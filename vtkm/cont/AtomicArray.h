@@ -74,12 +74,11 @@ public:
   {
   }
 
-  template <typename Device>
-  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(
-    Device,
+  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const
   {
-    return vtkm::exec::AtomicArrayExecutionObject<T, Device>(this->Handle, token);
+    return vtkm::exec::AtomicArrayExecutionObject<T>(this->Handle, device, token);
   }
 
   template <typename Device>

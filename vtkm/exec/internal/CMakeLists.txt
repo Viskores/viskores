@@ -13,8 +13,9 @@ set(headers
   FastVec.h
   ReduceByKeyLookup.h
   TaskSingular.h
-  WorkletInvokeFunctorDetail.h
   TwoLevelUniformGridExecutionObject.h
+  Variant.h
+  WorkletInvokeFunctorDetail.h
   )
 
 vtkm_declare_headers(${headers})

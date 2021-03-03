@@ -12,12 +12,19 @@
 
 #include <vtkm/cont/FieldRangeCompute.h>
 
-#include <vtkm/cont/FieldRangeGlobalCompute.hxx>
-
 namespace vtkm
 {
 namespace cont
 {
+
+namespace detail
+{
+
+VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
+  const vtkm::cont::ArrayHandle<vtkm::Range>& range);
+
+} // namespace detail
+
 /// \brief utility functions to compute global ranges for dataset fields.
 ///
 /// These functions compute global ranges for fields in a single DataSet or a
@@ -37,6 +44,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
 
 template <typename TypeList>
+VTKM_DEPRECATED(1.6, "FieldRangeGlobalCompute no longer supports TypeList.")
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
@@ -44,7 +52,10 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   TypeList)
 {
   VTKM_IS_LIST(TypeList);
-  return detail::FieldRangeGlobalComputeImpl(dataset, name, assoc, TypeList());
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  auto lrange = vtkm::cont::FieldRangeCompute(dataset, name, assoc, TypeList());
+  VTKM_DEPRECATED_SUPPRESS_END
+  return vtkm::cont::detail::MergeRangesGlobal(lrange);
 }
 
 //@}
@@ -65,6 +76,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
 
 template <typename TypeList>
+VTKM_DEPRECATED(1.6, "FieldRangeGlobalCompute no longer supports TypeList.")
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
@@ -72,7 +84,10 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   TypeList)
 {
   VTKM_IS_LIST(TypeList);
-  return detail::FieldRangeGlobalComputeImpl(pds, name, assoc, TypeList());
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  auto lrange = vtkm::cont::FieldRangeCompute(pds, name, assoc, TypeList());
+  VTKM_DEPRECATED_SUPPRESS_END
+  return vtkm::cont::detail::MergeRangesGlobal(lrange);
 }
 //@}
 }

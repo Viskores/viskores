@@ -36,8 +36,7 @@ struct TwoLevelUniformGridExecutionObject
 
 
   template <typename T>
-  using ArrayPortalConst =
-    typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<Device>::PortalConst;
+  using ArrayPortalConst = typename vtkm::cont::ArrayHandle<T>::ReadPortalType;
 
   Grid TopLevel;
 

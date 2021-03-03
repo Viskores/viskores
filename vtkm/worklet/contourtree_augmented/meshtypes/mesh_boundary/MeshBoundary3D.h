@@ -73,25 +73,26 @@ namespace worklet
 namespace contourtree_augmented
 {
 
-template <typename DeviceTag>
-class MeshBoundary3D : public vtkm::cont::ExecutionObjectBase
+class MeshBoundary3D
 {
 public:
   // Sort indicies types
-  using SortIndicesPortalType =
-    typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
+  using SortIndicesPortalType = IdArrayType::ReadPortalType;
 
   VTKM_EXEC_CONT
   MeshBoundary3D()
-    : MeshStructure(data_set_mesh::MeshStructure3D<DeviceTag>(vtkm::Id3{ 0, 0, 0 }))
+    : MeshStructure(data_set_mesh::MeshStructure3D(vtkm::Id3{ 0, 0, 0 }))
   {
   }
 
   VTKM_CONT
-  MeshBoundary3D(vtkm::Id3 meshSize, const IdArrayType& inSortIndices, vtkm::cont::Token& token)
-    : MeshStructure(data_set_mesh::MeshStructure3D<DeviceTag>(meshSize))
+  MeshBoundary3D(vtkm::Id3 meshSize,
+                 const IdArrayType& inSortIndices,
+                 vtkm::cont::DeviceAdapterId device,
+                 vtkm::cont::Token& token)
+    : MeshStructure(data_set_mesh::MeshStructure3D(meshSize))
   {
-    this->SortIndicesPortal = inSortIndices.PrepareForInput(DeviceTag(), token);
+    this->SortIndicesPortal = inSortIndices.PrepareForInput(device, token);
   }
 
   VTKM_EXEC_CONT
@@ -141,7 +142,14 @@ public:
           nbrSortIndex = this->SortIndicesPortal.Get(meshIndex - strides[1]);
           break; // [1] - 1, [0]
         default:
-          std::abort();
+          // Due to CUDA we cannot throw an exception here, which would make the most
+          // sense
+          VTKM_ASSERT(false); // Should not occur, edgeNo < N_INCIDENT_EDGES_2D = 6
+          // Initialize nbrSortIndex to something anyway to prevent compiler warning
+          // Set to the sort index of the vertex itself since there is "no" edge so
+          // that it contains a "sane" value if it should ever be reached.
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex);
+          break;
       }
 
       bool currIsInUpperLink = (nbrSortIndex > sortIndex);
@@ -225,14 +233,14 @@ public:
           { // On [2]-perpendicular face
             VTKM_ASSERT(pos[0] != 0 && pos[0] != this->MeshStructure.MeshSize[0]);
             VTKM_ASSERT(pos[1] != 0 && pos[1] != this->MeshStructure.MeshSize[1]);
-            return CountLinkComponentsIn2DSlice(meshIndex, this->MeshStructure.MeshSize[0], 1) ==
-              1; // FIXME: or != 2;
+            return CountLinkComponentsIn2DSlice(meshIndex,
+                                                vtkm::Id2(1, this->MeshStructure.MeshSize[0])) != 2;
           }
           else if (pos[1] == 0 || pos[1] == this->MeshStructure.MeshSize[1] - 1)
           { // On [1]-perpendicular face
             VTKM_ASSERT(pos[0] != 0 && pos[0] != this->MeshStructure.MeshSize[0]);
             VTKM_ASSERT(pos[2] != 0 && pos[2] != this->MeshStructure.MeshSize[2]);
-            return CountLinkComponentsIn2DSlice(meshIndex, nPerSlice, 1) == 1; // FIXME: or != 2;
+            return CountLinkComponentsIn2DSlice(meshIndex, vtkm::Id2(1, nPerSlice)) != 2;
           }
           else
           { // On [0]-perpendicular face
@@ -240,7 +248,7 @@ public:
             VTKM_ASSERT(pos[1] != 0 && pos[1] != this->MeshStructure.MeshSize[1]);
             VTKM_ASSERT(pos[2] != 0 && pos[2] != this->MeshStructure.MeshSize[2]);
             return CountLinkComponentsIn2DSlice(
-                     meshIndex, this->MeshStructure.MeshSize[0], nPerSlice) == 1; // FIXME: or != 2;
+                     meshIndex, vtkm::Id2(nPerSlice, this->MeshStructure.MeshSize[0])) != 2;
           }
         }
       }
@@ -252,14 +260,11 @@ public:
   }
 
   VTKM_EXEC_CONT
-  const data_set_mesh::MeshStructure3D<DeviceTag>& GetMeshStructure() const
-  {
-    return this->MeshStructure;
-  }
+  const data_set_mesh::MeshStructure3D& GetMeshStructure() const { return this->MeshStructure; }
 
 protected:
   // 3D Mesh size parameters
-  data_set_mesh::MeshStructure3D<DeviceTag> MeshStructure;
+  data_set_mesh::MeshStructure3D MeshStructure;
   SortIndicesPortalType SortIndicesPortal;
 };
 
@@ -274,11 +279,10 @@ public:
   {
   }
 
-  VTKM_CONT
-  template <typename DeviceTag>
-  MeshBoundary3D<DeviceTag> PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
+  VTKM_CONT MeshBoundary3D PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                               vtkm::cont::Token& token) const
   {
-    return MeshBoundary3D<DeviceTag>(this->MeshSize, this->SortIndices, token);
+    return MeshBoundary3D(this->MeshSize, this->SortIndices, device, token);
   }
 
 protected:

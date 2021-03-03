@@ -74,25 +74,26 @@ namespace contourtree_augmented
 {
 
 
-template <typename DeviceTag>
 class MeshBoundary2D
 {
 public:
   // Sort indicies types
-  using SortIndicesPortalType =
-    typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
+  using SortIndicesPortalType = IdArrayType::ReadPortalType;
 
   VTKM_EXEC_CONT
   MeshBoundary2D()
-    : MeshStructure(0, 0)
+    : MeshStructure({ 0, 0 })
   {
   }
 
   VTKM_CONT
-  MeshBoundary2D(vtkm::Id2 meshSize, const IdArrayType& sortIndices, vtkm::cont::Token& token)
+  MeshBoundary2D(vtkm::Id2 meshSize,
+                 const IdArrayType& sortIndices,
+                 vtkm::cont::DeviceAdapterId device,
+                 vtkm::cont::Token& token)
     : MeshStructure(meshSize)
   {
-    this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceTag(), token);
+    this->SortIndicesPortal = sortIndices.PrepareForInput(device, token);
   }
 
   VTKM_EXEC_CONT
@@ -122,7 +123,7 @@ public:
       }
       else
       {
-        // if not a corner, keeep only vertices that are local extrema
+        // if not a corner, keep only vertices that are local extrema
         vtkm::Id sp, sn;
         if (pos[1] == 0 || pos[1] == this->MeshStructure.MeshSize[1] - 1)
         {
@@ -138,8 +139,12 @@ public:
           assert(meshIndex >= this->MeshStructure.MeshSize[0]);
           sp = this->SortIndicesPortal.Get(meshIndex - this->MeshStructure.MeshSize[0]);
           assert(meshIndex + this->MeshStructure.MeshSize[0] <
-                 this->SortIndices.GetNumberOfValues());
+                 this->SortIndicesPortal.GetNumberOfValues());
           sn = this->SortIndicesPortal.Get(meshIndex + this->MeshStructure.MeshSize[0]);
+        }
+        else
+        {
+          return false;
         }
         return (sortIndex < sp && sortIndex < sn) || (sortIndex > sp && sortIndex > sn);
       }
@@ -151,14 +156,11 @@ public:
     }
   }
   VTKM_EXEC_CONT
-  const data_set_mesh::MeshStructure2D<DeviceTag>& GetMeshStructure() const
-  {
-    return this->MeshStructure;
-  }
+  const data_set_mesh::MeshStructure2D& GetMeshStructure() const { return this->MeshStructure; }
 
 private:
   // 2D Mesh size parameters
-  data_set_mesh::MeshStructure2D<DeviceTag> MeshStructure;
+  data_set_mesh::MeshStructure2D MeshStructure;
   SortIndicesPortalType SortIndicesPortal;
 };
 
@@ -173,10 +175,10 @@ public:
   }
 
   VTKM_CONT
-  template <typename DeviceTag>
-  MeshBoundary2D<DeviceTag> PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
+  MeshBoundary2D PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                     vtkm::cont::Token& token) const
   {
-    return MeshBoundary2D<DeviceTag>(this->MeshSize, this->SortIndices, token);
+    return MeshBoundary2D(this->MeshSize, this->SortIndices, device, token);
   }
 
 private:

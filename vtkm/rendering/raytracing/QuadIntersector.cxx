@@ -104,7 +104,7 @@ class QuadLeafIntersector
 public:
   using IdType = vtkm::Vec<vtkm::Id, 5>;
   using IdHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 5>>;
-  using IdArrayPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using IdArrayPortal = typename IdHandle::ReadPortalType;
   IdArrayPortal QuadIds;
 
   QuadLeafIntersector() {}
@@ -366,7 +366,7 @@ public:
     : MinScalar(minScalar)
   {
     Normalize = true;
-    if (minScalar > maxScalar)
+    if (minScalar >= maxScalar)
     {
       // support the scalar renderer
       Normalize = false;
@@ -458,7 +458,7 @@ void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
     .Invoke(rays.HitIdx,
             rays.Scalar,
-            scalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+            vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
             QuadIds);
 }
 

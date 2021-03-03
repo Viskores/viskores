@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtkmDefaultTypes_h
-#define vtkmDefaultTypes_h
+#ifndef vtk_m_cont_internal_DefaultTypesVTK_h
+#define vtk_m_cont_internal_DefaultTypesVTK_h
 
 // This configures the default types to use when compiling VTK-m for use as an
 // accelerator in VTK.
@@ -16,6 +16,15 @@
 #include <vtkm/TypeList.h>
 
 #include <vtkm/cont/CellSetList.h>
+
+#cmakedefine VTKM_ADD_XGC_DEFAULT_TYPES
+
+#ifdef VTKM_ADD_XGC_DEFAULT_TYPES
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/ArrayHandleXGCCoordinates.h>
+#include <vtkm/cont/StorageList.h>
+#endif
 
 namespace tovtkm
 {
@@ -99,10 +108,29 @@ using CellListUnstructuredOutVTK = vtkm::List<                     //
 using CellListAllInVTK = vtkm::ListAppend<CellListStructuredInVTK, CellListUnstructuredInVTK>;
 using CellListAllOutVTK = vtkm::ListAppend<CellListStructuredOutVTK, CellListUnstructuredOutVTK>;
 
+#ifdef VTKM_ADD_XGC_DEFAULT_TYPES
+using StorageListField = vtkm::ListAppend<
+  vtkm::cont::StorageListBasic,
+  vtkm::List<
+    vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                            vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                            vtkm::cont::ArrayHandle<vtkm::Float32>>::StorageTag,
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                            vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                            vtkm::cont::ArrayHandle<vtkm::Float64>>::StorageTag,
+    vtkm::cont::StorageTagXGCCoordinates
+    >>;
+#endif
+
 } // end namespace tovtkm
 
 #define VTKM_DEFAULT_TYPE_LIST ::tovtkm::FieldTypeInVTK
 #define VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED ::tovtkm::CellListStructuredInVTK
 #define VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED ::tovtkm::CellListUnstructuredInVTK
 
-#endif //vtkmDefaultTypes_h
+#ifdef VTKM_ADD_XGC_DEFAULT_TYPES
+#define VTKM_DEFAULT_STORAGE_LIST ::tovtkm::StorageListField
+#endif
+
+#endif //vtk_m_cont_internal_DefaultTypesVTK_h

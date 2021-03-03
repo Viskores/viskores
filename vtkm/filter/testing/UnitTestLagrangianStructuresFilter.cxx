@@ -11,8 +11,8 @@
 #include <iostream>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-
 #include <vtkm/filter/LagrangianStructures.h>
+#include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 namespace auxiliary
 {
@@ -343,47 +343,53 @@ void Test2DLCS()
   vtkm::cont::DataSet outputData = lagrangianStructures.Execute(inputData);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> FTLEField;
-  outputData.GetField("FTLE").GetData().CopyTo(FTLEField);
+  outputData.GetField("FTLE").GetData().AsArrayHandle(FTLEField);
   auxiliary::ValidateLCSFilterResult(FTLEField, visitHandle, diffHandle);
 }
 
 void Test3DLCS()
 {
   /*Construct dataset and vector field*/
-  vtkm::cont::DataSet inputData;
+  vtkm::Bounds bounds(0, 10, 0, 10, 0, 10);
   vtkm::Id3 dims(5, 5, 5);
-  vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec3f spacing;
-  spacing[0] = 10.0f / static_cast<vtkm::FloatDefault>(dims[0] - 1);
-  spacing[1] = 10.0f / static_cast<vtkm::FloatDefault>(dims[1] - 1);
-  spacing[2] = 10.0f / static_cast<vtkm::FloatDefault>(dims[2] - 1);
-  vtkm::cont::DataSetBuilderUniform dataBuilder;
-  inputData = dataBuilder.Create(dims, origin, spacing);
 
-  std::vector<vtkm::FloatDefault> diffVec;
-  std::vector<vtkm::FloatDefault> visitVec;
-  std::vector<vtkm::Vec3f> fieldVec;
+  auto dataSets = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
+  for (auto& input : dataSets)
+  {
+    using Structured3DType = vtkm::cont::CellSetStructured<3>;
+    using Structured2DType = vtkm::cont::CellSetStructured<2>;
 
-  auxiliary::PopulateData(fieldVec, visitVec, diffVec, auxiliary::Option::_3D);
+    vtkm::cont::DynamicCellSet cellset = input.GetCellSet();
 
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> diffHandle =
-    vtkm::cont::make_ArrayHandle(diffVec, vtkm::CopyFlag::On);
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> visitHandle =
-    vtkm::cont::make_ArrayHandle(visitVec, vtkm::CopyFlag::On);
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldHandle =
-    vtkm::cont::make_ArrayHandle(fieldVec, vtkm::CopyFlag::On);
-  inputData.AddPointField("velocity", fieldHandle);
+    //Only structured supported in filter right now.
+    if (!(cellset.IsType<Structured2DType>() || cellset.IsType<Structured3DType>()))
+      continue;
 
-  vtkm::filter::LagrangianStructures lagrangianStructures;
-  lagrangianStructures.SetStepSize(0.01f);
-  lagrangianStructures.SetNumberOfSteps(500);
-  lagrangianStructures.SetAdvectionTime(0.01f * 500);
-  lagrangianStructures.SetActiveField("velocity");
-  vtkm::cont::DataSet outputData = lagrangianStructures.Execute(inputData);
+    std::vector<vtkm::FloatDefault> diffVec;
+    std::vector<vtkm::FloatDefault> visitVec;
+    std::vector<vtkm::Vec3f> fieldVec;
 
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> FTLEField;
-  outputData.GetField("FTLE").GetData().CopyTo(FTLEField);
-  auxiliary::ValidateLCSFilterResult(FTLEField, visitHandle, diffHandle);
+    auxiliary::PopulateData(fieldVec, visitVec, diffVec, auxiliary::Option::_3D);
+
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> diffHandle =
+      vtkm::cont::make_ArrayHandle(diffVec, vtkm::CopyFlag::On);
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> visitHandle =
+      vtkm::cont::make_ArrayHandle(visitVec, vtkm::CopyFlag::On);
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldHandle =
+      vtkm::cont::make_ArrayHandle(fieldVec, vtkm::CopyFlag::On);
+    input.AddPointField("velocity", fieldHandle);
+
+    vtkm::filter::LagrangianStructures lagrangianStructures;
+    lagrangianStructures.SetStepSize(0.01f);
+    lagrangianStructures.SetNumberOfSteps(500);
+    lagrangianStructures.SetAdvectionTime(0.01f * 500);
+    lagrangianStructures.SetActiveField("velocity");
+    vtkm::cont::DataSet outputData = lagrangianStructures.Execute(input);
+
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> FTLEField;
+    outputData.GetField("FTLE").GetData().AsArrayHandle(FTLEField);
+    auxiliary::ValidateLCSFilterResult(FTLEField, visitHandle, diffHandle);
+  }
 }
 
 void TestLagrangianStructures()

@@ -12,6 +12,7 @@
 #define vtk_m_filter_particle_density_ngp_hxx
 
 #include "ParticleDensityNearestGridPoint.h"
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/filter/PolicyBase.h>
@@ -40,7 +41,7 @@ public:
     vtkm::Vec3f parametric;
 
     // Find the cell containing the point
-    if (locator->FindCell(point, cellId, parametric) == vtkm::ErrorCode::Success)
+    if (locator.FindCell(point, cellId, parametric) == vtkm::ErrorCode::Success)
     {
       // deposit field value to density
       density.Add(cellId, value);

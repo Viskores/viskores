@@ -13,12 +13,14 @@
 #include <vtkm/Assert.h>
 #include <vtkm/TypeTraits.h>
 
-#include <vtkm/internal/Variant.h>
-
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+
+#include <vtkm/cont/internal/Variant.h>
+#include <vtkm/exec/internal/Variant.h>
 
 namespace vtkm
 {
@@ -88,7 +90,7 @@ private:
 template <typename... PortalTypes>
 struct ArrayPortalMultiplexer
 {
-  using PortalVariantType = vtkm::internal::Variant<PortalTypes...>;
+  using PortalVariantType = vtkm::exec::internal::Variant<PortalTypes...>;
   PortalVariantType PortalVariant;
 
   using ValueType = typename PortalVariantType::template TypeAt<0>::ValueType;
@@ -148,309 +150,163 @@ namespace detail
 
 struct MultiplexerGetNumberOfValuesFunctor
 {
-  template <typename ArrayHandleType>
-  VTKM_CONT vtkm::Id operator()(ArrayHandleType&& array) const
+  template <typename StorageType>
+  VTKM_CONT vtkm::Id operator()(StorageType, const vtkm::cont::internal::Buffer* buffers) const
   {
-    return array.GetNumberOfValues();
+    return StorageType::GetNumberOfValues(buffers);
   }
 };
 
-struct MultiplexerAllocateFunctor
+struct MultiplexerResizeBuffersFunctor
 {
-  template <typename ArrayHandleType>
-  VTKM_CONT void operator()(ArrayHandleType&& array, vtkm::Id numberOfValues) const
+  template <typename StorageType>
+  VTKM_CONT void operator()(StorageType,
+                            vtkm::Id numValues,
+                            vtkm::cont::internal::Buffer* buffers,
+                            vtkm::CopyFlag preserve,
+                            vtkm::cont::Token& token) const
   {
-    array.Allocate(numberOfValues);
+    StorageType::ResizeBuffers(numValues, buffers, preserve, token);
   }
 };
 
-struct MultiplexerShrinkFunctor
+template <typename ReadPortalType>
+struct MultiplexerCreateReadPortalFunctor
 {
-  template <typename ArrayHandleType>
-  VTKM_CONT void operator()(ArrayHandleType&& array, vtkm::Id numberOfValues) const
+  template <typename StorageType>
+  VTKM_CONT ReadPortalType operator()(StorageType,
+                                      const vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::cont::DeviceAdapterId device,
+                                      vtkm::cont::Token& token) const
   {
-    array.Shrink(numberOfValues);
+    return ReadPortalType(StorageType::CreateReadPortal(buffers, device, token));
   }
 };
 
-struct MultiplexerReleaseResourcesFunctor
+template <typename WritePortalType>
+struct MultiplexerCreateWritePortalFunctor
 {
-  template <typename ArrayHandleType>
-  VTKM_CONT void operator()(ArrayHandleType&& array) const
+  template <typename StorageType>
+  VTKM_CONT WritePortalType operator()(StorageType,
+                                       vtkm::cont::internal::Buffer* buffers,
+                                       vtkm::cont::DeviceAdapterId device,
+                                       vtkm::cont::Token& token) const
   {
-    array.ReleaseResources();
+    return WritePortalType(StorageType::CreateWritePortal(buffers, device, token));
   }
 };
 
-struct MultiplexerReleaseResourcesExecutionFunctor
+template <typename T, typename... Ss>
+struct MultiplexerArrayHandleVariantFunctor
 {
-  template <typename ArrayHandleType>
-  VTKM_CONT void operator()(ArrayHandleType&& array) const
+  using VariantType = vtkm::cont::internal::Variant<vtkm::cont::ArrayHandle<T, Ss>...>;
+
+  template <typename StorageTag>
+  VTKM_CONT VariantType operator()(vtkm::cont::internal::Storage<T, StorageTag>,
+                                   const vtkm::cont::internal::Buffer* buffers)
   {
-    array.ReleaseResourcesExecution();
+    return VariantType(vtkm::cont::ArrayHandle<T, StorageTag>(buffers));
   }
 };
 
 } // namespace detail
 
-template <typename ValueType_, typename... StorageTags>
-class Storage<ValueType_, StorageTagMultiplexer<StorageTags...>>
+template <typename ValueType, typename... StorageTags>
+class Storage<ValueType, StorageTagMultiplexer<StorageTags...>>
 {
-public:
-  using ValueType = ValueType_;
-
-private:
   template <typename S>
-  using StorageToArrayHandle = vtkm::cont::ArrayHandle<ValueType, S>;
+  using StorageFor = vtkm::cont::internal::Storage<ValueType, S>;
 
-  template <typename S>
-  using StorageToPortalControl = typename StorageToArrayHandle<S>::WritePortalType;
+  using StorageVariant = vtkm::cont::internal::Variant<StorageFor<StorageTags>...>;
 
-  template <typename S>
-  using StorageToPortalConstControl = typename StorageToArrayHandle<S>::ReadPortalType;
-
-  using ArrayHandleVariantType = vtkm::internal::Variant<StorageToArrayHandle<StorageTags>...>;
-  ArrayHandleVariantType ArrayHandleVariant;
-
-public:
-  using PortalType = vtkm::internal::ArrayPortalMultiplexer<StorageToPortalControl<StorageTags>...>;
-  using PortalConstType =
-    vtkm::internal::ArrayPortalMultiplexer<StorageToPortalConstControl<StorageTags>...>;
-
-  Storage() = default;
-  Storage(Storage&&) = default;
-  Storage(const Storage&) = default;
-  Storage& operator=(Storage&&) = default;
-  Storage& operator=(const Storage&) = default;
-
-  template <typename S>
-  VTKM_CONT Storage(vtkm::cont::ArrayHandle<ValueType, S>&& rhs)
-    : ArrayHandleVariant(std::move(rhs))
+  VTKM_CONT static StorageVariant Variant(const vtkm::cont::internal::Buffer* buffers)
   {
+    return buffers[0].GetMetaData<StorageVariant>();
   }
 
-  template <typename S>
-  VTKM_CONT Storage(const vtkm::cont::ArrayHandle<ValueType, S>& src)
-    : ArrayHandleVariant(src)
+  template <typename Buff>
+  VTKM_CONT static Buff* ArrayBuffers(Buff* buffers)
   {
+    return buffers + 1;
   }
-
-  VTKM_CONT bool IsValid() const { return this->ArrayHandleVariant.IsValid(); }
-
-  template <typename S>
-  VTKM_CONT void SetArray(vtkm::cont::ArrayHandle<ValueType, S>&& rhs)
-  {
-    this->ArrayHandleVariant = std::move(rhs);
-  }
-
-  template <typename S>
-  VTKM_CONT void SetArray(const vtkm::cont::ArrayHandle<ValueType, S>& src)
-  {
-    this->ArrayHandleVariant = src;
-  }
-
-private:
-  struct GetPortalFunctor
-  {
-    template <typename ArrayHandleType>
-    VTKM_CONT PortalType operator()(ArrayHandleType&& array) const
-    {
-      return PortalType(array.WritePortal());
-    }
-  };
-
-  struct GetPortalConstFunctor
-  {
-    template <typename ArrayHandleType>
-    VTKM_CONT PortalConstType operator()(ArrayHandleType&& array) const
-    {
-      return PortalConstType(array.ReadPortal());
-    }
-  };
 
 public:
-  VTKM_CONT PortalType GetPortal()
+  using ReadPortalType =
+    vtkm::internal::ArrayPortalMultiplexer<typename StorageFor<StorageTags>::ReadPortalType...>;
+  using WritePortalType =
+    vtkm::internal::ArrayPortalMultiplexer<typename StorageFor<StorageTags>::WritePortalType...>;
+
+  VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers()
   {
-    return this->ArrayHandleVariant.CastAndCall(GetPortalFunctor{});
+    return std::max({ StorageFor<StorageTags>::GetNumberOfBuffers()... }) + 1;
   }
 
-  VTKM_CONT PortalConstType GetPortalConst() const
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    return this->ArrayHandleVariant.CastAndCall(GetPortalConstFunctor{});
+    return Variant(buffers).CastAndCall(detail::MultiplexerGetNumberOfValuesFunctor{},
+                                        ArrayBuffers(buffers));
   }
 
-  VTKM_CONT vtkm::Id GetNumberOfValues() const
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token)
   {
-    if (this->IsValid())
-    {
-      return this->ArrayHandleVariant.CastAndCall(detail::MultiplexerGetNumberOfValuesFunctor{});
-    }
-    else
-    {
-      return 0;
-    }
+    Variant(buffers).CastAndCall(
+      detail::MultiplexerResizeBuffersFunctor{}, numValues, ArrayBuffers(buffers), preserve, token);
   }
 
-  VTKM_CONT void Allocate(vtkm::Id numberOfValues)
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
-    if (this->IsValid())
-    {
-      this->ArrayHandleVariant.CastAndCall(detail::MultiplexerAllocateFunctor{}, numberOfValues);
-    }
-    else if (numberOfValues > 0)
-    {
-      throw vtkm::cont::ErrorBadValue(
-        "Attempted to allocate an ArrayHandleMultiplexer with no underlying array.");
-    }
-    else
-    {
-      // Special case, OK to perform "0" allocation on invalid array.
-    }
+    return Variant(buffers).CastAndCall(
+      detail::MultiplexerCreateReadPortalFunctor<ReadPortalType>{},
+      ArrayBuffers(buffers),
+      device,
+      token);
   }
 
-  VTKM_CONT void Shrink(vtkm::Id numberOfValues)
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
-    if (this->IsValid())
-    {
-      this->ArrayHandleVariant.CastAndCall(detail::MultiplexerShrinkFunctor{}, numberOfValues);
-    }
-    else if (numberOfValues > 0)
-    {
-      throw vtkm::cont::ErrorBadValue(
-        "Attempted to allocate an ArrayHandleMultiplexer with no underlying array.");
-    }
-    else
-    {
-      // Special case, OK to perform "0" allocation on invalid array.
-    }
+    return Variant(buffers).CastAndCall(
+      detail::MultiplexerCreateWritePortalFunctor<WritePortalType>{},
+      ArrayBuffers(buffers),
+      device,
+      token);
   }
 
-  VTKM_CONT void ReleaseResources()
+  VTKM_CONT static bool IsValid(const vtkm::cont::internal::Buffer* buffers)
   {
-    if (this->IsValid())
-    {
-      this->ArrayHandleVariant.CastAndCall(detail::MultiplexerReleaseResourcesFunctor{});
-    }
+    return Variant(buffers).IsValid();
   }
 
-  VTKM_CONT ArrayHandleVariantType& GetArrayHandleVariant() { return this->ArrayHandleVariant; }
-  VTKM_CONT const ArrayHandleVariantType& GetArrayHandleVariant() const
+  template <typename ArrayType>
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(const ArrayType& array)
   {
-    return this->ArrayHandleVariant;
-  }
-};
+    VTKM_IS_ARRAY_HANDLE(ArrayType);
+    std::vector<vtkm::cont::internal::Buffer> buffers =
+      vtkm::cont::internal::CreateBuffers(StorageVariant{ array.GetStorage() }, array);
 
+    // Some arrays will require different numbers of buffers. Make sure we size the buffers
+    // array to accomodate any such one to avoid any troubles.
+    std::size_t numBuffers = static_cast<std::size_t>(GetNumberOfBuffers());
+    VTKM_ASSERT(numBuffers >= buffers.size());
+    buffers.resize(numBuffers);
 
-template <typename ValueType_, typename... StorageTags, typename Device>
-class ArrayTransfer<ValueType_, StorageTagMultiplexer<StorageTags...>, Device>
-{
-public:
-  using ValueType = ValueType_;
-
-private:
-  using StorageTag = StorageTagMultiplexer<StorageTags...>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-  template <typename S>
-  using StorageToArrayHandle = vtkm::cont::ArrayHandle<ValueType, S>;
-
-  template <typename S>
-  using StorageToPortalExecution =
-    typename StorageToArrayHandle<S>::template ExecutionTypes<Device>::Portal;
-
-  template <typename S>
-  using StorageToPortalConstExecution =
-    typename StorageToArrayHandle<S>::template ExecutionTypes<Device>::PortalConst;
-
-public:
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
-
-  using PortalExecution =
-    vtkm::internal::ArrayPortalMultiplexer<StorageToPortalExecution<StorageTags>...>;
-  using PortalConstExecution =
-    vtkm::internal::ArrayPortalMultiplexer<StorageToPortalConstExecution<StorageTags>...>;
-
-private:
-  StorageType* StoragePointer;
-
-public:
-  VTKM_CONT ArrayTransfer(StorageType* storage)
-    : StoragePointer(storage)
-  {
+    return buffers;
   }
 
-  VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->StoragePointer->GetNumberOfValues(); }
-
-  VTKM_CONT PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData),
-                                                 vtkm::cont::Token& token)
+  VTKM_CONT static
+    typename detail::MultiplexerArrayHandleVariantFunctor<ValueType, StorageTags...>::VariantType
+    GetArrayHandleVariant(const vtkm::cont::internal::Buffer* buffers)
   {
-    return this->StoragePointer->GetArrayHandleVariant().CastAndCall(PrepareForInputFunctor{},
-                                                                     token);
+    return Variant(buffers).CastAndCall(
+      detail::MultiplexerArrayHandleVariantFunctor<ValueType, StorageTags...>{},
+      ArrayBuffers(buffers));
   }
-
-  VTKM_CONT PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData),
-                                              vtkm::cont::Token& token)
-  {
-    return this->StoragePointer->GetArrayHandleVariant().CastAndCall(PrepareForInPlaceFunctor{},
-                                                                     token);
-  }
-
-  VTKM_CONT PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
-  {
-    return this->StoragePointer->GetArrayHandleVariant().CastAndCall(
-      PrepareForOutputFunctor{}, numberOfValues, token);
-  }
-
-  VTKM_CONT void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
-  {
-    // Implementation of this method should be unnecessary. The internal
-    // array handles should automatically retrieve the output data as
-    // necessary.
-  }
-
-  VTKM_CONT void Shrink(vtkm::Id numberOfValues)
-  {
-    this->StoragePointer->GetArrayHandleVariant().CastAndCall(detail::MultiplexerShrinkFunctor{},
-                                                              numberOfValues);
-  }
-
-  VTKM_CONT void ReleaseResources()
-  {
-    this->StoragePointer->GetArrayHandleVariant().CastAndCall(
-      detail::MultiplexerReleaseResourcesExecutionFunctor{});
-  }
-
-private:
-  struct PrepareForInputFunctor
-  {
-    template <typename ArrayHandleType>
-    VTKM_CONT PortalConstExecution operator()(const ArrayHandleType& array,
-                                              vtkm::cont::Token& token)
-    {
-      return PortalConstExecution(array.PrepareForInput(Device{}, token));
-    }
-  };
-
-  struct PrepareForInPlaceFunctor
-  {
-    template <typename ArrayHandleType>
-    VTKM_CONT PortalExecution operator()(ArrayHandleType& array, vtkm::cont::Token& token)
-    {
-      return PortalExecution(array.PrepareForInPlace(Device{}, token));
-    }
-  };
-
-  struct PrepareForOutputFunctor
-  {
-    template <typename ArrayHandleType>
-    VTKM_CONT PortalExecution operator()(ArrayHandleType& array,
-                                         vtkm::Id numberOfValues,
-                                         vtkm::cont::Token& token)
-    {
-      return PortalExecution(array.PrepareForOutput(numberOfValues, Device{}, token));
-    }
-  };
 };
 
 } // namespace internal
@@ -495,7 +351,7 @@ struct ArrayHandleMultiplexerTraits
     vtkm::cont::StorageTagMultiplexer<ArrayHandleToStorageTag<ArrayHandleTypes>...>;
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 };
-}
+} // namespace detail
 
 /// \brief An ArrayHandle that can behave like several other handles.
 ///
@@ -536,28 +392,22 @@ private:
 public:
   template <typename RealStorageTag>
   VTKM_CONT ArrayHandleMultiplexer(const vtkm::cont::ArrayHandle<ValueType, RealStorageTag>& src)
-    : Superclass(StorageType(src))
+    : Superclass(StorageType::CreateBuffers(src))
   {
   }
 
-  template <typename RealStorageTag>
-  VTKM_CONT ArrayHandleMultiplexer(vtkm::cont::ArrayHandle<ValueType, RealStorageTag>&& rhs)
-    : Superclass(StorageType(std::move(rhs)))
-  {
-  }
-
-  VTKM_CONT bool IsValid() const { return this->GetStorage().IsValid(); }
-
-  template <typename S>
-  VTKM_CONT void SetArray(vtkm::cont::ArrayHandle<ValueType, S>&& rhs)
-  {
-    this->GetStorage().SetArray(std::move(rhs));
-  }
+  VTKM_CONT bool IsValid() const { return StorageType::IsValid(this->GetBuffers()); }
 
   template <typename S>
   VTKM_CONT void SetArray(const vtkm::cont::ArrayHandle<ValueType, S>& src)
   {
-    this->GetStorage().SetArray(src);
+    this->SetBuffers(StorageType::CreateBuffers(src));
+  }
+
+  VTKM_CONT auto GetArrayHandleVariant() const
+    -> decltype(StorageType::GetArrayHandleVariant(this->GetBuffers()))
+  {
+    return StorageType::GetArrayHandleVariant(this->GetBuffers());
   }
 };
 
@@ -583,6 +433,44 @@ using ArrayHandleMultiplexerFromListTag VTKM_DEPRECATED(
 ///
 template <typename List>
 using ArrayHandleMultiplexerFromList = vtkm::ListApply<List, ArrayHandleMultiplexer>;
+
+namespace internal
+{
+
+namespace detail
+{
+
+struct ArrayExtractComponentMultiplexerFunctor
+{
+  template <typename ArrayType>
+  auto operator()(const ArrayType& array,
+                  vtkm::IdComponent componentIndex,
+                  vtkm::CopyFlag allowCopy) const
+    -> decltype(vtkm::cont::ArrayExtractComponent(array, componentIndex, allowCopy))
+  {
+    return vtkm::cont::internal::ArrayExtractComponentImpl<typename ArrayType::StorageTag>{}(
+      array, componentIndex, allowCopy);
+  }
+};
+
+} // namespace detail
+
+template <typename... Ss>
+struct ArrayExtractComponentImpl<vtkm::cont::StorageTagMultiplexer<Ss...>>
+{
+  template <typename T>
+  vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagMultiplexer<Ss...>>& src,
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy)
+  {
+    vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<T, Ss>...> array(src);
+    return array.GetArrayHandleVariant().CastAndCall(
+      detail::ArrayExtractComponentMultiplexerFunctor{}, componentIndex, allowCopy);
+  }
+};
+
+} // namespace internal
 
 } // namespace cont
 

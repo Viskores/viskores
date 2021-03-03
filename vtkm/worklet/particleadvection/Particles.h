@@ -16,7 +16,6 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/particleadvection/IntegratorStatus.h>
 
@@ -26,7 +25,7 @@ namespace worklet
 {
 namespace particleadvection
 {
-template <typename Device, typename ParticleType>
+template <typename ParticleType>
 class ParticleExecutionObject
 {
 public:
@@ -39,9 +38,10 @@ public:
 
   ParticleExecutionObject(vtkm::cont::ArrayHandle<ParticleType> particleArray,
                           vtkm::Id maxSteps,
+                          vtkm::cont::DeviceAdapterId device,
                           vtkm::cont::Token& token)
   {
-    Particles = particleArray.PrepareForInPlace(Device(), token);
+    Particles = particleArray.PrepareForInPlace(device, token);
     MaxSteps = maxSteps;
   }
 
@@ -77,6 +77,8 @@ public:
       p.Status.SetSpatialBounds();
     if (status.CheckTemporalBounds())
       p.Status.SetTemporalBounds();
+    if (status.CheckInGhostCell())
+      p.Status.SetInGhostCell();
     this->Particles.Set(idx, p);
   }
 
@@ -86,7 +88,7 @@ public:
     ParticleType p = this->GetParticle(idx);
 
     return (p.Status.CheckOk() && !p.Status.CheckTerminate() && !p.Status.CheckSpatialBounds() &&
-            !p.Status.CheckTemporalBounds());
+            !p.Status.CheckTemporalBounds() && !p.Status.CheckInGhostCell());
   }
 
   VTKM_EXEC
@@ -101,8 +103,7 @@ public:
   }
 
 protected:
-  using ParticlePortal =
-    typename vtkm::cont::ArrayHandle<ParticleType>::template ExecutionTypes<Device>::Portal;
+  using ParticlePortal = typename vtkm::cont::ArrayHandle<ParticleType>::WritePortalType;
 
   ParticlePortal Particles;
   vtkm::Id MaxSteps;
@@ -112,12 +113,11 @@ template <typename ParticleType>
 class Particles : public vtkm::cont::ExecutionObjectBase
 {
 public:
-  template <typename Device>
-  VTKM_CONT vtkm::worklet::particleadvection::ParticleExecutionObject<Device, ParticleType>
-  PrepareForExecution(Device, vtkm::cont::Token& token) const
+  VTKM_CONT vtkm::worklet::particleadvection::ParticleExecutionObject<ParticleType>
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
   {
-    return vtkm::worklet::particleadvection::ParticleExecutionObject<Device, ParticleType>(
-      this->ParticleArray, this->MaxSteps, token);
+    return vtkm::worklet::particleadvection::ParticleExecutionObject<ParticleType>(
+      this->ParticleArray, this->MaxSteps, device, token);
   }
 
   VTKM_CONT
@@ -135,13 +135,13 @@ protected:
 };
 
 
-template <typename Device, typename ParticleType>
-class StateRecordingParticleExecutionObject : public ParticleExecutionObject<Device, ParticleType>
+template <typename ParticleType>
+class StateRecordingParticleExecutionObject : public ParticleExecutionObject<ParticleType>
 {
 public:
   VTKM_EXEC_CONT
   StateRecordingParticleExecutionObject()
-    : ParticleExecutionObject<Device, ParticleType>()
+    : ParticleExecutionObject<ParticleType>()
     , History()
     , Length(0)
     , StepCount()
@@ -154,20 +154,21 @@ public:
                                         vtkm::cont::ArrayHandle<vtkm::Id> validPointArray,
                                         vtkm::cont::ArrayHandle<vtkm::Id> stepCountArray,
                                         vtkm::Id maxSteps,
+                                        vtkm::cont::DeviceAdapterId device,
                                         vtkm::cont::Token& token)
-    : ParticleExecutionObject<Device, ParticleType>(pArray, maxSteps, token)
+    : ParticleExecutionObject<ParticleType>(pArray, maxSteps, device, token)
     , Length(maxSteps + 1)
   {
     vtkm::Id numPos = pArray.GetNumberOfValues();
-    History = historyArray.PrepareForOutput(numPos * Length, Device(), token);
-    ValidPoint = validPointArray.PrepareForInPlace(Device(), token);
-    StepCount = stepCountArray.PrepareForInPlace(Device(), token);
+    History = historyArray.PrepareForOutput(numPos * Length, device, token);
+    ValidPoint = validPointArray.PrepareForInPlace(device, token);
+    StepCount = stepCountArray.PrepareForInPlace(device, token);
   }
 
   VTKM_EXEC
   void PreStepUpdate(const vtkm::Id& idx)
   {
-    ParticleType p = this->ParticleExecutionObject<Device, ParticleType>::GetParticle(idx);
+    ParticleType p = this->ParticleExecutionObject<ParticleType>::GetParticle(idx);
     if (this->StepCount.Get(idx) == 0)
     {
       vtkm::Id loc = idx * Length;
@@ -180,7 +181,7 @@ public:
   VTKM_EXEC
   void StepUpdate(const vtkm::Id& idx, vtkm::FloatDefault time, const vtkm::Vec3f& pt)
   {
-    this->ParticleExecutionObject<Device, ParticleType>::StepUpdate(idx, time, pt);
+    this->ParticleExecutionObject<ParticleType>::StepUpdate(idx, time, pt);
 
     //local step count.
     vtkm::Id stepCount = this->StepCount.Get(idx);
@@ -192,10 +193,8 @@ public:
   }
 
 protected:
-  using IdPortal =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::Portal;
-  using HistoryPortal =
-    typename vtkm::cont::ArrayHandle<vtkm::Vec3f>::template ExecutionTypes<Device>::Portal;
+  using IdPortal = typename vtkm::cont::ArrayHandle<vtkm::Id>::WritePortalType;
+  using HistoryPortal = typename vtkm::cont::ArrayHandle<vtkm::Vec3f>::WritePortalType;
 
   HistoryPortal History;
   vtkm::Id Length;
@@ -218,18 +217,16 @@ public:
   };
 
 
-  template <typename Device>
-  VTKM_CONT
-    vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<Device, ParticleType>
-    PrepareForExecution(Device, vtkm::cont::Token& token) const
+  VTKM_CONT vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<ParticleType>
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
   {
-    return vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<Device,
-                                                                                   ParticleType>(
+    return vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<ParticleType>(
       this->ParticleArray,
       this->HistoryArray,
       this->ValidPointArray,
       this->StepCountArray,
       this->MaxSteps,
+      device,
       token);
   }
   VTKM_CONT

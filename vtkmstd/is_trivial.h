@@ -11,10 +11,17 @@
 #define vtk_m_std_is_trivial_h
 
 #include <vtkm/StaticAssert.h>
+#include <vtkm/internal/Configure.h>
 
 #include <type_traits>
 
-#if defined(VTKM_USING_GLIBCXX_4)
+#if defined(VTKM_GCC) && !defined(VTKM_USING_GLIBCXX_4)
+#define VTKM_USE_STD_IS_TRIVIAL
+#elif defined(VTKM_CLANG)
+#define VTKM_USE_STD_IS_TRIVIAL
+#endif
+
+#ifndef VTKM_USE_STD_IS_TRIVIAL
 namespace vtkmstd
 {
 

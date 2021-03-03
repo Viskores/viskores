@@ -87,6 +87,29 @@ VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
     vtkm::cont::ArrayCopy(posTrn, outPos);
 }
 
+
+template <typename ParticleType>
+VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
+  const std::vector<vtkm::cont::ArrayHandle<ParticleType, vtkm::cont::StorageTagBasic>>& inputs,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos)
+{
+  vtkm::Id numParticles = 0;
+  for (const auto& v : inputs)
+    numParticles += v.GetNumberOfValues();
+  outPos.Allocate(numParticles);
+
+  vtkm::Id idx = 0;
+  for (const auto& v : inputs)
+  {
+    auto posTrn =
+      vtkm::cont::make_ArrayHandleTransform(v, detail::ExtractPositionFunctor<ParticleType>());
+    vtkm::Id n = posTrn.GetNumberOfValues();
+    vtkm::cont::Algorithm::CopySubRange(posTrn, 0, n, outPos, idx);
+    idx += n;
+  }
+}
+
+
 /// \brief Copy all fields in vtkm::Particle to standard types.
 ///
 /// Given an \c ArrayHandle of vtkm::Particle, this function copies the

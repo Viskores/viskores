@@ -12,7 +12,7 @@
 
 #include <vtkm/filter/vtkm_filter_extra_export.h>
 
-#include <vtkm/cont/ImplicitFunctionHandle.h>
+#include <vtkm/ImplicitFunction.h>
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/worklet/Clip.h>
@@ -27,18 +27,15 @@ namespace filter
 /// Clip a dataset using a given implicit function value, such as vtkm::Sphere
 /// or vtkm::Frustum.
 /// The resulting geometry will not be water tight.
-class VTKM_ALWAYS_EXPORT ClipWithImplicitFunction
+class VTKM_FILTER_EXTRA_EXPORT ClipWithImplicitFunction
   : public vtkm::filter::FilterDataSet<ClipWithImplicitFunction>
 {
 public:
-  void SetImplicitFunction(const vtkm::cont::ImplicitFunctionHandle& func)
-  {
-    this->Function = func;
-  }
+  void SetImplicitFunction(const vtkm::ImplicitFunctionGeneral& func) { this->Function = func; }
 
   void SetInvertClip(bool invert) { this->Invert = invert; }
 
-  const vtkm::cont::ImplicitFunctionHandle& GetImplicitFunction() const { return this->Function; }
+  const vtkm::ImplicitFunctionGeneral& GetImplicitFunction() const { return this->Function; }
 
   template <typename DerivedPolicy>
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
@@ -94,13 +91,13 @@ public:
   }
 
 private:
-  vtkm::cont::ImplicitFunctionHandle Function;
+  vtkm::ImplicitFunctionGeneral Function;
   vtkm::worklet::Clip Worklet;
   bool Invert = false;
 };
 
 #ifndef vtkm_filter_ClipWithImplicitFunction_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(ClipWithImplicitFunction);
+VTKM_FILTER_EXTRA_EXPORT_EXECUTE_METHOD(ClipWithImplicitFunction);
 #endif
 }
 } // namespace vtkm::filter

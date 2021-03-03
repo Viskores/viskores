@@ -138,7 +138,7 @@ const vtkm::internal::PortalVirtualBase* StorageVirtual::PrepareForInPlace(
 }
 
 //--------------------------------------------------------------------
-std::unique_ptr<vtkm::internal::PortalVirtualBase>&& StorageVirtual::WritePortal()
+const vtkm::internal::PortalVirtualBase* StorageVirtual::WritePortal()
 {
   //we need to prepare for input and grab the host ptr
   auto* payload = this->DeviceTransferState.get();
@@ -149,7 +149,7 @@ std::unique_ptr<vtkm::internal::PortalVirtualBase>&& StorageVirtual::WritePortal
 }
 
 //--------------------------------------------------------------------
-std::unique_ptr<vtkm::internal::PortalVirtualBase>&& StorageVirtual::ReadPortal() const
+const vtkm::internal::PortalVirtualBase* StorageVirtual::ReadPortal() const
 {
   //we need to prepare for input and grab the host ptr
   vtkm::cont::internal::TransferInfoArray* payload = this->DeviceTransferState.get();

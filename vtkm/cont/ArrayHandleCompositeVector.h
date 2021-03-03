@@ -10,6 +10,7 @@
 #ifndef vtk_m_ArrayHandleCompositeVector_h
 #define vtk_m_ArrayHandleCompositeVector_h
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 
 #include <vtkm/Deprecated.h>
@@ -25,41 +26,16 @@
 
 namespace vtkm
 {
-namespace cont
-{
 namespace internal
 {
 
 namespace compvec
 {
 
-// AllAreArrayHandles: ---------------------------------------------------------
-// Ensures that all types in ArrayHandlesT... are subclasses of ArrayHandleBase
-template <typename... ArrayHandlesT>
-struct AllAreArrayHandlesImpl;
-
-template <typename Head, typename... Tail>
-struct AllAreArrayHandlesImpl<Head, Tail...>
-{
-private:
-  using Next = AllAreArrayHandlesImpl<Tail...>;
-  constexpr static bool HeadValid = std::is_base_of<ArrayHandleBase, Head>::value;
-
-public:
-  constexpr static bool Value = HeadValid && Next::Value;
-};
-
-template <typename Head>
-struct AllAreArrayHandlesImpl<Head>
-{
-  constexpr static bool Value = std::is_base_of<ArrayHandleBase, Head>::value;
-};
-
-template <typename... ArrayHandleTs>
-struct AllAreArrayHandles
-{
-  constexpr static bool Value = AllAreArrayHandlesImpl<ArrayHandleTs...>::Value;
-};
+template <typename... PortalList>
+using AllPortalsAreWritable =
+  typename brigand::all<brigand::list<PortalList...>,
+                        brigand::bind<vtkm::internal::PortalSupportsSets, brigand::_1>>::type;
 
 // GetValueType: ---------------------------------------------------------------
 // Determines the output `ValueType` of the set of `ArrayHandle` objects. For example, if the input
@@ -92,169 +68,6 @@ struct GetValueType<ArrayType>
   using ComponentType = typename ArrayType::ValueType;
   using ValueType = typename ArrayType::ValueType;
 };
-
-// -----------------------------------------------------------------------------
-// Functors to access Storage methods. This is used with vtkm::Tuple's
-// ForEach and Transform methods.
-
-struct WritePortal
-{
-  template <typename ArrayHandle>
-  typename ArrayHandle::WritePortalType operator()(const ArrayHandle& array) const
-  {
-    return array.WritePortal();
-  }
-};
-
-struct ReadPortal
-{
-  template <typename ArrayHandle>
-  typename ArrayHandle::ReadPortalType operator()(const ArrayHandle& array) const
-  {
-    return array.ReadPortal();
-  }
-};
-
-struct Allocate
-{
-  vtkm::Id NumValues;
-  VTKM_CONT Allocate(vtkm::Id numValues)
-    : NumValues(numValues)
-  {
-  }
-
-  template <typename Array>
-  VTKM_CONT void operator()(Array& array)
-  {
-    array.Allocate(this->NumValues);
-  }
-};
-
-struct Shrink
-{
-  vtkm::Id NumValues;
-  VTKM_CONT Shrink(vtkm::Id numValues)
-    : NumValues(numValues)
-  {
-  }
-
-  template <typename Array>
-  VTKM_CONT void operator()(Array& array)
-  {
-    array.Shrink(this->NumValues);
-  }
-};
-
-struct ReleaseResources
-{
-  template <typename Array>
-  VTKM_CONT void operator()(Array& array)
-  {
-    array.ReleaseResources();
-  }
-};
-
-// -----------------------------------------------------------------------------
-// Functors to access ArrayTransfer methods. This is used with vtkm::Tuple's
-// ForEach and Transform methods.
-
-template <typename Device>
-struct PrepareForInput
-{
-  vtkm::cont::Token& Token;
-  VTKM_CONT PrepareForInput(vtkm::cont::Token& token)
-    : Token(token)
-  {
-  }
-
-  template <typename Array>
-  VTKM_CONT typename Array::template ExecutionTypes<Device>::PortalConst operator()(
-    const Array& array)
-  {
-    return array.PrepareForInput(Device{}, this->Token);
-  }
-};
-
-template <typename Device>
-struct PrepareForInPlace
-{
-  vtkm::cont::Token& Token;
-  VTKM_CONT PrepareForInPlace(vtkm::cont::Token& token)
-    : Token(token)
-  {
-  }
-
-  template <typename Array>
-  VTKM_CONT typename Array::template ExecutionTypes<Device>::Portal operator()(Array& array)
-  {
-    return array.PrepareForInPlace(Device{}, this->Token);
-  }
-};
-
-template <typename Device>
-struct PrepareForOutput
-{
-  vtkm::Id NumValues;
-  vtkm::cont::Token& Token;
-  VTKM_CONT PrepareForOutput(vtkm::Id numValues, vtkm::cont::Token& token)
-    : NumValues(numValues)
-    , Token(token)
-  {
-  }
-
-  template <typename Array>
-  VTKM_CONT typename Array::template ExecutionTypes<Device>::Portal operator()(Array& array)
-  {
-    return array.PrepareForOutput(this->NumValues, Device{}, this->Token);
-  }
-};
-
-struct ReleaseResourcesExecution
-{
-  template <typename Array>
-  VTKM_CONT void operator()(Array& array)
-  {
-    array.ReleaseResourcesExecution();
-  }
-};
-
-// ArraySizeValidator: ---------------------------------------------------------
-// Call Exec(ArrayTuple, NumValues) to ensure that all arrays in the tuple have
-// the specified number of values.
-template <std::size_t Index, std::size_t Count, typename TupleType>
-struct ArraySizeValidatorImpl
-{
-  using Next = ArraySizeValidatorImpl<Index + 1, Count, TupleType>;
-
-  VTKM_CONT
-  static bool Exec(const TupleType& tuple, vtkm::Id numVals)
-  {
-    return vtkm::Get<Index>(tuple).GetNumberOfValues() == numVals && Next::Exec(tuple, numVals);
-  }
-};
-
-template <std::size_t Index, typename TupleType>
-struct ArraySizeValidatorImpl<Index, Index, TupleType>
-{
-  VTKM_CONT
-  static bool Exec(const TupleType&, vtkm::Id) { return true; }
-};
-
-template <typename TupleType>
-struct ArraySizeValidator
-{
-  VTKM_CONT
-  static bool Exec(const TupleType& tuple, vtkm::Id numVals)
-  {
-    return ArraySizeValidatorImpl<0, vtkm::TupleSize<TupleType>::value, TupleType>::Exec(tuple,
-                                                                                         numVals);
-  }
-};
-
-template <typename... PortalList>
-using AllPortalsAreWritable =
-  typename brigand::all<brigand::list<PortalList...>,
-                        brigand::bind<vtkm::internal::PortalSupportsSets, brigand::_1>>::type;
 
 // GetFromPortals: -------------------------------------------------------------
 // Given a set of array portals as arguments, returns a Vec comprising the values
@@ -294,7 +107,7 @@ VTKM_EXEC_CONT void SetToPortals(vtkm::Id index, const ValueType& value, const P
     portals...);
 }
 
-} // end namespace compvec
+} // namespace compvec
 
 template <typename... PortalTypes>
 class VTKM_ALWAYS_EXPORT ArrayPortalCompositeVector
@@ -338,6 +151,54 @@ public:
   }
 };
 
+}
+} // vtkm::internal
+
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
+
+namespace compvec
+{
+
+template <typename ArrayType>
+struct VerifyArrayHandle
+{
+  VTKM_STATIC_ASSERT_MSG(vtkm::cont::internal::ArrayHandleCheck<ArrayType>::type::value,
+                         "Template parameters for ArrayHandleCompositeVector "
+                         "must be a list of ArrayHandle types.");
+};
+
+template <std::size_t I>
+struct BufferIndexImpl
+{
+  template <typename... Ts>
+  static constexpr vtkm::IdComponent Value(vtkm::IdComponent n, Ts... remaining)
+  {
+    return n + BufferIndexImpl<I - 1>::Value(remaining...);
+  }
+};
+template <>
+struct BufferIndexImpl<0>
+{
+  template <typename... Ts>
+  static constexpr vtkm::IdComponent Value(Ts...)
+  {
+    return 0;
+  }
+};
+
+template <std::size_t I, typename... StorageTypes>
+constexpr vtkm::IdComponent BufferIndex()
+{
+  return BufferIndexImpl<I>::Value(StorageTypes::GetNumberOfBuffers()...);
+}
+
+} // end namespace compvec
+
 } // namespace internal
 
 template <typename... StorageTags>
@@ -354,11 +215,9 @@ struct CompositeVectorTraits
   // Need to check this here, since this traits struct is used in the
   // ArrayHandleCompositeVector superclass definition before any other
   // static_asserts could be used.
-  VTKM_STATIC_ASSERT_MSG(compvec::AllAreArrayHandles<ArrayTs...>::Value,
-                         "Template parameters for ArrayHandleCompositeVector "
-                         "must be a list of ArrayHandle types.");
+  using CheckArrayHandles = vtkm::List<compvec::VerifyArrayHandle<ArrayTs>...>;
 
-  using ValueType = typename compvec::GetValueType<ArrayTs...>::ValueType;
+  using ValueType = typename vtkm::internal::compvec::GetValueType<ArrayTs...>::ValueType;
   using StorageTag = vtkm::cont::StorageTagCompositeVec<typename ArrayTs::StorageTag...>;
   using StorageType = Storage<ValueType, StorageTag>;
   using Superclass = ArrayHandle<ValueType, StorageTag>;
@@ -368,187 +227,177 @@ template <typename T, typename... StorageTags>
 class Storage<vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags))>,
               vtkm::cont::StorageTagCompositeVec<StorageTags...>>
 {
-  using ArrayTuple = vtkm::Tuple<vtkm::cont::ArrayHandle<T, StorageTags>...>;
+  template <typename S>
+  using StorageFor = vtkm::cont::internal::Storage<T, S>;
 
-  ArrayTuple Arrays;
-  bool Valid;
+  using StorageTuple = vtkm::Tuple<StorageFor<StorageTags>...>;
+
+  template <std::size_t I>
+  VTKM_CONT static constexpr vtkm::IdComponent BufferIndex()
+  {
+    return compvec::BufferIndex<I, StorageFor<StorageTags>...>();
+  }
+
+  template <std::size_t I, typename Buff>
+  VTKM_CONT static Buff* Buffers(Buff* buffers)
+  {
+    return buffers + BufferIndex<I>();
+  }
+
+  using IndexList = vtkmstd::make_index_sequence<sizeof...(StorageTags)>;
 
 public:
-  using ValueType = vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags))>;
-  using PortalType = ArrayPortalCompositeVector<
-    typename vtkm::cont::ArrayHandle<T, StorageTags>::WritePortalType...>;
-  using PortalConstType =
-    ArrayPortalCompositeVector<typename vtkm::cont::ArrayHandle<T, StorageTags>::ReadPortalType...>;
-
-  VTKM_CONT
-  Storage()
-    : Valid(false)
-  {
-  }
-
-  template <typename... ArrayTypes>
-  VTKM_CONT Storage(const ArrayTypes&... arrays)
-    : Arrays(arrays...)
-    , Valid(true)
-  {
-    using SizeValidator = compvec::ArraySizeValidator<ArrayTuple>;
-    if (!SizeValidator::Exec(this->Arrays, this->GetNumberOfValues()))
-    {
-      throw ErrorBadValue("All arrays must have the same number of values.");
-    }
-  }
-
-  VTKM_CONT
-  PortalType GetPortal()
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->Arrays.Transform(compvec::WritePortal{});
-  }
-
-  void TypeCheck(int) const;
-  VTKM_CONT
-  PortalConstType GetPortalConst() const
-  {
-    VTKM_ASSERT(this->Valid);
-    this->Arrays.Transform(compvec::ReadPortal{});
-    return this->Arrays.Transform(compvec::ReadPortal{});
-  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    VTKM_ASSERT(this->Valid);
-    return vtkm::Get<0>(this->Arrays).GetNumberOfValues();
-  }
-
-  VTKM_CONT
-  void Allocate(vtkm::Id numValues)
-  {
-    VTKM_ASSERT(this->Valid);
-    this->Arrays.ForEach(compvec::Allocate{ numValues });
-  }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id numValues)
-  {
-    VTKM_ASSERT(this->Valid);
-    this->Arrays.ForEach(compvec::Shrink{ numValues });
-  }
-
-  VTKM_CONT
-  void ReleaseResources()
-  {
-    VTKM_ASSERT(this->Valid);
-    this->Arrays.ForEach(compvec::ReleaseResources{});
-  }
-
-  VTKM_CONT
-  const ArrayTuple& GetArrayTuple() const
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->Arrays;
-  }
-
-  VTKM_CONT
-  ArrayTuple& GetArrayTuple()
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->Arrays;
-  }
-};
-
-// Special case for single component. Just defer to the original storage.
-template <typename T, typename StorageTag>
-class Storage<T, vtkm::cont::StorageTagCompositeVec<StorageTag>> : public Storage<T, StorageTag>
-{
-  using ArrayType = vtkm::cont::ArrayHandle<T, StorageTag>;
-  using TupleType = vtkm::Tuple<ArrayType>;
-
-public:
-  Storage() = default;
-  Storage(const ArrayType& array)
-    : Storage<T, StorageTag>(array.GetStorage())
-  {
-  }
-
-  VTKM_CONT
-  const TupleType GetArrayTuple() const { return TupleType(ArrayType(this->GetStoragea())); }
-};
-
-template <typename T, typename... StorageTags, typename DeviceTag>
-class ArrayTransfer<vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags))>,
-                    vtkm::cont::StorageTagCompositeVec<StorageTags...>,
-                    DeviceTag>
-{
-  VTKM_IS_DEVICE_ADAPTER_TAG(DeviceTag);
-
-  using ArrayTuple = vtkm::Tuple<vtkm::cont::ArrayHandle<T, StorageTags>...>;
-
-public:
-  using ValueType = vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags))>;
+  using ReadPortalType =
+    vtkm::internal::ArrayPortalCompositeVector<typename StorageFor<StorageTags>::ReadPortalType...>;
+  using WritePortalType = vtkm::internal::ArrayPortalCompositeVector<
+    typename StorageFor<StorageTags>::WritePortalType...>;
 
 private:
-  using StorageTag = vtkm::cont::StorageTagCompositeVec<StorageTags...>;
-  using StorageType = internal::Storage<ValueType, StorageTag>;
+  // Hoop to jump through to use Storage::ResizeBuffer in an initializer list.
+  template <typename StorageType>
+  static bool ResizeBuffersCallthrough(StorageType,
+                                       vtkm::Id numValues,
+                                       vtkm::cont::internal::Buffer* buffers,
+                                       vtkm::CopyFlag preserve,
+                                       vtkm::cont::Token& token)
+  {
+    StorageType::ResizeBuffers(numValues, buffers, preserve, token);
+    return false; // Return value does not matter. Hopefully just thrown away by compiler.
+  }
 
-  StorageType* Storage;
+  template <std::size_t... Is>
+  static void ResizeBuffersImpl(vtkmstd::index_sequence<Is...>,
+                                vtkm::Id numValues,
+                                vtkm::cont::internal::Buffer* buffers,
+                                vtkm::CopyFlag preserve,
+                                vtkm::cont::Token& token)
+  {
+    auto init_list = { ResizeBuffersCallthrough(vtkm::tuple_element_t<Is, StorageTuple>{},
+                                                numValues,
+                                                Buffers<Is>(buffers),
+                                                preserve,
+                                                token)... };
+    (void)init_list;
+  }
+
+  template <std::size_t... Is>
+  static ReadPortalType CreateReadPortalImpl(vtkmstd::index_sequence<Is...>,
+                                             const vtkm::cont::internal::Buffer* buffers,
+                                             vtkm::cont::DeviceAdapterId device,
+                                             vtkm::cont::Token& token)
+  {
+    return ReadPortalType(vtkm::tuple_element_t<Is, StorageTuple>::CreateReadPortal(
+      Buffers<Is>(buffers), device, token)...);
+  }
+
+  template <std::size_t... Is>
+  static WritePortalType CreateWritePortalImpl(vtkmstd::index_sequence<Is...>,
+                                               vtkm::cont::internal::Buffer* buffers,
+                                               vtkm::cont::DeviceAdapterId device,
+                                               vtkm::cont::Token& token)
+  {
+    return WritePortalType(vtkm::tuple_element_t<Is, StorageTuple>::CreateWritePortal(
+      Buffers<Is>(buffers), device, token)...);
+  }
 
 public:
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
-
-  using PortalExecution =
-    ArrayPortalCompositeVector<typename vtkm::cont::ArrayHandle<T, StorageTags>::
-                                 template ExecutionTypes<DeviceTag>::Portal...>;
-  using PortalConstExecution =
-    ArrayPortalCompositeVector<typename vtkm::cont::ArrayHandle<T, StorageTags>::
-                                 template ExecutionTypes<DeviceTag>::PortalConst...>;
-
-  VTKM_CONT
-  ArrayTransfer(StorageType* storage)
-    : Storage(storage)
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
   {
+    return BufferIndex<sizeof...(StorageTags)>();
   }
 
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
-
-  VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token) const
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    return this->GetArrayTuple().Transform(compvec::PrepareForInput<DeviceTag>{ token });
+    return vtkm::TupleElement<0, StorageTuple>::GetNumberOfValues(buffers);
   }
 
-  VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token)
   {
-    return this->GetArrayTuple().Transform(compvec::PrepareForInPlace<DeviceTag>{ token });
+    ResizeBuffersImpl(IndexList{}, numValues, buffers, preserve, token);
   }
 
-  VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numValues, vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
-    return this->GetArrayTuple().Transform(
-      compvec::PrepareForOutput<DeviceTag>{ numValues, token });
+    return CreateReadPortalImpl(IndexList{}, buffers, device, token);
   }
 
-  VTKM_CONT
-  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
-    // Implementation of this method should be unnecessary. The internal
-    // array handle should automatically retrieve the output data as
-    // necessary.
+    return CreateWritePortalImpl(IndexList{}, buffers, device, token);
   }
 
-  VTKM_CONT
-  void Shrink(vtkm::Id numValues) { this->GetArrayTuple().ForEach(compvec::Shrink{ numValues }); }
+private:
+  template <typename ArrayType>
+  VTKM_CONT static bool CopyBuffers(const ArrayType& array,
+                                    vtkm::cont::internal::Buffer* destBuffers)
+  {
+    vtkm::IdComponent numBuffers = array.GetNumberOfBuffers();
+    const vtkm::cont::internal::Buffer* srcBuffers = array.GetBuffers();
+    for (vtkm::IdComponent buffIndex = 0; buffIndex < numBuffers; ++buffIndex)
+    {
+      destBuffers[buffIndex] = srcBuffers[buffIndex];
+    }
+    return false; // Return value does not matter. Hopefully just thrown away by compiler.
+  }
 
-  VTKM_CONT
-  void ReleaseResources() { this->GetArrayTuple().ForEach(compvec::ReleaseResourcesExecution{}); }
+  template <std::size_t... Is, typename... ArrayTs>
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffersImpl(
+    vtkmstd::index_sequence<Is...>,
+    const ArrayTs... arrays)
+  {
+    std::vector<vtkm::cont::internal::Buffer> buffers(
+      static_cast<std::size_t>(GetNumberOfBuffers()));
+    auto init_list = { CopyBuffers(arrays, Buffers<Is>(&buffers.front()))... };
+    (void)init_list;
+    return buffers;
+  }
 
-  VTKM_CONT
-  const ArrayTuple& GetArrayTuple() const { return this->Storage->GetArrayTuple(); }
-  ArrayTuple& GetArrayTuple() { return this->Storage->GetArrayTuple(); }
+public:
+  template <typename... ArrayTs>
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(const ArrayTs... arrays)
+  {
+    return CreateBuffersImpl(IndexList{}, arrays...);
+  }
+
+private:
+  using ArrayTupleType = vtkm::Tuple<vtkm::cont::ArrayHandle<T, StorageTags>...>;
+
+  template <std::size_t... Is>
+  VTKM_CONT static ArrayTupleType GetArrayTupleImpl(vtkmstd::index_sequence<Is...>,
+                                                    const vtkm::cont::internal::Buffer* buffers)
+  {
+    return ArrayTupleType(vtkm::cont::ArrayHandle<T, StorageTags>(Buffers<Is>(buffers))...);
+  }
+
+public:
+  VTKM_CONT static ArrayTupleType GetArrayTuple(const vtkm::cont::internal::Buffer* buffers)
+  {
+    return GetArrayTupleImpl(IndexList{}, buffers);
+  }
+};
+
+// Special degenerative case when there is only one array being composited
+template <typename T, typename StorageTag>
+struct Storage<T, vtkm::cont::StorageTagCompositeVec<StorageTag>> : Storage<T, StorageTag>
+{
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
+    const vtkm::cont::ArrayHandle<T, StorageTag>& array)
+  {
+    return vtkm::cont::internal::CreateBuffers(array);
+  }
+
+  VTKM_CONT static vtkm::Tuple<vtkm::cont::ArrayHandle<T, StorageTag>> GetArrayTuple(
+    const vtkm::cont::internal::Buffer* buffers)
+  {
+    return vtkm::cont::ArrayHandle<T, StorageTag>(buffers);
+  }
 };
 
 } // namespace internal
@@ -573,7 +422,6 @@ class ArrayHandleCompositeVector
 {
 private:
   using Traits = internal::CompositeVectorTraits<ArrayTs...>;
-  using TupleType = vtkm::Tuple<ArrayTs...>;
   using StorageType = typename Traits::StorageType;
 
 public:
@@ -583,8 +431,13 @@ public:
 
   VTKM_CONT
   ArrayHandleCompositeVector(const ArrayTs&... arrays)
-    : Superclass(StorageType(arrays...))
+    : Superclass(StorageType::CreateBuffers(arrays...))
   {
+  }
+
+  VTKM_CONT vtkm::Tuple<ArrayTs...> GetArrayTuple() const
+  {
+    return StorageType::GetArrayTuple(this->GetBuffers());
   }
 };
 
@@ -594,11 +447,73 @@ template <typename... ArrayTs>
 VTKM_CONT ArrayHandleCompositeVector<ArrayTs...> make_ArrayHandleCompositeVector(
   const ArrayTs&... arrays)
 {
-  VTKM_STATIC_ASSERT_MSG(internal::compvec::AllAreArrayHandles<ArrayTs...>::Value,
-                         "Arguments to make_ArrayHandleCompositeVector must be "
-                         "of ArrayHandle types.");
+  // Will issue compiler error if any of ArrayTs is not a valid ArrayHandle.
+  vtkm::List<internal::compvec::VerifyArrayHandle<ArrayTs>...> checkArrayHandles;
+  (void)checkArrayHandles;
   return ArrayHandleCompositeVector<ArrayTs...>(arrays...);
 }
+
+//--------------------------------------------------------------------------------
+// Specialization of ArrayExtractComponent
+namespace internal
+{
+
+namespace detail
+{
+
+template <typename T>
+struct ExtractComponentCompositeVecFunctor
+{
+  using ResultArray = vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType>;
+
+  ResultArray operator()(vtkm::IdComponent, vtkm::IdComponent, vtkm::CopyFlag) const
+  {
+    throw vtkm::cont::ErrorBadValue("Invalid component index given to ArrayExtractComponent.");
+  }
+
+  template <typename A0, typename... As>
+  ResultArray operator()(vtkm::IdComponent compositeIndex,
+                         vtkm::IdComponent subIndex,
+                         vtkm::CopyFlag allowCopy,
+                         const A0& array0,
+                         const As&... arrays) const
+  {
+    if (compositeIndex == 0)
+    {
+      return vtkm::cont::internal::ArrayExtractComponentImpl<typename A0::StorageTag>{}(
+        array0, subIndex, allowCopy);
+    }
+    else
+    {
+      return (*this)(--compositeIndex, subIndex, allowCopy, arrays...);
+    }
+  }
+};
+
+} // namespace detail
+
+template <typename... StorageTags>
+struct ArrayExtractComponentImpl<StorageTagCompositeVec<StorageTags...>>
+{
+  template <typename T, vtkm::IdComponent NUM_COMPONENTS>
+  typename detail::ExtractComponentCompositeVecFunctor<T>::ResultArray operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Vec<T, NUM_COMPONENTS>,
+                                  vtkm::cont::StorageTagCompositeVec<StorageTags...>>& src,
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy) const
+  {
+    vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<T, StorageTags>...> array(src);
+    constexpr vtkm::IdComponent NUM_SUB_COMPONENTS = vtkm::VecFlat<T>::NUM_COMPONENTS;
+
+    return array.GetArrayTuple().Apply(detail::ExtractComponentCompositeVecFunctor<T>{},
+                                       componentIndex / NUM_SUB_COMPONENTS,
+                                       componentIndex % NUM_SUB_COMPONENTS,
+                                       allowCopy);
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 
@@ -677,7 +592,7 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    obj.GetStorage().GetArrayTuple().ForEach(SaveFunctor{ bb });
+    Type(obj).GetArrayTuple().ForEach(SaveFunctor{ bb });
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)

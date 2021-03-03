@@ -1722,7 +1722,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y)
 ///
 template <typename T>
 static inline VTKM_EXEC_CONT T Min(const T& x, const T& y);
-#ifdef VTKM_USE_STL
+#if defined(VTKM_USE_STL) && !defined(VTKM_HIP)
 static inline VTKM_EXEC_CONT vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y)
 {
   return (std::min)(x, y);
@@ -1731,7 +1731,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y)
 {
   return (std::min)(x, y);
 }
-#else // !VTKM_USE_STL
+#else // !VTKM_USE_STL OR HIP
 static inline VTKM_EXEC_CONT vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y)
 {
 #ifdef VTKM_CUDA
@@ -2562,7 +2562,8 @@ static inline VTKM_EXEC_CONT vtkm::Vec<T, N> CopySign(const vtkm::Vec<T, N>& x,
 
 inline VTKM_EXEC_CONT vtkm::Float32 Frexp(vtkm::Float32 x, vtkm::Int32 *exponent)
 {
-#ifdef VTKM_CUDA
+  // See: https://github.com/ROCm-Developer-Tools/HIP/issues/2169
+#if defined(VTKM_CUDA) || defined(VTKM_HIP)
   return VTKM_CUDA_MATH_FUNCTION_32(frexp)(x, exponent);
 #else
   return std::frexp(x, exponent);

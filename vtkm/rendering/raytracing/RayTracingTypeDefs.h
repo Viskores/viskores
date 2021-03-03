@@ -18,8 +18,9 @@
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DeviceAdapterList.h>
+#include <vtkm/cont/Field.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 
 namespace vtkm
 {
@@ -137,6 +138,12 @@ using ScalarD = vtkm::Float64;
 using RayStatusType = vtkm::List<vtkm::UInt8>;
 
 using ScalarRenderingTypes = vtkm::List<ScalarF, ScalarD>;
+
+VTKM_CONT inline vtkm::cont::UncertainArrayHandle<ScalarRenderingTypes, VTKM_DEFAULT_STORAGE_LIST>
+GetScalarFieldArray(const vtkm::cont::Field& field)
+{
+  return field.GetData().ResetTypes(ScalarRenderingTypes{}, VTKM_DEFAULT_STORAGE_LIST{});
+}
 }
 }
 } //namespace vtkm::rendering::raytracing

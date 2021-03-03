@@ -26,7 +26,6 @@ set(common_headers
   MapFieldPermutation.h
   PolicyBase.h
   PolicyDefault.h
-  PolicyExtrude.h
   Threshold.h
   ThresholdPoints.h
   )
@@ -42,6 +41,7 @@ set(common_header_template_sources
   FilterDataSetWithField.hxx
   FilterField.hxx
   Filter.hxx
+  PointAverage.hxx
   Threshold.hxx
   ThresholdPoints.hxx
   )
@@ -53,6 +53,7 @@ set(common_sources_device
   ExtractStructured.cxx
   MapFieldMergeAverage.cxx
   MapFieldPermutation.cxx
+  PointAverage.cxx
   Threshold.cxx
 )
 
@@ -73,6 +74,7 @@ set(extra_headers
   GhostCellRemove.h
   Histogram.h
   ImageConnectivity.h
+  ImageDifference.h
   ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
@@ -111,6 +113,8 @@ set(extra_header_template_sources
   CellSetConnectivity.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
+  ClipWithFieldSkipInstantiations.hxx
+  ClipWithImplicitFunctionSkipInstantiations.hxx
   ComputeMoments.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
@@ -122,6 +126,7 @@ set(extra_header_template_sources
   GhostCellRemove.hxx
   Histogram.hxx
   ImageConnectivity.hxx
+  ImageDifference.hxx
   ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
@@ -133,7 +138,6 @@ set(extra_header_template_sources
   ParticleDensityNearestGridPoint.hxx
   ParticleAdvection.hxx
   Pathline.hxx
-  PointAverage.hxx
   PointElevation.hxx
   PointTransform.hxx
   Probe.hxx
@@ -157,11 +161,12 @@ set(extra_header_template_sources
   )
 
 set(extra_sources_device
-  ClipWithField.cxx
+  ClipWithFieldScalar.cxx
+  ClipWithFieldSignedInteger.cxx
+  ClipWithFieldUnsignedInteger.cxx
   ClipWithImplicitFunction.cxx
-  PointAverage.cxx
-  VectorMagnitude.cxx
   ExternalFaces.cxx
+  VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
 )
@@ -195,10 +200,21 @@ set(gradient_header_template_sources
   )
 
 set(gradient_sources_device
+  GradientCartesianPoints.cxx
   GradientScalar.cxx
   GradientUniformPoints.cxx
   GradientVector.cxx
   )
+
+if (VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK)
+  list(APPEND gradient_sources_device GradientXGCPoints.cxx)
+endif()
+
+vtkm_pyexpander_generated_file(ClipWithFieldSkipInstantiations.hxx)
+vtkm_pyexpander_generated_file(ClipWithImplicitFunctionSkipInstantiations.hxx)
+vtkm_pyexpander_generated_file(ClipWithFieldSignedInteger.cxx)
+vtkm_pyexpander_generated_file(ClipWithFieldUnsignedInteger.cxx)
+vtkm_pyexpander_generated_file(ClipWithImplicitFunction.cxx)
 
 set_source_files_properties(Contour.cxx ExtractStructured.cxx ClipWithField.cxx ClipWithImplicitFunction.cxx PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 

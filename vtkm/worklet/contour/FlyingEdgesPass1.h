@@ -141,18 +141,19 @@ struct ComputePass1 : public vtkm::worklet::WorkletVisitPointsWithCells
         }
       }
     }
+    write_edge(device, startPos + (offset * end), edges, FlyingEdges3D::Below);
   }
 };
 
 struct launchComputePass1
 {
   template <typename DeviceAdapterTag, typename T, typename StorageTagField, typename... Args>
-  VTKM_CONT bool operator()(DeviceAdapterTag device,
-                            const ComputePass1<T>& worklet,
-                            const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
-                            vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases,
-                            vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
-                            Args&&... args) const
+  VTKM_CONT bool LaunchXAxis(DeviceAdapterTag device,
+                             const ComputePass1<T>& worklet,
+                             const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
+                             vtkm::cont::ArrayHandle<vtkm::UInt8>& edgeCases,
+                             vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
+                             Args&&... args) const
   {
     vtkm::cont::Invoker invoke(device);
     metaDataMesh2D = make_metaDataMesh2D(SumXAxis{}, worklet.PointDims);
@@ -161,13 +162,13 @@ struct launchComputePass1
     return true;
   }
 
-  template <typename T, typename StorageTagField, typename... Args>
-  VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagCuda device,
-                            const ComputePass1<T>& worklet,
-                            const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
-                            vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases,
-                            vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
-                            Args&&... args) const
+  template <typename DeviceAdapterTag, typename T, typename StorageTagField, typename... Args>
+  VTKM_CONT bool LaunchYAxis(DeviceAdapterTag device,
+                             const ComputePass1<T>& worklet,
+                             const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
+                             vtkm::cont::ArrayHandle<vtkm::UInt8>& edgeCases,
+                             vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
+                             Args&&... args) const
   {
     vtkm::cont::Invoker invoke(device);
     metaDataMesh2D = make_metaDataMesh2D(SumYAxis{}, worklet.PointDims);
@@ -175,6 +176,24 @@ struct launchComputePass1
     vtkm::cont::Algorithm::Fill(edgeCases, static_cast<vtkm::UInt8>(FlyingEdges3D::Below));
     invoke(worklet, metaDataMesh2D, std::forward<Args>(args)..., edgeCases, inputField);
     return true;
+  }
+
+  template <typename DeviceAdapterTag, typename... Args>
+  VTKM_CONT bool operator()(DeviceAdapterTag device, Args&&... args) const
+  {
+    return this->LaunchXAxis(device, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagCuda device, Args&&... args) const
+  {
+    return this->LaunchYAxis(device, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagKokkos device, Args&&... args) const
+  {
+    return this->LaunchYAxis(device, std::forward<Args>(args)...);
   }
 };
 }

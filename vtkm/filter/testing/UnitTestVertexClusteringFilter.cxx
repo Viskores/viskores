@@ -33,8 +33,9 @@ void TestVertexClustering()
                    "Number of output coordinate systems mismatch");
 
   using FieldArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
-  FieldArrayType pointvar = output.GetPointField("pointvar").GetData().Cast<FieldArrayType>();
-  FieldArrayType cellvar = output.GetCellField("cellvar").GetData().Cast<FieldArrayType>();
+  FieldArrayType pointvar =
+    output.GetPointField("pointvar").GetData().AsArrayHandle<FieldArrayType>();
+  FieldArrayType cellvar = output.GetCellField("cellvar").GetData().AsArrayHandle<FieldArrayType>();
 
   // test
   const vtkm::Id output_points = 7;

@@ -68,22 +68,21 @@ namespace contourtree_augmented
 namespace process_contourtree_inc
 {
 
-template <typename DeviceAdapter>
 class SuperNodeBranchComparatorImpl
 { // SuperNodeBranchComparatorImpl
 public:
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
   IdPortalType WhichBranchPortal;
   IdPortalType SupernodesPortal;
 
   // constructor
   SuperNodeBranchComparatorImpl(const IdArrayType& whichBranch,
                                 const IdArrayType& supernodes,
+                                vtkm::cont::DeviceAdapterId device,
                                 vtkm::cont::Token& token)
   { // constructor
-    this->WhichBranchPortal = whichBranch.PrepareForInput(DeviceAdapter(), token);
-    this->SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter(), token);
+    this->WhichBranchPortal = whichBranch.PrepareForInput(device, token);
+    this->SupernodesPortal = supernodes.PrepareForInput(device, token);
   } // constructor
 
   // () operator - gets called to do comparison
@@ -124,12 +123,10 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT SuperNodeBranchComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter,
-    vtkm::cont::Token& token)
+  VTKM_CONT SuperNodeBranchComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                              vtkm::cont::Token& token)
   {
-    return SuperNodeBranchComparatorImpl<DeviceAdapter>(this->WhichBranch, this->Supernodes, token);
+    return SuperNodeBranchComparatorImpl(this->WhichBranch, this->Supernodes, device, token);
   }
 
 private:

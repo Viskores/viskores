@@ -15,10 +15,10 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
 
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/CellSetStructured.h>
 
 #include <vtkm/exec/CellInside.h>
-#include <vtkm/exec/CellLocator.h>
 #include <vtkm/exec/ConnectivityStructured.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 
@@ -28,54 +28,47 @@ namespace vtkm
 namespace exec
 {
 
-template <typename DeviceAdapter, vtkm::IdComponent dimensions>
-class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid final : public vtkm::exec::CellLocator
+class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid
 {
 private:
-  using VisitType = vtkm::TopologyElementTagCell;
-  using IncidentType = vtkm::TopologyElementTagPoint;
-  using CellSetPortal = vtkm::exec::ConnectivityStructured<VisitType, IncidentType, dimensions>;
-
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-  using AxisPortalType = typename AxisHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using RectilinearPortalType =
-    typename RectilinearType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using AxisPortalType = typename AxisHandle::ReadPortalType;
+  using RectilinearPortalType = typename RectilinearType::ReadPortalType;
+
+  VTKM_CONT static vtkm::Id3&& ToId3(vtkm::Id3&& src) { return std::move(src); }
+  VTKM_CONT static vtkm::Id3 ToId3(vtkm::Id2&& src) { return vtkm::Id3(src[0], src[1], 1); }
+  VTKM_CONT static vtkm::Id3 ToId3(vtkm::Id&& src) { return vtkm::Id3(src, 1, 1); }
 
 public:
-  VTKM_CONT
-  CellLocatorRectilinearGrid(const vtkm::Id planeSize,
-                             const vtkm::Id rowSize,
-                             const vtkm::cont::CellSetStructured<dimensions>& cellSet,
-                             const RectilinearType& coords,
-                             DeviceAdapter,
-                             vtkm::cont::Token& token)
+  template <vtkm::IdComponent dimensions>
+  VTKM_CONT CellLocatorRectilinearGrid(const vtkm::Id planeSize,
+                                       const vtkm::Id rowSize,
+                                       const vtkm::cont::CellSetStructured<dimensions>& cellSet,
+                                       const RectilinearType& coords,
+                                       vtkm::cont::DeviceAdapterId device,
+                                       vtkm::cont::Token& token)
     : PlaneSize(planeSize)
     , RowSize(rowSize)
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType(), token))
-    , Coords(coords.PrepareForInput(DeviceAdapter(), token))
-    , PointDimensions(cellSet.GetPointDimensions())
+    , PointDimensions(ToId3(cellSet.GetPointDimensions()))
+    , Dimensions(dimensions)
   {
-    this->AxisPortals[0] = this->Coords.GetFirstPortal();
-    this->MinPoint[0] = coords.ReadPortal().GetFirstPortal().Get(0);
-    this->MaxPoint[0] = coords.ReadPortal().GetFirstPortal().Get(this->PointDimensions[0] - 1);
+    auto coordsContPortal = coords.ReadPortal();
+    RectilinearPortalType coordsExecPortal = coords.PrepareForInput(device, token);
+    this->AxisPortals[0] = coordsExecPortal.GetFirstPortal();
+    this->MinPoint[0] = coordsContPortal.GetFirstPortal().Get(0);
+    this->MaxPoint[0] = coordsContPortal.GetFirstPortal().Get(this->PointDimensions[0] - 1);
 
-    this->AxisPortals[1] = this->Coords.GetSecondPortal();
-    this->MinPoint[1] = coords.ReadPortal().GetSecondPortal().Get(0);
-    this->MaxPoint[1] = coords.ReadPortal().GetSecondPortal().Get(this->PointDimensions[1] - 1);
+    this->AxisPortals[1] = coordsExecPortal.GetSecondPortal();
+    this->MinPoint[1] = coordsContPortal.GetSecondPortal().Get(0);
+    this->MaxPoint[1] = coordsContPortal.GetSecondPortal().Get(this->PointDimensions[1] - 1);
     if (dimensions == 3)
     {
-      this->AxisPortals[2] = this->Coords.GetThirdPortal();
-      this->MinPoint[2] = coords.ReadPortal().GetThirdPortal().Get(0);
-      this->MaxPoint[2] = coords.ReadPortal().GetThirdPortal().Get(this->PointDimensions[2] - 1);
+      this->AxisPortals[2] = coordsExecPortal.GetThirdPortal();
+      this->MinPoint[2] = coordsContPortal.GetThirdPortal().Get(0);
+      this->MaxPoint[2] = coordsContPortal.GetThirdPortal().Get(this->PointDimensions[2] - 1);
     }
-  }
-
-  VTKM_EXEC_CONT virtual ~CellLocatorRectilinearGrid() noexcept override
-  {
-    // This must not be defaulted, since defaulted virtual destructors are
-    // troublesome with CUDA __host__ __device__ markup.
   }
 
   VTKM_EXEC
@@ -86,7 +79,7 @@ public:
       inside = false;
     if (point[1] < this->MinPoint[1] || point[1] > this->MaxPoint[1])
       inside = false;
-    if (dimensions == 3)
+    if (this->Dimensions == 3)
     {
       if (point[2] < this->MinPoint[2] || point[2] > this->MaxPoint[2])
         inside = false;
@@ -97,7 +90,7 @@ public:
   VTKM_EXEC
   vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
                            vtkm::Id& cellId,
-                           vtkm::Vec3f& parametric) const override
+                           vtkm::Vec3f& parametric) const
   {
     if (!this->IsInside(point))
     {
@@ -107,7 +100,7 @@ public:
 
     // Get the Cell Id from the point.
     vtkm::Id3 logicalCell(0, 0, 0);
-    for (vtkm::Int32 dim = 0; dim < dimensions; ++dim)
+    for (vtkm::Int32 dim = 0; dim < this->Dimensions; ++dim)
     {
       //
       // When searching for points, we consider the max value of the cell
@@ -151,16 +144,20 @@ public:
     return vtkm::ErrorCode::Success;
   }
 
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
+  VTKM_EXEC CellLocatorRectilinearGrid* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
+  VTKM_EXEC const CellLocatorRectilinearGrid* operator->() const { return this; }
+
 private:
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;
 
-  CellSetPortal CellSet;
-  RectilinearPortalType Coords;
   AxisPortalType AxisPortals[3];
-  vtkm::Vec<vtkm::Id, dimensions> PointDimensions;
+  vtkm::Id3 PointDimensions;
   vtkm::Vec3f MinPoint;
   vtkm::Vec3f MaxPoint;
+  vtkm::Id Dimensions;
 };
 } //namespace exec
 } //namespace vtkm

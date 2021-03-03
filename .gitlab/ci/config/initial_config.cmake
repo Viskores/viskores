@@ -29,6 +29,10 @@ foreach(option IN LISTS options)
   elseif(vtk_types STREQUAL option)
     set(VTKm_USE_DEFAULT_TYPES_FOR_VTK "ON" CACHE STRING "")
 
+  elseif(ascent_types STREQUAL option)
+    # Note: ascent_types also requires 32bit_ids and 64bit_floats
+    set(VTKm_USE_DEFAULT_TYPES_FOR_ASCENT "ON" CACHE STRING "")
+
   elseif(32bit_ids STREQUAL option)
     set(VTKm_USE_64BIT_IDS "OFF" CACHE STRING "")
 
@@ -75,6 +79,9 @@ foreach(option IN LISTS options)
 
   elseif(kokkos STREQUAL option)
     set(VTKm_ENABLE_KOKKOS "ON" CACHE STRING "")
+
+  elseif(hdf5 STREQUAL option)
+    set(VTKm_ENABLE_HDF5_IO "ON" CACHE STRING "")
 
   elseif(maxwell STREQUAL option)
     set(VTKm_CUDA_Architecture "maxwell" CACHE STRING "")

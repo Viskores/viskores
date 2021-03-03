@@ -58,6 +58,7 @@ set(headers
   VecFromPortalPermute.h
   VecFromVirtPortal.h
   VectorAnalysis.h
+  VecFlat.h
   VecTraits.h
   VecVariable.h
   VirtualObjectBase.h

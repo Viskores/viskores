@@ -152,6 +152,46 @@ struct SerializableTypeString<vtkm::Float64>
   }
 };
 
+template <>
+struct SerializableTypeString<bool>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "B8";
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<char>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "C8";
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<VTKM_UNUSED_INT_TYPE>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "L" + std::to_string(sizeof(VTKM_UNUSED_INT_TYPE) * 8);
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<unsigned VTKM_UNUSED_INT_TYPE>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "UL" + std::to_string(sizeof(unsigned VTKM_UNUSED_INT_TYPE) * 8);
+    return name;
+  }
+};
+
 template <typename T, vtkm::IdComponent NumComponents>
 struct SerializableTypeString<vtkm::Vec<T, NumComponents>>
 {

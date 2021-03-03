@@ -94,7 +94,7 @@ void TryArray(const vtkm::cont::ArrayHandle<T, S>& inputArray)
   VTKM_TEST_ASSERT(outputField.GetName() == "my-array");
 
   vtkm::cont::ArrayHandle<T> outputArray;
-  outputField.GetData().CopyTo(outputArray);
+  outputField.GetData().AsArrayHandle(outputArray);
   std::cout << "Actual output" << std::endl;
   vtkm::cont::printSummary_ArrayHandle(outputArray, std::cout);
 

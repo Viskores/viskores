@@ -72,7 +72,7 @@ void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
   vtkm::cont::ArrayHandle<vtkm::Vec3f> resultArrayHandle;
   result.GetField(fieldName, vtkm::cont::Field::Association::POINTS)
     .GetData()
-    .CopyTo(resultArrayHandle);
+    .AsArrayHandle(resultArrayHandle);
 
   auto outPointsArrayHandle = result.GetCoordinateSystem().GetDataAsMultiplexer();
 

@@ -18,8 +18,9 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/testing/Testing.h>
+
+#include <vtkm/ImplicitFunction.h>
 
 #include <vector>
 
@@ -116,7 +117,8 @@ void TestClippingExplicit()
   bool invertClip = false;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(),
-             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListFieldScalar{},
+                                                         VTKM_DEFAULT_STORAGE_LIST{}),
              clipValue,
              invertClip);
 
@@ -124,11 +126,11 @@ void TestClippingExplicit()
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
-  ds.GetField("scalars").GetData().CopyTo(scalarsIn);
+  ds.GetField("scalars").GetData().AsArrayHandle(scalarsIn);
   vtkm::cont::ArrayHandle<vtkm::Float32> scalars = clip.ProcessPointField(scalarsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
-  ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
+  ds.GetField("cellvar").GetData().AsArrayHandle(cellvarIn);
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvar = clip.ProcessCellField(cellvarIn);
 
   vtkm::Id connectivitySize = 8;
@@ -172,7 +174,8 @@ void TestClippingStructured()
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(),
-             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListFieldScalar{},
+                                                         VTKM_DEFAULT_STORAGE_LIST{}),
              clipValue,
              invertClip);
 
@@ -180,11 +183,11 @@ void TestClippingStructured()
   CoordsOutType coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
-  ds.GetField("scalars").GetData().CopyTo(scalarsIn);
+  ds.GetField("scalars").GetData().AsArrayHandle(scalarsIn);
   vtkm::cont::ArrayHandle<vtkm::Float32> scalars = clip.ProcessPointField(scalarsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
-  ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
+  ds.GetField("cellvar").GetData().AsArrayHandle(cellvarIn);
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvar = clip.ProcessCellField(cellvarIn);
 
 
@@ -232,21 +235,18 @@ void TestClippingWithImplicitFunction()
 
   bool invertClip = false;
   vtkm::worklet::Clip clip;
-  vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(),
-             vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
-             ds.GetCoordinateSystem("coords"),
-             invertClip);
+  vtkm::cont::CellSetExplicit<> outputCellSet = clip.Run(
+    ds.GetCellSet(), vtkm::Sphere(center, radius), ds.GetCoordinateSystem("coords"), invertClip);
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetDataAsMultiplexer();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
-  ds.GetField("scalars").GetData().CopyTo(scalarsIn);
+  ds.GetField("scalars").GetData().AsArrayHandle(scalarsIn);
   vtkm::cont::ArrayHandle<vtkm::Float32> scalars = clip.ProcessPointField(scalarsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
-  ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
+  ds.GetField("cellvar").GetData().AsArrayHandle(cellvarIn);
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvar = clip.ProcessCellField(cellvarIn);
 
   vtkm::Id connectivitySize = 28;
@@ -291,21 +291,18 @@ void TestClippingWithImplicitFunctionInverted()
 
   bool invertClip = true;
   vtkm::worklet::Clip clip;
-  vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(),
-             vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
-             ds.GetCoordinateSystem("coords"),
-             invertClip);
+  vtkm::cont::CellSetExplicit<> outputCellSet = clip.Run(
+    ds.GetCellSet(), vtkm::Sphere(center, radius), ds.GetCoordinateSystem("coords"), invertClip);
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetDataAsMultiplexer();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
-  ds.GetField("scalars").GetData().CopyTo(scalarsIn);
+  ds.GetField("scalars").GetData().AsArrayHandle(scalarsIn);
   vtkm::cont::ArrayHandle<vtkm::Float32> scalars = clip.ProcessPointField(scalarsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
-  ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
+  ds.GetField("cellvar").GetData().AsArrayHandle(cellvarIn);
   vtkm::cont::ArrayHandle<vtkm::Float32> cellvar = clip.ProcessCellField(cellvarIn);
 
   vtkm::Id connectivitySize = 12;

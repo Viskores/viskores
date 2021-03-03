@@ -17,7 +17,7 @@ build:ubuntu1604_gcc5:
     CC: "gcc-5"
     CXX: "g++-5"
     CMAKE_BUILD_TYPE: RelWithDebInfo
-    VTKM_SETTINGS: "cuda+pascal+no_virtual"
+    VTKM_SETTINGS: "cuda+pascal+no_virtual+ascent_types+32bit_ids+64bit_floats"
 
 test:ubuntu1604_gcc5:
   tags:
@@ -74,50 +74,6 @@ test:ubuntu1804_test_ubuntu1604_gcc5_2:
     - build:ubuntu1604_gcc5_2
   needs:
     - build:ubuntu1604_gcc5_2
-
-# Build on ubuntu1604 with mpi + tbb and test on ubuntu1604
-# Uses gcc 4.8
-# Uses OpenMPI
-build:ubuntu1604_gcc48:
-  tags:
-    - build
-    - vtkm
-    - docker
-    - linux
-  extends:
-    - .ubuntu1604
-    - .cmake_build_linux
-    - .only-default
-  variables:
-    CC: "gcc-4.8"
-    CXX: "g++-4.8"
-    CMAKE_BUILD_TYPE: Release
-    #custom openmpi install location
-    CMAKE_PREFIX_PATH: "/opt/openmpi/"
-    VTKM_SETTINGS: "tbb+mpi+shared+no_rendering"
-
-test:ubuntu1604_gcc48:
-  tags:
-    - test
-    - vtkm
-    - docker
-    - linux
-  extends:
-    - .ubuntu1604
-    - .cmake_test_linux
-    - .only-default
-  variables:
-    #env flags to allow openmpi to run as root user
-    OMPI_ALLOW_RUN_AS_ROOT: 1
-    OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
-    #mpi location so that `built_against_test_install` tests
-    #pass
-    CMAKE_PREFIX_PATH: "/opt/openmpi/"
-  dependencies:
-    - build:ubuntu1604_gcc48
-  needs:
-    - build:ubuntu1604_gcc48
-
 
 # Build on ubuntu1604 with tbb and test on ubuntu1604
 # Uses clang 5

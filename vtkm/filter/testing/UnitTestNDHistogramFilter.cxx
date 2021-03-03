@@ -95,13 +95,13 @@ void RunTest()
   VTKM_TEST_ASSERT(nonSparseBins == gtNonSparseBins, "Incorrect ND-histogram Filter results");
 
   vtkm::cont::ArrayHandle<vtkm::Id> binId0;
-  outputData.GetField("fieldA").GetData().CopyTo(binId0);
+  outputData.GetField("fieldA").GetData().AsArrayHandle(binId0);
   vtkm::cont::ArrayHandle<vtkm::Id> binId1;
-  outputData.GetField("fieldB").GetData().CopyTo(binId1);
+  outputData.GetField("fieldB").GetData().AsArrayHandle(binId1);
   vtkm::cont::ArrayHandle<vtkm::Id> binId2;
-  outputData.GetField("fieldC").GetData().CopyTo(binId2);
+  outputData.GetField("fieldC").GetData().AsArrayHandle(binId2);
   vtkm::cont::ArrayHandle<vtkm::Id> freqs;
-  outputData.GetField("Frequency").GetData().CopyTo(freqs);
+  outputData.GetField("Frequency").GetData().AsArrayHandle(freqs);
   for (int i = 0; i < nonSparseBins; i++)
   {
     vtkm::Id idx0 = binId0.WritePortal().Get(i);

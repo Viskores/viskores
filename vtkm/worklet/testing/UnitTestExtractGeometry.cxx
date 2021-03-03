@@ -40,7 +40,7 @@ public:
     OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds);
 
     auto cellvar =
-      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+      dataset.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
     auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
@@ -75,13 +75,13 @@ public:
     vtkm::cont::DynamicCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coordinates"),
-                          vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
+                          vtkm::Box(minPoint, maxPoint),
                           extractInside,
                           extractBoundaryCells,
                           extractOnlyBoundaryCells);
 
     auto cellvar =
-      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+      dataset.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
     auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
 
@@ -115,7 +115,7 @@ public:
     OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds);
 
     auto cellvar =
-      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+      dataset.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
     auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
@@ -148,7 +148,7 @@ public:
     OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds);
 
     auto cellvar =
-      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+      dataset.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
     auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
@@ -183,13 +183,13 @@ public:
     vtkm::cont::DynamicCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coords"),
-                          vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
+                          vtkm::Box(minPoint, maxPoint),
                           extractInside,
                           extractBoundaryCells,
                           extractOnlyBoundaryCells);
 
     auto cellvar =
-      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+      dataset.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
     auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractCells");
@@ -223,13 +223,13 @@ public:
     vtkm::cont::DynamicCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coords"),
-                          vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
+                          vtkm::Sphere(center, radius),
                           extractInside,
                           extractBoundaryCells,
                           extractOnlyBoundaryCells);
 
     auto cellvar =
-      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+      dataset.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
     auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractCells");

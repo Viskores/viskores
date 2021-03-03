@@ -56,7 +56,7 @@ void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataS
   VTKM_TEST_ASSERT(result.HasPointField("warpvector"), "Output filed WarpVector is missing");
   using vecType = vtkm::Vec3f;
   vtkm::cont::ArrayHandle<vecType> outputArray;
-  result.GetPointField("warpvector").GetData().CopyTo(outputArray);
+  result.GetPointField("warpvector").GetData().AsArrayHandle(outputArray);
   auto outPortal = outputArray.ReadPortal();
 
   for (vtkm::Id j = 0; j < dim; ++j)

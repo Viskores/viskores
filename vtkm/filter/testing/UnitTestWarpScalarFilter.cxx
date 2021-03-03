@@ -59,11 +59,11 @@ void CheckResult(const vtkm::filter::WarpScalar& filter, const vtkm::cont::DataS
   VTKM_TEST_ASSERT(result.HasPointField("warpscalar"), "Output filed warpscalar is missing");
   using vecType = vtkm::Vec3f;
   vtkm::cont::ArrayHandle<vecType> outputArray;
-  result.GetPointField("warpscalar").GetData().CopyTo(outputArray);
+  result.GetPointField("warpscalar").GetData().AsArrayHandle(outputArray);
   auto outPortal = outputArray.ReadPortal();
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> sfArray;
-  result.GetPointField("scalarfactor").GetData().CopyTo(sfArray);
+  result.GetPointField("scalarfactor").GetData().AsArrayHandle(sfArray);
   auto sfPortal = sfArray.ReadPortal();
 
   for (vtkm::Id j = 0; j < dim; ++j)

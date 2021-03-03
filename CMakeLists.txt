@@ -12,6 +12,14 @@
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 project (VTKm)
 
+# We only allow c++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# When using C++14 support make sure you use the standard C++ extensions rather
+# than compiler-specific versions of the extensions (to preserve portability).
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Update module path
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
@@ -92,6 +100,11 @@ endif()
 vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
+vtkm_option(VTKm_ENABLE_HDF5_IO "Enable HDF5 support" OFF)
+if (VTKm_ENABLE_HDF5_IO)
+  find_package(HDF5 REQUIRED COMPONENTS HL)
+endif()
+
 # VTK-m will turn on logging by default, but will set the default
 # logging level to WARN.  This option should not be visible by default
 # in the GUI, as ERROR and WARN level logging should not interfere
@@ -149,6 +162,7 @@ mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
   VTKm_NO_ASSERT_CUDA
+  VTKm_NO_ASSERT_HIP
   VTKm_INSTALL_ONLY_LIBRARIES
   VTKm_HIDE_PRIVATE_SYMBOLS
   VTKm_ENABLE_DEVELOPER_FLAGS
@@ -157,9 +171,6 @@ mark_as_advanced(
   )
 
 #-----------------------------------------------------------------------------
-# When using C++11 support make sure you use the standard C++ extensions rather
-# than compiler-specific versions of the extensions (to preserve portability).
-set(CMAKE_CXX_EXTENSIONS Off)
 
 # Setup default build types
 include(VTKmBuildType)
@@ -219,7 +230,7 @@ if (VTKm_ENABLE_TESTING)
   # Setup compiler flags for dynamic analysis if needed
   include(testing/VTKmCompilerDynamicAnalysisFlags)
 
-endif (VTKm_ENABLE_TESTING)
+endif()
 
 #-----------------------------------------------------------------------------
 # Check basic type sizes.
@@ -285,8 +296,13 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
     FILES
       ${VTKm_SOURCE_DIR}/CMake/VTKmCMakeBackports.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
-      ${VTKm_SOURCE_DIR}/CMake/patches/3.15/FindMPI.cmake
+      ${VTKm_SOURCE_DIR}/CMake/patches/FindMPI.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
+    )
+  install(
+    FILES
+      ${VTKm_SOURCE_DIR}/CMake/patches/3.15/FindMPI.cmake
+    DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}/3.15
     )
 
   # Install support files.

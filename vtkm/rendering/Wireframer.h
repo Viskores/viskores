@@ -147,8 +147,7 @@ template <typename DeviceTag>
 class EdgePlotter : public vtkm::worklet::WorkletMapField
 {
 public:
-  using AtomicPackedFrameBufferHandle =
-    vtkm::exec::AtomicArrayExecutionObject<vtkm::Int64, DeviceTag>;
+  using AtomicPackedFrameBufferHandle = vtkm::exec::AtomicArrayExecutionObject<vtkm::Int64>;
   using AtomicPackedFrameBuffer = vtkm::cont::AtomicArray<vtkm::Int64>;
 
   using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayIn);
@@ -304,7 +303,7 @@ public:
   }
 
 private:
-  using ColorMapPortalConst = typename ColorMapHandle::ExecutionTypes<DeviceTag>::PortalConst;
+  using ColorMapPortalConst = typename ColorMapHandle::ReadPortalType;
 
   VTKM_EXEC
   void TransformWorldToViewport(vtkm::Vec3f_32& point) const
@@ -545,7 +544,7 @@ private:
       vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
       plotterDispatcher.SetDevice(DeviceTag());
       plotterDispatcher.Invoke(
-        PointIndices, Coordinates, ScalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+        PointIndices, Coordinates, vtkm::rendering::raytracing::GetScalarFieldArray(ScalarField));
     }
 
     BufferConverter converter;

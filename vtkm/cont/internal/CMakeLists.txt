@@ -9,16 +9,15 @@
 ##============================================================================
 
 set(headers
+  ArrayHandleDeprecated.h
   ArrayHandleExecutionManager.h
-  ArrayManagerExecution.h
-  ArrayManagerExecutionShareWithControl.h
-  ArrayPortalCheck.h
   ArrayPortalFromIterators.h
   ArrayTransfer.h
   AtomicInterfaceControl.h
   AtomicInterfaceExecution.h
   Buffer.h
   CastInvalidValue.h
+  CellLocatorBase.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
   DeviceAdapterMemoryManager.h
@@ -30,9 +29,12 @@ set(headers
   OptionParser.h
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
+  PointLocatorBase.h
   ReverseConnectivityBuilder.h
+  StorageDeprecated.h
   StorageError.h
   TransferInfo.h
+  Variant.h
   VirtualObjectTransfer.h
   VirtualObjectTransferInstantiate.h
   VirtualObjectTransferShareWithControl.h

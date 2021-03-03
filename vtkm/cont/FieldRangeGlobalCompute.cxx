@@ -27,7 +27,8 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(const vtkm::cont::D
                                                              const std::string& name,
                                                              vtkm::cont::Field::Association assoc)
 {
-  return detail::FieldRangeGlobalComputeImpl(dataset, name, assoc, VTKM_DEFAULT_TYPE_LIST());
+  auto lrange = vtkm::cont::FieldRangeCompute(dataset, name, assoc);
+  return vtkm::cont::detail::MergeRangesGlobal(lrange);
 }
 
 //-----------------------------------------------------------------------------
@@ -37,7 +38,8 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const std::string& name,
   vtkm::cont::Field::Association assoc)
 {
-  return detail::FieldRangeGlobalComputeImpl(pds, name, assoc, VTKM_DEFAULT_TYPE_LIST());
+  auto lrange = vtkm::cont::FieldRangeCompute(pds, name, assoc);
+  return vtkm::cont::detail::MergeRangesGlobal(lrange);
 }
 
 //-----------------------------------------------------------------------------

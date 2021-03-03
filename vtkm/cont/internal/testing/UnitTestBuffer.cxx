@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 #include <vtkm/cont/internal/Buffer.h>
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -23,32 +24,16 @@ constexpr vtkm::Id ARRAY_SIZE = 20;
 using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<T*>;
 using PortalTypeConst = vtkm::cont::internal::ArrayPortalFromIterators<const T*>;
 
-struct BufferMetaDataTest : vtkm::cont::internal::BufferMetaData
+struct TestMetaData
 {
-  vtkm::Id Value;
-
-  std::unique_ptr<vtkm::cont::internal::BufferMetaData> DeepCopy() const override
-  {
-    return std::unique_ptr<vtkm::cont::internal::BufferMetaData>(new BufferMetaDataTest(*this));
-  }
+  vtkm::Id Value = 0;
 };
 
 constexpr vtkm::Id METADATA_VALUE = 42;
 
 bool CheckMetaData(const vtkm::cont::internal::Buffer& buffer)
 {
-  vtkm::cont::internal::BufferMetaData* generalMetaData = buffer.GetMetaData();
-  if (!generalMetaData)
-  {
-    return false;
-  }
-  BufferMetaDataTest* metadata = dynamic_cast<BufferMetaDataTest*>(generalMetaData);
-  if (!metadata)
-  {
-    return false;
-  }
-
-  return metadata->Value == METADATA_VALUE;
+  return buffer.GetMetaData<TestMetaData>().Value == METADATA_VALUE;
 }
 
 PortalType MakePortal(void* buffer, vtkm::Id numValues)
@@ -110,7 +95,7 @@ void DoTest()
   vtkm::cont::internal::Buffer buffer;
 
   {
-    BufferMetaDataTest metadata;
+    TestMetaData metadata;
     metadata.Value = METADATA_VALUE;
     buffer.SetMetaData(metadata);
     VTKM_TEST_ASSERT(CheckMetaData(buffer));

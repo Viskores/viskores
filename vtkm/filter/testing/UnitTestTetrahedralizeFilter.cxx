@@ -35,7 +35,7 @@ public:
                      "Wrong number of points for Tetrahedralize");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outData =
-      output.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+      output.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
     VTKM_TEST_ASSERT(outData.ReadPortal().Get(5) == 100.2f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outData.ReadPortal().Get(6) == 100.2f, "Wrong cell field data");
@@ -58,7 +58,7 @@ public:
                      "Wrong number of points for Tetrahedralize");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outData =
-      output.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+      output.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
     VTKM_TEST_ASSERT(outData.ReadPortal().Get(5) == 110.f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outData.ReadPortal().Get(6) == 110.f, "Wrong cell field data");

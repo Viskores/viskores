@@ -50,7 +50,7 @@ As explained below, `ArrayHandle` holds some fixed number of `Buffer`
 objects. (The number can be zero for implicit `ArrayHandle`s.) Because all
 the interaction with the devices happen through `Buffer`, it will no longer
 be necessary to compile any reference to `ArrayHandle` for devices (e.g.
-you won’t have to use nvcc just because the code links `ArrayHandle.h`).
+you won't have to use nvcc just because the code links `ArrayHandle.h`).
 
 ## Storage
 
@@ -121,12 +121,12 @@ With the current version of `ArrayHandle`, if you want to take data from
 one `ArrayHandle` you pretty much have to create a special template to wrap
 another `ArrayHandle` around that. With this new design, it is possible to
 take data from one `ArrayHandle` and give it to another `ArrayHandle` of a
-completely different type. You can’t do this willy-nilly since different
+completely different type. You can't do this willy-nilly since different
 `ArrayHandle` types will interpret buffers differently. But there can be
 some special important use cases.
 
 One such case could be an `ArrayHandle` that provides strided access to a
-buffer. (Let’s call it `ArrayHandleStride`.) The idea is that it interprets
+buffer. (Let's call it `ArrayHandleStride`.) The idea is that it interprets
 the buffer as an array for a particular type (like a basic `ArrayHandle`)
 but also defines a stride, skip, and repeat so that given an index it looks
 up the value `((index / skip) % repeat) * stride`. The point is that it can
@@ -165,7 +165,7 @@ this redesign, the data need to be stored in some fixed number of memory
 buffers.
 
 This is a pretty open requirement. I suspect most data formats will be
-storable in this. The user’s guide has an example of data stored in a
+storable in this. The user's guide has an example of data stored in a
 `std::deque` that will not be representable. But that is probably not a
 particularly practical example.
 

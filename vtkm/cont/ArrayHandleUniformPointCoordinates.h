@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 #define vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 
@@ -36,15 +37,12 @@ struct Storage<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>
 
 } // namespace internal
 
-template <>
-VTKM_ARRAY_HANDLE_NEW_STYLE(vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints);
-
 /// ArrayHandleUniformPointCoordinates is a specialization of ArrayHandle. It
 /// contains the information necessary to compute the point coordinates in a
 /// uniform orthogonal grid (extent, origin, and spacing) and implicitly
 /// computes these coordinates in its array portal.
 ///
-class VTKM_ALWAYS_EXPORT ArrayHandleUniformPointCoordinates
+class VTKM_CONT_EXPORT ArrayHandleUniformPointCoordinates
   : public vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>
 {
 public:
@@ -59,19 +57,34 @@ public:
   VTKM_CONT
   ArrayHandleUniformPointCoordinates(vtkm::Id3 dimensions,
                                      ValueType origin = ValueType(0.0f, 0.0f, 0.0f),
-                                     ValueType spacing = ValueType(1.0f, 1.0f, 1.0f))
-    : Superclass(internal::PortalToArrayHandleImplicitBuffers(
-        vtkm::internal::ArrayPortalUniformPointCoordinates(dimensions, origin, spacing)))
-  {
-  }
+                                     ValueType spacing = ValueType(1.0f, 1.0f, 1.0f));
 
   /// Implemented so that it is defined exclusively in the control environment.
   /// If there is a separate device for the execution environment (for example,
   /// with CUDA), then the automatically generated destructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  ~ArrayHandleUniformPointCoordinates() {}
+  ~ArrayHandleUniformPointCoordinates();
+
+  VTKM_CONT vtkm::Id3 GetDimensions() const;
+  VTKM_CONT vtkm::Vec3f GetOrigin() const;
+  VTKM_CONT vtkm::Vec3f GetSpacing() const;
 };
+
+namespace internal
+{
+
+template <>
+struct VTKM_CONT_EXPORT ArrayExtractComponentImpl<vtkm::cont::StorageTagUniformPoints>
+{
+  vtkm::cont::ArrayHandleStride<vtkm::FloatDefault> operator()(
+    const vtkm::cont::ArrayHandleUniformPointCoordinates& src,
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy) const;
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

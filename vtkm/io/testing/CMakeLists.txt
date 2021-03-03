@@ -10,6 +10,7 @@
 
 set(unit_tests
   UnitTestBOVDataSetReader.cxx
+  UnitTestFileUtils.cxx
   UnitTestPixelTypes.cxx
   UnitTestVTKDataSetReader.cxx
   UnitTestVTKDataSetWriter.cxx
@@ -18,11 +19,16 @@ set(unit_tests
 set(unit_test_libraries vtkm_lodepng vtkm_io)
 
 if(VTKm_ENABLE_RENDERING)
-  set(unit_tests ${unit_tests}
+  list(APPEND unit_tests
     UnitTestImageWriter.cxx
-    )
+  )
 
-  set(unit_test_libraries ${unit_test_libraries} vtkm_rendering)
+  if (VTKm_ENABLE_HDF5_IO)
+    list(APPEND unit_tests
+      UnitTestHDF5Image.cxx)
+  endif()
+
+  list(APPEND unit_test_libraries vtkm_rendering)
 endif()
 
 vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES ${unit_test_libraries})

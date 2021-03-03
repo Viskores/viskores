@@ -115,24 +115,8 @@ protected:
                           vtkm::FloatDefault& time,
                           vtkm::Vec3f& outpos) const override
     {
-      // If particle is out of either spatial or temporal boundary to begin with,
-      // then return the corresponding status.
-      IntegratorStatus status;
-      if (!this->Evaluator.IsWithinSpatialBoundary(particle->Pos))
-      {
-        status.SetFail();
-        status.SetSpatialBounds();
-        return status;
-      }
-      if (!this->Evaluator.IsWithinTemporalBoundary(particle->Time))
-      {
-        status.SetFail();
-        status.SetTemporalBounds();
-        return status;
-      }
-
-      vtkm::Vec3f velocity;
-      status = CheckStep(particle, this->StepLength, velocity);
+      vtkm::Vec3f velocity(0, 0, 0);
+      auto status = this->CheckStep(particle, this->StepLength, velocity);
       if (status.CheckOk())
       {
         outpos = particle->Pos + this->StepLength * velocity;
@@ -149,17 +133,6 @@ protected:
                                vtkm::FloatDefault& time,
                                vtkm::Vec3f& outpos) const override
     {
-      if (!this->Evaluator.IsWithinSpatialBoundary(particle->Pos))
-      {
-        outpos = particle->Pos;
-        return IntegratorStatus(false, true, false);
-      }
-      if (!this->Evaluator.IsWithinTemporalBoundary(particle->Time))
-      {
-        outpos = particle->Pos;
-        return IntegratorStatus(false, false, true);
-      }
-
       //Stepping by this->StepLength goes beyond the bounds of the dataset.
       //We need to take an Euler step that goes outside of the dataset.
       //Use a binary search to find the largest step INSIDE the dataset.
@@ -170,7 +143,8 @@ protected:
       //The binary search will be between {0, this->StepLength}
       vtkm::FloatDefault stepRange[2] = { 0, this->StepLength };
 
-      vtkm::Vec3f currPos(particle->Pos), currVelocity;
+      vtkm::Vec3f currPos(particle->Pos);
+      vtkm::Vec3f currVelocity(0, 0, 0);
       vtkm::VecVariable<vtkm::Vec3f, 2> currValue, tmp;
       auto evalStatus = this->Evaluator.Evaluate(currPos, particle->Time, currValue);
       if (evalStatus.CheckFail())
@@ -182,44 +156,57 @@ protected:
       {
         //Try a step midway between stepRange[0] and stepRange[1]
         div *= 2;
-        vtkm::FloatDefault stepCurr = stepRange[0] + (this->StepLength / div);
+        vtkm::FloatDefault currStep = stepRange[0] + (this->StepLength / div);
 
-        //See if we can step by stepCurr.
-        IntegratorStatus status = this->CheckStep(particle, stepCurr, currVelocity);
+        //See if we can step by currStep
+        IntegratorStatus status = this->CheckStep(particle, currStep, currVelocity);
 
         if (status.CheckOk()) //Integration step succedded.
         {
           //See if this point is in/out.
-          auto newPos = particle->Pos + stepCurr * currVelocity;
-          evalStatus = this->Evaluator.Evaluate(newPos, particle->Time + stepCurr, tmp);
+          auto newPos = particle->Pos + currStep * currVelocity;
+          evalStatus = this->Evaluator.Evaluate(newPos, particle->Time + currStep, tmp);
           if (evalStatus.CheckOk())
           {
-            //Point still in. Update currPos and set range to {stepCurr, stepRange[1]}
+            //Point still in. Update currPos and set range to {currStep, stepRange[1]}
             currPos = newPos;
-            stepRange[0] = stepCurr;
+            stepRange[0] = currStep;
           }
           else
           {
             //The step succedded, but the next point is outside.
-            //Step too long. Set range to: {stepRange[0], stepCurr} and continue.
-            stepRange[1] = stepCurr;
+            //Step too long. Set range to: {stepRange[0], currStep} and continue.
+            stepRange[1] = currStep;
           }
         }
         else
         {
           //Step too long. Set range to: {stepRange[0], stepCurr} and continue.
-          stepRange[1] = stepCurr;
+          stepRange[1] = currStep;
         }
       }
+
       evalStatus = this->Evaluator.Evaluate(currPos, particle->Time + stepRange[0], currValue);
-      if (evalStatus.CheckFail())
+      //The eval at Time + stepRange[0] better be *inside*
+      VTKM_ASSERT(evalStatus.CheckOk() && !evalStatus.CheckSpatialBounds());
+      if (evalStatus.CheckFail() || evalStatus.CheckSpatialBounds())
         return IntegratorStatus(evalStatus);
+
       //Update the position and time.
       outpos = currPos + stepRange[1] * particle->Velocity(currValue, stepRange[1]);
       time += stepRange[1];
 
-      return IntegratorStatus(
-        true, true, !this->Evaluator.IsWithinTemporalBoundary(particle->Time));
+      //Get the evaluation status for the point that is *just* outside of the data.
+      evalStatus = this->Evaluator.Evaluate(outpos, time, currValue);
+
+      //The eval should fail, and the point should be outside either spatially or temporally.
+      VTKM_ASSERT(evalStatus.CheckFail() &&
+                  (evalStatus.CheckSpatialBounds() || evalStatus.CheckTemporalBounds()));
+
+      IntegratorStatus status(evalStatus);
+      status.SetOk(); //status is ok.
+
+      return status;
     }
 
     VTKM_EXEC

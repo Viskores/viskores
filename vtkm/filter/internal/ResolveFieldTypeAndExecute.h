@@ -24,7 +24,7 @@ namespace filter
 namespace internal
 {
 
-struct ResolveFieldTypeAndExecute
+struct VTKM_ALWAYS_EXPORT ResolveFieldTypeAndExecute
 {
   template <typename T,
             typename Storage,

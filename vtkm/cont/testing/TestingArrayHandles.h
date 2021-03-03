@@ -77,6 +77,16 @@ struct OtherType<vtkm::Int32>
 template <class DeviceAdapterTag>
 struct TestingArrayHandles
 {
+  // Make sure deprecated types still work (while applicable)
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  VTKM_STATIC_ASSERT(
+    (std::is_same<typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType,
+                  typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<
+                    DeviceAdapterTag>::PortalConst>::value));
+  VTKM_STATIC_ASSERT((std::is_same<typename vtkm::cont::ArrayHandle<vtkm::Id>::WritePortalType,
+                                   typename vtkm::cont::ArrayHandle<vtkm::Id>::
+                                     template ExecutionTypes<DeviceAdapterTag>::Portal>::value));
+  VTKM_DEPRECATED_SUPPRESS_END
 
   template <typename PortalType>
   struct PortalExecObjectWrapper : vtkm::cont::ExecutionObjectBase
@@ -172,7 +182,7 @@ private:
                        "Uninitialized array does not give portal with zero values.");
       vtkm::cont::Token token;
       arrayHandle = vtkm::cont::ArrayHandle<T>();
-      arrayHandle.Shrink(0);
+      arrayHandle.Allocate(0, vtkm::CopyFlag::On);
       arrayHandle = vtkm::cont::ArrayHandle<T>();
       arrayHandle.ReleaseResourcesExecution();
       arrayHandle = vtkm::cont::ArrayHandle<T>();
@@ -210,8 +220,8 @@ private:
       std::cout << "Check out execution array behavior." << std::endl;
       { //as input
         vtkm::cont::Token token;
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-          executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
+        typename vtkm::cont::ArrayHandle<T>::ReadPortalType executionPortal =
+          arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
         token.DetachFromAll();
         static_cast<void>(executionPortal);
 
@@ -224,8 +234,8 @@ private:
       std::cout << "Check out inplace." << std::endl;
       { //as inplace
         vtkm::cont::Token token;
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
-          executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
+        typename vtkm::cont::ArrayHandle<T>::WritePortalType executionPortal =
+          arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
         token.DetachFromAll();
         static_cast<void>(executionPortal);
 
@@ -302,8 +312,8 @@ private:
       std::cout << "Check out execution array behavior." << std::endl;
       { //as input
         vtkm::cont::Token token;
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-          executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
+        typename vtkm::cont::ArrayHandle<T>::ReadPortalType executionPortal =
+          arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
         token.DetachFromAll();
         static_cast<void>(executionPortal);
 
@@ -316,8 +326,8 @@ private:
       std::cout << "Check out inplace." << std::endl;
       { //as inplace
         vtkm::cont::Token token;
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
-          executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
+        typename vtkm::cont::ArrayHandle<T>::WritePortalType executionPortal =
+          arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
         token.DetachFromAll();
         static_cast<void>(executionPortal);
 
@@ -385,8 +395,7 @@ private:
       std::cout << "Check out execution array behavior." << std::endl;
       { //as input
         vtkm::cont::Token token;
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-          executionPortal;
+        typename vtkm::cont::ArrayHandle<T>::ReadPortalType executionPortal;
         executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
         token.DetachFromAll();
 
@@ -399,8 +408,7 @@ private:
       std::cout << "Check out inplace." << std::endl;
       { //as inplace
         vtkm::cont::Token token;
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
-          executionPortal;
+        typename vtkm::cont::ArrayHandle<T>::WritePortalType executionPortal;
         executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
         token.DetachFromAll();
 
@@ -451,8 +459,7 @@ private:
       std::cout << "Check out execution array behavior." << std::endl;
       { //as input
         vtkm::cont::Token token;
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-          executionPortal;
+        typename vtkm::cont::ArrayHandle<T>::ReadPortalType executionPortal;
         executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
         token.DetachFromAll();
 
@@ -465,8 +472,7 @@ private:
       std::cout << "Check out inplace." << std::endl;
       { //as inplace
         vtkm::cont::Token token;
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
-          executionPortal;
+        typename vtkm::cont::ArrayHandle<T>::WritePortalType executionPortal;
         executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
         token.DetachFromAll();
 
@@ -510,8 +516,7 @@ private:
                        "ArrayHandle has wrong number of entries.");
       {
         vtkm::cont::Token token;
-        using ExecutionPortalType =
-          typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+        using ExecutionPortalType = typename vtkm::cont::ArrayHandle<T>::WritePortalType;
         ExecutionPortalType executionPortal =
           arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
 
@@ -526,7 +531,7 @@ private:
       array_handle_testing::CheckArray(arrayHandle);
 
       std::cout << "Try shrinking the array." << std::endl;
-      arrayHandle.Shrink(ARRAY_SIZE);
+      arrayHandle.Allocate(ARRAY_SIZE, vtkm::CopyFlag::On);
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                        "Array size did not shrink correctly.");
       array_handle_testing::CheckArray(arrayHandle);
@@ -540,8 +545,7 @@ private:
       std::cout << "Try in place operation." << std::endl;
       {
         vtkm::cont::Token token;
-        using ExecutionPortalType =
-          typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+        using ExecutionPortalType = typename vtkm::cont::ArrayHandle<T>::WritePortalType;
 
         // Reset array data.
         Algorithm::Schedule(AssignTestValue<T, ExecutionPortalType>{ arrayHandle.PrepareForOutput(
@@ -587,8 +591,7 @@ private:
                          "ArrayHandle has wrong number of entries.");
         {
           vtkm::cont::Token token;
-          using ExecutionPortalType =
-            typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+          using ExecutionPortalType = typename vtkm::cont::ArrayHandle<T>::WritePortalType;
           ExecutionPortalType executionPortal =
             arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
 
@@ -607,8 +610,7 @@ private:
         std::cout << "Try in place operation." << std::endl;
         {
           vtkm::cont::Token token;
-          using ExecutionPortalType =
-            typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+          using ExecutionPortalType = typename vtkm::cont::ArrayHandle<T>::WritePortalType;
 
           // Reset array data.
           Algorithm::Schedule(AssignTestValue<T, ExecutionPortalType>{ arrayHandle.PrepareForOutput(

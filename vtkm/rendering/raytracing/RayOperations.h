@@ -70,12 +70,13 @@ public:
     DoubleInvWidth = 2.f / static_cast<vtkm::Float32>(width);
   }
 
-  using ControlSignature = void(FieldIn, FieldInOut, WholeArrayIn);
-  using ExecutionSignature = void(_1, _2, _3);
+  using ControlSignature = void(FieldIn, FieldInOut, FieldIn, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename Precision, typename DepthPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& pixelId,
                             Precision& maxDistance,
+                            const Vec<Precision, 3>& origin,
                             const DepthPortalType& depths) const
   {
     vtkm::Vec4f_32 position;
@@ -94,7 +95,8 @@ public:
     p[0] = position[0] / position[3];
     p[1] = position[1] / position[3];
     p[2] = position[2] / position[3];
-    p = p - Origin;
+    p = p - origin;
+
 
     maxDistance = vtkm::Magnitude(p);
   }

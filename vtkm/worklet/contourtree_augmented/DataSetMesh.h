@@ -166,15 +166,18 @@ public:
 
   /// Routine to return the global IDs for a set of vertices
   /// We here return a fancy array handle to convert values on-the-fly without requiring additional memory
+  /// SortIdArrayType must be an array if Ids. Usually this is a vtkm::worklet::contourtree_augmented::IdArrayType
+  /// but in some cases it may also be a fancy array to avoid memory allocation
   /// @param[in] meshIds Array with mesh Ids to be converted from local to global Ids
   /// @param[in] localToGlobalIdRelabeler This parameter is the IdRelabeler
   ///            used to transform local to global Ids. The relabeler relies on the
   ///            decomposition of the global mesh which is not know by this block.
-  inline vtkm::cont::ArrayHandleTransform<IdArrayType, mesh_dem::IdRelabeler>
-  GetGlobalIdsFromMeshIndices(const IdArrayType& meshIds,
+  template <typename MeshIdArrayType>
+  inline vtkm::cont::ArrayHandleTransform<MeshIdArrayType, mesh_dem::IdRelabeler>
+  GetGlobalIdsFromMeshIndices(const MeshIdArrayType& meshIds,
                               const mesh_dem::IdRelabeler* localToGlobalIdRelabeler) const
   { // GetGlobalIDsFromMeshIndices()
-    return vtkm::cont::ArrayHandleTransform<IdArrayType, mesh_dem::IdRelabeler>(
+    return vtkm::cont::ArrayHandleTransform<MeshIdArrayType, mesh_dem::IdRelabeler>(
       meshIds, *localToGlobalIdRelabeler);
   } // GetGlobalIDsFromMeshIndices()
 
@@ -189,7 +192,7 @@ protected:
 
 // Sorts the data and initialises the SortIndices & SortOrder
 template <typename T, typename StorageType>
-void DataSetMesh::SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values)
+inline void DataSetMesh::SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
   // Define namespace alias for mesh dem worklets
   namespace mesh_dem_worklets = vtkm::worklet::contourtree_augmented::mesh_dem;
@@ -230,7 +233,7 @@ void DataSetMesh::SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values
 } // SortData()
 
 // Print mesh extends
-void DataSetMesh::DebugPrintExtends()
+inline void DataSetMesh::DebugPrintExtends()
 {
   // For compatibility with the output of the original PPP Implementation, print size
   // as NumRows, NumColumns and NumSlices (if applicable)
@@ -248,7 +251,7 @@ void DataSetMesh::DebugPrintExtends()
   }
 } // DebugPrintExtends
 
-void DataSetMesh::DebugPrint(const char* message, const char* fileName, long lineNum)
+inline void DataSetMesh::DebugPrint(const char* message, const char* fileName, long lineNum)
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "------------------------------------------------------" << std::endl;
@@ -276,7 +279,7 @@ void DataSetMesh::DebugPrint(const char* message, const char* fileName, long lin
 } // DebugPrint()
 
 template <typename T, typename StorageType>
-void DataSetMesh::DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values)
+inline void DataSetMesh::DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
 #ifdef DEBUG_PRINT
   if (MeshSize[0] > 0)

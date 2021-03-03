@@ -501,8 +501,8 @@ public:
     if (cells > 0 && pointId3Array.ReadPortal().Get(cells - 1)[2] >= nPoints)
     {
       cells--;
-      pointId3Array.Shrink(cells);
-      this->CellIdMap.Shrink(cells);
+      pointId3Array.Allocate(cells, vtkm::CopyFlag::On);
+      this->CellIdMap.Allocate(cells, vtkm::CopyFlag::On);
     }
 
     /// output

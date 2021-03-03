@@ -17,6 +17,7 @@ function(vtkm_test_install )
       "-DVTKm_INSTALL_INCLUDE_DIR=${VTKm_INSTALL_INCLUDE_DIR}"
       "-DVTKm_ENABLE_RENDERING=${VTKm_ENABLE_RENDERING}"
       "-DVTKm_ENABLE_LOGGING=${VTKm_ENABLE_LOGGING}"
+      "-DVTKm_ENABLE_HDF5_IO=${VTKm_ENABLE_HDF5_IO}"
       )
 
     #By having this as separate tests using fixtures, it will allow us in

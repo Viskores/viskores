@@ -11,15 +11,26 @@
 #define vtk_m_ImplicitFunction_h
 
 #include <vtkm/Bounds.h>
+#include <vtkm/Deprecated.h>
 #include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
+
+#include <vtkm/exec/internal/Variant.h>
+
+// For interface class only.
+#include <vtkm/cont/ExecutionAndControlObjectBase.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/VirtualObjectBase.h>
+#endif // VTKM_NO_DEPRECATED_VIRTUAL
 
 namespace vtkm
 {
 
 //============================================================================
-class VTKM_ALWAYS_EXPORT ImplicitFunction : public vtkm::VirtualObjectBase
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+class VTKM_DEPRECATED(1.6, "ImplicitFunction with virtual methods no longer supported.")
+  VTKM_ALWAYS_EXPORT ImplicitFunction : public vtkm::VirtualObjectBase
 {
 public:
   using Scalar = vtkm::FloatDefault;
@@ -28,6 +39,7 @@ public:
   VTKM_EXEC_CONT virtual Scalar Value(const Vector& point) const = 0;
   VTKM_EXEC_CONT virtual Vector Gradient(const Vector& point) const = 0;
 
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_EXEC_CONT Scalar Value(Scalar x, Scalar y, Scalar z) const
   {
     return this->Value(Vector(x, y, z));
@@ -37,14 +49,60 @@ public:
   {
     return this->Gradient(Vector(x, y, z));
   }
+  VTKM_DEPRECATED_SUPPRESS_END
 };
+#endif // VTKM_NO_DEPRECATED_VIRTUAL
 
 //============================================================================
+namespace internal
+{
+
+/// \brief Base class for all `ImplicitFunction` classes.
+///
+/// `ImplicitFunctionBase` uses the curiously recurring template pattern (CRTP). Subclasses
+/// must provide their own type for the template parameter. Subclasses must implement
+/// `Value` and `Gradient` methods.
+///
+/// Also, all subclasses must be trivially copiable. This is so they can be copied among
+/// host and devices.
+///
+template <typename Derived>
+class ImplicitFunctionBase : public vtkm::cont::ExecutionAndControlObjectBase
+{
+public:
+  using Scalar = vtkm::FloatDefault;
+  using Vector = vtkm::Vec<Scalar, 3>;
+
+  VTKM_EXEC_CONT Scalar Value(Scalar x, Scalar y, Scalar z) const
+  {
+    return reinterpret_cast<const Derived*>(this)->Value(Vector(x, y, z));
+  }
+
+  VTKM_EXEC_CONT Vector Gradient(Scalar x, Scalar y, Scalar z) const
+  {
+    return reinterpret_cast<const Derived*>(this)->Gradient(Vector(x, y, z));
+  }
+
+  VTKM_CONT Derived PrepareForExecution(vtkm::cont::DeviceAdapterId, vtkm::cont::Token&) const
+  {
+    return *reinterpret_cast<const Derived*>(this);
+  }
+
+  VTKM_CONT Derived PrepareForControl() const { return *reinterpret_cast<const Derived*>(this); }
+};
+
+} // namespace vtkm::internal
+
+//============================================================================
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 /// A helpful functor that calls the (virtual) value method of a given ImplicitFunction. Can be
 /// passed to things that expect a functor instead of an ImplictFunction class (like an array
 /// transform).
 ///
-class VTKM_ALWAYS_EXPORT ImplicitFunctionValue
+class VTKM_DEPRECATED(1.6,
+                      "Use ImplicitFunctionValueFunctor.") VTKM_ALWAYS_EXPORT ImplicitFunctionValue
 {
 public:
   using Scalar = vtkm::ImplicitFunction::Scalar;
@@ -73,7 +131,8 @@ private:
 /// passed to things that expect a functor instead of an ImplictFunction class (like an array
 /// transform).
 ///
-class VTKM_ALWAYS_EXPORT ImplicitFunctionGradient
+class VTKM_DEPRECATED(1.6, "Use ImplicitFunctionGradientFunctor.")
+  VTKM_ALWAYS_EXPORT ImplicitFunctionGradient
 {
 public:
   using Scalar = vtkm::ImplicitFunction::Scalar;
@@ -98,6 +157,76 @@ private:
   const vtkm::ImplicitFunction* Function;
 };
 
+VTKM_DEPRECATED_SUPPRESS_END
+#endif // VTKM_NO_DEPRECATED_VIRTUAL
+
+//============================================================================
+/// A helpful functor that calls the value method of a given `ImplicitFunction`. Can be
+/// passed to things that expect a functor instead of an `ImplictFunction` class (like an array
+/// transform).
+///
+template <typename FunctionType>
+class ImplicitFunctionValueFunctor
+{
+public:
+  using Scalar = typename FunctionType::Scalar;
+  using Vector = typename FunctionType::Vector;
+
+  ImplicitFunctionValueFunctor() = default;
+
+  VTKM_EXEC_CONT ImplicitFunctionValueFunctor(
+    const vtkm::internal::ImplicitFunctionBase<FunctionType>& function)
+    : Function(reinterpret_cast<const FunctionType&>(function))
+  {
+  }
+
+  VTKM_EXEC_CONT ImplicitFunctionValueFunctor(const FunctionType& function)
+    : Function(function)
+  {
+  }
+
+  VTKM_EXEC_CONT Scalar operator()(const Vector& point) const
+  {
+    return this->Function.Value(point);
+  }
+
+private:
+  FunctionType Function;
+};
+
+/// A helpful functor that calls the gradient method of a given `ImplicitFunction`. Can be
+/// passed to things that expect a functor instead of an `ImplictFunction` class (like an array
+/// transform).
+///
+template <typename FunctionType>
+class ImplicitFunctionGradientFunctor
+{
+public:
+  using Scalar = typename FunctionType::Scalar;
+  using Vector = typename FunctionType::Vector;
+
+  ImplicitFunctionGradientFunctor() = default;
+
+  VTKM_EXEC_CONT ImplicitFunctionGradientFunctor(
+    const vtkm::internal::ImplicitFunctionBase<FunctionType>& function)
+    : Function(reinterpret_cast<const FunctionType&>(function))
+  {
+  }
+
+  VTKM_EXEC_CONT ImplicitFunctionGradientFunctor(const FunctionType& function)
+    : Function(function)
+  {
+  }
+
+  VTKM_EXEC_CONT Vector operator()(const Vector& point) const
+  {
+    return this->Function->Gradient(point);
+  }
+
+private:
+  FunctionType Function;
+};
+
 //============================================================================
 /// \brief Implicit function for a box
 ///
@@ -106,7 +235,7 @@ private:
 /// meeting along shared edges and all faces are orthogonal to the x-y-z
 /// coordinate axes.
 
-class VTKM_ALWAYS_EXPORT Box : public ImplicitFunction
+class VTKM_ALWAYS_EXPORT Box : public internal::ImplicitFunctionBase<Box>
 {
 public:
   /// \brief Construct box with center at (0,0,0) and each side of length 1.0.
@@ -130,17 +259,9 @@ public:
 
   VTKM_CONT Box(const vtkm::Bounds& bounds) { this->SetBounds(bounds); }
 
-  VTKM_CONT void SetMinPoint(const Vector& point)
-  {
-    this->MinPoint = point;
-    this->Modified();
-  }
+  VTKM_CONT void SetMinPoint(const Vector& point) { this->MinPoint = point; }
 
-  VTKM_CONT void SetMaxPoint(const Vector& point)
-  {
-    this->MaxPoint = point;
-    this->Modified();
-  }
+  VTKM_CONT void SetMaxPoint(const Vector& point) { this->MaxPoint = point; }
 
   VTKM_EXEC_CONT const Vector& GetMinPoint() const { return this->MinPoint; }
 
@@ -159,7 +280,7 @@ public:
                         vtkm::Range(this->MinPoint[2], this->MaxPoint[2]));
   }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Scalar minDistance = vtkm::NegativeInfinity32();
     Scalar diff, t, dist;
@@ -227,7 +348,7 @@ public:
     }
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const final
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     vtkm::IdComponent minAxis = 0;
     Scalar dist = 0.0;
@@ -349,6 +470,11 @@ public:
     return normal;
   }
 
+  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
+  VTKM_EXEC Box* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
+  VTKM_EXEC const Box* operator->() const { return this; }
+
 private:
   Vector MinPoint;
   Vector MaxPoint;
@@ -365,7 +491,7 @@ private:
 ///
 /// Note that the cylinder is infinite in extent.
 ///
-class VTKM_ALWAYS_EXPORT Cylinder final : public vtkm::ImplicitFunction
+class VTKM_ALWAYS_EXPORT Cylinder : public vtkm::internal::ImplicitFunctionBase<Cylinder>
 {
 public:
   /// Construct cylinder radius of 0.5; centered at origin with axis
@@ -391,32 +517,20 @@ public:
   {
   }
 
-  VTKM_CONT void SetCenter(const Vector& center)
-  {
-    this->Center = center;
-    this->Modified();
-  }
+  VTKM_CONT void SetCenter(const Vector& center) { this->Center = center; }
 
-  VTKM_CONT void SetAxis(const Vector& axis)
-  {
-    this->Axis = vtkm::Normal(axis);
-    this->Modified();
-  }
+  VTKM_CONT void SetAxis(const Vector& axis) { this->Axis = vtkm::Normal(axis); }
 
-  VTKM_CONT void SetRadius(Scalar radius)
-  {
-    this->Radius = radius;
-    this->Modified();
-  }
+  VTKM_CONT void SetRadius(Scalar radius) { this->Radius = radius; }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Vector x2c = point - this->Center;
     FloatDefault proj = vtkm::Dot(this->Axis, x2c);
     return vtkm::Dot(x2c, x2c) - (proj * proj) - (this->Radius * this->Radius);
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const final
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     Vector x2c = point - this->Center;
     FloatDefault t = this->Axis[0] * x2c[0] + this->Axis[1] * x2c[1] + this->Axis[2] * x2c[2];
@@ -424,6 +538,10 @@ public:
     return (point - closestPoint) * FloatDefault(2);
   }
 
+  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
+  VTKM_EXEC Cylinder* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
+  VTKM_EXEC const Cylinder* operator->() const { return this; }
 
 private:
   Vector Center;
@@ -433,7 +551,7 @@ private:
 
 //============================================================================
 /// \brief Implicit function for a frustum
-class VTKM_ALWAYS_EXPORT Frustum final : public vtkm::ImplicitFunction
+class VTKM_ALWAYS_EXPORT Frustum : public vtkm::internal::ImplicitFunctionBase<Frustum>
 {
 public:
   /// \brief Construct axis-aligned frustum with center at (0,0,0) and each side of length 1.0.
@@ -456,7 +574,6 @@ public:
     {
       this->Normals[index] = normals[index];
     }
-    this->Modified();
   }
 
   VTKM_EXEC void SetPlane(int idx, const Vector& point, const Vector& normal)
@@ -464,7 +581,6 @@ public:
     VTKM_ASSERT((idx >= 0) && (idx < 6));
     this->Points[idx] = point;
     this->Normals[idx] = normal;
-    this->Modified();
   }
 
   VTKM_EXEC_CONT void GetPlanes(Vector points[6], Vector normals[6]) const
@@ -502,10 +618,9 @@ public:
       this->Points[i] = v0;
       this->Normals[i] = vtkm::Normal(vtkm::TriangleNormal(v0, v1, v2));
     }
-    this->Modified();
   }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
     for (vtkm::Id index : { 0, 1, 2, 3, 4, 5 })
@@ -518,7 +633,7 @@ public:
     return maxVal;
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const final
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
     vtkm::Id maxValIdx = 0;
@@ -536,6 +651,11 @@ public:
     return this->Normals[maxValIdx];
   }
 
+  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
+  VTKM_EXEC Frustum* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
+  VTKM_EXEC const Frustum* operator->() const { return this; }
+
 private:
   Vector Points[6] = { { -0.5f, 0.0f, 0.0f }, { 0.5f, 0.0f, 0.0f },  { 0.0f, -0.5f, 0.0f },
                        { 0.0f, 0.5f, 0.0f },  { 0.0f, 0.0f, -0.5f }, { 0.0f, 0.0f, 0.5f } };
@@ -550,7 +670,7 @@ private:
 /// The normal does not have to be a unit vector. The implicit function will
 /// still evaluate to 0 at the plane, but the values outside the plane
 /// (and the gradient) will be scaled by the length of the normal vector.
-class VTKM_ALWAYS_EXPORT Plane final : public vtkm::ImplicitFunction
+class VTKM_ALWAYS_EXPORT Plane : public vtkm::internal::ImplicitFunctionBase<Plane>
 {
 public:
   /// Construct plane passing through origin and normal to z-axis.
@@ -574,27 +694,24 @@ public:
   {
   }
 
-  VTKM_CONT void SetOrigin(const Vector& origin)
-  {
-    this->Origin = origin;
-    this->Modified();
-  }
+  VTKM_CONT void SetOrigin(const Vector& origin) { this->Origin = origin; }
 
-  VTKM_CONT void SetNormal(const Vector& normal)
-  {
-    this->Normal = normal;
-    this->Modified();
-  }
+  VTKM_CONT void SetNormal(const Vector& normal) { this->Normal = normal; }
 
   VTKM_EXEC_CONT const Vector& GetOrigin() const { return this->Origin; }
   VTKM_EXEC_CONT const Vector& GetNormal() const { return this->Normal; }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     return vtkm::Dot(point - this->Origin, this->Normal);
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector&) const final { return this->Normal; }
+  VTKM_EXEC_CONT Vector Gradient(const Vector&) const { return this->Normal; }
+
+  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
+  VTKM_EXEC Plane* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
+  VTKM_EXEC const Plane* operator->() const { return this; }
 
 private:
   Vector Origin;
@@ -609,7 +726,7 @@ private:
 /// The value of the sphere implicit function is the square of the distance
 /// from the center biased by the radius (so the surface of the sphere is
 /// at value 0).
-class VTKM_ALWAYS_EXPORT Sphere final : public vtkm::ImplicitFunction
+class VTKM_ALWAYS_EXPORT Sphere : public vtkm::internal::ImplicitFunctionBase<Sphere>
 {
 public:
   /// Construct sphere with center at (0,0,0) and radius = 0.5.
@@ -632,51 +749,143 @@ public:
   {
   }
 
-  VTKM_CONT void SetRadius(Scalar radius)
-  {
-    this->Radius = radius;
-    this->Modified();
-  }
+  VTKM_CONT void SetRadius(Scalar radius) { this->Radius = radius; }
 
-  VTKM_CONT void SetCenter(const Vector& center)
-  {
-    this->Center = center;
-    this->Modified();
-  }
+  VTKM_CONT void SetCenter(const Vector& center) { this->Center = center; }
 
   VTKM_EXEC_CONT Scalar GetRadius() const { return this->Radius; }
 
   VTKM_EXEC_CONT const Vector& GetCenter() const { return this->Center; }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     return vtkm::MagnitudeSquared(point - this->Center) - (this->Radius * this->Radius);
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const final
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     return Scalar(2) * (point - this->Center);
   }
+
+  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
+  VTKM_EXEC Sphere* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
+  VTKM_EXEC const Sphere* operator->() const { return this; }
 
 private:
   Scalar Radius;
   Vector Center;
 };
 
-} // namespace vtkm
+namespace detail
+{
 
-// Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
-// to be instantiated in a consistent order among all the translation units of an
-// executable. Failing to do so results in random crashes and incorrect results.
-// We workaroud this issue by explicitly instantiating VirtualObjectTransfer for
-// all the implicit functions here.
-#ifdef VTKM_CUDA
-#include <vtkm/cont/internal/VirtualObjectTransferInstantiate.h>
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::Box);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::Cylinder);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::Frustum);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::Plane);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::Sphere);
-#endif
+struct ImplicitFunctionValueFunctor
+{
+  template <typename ImplicitFunctionType>
+  VTKM_EXEC_CONT typename ImplicitFunctionType::Scalar operator()(
+    const ImplicitFunctionType& function,
+    const typename ImplicitFunctionType::Vector& point) const
+  {
+    return function.Value(point);
+  }
+};
+
+struct ImplicitFunctionGradientFunctor
+{
+  template <typename ImplicitFunctionType>
+  VTKM_EXEC_CONT typename ImplicitFunctionType::Vector operator()(
+    const ImplicitFunctionType& function,
+    const typename ImplicitFunctionType::Vector& point) const
+  {
+    return function.Gradient(point);
+  }
+};
+
+} // namespace detail
+
+//============================================================================
+/// \brief Implicit function that can switch among different types.
+///
+/// An `ImplicitFunctionMultiplexer` is a templated `ImplicitFunction` that takes
+/// as template arguments any number of other `ImplicitFunction`s that it can
+/// behave as. This allows you to decide at runtime which of these implicit
+/// functions to define and compute.
+///
+/// For example, let's say you want a filter that finds points either inside
+/// a sphere or inside a box. Rather than create 2 different filters, one for
+/// each type of implicit function, you can use `ImplicitFunctionMultiplexer<Sphere, Box>`
+/// and then set either a `Sphere` or a `Box` at runtime.
+///
+/// To use `ImplicitFunctionMultiplexer`, simply create the actual implicit
+/// function that you want to use, and then set the `ImplicitFunctionMultiplexer`
+/// to that concrete implicit function object.
+///
+template <typename... ImplicitFunctionTypes>
+class ImplicitFunctionMultiplexer
+  : public vtkm::internal::ImplicitFunctionBase<
+      ImplicitFunctionMultiplexer<ImplicitFunctionTypes...>>
+{
+  vtkm::exec::internal::Variant<ImplicitFunctionTypes...> Variant;
+
+  using Superclass =
+    vtkm::internal::ImplicitFunctionBase<ImplicitFunctionMultiplexer<ImplicitFunctionTypes...>>;
+
+public:
+  using Scalar = typename Superclass::Scalar;
+  using Vector = typename Superclass::Vector;
+
+  ImplicitFunctionMultiplexer() = default;
+
+  template <typename FunctionType>
+  VTKM_EXEC_CONT ImplicitFunctionMultiplexer(
+    const vtkm::internal::ImplicitFunctionBase<FunctionType>& function)
+    : Variant(reinterpret_cast<const FunctionType&>(function))
+  {
+  }
+
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const
+  {
+    return this->Variant.CastAndCall(detail::ImplicitFunctionValueFunctor{}, point);
+  }
+
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
+  {
+    return this->Variant.CastAndCall(detail::ImplicitFunctionGradientFunctor{}, point);
+  }
+};
+
+//============================================================================
+/// \brief Implicit function that can switch among known implicit function types.
+///
+/// `ImplicitFunctionGeneral` can behave as any of the predefined implicit functions
+/// provided by VTK-m. This is helpful when the type of implicit function is not
+/// known at compile time. For example, say you want a filter that can operate on
+/// an implicit function. Rather than compile separate versions of the filter, one
+/// for each type of implicit function, you can compile the filter once for
+/// `ImplicitFunctionGeneral` and then set the desired implicit function at runtime.
+///
+/// To use `ImplicitFunctionGeneral`, simply create the actual implicit
+/// function that you want to use, and then set the `ImplicitFunctionGeneral`
+/// to that concrete implicit function object.
+///
+class ImplicitFunctionGeneral
+  : public vtkm::ImplicitFunctionMultiplexer<vtkm::Box,
+                                             vtkm::Cylinder,
+                                             vtkm::Frustum,
+                                             vtkm::Plane,
+                                             vtkm::Sphere>
+{
+  using Superclass = vtkm::ImplicitFunctionMultiplexer<vtkm::Box,
+                                                       vtkm::Cylinder,
+                                                       vtkm::Frustum,
+                                                       vtkm::Plane,
+                                                       vtkm::Sphere>;
+
+public:
+  using Superclass::Superclass;
+};
+
+} // namespace vtkm
 
 #endif //vtk_m_ImplicitFunction_h

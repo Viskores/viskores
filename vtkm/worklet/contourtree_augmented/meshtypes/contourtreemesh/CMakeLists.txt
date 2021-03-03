@@ -67,7 +67,6 @@ set(headers
   ComputeMaxNeighboursWorklet.h
   FindStartIndexWorklet.h
   ReplaceArcNumWithToVertexWorklet.h
-  CombinedVector.h
   CombinedSimulatedSimplicityIndexComparator.h
   InitToCombinedSortOrderArraysWorklet.h
   CombinedOtherStartIndexNNeighboursWorklet.h

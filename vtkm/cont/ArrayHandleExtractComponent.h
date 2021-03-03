@@ -10,12 +10,12 @@
 #ifndef vtk_m_cont_ArrayHandleExtractComponent_h
 #define vtk_m_cont_ArrayHandleExtractComponent_h
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 
 namespace vtkm
-{
-namespace cont
 {
 namespace internal
 {
@@ -82,6 +82,9 @@ private:
 
 } // namespace internal
 
+namespace cont
+{
+
 template <typename ArrayHandleType>
 class StorageTagExtractComponent
 {
@@ -94,160 +97,70 @@ template <typename ArrayHandleType>
 class Storage<typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType,
               StorageTagExtractComponent<ArrayHandleType>>
 {
+  using SourceValueType = typename ArrayHandleType::ValueType;
+  using ValueType = typename vtkm::VecTraits<SourceValueType>::ComponentType;
+  using SourceStorageTag = typename ArrayHandleType::StorageTag;
+  using SourceStorage = vtkm::cont::internal::Storage<SourceValueType, SourceStorageTag>;
+
 public:
-  using PortalType = ArrayPortalExtractComponent<typename ArrayHandleType::WritePortalType>;
-  using PortalConstType = ArrayPortalExtractComponent<typename ArrayHandleType::ReadPortalType>;
-  using ValueType = typename PortalType::ValueType;
-
-  VTKM_CONT
-  Storage()
-    : Array()
-    , Component(0)
-    , Valid(false)
+  VTKM_CONT static vtkm::IdComponent ComponentIndex(const vtkm::cont::internal::Buffer* buffers)
   {
+    return buffers[0].GetMetaData<vtkm::IdComponent>();
   }
 
-  VTKM_CONT
-  Storage(const ArrayHandleType& array, vtkm::IdComponent component)
-    : Array(array)
-    , Component(component)
-    , Valid(true)
+  template <typename Buff>
+  VTKM_CONT static Buff* SourceBuffers(Buff* buffers)
   {
+    return buffers + 1;
   }
 
-  VTKM_CONT
-  PortalConstType GetPortalConst() const
+  using ReadPortalType =
+    vtkm::internal::ArrayPortalExtractComponent<typename SourceStorage::ReadPortalType>;
+  using WritePortalType =
+    vtkm::internal::ArrayPortalExtractComponent<typename SourceStorage::WritePortalType>;
+
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
   {
-    VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.ReadPortal(), this->Component);
+    return SourceStorage::GetNumberOfBuffers() + 1;
   }
 
-  VTKM_CONT
-  PortalType GetPortal()
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.WritePortal(), this->Component);
+    return SourceStorage::GetNumberOfValues(SourceBuffers(buffers));
   }
 
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token)
   {
-    VTKM_ASSERT(this->Valid);
-    return this->Array.GetNumberOfValues();
+    SourceStorage::ResizeBuffers(numValues, SourceBuffers(buffers), preserve, token);
   }
 
-  VTKM_CONT
-  void Allocate(vtkm::Id numberOfValues)
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
-    VTKM_ASSERT(this->Valid);
-    this->Array.Allocate(numberOfValues);
+    return ReadPortalType(SourceStorage::CreateReadPortal(SourceBuffers(buffers), device, token),
+                          ComponentIndex(buffers));
   }
 
-  VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues)
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
-    VTKM_ASSERT(this->Valid);
-    this->Array.Shrink(numberOfValues);
+    return WritePortalType(SourceStorage::CreateWritePortal(SourceBuffers(buffers), device, token),
+                           ComponentIndex(buffers));
   }
 
-  VTKM_CONT
-  void ReleaseResources()
+  VTKM_CONT static auto CreateBuffers(vtkm::IdComponent componentIndex,
+                                      const ArrayHandleType& array)
+    -> decltype(vtkm::cont::internal::CreateBuffers())
   {
-    VTKM_ASSERT(this->Valid);
-    this->Array.ReleaseResources();
+    return vtkm::cont::internal::CreateBuffers(componentIndex, array);
   }
-
-  VTKM_CONT
-  const ArrayHandleType& GetArray() const
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->Array;
-  }
-
-  VTKM_CONT
-  vtkm::IdComponent GetComponent() const
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->Component;
-  }
-
-private:
-  ArrayHandleType Array;
-  vtkm::IdComponent Component;
-  bool Valid;
 }; // class Storage
 
-template <typename ArrayHandleType, typename Device>
-class ArrayTransfer<typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType,
-                    StorageTagExtractComponent<ArrayHandleType>,
-                    Device>
-{
-public:
-  using ValueType = typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType;
-
-private:
-  using StorageTag = StorageTagExtractComponent<ArrayHandleType>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-  using ArrayValueType = typename ArrayHandleType::ValueType;
-  using ArrayStorageTag = typename ArrayHandleType::StorageTag;
-  using ArrayStorageType =
-    vtkm::cont::internal::Storage<typename ArrayHandleType::ValueType, ArrayStorageTag>;
-
-public:
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
-
-  using ExecutionTypes = typename ArrayHandleType::template ExecutionTypes<Device>;
-  using PortalExecution = ArrayPortalExtractComponent<typename ExecutionTypes::Portal>;
-  using PortalConstExecution = ArrayPortalExtractComponent<typename ExecutionTypes::PortalConst>;
-
-  VTKM_CONT
-  ArrayTransfer(StorageType* storage)
-    : Array(storage->GetArray())
-    , Component(storage->GetComponent())
-  {
-  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
-
-  VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
-  {
-    return PortalConstExecution(this->Array.PrepareForInput(Device(), token), this->Component);
-  }
-
-  VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
-  {
-    return PortalExecution(this->Array.PrepareForInPlace(Device(), token), this->Component);
-  }
-
-  VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
-  {
-    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device(), token),
-                           this->Component);
-  }
-
-  VTKM_CONT
-  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
-  {
-    // Implementation of this method should be unnecessary. The internal
-    // array handle should automatically retrieve the output data as
-    // necessary.
-  }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues) { this->Array.Shrink(numberOfValues); }
-
-  VTKM_CONT
-  void ReleaseResources() { this->Array.ReleaseResourcesExecution(); }
-
-private:
-  ArrayHandleType Array;
-  vtkm::IdComponent Component;
-};
 }
 }
 } // namespace vtkm::cont::internal
@@ -288,8 +201,20 @@ protected:
 public:
   VTKM_CONT
   ArrayHandleExtractComponent(const ArrayHandleType& array, vtkm::IdComponent component)
-    : Superclass(StorageType(array, component))
+    : Superclass(StorageType::CreateBuffers(component, array))
   {
+  }
+
+  VTKM_CONT vtkm::IdComponent GetComponent() const
+  {
+    return StorageType::ComponentIndex(this->GetBuffers());
+  }
+
+  VTKM_CONT ArrayHandleType GetArray() const
+  {
+    using BaseArray = vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
+                                              typename ArrayHandleType::StorageTag>;
+    return ArrayHandleType(BaseArray(StorageType::SourceBuffers(this->GetBuffers())));
   }
 };
 
@@ -302,6 +227,32 @@ VTKM_CONT ArrayHandleExtractComponent<ArrayHandleType> make_ArrayHandleExtractCo
 {
   return ArrayHandleExtractComponent<ArrayHandleType>(array, component);
 }
+
+namespace internal
+{
+
+template <typename ArrayHandleType>
+struct ArrayExtractComponentImpl<vtkm::cont::StorageTagExtractComponent<ArrayHandleType>>
+{
+  auto operator()(const vtkm::cont::ArrayHandleExtractComponent<ArrayHandleType>& src,
+                  vtkm::IdComponent componentIndex,
+                  vtkm::CopyFlag allowCopy) const
+    -> decltype(ArrayExtractComponentImpl<typename ArrayHandleType::StorageTag>{}(
+      std::declval<ArrayHandleType>(),
+      componentIndex,
+      allowCopy))
+  {
+    using ValueType = typename ArrayHandleType::ValueType;
+    using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
+    using FlatComponent = vtkm::VecFlat<ComponentType>;
+    constexpr vtkm::IdComponent FLAT_SUB_COMPONENTS = FlatComponent::NUM_COMPONENTS;
+    return ArrayExtractComponentImpl<typename ArrayHandleType::StorageTag>{}(
+      src.GetArray(), (src.GetComponent() * FLAT_SUB_COMPONENTS) + componentIndex, allowCopy);
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 
@@ -346,9 +297,8 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    auto storage = obj.GetStorage();
-    vtkmdiy::save(bb, storage.GetComponent());
-    vtkmdiy::save(bb, storage.GetArray());
+    vtkmdiy::save(bb, Type(obj).GetComponent());
+    vtkmdiy::save(bb, Type(obj).GetArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)

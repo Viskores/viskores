@@ -13,7 +13,10 @@
 #include <cstdint>
 #include <type_traits>
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__)
+# define LCL_EXEC __device__ __host__
+#elif defined(__HIP__)
+#include "hip/hip_runtime.h" //required for __device__ __host__
 # define LCL_EXEC __device__ __host__
 #else
 # define LCL_EXEC

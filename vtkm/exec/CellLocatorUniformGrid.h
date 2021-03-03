@@ -11,6 +11,7 @@
 #define vtkm_exec_celllocatoruniformgrid_h
 
 #include <vtkm/Bounds.h>
+#include <vtkm/Math.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
@@ -18,7 +19,6 @@
 #include <vtkm/cont/CellSetStructured.h>
 
 #include <vtkm/exec/CellInside.h>
-#include <vtkm/exec/CellLocator.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 
 namespace vtkm
@@ -27,34 +27,20 @@ namespace vtkm
 namespace exec
 {
 
-template <typename DeviceAdapter, vtkm::IdComponent dimensions>
-class VTKM_ALWAYS_EXPORT CellLocatorUniformGrid final : public vtkm::exec::CellLocator
+class VTKM_ALWAYS_EXPORT CellLocatorUniformGrid
 {
-private:
-  using VisitType = vtkm::TopologyElementTagCell;
-  using IncidentType = vtkm::TopologyElementTagPoint;
-  using CellSetPortal = vtkm::exec::ConnectivityStructured<VisitType, IncidentType, dimensions>;
-
 public:
   VTKM_CONT
   CellLocatorUniformGrid(const vtkm::Id3 cellDims,
-                         const vtkm::Id3 pointDims,
                          const vtkm::Vec3f origin,
                          const vtkm::Vec3f invSpacing,
-                         const vtkm::Vec3f maxPoint,
-                         DeviceAdapter)
+                         const vtkm::Vec3f maxPoint)
     : CellDims(cellDims)
-    , PointDims(pointDims)
+    , MaxCellIds(vtkm::Max(cellDims - vtkm::Id3(1), vtkm::Id3(0)))
     , Origin(origin)
     , InvSpacing(invSpacing)
     , MaxPoint(maxPoint)
   {
-  }
-
-  VTKM_EXEC_CONT virtual ~CellLocatorUniformGrid() noexcept override
-  {
-    // This must not be defaulted, since defaulted virtual destructors are
-    // troublesome with CUDA __host__ __device__ markup.
   }
 
   VTKM_EXEC inline bool IsInside(const vtkm::Vec3f& point) const
@@ -72,7 +58,7 @@ public:
   VTKM_EXEC
   vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
                            vtkm::Id& cellId,
-                           vtkm::Vec3f& parametric) const override
+                           vtkm::Vec3f& parametric) const
   {
     if (!this->IsInside(point))
     {
@@ -87,21 +73,8 @@ public:
     temp = temp * this->InvSpacing;
 
     //make sure that if we border the upper edge, we sample the correct cell
-    logicalCell = temp;
-    if (logicalCell[0] == this->CellDims[0])
-    {
-      logicalCell[0]--;
-    }
-    if (logicalCell[1] == this->CellDims[1])
-    {
-      logicalCell[1]--;
-    }
-    if (logicalCell[2] == this->CellDims[2])
-    {
-      logicalCell[2]--;
-    }
-    if (dimensions == 2)
-      logicalCell[2] = 0;
+    logicalCell = vtkm::Min(vtkm::Id3(temp), this->MaxCellIds);
+
     cellId =
       (logicalCell[2] * this->CellDims[1] + logicalCell[1]) * this->CellDims[0] + logicalCell[0];
     parametric = temp - logicalCell;
@@ -109,9 +82,14 @@ public:
     return vtkm::ErrorCode::Success;
   }
 
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
+  VTKM_EXEC CellLocatorUniformGrid* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
+  VTKM_EXEC const CellLocatorUniformGrid* operator->() const { return this; }
+
 private:
   vtkm::Id3 CellDims;
-  vtkm::Id3 PointDims;
+  vtkm::Id3 MaxCellIds;
   vtkm::Vec3f Origin;
   vtkm::Vec3f InvSpacing;
   vtkm::Vec3f MaxPoint;

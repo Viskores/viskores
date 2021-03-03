@@ -55,6 +55,8 @@ namespace vtkm
 template <>
 struct VecTraits<UnusualType> : VecTraits<UnusualType::T>
 {
+  using ComponentType = UnusualType;
+  using BaseComponentType = UnusualType;
 };
 
 } // namespace vtkm
@@ -100,7 +102,7 @@ void BasicUnknownArrayChecks(const vtkm::cont::UnknownArrayHandle& array,
 {
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
                    "Dynamic array reports unexpected size.");
-  VTKM_TEST_ASSERT(array.GetNumberOfComponents() == numComponents,
+  VTKM_TEST_ASSERT(array.GetNumberOfComponentsFlat() == numComponents,
                    "Dynamic array reports unexpected number of components.");
 }
 
@@ -216,7 +218,7 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
     MultiplexerType multiplexArray = arrayUnknown.AsArrayHandle<MultiplexerType>();
 
     VTKM_TEST_ASSERT(multiplexArray.IsValid());
-    VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 0);
+    VTKM_TEST_ASSERT(multiplexArray.GetArrayHandleVariant().GetIndex() == 0);
     VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), array.ReadPortal()));
   }
 
@@ -228,7 +230,7 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
     MultiplexerType multiplexArray = arrayUnknown.AsArrayHandle<MultiplexerType>();
 
     VTKM_TEST_ASSERT(multiplexArray.IsValid());
-    VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 1);
+    VTKM_TEST_ASSERT(multiplexArray.GetArrayHandleVariant().GetIndex() == 1);
     VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), array.ReadPortal()));
   }
 
@@ -300,6 +302,14 @@ void TryNewInstance(vtkm::cont::UnknownArrayHandle originalArray)
   }
   CheckUnknownArray<vtkm::List<T>, VTKM_DEFAULT_STORAGE_LIST>(newArray,
                                                               vtkm::VecTraits<T>::NUM_COMPONENTS);
+
+  std::cout << "Get a new instance as a float array and make sure the type is as expected."
+            << std::endl;
+  vtkm::cont::UnknownArrayHandle floatArray = originalArray.NewInstanceFloatBasic();
+  vtkm::cont::ArrayHandle<
+    typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>>
+    staticFloatArray;
+  floatArray.AsArrayHandle(staticFloatArray);
 }
 
 template <typename T>
@@ -426,6 +436,64 @@ void TryAsArrayHandle()
   TryAsArrayHandle(vtkm::cont::make_ArrayHandleConstant(5, ARRAY_SIZE));
 }
 
+struct CheckExtractedArray
+{
+  template <typename ExtractedArray, typename OriginalArray>
+  void operator()(const ExtractedArray& extractedArray, const OriginalArray& originalArray) const
+  {
+    using ValueType = typename OriginalArray::ValueType;
+    using FlatVec = vtkm::VecFlat<ValueType>;
+
+    VTKM_TEST_ASSERT(extractedArray.GetNumberOfComponents() == FlatVec::NUM_COMPONENTS);
+    auto originalPortal = originalArray.ReadPortal();
+    auto extractedPortal = extractedArray.ReadPortal();
+    for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+    {
+      FlatVec originalData = originalPortal.Get(valueIndex);
+      auto extractedData = extractedPortal.Get(valueIndex);
+      VTKM_TEST_ASSERT(test_equal(originalData, extractedData));
+    }
+  }
+};
+
+template <typename ArrayHandleType>
+void TryExtractComponent()
+{
+  using ValueType = typename ArrayHandleType::ValueType;
+  using FlatVec = vtkm::VecFlat<ValueType>;
+  using ComponentType = typename FlatVec::ComponentType;
+
+  ArrayHandleType originalArray;
+  originalArray.Allocate(ARRAY_SIZE);
+  SetPortal(originalArray.WritePortal());
+
+  vtkm::cont::UnknownArrayHandle unknownArray(originalArray);
+
+  VTKM_TEST_ASSERT(unknownArray.GetNumberOfComponentsFlat() == FlatVec::NUM_COMPONENTS);
+
+  CheckExtractedArray{}(unknownArray.ExtractArrayFromComponents<ComponentType>(), originalArray);
+
+  unknownArray.CastAndCallWithExtractedArray(CheckExtractedArray{}, originalArray);
+}
+
+void TryExtractComponent()
+{
+  std::cout << "  Scalar array." << std::endl;
+  TryExtractComponent<vtkm::cont::ArrayHandle<vtkm::FloatDefault>>();
+
+  std::cout << "  Equivalent scalar." << std::endl;
+  TryExtractComponent<vtkm::cont::ArrayHandle<VTKM_UNUSED_INT_TYPE>>();
+
+  std::cout << "  Basic Vec." << std::endl;
+  TryExtractComponent<vtkm::cont::ArrayHandle<vtkm::Id3>>();
+
+  std::cout << "  Vec of Vecs." << std::endl;
+  TryExtractComponent<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec2f, 3>>>();
+
+  std::cout << "  Vec of Vecs of Vecs." << std::endl;
+  TryExtractComponent<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<vtkm::Id4, 3>, 2>>>();
+}
+
 void TrySetCastArray()
 {
   vtkm::cont::ArrayHandle<vtkm::Id> knownArray = CreateArray(vtkm::Id{});
@@ -472,6 +540,9 @@ void TestUnknownArrayHandle()
 
   std::cout << "Try AsArrayHandle" << std::endl;
   TryAsArrayHandle();
+
+  std::cout << "Try ExtractComponent" << std::endl;
+  TryExtractComponent();
 
   std::cout << "Try setting ArrayHandleCast" << std::endl;
   TrySetCastArray();

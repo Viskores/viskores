@@ -7,6 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCast.h>
@@ -68,16 +69,14 @@ public:
   template <typename ArrayHandle1, typename ArrayHandle2>
   VTKM_CONT void operator()(const ArrayHandle1& array1, const ArrayHandle2& array2) const
   {
-    auto result = vtkm::cont::testing::test_equal_ArrayHandles(array1, array2);
-    VTKM_TEST_ASSERT(result, result.GetMergedMessage());
+    VTKM_TEST_ASSERT(test_equal_ArrayHandles(array1, array2));
   }
 
   VTKM_CONT void operator()(const vtkm::cont::UnknownArrayHandle& array1,
                             const vtkm::cont::UnknownArrayHandle& array2) const
   {
-    auto result = vtkm::cont::testing::test_equal_ArrayHandles(
-      array1.ResetTypes<vtkm::TypeListAll, StorageList>(),
-      array2.ResetTypes<vtkm::TypeListAll, StorageList>());
+    VTKM_TEST_ASSERT(test_equal_ArrayHandles(array1.ResetTypes<vtkm::TypeListAll, StorageList>(),
+                                             array2.ResetTypes<vtkm::TypeListAll, StorageList>()));
   }
 };
 
@@ -336,6 +335,22 @@ struct TestArrayHandleReverse
   }
 };
 
+struct TestArrayHandleSwizzle
+{
+  template <typename T>
+  void operator()(T) const
+  {
+    constexpr vtkm::IdComponent NUM_COMPONENTS = vtkm::VecTraits<T>::NUM_COMPONENTS;
+    vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> map;
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; ++i)
+    {
+      map[i] = NUM_COMPONENTS - (i + 1);
+    }
+    auto array = vtkm::cont::make_ArrayHandleSwizzle(RandomArrayHandle<T>::Make(ArraySize), map);
+    RunTest(array);
+  }
+};
+
 
 vtkm::cont::ArrayHandleUniformPointCoordinates MakeRandomArrayHandleUniformPointCoordinates()
 {
@@ -360,9 +375,11 @@ void TestArrayHandleSerialization()
 {
   std::cout << "Testing ArrayHandleBasic\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleBasic(), TestTypesList());
+  vtkm::testing::Testing::TryTypes(
+    TestArrayHandleBasic(), vtkm::List<char, long, long long, unsigned long, unsigned long long>());
 
   std::cout << "Testing ArrayHandleSOA\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesList());
+  vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesListVec());
 
   std::cout << "Testing ArrayHandleCartesianProduct\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleCartesianProduct(), TestTypesListScalar());
@@ -390,6 +407,9 @@ void TestArrayHandleSerialization()
 
   std::cout << "Testing ArrayHandleReverse\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleReverse(), TestTypesList());
+
+  std::cout << "Testing ArrayHandleSwizzle\n";
+  vtkm::testing::Testing::TryTypes(TestArrayHandleSwizzle(), TestTypesList());
 
   std::cout << "Testing ArrayHandleUniformPointCoordinates\n";
   TestArrayHandleUniformPointCoordinates();

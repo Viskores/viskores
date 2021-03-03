@@ -33,6 +33,8 @@ endif()
 
 if (TARGET vtkm::kokkos_cuda)
   set(VTKM_KOKKOS_CUDA ON)
+elseif(TARGET vtkm::kokkos_hip)
+  set(VTKM_KOKKOS_HIP ON)
 endif()
 
 set(VTKM_ENABLE_LOGGING ${VTKm_ENABLE_LOGGING})
@@ -49,6 +51,7 @@ vtkm_install_headers(vtkm/internal
 
 set(headers
   ArrayPortalBasic.h
+  ArrayPortalDummy.h
   ArrayPortalHelpers.h
   ArrayPortalUniformPointCoordinates.h
   ArrayPortalValueReference.h
@@ -67,8 +70,8 @@ set(headers
   IndicesExtrude.h
   Invocation.h
   Unreachable.h
-  Variant.h
-  VariantDetail.h
+  VariantImpl.h
+  VariantImplDetail.h
   VecOperators.h
   Windows.h
   )
@@ -77,7 +80,7 @@ vtkm_declare_headers(${headers})
 
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPre.h)
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPost.h)
-vtkm_pyexpander_generated_file(VariantDetail.h)
+vtkm_pyexpander_generated_file(VariantImplDetail.h)
 vtkm_pyexpander_generated_file(VecOperators.h)
 
 add_subdirectory(testing)

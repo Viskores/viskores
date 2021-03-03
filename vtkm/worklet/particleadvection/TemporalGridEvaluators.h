@@ -21,13 +21,13 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename DeviceAdapter, typename FieldType>
+template <typename FieldType>
 class ExecutionTemporalGridEvaluator
 {
 private:
   using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using ExecutionGridEvaluator =
-    vtkm::worklet::particleadvection::ExecutionGridEvaluator<DeviceAdapter, FieldType>;
+    vtkm::worklet::particleadvection::ExecutionGridEvaluator<FieldType>;
 
 public:
   VTKM_CONT
@@ -38,9 +38,10 @@ public:
                                  const vtkm::FloatDefault timeOne,
                                  const GridEvaluator& evaluatorTwo,
                                  const vtkm::FloatDefault timeTwo,
+                                 vtkm::cont::DeviceAdapterId device,
                                  vtkm::cont::Token& token)
-    : EvaluatorOne(evaluatorOne.PrepareForExecution(DeviceAdapter(), token))
-    , EvaluatorTwo(evaluatorTwo.PrepareForExecution(DeviceAdapter(), token))
+    : EvaluatorOne(evaluatorOne.PrepareForExecution(device, token))
+    , EvaluatorTwo(evaluatorTwo.PrepareForExecution(device, token))
     , TimeOne(timeOne)
     , TimeTwo(timeTwo)
     , TimeDiff(timeTwo - timeOne)
@@ -57,7 +58,7 @@ public:
   VTKM_EXEC
   bool IsWithinTemporalBoundary(const vtkm::FloatDefault time) const
   {
-    return time >= TimeOne && time <= TimeTwo;
+    return time >= this->TimeOne && time <= this->TimeTwo;
   }
 
   VTKM_EXEC
@@ -85,10 +86,10 @@ public:
     }
 
     vtkm::VecVariable<Point, 2> e1, e2;
-    status = this->EvaluatorOne.Evaluate(particle, e1);
+    status = this->EvaluatorOne.Evaluate(particle, time, e1);
     if (status.CheckFail())
       return status;
-    status = this->EvaluatorTwo.Evaluate(particle, e2);
+    status = this->EvaluatorTwo.Evaluate(particle, time, e2);
     if (status.CheckFail())
       return status;
 
@@ -121,6 +122,21 @@ private:
 public:
   VTKM_CONT TemporalGridEvaluator() = default;
 
+  VTKM_CONT TemporalGridEvaluator(const vtkm::cont::DataSet& ds1,
+                                  const vtkm::FloatDefault t1,
+                                  const FieldType& field1,
+                                  const vtkm::cont::DataSet& ds2,
+                                  const vtkm::FloatDefault t2,
+                                  const FieldType& field2)
+    : EvaluatorOne(GridEvaluator(ds1, field1))
+    , EvaluatorTwo(GridEvaluator(ds2, field2))
+    , TimeOne(t1)
+    , TimeTwo(t2)
+
+  {
+  }
+
+
   VTKM_CONT TemporalGridEvaluator(GridEvaluator& evaluatorOne,
                                   const vtkm::FloatDefault timeOne,
                                   GridEvaluator& evaluatorTwo,
@@ -147,13 +163,12 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ExecutionTemporalGridEvaluator<DeviceAdapter, FieldType> PrepareForExecution(
-    DeviceAdapter,
+  VTKM_CONT ExecutionTemporalGridEvaluator<FieldType> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const
   {
-    return ExecutionTemporalGridEvaluator<DeviceAdapter, FieldType>(
-      this->EvaluatorOne, this->TimeOne, this->EvaluatorTwo, this->TimeTwo, token);
+    return ExecutionTemporalGridEvaluator<FieldType>(
+      this->EvaluatorOne, this->TimeOne, this->EvaluatorTwo, this->TimeTwo, device, token);
   }
 
 private:

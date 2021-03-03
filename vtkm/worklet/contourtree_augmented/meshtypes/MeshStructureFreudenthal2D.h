@@ -69,20 +69,17 @@ namespace contourtree_augmented
 {
 
 // Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
-class MeshStructureFreudenthal2D : public data_set_mesh::MeshStructure2D<DeviceAdapter>
+class MeshStructureFreudenthal2D : public data_set_mesh::MeshStructure2D
 {
 public:
-  using SortIndicesPortalType =
-    typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using SortIndicesPortalType = IdArrayType::ReadPortalType;
   using EdgeBoundaryDetectionMasksPortalType =
-    typename m2d_freudenthal::EdgeBoundaryDetectionMasksType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    m2d_freudenthal::EdgeBoundaryDetectionMasksType::ReadPortalType;
 
   // Default constucture. Needed for the CUDA built to work
   VTKM_EXEC_CONT
   MeshStructureFreudenthal2D()
-    : data_set_mesh::MeshStructure2D<DeviceAdapter>()
+    : data_set_mesh::MeshStructure2D()
     , GetMax(false)
     , NumIncidentEdges(m2d_freudenthal::N_INCIDENT_EDGES)
   {
@@ -96,19 +93,20 @@ public:
     const IdArrayType& sortIndices,
     const IdArrayType& SortOrder,
     const m2d_freudenthal::EdgeBoundaryDetectionMasksType& EdgeBoundaryDetectionMasksIn,
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
-    : data_set_mesh::MeshStructure2D<DeviceAdapter>(meshSize)
+    : data_set_mesh::MeshStructure2D(meshSize)
     , GetMax(getmax)
     , NumIncidentEdges(nincident_edges)
   {
-    this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter(), token);
-    this->SortOrderPortal = SortOrder.PrepareForInput(DeviceAdapter(), token);
+    this->SortIndicesPortal = sortIndices.PrepareForInput(device, token);
+    this->SortOrderPortal = SortOrder.PrepareForInput(device, token);
     this->EdgeBoundaryDetectionMasksPortal =
-      EdgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter(), token);
+      EdgeBoundaryDetectionMasksIn.PrepareForInput(device, token);
   }
 
   VTKM_EXEC
-  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return m2d_freudenthal::N_INCIDENT_EDGES; }
+  vtkm::Id GetMaxNumberOfNeighbours() const { return m2d_freudenthal::N_INCIDENT_EDGES; }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id edgeNo) const

@@ -80,8 +80,7 @@ private:
                             vtkm::worklet::contourtree_augmented::IdArrayType& expected,
                             std::string arrayName) const
   {
-    vtkm::cont::testing::TestEqualResult testResult =
-      vtkm::cont::testing::test_equal_ArrayHandles(result, expected);
+    TestEqualResult testResult = test_equal_ArrayHandles(result, expected);
     if (!testResult)
     {
       std::cout << arrayName << " sizes; result=" << result.GetNumberOfValues()
@@ -377,7 +376,7 @@ private:
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Run the specific test
     CallTestContourTreeAugmentedSteps(
@@ -726,7 +725,7 @@ public:
     vtkm::Id3 meshSize{ pointDimensions2D[0], pointDimensions2D[1], 1 };
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
@@ -750,7 +749,7 @@ public:
       contourTree, meshSortOrder, saddlePeak);
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArrayColumnLayout(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0           12" << std::endl;
@@ -792,7 +791,7 @@ public:
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
@@ -816,7 +815,7 @@ public:
       contourTree, meshSortOrder, saddlePeak);
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArrayColumnLayout(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0           67" << std::endl;
@@ -865,7 +864,7 @@ public:
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
@@ -889,7 +888,7 @@ public:
       contourTree, meshSortOrder, saddlePeak);
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArrayColumnLayout(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0          118" << std::endl;

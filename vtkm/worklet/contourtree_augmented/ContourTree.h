@@ -166,20 +166,21 @@ public:
   inline void Init(vtkm::Id dataSize);
 
   // debug routine
-  inline void DebugPrint(const char* message, const char* fileName, long lineNum) const;
+  inline std::string DebugPrint(const char* message, const char* fileName, long lineNum) const;
 
   // print contents
-  inline void PrintContent() const;
+  inline void PrintContent(std::ostream& outStream = std::cout) const;
 
   // print routines
   inline void PrintDotSuperStructure() const;
   inline std::string PrintHyperStructureStatistics(bool print = true) const;
+  inline std::string PrintArraySizes() const;
 
 }; // class ContourTree
 
 
 
-ContourTree::ContourTree()
+inline ContourTree::ContourTree()
   : Arcs()
   , Superparents()
   , Supernodes()
@@ -192,7 +193,7 @@ ContourTree::ContourTree()
 
 
 // initialises contour tree arrays - rest is done by another class
-void ContourTree::Init(vtkm::Id dataSize)
+inline void ContourTree::Init(vtkm::Id dataSize)
 { // Init()
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray(
     static_cast<vtkm::Id>(NO_SUCH_ELEMENT), dataSize);
@@ -201,52 +202,52 @@ void ContourTree::Init(vtkm::Id dataSize)
 } // Init()
 
 
-inline void ContourTree::PrintContent() const
+inline void ContourTree::PrintContent(std::ostream& outStream /*= std::cout*/) const
 {
-  PrintHeader(this->Arcs.GetNumberOfValues());
-  PrintIndices("Arcs", this->Arcs);
-  PrintIndices("Superparents", this->Superparents);
-  std::cout << std::endl;
-  PrintHeader(this->Supernodes.GetNumberOfValues());
-  PrintIndices("Supernodes", this->Supernodes);
-  PrintIndices("Superarcs", this->Superarcs);
-  PrintIndices("Hyperparents", this->Hyperparents);
-  PrintIndices("When Xferred", this->WhenTransferred);
-  std::cout << std::endl;
-  PrintHeader(this->Hypernodes.GetNumberOfValues());
-  PrintIndices("Hypernodes", this->Hypernodes);
-  PrintIndices("Hyperarcs", this->Hyperarcs);
-  PrintHeader(Augmentnodes.GetNumberOfValues());
-  PrintIndices("Augmentnodes", Augmentnodes);
-  PrintIndices("Augmentarcs", this->Augmentarcs);
-  std::cout << std::endl;
-  std::cout << "NumIterations: " << this->NumIterations << std::endl;
-  PrintHeader(this->FirstSupernodePerIteration.GetNumberOfValues());
-  PrintIndices("First SN Per Iter", this->FirstSupernodePerIteration);
-  PrintIndices("First HN Per Iter", this->FirstHypernodePerIteration);
+  PrintHeader(this->Arcs.GetNumberOfValues(), outStream);
+  PrintIndices("Arcs", this->Arcs, -1, outStream); // -1 -> thisArcs.size()
+  PrintIndices("Superparents", this->Superparents, -1, outStream);
+  outStream << std::endl;
+  PrintHeader(this->Supernodes.GetNumberOfValues(), outStream);
+  PrintIndices("Supernodes", this->Supernodes, -1, outStream);
+  PrintIndices("Superarcs", this->Superarcs, -1, outStream);
+  PrintIndices("Hyperparents", this->Hyperparents, -1, outStream);
+  PrintIndices("When Xferred", this->WhenTransferred, -1, outStream);
+  outStream << std::endl;
+  PrintHeader(this->Hypernodes.GetNumberOfValues(), outStream);
+  PrintIndices("Hypernodes", this->Hypernodes, -1, outStream);
+  PrintIndices("Hyperarcs", this->Hyperarcs, -1, outStream);
+  PrintHeader(Augmentnodes.GetNumberOfValues(), outStream);
+  PrintIndices("Augmentnodes", Augmentnodes, -1, outStream);
+  PrintIndices("Augmentarcs", this->Augmentarcs, -1, outStream);
+  outStream << std::endl;
+  outStream << "NumIterations: " << this->NumIterations << std::endl;
+  PrintHeader(this->FirstSupernodePerIteration.GetNumberOfValues(), outStream);
+  PrintIndices("First SN Per Iter", this->FirstSupernodePerIteration, -1, outStream);
+  PrintIndices("First HN Per Iter", this->FirstHypernodePerIteration, -1, outStream);
 }
 
-void ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum) const
+inline std::string ContourTree::DebugPrint(const char* message,
+                                           const char* fileName,
+                                           long lineNum) const
 { // DebugPrint()
-#ifdef DEBUG_PRINT
-  std::cout << "---------------------------" << std::endl;
-  std::cout << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
-            << lineNum << std::endl;
-  std::cout << std::left << std::string(message) << std::endl;
-  std::cout << "Contour Tree Contains:     " << std::endl;
-  std::cout << "---------------------------" << std::endl;
-  std::cout << std::endl;
+  std::stringstream resultStream;
+  resultStream << std::endl;
+  resultStream << "---------------------------" << std::endl;
+  resultStream << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
+               << lineNum << std::endl;
+  resultStream << std::left << std::string(message) << std::endl;
+  resultStream << "Contour Tree Contains:     " << std::endl;
+  resultStream << "---------------------------" << std::endl;
+  resultStream << std::endl;
 
-  this->PrintContent();
-#else
-  // Avoid unused parameter warnings
-  (void)message;
-  (void)fileName;
-  (void)lineNum;
-#endif
+  this->PrintContent(resultStream);
+
+  return resultStream.str();
+
 } // DebugPrint()
 
-void ContourTree::PrintDotSuperStructure() const
+inline void ContourTree::PrintDotSuperStructure() const
 { // PrintDotSuperStructure()
   // print the header information
   printf("digraph G\n\t{\n");
@@ -333,7 +334,7 @@ void ContourTree::PrintDotSuperStructure() const
   printf("\t}\n");
 } // PrintDotSuperStructure()
 
-std::string ContourTree::PrintHyperStructureStatistics(bool print) const
+inline std::string ContourTree::PrintHyperStructureStatistics(bool print) const
 { // PrintHyperStructureStatistics()
   // arrays for collecting statistics
   std::vector<vtkm::Id> minPath;
@@ -407,6 +408,29 @@ std::string ContourTree::PrintHyperStructureStatistics(bool print) const
   return resultString.str();
 } // PrintHyperStructureStatistics()
 
+inline std::string ContourTree::PrintArraySizes() const
+{ // PrintArraySizes
+  std::stringstream arraySizeLog;
+  arraySizeLog << std::setw(42) << std::left << "    #Nodes"
+               << ": " << this->Nodes.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Arcs"
+               << ": " << this->Arcs.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Superparents"
+               << ": " << this->Superparents.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Superarcs"
+               << ": " << this->Superarcs.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Supernodes"
+               << ": " << this->Supernodes.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Hyperparents"
+               << ": " << this->Hyperparents.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #WhenTransferred"
+               << ": " << this->WhenTransferred.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Hypernodes"
+               << ": " << this->Hypernodes.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Hyperarcs"
+               << ": " << this->Hyperarcs.GetNumberOfValues() << std::endl;
+  return arraySizeLog.str();
+} // PrintArraySizes
 
 } // namespace contourtree_augmented
 } // worklet

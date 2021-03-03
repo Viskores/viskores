@@ -457,47 +457,35 @@ VTKM_CONT void CellLocatorTwoLevel::Build()
 //----------------------------------------------------------------------------
 struct CellLocatorTwoLevel::MakeExecObject
 {
-  template <typename CellSetType, typename DeviceAdapter>
+  template <typename CellSetType>
   VTKM_CONT void operator()(const CellSetType& cellSet,
-                            DeviceAdapter,
+                            vtkm::cont::DeviceAdapterId device,
                             vtkm::cont::Token& token,
-                            const CellLocatorTwoLevel& self) const
+                            const CellLocatorTwoLevel& self,
+                            ExecObjType& execObject) const
   {
-    auto execObject =
-      new vtkm::exec::CellLocatorTwoLevel<CellSetType, DeviceAdapter>(self.TopLevel,
-                                                                      self.LeafDimensions,
-                                                                      self.LeafStartIndex,
-                                                                      self.CellStartIndex,
-                                                                      self.CellCount,
-                                                                      self.CellIds,
-                                                                      cellSet,
-                                                                      self.GetCoordinates(),
-                                                                      token);
-    self.ExecutionObjectHandle.Reset(execObject);
+    using CellStructuredType = CellSetContToExec<CellSetType>;
+    execObject = vtkm::exec::CellLocatorTwoLevel<CellStructuredType>(self.TopLevel,
+                                                                     self.LeafDimensions,
+                                                                     self.LeafStartIndex,
+                                                                     self.CellStartIndex,
+                                                                     self.CellCount,
+                                                                     self.CellIds,
+                                                                     cellSet,
+                                                                     self.GetCoordinates(),
+                                                                     device,
+                                                                     token);
   }
 };
 
-struct CellLocatorTwoLevel::PrepareForExecutionFunctor
-{
-  template <typename DeviceAdapter>
-  VTKM_CONT bool operator()(DeviceAdapter,
-                            vtkm::cont::Token& token,
-                            const CellLocatorTwoLevel& self) const
-  {
-    self.GetCellSet().CastAndCall(MakeExecObject{}, DeviceAdapter{}, token, self);
-    return true;
-  }
-};
-
-VTKM_CONT const vtkm::exec::CellLocator* CellLocatorTwoLevel::PrepareForExecution(
+CellLocatorTwoLevel::ExecObjType CellLocatorTwoLevel::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Token& token) const
 {
-  if (!vtkm::cont::TryExecuteOnDevice(device, PrepareForExecutionFunctor(), token, *this))
-  {
-    throwFailedRuntimeDeviceTransfer("CellLocatorTwoLevel", device);
-  }
-  return this->ExecutionObjectHandle.PrepareForExecution(device, token);
+  this->Update();
+  ExecObjType execObject;
+  this->GetCellSet().CastAndCall(MakeExecObject{}, device, token, *this, execObject);
+  return execObject;
 }
 
 //----------------------------------------------------------------------------

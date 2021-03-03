@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
+#include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
 
 namespace vtkm
@@ -72,19 +73,52 @@ private:
   vtkm::Id NumberOfValues;
 };
 
+namespace detail
+{
+
+template <typename T, typename UseVecTraits = vtkm::HasVecTraits<T>>
+struct CanCountImpl;
+
+template <typename T>
+struct CanCountImpl<T, std::false_type>
+{
+  using TTraits = vtkm::TypeTraits<T>;
+  static constexpr bool IsNumeric =
+    !std::is_same<typename TTraits::NumericTag, vtkm::TypeTraitsUnknownTag>::value;
+
+  static constexpr bool value = IsNumeric;
+};
+
+template <typename T>
+struct CanCountImpl<T, std::true_type>
+{
+  using VTraits = vtkm::VecTraits<T>;
+  using BaseType = typename VTraits::BaseComponentType;
+  static constexpr bool IsBool = std::is_same<BaseType, bool>::value;
+
+  static constexpr bool value = CanCountImpl<BaseType, std::false_type>::value && !IsBool;
+};
+
+} // namespace detail
+
+// Not all types can be counted.
+template <typename T>
+struct CanCount
+{
+  static constexpr bool value = detail::CanCountImpl<T>::value;
+};
+
 template <typename T>
 using StorageTagCountingSuperclass =
   vtkm::cont::StorageTagImplicit<internal::ArrayPortalCounting<T>>;
 
 template <typename T>
-struct Storage<T, vtkm::cont::StorageTagCounting> : Storage<T, StorageTagCountingSuperclass<T>>
+struct Storage<T, typename std::enable_if<CanCount<T>::value, vtkm::cont::StorageTagCounting>::type>
+  : Storage<T, StorageTagCountingSuperclass<T>>
 {
 };
 
 } // namespace internal
-
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagCounting);
 
 /// ArrayHandleCounting is a specialization of ArrayHandle. By default it
 /// contains a increment value, that is increment for each step between zero

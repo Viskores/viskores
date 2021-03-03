@@ -14,6 +14,7 @@
 #include <vtkm/io/ErrorIO.h>
 
 #include <fstream>
+#include <sstream>
 
 namespace
 {

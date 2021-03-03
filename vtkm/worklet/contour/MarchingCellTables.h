@@ -495,11 +495,9 @@ public:
     }
 
   private:
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      NumVerticesPerCellPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      NumTrianglesTablePortal;
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType NumVerticesPerCellPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType NumTrianglesTablePortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType
       NumTrianglesTableOffsetPortal;
 
     friend class CellClassifyTable;
@@ -580,14 +578,10 @@ public:
     }
 
   private:
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      EdgeTablePortal;
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      EdgeTableOffsetPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      TriangleTablePortal;
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      TriangleTableOffsetPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType EdgeTablePortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType EdgeTableOffsetPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType TriangleTablePortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType TriangleTableOffsetPortal;
     friend class TriangleGenerationTable;
   };
 

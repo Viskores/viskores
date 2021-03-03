@@ -67,7 +67,8 @@ public:
       auto inpos = particle->Pos;
       vtkm::VecVariable<vtkm::Vec3f, 2> vectors;
       GridEvaluatorStatus status = this->Evaluator.Evaluate(inpos, time, vectors);
-      velocity = particle->Velocity(vectors, stepLength);
+      if (status.CheckOk())
+        velocity = particle->Velocity(vectors, stepLength);
       return IntegratorStatus(status);
     }
   };

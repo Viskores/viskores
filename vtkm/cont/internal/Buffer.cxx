@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorBadDevice.h>
+#include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 
 #include <vtkm/cont/internal/Buffer.h>
@@ -100,6 +101,62 @@ struct BufferState
   }
 };
 
+struct MetaDataManager
+{
+  void* Data = nullptr;
+  std::string Type;
+  vtkm::cont::internal::detail::DeleterType* Deleter = nullptr;
+  vtkm::cont::internal::detail::CopierType* Copier = nullptr;
+
+  MetaDataManager() = default;
+
+  ~MetaDataManager()
+  {
+    if (this->Data != nullptr)
+    {
+      VTKM_ASSERT(this->Deleter != nullptr);
+      this->Deleter(this->Data);
+      this->Data = nullptr;
+    }
+  }
+
+  // We don't know how much information is the metadata, and copying it could be expensive.
+  // Thus, we want to be intentional about copying the metadata only for deep copies.
+  MetaDataManager(const MetaDataManager& src) = delete;
+  MetaDataManager& operator=(const MetaDataManager& src) = delete;
+
+  void Initialize(void* data,
+                  const std::string& type,
+                  vtkm::cont::internal::detail::DeleterType* deleter,
+                  vtkm::cont::internal::detail::CopierType* copier)
+  {
+    Data = data;
+    Type = type;
+    Deleter = deleter;
+    Copier = copier;
+  }
+
+  void DeepCopyFrom(const MetaDataManager& src)
+  {
+    if (this->Data != nullptr)
+    {
+      VTKM_ASSERT(this->Deleter != nullptr);
+      this->Deleter(this->Data);
+      this->Data = nullptr;
+      this->Type = "";
+    }
+    if (src.Data != nullptr)
+    {
+      VTKM_ASSERT(src.Copier);
+      VTKM_ASSERT(src.Deleter);
+      this->Data = src.Copier(src.Data);
+      this->Type = src.Type;
+      this->Deleter = src.Deleter;
+      this->Copier = src.Copier;
+    }
+  }
+};
+
 } // anonymous namespace
 
 namespace vtkm
@@ -108,8 +165,6 @@ namespace cont
 {
 namespace internal
 {
-
-BufferMetaData::~BufferMetaData() {}
 
 class Buffer::InternalsStruct
 {
@@ -138,7 +193,7 @@ public:
   std::mutex Mutex;
   std::condition_variable ConditionVariable;
 
-  std::unique_ptr<vtkm::cont::internal::BufferMetaData> MetaData;
+  MetaDataManager MetaData;
 
   LockType GetLock() { return LockType(this->Mutex); }
 
@@ -535,10 +590,7 @@ struct VTKM_NEVER_EXPORT BufferHelper
                 srcInternals->GetHostBuffer(srcLock).GetPointer(),
                 static_cast<std::size_t>(size));
 
-    if (srcInternals->MetaData)
-    {
-      destInternals->MetaData = srcInternals->MetaData->DeepCopy();
-    }
+    destInternals->MetaData.DeepCopyFrom(srcInternals->MetaData);
   }
 
   static void CopyOnDevice(
@@ -580,10 +632,7 @@ struct VTKM_NEVER_EXPORT BufferHelper
 
     destInternals->SetNumberOfBytes(destLock, srcInternals->GetNumberOfBytes(srcLock));
 
-    if (srcInternals->MetaData)
-    {
-      destInternals->MetaData = srcInternals->MetaData->DeepCopy();
-    }
+    destInternals->MetaData.DeepCopyFrom(srcInternals->MetaData);
   }
 };
 
@@ -637,14 +686,31 @@ void Buffer::SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes,
   detail::BufferHelper::SetNumberOfBytes(this->Internals, lock, numberOfBytes, preserve, token);
 }
 
-vtkm::cont::internal::BufferMetaData* Buffer::GetMetaData() const
+bool Buffer::HasMetaData() const
 {
-  return this->Internals->MetaData.get();
+  return (this->Internals->MetaData.Data != nullptr);
 }
 
-void Buffer::SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>&& metadata)
+bool Buffer::MetaDataIsType(const std::string& type) const
 {
-  this->Internals->MetaData = std::move(metadata);
+  return this->HasMetaData() && (this->Internals->MetaData.Type == type);
+}
+
+void Buffer::SetMetaData(void* data,
+                         const std::string& type,
+                         detail::DeleterType* deleter,
+                         detail::CopierType* copier) const
+{
+  this->Internals->MetaData.Initialize(data, type, deleter, copier);
+}
+
+void* Buffer::GetMetaData(const std::string& type) const
+{
+  if (type != this->Internals->MetaData.Type)
+  {
+    throw vtkm::cont::ErrorBadType("Requesting Buffer meta data that is the wrong type.");
+  }
+  return this->Internals->MetaData.Data;
 }
 
 bool Buffer::IsAllocatedOnHost() const
@@ -806,10 +872,7 @@ void Buffer::DeepCopyFrom(const vtkm::cont::internal::Buffer& src) const
                                              src.Internals->GetNumberOfBytes(srcLock),
                                              vtkm::CopyFlag::Off,
                                              token);
-      if (src.Internals->MetaData)
-      {
-        dest.Internals->MetaData = src.Internals->MetaData->DeepCopy();
-      }
+      dest.Internals->MetaData.DeepCopyFrom(src.Internals->MetaData);
     }
   }
 }

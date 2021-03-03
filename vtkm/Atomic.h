@@ -503,7 +503,7 @@ VTKM_EXEC_CONT inline vtkm::UInt64 AtomicLoadImpl(vtkm::UInt64* const addr, vtkm
 
 VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt8* addr,
                                            vtkm::UInt8 val,
-                                           vtkm::MemoryOrder order)
+                                           vtkm::MemoryOrder vtkmNotUsed(order))
 {
   // There doesn't seem to be an atomic store instruction in the windows
   // API, so just exchange and discard the result.
@@ -511,7 +511,7 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt8* addr,
 }
 VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt16* addr,
                                            vtkm::UInt16 val,
-                                           vtkm::MemoryOrder order)
+                                           vtkm::MemoryOrder vtkmNotUsed(order))
 {
   // There doesn't seem to be an atomic store instruction in the windows
   // API, so just exchange and discard the result.
@@ -539,31 +539,31 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt64* addr,
       winName##suffix(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(arg)));        \
   }
 
-#define VTKM_ATOMIC_OPS_FOR_TYPE(vtkmType, winType, suffix)                             \
-  VTKM_ATOMIC_OP(AtomicAddImpl, _InterlockedExchangeAdd, vtkmType, winType, suffix)     \
-  VTKM_ATOMIC_OP(AtomicAndImpl, _InterlockedAnd, vtkmType, winType, suffix)             \
-  VTKM_ATOMIC_OP(AtomicOrImpl, _InterlockedOr, vtkmType, winType, suffix)               \
-  VTKM_ATOMIC_OP(AtomicXorImpl, _InterlockedXor, vtkmType, winType, suffix)             \
-  VTKM_EXEC_CONT inline vtkmType AtomicNotImpl(vtkmType* addr, vtkm::MemoryOrder order) \
-  {                                                                                     \
-    return AtomicXorImpl(addr, static_cast<vtkmType>(~vtkmType{ 0u }), order);          \
-  }                                                                                     \
-  VTKM_EXEC_CONT inline bool AtomicCompareExchangeImpl(                                 \
-    vtkmType* addr, vtkmType* expected, vtkmType desired, vtkm::MemoryOrder order)      \
-  {                                                                                     \
-    vtkmType result = BitCast<vtkmType>(                                                \
-      _InterlockedCompareExchange##suffix(reinterpret_cast<volatile winType*>(addr),    \
-                                          BitCast<winType>(desired),                    \
-                                          BitCast<winType>(*expected)));                \
-    if (result == *expected)                                                            \
-    {                                                                                   \
-      return true;                                                                      \
-    }                                                                                   \
-    else                                                                                \
-    {                                                                                   \
-      *expected = result;                                                               \
-      return false;                                                                     \
-    }                                                                                   \
+#define VTKM_ATOMIC_OPS_FOR_TYPE(vtkmType, winType, suffix)                                     \
+  VTKM_ATOMIC_OP(AtomicAddImpl, _InterlockedExchangeAdd, vtkmType, winType, suffix)             \
+  VTKM_ATOMIC_OP(AtomicAndImpl, _InterlockedAnd, vtkmType, winType, suffix)                     \
+  VTKM_ATOMIC_OP(AtomicOrImpl, _InterlockedOr, vtkmType, winType, suffix)                       \
+  VTKM_ATOMIC_OP(AtomicXorImpl, _InterlockedXor, vtkmType, winType, suffix)                     \
+  VTKM_EXEC_CONT inline vtkmType AtomicNotImpl(vtkmType* addr, vtkm::MemoryOrder order)         \
+  {                                                                                             \
+    return AtomicXorImpl(addr, static_cast<vtkmType>(~vtkmType{ 0u }), order);                  \
+  }                                                                                             \
+  VTKM_EXEC_CONT inline bool AtomicCompareExchangeImpl(                                         \
+    vtkmType* addr, vtkmType* expected, vtkmType desired, vtkm::MemoryOrder vtkmNotUsed(order)) \
+  {                                                                                             \
+    vtkmType result = BitCast<vtkmType>(                                                        \
+      _InterlockedCompareExchange##suffix(reinterpret_cast<volatile winType*>(addr),            \
+                                          BitCast<winType>(desired),                            \
+                                          BitCast<winType>(*expected)));                        \
+    if (result == *expected)                                                                    \
+    {                                                                                           \
+      return true;                                                                              \
+    }                                                                                           \
+    else                                                                                        \
+    {                                                                                           \
+      *expected = result;                                                                       \
+      return false;                                                                             \
+    }                                                                                           \
   }
 
 VTKM_ATOMIC_OPS_FOR_TYPE(vtkm::UInt8, CHAR, 8)

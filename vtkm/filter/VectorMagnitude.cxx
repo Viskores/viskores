@@ -25,6 +25,6 @@ VectorMagnitude::VectorMagnitude()
 }
 
 //-----------------------------------------------------------------------------
-VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(VectorMagnitude);
+VTKM_FILTER_EXTRA_INSTANTIATE_EXECUTE_METHOD(VectorMagnitude);
 }
 }

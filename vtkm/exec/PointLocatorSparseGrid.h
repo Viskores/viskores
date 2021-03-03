@@ -11,12 +11,8 @@
 #define vtk_m_exec_PointLocatorSparseGrid_h
 
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
-
-#include <vtkm/exec/PointLocator.h>
 
 #include <vtkm/Deprecated.h>
 #include <vtkm/VectorAnalysis.h>
@@ -26,18 +22,13 @@ namespace vtkm
 namespace exec
 {
 
-template <typename DeviceAdapter>
-class VTKM_ALWAYS_EXPORT PointLocatorSparseGrid : public vtkm::exec::PointLocator
+class VTKM_ALWAYS_EXPORT PointLocatorSparseGrid
 {
 public:
   using CoordPortalType =
-    typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+    typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::ReadPortalType;
+  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
 
-
-  PointLocatorSparseGrid() = default;
 
   PointLocatorSparseGrid(const vtkm::Vec3f& min,
                          const vtkm::Vec3f& max,
@@ -66,9 +57,9 @@ public:
   /// \param nearestNeighborId Neareast neighbor in the training dataset for each points in
   ///                            the test set
   /// \param distance2 Squared distance between query points and their nearest neighbors.
-  VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec3f& queryPoint,
-                                             vtkm::Id& nearestNeighborId,
-                                             vtkm::FloatDefault& distance2) const override
+  VTKM_EXEC void FindNearestNeighbor(const vtkm::Vec3f& queryPoint,
+                                     vtkm::Id& nearestNeighborId,
+                                     vtkm::FloatDefault& distance2) const
   {
     //std::cout << "FindNeareastNeighbor: " << queryPoint << std::endl;
     vtkm::Id3 ijk = (queryPoint - this->Min) / this->Dxdydz;
@@ -93,6 +84,11 @@ public:
     // is just on the other side of a cell boundary.
     this->FindInBox(queryPoint, ijk, level, nearestNeighborId, distance2);
   }
+
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
+  VTKM_EXEC PointLocatorSparseGrid* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
+  VTKM_EXEC const PointLocatorSparseGrid* operator->() const { return this; }
 
 private:
   vtkm::Vec3f Min;
@@ -235,7 +231,8 @@ private:
       queryPoint, planeCenter, div, mod, origin, numInPlane, nearestNeighborId, nearestDistance2);
   }
 };
-}
-}
+
+} // vtkm::exec
+} // vtkm
 
 #endif // vtk_m_exec_PointLocatorSparseGrid_h

@@ -762,14 +762,13 @@ int main(int argc, char* argv[])
     if (numLevels > 0) // if compute isovalues
     {
 // Get the data values for computing the explicit branch decomposition
-// TODO Can we cast the handle we get from GetData() instead of doing a CopyTo?
 #ifdef WITH_MPI
       vtkm::cont::ArrayHandle<ValueType> dataField;
-      result.GetPartitions()[0].GetField(0).GetData().CopyTo(dataField);
+      result.GetPartitions()[0].GetField(0).GetData().AsArrayHandle(dataField);
       bool dataFieldIsSorted = true;
 #else
       vtkm::cont::ArrayHandle<ValueType> dataField;
-      useDataSet.GetField(0).GetData().CopyTo(dataField);
+      useDataSet.GetField(0).GetData().AsArrayHandle(dataField);
       bool dataFieldIsSorted = false;
 #endif
 
@@ -844,7 +843,7 @@ int main(int argc, char* argv[])
 
   //vtkm::cont::Field resultField =  result.GetField();
   //vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > saddlePeak;
-  //resultField.GetData().CopyTo(saddlePeak);
+  //resultField.GetData().AsArrayHandle(saddlePeak);
 
   // Dump out contour tree for comparison
   if (rank == 0 && printContourTree)
@@ -854,7 +853,7 @@ int main(int argc, char* argv[])
     ctaug_ns::EdgePairArray saddlePeak;
     ctaug_ns::ProcessContourTree::CollectSortedSuperarcs(
       filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
-    ctaug_ns::PrintEdgePairArray(saddlePeak);
+    ctaug_ns::PrintEdgePairArrayColumnLayout(saddlePeak, std::cout);
   }
 
 #ifdef WITH_MPI
@@ -889,24 +888,7 @@ int main(int argc, char* argv[])
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              std::endl
                << "    ---------------- Contour Tree Array Sizes ---------------------" << std::endl
-               << std::setw(42) << std::left << "    #Nodes"
-               << ": " << ct.Nodes.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Arcs"
-               << ": " << ct.Arcs.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Superparents"
-               << ": " << ct.Superparents.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Superarcs"
-               << ": " << ct.Superarcs.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Supernodes"
-               << ": " << ct.Supernodes.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Hyperparents"
-               << ": " << ct.Hyperparents.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #WhenTransferred"
-               << ": " << ct.WhenTransferred.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Hypernodes"
-               << ": " << ct.Hypernodes.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Hyperarcs"
-               << ": " << ct.Hyperarcs.GetNumberOfValues() << std::endl);
+               << ct.PrintArraySizes());
   // Print hyperstructure statistics
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              std::endl

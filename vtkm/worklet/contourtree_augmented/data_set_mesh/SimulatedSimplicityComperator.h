@@ -67,12 +67,11 @@ namespace mesh_dem
 
 
 // comparator used for initial sort of data values
-template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename T, typename StorageType>
 class SimulatedSimplicityIndexComparatorImpl
 {
 public:
-  using ValuePortalType = typename vtkm::cont::ArrayHandle<T, StorageType>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
+  using ValuePortalType = typename vtkm::cont::ArrayHandle<T, StorageType>::ReadPortalType;
 
   ValuePortalType values;
 
@@ -113,11 +112,11 @@ public:
   { // constructor
   } // constructor
 
-  template <typename DeviceAdapter>
-  VTKM_CONT SimulatedSimplicityIndexComparatorImpl<T, StorageType, DeviceAdapter>
-  PrepareForExecution(DeviceAdapter device, vtkm::cont::Token& token) const
+  VTKM_CONT SimulatedSimplicityIndexComparatorImpl<T, StorageType> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token) const
   {
-    return SimulatedSimplicityIndexComparatorImpl<T, StorageType, DeviceAdapter>(
+    return SimulatedSimplicityIndexComparatorImpl<T, StorageType>(
       this->Values.PrepareForInput(device, token));
   }
 

@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CoordinateSystem.h>
 
@@ -23,7 +24,7 @@ namespace detail
 VTKM_DEPRECATED_SUPPRESS_BEGIN
 vtkm::cont::ArrayHandleVirtualCoordinates CoordDataDepWrapper::ToArray() const
 {
-  return this->Cast<vtkm::cont::ArrayHandleVirtualCoordinates>();
+  return this->AsArrayHandle<vtkm::cont::ArrayHandleVirtualCoordinates>();
 }
 VTKM_DEPRECATED_SUPPRESS_END
 
@@ -36,8 +37,8 @@ VTKM_CONT CoordinateSystem::CoordinateSystem()
 }
 
 VTKM_CONT CoordinateSystem::CoordinateSystem(std::string name,
-                                             const vtkm::cont::VariantArrayHandleCommon& data)
-  : Superclass(name, Association::POINTS, vtkm::cont::VariantArrayHandle{ data })
+                                             const vtkm::cont::UnknownArrayHandle& data)
+  : Superclass(name, Association::POINTS, data)
 {
 }
 
@@ -60,10 +61,11 @@ VTKM_CONT vtkm::cont::detail::CoordDataDepWrapper CoordinateSystem::GetData() co
   return vtkm::cont::detail::CoordDataDepWrapper(this->Superclass::GetData());
 }
 #else  //!VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_CONT vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3> CoordinateSystem::GetData()
-  const
+VTKM_CONT vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>
+CoordinateSystem::GetData() const
 {
-  return vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3>(this->Superclass::GetData());
+  return vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>(
+    this->Superclass::GetData());
 }
 #endif //!VTKM_NO_DEPRECATED_VIRTUAL
 
@@ -71,7 +73,7 @@ VTKM_CONT vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3> Coordinate
 VTKM_CONT vtkm::cont::CoordinateSystem::MultiplexerArrayType
 CoordinateSystem::GetDataAsMultiplexer() const
 {
-  return this->GetData().AsMultiplexer<MultiplexerArrayType>();
+  return this->GetData().AsArrayHandle<MultiplexerArrayType>();
 }
 
 VTKM_CONT

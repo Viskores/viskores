@@ -77,8 +77,6 @@ struct ContourTreeBlockData
 
   // ContourTreeMesh data
   vtkm::Id NumVertices;
-  // TODO Should be able to remove sortOrder here, but we need to figure out what to return in the worklet instead
-  vtkm::worklet::contourtree_augmented::IdArrayType SortOrder;
   vtkm::cont::ArrayHandle<FieldType> SortedValue;
   vtkm::worklet::contourtree_augmented::IdArrayType GlobalMeshIndex;
   vtkm::worklet::contourtree_augmented::IdArrayType Neighbours;
@@ -108,7 +106,6 @@ struct Serialization<vtkm::worklet::contourtree_distributed::ContourTreeBlockDat
     const vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
   {
     vtkmdiy::save(bb, block.NumVertices);
-    vtkmdiy::save(bb, block.SortOrder);
     vtkmdiy::save(bb, block.SortedValue);
     vtkmdiy::save(bb, block.GlobalMeshIndex);
     vtkmdiy::save(bb, block.Neighbours);
@@ -124,7 +121,6 @@ struct Serialization<vtkm::worklet::contourtree_distributed::ContourTreeBlockDat
                    vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
   {
     vtkmdiy::load(bb, block.NumVertices);
-    vtkmdiy::load(bb, block.SortOrder);
     vtkmdiy::load(bb, block.SortedValue);
     vtkmdiy::load(bb, block.GlobalMeshIndex);
     vtkmdiy::load(bb, block.Neighbours);

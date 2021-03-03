@@ -50,7 +50,7 @@ void TestClipStructured()
   vtkm::FloatDefault radius(0.5);
 
   vtkm::filter::ClipWithImplicitFunction clip;
-  clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(vtkm::Sphere(center, radius)));
+  clip.SetImplicitFunction(vtkm::Sphere(center, radius));
   clip.SetFieldsToPass("scalars");
 
   vtkm::cont::DataSet outputData = clip.Execute(ds);
@@ -87,7 +87,7 @@ void TestClipStructuredInverted()
   vtkm::FloatDefault radius(0.5);
 
   vtkm::filter::ClipWithImplicitFunction clip;
-  clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(vtkm::Sphere(center, radius)));
+  clip.SetImplicitFunction(vtkm::Sphere(center, radius));
   bool invert = true;
   clip.SetInvertClip(invert);
   clip.SetFieldsToPass("scalars");

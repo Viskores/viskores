@@ -9,15 +9,23 @@
 ##============================================================================
 
 set(headers
+  BoundaryTree.h
+  BoundaryTreeMaker.h
+  ComputeDistributedContourTreeFunctor.h
   ContourTreeBlockData.h
-  SpatialDecomposition.h
-  MultiBlockContourTreeHelper.h
-  MergeBlockFunctor.h
-  BoundaryRestrictedAugmentedContourTree.h
-  BoundaryRestrictedAugmentedContourTreeMaker.h
+  DistributedContourTreeBlockData.h
   HierarchicalContourTree.h
+  InteriorForest.h
+  MergeBlockFunctor.h
+  MultiBlockContourTreeHelper.h
+  PrintGraph.h
+  SpatialDecomposition.h
+  TreeCompiler.h
+  TreeGrafter.h
 )
 
 vtkm_declare_headers(${headers})
 
-add_subdirectory(bract_maker)
+add_subdirectory(boundary_tree_maker)
+add_subdirectory(tree_grafter)
+add_subdirectory(hierarchical_contour_tree)

@@ -11,9 +11,11 @@
 #define vtk_m_cont_CellLocatorTwoLevel_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellLocator.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
+#include <vtkm/cont/CellSetList.h>
 
+#include <vtkm/cont/internal/CellLocatorBase.h>
+
+#include <vtkm/exec/CellLocatorMultiplexer.h>
 #include <vtkm/exec/CellLocatorTwoLevel.h>
 
 
@@ -38,9 +40,25 @@ namespace cont
 /// Javor Kalojanov, Markus Billeter, and Philipp Slusallek. "Two-Level Grids for Ray Tracing
 /// on GPUs." _Computer Graphics Forum_, 2011, pages 307-314. DOI 10.1111/j.1467-8659.2011.01862.x
 ///
-class VTKM_CONT_EXPORT CellLocatorTwoLevel : public vtkm::cont::CellLocator
+class VTKM_CONT_EXPORT CellLocatorTwoLevel
+  : public vtkm::cont::internal::CellLocatorBase<CellLocatorTwoLevel>
 {
+  using Superclass = vtkm::cont::internal::CellLocatorBase<CellLocatorTwoLevel>;
+
+  template <typename CellSetCont>
+  using CellSetContToExec =
+    typename CellSetCont::template ExecConnectivityType<vtkm::TopologyElementTagCell,
+                                                        vtkm::TopologyElementTagPoint>;
+
 public:
+  using SupportedCellSets = VTKM_DEFAULT_CELL_SET_LIST;
+
+  using CellExecObjectList = vtkm::ListTransform<SupportedCellSets, CellSetContToExec>;
+  using CellLocatorExecList =
+    vtkm::ListTransform<CellExecObjectList, vtkm::exec::CellLocatorTwoLevel>;
+
+  using ExecObjType = vtkm::ListApply<CellLocatorExecList, vtkm::exec::CellLocatorMultiplexer>;
+
   CellLocatorTwoLevel()
     : DensityL1(32.0f)
     , DensityL2(2.0f)
@@ -67,11 +85,13 @@ public:
 
   void PrintSummary(std::ostream& out) const;
 
-  const vtkm::exec::CellLocator* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token) const override;
+public:
+  ExecObjType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                  vtkm::cont::Token& token) const;
 
 private:
-  VTKM_CONT void Build() override;
+  friend Superclass;
+  VTKM_CONT void Build();
 
   vtkm::FloatDefault DensityL1, DensityL2;
 
@@ -82,11 +102,9 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> CellCount;
   vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
 
-  mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
-
   struct MakeExecObject;
-  struct PrepareForExecutionFunctor;
 };
+
 }
 } // vtkm::cont
 

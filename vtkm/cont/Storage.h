@@ -18,10 +18,16 @@
 #define VTKM_STORAGE VTKM_STORAGE_BASIC
 #endif
 
+#include <vtkm/Flags.h>
 #include <vtkm/StaticAssert.h>
 
-#include <vtkm/cont/vtkm_cont_export.h>
-#include <vtkm/internal/ExportMacros.h>
+#include <vtkm/internal/ArrayPortalDummy.h>
+
+#include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/Token.h>
+
+#include <vtkm/cont/internal/Buffer.h>
 
 namespace vtkm
 {
@@ -94,8 +100,8 @@ class Storage
   : public vtkm::cont::internal::UndefinedStorage
 {
 public:
-  using PortalType = vtkm::cont::internal::detail::UndefinedArrayPortal<T>;
-  using PortalConstType = vtkm::cont::internal::detail::UndefinedArrayPortal<T>;
+  using ReadPortalType = vtkm::cont::internal::detail::UndefinedArrayPortal<T>;
+  using WritePortalType = vtkm::cont::internal::detail::UndefinedArrayPortal<T>;
 };
 #else  //VTKM_DOXYGEN_ONLY
 {
@@ -104,70 +110,85 @@ public:
   ///
   using ValueType = T;
 
-  /// \brief The type of portal objects for the array.
+  /// \brief The type of portal objects for the array (read only).
   ///
-  /// The actual portal object can take any form. This is a simple example of a
-  /// portal to a C array.
-  ///
-  using PortalType = ::vtkm::cont::internal::ArrayPortalFromIterators<ValueType*>;
+  using ReadPortalType = vtkm::internal::ArrayPortalBasicRead<T>;
 
-  /// \brief The type of portal objects (const version) for the array.
+  /// \brief The type of portal objects for the array (read/write).
   ///
-  /// The actual portal object can take any form. This is a simple example of a
-  /// portal to a C array.
-  ///
-  using PortalConstType = ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*>;
+  using WritePortalType = vtkm::internal::ArrayPortalBasicWrite<T>;
 
-  VTKM_CONT Storage(const Storage& src);
-  VTKM_CONT Storage(Storage&& src) noexcept;
-  VTKM_CONT Storage& operator=(const Storage& src);
-  VTKM_CONT Storage& operator=(Storage&& src);
-
-  /// Returns a portal to the array.
+  /// \brief Returns the number of buffers required for this storage.
   ///
-  VTKM_CONT
-  PortalType GetPortal();
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers();
 
-  /// Returns a portal to the array with immutable values.
+  /// \brief Resizes the array by changing the size of the buffers.
   ///
-  VTKM_CONT
-  PortalConstType GetPortalConst() const;
+  /// Can also modify any metadata attached to the buffers.
+  ///
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token);
 
-  /// Returns the number of entries allocated in the array.
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const;
+  /// \brief Returns the number of entries allocated in the array.
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers);
 
-  /// \brief Allocates an array large enough to hold the given number of values.
+  /// \brief Create a read-only portal on the specified device.
   ///
-  /// The allocation may be done on an already existing array, but can wipe out
-  /// any data already in the array. This method can throw
-  /// ErrorBadAllocation if the array cannot be allocated or
-  /// ErrorBadValue if the allocation is not feasible (for example, the
-  /// array storage is read-only).
-  ///
-  VTKM_CONT
-  void Allocate(vtkm::Id numberOfValues);
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token);
 
-  /// \brief Reduces the size of the array without changing its values.
+  /// \brief Create a read/write portal on the specified device.
   ///
-  /// This method allows you to resize the array without reallocating it. The
-  /// number of entries in the array is changed to \c numberOfValues. The data
-  /// in the array (from indices 0 to \c numberOfValues - 1) are the same, but
-  /// \c numberOfValues must be equal or less than the preexisting size
-  /// (returned from GetNumberOfValues). That is, this method can only be used
-  /// to shorten the array, not lengthen.
-  VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues);
-
-  /// \brief Frees any resources (i.e. memory) stored in this array.
-  ///
-  /// After calling this method GetNumberOfValues will return 0. The
-  /// resources should also be released when the Storage class is
-  /// destroyed.
-  VTKM_CONT
-  void ReleaseResources();
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
 };
 #endif // VTKM_DOXYGEN_ONLY
+
+namespace detail
+{
+
+VTKM_CONT_EXPORT void StorageNoResizeImpl(vtkm::Id currentNumValues,
+                                          vtkm::Id requestedNumValues,
+                                          std::string storageTagName);
+
+} // namespace detail
+
+template <typename StorageType>
+struct StorageTraits;
+
+template <typename T, typename S>
+struct StorageTraits<vtkm::cont::internal::Storage<T, S>>
+{
+  using ValueType = T;
+  using Tag = S;
+};
+
+#define VTKM_STORAGE_NO_RESIZE                                                                     \
+  VTKM_CONT static void ResizeBuffers(                                                             \
+    vtkm::Id numValues, vtkm::cont::internal::Buffer* buffers, vtkm::CopyFlag, vtkm::cont::Token&) \
+  {                                                                                                \
+    vtkm::cont::internal::detail::StorageNoResizeImpl(                                             \
+      GetNumberOfValues(buffers),                                                                  \
+      numValues,                                                                                   \
+      vtkm::cont::TypeToString<typename vtkm::cont::internal::StorageTraits<Storage>::Tag>());     \
+  }                                                                                                \
+  using ResizeBuffersEatComma = void
+
+#define VTKM_STORAGE_NO_WRITE_PORTAL                                                           \
+  using WritePortalType = vtkm::internal::ArrayPortalDummy<                                    \
+    typename vtkm::cont::internal::StorageTraits<Storage>::ValueType>;                         \
+  VTKM_CONT static WritePortalType CreateWritePortal(                                          \
+    vtkm::cont::internal::Buffer*, vtkm::cont::DeviceAdapterId, vtkm::cont::Token&)            \
+  {                                                                                            \
+    throw vtkm::cont::ErrorBadAllocation(                                                      \
+      "Cannot write to arrays with storage type of " +                                         \
+      vtkm::cont::TypeToString<typename vtkm::cont::internal::StorageTraits<Storage>::Tag>()); \
+  }                                                                                            \
+  using CreateWritePortalEatComma = void
 
 } // namespace internal
 }

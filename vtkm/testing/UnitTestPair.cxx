@@ -13,6 +13,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
+#include <vtkmstd/is_trivial.h>
+
 #include <vtkm/testing/Testing.h>
 
 namespace
@@ -135,8 +137,11 @@ void PairTest()
 
     // Pair types should preserve the trivial properties of their components.
     // This insures that algorithms like std::copy will optimize fully.
-    VTKM_TEST_ASSERT(std::is_trivial<T>::value &&
-                       std::is_trivial<U>::value == std::is_trivial<P>::value,
+    // (Note, if std::is_trivial is not supported by the compiler, then
+    // vtkmstd::is_trivial will always report false, but VTKM_IS_TRIVIAL will
+    // always succeed.)
+    VTKM_IS_TRIVIAL(T);
+    VTKM_TEST_ASSERT(vtkmstd::is_trivial<U>::value == vtkmstd::is_trivial<P>::value,
                      "PairType's triviality differs from ComponentTypes.");
   }
 

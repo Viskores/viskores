@@ -22,8 +22,8 @@ namespace filter
 {
 
 template <typename Policy>
-inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
-                                                          vtkm::filter::PolicyBase<Policy> policy)
+vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
+                                         vtkm::filter::PolicyBase<Policy> policy)
 {
   using CellSetType = vtkm::cont::CellSetExplicit<>;
 

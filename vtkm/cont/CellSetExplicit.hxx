@@ -12,9 +12,8 @@
 #include <vtkm/Deprecated.h>
 #include <vtkm/cont/CellSetExplicit.h>
 
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayGetValues.h>
-#include <vtkm/cont/ArrayHandleDecorator.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
@@ -325,7 +324,7 @@ VTKM_CONT
 void CellSetExplicit<SST, CST, OST>::CompleteAddingCells(vtkm::Id numPoints)
 {
   this->Data->NumberOfPoints = numPoints;
-  this->Data->CellPointIds.Connectivity.Shrink(this->Data->ConnectivityAdded);
+  this->Data->CellPointIds.Connectivity.Allocate(this->Data->ConnectivityAdded, vtkm::CopyFlag::On);
   this->Data->CellPointIds.ElementsValid = true;
 
   if (this->Data->NumberOfCellsAdded != this->GetNumberOfCells())
@@ -370,27 +369,23 @@ void CellSetExplicit<SST, CST, OST>
 //----------------------------------------------------------------------------
 
 template <typename SST, typename CST, typename OST>
-template <typename Device, typename VisitTopology, typename IncidentTopology>
+template <typename VisitTopology, typename IncidentTopology>
 VTKM_CONT
 auto CellSetExplicit<SST, CST, OST>
-::PrepareForInput(Device, VisitTopology, IncidentTopology, vtkm::cont::Token& token) const
--> typename ExecutionTypes<Device,
-                           VisitTopology,
-                           IncidentTopology>::ExecObjectType
+::PrepareForInput(vtkm::cont::DeviceAdapterId device, VisitTopology, IncidentTopology, vtkm::cont::Token& token) const
+-> ExecConnectivityType<VisitTopology, IncidentTopology>
 {
-  this->BuildConnectivity(Device{}, VisitTopology{}, IncidentTopology{});
+  this->BuildConnectivity(device, VisitTopology{}, IncidentTopology{});
 
   const auto& connectivity = this->GetConnectivity(VisitTopology{},
                                                    IncidentTopology{});
   VTKM_ASSERT(connectivity.ElementsValid);
 
-  using ExecObjType = typename ExecutionTypes<Device,
-                                              VisitTopology,
-                                              IncidentTopology>::ExecObjectType;
+  using ExecObjType = ExecConnectivityType<VisitTopology, IncidentTopology>;
 
-  return ExecObjType(connectivity.Shapes.PrepareForInput(Device{}, token),
-                     connectivity.Connectivity.PrepareForInput(Device{}, token),
-                     connectivity.Offsets.PrepareForInput(Device{}, token));
+  return ExecObjType(connectivity.Shapes.PrepareForInput(device, token),
+                     connectivity.Connectivity.PrepareForInput(device, token),
+                     connectivity.Offsets.PrepareForInput(device, token));
 }
 
 //----------------------------------------------------------------------------
@@ -446,11 +441,8 @@ auto CellSetExplicit<SST, CST, OST>
 -> typename ConnectivityChooser<VisitTopology,
                                 IncidentTopology>::NumIndicesArrayType
 {
-  auto offsets = this->GetOffsetsArray(visited, incident);
-  const vtkm::Id numVals = offsets.GetNumberOfValues() - 1;
-  return vtkm::cont::make_ArrayHandleDecorator(numVals,
-                                               detail::NumIndicesDecorator{},
-                                               std::move(offsets));
+  // Converts to NumIndicesArrayType (which is an ArrayHandleOffsetsToNumComponents)
+  return this->GetOffsetsArray(visited, incident);
 }
 
 //----------------------------------------------------------------------------
@@ -479,9 +471,9 @@ void CellSetExplicit<SST, CST, OST>::DeepCopy(const CellSet* src)
   const auto ct = vtkm::TopologyElementTagCell{};
   const auto pt = vtkm::TopologyElementTagPoint{};
 
-  vtkm::cont::ArrayCopy(other->GetShapesArray(ct, pt), shapes);
-  vtkm::cont::ArrayCopy(other->GetConnectivityArray(ct, pt), conn);
-  vtkm::cont::ArrayCopy(other->GetOffsetsArray(ct, pt), offsets);
+  shapes.DeepCopyFrom(other->GetShapesArray(ct, pt));
+  conn.DeepCopyFrom(other->GetConnectivityArray(ct, pt));
+  offsets.DeepCopyFrom(other->GetOffsetsArray(ct, pt));
 
   this->Fill(other->GetNumberOfPoints(), shapes, conn, offsets);
 }

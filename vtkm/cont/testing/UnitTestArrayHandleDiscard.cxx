@@ -12,7 +12,6 @@
 #include <vtkm/cont/ArrayHandleDiscard.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 

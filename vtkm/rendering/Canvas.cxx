@@ -15,6 +15,8 @@
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/io/DecodePNG.h>
 #include <vtkm/io/EncodePNG.h>
+#include <vtkm/io/FileUtils.h>
+#include <vtkm/io/ImageUtils.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/LineRenderer.h>
 #include <vtkm/rendering/TextRenderer.h>
@@ -577,19 +579,11 @@ void Canvas::SetViewToScreenSpace(const vtkm::rendering::Camera& vtkmNotUsed(cam
 void Canvas::SaveAs(const std::string& fileName) const
 {
   this->RefreshColorBuffer();
-  auto ends_with = [](std::string const& value, std::string const& ending) {
-    if (ending.size() > value.size())
-    {
-      return false;
-    }
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-  };
-
   ColorBufferType::ReadPortalType colorPortal = GetColorBuffer().ReadPortal();
   vtkm::Id width = GetWidth();
   vtkm::Id height = GetHeight();
 
-  if (ends_with(fileName, ".png"))
+  if (vtkm::io::EndsWith(fileName, ".png"))
   {
     std::vector<unsigned char> img(static_cast<size_t>(4 * width * height));
     for (vtkm::Id yIndex = height - 1; yIndex >= 0; yIndex--)

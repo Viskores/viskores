@@ -10,10 +10,10 @@
 #ifndef vtk_m_cont_internal_ReverseConnectivityBuilder_h
 #define vtk_m_cont_internal_ReverseConnectivityBuilder_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/cont/AtomicArray.h>
 #include <vtkm/exec/FunctorBase.h>
@@ -133,8 +133,7 @@ public:
             typename RConnArray,
             typename ROffsetsArray,
             typename RConnToConnIdxCalc,
-            typename ConnIdxToCellIdxCalc,
-            typename Device>
+            typename ConnIdxToCellIdxCalc>
   inline void Run(const ConnArray& conn,
                   RConnArray& rConn,
                   ROffsetsArray& rOffsets,
@@ -142,12 +141,10 @@ public:
                   const ConnIdxToCellIdxCalc& cellIdCalc,
                   vtkm::Id numberOfPoints,
                   vtkm::Id rConnSize,
-                  Device)
+                  vtkm::cont::DeviceAdapterId device)
   {
-    using Algo = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-
     vtkm::cont::Token connToken;
-    auto connPortal = conn.PrepareForInput(Device(), connToken);
+    auto connPortal = conn.PrepareForInput(device, connToken);
     auto zeros = vtkm::cont::make_ArrayHandleConstant(vtkm::IdComponent{ 0 }, numberOfPoints);
 
     // Compute RConn offsets by atomically building a histogram and doing an
@@ -159,26 +156,27 @@ public:
     // (out) RIdxOffsets:  0  3  5  6  9 11 12
     vtkm::cont::ArrayHandle<vtkm::IdComponent> rNumIndices;
     { // allocate and zero the numIndices array:
-      Algo::Copy(zeros, rNumIndices);
+      vtkm::cont::Algorithm::Copy(device, zeros, rNumIndices);
     }
 
     { // Build histogram:
       vtkm::cont::AtomicArray<vtkm::IdComponent> atomicCounter{ rNumIndices };
       vtkm::cont::Token token;
-      auto ac = atomicCounter.PrepareForExecution(Device(), token);
+      auto ac = atomicCounter.PrepareForExecution(device, token);
       using BuildHisto =
         rcb::BuildHistogram<decltype(ac), decltype(connPortal), RConnToConnIdxCalc>;
       BuildHisto histoGen{ ac, connPortal, rConnToConnCalc };
 
-      Algo::Schedule(histoGen, rConnSize);
+      vtkm::cont::Algorithm::Schedule(device, histoGen, rConnSize);
     }
 
     { // Compute offsets:
-      Algo::ScanExtended(vtkm::cont::make_ArrayHandleCast<vtkm::Id>(rNumIndices), rOffsets);
+      vtkm::cont::Algorithm::ScanExtended(
+        device, vtkm::cont::make_ArrayHandleCast<vtkm::Id>(rNumIndices), rOffsets);
     }
 
     { // Reset the numIndices array to 0's:
-      Algo::Copy(zeros, rNumIndices);
+      vtkm::cont::Algorithm::Copy(device, zeros, rNumIndices);
     }
 
     // Fill the connectivity table:
@@ -197,9 +195,9 @@ public:
     {
       vtkm::cont::AtomicArray<vtkm::IdComponent> atomicCounter{ rNumIndices };
       vtkm::cont::Token token;
-      auto ac = atomicCounter.PrepareForExecution(Device(), token);
-      auto rOffsetPortal = rOffsets.PrepareForInput(Device(), token);
-      auto rConnPortal = rConn.PrepareForOutput(rConnSize, Device(), token);
+      auto ac = atomicCounter.PrepareForExecution(device, token);
+      auto rOffsetPortal = rOffsets.PrepareForInput(device, token);
+      auto rConnPortal = rConn.PrepareForOutput(rConnSize, device, token);
 
       using GenRConnT = rcb::GenerateRConn<decltype(ac),
                                            decltype(connPortal),
@@ -209,7 +207,7 @@ public:
                                            ConnIdxToCellIdxCalc>;
       GenRConnT rConnGen{ ac, connPortal, rOffsetPortal, rConnPortal, rConnToConnCalc, cellIdCalc };
 
-      Algo::Schedule(rConnGen, rConnSize);
+      vtkm::cont::Algorithm::Schedule(device, rConnGen, rConnSize);
     }
   }
 };
