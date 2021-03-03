@@ -145,7 +145,8 @@ public:
   }
 
   template <typename T, typename U, class CIn>
-  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
+  VTKM_CONT static auto Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
+    -> decltype(Reduce(input, initialValue, vtkm::Add{}))
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
@@ -153,9 +154,10 @@ public:
   }
 
   template <typename T, typename U, class CIn, class BinaryFunctor>
-  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input,
-                            U initialValue,
-                            BinaryFunctor binary_functor)
+  VTKM_CONT static auto Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               U initialValue,
+                               BinaryFunctor binary_functor)
+    -> decltype(tbb::ReducePortals(input.ReadPortal(), initialValue, binary_functor))
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
