@@ -44,19 +44,27 @@ public:
 #endif
   }
 
+  int GetRank() const { return this->Rank; }
+  int GetNumRanks() const { return this->NumRanks; }
+
 #ifdef VTKM_ENABLE_MPI
   VTKM_CONT void RegisterTag(int tag, std::size_t numRecvs, std::size_t size);
 
 protected:
+  static std::size_t CalcMessageBufferSize(std::size_t msgSz);
+
   void InitializeBuffers();
-  void CleanupRequests(int tag = TAG_ANY);
   void CheckPendingSendRequests();
-  void PostRecv(int tag);
-  void PostRecv(int tag, std::size_t sz, int src = -1);
+  void CleanupRequests(int tag = TAG_ANY);
   void SendData(int dst, int tag, const vtkmdiy::MemoryBuffer& buff);
-  bool RecvData(std::set<int>& tags,
+  bool RecvData(const std::set<int>& tags,
                 std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>& buffers,
                 bool blockAndWait = false);
+
+private:
+  void PostRecv(int tag);
+  void PostRecv(int tag, std::size_t sz, int src = -1);
+
 
   //Message headers.
   typedef struct
@@ -87,12 +95,16 @@ protected:
   std::map<RankIdPair, std::list<char*>> RecvPackets;
   std::map<RequestTagPair, char*> SendBuffers;
   static constexpr int TAG_ANY = -1;
+
+  void CheckRequests(const std::map<RequestTagPair, char*>& buffer,
+                     const std::set<int>& tags,
+                     bool BlockAndWait,
+                     std::vector<RequestTagPair>& reqTags);
 #else
+protected:
   static constexpr int NumRanks = 1;
   static constexpr int Rank = 0;
 #endif
-
-  static std::size_t CalcMessageBufferSize(std::size_t msgSz);
 };
 }
 }
