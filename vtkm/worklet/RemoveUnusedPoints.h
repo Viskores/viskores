@@ -214,6 +214,16 @@ private:
 
     template <typename InT, typename InS>
     VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<InT, InS>& inArray,
+                              vtkm::cont::UnknownArrayHandle& outHolder,
+                              const RemoveUnusedPoints& self) const
+    {
+      vtkm::cont::ArrayHandle<InT> outArray;
+      (*this)(inArray, outArray, self);
+      outHolder = vtkm::cont::UnknownArrayHandle{ outArray };
+    }
+
+    template <typename InT, typename InS>
+    VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<InT, InS>& inArray,
                               vtkm::cont::VariantArrayHandleCommon& outHolder,
                               const RemoveUnusedPoints& self) const
     {
@@ -248,6 +258,23 @@ public:
     vtkm::cont::ArrayHandle<T> outArray;
     this->MapPointFieldDeep(inArray, outArray);
 
+    return outArray;
+  }
+
+  template <typename InValueTypes, typename InStorageTypes, typename OutArrayHandle>
+  VTKM_CONT void MapPointFieldDeep(
+    const vtkm::cont::UncertainArrayHandle<InValueTypes, InStorageTypes>& inArray,
+    OutArrayHandle& outArray) const
+  {
+    vtkm::cont::CastAndCall(inArray, MapPointFieldDeepFunctor{}, outArray, *this);
+  }
+
+  template <typename InValueTypes, typename InStorageTypes>
+  VTKM_CONT vtkm::cont::UncertainArrayHandle<InValueTypes, InStorageTypes> MapPointFieldDeep(
+    const vtkm::cont::UncertainArrayHandle<InValueTypes, InStorageTypes>& inArray) const
+  {
+    vtkm::cont::UncertainArrayHandle<InValueTypes, InStorageTypes> outArray;
+    vtkm::cont::CastAndCall(inArray, MapPointFieldDeepFunctor{}, outArray, *this);
     return outArray;
   }
 

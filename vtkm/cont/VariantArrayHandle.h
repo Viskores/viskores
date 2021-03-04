@@ -25,6 +25,8 @@
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
+#include <sstream>
+
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
@@ -284,14 +286,7 @@ public:
   {
   }
 
-  VTKM_CONT explicit VariantArrayHandleBase(const vtkm::cont::UnknownArrayHandle& src)
-    : Superclass(src)
-  {
-  }
-
-  template <typename StorageList>
-  VTKM_CONT VariantArrayHandleBase(
-    const vtkm::cont::UncertainArrayHandle<TypeList, StorageList>& src)
+  VTKM_CONT VariantArrayHandleBase(const vtkm::cont::UnknownArrayHandle& src)
     : Superclass(src)
   {
   }

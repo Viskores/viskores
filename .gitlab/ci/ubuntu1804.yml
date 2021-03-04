@@ -16,7 +16,7 @@ build:ubuntu1804_gcc9:
     CC: "gcc-9"
     CXX: "g++-9"
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "tbb+openmp+mpi+shared"
+    VTKM_SETTINGS: "tbb+openmp+mpi+shared+hdf5"
 
 test:ubuntu1804_gcc9:
   tags:
@@ -220,5 +220,3 @@ test:ubuntu1804_kokkos:
     - build:ubuntu1804_kokkos
   needs:
     - build:ubuntu1804_kokkos
-  variables:
-    CUDA_LAUNCH_BLOCKING: "1"

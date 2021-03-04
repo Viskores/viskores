@@ -16,9 +16,6 @@
 #include <vtkm/cont/ColorTableSamples.h>
 #include <vtkm/cont/testing/Testing.h>
 
-// Required for implementation of ArrayRangeCompute for "odd" arrays
-#include <vtkm/cont/ArrayRangeCompute.hxx>
-
 #include <algorithm>
 #include <iostream>
 

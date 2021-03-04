@@ -29,6 +29,7 @@
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/Timer.h>
 
+#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -72,9 +73,8 @@ private:
   using ScalarArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag>;
   using FloatCastHandle = vtkm::cont::ArrayHandleCast<vtkm::FloatDefault, IdArrayHandle>;
 
-  using IdPortalType = typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
-  using IdPortalConstType =
-    typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
+  using IdPortalType = typename IdArrayHandle::WritePortalType;
+  using IdPortalConstType = typename IdArrayHandle::ReadPortalType;
 
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
@@ -171,7 +171,7 @@ public:
   struct OverlapKernel
   {
     using ArrayType = ArrayHandle<bool>;
-    using PortalType = typename ArrayType::template ExecutionTypes<DeviceAdapterTag>::Portal;
+    using PortalType = typename ArrayType::WritePortalType;
 
     PortalType TrackerPortal;
     PortalType ValidPortal;
@@ -310,7 +310,7 @@ public:
 
     VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
-    vtkm::exec::AtomicArrayExecutionObject<T, DeviceAdapterTag> AArray;
+    vtkm::exec::AtomicArrayExecutionObject<T> AArray;
   };
 
   template <typename T>
@@ -334,7 +334,7 @@ public:
 
     VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
-    vtkm::exec::AtomicArrayExecutionObject<T, DeviceAdapterTag> AArray;
+    vtkm::exec::AtomicArrayExecutionObject<T> AArray;
   };
 
   class VirtualObjectTransferKernel
@@ -787,7 +787,7 @@ private:
 
     {
       using BoolArray = ArrayHandle<bool>;
-      using BoolPortal = typename BoolArray::template ExecutionTypes<DeviceAdapterTag>::Portal;
+      using BoolPortal = typename BoolArray::WritePortalType;
       BoolArray tracker;
       BoolArray valid;
 
@@ -831,7 +831,7 @@ private:
       static const vtkm::Id3 dims{ DIM_SIZE, DIM_SIZE, DIM_SIZE };
 
       using BoolArray = ArrayHandle<bool>;
-      using BoolPortal = typename BoolArray::template ExecutionTypes<DeviceAdapterTag>::Portal;
+      using BoolPortal = typename BoolArray::WritePortalType;
       BoolArray tracker;
       BoolArray valid;
 
@@ -918,8 +918,8 @@ private:
     }
 
     std::cout << "  CopyIf on zero size arrays." << std::endl;
-    array.Shrink(0);
-    stencil.Shrink(0);
+    array.ReleaseResources();
+    stencil.ReleaseResources();
     Algorithm::CopyIf(array, stencil, result);
     VTKM_TEST_ASSERT(result.GetNumberOfValues() == 0, "result of CopyIf has an incorrect size");
   }
@@ -1043,7 +1043,7 @@ private:
     }
 
     //Try zero sized array
-    sorted.Shrink(0);
+    sorted.Allocate(0);
     Algorithm::Sort(sorted);
   }
 
@@ -1338,10 +1338,10 @@ private:
     std::cout << "  Inclusive scan to check" << std::endl;
     vtkm::Id inclusive_sum = Algorithm::ScanInclusive(array, array);
     std::cout << "  Reduce with 1 value." << std::endl;
-    array.Shrink(1);
+    array.Allocate(1, vtkm::CopyFlag::On);
     vtkm::Id reduce_sum_one_value = Algorithm::Reduce(array, vtkm::Id(0));
     std::cout << "  Reduce with 0 values." << std::endl;
-    array.Shrink(0);
+    array.Allocate(0);
     vtkm::Id reduce_sum_no_values = Algorithm::Reduce(array, vtkm::Id(0));
     VTKM_TEST_ASSERT(reduce_sum == OFFSET * ARRAY_SIZE, "Got bad sum from Reduce");
     VTKM_TEST_ASSERT(reduce_sum_with_intial_value == reduce_sum + ARRAY_SIZE,
@@ -1938,14 +1938,14 @@ private:
       }
 
       std::cout << "  size 1" << std::endl;
-      array.Shrink(1);
+      array.Allocate(1, vtkm::CopyFlag::On);
       sum = Algorithm::ScanInclusive(array, array);
       VTKM_TEST_ASSERT(sum == OFFSET, "Incorrect partial sum");
       const vtkm::Id value = array.ReadPortal().Get(0);
       VTKM_TEST_ASSERT(value == OFFSET, "Incorrect partial sum");
 
       std::cout << "  size 0" << std::endl;
-      array.Shrink(0);
+      array.Allocate(0);
       sum = Algorithm::ScanInclusive(array, array);
       VTKM_TEST_ASSERT(sum == 0, "Incorrect partial sum");
     }
@@ -2081,7 +2081,7 @@ private:
       }
 
       std::cout << "  size 1" << std::endl;
-      array.Shrink(1);
+      array.Allocate(1, vtkm::CopyFlag::On);
       array.WritePortal().Set(0, OFFSET);
       sum = Algorithm::ScanExclusive(array, array);
       VTKM_TEST_ASSERT(sum == OFFSET, "Incorrect partial sum");
@@ -2089,7 +2089,7 @@ private:
       VTKM_TEST_ASSERT(value == 0, "Incorrect partial sum");
 
       std::cout << "  size 0" << std::endl;
-      array.Shrink(0);
+      array.Allocate(0);
       sum = Algorithm::ScanExclusive(array, array);
       VTKM_TEST_ASSERT(sum == 0, "Incorrect partial sum");
     }
@@ -2186,7 +2186,7 @@ private:
       }
 
       std::cout << "  size 1" << std::endl;
-      array.Shrink(1);
+      array.Allocate(1, vtkm::CopyFlag::On);
       array.WritePortal().Set(0, OFFSET);
       Algorithm::ScanExtended(array, array);
       VTKM_TEST_ASSERT(array.GetNumberOfValues() == 2);
@@ -2197,7 +2197,7 @@ private:
       }
 
       std::cout << "  size 0" << std::endl;
-      array.Shrink(0);
+      array.Allocate(0);
       Algorithm::ScanExtended(array, array);
       VTKM_TEST_ASSERT(array.GetNumberOfValues() == 1);
       {

@@ -92,8 +92,7 @@ public:
   class Texture2DSamplerExecutionObject
   {
   public:
-    using TextureExecPortal =
-      typename TextureDataHandle::template ExecutionTypes<Device>::PortalConst;
+    using TextureExecPortal = typename TextureDataHandle::ReadPortalType;
 
     VTKM_CONT
     Texture2DSamplerExecutionObject()

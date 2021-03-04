@@ -160,6 +160,8 @@ bool CleanGrid::MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont
 }
 
 //-----------------------------------------------------------------------------
-VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(CleanGrid);
+template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::DataSet CleanGrid::DoExecute(
+  const vtkm::cont::DataSet& inData,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault> policy);
 }
 }

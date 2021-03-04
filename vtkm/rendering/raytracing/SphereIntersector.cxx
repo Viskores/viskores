@@ -125,9 +125,9 @@ class SphereLeafIntersector
 {
 public:
   using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using IdArrayPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using IdArrayPortal = typename IdHandle::ReadPortalType;
   using FloatHandle = vtkm::cont::ArrayHandle<vtkm::Float32>;
-  using FloatPortal = typename FloatHandle::ExecutionTypes<Device>::PortalConst;
+  using FloatPortal = typename FloatHandle::ReadPortalType;
   IdArrayPortal PointIds;
   FloatPortal Radii;
 
@@ -257,7 +257,7 @@ public:
     : MinScalar(minScalar)
   {
     Normalize = true;
-    if (minScalar > maxScalar)
+    if (minScalar >= maxScalar)
     {
       // support the scalar renderer
       Normalize = false;
@@ -375,7 +375,7 @@ void SphereIntersector::IntersectionDataImp(Ray<Precision>& rays,
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
     .Invoke(rays.HitIdx,
             rays.Scalar,
-            scalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+            vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
             PointIds);
 }
 

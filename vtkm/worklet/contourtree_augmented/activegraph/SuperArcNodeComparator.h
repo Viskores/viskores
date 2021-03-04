@@ -69,21 +69,20 @@ namespace active_graph_inc
 
 
 // comparator used for initial sort of data values
-template <typename DeviceAdapter>
 class SuperArcNodeComparatorImpl
 {
 public:
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
 
   // constructor - takes vectors as parameters
   VTKM_CONT
   SuperArcNodeComparatorImpl(const IdArrayType& superparents,
                              bool joinSweep,
+                             vtkm::cont::DeviceAdapterId device,
                              vtkm::cont::Token& token)
     : IsJoinSweep(joinSweep)
   { // constructor
-    SuperparentsPortal = superparents.PrepareForInput(DeviceAdapter(), token);
+    SuperparentsPortal = superparents.PrepareForInput(device, token);
   } // constructor
 
   // () operator - gets called to do comparison
@@ -128,12 +127,10 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT SuperArcNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter,
-    vtkm::cont::Token& token) const
+  VTKM_CONT SuperArcNodeComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                           vtkm::cont::Token& token) const
   {
-    return SuperArcNodeComparatorImpl<DeviceAdapter>(this->Superparents, this->JoinSweep, token);
+    return SuperArcNodeComparatorImpl(this->Superparents, this->JoinSweep, device, token);
   }
 
 private:

@@ -8,10 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ContourExecute_cxx
-#define vtk_m_filter_ContourExecute_cxx
+#ifndef vtk_m_filter_ContourExecuteScalar_cxx
+#define vtk_m_filter_ContourExecuteScalar_cxx
 
 #include <vtkm/filter/Contour.h>
+#include <vtkm/filter/Contour.hxx>
 
 namespace vtkm
 {

@@ -85,7 +85,7 @@ public:
     vtkm::Id nCols = pointDimensions[1];
 
     vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-    dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(fieldArray);
 
     // Output saddle peak pairs array
     vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
@@ -132,7 +132,7 @@ public:
     vtkm::Id nSlices = pointDimensions[2];
 
     vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-    dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(fieldArray);
 
     // Output saddle peak pairs array
     vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;

@@ -45,7 +45,7 @@ struct TryArrayOutType
     using ArrayHandleType = vtkm::cont::ArrayHandle<T>;
     ArrayHandleType handle;
 
-    using PortalType = typename ArrayHandleType::template ExecutionTypes<Device>::Portal;
+    using PortalType = typename ArrayHandleType::WritePortalType;
 
     vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayOut, ArrayHandleType, Device>
       transport;

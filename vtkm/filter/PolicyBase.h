@@ -153,6 +153,19 @@ struct AllCastArraysForStorageImpl<TargetT,
   using type = vtkm::ListEmpty;
 };
 
+#ifdef VTKM_ADD_XGC_DEFAULT_TYPES
+template <typename T>
+struct AllCastArraysForStorageImpl<vtkm::Vec<T, 3>, vtkm::cont::StorageTagXGCCoordinates, true>
+{
+  using type = vtkm::List<vtkm::cont::ArrayHandleXGCCoordinates<T>>;
+};
+template <typename TargetT>
+struct AllCastArraysForStorageImpl<TargetT, vtkm::cont::StorageTagXGCCoordinates, false>
+{
+  using type = vtkm::ListEmpty;
+};
+#endif
+
 // Given a target type and storage of an array handle, provides a list this array handle plus all
 // array handles that can be cast to the target type wrapped in an ArrayHandleCast that does so.
 template <typename TargetT, typename Storage>
@@ -201,10 +214,12 @@ using ArrayHandleMultiplexerForStorageList = vtkm::cont::ArrayHandleMultiplexerF
 /// passed to the `DoMapField` method of filters.
 ///
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename std::conditional<
-  std::is_same<typename DerivedPolicy::FieldTypeList, vtkm::ListUniversal>::value,
-  VTKM_DEFAULT_TYPE_LIST,
-  typename DerivedPolicy::FieldTypeList>::type>
+VTKM_CONT vtkm::cont::UncertainArrayHandle<
+  typename std::conditional<
+    std::is_same<typename DerivedPolicy::FieldTypeList, vtkm::ListUniversal>::value,
+    VTKM_DEFAULT_TYPE_LIST,
+    typename DerivedPolicy::FieldTypeList>::type,
+  typename DerivedPolicy::StorageList>
 ApplyPolicyFieldNotActive(const vtkm::cont::Field& field, vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   // Policies are on their way out, but until they are we want to respect them. In the mean
@@ -213,7 +228,7 @@ ApplyPolicyFieldNotActive(const vtkm::cont::Field& field, vtkm::filter::PolicyBa
     std::is_same<typename DerivedPolicy::FieldTypeList, vtkm::ListUniversal>::value,
     VTKM_DEFAULT_TYPE_LIST,
     typename DerivedPolicy::FieldTypeList>::type;
-  return field.GetData().ResetTypes(TypeList());
+  return field.GetData().ResetTypes(TypeList{}, typename DerivedPolicy::StorageList{});
 }
 
 //-----------------------------------------------------------------------------
@@ -235,7 +250,7 @@ ApplyPolicyFieldOfType(const vtkm::cont::Field& field,
     T,
     vtkm::ListAppend<typename FilterType::AdditionalFieldStorage,
                      typename DerivedPolicy::StorageList>>;
-  return field.GetData().AsMultiplexer<ArrayHandleMultiplexerType>();
+  return field.GetData().AsArrayHandle<ArrayHandleMultiplexerType>();
 }
 
 //-----------------------------------------------------------------------------
@@ -255,7 +270,10 @@ ApplyPolicyFieldActive(const vtkm::cont::Field& field,
   using FilterTypes = typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList;
   using TypeList =
     typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterTypes>::TypeList;
-  return field.GetData().ResetTypes(TypeList());
+  using FilterStorage = typename vtkm::filter::FilterTraits<FilterType>::AdditionalFieldStorage;
+  using StorageList =
+    typename vtkm::filter::DeduceFilterFieldStorage<DerivedPolicy, FilterStorage>::StorageList;
+  return field.GetData().ResetTypes(TypeList{}, StorageList{});
 }
 
 ////-----------------------------------------------------------------------------
@@ -361,19 +379,26 @@ VTKM_CONT vtkm::cont::DynamicCellSetBase<
 }
 
 //-----------------------------------------------------------------------------
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList>
-  MakeSerializableField(vtkm::filter::PolicyBase<DerivedPolicy>)
+VTKM_DEPRECATED(1.6, "MakeSerializableField is no longer needed.")
+VTKM_CONT
+  vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList> MakeSerializableField(
+    vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return {};
 }
 
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList>
-MakeSerializableField(const vtkm::cont::Field& field, vtkm::filter::PolicyBase<DerivedPolicy>)
+VTKM_DEPRECATED(1.6, "MakeSerializableField is no longer needed.")
+VTKM_CONT
+  vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList> MakeSerializableField(
+    const vtkm::cont::Field& field,
+    vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return vtkm::cont::SerializableField<typename DerivedPolicy::FieldTypeList>{ field };
 }
+VTKM_DEPRECATED_SUPPRESS_END
 
 template <typename DerivedPolicy>
 VTKM_DEPRECATED(1.6, "MakeSerializableDataSet now takes the filter as an argument.")

@@ -14,6 +14,17 @@
 
 namespace vtkm
 {
+
+namespace internal
+{
+
+struct VTKM_ALWAYS_EXPORT IndexFunctor
+{
+  VTKM_EXEC_CONT vtkm::Id operator()(vtkm::Id index) const { return index; }
+};
+
+} // namespace internal
+
 namespace cont
 {
 
@@ -24,28 +35,12 @@ struct VTKM_ALWAYS_EXPORT StorageTagIndex
 namespace internal
 {
 
-struct VTKM_ALWAYS_EXPORT IndexFunctor
-{
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id index) const { return index; }
-};
-
 using StorageTagIndexSuperclass =
-  typename vtkm::cont::ArrayHandleImplicit<IndexFunctor>::StorageTag;
+  typename vtkm::cont::ArrayHandleImplicit<vtkm::internal::IndexFunctor>::StorageTag;
 
 template <>
 struct Storage<vtkm::Id, vtkm::cont::StorageTagIndex> : Storage<vtkm::Id, StorageTagIndexSuperclass>
 {
-  using Superclass = Storage<vtkm::Id, StorageTagIndexSuperclass>;
-  using Superclass::Superclass;
-};
-
-template <typename Device>
-struct ArrayTransfer<vtkm::Id, vtkm::cont::StorageTagIndex, Device>
-  : ArrayTransfer<vtkm::Id, StorageTagIndexSuperclass, Device>
-{
-  using Superclass = ArrayTransfer<vtkm::Id, StorageTagIndexSuperclass, Device>;
-  using Superclass::Superclass;
 };
 
 } // namespace internal
@@ -65,8 +60,7 @@ public:
   VTKM_CONT
   ArrayHandleIndex(vtkm::Id length)
     : Superclass(
-        typename internal::Storage<vtkm::Id, StorageTagIndex>::PortalType(internal::IndexFunctor{},
-                                                                          length))
+        internal::FunctorToArrayHandleImplicitBuffers(vtkm::internal::IndexFunctor{}, length))
   {
   }
 };

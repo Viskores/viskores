@@ -243,26 +243,6 @@ void TrySpecialArrays()
   }
 }
 
-void TestBadArrayLengths()
-{
-  std::cout << "Checking behavior when size of input arrays do not agree." << std::endl;
-
-  using InArrayType = vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag>;
-  InArrayType longInArray = MakeInputArray<vtkm::FloatDefault>(0);
-  InArrayType shortInArray = MakeInputArray<vtkm::FloatDefault>(1);
-  shortInArray.Shrink(ARRAY_SIZE / 2);
-
-  try
-  {
-    vtkm::cont::make_ArrayHandleCompositeVector(longInArray, shortInArray);
-    VTKM_TEST_FAIL("Did not get exception like expected.");
-  }
-  catch (vtkm::cont::ErrorBadValue& error)
-  {
-    std::cout << "Got expected error: " << std::endl << error.GetMessage() << std::endl;
-  }
-}
-
 void TestCompositeVector()
 {
   TryScalarArray<2>();
@@ -272,8 +252,6 @@ void TestCompositeVector()
   TryVector();
 
   TrySpecialArrays();
-
-  TestBadArrayLengths();
 }
 
 } // anonymous namespace

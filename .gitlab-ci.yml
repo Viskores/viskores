@@ -3,7 +3,7 @@
 #
 #   * .gitlab/ci/docker/centos7/cuda10.2/
 #     - cuda
-#     - gcc 4.8.5
+#     - gcc 7.3.1
 #   * .gitlab/ci/docker/centos8/base/
 #     - gcc 8.3.1
 #     - clang 8.0.1
@@ -13,7 +13,7 @@
 #     - cuda
 #     - gcc 8.2.1
 #   * .gitlab/ci/docker/ubuntu1604/base/
-#     - gcc 4.8
+#     - gcc 5.4.0
 #     - clang 3.8
 #     - clang 5.0
 #     - tbb
@@ -32,6 +32,7 @@
 #     - tbb
 #     - openmp
 #     - mpich2
+#     - hdf5
 #   * .gitlab/ci/docker/ubuntu1804/cuda11.1/
 #     - cuda
 #     - gcc 7
@@ -50,7 +51,7 @@
     GIT_CLONE_PATH: $CI_BUILDS_DIR/gitlab-kitware-sciviz-ci
 
 .centos7: &centos7
-  image: "kitware/vtkm:ci-centos7_cuda10.2-20201016"
+  image: "kitware/vtkm:ci-centos7_cuda10.2-20210128"
   extends:
     - .docker_image
 
@@ -75,7 +76,7 @@
     - .docker_image
 
 .ubuntu1804: &ubuntu1804
-  image: "kitware/vtkm:ci-ubuntu1804-20201016"
+  image: "kitware/vtkm:ci-ubuntu1804-20210107"
   extends:
     - .docker_image
 
@@ -173,6 +174,14 @@ stages:
     #for running failed tests multiple times so failures
     #due to system load are not reported
     - "ctest-latest -VV -S .gitlab/ci/ctest_test.cmake"
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      # The generated regression testing images
+      - build/*.png
+      - build/*.pnm
+      - build/*.pmm
 
 .cmake_memcheck_linux: &cmake_memcheck_linux
   stage: test
@@ -180,6 +189,14 @@ stages:
   interruptible: true
   script:
     - "ctest-latest -VV -S .gitlab/ci/ctest_memcheck.cmake"
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      # The generated regression testing images
+      - build/*.png
+      - build/*.pnm
+      - build/*.pmm
 
 include:
   - local: '/.gitlab/ci/centos7.yml'

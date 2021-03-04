@@ -12,6 +12,7 @@
 #define vtk_m_filter_particle_density_ngp_hxx
 
 #include "ParticleDensityNearestGridPoint.h"
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/filter/PolicyBase.h>
@@ -24,11 +25,15 @@ namespace worklet
 class NGPWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn coords, ExecObject locator, AtomicArrayInOut density);
-  using ExecutionSignature = void(_1, _2, _3);
+  using ControlSignature = void(FieldIn coords,
+                                FieldIn field,
+                                ExecObject locator,
+                                AtomicArrayInOut density);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
-  template <typename Point, typename CellLocatorExecObj, typename AtomicArray>
+  template <typename Point, typename T, typename CellLocatorExecObj, typename AtomicArray>
   VTKM_EXEC void operator()(const Point& point,
+                            const T value,
                             const CellLocatorExecObj& locator,
                             AtomicArray& density) const
   {
@@ -36,14 +41,13 @@ public:
     vtkm::Vec3f parametric;
 
     // Find the cell containing the point
-    if (locator->FindCell(point, cellId, parametric) == vtkm::ErrorCode::Success)
+    if (locator.FindCell(point, cellId, parametric) == vtkm::ErrorCode::Success)
     {
-      // increment density
-      density.Add(cellId, 1);
+      // deposit field value to density
+      density.Add(cellId, value);
     }
 
-    // FIXME: what does mean when it is not found?
-    // We simply ignore that particular particle.
+    // We simply ignore that particular particle when it is not in the mesh.
   }
 }; //NGPWorklet
 } //worklet
@@ -79,8 +83,9 @@ ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(const Id3& dime
 
 template <typename T, typename StorageType, typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
-  const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::cont::DataSet& dataSet,
+  const vtkm::cont::ArrayHandle<T, StorageType>&
+    field, // particles' scala field to be deposited to the mesh, e.g. mass or charge
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<Policy>)
 {
@@ -100,14 +105,16 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   locator.SetCoordinates(uniform.GetCoordinateSystem());
   locator.Update();
 
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> coords;
+  dataSet.GetCoordinateSystem().GetData().AsArrayHandle<vtkm::Vec3f>(coords);
+
   // We create an ArrayHandle and pass it to the Worklet as AtomicArrayInOut.
   // However the ArrayHandle needs to be allocated and initialized first. The
   // easily way to do it is to copy from an ArrayHandleConstant
-  vtkm::cont::ArrayHandle<vtkm::Id> density;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, uniform.GetNumberOfCells()),
-                        density);
+  vtkm::cont::ArrayHandle<T> density;
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<T>(0, uniform.GetNumberOfCells()), density);
 
-  this->Invoke(vtkm::worklet::NGPWorklet{}, field, locator, density);
+  this->Invoke(vtkm::worklet::NGPWorklet{}, coords, field, locator, density);
 
   uniform.AddField(vtkm::cont::make_FieldCell("density", density));
 

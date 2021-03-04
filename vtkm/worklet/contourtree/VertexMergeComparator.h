@@ -107,13 +107,11 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
   class ExecObject
   {
   public:
-    using ValuePortalType =
-      typename ValueArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-    using IdPortalType = typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+    using ValuePortalType = typename ValueArrayType::ReadPortalType;
+    using IdPortalType = typename IdArrayType::ReadPortalType;
 
     ValuePortalType Values;
     IdPortalType Extrema;
@@ -162,13 +160,12 @@ public:
     }
   };
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter,
-                                                          vtkm::cont::Token& token) const
+  VTKM_CONT ExecObject PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                           vtkm::cont::Token& token) const
   {
-    return ExecObject<DeviceAdapter>(this->Values.PrepareForInput(DeviceAdapter(), token),
-                                     this->Extrema.PrepareForInput(DeviceAdapter(), token),
-                                     this->IsJoinTree);
+    return ExecObject(this->Values.PrepareForInput(device, token),
+                      this->Extrema.PrepareForInput(device, token),
+                      this->IsJoinTree);
   }
 }; // VertexMergeComparator
 }

@@ -87,7 +87,7 @@ public:
 
     vtkm::cont::Field Result = result.GetField("saddlePeak");
     vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-    Result.GetData().CopyTo(saddlePeak);
+    Result.GetData().AsArrayHandle(saddlePeak);
 
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 7),
                      "Wrong result for ContourTree filter");
@@ -126,7 +126,7 @@ public:
 
     vtkm::cont::Field Result = result.GetField("saddlePeak");
     vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-    Result.GetData().CopyTo(saddlePeak);
+    Result.GetData().AsArrayHandle(saddlePeak);
 
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 9),
                      "Wrong result for ContourTree filter");

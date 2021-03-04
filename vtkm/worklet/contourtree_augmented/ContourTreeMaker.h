@@ -173,9 +173,9 @@ public:
 
 // TODO we should add an Init function to move the heavy-weight computions out of the constructor
 // constructor
-ContourTreeMaker::ContourTreeMaker(ContourTree& contourTree,
-                                   MergeTree& joinTree,
-                                   MergeTree& splitTree)
+inline ContourTreeMaker::ContourTreeMaker(ContourTree& contourTree,
+                                          MergeTree& joinTree,
+                                          MergeTree& splitTree)
   : ContourTreeResult(contourTree)
   , JoinTree(joinTree)
   , SplitTree(splitTree)
@@ -188,7 +188,7 @@ ContourTreeMaker::ContourTreeMaker(ContourTree& contourTree,
 } //MakeContourTree()
 
 
-void ContourTreeMaker::ComputeHyperAndSuperStructure()
+inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
 { // ComputeHyperAndSuperStructure()
 
   // augment the merge trees & establish the list of supernodes
@@ -217,6 +217,7 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
     // compress the active list of supernodes
     CompressActiveSupernodes();
     this->ContourTreeResult.NumIterations++;
+
   } // loop until no active vertices remaining
 
   // test for final edges meeting
@@ -231,8 +232,9 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
     this->ContourTreeResult.WhenTransferred.WritePortal().Set(
       superID, this->ContourTreeResult.NumIterations | IS_HYPERNODE);
   } // meet at a vertex
+#ifdef DEBUG_PRINT
   DebugPrint("Contour Tree Constructed. Now Swizzling", __FILE__, __LINE__);
-
+#endif
 
   // next, we have to set up the hyper and super structure arrays one at a time
   // at present, all superarcs / Hyperarcs are expressed in terms of supernode IDs
@@ -308,8 +310,8 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
 
   // now we compress both the hypernodes & Hyperarcs
   IdArrayType newHypernodePosition;
-  OnefIfHypernode oneIfHypernodeFunctor;
-  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfHypernode>(
+  OneIfHypernode oneIfHypernodeFunctor;
+  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfHypernode>(
     this->ContourTreeResult.WhenTransferred, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
@@ -441,13 +443,14 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
   this->ContourTreeResult.FirstHypernodePerIteration.WritePortal().Set(
     this->ContourTreeResult.NumIterations + 1,
     this->ContourTreeResult.Hypernodes.GetNumberOfValues());
-
+#ifdef DEBUG_PRINT
   DebugPrint("Contour Tree Super Structure Constructed", __FILE__, __LINE__);
+#endif
 } // ComputeHyperAndSuperStructure()
 
 
 // computes the regular arcs in the contour tree
-void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema)
+inline void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema)
 { // ComputeRegularStructure()
   // First step - use the superstructure to set the superparent for all supernodes
   auto supernodesIndex =
@@ -494,8 +497,9 @@ void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema)
                this->ContourTreeResult.Superarcs,    // (input)
                this->ContourTreeResult.Supernodes,   // (input)
                this->ContourTreeResult.Arcs);        // (output)
-
+#ifdef DEBUG_PRINT
   DebugPrint("Regular Structure Computed", __FILE__, __LINE__);
+#endif
 } // ComputeRegularStructure()
 
 struct ContourTreeNoSuchElementSuperParents
@@ -507,7 +511,7 @@ struct ContourTreeNoSuchElementSuperParents
   }
 };
 
-void InitIdArrayTypeNoSuchElement(IdArrayType& idArray, vtkm::Id size)
+inline void InitIdArrayTypeNoSuchElement(IdArrayType& idArray, vtkm::Id size)
 {
   idArray.Allocate(size);
 
@@ -516,7 +520,7 @@ void InitIdArrayTypeNoSuchElement(IdArrayType& idArray, vtkm::Id size)
 }
 
 template <class Mesh, class MeshBoundaryExecObj>
-void ContourTreeMaker::ComputeBoundaryRegularStructure(
+inline void ContourTreeMaker::ComputeBoundaryRegularStructure(
   MeshExtrema& meshExtrema,
   const Mesh& mesh,
   const MeshBoundaryExecObj& meshBoundaryExecObj)
@@ -599,14 +603,16 @@ void ContourTreeMaker::ComputeBoundaryRegularStructure(
                this->ContourTreeResult.Supernodes,   // (input)
                toCompressed,                         // (input)
                this->ContourTreeResult.Augmentarcs); // (output)
+#ifdef DEBUG_PRINT
   DebugPrint("Regular Boundary Structure Computed", __FILE__, __LINE__);
+#endif
 } // ComputeRegularStructure()
 
 
 // routine that augments the join & split tree with each other's supernodes
 // the augmented trees will be stored in the joinSuperarcs / mergeSuperarcs arrays
 // the sort IDs will be stored in the ContourTree's arrays, &c.
-void ContourTreeMaker::AugmentMergeTrees()
+inline void ContourTreeMaker::AugmentMergeTrees()
 { // ContourTreeMaker::AugmentMergeTrees()
   // in this version, we know that only connectivity-critical points are used
   // so we want to combine the lists of supernodes.
@@ -648,7 +654,7 @@ void ContourTreeMaker::AugmentMergeTrees()
     splitSort.ReleaseResources();
 
     // 4. Resize the supernode array accordingly
-    this->ContourTreeResult.Supernodes.Shrink(nSupernodes);
+    this->ContourTreeResult.Supernodes.Allocate(nSupernodes, vtkm::CopyFlag::On);
     */
 
   // 1. Allocate an array that is guaranteed to be big enough
@@ -754,8 +760,9 @@ void ContourTreeMaker::AugmentMergeTrees()
                               this->Updegree);
   vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nSupernodes),
                               this->Downdegree);
-
+#ifdef DEBUG_PRINT
   DebugPrint("Supernodes Found", __FILE__, __LINE__);
+#endif
 } // ContourTreeMaker::AugmentMergeTrees()
 
 
@@ -783,10 +790,10 @@ struct LeafChainsToContourTree
   }
 
   template <typename DeviceAdapter, typename... Args>
-  bool operator()(DeviceAdapter device, Args&&... args) const
+  inline bool operator()(DeviceAdapter device, Args&&... args) const
   {
     vtkm::cont::Token token;
-    contourtree_maker_inc_ns::TransferLeafChains_TransferToContourTree<DeviceAdapter> worklet(
+    contourtree_maker_inc_ns::TransferLeafChains_TransferToContourTree worklet(
       this->NumIterations, // (input)
       this->IsJoin,        // (input)
       this->Outdegree,     // (input)
@@ -794,6 +801,7 @@ struct LeafChainsToContourTree
       this->Outbound,      // (input)
       this->Inbound,       // (input)
       this->Inwards,       // (input)
+      device,
       token);
     vtkm::worklet::DispatcherMapField<decltype(worklet)> dispatcher(worklet);
     dispatcher.SetDevice(device);
@@ -813,7 +821,7 @@ struct LeafChainsToContourTree
 }
 
 // routine to transfer leaf chains to contour tree
-void ContourTreeMaker::TransferLeafChains(bool isJoin)
+inline void ContourTreeMaker::TransferLeafChains(bool isJoin)
 { // ContourTreeMaker::TransferLeafChains()
   // we need to compute the chains in both directions, so we have two vectors:
   // TODO below we initialize the outbound and inbound arrays with 0 to ensure consistency of debug output. Check if this is needed.
@@ -844,9 +852,9 @@ void ContourTreeMaker::TransferLeafChains(bool isJoin)
                indegree,               // (input)
                outbound,               // (output)
                inbound);               // (output)
-
+#ifdef DEBUG_PRINT
   DebugPrint("Init in and outbound -- Step 1", __FILE__, __LINE__);
-
+#endif
   // Compute the number of log steps required in this pass
   vtkm::Id numLogSteps = 1;
   for (vtkm::Id shifter = this->ActiveSupernodes.GetNumberOfValues(); shifter != 0; shifter >>= 1)
@@ -867,9 +875,9 @@ void ContourTreeMaker::TransferLeafChains(bool isJoin)
                  inbound);               // (input/output)
 
   } // per iteration
-
+#ifdef DEBUG_PRINT
   DebugPrint("Init in and outbound -- Step 2", __FILE__, __LINE__);
-
+#endif
   // at this point, the outbound vector chains everything outwards to the leaf
   // any vertices on the last outbound leaf superarc point to the leaf
   // and the leaf itself will point to its saddle, identifying the hyperarc
@@ -887,6 +895,10 @@ void ContourTreeMaker::TransferLeafChains(bool isJoin)
 
 
   // loop through the active vertices
+  // Note: there are better and safer ways to pass these arrays (e.g. in/outdegree) to
+  // a worklet. You could pass them as WholeArrayIn ControlSignature arguments. Or
+  // you could build a subclass of vtkm::cont::ExecutionObjectBase and pass that in
+  // as an ExecObject.
   details::LeafChainsToContourTree task(this->ContourTreeResult.NumIterations, // (input)
                                         isJoin,                                // (input)
                                         outdegree,                             // (input)
@@ -900,15 +912,16 @@ void ContourTreeMaker::TransferLeafChains(bool isJoin)
                          this->ContourTreeResult.Hyperarcs,        // (output)
                          this->ContourTreeResult.Superarcs,        // (output)
                          this->ContourTreeResult.WhenTransferred); // (output)
-
+#ifdef DEBUG_PRINT
   DebugPrint(isJoin ? "Upper Regular Chains Transferred" : "Lower Regular Chains Transferred",
              __FILE__,
              __LINE__);
+#endif
 } // ContourTreeMaker::TransferLeafChains()
 
 
 // routine to compress trees by removing regular vertices as well as Hypernodes
-void ContourTreeMaker::CompressTrees()
+inline void ContourTreeMaker::CompressTrees()
 { // ContourTreeMaker::CompressTrees()
 
   // Compute the number of log steps required in this pass
@@ -930,13 +943,14 @@ void ContourTreeMaker::CompressTrees()
     );
 
   } // iteration log times
-
+#ifdef DEBUG_PRINT
   DebugPrint("Trees Compressed", __FILE__, __LINE__);
+#endif
 } // ContourTreeMaker::CompressTrees()
 
 
 // compresses trees to remove transferred vertices
-void ContourTreeMaker::CompressActiveSupernodes()
+inline void ContourTreeMaker::CompressActiveSupernodes()
 { // ContourTreeMaker::CompressActiveSupernodes()
   // copy only if this->ContourTreeResult.WhenTransferred has been set
   IdArrayType compressedActiveSupernodes;
@@ -955,12 +969,13 @@ void ContourTreeMaker::CompressActiveSupernodes()
   ActiveSupernodes.ReleaseResources();
   ActiveSupernodes =
     compressedActiveSupernodes; // vtkm ArrayHandles are smart, so we can just swap it in without having to copy
-
+#ifdef DEBUG_PRINT
   DebugPrint("Active Supernodes Compressed", __FILE__, __LINE__);
+#endif
 } // ContourTreeMaker::CompressActiveSupernodes()
 
 
-void ContourTreeMaker::FindDegrees()
+inline void ContourTreeMaker::FindDegrees()
 { // ContourTreeMaker::FindDegrees()
   using PermuteIndexArray = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
@@ -971,9 +986,9 @@ void ContourTreeMaker::FindDegrees()
   contourtree_maker_inc_ns::FindDegrees_ResetUpAndDowndegree resetUpAndDowndegreeWorklet;
   this->Invoke(
     resetUpAndDowndegreeWorklet, this->ActiveSupernodes, this->Updegree, this->Downdegree);
-
+#ifdef DEBUG_PRINT
   DebugPrint("Degrees Set to 0", __FILE__, __LINE__);
-
+#endif
   // now we loop through every join & split arc, updating degrees
   // to minimise memory footprint, we will do two separate loops
   // but we could combine the two into paired loops
@@ -1011,15 +1026,15 @@ void ContourTreeMaker::FindDegrees()
   // now subtract the LHE to get the size
   contourtree_maker_inc_ns::FindDegrees_SubtractLHE splitSubractLHEWorklet;
   this->Invoke(splitSubractLHEWorklet, inNeighbour, this->Downdegree);
-
+#ifdef DEBUG_PRINT
   DebugPrint("Degrees Computed", __FILE__, __LINE__);
+#endif
 } // ContourTreeMaker::FindDegrees()
 
 
 
-void ContourTreeMaker::DebugPrint(const char* message, const char* fileName, long lineNum)
+inline void ContourTreeMaker::DebugPrint(const char* message, const char* fileName, long lineNum)
 { // ContourTreeMaker::DebugPrint()
-#ifdef DEBUG_PRINT
   std::string childString = std::string(message);
   std::cout
     << "==========================================================================================="
@@ -1051,7 +1066,7 @@ void ContourTreeMaker::DebugPrint(const char* message, const char* fileName, lon
 
   // this->JoinTree.DebugPrint((childString + std::string(": Join Tree")).c_str(), fileName, lineNum);
   // this->SplitTree.DebugPrint((childString + std::string(": Split Tree")).c_str(), fileName, lineNum);
-  this->ContourTreeResult.DebugPrint(
+  std::cout << this->ContourTreeResult.DebugPrint(
     (childString + std::string(": Contour Tree")).c_str(), fileName, lineNum);
   std::cout
     << "==========================================================================================="
@@ -1078,12 +1093,6 @@ void ContourTreeMaker::DebugPrint(const char* message, const char* fileName, lon
 
   PrintHeader(this->ActiveSupernodes.GetNumberOfValues());
   PrintIndices("Active SNodes", this->ActiveSupernodes);
-#else
-  // Avoid unused parameter warnings
-  (void)message;
-  (void)fileName;
-  (void)lineNum;
-#endif
 } // ContourTreeMaker::DebugPrint()
 
 

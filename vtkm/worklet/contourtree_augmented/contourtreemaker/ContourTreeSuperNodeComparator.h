@@ -68,12 +68,10 @@ namespace contourtree_maker_inc
 
 
 // comparator used for initial sort of data values
-template <typename DeviceAdapter>
 class ContourTreeSuperNodeComparatorImpl
 {
 public:
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
 
   IdPortalType HyperparentsPortal;
   IdPortalType SupernodesPortal;
@@ -84,11 +82,12 @@ public:
   ContourTreeSuperNodeComparatorImpl(const IdArrayType& hyperparents,
                                      const IdArrayType& supernodes,
                                      const IdArrayType& whenTransferred,
+                                     vtkm::cont::DeviceAdapterId device,
                                      vtkm::cont::Token& token)
   {
-    this->HyperparentsPortal = hyperparents.PrepareForInput(DeviceAdapter(), token);
-    this->SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter(), token);
-    this->WhenTransferredPortal = whenTransferred.PrepareForInput(DeviceAdapter(), token);
+    this->HyperparentsPortal = hyperparents.PrepareForInput(device, token);
+    this->SupernodesPortal = supernodes.PrepareForInput(device, token);
+    this->WhenTransferredPortal = whenTransferred.PrepareForInput(device, token);
   }
 
   // () operator - gets called to do comparison
@@ -138,13 +137,11 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ContourTreeSuperNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter,
-    vtkm::cont::Token& token)
+  VTKM_CONT ContourTreeSuperNodeComparatorImpl
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token)
   {
-    return ContourTreeSuperNodeComparatorImpl<DeviceAdapter>(
-      this->Hyperparents, this->Supernodes, this->WhenTransferred, token);
+    return ContourTreeSuperNodeComparatorImpl(
+      this->Hyperparents, this->Supernodes, this->WhenTransferred, device, token);
   }
 
 private:

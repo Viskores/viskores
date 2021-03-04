@@ -25,7 +25,8 @@ class ParticleDensityNearestGridPoint
 {
 public:
   // ParticleDensity only support turning 2D/3D particle positions into density
-  using SupportedTypes = vtkm::TypeListFieldVec3;
+  //using SupportedTypes = vtkm::TypeListFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldScalar;
 
   //
   ParticleDensityNearestGridPoint(const vtkm::Id3& dimension,

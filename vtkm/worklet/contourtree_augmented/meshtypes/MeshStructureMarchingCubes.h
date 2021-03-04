@@ -69,38 +69,31 @@ namespace contourtree_augmented
 {
 
 // Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
-class MeshStructureMarchingCubes : public data_set_mesh::MeshStructure3D<DeviceAdapter>
+class MeshStructureMarchingCubes : public data_set_mesh::MeshStructure3D
 {
 public:
   // EdgeBoundaryDetectionMasks types
   using EdgeBoundaryDetectionMasksPortalType =
-    typename m3d_marchingcubes::EdgeBoundaryDetectionMasksType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    m3d_marchingcubes::EdgeBoundaryDetectionMasksType::ReadPortalType;
 
   // Sort indicies types
-  using SortIndicesPortalType =
-    typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using SortIndicesPortalType = IdArrayType::ReadPortalType;
 
   // CubeVertexPermutations types
   using CubeVertexPermutationsPortalType =
-    typename m3d_marchingcubes::CubeVertexPermutationsType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    m3d_marchingcubes::CubeVertexPermutationsType::ReadPortalType;
 
   // linkVertexConnection types
   using LinkVertexConnectionsPortalType =
-    typename m3d_marchingcubes::LinkVertexConnectionsType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    m3d_marchingcubes::LinkVertexConnectionsType::ReadPortalType;
   // inCubeConnection types
 
-  using InCubeConnectionsPortalType =
-    typename m3d_marchingcubes::InCubeConnectionsType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+  using InCubeConnectionsPortalType = m3d_marchingcubes::InCubeConnectionsType::ReadPortalType;
 
   // Default constructor needed to make the CUDA build work
   VTKM_EXEC_CONT
   MeshStructureMarchingCubes()
-    : data_set_mesh::MeshStructure3D<DeviceAdapter>()
+    : data_set_mesh::MeshStructure3D()
     , GetMax(false)
   {
   }
@@ -117,31 +110,27 @@ public:
     const m3d_marchingcubes::LinkVertexConnectionsType& LinkVertexConnectionsEighteenIn,
     const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsSixIn,
     const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsEighteenIn,
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
-    : data_set_mesh::MeshStructure3D<DeviceAdapter>(meshSize)
+    : data_set_mesh::MeshStructure3D(meshSize)
     , GetMax(getmax)
   {
-    this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter(), token);
-    this->SortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
+    this->SortIndicesPortal = sortIndices.PrepareForInput(device, token);
+    this->SortOrderPortal = sortOrder.PrepareForInput(device, token);
     this->EdgeBoundaryDetectionMasksPortal =
-      EdgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter(), token);
-    this->CubeVertexPermutationsPortal =
-      CubeVertexPermutationsIn.PrepareForInput(DeviceAdapter(), token);
+      EdgeBoundaryDetectionMasksIn.PrepareForInput(device, token);
+    this->CubeVertexPermutationsPortal = CubeVertexPermutationsIn.PrepareForInput(device, token);
     this->LinkVertexConnectionsSixPortal =
-      LinkVertexConnectionsSixIn.PrepareForInput(DeviceAdapter(), token);
+      LinkVertexConnectionsSixIn.PrepareForInput(device, token);
     this->LinkVertexConnectionsEighteenPortal =
-      LinkVertexConnectionsEighteenIn.PrepareForInput(DeviceAdapter(), token);
-    this->InCubeConnectionsSixPortal =
-      InCubeConnectionsSixIn.PrepareForInput(DeviceAdapter(), token);
+      LinkVertexConnectionsEighteenIn.PrepareForInput(device, token);
+    this->InCubeConnectionsSixPortal = InCubeConnectionsSixIn.PrepareForInput(device, token);
     this->InCubeConnectionsEighteenPortal =
-      InCubeConnectionsEighteenIn.PrepareForInput(DeviceAdapter(), token);
+      InCubeConnectionsEighteenIn.PrepareForInput(device, token);
   }
 
   VTKM_EXEC
-  constexpr vtkm::Id GetMaxNumberOfNeighbours() const
-  {
-    return m3d_marchingcubes::N_FACE_NEIGHBOURS;
-  }
+  vtkm::Id GetMaxNumberOfNeighbours() const { return m3d_marchingcubes::N_FACE_NEIGHBOURS; }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id nbrNo) const
@@ -313,22 +302,38 @@ public:
           caseNo |= (vtkm::UInt8)(1 << vtxNo);
         }
       }
+
+      const auto& vertex_permutation = CubeVertexPermutationsPortal.Get(permIndex);
       if (getMaxComponents)
       {
         for (int edgeNo = 0; edgeNo < 3; ++edgeNo)
         {
           if (InCubeConnectionsSixPortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << edgeNo))
           {
-            int root0 = CubeVertexPermutationsPortal.Get(
-              permIndex)[LinkVertexConnectionsSixPortal.Get(edgeNo)[0]];
+            const auto& edge = LinkVertexConnectionsSixPortal.Get(edgeNo);
+            vtkm::IdComponent edge0 = edge[0];
+            vtkm::IdComponent edge1 = edge[1];
+            VTKM_ASSERT(0 <= edge0 && edge0 < CubeVertexPermutations_PermVecLength);
+            VTKM_ASSERT(0 <= edge1 && edge1 < CubeVertexPermutations_PermVecLength);
+            int root0 = vertex_permutation[edge0];
+            int root1 = vertex_permutation[edge1];
+            VTKM_ASSERT(0 <= root0 && root0 < N_ALL_NEIGHBOURS);
+            VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
             while (parentId[root0] != root0)
+            {
               root0 = parentId[root0];
-            int root1 = CubeVertexPermutationsPortal.Get(
-              permIndex)[LinkVertexConnectionsSixPortal.Get(edgeNo)[1]];
+              VTKM_ASSERT(0 <= root0 && root0 < N_ALL_NEIGHBOURS);
+            }
             while (parentId[root1] != root1)
+            {
               root1 = parentId[root1];
+              VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
+            }
             if (root0 != root1)
+            {
+              VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
               parentId[root1] = root0;
+            }
           }
         }
       }
@@ -338,16 +343,30 @@ public:
         {
           if (InCubeConnectionsEighteenPortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << edgeNo))
           {
-            int root0 = CubeVertexPermutationsPortal.Get(
-              permIndex)[LinkVertexConnectionsEighteenPortal.Get(edgeNo)[0]];
+            const auto& edge = LinkVertexConnectionsEighteenPortal.Get(edgeNo);
+            vtkm::IdComponent edge0 = edge[0];
+            vtkm::IdComponent edge1 = edge[1];
+            VTKM_ASSERT(0 <= edge0 && edge0 < CubeVertexPermutations_PermVecLength);
+            VTKM_ASSERT(0 <= edge1 && edge1 < CubeVertexPermutations_PermVecLength);
+            int root0 = vertex_permutation[edge0];
+            int root1 = vertex_permutation[edge1];
+            VTKM_ASSERT(0 <= root0 && root0 < N_ALL_NEIGHBOURS);
+            VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
             while (parentId[root0] != root0)
+            {
               root0 = parentId[root0];
-            int root1 = CubeVertexPermutationsPortal.Get(
-              permIndex)[LinkVertexConnectionsEighteenPortal.Get(edgeNo)[1]];
+              VTKM_ASSERT(0 <= root0 && root0 < N_ALL_NEIGHBOURS);
+            }
             while (parentId[root1] != root1)
+            {
               root1 = parentId[root1];
+              VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
+            }
             if (root0 != root1)
+            {
+              VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
               parentId[root1] = root0;
+            }
           }
         }
       }

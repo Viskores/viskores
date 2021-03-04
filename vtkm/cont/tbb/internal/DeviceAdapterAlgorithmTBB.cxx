@@ -19,6 +19,8 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::ScheduleTask(
   vtkm::exec::tbb::internal::TaskTiling1D& functor,
   vtkm::Id size)
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Schedule Task TBB 1D");
+
   const vtkm::Id MESSAGE_SIZE = 1024;
   char errorString[MESSAGE_SIZE];
   errorString[0] = '\0';
@@ -40,6 +42,8 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::ScheduleTask(
   vtkm::exec::tbb::internal::TaskTiling3D& functor,
   vtkm::Id3 size)
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Schedule Task TBB 3D");
+
   static constexpr vtkm::UInt32 TBB_GRAIN_SIZE_3D[3] = { 1, 4, 256 };
   const vtkm::Id MESSAGE_SIZE = 1024;
   char errorString[MESSAGE_SIZE];

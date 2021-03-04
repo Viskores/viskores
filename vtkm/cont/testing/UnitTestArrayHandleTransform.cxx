@@ -54,18 +54,15 @@ struct CheckTransformFunctor : vtkm::exec::FunctorBase
 };
 
 template <typename OriginalArrayHandleType, typename TransformedArrayHandleType, typename Device>
-VTKM_CONT CheckTransformFunctor<
-  typename OriginalArrayHandleType::template ExecutionTypes<Device>::PortalConst,
-  typename TransformedArrayHandleType::template ExecutionTypes<Device>::PortalConst>
+VTKM_CONT CheckTransformFunctor<typename OriginalArrayHandleType::ReadPortalType,
+                                typename TransformedArrayHandleType::ReadPortalType>
 make_CheckTransformFunctor(const OriginalArrayHandleType& originalArray,
                            const TransformedArrayHandleType& transformedArray,
                            Device,
                            vtkm::cont::Token& token)
 {
-  using OriginalPortalType =
-    typename OriginalArrayHandleType::template ExecutionTypes<Device>::PortalConst;
-  using TransformedPortalType =
-    typename TransformedArrayHandleType::template ExecutionTypes<Device>::PortalConst;
+  using OriginalPortalType = typename OriginalArrayHandleType::ReadPortalType;
+  using TransformedPortalType = typename TransformedArrayHandleType::ReadPortalType;
   CheckTransformFunctor<OriginalPortalType, TransformedPortalType> functor;
   functor.OriginalPortal = originalArray.PrepareForInput(Device(), token);
   functor.TransformedPortal = transformedArray.PrepareForInput(Device(), token);

@@ -34,7 +34,7 @@ class WaterTightLeafIntersector
 {
 public:
   using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
-  using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
+  using Id4ArrayPortal = typename Id4Handle::ReadPortalType;
   Id4ArrayPortal Triangles;
 
 public:
@@ -87,7 +87,7 @@ class MollerTriLeafIntersector
   //protected:
 public:
   using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
-  using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
+  using Id4ArrayPortal = typename Id4Handle::ReadPortalType;
   Id4ArrayPortal Triangles;
 
 public:
@@ -251,7 +251,7 @@ public:
       : MinScalar(minScalar)
     {
       Normalize = true;
-      if (minScalar > maxScalar)
+      if (minScalar >= maxScalar)
       {
         // support the scalar renderer
         Normalize = false;
@@ -315,7 +315,7 @@ public:
       : MinScalar(minScalar)
     {
       Normalize = true;
-      if (minScalar > maxScalar)
+      if (minScalar >= maxScalar)
       {
         // support the scalar renderer
         Normalize = false;
@@ -385,7 +385,7 @@ public:
                 rays.U,
                 rays.V,
                 rays.Scalar,
-                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
                 triangles);
     }
     else
@@ -394,7 +394,7 @@ public:
         NodalScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
         .Invoke(rays.HitIdx,
                 rays.Scalar,
-                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
                 triangles);
     }
   } // Run

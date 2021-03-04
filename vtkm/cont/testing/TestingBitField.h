@@ -17,6 +17,8 @@
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
+#include <vtkm/worklet/WorkletMapField.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -164,6 +166,23 @@ struct TestingBitField
   }
 
   template <typename PortalType>
+  VTKM_EXEC_CONT static bool TestBitValue(const char* operation,
+                                          vtkm::Id i,
+                                          PortalType portal,
+                                          bool& bit,
+                                          bool originalBit)
+  {
+    auto expected = bit;
+    auto result = portal.GetBitAtomic(i);
+    DEVICE_ASSERT_MSG(result == expected, operation);
+
+    // Reset
+    bit = originalBit;
+    portal.SetBitAtomic(i, bit);
+    return true;
+  }
+
+  template <typename PortalType>
   VTKM_EXEC_CONT static bool HelpTestBit(vtkm::Id i, PortalType portal)
   {
     const auto origBit = RandomBitFromIndex(i);
@@ -171,36 +190,25 @@ struct TestingBitField
 
     const auto mod = RandomBitFromIndex(i + NUM_BITS);
 
-    auto testValues = [&](const char* op) -> bool {
-      auto expected = bit;
-      auto result = portal.GetBitAtomic(i);
-      DEVICE_ASSERT_MSG(result == expected, op);
-
-      // Reset:
-      bit = origBit;
-      portal.SetBitAtomic(i, bit);
-      return true;
-    };
-
     bit = mod;
     portal.SetBitAtomic(i, mod);
-    DEVICE_ASSERT(testValues("SetBitAtomic"));
+    DEVICE_ASSERT(TestBitValue("SetBitAtomic", i, portal, bit, origBit));
 
     bit = !bit;
     portal.NotBitAtomic(i);
-    DEVICE_ASSERT(testValues("NotBitAtomic"));
+    DEVICE_ASSERT(TestBitValue("NotBitAtomic", i, portal, bit, origBit));
 
     bit = bit && mod;
     portal.AndBitAtomic(i, mod);
-    DEVICE_ASSERT(testValues("AndBitAtomic"));
+    DEVICE_ASSERT(TestBitValue("AndBitAtomic", i, portal, bit, origBit));
 
     bit = bit || mod;
     portal.OrBitAtomic(i, mod);
-    DEVICE_ASSERT(testValues("OrBitAtomic"));
+    DEVICE_ASSERT(TestBitValue("OrBitAtomic", i, portal, bit, origBit));
 
     bit = bit != mod;
     portal.XorBitAtomic(i, mod);
-    DEVICE_ASSERT(testValues("XorBitAtomic"));
+    DEVICE_ASSERT(TestBitValue("XorBitAtomic", i, portal, bit, origBit));
 
     const auto notBit = !bit;
     // A compare-exchange that should fail
@@ -222,6 +230,23 @@ struct TestingBitField
   }
 
   template <typename WordType, typename PortalType>
+  VTKM_EXEC_CONT static bool TestWordValue(const char* operation,
+                                           vtkm::Id i,
+                                           const PortalType& portal,
+                                           WordType& word,
+                                           WordType originalWord)
+  {
+    auto expected = word;
+    auto result = portal.template GetWordAtomic<WordType>(i);
+    DEVICE_ASSERT_MSG(result == expected, operation);
+
+    // Reset
+    word = originalWord;
+    portal.SetWordAtomic(i, word);
+    return true;
+  }
+
+  template <typename WordType, typename PortalType>
   VTKM_EXEC_CONT static bool HelpTestWord(vtkm::Id i, PortalType portal)
   {
     const auto origWord = RandomWordFromIndex<WordType>(i);
@@ -229,42 +254,30 @@ struct TestingBitField
 
     const auto mod = RandomWordFromIndex<WordType>(i + NUM_BITS);
 
-    auto testValues = [&](const char* op) -> bool {
-      auto expected = word;
-      auto result = portal.template GetWordAtomic<WordType>(i);
-      DEVICE_ASSERT_MSG(result == expected, op);
-
-      // Reset:
-      word = origWord;
-      portal.SetWordAtomic(i, word);
-
-      return true;
-    };
-
     portal.SetWord(i, word);
-    DEVICE_ASSERT(testValues("SetWord"));
+    DEVICE_ASSERT(TestWordValue("SetWord", i, portal, word, origWord));
 
     word = mod;
     portal.SetWordAtomic(i, mod);
-    DEVICE_ASSERT(testValues("SetWordAtomic"));
+    DEVICE_ASSERT(TestWordValue("SetWordAtomic", i, portal, word, origWord));
 
     // C++ promotes e.g. uint8 to int32 when performing bitwise not. Silence
     // conversion warning and mask unimportant bits:
     word = static_cast<WordType>(~word);
     portal.template NotWordAtomic<WordType>(i);
-    DEVICE_ASSERT(testValues("NotWordAtomic"));
+    DEVICE_ASSERT(TestWordValue("NotWordAtomic", i, portal, word, origWord));
 
     word = word & mod;
     portal.AndWordAtomic(i, mod);
-    DEVICE_ASSERT(testValues("AndWordAtomic"));
+    DEVICE_ASSERT(TestWordValue("AndWordAtomic", i, portal, word, origWord));
 
     word = word | mod;
     portal.OrWordAtomic(i, mod);
-    DEVICE_ASSERT(testValues("OrWordAtomic"));
+    DEVICE_ASSERT(TestWordValue("OrWordAtomic", i, portal, word, origWord));
 
     word = word ^ mod;
     portal.XorWordAtomic(i, mod);
-    DEVICE_ASSERT(testValues("XorWordAtomic"));
+    DEVICE_ASSERT(TestWordValue("XorWordAtomic", i, portal, word, origWord));
 
     // Compare-exchange that should fail
     const WordType notWord = static_cast<WordType>(~word);
@@ -520,7 +533,7 @@ struct TestingBitField
 
   struct ArrayHandleBitFieldChecker : vtkm::exec::FunctorBase
   {
-    using PortalType = typename ArrayHandleBitField::ExecutionTypes<DeviceAdapterTag>::Portal;
+    using PortalType = vtkm::cont::ArrayHandleBitField::WritePortalType;
 
     PortalType Portal;
     bool InvertReference;

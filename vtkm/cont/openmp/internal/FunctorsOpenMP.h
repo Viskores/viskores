@@ -614,8 +614,8 @@ void ReduceByKeyHelper(KeysInArray keysInArray,
 
   token.DetachFromAll();
 
-  keysOutArray.Shrink(outIdx);
-  valuesOutArray.Shrink(outIdx);
+  keysOutArray.Allocate(outIdx, vtkm::CopyFlag::On);
+  valuesOutArray.Allocate(outIdx, vtkm::CopyFlag::On);
 }
 
 template <typename IterT, typename RawPredicateT>

@@ -45,7 +45,7 @@ void TestVectorMagnitude()
   VTKM_TEST_ASSERT(result.HasPointField("magnitude"), "Output field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetPointField("magnitude").GetData().CopyTo(resultArrayHandle);
+  result.GetPointField("magnitude").GetData().AsArrayHandle(resultArrayHandle);
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
     VTKM_TEST_ASSERT(

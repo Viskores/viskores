@@ -76,8 +76,9 @@ struct StableSortIndices
     }
 
     template <typename Device>
-    IndirectSortPredicate<typename KeyArrayType::template ExecutionTypes<Device>::PortalConst>
-    PrepareForExecution(Device, vtkm::cont::Token& token) const
+    IndirectSortPredicate<typename KeyArrayType::ReadPortalType> PrepareForExecution(
+      Device,
+      vtkm::cont::Token& token) const
     {
       auto keyPortal = this->KeyArray.PrepareForInput(Device(), token);
       return IndirectSortPredicate<decltype(keyPortal)>(keyPortal);
@@ -115,8 +116,9 @@ struct StableSortIndices
     }
 
     template <typename Device>
-    IndirectUniquePredicate<typename KeyArrayType::template ExecutionTypes<Device>::PortalConst>
-    PrepareForExecution(Device, vtkm::cont::Token& token) const
+    IndirectUniquePredicate<typename KeyArrayType::ReadPortalType> PrepareForExecution(
+      Device,
+      vtkm::cont::Token& token) const
     {
       auto keyPortal = this->KeyArray.PrepareForInput(Device(), token);
       return IndirectUniquePredicate<decltype(keyPortal)>(keyPortal);

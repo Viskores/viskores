@@ -64,11 +64,10 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(),
-                        dataset.GetCoordinateSystem("coords"),
-                        vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside);
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(),
+                                                  dataset.GetCoordinateSystem("coords"),
+                                                  vtkm::Box(minPoint, maxPoint),
+                                                  extractInside);
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -95,11 +94,10 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(),
-                        dataset.GetCoordinateSystem("coords"),
-                        vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside);
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(),
+                                                  dataset.GetCoordinateSystem("coords"),
+                                                  vtkm::Box(minPoint, maxPoint),
+                                                  extractInside);
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 98),
@@ -126,11 +124,10 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(),
-                        dataset.GetCoordinateSystem("coords"),
-                        vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
-                        extractInside);
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(),
+                                                  dataset.GetCoordinateSystem("coords"),
+                                                  vtkm::Sphere(center, radius),
+                                                  extractInside);
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -157,11 +154,10 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(),
-                        dataset.GetCoordinateSystem("coordinates"),
-                        vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside);
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(),
+                                                  dataset.GetCoordinateSystem("coordinates"),
+                                                  vtkm::Box(minPoint, maxPoint),
+                                                  extractInside);
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8),
@@ -188,11 +184,10 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(),
-                        dataset.GetCoordinateSystem("coordinates"),
-                        vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside);
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(),
+                                                  dataset.GetCoordinateSystem("coordinates"),
+                                                  vtkm::Box(minPoint, maxPoint),
+                                                  extractInside);
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 3),

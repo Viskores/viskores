@@ -14,7 +14,6 @@
 
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/Logging.h>
-#include <vtkm/cont/internal/ArrayManagerExecution.h>
 
 
 #ifdef _WIN32

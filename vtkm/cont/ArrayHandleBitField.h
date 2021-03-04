@@ -82,7 +82,7 @@ public:
   using ReadPortalType = vtkm::cont::internal::ArrayPortalBitField<BitPortalConstType>;
   using WritePortalType = vtkm::cont::internal::ArrayPortalBitField<BitPortalType>;
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numberOfBits,
                                       vtkm::cont::internal::Buffer* buffers,
@@ -99,12 +99,13 @@ public:
                vtkm::cont::GetSizeString(static_cast<vtkm::UInt64>(numBytes)).c_str());
 
     buffers[0].SetNumberOfBytes(numBytes, preserve, token);
-    vtkm::cont::detail::GetBitFieldMetaData(buffers[0])->NumberOfBits = numberOfBits;
+    buffers[0].GetMetaData<vtkm::cont::internal::BitFieldMetaData>().NumberOfBits = numberOfBits;
   }
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    vtkm::Id numberOfBits = vtkm::cont::detail::GetBitFieldMetaData(buffers[0])->NumberOfBits;
+    vtkm::Id numberOfBits =
+      buffers[0].GetMetaData<vtkm::cont::internal::BitFieldMetaData>().NumberOfBits;
     VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= numberOfBits);
     return numberOfBits;
   }
@@ -134,9 +135,6 @@ public:
 
 } // end namespace internal
 
-
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::internal::StorageTagBitField);
 
 /// The ArrayHandleBitField class is a boolean-valued ArrayHandle that is backed
 /// by a BitField.

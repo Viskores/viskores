@@ -89,9 +89,9 @@ vtkm::cont::CellSetSingleType<> execute(
   // Since sharedState can be re-used between invocations of contour,
   // we need to make sure we reset the size of the Interpolation
   // arrays so we don't execute Pass5 over an array that is too large
-  sharedState.InterpolationEdgeIds.Shrink(0);
-  sharedState.InterpolationWeights.Shrink(0);
-  sharedState.CellIdMap.Shrink(0);
+  sharedState.InterpolationEdgeIds.ReleaseResources();
+  sharedState.InterpolationWeights.ReleaseResources();
+  sharedState.CellIdMap.ReleaseResources();
 
   vtkm::cont::ArrayHandle<vtkm::Id> triangle_topology;
   for (std::size_t i = 0; i < isovalues.size(); ++i)
@@ -109,11 +109,11 @@ vtkm::cont::CellSetSingleType<> execute(
     {
       VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges Pass1");
 
-      // We have different logic for CUDA compared to Shared memory systems
+      // We have different logic for GPU's compared to Shared memory systems
       // since this is the first touch of lots of the arrays, and will effect
       // NUMA perf.
       //
-      // Additionally CUDA does significantly better when you do an initial fill
+      // Additionally GPU's does significantly better when you do an initial fill
       // and write only non-below values
       //
       ComputePass1<ValueType> worklet1(isoval, pdims);

@@ -23,7 +23,6 @@
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
-#include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterMemoryManager.h>
 
 // clang-format on
@@ -59,9 +58,6 @@ namespace cont
 ///
 /// To execute algorithms on any device, see Algorithm.h which allows
 /// for abitrary device execution.
-/// See the ArrayManagerExecution.h and DeviceAdapterAlgorithm.h files for
-/// documentation on all the functions and classes that must be
-/// overloaded/specialized to create a new device adapter.
 ///
 struct DeviceAdapterTag___
 {

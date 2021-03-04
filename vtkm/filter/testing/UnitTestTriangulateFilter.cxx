@@ -33,7 +33,7 @@ public:
                      "Wrong number of points for Triangulate");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outData =
-      output.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+      output.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
     VTKM_TEST_ASSERT(outData.ReadPortal().Get(2) == 1.f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outData.ReadPortal().Get(3) == 1.f, "Wrong cell field data");
@@ -53,7 +53,7 @@ public:
                      "Wrong number of points for Triangulate");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outData =
-      output.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+      output.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
     VTKM_TEST_ASSERT(outData.ReadPortal().Get(1) == 1.f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outData.ReadPortal().Get(2) == 1.f, "Wrong cell field data");

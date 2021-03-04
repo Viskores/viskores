@@ -81,7 +81,6 @@ void TestPCoordsSpecial(const PointWCoordsType& pointWCoords, CellShapeTag shape
 
   const vtkm::IdComponent numPoints = pointWCoords.GetNumberOfComponents();
 
-  std::cout << "    Test parametric coordinates at cell nodes." << std::endl;
   for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
   {
     Vector3 pcoords;
@@ -91,7 +90,6 @@ void TestPCoordsSpecial(const PointWCoordsType& pointWCoords, CellShapeTag shape
   }
 
   {
-    std::cout << "    Test parametric coordinates at cell center." << std::endl;
     Vector3 wcoords = pointWCoords[0];
     for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; pointIndex++)
     {
@@ -129,8 +127,6 @@ void TestPCoordsSample(const PointWCoordsType& pointWCoords, CellShapeTag shape)
       totalWeight += weight;
     }
     pcoords = (1 / totalWeight) * pcoords;
-
-    std::cout << "    Test parametric coordinates at " << pcoords << std::endl;
 
     // If you convert to world coordinates and back, you should get the
     // same value.

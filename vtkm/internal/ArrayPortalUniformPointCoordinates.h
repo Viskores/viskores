@@ -44,25 +44,6 @@ public:
   }
 
   VTKM_EXEC_CONT
-  ArrayPortalUniformPointCoordinates(const ArrayPortalUniformPointCoordinates& src)
-    : Dimensions(src.Dimensions)
-    , NumberOfValues(src.NumberOfValues)
-    , Origin(src.Origin)
-    , Spacing(src.Spacing)
-  {
-  }
-
-  VTKM_EXEC_CONT
-  ArrayPortalUniformPointCoordinates& operator=(const ArrayPortalUniformPointCoordinates& src)
-  {
-    this->Dimensions = src.Dimensions;
-    this->NumberOfValues = src.NumberOfValues;
-    this->Origin = src.Origin;
-    this->Spacing = src.Spacing;
-    return *this;
-  }
-
-  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_EXEC_CONT

@@ -47,9 +47,15 @@ function(vtkm_create_test_executable
   vtkm_add_drop_unused_function_flags(${prog})
   target_compile_definitions(${prog} PRIVATE ${defines})
 
-  #if all backends are enabled, we can use cuda compiler to handle all possible backends.
+  #determine if we have a device that requires a separate compiler enabled
+  set(device_lang_enabled FALSE)
+  if( (TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda) OR (TARGET vtkm::kokkos_hip))
+    set(device_lang_enabled TRUE)
+  endif()
+
+  #if all backends are enabled, we can use the device compiler to handle all possible backends.
   set(device_sources)
-  if(((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda)) AND enable_all_backends)
+  if(device_lang_enabled AND enable_all_backends)
     set(device_sources ${sources})
   endif()
   vtkm_add_target_information(${prog} DEVICE_SOURCES ${device_sources})
@@ -62,7 +68,7 @@ function(vtkm_create_test_executable
   set_property(TARGET ${prog} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
-  target_link_libraries(${prog} PRIVATE vtkm_cont ${libraries})
+  target_link_libraries(${prog} PRIVATE vtkm_cont_testing ${libraries})
 
   if(use_job_pool)
     vtkm_setup_job_pool()
@@ -177,6 +183,9 @@ function(vtkm_unit_tests)
 
   # Add the path to the location where regression test images are to be stored
   list(APPEND VTKm_UT_TEST_ARGS "--baseline-dir=${VTKm_SOURCE_DIR}/data/baseline")
+
+  # Add the path to the location where generated regression test images should be written
+  list(APPEND VTKm_UT_TEST_ARGS "--write-dir=${VTKm_BINARY_DIR}")
 
   if(VTKm_UT_MPI)
     if (VTKm_ENABLE_MPI)

@@ -8,7 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #define vtkm_filter_ExtractGeometry_cxx
+
 #include <vtkm/filter/ExtractGeometry.h>
+#include <vtkm/filter/ExtractGeometry.hxx>
 
 #include <vtkm/filter/MapFieldPermutation.h>
 
@@ -18,7 +20,7 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-VTKM_FILTER_COMMON_EXPORT ExtractGeometry::ExtractGeometry()
+ExtractGeometry::ExtractGeometry()
   : vtkm::filter::FilterDataSet<ExtractGeometry>()
   , ExtractInside(true)
   , ExtractBoundaryCells(false)
@@ -26,8 +28,8 @@ VTKM_FILTER_COMMON_EXPORT ExtractGeometry::ExtractGeometry()
 {
 }
 
-VTKM_FILTER_COMMON_EXPORT bool ExtractGeometry::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                                   const vtkm::cont::Field& field)
+bool ExtractGeometry::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                         const vtkm::cont::Field& field)
 {
   if (field.IsFieldPoint())
   {
@@ -51,6 +53,8 @@ VTKM_FILTER_COMMON_EXPORT bool ExtractGeometry::MapFieldOntoOutput(vtkm::cont::D
 }
 
 //-----------------------------------------------------------------------------
-VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(ExtractGeometry);
+template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::DataSet ExtractGeometry::DoExecute(
+  const vtkm::cont::DataSet& inData,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault> policy);
 }
 } // namespace vtkm::filter

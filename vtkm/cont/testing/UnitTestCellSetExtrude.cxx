@@ -10,7 +10,7 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/ArrayHandleExtrudeCoords.h>
+#include <vtkm/cont/ArrayHandleXGCCoordinates.h>
 #include <vtkm/cont/CellSetExtrude.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -97,11 +97,22 @@ void verify_topo(vtkm::cont::ArrayHandle<vtkm::Vec<T, 6>, S> const& handle, vtkm
   VTKM_TEST_ASSERT(test_equal(v, e), "incorrect conversion of topology to Cartesian space");
 }
 
+template <typename T, typename S>
+void verify_reverse_topo(vtkm::cont::ArrayHandle<T, S> const& handle, vtkm::Id expectedLen)
+{
+  auto portal = handle.ReadPortal();
+  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == expectedLen, "topology portal size is incorrect");
+  for (vtkm::Id i = 0; i < expectedLen - 1; ++i)
+  {
+    auto v = portal.Get(i);
+    VTKM_TEST_ASSERT((v <= 2), "incorrect conversion to reverse topology");
+  }
+}
 int TestCellSetExtrude()
 {
   const std::size_t numPlanes = 8;
 
-  auto coords = vtkm::cont::make_ArrayHandleExtrudeCoords(points_rz, numPlanes, false);
+  auto coords = vtkm::cont::make_ArrayHandleXGCCoordinates(points_rz, numPlanes, false);
   auto cells = vtkm::cont::make_CellSetExtrude(topology, coords, nextNode);
   VTKM_TEST_ASSERT(cells.GetNumberOfPoints() == coords.GetNumberOfValues(),
                    "number of points don't match between cells and coordinates");
@@ -121,40 +132,8 @@ int TestCellSetExtrude()
     vtkm::cont::ArrayHandle<int> output;
     vtkm::worklet::DispatcherMapTopology<CopyReverseCellCount> dispatcher;
     dispatcher.Invoke(cells, output);
-    // verify_topo(output, 8);
+    verify_reverse_topo(output, 24);
   }
-
-  //test a filter
-  vtkm::cont::DataSet dataset;
-
-  dataset.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", coords));
-  dataset.SetCellSet(cells);
-
-  // verify that a constant value point field can be accessed
-  std::vector<float> pvalues(static_cast<size_t>(coords.GetNumberOfValues()), 42.0f);
-  vtkm::cont::Field pfield = vtkm::cont::make_Field(
-    "pfield", vtkm::cont::Field::Association::POINTS, pvalues, vtkm::CopyFlag::Off);
-  dataset.AddField(pfield);
-
-  // verify that a constant cell value can be accessed
-  std::vector<float> cvalues(static_cast<size_t>(cells.GetNumberOfCells()), 42.0f);
-  vtkm::cont::Field cfield = vtkm::cont::make_Field(
-    "cfield", vtkm::cont::Field::Association::CELL_SET, cvalues, vtkm::CopyFlag::Off);
-  dataset.AddField(cfield);
-
-  vtkm::filter::PointAverage avg;
-  try
-  {
-    avg.SetActiveField("cfield");
-    auto result = avg.Execute(dataset);
-    VTKM_TEST_ASSERT(result.HasPointField("cfield"), "filter resulting dataset should be valid");
-  }
-  catch (const vtkm::cont::Error& err)
-  {
-    std::cout << err.GetMessage() << std::endl;
-    VTKM_TEST_ASSERT(false, "Filter execution threw an exception");
-  }
-
 
   return 0;
 }
@@ -162,6 +141,5 @@ int TestCellSetExtrude()
 
 int UnitTestCellSetExtrude(int argc, char* argv[])
 {
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(TestCellSetExtrude, argc, argv);
 }

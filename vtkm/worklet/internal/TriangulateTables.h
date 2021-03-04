@@ -77,11 +77,10 @@ static vtkm::IdComponent TriangleIndexData[] = {
   3
 };
 
-template <typename DeviceAdapter>
 class TriangulateTablesExecutionObject
 {
 public:
-  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst;
+  using PortalType = TriangulateArrayHandle::ReadPortalType;
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   TriangulateTablesExecutionObject() {}
@@ -90,10 +89,11 @@ public:
   TriangulateTablesExecutionObject(const TriangulateArrayHandle& counts,
                                    const TriangulateArrayHandle& offsets,
                                    const TriangulateArrayHandle& indices,
+                                   vtkm::cont::DeviceAdapterId device,
                                    vtkm::cont::Token& token)
-    : Counts(counts.PrepareForInput(DeviceAdapter(), token))
-    , Offsets(offsets.PrepareForInput(DeviceAdapter(), token))
-    , Indices(indices.PrepareForInput(DeviceAdapter(), token))
+    : Counts(counts.PrepareForInput(device, token))
+    , Offsets(offsets.PrepareForInput(device, token))
+    , Indices(indices.PrepareForInput(device, token))
   {
   }
 
@@ -139,17 +139,15 @@ private:
 class TriangulateTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
 {
 public:
-  template <typename Device>
-  VTKM_CONT TriangulateTablesExecutionObject<Device> PrepareForExecution(
-    Device,
-    vtkm::cont::Token& token) const
+  VTKM_CONT TriangulateTablesExecutionObject PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                                 vtkm::cont::Token& token) const
   {
     if (BasicImpl)
     {
-      return TriangulateTablesExecutionObject<Device>();
+      return TriangulateTablesExecutionObject();
     }
-    return TriangulateTablesExecutionObject<Device>(
-      this->Counts, this->Offsets, this->Indices, token);
+    return TriangulateTablesExecutionObject(
+      this->Counts, this->Offsets, this->Indices, device, token);
   }
   VTKM_CONT
   TriangulateTablesExecutionObjectFactory()
@@ -291,11 +289,10 @@ static vtkm::IdComponent TetrahedronIndexData[] = {
   4
 };
 
-template <typename DeviceAdapter>
 class TetrahedralizeTablesExecutionObject
 {
 public:
-  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst;
+  using PortalType = typename TriangulateArrayHandle::ReadPortalType;
   template <typename Device>
   VTKM_CONT TetrahedralizeTablesExecutionObject PrepareForExecution(Device) const
   {
@@ -309,10 +306,11 @@ public:
   TetrahedralizeTablesExecutionObject(const TriangulateArrayHandle& counts,
                                       const TriangulateArrayHandle& offsets,
                                       const TriangulateArrayHandle& indices,
+                                      vtkm::cont::DeviceAdapterId device,
                                       vtkm::cont::Token& token)
-    : Counts(counts.PrepareForInput(DeviceAdapter(), token))
-    , Offsets(offsets.PrepareForInput(DeviceAdapter(), token))
-    , Indices(indices.PrepareForInput(DeviceAdapter(), token))
+    : Counts(counts.PrepareForInput(device, token))
+    , Offsets(offsets.PrepareForInput(device, token))
+    , Indices(indices.PrepareForInput(device, token))
   {
   }
 
@@ -343,17 +341,15 @@ private:
 class TetrahedralizeTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
 {
 public:
-  template <typename Device>
-  VTKM_CONT TetrahedralizeTablesExecutionObject<Device> PrepareForExecution(
-    Device,
-    vtkm::cont::Token& token) const
+  VTKM_CONT TetrahedralizeTablesExecutionObject
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
   {
     if (BasicImpl)
     {
-      return TetrahedralizeTablesExecutionObject<Device>();
+      return TetrahedralizeTablesExecutionObject();
     }
-    return TetrahedralizeTablesExecutionObject<Device>(
-      this->Counts, this->Offsets, this->Indices, token);
+    return TetrahedralizeTablesExecutionObject(
+      this->Counts, this->Offsets, this->Indices, device, token);
   }
 
   VTKM_CONT

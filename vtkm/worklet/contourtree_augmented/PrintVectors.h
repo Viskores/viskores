@@ -78,7 +78,7 @@ namespace contourtree_augmented
 
 // local constants to allow changing the spacing as needed
 constexpr int PRINT_WIDTH = 12;
-constexpr int PREFIX_WIDTH = 24;
+constexpr int PREFIX_WIDTH = 30;
 
 template <typename T, typename StorageType>
 void PrintValues(std::string label,
@@ -263,9 +263,43 @@ inline void PrintLabelledDataBlock(std::string label,
 } // PrintLabelledDataBlock()
 
 
-// routine for printing list of edge pairs. Used, e.g., to print the sorted list of saddle peaks from the ContourTree
-inline void PrintEdgePairArray(const EdgePairArray& edgePairArray,
+// routine for printing list of edge pairs in row format, i.e., First and Second of the Edge
+// are printed separated. Used, e.g.,in standard debug.
+inline void PrintEdgePairArray(std::string label,
+                               const EdgePairArray& edgePairArray,
+                               vtkm::Id nIndices,
                                std::ostream& outStream = std::cout)
+{ // PrintEdgePairArray()
+  // -1 means full size
+  if (nIndices == -1)
+  {
+    nIndices = edgePairArray.GetNumberOfValues();
+  }
+  // now print them out
+  auto edgePairArrayConstPortal = edgePairArray.ReadPortal();
+
+  // print the low end
+  PrintLabel(label + " High", outStream);
+  for (vtkm::Id superarc = 0; superarc < nIndices; superarc++)
+  { // per superarc
+    PrintIndexType(edgePairArrayConstPortal.Get(superarc).second, outStream);
+  } // per superarc
+  outStream << std::endl;
+
+  // print the high end
+  PrintLabel(label + " Low", outStream);
+  for (vtkm::Id superarc = 0; superarc < nIndices; superarc++)
+  { // per edge
+    PrintIndexType(edgePairArrayConstPortal.Get(superarc).first, outStream);
+  }
+  outStream << std::endl;
+} // PrintEdgePairArray()
+
+
+// routine for printing list of edge pairs in column format (first, second).
+// Used, e.g., to print the sorted list of saddle peaks from the ContourTree
+inline void PrintEdgePairArrayColumnLayout(const EdgePairArray& edgePairArray,
+                                           std::ostream& outStream = std::cout)
 { // PrintEdgePairArray()
   // now print them out
   auto edgePairArrayConstPortal = edgePairArray.ReadPortal();

@@ -10,6 +10,7 @@
 #ifndef vtk_m_worklet_colorconversion_ConvertToRGB_h
 #define vtk_m_worklet_colorconversion_ConvertToRGB_h
 
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/colorconversion/Conversions.h>
 
 namespace vtkm

@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(headers
-  ArrayManagerExecutionTBB.h
   DeviceAdapterAlgorithmTBB.h
   DeviceAdapterMemoryManagerTBB.h
   DeviceAdapterRuntimeDetectorTBB.h

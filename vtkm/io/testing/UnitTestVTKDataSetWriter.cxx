@@ -11,6 +11,7 @@
 #include <complex>
 #include <cstdio>
 #include <vector>
+#include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
@@ -30,7 +31,7 @@ struct CheckSameField
                   const vtkm::cont::Field& fileField) const
   {
     vtkm::cont::ArrayHandle<T> fileArray;
-    fileField.GetData().CopyTo(fileArray);
+    fileField.GetData().AsArrayHandle(fileArray);
     VTKM_TEST_ASSERT(test_equal_portals(originalArray.ReadPortal(), fileArray.ReadPortal()));
   }
 };
@@ -39,6 +40,13 @@ struct CheckSameCoordinateSystem
 {
   template <typename T>
   void operator()(const vtkm::cont::ArrayHandle<T>& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    CheckSameField{}(originalArray, fileCoords);
+  }
+
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagSOA>& originalArray,
                   const vtkm::cont::CoordinateSystem& fileCoords) const
   {
     CheckSameField{}(originalArray, fileCoords);
@@ -60,7 +68,7 @@ struct CheckSameCoordinateSystem
   {
     VTKM_TEST_ASSERT(fileCoords.GetData().IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>());
     vtkm::cont::ArrayHandleUniformPointCoordinates fileArray =
-      fileCoords.GetData().Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+      fileCoords.GetData().AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>();
     auto originalPortal = originalArray.ReadPortal();
     auto filePortal = fileArray.ReadPortal();
     VTKM_TEST_ASSERT(test_equal(originalPortal.GetOrigin(), filePortal.GetOrigin()));
@@ -80,7 +88,7 @@ struct CheckSameCoordinateSystem
   {
     VTKM_TEST_ASSERT(fileCoords.GetData().IsType<ArrayHandleRectilinearCoords<T>>());
     ArrayHandleRectilinearCoords<T> fileArray =
-      fileCoords.GetData().Cast<ArrayHandleRectilinearCoords<T>>();
+      fileCoords.GetData().AsArrayHandle<ArrayHandleRectilinearCoords<T>>();
     auto originalPortal = originalArray.ReadPortal();
     auto filePortal = fileArray.ReadPortal();
     VTKM_TEST_ASSERT(
@@ -90,6 +98,19 @@ struct CheckSameCoordinateSystem
     VTKM_TEST_ASSERT(
       test_equal_portals(originalPortal.GetThirdPortal(), filePortal.GetThirdPortal()));
   }
+
+#ifdef VTKM_ADD_XGC_DEFAULT_TYPES
+  // Just added to fix compilation errors when building with XGC types added to default types
+  // An XGC data set wouldn't be directly written out to a VTK file, it should be converted
+  // to an explicit grid first and then written out.
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagXGCCoordinates>&,
+                  const vtkm::cont::CoordinateSystem&) const
+  {
+    throw vtkm::cont::ErrorBadType("UnitTestVTKDataSetWriter::CheckSameCoordinateSystem() shouldn't"
+                                   " be called on ArrayHandleXGCCoordinates");
+  }
+#endif
 };
 
 void CheckWrittenReadData(const vtkm::cont::DataSet& originalData,

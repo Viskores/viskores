@@ -25,7 +25,7 @@ void TestPointGradientUniform2D()
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
+  dataSet.GetField("pointvar").GetData().AsArrayHandle(fieldArray);
 
   vtkm::worklet::PointGradient gradient;
   auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
@@ -51,7 +51,7 @@ void TestPointGradientUniform3D()
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
+  dataSet.GetField("pointvar").GetData().AsArrayHandle(fieldArray);
 
   vtkm::worklet::PointGradient gradient;
   auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
@@ -202,7 +202,7 @@ void TestPointGradientExplicit3D()
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet5();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
+  dataSet.GetField("pointvar").GetData().AsArrayHandle(fieldArray);
 
   vtkm::worklet::PointGradient gradient;
   auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);
@@ -235,7 +235,7 @@ void TestPointGradientExplicit2D()
   vtkm::cont::DataSet dataSet = testDataSet.Make2DExplicitDataSet0();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
+  dataSet.GetField("pointvar").GetData().AsArrayHandle(fieldArray);
 
   vtkm::worklet::PointGradient gradient;
   auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray);

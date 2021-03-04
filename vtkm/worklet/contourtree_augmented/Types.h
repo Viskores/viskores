@@ -75,8 +75,15 @@ constexpr vtkm::Id IS_ASCENDING = std::numeric_limits<vtkm::Id>::max() / 16 + 1;
 constexpr vtkm::Id INDEX_MASK = std::numeric_limits<vtkm::Id>::max() / 16; //0x07FFFFFF || 0x07FFFFFFFFFFFFFF
 constexpr vtkm::Id CV_OTHER_FLAG = std::numeric_limits<vtkm::Id>::max() / 8 + 1; //0x10000000 || 0x1000000000000000
 constexpr vtkm::Id ELEMENT_EXISTS = std::numeric_limits<vtkm::Id>::max() / 4 + 1; //0x20000000 || 0x2000000000000000 , same as IS_SUPERNODE
-// clang-format on
 
+// flags for testing regular vertices
+constexpr vtkm::Id IS_LOWER_LEAF = static_cast<vtkm::Id>(0);
+constexpr vtkm::Id IS_UPPER_LEAF = static_cast<vtkm::Id>(1);
+constexpr vtkm::Id IS_REGULAR = static_cast<vtkm::Id>(2);
+constexpr vtkm::Id IS_SADDLE = static_cast<vtkm::Id>(3);
+constexpr vtkm::Id IS_ATTACHMENT = static_cast<vtkm::Id>(4);
+
+// clang-format on
 using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
 using EdgePair = vtkm::Pair<vtkm::Id, vtkm::Id>; // here EdgePair.first=low and EdgePair.second=high

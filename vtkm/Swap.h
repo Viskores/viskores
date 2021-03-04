@@ -13,7 +13,7 @@
 
 #include <vtkm/internal/ExportMacros.h>
 
-#ifdef __CUDACC__
+#ifdef VTKM_CUDA
 #include <thrust/swap.h>
 #else
 #include <algorithm>
@@ -23,12 +23,26 @@ namespace vtkm
 {
 
 /// Performs a swap operation. Safe to call from cuda code.
-#ifdef __CUDACC__
+#if defined(VTKM_CUDA)
 template <typename T>
 VTKM_EXEC_CONT void Swap(T& a, T& b)
 {
   using namespace thrust;
   swap(a, b);
+}
+#elif defined(VTKM_HIP)
+template <typename T>
+__host__ void Swap(T& a, T& b)
+{
+  using namespace std;
+  swap(a, b);
+}
+template <typename T>
+__device__ void Swap(T& a, T& b)
+{
+  T temp = a;
+  a = b;
+  b = temp;
 }
 #else
 template <typename T>

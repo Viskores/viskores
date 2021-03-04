@@ -15,6 +15,7 @@
 /// Reference: Computational Physics 2nd Edition, Nicholas Giordano & Hisao Nakanishi
 
 #include <iomanip>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleRandomUniformReal.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
@@ -96,7 +97,7 @@ int main(int argc, char** argv)
 
   auto dataSet = SpinField({ 5, 5 });
   vtkm::cont::ArrayHandle<vtkm::Float32> spins;
-  dataSet.GetCellField("spins").GetData().CopyTo(spins);
+  dataSet.GetCellField("spins").GetData().AsArrayHandle(spins);
 
   vtkm::rendering::Scene scene;
   vtkm::rendering::Actor actor(dataSet.GetCellSet(),

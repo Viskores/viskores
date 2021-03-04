@@ -15,7 +15,7 @@
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
 #include <vtkm/exec/arg/IncidentElementIndices.h>
 
-//optimized fetches for ArrayPortalExtrude for
+//optimized fetches for ArrayPortalXGCCoordinates for
 // - 3D Scheduling
 // - WorkletNeighboorhood
 namespace vtkm
@@ -30,9 +30,9 @@ template <typename FetchType, typename ExecObjectType>
 struct Fetch<FetchType, vtkm::exec::arg::AspectTagIncidentElementIndices, ExecObjectType>
 {
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename Device, typename ScatterAndMaskMode>
+  template <typename ScatterAndMaskMode>
   VTKM_EXEC auto Load(
-    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>,
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude,
                                                     ScatterAndMaskMode>& indices,
     const ExecObjectType&) const -> vtkm::Vec<vtkm::Id, 6>
   {
@@ -70,47 +70,40 @@ struct Fetch<FetchType, vtkm::exec::arg::AspectTagIncidentElementIndices, ExecOb
 template <typename T>
 struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
              vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::ArrayPortalExtrude<T>>
+             vtkm::internal::ArrayPortalXGCCoordinates<T>>
 
 {
+  //Optimized fetch for point arrays when iterating the cells ConnectivityExtrude
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename ThreadIndicesType>
-  VTKM_EXEC auto Load(const ThreadIndicesType& indices,
-                      const vtkm::exec::ArrayPortalExtrude<T>& points)
-    -> decltype(points.GetWedge(indices.GetIndicesIncident()))
-  {
-    // std::cout << "opimized fetch for point coordinates" << std::endl;
-    return points.GetWedge(indices.GetIndicesIncident());
-  }
-
-  template <typename ThreadIndicesType, typename ValueType>
-  VTKM_EXEC void Store(const ThreadIndicesType&,
-                       const vtkm::exec::ArrayPortalExtrude<T>&,
-                       const ValueType&) const
-  {
-    // Store is a no-op for this fetch.
-  }
-};
-
-//Optimized fetch for point coordinates when iterating the cells of ConnectivityExtrude
-template <typename T>
-struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
-             vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::ArrayPortalExtrudePlane<T>>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename ThreadIndicesType>
-  VTKM_EXEC auto Load(const ThreadIndicesType& indices,
-                      const vtkm::exec::ArrayPortalExtrudePlane<T>& portal)
+  template <typename ScatterAndMaskMode>
+  VTKM_EXEC auto Load(
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude,
+                                                    ScatterAndMaskMode>& indices,
+    const vtkm::internal::ArrayPortalXGCCoordinates<T>& portal)
     -> decltype(portal.GetWedge(indices.GetIndicesIncident()))
   {
-    // std::cout << "opimized fetch for point coordinates" << std::endl;
     return portal.GetWedge(indices.GetIndicesIncident());
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename ThreadIndicesType>
+  VTKM_EXEC auto Load(const ThreadIndicesType& indices,
+                      const vtkm::internal::ArrayPortalXGCCoordinates<T>& field) const
+    -> decltype(
+      detail::FetchArrayTopologyMapInImplementation<typename ThreadIndicesType::Connectivity,
+                                                    vtkm::internal::ArrayPortalXGCCoordinates<T>,
+                                                    ThreadIndicesType>::Load(indices, field))
+  {
+    using Implementation =
+      detail::FetchArrayTopologyMapInImplementation<typename ThreadIndicesType::Connectivity,
+                                                    vtkm::internal::ArrayPortalXGCCoordinates<T>,
+                                                    ThreadIndicesType>;
+    return Implementation::Load(indices, field);
+  }
+
   template <typename ThreadIndicesType, typename ValueType>
   VTKM_EXEC void Store(const ThreadIndicesType&,
-                       const vtkm::exec::ArrayPortalExtrudePlane<T>&,
+                       const vtkm::internal::ArrayPortalXGCCoordinates<T>&,
                        const ValueType&) const
   {
     // Store is a no-op for this fetch.
@@ -121,13 +114,13 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
 template <typename T>
 struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
              vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::ArrayPortalExtrude<T>>
+             vtkm::internal::ArrayPortalXGCCoordinates<T>>
 
 {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VTKM_EXEC auto Load(const ThreadIndicesType& indices,
-                      const vtkm::exec::ArrayPortalExtrude<T>& points)
+                      const vtkm::internal::ArrayPortalXGCCoordinates<T>& points)
     -> decltype(points.Get(indices.GetInputIndex()))
   {
     // std::cout << "optimized fetch for point coordinates" << std::endl;
@@ -135,11 +128,11 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename Device, typename ScatterAndMaskMode>
+  template <typename ScatterAndMaskMode>
   VTKM_EXEC auto Load(
-    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>,
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude,
                                                     ScatterAndMaskMode>& indices,
-    const vtkm::exec::ArrayPortalExtrude<T>& points)
+    const vtkm::internal::ArrayPortalXGCCoordinates<T>& points)
     -> decltype(points.Get(indices.GetIndexLogical()))
   {
     // std::cout << "optimized fetch for point coordinates" << std::endl;
@@ -148,7 +141,7 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
 
   template <typename ThreadIndicesType, typename ValueType>
   VTKM_EXEC void Store(const ThreadIndicesType&,
-                       const vtkm::exec::ArrayPortalExtrude<T>&,
+                       const vtkm::internal::ArrayPortalXGCCoordinates<T>&,
                        const ValueType&) const
   {
     // Store is a no-op for this fetch.

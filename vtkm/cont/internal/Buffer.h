@@ -13,6 +13,7 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/Token.h>
 
@@ -59,29 +60,23 @@ namespace detail
 
 struct BufferHelper;
 
-} // namespace detail
+using DeleterType = void(void*);
 
-/// \brief An object to hold metadata for a `Buffer` object.
-///
-/// A `Buffer` object can optionally hold a `BufferMetaData` object. The metadata object
-/// allows the buffer to hold state for the buffer that is not directly related to the
-/// memory allocated and its size. This allows you to completely encapsulate the state
-/// in the `Buffer` object and then pass the `Buffer` object to different object that
-/// provide different interfaces to the array.
-///
-/// To use `BufferMetaData`, create a subclass, and then provide that subclass as the
-/// metadata. The `Buffer` object will only remember it as the generic base class. You
-/// can then get the metadata and perform a `dynamic_cast` to check that the metadata
-/// is as expected and to get to the meta information
-///
-struct VTKM_CONT_EXPORT BufferMetaData
+template <typename T>
+void BasicDeleter(void* mem)
 {
-  virtual ~BufferMetaData();
+  T* obj = reinterpret_cast<T*>(mem);
+  delete obj;
+}
 
-  /// Subclasses must provide a way to deep copy metadata.
-  ///
-  virtual std::unique_ptr<BufferMetaData> DeepCopy() const = 0;
-};
+using CopierType = void*(const void*);
+template <typename T>
+void* BasicCopier(const void* mem)
+{
+  return new T(*reinterpret_cast<const T*>(mem));
+}
+
+} // namespace detail
 
 /// \brief Manages a buffer data among the host and various devices.
 ///
@@ -130,33 +125,65 @@ public:
                                   vtkm::CopyFlag preserve,
                                   vtkm::cont::Token& token);
 
-  /// \brief Gets the metadata for the buffer.
-  ///
-  /// Holding metadata in a `Buffer` is optional. The metadata is held in a subclass of
-  /// `BufferMetaData`, and you will have to safely downcast the object to retrieve the
-  /// actual information.
-  ///
-  /// The metadata could be a `nullptr` if the metadata was never set.
-  ///
-  VTKM_CONT vtkm::cont::internal::BufferMetaData* GetMetaData() const;
+private:
+  VTKM_CONT bool MetaDataIsType(const std::string& type) const;
+  VTKM_CONT void SetMetaData(void* data,
+                             const std::string& type,
+                             detail::DeleterType* deleter,
+                             detail::CopierType copier) const;
+  VTKM_CONT void* GetMetaData(const std::string& type) const;
 
-  /// \brief Sets the metadata for the buffer.
+public:
+  /// \brief Returns whether this `Buffer` holds metadata.
   ///
-  /// This form of SetMetaData takes an rvalue to a unique_ptr holding the metadata to
-  /// ensure that the object is properly managed.
-  ///
-  VTKM_CONT void SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>&& metadata);
+  VTKM_CONT bool HasMetaData() const;
 
-  /// \brief Sets the metadata for the buffer.
-  ///
-  /// This form of SetMetaData takes the metadata object value. The metadata object
-  /// must be a subclass of BufferMetaData or you will get a compile error.
+  /// \brief Determines if the metadata for the buffer is set to the given type.
   ///
   template <typename MetaDataType>
-  VTKM_CONT void SetMetaData(const MetaDataType& metadata)
+  VTKM_CONT bool MetaDataIsType() const
   {
-    this->SetMetaData(
-      std::unique_ptr<vtkm::cont::internal::BufferMetaData>(new MetaDataType(metadata)));
+    return this->MetaDataIsType(vtkm::cont::TypeToString<MetaDataType>());
+  }
+
+  /// \brief Sets the metadata for the buffer.
+  ///
+  /// Takes an arbitrary object and copies it to the metadata of this buffer. Any existing
+  /// metadata is deleted. Any object can be set as the metadata as long as the object has
+  /// a default constructor and is copyable.
+  ///
+  /// Holding metadata in a `Buffer` is optional, but helpful for storing additional
+  /// information or objects that cannot be implied by the buffer itself.
+  ///
+  template <typename MetaDataType>
+  VTKM_CONT void SetMetaData(const MetaDataType& metadata) const
+  {
+    MetaDataType* metadataCopy = new MetaDataType(metadata);
+    this->SetMetaData(metadataCopy,
+                      vtkm::cont::TypeToString(metadata),
+                      detail::BasicDeleter<MetaDataType>,
+                      detail::BasicCopier<MetaDataType>);
+  }
+
+  /// \brief Gets the metadata for the buffer.
+  ///
+  /// When you call this method, you have to specify a template parameter for the type
+  /// of the metadata. If the metadata has not yet been set in this buffer, a new metadata
+  /// object is created, set to this buffer, and returned. If metadata of a different type
+  /// has already been set, then an exception is thrown.
+  ///
+  /// The returned value is a reference that can be manipulated to alter the metadata of
+  /// this buffer.
+  ///
+  template <typename MetaDataType>
+  VTKM_CONT MetaDataType& GetMetaData() const
+  {
+    if (!this->HasMetaData())
+    {
+      this->SetMetaData(MetaDataType{});
+    }
+    return *reinterpret_cast<MetaDataType*>(
+      this->GetMetaData(vtkm::cont::TypeToString<MetaDataType>()));
   }
 
   /// \brief Returns `true` if the buffer is allocated on the host.

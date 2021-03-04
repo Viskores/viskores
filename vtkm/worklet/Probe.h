@@ -12,13 +12,12 @@
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellLocatorGeneral.h>
+#include <vtkm/cont/CellLocatorChooser.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/exec/CellInside.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -48,11 +47,21 @@ public:
                               vtkm::Id& cellId,
                               vtkm::Vec3f& pcoords) const
     {
-      locator->FindCell(point, cellId, pcoords);
+      locator.FindCell(point, cellId, pcoords);
     }
   };
 
 private:
+  struct RunSelectLocator
+  {
+    template <typename LocatorType, typename PointsType>
+    void operator()(const LocatorType& locator, Probe& worklet, const PointsType& points) const
+    {
+      worklet.Invoke(
+        FindCellWorklet{}, points, locator, worklet.CellIds, worklet.ParametricCoordinates);
+    }
+  };
+
   template <typename CellSetType, typename PointsType, typename PointsStorage>
   void RunImpl(const CellSetType& cells,
                const vtkm::cont::CoordinateSystem& coords,
@@ -60,14 +69,7 @@ private:
   {
     this->InputCellSet = vtkm::cont::DynamicCellSet(cells);
 
-    vtkm::cont::CellLocatorGeneral locator;
-    locator.SetCellSet(this->InputCellSet);
-    locator.SetCoordinates(coords);
-    locator.Update();
-
-    vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
-    // CellLocatorGeneral is non-copyable. Pass it via a pointer.
-    dispatcher.Invoke(points, &locator, this->CellIds, this->ParametricCoordinates);
+    vtkm::cont::CastAndCallCellLocatorChooser(cells, coords, RunSelectLocator{}, *this, points);
   }
 
   //============================================================================
@@ -151,8 +153,8 @@ private:
       this->CellIds);
     this->ParametricCoordinates.Allocate(points.GetNumberOfValues());
 
-    vtkm::worklet::DispatcherMapTopology<ProbeUniformPoints> dispatcher;
-    dispatcher.Invoke(cells, coords, points, this->CellIds, this->ParametricCoordinates);
+    this->Invoke(
+      ProbeUniformPoints{}, cells, coords, points, this->CellIds, this->ParametricCoordinates);
   }
 
   //============================================================================
@@ -298,8 +300,7 @@ public:
   vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenPointsField() const
   {
     vtkm::cont::ArrayHandle<vtkm::UInt8> field;
-    vtkm::worklet::DispatcherMapField<HiddenPointsWorklet> dispatcher;
-    dispatcher.Invoke(this->CellIds, field);
+    this->Invoke(HiddenPointsWorklet{}, this->CellIds, field);
     return field;
   }
 
@@ -331,8 +332,7 @@ public:
   vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenCellsField(CellSetType cellset) const
   {
     vtkm::cont::ArrayHandle<vtkm::UInt8> field;
-    vtkm::worklet::DispatcherMapTopology<HiddenCellsWorklet> dispatcher;
-    dispatcher.Invoke(cellset, this->CellIds, field);
+    this->Invoke(HiddenCellsWorklet{}, cellset, this->CellIds, field);
     return field;
   }
 
@@ -343,6 +343,8 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> ParametricCoordinates;
   vtkm::cont::DynamicCellSet InputCellSet;
+
+  vtkm::cont::Invoker Invoke;
 };
 }
 } // vtkm::worklet

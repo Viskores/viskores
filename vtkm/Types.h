@@ -173,11 +173,13 @@ using WordTypeDefault = vtkm::UInt32;
 
 //In this order so that we exactly match the logic that exists in VTK
 #if VTKM_SIZE_LONG_LONG == 8
-using Int64 = long long;
+using Int64 = signed long long;
 using UInt64 = unsigned long long;
+#define VTKM_UNUSED_INT_TYPE long
 #elif VTKM_SIZE_LONG == 8
 using Int64 = signed long;
 using UInt64 = unsigned long;
+#define VTKM_UNUSED_INT_TYPE long long
 #else
 #error Could not find a 64-bit integer.
 #endif
@@ -341,15 +343,14 @@ public:
     }
   }
 
-  template <typename OtherComponentType, typename OtherVecType>
-  VTKM_EXEC_CONT DerivedClass& operator=(
-    const vtkm::detail::VecBaseCommon<OtherComponentType, OtherVecType>& src)
+  // Only works with Vec-like objects with operator[] and GetNumberOfComponents().
+  template <typename OtherVecType>
+  VTKM_EXEC_CONT DerivedClass& operator=(const OtherVecType& src)
   {
-    const OtherVecType& srcDerived = static_cast<const OtherVecType&>(src);
-    VTKM_ASSERT(this->NumComponents() == srcDerived.GetNumberOfComponents());
+    VTKM_ASSERT(this->NumComponents() == src.GetNumberOfComponents());
     for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
     {
-      this->Component(i) = OtherComponentType(srcDerived[i]);
+      this->Component(i) = src[i];
     }
     return this->Derived();
   }
@@ -411,14 +412,12 @@ public:
   }
 
   template <typename OtherClass>
-  inline VTKM_EXEC_CONT DerivedClass& operator+=(
-    const VecBaseCommon<ComponentType, OtherClass>& other)
+  inline VTKM_EXEC_CONT DerivedClass& operator+=(const OtherClass& other)
   {
-    const OtherClass& other_derived = static_cast<const OtherClass&>(other);
-    VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
+    VTKM_ASSERT(this->NumComponents() == other.GetNumberOfComponents());
     for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
     {
-      this->Component(i) += other_derived[i];
+      this->Component(i) += other[i];
     }
     return this->Derived();
   }
@@ -437,14 +436,12 @@ public:
   }
 
   template <typename OtherClass>
-  inline VTKM_EXEC_CONT DerivedClass& operator-=(
-    const VecBaseCommon<ComponentType, OtherClass>& other)
+  inline VTKM_EXEC_CONT DerivedClass& operator-=(const OtherClass& other)
   {
-    const OtherClass& other_derived = static_cast<const OtherClass&>(other);
-    VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
+    VTKM_ASSERT(this->NumComponents() == other.GetNumberOfComponents());
     for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
     {
-      this->Component(i) -= other_derived[i];
+      this->Component(i) -= other[i];
     }
     return this->Derived();
   }
@@ -462,14 +459,12 @@ public:
   }
 
   template <typename OtherClass>
-  inline VTKM_EXEC_CONT DerivedClass& operator*=(
-    const VecBaseCommon<ComponentType, OtherClass>& other)
+  inline VTKM_EXEC_CONT DerivedClass& operator*=(const OtherClass& other)
   {
-    const OtherClass& other_derived = static_cast<const OtherClass&>(other);
-    VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
+    VTKM_ASSERT(this->NumComponents() == other.GetNumberOfComponents());
     for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
     {
-      this->Component(i) *= other_derived[i];
+      this->Component(i) *= other[i];
     }
     return this->Derived();
   }
@@ -487,13 +482,12 @@ public:
   }
 
   template <typename OtherClass>
-  VTKM_EXEC_CONT DerivedClass& operator/=(const VecBaseCommon<ComponentType, OtherClass>& other)
+  VTKM_EXEC_CONT DerivedClass& operator/=(const OtherClass& other)
   {
-    const OtherClass& other_derived = static_cast<const OtherClass&>(other);
-    VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
+    VTKM_ASSERT(this->NumComponents() == other.GetNumberOfComponents());
     for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
     {
-      this->Component(i) /= other_derived[i];
+      this->Component(i) /= other[i];
     }
     return this->Derived();
   }

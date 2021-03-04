@@ -52,6 +52,7 @@ public:
                             const vtkm::Id& index) const
   {
     vtkm::Vec<Precision, 3> intersection = origin + inDepth * dir;
+
     vtkm::Vec4f_32 point;
     point[0] = static_cast<vtkm::Float32>(intersection[0]);
     point[1] = static_cast<vtkm::Float32>(intersection[1]);

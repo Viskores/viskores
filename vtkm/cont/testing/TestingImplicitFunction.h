@@ -10,14 +10,17 @@
 #ifndef vtk_m_cont_testing_TestingImplicitFunction_h
 #define vtk_m_cont_testing_TestingImplicitFunction_h
 
+#include <vtkm/ImplicitFunction.h>
+
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
-#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/internal/Configure.h>
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#include <vtkm/cont/ImplicitFunctionHandle.h>
+#endif //!VTKM_NO_DEPRECATED_VIRTUAL
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -37,85 +40,43 @@ namespace implicit_function_detail
 class EvaluateImplicitFunction : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn, FieldOut, FieldOut);
-  using ExecutionSignature = void(_1, _2, _3);
+  using ControlSignature = void(FieldIn, FieldOut, FieldOut, ExecObject);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
-  EvaluateImplicitFunction(const vtkm::ImplicitFunction* function)
-    : Function(function)
+  template <typename VecType, typename ScalarType, typename FunctionType>
+  VTKM_EXEC void operator()(const VecType& point,
+                            ScalarType& val,
+                            VecType& gradient,
+                            const FunctionType& function) const
   {
+    val = function.Value(point);
+    gradient = function.Gradient(point);
   }
 
-  template <typename VecType, typename ScalarType>
-  VTKM_EXEC void operator()(const VecType& point, ScalarType& val, VecType& gradient) const
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  template <typename VecType, typename ScalarType, typename FunctionType>
+  VTKM_EXEC void operator()(const VecType& point,
+                            ScalarType& val,
+                            VecType& gradient,
+                            const FunctionType* function) const
   {
-    val = this->Function->Value(point);
-    gradient = this->Function->Gradient(point);
+    val = function->Value(point);
+    gradient = function->Gradient(point);
   }
-
-private:
-  const vtkm::ImplicitFunction* Function;
+  VTKM_DEPRECATED_SUPPRESS_END
+#endif //!VTKM_NO_DEPRECATED_VIRTUAL
 };
 
-template <typename DeviceAdapter>
+template <typename ImplicitFunctionType>
 void EvaluateOnCoordinates(vtkm::cont::CoordinateSystem points,
-                           const vtkm::cont::ImplicitFunctionHandle& function,
+                           const ImplicitFunctionType& function,
                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>& values,
                            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& gradients,
-                           DeviceAdapter device)
+                           vtkm::cont::DeviceAdapterId device)
 {
-  using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvaluateImplicitFunction>;
-
-  vtkm::cont::Token token;
-  EvaluateImplicitFunction eval(function.PrepareForExecution(device, token));
-  EvalDispatcher dispatcher(eval);
-  dispatcher.SetDevice(DeviceAdapter());
-  dispatcher.Invoke(points.GetDataAsMultiplexer(), values, gradients);
-}
-
-template <typename ItemType, std::size_t N>
-bool TestArrayEqual(const vtkm::cont::ArrayHandle<ItemType>& result,
-                    const std::array<ItemType, N>& expected)
-{
-  bool success = false;
-  auto portal = result.ReadPortal();
-  vtkm::Id count = portal.GetNumberOfValues();
-
-  if (static_cast<std::size_t>(count) == N)
-  {
-    success = true;
-    for (vtkm::Id i = 0; i < count; ++i)
-    {
-      if (!test_equal(portal.Get(i), expected[static_cast<std::size_t>(i)]))
-      {
-        success = false;
-        break;
-      }
-    }
-  }
-  if (!success)
-  {
-    if (count == 0)
-    {
-      std::cout << "result: <empty>\n";
-    }
-    else
-    {
-      std::cout << "result:   " << portal.Get(0);
-      for (vtkm::Id i = 1; i < count; ++i)
-      {
-        std::cout << ", " << portal.Get(i);
-      }
-      std::cout << "\n";
-      std::cout << "expected: " << expected[0];
-      for (vtkm::Id i = 1; i < count; ++i)
-      {
-        std::cout << ", " << expected[static_cast<std::size_t>(i)];
-      }
-      std::cout << "\n";
-    }
-  }
-
-  return success;
+  vtkm::cont::Invoker invoke{ device };
+  invoke(EvaluateImplicitFunction{}, points.GetDataAsMultiplexer(), values, gradients, function);
 }
 
 } // anonymous namespace
@@ -139,21 +100,63 @@ public:
   }
 
 private:
-  template <typename DeviceAdapter>
-  void Try(vtkm::cont::ImplicitFunctionHandle& function,
+  template <typename ImplicitFunctorType>
+  void Try(ImplicitFunctorType& function,
            const std::array<vtkm::FloatDefault, 8>& expectedValues,
            const std::array<vtkm::Vec3f, 8>& expectedGradients,
-           DeviceAdapter device)
+           vtkm::cont::DeviceAdapterId device)
   {
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
-    implicit_function_detail::EvaluateOnCoordinates(
-      this->Input.GetCoordinateSystem(0), function, values, gradients, device);
+    auto expectedValuesArray =
+      vtkm::cont::make_ArrayHandle(expectedValues.data(), 8, vtkm::CopyFlag::Off);
+    auto expectedGradientsArray =
+      vtkm::cont::make_ArrayHandle(expectedGradients.data(), 8, vtkm::CopyFlag::Off);
 
-    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expectedValues),
-                     "Result does not match expected values");
-    VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(gradients, expectedGradients),
-                     "Result does not match expected gradients values");
+    {
+      vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
+      implicit_function_detail::EvaluateOnCoordinates(
+        this->Input.GetCoordinateSystem(0), function, values, gradients, device);
+
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(values, expectedValuesArray));
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(gradients, expectedGradientsArray));
+    }
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+    VTKM_DEPRECATED_SUPPRESS_BEGIN
+    {
+      vtkm::cont::ImplicitFunctionHandle functionHandle(&function, false);
+      vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
+      implicit_function_detail::EvaluateOnCoordinates(
+        this->Input.GetCoordinateSystem(0), functionHandle, values, gradients, device);
+
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(values, expectedValuesArray));
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(gradients, expectedGradientsArray));
+    }
+    VTKM_DEPRECATED_SUPPRESS_END
+#endif //!VTKM_NO_DEPRECATED_VIRTUAL
+
+    {
+      vtkm::ImplicitFunctionMultiplexer<ImplicitFunctorType> functionChoose(function);
+      vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
+      implicit_function_detail::EvaluateOnCoordinates(
+        this->Input.GetCoordinateSystem(0), functionChoose, values, gradients, device);
+
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(values, expectedValuesArray));
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(gradients, expectedGradientsArray));
+    }
+
+    {
+      vtkm::ImplicitFunctionGeneral functionChoose(function);
+      vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
+      implicit_function_detail::EvaluateOnCoordinates(
+        this->Input.GetCoordinateSystem(0), functionChoose, values, gradients, device);
+
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(values, expectedValuesArray));
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(gradients, expectedGradientsArray));
+    }
   }
 
   template <typename DeviceAdapter>
@@ -164,8 +167,7 @@ private:
 
     std::cout << "  default box" << std::endl;
     vtkm::Box box;
-    vtkm::cont::ImplicitFunctionHandle boxHandle(&box, false);
-    this->Try(boxHandle,
+    this->Try(box,
               { { -0.5f, 0.5f, 0.707107f, 0.5f, 0.5f, 0.707107f, 0.866025f, 0.707107f } },
               { { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
                   vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
@@ -180,7 +182,7 @@ private:
     std::cout << "  Specified min/max box" << std::endl;
     box.SetMinPoint({ 0.0f, -0.5f, -0.5f });
     box.SetMaxPoint({ 1.5f, 1.5f, 0.5f });
-    this->Try(boxHandle,
+    this->Try(box,
               { { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f } },
               { { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
                   vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
@@ -194,7 +196,7 @@ private:
 
     std::cout << "  Specified bounds box" << std::endl;
     box.SetBounds({ vtkm::Range(0.0, 1.5), vtkm::Range(-0.5, 1.5), vtkm::Range(-0.5, 0.5) });
-    this->Try(boxHandle,
+    this->Try(box,
               { { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f } },
               { { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
                   vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
@@ -215,8 +217,7 @@ private:
 
     std::cout << "  Default cylinder" << std::endl;
     vtkm::Cylinder cylinder;
-    vtkm::cont::ImplicitFunctionHandle cylinderHandle(&cylinder, false);
-    this->Try(cylinderHandle,
+    this->Try(cylinder,
               { { -0.25f, 0.75f, 1.75f, 0.75f, -0.25f, 0.75f, 1.75f, 0.75f } },
               { { vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
                   vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
@@ -232,7 +233,7 @@ private:
     cylinder.SetCenter({ 0.0f, 0.0f, 1.0f });
     cylinder.SetAxis({ 0.0f, 1.0f, 0.0f });
     cylinder.SetRadius(1.0f);
-    this->Try(cylinderHandle,
+    this->Try(cylinder,
               { { 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f } },
               { { vtkm::Vec3f{ 0.0f, 0.0f, -2.0f },
                   vtkm::Vec3f{ 2.0f, 0.0f, -2.0f },
@@ -248,7 +249,7 @@ private:
     cylinder.SetCenter({ 0.0f, 0.0f, 0.0f });
     cylinder.SetAxis({ 1.0f, 1.0f, 0.0f });
     cylinder.SetRadius(1.0f);
-    this->Try(cylinderHandle,
+    this->Try(cylinder,
               { { -1.0f, -0.5f, 0.5f, 0.0f, -0.5f, -1.0f, 0.0f, 0.5f } },
               { { vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
                   vtkm::Vec3f{ 1.0f, -1.0f, 0.0f },
@@ -278,10 +279,8 @@ private:
       { 1.5f, 1.0f, 0.5f },   // 6
       { 1.5f, 1.0f, -0.5f }   // 7
     };
-    vtkm::cont::ImplicitFunctionHandle frustumHandle =
-      vtkm::cont::make_ImplicitFunctionHandle<vtkm::Frustum>(cornerPoints);
-    vtkm::Frustum* frustum = static_cast<vtkm::Frustum*>(frustumHandle.Get());
-    this->Try(frustumHandle,
+    vtkm::Frustum frustum{ cornerPoints };
+    this->Try(frustum,
               { { 0.0f, 0.353553f, 0.5f, 0.5f, 0.0f, 0.0f, 0.5f, 0.5f } },
               { { vtkm::Vec3f{ 0.0f, -1.0f, 0.0f },
                   vtkm::Vec3f{ 0.707107f, -0.707107f, 0.0f },
@@ -300,8 +299,8 @@ private:
     vtkm::Vec3f planeNormals[6] = { { 0.0f, -1.0f, 0.0f }, { 0.707107f, 0.707107f, 0.0f },
                                     { -1.0f, 0.0f, 0.0f }, { 0.707107f, -0.707107f, 0.0f },
                                     { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f, 1.0f } };
-    frustum->SetPlanes(planePoints, planeNormals);
-    this->Try(frustumHandle,
+    frustum.SetPlanes(planePoints, planeNormals);
+    this->Try(frustum,
               { { 0.0f, 0.353553f, 0.5f, 0.5f, -0.5f, 0.0f, 0.5f, 0.5f } },
               { { vtkm::Vec3f{ 0.0f, -1.0f, 0.0f },
                   vtkm::Vec3f{ 0.707107f, -0.707107f, 0.0f },
@@ -321,10 +320,8 @@ private:
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
     std::cout << "  Default plane" << std::endl;
-    vtkm::cont::ImplicitFunctionHandle planeHandle =
-      vtkm::cont::make_ImplicitFunctionHandle(vtkm::Plane());
-    vtkm::Plane* plane = static_cast<vtkm::Plane*>(planeHandle.Get());
-    this->Try(planeHandle,
+    vtkm::Plane plane;
+    this->Try(plane,
               { { 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f } },
               { { vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
                   vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
@@ -337,9 +334,9 @@ private:
               device);
 
     std::cout << "  Normal of length 2" << std::endl;
-    plane->SetOrigin({ 1.0f, 1.0f, 1.0f });
-    plane->SetNormal({ 0.0f, 0.0f, 2.0f });
-    this->Try(planeHandle,
+    plane.SetOrigin({ 1.0f, 1.0f, 1.0f });
+    plane.SetNormal({ 0.0f, 0.0f, 2.0f });
+    this->Try(plane,
               { { -2.0f, -2.0f, 0.0f, 0.0f, -2.0f, -2.0f, 0.0f, 0.0f } },
               { { vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
                   vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
@@ -352,9 +349,9 @@ private:
               device);
 
     std::cout << "  Oblique plane" << std::endl;
-    plane->SetOrigin({ 0.5f, 0.5f, 0.5f });
-    plane->SetNormal({ 1.0f, 0.0f, 1.0f });
-    this->Try(planeHandle,
+    plane.SetOrigin({ 0.5f, 0.5f, 0.5f });
+    plane.SetNormal({ 1.0f, 0.0f, 1.0f });
+    this->Try(plane,
               { { -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f } },
               { { vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
                   vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
@@ -367,8 +364,8 @@ private:
               device);
 
     std::cout << "  Another oblique plane" << std::endl;
-    plane->SetNormal({ -1.0f, 0.0f, -1.0f });
-    this->Try(planeHandle,
+    plane.SetNormal({ -1.0f, 0.0f, -1.0f });
+    this->Try(plane,
               { { 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f } },
               { { vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
                   vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
@@ -389,8 +386,7 @@ private:
 
     std::cout << "  Default sphere" << std::endl;
     vtkm::Sphere sphere;
-    vtkm::cont::ImplicitFunctionHandle sphereHandle(&sphere, false);
-    this->Try(sphereHandle,
+    this->Try(sphere,
               { { -0.25f, 0.75f, 1.75f, 0.75f, 0.75f, 1.75f, 2.75f, 1.75f } },
               { { vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
                   vtkm::Vec3f{ 2.0f, 0.0f, 0.0f },
@@ -405,7 +401,7 @@ private:
     std::cout << "  Shifted and scaled sphere" << std::endl;
     sphere.SetCenter({ 1.0f, 1.0f, 1.0f });
     sphere.SetRadius(1.0f);
-    this->Try(sphereHandle,
+    this->Try(sphere,
               { { 2.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f } },
               { { vtkm::Vec3f{ -2.0f, -2.0f, -2.0f },
                   vtkm::Vec3f{ 0.0f, -2.0f, -2.0f },

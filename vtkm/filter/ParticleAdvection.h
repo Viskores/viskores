@@ -13,7 +13,6 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/filter/FilterDataSetWithField.h>
-#include <vtkm/worklet/ParticleAdvection.h>
 
 namespace vtkm
 {
@@ -40,6 +39,12 @@ public:
   VTKM_CONT
   void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds);
 
+  VTKM_CONT
+  bool GetUseThreadedAlgorithm() { return this->UseThreadedAlgorithm; }
+
+  VTKM_CONT
+  void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
+
   template <typename DerivedPolicy>
   vtkm::cont::PartitionedDataSet PrepareForExecution(
     const vtkm::cont::PartitionedDataSet& input,
@@ -54,7 +59,7 @@ private:
   vtkm::Id NumberOfSteps;
   vtkm::FloatDefault StepSize;
   vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
-  vtkm::worklet::ParticleAdvection Worklet;
+  bool UseThreadedAlgorithm;
 };
 }
 } // namespace vtkm::filter

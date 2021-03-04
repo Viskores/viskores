@@ -37,7 +37,6 @@ const std::vector<vtkm::FloatDefault> expectedPointvar{ 10.1f, 20.1f, 30.2f, 40.
                                                         30.2f, 30.2f, 40.2f, 40.2f, 50.3f, 50.3f,
                                                         60.3f, 60.3f, 70.3f, 70.3f, 80.3f, 80.3f };
 
-
 vtkm::cont::DataSet Make3DExplicitSimpleCube()
 {
   vtkm::cont::DataSet dataSet;
@@ -135,7 +134,7 @@ void TestSplitSharpEdgesFilterSplitEveryEdge(vtkm::cont::DataSet& simpleCubeWith
   auto newCoords = result.GetCoordinateSystem().GetDataAsMultiplexer();
   auto newCoordsP = newCoords.ReadPortal();
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointvarField;
-  result.GetField("pointvar").GetData().CopyTo(newPointvarField);
+  result.GetField("pointvar").GetData().AsArrayHandle(newPointvarField);
 
   for (vtkm::IdComponent i = 0; i < newCoords.GetNumberOfValues(); i++)
   {
@@ -170,7 +169,7 @@ void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
     result.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
   auto newCoordsP = newCoords.ReadPortal();
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointvarField;
-  result.GetField("pointvar").GetData().CopyTo(newPointvarField);
+  result.GetField("pointvar").GetData().AsArrayHandle(newPointvarField);
 
   for (vtkm::IdComponent i = 0; i < newCoords.GetNumberOfValues(); i++)
   {
@@ -204,6 +203,7 @@ void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
 void TestWithExplicitData()
 {
   vtkm::cont::DataSet simpleCube = Make3DExplicitSimpleCube();
+
   // Generate surface normal field
   vtkm::filter::SurfaceNormals surfaceNormalsFilter;
   surfaceNormalsFilter.SetGenerateCellNormals(true);

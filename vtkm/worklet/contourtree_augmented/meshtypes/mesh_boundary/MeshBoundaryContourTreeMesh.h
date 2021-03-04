@@ -71,13 +71,10 @@ namespace worklet
 namespace contourtree_augmented
 {
 
-
-
-template <typename DeviceTag>
 class MeshBoundaryContourTreeMesh
 {
 public:
-  using IndicesPortalType = typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
+  using IndicesPortalType = IdArrayType::ReadPortalType;
 
   VTKM_EXEC_CONT
   MeshBoundaryContourTreeMesh() {}
@@ -87,13 +84,14 @@ public:
                               vtkm::Id3 globalSize,
                               vtkm::Id3 minIdx,
                               vtkm::Id3 maxIdx,
+                              vtkm::cont::DeviceAdapterId device,
                               vtkm::cont::Token& token)
     : GlobalSize(globalSize)
     , MinIdx(minIdx)
     , MaxIdx(maxIdx)
   {
     assert(this->GlobalSize[0] > 0 && this->GlobalSize[1] > 0);
-    this->GlobalMeshIndexPortal = globalMeshIndex.PrepareForInput(DeviceTag(), token);
+    this->GlobalMeshIndexPortal = globalMeshIndex.PrepareForInput(device, token);
   }
 
   VTKM_EXEC_CONT
@@ -147,13 +145,11 @@ public:
   {
   }
 
-  VTKM_CONT
-  template <typename DeviceTag>
-  MeshBoundaryContourTreeMesh<DeviceTag> PrepareForExecution(DeviceTag,
-                                                             vtkm::cont::Token& token) const
+  VTKM_CONT MeshBoundaryContourTreeMesh PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                            vtkm::cont::Token& token) const
   {
-    return MeshBoundaryContourTreeMesh<DeviceTag>(
-      this->GlobalMeshIndex, this->GlobalSize, this->MinIdx, this->MaxIdx, token);
+    return MeshBoundaryContourTreeMesh(
+      this->GlobalMeshIndex, this->GlobalSize, this->MinIdx, this->MaxIdx, device, token);
   }
 
 private:

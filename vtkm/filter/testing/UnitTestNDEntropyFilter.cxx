@@ -189,7 +189,7 @@ void RunTest()
   vtkm::cont::DataSet outputData = ndEntropyFilter.Execute(ds);
 
   vtkm::cont::ArrayHandle<vtkm::Float64> entropyHandle;
-  outputData.GetField("Entropy").GetData().CopyTo(entropyHandle);
+  outputData.GetField("Entropy").GetData().AsArrayHandle(entropyHandle);
   vtkm::Float64 e = entropyHandle.WritePortal().Get(0);
 
   VTKM_TEST_ASSERT(fabs(e - 7.457857) < 0.001,

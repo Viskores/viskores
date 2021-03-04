@@ -19,6 +19,13 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
+// Do not instantiation common concrete types unless we are compiling the
+// corresponding TU.
+#if !defined(vtkm_filter_ClipWithFieldExecuteInteger_cxx) || \
+  !defined(vtkm_filter_ClipWithFieldExecuteScalar_cxx)
+#include <vtkm/filter/ClipWithFieldSkipInstantiations.hxx>
+#endif
+
 namespace vtkm
 {
 namespace filter
@@ -45,11 +52,10 @@ struct ClipWithFieldProcessCoords
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+vtkm::cont::DataSet ClipWithField::DoExecute(const vtkm::cont::DataSet& input,
+                                             const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                             const vtkm::filter::FieldMetadata& fieldMeta,
+                                             vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   if (fieldMeta.IsPointField() == false)
   {

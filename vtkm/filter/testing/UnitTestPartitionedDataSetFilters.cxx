@@ -70,7 +70,7 @@ vtkm::cont::PartitionedDataSet PartitionedDataSetBuilder(std::size_t partitionNu
   }
   return partitions;
 }
-template <typename D>
+template <typename T, typename D>
 void Result_Verify(const vtkm::cont::PartitionedDataSet& result,
                    D& filter,
                    const vtkm::cont::PartitionedDataSet& partitions,
@@ -88,10 +88,10 @@ void Result_Verify(const vtkm::cont::PartitionedDataSet& result,
                        partitionResult.GetField(outputFieldName).GetNumberOfValues(),
                      "result vectors' size incorrect");
 
-    vtkm::cont::ArrayHandle<vtkm::Id> partitionArray;
-    result.GetPartition(j).GetField(outputFieldName).GetData().CopyTo(partitionArray);
-    vtkm::cont::ArrayHandle<vtkm::Id> sDataSetArray;
-    partitionResult.GetField(outputFieldName).GetData().CopyTo(sDataSetArray);
+    vtkm::cont::ArrayHandle<T> partitionArray;
+    result.GetPartition(j).GetField(outputFieldName).GetData().AsArrayHandle(partitionArray);
+    vtkm::cont::ArrayHandle<T> sDataSetArray;
+    partitionResult.GetField(outputFieldName).GetData().AsArrayHandle(sDataSetArray);
 
     const vtkm::Id numValues = result.GetPartition(j).GetField(outputFieldName).GetNumberOfValues();
     for (vtkm::Id i = 0; i < numValues; i++)
@@ -109,12 +109,12 @@ void TestPartitionedDataSetFilters()
   vtkm::cont::PartitionedDataSet result;
   vtkm::cont::PartitionedDataSet partitions;
 
-  partitions = PartitionedDataSetBuilder<vtkm::Id>(partitionNum, "pointvar");
+  partitions = PartitionedDataSetBuilder<vtkm::FloatDefault>(partitionNum, "pointvar");
   vtkm::filter::CellAverage cellAverage;
   cellAverage.SetOutputFieldName("average");
   cellAverage.SetActiveField("pointvar");
   result = cellAverage.Execute(partitions);
-  Result_Verify(result, cellAverage, partitions, std::string("pointvar"));
+  Result_Verify<vtkm::FloatDefault>(result, cellAverage, partitions, std::string("pointvar"));
 }
 
 int UnitTestPartitionedDataSetFilters(int argc, char* argv[])

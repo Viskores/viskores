@@ -30,7 +30,7 @@ namespace filter
 /// filter is an permutation of the input dataset.
 ///
 /// You can threshold either on point or cell fields
-class VTKM_ALWAYS_EXPORT Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
+class VTKM_FILTER_COMMON_EXPORT Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
 {
 public:
   using SupportedTypes = vtkm::TypeListScalarAll;
@@ -53,8 +53,7 @@ public:
 
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid after DoExecute is called
-  VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                              const vtkm::cont::Field& field);
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
 
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
@@ -71,7 +70,7 @@ private:
 };
 
 #ifndef vtkm_filter_Threshold_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(Threshold);
+VTKM_FILTER_COMMON_EXPORT_EXECUTE_METHOD(Threshold);
 #endif
 }
 } // namespace vtkm::filter

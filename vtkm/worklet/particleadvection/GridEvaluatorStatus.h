@@ -15,7 +15,6 @@
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellLocator.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
 #include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
@@ -37,12 +36,14 @@ class GridEvaluatorStatus : public vtkm::Bitset<vtkm::UInt8>
 {
 public:
   VTKM_EXEC_CONT GridEvaluatorStatus(){};
-  VTKM_EXEC_CONT GridEvaluatorStatus(bool ok, bool spatial, bool temporal)
+  VTKM_EXEC_CONT GridEvaluatorStatus(bool ok, bool spatial, bool temporal, bool inGhost)
   {
     this->set(this->SUCCESS_BIT, ok);
     this->set(this->SPATIAL_BOUNDS_BIT, spatial);
     this->set(this->TEMPORAL_BOUNDS_BIT, temporal);
+    this->set(this->IN_GHOST_CELL_BIT, inGhost);
   };
+
   VTKM_EXEC_CONT void SetOk() { this->set(this->SUCCESS_BIT); }
   VTKM_EXEC_CONT bool CheckOk() const { return this->test(this->SUCCESS_BIT); }
 
@@ -55,10 +56,14 @@ public:
   VTKM_EXEC_CONT void SetTemporalBounds() { this->set(this->TEMPORAL_BOUNDS_BIT); }
   VTKM_EXEC_CONT bool CheckTemporalBounds() const { return this->test(this->TEMPORAL_BOUNDS_BIT); }
 
+  VTKM_EXEC_CONT void SetInGhostCell() { this->set(this->IN_GHOST_CELL_BIT); }
+  VTKM_EXEC_CONT bool CheckInGhostCell() const { return this->test(this->IN_GHOST_CELL_BIT); }
+
 private:
   static constexpr vtkm::Id SUCCESS_BIT = 0;
   static constexpr vtkm::Id SPATIAL_BOUNDS_BIT = 1;
   static constexpr vtkm::Id TEMPORAL_BOUNDS_BIT = 2;
+  static constexpr vtkm::Id IN_GHOST_CELL_BIT = 3;
 };
 }
 }

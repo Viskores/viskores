@@ -58,8 +58,8 @@ public:
     }
     else
     {
-      CastAndCall(
-        fieldArray.ResetTypes(vtkm::TypeListScalarAll()),
+      vtkm::cont::CastAndCall(
+        fieldArray.ResetTypes(vtkm::TypeListScalarAll{}, VTKM_DEFAULT_STORAGE_LIST{}),
         vtkm::worklet::histogram::ComputeBins(Bin1DIndex, numberOfBins, rangeOfValues, binDelta));
     }
   }

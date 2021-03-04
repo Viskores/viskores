@@ -147,9 +147,9 @@ class CylinderLeafIntersector
 {
 public:
   using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id3>;
-  using IdArrayPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using IdArrayPortal = typename IdHandle::ReadPortalType;
   using FloatHandle = vtkm::cont::ArrayHandle<vtkm::Float32>;
-  using FloatPortal = typename FloatHandle::ExecutionTypes<Device>::PortalConst;
+  using FloatPortal = typename FloatHandle::ReadPortalType;
   IdArrayPortal CylIds;
   FloatPortal Radii;
 
@@ -379,7 +379,7 @@ public:
     : MinScalar(minScalar)
   {
     Normalize = true;
-    if (minScalar > maxScalar)
+    if (minScalar >= maxScalar)
     {
       // support the scalar renderer
       Normalize = false;
@@ -497,8 +497,10 @@ void CylinderIntersector::IntersectionDataImp(Ray<Precision>& rays,
 
   vtkm::worklet::DispatcherMapField<detail::GetScalar<Precision>>(
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-    .Invoke(
-      rays.HitIdx, rays.Scalar, scalarField.GetData().ResetTypes(ScalarRenderingTypes()), CylIds);
+    .Invoke(rays.HitIdx,
+            rays.Scalar,
+            vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
+            CylIds);
 }
 
 void CylinderIntersector::IntersectionData(Ray<vtkm::Float32>& rays,

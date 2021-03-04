@@ -26,7 +26,8 @@ namespace cont
 /// \brief A type list containing types that can be used with an AtomicArray.
 ///
 /// @cond NONE
-using AtomicArrayTypeList = vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::UInt64, vtkm::Int64>;
+using AtomicArrayTypeList =
+  vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::UInt64, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
 
 struct VTKM_DEPRECATED(1.6,
                        "AtomicArrayTypeListTag replaced by AtomicArrayTypeList. Note that the "
@@ -73,12 +74,11 @@ public:
   {
   }
 
-  template <typename Device>
-  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(
-    Device,
+  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const
   {
-    return vtkm::exec::AtomicArrayExecutionObject<T, Device>(this->Handle, token);
+    return vtkm::exec::AtomicArrayExecutionObject<T>(this->Handle, device, token);
   }
 
   template <typename Device>

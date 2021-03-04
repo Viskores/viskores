@@ -11,6 +11,7 @@
 #define vtk_m_cont_ArrayHandleBasic_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/SerializableTypeString.h>
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/Storage.h>
@@ -34,7 +35,7 @@ public:
   using ReadPortalType = vtkm::internal::ArrayPortalBasicRead<T>;
   using WritePortalType = vtkm::internal::ArrayPortalBasicWrite<T>;
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
                                       vtkm::cont::internal::Buffer* buffers,
@@ -47,7 +48,8 @@ public:
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    return static_cast<vtkm::Id>(buffers->GetNumberOfBytes()) / static_cast<vtkm::Id>(sizeof(T));
+    return static_cast<vtkm::Id>(buffers->GetNumberOfBytes() /
+                                 static_cast<vtkm::BufferSizeType>(sizeof(T)));
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
@@ -68,9 +70,6 @@ public:
 };
 
 } // namespace internal
-
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagBasic);
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT ArrayHandleBasic : public ArrayHandle<T, vtkm::cont::StorageTagBasic>
@@ -382,14 +381,13 @@ VTKM_STORAGE_EXPORT(vtkm::Float64)
 
 } // namespace internal
 
-#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                         \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<Type, StorageTagBasic>; \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
-    ArrayHandleNewStyle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                 \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
-    ArrayHandleNewStyle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                 \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
-    ArrayHandleNewStyle<vtkm::Vec<Type, 4>, StorageTagBasic>;
+#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagBasic>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                     \
+    ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                     \
+    ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
 VTKM_ARRAYHANDLE_EXPORT(char)
 VTKM_ARRAYHANDLE_EXPORT(vtkm::Int8)

@@ -19,7 +19,8 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/ImplicitFunctionHandle.h>
+
+#include <vtkm/ImplicitFunction.h>
 
 namespace vtkm
 {
@@ -50,11 +51,11 @@ public:
     {
     }
 
-    template <typename ConnectivityInVec, typename InVecFieldPortalType>
+    template <typename ConnectivityInVec, typename InVecFieldPortalType, typename ImplicitFunction>
     VTKM_EXEC bool operator()(vtkm::Id numIndices,
                               const ConnectivityInVec& connectivityIn,
                               const InVecFieldPortalType& coordinates,
-                              const vtkm::ImplicitFunction* function) const
+                              const ImplicitFunction& function) const
     {
       // Count points inside/outside volume of interest
       vtkm::IdComponent inCnt = 0;
@@ -64,7 +65,7 @@ public:
       {
         vtkm::Id ptId = connectivityIn[static_cast<vtkm::IdComponent>(indx)];
         vtkm::Vec<FloatDefault, 3> coordinate = coordinates.Get(ptId);
-        vtkm::FloatDefault value = function->Value(coordinate);
+        vtkm::FloatDefault value = function.Value(coordinate);
         if (value <= 0)
           inCnt++;
         if (value >= 0)
@@ -130,14 +131,13 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract cells by implicit function permutes input data
-  template <typename CellSetType>
-  vtkm::cont::CellSetPermutation<CellSetType> Run(
-    const CellSetType& cellSet,
-    const vtkm::cont::CoordinateSystem& coordinates,
-    const vtkm::cont::ImplicitFunctionHandle& implicitFunction,
-    bool extractInside,
-    bool extractBoundaryCells,
-    bool extractOnlyBoundaryCells)
+  template <typename CellSetType, typename ImplicitFunction>
+  vtkm::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet,
+                                                  const vtkm::cont::CoordinateSystem& coordinates,
+                                                  const ImplicitFunction& implicitFunction,
+                                                  bool extractInside,
+                                                  bool extractBoundaryCells,
+                                                  bool extractOnlyBoundaryCells)
   {
     // Worklet output will be a boolean passFlag array
     vtkm::cont::ArrayHandle<bool> passFlags;

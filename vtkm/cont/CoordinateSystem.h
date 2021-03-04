@@ -16,6 +16,7 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
@@ -31,15 +32,16 @@ namespace detail
 {
 
 // CoordinateSystem::GetData used to return an ArrayHandleVirtualCoordinates.
-// That behavior is deprecated, and CoordianteSystem::GetData now returns a
-// VariantArrayHandle similar (although slightly different than) its superclass.
+// That behavior is deprecated, and CoordianteSystem::GetData now returns am
+// UncertainArrayHandle similar (although slightly different than) its superclass.
 // This wrapper class supports the old deprecated behavior until it is no longer
 // supported. Once the behavior is removed (probably when
 // ArrayHandleVirtualCoordinates is removed), then this class should be removed.
 class VTKM_ALWAYS_EXPORT CoordDataDepWrapper
-  : public vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3>
+  : public vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>
 {
-  using Superclass = vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3>;
+  using Superclass =
+    vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>;
 
   VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandleVirtualCoordinates ToArray() const;
@@ -51,53 +53,53 @@ public:
   // Make the return also behave as ArrayHandleVirtualCoordiantes
   VTKM_DEPRECATED_SUPPRESS_BEGIN
 
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns a VariantArrayHandle.")
+  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
   operator vtkm::cont::ArrayHandleVirtualCoordinates() const
   {
     return this->ToArray();
   }
 
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns a VariantArrayHandle.")
+  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
   operator vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagVirtual>() const
   {
     return this->ToArray();
   }
 
-  using ValueType VTKM_DEPRECATED(1.6,
-                                  "CoordinateSystem::GetData() now returns a VariantArrayHandle.") =
-    vtkm::Vec3f;
+  using ValueType VTKM_DEPRECATED(
+    1.6,
+    "CoordinateSystem::GetData() now returns an UncertainArrayHandle.") = vtkm::Vec3f;
 
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns a VariantArrayHandle.")
+  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
     ArrayHandleVirtualCoordinates::ReadPortalType ReadPortal() const
   {
     return this->ToArray().ReadPortal();
   }
 
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns a VariantArrayHandle.")
+  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
     ArrayHandleVirtualCoordinates::WritePortalType WritePortal() const
   {
     return this->ToArray().WritePortal();
   }
 
   template <typename Device>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns a VariantArrayHandle.")
-    typename ArrayHandleVirtualCoordinates::ExecutionTypes<Device>::PortalConst
+  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
+    typename ArrayHandleVirtualCoordinates::ReadPortalType
     PrepareForInput(Device device, vtkm::cont::Token& token) const
   {
     return this->ToArray().PrepareForInput(device, token);
   }
 
   template <typename Device>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns a VariantArrayHandle.")
-    typename ArrayHandleVirtualCoordinates::ExecutionTypes<Device>::Portal
+  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
+    typename ArrayHandleVirtualCoordinates::WritePortalType
     PrepareForInPlace(Device device, vtkm::cont::Token& token) const
   {
     return this->ToArray().PrepareForInPlace(device, token);
   }
 
   template <typename Device>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns a VariantArrayHandle.")
-    typename ArrayHandleVirtualCoordinates::ExecutionTypes<Device>::Portal
+  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
+    typename ArrayHandleVirtualCoordinates::WritePortalType
     PrepareForOutput(vtkm::Id numberOfValues, Device device, vtkm::cont::Token& token) const
   {
     return this->ToArray().PrepareForOutput(numberOfValues, device, token);
@@ -111,11 +113,11 @@ public:
 VTKM_DEPRECATED_SUPPRESS_BEGIN
 VTKM_CONT VTKM_DEPRECATED(
   1.6,
-  "CoordinateSystem::GetData() now returns a "
-  "VariantArrayHandle.") inline void printSummary_ArrayHandle(const detail::CoordDataDepWrapper&
-                                                                array,
-                                                              std::ostream& out,
-                                                              bool full = false)
+  "CoordinateSystem::GetData() now returns an "
+  "UncertainArrayHandle.") inline void printSummary_ArrayHandle(const detail::CoordDataDepWrapper&
+                                                                  array,
+                                                                std::ostream& out,
+                                                                bool full = false)
 {
   vtkm::cont::ArrayHandleVirtualCoordinates coordArray = array;
   vtkm::cont::printSummary_ArrayHandle(coordArray, out, full);
@@ -126,13 +128,12 @@ VTKM_DEPRECATED_SUPPRESS_END
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
   using Superclass = vtkm::cont::Field;
-  using CoordinatesTypeList = vtkm::List<vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
 public:
   VTKM_CONT
   CoordinateSystem();
 
-  VTKM_CONT CoordinateSystem(std::string name, const vtkm::cont::VariantArrayHandleCommon& data);
+  VTKM_CONT CoordinateSystem(std::string name, const vtkm::cont::UnknownArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT CoordinateSystem(std::string name, const ArrayHandle<T, Storage>& data)
@@ -154,7 +155,8 @@ public:
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
   VTKM_CONT detail::CoordDataDepWrapper GetData() const;
 #else
-  VTKM_CONT vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3> GetData() const;
+  VTKM_CONT vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>
+  GetData() const;
 #endif
 
 private:
@@ -205,10 +207,7 @@ public:
   VTKM_CONT MultiplexerArrayType GetDataAsMultiplexer() const;
 
   VTKM_CONT
-  void GetRange(vtkm::Range* range) const
-  {
-    this->Superclass::GetRange(range, CoordinatesTypeList());
-  }
+  void GetRange(vtkm::Range* range) const { this->Superclass::GetRange(range); }
 
   VTKM_CONT
   vtkm::Vec<vtkm::Range, 3> GetRange() const
@@ -221,7 +220,7 @@ public:
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Range> GetRangeAsArrayHandle() const
   {
-    return this->Superclass::GetRange(CoordinatesTypeList());
+    return this->Superclass::GetRange();
   }
 
   VTKM_CONT
@@ -299,31 +298,15 @@ namespace mangled_diy_namespace
 template <>
 struct Serialization<vtkm::cont::detail::CoordDataDepWrapper>
   : public Serialization<
-      vtkm::cont::VariantArrayHandleBase<vtkm::List<vtkm::Vec3f_32, vtkm::Vec3f_64>>>
+      vtkm::cont::UncertainArrayHandle<vtkm::List<vtkm::Vec3f_32, vtkm::Vec3f_64>,
+                                       VTKM_DEFAULT_STORAGE_LIST>>
 {
 };
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <>
-struct Serialization<vtkm::cont::CoordinateSystem>
+struct Serialization<vtkm::cont::CoordinateSystem> : Serialization<vtkm::cont::Field>
 {
-  using CoordinatesTypeList = vtkm::List<vtkm::Vec3f_32, vtkm::Vec3f_64>;
-
-  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::CoordinateSystem& cs)
-  {
-    vtkmdiy::save(bb, cs.GetName());
-    vtkmdiy::save(
-      bb, static_cast<vtkm::cont::VariantArrayHandleBase<CoordinatesTypeList>>(cs.GetData()));
-  }
-
-  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::CoordinateSystem& cs)
-  {
-    std::string name;
-    vtkmdiy::load(bb, name);
-    vtkm::cont::VariantArrayHandleBase<CoordinatesTypeList> data;
-    vtkmdiy::load(bb, data);
-    cs = vtkm::cont::CoordinateSystem(name, data);
-  }
 };
 
 } // diy

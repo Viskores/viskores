@@ -44,8 +44,8 @@ protected:
   using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using CartesianArrayHandle =
     vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
-  using DefaultConstHandle = typename DefaultHandle::ExecutionTypes<Device>::PortalConst;
-  using CartesianConstPortal = typename CartesianArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using DefaultConstHandle = typename DefaultHandle::ReadPortalType;
+  using CartesianConstPortal = typename CartesianArrayHandle::ReadPortalType;
 
   DefaultConstHandle CoordPortals[3];
   CartesianConstPortal Coordinates;
@@ -187,7 +187,7 @@ class UniformLocator
 {
 protected:
   using UniformArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
-  using UniformConstPortal = typename UniformArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using UniformConstPortal = typename UniformArrayHandle::ReadPortalType;
 
   vtkm::Id3 PointDimensions;
   vtkm::Vec3f_32 Origin;
@@ -298,7 +298,7 @@ class Sampler : public vtkm::worklet::WorkletMapField
 {
 private:
   using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
-  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
+  using ColorArrayPortal = typename ColorArrayHandle::ReadPortalType;
   ColorArrayPortal ColorMap;
   vtkm::Id ColorMapSize;
   vtkm::Float32 MinScalar;
@@ -495,7 +495,7 @@ class SamplerCellAssoc : public vtkm::worklet::WorkletMapField
 {
 private:
   using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
-  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
+  using ColorArrayPortal = typename ColorArrayHandle::ReadPortalType;
   ColorArrayPortal ColorMap;
   vtkm::Id ColorMapSize;
   vtkm::Float32 MinScalar;
@@ -829,7 +829,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   {
     vtkm::cont::Token token;
     vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
-    vertices = Coordinates.GetData().Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+    vertices =
+      Coordinates.GetData().AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>();
     UniformLocator<Device> locator(vertices, Cellset, token);
 
     if (isAssocPoints)
@@ -843,12 +844,13 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                 meshEpsilon,
                                                 token));
       samplerDispatcher.SetDevice(Device());
-      samplerDispatcher.Invoke(rays.Dir,
-                               rays.Origin,
-                               rays.MinDistance,
-                               rays.MaxDistance,
-                               rays.Buffers.at(0).Buffer,
-                               ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+      samplerDispatcher.Invoke(
+        rays.Dir,
+        rays.Origin,
+        rays.MinDistance,
+        rays.MaxDistance,
+        rays.Buffers.at(0).Buffer,
+        vtkm::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
     else
     {
@@ -865,14 +867,14 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                 rays.MinDistance,
                 rays.MaxDistance,
                 rays.Buffers.at(0).Buffer,
-                ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+                vtkm::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
   }
   else
   {
     vtkm::cont::Token token;
     CartesianArrayHandle vertices;
-    vertices = Coordinates.GetData().Cast<CartesianArrayHandle>();
+    vertices = Coordinates.GetData().AsArrayHandle<CartesianArrayHandle>();
     RectilinearLocator<Device> locator(vertices, Cellset, token);
     if (isAssocPoints)
     {
@@ -886,12 +888,13 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                       meshEpsilon,
                                                       token));
       samplerDispatcher.SetDevice(Device());
-      samplerDispatcher.Invoke(rays.Dir,
-                               rays.Origin,
-                               rays.MinDistance,
-                               rays.MaxDistance,
-                               rays.Buffers.at(0).Buffer,
-                               ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+      samplerDispatcher.Invoke(
+        rays.Dir,
+        rays.Origin,
+        rays.MinDistance,
+        rays.MaxDistance,
+        rays.Buffers.at(0).Buffer,
+        vtkm::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
     else
     {
@@ -911,7 +914,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
         rays.MinDistance,
         rays.MaxDistance,
         rays.Buffers.at(0).Buffer,
-        ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+        vtkm::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
   }
 

@@ -2511,12 +2511,9 @@ public:
     }
 
   private:
-    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ExecutionTypes<DeviceAdapter>::PortalConst
-      ClipTablesDataPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::UInt16>::ExecutionTypes<DeviceAdapter>::PortalConst
-      ClipTablesIndicesPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ExecutionTypes<DeviceAdapter>::PortalConst
-      CellEdgesPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType ClipTablesDataPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::UInt16>::ReadPortalType ClipTablesIndicesPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType CellEdgesPortal;
 
     friend class ClipTables;
   };

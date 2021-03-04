@@ -261,17 +261,14 @@ struct DecoratorTests
 
     // Resize methods:
     template <typename Array1T, typename Array2T>
-    VTKM_CONT void AllocateSourceArrays(vtkm::Id numVals, Array1T&& array1, Array2T&& array2) const
+    VTKM_CONT void AllocateSourceArrays(vtkm::Id numVals,
+                                        vtkm::CopyFlag preserve,
+                                        vtkm::cont::Token& token,
+                                        Array1T&& array1,
+                                        Array2T&& array2) const
     {
-      array1.Allocate(numVals);
-      array2.Allocate(numVals);
-    }
-
-    template <typename Array1T, typename Array2T>
-    VTKM_CONT void ShrinkSourceArrays(vtkm::Id numVals, Array1T&& array1, Array2T&& array2) const
-    {
-      array1.Shrink(numVals);
-      array2.Shrink(numVals);
+      array1.Allocate(numVals, preserve, token);
+      array2.Allocate(numVals, preserve, token);
     }
   };
 
@@ -478,7 +475,7 @@ struct DecoratorTests
       VTKM_TEST_ASSERT(test_equal(a2Portal.Get(4), 7));
     }
 
-    decor.Shrink(3);
+    decor.Allocate(3, vtkm::CopyFlag::On);
     VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 3);
     {
       auto decorPortal = decor.ReadPortal();
@@ -521,7 +518,7 @@ struct DecoratorTests
   }
 };
 
-// ArrayHandleDecorator that implements AllocateSourceArrays and ShrinkSourceArrays, thus allowing
+// ArrayHandleDecorator that implements AllocateSourceArrays, thus allowing
 // it to be resized.
 struct ResizableDecorImpl
 {
@@ -538,29 +535,32 @@ struct ResizableDecorImpl
   }
 
   template <typename Array1T, typename Array2T>
-  void ShrinkSourceArrays(vtkm::Id newSize, Array1T& a1, Array2T& a2) const
+  void AllocateSourceArrays(vtkm::Id newSize,
+                            vtkm::CopyFlag preserve,
+                            vtkm::cont::Token& token,
+                            Array1T& a1,
+                            Array2T& a2) const
   {
     VTKM_IS_ARRAY_HANDLE(Array1T);
     VTKM_IS_ARRAY_HANDLE(Array2T);
 
-    // Resize each to 2*newSize:
-    a1.Shrink(2 * newSize);
-    a2.Shrink(2 * newSize);
-  }
-
-  template <typename Array1T, typename Array2T>
-  void AllocateSourceArrays(vtkm::Id newSize, Array1T& a1, Array2T& a2) const
-  {
-    VTKM_IS_ARRAY_HANDLE(Array1T);
-    VTKM_IS_ARRAY_HANDLE(Array2T);
-
-    // Resize each to 3*newSize:
-    a1.Allocate(3 * newSize);
-    a2.Allocate(3 * newSize);
+    // Resize differently based on preserve to verify the flag is correct.
+    if (preserve == vtkm::CopyFlag::Off)
+    {
+      // Resize each to 3*newSize:
+      a1.Allocate(3 * newSize, preserve, token);
+      a2.Allocate(3 * newSize, preserve, token);
+    }
+    else
+    {
+      // Resize each to 2*newSize:
+      a1.Allocate(2 * newSize, vtkm::CopyFlag::On);
+      a2.Allocate(2 * newSize, vtkm::CopyFlag::On);
+    }
   }
 };
 
-// ArrayHandleDecorator that implements AllocateSourceArrays and ShrinkSourceArrays, thus allowing
+// ArrayHandleDecorator that does not implement AllocateSourceArrays, thus not allowing
 // it to be resized.
 struct NonResizableDecorImpl
 {
@@ -591,7 +591,7 @@ void ResizeTest()
     VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 30);
     VTKM_TEST_ASSERT(a2.GetNumberOfValues() == 30);
     VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 10);
-    decor.Shrink(3); // Should resize a1&a2 to have 6 values:
+    decor.Allocate(3, vtkm::CopyFlag::On); // Should resize a1&a2 to have 6 values:
     VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 6);
     VTKM_TEST_ASSERT(a2.GetNumberOfValues() == 6);
     VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 3);
@@ -624,7 +624,7 @@ void ResizeTest()
     threw = false;
     try
     {
-      decor.Shrink(3);
+      decor.Allocate(3, vtkm::CopyFlag::On);
     }
     catch (vtkm::cont::ErrorBadType& e)
     {

@@ -18,7 +18,7 @@ void TestFieldToColors()
 {
   //faux input field
   constexpr vtkm::Id nvals = 8;
-  constexpr int data[nvals] = { -1, 0, 10, 20, 30, 40, 50, 60 };
+  constexpr vtkm::FloatDefault data[nvals] = { -1, 0, 10, 20, 30, 40, 50, 60 };
 
   //build a color table with clamping off and verify that sampling works
   vtkm::Range range{ 0.0, 50.0 };
@@ -40,7 +40,7 @@ void TestFieldToColors()
   VTKM_TEST_ASSERT(rgbaResult.HasPointField("colors"), "Field missing.");
   vtkm::cont::Field Result = rgbaResult.GetPointField("colors");
   vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> resultRGBAHandle;
-  Result.GetData().CopyTo(resultRGBAHandle);
+  Result.GetData().AsArrayHandle(resultRGBAHandle);
 
   //values confirmed with ParaView 5.4
   const vtkm::Vec4ui_8 correct_diverging_rgba_values[nvals] = {
@@ -61,7 +61,7 @@ void TestFieldToColors()
   VTKM_TEST_ASSERT(rgbResult.HasPointField("colors"), "Field missing.");
   Result = rgbResult.GetPointField("colors");
   vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> resultRGBHandle;
-  Result.GetData().CopyTo(resultRGBHandle);
+  Result.GetData().AsArrayHandle(resultRGBHandle);
 
   //values confirmed with ParaView 5.4
   const vtkm::Vec3ui_8 correct_diverging_rgb_values[nvals] = { { 0, 0, 255 },     { 59, 76, 192 },

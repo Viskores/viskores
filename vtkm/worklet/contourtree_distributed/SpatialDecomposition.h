@@ -54,6 +54,11 @@
 #define vtk_m_worklet_contourtree_distributed_spatialdecomposition_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/BoundsCompute.h>
+#include <vtkm/cont/BoundsGlobalCompute.h>
+#include <vtkm/cont/EnvironmentTracker.h>
+#include <vtkm/cont/PartitionedDataSet.h>
+
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 // clang-format off
@@ -91,8 +96,7 @@ public:
   {
     if (this->NumberOfDimensions() == 2)
     {
-      // may need to change back when porting ot later verison of VTKM/vtkmdiy
-      vtkmdiy::DiscreteBounds domain(0); //(2);
+      vtkmdiy::DiscreteBounds domain(2);
       domain.min[0] = domain.min[1] = 0;
       domain.max[0] = static_cast<int>(this->GlobalSize[0]);
       domain.max[1] = static_cast<int>(this->GlobalSize[1]);
@@ -100,8 +104,7 @@ public:
     }
     else
     {
-      // may need to change back when porting to later version of VTMK/vtkmdiy
-      vtkmdiy::DiscreteBounds domain(0); //(3);
+      vtkmdiy::DiscreteBounds domain(3);
       domain.min[0] = domain.min[1] = domain.min[2] = 0;
       domain.max[0] = static_cast<int>(this->GlobalSize[0]);
       domain.max[1] = static_cast<int>(this->GlobalSize[1]);
@@ -118,6 +121,33 @@ public:
   }
 
   inline vtkm::Id GetLocalNumberOfBlocks() const { return LocalBlockSizes.GetNumberOfValues(); }
+
+  inline static vtkm::Bounds GetGlobalBounds(const vtkm::cont::PartitionedDataSet& input)
+  {
+    // Get the  spatial bounds  of a multi -block  data  set
+    vtkm::Bounds bounds = vtkm::cont::BoundsGlobalCompute(input);
+    return bounds;
+  }
+
+  inline static vtkm::Bounds GetLocalBounds(const vtkm::cont::PartitionedDataSet& input)
+  {
+    // Get the spatial bounds  of a multi -block  data  set
+    vtkm::Bounds bounds = vtkm::cont::BoundsCompute(input);
+    return bounds;
+  }
+
+  inline static vtkm::Id GetGlobalNumberOfBlocks(const vtkm::cont::PartitionedDataSet& input)
+  {
+    auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+    vtkm::Id localSize = input.GetNumberOfPartitions();
+    vtkm::Id globalSize = 0;
+#ifdef VTKM_ENABLE_MPI
+    vtkmdiy::mpi::all_reduce(comm, localSize, globalSize, std::plus<vtkm::Id>{});
+#else
+    globalSize = localSize;
+#endif
+    return globalSize;
+  }
 
   // Number of blocks along each dimension
   vtkm::Id3 BlocksPerDimension;

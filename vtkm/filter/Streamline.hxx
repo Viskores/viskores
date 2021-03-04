@@ -16,10 +16,10 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
-
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
-#include <vtkm/filter/particleadvection/ParticleAdvector.h>
+
+#include <vtkm/filter/particleadvection/StreamlineAlgorithm.h>
 
 namespace vtkm
 {
@@ -29,7 +29,7 @@ namespace filter
 //-----------------------------------------------------------------------------
 inline VTKM_CONT Streamline::Streamline()
   : vtkm::filter::FilterDataSetWithField<Streamline>()
-  , Worklet()
+  , UseThreadedAlgorithm(false)
 {
 }
 
@@ -45,28 +45,34 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Streamline::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
+  if (this->GetUseCoordinateSystemAsField())
+    throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");
   if (this->Seeds.GetNumberOfValues() == 0)
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
 
   std::string activeField = this->GetActiveFieldName();
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
-  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
-  std::vector<DataSetIntegratorType> dsi;
+  using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
+  std::vector<DSIType> dsi;
 
   for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {
     vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
-    dsi.push_back(DataSetIntegratorType(input.GetPartition(i), blockId, activeField));
+    auto ds = input.GetPartition(i);
+    if (!ds.HasPointField(activeField))
+      throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
+    dsi.push_back(DSIType(ds, blockId, activeField));
   }
 
-  vtkm::filter::particleadvection::StreamlineAlgorithm sa(boundsMap, dsi);
-  sa.SetNumberOfSteps(this->NumberOfSteps);
-  sa.SetStepSize(this->StepSize);
-  sa.SetSeeds(this->Seeds);
+  using AlgorithmType = vtkm::filter::particleadvection::StreamlineAlgorithm;
+  using ThreadedAlgorithmType = vtkm::filter::particleadvection::StreamlineThreadedAlgorithm;
 
-  sa.Go();
-  vtkm::cont::PartitionedDataSet output = sa.GetOutput();
-  return output;
+  if (this->GetUseThreadedAlgorithm())
+    return vtkm::filter::particleadvection::RunAlgo<DSIType, ThreadedAlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+  else
+    return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
 }
 
 //-----------------------------------------------------------------------------

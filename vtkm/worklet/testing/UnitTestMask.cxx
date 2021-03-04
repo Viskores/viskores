@@ -43,7 +43,7 @@ public:
     OutCellSetType outCellSet = maskCells.Run(cellSet, 2);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
-    dataset.GetField("cellvar").GetData().CopyTo(cellvar);
+    dataset.GetField("cellvar").GetData().AsArrayHandle(cellvar);
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = maskCells.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for Mask");
@@ -69,7 +69,7 @@ public:
     OutCellSetType outCellSet = maskCells.Run(cellSet, 9);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
-    dataset.GetField("cellvar").GetData().CopyTo(cellvar);
+    dataset.GetField("cellvar").GetData().AsArrayHandle(cellvar);
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = maskCells.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 7), "Wrong result for ExtractCells");
@@ -96,7 +96,7 @@ public:
     OutCellSetType outCellSet = maskCells.Run(cellSet, 2);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
-    dataset.GetField("cellvar").GetData().CopyTo(cellvar);
+    dataset.GetField("cellvar").GetData().AsArrayHandle(cellvar);
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = maskCells.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 2), "Wrong result for ExtractCells");

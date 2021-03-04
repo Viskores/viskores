@@ -14,8 +14,6 @@
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 
-#include <vtkm/cont/FieldRangeCompute.hxx>
-
 namespace vtkm
 {
 namespace cont
@@ -39,6 +37,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
   vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
 
 template <typename TypeList>
+VTKM_DEPRECATED(1.6, "FieldRangeCompute no longer supports TypeList.")
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
@@ -46,7 +45,20 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
   TypeList)
 {
   VTKM_IS_LIST(TypeList);
-  return vtkm::cont::detail::FieldRangeComputeImpl(dataset, name, assoc, TypeList());
+  vtkm::cont::Field field;
+  try
+  {
+    field = dataset.GetField(name, assoc);
+  }
+  catch (vtkm::cont::ErrorBadValue&)
+  {
+    // field missing, return empty range.
+    return vtkm::cont::ArrayHandle<vtkm::Range>();
+  }
+
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  return field.GetRange(TypeList());
+  VTKM_DEPRECATED_SUPPRESS_END
 }
 
 //@}
@@ -68,6 +80,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
   vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
 
 template <typename TypeList>
+VTKM_DEPRECATED(1.6, "FieldRangeCompute no longer supports TypeList.")
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
   const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
@@ -77,7 +90,33 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
   VTKM_IS_LIST(TypeList);
   VTKM_STATIC_ASSERT_MSG((!std::is_same<TypeList, vtkm::ListUniversal>::value),
                          "Cannot use vtkm::ListUniversal with FieldRangeCompute.");
-  return vtkm::cont::detail::FieldRangeComputeImpl(pds, name, assoc, TypeList());
+  std::vector<vtkm::Range> result_vector = std::accumulate(
+    pds.begin(),
+    pds.end(),
+    std::vector<vtkm::Range>(),
+    [&](const std::vector<vtkm::Range>& accumulated_value, const vtkm::cont::DataSet& dataset) {
+      VTKM_DEPRECATED_SUPPRESS_BEGIN
+      vtkm::cont::ArrayHandle<vtkm::Range> partition_range =
+        vtkm::cont::FieldRangeCompute(dataset, name, assoc, TypeList());
+      VTKM_DEPRECATED_SUPPRESS_END
+
+      std::vector<vtkm::Range> result = accumulated_value;
+
+      // if the current partition has more components than we have seen so far,
+      // resize the result to fit all components.
+      result.resize(
+        std::max(result.size(), static_cast<size_t>(partition_range.GetNumberOfValues())));
+
+      auto portal = partition_range.ReadPortal();
+      std::transform(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                     vtkm::cont::ArrayPortalToIteratorEnd(portal),
+                     result.begin(),
+                     result.begin(),
+                     std::plus<vtkm::Range>());
+      return result;
+    });
+
+  return vtkm::cont::make_ArrayHandleMove(std::move(result_vector));
 }
 
 //@}

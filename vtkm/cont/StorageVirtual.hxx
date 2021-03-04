@@ -12,8 +12,9 @@
 
 #include <vtkm/cont/StorageVirtual.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/TransferInfo.h>
 
+#include <vtkm/cont/internal/ArrayTransfer.h>
+#include <vtkm/cont/internal/TransferInfo.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 
@@ -133,7 +134,7 @@ template <typename T, typename S>
 void StorageVirtualImpl<T, S>::Shrink(vtkm::Id numberOfValues)
 {
   this->DropAllPortals();
-  this->Handle.Shrink(numberOfValues);
+  this->Handle.Allocate(numberOfValues, vtkm::CopyFlag::On);
 }
 
 struct PortalWrapperToDevice

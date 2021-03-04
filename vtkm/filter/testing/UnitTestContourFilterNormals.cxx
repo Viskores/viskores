@@ -111,7 +111,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
 
   mc.SetActiveField("pointvar");
   auto result = mc.Execute(dataset);
-  result.GetField("normals").GetData().CopyTo(normals);
+  result.GetField("normals").GetData().AsArrayHandle(normals);
   VTKM_TEST_ASSERT(normals.GetNumberOfValues() == numVerts,
                    "Wrong number of values in normals field");
 
@@ -150,7 +150,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   }
 
   result = mc.Execute(dataset);
-  result.GetField("normals").GetData().CopyTo(normals);
+  result.GetField("normals").GetData().AsArrayHandle(normals);
   VTKM_TEST_ASSERT(normals.GetNumberOfValues() == numVerts,
                    "Wrong number of values in normals field");
 

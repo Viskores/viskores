@@ -52,7 +52,7 @@ class Redistributor
 
     vtkm::filter::ExtractPoints extractor;
     extractor.SetCompactPoints(true);
-    extractor.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(box));
+    extractor.SetImplicitFunction(box);
     return extractor.Execute(input);
   }
 
@@ -71,8 +71,12 @@ class Redistributor
 
       if (this->Field.GetNumberOfValues() == 0)
       {
+        // Copy metadata
         this->Field = field;
-        field.GetData().CastAndCall(Allocator{}, this->Field, this->TotalSize);
+        // Reset array
+        this->Field.SetData(field.GetData().NewInstanceBasic());
+        // Preallocate array
+        this->Field.GetData().Allocate(this->TotalSize);
       }
       else
       {
@@ -80,26 +84,14 @@ class Redistributor
                     this->Field.GetAssociation() == field.GetAssociation());
       }
 
-      field.GetData().CastAndCall(Appender{}, this->Field, this->CurrentIdx);
+      field.GetData().CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
+        Appender{}, this->Field, this->CurrentIdx);
       this->CurrentIdx += field.GetNumberOfValues();
     }
 
     const vtkm::cont::Field& GetResult() const { return this->Field; }
 
   private:
-    struct Allocator
-    {
-      template <typename T, typename S>
-      void operator()(const vtkm::cont::ArrayHandle<T, S>&,
-                      vtkm::cont::Field& field,
-                      vtkm::Id totalSize) const
-      {
-        vtkm::cont::ArrayHandle<T> init;
-        init.Allocate(totalSize);
-        field.SetData(init);
-      }
-    };
-
     struct Appender
     {
       template <typename T, typename S>
@@ -108,7 +100,7 @@ class Redistributor
                       vtkm::Id currentIdx) const
       {
         vtkm::cont::ArrayHandle<T> farray =
-          field.GetData().template Cast<vtkm::cont::ArrayHandle<T>>();
+          field.GetData().template AsArrayHandle<vtkm::cont::ArrayHandle<T>>();
         vtkm::cont::Algorithm::CopySubRange(data, 0, data.GetNumberOfValues(), farray, currentIdx);
       }
     };

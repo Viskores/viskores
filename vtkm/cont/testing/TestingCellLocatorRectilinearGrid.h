@@ -29,11 +29,10 @@ class LocatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using AxisPortalType = typename AxisHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using AxisPortalType = typename AxisHandle::ReadPortalType;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-  using RectilinearPortalType =
-    typename RectilinearType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using RectilinearPortalType = typename RectilinearType::ReadPortalType;
 
   LocatorWorklet(vtkm::Bounds& bounds,
                  vtkm::Id3& dims,
@@ -104,7 +103,7 @@ public:
                             bool& match) const
   {
     vtkm::Id calculated = CalculateCellId(pointIn);
-    vtkm::ErrorCode status = locator->FindCell(pointIn, cellId, parametric);
+    vtkm::ErrorCode status = locator.FindCell(pointIn, cellId, parametric);
     if (status != vtkm::ErrorCode::Success)
     {
       this->RaiseError(vtkm::ErrorString(status));
@@ -185,7 +184,7 @@ public:
     vtkm::cont::ArrayHandle<bool> match;
     vtkm::cont::Token token;
     LocatorWorklet<DeviceAdapter> worklet(
-      bounds, dims, coords.GetData().template Cast<RectilinearType>(), token);
+      bounds, dims, coords.GetData().template AsArrayHandle<RectilinearType>(), token);
 
     vtkm::worklet::DispatcherMapField<LocatorWorklet<DeviceAdapter>> dispatcher(worklet);
     dispatcher.SetDevice(DeviceAdapter());
