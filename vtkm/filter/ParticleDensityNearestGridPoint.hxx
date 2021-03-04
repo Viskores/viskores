@@ -84,7 +84,8 @@ ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(const Id3& dime
 template <typename T, typename StorageType, typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   const vtkm::cont::DataSet& dataSet,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::cont::ArrayHandle<T, StorageType>&
+    field, // particles' scala field to be deposited to the mesh, e.g. mass or charge
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<Policy>)
 {
