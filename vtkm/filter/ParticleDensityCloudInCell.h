@@ -25,7 +25,8 @@ class ParticleDensityCloudInCell : public vtkm::filter::FilterField<ParticleDens
 public:
   // ParticleDensity only support turning 2D/3D particle positions into density
   // FIXME: 2D?
-  using SupportedTypes = vtkm::TypeListFieldVec3;
+  //using SupportedTypes = vtkm::TypeListFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldScalar;
 
   ParticleDensityCloudInCell(const vtkm::Id3& dimension,
                              const vtkm::Vec3f& origin,
@@ -45,5 +46,5 @@ private:
 } // filter
 } // vtkm
 
-#include <vtkm/filter/ParticleDensityCIC.hxx>
+#include <vtkm/filter/ParticleDensityCloudInCell.hxx>
 #endif // vtk_m_filter_particle_density_cic_h

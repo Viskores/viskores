@@ -11,7 +11,6 @@
 #ifndef vtk_m_filter_particle_density_ngp_hxx
 #define vtk_m_filter_particle_density_ngp_hxx
 
-#include "ParticleDensityNearestGridPoint.h"
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
@@ -68,8 +67,9 @@ inline VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoin
 {
 }
 
-ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(const Id3& dimension,
-                                                                 const vtkm::Bounds& bounds)
+inline VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(
+  const Id3& dimension,
+  const vtkm::Bounds& bounds)
   : Dimension(dimension)
   , Origin({ static_cast<vtkm::FloatDefault>(bounds.X.Min),
              static_cast<vtkm::FloatDefault>(bounds.Y.Min),
