@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_particle_density_cic_hxx
 #define vtk_m_filter_particle_density_cic_hxx
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/filter/PolicyBase.h>
