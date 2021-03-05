@@ -185,13 +185,13 @@ public:
     if (fieldLength == 0.f)
     {
       // constant color
-      InverseFieldDelta = 0.f;
+      this->InverseFieldDelta = 0.f;
     }
     else
     {
-      InverseFieldDelta = 1.0f / fieldLength;
+      this->InverseFieldDelta = 1.0f / fieldLength;
     }
-    Offset = vtkm::Max(0.03f / vtkm::Float32(clippingRange.Length()), 0.0001f);
+    this->Offset = vtkm::Max(0.03f / vtkm::Float32(clippingRange.Length()), 0.0001f);
   }
 
   template <typename CoordinatesPortalType, typename ScalarFieldPortalType>
@@ -336,10 +336,11 @@ private:
 
   VTKM_EXEC vtkm::Vec4f_32 GetColor(vtkm::Float64 fieldValue) const
   {
-    vtkm::Int32 colorIdx =
-      vtkm::Int32((vtkm::Float32(fieldValue) - FieldMin) * ColorMapSize * InverseFieldDelta);
-    colorIdx = vtkm::Min(vtkm::Int32(ColorMap.GetNumberOfValues() - 1), vtkm::Max(0, colorIdx));
-    return ColorMap.Get(colorIdx);
+    vtkm::Int32 colorIdx = vtkm::Int32((vtkm::Float32(fieldValue) - FieldMin) * this->ColorMapSize *
+                                       this->InverseFieldDelta);
+    colorIdx =
+      vtkm::Min(vtkm::Int32(this->ColorMap.GetNumberOfValues() - 1), vtkm::Max(0, colorIdx));
+    return this->ColorMap.Get(colorIdx);
   }
 
   VTKM_EXEC

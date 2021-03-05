@@ -357,7 +357,7 @@ class GetScalar : public vtkm::worklet::WorkletMapField
 {
 private:
   Precision MinScalar;
-  Precision invDeltaScalar;
+  Precision InvDeltaScalar;
   bool Normalize;
 
 public:
@@ -370,13 +370,13 @@ public:
     {
       // support the scalar renderer
       Normalize = false;
-      invDeltaScalar = Precision(0.f);
+      this->InvDeltaScalar = Precision(0.f);
     }
     else
     {
       //Make sure the we don't divide by zero on
       //something like an iso-surface
-      invDeltaScalar = 1.f / (maxScalar - MinScalar);
+      this->InvDeltaScalar = 1.f / (maxScalar - MinScalar);
     }
   }
   typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
@@ -396,7 +396,7 @@ public:
     scalar = Precision(scalars.Get(pointId[0]));
     if (Normalize)
     {
-      scalar = (scalar - MinScalar) * invDeltaScalar;
+      scalar = (scalar - MinScalar) * this->InvDeltaScalar;
     }
   }
 }; //class GetScalar
