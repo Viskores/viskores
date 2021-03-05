@@ -185,8 +185,7 @@ public:
     if (fieldLength == 0.f)
     {
       // constant color
-      FieldMin = 0.f;
-      InverseFieldDelta = 1.f;
+      InverseFieldDelta = 0.f;
     }
     else
     {

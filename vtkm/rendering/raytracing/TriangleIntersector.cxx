@@ -319,17 +319,13 @@ public:
       {
         // support the scalar renderer
         Normalize = false;
-        MinScalar = 0;
-        invDeltaScalar = 1;
+        invDeltaScalar = Precision(0.f);
       }
       else
       {
         //Make sure the we don't divide by zero on
         //something like an iso-surface
-        if (maxScalar - MinScalar != 0.f)
-          invDeltaScalar = 1.f / (maxScalar - MinScalar);
-        else
-          invDeltaScalar = 1.f / minScalar;
+        invDeltaScalar = 1.f / (maxScalar - MinScalar);
       }
     }
 
