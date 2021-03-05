@@ -181,7 +181,17 @@ public:
     , FrameBuffer(frameBuffer.PrepareForExecution(DeviceTag(), token))
     , FieldMin(vtkm::Float32(fieldRange.Min))
   {
-    InverseFieldDelta = 1.0f / vtkm::Float32(fieldRange.Length());
+    vtkm::Float32 fieldLength = vtkm::Float32(fieldRange.Length());
+    if (fieldLength == 0.f)
+    {
+      // constant color
+      FieldMin = 0.f;
+      InverseFieldDelta = 1.f;
+    }
+    else
+    {
+      InverseFieldDelta = 1.0f / fieldLength;
+    }
     Offset = vtkm::Max(0.03f / vtkm::Float32(clippingRange.Length()), 0.0001f);
   }
 
