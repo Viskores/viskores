@@ -396,6 +396,10 @@ void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet)
     // these function just like explicit cell sets
     WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetSingleType<>>());
   }
+  else if (cellSet.IsType<vtkm::cont::CellSetExtrude>())
+  {
+    WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetExplicit<>>());
+  }
   else
   {
     throw vtkm::cont::ErrorBadType("Could not determine type to write out.");
