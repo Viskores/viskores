@@ -46,7 +46,7 @@ void TestNGP()
   auto density = filter.Execute(dataSet);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> field;
-  density.GetCellField("density").GetData().CopyTo(field);
+  density.GetCellField("density").GetData().AsArrayHandle<vtkm::Float32>(field);
 
   auto mass_result = vtkm::worklet::DescriptiveStatistics::Run(mass);
   auto density_result = vtkm::worklet::DescriptiveStatistics::Run(field);
