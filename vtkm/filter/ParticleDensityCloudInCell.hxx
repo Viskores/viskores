@@ -53,18 +53,18 @@ public:
       // deposit the scalar field value in proportion to the volume of the sub-hexahedron
       // the vertex is in.
       density.Add(indices[0], value * parametric[0] * parametric[1] * parametric[2]);
-      density.Add(indices[0], value * (1.0 - parametric[0]) * parametric[1] * parametric[2]);
+      density.Add(indices[0], value * (1.0f - parametric[0]) * parametric[1] * parametric[2]);
       density.Add(indices[0],
-                  value * (1.0 - parametric[0]) * (1.0 - parametric[1]) * parametric[2]);
-      density.Add(indices[0], value * parametric[0] * (1.0 - parametric[1]) * parametric[2]);
+                  value * (1.0f - parametric[0]) * (1.0f - parametric[1]) * parametric[2]);
+      density.Add(indices[0], value * parametric[0] * (1.0f - parametric[1]) * parametric[2]);
 
-      density.Add(indices[0], value * parametric[0] * parametric[1] * (1.0 - parametric[2]));
+      density.Add(indices[0], value * parametric[0] * parametric[1] * (1.0f - parametric[2]));
       density.Add(indices[0],
-                  value * (1.0 - parametric[0]) * parametric[1] * (1.0 - parametric[2]));
+                  value * (1.0f - parametric[0]) * parametric[1] * (1.0f - parametric[2]));
       density.Add(indices[0],
-                  value * (1.0 - parametric[0]) * (1.0 - parametric[1]) * (1.0 - parametric[2]));
+                  value * (1.0f - parametric[0]) * (1.0f - parametric[1]) * (1.0f - parametric[2]));
       density.Add(indices[0],
-                  value * parametric[0] * (1.0 - parametric[1]) * (1.0 - parametric[2]));
+                  value * parametric[0] * (1.0f - parametric[1]) * (1.0f - parametric[2]));
     }
 
     // We simply ignore that particular particle when it is not in the mesh.
