@@ -52,10 +52,26 @@ struct MakeUnsigned<vtkm::Int64>
 template <>
 struct MakeUnsigned<vtkm::Float32>
 {
-  using type = vtkm::Float32;
+  using type = vtkm::UInt32;
 };
 template <>
 struct MakeUnsigned<vtkm::Float64>
+{
+  using type = vtkm::UInt64;
+};
+
+template <typename T>
+struct ArithType
+{
+  using type = typename MakeUnsigned<T>::type;
+};
+template <>
+struct ArithType<vtkm::Float32>
+{
+  using type = vtkm::Float32;
+};
+template <>
+struct ArithType<vtkm::Float64>
 {
   using type = vtkm::Float64;
 };
@@ -178,7 +194,7 @@ public:
     // This is safe, since the only difference between signed/unsigned types
     // is how overflow works, and signed overflow is already undefined. We also
     // document that overflow is undefined for this operation.
-    using APIType = typename detail::MakeUnsigned<ValueType>::type;
+    using APIType = typename detail::ArithType<ValueType>::type;
 
     return static_cast<T>(
       vtkm::AtomicAdd(reinterpret_cast<APIType*>(this->Data + index), static_cast<APIType>(value)));
