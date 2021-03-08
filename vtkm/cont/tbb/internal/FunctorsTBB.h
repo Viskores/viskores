@@ -460,14 +460,17 @@ struct ReduceBody
 
 
 template <class InputPortalType, typename T, class BinaryOperationType>
-VTKM_CONT static T ReducePortals(InputPortalType inputPortal,
-                                 T initialValue,
-                                 BinaryOperationType binaryOperation)
+VTKM_CONT static auto ReducePortals(InputPortalType inputPortal,
+                                    T initialValue,
+                                    BinaryOperationType binaryOperation)
+  -> decltype(binaryOperation(initialValue, inputPortal.Get(0)))
 {
-  using WrappedBinaryOp = internal::WrappedBinaryOperator<T, BinaryOperationType>;
+  using ResultType = decltype(binaryOperation(initialValue, inputPortal.Get(0)));
+  using WrappedBinaryOp = internal::WrappedBinaryOperator<ResultType, BinaryOperationType>;
 
   WrappedBinaryOp wrappedBinaryOp(binaryOperation);
-  ReduceBody<InputPortalType, T, WrappedBinaryOp> body(inputPortal, initialValue, wrappedBinaryOp);
+  ReduceBody<InputPortalType, ResultType, WrappedBinaryOp> body(
+    inputPortal, initialValue, wrappedBinaryOp);
   vtkm::Id arrayLength = inputPortal.GetNumberOfValues();
 
   if (arrayLength > 1)
@@ -484,7 +487,7 @@ VTKM_CONT static T ReducePortals(InputPortalType inputPortal,
   else // arrayLength == 0
   {
     // ReduceBody does not work with an array of size 0.
-    return initialValue;
+    return static_cast<ResultType>(initialValue);
   }
 }
 

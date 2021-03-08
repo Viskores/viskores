@@ -221,37 +221,81 @@ struct NullType
 #endif // gcc || clang
 struct Add
 {
-  template <typename T>
-  inline VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
+  template <typename T, typename U>
+  inline VTKM_EXEC_CONT auto operator()(const T& a, const U& b) const -> decltype(a + b)
   {
-    return T(a + b);
+    return a + b;
+  }
+
+  // If both arguments are short integers, explicitly cast the result back to the
+  // type to avoid narrowing conversion warnings from operations that promote to
+  // integers.
+  template <typename T>
+  inline VTKM_EXEC_CONT
+    typename std::enable_if<std::is_integral<T>::value && sizeof(T) < sizeof(int), T>::type
+    operator()(T a, T b) const
+  {
+    return static_cast<T>(a + b);
   }
 };
 
 struct Subtract
 {
-  template <typename T>
-  inline VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
+  template <typename T, typename U>
+  inline VTKM_EXEC_CONT auto operator()(const T& a, const U& b) const -> decltype(a - b)
   {
-    return T(a - b);
+    return a - b;
+  }
+
+  // If both arguments are short integers, explicitly cast the result back to the
+  // type to avoid narrowing conversion warnings from operations that promote to
+  // integers.
+  template <typename T>
+  inline VTKM_EXEC_CONT
+    typename std::enable_if<std::is_integral<T>::value && sizeof(T) < sizeof(int), T>::type
+    operator()(T a, T b) const
+  {
+    return static_cast<T>(a - b);
   }
 };
 
 struct Multiply
 {
-  template <typename T>
-  inline VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
+  template <typename T, typename U>
+  inline VTKM_EXEC_CONT auto operator()(const T& a, const U& b) const -> decltype(a * b)
   {
-    return T(a * b);
+    return a * b;
+  }
+
+  // If both arguments are short integers, explicitly cast the result back to the
+  // type to avoid narrowing conversion warnings from operations that promote to
+  // integers.
+  template <typename T>
+  inline VTKM_EXEC_CONT
+    typename std::enable_if<std::is_integral<T>::value && sizeof(T) < sizeof(int), T>::type
+    operator()(T a, T b) const
+  {
+    return static_cast<T>(a * b);
   }
 };
 
 struct Divide
 {
-  template <typename T>
-  inline VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
+  template <typename T, typename U>
+  inline VTKM_EXEC_CONT auto operator()(const T& a, const U& b) const -> decltype(a / b)
   {
-    return T(a / b);
+    return a / b;
+  }
+
+  // If both arguments are short integers, explicitly cast the result back to the
+  // type to avoid narrowing conversion warnings from operations that promote to
+  // integers.
+  template <typename T>
+  inline VTKM_EXEC_CONT
+    typename std::enable_if<std::is_integral<T>::value && sizeof(T) < sizeof(int), T>::type
+    operator()(T a, T b) const
+  {
+    return static_cast<T>(a / b);
   }
 };
 
