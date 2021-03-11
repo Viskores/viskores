@@ -17,8 +17,6 @@
 
 #if defined(VTKM_GCC) && !defined(VTKM_USING_GLIBCXX_4)
 #define VTKM_USE_STD_IS_TRIVIAL
-#elif defined(VTKM_CLANG)
-#define VTKM_USE_STD_IS_TRIVIAL
 #endif
 
 #ifndef VTKM_USE_STD_IS_TRIVIAL
