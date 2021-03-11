@@ -41,7 +41,7 @@
 #define VTKM_PGI
 
 #elif defined(__ibmxl__)
-//Check for xl before GCC and clang, as xl claims it many things
+//Check for xl before GCC and clang, as xl claims it is many things
 #define VTKM_XL
 
 #elif defined(__clang__)
