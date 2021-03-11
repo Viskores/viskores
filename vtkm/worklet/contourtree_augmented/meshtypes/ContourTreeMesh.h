@@ -72,6 +72,7 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/EnvironmentTracker.h>
+#include <vtkm/cont/Timer.h>
 #include <vtkm/io/ErrorIO.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/contourtree_augmented/ArrayTransforms.h>
@@ -164,7 +165,9 @@ public:
   vtkm::Id GetNumberOfVertices() const { return this->NumVertices; }
 
   // Combine two ContourTreeMeshes
-  void MergeWith(ContourTreeMesh<FieldType>& other);
+  void MergeWith(ContourTreeMesh<FieldType>& other,
+                 vtkm::cont::LogLevel TreeLogLevel = vtkm::cont::LogLevel::Perf,
+                 std::string timingsMessage = "");
 
   // Save/Load the mesh helpers
   void Save(const char* filename) const;
@@ -519,12 +522,20 @@ struct NotNoSuchElement
 
 // Combine two ContourTreeMeshes
 template <typename FieldType>
-inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
+inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other,
+                                                  vtkm::cont::LogLevel timingsLogLevel,
+                                                  std::string timingsMessage)
 { // Merge With
 #ifdef DEBUG_PRINT
   this->DebugPrint("THIS ContourTreeMesh", __FILE__, __LINE__);
   other.DebugPrint("OTHER ContourTreeMesh", __FILE__, __LINE__);
 #endif
+  // Track timing of main steps
+  vtkm::cont::Timer totalTimer; // Total time for each call
+  totalTimer.Start();
+  vtkm::cont::Timer timer; // Time individual steps
+  timer.Start();
+  std::stringstream timingsStream;
 
   // Create combined sort order
   // TODO This vector could potentially be implemented purely as a smart array handle to reduce memory usage
@@ -539,6 +550,17 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     contourtree_mesh_inc_ns::CombinedSimulatedSimplicityIndexComparator<FieldType>
       cssicFunctorExecObj(
         this->GlobalMeshIndex, other.GlobalMeshIndex, this->SortedValues, other.SortedValues);
+    // TODO FIXME We should use a proper merge instead of compbine and sort to improve performance
+    vtkm::cont::Algorithm::CopySubRange(
+      thisIndices, 0, thisIndices.GetNumberOfValues(), overallSortOrder, 0);
+    vtkm::cont::Algorithm::CopySubRange(otherIndices,
+                                        0,
+                                        otherIndices.GetNumberOfValues(),
+                                        overallSortOrder,
+                                        thisIndices.GetNumberOfValues());
+    vtkm::cont::Algorithm::Sort(overallSortOrder, cssicFunctorExecObj);
+
+    /*
     // TODO FIXME We here need to force the arrays for the comparator onto the CPU by using DeviceAdapterTagSerial
     //            Instead we should implement the merge of the arrays on the device and not use std::merge
     vtkm::cont::Token tempToken;
@@ -551,7 +573,11 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                vtkm::cont::ArrayPortalToIteratorEnd(otherIndices.ReadPortal()),
                vtkm::cont::ArrayPortalToIteratorBegin(overallSortOrder.WritePortal()),
                cssicFunctor);
+    */
   }
+  timingsStream << "    " << std::setw(38) << std::left << "Create OverallSortOrder"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
 #ifdef DEBUG_PRINT
   std::cout << "OverallSortOrder.size  " << overallSortOrder.GetNumberOfValues() << std::endl;
@@ -588,6 +614,9 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   std::cout << "numVerticesCombined: " << numVerticesCombined << std::endl;
   std::cout << std::endl;
 #endif
+  timingsStream << "    " << std::setw(38) << std::left << "Create OverallSortIndex"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
   // thisToCombinedSortOrder and otherToCombinedSortOrder
   IdArrayType thisToCombinedSortOrder;
@@ -606,6 +635,9 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   PrintIndices("thisToCombinedSortOrder", thisToCombinedSortOrder);
   PrintIndices("otherToCombinedSortOrder", otherToCombinedSortOrder);
 #endif
+  timingsStream << "    " << std::setw(38) << std::left << "Create This/OtherCombinedSortOrder"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
   IdArrayType combinedNNeighbours;
   vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numVerticesCombined),
@@ -617,6 +649,9 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
       vtkm::cont::make_ArrayHandlePermutation(thisToCombinedSortOrder, combinedNNeighbours);
     vtkm::cont::Algorithm::Copy(nNeighbours, permutedCombinedNNeighbours);
   }
+  timingsStream << "    " << std::setw(38) << std::left << "Create CombinedNNeighbours"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
   IdArrayType combinedOtherStartIndex;
   vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numVerticesCombined),
@@ -638,6 +673,9 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   PrintIndices("combinedNNeighbours", combinedNNeighbours);
   PrintIndices("combinedOtherStartIndex", combinedOtherStartIndex);
 #endif
+  timingsStream << "    " << std::setw(38) << std::left << "Create CombinedOtherStartIndex"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
   IdArrayType combinedFirstNeighbour;
   combinedFirstNeighbour.Allocate(numVerticesCombined);
@@ -670,6 +708,10 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                combinedFirstNeighbour,
                combinedOtherStartIndex,
                combinedNeighbours);
+
+  timingsStream << "    " << std::setw(38) << std::left << "Update CombinedNeighbours"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
   // TODO VTKM -Version MergedCombinedOtherStartIndex. Replace 1r block with the 1s block. Need to check for Segfault in contourtree_mesh_inc_ns::MergeCombinedOtherStartIndexWorklet. This workloat also still uses a number of stl algorithms that should be replaced with VTKm code (which is porbably also why the worklet fails).
   /* // 1s--start
@@ -716,6 +758,10 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   }
   // 1r--end
 
+  timingsStream << "    " << std::setw(38) << std::left << "Merge CombinedOtherStartIndex"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
   IdArrayType combinedFirstNeighbourShift;
   combinedFirstNeighbourShift.Allocate(combinedFirstNeighbour.GetNumberOfValues());
   vtkm::cont::Algorithm::ScanExclusive(combinedOtherStartIndex, combinedFirstNeighbourShift);
@@ -733,6 +779,10 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     this->Invoke(subAssignWorklet, combinedFirstNeighbour, combinedFirstNeighbourShift);
   }
 
+  timingsStream << "    " << std::setw(38) << std::left << "Create CombinedFirstNeighbourShift"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
   // Compute combined global mesh index arrays
   IdArrayType combinedGlobalMeshIndex;
   combinedGlobalMeshIndex.Allocate(combinedFirstNeighbour.GetNumberOfValues());
@@ -746,6 +796,10 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
       vtkm::cont::make_ArrayHandlePermutation(otherToCombinedSortOrder, combinedGlobalMeshIndex);
     vtkm::cont::Algorithm::Copy(other.GlobalMeshIndex, permutedCombinedGlobalMeshIndex);
   }
+
+  timingsStream << "    " << std::setw(38) << std::left << "Create CombinedGlobalMeshIndex"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
   // Compute combined sorted values
   vtkm::cont::ArrayHandle<FieldType> combinedSortedValues;
@@ -761,6 +815,10 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     vtkm::cont::Algorithm::Copy(other.SortedValues, permutedCombinedSortedValues);
   }
 
+  timingsStream << "    " << std::setw(38) << std::left << "Create CombinedSortedValues"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
   // Swap in combined version. VTKM ArrayHandles are smart so we can just swap in the new for the old
   this->SortedValues = combinedSortedValues;
   this->GlobalMeshIndex = combinedGlobalMeshIndex;
@@ -770,8 +828,25 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   this->SortIndices = vtkm::cont::ArrayHandleIndex(this->NumVertices);
   this->SortOrder = vtkm::cont::ArrayHandleIndex(this->NumVertices);
 
+  timingsStream << "    " << std::setw(38) << std::left << "Swap in new arrays"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
   // Re-compute maximum number of neigbours
   ComputeMaxNeighbours();
+
+  timingsStream << "    " << std::setw(38) << std::left << "Compute MaxNeighbours"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+  timingsStream << "    " << std::setw(38) << std::left << "Total time MergeWith"
+                << ": " << totalTimer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+  // Record the times we logged
+  VTKM_LOG_S(timingsLogLevel,
+             std::endl
+               << "    ---------------- ContourTreeMesh MergeWith ---------------------"
+               << std::endl
+               << timingsMessage << timingsStream.str());
 
 #ifdef DEBUG_PRINT
   // Print the contents fo this for debugging
