@@ -19,15 +19,14 @@ namespace filter
 {
 /// \brief Estimate the density of particles using the Nearest Grid Point method
 
-// We only need the CoordinateSystem of the input dataset thus a FilterField
+// We only need the CoordinateSystem and scalar fields of the input dataset thus a FilterField
 class ParticleDensityNearestGridPoint
   : public vtkm::filter::FilterField<ParticleDensityNearestGridPoint>
 {
 public:
-  // ParticleDensity only support turning 2D/3D particle positions into density
-  using SupportedTypes = vtkm::TypeListFieldVec3;
+  // deposit scalar field associated with particles, e.g. mass/charge to mesh cells
+  using SupportedTypes = vtkm::TypeListFieldScalar;
 
-  //
   ParticleDensityNearestGridPoint(const vtkm::Id3& dimension,
                                   const vtkm::Vec3f& origin,
                                   const vtkm::Vec3f& spacing);
