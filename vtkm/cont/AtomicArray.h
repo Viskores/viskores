@@ -26,7 +26,8 @@ namespace cont
 /// \brief A type list containing types that can be used with an AtomicArray.
 ///
 /// @cond NONE
-using AtomicArrayTypeList = vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::UInt64, vtkm::Int64>;
+using AtomicArrayTypeList =
+  vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::UInt64, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
 
 struct VTKM_DEPRECATED(1.6,
                        "AtomicArrayTypeListTag replaced by AtomicArrayTypeList. Note that the "

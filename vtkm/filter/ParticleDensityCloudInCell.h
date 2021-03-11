@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particle_density_ngp_h
-#define vtk_m_filter_particle_density_ngp_h
+#ifndef vtk_m_filter_particle_density_cic_h
+#define vtk_m_filter_particle_density_cic_h
 
 #include <vtkm/filter/FilterField.h>
 
@@ -17,23 +17,20 @@ namespace vtkm
 {
 namespace filter
 {
-/// \brief Estimate the density of particles using the Nearest Grid Point method
+/// \brief Estimate the density of particles using the Cloud-in-Cell method
 
 // We only need the CoordinateSystem of the input dataset thus a FilterField
-class ParticleDensityNearestGridPoint
-  : public vtkm::filter::FilterField<ParticleDensityNearestGridPoint>
+class ParticleDensityCloudInCell : public vtkm::filter::FilterField<ParticleDensityCloudInCell>
 {
 public:
   // ParticleDensity only support turning 2D/3D particle positions into density
+  // FIXME: 2D?
   //using SupportedTypes = vtkm::TypeListFieldVec3;
   using SupportedTypes = vtkm::TypeListFieldScalar;
 
-  //
-  ParticleDensityNearestGridPoint(const vtkm::Id3& dimension,
-                                  const vtkm::Vec3f& origin,
-                                  const vtkm::Vec3f& spacing);
-
-  ParticleDensityNearestGridPoint(const vtkm::Id3& dimension, const vtkm::Bounds& bounds);
+  ParticleDensityCloudInCell(const vtkm::Id3& dimension,
+                             const vtkm::Vec3f& origin,
+                             const vtkm::Vec3f& spacing);
 
   template <typename T, typename StorageType, typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
@@ -42,13 +39,12 @@ public:
                                           vtkm::filter::PolicyBase<Policy> policy);
 
 private:
-  vtkm::Id3 Dimension; // Cell dimension
+  vtkm::Id3 Dimension; // Point dimension
   vtkm::Vec3f Origin;
   vtkm::Vec3f Spacing;
 };
-}
-}
+} // filter
+} // vtkm
 
-#include <vtkm/filter/ParticleDensityNearestGridPoint.hxx>
-
-#endif //vtk_m_filter_particle_density_ngp_h
+#include <vtkm/filter/ParticleDensityCloudInCell.hxx>
+#endif // vtk_m_filter_particle_density_cic_h
