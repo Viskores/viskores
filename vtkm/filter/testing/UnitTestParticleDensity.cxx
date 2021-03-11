@@ -92,13 +92,12 @@ void TestCIC()
   auto mass_result = vtkm::worklet::DescriptiveStatistics::Run(mass);
   auto density_result = vtkm::worklet::DescriptiveStatistics::Run(field);
   // Unfortunately, floating point atomics suffer from precision error more than everything else.
-  // TODO: test_equal does not wor properly when one of the value is 0 and the other is large.
   VTKM_TEST_ASSERT(test_equal(density_result.Sum(), mass_result.Sum(), 10));
 }
 
 void TestParticleDensity()
 {
-  //  TestNGP();
+  TestNGP();
   TestCIC();
 }
 
