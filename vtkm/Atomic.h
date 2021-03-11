@@ -230,19 +230,18 @@ VTKM_EXEC_CONT inline vtkm::Float32 vtkmAtomicAddImpl(vtkm::Float32* address,
                                                       vtkm::Float32 value,
                                                       vtkm::MemoryOrder order)
 {
-  union {
-    vtkm::UInt32 i;
-    vtkm::Float32 f;
-  } expected{ .f = *address }, desired{};
-
+  AtomicStoreFence(order);
+  vtkm::UInt32 assumed;
+  vtkm::UInt32 old = __float_as_int(*address);
   do
   {
-    desired.f = expected.f + value;
-  } while (!AtomicCompareExchangeImpl(
-    reinterprete_cast<vtkm::UInt32*>(address), expected.i, desired.i, order));
-
-  // return the "old" value that was in the memory.
-  return expected.f;
+    assumed = old;
+    old = atomicCAS(reinterpret_cast<volatile vtkm::UInt32*>(address),
+                    assumed,
+                    __float_as_int(__int_as_float(assumed) + value));
+  } while (assumed != old);
+  AtomicLoadFence(order);
+  return __int_as_float(old);
 }
 #endif
 #if __CUDA_ARCH__ < 600
@@ -250,19 +249,18 @@ VTKM_EXEC_CONT inline vtkm::Float64 vtkmAtomicAdd(vtkm::Float64* address,
                                                   vtkm::Float64 value,
                                                   vtkm::MemoryOrder order)
 {
-  union {
-    vtkm::UInt64 i;
-    vtkm::Float64 f;
-  } expected{ .f = *address }, desired{};
-
+  AtomicStoreFence(order);
+  vtkm::UInt64 assumed;
+  vtkm::UInt64 old = __double_as_longlong(*address);
   do
   {
-    desired.f = expected.f + value;
-  } while (!AtomicCompareExchangeImpl(
-    reinterprete_cast<vtkm::UInt64*>(address), expected.i, desired.i, order));
-
-  // return the "old" value that was in the memory.
-  return expected.f;
+    assumed = old;
+    old = atomicCAS(reinterpret_cast<volatile vtkm::UInt64*>(address),
+                    assumed,
+                    __double_as_longlong(__longlong_as_double(assumed) + value));
+  } while (assumed != old);
+  AtomicLoadFence(order);
+  return __longlong_as_double(old);
 }
 #endif
 }
@@ -573,48 +571,36 @@ VTKM_ATOMIC_OPS_FOR_TYPE(vtkm::UInt64, LONG64, 64)
 
 #undef VTKM_ATOMIC_OPS_FOR_TYPE
 
-VTKM_EXEC_CONT inline vtkm::Float32 AtomicAddImpl(vtkm::Float32* addr,
-                                                  vtkm::Float32 arg,
-                                                  vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline vtkm::Float32 AtomicAddImpl(vtkm::Float32* address,
+                                                  vtkm::Float32 value,
+                                                  vtkm::MemoryOrder vtkmNotUsed(order))
 {
-  union {
-    vtkm::UInt32 i;
-    vtkm::Float32 f;
-  } expected{}, desired{};
-  expected.f = *addr;
-
+  LONG assumed;
+  LONG old = BitCast<LONG>(*address);
   do
   {
-    desired.f = expected.f + arg;
-  } while (
-    !AtomicCompareExchangeImpl(reinterpret_cast<vtkm::UInt32*>(addr),
-                               &expected.i, // reloads expected with *addr prior to the operation
-                               desired.i,
-                               order));
-  // return the "old" value that was in the memory.
-  return expected.f;
+    assumed = old;
+    old = _InterlockedCompareExchange(reinterpret_cast<volatile LONG*>(address),
+                                      BitCast<LONG>(BitCast<vtkm::Float32>(assumed) + value),
+                                      assumed);
+  } while (assumed != old);
+  return BitCast<vtkm::Float32>(old);
 }
 
-VTKM_EXEC_CONT inline vtkm::Float64 AtomicAddImpl(vtkm::Float64* addr,
-                                                  vtkm::Float64 arg,
-                                                  vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline vtkm::Float64 AtomicAddImpl(vtkm::Float64* address,
+                                                  vtkm::Float64 value,
+                                                  vtkm::MemoryOrder vtkmNotUsed(order))
 {
-  union {
-    vtkm::UInt64 i;
-    vtkm::Float64 f;
-  } expected{}, desired{};
-  expected.f = *addr;
-
+  LONG64 assumed;
+  LONG64 old = BitCast<LONG64>(*address);
   do
   {
-    desired.f = expected.f + arg;
-  } while (
-    !AtomicCompareExchangeImpl(reinterpret_cast<vtkm::UInt64*>(addr),
-                               &expected.i, // reloads expected with *addr prior to the operation
-                               desired.i,
-                               order));
-  // return the "old" value that was in the memory.
-  return expected.f;
+    assumed = old;
+    old = _InterlockedCompareExchange64(reinterpret_cast<volatile LONG64*>(address),
+                                        BitCast<LONG64>(BitCast<vtkm::Float64>(assumed) + value),
+                                        assumed);
+  } while (assumed != old);
+  return BitCast<vtkm::Float64>(old);
 }
 
 }
@@ -714,6 +700,52 @@ VTKM_EXEC_CONT inline vtkm::Float32 AtomicAddImpl(vtkm::Float64* addr,
                                  GccAtomicMemOrder(order)));
   // return the "old" value that was in the memory.
   return expected.f;
+}
+
+#include <vtkmstd/bit_cast.h>
+
+// TODO: Use enable_if to write one version for both Float32 and Float64.
+VTKM_EXEC_CONT inline vtkm::Float32 AtomicAddImpl(vtkm::Float32* addr,
+                                                  vtkm::Float32 arg,
+                                                  vtkm::MemoryOrder order)
+{
+  vtkm::UInt32 expected = vtkmstd::bit_cast<vtkm::UInt32>(*addr);
+  vtkm::UInt32 desired;
+
+  do
+  {
+    desired = vtkmstd::bit_cast<vtkm::UInt32>(vtkmstd::bit_cast<vtkm::Float32>(expected) + arg);
+  } while (
+    !__atomic_compare_exchange_n(reinterpret_cast<vtkm::UInt32*>(addr),
+                                 &expected, // reloads expected with *addr prior to the operation
+                                 desired,
+                                 false,
+                                 GccAtomicMemOrder(order),
+                                 GccAtomicMemOrder(order)));
+  // return the "old" value that was in the memory.
+  return vtkmstd::bit_cast<vtkm::Float32>(expected);
+}
+
+// TODO: Use enable_if to write one version for both Float32 and Float64.
+VTKM_EXEC_CONT inline vtkm::Float64 AtomicAddImpl(vtkm::Float64* addr,
+                                                  vtkm::Float64 arg,
+                                                  vtkm::MemoryOrder order)
+{
+  vtkm::UInt64 expected = vtkmstd::bit_cast<vtkm::UInt64>(*addr);
+  vtkm::UInt64 desired;
+
+  do
+  {
+    desired = vtkmstd::bit_cast<vtkm::UInt64>(vtkmstd::bit_cast<vtkm::Float64>(expected) + arg);
+  } while (
+    !__atomic_compare_exchange_n(reinterpret_cast<vtkm::UInt64*>(addr),
+                                 &expected, // reloads expected with *addr prior to the operation
+                                 desired,
+                                 false,
+                                 GccAtomicMemOrder(order),
+                                 GccAtomicMemOrder(order)));
+  // return the "old" value that was in the memory.
+  return vtkmstd::bit_cast<vtkm::Float64>(expected);
 }
 
 template <typename T>
