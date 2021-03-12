@@ -182,7 +182,7 @@ void CellSetExtrude::GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const
   }
 }
 
-template <vtkm::IdComponent NumIndices = 6>
+template <vtkm::IdComponent NumIndices>
 VTKM_CONT void CellSetExtrude::GetIndices(vtkm::Id index,
                                           vtkm::Vec<vtkm::Id, NumIndices>& ids) const
 {
