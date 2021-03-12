@@ -193,10 +193,7 @@ VTKM_CONT void CellSetExtrude::GetIndices(vtkm::Id index,
 VTKM_CONT void CellSetExtrude::GetIndices(vtkm::Id index,
                                           vtkm::cont::ArrayHandle<vtkm::Id>& ids) const
 {
-  if (ids.GetNumberOfValues() < 6)
-  {
-    ids.Allocate(6);
-  }
+  ids.Allocate(6);
   auto outIdPortal = ids.WritePortal();
   vtkm::cont::Token token;
   auto conn = this->PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
