@@ -398,7 +398,7 @@ void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   }
   else if (cellSet.IsType<vtkm::cont::CellSetExtrude>())
   {
-    WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetExplicit<>>());
+    WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetExtrude>());
   }
   else
   {

@@ -182,6 +182,34 @@ void CellSetExtrude::GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const
   }
 }
 
+template <vtkm::IdComponent NumIndices = 6>
+VTKM_CONT void CellSetExtrude::GetIndices(vtkm::Id index,
+                                          vtkm::Vec<vtkm::Id, NumIndices>& ids) const
+{
+  static_assert(NumIndices == 6, "There are always 6 points in a wedge.");
+  this->GetCellPointIds(index, ids.data());
+}
+
+VTKM_CONT void CellSetExtrude::GetIndices(vtkm::Id index,
+                                          vtkm::cont::ArrayHandle<vtkm::Id>& ids) const
+{
+  if (ids.GetNumberOfValues() < 6)
+  {
+    ids.Allocate(6);
+  }
+  auto outIdPortal = ids.WritePortal();
+  vtkm::cont::Token token;
+  auto conn = this->PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
+                                    vtkm::TopologyElementTagCell{},
+                                    vtkm::TopologyElementTagPoint{},
+                                    token);
+  auto indices = conn.GetIndices(index);
+  for (vtkm::IdComponent i = 0; i < 6; i++)
+  {
+    outIdPortal.Set(i, indices[i]);
+  }
+}
+
 std::shared_ptr<CellSet> CellSetExtrude::NewInstance() const
 {
   return std::make_shared<CellSetExtrude>();
