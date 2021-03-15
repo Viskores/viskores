@@ -97,9 +97,17 @@ public:
 
     VTKM_EXEC_CONT vtkm::Id operator()(vtkm::Id i) const
     {
-      vtkm::Id currGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i));
-      vtkm::Id nextGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i + 1));
-      return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
+      // When performing an exclusive scan we need to run 1 element extra. But that doesn't matter so just return 0
+      if (i >= this->OverallSortOrderPortal.GetNumberOfValues() - 1)
+      {
+        return vtkm::Id{ 0 };
+      }
+      else
+      {
+        vtkm::Id currGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i));
+        vtkm::Id nextGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i + 1));
+        return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
+      }
     }
   };
 

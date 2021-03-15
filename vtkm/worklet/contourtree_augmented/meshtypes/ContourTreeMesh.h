@@ -577,21 +577,19 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   overallSortIndex.Allocate(overallSortOrder.GetNumberOfValues());
   {
     // Array decorator with functor returning 0, 1 for each element depending
-    // on whethern the current value is different from the next
+    // on whethern the current value is different from the next. For the last
+    // value, where we can't compare to next any more, the array simply returns
+    // 0. With this trick we can do a ScanExclusive for the full array size
+    // and avoid having to explictily set the first element to 0 on the host.
     auto differentFromNextArr = vtkm::cont::make_ArrayHandleDecorator(
-      overallSortIndex.GetNumberOfValues() - 1,
+      overallSortOrder.GetNumberOfValues(),
       mesh_dem_contourtree_mesh_inc::CombinedVectorDifferentFromNextDecoratorImpl{},
       overallSortOrder,
       this->GlobalMeshIndex,
       other.GlobalMeshIndex);
 
     // Compute the exclusive scan of our transformed combined vector
-    overallSortIndex.WritePortal().Set(0, 0);
-    IdArrayType tempArr;
-
-    vtkm::cont::Algorithm::ScanInclusive(differentFromNextArr, tempArr);
-    vtkm::cont::Algorithm::CopySubRange(
-      tempArr, 0, tempArr.GetNumberOfValues(), overallSortIndex, 1);
+    vtkm::cont::Algorithm::ScanExclusive(differentFromNextArr, overallSortIndex);
   }
   vtkm::Id numVerticesCombined =
     overallSortIndex.ReadPortal().Get(overallSortIndex.GetNumberOfValues() - 1) + 1;
