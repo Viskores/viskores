@@ -43,7 +43,7 @@ public:
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           vtkm::filter::PolicyBase<Policy> policy);
-  VTKM_CONT SetDivideByVolume(bool yes) { this->DivideByVolume = yes; }
+  VTKM_CONT void SetDivideByVolume(bool yes) { this->DivideByVolume = yes; }
 
   VTKM_CONT bool GetDivideByVolume() const { return this->DivideByVolume; }
 
