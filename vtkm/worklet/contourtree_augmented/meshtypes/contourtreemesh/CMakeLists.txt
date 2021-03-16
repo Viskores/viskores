@@ -62,17 +62,18 @@
 
 set(headers
   ArcComparator.h
+  CombinedOtherStartIndexNNeighboursWorklet.h
+  CombinedSimulatedSimplicityIndexComparator.h
   CombinedVectorDifferentFromNext.h
   CompressNeighboursWorklet.h
   ComputeMaxNeighboursWorklet.h
+  CopyIntoCombinedArrayWorklet.h
   FindStartIndexWorklet.h
-  ReplaceArcNumWithToVertexWorklet.h
-  CombinedSimulatedSimplicityIndexComparator.h
   InitToCombinedSortOrderArraysWorklet.h
-  CombinedOtherStartIndexNNeighboursWorklet.h
+  MergeCombinedOtherStartIndexWorklet.h
+  ReplaceArcNumWithToVertexWorklet.h
   SubtractAssignWorklet.h
   UpdateCombinedNeighboursWorklet.h
-  MergeCombinedOtherStartIndexWorklet.h
  )
 
 #-----------------------------------------------------------------------------

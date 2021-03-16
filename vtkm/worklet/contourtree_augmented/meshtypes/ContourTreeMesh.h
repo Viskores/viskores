@@ -84,6 +84,7 @@
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVectorDifferentFromNext.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CompressNeighboursWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ComputeMaxNeighboursWorklet.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyIntoCombinedArrayWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/FindStartIndexWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/InitToCombinedSortOrderArraysWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/MergeCombinedOtherStartIndexWorklet.h>
@@ -550,30 +551,17 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     contourtree_mesh_inc_ns::CombinedSimulatedSimplicityIndexComparator<FieldType>
       cssicFunctorExecObj(
         this->GlobalMeshIndex, other.GlobalMeshIndex, this->SortedValues, other.SortedValues);
-    // TODO FIXME We should use a proper merge instead of compbine and sort to improve performance
-    vtkm::cont::Algorithm::CopySubRange(
-      thisIndices, 0, thisIndices.GetNumberOfValues(), overallSortOrder, 0);
-    vtkm::cont::Algorithm::CopySubRange(otherIndices,
-                                        0,
-                                        otherIndices.GetNumberOfValues(),
-                                        overallSortOrder,
-                                        thisIndices.GetNumberOfValues());
-    vtkm::cont::Algorithm::Sort(overallSortOrder, cssicFunctorExecObj);
-
-    /*
-    // TODO FIXME We here need to force the arrays for the comparator onto the CPU by using DeviceAdapterTagSerial
-    //            Instead we should implement the merge of the arrays on the device and not use std::merge
-    vtkm::cont::Token tempToken;
-    auto cssicFunctor =
-      cssicFunctorExecObj.PrepareForExecution(vtkm::cont::DeviceAdapterTagSerial(), tempToken);
-    // Merge the arrays
-    std::merge(vtkm::cont::ArrayPortalToIteratorBegin(thisIndices.ReadPortal()),
-               vtkm::cont::ArrayPortalToIteratorEnd(thisIndices.ReadPortal()),
-               vtkm::cont::ArrayPortalToIteratorBegin(otherIndices.ReadPortal()),
-               vtkm::cont::ArrayPortalToIteratorEnd(otherIndices.ReadPortal()),
-               vtkm::cont::ArrayPortalToIteratorBegin(overallSortOrder.WritePortal()),
-               cssicFunctor);
-    */
+    contourtree_mesh_inc_ns::CopyIntoCombinedArrayWorklet copyIntoCombinedArrayWorklet;
+    this->Invoke(copyIntoCombinedArrayWorklet,
+                 thisIndices,
+                 otherIndices,
+                 cssicFunctorExecObj,
+                 overallSortOrder);
+    this->Invoke(copyIntoCombinedArrayWorklet,
+                 otherIndices,
+                 thisIndices,
+                 cssicFunctorExecObj,
+                 overallSortOrder);
   }
   timingsStream << "    " << std::setw(38) << std::left << "Create OverallSortOrder"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
