@@ -89,7 +89,7 @@ void TestCheckAtomicArray()
                    "Check for 32-bit int failed.");
   VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagAtomicArray, Int64Array>::value),
                    "Check for 64-bit int failed.");
-  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagAtomicArray, FloatArray>::value),
+  VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagAtomicArray, FloatArray>::value),
                    "Check for float failed.");
 }
 
