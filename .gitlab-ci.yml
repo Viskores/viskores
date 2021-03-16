@@ -131,6 +131,7 @@ stages:
     - export PATH=$PWD/.gitlab:$PATH
     - SCCACHE_IDLE_TIMEOUT=0 sccache --start-server
     - sccache --show-stats
+    - .gitlab/ci/config/google_benchmarks.sh
     - "cmake --version"
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
