@@ -11,7 +11,6 @@
 #ifndef vtk_m_filter_particle_density_ngp_hxx
 #define vtk_m_filter_particle_density_ngp_hxx
 
-#include "ParticleDensityNearestGridPoint.h"
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
@@ -50,6 +49,30 @@ public:
     // We simply ignore that particular particle when it is not in the mesh.
   }
 }; //NGPWorklet
+namespace detail
+{
+class DividByVolume : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldInOut field);
+  using ExecutionSignature = void(_1);
+
+  VTKM_EXEC_CONT
+  explicit DividByVolume(vtkm::Float64 volume)
+    : Volume(volume)
+  {
+  }
+
+  template <typename T>
+  VTKM_EXEC void operator()(T& value) const
+  {
+    value = value / Volume;
+  }
+
+private:
+  vtkm::Float64 Volume;
+};
+} //detail
 } //worklet
 } //vtkm
 
@@ -65,6 +88,7 @@ inline VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoin
   : Dimension(dimension)
   , Origin(origin)
   , Spacing(spacing)
+  , DivideByVolume(true)
 {
 }
 
@@ -78,6 +102,7 @@ ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(const Id3& dime
                          static_cast<vtkm::FloatDefault>(bounds.Y.Length()),
                          static_cast<vtkm::FloatDefault>(bounds.Z.Length()) } /
             Dimension)
+  , DivideByVolume(true)
 {
 }
 
@@ -110,11 +135,17 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
 
   // We create an ArrayHandle and pass it to the Worklet as AtomicArrayInOut.
   // However the ArrayHandle needs to be allocated and initialized first. The
-  // easily way to do it is to copy from an ArrayHandleConstant
+  // easiest way to do it is to copy from an ArrayHandleConstant
   vtkm::cont::ArrayHandle<T> density;
   vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<T>(0, uniform.GetNumberOfCells()), density);
 
   this->Invoke(vtkm::worklet::NGPWorklet{}, coords, field, locator, density);
+
+  if (DivideByVolume)
+  {
+    auto volume = this->Spacing[0] * this->Spacing[1] * this->Spacing[2];
+    this->Invoke(vtkm::worklet::detail::DividByVolume{ volume }, density);
+  }
 
   uniform.AddField(vtkm::cont::make_FieldCell("density", density));
 

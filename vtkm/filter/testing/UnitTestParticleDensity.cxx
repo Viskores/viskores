@@ -51,7 +51,7 @@ void TestNGP()
   auto mass_result = vtkm::worklet::DescriptiveStatistics::Run(mass);
   auto density_result = vtkm::worklet::DescriptiveStatistics::Run(field);
   // Unfortunately, floating point atomics suffer from precision error more than everything else.
-  VTKM_TEST_ASSERT(test_equal(density_result.Sum(), mass_result.Sum(), 10));
+  VTKM_TEST_ASSERT(test_equal(density_result.Sum(), mass_result.Sum() * 27.0, 0.1));
 }
 
 void TestParticleDensity()

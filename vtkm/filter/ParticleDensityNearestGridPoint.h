@@ -18,6 +18,11 @@ namespace vtkm
 namespace filter
 {
 /// \brief Estimate the density of particles using the Nearest Grid Point method
+/// This filter takes a DataSet with CellSetExplicit of shape Vertex as input data.
+/// The vertices are treated as a set of particles with infinitesimal size and finite
+/// mass (or other scalar attributes such as charge). The filter estimates density by
+/// imposing a regular grid as specified in the constructor and summing the mass of
+/// particles within each cell in the grid.
 
 // We only need the CoordinateSystem and scalar fields of the input dataset thus a FilterField
 class ParticleDensityNearestGridPoint
@@ -38,11 +43,15 @@ public:
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           vtkm::filter::PolicyBase<Policy> policy);
+  VTKM_CONT SetDivideByVolume(bool yes) { this->DivideByVolume = yes; }
+
+  VTKM_CONT bool GetDivideByVolume() const { return this->DivideByVolume; }
 
 private:
   vtkm::Id3 Dimension; // Cell dimension
   vtkm::Vec3f Origin;
   vtkm::Vec3f Spacing;
+  bool DivideByVolume;
 };
 }
 }
