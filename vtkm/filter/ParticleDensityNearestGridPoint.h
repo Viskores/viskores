@@ -30,7 +30,7 @@ namespace filter
 /// volume of the cell. Thus, the density will be computed as the units of the mass field
 /// per the cubic units of the coordinate system. If you just want a sum of the mass in each
 /// cell, turn off the DivideByVolume feature of this filter.
-/// In addition, you can also simply count the number of particles in each by calling
+/// In addition, you can also simply count the number of particles in each cell by calling
 /// SetComputeNumberDensity(true).
 
 // We only need the CoordinateSystem and scalar fields of the input dataset thus a FilterField
