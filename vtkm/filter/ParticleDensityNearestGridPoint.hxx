@@ -109,6 +109,25 @@ ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(const Id3& dime
 {
 }
 
+template <typename DerivedPolicy>
+VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::PrepareForExecution(
+  const vtkm::cont::DataSet& input,
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+{
+  if (this->ComputeNumberDensity)
+  {
+    return this->DoExecute(
+      input,
+      vtkm::cont::make_ArrayHandleConstant(vtkm::FloatDefault{ 1 }, input.GetNumberOfPoints()),
+      vtkm::filter::FieldMetadata{}, // Ignored
+      policy);
+  }
+  else
+  {
+    return this->FilterField::PrepareForExecution(input, policy);
+  }
+}
+
 template <typename T, typename StorageType, typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   const vtkm::cont::DataSet& dataSet,
@@ -141,15 +160,7 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   vtkm::cont::ArrayHandle<T> density;
   vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<T>(0, uniform.GetNumberOfCells()), density);
 
-  if (this->ComputeNumberDensity)
-  {
-    auto ones = vtkm::cont::make_ArrayHandleConstant(T{ 1 }, coords.GetNumberOfValues());
-    this->Invoke(vtkm::worklet::NGPWorklet{}, coords, ones, locator, density);
-  }
-  else
-  {
-    this->Invoke(vtkm::worklet::NGPWorklet{}, coords, field, locator, density);
-  }
+  this->Invoke(vtkm::worklet::NGPWorklet{}, coords, field, locator, density);
 
   if (DivideByVolume)
   {

@@ -47,6 +47,10 @@ public:
 
   ParticleDensityNearestGridPoint(const vtkm::Id3& dimension, const vtkm::Bounds& bounds);
 
+  template <typename DerivedPolicy>
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
+                                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
+
   template <typename T, typename StorageType, typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
