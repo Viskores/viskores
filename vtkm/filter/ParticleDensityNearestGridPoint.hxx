@@ -67,7 +67,7 @@ public:
   template <typename T>
   VTKM_EXEC void operator()(T& value) const
   {
-    value = value / Volume;
+    value = static_cast<T>(value / Volume);
   }
 
 private:
