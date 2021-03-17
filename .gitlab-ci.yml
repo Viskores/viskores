@@ -183,6 +183,15 @@ stages:
       - build/*.png
       - build/*.pnm
       - build/*.pmm
+      - build/*/*.png
+      - build/*/*.pnm
+      - build/*/*.pmm
+      - build/*/*/*.png
+      - build/*/*/*.pnm
+      - build/*/*/*.pmm
+      - build/*/*/*/*.png
+      - build/*/*/*/*.pnm
+      - build/*/*/*/*.pmm
 
 .cmake_memcheck_linux: &cmake_memcheck_linux
   stage: test

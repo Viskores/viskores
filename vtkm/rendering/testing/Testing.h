@@ -13,11 +13,13 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Error.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/ImageDifference.h>
 #include <vtkm/internal/Configure.h>
+#include <vtkm/io/FileUtils.h>
 #include <vtkm/io/ImageUtils.h>
 
 #include <fstream>
@@ -56,8 +58,8 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
 
   view->Paint();
   view->GetCanvas().RefreshColorBuffer();
-  const std::string testImageName =
-    vtkm::cont::testing::Testing::WriteDirPath("test-" + fileNames[0]);
+  const std::string testImageName = vtkm::cont::testing::Testing::WriteDirPath(
+    vtkm::io::PrefixStringToFilename(fileNames[0], "test-"));
   vtkm::io::WriteImageFile(view->GetCanvas().GetDataSet(), testImageName, "color");
 
   for (const auto& fileName : fileNames)
@@ -79,7 +81,8 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
       const std::string outputImagePath = vtkm::cont::testing::Testing::WriteDirPath(fileName);
       vtkm::io::WriteImageFile(view->GetCanvas().GetDataSet(), outputImagePath, "color");
 
-      imageResult.PushMessage("File '" + fileName + "' did not exist but has been generated");
+      imageResult.PushMessage("File '" + fileName +
+                              "' did not exist but has been generated here: " + outputImagePath);
       testResults.PushMessage(imageResult.GetMergedMessage());
       continue;
     }
@@ -110,7 +113,8 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
 
     if (writeDiff && resultDataSet.HasPointField("image-diff"))
     {
-      const std::string diffName = vtkm::cont::testing::Testing::WriteDirPath("diff-" + fileName);
+      const std::string diffName = vtkm::cont::testing::Testing::WriteDirPath(
+        vtkm::io::PrefixStringToFilename(fileName, "diff-"));
       vtkm::io::WriteImageFile(resultDataSet, diffName, "image-diff");
     }
 

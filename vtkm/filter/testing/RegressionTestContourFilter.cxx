@@ -51,7 +51,11 @@ void TestContourFilterWedge()
   result.PrintSummary(std::cout);
 
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "gyroid", colorTable, "contour-wedge.png", static_cast<vtkm::FloatDefault>(0.08));
+    result,
+    "gyroid",
+    colorTable,
+    "filter/contour-wedge.png",
+    static_cast<vtkm::FloatDefault>(0.08));
 }
 
 void TestContourFilterUniform()
@@ -81,7 +85,7 @@ void TestContourFilterUniform()
 
   //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "contour-uniform.png");
+    result, "pointvar", colorTable, "filter/contour-uniform.png");
 }
 
 void TestContourFilterTangle()
@@ -109,7 +113,7 @@ void TestContourFilterTangle()
 
   //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "nodevar", colorTable, "contour-tangle.png");
+    result, "nodevar", colorTable, "filter/contour-tangle.png");
 }
 
 void TestContourFilter()
