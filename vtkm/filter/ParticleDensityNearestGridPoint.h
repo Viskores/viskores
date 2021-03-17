@@ -23,6 +23,13 @@ namespace filter
 /// such as charge). The filter estimates density by imposing a regular grid as
 /// specified in the constructor and summing the mass of particles within each cell
 /// in the grid.
+/// The mass of particles is established by setting the active field (using SetActiveField).
+/// Note that the "mass" can actually be another quantity. For example, you could use
+/// electrical charge in place of mass to compute the charge density.
+/// Once the sum of the mass is computed for each grid cell, the mass is divided by the
+/// volume of the cell. Thus, the density will be computed as the units of the mass field
+/// per the cubic units of the coordinate system. If you just want a sum of the mass in each
+/// cell, turn off the DivideByVolume feature of this filter.
 
 // We only need the CoordinateSystem and scalar fields of the input dataset thus a FilterField
 class ParticleDensityNearestGridPoint
