@@ -35,8 +35,9 @@ void TestNGP()
   auto dataSet = vtkm::cont::DataSetBuilderExplicit::Create(
     positions, vtkm::CellShapeTagVertex{}, 1, connectivity);
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> mass;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xd1ce), mass);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> mass;
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(N, 0xd1ce),
+                        mass);
   dataSet.AddCellField("mass", mass);
 
   auto cellDims = vtkm::Id3{ 3, 3, 3 };
@@ -46,13 +47,23 @@ void TestNGP()
   filter.SetActiveField("mass");
   auto density = filter.Execute(dataSet);
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> field;
-  density.GetCellField("density").GetData().AsArrayHandle<vtkm::Float32>(field);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> field;
+  density.GetCellField("density").GetData().AsArrayHandle<vtkm::FloatDefault>(field);
 
   auto mass_result = vtkm::worklet::DescriptiveStatistics::Run(mass);
   auto density_result = vtkm::worklet::DescriptiveStatistics::Run(field);
   // Unfortunately, floating point atomics suffer from precision error more than everything else.
-  VTKM_TEST_ASSERT(test_equal(density_result.Sum(), mass_result.Sum(), 10));
+  VTKM_TEST_ASSERT(test_equal(density_result.Sum(), mass_result.Sum() * 27.0, 0.1));
+
+  filter.SetComputeNumberDensity(true);
+  filter.SetDivideByVolume(false);
+  auto counts = filter.Execute(dataSet);
+
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> field1;
+  counts.GetCellField("density").GetData().AsArrayHandle<vtkm::FloatDefault>(field1);
+
+  auto counts_result = vtkm::worklet::DescriptiveStatistics::Run(field1);
+  VTKM_TEST_ASSERT(test_equal(counts_result.Sum(), mass_result.N(), 0.1));
 }
 
 void TestCIC()

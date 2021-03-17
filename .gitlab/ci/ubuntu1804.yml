@@ -16,7 +16,7 @@ build:ubuntu1804_gcc9:
     CC: "gcc-9"
     CXX: "g++-9"
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "tbb+openmp+mpi+shared+hdf5"
+    VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5"
 
 test:ubuntu1804_gcc9:
   tags:
@@ -56,7 +56,7 @@ build:ubuntu1804_gcc7:
     CC: "gcc-7"
     CXX: "g++-7"
     CUDAHOSTCXX: "g++-7"
-    VTKM_SETTINGS: "cuda+turing+mpi+64bit_floats+no_virtual"
+    VTKM_SETTINGS: "benchmarks+cuda+turing+mpi+64bit_floats+no_virtual"
 
 test:ubuntu1804_gcc7:
   tags:
@@ -202,7 +202,7 @@ build:ubuntu1804_kokkos:
   variables:
     CMAKE_GENERATOR: "Ninja"
     CMAKE_BUILD_TYPE: Release
-    VTKM_SETTINGS: "kokkos+turing+static+64bit_floats"
+    VTKM_SETTINGS: "benchmarks+kokkos+turing+static+64bit_floats"
 
 test:ubuntu1804_kokkos:
   tags:

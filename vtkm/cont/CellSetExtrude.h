@@ -100,6 +100,11 @@ public:
 
   bool GetIsPeriodic() const { return this->IsPeriodic; }
 
+  template <vtkm::IdComponent NumIndices>
+  VTKM_CONT void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id, NumIndices>& ids) const;
+
+  VTKM_CONT void GetIndices(vtkm::Id index, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const;
+
   template <typename VisitTopology, typename IncidentTopology>
   using ExecConnectivityType =
     typename detail::CellSetExtrudeConnectivityChooser<VisitTopology,
