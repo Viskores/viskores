@@ -19,7 +19,9 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/internal/brigand.hpp>
+#include <vtkm/internal/Assume.h>
+
+#include <vtkmstd/is_trivial.h>
 
 #include <type_traits>
 
@@ -45,2136 +47,2845 @@ struct VariantDummyReturn<void>
   VTK_M_DEVICE static inline void F() noexcept {}
 };
 
-template <typename ReturnType, typename Functor, typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(brigand::list<>,
-                                                      vtkm::IdComponent,
-                                                      Functor&&,
-                                                      const void*,
-                                                      Args&&...) noexcept
-{
-  // If we are here, it means we failed to find the appropriate type in a variant
-  VTKM_ASSERT(false && "Internal error, bad Variant state.");
-  return VariantDummyReturn<ReturnType>::F();
-}
-
 // clang-format off
 
-template <typename ReturnType,
-          typename T0,
-          typename Functor,
+// --------------------------------------------------------------------------------
+// Helper classes to determine if all Variant types are trivial.
+template <typename... Ts>
+struct AllTriviallyCopyable;
+
+template <typename T0>
+struct AllTriviallyCopyable<T0>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  true)> { };
+template <typename T0, typename T1>
+struct AllTriviallyCopyable<T0, T1>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2>
+struct AllTriviallyCopyable<T0, T1, T2>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3>
+struct AllTriviallyCopyable<T0, T1, T2, T3>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  vtkmstd::is_trivially_copyable<T11>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  vtkmstd::is_trivially_copyable<T11>::value &&
+                                  vtkmstd::is_trivially_copyable<T12>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  vtkmstd::is_trivially_copyable<T11>::value &&
+                                  vtkmstd::is_trivially_copyable<T12>::value &&
+                                  vtkmstd::is_trivially_copyable<T13>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  vtkmstd::is_trivially_copyable<T11>::value &&
+                                  vtkmstd::is_trivially_copyable<T12>::value &&
+                                  vtkmstd::is_trivially_copyable<T13>::value &&
+                                  vtkmstd::is_trivially_copyable<T14>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  vtkmstd::is_trivially_copyable<T11>::value &&
+                                  vtkmstd::is_trivially_copyable<T12>::value &&
+                                  vtkmstd::is_trivially_copyable<T13>::value &&
+                                  vtkmstd::is_trivially_copyable<T14>::value &&
+                                  vtkmstd::is_trivially_copyable<T15>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  vtkmstd::is_trivially_copyable<T11>::value &&
+                                  vtkmstd::is_trivially_copyable<T12>::value &&
+                                  vtkmstd::is_trivially_copyable<T13>::value &&
+                                  vtkmstd::is_trivially_copyable<T14>::value &&
+                                  vtkmstd::is_trivially_copyable<T15>::value &&
+                                  vtkmstd::is_trivially_copyable<T16>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  vtkmstd::is_trivially_copyable<T11>::value &&
+                                  vtkmstd::is_trivially_copyable<T12>::value &&
+                                  vtkmstd::is_trivially_copyable<T13>::value &&
+                                  vtkmstd::is_trivially_copyable<T14>::value &&
+                                  vtkmstd::is_trivially_copyable<T15>::value &&
+                                  vtkmstd::is_trivially_copyable<T16>::value &&
+                                  vtkmstd::is_trivially_copyable<T17>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  vtkmstd::is_trivially_copyable<T11>::value &&
+                                  vtkmstd::is_trivially_copyable<T12>::value &&
+                                  vtkmstd::is_trivially_copyable<T13>::value &&
+                                  vtkmstd::is_trivially_copyable<T14>::value &&
+                                  vtkmstd::is_trivially_copyable<T15>::value &&
+                                  vtkmstd::is_trivially_copyable<T16>::value &&
+                                  vtkmstd::is_trivially_copyable<T17>::value &&
+                                  vtkmstd::is_trivially_copyable<T18>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  vtkmstd::is_trivially_copyable<T11>::value &&
+                                  vtkmstd::is_trivially_copyable<T12>::value &&
+                                  vtkmstd::is_trivially_copyable<T13>::value &&
+                                  vtkmstd::is_trivially_copyable<T14>::value &&
+                                  vtkmstd::is_trivially_copyable<T15>::value &&
+                                  vtkmstd::is_trivially_copyable<T16>::value &&
+                                  vtkmstd::is_trivially_copyable<T17>::value &&
+                                  vtkmstd::is_trivially_copyable<T18>::value &&
+                                  vtkmstd::is_trivially_copyable<T19>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+                                  vtkmstd::is_trivially_copyable<T1>::value &&
+                                  vtkmstd::is_trivially_copyable<T2>::value &&
+                                  vtkmstd::is_trivially_copyable<T3>::value &&
+                                  vtkmstd::is_trivially_copyable<T4>::value &&
+                                  vtkmstd::is_trivially_copyable<T5>::value &&
+                                  vtkmstd::is_trivially_copyable<T6>::value &&
+                                  vtkmstd::is_trivially_copyable<T7>::value &&
+                                  vtkmstd::is_trivially_copyable<T8>::value &&
+                                  vtkmstd::is_trivially_copyable<T9>::value &&
+                                  vtkmstd::is_trivially_copyable<T10>::value &&
+                                  vtkmstd::is_trivially_copyable<T11>::value &&
+                                  vtkmstd::is_trivially_copyable<T12>::value &&
+                                  vtkmstd::is_trivially_copyable<T13>::value &&
+                                  vtkmstd::is_trivially_copyable<T14>::value &&
+                                  vtkmstd::is_trivially_copyable<T15>::value &&
+                                  vtkmstd::is_trivially_copyable<T16>::value &&
+                                  vtkmstd::is_trivially_copyable<T17>::value &&
+                                  vtkmstd::is_trivially_copyable<T18>::value &&
+                                  vtkmstd::is_trivially_copyable<T19>::value &&
+                                  AllTriviallyCopyable<T20, Ts...>::value)> { };
+
+template <typename... Ts>
+struct AllTriviallyConstructible;
+
+template <typename T0>
+struct AllTriviallyConstructible<T0>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  true)> { };
+template <typename T0, typename T1>
+struct AllTriviallyConstructible<T0, T1>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2>
+struct AllTriviallyConstructible<T0, T1, T2>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3>
+struct AllTriviallyConstructible<T0, T1, T2, T3>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  vtkmstd::is_trivially_constructible<T11>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  vtkmstd::is_trivially_constructible<T11>::value &&
+                                  vtkmstd::is_trivially_constructible<T12>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  vtkmstd::is_trivially_constructible<T11>::value &&
+                                  vtkmstd::is_trivially_constructible<T12>::value &&
+                                  vtkmstd::is_trivially_constructible<T13>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  vtkmstd::is_trivially_constructible<T11>::value &&
+                                  vtkmstd::is_trivially_constructible<T12>::value &&
+                                  vtkmstd::is_trivially_constructible<T13>::value &&
+                                  vtkmstd::is_trivially_constructible<T14>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  vtkmstd::is_trivially_constructible<T11>::value &&
+                                  vtkmstd::is_trivially_constructible<T12>::value &&
+                                  vtkmstd::is_trivially_constructible<T13>::value &&
+                                  vtkmstd::is_trivially_constructible<T14>::value &&
+                                  vtkmstd::is_trivially_constructible<T15>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  vtkmstd::is_trivially_constructible<T11>::value &&
+                                  vtkmstd::is_trivially_constructible<T12>::value &&
+                                  vtkmstd::is_trivially_constructible<T13>::value &&
+                                  vtkmstd::is_trivially_constructible<T14>::value &&
+                                  vtkmstd::is_trivially_constructible<T15>::value &&
+                                  vtkmstd::is_trivially_constructible<T16>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  vtkmstd::is_trivially_constructible<T11>::value &&
+                                  vtkmstd::is_trivially_constructible<T12>::value &&
+                                  vtkmstd::is_trivially_constructible<T13>::value &&
+                                  vtkmstd::is_trivially_constructible<T14>::value &&
+                                  vtkmstd::is_trivially_constructible<T15>::value &&
+                                  vtkmstd::is_trivially_constructible<T16>::value &&
+                                  vtkmstd::is_trivially_constructible<T17>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  vtkmstd::is_trivially_constructible<T11>::value &&
+                                  vtkmstd::is_trivially_constructible<T12>::value &&
+                                  vtkmstd::is_trivially_constructible<T13>::value &&
+                                  vtkmstd::is_trivially_constructible<T14>::value &&
+                                  vtkmstd::is_trivially_constructible<T15>::value &&
+                                  vtkmstd::is_trivially_constructible<T16>::value &&
+                                  vtkmstd::is_trivially_constructible<T17>::value &&
+                                  vtkmstd::is_trivially_constructible<T18>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  vtkmstd::is_trivially_constructible<T11>::value &&
+                                  vtkmstd::is_trivially_constructible<T12>::value &&
+                                  vtkmstd::is_trivially_constructible<T13>::value &&
+                                  vtkmstd::is_trivially_constructible<T14>::value &&
+                                  vtkmstd::is_trivially_constructible<T15>::value &&
+                                  vtkmstd::is_trivially_constructible<T16>::value &&
+                                  vtkmstd::is_trivially_constructible<T17>::value &&
+                                  vtkmstd::is_trivially_constructible<T18>::value &&
+                                  vtkmstd::is_trivially_constructible<T19>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+                                  vtkmstd::is_trivially_constructible<T1>::value &&
+                                  vtkmstd::is_trivially_constructible<T2>::value &&
+                                  vtkmstd::is_trivially_constructible<T3>::value &&
+                                  vtkmstd::is_trivially_constructible<T4>::value &&
+                                  vtkmstd::is_trivially_constructible<T5>::value &&
+                                  vtkmstd::is_trivially_constructible<T6>::value &&
+                                  vtkmstd::is_trivially_constructible<T7>::value &&
+                                  vtkmstd::is_trivially_constructible<T8>::value &&
+                                  vtkmstd::is_trivially_constructible<T9>::value &&
+                                  vtkmstd::is_trivially_constructible<T10>::value &&
+                                  vtkmstd::is_trivially_constructible<T11>::value &&
+                                  vtkmstd::is_trivially_constructible<T12>::value &&
+                                  vtkmstd::is_trivially_constructible<T13>::value &&
+                                  vtkmstd::is_trivially_constructible<T14>::value &&
+                                  vtkmstd::is_trivially_constructible<T15>::value &&
+                                  vtkmstd::is_trivially_constructible<T16>::value &&
+                                  vtkmstd::is_trivially_constructible<T17>::value &&
+                                  vtkmstd::is_trivially_constructible<T18>::value &&
+                                  vtkmstd::is_trivially_constructible<T19>::value &&
+                                  AllTriviallyConstructible<T20, Ts...>::value)> { };
+
+template <typename... Ts>
+struct AllTriviallyDestructible;
+
+template <typename T0>
+struct AllTriviallyDestructible<T0>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  true)> { };
+template <typename T0, typename T1>
+struct AllTriviallyDestructible<T0, T1>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2>
+struct AllTriviallyDestructible<T0, T1, T2>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3>
+struct AllTriviallyDestructible<T0, T1, T2, T3>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  vtkmstd::is_trivially_destructible<T11>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  vtkmstd::is_trivially_destructible<T11>::value &&
+                                  vtkmstd::is_trivially_destructible<T12>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  vtkmstd::is_trivially_destructible<T11>::value &&
+                                  vtkmstd::is_trivially_destructible<T12>::value &&
+                                  vtkmstd::is_trivially_destructible<T13>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  vtkmstd::is_trivially_destructible<T11>::value &&
+                                  vtkmstd::is_trivially_destructible<T12>::value &&
+                                  vtkmstd::is_trivially_destructible<T13>::value &&
+                                  vtkmstd::is_trivially_destructible<T14>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  vtkmstd::is_trivially_destructible<T11>::value &&
+                                  vtkmstd::is_trivially_destructible<T12>::value &&
+                                  vtkmstd::is_trivially_destructible<T13>::value &&
+                                  vtkmstd::is_trivially_destructible<T14>::value &&
+                                  vtkmstd::is_trivially_destructible<T15>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  vtkmstd::is_trivially_destructible<T11>::value &&
+                                  vtkmstd::is_trivially_destructible<T12>::value &&
+                                  vtkmstd::is_trivially_destructible<T13>::value &&
+                                  vtkmstd::is_trivially_destructible<T14>::value &&
+                                  vtkmstd::is_trivially_destructible<T15>::value &&
+                                  vtkmstd::is_trivially_destructible<T16>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  vtkmstd::is_trivially_destructible<T11>::value &&
+                                  vtkmstd::is_trivially_destructible<T12>::value &&
+                                  vtkmstd::is_trivially_destructible<T13>::value &&
+                                  vtkmstd::is_trivially_destructible<T14>::value &&
+                                  vtkmstd::is_trivially_destructible<T15>::value &&
+                                  vtkmstd::is_trivially_destructible<T16>::value &&
+                                  vtkmstd::is_trivially_destructible<T17>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  vtkmstd::is_trivially_destructible<T11>::value &&
+                                  vtkmstd::is_trivially_destructible<T12>::value &&
+                                  vtkmstd::is_trivially_destructible<T13>::value &&
+                                  vtkmstd::is_trivially_destructible<T14>::value &&
+                                  vtkmstd::is_trivially_destructible<T15>::value &&
+                                  vtkmstd::is_trivially_destructible<T16>::value &&
+                                  vtkmstd::is_trivially_destructible<T17>::value &&
+                                  vtkmstd::is_trivially_destructible<T18>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  vtkmstd::is_trivially_destructible<T11>::value &&
+                                  vtkmstd::is_trivially_destructible<T12>::value &&
+                                  vtkmstd::is_trivially_destructible<T13>::value &&
+                                  vtkmstd::is_trivially_destructible<T14>::value &&
+                                  vtkmstd::is_trivially_destructible<T15>::value &&
+                                  vtkmstd::is_trivially_destructible<T16>::value &&
+                                  vtkmstd::is_trivially_destructible<T17>::value &&
+                                  vtkmstd::is_trivially_destructible<T18>::value &&
+                                  vtkmstd::is_trivially_destructible<T19>::value &&
+                                  true)> { };
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+                                  vtkmstd::is_trivially_destructible<T1>::value &&
+                                  vtkmstd::is_trivially_destructible<T2>::value &&
+                                  vtkmstd::is_trivially_destructible<T3>::value &&
+                                  vtkmstd::is_trivially_destructible<T4>::value &&
+                                  vtkmstd::is_trivially_destructible<T5>::value &&
+                                  vtkmstd::is_trivially_destructible<T6>::value &&
+                                  vtkmstd::is_trivially_destructible<T7>::value &&
+                                  vtkmstd::is_trivially_destructible<T8>::value &&
+                                  vtkmstd::is_trivially_destructible<T9>::value &&
+                                  vtkmstd::is_trivially_destructible<T10>::value &&
+                                  vtkmstd::is_trivially_destructible<T11>::value &&
+                                  vtkmstd::is_trivially_destructible<T12>::value &&
+                                  vtkmstd::is_trivially_destructible<T13>::value &&
+                                  vtkmstd::is_trivially_destructible<T14>::value &&
+                                  vtkmstd::is_trivially_destructible<T15>::value &&
+                                  vtkmstd::is_trivially_destructible<T16>::value &&
+                                  vtkmstd::is_trivially_destructible<T17>::value &&
+                                  vtkmstd::is_trivially_destructible<T18>::value &&
+                                  vtkmstd::is_trivially_destructible<T19>::value &&
+                                  AllTriviallyDestructible<T20, Ts...>::value)> { };
+
+// --------------------------------------------------------------------------------
+// Union type used inside of Variant
+//
+// You may be asking yourself, why not just use an std::aligned_union rather than a real union
+// type? That was our first implementation, but the problem is that the std::aligned_union
+// reference needs to be recast to the actual type. Typically you would do that with
+// reinterpret_cast. However, doing that leads to undefined behavior. The C++ compiler assumes that
+// 2 pointers of different types point to different memory (even if it is clear that they are set
+// to the same address). That means optimizers can remove code because it "knows" that data in one
+// type cannot affect data in another type. To safely change the type of an std::aligned_union,
+// you really have to do an std::memcpy. This is problematic for types that cannot be trivially
+// copied. Another problem is that we found that device compilers do not optimize the memcpy
+// as well as most CPU compilers. Likely, memcpy is used much less frequently on GPU devices.
+//
+// Part of the trickiness of the union implementation is trying to preserve when the type is
+// trivially constructible and copyable. The trick is that if members of the union are not trivial,
+// then the default constructors are deleted. To get around that, a non-default constructor is
+// added, which we can use to construct the union for non-trivial types. Working with types with
+// non-trivial destructors are particularly trick. Again, if any member of the union has a
+// non-trivial destructor, the destructor is deleted. Unlike a constructor, you cannot just say to
+// use a different destructor. Thus, we have to define our own destructor for the union.
+// Technically, the destructor here does not do anything, but the actual destruction should be
+// handled by the Variant class that contains this VariantUnion. We actually need two separate
+// implementations of our union, one that defines a destructor and one that use the default
+// destructor. If you define your own destructor, you can lose the trivial constructor and trivial
+// copy properties.
+//
+
+// TD = trivially deconstructible
+template <typename... Ts>
+union VariantUnionTD;
+
+// NTD = non-trivially deconstructible
+template <typename... Ts>
+union VariantUnionNTD;
+
+template <typename T0>
+union VariantUnionTD<T0>
+{
+  T0 V0;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0>
+union VariantUnionNTD<T0>
+{
+  T0 V0;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1>
+union VariantUnionTD<T0, T1>
+{
+  T0 V0;
+  T1 V1;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1>
+union VariantUnionNTD<T0, T1>
+{
+  T0 V0;
+  T1 V1;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2>
+union VariantUnionTD<T0, T1, T2>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2>
+union VariantUnionNTD<T0, T1, T2>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3>
+union VariantUnionTD<T0, T1, T2, T3>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3>
+union VariantUnionNTD<T0, T1, T2, T3>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4>
+union VariantUnionTD<T0, T1, T2, T3, T4>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4>
+union VariantUnionNTD<T0, T1, T2, T3, T4>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  T16 V16;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  T16 V16;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  T16 V16;
+  T17 V17;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  T16 V16;
+  T17 V17;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  T16 V16;
+  T17 V17;
+  T18 V18;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  T16 V16;
+  T17 V17;
+  T18 V18;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  T16 V16;
+  T17 V17;
+  T18 V18;
+  T19 V19;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  T16 V16;
+  T17 V17;
+  T18 V18;
+  T19 V19;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+{
+  vtkm::internal::NullType Dummy;
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  T16 V16;
+  T17 V17;
+  T18 V18;
+  T19 V19;
+  VariantUnionTD<T20, Ts...> Remaining;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+{
+  vtkm::internal::NullType Dummy;
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  T8 V8;
+  T9 V9;
+  T10 V10;
+  T11 V11;
+  T12 V12;
+  T13 V13;
+  T14 V14;
+  T15 V15;
+  T16 V16;
+  T17 V17;
+  T18 V18;
+  T19 V19;
+  VariantUnionNTD<T20, Ts...> Remaining;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <bool TrivialConstructor, typename... Ts>
+struct VariantUnionFinder;
+
+template <typename... Ts>
+struct VariantUnionFinder<true, Ts...>
+{
+  using type = VariantUnionTD<Ts...>;
+};
+template <typename... Ts>
+struct VariantUnionFinder<false, Ts...>
+{
+  using type = VariantUnionNTD<Ts...>;
+};
+
+template <typename... Ts>
+using VariantUnion =
+  typename VariantUnionFinder<AllTriviallyDestructible<Ts...>::value, Ts...>::type;
+
+// --------------------------------------------------------------------------------
+// Methods to get values out of the variant union
+template <vtkm::IdComponent I, typename UnionType>
+struct VariantUnionGetImpl;
+
+template <typename UnionType>
+struct VariantUnionGetImpl<0, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V0)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V0;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<1, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V1)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V1;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<2, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V2)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V2;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<3, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V3)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V3;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<4, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V4)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V4;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<5, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V5)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V5;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<6, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V6)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V6;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<7, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V7)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V7;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<8, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V8)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V8;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<9, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V9)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V9;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<10, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V10)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V10;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<11, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V11)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V11;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<12, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V12)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V12;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<13, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V13)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V13;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<14, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V14)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V14;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<15, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V15)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V15;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<16, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V16)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V16;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<17, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V17)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V17;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<18, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V18)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V18;
+  }
+};
+
+template <typename UnionType>
+struct VariantUnionGetImpl<19, UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V19)&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V19;
+  }
+};
+
+
+template <vtkm::IdComponent I, typename UnionType>
+struct VariantUnionGetImpl
+{
+  VTKM_STATIC_ASSERT(I >= 20);
+  using RecursiveGet = VariantUnionGetImpl<I - 20, decltype(std::declval<UnionType>().Remaining)>;
+  using ReturnType = typename RecursiveGet::ReturnType;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return RecursiveGet::Get(storage.Remaining);
+  }
+};
+
+template <vtkm::IdComponent I, typename UnionType>
+VTK_M_DEVICE typename VariantUnionGetImpl<I, UnionType>::ReturnType
+VariantUnionGet(UnionType& storage) noexcept
+{
+  return VariantUnionGetImpl<I, UnionType>::Get(storage);
+}
+
+// --------------------------------------------------------------------------------
+// Internal implementation of CastAndCall for Variant
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 1>,
   vtkm::IdComponent index,
   Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 2>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 3>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 4>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 5>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 6>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 7>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 8>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 9>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 10>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 11>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     case 10:
-      return f(*reinterpret_cast<const T10*>(storage), std::forward<Args>(args)...);
+      return f(storage.V10, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 12>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     case 10:
-      return f(*reinterpret_cast<T10*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
-    case 10:
-      return f(*reinterpret_cast<const T10*>(storage), std::forward<Args>(args)...);
+      return f(storage.V10, std::forward<Args>(args)...);
     case 11:
-      return f(*reinterpret_cast<const T11*>(storage), std::forward<Args>(args)...);
+      return f(storage.V11, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 13>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     case 10:
-      return f(*reinterpret_cast<T10*>(storage), std::forward<Args>(args)...);
+      return f(storage.V10, std::forward<Args>(args)...);
     case 11:
-      return f(*reinterpret_cast<T11*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
-    case 10:
-      return f(*reinterpret_cast<const T10*>(storage), std::forward<Args>(args)...);
-    case 11:
-      return f(*reinterpret_cast<const T11*>(storage), std::forward<Args>(args)...);
+      return f(storage.V11, std::forward<Args>(args)...);
     case 12:
-      return f(*reinterpret_cast<const T12*>(storage), std::forward<Args>(args)...);
+      return f(storage.V12, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 14>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     case 10:
-      return f(*reinterpret_cast<T10*>(storage), std::forward<Args>(args)...);
+      return f(storage.V10, std::forward<Args>(args)...);
     case 11:
-      return f(*reinterpret_cast<T11*>(storage), std::forward<Args>(args)...);
+      return f(storage.V11, std::forward<Args>(args)...);
     case 12:
-      return f(*reinterpret_cast<T12*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
-    case 10:
-      return f(*reinterpret_cast<const T10*>(storage), std::forward<Args>(args)...);
-    case 11:
-      return f(*reinterpret_cast<const T11*>(storage), std::forward<Args>(args)...);
-    case 12:
-      return f(*reinterpret_cast<const T12*>(storage), std::forward<Args>(args)...);
+      return f(storage.V12, std::forward<Args>(args)...);
     case 13:
-      return f(*reinterpret_cast<const T13*>(storage), std::forward<Args>(args)...);
+      return f(storage.V13, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 15>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     case 10:
-      return f(*reinterpret_cast<T10*>(storage), std::forward<Args>(args)...);
+      return f(storage.V10, std::forward<Args>(args)...);
     case 11:
-      return f(*reinterpret_cast<T11*>(storage), std::forward<Args>(args)...);
+      return f(storage.V11, std::forward<Args>(args)...);
     case 12:
-      return f(*reinterpret_cast<T12*>(storage), std::forward<Args>(args)...);
+      return f(storage.V12, std::forward<Args>(args)...);
     case 13:
-      return f(*reinterpret_cast<T13*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
-    case 10:
-      return f(*reinterpret_cast<const T10*>(storage), std::forward<Args>(args)...);
-    case 11:
-      return f(*reinterpret_cast<const T11*>(storage), std::forward<Args>(args)...);
-    case 12:
-      return f(*reinterpret_cast<const T12*>(storage), std::forward<Args>(args)...);
-    case 13:
-      return f(*reinterpret_cast<const T13*>(storage), std::forward<Args>(args)...);
+      return f(storage.V13, std::forward<Args>(args)...);
     case 14:
-      return f(*reinterpret_cast<const T14*>(storage), std::forward<Args>(args)...);
+      return f(storage.V14, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 16>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     case 10:
-      return f(*reinterpret_cast<T10*>(storage), std::forward<Args>(args)...);
+      return f(storage.V10, std::forward<Args>(args)...);
     case 11:
-      return f(*reinterpret_cast<T11*>(storage), std::forward<Args>(args)...);
+      return f(storage.V11, std::forward<Args>(args)...);
     case 12:
-      return f(*reinterpret_cast<T12*>(storage), std::forward<Args>(args)...);
+      return f(storage.V12, std::forward<Args>(args)...);
     case 13:
-      return f(*reinterpret_cast<T13*>(storage), std::forward<Args>(args)...);
+      return f(storage.V13, std::forward<Args>(args)...);
     case 14:
-      return f(*reinterpret_cast<T14*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
-    case 10:
-      return f(*reinterpret_cast<const T10*>(storage), std::forward<Args>(args)...);
-    case 11:
-      return f(*reinterpret_cast<const T11*>(storage), std::forward<Args>(args)...);
-    case 12:
-      return f(*reinterpret_cast<const T12*>(storage), std::forward<Args>(args)...);
-    case 13:
-      return f(*reinterpret_cast<const T13*>(storage), std::forward<Args>(args)...);
-    case 14:
-      return f(*reinterpret_cast<const T14*>(storage), std::forward<Args>(args)...);
+      return f(storage.V14, std::forward<Args>(args)...);
     case 15:
-      return f(*reinterpret_cast<const T15*>(storage), std::forward<Args>(args)...);
+      return f(storage.V15, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 17>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     case 10:
-      return f(*reinterpret_cast<T10*>(storage), std::forward<Args>(args)...);
+      return f(storage.V10, std::forward<Args>(args)...);
     case 11:
-      return f(*reinterpret_cast<T11*>(storage), std::forward<Args>(args)...);
+      return f(storage.V11, std::forward<Args>(args)...);
     case 12:
-      return f(*reinterpret_cast<T12*>(storage), std::forward<Args>(args)...);
+      return f(storage.V12, std::forward<Args>(args)...);
     case 13:
-      return f(*reinterpret_cast<T13*>(storage), std::forward<Args>(args)...);
+      return f(storage.V13, std::forward<Args>(args)...);
     case 14:
-      return f(*reinterpret_cast<T14*>(storage), std::forward<Args>(args)...);
+      return f(storage.V14, std::forward<Args>(args)...);
     case 15:
-      return f(*reinterpret_cast<T15*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename T16,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
-    case 10:
-      return f(*reinterpret_cast<const T10*>(storage), std::forward<Args>(args)...);
-    case 11:
-      return f(*reinterpret_cast<const T11*>(storage), std::forward<Args>(args)...);
-    case 12:
-      return f(*reinterpret_cast<const T12*>(storage), std::forward<Args>(args)...);
-    case 13:
-      return f(*reinterpret_cast<const T13*>(storage), std::forward<Args>(args)...);
-    case 14:
-      return f(*reinterpret_cast<const T14*>(storage), std::forward<Args>(args)...);
-    case 15:
-      return f(*reinterpret_cast<const T15*>(storage), std::forward<Args>(args)...);
+      return f(storage.V15, std::forward<Args>(args)...);
     case 16:
-      return f(*reinterpret_cast<const T16*>(storage), std::forward<Args>(args)...);
+      return f(storage.V16, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename T16,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 18>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     case 10:
-      return f(*reinterpret_cast<T10*>(storage), std::forward<Args>(args)...);
+      return f(storage.V10, std::forward<Args>(args)...);
     case 11:
-      return f(*reinterpret_cast<T11*>(storage), std::forward<Args>(args)...);
+      return f(storage.V11, std::forward<Args>(args)...);
     case 12:
-      return f(*reinterpret_cast<T12*>(storage), std::forward<Args>(args)...);
+      return f(storage.V12, std::forward<Args>(args)...);
     case 13:
-      return f(*reinterpret_cast<T13*>(storage), std::forward<Args>(args)...);
+      return f(storage.V13, std::forward<Args>(args)...);
     case 14:
-      return f(*reinterpret_cast<T14*>(storage), std::forward<Args>(args)...);
+      return f(storage.V14, std::forward<Args>(args)...);
     case 15:
-      return f(*reinterpret_cast<T15*>(storage), std::forward<Args>(args)...);
+      return f(storage.V15, std::forward<Args>(args)...);
     case 16:
-      return f(*reinterpret_cast<T16*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename T16,
-          typename T17,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
-    case 10:
-      return f(*reinterpret_cast<const T10*>(storage), std::forward<Args>(args)...);
-    case 11:
-      return f(*reinterpret_cast<const T11*>(storage), std::forward<Args>(args)...);
-    case 12:
-      return f(*reinterpret_cast<const T12*>(storage), std::forward<Args>(args)...);
-    case 13:
-      return f(*reinterpret_cast<const T13*>(storage), std::forward<Args>(args)...);
-    case 14:
-      return f(*reinterpret_cast<const T14*>(storage), std::forward<Args>(args)...);
-    case 15:
-      return f(*reinterpret_cast<const T15*>(storage), std::forward<Args>(args)...);
-    case 16:
-      return f(*reinterpret_cast<const T16*>(storage), std::forward<Args>(args)...);
+      return f(storage.V16, std::forward<Args>(args)...);
     case 17:
-      return f(*reinterpret_cast<const T17*>(storage), std::forward<Args>(args)...);
+      return f(storage.V17, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename T16,
-          typename T17,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 19>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     case 10:
-      return f(*reinterpret_cast<T10*>(storage), std::forward<Args>(args)...);
+      return f(storage.V10, std::forward<Args>(args)...);
     case 11:
-      return f(*reinterpret_cast<T11*>(storage), std::forward<Args>(args)...);
+      return f(storage.V11, std::forward<Args>(args)...);
     case 12:
-      return f(*reinterpret_cast<T12*>(storage), std::forward<Args>(args)...);
+      return f(storage.V12, std::forward<Args>(args)...);
     case 13:
-      return f(*reinterpret_cast<T13*>(storage), std::forward<Args>(args)...);
+      return f(storage.V13, std::forward<Args>(args)...);
     case 14:
-      return f(*reinterpret_cast<T14*>(storage), std::forward<Args>(args)...);
+      return f(storage.V14, std::forward<Args>(args)...);
     case 15:
-      return f(*reinterpret_cast<T15*>(storage), std::forward<Args>(args)...);
+      return f(storage.V15, std::forward<Args>(args)...);
     case 16:
-      return f(*reinterpret_cast<T16*>(storage), std::forward<Args>(args)...);
+      return f(storage.V16, std::forward<Args>(args)...);
     case 17:
-      return f(*reinterpret_cast<T17*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename T16,
-          typename T17,
-          typename T18,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
-    case 10:
-      return f(*reinterpret_cast<const T10*>(storage), std::forward<Args>(args)...);
-    case 11:
-      return f(*reinterpret_cast<const T11*>(storage), std::forward<Args>(args)...);
-    case 12:
-      return f(*reinterpret_cast<const T12*>(storage), std::forward<Args>(args)...);
-    case 13:
-      return f(*reinterpret_cast<const T13*>(storage), std::forward<Args>(args)...);
-    case 14:
-      return f(*reinterpret_cast<const T14*>(storage), std::forward<Args>(args)...);
-    case 15:
-      return f(*reinterpret_cast<const T15*>(storage), std::forward<Args>(args)...);
-    case 16:
-      return f(*reinterpret_cast<const T16*>(storage), std::forward<Args>(args)...);
-    case 17:
-      return f(*reinterpret_cast<const T17*>(storage), std::forward<Args>(args)...);
+      return f(storage.V17, std::forward<Args>(args)...);
     case 18:
-      return f(*reinterpret_cast<const T18*>(storage), std::forward<Args>(args)...);
+      return f(storage.V18, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename T16,
-          typename T17,
-          typename T18,
-          typename Functor,
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, 20>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
     case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
+      return f(storage.V0, std::forward<Args>(args)...);
     case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
+      return f(storage.V1, std::forward<Args>(args)...);
     case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
+      return f(storage.V2, std::forward<Args>(args)...);
     case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
+      return f(storage.V3, std::forward<Args>(args)...);
     case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
+      return f(storage.V4, std::forward<Args>(args)...);
     case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
+      return f(storage.V5, std::forward<Args>(args)...);
     case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
+      return f(storage.V6, std::forward<Args>(args)...);
     case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
+      return f(storage.V7, std::forward<Args>(args)...);
     case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
+      return f(storage.V8, std::forward<Args>(args)...);
     case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
+      return f(storage.V9, std::forward<Args>(args)...);
     case 10:
-      return f(*reinterpret_cast<T10*>(storage), std::forward<Args>(args)...);
+      return f(storage.V10, std::forward<Args>(args)...);
     case 11:
-      return f(*reinterpret_cast<T11*>(storage), std::forward<Args>(args)...);
+      return f(storage.V11, std::forward<Args>(args)...);
     case 12:
-      return f(*reinterpret_cast<T12*>(storage), std::forward<Args>(args)...);
+      return f(storage.V12, std::forward<Args>(args)...);
     case 13:
-      return f(*reinterpret_cast<T13*>(storage), std::forward<Args>(args)...);
+      return f(storage.V13, std::forward<Args>(args)...);
     case 14:
-      return f(*reinterpret_cast<T14*>(storage), std::forward<Args>(args)...);
+      return f(storage.V14, std::forward<Args>(args)...);
     case 15:
-      return f(*reinterpret_cast<T15*>(storage), std::forward<Args>(args)...);
+      return f(storage.V15, std::forward<Args>(args)...);
     case 16:
-      return f(*reinterpret_cast<T16*>(storage), std::forward<Args>(args)...);
+      return f(storage.V16, std::forward<Args>(args)...);
     case 17:
-      return f(*reinterpret_cast<T17*>(storage), std::forward<Args>(args)...);
+      return f(storage.V17, std::forward<Args>(args)...);
     case 18:
-      return f(*reinterpret_cast<T18*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename T16,
-          typename T17,
-          typename T18,
-          typename T19,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<const T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<const T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<const T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<const T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<const T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<const T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<const T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<const T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<const T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<const T9*>(storage), std::forward<Args>(args)...);
-    case 10:
-      return f(*reinterpret_cast<const T10*>(storage), std::forward<Args>(args)...);
-    case 11:
-      return f(*reinterpret_cast<const T11*>(storage), std::forward<Args>(args)...);
-    case 12:
-      return f(*reinterpret_cast<const T12*>(storage), std::forward<Args>(args)...);
-    case 13:
-      return f(*reinterpret_cast<const T13*>(storage), std::forward<Args>(args)...);
-    case 14:
-      return f(*reinterpret_cast<const T14*>(storage), std::forward<Args>(args)...);
-    case 15:
-      return f(*reinterpret_cast<const T15*>(storage), std::forward<Args>(args)...);
-    case 16:
-      return f(*reinterpret_cast<const T16*>(storage), std::forward<Args>(args)...);
-    case 17:
-      return f(*reinterpret_cast<const T17*>(storage), std::forward<Args>(args)...);
-    case 18:
-      return f(*reinterpret_cast<const T18*>(storage), std::forward<Args>(args)...);
+      return f(storage.V18, std::forward<Args>(args)...);
     case 19:
-      return f(*reinterpret_cast<const T19*>(storage), std::forward<Args>(args)...);
+      return f(storage.V19, std::forward<Args>(args)...);
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename T16,
-          typename T17,
-          typename T18,
-          typename T19,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  switch (index)
-  {
-    case 0:
-      return f(*reinterpret_cast<T0*>(storage), std::forward<Args>(args)...);
-    case 1:
-      return f(*reinterpret_cast<T1*>(storage), std::forward<Args>(args)...);
-    case 2:
-      return f(*reinterpret_cast<T2*>(storage), std::forward<Args>(args)...);
-    case 3:
-      return f(*reinterpret_cast<T3*>(storage), std::forward<Args>(args)...);
-    case 4:
-      return f(*reinterpret_cast<T4*>(storage), std::forward<Args>(args)...);
-    case 5:
-      return f(*reinterpret_cast<T5*>(storage), std::forward<Args>(args)...);
-    case 6:
-      return f(*reinterpret_cast<T6*>(storage), std::forward<Args>(args)...);
-    case 7:
-      return f(*reinterpret_cast<T7*>(storage), std::forward<Args>(args)...);
-    case 8:
-      return f(*reinterpret_cast<T8*>(storage), std::forward<Args>(args)...);
-    case 9:
-      return f(*reinterpret_cast<T9*>(storage), std::forward<Args>(args)...);
-    case 10:
-      return f(*reinterpret_cast<T10*>(storage), std::forward<Args>(args)...);
-    case 11:
-      return f(*reinterpret_cast<T11*>(storage), std::forward<Args>(args)...);
-    case 12:
-      return f(*reinterpret_cast<T12*>(storage), std::forward<Args>(args)...);
-    case 13:
-      return f(*reinterpret_cast<T13*>(storage), std::forward<Args>(args)...);
-    case 14:
-      return f(*reinterpret_cast<T14*>(storage), std::forward<Args>(args)...);
-    case 15:
-      return f(*reinterpret_cast<T15*>(storage), std::forward<Args>(args)...);
-    case 16:
-      return f(*reinterpret_cast<T16*>(storage), std::forward<Args>(args)...);
-    case 17:
-      return f(*reinterpret_cast<T17*>(storage), std::forward<Args>(args)...);
-    case 18:
-      return f(*reinterpret_cast<T18*>(storage), std::forward<Args>(args)...);
-    case 19:
-      return f(*reinterpret_cast<T19*>(storage), std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
 //clang-format on
 
 // Recurse for cases where Variant has more than 20 types
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename T16,
-          typename T17,
-          typename T18,
-          typename T19,
-          typename T20,
-          typename... RemainingT,
+template <vtkm::IdComponent N,
           typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, RemainingT...>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, N>,
   vtkm::IdComponent index,
   Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
-  if (index < 20)
+  switch (index)
   {
-    return VariantCastAndCallImpl<ReturnType>(
-      brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>{},
-      index,
-      f,
-      storage,
-      args...);
-  }
-  else
-  {
-    return VariantCastAndCallImpl<ReturnType>(
-      brigand::list<T20, RemainingT...>{}, index - 20, f, storage, args...);
-  }
-}
-
-template <typename ReturnType,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename T12,
-          typename T13,
-          typename T14,
-          typename T15,
-          typename T16,
-          typename T17,
-          typename T18,
-          typename T19,
-          typename T20,
-          typename... RemainingT,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, RemainingT...>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  if (index < 20)
-  {
-    return VariantCastAndCallImpl<ReturnType>(
-      brigand::list<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>{},
-      index,
-      f,
-      storage,
-      args...);
-  }
-  else
-  {
-    return VariantCastAndCallImpl<ReturnType>(
-      brigand::list<T20, RemainingT...>{}, index - 20, f, storage, args...);
+    case 0:
+      return f(storage.V0, std::forward<Args>(args)...);
+    case 1:
+      return f(storage.V1, std::forward<Args>(args)...);
+    case 2:
+      return f(storage.V2, std::forward<Args>(args)...);
+    case 3:
+      return f(storage.V3, std::forward<Args>(args)...);
+    case 4:
+      return f(storage.V4, std::forward<Args>(args)...);
+    case 5:
+      return f(storage.V5, std::forward<Args>(args)...);
+    case 6:
+      return f(storage.V6, std::forward<Args>(args)...);
+    case 7:
+      return f(storage.V7, std::forward<Args>(args)...);
+    case 8:
+      return f(storage.V8, std::forward<Args>(args)...);
+    case 9:
+      return f(storage.V9, std::forward<Args>(args)...);
+    case 10:
+      return f(storage.V10, std::forward<Args>(args)...);
+    case 11:
+      return f(storage.V11, std::forward<Args>(args)...);
+    case 12:
+      return f(storage.V12, std::forward<Args>(args)...);
+    case 13:
+      return f(storage.V13, std::forward<Args>(args)...);
+    case 14:
+      return f(storage.V14, std::forward<Args>(args)...);
+    case 15:
+      return f(storage.V15, std::forward<Args>(args)...);
+    case 16:
+      return f(storage.V16, std::forward<Args>(args)...);
+    case 17:
+      return f(storage.V17, std::forward<Args>(args)...);
+    case 18:
+      return f(storage.V18, std::forward<Args>(args)...);
+    case 19:
+      return f(storage.V19, std::forward<Args>(args)...);
+    default:
+      return VariantCastAndCallImpl(std::integral_constant<vtkm::IdComponent, N - 20>{},
+                                    index - 20,
+                                    std::forward<Functor>(f),
+                                    storage.Remaining,
+                                    std::forward<Args>(args)...);
   }
 }
 

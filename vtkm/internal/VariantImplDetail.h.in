@@ -31,7 +31,9 @@ $# Ignore the following comment. It is meant for the generated file.
 
 #include <vtkm/Types.h>
 
-#include <vtkm/internal/brigand.hpp>
+#include <vtkm/internal/Assume.h>
+
+#include <vtkmstd/is_trivial.h>
 
 #include <type_traits>
 
@@ -46,9 +48,17 @@ def type_list(num_params):
   for param in range(1, num_params + 1):
     result += ', T%d' % param
   return result
+
+def typename_list(num_params):
+  if num_params < 0:
+    return ''
+  result = 'typename T0'
+  for param in range(1, num_params + 1):
+    result += ', typename T%d' % param
+  return result
 )\
 $#
-$extend(type_list)\
+$extend(type_list, typename_list)\
 
 namespace vtkm
 {
@@ -70,70 +80,234 @@ struct VariantDummyReturn<void>
   VTK_M_DEVICE static inline void F() noexcept {}
 };
 
-template <typename ReturnType, typename Functor, typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(brigand::list<>,
-                                                      vtkm::IdComponent,
-                                                      Functor&&,
-                                                      const void*,
-                                                      Args&&...) noexcept
-{
-  // If we are here, it means we failed to find the appropriate type in a variant
-  VTKM_ASSERT(false && "Internal error, bad Variant state.");
-  return VariantDummyReturn<ReturnType>::F();
-}
-
 // clang-format off
 
-$for(num_params in range(0, max_expanded))\
-template <typename ReturnType,
-$for(param_index in range(0, num_params + 1))\
-          typename T$(param_index),
+// --------------------------------------------------------------------------------
+// Helper classes to determine if all Variant types are trivial.
+template <typename... Ts>
+struct AllTriviallyCopyable;
+
+$for(num_params in range(max_expanded))\
+template <$typename_list(num_params)>
+struct AllTriviallyCopyable<$type_list(num_params)>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+$for(param_index in range(1, num_params + 1))\
+                                  vtkmstd::is_trivially_copyable<T$(param_index)>::value &&
 $endfor\
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<$type_list(num_params)>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+                                  true)> { };
+$endfor\
+template <$typename_list(max_expanded), typename... Ts>
+struct AllTriviallyCopyable<$type_list(max_expanded), Ts...>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
+$for(param_index in range(1, max_expanded))\
+                                  vtkmstd::is_trivially_copyable<T$(param_index)>::value &&
+$endfor\
+                                  AllTriviallyCopyable<T$(max_expanded), Ts...>::value)> { };
+
+template <typename... Ts>
+struct AllTriviallyConstructible;
+
+$for(num_params in range(max_expanded))\
+template <$typename_list(num_params)>
+struct AllTriviallyConstructible<$type_list(num_params)>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+$for(param_index in range(1, num_params + 1))\
+                                  vtkmstd::is_trivially_constructible<T$(param_index)>::value &&
+$endfor\
+                                  true)> { };
+$endfor\
+template <$typename_list(max_expanded), typename... Ts>
+struct AllTriviallyConstructible<$type_list(max_expanded), Ts...>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
+$for(param_index in range(1, max_expanded))\
+                                  vtkmstd::is_trivially_constructible<T$(param_index)>::value &&
+$endfor\
+                                  AllTriviallyConstructible<T$(max_expanded), Ts...>::value)> { };
+
+template <typename... Ts>
+struct AllTriviallyDestructible;
+
+$for(num_params in range(max_expanded))\
+template <$typename_list(num_params)>
+struct AllTriviallyDestructible<$type_list(num_params)>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+$for(param_index in range(1, num_params + 1))\
+                                  vtkmstd::is_trivially_destructible<T$(param_index)>::value &&
+$endfor\
+                                  true)> { };
+$endfor\
+template <$typename_list(max_expanded), typename... Ts>
+struct AllTriviallyDestructible<$type_list(max_expanded), Ts...>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
+$for(param_index in range(1, max_expanded))\
+                                  vtkmstd::is_trivially_destructible<T$(param_index)>::value &&
+$endfor\
+                                  AllTriviallyDestructible<T$(max_expanded), Ts...>::value)> { };
+
+// --------------------------------------------------------------------------------
+// Union type used inside of Variant
+//
+// You may be asking yourself, why not just use an std::aligned_union rather than a real union
+// type? That was our first implementation, but the problem is that the std::aligned_union
+// reference needs to be recast to the actual type. Typically you would do that with
+// reinterpret_cast. However, doing that leads to undefined behavior. The C++ compiler assumes that
+// 2 pointers of different types point to different memory (even if it is clear that they are set
+// to the same address). That means optimizers can remove code because it "knows" that data in one
+// type cannot affect data in another type. To safely change the type of an std::aligned_union,
+// you really have to do an std::memcpy. This is problematic for types that cannot be trivially
+// copied. Another problem is that we found that device compilers do not optimize the memcpy
+// as well as most CPU compilers. Likely, memcpy is used much less frequently on GPU devices.
+//
+// Part of the trickiness of the union implementation is trying to preserve when the type is
+// trivially constructible and copyable. The trick is that if members of the union are not trivial,
+// then the default constructors are deleted. To get around that, a non-default constructor is
+// added, which we can use to construct the union for non-trivial types. Working with types with
+// non-trivial destructors are particularly trick. Again, if any member of the union has a
+// non-trivial destructor, the destructor is deleted. Unlike a constructor, you cannot just say to
+// use a different destructor. Thus, we have to define our own destructor for the union.
+// Technically, the destructor here does not do anything, but the actual destruction should be
+// handled by the Variant class that contains this VariantUnion. We actually need two separate
+// implementations of our union, one that defines a destructor and one that use the default
+// destructor. If you define your own destructor, you can lose the trivial constructor and trivial
+// copy properties.
+//
+
+// TD = trivially deconstructible
+template <typename... Ts>
+union VariantUnionTD;
+
+// NTD = non-trivially deconstructible
+template <typename... Ts>
+union VariantUnionNTD;
+
+$for(num_params in range(max_expanded))\
+template <$typename_list(num_params)>
+union VariantUnionTD<$type_list(num_params)>
 {
-  switch (index)
-  {
-$for(param_index in range(0, num_params + 1))\
-    case $(param_index):
-      return f(*reinterpret_cast<const T$(param_index)*>(storage), std::forward<Args>(args)...);
+$for(param_index in range(num_params + 1))\
+  T$(param_index) V$(param_index);
 $endfor\
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <$typename_list(num_params)>
+union VariantUnionNTD<$type_list(num_params)>
+{
+$for(param_index in range(num_params + 1))\
+  T$(param_index) V$(param_index);
+$endfor\
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+$endfor\
+
+template <$typename_list(max_expanded), typename... Ts>
+union VariantUnionTD<$type_list(max_expanded), Ts...>
+{
+  vtkm::internal::NullType Dummy;
+$for(param_index in range(max_expanded))\
+  T$(param_index) V$(param_index);
+$endfor\
+  VariantUnionTD<T$(max_expanded), Ts...> Remaining;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+
+template <$typename_list(max_expanded), typename... Ts>
+union VariantUnionNTD<$type_list(max_expanded), Ts...>
+{
+  vtkm::internal::NullType Dummy;
+$for(param_index in range(max_expanded))\
+  T$(param_index) V$(param_index);
+$endfor\
+  VariantUnionNTD<T$(max_expanded), Ts...> Remaining;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <bool TrivialConstructor, typename... Ts>
+struct VariantUnionFinder;
+
+template <typename... Ts>
+struct VariantUnionFinder<true, Ts...>
+{
+  using type = VariantUnionTD<Ts...>;
+};
+template <typename... Ts>
+struct VariantUnionFinder<false, Ts...>
+{
+  using type = VariantUnionNTD<Ts...>;
+};
+
+template <typename... Ts>
+using VariantUnion =
+  typename VariantUnionFinder<AllTriviallyDestructible<Ts...>::value, Ts...>::type;
+
+// --------------------------------------------------------------------------------
+// Methods to get values out of the variant union
+template <vtkm::IdComponent I, typename UnionType>
+struct VariantUnionGetImpl;
+
+$for(param_index in range(max_expanded))\
+template <typename UnionType>
+struct VariantUnionGetImpl<$(param_index), UnionType>
+{
+  using ReturnType = decltype(std::declval<UnionType>().V$(param_index))&;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return storage.V$(param_index);
   }
+};
+
+$endfor\
+
+template <vtkm::IdComponent I, typename UnionType>
+struct VariantUnionGetImpl
+{
+  VTKM_STATIC_ASSERT(I >= $(max_expanded));
+  using RecursiveGet = VariantUnionGetImpl<I - $(max_expanded), decltype(std::declval<UnionType>().Remaining)>;
+  using ReturnType = typename RecursiveGet::ReturnType;
+  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  {
+    return RecursiveGet::Get(storage.Remaining);
+  }
+};
+
+template <vtkm::IdComponent I, typename UnionType>
+VTK_M_DEVICE typename VariantUnionGetImpl<I, UnionType>::ReturnType
+VariantUnionGet(UnionType& storage) noexcept
+{
+  return VariantUnionGetImpl<I, UnionType>::Get(storage);
 }
 
-template <typename ReturnType,
-$for(param_index in range(0, num_params + 1))\
-          typename T$(param_index),
-$endfor\
-          typename Functor,
+// --------------------------------------------------------------------------------
+// Internal implementation of CastAndCall for Variant
+$for(num_params in range(max_expanded))\
+template <typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<$type_list(num_params)>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, $(num_params + 1)>,
   vtkm::IdComponent index,
   Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
-$for(param_index in range(0, num_params + 1))\
+$for(param_index in range(num_params + 1))\
     case $(param_index):
-      return f(*reinterpret_cast<T$(param_index)*>(storage), std::forward<Args>(args)...);
+      return f(storage.V$(param_index), std::forward<Args>(args)...);
 $endfor\
     default:
       // If we are here, it means we failed to find the appropriate type in a variant
       VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<ReturnType>::F();
+      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
   }
 }
 
@@ -141,63 +315,30 @@ $endfor\
 //clang-format on
 
 // Recurse for cases where Variant has more than $(max_expanded) types
-template <typename ReturnType,
-$for(param_index in range(0, max_expanded + 1))\
-          typename T$(param_index),
-$endfor\
-          typename... RemainingT,
+template <vtkm::IdComponent N,
           typename Functor,
+          typename UnionType,
           typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<$type_list(max_expanded), RemainingT...>,
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  std::integral_constant<vtkm::IdComponent, N>,
   vtkm::IdComponent index,
   Functor&& f,
-  const void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
 {
-  if (index < $(max_expanded))
+  switch (index)
   {
-    return VariantCastAndCallImpl<ReturnType>(
-      brigand::list<$type_list(max_expanded - 1)>{},
-      index,
-      f,
-      storage,
-      args...);
-  }
-  else
-  {
-    return VariantCastAndCallImpl<ReturnType>(
-      brigand::list<T$(max_expanded), RemainingT...>{}, index - $(max_expanded), f, storage, args...);
-  }
-}
-
-template <typename ReturnType,
-$for(param_index in range(0, max_expanded + 1))\
-          typename T$(param_index),
+$for(param_index in range(max_expanded))\
+    case $(param_index):
+      return f(storage.V$(param_index), std::forward<Args>(args)...);
 $endfor\
-          typename... RemainingT,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImpl(
-  brigand::list<$type_list(max_expanded), RemainingT...>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  void* storage,
-  Args&&... args) noexcept(noexcept(f(std::declval<const T0&>(), args...)))
-{
-  if (index < $(max_expanded))
-  {
-    return VariantCastAndCallImpl<ReturnType>(
-      brigand::list<$type_list(max_expanded - 1)>{},
-      index,
-      f,
-      storage,
-      args...);
-  }
-  else
-  {
-    return VariantCastAndCallImpl<ReturnType>(
-      brigand::list<T$(max_expanded), RemainingT...>{}, index - $(max_expanded), f, storage, args...);
+    default:
+      return VariantCastAndCallImpl(std::integral_constant<vtkm::IdComponent, N - $(max_expanded)>{},
+                                    index - $(max_expanded),
+                                    std::forward<Functor>(f),
+                                    storage.Remaining,
+                                    std::forward<Args>(args)...);
   }
 }
 
