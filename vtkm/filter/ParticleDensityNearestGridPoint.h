@@ -18,21 +18,38 @@ namespace vtkm
 namespace filter
 {
 /// \brief Estimate the density of particles using the Nearest Grid Point method
+/// This filter treats the CoordinateSystem of a DataSet as positions of particles.
+/// The particles are infinitesimal in size with finite mass (or other scalar attributes
+/// such as charge). The filter estimates density by imposing a regular grid as
+/// specified in the constructor and summing the mass of particles within each cell
+/// in the grid.
+/// The mass of particles is established by setting the active field (using SetActiveField).
+/// Note that the "mass" can actually be another quantity. For example, you could use
+/// electrical charge in place of mass to compute the charge density.
+/// Once the sum of the mass is computed for each grid cell, the mass is divided by the
+/// volume of the cell. Thus, the density will be computed as the units of the mass field
+/// per the cubic units of the coordinate system. If you just want a sum of the mass in each
+/// cell, turn off the DivideByVolume feature of this filter.
+/// In addition, you can also simply count the number of particles in each cell by calling
+/// SetComputeNumberDensity(true).
 
-// We only need the CoordinateSystem of the input dataset thus a FilterField
+// We only need the CoordinateSystem and scalar fields of the input dataset thus a FilterField
 class ParticleDensityNearestGridPoint
   : public vtkm::filter::FilterField<ParticleDensityNearestGridPoint>
 {
 public:
-  // ParticleDensity only support turning 2D/3D particle positions into density
-  using SupportedTypes = vtkm::TypeListFieldVec3;
+  // deposit scalar field associated with particles, e.g. mass/charge to mesh cells
+  using SupportedTypes = vtkm::TypeListFieldScalar;
 
-  //
   ParticleDensityNearestGridPoint(const vtkm::Id3& dimension,
                                   const vtkm::Vec3f& origin,
                                   const vtkm::Vec3f& spacing);
 
   ParticleDensityNearestGridPoint(const vtkm::Id3& dimension, const vtkm::Bounds& bounds);
+
+  template <typename DerivedPolicy>
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
+                                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   template <typename T, typename StorageType, typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
@@ -40,10 +57,20 @@ public:
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           vtkm::filter::PolicyBase<Policy> policy);
 
+  VTKM_CONT void SetComputeNumberDensity(bool yes) { this->ComputeNumberDensity = yes; }
+
+  VTKM_CONT bool GetComputeNumberDensity() const { return this->ComputeNumberDensity; }
+
+  VTKM_CONT void SetDivideByVolume(bool yes) { this->DivideByVolume = yes; }
+
+  VTKM_CONT bool GetDivideByVolume() const { return this->DivideByVolume; }
+
 private:
   vtkm::Id3 Dimension; // Cell dimension
   vtkm::Vec3f Origin;
   vtkm::Vec3f Spacing;
+  bool ComputeNumberDensity;
+  bool DivideByVolume;
 };
 }
 }
