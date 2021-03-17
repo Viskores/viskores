@@ -45,8 +45,8 @@ void TestNGP()
   filter.SetActiveField("mass");
   auto density = filter.Execute(dataSet);
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> field;
-  density.GetCellField("density").GetData().AsArrayHandle<vtkm::Float32>(field);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> field;
+  density.GetCellField("density").GetData().AsArrayHandle<vtkm::FloatDefault>(field);
 
   auto mass_result = vtkm::worklet::DescriptiveStatistics::Run(mass);
   auto density_result = vtkm::worklet::DescriptiveStatistics::Run(field);
@@ -57,8 +57,8 @@ void TestNGP()
   filter.SetDivideByVolume(false);
   auto counts = filter.Execute(dataSet);
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> field1;
-  counts.GetCellField("density").GetData().AsArrayHandle<vtkm::Float32>(field1);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> field1;
+  counts.GetCellField("density").GetData().AsArrayHandle<vtkm::FloatDefault>(field1);
 
   auto counts_result = vtkm::worklet::DescriptiveStatistics::Run(field1);
   VTKM_TEST_ASSERT(test_equal(counts_result.Sum(), mass_result.N(), 0.1));
