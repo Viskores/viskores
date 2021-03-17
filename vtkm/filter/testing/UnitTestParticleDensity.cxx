@@ -34,8 +34,9 @@ void TestNGP()
   auto dataSet = vtkm::cont::DataSetBuilderExplicit::Create(
     positions, vtkm::CellShapeTagVertex{}, 1, connectivity);
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> mass;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xd1ce), mass);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> mass;
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(N, 0xd1ce),
+                        mass);
   dataSet.AddCellField("mass", mass);
 
   auto cellDims = vtkm::Id3{ 3, 3, 3 };
