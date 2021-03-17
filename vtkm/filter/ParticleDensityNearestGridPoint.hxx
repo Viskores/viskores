@@ -130,8 +130,7 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   locator.SetCoordinates(uniform.GetCoordinateSystem());
   locator.Update();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> coords;
-  dataSet.GetCoordinateSystem().GetData().AsArrayHandle<vtkm::Vec3f>(coords);
+  auto coords = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
 
   // We create an ArrayHandle and pass it to the Worklet as AtomicArrayInOut.
   // However the ArrayHandle needs to be allocated and initialized first. The
