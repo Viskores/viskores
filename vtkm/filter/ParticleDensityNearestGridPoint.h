@@ -18,13 +18,11 @@ namespace vtkm
 namespace filter
 {
 /// \brief Estimate the density of particles using the Nearest Grid Point method
-/// This filter takes a DataSet with CellSetExplicit consist of solely Vertex cell
-/// shape (aka CellSetSingleType with Type = Vertex) as input data. The vertices
-/// are treated as a set of particles with infinitesimal size and finite mass
-/// (or other scalar attributes such as charge). The locations of the particles
-/// are given as the CoordinateSystem of the DataSet. The filter estimates density
-/// by imposing a regular grid as specified in the constructor and summing the mass
-/// of particles within each cell in the grid.
+/// This filter treats the CoordinateSystem of a DataSet as positions of particles.
+/// The particles are infinitesimal in size with finite mass (or other scalar attributes
+/// such as charge). The filter estimates density by imposing a regular grid as
+/// specified in the constructor and summing the mass of particles within each cell
+/// in the grid.
 
 // We only need the CoordinateSystem and scalar fields of the input dataset thus a FilterField
 class ParticleDensityNearestGridPoint
