@@ -12,6 +12,7 @@
 #define vtk_m_filter_particle_density_ngp_hxx
 
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/filter/PolicyBase.h>
@@ -88,6 +89,7 @@ inline VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoin
   : Dimension(dimension)
   , Origin(origin)
   , Spacing(spacing)
+  , ComputeNumberDensity(false)
   , DivideByVolume(true)
 {
 }
@@ -102,6 +104,7 @@ ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(const Id3& dime
                          static_cast<vtkm::FloatDefault>(bounds.Y.Length()),
                          static_cast<vtkm::FloatDefault>(bounds.Z.Length()) } /
             Dimension)
+  , ComputeNumberDensity(false)
   , DivideByVolume(true)
 {
 }
@@ -138,7 +141,15 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   vtkm::cont::ArrayHandle<T> density;
   vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<T>(0, uniform.GetNumberOfCells()), density);
 
-  this->Invoke(vtkm::worklet::NGPWorklet{}, coords, field, locator, density);
+  if (this->ComputeNumberDensity)
+  {
+    auto ones = vtkm::cont::make_ArrayHandleConstant(T{ 1 }, coords.GetNumberOfValues());
+    this->Invoke(vtkm::worklet::NGPWorklet{}, coords, ones, locator, density);
+  }
+  else
+  {
+    this->Invoke(vtkm::worklet::NGPWorklet{}, coords, field, locator, density);
+  }
 
   if (DivideByVolume)
   {

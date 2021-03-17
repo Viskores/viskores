@@ -30,6 +30,8 @@ namespace filter
 /// volume of the cell. Thus, the density will be computed as the units of the mass field
 /// per the cubic units of the coordinate system. If you just want a sum of the mass in each
 /// cell, turn off the DivideByVolume feature of this filter.
+/// In addition, you can also simply count the number of particles in each by calling
+/// SetComputeNumberDensity(true).
 
 // We only need the CoordinateSystem and scalar fields of the input dataset thus a FilterField
 class ParticleDensityNearestGridPoint
@@ -50,6 +52,11 @@ public:
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           vtkm::filter::PolicyBase<Policy> policy);
+
+  VTKM_CONT void SetComputeNumberDensity(bool yes) { this->ComputeNumberDensity = yes; }
+
+  VTKM_CONT bool GetComputeNumberDensity() const { return this->ComputeNumberDensity; }
+
   VTKM_CONT void SetDivideByVolume(bool yes) { this->DivideByVolume = yes; }
 
   VTKM_CONT bool GetDivideByVolume() const { return this->DivideByVolume; }
@@ -58,6 +65,7 @@ private:
   vtkm::Id3 Dimension; // Cell dimension
   vtkm::Vec3f Origin;
   vtkm::Vec3f Spacing;
+  bool ComputeNumberDensity;
   bool DivideByVolume;
 };
 }
