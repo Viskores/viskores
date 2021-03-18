@@ -701,50 +701,12 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
-  // TODO VTKM -Version MergedCombinedOtherStartIndex. Replace 1r block with the 1s block. Need to check for Segfault in contourtree_mesh_inc_ns::MergeCombinedOtherStartIndexWorklet. This workloat also still uses a number of stl algorithms that should be replaced with VTKm code (which is porbably also why the worklet fails).
-  /* // 1s--start
-    contourtree_mesh_inc_ns::MergeCombinedOtherStartIndexWorklet<DeviceAdapter> mergeCombinedOtherStartIndexWorklet;
-    vtkm::worklet::DispatcherMapField< contourtree_mesh_inc_ns::MergeCombinedOtherStartIndexWorklet<DeviceAdapter>> mergeCombinedOtherStartIndexDispatcher(mergeCombinedOtherStartIndexWorklet);
-    this->Invoke(mergeCombinedOtherStartIndexWorklet,
-       combinedOtherStartIndex, // (input/output)
-       combinedNeighbours,      // (input/output)
-       combinedFirstNeighbour   // (input)
-       );
-    // 1s--end
-    */
-
-  // TODO Fix the MergedCombinedOtherStartIndex worklet and remove //1r block below
-  // 1r--start
-  auto combinedOtherStartIndexPortal = combinedOtherStartIndex.WritePortal();
-  auto combinedFirstNeighbourPortal = combinedFirstNeighbour.ReadPortal();
-  auto combinedNeighboursPortal = combinedNeighbours.WritePortal();
-  std::vector<vtkm::Id> tempCombinedNeighours((std::size_t)combinedNeighbours.GetNumberOfValues());
-  for (vtkm::Id vtx = 0; vtx < combinedNeighbours.GetNumberOfValues(); ++vtx)
-  {
-    tempCombinedNeighours[(std::size_t)vtx] = combinedNeighboursPortal.Get(vtx);
-  }
-  for (vtkm::Id vtx = 0; vtx < combinedFirstNeighbour.GetNumberOfValues(); ++vtx)
-  {
-    if (combinedOtherStartIndexPortal.Get(vtx)) // Needs merge
-    {
-      auto neighboursBegin = tempCombinedNeighours.begin() + combinedFirstNeighbourPortal.Get(vtx);
-      auto neighboursEnd = (vtx < combinedFirstNeighbour.GetNumberOfValues() - 1)
-        ? tempCombinedNeighours.begin() + combinedFirstNeighbourPortal.Get(vtx + 1)
-        : tempCombinedNeighours.end();
-      std::inplace_merge(
-        neighboursBegin, neighboursBegin + combinedOtherStartIndexPortal.Get(vtx), neighboursEnd);
-      auto it = std::unique(neighboursBegin, neighboursEnd);
-      combinedOtherStartIndexPortal.Set(vtx, static_cast<vtkm::Id>(neighboursEnd - it));
-      while (it != neighboursEnd)
-        *(it++) = NO_SUCH_ELEMENT;
-    }
-  }
-  // copy the values back to VTKm
-  for (vtkm::Id vtx = 0; vtx < combinedNeighbours.GetNumberOfValues(); ++vtx)
-  {
-    combinedNeighboursPortal.Set(vtx, tempCombinedNeighours[(std::size_t)vtx]);
-  }
-  // 1r--end
+  contourtree_mesh_inc_ns::MergeCombinedOtherStartIndexWorklet mergeCombinedOtherStartIndexWorklet;
+  this->Invoke(mergeCombinedOtherStartIndexWorklet,
+               combinedOtherStartIndex, // (input/output)
+               combinedNeighbours,      // (input/output)
+               combinedFirstNeighbour   // (input)
+  );
 
   timingsStream << "    " << std::setw(38) << std::left << "Merge CombinedOtherStartIndex"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;

@@ -81,7 +81,6 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-template <typename DeviceAdapter>
 class MergeCombinedOtherStartIndexWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -104,23 +103,57 @@ public:
                             const InOutFieldPortalType combinedNeighboursPortal,
                             const InFieldPortalType combinedFirstNeighbourPortal) const
   {
-    // TODO Replace this to not use stl algorithms inside the worklet
     if (combinedOtherStartIndexPortal.Get(vtx)) // Needs merge
     {
-      vtkm::cont::ArrayPortalToIterators<InOutFieldPortalType> combinedNeighboursIterators(
-        combinedNeighboursPortal);
-      auto neighboursBegin =
-        combinedNeighboursIterators.GetBegin() + combinedFirstNeighbourPortal.Get(vtx);
-      auto neighboursEnd = (vtx < combinedFirstNeighbourPortal.GetNumberOfValues() - 1)
-        ? combinedNeighboursIterators.GetBegin() + combinedFirstNeighbourPortal.Get(vtx + 1)
-        : combinedNeighboursIterators.GetEnd();
-      std::inplace_merge(
-        neighboursBegin, neighboursBegin + combinedOtherStartIndexPortal.Get(vtx), neighboursEnd);
-      auto it = std::unique(neighboursBegin, neighboursEnd);
-      combinedOtherStartIndexPortal.Set(vtx, neighboursEnd - it);
-      while (it != neighboursEnd)
+      auto myNeighboursBeginIdx = combinedFirstNeighbourPortal.Get(vtx);
+      auto otherNeighboursBeginIdx = myNeighboursBeginIdx + combinedOtherStartIndexPortal.Get(vtx);
+      auto neighboursEndIdx = (vtx < combinedFirstNeighbourPortal.GetNumberOfValues() - 1)
+        ? combinedFirstNeighbourPortal.Get(vtx + 1) - 1
+        : combinedNeighboursPortal.GetNumberOfValues() - 1;
+
+      // Merge two sorted neighbours lists from myNeighboursBeginIdx through
+      // otherNeighboursBeginIdx - 1 and from otherNeighboursBeginIdx - 1 to
+      // neighboursEndIdx
+      auto arr0_end = otherNeighboursBeginIdx - 1;
+      auto curr = neighboursEndIdx;
+      while (curr >= otherNeighboursBeginIdx)
       {
-        *(it++) = NO_SUCH_ELEMENT;
+        auto x = combinedNeighboursPortal.Get(curr);
+        if (x < combinedNeighboursPortal.Get(arr0_end))
+        {
+          combinedNeighboursPortal.Set(curr, combinedNeighboursPortal.Get(arr0_end));
+
+          auto pos = arr0_end - 1;
+          while (pos >= myNeighboursBeginIdx && (combinedNeighboursPortal.Get(pos) > x))
+          {
+            combinedNeighboursPortal.Set(pos + 1, combinedNeighboursPortal.Get(pos));
+            --pos;
+          }
+          combinedNeighboursPortal.Set(pos + 1, x);
+        }
+        --curr;
+      }
+
+      // Remove duplicates
+      vtkm::Id prevNeighbour = combinedNeighboursPortal.Get(myNeighboursBeginIdx);
+      vtkm::Id currPos = myNeighboursBeginIdx + 1;
+      for (vtkm::Id i = myNeighboursBeginIdx + 1; i <= neighboursEndIdx; ++i)
+      {
+        auto currNeighbour = combinedNeighboursPortal.Get(i);
+        if (currNeighbour != prevNeighbour)
+        {
+          combinedNeighboursPortal.Set(currPos++, currNeighbour);
+          prevNeighbour = currNeighbour;
+        }
+      }
+
+      // Record number of elements in neighbour list for subsequent compression
+      combinedOtherStartIndexPortal.Set(vtx, neighboursEndIdx + 1 - currPos);
+
+      // Fill remainder with NO_SUCH_ELEMENT so that it can be easily discarded
+      while (currPos != neighboursEndIdx + 1)
+      {
+        combinedNeighboursPortal.Set(currPos++, (vtkm::Id)NO_SUCH_ELEMENT);
       }
     }
 
@@ -136,38 +169,9 @@ public:
            combinedOtherStartIndex[vtx] = neighboursEnd - it;
            while (it != neighboursEnd) *(it++) = NO_SUCH_ELEMENT;
          }
-       }*/
-
-
-    /* Attempt at porting the code without using STL
-      if (combinedOtherStartIndexPortal.Get(vtx))
-      {
-        vtkm::Id combinedNeighboursBeginIndex = combinedFirstNeighbourPortal.Get(vtx);
-        vtkm::Id combinedNeighboursEndIndex = (vtx < combinedFirstNeighbourPortal.GetNumberOfValues() - 1) ? combinedFirstNeighbourPortal.Get(vtx+1) : combinedNeighboursPortal.GetNumberOfValues() -1;
-        vtkm::Id numSelectedVals = combinedNeighboursEndIndex- combinedNeighboursBeginIndex + 1;
-        vtkm::cont::ArrayHandleCounting <vtkm::Id > selectSubRangeIndex (combinedNeighboursBeginIndex, 1, numSelectedVals);
-        vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandleCounting <vtkm::Id >, IdArrayType> selectSubRangeArrayHandle(
-           selectSubRangeIndex,       // index array to select the range of values
-           combinedNeighboursPortal   // value array to select from. // TODO this won't work because this is an ArrayPortal not an ArrayHandle
-        );
-        vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(selectSubRangeArrayHandle);
-        vtkm::Id numUniqueVals = 1;
-        for(vtkm::Id i=combinedNeighboursBeginIndex; i<=combinedNeighboursEndIndex; i++){
-          if (combinedNeighboursPortal.Get(i) == combinedNeighboursPortal.Get(i-1))
-          {
-            combinedNeighboursPortal.Set(i, (vtkm::Id) NO_SUCH_ELEMENT);
-          }
-          else
-          {
-            numUniqueVals += 1;
-          }
-        }
-        combinedOtherStartIndexPortal.Set(vtx, combinedNeighboursEndIndex - (combinedNeighboursBeginIndex + numUniqueVals + 1));
-      }
-      */
+       }
+    */
   }
-
-
 }; //  MergeCombinedOtherStartIndexWorklet
 
 
