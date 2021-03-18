@@ -83,6 +83,7 @@ set(extra_headers
   MeshQuality.h
   NDEntropy.h
   NDHistogram.h
+  ParticleDensityBase.h
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
   ParticleAdvection.h
