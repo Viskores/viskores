@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_particle_density_ngp_h
 #define vtk_m_filter_particle_density_ngp_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/ParticleDensityBase.h>
 
 namespace vtkm
 {
@@ -29,17 +29,13 @@ namespace filter
 /// Once the sum of the mass is computed for each grid cell, the mass is divided by the
 /// volume of the cell. Thus, the density will be computed as the units of the mass field
 /// per the cubic units of the coordinate system. If you just want a sum of the mass in each
-/// cell, turn off the DivideByVolume feature of this filter.
+/// cell, turn off the DivideByVolumeWorklet feature of this filter.
 /// In addition, you can also simply count the number of particles in each cell by calling
 /// SetComputeNumberDensity(true).
-
-// We only need the CoordinateSystem and scalar fields of the input dataset thus a FilterField
-class ParticleDensityNearestGridPoint
-  : public vtkm::filter::FilterField<ParticleDensityNearestGridPoint>
+class ParticleDensityNearestGridPoint : public ParticleDensityBase<ParticleDensityNearestGridPoint>
 {
 public:
-  // deposit scalar field associated with particles, e.g. mass/charge to mesh cells
-  using SupportedTypes = vtkm::TypeListFieldScalar;
+  using Superclass = ParticleDensityBase<ParticleDensityNearestGridPoint>;
 
   ParticleDensityNearestGridPoint(const vtkm::Id3& dimension,
                                   const vtkm::Vec3f& origin,
@@ -47,30 +43,11 @@ public:
 
   ParticleDensityNearestGridPoint(const vtkm::Id3& dimension, const vtkm::Bounds& bounds);
 
-  template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
-                                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
-
   template <typename T, typename StorageType, typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           vtkm::filter::PolicyBase<Policy> policy);
-
-  VTKM_CONT void SetComputeNumberDensity(bool yes) { this->ComputeNumberDensity = yes; }
-
-  VTKM_CONT bool GetComputeNumberDensity() const { return this->ComputeNumberDensity; }
-
-  VTKM_CONT void SetDivideByVolume(bool yes) { this->DivideByVolume = yes; }
-
-  VTKM_CONT bool GetDivideByVolume() const { return this->DivideByVolume; }
-
-private:
-  vtkm::Id3 Dimension; // Cell dimension
-  vtkm::Vec3f Origin;
-  vtkm::Vec3f Spacing;
-  bool ComputeNumberDensity;
-  bool DivideByVolume;
 };
 }
 }

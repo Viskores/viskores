@@ -80,12 +80,15 @@ namespace filter
 inline VTKM_CONT ParticleDensityCloudInCell::ParticleDensityCloudInCell(const vtkm::Id3& dimension,
                                                                         const vtkm::Vec3f& origin,
                                                                         const vtkm::Vec3f& spacing)
-  : Dimension(dimension)
-  , Origin(origin)
-  , Spacing(spacing)
+  : Superclass(dimension, origin, spacing)
 {
 }
 
+inline VTKM_CONT ParticleDensityCloudInCell::ParticleDensityCloudInCell(const Id3& dimension,
+                                                                        const vtkm::Bounds& bounds)
+  : Superclass(dimension, bounds)
+{
+}
 
 template <typename T, typename StorageType, typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(
@@ -112,6 +115,12 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(
                         density);
 
   this->Invoke(vtkm::worklet::CICWorklet{}, coords, field, locator, uniform.GetCellSet(), density);
+
+  if (DivideByVolume)
+  {
+    auto volume = this->Spacing[0] * this->Spacing[1] * this->Spacing[2];
+    this->Invoke(DivideByVolumeWorklet{ volume }, density);
+  }
 
   uniform.AddField(vtkm::cont::make_FieldPoint("density", density));
 

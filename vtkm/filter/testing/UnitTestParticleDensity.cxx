@@ -103,7 +103,17 @@ void TestCIC()
   auto mass_result = vtkm::worklet::DescriptiveStatistics::Run(mass);
   auto density_result = vtkm::worklet::DescriptiveStatistics::Run(field);
   // Unfortunately, floating point atomics suffer from precision error more than everything else.
-  VTKM_TEST_ASSERT(test_equal(density_result.Sum(), mass_result.Sum(), 10));
+  VTKM_TEST_ASSERT(test_equal(density_result.Sum(), mass_result.Sum() * 27.0, 10));
+
+  filter.SetComputeNumberDensity(true);
+  filter.SetDivideByVolume(false);
+  auto counts = filter.Execute(dataSet);
+
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> field1;
+  counts.GetPointField("density").GetData().AsArrayHandle<vtkm::FloatDefault>(field1);
+
+  auto counts_result = vtkm::worklet::DescriptiveStatistics::Run(field1);
+  VTKM_TEST_ASSERT(test_equal(counts_result.Sum(), mass_result.N(), 0.1));
 }
 
 void TestParticleDensity()
