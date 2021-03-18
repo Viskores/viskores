@@ -38,14 +38,15 @@
 /// missing the image will be generated for that file and the test will continue.
 ///
 template <typename ViewType>
-inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
-                                         const std::vector<std::string>& fileNames,
-                                         const vtkm::IdComponent& averageRadius = 0,
-                                         const vtkm::IdComponent& pixelShiftRadius = 0,
-                                         const vtkm::FloatDefault& allowedPixelErrorRatio = 0.0001f,
-                                         const vtkm::FloatDefault& threshold = 0.05f,
-                                         const bool& writeDiff = true,
-                                         const bool& returnOnPass = true)
+inline TestEqualResult test_equal_images(
+  const std::shared_ptr<ViewType> view,
+  const std::vector<std::string>& fileNames,
+  const vtkm::IdComponent& averageRadius = 0,
+  const vtkm::IdComponent& pixelShiftRadius = 0,
+  const vtkm::FloatDefault& allowedPixelErrorRatio = 0.00025f,
+  const vtkm::FloatDefault& threshold = 0.05f,
+  const bool& writeDiff = true,
+  const bool& returnOnPass = true)
 {
   vtkm::cont::ScopedRuntimeDeviceTracker runtime(vtkm::cont::DeviceAdapterTagAny{});
   TestEqualResult testResults;
@@ -137,13 +138,14 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
 }
 
 template <typename ViewType>
-inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
-                                         const std::string& fileName,
-                                         const vtkm::IdComponent& averageRadius = 0,
-                                         const vtkm::IdComponent& pixelShiftRadius = 0,
-                                         const vtkm::FloatDefault& allowedPixelErrorRatio = 0.0001f,
-                                         const vtkm::FloatDefault& threshold = 0.05f,
-                                         const bool& writeDiff = true)
+inline TestEqualResult test_equal_images(
+  const std::shared_ptr<ViewType> view,
+  const std::string& fileName,
+  const vtkm::IdComponent& averageRadius = 0,
+  const vtkm::IdComponent& pixelShiftRadius = 0,
+  const vtkm::FloatDefault& allowedPixelErrorRatio = 0.00025f,
+  const vtkm::FloatDefault& threshold = 0.05f,
+  const bool& writeDiff = true)
 {
   std::vector<std::string> fileNames{ fileName };
   return test_equal_images(
@@ -169,7 +171,7 @@ inline TestEqualResult test_equal_images_matching_name(
   const std::string& fileName,
   const vtkm::IdComponent& averageRadius = 0,
   const vtkm::IdComponent& pixelShiftRadius = 0,
-  const vtkm::FloatDefault& allowedPixelErrorRatio = 0.0001f,
+  const vtkm::FloatDefault& allowedPixelErrorRatio = 0.00025f,
   const vtkm::FloatDefault& threshold = 0.05f,
   const bool& writeDiff = true,
   const bool& returnOnPass = true)
