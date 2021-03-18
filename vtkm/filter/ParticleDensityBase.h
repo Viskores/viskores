@@ -86,6 +86,8 @@ protected:
   bool ComputeNumberDensity;
   bool DivideByVolume;
 
+public:
+  // conceptually protected but CUDA needs this to be public
   class DivideByVolumeWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
