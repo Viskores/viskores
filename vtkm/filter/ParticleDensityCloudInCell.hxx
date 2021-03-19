@@ -49,22 +49,19 @@ public:
     {
       // iterate through all the points of the cell and deposit with correct weight.
       auto indices = cellSet.GetIndices(cellId);
+      auto rparametric = vtkm::Vec3f{ 1, 1, 1 } - parametric;
 
       // deposit the scalar field value in proportion to the volume of the sub-hexahedron
       // the vertex is in.
       density.Add(indices[0], value * parametric[0] * parametric[1] * parametric[2]);
-      density.Add(indices[0], value * (1.0f - parametric[0]) * parametric[1] * parametric[2]);
-      density.Add(indices[0],
-                  value * (1.0f - parametric[0]) * (1.0f - parametric[1]) * parametric[2]);
-      density.Add(indices[0], value * parametric[0] * (1.0f - parametric[1]) * parametric[2]);
+      density.Add(indices[1], value * rparametric[0] * parametric[1] * parametric[2]);
+      density.Add(indices[2], value * rparametric[0] * rparametric[1] * parametric[2]);
+      density.Add(indices[3], value * parametric[0] * rparametric[1] * parametric[2]);
 
-      density.Add(indices[0], value * parametric[0] * parametric[1] * (1.0f - parametric[2]));
-      density.Add(indices[0],
-                  value * (1.0f - parametric[0]) * parametric[1] * (1.0f - parametric[2]));
-      density.Add(indices[0],
-                  value * (1.0f - parametric[0]) * (1.0f - parametric[1]) * (1.0f - parametric[2]));
-      density.Add(indices[0],
-                  value * parametric[0] * (1.0f - parametric[1]) * (1.0f - parametric[2]));
+      density.Add(indices[4], value * parametric[0] * parametric[1] * rparametric[2]);
+      density.Add(indices[5], value * rparametric[0] * parametric[1] * rparametric[2]);
+      density.Add(indices[6], value * rparametric[0] * rparametric[1] * rparametric[2]);
+      density.Add(indices[7], value * parametric[0] * rparametric[1] * rparametric[2]);
     }
 
     // We simply ignore that particular particle when it is not in the mesh.

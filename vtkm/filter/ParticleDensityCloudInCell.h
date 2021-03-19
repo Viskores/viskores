@@ -21,7 +21,7 @@ namespace filter
 /// This filter treats the CoordinateSystem of a DataSet as positions of particles.
 /// The particles are infinitesimal in size with finite mass (or other scalar attributes
 /// such as charge). The filter estimates density by imposing a regular grid as
-/// specified in the constructor. It spread the mass of each particle to its 8 nearest
+/// specified in the constructor. It spreads the mass of each particle to its 8 nearest
 /// neighboring grid points and summing the contribution of particles for each point
 /// in the grid.
 /// The mass of particles is established by setting the active field (using SetActiveField).
