@@ -684,7 +684,7 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
       combinedFirstNeighbour, combinedFirstNeighbour.GetNumberOfValues() - 1, 1, tempArr, 0);
     vtkm::cont::Algorithm::CopySubRange(
       combinedNNeighbours, combinedNNeighbours.GetNumberOfValues() - 1, 1, tempArr, 1);
-    nCombinedNeighbours = vtkm::cont::Algorithm::Reduce(tempArr, 0);
+    nCombinedNeighbours = vtkm::cont::Algorithm::Reduce(tempArr, vtkm::Id{ 0 });
   }
 
   IdArrayType combinedNeighbours;
