@@ -16,6 +16,7 @@ set(headers
   DistributedContourTreeBlockData.h
   HierarchicalContourTree.h
   HierarchicalHyperSweeper.h
+  HierarchicalAugmenter.h
   InteriorForest.h
   MergeBlockFunctor.h
   MultiBlockContourTreeHelper.h
@@ -31,3 +32,4 @@ add_subdirectory(boundary_tree_maker)
 add_subdirectory(tree_grafter)
 add_subdirectory(hierarchical_contour_tree)
 add_subdirectory(hierarchical_hyper_sweeper)
+add_subdirectory(hierarchical_augmenter)

@@ -683,6 +683,7 @@ std::string HierarchicalHyperSweeper<MeshType, FieldType>::DebugPrint(std::strin
     "Sorted Transfer", this->SortedTransferTarget - 1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
     "Sort Permute", this->SuperSortPermute - 1, resultStream);
+  return resultStream.str();
 } // DebugPrint()
 
 

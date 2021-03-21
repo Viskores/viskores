@@ -75,6 +75,7 @@
 #include <vtkm/worklet/contourtree_distributed/TreeGrafter.h>
 
 
+#include <vtkm/worklet/contourtree_distributed/HierarchicalAugmenter.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
 
 // DIY includes
