@@ -98,10 +98,7 @@ public:
     VTKM_EXEC_CONT vtkm::Id operator()(vtkm::Id i) const
     {
       vtkm::Id currGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i));
-      // When performing an exclusive scan we need to run 1 element extra. But that doesn't
-      // matter so just return 0. Emulate this effect by implictly duplicating the last element
-      vtkm::Id nextI = (i < this->OverallSortOrderPortal.GetNumberOfValues() - 1) ? i + 1 : i;
-      vtkm::Id nextGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(nextI));
+      vtkm::Id nextGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i + 1));
       return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
     }
   };
