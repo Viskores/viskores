@@ -423,8 +423,8 @@ inline void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArr
   auto oneIfArcValidArrayHandle =
     vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfArcValid>(arcs, oneIfArcValidFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfArcValidArrayHandle, arcTargetIndex);
-  vtkm::Id nValidArcs = arcTargetIndex.ReadPortal().Get(arcTargetIndex.GetNumberOfValues() - 1) +
-    oneIfArcValidFunctor(arcs.ReadPortal().Get(arcs.GetNumberOfValues() - 1));
+  vtkm::Id nValidArcs = ArrayGetValue(arcTargetIndex.GetNumberOfValues() - 1, arcTargetIndex) +
+    oneIfArcValidFunctor(ArrayGetValue(arcs.GetNumberOfValues() - 1, arcs));
 
   // ... and compress array
   this->Neighbours.ReleaseResources();
@@ -496,7 +496,7 @@ inline void ContourTreeMesh<FieldType>::ComputeMaxNeighbours()
   IdArrayType nNeighbours;
   this->ComputeNNeighboursVector(nNeighbours);
   vtkm::cont::ArrayHandle<vtkm::Range> rangeArray = vtkm::cont::ArrayRangeCompute(nNeighbours);
-  this->MaxNeighbours = static_cast<vtkm::Id>(rangeArray.ReadPortal().Get(0).Max);
+  this->MaxNeighbours = ArrayGetValue(0, rangeArray).Max;
 }
 
 // Define the behavior for the execution object generate by the PrepareForExecution function
@@ -663,26 +663,9 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   IdArrayType combinedFirstNeighbour;
   combinedFirstNeighbour.Allocate(numVerticesCombined);
   vtkm::cont::Algorithm::ScanExclusive(combinedNNeighbours, combinedFirstNeighbour);
-  // vtkm::cont::Algorithm::Reduce to compute a single value
-  // in a way that avoids pulling the whole array from the device to the host. We
-  // effecively just do the following, but using ReadPortal will pull the array
-  // to the host, which we would like to avoid. So we just copy the two values we
-  // need into a new array and then do a Reduce. We could get super-fancy and
-  // do ArrayHandleView and ArryHandleDecorator magic, but that would be complicated
-  // and likely not any faster.
-  // vtkm::Id nCombinedNeighbours =
-  //   combinedFirstNeighbour.ReadPortal().Get(combinedFirstNeighbour.GetNumberOfValues() - 1) +
-  //    combinedNNeighbours.ReadPortal().Get(combinedNNeighbours.GetNumberOfValues() - 1);
-  vtkm::Id nCombinedNeighbours;
-  {
-    IdArrayType tempArr;
-    tempArr.Allocate(2);
-    vtkm::cont::Algorithm::CopySubRange(
-      combinedFirstNeighbour, combinedFirstNeighbour.GetNumberOfValues() - 1, 1, tempArr, 0);
-    vtkm::cont::Algorithm::CopySubRange(
-      combinedNNeighbours, combinedNNeighbours.GetNumberOfValues() - 1, 1, tempArr, 1);
-    nCombinedNeighbours = vtkm::cont::Algorithm::Reduce(tempArr, vtkm::Id{ 0 });
-  }
+  vtkm::Id nCombinedNeighbours =
+    ArrayGetValue(combinedFirstNeighbour.GetNumberOfValues() - 1, combinedFirstNeighbour) +
+    ArrayGetValue(combinedNNeighbours.GetNumberOfValues() - 1, combinedNNeighbours);
 
   IdArrayType combinedNeighbours;
   combinedNeighbours.Allocate(nCombinedNeighbours);
