@@ -93,7 +93,7 @@ struct VariantTriviallyCopyable;
 
 template <typename... Ts>
 struct VariantTriviallyCopyable<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>>
-  : vtkmstd::is_trivially_copyable<VariantUnion<Ts...>>
+  : AllTriviallyCopyable<Ts...>
 {
 };
 
@@ -102,7 +102,7 @@ struct VariantTriviallyConstructible;
 
 template <typename... Ts>
 struct VariantTriviallyConstructible<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>>
-  : vtkmstd::is_trivially_constructible<VariantUnion<Ts...>>
+  : AllTriviallyConstructible<Ts...>
 {
 };
 
