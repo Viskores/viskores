@@ -256,8 +256,12 @@ $for(param_index in range(max_expanded))\
 template <typename UnionType>
 struct VariantUnionGetImpl<$(param_index), UnionType>
 {
-  using ReturnType = decltype(std::declval<UnionType>().V$(param_index))&;
-  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  using ReturnType = decltype(std::declval<UnionType>().V$(param_index));
+  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
+  {
+    return storage.V$(param_index);
+  }
+  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
   {
     return storage.V$(param_index);
   }
@@ -269,19 +273,23 @@ template <vtkm::IdComponent I, typename UnionType>
 struct VariantUnionGetImpl
 {
   VTKM_STATIC_ASSERT(I >= $(max_expanded));
-  using RecursiveGet = VariantUnionGetImpl<I - $(max_expanded), decltype(std::declval<UnionType>().Remaining)>;
+  using RecursiveGet = VariantUnionGetImpl<I - $(max_expanded), decltype(std::declval<UnionType&>().Remaining)>;
   using ReturnType = typename RecursiveGet::ReturnType;
-  VTK_M_DEVICE static ReturnType Get(UnionType& storage) noexcept
+  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
+  {
+    return RecursiveGet::Get(storage.Remaining);
+  }
+  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
   {
     return RecursiveGet::Get(storage.Remaining);
   }
 };
 
 template <vtkm::IdComponent I, typename UnionType>
-VTK_M_DEVICE typename VariantUnionGetImpl<I, UnionType>::ReturnType
-VariantUnionGet(UnionType& storage) noexcept
+VTK_M_DEVICE auto VariantUnionGet(UnionType& storage) noexcept
+  -> decltype(VariantUnionGetImpl<I, typename std::decay<UnionType>::type>::Get(storage))&
 {
-  return VariantUnionGetImpl<I, UnionType>::Get(storage);
+  return VariantUnionGetImpl<I, typename std::decay<UnionType>::type>::Get(storage);
 }
 
 // --------------------------------------------------------------------------------
