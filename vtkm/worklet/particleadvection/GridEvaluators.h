@@ -26,7 +26,6 @@
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
 #include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluatorStatus.h>
-#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 
 namespace vtkm
 {
@@ -127,7 +126,7 @@ public:
       vtkm::VecVariable<vtkm::Vec3f, 8> fieldValues;
       InterpolationHelper->GetCellInfo(cellId, cellShape, nVerts, ptIndices);
 
-      this->Field->GetValue(ptIndices, nVerts, parametric, cellShape, out);
+      this->Field.GetValue(ptIndices, nVerts, parametric, cellShape, out);
       status.SetOk();
     }
 
@@ -146,7 +145,7 @@ private:
   using GhostCellPortal = typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType;
 
   vtkm::Bounds Bounds;
-  const vtkm::worklet::particleadvection::ExecutionField* Field;
+  typename FieldType::ExecutionType Field;
   GhostCellPortal GhostCells;
   bool HaveGhostCells;
   const vtkm::exec::CellInterpolationHelper* InterpolationHelper;

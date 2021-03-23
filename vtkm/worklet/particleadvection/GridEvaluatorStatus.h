@@ -22,9 +22,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
 
-#include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
-#include <vtkm/worklet/particleadvection/IntegratorBase.h>
-
 namespace vtkm
 {
 namespace worklet

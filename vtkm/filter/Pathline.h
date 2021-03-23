@@ -14,7 +14,7 @@
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/IntegratorBase.h>
+#include <vtkm/worklet/particleadvection/Stepper.h>
 
 namespace vtkm
 {
