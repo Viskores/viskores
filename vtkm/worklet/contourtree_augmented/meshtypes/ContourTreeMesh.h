@@ -496,7 +496,7 @@ inline void ContourTreeMesh<FieldType>::ComputeMaxNeighbours()
   IdArrayType nNeighbours;
   this->ComputeNNeighboursVector(nNeighbours);
   vtkm::cont::ArrayHandle<vtkm::Range> rangeArray = vtkm::cont::ArrayRangeCompute(nNeighbours);
-  this->MaxNeighbours = ArrayGetValue(0, rangeArray).Max;
+  this->MaxNeighbours = static_cast<vtkm::Id>(ArrayGetValue(0, rangeArray).Max);
 }
 
 // Define the behavior for the execution object generate by the PrepareForExecution function
@@ -795,6 +795,9 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                << "    ---------------- ContourTreeMesh MergeWith ---------------------"
                << std::endl
                << timingsMessage << timingsStream.str());
+  // Prevent unused parameter warning when compiled without logging
+  (void)timingsLogLevel;
+  (void)timingsMessage;
 
 #ifdef DEBUG_PRINT
   // Print the contents fo this for debugging
