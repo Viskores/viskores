@@ -50,33 +50,8 @@ public:
     // We simply ignore that particular particle when it is not in the mesh.
   }
 }; //NGPWorklet
-namespace detail
-{
-class DividByVolume : public vtkm::worklet::WorkletMapField
-{
-public:
-  using ControlSignature = void(FieldInOut field);
-  using ExecutionSignature = void(_1);
-
-  VTKM_EXEC_CONT
-  explicit DividByVolume(vtkm::Float64 volume)
-    : Volume(volume)
-  {
-  }
-
-  template <typename T>
-  VTKM_EXEC void operator()(T& value) const
-  {
-    value = static_cast<T>(value / Volume);
-  }
-
-private:
-  vtkm::Float64 Volume;
-};
-} //detail
 } //worklet
 } //vtkm
-
 
 namespace vtkm
 {
@@ -86,46 +61,15 @@ inline VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoin
   const vtkm::Id3& dimension,
   const vtkm::Vec3f& origin,
   const vtkm::Vec3f& spacing)
-  : Dimension(dimension)
-  , Origin(origin)
-  , Spacing(spacing)
-  , ComputeNumberDensity(false)
-  , DivideByVolume(true)
+  : Superclass(dimension, origin, spacing)
 {
 }
 
-ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(const Id3& dimension,
-                                                                 const vtkm::Bounds& bounds)
-  : Dimension(dimension)
-  , Origin({ static_cast<vtkm::FloatDefault>(bounds.X.Min),
-             static_cast<vtkm::FloatDefault>(bounds.Y.Min),
-             static_cast<vtkm::FloatDefault>(bounds.Z.Min) })
-  , Spacing(vtkm::Vec3f{ static_cast<vtkm::FloatDefault>(bounds.X.Length()),
-                         static_cast<vtkm::FloatDefault>(bounds.Y.Length()),
-                         static_cast<vtkm::FloatDefault>(bounds.Z.Length()) } /
-            Dimension)
-  , ComputeNumberDensity(false)
-  , DivideByVolume(true)
+inline VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(
+  const Id3& dimension,
+  const vtkm::Bounds& bounds)
+  : Superclass(dimension, bounds)
 {
-}
-
-template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::PrepareForExecution(
-  const vtkm::cont::DataSet& input,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
-{
-  if (this->ComputeNumberDensity)
-  {
-    return this->DoExecute(
-      input,
-      vtkm::cont::make_ArrayHandleConstant(vtkm::FloatDefault{ 1 }, input.GetNumberOfPoints()),
-      vtkm::filter::FieldMetadata{}, // Ignored
-      policy);
-  }
-  else
-  {
-    return this->FilterField::PrepareForExecution(input, policy);
-  }
 }
 
 template <typename T, typename StorageType, typename Policy>
@@ -165,7 +109,7 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   if (DivideByVolume)
   {
     auto volume = this->Spacing[0] * this->Spacing[1] * this->Spacing[2];
-    this->Invoke(vtkm::worklet::detail::DividByVolume{ volume }, density);
+    this->Invoke(DivideByVolumeWorklet{ volume }, density);
   }
 
   uniform.AddField(vtkm::cont::make_FieldCell("density", density));
