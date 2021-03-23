@@ -9,9 +9,9 @@
 ##============================================================================
 
 set(headers
-  InitializeRegularVertexCountComputeSuperparentIds.h
-  InitializeRegularVertexCountInitalizeCountsWorklet.h
-  InitializeRegularVertexCountSubtractLowEndWorklet.h
+  InitializeIntrinsicVertexCountComputeSuperparentIds.h
+  InitializeIntrinsicVertexCountInitalizeCountsWorklet.h
+  InitializeIntrinsicVertexCountSubtractLowEndWorklet.h
   ComputeSuperarcDependentWeightsWorklet.h
   ComputeSuperarcTransferWeightsWorklet.h
   TransferTargetComperator.h

@@ -79,7 +79,7 @@ public:
       hierarchicalTreeHyperparentsView, // view of  hierarchicalTree.Hyperparents[firstSupernode, lastSupernode)
     WholeArrayIn hierarchicalTreeHypernodes, // whole hierarchicalTree.Hypernodes array
     WholeArrayIn valuePrefixSum,             // whole valuePrefixSum array
-    FieldInOut sweepValuesView // output view of sweepValues[firstSupernode, lastSupernode)
+    FieldInOut dependentValuesView // output view of dependentValues[firstSupernode, lastSupernode)
   );
   using ExecutionSignature = void(InputIndex, _1, _2);
   using InputDomain = _1;
@@ -102,7 +102,7 @@ public:
     const vtkm::Id& hyperparent, // same as hierarchicalTree.hyperparents[supernode];
     const InFieldPortalType& hierarchicalTreeHypernodesPortal,
     const InFieldPortalType& valuePrefixSumPortal,
-    vtkm::Id& sweepValue) const
+    vtkm::Id& dependentValue) const
   {
     // per supernode
     // if there is no superarc, it is either the root of the tree or an attachment point
@@ -113,19 +113,19 @@ public:
       { // global root
         // this is guaranteed to be the only element in it's iteration
         // so the prefix sum is good as it stands
-        sweepValue = valuePrefixSumPortal.Get(supernode);
+        dependentValue = valuePrefixSumPortal.Get(supernode);
       } // global root
       else
       { // attachment point
         // could be the first in the iteration, in which case it is correct
         if (supernode == this->FirstSupernode)
         {
-          sweepValue = valuePrefixSumPortal.Get(supernode);
+          dependentValue = valuePrefixSumPortal.Get(supernode);
         }
         // otherwise, we are guaranteed that it's a length one chain, so subtract predecessor
         else
         {
-          sweepValue =
+          dependentValue =
             valuePrefixSumPortal.Get(supernode) - valuePrefixSumPortal.Get(supernode - 1);
         }
       } // attachment point
@@ -142,7 +142,7 @@ public:
         baseValue = valuePrefixSumPortal.Get(hyperparentSuperId - 1);
       }
       // for all others, remove the hyperparent's prefix sum to get the "relative" prefix sum
-      sweepValue = valuePrefixSumPortal.Get(supernode) - baseValue;
+      dependentValue = valuePrefixSumPortal.Get(supernode) - baseValue;
     } // actual superarc
 
     // In serial this worklet implements the following operation
@@ -160,16 +160,16 @@ public:
         { // global root
           // this is guaranteed to be the only element in it's iteration
           // so the prefix sum is good as it stands
-          sweepValues[supernode] = valuePrefixSum[supernode];
+          dependentValues[supernode] = valuePrefixSum[supernode];
         } // global root
         else
         { // attachment point
           // could be the first in the iteration, in which case it is correct
           if (supernode == firstSupernode)
-            sweepValues[supernode] = valuePrefixSum[supernode];
+            dependentValues[supernode] = valuePrefixSum[supernode];
           // otherwise, we are guaranteed that it's a length one chain, so subtract predecessor
           else
-            sweepValues[supernode] = valuePrefixSum[supernode] - valuePrefixSum[supernode-1];
+            dependentValues[supernode] = valuePrefixSum[supernode] - valuePrefixSum[supernode-1];
         } // attachment point
       } // null superarc
       else
@@ -184,7 +184,7 @@ public:
           baseValue = valuePrefixSum[hyperparentSuperId - 1];
 
         // for all others, remove the hyperparent's prefix sum to get the "relative" prefix sum
-        sweepValues[supernode] = valuePrefixSum[supernode] - baseValue;
+        dependentValues[supernode] = valuePrefixSum[supernode] - baseValue;
       } // actual superarc
     } // per supernode
     */

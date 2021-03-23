@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_initialize_regular_vertex_count_initialize_counts_worklet_h
-#define vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_initialize_regular_vertex_count_initialize_counts_worklet_h
+#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_initialize_intrinsic_vertex_count_initialize_counts_worklet_h
+#define vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_initialize_intrinsic_vertex_count_initialize_counts_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -65,9 +65,9 @@ namespace contourtree_distributed
 namespace hierarchical_hyper_sweeper
 {
 
-/// Worklet used in HierarchicalHyperSweeper.InitializeRegularVertexCount(...) to
+/// Worklet used in HierarchicalHyperSweeper.InitializeIntrinsicVertexCount(...) to
 /// set the count to the Id one off the high end of each range
-class InitializeRegularVertexCountInitalizeCountsWorklet : public vtkm::worklet::WorkletMapField
+class InitializeIntrinsicVertexCountInitalizeCountsWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(WholeArrayIn superparents, WholeArrayInOut superarcRegularCounts);
@@ -76,7 +76,7 @@ public:
 
   // Default Constructor
   VTKM_EXEC_CONT
-  InitializeRegularVertexCountInitalizeCountsWorklet() {}
+  InitializeIntrinsicVertexCountInitalizeCountsWorklet() {}
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& vertex,
@@ -128,7 +128,7 @@ public:
     */
   } // operator()()
 
-}; // InitializeRegularVertexCountInitalizeCountsWorklet
+}; // InitializeIntrinsicVertexCountInitalizeCountsWorklet
 
 } // namespace hierarchical_hyper_sweeper
 } // namespace contourtree_distributed

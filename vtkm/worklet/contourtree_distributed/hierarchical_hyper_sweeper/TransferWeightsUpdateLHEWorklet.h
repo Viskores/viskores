@@ -79,7 +79,7 @@ public:
     FieldIn
       valuePrefixSumShiftedView, // input view of valuePrefixSum[firstSupernode-1, lastSupernode-1)
     FieldInOut
-      sweepValuePermuted // output view of sweepValues permuted by sortedTransferTarget[firstSupernode, lastSupernode). Use FieldInOut since we don't overwrite all values.
+      dependentValuePermuted // output view of dependentValues permuted by sortedTransferTarget[firstSupernode, lastSupernode). Use FieldInOut since we don't overwrite all values.
   );
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
@@ -96,7 +96,7 @@ public:
     const vtkm::Id& sortedTransferTargetValue,     // same as sortedTransferTarget[supernode]
     const vtkm::Id& sortedTransferTargetNextValue, // same as sortedTransferTarget[supernode+1]
     const vtkm::Id& valuePrefixSumPreviousValue,   // same as valuePrefixSum[supernode-1]
-    vtkm::Id& sweepValue // same as sweepValues[sortedTransferTarget[supernode]]
+    vtkm::Id& dependentValue // same as dependentValues[sortedTransferTarget[supernode]]
   ) const
   {
     // per supernode
@@ -110,11 +110,11 @@ public:
     // occur, but let's keep the logic strict
     if (supernode == this->FirstSupernode)
     { // LHE 0
-      sweepValue -= 0;
+      dependentValue -= 0;
     } // LHE 0
     else if (sortedTransferTargetValue != sortedTransferTargetNextValue)
     { // LHE not 0
-      sweepValue -= valuePrefixSumPreviousValue;
+      dependentValue -= valuePrefixSumPreviousValue;
     } // LHE not 0
 
     // In serial this worklet implements the following operation
@@ -129,11 +129,11 @@ public:
       // occur, but let's keep the logic strict
       if (supernode == firstSupernode)
       { // LHE 0
-        sweepValues[sortedTransferTarget[supernode]] -= 0;
+        dependentValues[sortedTransferTarget[supernode]] -= 0;
       } // LHE 0
       else if (sortedTransferTarget[supernode] != sortedTransferTarget[supernode-1])
       { // LHE not 0
-        sweepValues[sortedTransferTarget[supernode]] -= valuePrefixSum[supernode-1];
+        dependentValues[sortedTransferTarget[supernode]] -= valuePrefixSum[supernode-1];
       } // LHE not 0
     } // per supernode
     */

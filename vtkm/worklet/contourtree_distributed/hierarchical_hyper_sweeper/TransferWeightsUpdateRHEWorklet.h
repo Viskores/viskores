@@ -79,7 +79,7 @@ public:
       sortedTransferTargetShiftedView, // input view of sortedTransferTarget[firstSupernode+1, lastSupernode+1)
     FieldIn valuePrefixSumView, // input view of valuePrefixSum[firstSupernode, lastSupernode)
     FieldInOut
-      sweepValuePermuted // output view of sweepValues permuted by sortedTransferTarget[firstSupernode, lastSupernode). Use FieldInOut since we don't overwrite all values.
+      dependentValuePermuted // output view of dependentValues permuted by sortedTransferTarget[firstSupernode, lastSupernode). Use FieldInOut since we don't overwrite all values.
   );
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
@@ -96,7 +96,7 @@ public:
     const vtkm::Id& sortedTransferTargetValue,     // same as sortedTransferTarget[supernode]
     const vtkm::Id& sortedTransferTargetNextValue, // same as sortedTransferTarget[supernode+1]
     const vtkm::Id& valuePrefixSum,                // same as valuePrefixSum[supernode]
-    vtkm::Id& sweepValue // same as sweepValues[sortedTransferTarget[supernode]]
+    vtkm::Id& dependentValue // same as dependentValues[sortedTransferTarget[supernode]]
   ) const
   {
     // per supernode
@@ -109,7 +109,7 @@ public:
     if ((supernode == this->LastSupernode - 1) ||
         (sortedTransferTargetValue != sortedTransferTargetNextValue))
     { // RHE of segment
-      sweepValue += valuePrefixSum;
+      dependentValue += valuePrefixSum;
     } // RHE of segment
 
     // In serial this worklet implements the following operation
@@ -123,7 +123,7 @@ public:
         // the RHE of each segment transfers its weight (including all irrelevant prefixes)
         if ((supernode == lastSupernode - 1) || (sortedTransferTarget[supernode] != sortedTransferTarget[supernode+1]))
         { // RHE of segment
-          sweepValues[sortedTransferTarget[supernode]] += valuePrefixSum[supernode];
+          dependentValues[sortedTransferTarget[supernode]] += valuePrefixSum[supernode];
         } // RHE of segment
       } // per supernode
     */
