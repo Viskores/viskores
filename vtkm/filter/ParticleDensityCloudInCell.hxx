@@ -104,8 +104,7 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(
   locator.SetCoordinates(uniform.GetCoordinateSystem());
   locator.Update();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> coords;
-  dataSet.GetCoordinateSystem().GetData().AsArrayHandle<vtkm::Vec3f>(coords);
+  auto coords = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
 
   vtkm::cont::ArrayHandle<T> density;
   vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<T>(0, uniform.GetNumberOfPoints()),
