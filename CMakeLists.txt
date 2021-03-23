@@ -271,6 +271,8 @@ write_basic_package_version_file(
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
 
+include(VTKmInstallCMakePackage)
+
 # Install the readme and license files.
 if (NOT VTKm_NO_INSTALL_README_LICENSE)
 install(FILES ${VTKm_SOURCE_DIR}/README.md
