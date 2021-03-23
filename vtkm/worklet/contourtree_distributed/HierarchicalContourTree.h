@@ -68,6 +68,8 @@
 #ifndef vtk_m_worklet_contourtree_distributed_hierarchical_contour_tree_h
 #define vtk_m_worklet_contourtree_distributed_hierarchical_contour_tree_h
 
+#define VOLUME_PRINT_WIDTH 8
+
 #include <vtkm/Types.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
@@ -220,6 +222,12 @@ public:
   /// debug routine
   VTKM_CONT
   std::string DebugPrint(const char* message, const char* fileName, long lineNum) const;
+
+  // modified version of dumpSuper() that also gives volume counts
+  VTKM_CONT
+  std::string DumpVolumes(vtkm::Id totalVolume,
+                          const vtkm::worklet::contourtree_augmented::IdArrayType& intrinsicVolume,
+                          const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume);
 
 private:
   /// Used internally to Invoke worklets
@@ -821,6 +829,7 @@ std::string HierarchicalContourTree<FieldType>::DebugPrint(const char* message,
     "nSupernodes In Round", this->NumSupernodesInRound, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
     "nHypernodes In Round", this->NumHypernodesInRound, -1, resultStream);
+  resultStream << "Owned Regular Vertices: " << this->NumOwnedRegularVertices << std::endl;
   vtkm::worklet::contourtree_augmented::PrintHeader(this->NumIterations.GetNumberOfValues(),
                                                     resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
@@ -863,6 +872,80 @@ std::string HierarchicalContourTree<FieldType>::PrintTreeStats() const
 
   return resultStream.str();
 } // PrintTreeStats
+
+
+// modified version of dumpSuper() that also gives volume counts
+template <typename FieldType>
+std::string HierarchicalContourTree<FieldType>::DumpVolumes(
+  vtkm::Id totalVolume,
+  const vtkm::worklet::contourtree_augmented::IdArrayType& intrinsicVolume,
+  const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume)
+{ // DumpVolumes()
+  // a local string stream to build the output
+  std::stringstream outStream;
+
+  // header info
+  outStream << "============" << std::endl;
+  outStream << "Contour Tree" << std::endl;
+
+  // loop through all superarcs
+  auto supernodesPortal = this->Supernodes.ReadPortal();
+  auto regularNodeGlobalIdsPortal = this->RegularNodeGlobalIds.ReadPortal();
+  auto superarcsPortal = this->Superarcs.ReadPortal();
+  auto intrinsicVolumePortal = intrinsicVolume.ReadPortal();
+  auto dependentVolumePortal = dependentVolume.ReadPortal();
+  for (vtkm::Id supernode = 0; supernode < this->Supernodes.GetNumberOfValues(); supernode++)
+  { // per supernode
+    // convert all the way down to global regular IDs
+    vtkm::Id fromRegular = supernodesPortal.Get(supernode);
+    vtkm::Id fromGlobal = regularNodeGlobalIdsPortal.Get(fromRegular);
+
+    // retrieve the superarc target
+    vtkm::Id toSuper = superarcsPortal.Get(supernode);
+
+    // if it is NO_SUCH_ELEMENT, it is the root or an attachment point
+    // for an augmented tree, it can only be the root
+    // in any event, we don't want to print them
+    if (vtkm::worklet::contourtree_augmented::NoSuchElement(toSuper))
+    {
+      continue;
+    }
+    // now break out the ascending flag & the underlying ID
+    bool superarcAscends = vtkm::worklet::contourtree_augmented::IsAscending(toSuper);
+    toSuper = vtkm::worklet::contourtree_augmented::MaskedIndex(toSuper);
+    vtkm::Id toRegular = supernodesPortal.Get(toSuper);
+    vtkm::Id toGlobal = regularNodeGlobalIdsPortal.Get(toRegular);
+
+    // compute the weights
+    vtkm::Id weight = dependentVolumePortal.Get(supernode);
+    // -1 because the validation output does not count the supernode for the superarc
+    vtkm::Id arcWeight = intrinsicVolumePortal.Get(supernode) - 1;
+    vtkm::Id counterWeight = totalVolume - weight + arcWeight;
+
+    // orient with high end first
+    if (superarcAscends)
+    { // ascending superarc
+      outStream << "H: " << std::setw(VOLUME_PRINT_WIDTH) << toGlobal;
+      outStream << " L: " << std::setw(VOLUME_PRINT_WIDTH) << fromGlobal;
+      outStream << " VH: " << std::setw(VOLUME_PRINT_WIDTH) << weight;
+      outStream << " VR: " << std::setw(VOLUME_PRINT_WIDTH) << arcWeight;
+      outStream << " VL: " << std::setw(VOLUME_PRINT_WIDTH) << counterWeight;
+      outStream << std::endl;
+    } // ascending superarc
+    else
+    { // descending superarc
+      outStream << "H: " << std::setw(VOLUME_PRINT_WIDTH) << fromGlobal;
+      outStream << " L: " << std::setw(VOLUME_PRINT_WIDTH) << toGlobal;
+      outStream << " VH: " << std::setw(VOLUME_PRINT_WIDTH) << counterWeight;
+      outStream << " VR: " << std::setw(VOLUME_PRINT_WIDTH) << arcWeight;
+      outStream << " VL: " << std::setw(VOLUME_PRINT_WIDTH) << weight;
+      outStream << std::endl;
+    } // descending superarc
+
+  } // per supernode
+  // return the string
+  return outStream.str();
+} // DumpVolumes()
 
 
 } // namespace contourtree_distributed
