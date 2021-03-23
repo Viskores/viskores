@@ -551,13 +551,16 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     contourtree_mesh_inc_ns::CombinedSimulatedSimplicityIndexComparator<FieldType>
       cssicFunctorExecObj(
         this->GlobalMeshIndex, other.GlobalMeshIndex, this->SortedValues, other.SortedValues);
-    contourtree_mesh_inc_ns::CopyIntoCombinedArrayWorklet copyIntoCombinedArrayWorklet;
-    this->Invoke(copyIntoCombinedArrayWorklet,
+    contourtree_mesh_inc_ns::CopyIntoCombinedArrayWorklet<true>
+      copyIntoCombinedArrayWorkletLowerBound;
+    this->Invoke(copyIntoCombinedArrayWorkletLowerBound,
                  thisIndices,
                  otherIndices,
                  cssicFunctorExecObj,
                  overallSortOrder);
-    this->Invoke(copyIntoCombinedArrayWorklet,
+    contourtree_mesh_inc_ns::CopyIntoCombinedArrayWorklet<false>
+      copyIntoCombinedArrayWorkletUpperBound;
+    this->Invoke(copyIntoCombinedArrayWorkletUpperBound,
                  otherIndices,
                  thisIndices,
                  cssicFunctorExecObj,

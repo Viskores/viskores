@@ -76,6 +76,7 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
+template <bool useLowerBound>
 class CopyIntoCombinedArrayWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -96,19 +97,20 @@ public:
                             const ComparisonFunctorType& comparisonFunctor,
                             OutputArrayPortalType& resultArrayPortal) const
   {
-    //std::cout << "Value " << value << " at idx " << idx << ": ";
     // Find position of value in other array. Note: We use lower and upper bounds for
-    // the two different arrays for the case where an element occurs in both arrays,
-    // so that one position is "shifted" upwards and unique in the result array.
-    vtkm::Id posInOther = vtkm::worklet::contourtree_augmented::IsThis(value)
+    // the two different arrays (passed as template bool parameter so that the test
+    // occurs at compile time). If the same value occurs in both arrays, this approach
+    // "shifts" the position upwards for one of the arrays/elements, resulting in a
+    // uniuqe positioj in the result array. (Without this distinction, both values would
+    // end up at the same location in the result array, leaving and "empty"/uninitialized
+    // position.
+    vtkm::Id posInOther = useLowerBound
       ? vtkm::LowerBound(otherArrayPortal, value, comparisonFunctor)
       : vtkm::UpperBound(otherArrayPortal, value, comparisonFunctor);
 
-    //std::cout << " posInOther=" << posInOther;
     // The position of the current elemnt is its index in our array plus its
     // position in the ohter array.
     resultArrayPortal.Set(idx + posInOther, value);
-    //std::cout << " -> Setting " << idx + posInOther << " to " << value << std::endl;
   }
 }; //  CopyIntoCombinedArrayWorklet
 
