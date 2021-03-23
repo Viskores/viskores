@@ -63,6 +63,7 @@
 #ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_into_combined_array_worklet_h
 #define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_into_combined_array_worklet_h
 
+#include <vtkm/Algorithms.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
@@ -96,46 +97,12 @@ public:
                             OutputArrayPortalType& resultArrayPortal) const
   {
     //std::cout << "Value " << value << " at idx " << idx << ": ";
-    // Binary search to find position of our value in other array
-    vtkm::Id l = 0;
-    vtkm::Id r = otherArrayPortal.GetNumberOfValues();
-
-    while (r > l)
-    {
-      vtkm::Id pos = (l + r) / 2;
-      if (comparisonFunctor(value, otherArrayPortal.Get(pos)))
-      {
-        r = pos - 1;
-      }
-      else if (comparisonFunctor(otherArrayPortal.Get(pos), value))
-      {
-        l = pos + 1;
-      }
-      else
-      {
-        l = r = pos;
-      }
-    }
-
-    // l (and r) are position of element in other array with same value as other if
-    // such a value exists. Otherwise either the element in the other array before
-    // or after. Adapt position as necessary.
-    // Note: Shift positions with equal value (must have equal global mesh index due
-    // to simulation of simplicity) one up for one array (this Array) so that
-    // elements that occur in both arrays do not overwrite each other.
-    vtkm::Id posInOther = l;
-    //std::cout << "l=" << l << " r=" << r;
-    if (posInOther < otherArrayPortal.GetNumberOfValues())
-    {
-      //std::cout << " [ " << comparisonFunctor(otherArrayPortal.Get(posInOther), value) << " " << vtkm::worklet::contourtree_augmented::IsThis(value) << " " << comparisonFunctor.GetGlobalMeshIndex(otherArrayPortal.Get(posInOther)) << " " << comparisonFunctor.GetGlobalMeshIndex(value) << " ]";
-      if (comparisonFunctor(otherArrayPortal.Get(posInOther), value) ||
-          (vtkm::worklet::contourtree_augmented::IsThis(value) &&
-           comparisonFunctor.GetGlobalMeshIndex(otherArrayPortal.Get(posInOther)) ==
-             comparisonFunctor.GetGlobalMeshIndex(value)))
-      {
-        ++posInOther;
-      }
-    }
+    // Find position of value in other array. Note: We use lower and upper bounds for
+    // the two different arrays for the case where an element occurs in both arrays,
+    // so that one position is "shifted" upwards and unique in the result array.
+    vtkm::Id posInOther = vtkm::worklet::contourtree_augmented::IsThis(value)
+      ? vtkm::LowerBound(otherArrayPortal, value, comparisonFunctor)
+      : vtkm::UpperBound(otherArrayPortal, value, comparisonFunctor);
 
     //std::cout << " posInOther=" << posInOther;
     // The position of the current elemnt is its index in our array plus its
