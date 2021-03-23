@@ -141,6 +141,9 @@ public:
   // how many rounds of fan-in were used to construct it
   vtkm::Id NumRounds;
 
+  // use for debugging?
+  vtkm::Id NumOwnedRegularVertices;
+
   // The following arrays store the numbers of reg/super/hyper nodes at each level of the hierarchy
   // They are filled in from the top down, and are fundamentally CPU side control variables
   // They will be needed for hypersweeps.
@@ -225,6 +228,7 @@ private:
 
 template <typename FieldType>
 HierarchicalContourTree<FieldType>::HierarchicalContourTree()
+  : NumOwnedRegularVertices(static_cast<vtkm::Id>(0))
 { // constructor
   NumRegularNodesInRound.ReleaseResources();
   NumSupernodesInRound.ReleaseResources();
