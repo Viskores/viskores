@@ -130,8 +130,8 @@ public:
 
       case HelperType::EXPSINGLE:
       {
-        cellShape = CellShape;
-        numVerts = PointsPerCell;
+        cellShape = this->CellShape;
+        numVerts = this->PointsPerCell;
         vtkm::Id n = static_cast<vtkm::Id>(PointsPerCell);
         vtkm::Id offset = cellId * n;
         for (vtkm::Id i = 0; i < n; i++)
@@ -148,6 +148,14 @@ public:
           indices.Append(this->Connectivity.Get(offset + i));
       }
       break;
+
+      default:
+      {
+        // Code path not expected to execute in correct cases
+        // Supress unused variable warning
+        cellShape = vtkm::UInt8(0);
+        numVerts = vtkm::IdComponent(0);
+      }
     }
   }
 
@@ -246,16 +254,13 @@ public:
     {
       case ExecutionType::HelperType::STRUCTURED:
         return ExecutionType(this->CellDims, this->PointDims, this->Is3D);
-        break;
 
       case ExecutionType::HelperType::EXPSINGLE:
         return ExecutionType(
           this->CellShape, this->PointsPerCell, this->Connectivity, device, token);
-        break;
 
       case ExecutionType::HelperType::EXPLICIT:
         return ExecutionType(this->Shape, this->Offset, this->Connectivity, device, token);
-        break;
     }
     throw vtkm::cont::ErrorInternal("Undefined case for building cell interpolation helper");
   }
