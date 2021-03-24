@@ -257,7 +257,7 @@ public:
     vtkm::cont::Algorithm::ScanExclusive(triangleConnCount, triangleConnOffset);
 
     //Surface points are same as input points.
-    newPoints = coords.GetData().Cast<ExplCoordsType>();
+    newPoints = coords.GetData().AsArrayHandle<ExplCoordsType>();
 
     //Create surface triangles
     vtkm::Id numConnIds = vtkm::cont::Algorithm::Reduce(triangleConnCount, vtkm::Id(0));

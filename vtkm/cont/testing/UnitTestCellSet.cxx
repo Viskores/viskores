@@ -19,6 +19,84 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/testing/Testing.h>
 
+// Make sure deprecated types still work (while applicable)
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+VTKM_STATIC_ASSERT(
+  (std::is_same<typename vtkm::cont::CellSetStructured<3>::
+                  ExecConnectivityType<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>,
+                typename vtkm::cont::CellSetStructured<3>::ExecutionTypes<
+                  vtkm::cont::DeviceAdapterTagSerial,
+                  vtkm::TopologyElementTagPoint,
+                  vtkm::TopologyElementTagCell>::ExecObjectType>::value));
+VTKM_STATIC_ASSERT(
+  (std::is_same<typename vtkm::cont::CellSetStructured<3>::
+                  ExecConnectivityType<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>,
+                typename vtkm::cont::CellSetStructured<3>::ExecutionTypes<
+                  vtkm::cont::DeviceAdapterTagSerial,
+                  vtkm::TopologyElementTagCell,
+                  vtkm::TopologyElementTagPoint>::ExecObjectType>::value));
+
+VTKM_STATIC_ASSERT(
+  (std::is_same<typename vtkm::cont::CellSetExplicit<>::
+                  ExecConnectivityType<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>,
+                typename vtkm::cont::CellSetExplicit<>::ExecutionTypes<
+                  vtkm::cont::DeviceAdapterTagSerial,
+                  vtkm::TopologyElementTagPoint,
+                  vtkm::TopologyElementTagCell>::ExecObjectType>::value));
+VTKM_STATIC_ASSERT(
+  (std::is_same<typename vtkm::cont::CellSetExplicit<>::
+                  ExecConnectivityType<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>,
+                typename vtkm::cont::CellSetExplicit<>::ExecutionTypes<
+                  vtkm::cont::DeviceAdapterTagSerial,
+                  vtkm::TopologyElementTagCell,
+                  vtkm::TopologyElementTagPoint>::ExecObjectType>::value));
+
+VTKM_STATIC_ASSERT(
+  (std::is_same<typename vtkm::cont::CellSetSingleType<>::
+                  ExecConnectivityType<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>,
+                typename vtkm::cont::CellSetSingleType<>::ExecutionTypes<
+                  vtkm::cont::DeviceAdapterTagSerial,
+                  vtkm::TopologyElementTagPoint,
+                  vtkm::TopologyElementTagCell>::ExecObjectType>::value));
+VTKM_STATIC_ASSERT(
+  (std::is_same<typename vtkm::cont::CellSetSingleType<>::
+                  ExecConnectivityType<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>,
+                typename vtkm::cont::CellSetSingleType<>::ExecutionTypes<
+                  vtkm::cont::DeviceAdapterTagSerial,
+                  vtkm::TopologyElementTagCell,
+                  vtkm::TopologyElementTagPoint>::ExecObjectType>::value));
+
+VTKM_STATIC_ASSERT(
+  (std::is_same<typename vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>>::
+                  ExecConnectivityType<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>,
+                typename vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>>::
+                  ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial,
+                                 vtkm::TopologyElementTagPoint,
+                                 vtkm::TopologyElementTagCell>::ExecObjectType>::value));
+VTKM_STATIC_ASSERT(
+  (std::is_same<typename vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>>::
+                  ExecConnectivityType<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>,
+                typename vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>>::
+                  ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial,
+                                 vtkm::TopologyElementTagCell,
+                                 vtkm::TopologyElementTagPoint>::ExecObjectType>::value));
+
+VTKM_STATIC_ASSERT(
+  (std::is_same<typename vtkm::cont::CellSetExtrude::
+                  ExecConnectivityType<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>,
+                typename vtkm::cont::CellSetExtrude::ExecutionTypes<
+                  vtkm::cont::DeviceAdapterTagSerial,
+                  vtkm::TopologyElementTagPoint,
+                  vtkm::TopologyElementTagCell>::ExecObjectType>::value));
+VTKM_STATIC_ASSERT(
+  (std::is_same<typename vtkm::cont::CellSetExtrude::
+                  ExecConnectivityType<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>,
+                typename vtkm::cont::CellSetExtrude::ExecutionTypes<
+                  vtkm::cont::DeviceAdapterTagSerial,
+                  vtkm::TopologyElementTagCell,
+                  vtkm::TopologyElementTagPoint>::ExecObjectType>::value));
+VTKM_DEPRECATED_SUPPRESS_END
+
 namespace
 {
 

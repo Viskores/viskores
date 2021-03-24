@@ -33,7 +33,8 @@ if(NOT CTEST_MEMORYCHECK_SUPPRESSIONS_FILE)
 endif()
 
 set(test_exclusions
-  # placeholder for tests to exclude
+  # placeholder for tests to exclude provided by the env
+  $ENV{CTEST_EXCLUSIONS}
 )
 
 string(REPLACE ";" "|" test_exclusions "${test_exclusions}")

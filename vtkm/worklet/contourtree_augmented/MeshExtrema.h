@@ -65,7 +65,7 @@
 #include <vtkm/worklet/contourtree_augmented/meshextrema/SetStarts.h>
 
 
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/SortIndices.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/SortIndices.h>
 
 namespace mesh_extrema_inc_ns = vtkm::worklet::contourtree_augmented::mesh_extrema_inc;
 

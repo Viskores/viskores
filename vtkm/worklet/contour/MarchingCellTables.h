@@ -495,24 +495,25 @@ public:
     }
 
   private:
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      NumVerticesPerCellPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      NumTrianglesTablePortal;
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType NumVerticesPerCellPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType NumTrianglesTablePortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType
       NumTrianglesTableOffsetPortal;
 
     friend class CellClassifyTable;
   };
 
   CellClassifyTable()
-    : NumVerticesPerCellArray(
-        vtkm::cont::make_ArrayHandle(NumVerticesPerCellTable, vtkm::NUMBER_OF_CELL_SHAPES))
-    , NumTrianglesTableOffsetArray(
-        vtkm::cont::make_ArrayHandle(NumTrianglesTableOffset, vtkm::NUMBER_OF_CELL_SHAPES))
+    : NumVerticesPerCellArray(vtkm::cont::make_ArrayHandle(NumVerticesPerCellTable,
+                                                           vtkm::NUMBER_OF_CELL_SHAPES,
+                                                           vtkm::CopyFlag::Off))
+    , NumTrianglesTableOffsetArray(vtkm::cont::make_ArrayHandle(NumTrianglesTableOffset,
+                                                                vtkm::NUMBER_OF_CELL_SHAPES,
+                                                                vtkm::CopyFlag::Off))
     , NumTrianglesTableArray(
         vtkm::cont::make_ArrayHandle(NumTrianglesTable,
-                                     sizeof(NumTrianglesTable) / sizeof(NumTrianglesTable[0])))
+                                     sizeof(NumTrianglesTable) / sizeof(NumTrianglesTable[0]),
+                                     vtkm::CopyFlag::Off))
   {
   }
 
@@ -577,14 +578,10 @@ public:
     }
 
   private:
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      EdgeTablePortal;
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      EdgeTableOffsetPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      TriangleTablePortal;
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<DeviceAdapter>::PortalConst
-      TriangleTableOffsetPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType EdgeTablePortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType EdgeTableOffsetPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType TriangleTablePortal;
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType TriangleTableOffsetPortal;
     friend class TriangleGenerationTable;
   };
 
@@ -603,17 +600,21 @@ public:
   }
 
   TriangleGenerationTable()
-    : EdgeTableArray(
-        vtkm::cont::make_ArrayHandle(EdgeTable, sizeof(EdgeTable) / sizeof(EdgeTable[0])))
+    : EdgeTableArray(vtkm::cont::make_ArrayHandle(EdgeTable,
+                                                  sizeof(EdgeTable) / sizeof(EdgeTable[0]),
+                                                  vtkm::CopyFlag::Off))
     , EdgeTableOffsetArray(
         vtkm::cont::make_ArrayHandle(EdgeTableOffset,
-                                     sizeof(EdgeTableOffset) / sizeof(EdgeTableOffset[0])))
+                                     sizeof(EdgeTableOffset) / sizeof(EdgeTableOffset[0]),
+                                     vtkm::CopyFlag::Off))
     , TriangleTableArray(
         vtkm::cont::make_ArrayHandle(TriangleTable,
-                                     sizeof(TriangleTable) / sizeof(TriangleTable[0])))
+                                     sizeof(TriangleTable) / sizeof(TriangleTable[0]),
+                                     vtkm::CopyFlag::Off))
     , TriangleTableOffsetArray(
         vtkm::cont::make_ArrayHandle(TriangleTableOffset,
-                                     sizeof(TriangleTableOffset) / sizeof(TriangleTableOffset[0])))
+                                     sizeof(TriangleTableOffset) / sizeof(TriangleTableOffset[0]),
+                                     vtkm::CopyFlag::Off))
   {
   }
 

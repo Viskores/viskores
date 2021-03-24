@@ -16,7 +16,7 @@ namespace vtkm
 
 template <typename CoordType, int Dim, bool IsTwoSided>
 template <int Dim_, typename std::enable_if<Dim_ == 2, int>::type>
-Ray<CoordType, Dim, IsTwoSided>::Ray()
+VTKM_EXEC_CONT Ray<CoordType, Dim, IsTwoSided>::Ray()
   : Origin{ 0.f }
   , Direction{ 1.f, 0.f }
 {
@@ -24,50 +24,42 @@ Ray<CoordType, Dim, IsTwoSided>::Ray()
 
 template <typename CoordType, int Dim, bool IsTwoSided>
 template <int Dim_, typename std::enable_if<Dim_ == 3, int>::type>
-Ray<CoordType, Dim, IsTwoSided>::Ray()
+VTKM_EXEC_CONT Ray<CoordType, Dim, IsTwoSided>::Ray()
   : Origin{ 0.f }
   , Direction{ 1.f, 0.f, 0.f }
 {
 }
 
 template <typename CoordType, int Dim, bool IsTwoSided>
-Ray<CoordType, Dim, IsTwoSided>::Ray(const LineSegment<CoordType, Dim>& segment)
+VTKM_EXEC_CONT Ray<CoordType, Dim, IsTwoSided>::Ray(const LineSegment<CoordType, Dim>& segment)
   : Origin(segment.Endpoints[0])
   , Direction(vtkm::Normal(segment.Direction()))
 {
 }
 
 template <typename CoordType, int Dim, bool IsTwoSided>
-Ray<CoordType, Dim, IsTwoSided>::Ray(const Vector& point, const Vector& direction)
+VTKM_EXEC_CONT Ray<CoordType, Dim, IsTwoSided>::Ray(const Vector& point, const Vector& direction)
   : Origin(point)
   , Direction(vtkm::Normal(direction))
 {
 }
 
 template <typename CoordType, int Dim, bool IsTwoSided>
-typename Ray<CoordType, Dim, IsTwoSided>::Vector Ray<CoordType, Dim, IsTwoSided>::Evaluate(
-  CoordType param) const
+VTKM_EXEC_CONT typename Ray<CoordType, Dim, IsTwoSided>::Vector
+Ray<CoordType, Dim, IsTwoSided>::Evaluate(CoordType param) const
 {
   auto pointOnLine = this->Origin + this->Direction * param;
   return pointOnLine;
 }
 
 template <typename CoordType, int Dim, bool IsTwoSided>
-bool Ray<CoordType, Dim, IsTwoSided>::IsValid() const
+VTKM_EXEC_CONT bool Ray<CoordType, Dim, IsTwoSided>::IsValid() const
 {
-// At least on Ubuntu 17.10, cuda 9.1 will fail with an internal
-// compiler error when calling vtkm::IsInf() here. But the fix
-// below works. The fix should be removed as soon as our dashboards
-// allow it.
-#if __CUDACC_VER_MAJOR__ == 9 && __CUDACC_VER_MINOR__ == 1
-  return !isinf(this->Direction[0]);
-#else
   return !vtkm::IsInf(this->Direction[0]);
-#endif
 }
 
 template <typename CoordType, int Dim, bool IsTwoSided>
-CoordType Ray<CoordType, Dim, IsTwoSided>::DistanceTo(const Vector& point) const
+VTKM_EXEC_CONT CoordType Ray<CoordType, Dim, IsTwoSided>::DistanceTo(const Vector& point) const
 {
   Vector closest;
   CoordType param;
@@ -75,9 +67,9 @@ CoordType Ray<CoordType, Dim, IsTwoSided>::DistanceTo(const Vector& point) const
 }
 
 template <typename CoordType, int Dim, bool IsTwoSided>
-CoordType Ray<CoordType, Dim, IsTwoSided>::DistanceTo(const Vector& point,
-                                                      CoordType& param,
-                                                      Vector& projectedPoint) const
+VTKM_EXEC_CONT CoordType Ray<CoordType, Dim, IsTwoSided>::DistanceTo(const Vector& point,
+                                                                     CoordType& param,
+                                                                     Vector& projectedPoint) const
 {
   const auto& dir = this->Direction;
   auto mag2 = vtkm::MagnitudeSquared(dir);
@@ -105,9 +97,10 @@ CoordType Ray<CoordType, Dim, IsTwoSided>::DistanceTo(const Vector& point,
 
 template <typename CoordType, int Dim, bool IsTwoSided>
 template <bool OtherTwoSided, int Dim_, typename std::enable_if<Dim_ == 2, int>::type>
-bool Ray<CoordType, Dim, IsTwoSided>::Intersect(const Ray<CoordType, Dim, OtherTwoSided>& other,
-                                                Vector& point,
-                                                CoordType tol)
+VTKM_EXEC_CONT bool Ray<CoordType, Dim, IsTwoSided>::Intersect(
+  const Ray<CoordType, Dim, OtherTwoSided>& other,
+  Vector& point,
+  CoordType tol)
 {
   auto d1 = this->Direction;
   auto d2 = other.Direction;
@@ -139,33 +132,33 @@ bool Ray<CoordType, Dim, IsTwoSided>::Intersect(const Ray<CoordType, Dim, OtherT
 
 template <typename CoordType, int Dim>
 template <int Dim_, typename std::enable_if<Dim_ == 2, int>::type>
-LineSegment<CoordType, Dim>::LineSegment()
+VTKM_EXEC_CONT LineSegment<CoordType, Dim>::LineSegment()
   : Endpoints{ { 0.f }, { 1.f, 0.f } }
 {
 }
 
 template <typename CoordType, int Dim>
 template <int Dim_, typename std::enable_if<Dim_ == 3, int>::type>
-LineSegment<CoordType, Dim>::LineSegment()
+VTKM_EXEC_CONT LineSegment<CoordType, Dim>::LineSegment()
   : Endpoints{ { 0.f }, { 1.f, 0.f, 0.f } }
 {
 }
 
 template <typename CoordType, int Dim>
-LineSegment<CoordType, Dim>::LineSegment(const Vector& p0, const Vector& p1)
+VTKM_EXEC_CONT LineSegment<CoordType, Dim>::LineSegment(const Vector& p0, const Vector& p1)
   : Endpoints{ p0, p1 }
 {
 }
 
 template <typename CoordType, int Dim>
-bool LineSegment<CoordType, Dim>::IsSingular(CoordType tol2) const
+VTKM_EXEC_CONT bool LineSegment<CoordType, Dim>::IsSingular(CoordType tol2) const
 {
   return vtkm::MagnitudeSquared(this->Direction()) < tol2;
 }
 
 template <typename CoordType, int Dim>
 template <int Dim_, typename std::enable_if<Dim_ == 2, int>::type>
-Ray<CoordType, Dim, true> LineSegment<CoordType, Dim>::PerpendicularBisector() const
+VTKM_EXEC_CONT Ray<CoordType, Dim, true> LineSegment<CoordType, Dim>::PerpendicularBisector() const
 {
   const Vector dir = this->Direction();
   const Vector perp(-dir[1], dir[0]);
@@ -175,13 +168,13 @@ Ray<CoordType, Dim, true> LineSegment<CoordType, Dim>::PerpendicularBisector() c
 
 template <typename CoordType, int Dim>
 template <int Dim_, typename std::enable_if<Dim_ == 3, int>::type>
-Plane<CoordType> LineSegment<CoordType, Dim>::PerpendicularBisector() const
+VTKM_EXEC_CONT Plane<CoordType> LineSegment<CoordType, Dim>::PerpendicularBisector() const
 {
   return Plane<CoordType>(this->Center(), this->Direction());
 }
 
 template <typename CoordType, int Dim>
-typename LineSegment<CoordType, Dim>::Vector LineSegment<CoordType, Dim>::Evaluate(
+VTKM_EXEC_CONT typename LineSegment<CoordType, Dim>::Vector LineSegment<CoordType, Dim>::Evaluate(
   CoordType param) const
 {
   auto pointOnLine = this->Endpoints[0] * (1.0f - param) + this->Endpoints[1] * param;
@@ -189,7 +182,7 @@ typename LineSegment<CoordType, Dim>::Vector LineSegment<CoordType, Dim>::Evalua
 }
 
 template <typename CoordType, int Dim>
-CoordType LineSegment<CoordType, Dim>::DistanceTo(const Vector& point) const
+VTKM_EXEC_CONT CoordType LineSegment<CoordType, Dim>::DistanceTo(const Vector& point) const
 {
   Vector closest;
   CoordType param;
@@ -197,9 +190,9 @@ CoordType LineSegment<CoordType, Dim>::DistanceTo(const Vector& point) const
 }
 
 template <typename CoordType, int Dim>
-CoordType LineSegment<CoordType, Dim>::DistanceTo(const Vector& point,
-                                                  CoordType& param,
-                                                  Vector& projectedPoint) const
+VTKM_EXEC_CONT CoordType LineSegment<CoordType, Dim>::DistanceTo(const Vector& point,
+                                                                 CoordType& param,
+                                                                 Vector& projectedPoint) const
 {
   auto dir = this->Endpoints[1] - this->Endpoints[0];
   auto mag2 = vtkm::MagnitudeSquared(dir);
@@ -224,9 +217,10 @@ CoordType LineSegment<CoordType, Dim>::DistanceTo(const Vector& point,
 
 template <typename CoordType, int Dim>
 template <int Dim_, typename std::enable_if<Dim_ == 2, int>::type>
-bool LineSegment<CoordType, Dim>::IntersectInfinite(const LineSegment<CoordType, Dim>& other,
-                                                    Vector& point,
-                                                    CoordType tol)
+VTKM_EXEC_CONT bool LineSegment<CoordType, Dim>::IntersectInfinite(
+  const LineSegment<CoordType, Dim>& other,
+  Vector& point,
+  CoordType tol)
 {
   auto d1 = this->Direction();
   auto d2 = other.Direction();
@@ -249,14 +243,14 @@ bool LineSegment<CoordType, Dim>::IntersectInfinite(const LineSegment<CoordType,
 // Plane
 
 template <typename CoordType>
-Plane<CoordType>::Plane()
+VTKM_EXEC_CONT VTKM_EXEC_CONT Plane<CoordType>::Plane()
   : Origin{ 0.f, 0.f, 0.f }
   , Normal{ 0.f, 0.f, 1.f }
 {
 }
 
 template <typename CoordType>
-Plane<CoordType>::Plane(const Vector& origin, const Vector& normal, CoordType tol2)
+VTKM_EXEC_CONT Plane<CoordType>::Plane(const Vector& origin, const Vector& normal, CoordType tol2)
   : Origin(origin)
   , Normal(vtkm::Normal(normal))
 {
@@ -268,14 +262,15 @@ Plane<CoordType>::Plane(const Vector& origin, const Vector& normal, CoordType to
 }
 
 template <typename CoordType>
-CoordType Plane<CoordType>::DistanceTo(const Vector& point) const
+VTKM_EXEC_CONT CoordType Plane<CoordType>::DistanceTo(const Vector& point) const
 {
   auto dist = vtkm::Dot(point - this->Origin, this->Normal);
   return dist;
 }
 
 template <typename CoordType>
-typename Plane<CoordType>::Vector Plane<CoordType>::ClosestPoint(const Vector& point) const
+VTKM_EXEC_CONT typename Plane<CoordType>::Vector Plane<CoordType>::ClosestPoint(
+  const Vector& point) const
 {
   auto vop = vtkm::Project(point - this->Origin, this->Normal);
   auto closest = point - vop;
@@ -284,11 +279,11 @@ typename Plane<CoordType>::Vector Plane<CoordType>::ClosestPoint(const Vector& p
 
 template <typename CoordType>
 template <bool IsTwoSided>
-bool Plane<CoordType>::Intersect(const Ray<CoordType, 3, IsTwoSided>& ray,
-                                 CoordType& parameter,
-                                 Vector& point,
-                                 bool& lineInPlane,
-                                 CoordType tol) const
+VTKM_EXEC_CONT bool Plane<CoordType>::Intersect(const Ray<CoordType, 3, IsTwoSided>& ray,
+                                                CoordType& parameter,
+                                                Vector& point,
+                                                bool& lineInPlane,
+                                                CoordType tol) const
 {
   CoordType d0 = this->DistanceTo(ray.Origin);
   CoordType dirDot = vtkm::Dot(this->Normal, ray.Direction);
@@ -330,19 +325,19 @@ bool Plane<CoordType>::Intersect(const Ray<CoordType, 3, IsTwoSided>& ray,
 }
 
 template <typename CoordType>
-bool Plane<CoordType>::Intersect(const LineSegment<CoordType>& segment,
-                                 CoordType& parameter,
-                                 bool& lineInPlane) const
+VTKM_EXEC_CONT bool Plane<CoordType>::Intersect(const LineSegment<CoordType>& segment,
+                                                CoordType& parameter,
+                                                bool& lineInPlane) const
 {
   Vector point;
   return this->Intersect(segment, parameter, point, lineInPlane);
 }
 
 template <typename CoordType>
-bool Plane<CoordType>::Intersect(const LineSegment<CoordType>& segment,
-                                 CoordType& parameter,
-                                 Vector& point,
-                                 bool& lineInPlane) const
+VTKM_EXEC_CONT bool Plane<CoordType>::Intersect(const LineSegment<CoordType>& segment,
+                                                CoordType& parameter,
+                                                Vector& point,
+                                                bool& lineInPlane) const
 {
   CoordType d0 = this->DistanceTo(segment.Endpoints[0]);
   CoordType d1 = this->DistanceTo(segment.Endpoints[1]);
@@ -394,10 +389,10 @@ bool Plane<CoordType>::Intersect(const LineSegment<CoordType>& segment,
 }
 
 template <typename CoordType>
-bool Plane<CoordType>::Intersect(const Plane<CoordType>& other,
-                                 Ray<CoordType, 3, true>& ray,
-                                 bool& coincident,
-                                 CoordType tol2) const
+VTKM_EXEC_CONT bool Plane<CoordType>::Intersect(const Plane<CoordType>& other,
+                                                Ray<CoordType, 3, true>& ray,
+                                                bool& coincident,
+                                                CoordType tol2) const
 {
   auto dir = vtkm::Cross(this->Normal, other.Normal);
   auto mag2 = vtkm::MagnitudeSquared(dir);
@@ -434,27 +429,27 @@ bool Plane<CoordType>::Intersect(const Plane<CoordType>& other,
 // Sphere
 
 template <typename CoordType, int Dim>
-Sphere<CoordType, Dim>::Sphere()
+VTKM_EXEC_CONT Sphere<CoordType, Dim>::Sphere()
   : Center{ 0.f }
   , Radius(static_cast<CoordType>(1.f))
 {
 }
 
 template <typename CoordType, int Dim>
-Sphere<CoordType, Dim>::Sphere(const Vector& center, CoordType radius)
+VTKM_EXEC_CONT Sphere<CoordType, Dim>::Sphere(const Vector& center, CoordType radius)
   : Center(center)
   , Radius(radius <= 0.f ? static_cast<CoordType>(-1.0f) : radius)
 {
 }
 
 template <typename CoordType, int Dim>
-bool Sphere<CoordType, Dim>::Contains(const Vector& point, CoordType tol2) const
+VTKM_EXEC_CONT bool Sphere<CoordType, Dim>::Contains(const Vector& point, CoordType tol2) const
 {
   return this->Classify(point, tol2) < 0;
 }
 
 template <typename CoordType, int Dim>
-int Sphere<CoordType, Dim>::Classify(const Vector& point, CoordType tol2) const
+VTKM_EXEC_CONT int Sphere<CoordType, Dim>::Classify(const Vector& point, CoordType tol2) const
 {
   if (!this->IsValid())
   {
@@ -469,16 +464,17 @@ int Sphere<CoordType, Dim>::Classify(const Vector& point, CoordType tol2) const
 // Construction techniques
 
 template <typename CoordType, bool IsTwoSided>
-vtkm::Plane<CoordType> make_PlaneFromPointAndLine(const vtkm::Vec<CoordType, 3>& point,
-                                                  const vtkm::Ray<CoordType, 3, IsTwoSided>& ray,
-                                                  CoordType tol2)
+VTKM_EXEC_CONT vtkm::Plane<CoordType> make_PlaneFromPointAndLine(
+  const vtkm::Vec<CoordType, 3>& point,
+  const vtkm::Ray<CoordType, 3, IsTwoSided>& ray,
+  CoordType tol2)
 {
   auto tmpDir = point - ray.Origin;
   return vtkm::Plane<CoordType>(point, vtkm::Cross(ray.Direction, tmpDir), tol2);
 }
 
 template <typename CoordType>
-vtkm::Plane<CoordType> make_PlaneFromPointAndLineSegment(
+VTKM_EXEC_CONT vtkm::Plane<CoordType> make_PlaneFromPointAndLineSegment(
   const vtkm::Vec<CoordType, 3>& point,
   const vtkm::LineSegment3<CoordType>& segment,
   CoordType tol2)
@@ -488,10 +484,11 @@ vtkm::Plane<CoordType> make_PlaneFromPointAndLineSegment(
 }
 
 template <typename CoordType>
-vtkm::Circle<CoordType> make_CircleFrom3Points(const typename vtkm::Vec<CoordType, 2>& p0,
-                                               const typename vtkm::Vec<CoordType, 2>& p1,
-                                               const typename vtkm::Vec<CoordType, 2>& p2,
-                                               CoordType tol)
+VTKM_EXEC_CONT vtkm::Circle<CoordType> make_CircleFrom3Points(
+  const typename vtkm::Vec<CoordType, 2>& p0,
+  const typename vtkm::Vec<CoordType, 2>& p1,
+  const typename vtkm::Vec<CoordType, 2>& p2,
+  CoordType tol)
 {
   constexpr int Dim = 2;
   using Vector = typename vtkm::Circle<CoordType>::Vector;
@@ -518,11 +515,11 @@ vtkm::Circle<CoordType> make_CircleFrom3Points(const typename vtkm::Vec<CoordTyp
 }
 
 template <typename CoordType>
-vtkm::Sphere<CoordType, 3> make_SphereFrom4Points(const vtkm::Vec<CoordType, 3>& a0,
-                                                  const vtkm::Vec<CoordType, 3>& a1,
-                                                  const vtkm::Vec<CoordType, 3>& a2,
-                                                  const vtkm::Vec<CoordType, 3>& a3,
-                                                  CoordType tol)
+VTKM_EXEC_CONT vtkm::Sphere<CoordType, 3> make_SphereFrom4Points(const vtkm::Vec<CoordType, 3>& a0,
+                                                                 const vtkm::Vec<CoordType, 3>& a1,
+                                                                 const vtkm::Vec<CoordType, 3>& a2,
+                                                                 const vtkm::Vec<CoordType, 3>& a3,
+                                                                 CoordType tol)
 {
   // Choose p3 such that the min(p3 - p[012]) is larger than any other choice of p3.
   // From: http://steve.hollasch.net/cgindex/geometry/sphere4pts.html,

@@ -32,7 +32,6 @@ void TestPixelTypeOperations(const vtkm::UInt16& numPixels = 10)
     {
       pixelVal += (i + j) << (shift * 8);
     }
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info, "pixelVal[" << i << "] = " << pixelVal);
 
     PixelType pixel(pixelVal);
     pixelVector[i] = pixel;
@@ -49,9 +48,9 @@ void TestPixelTypeOperations(const vtkm::UInt16& numPixels = 10)
       for (ValType k = numChannels * i; k < numChannels * i + numChannels; k++)
       {
         VTKM_TEST_ASSERT(imageData[k * numBytes + j] == i + j,
-                         "Wrong value at index[" + std::to_string(k * numBytes + j) + "]: " +
-                           std::to_string(imageData[k * numBytes + j]) + " != " +
-                           std::to_string(i + j));
+                         "Wrong value at index[" + std::to_string(k * numBytes + j) +
+                           "]: " + std::to_string(imageData[k * numBytes + j]) +
+                           " != " + std::to_string(i + j));
       }
     }
   }

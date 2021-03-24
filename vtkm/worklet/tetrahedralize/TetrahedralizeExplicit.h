@@ -15,7 +15,6 @@
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -50,11 +49,9 @@ public:
     VTKM_CONT
     TetrahedraPerCell() {}
 
-    template <typename DeviceAdapter>
     VTKM_EXEC vtkm::IdComponent operator()(
       vtkm::UInt8 shape,
-      const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter>& tables)
-      const
+      const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject& tables) const
     {
       return tables.GetCount(vtkm::CellShapeTagGeneric(shape));
     }
@@ -82,14 +79,11 @@ public:
     }
 
     // Each cell produces tetrahedra and write result at the offset
-    template <typename CellShapeTag,
-              typename ConnectivityInVec,
-              typename DeviceAdapter,
-              typename ConnectivityOutVec>
+    template <typename CellShapeTag, typename ConnectivityInVec, typename ConnectivityOutVec>
     VTKM_EXEC void operator()(
       CellShapeTag shape,
       const ConnectivityInVec& connectivityIn,
-      const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter>& tables,
+      const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject& tables,
       ConnectivityOutVec& connectivityOut,
       vtkm::IdComponent visitIndex) const
     {

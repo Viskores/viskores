@@ -101,8 +101,7 @@ VTKM_CONT void ArrayGetValues(const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids
     { // Retry on any device if the first attempt failed.
       VTKM_LOG_S(vtkm::cont::LogLevel::Error,
                  "Failed to run ArrayGetValues on device '"
-                   << devId.GetName()
-                   << "'. Falling back to control-side copy.");
+                   << devId.GetName() << "'. Falling back to control-side copy.");
       copyComplete = vtkm::cont::Algorithm::Copy(vtkm::cont::DeviceAdapterTagAny{}, input, output);
     }
   }

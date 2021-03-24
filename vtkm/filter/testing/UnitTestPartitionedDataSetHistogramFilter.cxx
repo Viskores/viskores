@@ -110,7 +110,7 @@ static void TestPartitionedDataSetHistogram()
   auto bins = result.GetPartition(0)
                 .GetField("histogram")
                 .GetData()
-                .Cast<vtkm::cont::ArrayHandle<vtkm::Id>>();
+                .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
   VTKM_TEST_ASSERT(bins.GetNumberOfValues() == 10, "Expecting 10 bins.");
   auto binsPortal = bins.ReadPortal();
   auto count = std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(binsPortal),
@@ -129,8 +129,5 @@ static void TestPartitionedDataSetHistogram()
 
 int UnitTestPartitionedDataSetHistogramFilter(int argc, char* argv[])
 {
-  // Setup MPI environment: This test is not intendent to be run in parallel
-  // but filter does make some DIY/MPI calls
-  vtkmdiy::mpi::environment env(argc, argv);
   return vtkm::cont::testing::Testing::Run(TestPartitionedDataSetHistogram, argc, argv);
 }

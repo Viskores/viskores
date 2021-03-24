@@ -27,13 +27,11 @@ namespace vtkm_ut_zfp_filter
 
 void TestZFP1DFilter(vtkm::Float64 rate)
 {
-
-
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make1DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
-  vtkm::cont::ArrayHandle<vtkm::Float64> field =
-    dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  vtkm::cont::ArrayHandle<vtkm::Float64> field;
+  dynField.AsArrayHandle(field);
   auto oport = field.ReadPortal();
 
   vtkm::filter::ZFPCompressor1D compressor;
@@ -43,33 +41,28 @@ void TestZFP1DFilter(vtkm::Float64 rate)
   compressor.SetRate(rate);
   auto compressed = compressor.Execute(dataset);
 
-
-
   decompressor.SetActiveField("compressed");
   decompressor.SetRate(rate);
   auto decompress = decompressor.Execute(compressed);
   dynField = decompress.GetField("decompressed").GetData();
 
-  field = dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  dynField.AsArrayHandle(field);
   auto port = field.ReadPortal();
 
   for (int i = 0; i < field.GetNumberOfValues(); i++)
   {
-    std::cout << oport.Get(i) << " " << port.Get(i) << " " << oport.Get(i) - port.Get(i)
-              << std::endl;
+    VTKM_TEST_ASSERT(test_equal(oport.Get(i), port.Get(i), 0.8));
   }
 }
 
 void TestZFP2DFilter(vtkm::Float64 rate)
 {
-
-
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make2DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> field =
-    dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  vtkm::cont::ArrayHandle<vtkm::Float64> field;
+  dynField.AsArrayHandle(field);
   auto oport = field.ReadPortal();
 
 
@@ -87,26 +80,23 @@ void TestZFP2DFilter(vtkm::Float64 rate)
   auto decompress = decompressor.Execute(compressed);
   dynField = decompress.GetField("decompressed").GetData();
 
-  field = dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  dynField.AsArrayHandle(field);
   auto port = field.ReadPortal();
 
   for (int i = 0; i < dynField.GetNumberOfValues(); i++)
   {
-    std::cout << oport.Get(i) << " " << port.Get(i) << " " << oport.Get(i) - port.Get(i)
-              << std::endl;
+    VTKM_TEST_ASSERT(test_equal(oport.Get(i), port.Get(i), 0.8));
   }
 }
 
 void TestZFP3DFilter(vtkm::Float64 rate)
 {
-
-
   const vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make3DUniformDataSet3(dims);
   auto dynField = dataset.GetField("pointvar").GetData();
-  vtkm::cont::ArrayHandle<vtkm::Float64> field =
-    dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  vtkm::cont::ArrayHandle<vtkm::Float64> field;
+  dynField.AsArrayHandle(field);
   auto oport = field.ReadPortal();
 
 
@@ -117,20 +107,17 @@ void TestZFP3DFilter(vtkm::Float64 rate)
   compressor.SetRate(rate);
   auto compressed = compressor.Execute(dataset);
 
-
-
   decompressor.SetActiveField("compressed");
   decompressor.SetRate(rate);
   auto decompress = decompressor.Execute(compressed);
   dynField = decompress.GetField("decompressed").GetData();
 
-  field = dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  dynField.AsArrayHandle(field);
   auto port = field.ReadPortal();
 
   for (int i = 0; i < dynField.GetNumberOfValues(); i++)
   {
-    std::cout << oport.Get(i) << " " << port.Get(i) << " " << oport.Get(i) - port.Get(i)
-              << std::endl;
+    VTKM_TEST_ASSERT(test_equal(oport.Get(i), port.Get(i), 0.8));
   }
 }
 

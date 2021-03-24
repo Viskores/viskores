@@ -20,6 +20,7 @@
 #include <vtkm/io/internal/VTKDataSetTypes.h>
 
 #include <fstream>
+#include <sstream>
 
 namespace vtkm
 {

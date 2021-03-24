@@ -23,9 +23,11 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/RK4Integrator.h>
 
 #include <cstring>
 #include <sstream>
@@ -274,12 +276,14 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
   vtkm::worklet::ParticleAdvection particleadvection;
-  vtkm::worklet::ParticleAdvectionResult res;
+  vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
 
-  GridEvalType gridEval(coords, cells, field);
+  FieldType velocities(field);
+  GridEvalType gridEval(coords, cells, velocities);
   RK4Type rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
 
   res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step

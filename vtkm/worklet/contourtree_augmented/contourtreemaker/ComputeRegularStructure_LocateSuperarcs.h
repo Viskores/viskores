@@ -76,8 +76,8 @@ public:
                                 WholeArrayIn contourTreeHyperarcs,       // (input)
                                 WholeArrayIn contourTreeHypernodes,      // (input)
                                 WholeArrayIn contourTreeSupernodes,      // (input)
-                                WholeArrayIn meshExtremaPeaks,           // (input)
-                                WholeArrayIn meshExtremaPits);           // (input)
+                                FieldIn meshExtremaPeaks,                // (input)
+                                FieldIn meshExtremaPits);                // (input)
 
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;
@@ -101,16 +101,14 @@ public:
                             const InFieldPortalType& contourTreeHyperarcsPortal,
                             const InFieldPortalType& contourTreeHypernodesPortal,
                             const InFieldPortalType& contourTreeSupernodesPortal,
-                            const InFieldPortalType& meshExtremaPeaksPortal,
-                            const InFieldPortalType& meshExtremaPitsPortal) const
+                            vtkm::Id top,
+                            vtkm::Id bottom) const
   {
     // per node
     // if the superparent is already set, it's a supernode, so skip it.
     if (NoSuchElement(contourTreeSuperparentsPortal.Get(node)))
     { // regular nodes only
       // we will need to prune top and bottom until one of them prunes past the node
-      vtkm::Id top = meshExtremaPeaksPortal.Get(node);
-      vtkm::Id bottom = meshExtremaPitsPortal.Get(node);
       // these are the regular IDs of supernodes, so their superparents are already set
       vtkm::Id topSuperparent = contourTreeSuperparentsPortal.Get(MaskedIndex(top));
       vtkm::Id bottomSuperparent = contourTreeSuperparentsPortal.Get(MaskedIndex(bottom));
@@ -413,17 +411,16 @@ public:
                                 WholeArrayIn contourTreeHyperarcs,       // (input)
                                 WholeArrayIn contourTreeHypernodes,      // (input)
                                 WholeArrayIn contourTreeSupernodes,      // (input)
-                                WholeArrayIn meshExtremaPeaks,           // (input)
-                                WholeArrayIn meshExtremaPits,            // (input)
+                                FieldIn meshExtremaPeaks,                // (input)
+                                FieldIn meshExtremaPits,                 // (input)
+                                FieldIn sortOrder,                       // (input)
                                 ExecObject meshBoundary);                // (input)
 
-  typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8, _9);
+  typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8, _9, _10);
   using InputDomain = _1;
 
   vtkm::Id NumHypernodes; // contourTree.Hypernodes.GetNumberOfValues()
   vtkm::Id NumSupernodes; // contourTree.Supernodes.GetNumberOfValues()
-
-  vtkm::Id NumRows, NumColumns, NumSlices; // Mesh 2D or 3D - NumRows, NumColumns, NumSlices
 
   // Default Constructor
   VTKM_EXEC_CONT
@@ -441,17 +438,17 @@ public:
                             const InFieldPortalType& contourTreeHyperarcsPortal,
                             const InFieldPortalType& contourTreeHypernodesPortal,
                             const InFieldPortalType& contourTreeSupernodesPortal,
-                            const InFieldPortalType& meshExtremaPeaksPortal,
-                            const InFieldPortalType& meshExtremaPitsPortal,
+                            vtkm::Id top,
+                            vtkm::Id bottom,
+                            vtkm::Id sortOrder,
                             const MeshBoundaryType& meshBoundary) const
   {
     // per node
     // if the superparent is already set, it's a supernode, so skip it.
-    if (NoSuchElement(contourTreeSuperparentsPortal.Get(node)) && meshBoundary.liesOnBoundary(node))
+    if (NoSuchElement(contourTreeSuperparentsPortal.Get(node)) &&
+        meshBoundary.LiesOnBoundary(sortOrder))
     { // regular nodes only
       // we will need to prune top and bottom until one of them prunes past the node
-      vtkm::Id top = meshExtremaPeaksPortal.Get(node);
-      vtkm::Id bottom = meshExtremaPitsPortal.Get(node);
       // these are the regular IDs of supernodes, so their superparents are already set
       vtkm::Id topSuperparent = contourTreeSuperparentsPortal.Get(MaskedIndex(top));
       vtkm::Id bottomSuperparent = contourTreeSuperparentsPortal.Get(MaskedIndex(bottom));

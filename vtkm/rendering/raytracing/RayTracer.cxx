@@ -277,6 +277,7 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
 
   logger->AddLogData("shapes", NumberOfShapes);
   logger->AddLogData("num_rays", rays.NumRays);
+
   size_t numShapes = Intersectors.size();
   if (NumberOfShapes > 0)
   {

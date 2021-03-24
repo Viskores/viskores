@@ -24,8 +24,8 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
-
-#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
@@ -107,14 +107,12 @@ public:
 private:
   using AxisIndexArrayPoints =
     vtkm::cont::ArrayHandleImplicit<extractstructured::internal::SubArrayPermutePoints>;
-  using PointIndexArray = vtkm::cont::ArrayHandleCartesianProduct<AxisIndexArrayPoints,
-                                                                  AxisIndexArrayPoints,
-                                                                  AxisIndexArrayPoints>;
+  using PointIndexArray = vtkm::cont::
+    ArrayHandleCartesianProduct<AxisIndexArrayPoints, AxisIndexArrayPoints, AxisIndexArrayPoints>;
 
   using AxisIndexArrayCells = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
-  using CellIndexArray = vtkm::cont::ArrayHandleCartesianProduct<AxisIndexArrayCells,
-                                                                 AxisIndexArrayCells,
-                                                                 AxisIndexArrayCells>;
+  using CellIndexArray = vtkm::cont::
+    ArrayHandleCartesianProduct<AxisIndexArrayCells, AxisIndexArrayCells, AxisIndexArrayCells>;
 
   inline AxisIndexArrayPoints MakeAxisIndexArrayPoints(vtkm::Id count,
                                                        vtkm::Id first,
@@ -416,16 +414,15 @@ public:
   }
 
 private:
-  using UniformCoordinatesArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates::Superclass;
+  using UniformCoordinatesArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
 
-  using RectilinearCoordinatesArrayHandle = vtkm::cont::ArrayHandleCartesianProduct<
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault>>::Superclass;
+  using RectilinearCoordinatesArrayHandle =
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
 
 
-  vtkm::cont::ArrayHandleVirtualCoordinates MapCoordinatesUniform(
-    const UniformCoordinatesArrayHandle& coords)
+  UniformCoordinatesArrayHandle MapCoordinatesUniform(const UniformCoordinatesArrayHandle& coords)
   {
     using CoordsArray = vtkm::cont::ArrayHandleUniformPointCoordinates;
     using CoordType = CoordsArray::ValueType;
@@ -441,24 +438,23 @@ private:
                      inOrigin[2] + static_cast<ValueType>(this->VOI.Z.Min) * inSpacing[2]);
     CoordType outSpacing = inSpacing * static_cast<CoordType>(this->SampleRate);
 
-    auto out = CoordsArray(this->OutputDimensions, outOrigin, outSpacing);
-    return vtkm::cont::ArrayHandleVirtualCoordinates(out);
+    return CoordsArray(this->OutputDimensions, outOrigin, outSpacing);
   }
 
-  vtkm::cont::ArrayHandleVirtualCoordinates MapCoordinatesRectilinear(
+  RectilinearCoordinatesArrayHandle MapCoordinatesRectilinear(
     const RectilinearCoordinatesArrayHandle& coords)
   {
     // For structured datasets, the cellsets are of different types based on
     // its dimensionality, but the coordinates are always 3 dimensional.
     // We can map the axis of the cellset to the coordinates by looking at the
     // length of a coordinate axis array.
-    AxisIndexArrayPoints validIds[3] = { this->ValidPoints.GetStorage().GetFirstArray(),
-                                         this->ValidPoints.GetStorage().GetSecondArray(),
-                                         this->ValidPoints.GetStorage().GetThirdArray() };
+    AxisIndexArrayPoints validIds[3] = { this->ValidPoints.GetFirstArray(),
+                                         this->ValidPoints.GetSecondArray(),
+                                         this->ValidPoints.GetThirdArray() };
 
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> arrays[3] = { coords.GetStorage().GetFirstArray(),
-                                                              coords.GetStorage().GetSecondArray(),
-                                                              coords.GetStorage().GetThirdArray() };
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> arrays[3] = { coords.GetFirstArray(),
+                                                              coords.GetSecondArray(),
+                                                              coords.GetThirdArray() };
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> xyzs[3];
     int dim = 0;
@@ -478,28 +474,42 @@ private:
     }
     VTKM_ASSERT(dim == this->InputDimensionality);
 
-    auto out = vtkm::cont::make_ArrayHandleCartesianProduct(xyzs[0], xyzs[1], xyzs[2]);
-    return vtkm::cont::ArrayHandleVirtualCoordinates(out);
+    return vtkm::cont::make_ArrayHandleCartesianProduct(xyzs[0], xyzs[1], xyzs[2]);
   }
 
-public:
-  vtkm::cont::ArrayHandleVirtualCoordinates MapCoordinates(
-    const vtkm::cont::CoordinateSystem& coordinates)
+  struct MapCoordinatesFunctor
   {
-    auto coArray = coordinates.GetData();
-    if (coArray.IsType<UniformCoordinatesArrayHandle>())
+    template <typename T, typename S>
+    VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>& coords,
+                              ExtractStructured& self,
+                              vtkm::cont::UnknownArrayHandle& output) const
     {
-      return this->MapCoordinatesUniform(coArray.Cast<UniformCoordinatesArrayHandle>());
+      output = self.ProcessPointField(coords);
     }
-    else if (coArray.IsType<RectilinearCoordinatesArrayHandle>())
+
+    VTKM_CONT void operator()(const UniformCoordinatesArrayHandle::Superclass& coords,
+                              ExtractStructured& self,
+                              vtkm::cont::UnknownArrayHandle& output) const
     {
-      return this->MapCoordinatesRectilinear(coArray.Cast<RectilinearCoordinatesArrayHandle>());
+      output = self.MapCoordinatesUniform(coords);
     }
-    else
+
+    VTKM_CONT void operator()(const RectilinearCoordinatesArrayHandle::Superclass& coords,
+                              ExtractStructured& self,
+                              vtkm::cont::UnknownArrayHandle& output) const
     {
-      auto out = this->ProcessPointField(coArray);
-      return vtkm::cont::ArrayHandleVirtualCoordinates(out);
+      output = self.MapCoordinatesRectilinear(coords);
     }
+  };
+
+  friend MapCoordinatesFunctor;
+
+public:
+  vtkm::cont::UnknownArrayHandle MapCoordinates(const vtkm::cont::CoordinateSystem& coordinates)
+  {
+    vtkm::cont::UnknownArrayHandle output;
+    vtkm::cont::CastAndCall(coordinates, MapCoordinatesFunctor{}, *this, output);
+    return output;
   }
 
 public:

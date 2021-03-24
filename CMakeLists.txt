@@ -8,15 +8,17 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-# If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX.
-# We require CMake 3.11 with the MSVC generator as the $<COMPILE_LANGUAGE:>
-# generator expression is not supported on older versions.
+# If you want CUDA support, you will need to have CMake 3.13 on Linux/OSX.
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 project (VTKm)
 
-if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
-  cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
-endif()
+# We only allow c++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# When using C++14 support make sure you use the standard C++ extensions rather
+# than compiler-specific versions of the extensions (to preserve portability).
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Update module path
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
@@ -79,8 +81,9 @@ endmacro ()
 
 # Configurable Options
 vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
-vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
+vtkm_option(VTKm_ENABLE_KOKKOS "Enable Kokkos support" OFF)
 vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
+vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
@@ -97,6 +100,11 @@ endif()
 vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
+vtkm_option(VTKm_ENABLE_HDF5_IO "Enable HDF5 support" OFF)
+if (VTKm_ENABLE_HDF5_IO)
+  find_package(HDF5 REQUIRED COMPONENTS HL)
+endif()
+
 # VTK-m will turn on logging by default, but will set the default
 # logging level to WARN.  This option should not be visible by default
 # in the GUI, as ERROR and WARN level logging should not interfere
@@ -107,6 +115,17 @@ vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" ON)
 # VTK-m internal assert checks when in debug mode to improve debug runtime
 # performance.
 vtkm_option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
+
+# The CUDA compiler (as of CUDA 11) takes a surprising long time to compile
+# kernels with assert in them. By default we turn off asserts when compiling
+# for CUDA devices.
+vtkm_option(VTKm_NO_ASSERT_CUDA "Disable assertions for CUDA devices." ON)
+
+# The HIP compiler (as of ROCm 3.7) takes a surprising long time to compile
+# kernels with assert in them they generate `printf` calls which are very
+# slow ( cause massive register spillage). By default we turn off asserts when
+# compiling for HIP devices.
+vtkm_option(VTKm_NO_ASSERT_HIP "Disable assertions for HIP devices." ON)
 
 # When VTK-m is embedded into larger projects that wish to make end user
 # applications they want to only install libraries and don't want CMake/headers
@@ -132,19 +151,26 @@ vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful w
 # Some application might need not to install those, hence this option.
 vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README and LICENSE files" OFF)
 
+# We are in the process of deprecating the use of virtual methods because they
+# are not well supported on many accelerators. Turn this option on to remove
+# the code entirely. Note that the deprecation of virtual methods is work in
+# progress, so not all use of virtual methods may be done. In VTK-m 2.0
+# virtual methods should be removed entirely and this option will be removed.
+vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" OFF)
+
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
+  VTKm_NO_ASSERT_CUDA
+  VTKm_NO_ASSERT_HIP
   VTKm_INSTALL_ONLY_LIBRARIES
   VTKm_HIDE_PRIVATE_SYMBOLS
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
+  VTKm_NO_DEPRECATED_VIRTUAL
   )
 
 #-----------------------------------------------------------------------------
-# When using C++11 support make sure you use the standard C++ extensions rather
-# than compiler-specific versions of the extensions (to preserve portability).
-set(CMAKE_CXX_EXTENSIONS Off)
 
 # Setup default build types
 include(VTKmBuildType)
@@ -204,7 +230,7 @@ if (VTKm_ENABLE_TESTING)
   # Setup compiler flags for dynamic analysis if needed
   include(testing/VTKmCompilerDynamicAnalysisFlags)
 
-endif (VTKm_ENABLE_TESTING)
+endif()
 
 #-----------------------------------------------------------------------------
 # Check basic type sizes.
@@ -268,9 +294,15 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   # Install helper configure files.
   install(
     FILES
+      ${VTKm_SOURCE_DIR}/CMake/VTKmCMakeBackports.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
-      ${VTKm_SOURCE_DIR}/CMake/FindMPI.cmake
+      ${VTKm_SOURCE_DIR}/CMake/patches/FindMPI.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
+    )
+  install(
+    FILES
+      ${VTKm_SOURCE_DIR}/CMake/patches/3.15/FindMPI.cmake
+    DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}/3.15
     )
 
   # Install support files.
@@ -281,7 +313,6 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
       ${VTKm_SOURCE_DIR}/CMake/VTKmDeviceAdapters.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmDIYUtils.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
-      ${VTKm_SOURCE_DIR}/CMake/VTKmMPI.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
@@ -315,7 +346,7 @@ endif ()
 #-----------------------------------------------------------------------------
 #add the benchmarking folder
 if(VTKm_ENABLE_BENCHMARKS)
-    add_subdirectory(benchmarking)
+  add_subdirectory(benchmarking)
 endif()
 
 #-----------------------------------------------------------------------------

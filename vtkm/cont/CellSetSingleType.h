@@ -61,10 +61,11 @@ public:
   }
 
   VTKM_CONT
-  CellSetSingleType(Thisclass&& src) noexcept : Superclass(std::forward<Superclass>(src)),
-                                                ExpectedNumberOfCellsAdded(-1),
-                                                CellShapeAsId(src.CellShapeAsId),
-                                                NumberOfPointsPerCell(src.NumberOfPointsPerCell)
+  CellSetSingleType(Thisclass&& src) noexcept
+    : Superclass(std::forward<Superclass>(src))
+    , ExpectedNumberOfCellsAdded(-1)
+    , CellShapeAsId(src.CellShapeAsId)
+    , NumberOfPointsPerCell(src.NumberOfPointsPerCell)
   {
   }
 
@@ -158,7 +159,7 @@ public:
   void CompleteAddingCells(vtkm::Id numPoints)
   {
     this->Data->NumberOfPoints = numPoints;
-    this->CellPointIds.Connectivity.Shrink(this->ConnectivityAdded);
+    this->CellPointIds.Connectivity.Allocate(this->ConnectivityAdded, vtkm::CopyFlag::On);
 
     vtkm::Id numCells = this->NumberOfCellsAdded;
 

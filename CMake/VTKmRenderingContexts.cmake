@@ -61,6 +61,20 @@ function(vtkm_find_gl)
 
   if(DO_GLUT_FIND AND NOT TARGET GLUT::GLUT)
     find_package(GLUT ${GLUT_REQUIRED} ${QUIETLY})
+
+    if(APPLE AND CMAKE_VERSION VERSION_LESS 3.19.2)
+      get_target_property(lib_path GLUT::GLUT IMPORTED_LOCATION)
+      if(EXISTS "${lib_path}.tbd")
+        set_target_properties(GLUT::GLUT PROPERTIES
+          IMPORTED_LOCATION "${lib_path}.tbd")
+      endif()
+
+      get_target_property(lib_path GLUT::Cocoa IMPORTED_LOCATION)
+      if(EXISTS "${lib_path}.tbd")
+        set_target_properties(GLUT::Cocoa PROPERTIES
+          IMPORTED_LOCATION "${lib_path}.tbd")
+      endif()
+    endif()
   endif()
 
 endfunction()

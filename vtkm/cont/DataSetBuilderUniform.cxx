@@ -16,9 +16,7 @@ namespace cont
 {
 
 VTKM_CONT
-DataSetBuilderUniform::DataSetBuilderUniform()
-{
-}
+DataSetBuilderUniform::DataSetBuilderUniform() {}
 
 VTKM_CONT
 vtkm::cont::DataSet DataSetBuilderUniform::Create(const vtkm::Id& dimension,

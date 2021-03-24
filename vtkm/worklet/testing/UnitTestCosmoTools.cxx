@@ -195,11 +195,11 @@ void TestCosmo_2DHaloFind()
   vtkm::cont::ArrayHandle<vtkm::Id> haloIdArray;
   vtkm::cont::ArrayHandle<vtkm::Id> mbpArray;
 
-  dataSet.GetField("xLocation").GetData().CopyTo(xLocArray);
-  dataSet.GetField("yLocation").GetData().CopyTo(yLocArray);
-  dataSet.GetField("zLocation").GetData().CopyTo(zLocArray);
-  dataSet.GetField("haloId").GetData().CopyTo(haloIdArray);
-  dataSet.GetField("mbp").GetData().CopyTo(mbpArray);
+  dataSet.GetField("xLocation").GetData().AsArrayHandle(xLocArray);
+  dataSet.GetField("yLocation").GetData().AsArrayHandle(yLocArray);
+  dataSet.GetField("zLocation").GetData().AsArrayHandle(zLocArray);
+  dataSet.GetField("haloId").GetData().AsArrayHandle(haloIdArray);
+  dataSet.GetField("mbp").GetData().AsArrayHandle(mbpArray);
 
   // Output haloId, MBP, potential per particle
   vtkm::cont::ArrayHandle<vtkm::Id> resultHaloId;
@@ -247,11 +247,11 @@ void TestCosmo_3DHaloFind()
   vtkm::cont::ArrayHandle<vtkm::Id> haloIdArray;
   vtkm::cont::ArrayHandle<vtkm::Id> mbpArray;
 
-  dataSet.GetField("xLocation").GetData().CopyTo(xLocArray);
-  dataSet.GetField("yLocation").GetData().CopyTo(yLocArray);
-  dataSet.GetField("zLocation").GetData().CopyTo(zLocArray);
-  dataSet.GetField("haloId").GetData().CopyTo(haloIdArray);
-  dataSet.GetField("mbp").GetData().CopyTo(mbpArray);
+  dataSet.GetField("xLocation").GetData().AsArrayHandle(xLocArray);
+  dataSet.GetField("yLocation").GetData().AsArrayHandle(yLocArray);
+  dataSet.GetField("zLocation").GetData().AsArrayHandle(zLocArray);
+  dataSet.GetField("haloId").GetData().AsArrayHandle(haloIdArray);
+  dataSet.GetField("mbp").GetData().AsArrayHandle(mbpArray);
 
   // Output haloId, MBP, potential per particle
   vtkm::cont::ArrayHandle<vtkm::Id> resultHaloId;
@@ -297,9 +297,9 @@ void TestCosmo_3DCenterFind()
   vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> zLocArray;
   vtkm::cont::ArrayHandle<vtkm::Id> haloIdArray;
-  dataSet.GetField("xLocation").GetData().CopyTo(xLocArray);
-  dataSet.GetField("yLocation").GetData().CopyTo(yLocArray);
-  dataSet.GetField("zLocation").GetData().CopyTo(zLocArray);
+  dataSet.GetField("xLocation").GetData().AsArrayHandle(xLocArray);
+  dataSet.GetField("yLocation").GetData().AsArrayHandle(yLocArray);
+  dataSet.GetField("zLocation").GetData().AsArrayHandle(zLocArray);
 
   // Output haloId MBP particleId pairs array
   vtkm::Pair<vtkm::Id, vtkm::Float32> nxnResult;

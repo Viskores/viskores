@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/openmp/internal/ArrayManagerExecutionOpenMP.h>
 #include <vtkm/cont/openmp/internal/FunctorsOpenMP.h>
 #include <vtkm/cont/openmp/internal/ParallelQuickSortOpenMP.h>
 #include <vtkm/cont/openmp/internal/ParallelRadixSortOpenMP.h>
@@ -65,8 +64,10 @@ void parallel_sort(vtkm::cont::ArrayHandle<T, StorageT>& values,
                    vtkm::cont::internal::radix::RadixSortTag)
 {
   auto c = vtkm::cont::internal::radix::get_std_compare(binary_compare, T{});
+  vtkm::cont::Token token;
+  auto valuesPortal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagOpenMP{}, token);
   radix::parallel_radix_sort(
-    values.GetStorage().GetArray(), static_cast<std::size_t>(values.GetNumberOfValues()), c);
+    valuesPortal.GetIteratorBegin(), static_cast<std::size_t>(values.GetNumberOfValues()), c);
 }
 
 // Value sort -- static switch between quicksort & radix sort
@@ -166,8 +167,11 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
 {
   using namespace vtkm::cont::internal::radix;
   auto c = get_std_compare(binary_compare, T{});
-  radix::parallel_radix_sort_key_values(keys.GetStorage().GetArray(),
-                                        values.GetStorage().GetArray(),
+  vtkm::cont::Token token;
+  auto keysPortal = keys.PrepareForInPlace(vtkm::cont::DeviceAdapterTagOpenMP{}, token);
+  auto valuesPortal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagOpenMP{}, token);
+  radix::parallel_radix_sort_key_values(keysPortal.GetIteratorBegin(),
+                                        valuesPortal.GetIteratorBegin(),
                                         static_cast<std::size_t>(keys.GetNumberOfValues()),
                                         c);
 }

@@ -11,7 +11,7 @@
 #ifndef vtk_m_worklet_connectivity_InnerJoin_h
 #define vtk_m_worklet_connectivity_InnerJoin_h
 
-#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -56,13 +56,13 @@ public:
 
   // TODO: not mutating input keys and values?
   template <typename Key, typename Value1, typename Value2>
-  void Run(vtkm::cont::ArrayHandle<Key>& key1,
-           vtkm::cont::ArrayHandle<Value1>& value1,
-           vtkm::cont::ArrayHandle<Key>& key2,
-           vtkm::cont::ArrayHandle<Value2>& value2,
-           vtkm::cont::ArrayHandle<Key>& keyOut,
-           vtkm::cont::ArrayHandle<Value1>& value1Out,
-           vtkm::cont::ArrayHandle<Value2>& value2Out) const
+  static void Run(vtkm::cont::ArrayHandle<Key>& key1,
+                  vtkm::cont::ArrayHandle<Value1>& value1,
+                  vtkm::cont::ArrayHandle<Key>& key2,
+                  vtkm::cont::ArrayHandle<Value2>& value2,
+                  vtkm::cont::ArrayHandle<Key>& keyOut,
+                  vtkm::cont::ArrayHandle<Value1>& value1Out,
+                  vtkm::cont::ArrayHandle<Value2>& value2Out)
   {
     Algorithm::SortByKey(key1, value1);
     Algorithm::SortByKey(key2, value2);
@@ -78,6 +78,43 @@ public:
     vtkm::worklet::ScatterCounting scatter{ counts };
     vtkm::worklet::DispatcherMapField<Merge> mergeDisp(scatter);
     mergeDisp.Invoke(key1, value1, lbs, value2, keyOut, value1Out, value2Out);
+  }
+};
+
+class Renumber
+{
+public:
+  static void Run(vtkm::cont::ArrayHandle<vtkm::Id>& componentsInOut)
+  {
+    using Algorithm = vtkm::cont::Algorithm;
+
+    // FIXME: we should be able to apply findRoot to each pixel and use some kind
+    // of atomic operation to get the number of unique components without the
+    // cost of copying and sorting. This might be able to be extended to also
+    // work for the renumbering (replacing InnerJoin) through atomic increment.
+    vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
+    Algorithm::Copy(componentsInOut, uniqueComponents);
+    Algorithm::Sort(uniqueComponents);
+    Algorithm::Unique(uniqueComponents);
+
+    vtkm::cont::ArrayHandle<vtkm::Id> ids;
+    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(componentsInOut.GetNumberOfValues()), ids);
+
+    vtkm::cont::ArrayHandle<vtkm::Id> uniqueColor;
+    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(uniqueComponents.GetNumberOfValues()),
+                    uniqueColor);
+
+    vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
+    vtkm::cont::ArrayHandle<vtkm::Id> pixelIdsOut;
+    InnerJoin::Run(componentsInOut,
+                   ids,
+                   uniqueComponents,
+                   uniqueColor,
+                   cellColors,
+                   pixelIdsOut,
+                   componentsInOut);
+
+    Algorithm::SortByKey(pixelIdsOut, componentsInOut);
   }
 };
 }

@@ -10,6 +10,8 @@
 
 set(headers
   AverageByKey.h
+  BoundaryTypes.h
+  AveragePointNeighborhood.h
   CellAverage.h
   CellDeepCopy.h
   CellMeasure.h
@@ -21,6 +23,7 @@ set(headers
   CrossProduct.h
   DispatcherMapField.h
   DispatcherMapTopology.h
+  DispatcherCellNeighborhood.h
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   DotProduct.h
@@ -32,6 +35,7 @@ set(headers
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
+  ImageDifference.h
   KdTree3D.h
   KernelSplatter.h
   Keys.h
@@ -68,6 +72,7 @@ set(headers
   ScatterUniform.h
   SplitSharpEdges.h
   StableSortIndices.h
+  DescriptiveStatistics.h
   StreamLineUniformGrid.h
   StreamSurface.h
   SurfaceNormals.h
@@ -83,6 +88,8 @@ set(headers
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h
+  WorkletNeighborhood.h
+  WorkletCellNeighborhood.h
   WorkletPointNeighborhood.h
   WorkletReduceByKey.h
   ZFPCompressor.h
@@ -124,6 +131,7 @@ add_subdirectory(connectivities)
 add_subdirectory(contour)
 add_subdirectory(contourtree)
 add_subdirectory(contourtree_augmented)
+add_subdirectory(contourtree_distributed)
 add_subdirectory(cosmotools)
 add_subdirectory(gradient)
 add_subdirectory(histogram)

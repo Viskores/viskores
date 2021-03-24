@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_ClipWithField_h
 #define vtk_m_filter_ClipWithField_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_extra_export.h>
 
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/filter/MapFieldPermutation.h>
@@ -28,7 +28,8 @@ namespace filter
 /// value are considered outside, and will be discarded. All points that are greater
 /// are kept.
 /// The resulting geometry will not be water tight.
-class VTKM_ALWAYS_EXPORT ClipWithField : public vtkm::filter::FilterDataSetWithField<ClipWithField>
+class VTKM_FILTER_EXTRA_EXPORT ClipWithField
+  : public vtkm::filter::FilterDataSetWithField<ClipWithField>
 {
 public:
   using SupportedTypes = vtkm::TypeListScalarAll;
@@ -103,11 +104,9 @@ private:
 };
 
 #ifndef vtkm_filter_Clip_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(ClipWithField);
+VTKM_FILTER_EXTRA_EXPORT_EXECUTE_METHOD(ClipWithField);
 #endif
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/ClipWithField.hxx>
 
 #endif // vtk_m_filter_ClipWithField_h

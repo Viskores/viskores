@@ -197,9 +197,7 @@ MapperWireframer::MapperWireframer()
 {
 }
 
-MapperWireframer::~MapperWireframer()
-{
-}
+MapperWireframer::~MapperWireframer() {}
 
 vtkm::rendering::Canvas* MapperWireframer::GetCanvas() const
 {
@@ -229,16 +227,6 @@ bool MapperWireframer::GetIsOverlay() const
 void MapperWireframer::SetIsOverlay(bool isOverlay)
 {
   this->Internals->IsOverlay = isOverlay;
-}
-
-void MapperWireframer::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperWireframer::EndScene()
-{
-  // Nothing needs to be done.
 }
 
 void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
@@ -273,7 +261,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::worklet::DispatcherMapField<Convert1DCoordinates>(
       Convert1DCoordinates(this->LogarithmY, this->LogarithmX))
       .Invoke(coords.GetData(),
-              inScalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+              vtkm::rendering::raytracing::GetScalarFieldArray(inScalarField),
               newCoords,
               newScalars);
 
@@ -341,8 +329,6 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     CanvasRayTracer canvas(this->Internals->Canvas->GetWidth(),
                            this->Internals->Canvas->GetHeight());
     canvas.SetBackgroundColor(vtkm::rendering::Color::white);
-    canvas.Initialize();
-    canvas.Activate();
     canvas.Clear();
     MapperRayTracer raytracer;
     raytracer.SetCanvas(&canvas);

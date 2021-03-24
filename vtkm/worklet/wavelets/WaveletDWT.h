@@ -1488,7 +1488,7 @@ public:
     vtkm::Float64 elapsedTime = timer.GetElapsedTime();
 
     //VTKM_ASSERT( L[0] + L[1] <= coeffOut.GetNumberOfValues() );
-    coeffOut.Shrink(L[0] + L[1]);
+    coeffOut.Allocate(L[0] + L[1], vtkm::CopyFlag::On);
 
     return elapsedTime;
   }
@@ -1658,7 +1658,7 @@ public:
       elapsedTime = timer.GetElapsedTime();
     }
 
-    sigOut.Shrink(L[2]);
+    sigOut.Allocate(L[2], vtkm::CopyFlag::On);
 
     return elapsedTime;
   }

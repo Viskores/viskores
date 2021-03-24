@@ -79,7 +79,7 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field1,
   VTKM_TEST_ASSERT(result.HasPointField("crossproduct"), "Output field is missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> outputArray;
-  result.GetPointField("crossproduct").GetData().CopyTo(outputArray);
+  result.GetPointField("crossproduct").GetData().AsArrayHandle(outputArray);
 
   auto v1Portal = field1.ReadPortal();
   auto v2Portal = field2.ReadPortal();
@@ -129,8 +129,8 @@ void TestCrossProduct()
     createVectors(static_cast<std::size_t>(nVerts), i, vecs1, vecs2);
 
     vtkm::cont::ArrayHandle<vtkm::Vec3f> field1, field2;
-    field1 = vtkm::cont::make_ArrayHandle(vecs1);
-    field2 = vtkm::cont::make_ArrayHandle(vecs2);
+    field1 = vtkm::cont::make_ArrayHandle(vecs1, vtkm::CopyFlag::On);
+    field2 = vtkm::cont::make_ArrayHandle(vecs2, vtkm::CopyFlag::On);
 
     dataSet.AddPointField("vec1", field1);
     dataSet.AddPointField("vec2", field2);

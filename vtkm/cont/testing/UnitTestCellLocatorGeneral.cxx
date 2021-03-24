@@ -61,7 +61,7 @@ vtkm::cont::DataSet MakeTestDataSetRectilinear()
 vtkm::cont::DataSet MakeTestDataSetCurvilinear()
 {
   auto recti = MakeTestDataSetRectilinear();
-  auto coords = recti.GetCoordinateSystem().GetData();
+  auto coords = recti.GetCoordinateSystem().GetDataAsMultiplexer();
 
   vtkm::cont::ArrayHandle<PointType> sheared;
   sheared.Allocate(coords.GetNumberOfValues());
@@ -140,7 +140,8 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
 
   vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
     ParametricToWorldCoordinates::MakeScatter(cellIds));
-  dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
+  dispatcher.Invoke(
+    ds.GetCellSet(), ds.GetCoordinateSystem().GetDataAsMultiplexer(), pcoords, wcoords);
 }
 
 //-----------------------------------------------------------------------------
@@ -159,7 +160,7 @@ public:
                             vtkm::Id& cellId,
                             vtkm::Vec3f& pcoords) const
   {
-    vtkm::ErrorCode status = locator->FindCell(point, cellId, pcoords);
+    vtkm::ErrorCode status = locator.FindCell(point, cellId, pcoords);
     if (status != vtkm::ErrorCode::Success)
     {
       this->RaiseError(vtkm::ErrorString(status));
@@ -173,9 +174,6 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
   locator.SetCoordinates(dataset.GetCoordinateSystem());
   locator.Update();
 
-  const vtkm::cont::CellLocator& curLoc = *locator.GetCurrentLocator();
-  std::cout << "using locator: " << typeid(curLoc).name() << "\n";
-
   vtkm::cont::ArrayHandle<vtkm::Id> expCellIds;
   vtkm::cont::ArrayHandle<PointType> expPCoords;
   vtkm::cont::ArrayHandle<PointType> points;
@@ -185,8 +183,7 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
   vtkm::cont::ArrayHandle<PointType> pcoords;
 
   vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
-  // CellLocatorGeneral is non-copyable. Pass it via a pointer.
-  dispatcher.Invoke(points, &locator, cellIds, pcoords);
+  dispatcher.Invoke(points, locator, cellIds, pcoords);
 
   auto cellIdPortal = cellIds.ReadPortal();
   auto expCellIdsPortal = expCellIds.ReadPortal();

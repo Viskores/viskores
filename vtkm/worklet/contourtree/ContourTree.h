@@ -146,7 +146,6 @@
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
-#include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -182,10 +181,10 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Id> activeSupernodes;
 
   // references to join & split trees
-  MergeTree<T, StorageType> &joinTree, &splitTree;
+  MergeTree<T, StorageType>&joinTree, &splitTree;
 
   // references to join & split graphs
-  ChainGraph<T, StorageType> &joinGraph, &splitGraph;
+  ChainGraph<T, StorageType>&joinGraph, &splitGraph;
 
   // vectors of up & down degree used during computation
   vtkm::cont::ArrayHandle<vtkm::Id> updegree, downdegree;
@@ -903,7 +902,7 @@ void ContourTree<T, StorageType>::CollectSaddlePeak(
 
   // Setting saddlePeak reference to the make_ArrayHandle directly does not work
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> tempArray =
-    vtkm::cont::make_ArrayHandle(superarcVector);
+    vtkm::cont::make_ArrayHandle(superarcVector, vtkm::CopyFlag::Off);
 
   // now sort it
   vtkm::cont::Algorithm::Sort(tempArray, SaddlePeakSort());

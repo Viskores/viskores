@@ -23,7 +23,7 @@ There are many ways to contribute to [LCL]:
 
   + C++11 Compiler. Lightweight Cell Library has been confirmed to work with
     the following
-      + GCC 4.8+
+      + GCC 5.4+
       + Clang 3.3+
       + XCode 5.0+
       + MSVC 2015+

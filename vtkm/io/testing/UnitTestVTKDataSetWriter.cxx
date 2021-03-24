@@ -11,6 +11,8 @@
 #include <complex>
 #include <cstdio>
 #include <vector>
+#include <vtkm/cont/ArrayHandleSOA.h>
+#include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
@@ -19,14 +21,128 @@
 namespace
 {
 
-#define WRITE_FILE(MakeTestDataMethod)                                                             \
+#define WRITE_FILE(MakeTestDataMethod) \
   TestVTKWriteTestData(#MakeTestDataMethod, tds.MakeTestDataMethod())
+
+struct CheckSameField
+{
+  template <typename T, typename S>
+  void operator()(const vtkm::cont::ArrayHandle<T, S>& originalArray,
+                  const vtkm::cont::Field& fileField) const
+  {
+    vtkm::cont::ArrayHandle<T> fileArray;
+    fileField.GetData().AsArrayHandle(fileArray);
+    VTKM_TEST_ASSERT(test_equal_portals(originalArray.ReadPortal(), fileArray.ReadPortal()));
+  }
+};
+
+struct CheckSameCoordinateSystem
+{
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandle<T>& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    CheckSameField{}(originalArray, fileCoords);
+  }
+
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagSOA>& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    CheckSameField{}(originalArray, fileCoords);
+  }
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandleVirtual<T>& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    CheckSameField{}(originalArray, fileCoords);
+  }
+  VTKM_DEPRECATED_SUPPRESS_END
+#endif
+
+  void operator()(const vtkm::cont::ArrayHandleUniformPointCoordinates& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    VTKM_TEST_ASSERT(fileCoords.GetData().IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>());
+    vtkm::cont::ArrayHandleUniformPointCoordinates fileArray =
+      fileCoords.GetData().AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+    auto originalPortal = originalArray.ReadPortal();
+    auto filePortal = fileArray.ReadPortal();
+    VTKM_TEST_ASSERT(test_equal(originalPortal.GetOrigin(), filePortal.GetOrigin()));
+    VTKM_TEST_ASSERT(test_equal(originalPortal.GetSpacing(), filePortal.GetSpacing()));
+    VTKM_TEST_ASSERT(test_equal(originalPortal.GetRange3(), filePortal.GetRange3()));
+  }
+
+  template <typename T>
+  using ArrayHandleRectilinearCoords = vtkm::cont::ArrayHandle<
+    T,
+    typename vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T>,
+                                                     vtkm::cont::ArrayHandle<T>,
+                                                     vtkm::cont::ArrayHandle<T>>::StorageTag>;
+  template <typename T>
+  void operator()(const ArrayHandleRectilinearCoords<T>& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    VTKM_TEST_ASSERT(fileCoords.GetData().IsType<ArrayHandleRectilinearCoords<T>>());
+    ArrayHandleRectilinearCoords<T> fileArray =
+      fileCoords.GetData().AsArrayHandle<ArrayHandleRectilinearCoords<T>>();
+    auto originalPortal = originalArray.ReadPortal();
+    auto filePortal = fileArray.ReadPortal();
+    VTKM_TEST_ASSERT(
+      test_equal_portals(originalPortal.GetFirstPortal(), filePortal.GetFirstPortal()));
+    VTKM_TEST_ASSERT(
+      test_equal_portals(originalPortal.GetSecondPortal(), filePortal.GetSecondPortal()));
+    VTKM_TEST_ASSERT(
+      test_equal_portals(originalPortal.GetThirdPortal(), filePortal.GetThirdPortal()));
+  }
+
+#ifdef VTKM_ADD_XGC_DEFAULT_TYPES
+  // Just added to fix compilation errors when building with XGC types added to default types
+  // An XGC data set wouldn't be directly written out to a VTK file, it should be converted
+  // to an explicit grid first and then written out.
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagXGCCoordinates>&,
+                  const vtkm::cont::CoordinateSystem&) const
+  {
+    throw vtkm::cont::ErrorBadType("UnitTestVTKDataSetWriter::CheckSameCoordinateSystem() shouldn't"
+                                   " be called on ArrayHandleXGCCoordinates");
+  }
+#endif
+};
+
+void CheckWrittenReadData(const vtkm::cont::DataSet& originalData,
+                          const vtkm::cont::DataSet& fileData)
+{
+  VTKM_TEST_ASSERT(originalData.GetNumberOfPoints() == fileData.GetNumberOfPoints());
+  VTKM_TEST_ASSERT(originalData.GetNumberOfCells() == fileData.GetNumberOfCells());
+
+  for (vtkm::IdComponent fieldId = 0; fieldId < originalData.GetNumberOfFields(); ++fieldId)
+  {
+    vtkm::cont::Field originalField = originalData.GetField(fieldId);
+    VTKM_TEST_ASSERT(fileData.HasField(originalField.GetName(), originalField.GetAssociation()));
+    vtkm::cont::Field fileField =
+      fileData.GetField(originalField.GetName(), originalField.GetAssociation());
+    vtkm::cont::CastAndCall(originalField, CheckSameField{}, fileField);
+  }
+
+  VTKM_TEST_ASSERT(fileData.GetNumberOfCoordinateSystems() > 0);
+  vtkm::cont::CastAndCall(originalData.GetCoordinateSystem().GetData(),
+                          CheckSameCoordinateSystem{},
+                          fileData.GetCoordinateSystem());
+}
 
 void TestVTKWriteTestData(const std::string& methodName, const vtkm::cont::DataSet& data)
 {
   std::cout << "Writing " << methodName << std::endl;
   vtkm::io::VTKDataSetWriter writer(methodName + ".vtk");
   writer.WriteDataSet(data);
+
+  // Read back and check.
+  vtkm::io::VTKDataSetReader reader(methodName + ".vtk");
+  CheckWrittenReadData(data, reader.ReadDataSet());
 }
 
 void TestVTKExplicitWrite()
@@ -50,9 +166,9 @@ void TestVTKExplicitWrite()
   WRITE_FILE(Make3DExplicitDataSetPolygonal);
   WRITE_FILE(Make3DExplicitDataSetCowNose);
 
-  std::cout << "Force writer to output an explicit grid as points" << std::endl;
-  vtkm::io::VTKDataSetWriter writer("Make3DExplicitDataSet0-no-grid.vtk");
-  writer.WriteDataSet(tds.Make3DExplicitDataSet0(), true);
+  std::cout << "Set writer to output an explicit grid" << std::endl;
+  vtkm::io::VTKDataSetWriter writer("Make3DExplicitDataSet0.vtk");
+  writer.WriteDataSet(tds.Make3DExplicitDataSet0());
 }
 
 void TestVTKUniformWrite()
@@ -75,9 +191,9 @@ void TestVTKUniformWrite()
   WRITE_FILE(Make3DRegularDataSet0);
   WRITE_FILE(Make3DRegularDataSet1);
 
-  std::cout << "Force writer to output a uniform grid as points" << std::endl;
-  vtkm::io::VTKDataSetWriter writer("Make3DUniformDataSet0-no-grid.vtk");
-  writer.WriteDataSet(tds.Make3DUniformDataSet0(), true);
+  std::cout << "Set writer to output an uniform grid" << std::endl;
+  vtkm::io::VTKDataSetWriter writer("Make3DUniformDataSet0.vtk");
+  writer.WriteDataSet(tds.Make3DUniformDataSet0());
 }
 
 void TestVTKRectilinearWrite()
@@ -88,9 +204,9 @@ void TestVTKRectilinearWrite()
 
   WRITE_FILE(Make3DRectilinearDataSet0);
 
-  std::cout << "Force writer to output a rectilinear grid as points" << std::endl;
-  vtkm::io::VTKDataSetWriter writer("Make3DRectilinearDataSet0-no-grid.vtk");
-  writer.WriteDataSet(tds.Make3DRectilinearDataSet0(), true);
+  std::cout << "Set writer to output a rectilinear grid" << std::endl;
+  vtkm::io::VTKDataSetWriter writer("Make3DRectilinearDataSet0.vtk");
+  writer.WriteDataSet(tds.Make3DRectilinearDataSet0());
 }
 
 void TestVTKCompoundWrite()

@@ -209,12 +209,12 @@
 
 #define VTKM_LOG_S(level, ...) VLOG_S(static_cast<loguru::Verbosity>(level)) << __VA_ARGS__
 #define VTKM_LOG_F(level, ...) VLOG_F(static_cast<loguru::Verbosity>(level), __VA_ARGS__)
-#define VTKM_LOG_IF_S(level, cond, ...)                                                            \
+#define VTKM_LOG_IF_S(level, cond, ...) \
   VLOG_IF_S(static_cast<loguru::Verbosity>(level), cond) << __VA_ARGS__
-#define VTKM_LOG_IF_F(level, cond, ...)                                                            \
+#define VTKM_LOG_IF_F(level, cond, ...) \
   VLOG_IF_F(static_cast<loguru::Verbosity>(level), cond, __VA_ARGS__)
 #define VTKM_LOG_SCOPE(level, ...) VLOG_SCOPE_F(static_cast<loguru::Verbosity>(level), __VA_ARGS__)
-#define VTKM_LOG_SCOPE_FUNCTION(level)                                                             \
+#define VTKM_LOG_SCOPE_FUNCTION(level) \
   VTKM_LOG_SCOPE(static_cast<loguru::Verbosity>(level), __func__)
 #define VTKM_LOG_ERROR_CONTEXT(desc, data) ERROR_CONTEXT(desc, data)
 #define VTKM_LOG_ALWAYS_S(level, ...) VTKM_LOG_S(level, __VA_ARGS__)
@@ -222,42 +222,43 @@
 // Convenience macros:
 
 // Cast success:
-#define VTKM_LOG_CAST_SUCC(inObj, outObj)                                                          \
-  VTKM_LOG_F(vtkm::cont::LogLevel::Cast,                                                           \
-             "Cast succeeded: %s (%p) --> %s (%p)",                                                \
-             vtkm::cont::TypeToString(inObj).c_str(),                                              \
-             &inObj,                                                                               \
-             vtkm::cont::TypeToString(outObj).c_str(),                                             \
+#define VTKM_LOG_CAST_SUCC(inObj, outObj)              \
+  VTKM_LOG_F(vtkm::cont::LogLevel::Cast,               \
+             "Cast succeeded: %s (%p) --> %s (%p)",    \
+             vtkm::cont::TypeToString(inObj).c_str(),  \
+             &inObj,                                   \
+             vtkm::cont::TypeToString(outObj).c_str(), \
              &outObj)
 
 // Cast failure:
-#define VTKM_LOG_CAST_FAIL(inObj, outType)                                                         \
-  VTKM_LOG_F(vtkm::cont::LogLevel::Cast,                                                           \
-             "Cast failed: %s (%p) --> %s",                                                        \
-             vtkm::cont::TypeToString(inObj).c_str(),                                              \
-             &inObj,                                                                               \
+#define VTKM_LOG_CAST_FAIL(inObj, outType)            \
+  VTKM_LOG_F(vtkm::cont::LogLevel::Cast,              \
+             "Cast failed: %s (%p) --> %s",           \
+             vtkm::cont::TypeToString(inObj).c_str(), \
+             &inObj,                                  \
              vtkm::cont::TypeToString<outType>().c_str())
 
 // TryExecute failure
-#define VTKM_LOG_TRYEXECUTE_FAIL(errorMessage, functorName, deviceId)                              \
-  VTKM_LOG_S(vtkm::cont::LogLevel::Error, "TryExecute encountered an error: " << errorMessage);    \
-  VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Failing functor: " << functorName);                     \
+#define VTKM_LOG_TRYEXECUTE_FAIL(errorMessage, functorName, deviceId)                           \
+  VTKM_LOG_S(vtkm::cont::LogLevel::Error, "TryExecute encountered an error: " << errorMessage); \
+  VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Failing functor: " << functorName);                  \
   VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Failing device: " << deviceId.GetName())
 
 // Same, but disabling device:
-#define VTKM_LOG_TRYEXECUTE_DISABLE(errorMessage, functorName, deviceId)                           \
-  VTKM_LOG_S(vtkm::cont::LogLevel::Error, "TryExecute encountered an error: " << errorMessage);    \
-  VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Failing functor: " << functorName);                     \
-  VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Failing device: " << deviceId.GetName());               \
+#define VTKM_LOG_TRYEXECUTE_DISABLE(errorMessage, functorName, deviceId)                        \
+  VTKM_LOG_S(vtkm::cont::LogLevel::Error, "TryExecute encountered an error: " << errorMessage); \
+  VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Failing functor: " << functorName);                  \
+  VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Failing device: " << deviceId.GetName());            \
   VTKM_LOG_S(vtkm::cont::LogLevel::Error, "The failing device has been disabled.")
 
 // Custom log level
-#define VTKM_DEFINE_USER_LOG_LEVEL(name, offset)                                                   \
-  static constexpr vtkm::cont::LogLevel name = static_cast<vtkm::cont::LogLevel>(                  \
-    static_cast<typename std::underlying_type<vtkm::cont::LogLevel>::type>(                        \
-      vtkm::cont::LogLevel::UserFirst) +                                                           \
-    offset % static_cast<typename std::underlying_type<vtkm::cont::LogLevel>::type>(               \
-               vtkm::cont::LogLevel::UserLast))
+#define VTKM_DEFINE_USER_LOG_LEVEL(name, offset)                                  \
+  static constexpr vtkm::cont::LogLevel name = static_cast<vtkm::cont::LogLevel>( \
+    static_cast<typename std::underlying_type<vtkm::cont::LogLevel>::type>(       \
+      vtkm::cont::LogLevel::UserFirst) +                                          \
+    offset %                                                                      \
+      static_cast<typename std::underlying_type<vtkm::cont::LogLevel>::type>(     \
+        vtkm::cont::LogLevel::UserLast))
 
 #else // VTKM_ENABLE_LOGGING
 
@@ -274,20 +275,20 @@
 
 // Always emitted. When logging is disabled, std::cerr is used.
 
-#define VTKM_LOG_ALWAYS_S(level, ...)                                                              \
-  (static_cast<int>(level) < 0 ? std::cerr : std::cout) << vtkm::cont::GetLogLevelName(level)      \
-                                                        << ": " << __VA_ARGS__ << "\n"
+#define VTKM_LOG_ALWAYS_S(level, ...)                   \
+  (static_cast<int>(level) < 0 ? std::cerr : std::cout) \
+    << vtkm::cont::GetLogLevelName(level) << ": " << __VA_ARGS__ << "\n"
 
 // TryExecute failures are still important enough to log, but we just write to
 // std::cerr when logging is disabled.
-#define VTKM_LOG_TRYEXECUTE_FAIL(errorMessage, functorName, deviceId)                              \
-  std::cerr << "Error: TryExecute encountered an error: " << errorMessage << "\n"                  \
-            << "\t- Failing functor: " << functorName << "\n"                                      \
+#define VTKM_LOG_TRYEXECUTE_FAIL(errorMessage, functorName, deviceId)             \
+  std::cerr << "Error: TryExecute encountered an error: " << errorMessage << "\n" \
+            << "\t- Failing functor: " << functorName << "\n"                     \
             << "\t- Failing device: " << deviceId.GetName() << "\n\n"
-#define VTKM_LOG_TRYEXECUTE_DISABLE(errorMessage, functorName, deviceId)                           \
-  std::cerr << "Error: TryExecute encountered an error: " << errorMessage << "\n"                  \
-            << "\t- Failing functor: " << functorName << "\n"                                      \
-            << "\t- Failing device: " << deviceId.GetName() << "\n"                                \
+#define VTKM_LOG_TRYEXECUTE_DISABLE(errorMessage, functorName, deviceId)          \
+  std::cerr << "Error: TryExecute encountered an error: " << errorMessage << "\n" \
+            << "\t- Failing functor: " << functorName << "\n"                     \
+            << "\t- Failing device: " << deviceId.GetName() << "\n"               \
             << "The failing device has been disabled.\n\n"
 
 #endif // VTKM_ENABLE_LOGGING

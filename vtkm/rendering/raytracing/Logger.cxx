@@ -18,9 +18,7 @@ namespace raytracing
 
 Logger* Logger::Instance = nullptr;
 
-Logger::Logger()
-{
-}
+Logger::Logger() {}
 
 Logger::~Logger()
 {

@@ -16,13 +16,21 @@
 #include <vtkm/VirtualObjectBase.h>
 #include <vtkm/exec/FunctorBase.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "CellLocator with virtual methods is removed. Do not include CellLocator.h"
+#endif
+
 namespace vtkm
 {
 namespace exec
 {
 
-class VTKM_ALWAYS_EXPORT CellLocator : public vtkm::VirtualObjectBase
+class VTKM_DEPRECATED(
+  1.6,
+  "CellLocator with virtual methods no longer supported. Use CellLocatorGeneral.")
+  VTKM_ALWAYS_EXPORT CellLocator : public vtkm::VirtualObjectBase
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
 public:
   VTKM_EXEC_CONT virtual ~CellLocator() noexcept
   {
@@ -35,8 +43,8 @@ public:
                                    vtkm::Id& cellId,
                                    vtkm::Vec3f& parametric) const = 0;
 
-  VTKM_EXEC
   VTKM_DEPRECATED(1.6, "FindCell no longer takes worklet argument.")
+  VTKM_EXEC
   void FindCell(const vtkm::Vec3f& point,
                 vtkm::Id& cellId,
                 vtkm::Vec3f& parametric,
@@ -48,6 +56,7 @@ public:
       worklet.RaiseError(vtkm::ErrorString(status));
     }
   }
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 
 } // namespace exec

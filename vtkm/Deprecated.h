@@ -13,9 +13,9 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/Types.h>
 
-#define VTK_M_DEPRECATED_MAKE_MESSAGE(...)                                                         \
+#define VTK_M_DEPRECATED_MAKE_MESSAGE(...) \
   VTKM_EXPAND(VTK_M_DEPRECATED_MAKE_MESSAGE_IMPL(__VA_ARGS__, "", vtkm::internal::NullType{}))
-#define VTK_M_DEPRECATED_MAKE_MESSAGE_IMPL(version, message, ...)                                  \
+#define VTK_M_DEPRECATED_MAKE_MESSAGE_IMPL(version, message, ...) \
   message " Deprecated in version " #version "."
 
 /// \def VTKM_DEPRECATED(version, message)
@@ -62,7 +62,7 @@
 
 #if defined(__NVCC__)
 // Currently nvcc has zero support deprecated attributes
-#elif __cplusplus >= 201402L
+#elif __cplusplus >= 201402L && !defined(VTKM_GCC)
 
 // C++14 and better supports [[deprecated]]
 // Except in these cases:
@@ -104,7 +104,7 @@
 #if defined(VTKM_GCC) || defined(VTKM_CLANG)
 
 #define VTKM_DEPRECATED_SUPPRESS_SUPPORTED
-#define VTKM_DEPRECATED_SUPPRESS_BEGIN                                                             \
+#define VTKM_DEPRECATED_SUPPRESS_BEGIN \
   _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
 #define VTKM_DEPRECATED_SUPPRESS_END _Pragma("GCC diagnostic pop")
 
@@ -133,7 +133,14 @@
 // Only actually use the [[deprecated]] attribute if the compiler supports it AND
 // we know how to suppress deprecations when necessary.
 #if defined(VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED) && defined(VTKM_DEPRECATED_SUPPRESS_SUPPORTED)
+#ifdef VTKM_MSVC
 #define VTKM_DEPRECATED(...) [[deprecated(VTK_M_DEPRECATED_MAKE_MESSAGE(__VA_ARGS__))]]
+#else // !MSVC
+// GCC and other compilers support the C++14 attribute [[deprecated]], but there appears to be a
+// bug (or other undesirable behavior) where if you mix [[deprecated]] with __attribute__(()) you
+// get compile errors. To get around this, use __attribute((deprecated)) where supported.
+#define VTKM_DEPRECATED(...) __attribute__((deprecated(VTK_M_DEPRECATED_MAKE_MESSAGE(__VA_ARGS__))))
+#endif // !MSVC
 #else
 #define VTKM_DEPRECATED(...)
 #endif

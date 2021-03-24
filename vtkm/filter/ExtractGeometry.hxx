@@ -24,7 +24,7 @@ struct CallWorker
   vtkm::cont::DynamicCellSet& Output;
   vtkm::worklet::ExtractGeometry& Worklet;
   const vtkm::cont::CoordinateSystem& Coords;
-  const vtkm::cont::ImplicitFunctionHandle& Function;
+  const vtkm::ImplicitFunctionGeneral& Function;
   bool ExtractInside;
   bool ExtractBoundaryCells;
   bool ExtractOnlyBoundaryCells;
@@ -32,7 +32,7 @@ struct CallWorker
   CallWorker(vtkm::cont::DynamicCellSet& output,
              vtkm::worklet::ExtractGeometry& worklet,
              const vtkm::cont::CoordinateSystem& coords,
-             const vtkm::cont::ImplicitFunctionHandle& function,
+             const vtkm::ImplicitFunctionGeneral& function,
              bool extractInside,
              bool extractBoundaryCells,
              bool extractOnlyBoundaryCells)
@@ -67,9 +67,8 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input,
+                                               vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // extract the input cell set and coordinates
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();

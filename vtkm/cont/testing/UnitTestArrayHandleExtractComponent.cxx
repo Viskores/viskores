@@ -156,9 +156,8 @@ struct ExtractComponentTests
       InputArray composite = this->BuildInputArray();
       ExtractArray extract(composite, component);
 
-      using Portal = typename ExtractArray::template ExecutionTypes<DeviceTag>::Portal;
-      using RefPortal =
-        typename ReferenceCompositeArray::template ExecutionTypes<DeviceTag>::PortalConst;
+      using Portal = typename ExtractArray::WritePortalType;
+      using RefPortal = typename ReferenceCompositeArray::ReadPortalType;
 
       {
         vtkm::cont::Token token;

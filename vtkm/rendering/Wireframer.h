@@ -147,8 +147,7 @@ template <typename DeviceTag>
 class EdgePlotter : public vtkm::worklet::WorkletMapField
 {
 public:
-  using AtomicPackedFrameBufferHandle =
-    vtkm::exec::AtomicArrayExecutionObject<vtkm::Int64, DeviceTag>;
+  using AtomicPackedFrameBufferHandle = vtkm::exec::AtomicArrayExecutionObject<vtkm::Int64>;
   using AtomicPackedFrameBuffer = vtkm::cont::AtomicArray<vtkm::Int64>;
 
   using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayIn);
@@ -182,8 +181,17 @@ public:
     , FrameBuffer(frameBuffer.PrepareForExecution(DeviceTag(), token))
     , FieldMin(vtkm::Float32(fieldRange.Min))
   {
-    InverseFieldDelta = 1.0f / vtkm::Float32(fieldRange.Length());
-    Offset = vtkm::Max(0.03f / vtkm::Float32(clippingRange.Length()), 0.0001f);
+    vtkm::Float32 fieldLength = vtkm::Float32(fieldRange.Length());
+    if (fieldLength == 0.f)
+    {
+      // constant color
+      this->InverseFieldDelta = 0.f;
+    }
+    else
+    {
+      this->InverseFieldDelta = 1.0f / fieldLength;
+    }
+    this->Offset = vtkm::Max(0.03f / vtkm::Float32(clippingRange.Length()), 0.0001f);
   }
 
   template <typename CoordinatesPortalType, typename ScalarFieldPortalType>
@@ -304,7 +312,7 @@ public:
   }
 
 private:
-  using ColorMapPortalConst = typename ColorMapHandle::ExecutionTypes<DeviceTag>::PortalConst;
+  using ColorMapPortalConst = typename ColorMapHandle::ReadPortalType;
 
   VTKM_EXEC
   void TransformWorldToViewport(vtkm::Vec3f_32& point) const
@@ -328,10 +336,11 @@ private:
 
   VTKM_EXEC vtkm::Vec4f_32 GetColor(vtkm::Float64 fieldValue) const
   {
-    vtkm::Int32 colorIdx =
-      vtkm::Int32((vtkm::Float32(fieldValue) - FieldMin) * ColorMapSize * InverseFieldDelta);
-    colorIdx = vtkm::Min(vtkm::Int32(ColorMap.GetNumberOfValues() - 1), vtkm::Max(0, colorIdx));
-    return ColorMap.Get(colorIdx);
+    vtkm::Int32 colorIdx = vtkm::Int32((vtkm::Float32(fieldValue) - FieldMin) * this->ColorMapSize *
+                                       this->InverseFieldDelta);
+    colorIdx =
+      vtkm::Min(vtkm::Int32(this->ColorMap.GetNumberOfValues() - 1), vtkm::Max(0, colorIdx));
+    return this->ColorMap.Get(colorIdx);
   }
 
   VTKM_EXEC
@@ -362,7 +371,7 @@ private:
       blendedColor[2] = color[2] * intensity + srcColor[2] * alpha;
       blendedColor[3] = alpha + intensity;
       next.Ints.Color = PackColor(blendedColor);
-      current.Raw = FrameBuffer.CompareAndSwap(index, next.Raw, current.Raw);
+      FrameBuffer.CompareExchange(index, &current.Raw, next.Raw);
     } while (current.Floats.Depth > next.Floats.Depth);
   }
 
@@ -545,7 +554,7 @@ private:
       vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
       plotterDispatcher.SetDevice(DeviceTag());
       plotterDispatcher.Invoke(
-        PointIndices, Coordinates, ScalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+        PointIndices, Coordinates, vtkm::rendering::raytracing::GetScalarFieldArray(ScalarField));
     }
 
     BufferConverter converter;

@@ -156,11 +156,11 @@ struct ConnIdxToCellIdCalcSingleType
   vtkm::Id operator()(vtkm::Id inIdx) const { return inIdx / this->CellSize; }
 };
 
-template <typename ConnTableT, typename RConnTableT, typename Device>
+template <typename ConnTableT, typename RConnTableT>
 void ComputeRConnTable(RConnTableT& rConnTable,
                        const ConnTableT& connTable,
                        vtkm::Id numberOfPoints,
-                       Device)
+                       vtkm::cont::DeviceAdapterId device)
 {
   if (rConnTable.ElementsValid)
   {
@@ -174,13 +174,13 @@ void ComputeRConnTable(RConnTableT& rConnTable,
 
   {
     vtkm::cont::Token token;
-    const auto offInPortal = connTable.Offsets.PrepareForInput(Device{}, token);
+    const auto offInPortal = connTable.Offsets.PrepareForInput(device, token);
 
     PassThrough idxCalc{};
     ConnIdxToCellIdCalc<decltype(offInPortal)> cellIdCalc{ offInPortal };
 
     vtkm::cont::internal::ReverseConnectivityBuilder builder;
-    builder.Run(conn, rConn, rOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize, Device());
+    builder.Run(conn, rConn, rOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize, device);
   }
 
   rConnTable.Shapes = vtkm::cont::make_ArrayHandleConstant(
@@ -189,14 +189,14 @@ void ComputeRConnTable(RConnTableT& rConnTable,
 }
 
 // Specialize for CellSetSingleType:
-template <typename RConnTableT, typename ConnectivityStorageTag, typename Device>
+template <typename RConnTableT, typename ConnectivityStorageTag>
 void ComputeRConnTable(RConnTableT& rConnTable,
                        const ConnectivityExplicitInternals< // SingleType specialization types:
                          typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
                          ConnectivityStorageTag,
                          typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>& connTable,
                        vtkm::Id numberOfPoints,
-                       Device)
+                       vtkm::cont::DeviceAdapterId device)
 {
   if (rConnTable.ElementsValid)
   {
@@ -221,7 +221,7 @@ void ComputeRConnTable(RConnTableT& rConnTable,
   ConnIdxToCellIdCalcSingleType cellIdCalc{ cellSize };
 
   vtkm::cont::internal::ReverseConnectivityBuilder builder;
-  builder.Run(conn, rConn, rOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize, Device());
+  builder.Run(conn, rConn, rOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize, device);
 
   rConnTable.Shapes = vtkm::cont::make_ArrayHandleConstant(
     static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);

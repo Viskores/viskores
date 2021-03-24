@@ -86,7 +86,12 @@ using TypeListField = vtkm::List<vtkm::Float32,
                                  vtkm::Vec4f_64>;
 
 /// A list of all scalars defined in vtkm/Types.h. A scalar is a type that
-/// holds a single number.
+/// holds a single number. This should containing all true variations of
+/// scalars, but there might be some arithmetic C types not included. For
+/// example, this list contains `signed char`, and `unsigned char`, but not
+/// `char` as one of those types will behave the same as it. Two of the three
+/// types behave the same, but be aware that template resolution will treat
+/// them differently.
 ///
 using TypeListScalarAll = vtkm::List<vtkm::Int8,
                                      vtkm::UInt8,
@@ -98,6 +103,15 @@ using TypeListScalarAll = vtkm::List<vtkm::Int8,
                                      vtkm::UInt64,
                                      vtkm::Float32,
                                      vtkm::Float64>;
+
+// A list that containes all the base arithmetric C types (i.e. char, int, float, etc.).
+// The list contains C types that are functionally equivalent but considered different
+// types (e.g. it contains both `char` and `signed char`).
+using TypeListBaseC = vtkm::ListAppend<
+  vtkm::TypeListScalarAll,
+  // Other base C types that are the same as above but
+  // recognized as different by the compiler
+  vtkm::List<bool, char, signed VTKM_UNUSED_INT_TYPE, unsigned VTKM_UNUSED_INT_TYPE>>;
 
 /// A list of the most commonly use Vec classes. Specifically, these are
 /// vectors of size 2, 3, or 4 containing either unsigned bytes, signed

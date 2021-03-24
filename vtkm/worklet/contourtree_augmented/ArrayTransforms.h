@@ -75,7 +75,7 @@ namespace contourtree_augmented
 
 // permute routines
 template <typename ValueType, typename ArrayType>
-void PermuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& output)
+inline void PermuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& output)
 { // permuteValues()
   using transform_type =
     vtkm::cont::ArrayHandleTransform<IdArrayType, MaskedIndexFunctor<ValueType>>;
@@ -90,7 +90,7 @@ void PermuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& outpu
   }
   else if (permNumValues < outNumValues)
   {
-    output.Shrink(permNumValues);
+    output.Allocate(permNumValues, vtkm::CopyFlag::On);
   } // else the output has already the correct size
 
   // The following is equivalent to doing the following in serial
@@ -131,30 +131,30 @@ struct MarkOther
 };
 
 // transform functor needed for ScanExclusive calculation. Return 1 if vertex is critical else 0.
-struct OnefIfCritical
+struct OneIfCritical
 {
   VTKM_EXEC_CONT
-  OnefIfCritical() {}
+  OneIfCritical() {}
 
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id x) const { return x != 1 ? 1 : 0; }
 };
 
 // transform functor needed for ScanExclusive calculation in FindSuperAndHyperNodes. Return 1 if vertex is a supernode, else 0.
-struct OnefIfSupernode
+struct OneIfSupernode
 {
   VTKM_EXEC_CONT
-  OnefIfSupernode() {}
+  OneIfSupernode() {}
 
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id x) const { return IsSupernode(x) ? 1 : 0; }
 };
 
 // transform functor needed for ScanExclusive calculation in FindSuperAndHyperNodes. Return 1 if vertex is a hypernode, else 0.
-struct OnefIfHypernode
+struct OneIfHypernode
 {
   VTKM_EXEC_CONT
-  OnefIfHypernode() {}
+  OneIfHypernode() {}
 
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id x) const { return IsHypernode(x) ? 1 : 0; }

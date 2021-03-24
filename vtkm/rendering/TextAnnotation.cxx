@@ -25,9 +25,7 @@ TextAnnotation::TextAnnotation(const std::string& text,
 {
 }
 
-TextAnnotation::~TextAnnotation()
-{
-}
+TextAnnotation::~TextAnnotation() {}
 
 void TextAnnotation::SetText(const std::string& text)
 {

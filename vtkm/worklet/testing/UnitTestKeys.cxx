@@ -14,6 +14,16 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+// Make sure deprecated types still work (while applicable)
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+VTKM_STATIC_ASSERT((std::is_same<typename vtkm::worklet::internal::KeysBase::ExecutionTypes<
+                                   vtkm::cont::DeviceAdapterTagSerial>::Lookup,
+                                 typename vtkm::worklet::internal::KeysBase::ExecLookup>::value));
+VTKM_STATIC_ASSERT((std::is_same<typename vtkm::worklet::Keys<vtkm::Id>::ExecutionTypes<
+                                   vtkm::cont::DeviceAdapterTagSerial>::Lookup,
+                                 typename vtkm::worklet::Keys<vtkm::Id>::ExecLookup>::value));
+VTKM_DEPRECATED_SUPPRESS_END
+
 namespace
 {
 
@@ -57,7 +67,8 @@ void TryKeyType(KeyType)
     keyBuffer[index] = TestValue(index % NUM_UNIQUE, KeyType());
   }
 
-  vtkm::cont::ArrayHandle<KeyType> keyArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
+  vtkm::cont::ArrayHandle<KeyType> keyArray =
+    vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE, vtkm::CopyFlag::On);
 
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
   vtkm::cont::ArrayCopy(keyArray, sortedKeys);

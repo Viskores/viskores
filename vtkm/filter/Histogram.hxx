@@ -86,7 +86,8 @@ public:
 
   void SetLocalHistogram(vtkm::Id index, const vtkm::cont::Field& field)
   {
-    this->SetLocalHistogram(index, field.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Id>>());
+    this->SetLocalHistogram(index,
+                            field.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>());
   }
 
   vtkm::cont::ArrayHandle<vtkm::Id> ReduceAll() const
@@ -212,12 +213,6 @@ template <typename DerivedPolicy>
 inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::PartitionedDataSet& input,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  // Policies are on their way out, but until they are we want to respect them. In the mean
-  // time, respect the policy if it is defined.
-  using TypeList = typename std::conditional<
-    std::is_same<typename DerivedPolicy::FieldTypeList, vtkm::ListUniversal>::value,
-    VTKM_DEFAULT_TYPE_LIST,
-    typename DerivedPolicy::FieldTypeList>::type;
   if (this->Range.IsNonEmpty())
   {
     this->ComputedRange = this->Range;
@@ -225,7 +220,7 @@ inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::PartitionedDataSet
   else
   {
     auto handle = vtkm::cont::FieldRangeGlobalCompute(
-      input, this->GetActiveFieldName(), this->GetActiveFieldAssociation(), TypeList());
+      input, this->GetActiveFieldName(), this->GetActiveFieldAssociation());
     if (handle.GetNumberOfValues() != 1)
     {
       throw vtkm::cont::ErrorFilterExecution("expecting scalar field.");

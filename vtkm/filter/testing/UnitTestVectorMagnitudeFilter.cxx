@@ -33,7 +33,8 @@ void TestVectorMagnitude()
   {
     fvec[i] = vtkm::make_Vec(fvars[i], fvars[i], fvars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> finput = vtkm::cont::make_ArrayHandle(fvec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> finput =
+    vtkm::cont::make_ArrayHandle(fvec, vtkm::CopyFlag::On);
 
   dataSet.AddPointField("double_vec_pointvar", finput);
 
@@ -44,7 +45,7 @@ void TestVectorMagnitude()
   VTKM_TEST_ASSERT(result.HasPointField("magnitude"), "Output field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetPointField("magnitude").GetData().CopyTo(resultArrayHandle);
+  result.GetPointField("magnitude").GetData().AsArrayHandle(resultArrayHandle);
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
     VTKM_TEST_ASSERT(

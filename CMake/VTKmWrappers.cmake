@@ -10,9 +10,13 @@
 
 include(CMakeParseArguments)
 
+include(VTKmCMakeBackports)
 include(VTKmDeviceAdapters)
 include(VTKmCPUVectorization)
-include(VTKmMPI)
+
+if(VTKm_ENABLE_MPI AND NOT TARGET MPI::MPI_CXX)
+  find_package(MPI REQUIRED MODULE)
+endif()
 
 #-----------------------------------------------------------------------------
 # INTERNAL FUNCTIONS
@@ -29,7 +33,7 @@ function(vtkm_get_kit_name kitvar)
   # Optional second argument to get dir_prefix.
   if (${ARGC} GREATER 1)
     set(${ARGV1} "${dir_prefix}" PARENT_SCOPE)
-  endif (${ARGC} GREATER 1)
+  endif ()
 endfunction(vtkm_get_kit_name)
 
 #-----------------------------------------------------------------------------
@@ -62,7 +66,7 @@ function(vtkm_generate_export_header lib_name)
 
   # Now generate a header that holds the macros needed to easily export
   # template classes. This
-  string(TOUPPER ${kit_name} BASE_NAME_UPPER)
+  string(TOUPPER ${lib_name} BASE_NAME_UPPER)
   set(EXPORT_MACRO_NAME "${BASE_NAME_UPPER}")
 
   set(EXPORT_IS_BUILT_STATIC 0)
@@ -77,17 +81,17 @@ function(vtkm_generate_export_header lib_name)
   if(NOT EXPORT_IMPORT_CONDITION)
     #set EXPORT_IMPORT_CONDITION to what the DEFINE_SYMBOL would be when
     #building shared
-    set(EXPORT_IMPORT_CONDITION ${kit_name}_EXPORTS)
+    set(EXPORT_IMPORT_CONDITION ${lib_name}_EXPORTS)
   endif()
 
 
   configure_file(
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
-      ${VTKm_BINARY_DIR}/include/${dir_prefix}/${kit_name}_export.h
+      ${VTKm_BINARY_DIR}/include/${dir_prefix}/${lib_name}_export.h
     @ONLY)
 
   if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
-    install(FILES ${VTKm_BINARY_DIR}/include/${dir_prefix}/${kit_name}_export.h
+    install(FILES ${VTKm_BINARY_DIR}/include/${dir_prefix}/${lib_name}_export.h
       DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
       )
   endif()
@@ -146,9 +150,14 @@ endfunction()
 # Pass to consumers extra compile flags they need to add to CMAKE_CUDA_FLAGS
 # to have CUDA compatibility.
 #
-# This is required as currently the -sm/-gencode flags when specified inside
-# COMPILE_OPTIONS / target_compile_options are not propagated to the device
-# linker. Instead they must be specified in CMAKE_CUDA_FLAGS
+# If VTK-m was built with CMake 3.18+ and you are using CMake 3.18+ and have
+# a cmake_minimum_required of 3.18 or have set policy CMP0105 to new, this will
+# return an empty string as the `vtkm::cuda` target will correctly propagate
+# all the necessary flags.
+#
+# This is required for CMake < 3.18 as they don't support the `$<DEVICE_LINK>`
+# generator expression for `target_link_options`. Instead they need to be
+# specified in CMAKE_CUDA_FLAGS
 #
 #
 # add_library(lib_that_uses_vtkm ...)
@@ -156,7 +165,18 @@ endfunction()
 # target_link_libraries(lib_that_uses_vtkm PRIVATE vtkm_filter)
 #
 function(vtkm_get_cuda_flags settings_var)
+
   if(TARGET vtkm::cuda)
+    if(POLICY CMP0105)
+      cmake_policy(GET CMP0105 does_device_link)
+      get_property(arch_flags
+        TARGET vtkm::cuda
+        PROPERTY INTERFACE_LINK_OPTIONS)
+      if(arch_flags AND CMP0105 STREQUAL "NEW")
+        return()
+      endif()
+    endif()
+
     get_property(arch_flags
       TARGET    vtkm::cuda
       PROPERTY  cuda_architecture_flags)
@@ -232,8 +252,14 @@ endfunction()
 #
 #
 #  MODIFY_CUDA_FLAGS: If enabled will add the required -arch=<ver> flags
-#  that VTK-m was compiled with. If you have multiple libraries that use
-#  VTK-m calling `vtkm_add_target_information` multiple times with
+#  that VTK-m was compiled with.
+#
+#  If VTK-m was built with CMake 3.18+ and you are using CMake 3.18+ and have
+#  a cmake_minimum_required of 3.18 or have set policy CMP0105 to new, this will
+#  return an empty string as the `vtkm::cuda` target will correctly propagate
+#  all the necessary flags.
+#
+#  Note: calling `vtkm_add_target_information` multiple times with
 #  `MODIFY_CUDA_FLAGS` will cause duplicate compiler flags. To resolve this issue
 #  you can; pass all targets and sources to a single `vtkm_add_target_information`
 #  call, have the first one use `MODIFY_CUDA_FLAGS`, or use the provided
@@ -275,10 +301,11 @@ function(vtkm_add_target_information uses_vtkm_target)
     ${ARGN}
     )
 
-
   if(VTKm_TI_MODIFY_CUDA_FLAGS)
-    vtkm_get_cuda_flags(CMAKE_CUDA_FLAGS)
-    set(CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS} PARENT_SCOPE)
+    vtkm_get_cuda_flags(cuda_flags)
+    if(cuda_flags)
+      set(CMAKE_CUDA_FLAGS ${cuda_flags} PARENT_SCOPE)
+    endif()
   endif()
 
   set(targets ${uses_vtkm_target})
@@ -291,11 +318,19 @@ function(vtkm_add_target_information uses_vtkm_target)
   # set the required target properties
   set_target_properties(${targets} PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set_target_properties(${targets} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  # CUDA_ARCHITECTURES added in CMake 3.18
+  set_target_properties(${targets} PROPERTIES CUDA_ARCHITECTURES OFF)
 
   if(VTKm_TI_DROP_UNUSED_SYMBOLS)
     foreach(target IN LISTS targets)
       vtkm_add_drop_unused_function_flags(${target})
     endforeach()
+  endif()
+
+  if((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
+    set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
+  elseif(TARGET vtkm::kokkos_hip)
+    set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "HIP")
   endif()
 
   # Validate that following:
@@ -305,11 +340,15 @@ function(vtkm_add_target_information uses_vtkm_target)
   #
   # This is required as CUDA currently doesn't support device side calls across
   # dynamic library boundaries.
-  if(TARGET vtkm::cuda)
-    set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
+  if((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
     foreach(target IN LISTS targets)
       get_target_property(lib_type ${target} TYPE)
-      get_target_property(requires_static vtkm::cuda requires_static_builds)
+      if (TARGET vtkm::cuda)
+        get_target_property(requires_static vtkm::cuda requires_static_builds)
+      endif()
+      if (TARGET vtkm::kokkos)
+        get_target_property(requires_static vtkm::kokkos requires_static_builds)
+      endif()
 
       if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY" AND VTKm_TI_EXTENDS_VTKM)
         #We provide different error messages based on if we are building VTK-m

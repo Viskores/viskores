@@ -25,10 +25,9 @@ doxygen:
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
-    - eval `ssh-agent -s`
-    - ssh-add <(echo "$DOC_API_KEY_BASE64" | base64 --decode)
     - doxygen build/docs/doxyfile
-    - rsync -tv --recursive --delete -e "ssh -o StrictHostKeyChecking=no" build/docs/doxygen/html/ vtkm.documentation
+    - chmod 400 $DOC_KEY_FILE
+    - rsync -tv --recursive --delete -e "ssh -i $DOC_KEY_FILE -o StrictHostKeyChecking=no" build/docs/doxygen/html/ kitware@public.kitware.com:vtkm_documentation/
   variables:
     CMAKE_BUILD_TYPE: Release
     VTKM_SETTINGS: "tbb+openmp+mpi+shared+docs"

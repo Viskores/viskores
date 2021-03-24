@@ -57,7 +57,7 @@
 #ifndef vtk_m_filter_ContourTreeUniform_h
 #define vtk_m_filter_ContourTreeUniform_h
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 
 namespace vtkm
 {
@@ -70,7 +70,7 @@ namespace filter
 /// peak of contour
 /// Based on the algorithm presented in the paper:
 //  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
-class ContourTreeMesh2D : public vtkm::filter::FilterCell<ContourTreeMesh2D>
+class ContourTreeMesh2D : public vtkm::filter::FilterField<ContourTreeMesh2D>
 {
 public:
   using SupportedTypes = TypeListScalarAll;
@@ -92,7 +92,7 @@ public:
 /// peak of contour
 /// Based on the algorithm presented in the paper:
 //  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
-class ContourTreeMesh3D : public vtkm::filter::FilterCell<ContourTreeMesh3D>
+class ContourTreeMesh3D : public vtkm::filter::FilterField<ContourTreeMesh3D>
 {
 public:
   using SupportedTypes = TypeListScalarAll;

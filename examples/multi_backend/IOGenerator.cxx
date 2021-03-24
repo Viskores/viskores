@@ -42,7 +42,7 @@ vtkm::cont::DataSet make_test3DImageData(vtkm::Id3 dims)
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> field;
   vtkm::cont::Invoker invoke;
-  invoke(WaveField{}, ds.GetCoordinateSystem(), field);
+  invoke(WaveField{}, ds.GetCoordinateSystem().GetDataAsMultiplexer(), field);
 
   ds.AddPointField("vec_field", field);
   return ds;

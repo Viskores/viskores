@@ -124,8 +124,8 @@ class LinearBVHBuilder::GatherVecCast : public vtkm::worklet::WorkletMapField
 private:
   using Vec4IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Id4>;
   using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec4i_32>;
-  using PortalConst = typename Vec4IdArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
-  using Portal = typename Vec4IntArrayHandle::ExecutionTypes<DeviceAdapterTag>::Portal;
+  using PortalConst = typename Vec4IdArrayHandle::ReadPortalType;
+  using Portal = typename Vec4IntArrayHandle::WritePortalType;
 
 private:
   PortalConst InputPortal;
@@ -214,7 +214,7 @@ public:
                                 WholeArrayIn,     //rchild
                                 AtomicArrayInOut, //counters
                                 WholeArrayInOut   // flatbvh
-                                );
+  );
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12);
 
   template <typename InputPortalType,
@@ -343,7 +343,7 @@ public:
         cThird4Vec[3] = vtkm::Max(cSecond4Vec[1], cThird4Vec[3]);
         flatBVH.Set(currentNodeOffset + 2, cThird4Vec);
       }
-      vtkm::Vec4f_32 fourth4Vec;
+      vtkm::Vec4f_32 fourth4Vec{ 0.0f };
       vtkm::Int32 leftChild =
         static_cast<vtkm::Int32>((childVector[0] >= 0) ? childVector[0] * 4 : childVector[0]);
       memcpy(&fourth4Vec[0], &leftChild, 4);

@@ -151,9 +151,8 @@ public:
       for (vtkm::IdComponent c = 0; c < cells.GetNumberOfComponents(); ++c)
       {
         const vtkm::Id cellId = cells[c];
-        const bool alreadyVisited = visitedCells.CompareAndSwapBitAtomic(cellId, true, false);
-
-        if (!alreadyVisited)
+        bool checkNotVisited = false;
+        if (visitedCells.CompareExchangeBitAtomic(cellId, &checkNotVisited, true))
         { // This thread is first to visit cell
           activeCells.SetBitAtomic(cellId, true);
         }
@@ -216,8 +215,8 @@ public:
         const bool alreadyVisited = visitedPoints.GetBit(pointId);
         if (!alreadyVisited)
         {
-          const bool alreadyActive = activePoints.CompareAndSwapBitAtomic(pointId, true, false);
-          if (!alreadyActive)
+          bool checkNotActive = false;
+          if (activePoints.CompareExchangeBitAtomic(pointId, &checkNotActive, true))
           { // If we're the first thread to mark point active, set ref point:
             refPoints.Set(pointId, refPtId);
           }

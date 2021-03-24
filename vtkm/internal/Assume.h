@@ -24,14 +24,14 @@
 // assert that only valid cell types will be used, producing more efficient
 // code.
 //
-#define VTKM_ASSUME(cond)                                                                          \
-  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK                                                                 \
-  {                                                                                                \
-    const bool c = cond;                                                                           \
-    VTKM_ASSERT("Bad assumption in VTKM_ASSUME: " #cond&& c);                                      \
-    VTKM_ASSUME_IMPL(c);                                                                           \
-    (void)c; /* Prevents unused var warnings */                                                    \
-  }                                                                                                \
+#define VTKM_ASSUME(cond)                                     \
+  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK                            \
+  {                                                           \
+    const bool c = cond;                                      \
+    VTKM_ASSERT("Bad assumption in VTKM_ASSUME: " #cond&& c); \
+    VTKM_ASSUME_IMPL(c);                                      \
+    (void)c; /* Prevents unused var warnings */               \
+  }                                                           \
   VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
 // VTKM_ASSUME_IMPL is compiler-specific:
@@ -45,15 +45,15 @@
 #define VTKM_ASSUME_IMPL(cond) __assume(cond)
 #elif defined(VTKM_ICC) && !defined(__GNUC__)
 #define VTKM_ASSUME_IMPL(cond) __assume(cond)
-#elif (defined(VTKM_GCC) || defined(VTKM_ICC)) &&                                                  \
+#elif (defined(VTKM_GCC) || defined(VTKM_ICC)) && \
   (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
 // Added in 4.5.0:
-#define VTKM_ASSUME_IMPL(cond)                                                                     \
-  if (!(cond))                                                                                     \
+#define VTKM_ASSUME_IMPL(cond) \
+  if (!(cond))                 \
   __builtin_unreachable()
 #elif defined(VTKM_CLANG)
-#define VTKM_ASSUME_IMPL(cond)                                                                     \
-  if (!(cond))                                                                                     \
+#define VTKM_ASSUME_IMPL(cond) \
+  if (!(cond))                 \
   __builtin_unreachable()
 #else
 #define VTKM_ASSUME_IMPL(cond) (void)0 /* no-op */

@@ -12,12 +12,13 @@
 #define vtk_m_filter_Gradient_cxx
 
 #include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/Gradient.hxx>
 
 namespace vtkm
 {
 namespace filter
 {
-template VTKM_FILTER_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+template VTKM_FILTER_GRADIENT_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>&,
   const vtkm::filter::FieldMetadata&,

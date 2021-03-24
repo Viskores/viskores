@@ -13,16 +13,29 @@
 #include <vtkm/Assert.h>
 #include <vtkm/Deprecated.h>
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayPortal.h>
 
 namespace vtkm
 {
-namespace cont
-{
 
 namespace internal
 {
+
+struct ViewIndices
+{
+  vtkm::Id StartIndex = 0;
+  vtkm::Id NumberOfValues = 0;
+
+  ViewIndices() = default;
+
+  ViewIndices(vtkm::Id start, vtkm::Id numValues)
+    : StartIndex(start)
+    , NumberOfValues(numValues)
+  {
+  }
+};
 
 template <typename TargetPortalType>
 class ArrayPortalView
@@ -32,55 +45,53 @@ class ArrayPortalView
 public:
   using ValueType = typename TargetPortalType::ValueType;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalView() {}
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalView(const TargetPortalType& targetPortal, vtkm::Id startIndex, vtkm::Id numValues)
+  ArrayPortalView(const TargetPortalType& targetPortal, ViewIndices indices)
     : TargetPortal(targetPortal)
-    , StartIndex(startIndex)
-    , NumValues(numValues)
+    , Indices(indices)
   {
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherPortalType>
   VTKM_EXEC_CONT ArrayPortalView(const ArrayPortalView<OtherPortalType>& otherPortal)
     : TargetPortal(otherPortal.GetTargetPortal())
-    , StartIndex(otherPortal.GetStartIndex())
-    , NumValues(otherPortal.GetNumberOfValues())
+    , Indices(otherPortal.GetStartIndex(), otherPortal.GetNumberOfValues())
   {
   }
 
   VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfValues() const { return this->NumValues; }
+  vtkm::Id GetNumberOfValues() const { return this->Indices.NumberOfValues; }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ValueType Get(vtkm::Id index) const { return this->TargetPortal.Get(index + this->StartIndex); }
+  ValueType Get(vtkm::Id index) const
+  {
+    return this->TargetPortal.Get(index + this->GetStartIndex());
+  }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Writable_ = Writable,
             typename = typename std::enable_if<Writable_::value>::type>
   VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
-    this->TargetPortal.Set(index + this->StartIndex, value);
+    this->TargetPortal.Set(index + this->GetStartIndex(), value);
   }
 
   VTKM_EXEC_CONT
   const TargetPortalType& GetTargetPortal() const { return this->TargetPortal; }
   VTKM_EXEC_CONT
-  vtkm::Id GetStartIndex() const { return this->StartIndex; }
+  vtkm::Id GetStartIndex() const { return this->Indices.StartIndex; }
 
 private:
   TargetPortalType TargetPortal;
-  vtkm::Id StartIndex;
-  vtkm::Id NumValues;
+  ViewIndices Indices;
 };
 
 } // namespace internal
+
+namespace cont
+{
 
 template <typename StorageTag>
 struct VTKM_ALWAYS_EXPORT StorageTagView
@@ -124,181 +135,63 @@ struct ViewTypeArg
 {
 };
 
-} // detail
+} // namespace detail
 
 template <typename T, typename ST>
 class Storage<T, StorageTagView<ST>>
 {
   using ArrayHandleType = typename detail::ViewTypeArg<T, ST>::ArrayHandle;
+  using SourceStorage = Storage<T, ST>;
 
 public:
-  using ValueType = T;
+  VTKM_STORAGE_NO_RESIZE;
 
-  using PortalType = ArrayPortalView<typename ArrayHandleType::WritePortalType>;
-  using PortalConstType = ArrayPortalView<typename ArrayHandleType::ReadPortalType>;
+  using ReadPortalType = vtkm::internal::ArrayPortalView<typename ArrayHandleType::ReadPortalType>;
+  using WritePortalType =
+    vtkm::internal::ArrayPortalView<typename ArrayHandleType::WritePortalType>;
 
-  VTKM_CONT
-  Storage()
-    : Valid(false)
+  VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers()
   {
+    return SourceStorage::GetNumberOfBuffers() + 1;
   }
 
-  VTKM_CONT
-  Storage(const ArrayHandleType& array, vtkm::Id startIndex, vtkm::Id numValues)
-    : Array(array)
-    , StartIndex(startIndex)
-    , NumValues(numValues)
-    , Valid(true)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    VTKM_ASSERT(this->StartIndex >= 0);
-    VTKM_ASSERT((this->StartIndex + this->NumValues) <= this->Array.GetNumberOfValues());
+    return buffers[0].GetMetaData<vtkm::internal::ViewIndices>().NumberOfValues;
   }
 
-  VTKM_CONT
-  PortalType GetPortal()
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
-    VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.WritePortal(), this->StartIndex, this->NumValues);
+    vtkm::internal::ViewIndices indices = buffers[0].GetMetaData<vtkm::internal::ViewIndices>();
+    return ReadPortalType(SourceStorage::CreateReadPortal(buffers + 1, device, token), indices);
   }
 
-  VTKM_CONT
-  PortalConstType GetPortalConst() const
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
-    VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.ReadPortal(), this->StartIndex, this->NumValues);
+    vtkm::internal::ViewIndices indices = buffers[0].GetMetaData<vtkm::internal::ViewIndices>();
+    return WritePortalType(SourceStorage::CreateWritePortal(buffers + 1, device, token), indices);
   }
 
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->NumValues; }
-
-  VTKM_CONT
-  void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer>
+  CreateBuffers(vtkm::Id startIndex, vtkm::Id numValues, const ArrayHandleType& array)
   {
-    throw vtkm::cont::ErrorInternal("ArrayHandleView should not be allocated explicitly. ");
+    return vtkm::cont::internal::CreateBuffers(vtkm::internal::ViewIndices(startIndex, numValues),
+                                               array);
   }
 
-  VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues)
+  VTKM_CONT static ArrayHandleType GetSourceArray(const vtkm::cont::internal::Buffer* buffers)
   {
-    VTKM_ASSERT(this->Valid);
-    if (numberOfValues > this->NumValues)
-    {
-      throw vtkm::cont::ErrorBadValue("Shrink method cannot be used to grow array.");
-    }
-
-    this->NumValues = numberOfValues;
+    return ArrayHandleType(buffers + 1);
   }
 
-  VTKM_CONT
-  void ReleaseResources()
+  VTKM_CONT static vtkm::Id GetStartIndex(const vtkm::cont::internal::Buffer* buffers)
   {
-    VTKM_ASSERT(this->Valid);
-    this->Array.ReleaseResources();
+    return buffers[0].GetMetaData<vtkm::internal::ViewIndices>().StartIndex;
   }
-
-  // Required for later use in ArrayTransfer class.
-  VTKM_CONT
-  const ArrayHandleType& GetArray() const
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->Array;
-  }
-  VTKM_CONT
-  vtkm::Id GetStartIndex() const { return this->StartIndex; }
-
-private:
-  ArrayHandleType Array;
-  vtkm::Id StartIndex;
-  vtkm::Id NumValues;
-  bool Valid;
-};
-
-template <typename T, typename ST, typename Device>
-class ArrayTransfer<T, StorageTagView<ST>, Device>
-{
-private:
-  using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagView<ST>>;
-  using ArrayHandleType = typename detail::ViewTypeArg<T, ST>::ArrayHandle;
-
-public:
-  using ValueType = T;
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
-
-  using PortalExecution =
-    ArrayPortalView<typename ArrayHandleType::template ExecutionTypes<Device>::Portal>;
-  using PortalConstExecution =
-    ArrayPortalView<typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst>;
-
-  VTKM_CONT
-  ArrayTransfer(StorageType* storage)
-    : Array(storage->GetArray())
-    , StartIndex(storage->GetStartIndex())
-    , NumValues(storage->GetNumberOfValues())
-  {
-  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->NumValues; }
-
-  VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
-  {
-    return PortalConstExecution(
-      this->Array.PrepareForInput(Device(), token), this->StartIndex, this->NumValues);
-  }
-
-  VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
-  {
-    return PortalExecution(
-      this->Array.PrepareForInPlace(Device(), token), this->StartIndex, this->NumValues);
-  }
-
-  VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
-  {
-    if (numberOfValues != this->GetNumberOfValues())
-    {
-      throw vtkm::cont::ErrorBadValue(
-        "An ArrayHandleView can be used as an output array, "
-        "but it cannot be resized. Make sure the index array is sized "
-        "to the appropriate length before trying to prepare for output.");
-    }
-
-    // We cannot practically allocate ValueArray because we do not know the
-    // range of indices. We try to check by seeing if ValueArray has no
-    // entries, which clearly indicates that it is not allocated. Otherwise,
-    // we have to assume the allocation is correct.
-    if ((numberOfValues > 0) && (this->Array.GetNumberOfValues() < 1))
-    {
-      throw vtkm::cont::ErrorBadValue(
-        "The value array must be pre-allocated before it is used for the "
-        "output of ArrayHandleView.");
-    }
-
-    return PortalExecution(
-      this->Array.PrepareForOutput(this->Array.GetNumberOfValues(), Device(), token),
-      this->StartIndex,
-      this->NumValues);
-  }
-
-  VTKM_CONT
-  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
-  {
-    // No implementation necessary
-  }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues) { this->NumValues = numberOfValues; }
-
-  VTKM_CONT
-  void ReleaseResources() { this->Array.ReleaseResourcesExecution(); }
-
-private:
-  ArrayHandleType Array;
-  vtkm::Id StartIndex;
-  vtkm::Id NumValues;
 };
 
 } // namespace internal
@@ -323,8 +216,18 @@ private:
 public:
   VTKM_CONT
   ArrayHandleView(const ArrayHandleType& array, vtkm::Id startIndex, vtkm::Id numValues)
-    : Superclass(StorageType(array, startIndex, numValues))
+    : Superclass(StorageType::CreateBuffers(startIndex, numValues, array))
   {
+  }
+
+  VTKM_CONT ArrayHandleType GetSourceArray() const
+  {
+    return this->GetStorage().GetSourceArray(this->GetBuffers());
+  }
+
+  VTKM_CONT vtkm::Id GetStartIndex() const
+  {
+    return this->GetStorage().GetStartIndex(this->GetBuffers());
   }
 };
 
@@ -337,6 +240,39 @@ ArrayHandleView<ArrayHandleType> make_ArrayHandleView(const ArrayHandleType& arr
 
   return ArrayHandleView<ArrayHandleType>(array, startIndex, numValues);
 }
+
+namespace internal
+{
+
+template <typename StorageTag>
+struct ArrayExtractComponentImpl<StorageTagView<StorageTag>>
+{
+  template <typename T>
+  using StrideArrayType =
+    vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType>;
+
+  template <typename T>
+  StrideArrayType<T> operator()(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagView<StorageTag>>& src,
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy) const
+  {
+    vtkm::cont::ArrayHandleView<vtkm::cont::ArrayHandle<T, StorageTag>> srcArray(src);
+    StrideArrayType<T> subArray =
+      ArrayExtractComponentImpl<StorageTag>{}(srcArray.GetSourceArray(), componentIndex, allowCopy);
+    // Narrow the array by adjusting the size and offset.
+    return StrideArrayType<T>(subArray.GetBasicArray(),
+                              srcArray.GetNumberOfValues(),
+                              subArray.GetStride(),
+                              subArray.GetOffset() +
+                                (subArray.GetStride() * srcArray.GetStartIndex()),
+                              subArray.GetModulo(),
+                              subArray.GetDivisor());
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

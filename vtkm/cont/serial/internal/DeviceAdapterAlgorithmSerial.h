@@ -46,22 +46,32 @@ private:
   // template calls std::copy if and only if the types match, otherwise falls
   // back to a iterative casting approach. Since std::copy can only really
   // optimize same-type copies, this shouldn't affect performance.
-  template <typename InIter, typename OutIter>
-  static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type)
+  template <typename InPortal, typename OutPortal>
+  static void DoCopy(InPortal src,
+                     OutPortal dst,
+                     std::false_type,
+                     vtkm::Id startIndex,
+                     vtkm::Id numToCopy,
+                     vtkm::Id outIndex)
   {
-    using OutputType = typename std::iterator_traits<OutIter>::value_type;
-    while (src != srcEnd)
+    using OutputType = typename OutPortal::ValueType;
+    for (vtkm::Id index = 0; index < numToCopy; ++index)
     {
-      *dst = static_cast<OutputType>(*src);
-      ++src;
-      ++dst;
+      dst.Set(index + startIndex, static_cast<OutputType>(src.Get(index + outIndex)));
     }
   }
 
-  template <typename InIter, typename OutIter>
-  static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type)
+  template <typename InPortal, typename OutPortal>
+  static void DoCopy(InPortal src,
+                     OutPortal dst,
+                     std::true_type,
+                     vtkm::Id startIndex,
+                     vtkm::Id numToCopy,
+                     vtkm::Id outIndex)
   {
-    std::copy(src, srcEnd, dst);
+    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(src) + startIndex,
+              vtkm::cont::ArrayPortalToIteratorBegin(src) + startIndex + numToCopy,
+              vtkm::cont::ArrayPortalToIteratorBegin(dst) + outIndex);
   }
 
 public:
@@ -85,10 +95,7 @@ public:
     using InputType = decltype(inputPortal.Get(0));
     using OutputType = decltype(outputPortal.Get(0));
 
-    DoCopy(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
-           vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
-           vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
-           std::is_same<InputType, OutputType>());
+    DoCopy(inputPortal, outputPortal, std::is_same<InputType, OutputType>{}, 0, inSize, 0);
   }
 
   template <typename T, typename U, class CIn, class CStencil, class COut>
@@ -132,7 +139,7 @@ public:
       }
     }
 
-    output.Shrink(writePos);
+    output.Allocate(writePos, vtkm::CopyFlag::On);
   }
 
   template <typename T, typename U, class CIn, class COut>
@@ -147,10 +154,11 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
-    if (input == output && ((outputIndex >= inputStartIndex &&
-                             outputIndex < inputStartIndex + numberOfElementsToCopy) ||
-                            (inputStartIndex >= outputIndex &&
-                             inputStartIndex < outputIndex + numberOfElementsToCopy)))
+    if (input == output &&
+        ((outputIndex >= inputStartIndex &&
+          outputIndex < inputStartIndex + numberOfElementsToCopy) ||
+         (inputStartIndex >= outputIndex &&
+          inputStartIndex < outputIndex + numberOfElementsToCopy)))
     {
       return false;
     }
@@ -188,16 +196,16 @@ public:
     vtkm::cont::Token token;
     auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial(), token);
     auto outputPortal = output.PrepareForInPlace(DeviceAdapterTagSerial(), token);
-    auto inIter = vtkm::cont::ArrayPortalToIteratorBegin(inputPortal);
-    auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(outputPortal);
 
     using InputType = decltype(inputPortal.Get(0));
     using OutputType = decltype(outputPortal.Get(0));
 
-    DoCopy(inIter + inputStartIndex,
-           inIter + inputStartIndex + numberOfElementsToCopy,
-           outIter + outputIndex,
-           std::is_same<InputType, OutputType>());
+    DoCopy(inputPortal,
+           outputPortal,
+           std::is_same<InputType, OutputType>(),
+           inputStartIndex,
+           numberOfElementsToCopy,
+           outputIndex);
 
     return true;
   }
@@ -255,8 +263,8 @@ public:
       VTKM_ASSERT(numberOfKeys == values.GetNumberOfValues());
       if (numberOfKeys == 0)
       {
-        keys_output.Shrink(0);
-        values_output.Shrink(0);
+        keys_output.ReleaseResources();
+        values_output.ReleaseResources();
         return;
       }
 
@@ -292,8 +300,8 @@ public:
 
     //now we need to shrink to the correct number of keys/values
     //writePos is zero-based so add 1 to get correct length
-    keys_output.Shrink(writePos + 1);
-    values_output.Shrink(writePos + 1);
+    keys_output.Allocate(writePos + 1, vtkm::CopyFlag::On);
+    values_output.Allocate(writePos + 1, vtkm::CopyFlag::On);
   }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
@@ -537,7 +545,7 @@ public:
     auto end = std::unique(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
     vtkm::Id newSize = static_cast<vtkm::Id>(end - iterators.GetBegin());
     token.DetachFromAll();
-    values.Shrink(newSize);
+    values.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   VTKM_CONT static void Synchronize()

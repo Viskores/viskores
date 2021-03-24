@@ -26,9 +26,7 @@ using DataSetWrapper = vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTyp
 
 VTKM_CONT void TestEqualDataSet(const DataSetWrapper& ds1, const DataSetWrapper& ds2)
 {
-  auto result = vtkm::cont::testing::test_equal_DataSets(
-    ds1.DataSet, ds2.DataSet, CellSetTypes{}, FieldTypeList{});
-  VTKM_TEST_ASSERT(result, result.GetMergedMessage());
+  VTKM_TEST_ASSERT(test_equal_DataSets(ds1.DataSet, ds2.DataSet, CellSetTypes{}));
 }
 
 void RunTest(const vtkm::cont::DataSet& ds)

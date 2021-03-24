@@ -9,8 +9,12 @@
 //============================================================================
 #include <vtkm/cont/CellSetExtrude.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
+
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/CellShape.h>
 
@@ -64,18 +68,18 @@ CellSetExtrude::CellSetExtrude(const CellSetExtrude& src)
 }
 
 CellSetExtrude::CellSetExtrude(CellSetExtrude&& src) noexcept
-  : CellSet(std::forward<CellSet>(src)),
-    IsPeriodic(src.IsPeriodic),
-    NumberOfPointsPerPlane(src.NumberOfPointsPerPlane),
-    NumberOfCellsPerPlane(src.NumberOfCellsPerPlane),
-    NumberOfPlanes(src.NumberOfPlanes),
-    Connectivity(std::move(src.Connectivity)),
-    NextNode(std::move(src.NextNode)),
-    ReverseConnectivityBuilt(src.ReverseConnectivityBuilt),
-    RConnectivity(std::move(src.RConnectivity)),
-    ROffsets(std::move(src.ROffsets)),
-    RCounts(std::move(src.RCounts)),
-    PrevNode(std::move(src.PrevNode))
+  : CellSet(std::forward<CellSet>(src))
+  , IsPeriodic(src.IsPeriodic)
+  , NumberOfPointsPerPlane(src.NumberOfPointsPerPlane)
+  , NumberOfCellsPerPlane(src.NumberOfCellsPerPlane)
+  , NumberOfPlanes(src.NumberOfPlanes)
+  , Connectivity(std::move(src.Connectivity))
+  , NextNode(std::move(src.NextNode))
+  , ReverseConnectivityBuilt(src.ReverseConnectivityBuilt)
+  , RConnectivity(std::move(src.RConnectivity))
+  , ROffsets(std::move(src.ROffsets))
+  , RCounts(std::move(src.RCounts))
+  , PrevNode(std::move(src.PrevNode))
 {
 }
 
@@ -117,9 +121,7 @@ CellSetExtrude& CellSetExtrude::operator=(CellSetExtrude&& src) noexcept
   return *this;
 }
 
-CellSetExtrude::~CellSetExtrude()
-{
-}
+CellSetExtrude::~CellSetExtrude() {}
 
 vtkm::Int32 CellSetExtrude::GetNumberOfPlanes() const
 {
@@ -177,6 +179,31 @@ void CellSetExtrude::GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const
   for (int i = 0; i < 6; ++i)
   {
     ptids[i] = indices[i];
+  }
+}
+
+template <vtkm::IdComponent NumIndices>
+VTKM_CONT void CellSetExtrude::GetIndices(vtkm::Id index,
+                                          vtkm::Vec<vtkm::Id, NumIndices>& ids) const
+{
+  static_assert(NumIndices == 6, "There are always 6 points in a wedge.");
+  this->GetCellPointIds(index, ids.data());
+}
+
+VTKM_CONT void CellSetExtrude::GetIndices(vtkm::Id index,
+                                          vtkm::cont::ArrayHandle<vtkm::Id>& ids) const
+{
+  ids.Allocate(6);
+  auto outIdPortal = ids.WritePortal();
+  vtkm::cont::Token token;
+  auto conn = this->PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
+                                    vtkm::TopologyElementTagCell{},
+                                    vtkm::TopologyElementTagPoint{},
+                                    token);
+  auto indices = conn.GetIndices(index);
+  for (vtkm::IdComponent i = 0; i < 6; i++)
+  {
+    outIdPortal.Set(i, indices[i]);
   }
 }
 
@@ -253,5 +280,110 @@ void CellSetExtrude::PrintSummary(std::ostream& out) const
   vtkm::cont::printSummary_ArrayHandle(this->NextNode, out);
   out << "   ReverseConnectivityBuilt: " << this->NumberOfPlanes << std::endl;
 }
+
+
+namespace
+{
+
+struct ComputeReverseMapping : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn cellIndex, WholeArrayOut cellIds);
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename PortalType>
+  VTKM_EXEC void operator()(vtkm::Id cellId, PortalType&& pointIdValue) const
+  {
+    //3 as we are building the connectivity for triangles
+    const vtkm::Id offset = 3 * cellId;
+    pointIdValue.Set(offset, static_cast<vtkm::Int32>(cellId));
+    pointIdValue.Set(offset + 1, static_cast<vtkm::Int32>(cellId));
+    pointIdValue.Set(offset + 2, static_cast<vtkm::Int32>(cellId));
+  }
+};
+
+struct ComputePrevNode : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn nextNode, WholeArrayOut prevNodeArray);
+  typedef void ExecutionSignature(InputIndex, _1, _2);
+
+  template <typename PortalType>
+  VTKM_EXEC void operator()(vtkm::Id idx, vtkm::Int32 next, PortalType& prevs) const
+  {
+    prevs.Set(static_cast<vtkm::Id>(next), static_cast<vtkm::Int32>(idx));
+  }
+};
+
+} // anonymous namespace
+
+VTKM_CONT void CellSetExtrude::BuildReverseConnectivity()
+{
+  vtkm::cont::Invoker invoke;
+
+  // create a mapping of where each key is the point id and the value
+  // is the cell id. We
+  const vtkm::Id numberOfPointsPerCell = 3;
+  const vtkm::Id rconnSize = this->NumberOfCellsPerPlane * numberOfPointsPerCell;
+
+  vtkm::cont::ArrayHandle<vtkm::Int32> pointIdKey;
+  vtkm::cont::ArrayCopy(this->Connectivity, pointIdKey);
+
+  this->RConnectivity.Allocate(rconnSize);
+  invoke(ComputeReverseMapping{},
+         vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, this->NumberOfCellsPerPlane),
+         this->RConnectivity);
+
+  vtkm::cont::Algorithm::SortByKey(pointIdKey, this->RConnectivity);
+
+  // now we can compute the counts and offsets
+  vtkm::cont::ArrayHandle<vtkm::Int32> reducedKeys;
+  vtkm::cont::Algorithm::ReduceByKey(
+    pointIdKey,
+    vtkm::cont::make_ArrayHandleConstant(vtkm::Int32(1), static_cast<vtkm::Int32>(rconnSize)),
+    reducedKeys,
+    this->RCounts,
+    vtkm::Add{});
+
+  vtkm::cont::Algorithm::ScanExclusive(this->RCounts, this->ROffsets);
+
+  // compute PrevNode from NextNode
+  this->PrevNode.Allocate(this->NextNode.GetNumberOfValues());
+  invoke(ComputePrevNode{}, this->NextNode, this->PrevNode);
+
+  this->ReverseConnectivityBuilt = true;
+}
+
+vtkm::exec::ConnectivityExtrude CellSetExtrude::PrepareForInput(vtkm::cont::DeviceAdapterId device,
+                                                                vtkm::TopologyElementTagCell,
+                                                                vtkm::TopologyElementTagPoint,
+                                                                vtkm::cont::Token& token) const
+{
+  return vtkm::exec::ConnectivityExtrude(this->Connectivity.PrepareForInput(device, token),
+                                         this->NextNode.PrepareForInput(device, token),
+                                         this->NumberOfCellsPerPlane,
+                                         this->NumberOfPointsPerPlane,
+                                         this->NumberOfPlanes,
+                                         this->IsPeriodic);
+}
+
+vtkm::exec::ReverseConnectivityExtrude CellSetExtrude::PrepareForInput(
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::TopologyElementTagPoint,
+  vtkm::TopologyElementTagCell,
+  vtkm::cont::Token& token) const
+{
+  if (!this->ReverseConnectivityBuilt)
+  {
+    vtkm::cont::ScopedRuntimeDeviceTracker tracker(device);
+    const_cast<CellSetExtrude*>(this)->BuildReverseConnectivity();
+  }
+  return vtkm::exec::ReverseConnectivityExtrude(this->RConnectivity.PrepareForInput(device, token),
+                                                this->ROffsets.PrepareForInput(device, token),
+                                                this->RCounts.PrepareForInput(device, token),
+                                                this->PrevNode.PrepareForInput(device, token),
+                                                this->NumberOfCellsPerPlane,
+                                                this->NumberOfPointsPerPlane,
+                                                this->NumberOfPlanes);
+}
+
 }
 } // vtkm::cont

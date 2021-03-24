@@ -50,7 +50,7 @@ struct BoundingIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
   {
     vtkm::Vec3f parametric;
     vtkm::Id cellId;
-    bih->FindCell(point, cellId, parametric);
+    bih.FindCell(point, cellId, parametric);
     return (1 - static_cast<vtkm::IdComponent>(expectedId == cellId));
   }
 }; // struct BoundingIntervalHierarchyTester
@@ -65,7 +65,7 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   using Timer = vtkm::cont::Timer;
 
   vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
-  vtkm::cont::ArrayHandleVirtualCoordinates vertices = dataSet.GetCoordinateSystem().GetData();
+  auto vertices = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
 
   std::cout << "Using numPlanes: " << numPlanes << "\n";
   std::cout << "Building Bounding Interval Hierarchy Tree" << std::endl;

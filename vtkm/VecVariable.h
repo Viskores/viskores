@@ -65,11 +65,16 @@ public:
   VTKM_EXEC_CONT
   inline const ComponentType& operator[](vtkm::IdComponent index) const
   {
+    VTKM_ASSERT(index >= 0 && index < this->NumComponents);
     return this->Data[index];
   }
 
   VTKM_EXEC_CONT
-  inline ComponentType& operator[](vtkm::IdComponent index) { return this->Data[index]; }
+  inline ComponentType& operator[](vtkm::IdComponent index)
+  {
+    VTKM_ASSERT(index >= 0 && index < this->NumComponents);
+    return this->Data[index];
+  }
 
   VTKM_EXEC_CONT
   void Append(ComponentType value)

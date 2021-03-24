@@ -142,7 +142,8 @@ struct DoTestWorklet
       inputArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
-    vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inputHandle =
+      vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE, vtkm::CopyFlag::Off);
     vtkm::cont::ArrayHandle<T> outputHandleAsPtr;
     vtkm::cont::ArrayHandle<T> inoutHandleAsPtr;
 

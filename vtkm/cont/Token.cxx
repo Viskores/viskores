@@ -52,9 +52,7 @@ struct vtkm::cont::Token::HeldReference
   }
 };
 
-vtkm::cont::Token::Token()
-{
-}
+vtkm::cont::Token::Token() {}
 
 vtkm::cont::Token::Token(Token&& rhs)
   : Internals(std::move(rhs.Internals))
@@ -83,6 +81,16 @@ void vtkm::cont::Token::DetachFromAll()
     held.ConditionVariablePointer->notify_all();
   }
   heldReferences->clear();
+}
+
+vtkm::cont::Token::Reference vtkm::cont::Token::GetReference() const
+{
+  if (!this->Internals)
+  {
+    this->Internals.reset(new InternalStruct);
+  }
+
+  return this->Internals.get();
 }
 
 void vtkm::cont::Token::Attach(std::unique_ptr<vtkm::cont::Token::ObjectReference>&& objectRef,

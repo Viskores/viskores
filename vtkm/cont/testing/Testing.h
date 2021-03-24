@@ -22,7 +22,10 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 #include <vtkm/cont/VariantArrayHandle.h>
+
+#include <vtkm/cont/testing/vtkm_cont_testing_export.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
 
@@ -38,8 +41,9 @@ namespace testing
 enum TestOptionsIndex
 {
   TEST_UNKNOWN,
-  DATADIR,    // base dir containing test data files
-  BASELINEDIR // base dir for regression test images
+  DATADIR,     // base dir containing test data files
+  BASELINEDIR, // base dir for regression test images
+  WRITEDIR     // base dir for generated regression test images
 };
 
 struct TestVtkmArg : public opt::Arg
@@ -100,14 +104,37 @@ struct Testing
 public:
   static VTKM_CONT const std::string GetTestDataBasePath() { return SetAndGetTestDataBasePath(); }
 
+  static VTKM_CONT const std::string DataPath(const std::string& filename)
+  {
+    return GetTestDataBasePath() + filename;
+  }
+
   static VTKM_CONT const std::string GetRegressionTestImageBasePath()
   {
     return SetAndGetRegressionImageBasePath();
   }
 
+  static VTKM_CONT const std::string RegressionImagePath(const std::string& filename)
+  {
+    return GetRegressionTestImageBasePath() + filename;
+  }
+
+  static VTKM_CONT const std::string GetWriteDirBasePath() { return SetAndGetWriteDirBasePath(); }
+
+  static VTKM_CONT const std::string WriteDirPath(const std::string& filename)
+  {
+    return GetWriteDirBasePath() + filename;
+  }
+
   template <class Func>
   static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
+    std::unique_ptr<vtkmdiy::mpi::environment> env_diy = nullptr;
+    if (!vtkmdiy::mpi::environment::initialized())
+    {
+      env_diy.reset(new vtkmdiy::mpi::environment(argc, argv));
+    }
+
     vtkm::cont::Initialize(argc, argv);
     ParseAdditionalTestArgs(argc, argv);
 
@@ -130,6 +157,7 @@ public:
     catch (std::exception& error)
     {
       std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      return 1;
     }
     catch (...)
     {
@@ -165,6 +193,7 @@ public:
     catch (std::exception& error)
     {
       std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      return 1;
     }
     catch (...)
     {
@@ -179,8 +208,21 @@ private:
   {
     static std::string TestDataBasePath;
 
-    if (path != "")
+    if (!path.empty())
+    {
       TestDataBasePath = path;
+      if ((TestDataBasePath.back() != '/') && (TestDataBasePath.back() != '\\'))
+      {
+        TestDataBasePath = TestDataBasePath + "/";
+      }
+    }
+
+    if (TestDataBasePath.empty())
+    {
+      VTKM_LOG_S(
+        vtkm::cont::LogLevel::Error,
+        "TestDataBasePath was never set, was --data-dir set correctly? (hint: ../data/data)");
+    }
 
     return TestDataBasePath;
   }
@@ -189,10 +231,40 @@ private:
   {
     static std::string RegressionTestImageBasePath;
 
-    if (path != "")
+    if (!path.empty())
+    {
       RegressionTestImageBasePath = path;
+      if ((RegressionTestImageBasePath.back() != '/') &&
+          (RegressionTestImageBasePath.back() != '\\'))
+      {
+        RegressionTestImageBasePath = RegressionTestImageBasePath + '/';
+      }
+    }
+
+    if (RegressionTestImageBasePath.empty())
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "RegressionTestImageBasePath was never set, was --baseline-dir set correctly? "
+                 "(hint: ../data/baseline)");
+    }
 
     return RegressionTestImageBasePath;
+  }
+
+  static std::string& SetAndGetWriteDirBasePath(std::string path = "")
+  {
+    static std::string WriteDirBasePath;
+
+    if (!path.empty())
+    {
+      WriteDirBasePath = path;
+      if ((WriteDirBasePath.back() != '/') && (WriteDirBasePath.back() != '\\'))
+      {
+        WriteDirBasePath = WriteDirBasePath + '/';
+      }
+    }
+
+    return WriteDirBasePath;
   }
 
   // Method to parse the extra arguments given to unit tests
@@ -220,6 +292,16 @@ private:
                         "\tPath to the base dir "
                         "for regression test "
                         "images" });
+      usage.push_back({ WRITEDIR,
+                        0,
+                        "",
+                        "write-dir",
+                        TestVtkmArg::Required,
+                        "  --write-dir "
+                        "<write-dir-path> "
+                        "\tPath to the write dir "
+                        "to store generated "
+                        "regression test images" });
       // Required to collect unknown arguments when help is off.
       usage.push_back({ TEST_UNKNOWN, 0, "", "", TestVtkmArg::Unknown, "" });
       usage.push_back({ 0, 0, 0, 0, 0, 0 });
@@ -250,6 +332,11 @@ private:
         SetAndGetRegressionImageBasePath(options[BASELINEDIR].arg);
       }
 
+      if (options[WRITEDIR])
+      {
+        SetAndGetWriteDirBasePath(options[WRITEDIR].arg);
+      }
+
       for (const opt::Option* opt = options[TEST_UNKNOWN]; opt != nullptr; opt = opt->next())
       {
         VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -265,101 +352,41 @@ private:
   }
 };
 
+}
+}
+} // namespace vtkm::cont::testing
+
 //============================================================================
-class TestEqualResult
-{
-public:
-  void PushMessage(const std::string& msg) { this->Messages.push_back(msg); }
-
-  const std::vector<std::string>& GetMessages() const { return this->Messages; }
-
-  std::string GetMergedMessage() const
-  {
-    std::string msg;
-    std::for_each(this->Messages.rbegin(), this->Messages.rend(), [&](const std::string& next) {
-      msg += (msg.empty() ? "" : ": ");
-      msg += next;
-    });
-
-    return msg;
-  }
-
-  operator bool() const { return this->Messages.empty(); }
-
-private:
-  std::vector<std::string> Messages;
-};
-
-namespace detail
-{
-
-struct TestEqualArrayHandle
-{
-  template <typename T1, typename T2, typename StorageTag1, typename StorageTag2>
-  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T1, StorageTag1>&,
-                            const vtkm::cont::ArrayHandle<T2, StorageTag2>&,
-                            TestEqualResult& result) const
-  {
-    result.PushMessage("types don't match");
-    return;
-  }
-
-  template <typename T, typename StorageTag1, typename StorageTag2>
-  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, StorageTag1>& array1,
-                            const vtkm::cont::ArrayHandle<T, StorageTag2>& array2,
-                            TestEqualResult& result) const
-  {
-    if (array1.GetNumberOfValues() != array2.GetNumberOfValues())
-    {
-      result.PushMessage("sizes don't match");
-      return;
-    }
-    auto portal1 = array1.ReadPortal();
-    auto portal2 = array2.ReadPortal();
-    for (vtkm::Id i = 0; i < portal1.GetNumberOfValues(); ++i)
-    {
-      if (!test_equal(portal1.Get(i), portal2.Get(i)))
-      {
-        result.PushMessage(std::string("values don't match at index ") + std::to_string(i));
-        return;
-      }
-    }
-  }
-
-  template <typename T, typename StorageTag, typename TypeList>
-  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& array1,
-                            const vtkm::cont::VariantArrayHandleBase<TypeList>& array2,
-                            TestEqualResult& result) const
-  {
-    array2.CastAndCall(*this, array1, result);
-  }
-
-  template <typename T, typename StorageTag, typename TypeList>
-  VTKM_CONT void operator()(const vtkm::cont::VariantArrayHandleBase<TypeList>& array1,
-                            const vtkm::cont::ArrayHandle<T, StorageTag>& array2,
-                            TestEqualResult& result) const
-  {
-    array1.CastAndCall(*this, array2, result);
-  }
-
-  template <typename TypeList1, typename TypeList2>
-  VTKM_CONT void operator()(const vtkm::cont::VariantArrayHandleBase<TypeList1>& array1,
-                            const vtkm::cont::VariantArrayHandleBase<TypeList2>& array2,
-                            TestEqualResult& result) const
-  {
-    array2.CastAndCall(*this, array1, result);
-  }
-};
-} // detail
-
-template <typename ArrayHandle1, typename ArrayHandle2>
-inline VTKM_CONT TestEqualResult test_equal_ArrayHandles(const ArrayHandle1& array1,
-                                                         const ArrayHandle2& array2)
+template <typename T1, typename T2, typename StorageTag1, typename StorageTag2>
+VTKM_CONT TestEqualResult
+test_equal_ArrayHandles(const vtkm::cont::ArrayHandle<T1, StorageTag1>& array1,
+                        const vtkm::cont::ArrayHandle<T2, StorageTag2>& array2)
 {
   TestEqualResult result;
-  detail::TestEqualArrayHandle{}(array1, array2, result);
+
+  if (array1.GetNumberOfValues() != array2.GetNumberOfValues())
+  {
+    result.PushMessage("Arrays have different sizes.");
+    return result;
+  }
+
+  auto portal1 = array1.ReadPortal();
+  auto portal2 = array2.ReadPortal();
+  for (vtkm::Id i = 0; i < portal1.GetNumberOfValues(); ++i)
+  {
+    if (!test_equal(portal1.Get(i), portal2.Get(i)))
+    {
+      result.PushMessage("Values don't match at index " + std::to_string(i));
+      break;
+    }
+  }
+
   return result;
 }
+
+VTKM_CONT_TESTING_EXPORT TestEqualResult
+test_equal_ArrayHandles(const vtkm::cont::UnknownArrayHandle& array1,
+                        const vtkm::cont::UnknownArrayHandle& array2);
 
 namespace detail
 {
@@ -455,10 +482,8 @@ inline VTKM_CONT TestEqualResult test_equal_CellSets(const CellSet1& cellset1,
   return result;
 }
 
-template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST>
 inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
-                                                   const vtkm::cont::Field& f2,
-                                                   FieldTypeList fTtypes = FieldTypeList())
+                                                   const vtkm::cont::Field& f2)
 {
   TestEqualResult result;
 
@@ -474,8 +499,7 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
     return result;
   }
 
-  result =
-    test_equal_ArrayHandles(f1.GetData().ResetTypes(fTtypes), f2.GetData().ResetTypes(fTtypes));
+  result = test_equal_ArrayHandles(f1.GetData(), f2.GetData());
   if (!result)
   {
     result.PushMessage("data doesn't match");
@@ -484,12 +508,10 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
   return result;
 }
 
-template <typename CellSetTypes = VTKM_DEFAULT_CELL_SET_LIST,
-          typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST>
+template <typename CellSetTypes = VTKM_DEFAULT_CELL_SET_LIST>
 inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& ds1,
                                                      const vtkm::cont::DataSet& ds2,
-                                                     CellSetTypes ctypes = CellSetTypes(),
-                                                     FieldTypeList fTtypes = FieldTypeList())
+                                                     CellSetTypes ctypes = CellSetTypes())
 {
   TestEqualResult result;
   if (ds1.GetNumberOfCoordinateSystems() != ds2.GetNumberOfCoordinateSystems())
@@ -524,7 +546,7 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
   }
   for (vtkm::IdComponent i = 0; i < ds1.GetNumberOfFields(); ++i)
   {
-    result = test_equal_Fields(ds1.GetField(i), ds2.GetField(i), fTtypes);
+    result = test_equal_Fields(ds1.GetField(i), ds2.GetField(i));
     if (!result)
     {
       result.PushMessage(std::string("fields don't match at index ") + std::to_string(i));
@@ -534,8 +556,5 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
 
   return result;
 }
-}
-}
-} // namespace vtkm::cont::testing
 
 #endif //vtk_m_cont_internal_Testing_h

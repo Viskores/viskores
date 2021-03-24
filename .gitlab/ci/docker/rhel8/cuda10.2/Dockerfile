@@ -1,7 +1,7 @@
 FROM nvidia/cuda:10.2-devel-ubi8
 LABEL maintainer "Robert Maynard<robert.maynard@kitware.com>"
 
-RUN yum install make gcc gcc-c++ curl -y
+RUN yum install make gcc gcc-c++ curl cuda-compat-10-2 -y
 
 
 

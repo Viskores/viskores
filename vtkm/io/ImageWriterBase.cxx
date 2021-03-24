@@ -27,14 +27,7 @@ ImageWriterBase::ImageWriterBase(const std::string& filename)
 {
 }
 
-ImageWriterBase::~ImageWriterBase() noexcept
-{
-}
-
-void ImageWriterBase::WriteDataSet(const vtkm::cont::DataSet& dataSet)
-{
-  this->WriteDataSet(dataSet, std::string{});
-}
+ImageWriterBase::~ImageWriterBase() noexcept {}
 
 void ImageWriterBase::WriteDataSet(const vtkm::cont::DataSet& dataSet,
                                    const std::string& colorFieldName)
@@ -82,7 +75,7 @@ void ImageWriterBase::WriteDataSet(const vtkm::cont::DataSet& dataSet,
     }
   }
 
-  this->Write(width, height, colorField.GetData().Cast<ColorArrayType>());
+  this->Write(width, height, colorField.GetData().AsArrayHandle<ColorArrayType>());
 }
 }
 } // namespace vtkm::io

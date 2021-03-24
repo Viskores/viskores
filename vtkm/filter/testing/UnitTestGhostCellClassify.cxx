@@ -114,7 +114,7 @@ void TestStructured()
 
         //Check the number of normal cells.
         vtkm::cont::ArrayHandle<vtkm::UInt8> ghostArray;
-        fieldArray.CopyTo(ghostArray);
+        fieldArray.AsArrayHandle(ghostArray);
 
         vtkm::Id numNormalCells = 0;
         auto portal = ghostArray.ReadPortal();

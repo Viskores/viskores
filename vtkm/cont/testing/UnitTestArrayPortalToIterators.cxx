@@ -156,7 +156,8 @@ struct TemplatedTests
     T* end = begin + ARRAY_SIZE;
     const T* cbegin = begin;
     const T* cend = end;
-    vtkm::cont::ArrayHandle<T> arrayHandle = vtkm::cont::make_ArrayHandle(begin, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> arrayHandle =
+      vtkm::cont::make_ArrayHandle(begin, ARRAY_SIZE, vtkm::CopyFlag::Off);
 
     std::cout
       << "  Testing ArrayPortalToIterators(ArrayPortalFromIterators) gets back simple iterator."

@@ -13,46 +13,26 @@
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
-#include <vtkm/cont/CellLocatorUniformBins.h>
+#include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
 
 namespace
 {
 
-VTKM_CONT
-void DefaultConfigurator(std::unique_ptr<vtkm::cont::CellLocator>& locator,
-                         const vtkm::cont::DynamicCellSet& cellSet,
-                         const vtkm::cont::CoordinateSystem& coords)
+template <typename LocatorImplType, typename LocatorVariantType>
+void BuildForType(vtkm::cont::CellLocatorGeneral& locator, LocatorVariantType& locatorVariant)
 {
-  using StructuredCellSet = vtkm::cont::CellSetStructured<3>;
-  using UniformCoordinates = vtkm::cont::ArrayHandleUniformPointCoordinates;
-  using RectilinearCoordinates =
-    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
-
-  if (cellSet.IsType<StructuredCellSet>() && coords.GetData().IsType<UniformCoordinates>())
+  constexpr vtkm::IdComponent LOCATOR_INDEX =
+    LocatorVariantType::template GetIndexOf<LocatorImplType>();
+  if (locatorVariant.GetIndex() != LOCATOR_INDEX)
   {
-    if (!dynamic_cast<vtkm::cont::CellLocatorUniformGrid*>(locator.get()))
-    {
-      locator.reset(new vtkm::cont::CellLocatorUniformGrid);
-    }
+    locatorVariant = LocatorImplType{};
   }
-  else if (cellSet.IsType<StructuredCellSet>() && coords.GetData().IsType<RectilinearCoordinates>())
-  {
-    if (!dynamic_cast<vtkm::cont::CellLocatorRectilinearGrid*>(locator.get()))
-    {
-      locator.reset(new vtkm::cont::CellLocatorRectilinearGrid);
-    }
-  }
-  else if (!dynamic_cast<vtkm::cont::CellLocatorUniformBins*>(locator.get()))
-  {
-    locator.reset(new vtkm::cont::CellLocatorUniformBins);
-  }
-
-  locator->SetCellSet(cellSet);
-  locator->SetCoordinates(coords);
+  LocatorImplType& locatorImpl = locatorVariant.template Get<LOCATOR_INDEX>();
+  locatorImpl.SetCellSet(locator.GetCellSet());
+  locatorImpl.SetCoordinates(locator.GetCoordinates());
+  locatorImpl.Update();
 }
 
 } // anonymous namespace
@@ -62,33 +42,50 @@ namespace vtkm
 namespace cont
 {
 
-VTKM_CONT CellLocatorGeneral::CellLocatorGeneral()
-  : Configurator(DefaultConfigurator)
+VTKM_CONT void CellLocatorGeneral::Build()
 {
+  using StructuredCellSet = vtkm::cont::CellSetStructured<3>;
+  using UniformCoordinates = vtkm::cont::ArrayHandleUniformPointCoordinates;
+  using RectilinearCoordinates =
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
+
+  vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
+  vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
+
+  if (cellSet.IsType<StructuredCellSet>() && coords.GetData().IsType<UniformCoordinates>())
+  {
+    BuildForType<vtkm::cont::CellLocatorUniformGrid>(*this, this->LocatorImpl);
+  }
+  else if (cellSet.IsType<StructuredCellSet>() && coords.GetData().IsType<RectilinearCoordinates>())
+  {
+    BuildForType<vtkm::cont::CellLocatorRectilinearGrid>(*this, this->LocatorImpl);
+  }
+  else
+  {
+    BuildForType<vtkm::cont::CellLocatorTwoLevel>(*this, this->LocatorImpl);
+  }
 }
 
-VTKM_CONT CellLocatorGeneral::~CellLocatorGeneral() = default;
+struct CellLocatorGeneral::PrepareFunctor
+{
+  template <typename LocatorType>
+  ExecObjType operator()(LocatorType&& locator,
+                         vtkm::cont::DeviceAdapterId device,
+                         vtkm::cont::Token& token) const
+  {
+    return locator.PrepareForExecution(device, token);
+  }
+};
 
-VTKM_CONT const vtkm::exec::CellLocator* CellLocatorGeneral::PrepareForExecution(
+CellLocatorGeneral::ExecObjType CellLocatorGeneral::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Token& token) const
 {
-  if (this->Locator)
-  {
-    return this->Locator->PrepareForExecution(device, token);
-  }
-  return nullptr;
+  this->Update();
+  return this->LocatorImpl.CastAndCall(PrepareFunctor{}, device, token);
 }
 
-VTKM_CONT void CellLocatorGeneral::Build()
-{
-  this->Configurator(this->Locator, this->GetCellSet(), this->GetCoordinates());
-  this->Locator->Update();
-}
-
-VTKM_CONT void CellLocatorGeneral::ResetToDefaultConfigurator()
-{
-  this->SetConfigurator(DefaultConfigurator);
-}
 }
 } // vtkm::cont

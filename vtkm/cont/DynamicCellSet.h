@@ -326,11 +326,11 @@ struct DynamicCellSetCheck<vtkm::cont::DynamicCellSetBase<CellSetList>>
   using type = std::true_type;
 };
 
-#define VTKM_IS_DYNAMIC_CELL_SET(T)                                                                \
+#define VTKM_IS_DYNAMIC_CELL_SET(T) \
   VTKM_STATIC_ASSERT(::vtkm::cont::internal::DynamicCellSetCheck<T>::type::value)
 
-#define VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(T)                                                      \
-  VTKM_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value ||                       \
+#define VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(T)                                \
+  VTKM_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value || \
                      ::vtkm::cont::internal::DynamicCellSetCheck<T>::type::value)
 
 } // namespace internal

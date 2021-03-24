@@ -16,8 +16,6 @@
 
 namespace vtkm
 {
-namespace exec
-{
 namespace internal
 {
 
@@ -29,7 +27,6 @@ class VTKM_ALWAYS_EXPORT ArrayPortalPermutation
 public:
   using ValueType = typename ValuePortalType::ValueType;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalPermutation()
     : IndexPortal()
@@ -37,7 +34,6 @@ public:
   {
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalPermutation(const IndexPortalType& indexPortal, const ValuePortalType& valuePortal)
     : IndexPortal(indexPortal)
@@ -50,7 +46,6 @@ public:
   /// do any type casting that the delegate portals do (like the non-const to
   /// const cast).
   ///
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherIP, typename OtherVP>
   VTKM_EXEC_CONT ArrayPortalPermutation(const ArrayPortalPermutation<OtherIP, OtherVP>& src)
     : IndexPortal(src.GetIndexPortal())
@@ -58,11 +53,9 @@ public:
   {
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->IndexPortal.GetNumberOfValues(); }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   ValueType Get(vtkm::Id index) const
   {
@@ -70,7 +63,6 @@ public:
     return this->ValuePortal.Get(permutedIndex);
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Writable_ = Writable,
             typename = typename std::enable_if<Writable_::value>::type>
   VTKM_EXEC void Set(vtkm::Id index, const ValueType& value) const
@@ -79,11 +71,9 @@ public:
     this->ValuePortal.Set(permutedIndex, value);
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   const IndexPortalType& GetIndexPortal() const { return this->IndexPortal; }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   const ValuePortalType& GetValuePortal() const { return this->ValuePortal; }
 
@@ -92,8 +82,7 @@ private:
   ValuePortalType ValuePortal;
 };
 }
-}
-} // namespace vtkm::exec::internal
+} // namespace vtkm::internal
 
 namespace vtkm
 {
@@ -117,185 +106,68 @@ class Storage<T, vtkm::cont::StorageTagPermutation<IndexStorageTag, ValueStorage
   VTKM_STATIC_ASSERT_MSG((vtkm::cont::internal::IsValidArrayHandle<T, ValueStorageTag>::value),
                          "Invalid value storage tag.");
 
-public:
-  using IndexArrayType = vtkm::cont::ArrayHandle<vtkm::Id, IndexStorageTag>;
-  using ValueArrayType = vtkm::cont::ArrayHandle<T, ValueStorageTag>;
+  using IndexStorage = vtkm::cont::internal::Storage<vtkm::Id, IndexStorageTag>;
+  using ValueStorage = vtkm::cont::internal::Storage<T, ValueStorageTag>;
 
-  using ValueType = T;
-
-  using PortalType =
-    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::ReadPortalType,
-                                                 typename ValueArrayType::WritePortalType>;
-  using PortalConstType =
-    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::ReadPortalType,
-                                                 typename ValueArrayType::ReadPortalType>;
-
-  VTKM_CONT
-  Storage()
-    : Valid(false)
+  template <typename Buff>
+  VTKM_CONT constexpr static Buff* IndexBuffers(Buff* buffers)
   {
+    return buffers;
   }
-
-  VTKM_CONT
-  Storage(const IndexArrayType& indexArray, const ValueArrayType& valueArray)
-    : IndexArray(indexArray)
-    , ValueArray(valueArray)
-    , Valid(true)
+  template <typename Buff>
+  VTKM_CONT constexpr static Buff* ValueBuffers(Buff* buffers)
   {
+    return buffers + IndexStorage::GetNumberOfBuffers();
   }
-
-  VTKM_CONT
-  PortalType GetPortal()
-  {
-    VTKM_ASSERT(this->Valid);
-    return PortalType(this->IndexArray.ReadPortal(), this->ValueArray.WritePortal());
-  }
-
-  VTKM_CONT
-  PortalConstType GetPortalConst() const
-  {
-    VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->IndexArray.ReadPortal(), this->ValueArray.ReadPortal());
-  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->IndexArray.GetNumberOfValues();
-  }
-
-  VTKM_CONT
-  void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
-  {
-    throw vtkm::cont::ErrorBadType("ArrayHandlePermutation cannot be allocated.");
-  }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
-  {
-    throw vtkm::cont::ErrorBadType("ArrayHandlePermutation cannot shrink.");
-  }
-
-  VTKM_CONT
-  void ReleaseResources()
-  {
-    // This request is ignored since it is asking to release the resources
-    // of the delegate array, which may be used elsewhere. Should the behavior
-    // be different?
-  }
-
-  VTKM_CONT
-  const IndexArrayType& GetIndexArray() const { return this->IndexArray; }
-
-  VTKM_CONT
-  const ValueArrayType& GetValueArray() const { return this->ValueArray; }
-
-private:
-  IndexArrayType IndexArray;
-  ValueArrayType ValueArray;
-  bool Valid;
-};
-
-template <typename T, typename IndexStorageTag, typename ValueStorageTag, typename Device>
-class ArrayTransfer<T, StorageTagPermutation<IndexStorageTag, ValueStorageTag>, Device>
-{
-public:
-  using ValueType = T;
-
-private:
-  using StorageTag = StorageTagPermutation<IndexStorageTag, ValueStorageTag>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-  using IndexArrayType = typename StorageType::IndexArrayType;
-  using ValueArrayType = typename StorageType::ValueArrayType;
 
 public:
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
+  VTKM_STORAGE_NO_RESIZE;
 
-  using PortalExecution = vtkm::exec::internal::ArrayPortalPermutation<
-    typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
-    typename ValueArrayType::template ExecutionTypes<Device>::Portal>;
-  using PortalConstExecution = vtkm::exec::internal::ArrayPortalPermutation<
-    typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
-    typename ValueArrayType::template ExecutionTypes<Device>::PortalConst>;
+  using ReadPortalType =
+    vtkm::internal::ArrayPortalPermutation<typename IndexStorage::ReadPortalType,
+                                           typename ValueStorage::ReadPortalType>;
+  using WritePortalType =
+    vtkm::internal::ArrayPortalPermutation<typename IndexStorage::ReadPortalType,
+                                           typename ValueStorage::WritePortalType>;
 
-  VTKM_CONT
-  ArrayTransfer(StorageType* storage)
-    : IndexArray(storage->GetIndexArray())
-    , ValueArray(storage->GetValueArray())
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
   {
+    return (IndexStorage::GetNumberOfBuffers() + ValueStorage::GetNumberOfBuffers());
   }
 
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->IndexArray.GetNumberOfValues(); }
-
-  VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    return PortalConstExecution(this->IndexArray.PrepareForInput(Device(), token),
-                                this->ValueArray.PrepareForInput(Device(), token));
+    return IndexStorage::GetNumberOfValues(IndexBuffers(buffers));
   }
 
-  VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
-    return PortalExecution(this->IndexArray.PrepareForInput(Device(), token),
-                           this->ValueArray.PrepareForInPlace(Device(), token));
+    return ReadPortalType(IndexStorage::CreateReadPortal(IndexBuffers(buffers), device, token),
+                          ValueStorage::CreateReadPortal(ValueBuffers(buffers), device, token));
   }
 
-  VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
-    if (numberOfValues != this->GetNumberOfValues())
-    {
-      throw vtkm::cont::ErrorBadValue(
-        "An ArrayHandlePermutation can be used as an output array, "
-        "but it cannot be resized. Make sure the index array is sized "
-        "to the appropriate length before trying to prepare for output.");
-    }
-
-    // We cannot practically allocate ValueArray because we do not know the
-    // range of indices. We try to check by seeing if ValueArray has no
-    // entries, which clearly indicates that it is not allocated. Otherwise,
-    // we have to assume the allocation is correct.
-    if ((numberOfValues > 0) && (this->ValueArray.GetNumberOfValues() < 1))
-    {
-      throw vtkm::cont::ErrorBadValue(
-        "The value array must be pre-allocated before it is used for the "
-        "output of ArrayHandlePermutation.");
-    }
-
-    return PortalExecution(
-      this->IndexArray.PrepareForInput(Device(), token),
-      this->ValueArray.PrepareForOutput(this->ValueArray.GetNumberOfValues(), Device(), token));
+    // Note: the index portal is always a read-only portal.
+    return WritePortalType(IndexStorage::CreateReadPortal(IndexBuffers(buffers), device, token),
+                           ValueStorage::CreateWritePortal(ValueBuffers(buffers), device, token));
   }
 
-  VTKM_CONT
-  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
+  VTKM_CONT static vtkm::cont::ArrayHandle<vtkm::Id, IndexStorageTag> GetIndexArray(
+    const vtkm::cont::internal::Buffer* buffers)
   {
-    // Implementation of this method should be unnecessary. The internal
-    // array handles should automatically retrieve the output data as
-    // necessary.
+    return vtkm::cont::ArrayHandle<vtkm::Id, IndexStorageTag>(IndexBuffers(buffers));
   }
 
-  VTKM_CONT
-  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
+  VTKM_CONT static vtkm::cont::ArrayHandle<T, ValueStorageTag> GetValueArray(
+    const vtkm::cont::internal::Buffer* buffers)
   {
-    throw vtkm::cont::ErrorBadType("ArrayHandlePermutation cannot shrink.");
+    return vtkm::cont::ArrayHandle<T, ValueStorageTag>(ValueBuffers(buffers));
   }
-
-  VTKM_CONT
-  void ReleaseResources()
-  {
-    this->IndexArray.ReleaseResourcesExecution();
-    this->ValueArray.ReleaseResourcesExecution();
-  }
-
-private:
-  IndexArrayType IndexArray;
-  ValueArrayType ValueArray;
 };
 
 } // namespace internal
@@ -351,8 +223,18 @@ public:
   VTKM_CONT
   ArrayHandlePermutation(const IndexArrayHandleType& indexArray,
                          const ValueArrayHandleType& valueArray)
-    : Superclass(StorageType(indexArray, valueArray))
+    : Superclass(vtkm::cont::internal::CreateBuffers(indexArray, valueArray))
   {
+  }
+
+  VTKM_CONT IndexArrayHandleType GetIndexArray() const
+  {
+    return StorageType::GetIndexArray(this->GetBuffers());
+  }
+
+  VTKM_CONT ValueArrayHandleType GetValueArray() const
+  {
+    return StorageType::GetValueArray(this->GetBuffers());
   }
 };
 
@@ -412,9 +294,8 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    auto storage = obj.GetStorage();
-    vtkmdiy::save(bb, storage.GetIndexArray());
-    vtkmdiy::save(bb, storage.GetValueArray());
+    vtkmdiy::save(bb, Type(obj).GetIndexArray());
+    vtkmdiy::save(bb, Type(obj).GetValueArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)

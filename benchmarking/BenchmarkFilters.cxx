@@ -24,8 +24,8 @@
 #include <vtkm/cont/ErrorInternal.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 
 #include <vtkm/cont/internal/OptionParser.h>
 
@@ -39,6 +39,7 @@
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/filter/Threshold.h>
 #include <vtkm/filter/ThresholdPoints.h>
+#include <vtkm/filter/Triangulate.h>
 #include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/filter/VertexClustering.h>
 #include <vtkm/filter/WarpScalar.h>
@@ -92,12 +93,15 @@ vtkm::cont::InitializeResult Config;
 
 // The input dataset we'll use on the filters:
 static vtkm::cont::DataSet InputDataSet;
+static vtkm::cont::DataSet UnstructuredInputDataSet;
 // The point scalars to use:
 static std::string PointScalarsName;
 // The cell scalars to use:
 static std::string CellScalarsName;
 // The point vectors to use:
 static std::string PointVectorsName;
+// Whether the input is a file or is generated
+bool FileAsInput = false;
 
 bool InputIsStructured()
 {
@@ -166,8 +170,8 @@ void BenchGradient(::benchmark::State& state, int options)
   }
 }
 
-#define VTKM_PRIVATE_GRADIENT_BENCHMARK(Name, Opts)                                                \
-  void BenchGradient##Name(::benchmark::State& state) { BenchGradient(state, Opts); }              \
+#define VTKM_PRIVATE_GRADIENT_BENCHMARK(Name, Opts)                                   \
+  void BenchGradient##Name(::benchmark::State& state) { BenchGradient(state, Opts); } \
   VTKM_BENCHMARK(BenchGradient##Name)
 
 VTKM_PRIVATE_GRADIENT_BENCHMARK(Scalar, Gradient | ScalarInput);
@@ -343,10 +347,11 @@ void BenchContour(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  const vtkm::Id numIsoVals = static_cast<vtkm::Id>(state.range(0));
-  const bool mergePoints = static_cast<bool>(state.range(1));
-  const bool normals = static_cast<bool>(state.range(2));
-  const bool fastNormals = static_cast<bool>(state.range(3));
+  const bool isStructured = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numIsoVals = static_cast<vtkm::Id>(state.range(1));
+  const bool mergePoints = static_cast<bool>(state.range(2));
+  const bool normals = static_cast<bool>(state.range(3));
+  const bool fastNormals = static_cast<bool>(state.range(4));
 
   vtkm::filter::Contour filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
@@ -372,11 +377,14 @@ void BenchContour(::benchmark::State& state)
   filter.SetComputeFastNormalsForUnstructured(fastNormals);
 
   vtkm::cont::Timer timer{ device };
+
+  vtkm::cont::DataSet input = isStructured ? InputDataSet : UnstructuredInputDataSet;
+
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -386,19 +394,25 @@ void BenchContour(::benchmark::State& state)
 
 void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
 {
-  bm->ArgNames({ "NIsoVals", "MergePts", "GenNormals", "FastNormals" });
+  bm->ArgNames({ "IsStructuredDataSet", "NIsoVals", "MergePts", "GenNormals", "FastNormals" });
 
   auto helper = [&](const vtkm::Id numIsoVals) {
-    bm->Args({ numIsoVals, 0, 0, 0 });
-    bm->Args({ numIsoVals, 1, 0, 0 });
-    bm->Args({ numIsoVals, 0, 1, 0 });
-    bm->Args({ numIsoVals, 0, 1, 1 });
+    bm->Args({ 0, numIsoVals, 0, 0, 0 });
+    bm->Args({ 0, numIsoVals, 1, 0, 0 });
+    bm->Args({ 0, numIsoVals, 0, 1, 0 });
+    bm->Args({ 0, numIsoVals, 0, 1, 1 });
+    bm->Args({ 1, numIsoVals, 0, 0, 0 });
+    bm->Args({ 1, numIsoVals, 1, 0, 0 });
+    bm->Args({ 1, numIsoVals, 0, 1, 0 });
+    bm->Args({ 1, numIsoVals, 0, 1, 1 });
   };
 
   helper(1);
   helper(3);
   helper(12);
 }
+
+// :TODO: Disabled until SIGSEGV in Countour when passings field is resolved
 VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
 
 void BenchExternalFaces(::benchmark::State& state)
@@ -428,10 +442,9 @@ void BenchTetrahedralize(::benchmark::State& state)
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
   // This filter only supports structured datasets:
-  if (!InputIsStructured())
+  if (FileAsInput && !InputIsStructured())
   {
     state.SkipWithError("Tetrahedralize Filter requires structured data.");
-    return;
   }
 
   vtkm::filter::Tetrahedralize filter;
@@ -456,10 +469,9 @@ void BenchVertexClustering(::benchmark::State& state)
   const vtkm::Id numDivs = static_cast<vtkm::Id>(state.range(0));
 
   // This filter only supports unstructured datasets:
-  if (InputIsStructured())
+  if (FileAsInput && InputIsStructured())
   {
-    state.SkipWithError("VertexClustering Filter requires unstructured data.");
-    return;
+    state.SkipWithError("VertexClustering Filter requires unstructured data (use --tetra).");
   }
 
   vtkm::filter::VertexClustering filter;
@@ -469,8 +481,9 @@ void BenchVertexClustering(::benchmark::State& state)
   for (auto _ : state)
   {
     (void)_;
+
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(UnstructuredInputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -530,13 +543,12 @@ struct PrepareForInput
 
 void BenchReverseConnectivityGen(::benchmark::State& state)
 {
-  if (InputIsStructured())
+  if (FileAsInput && InputIsStructured())
   {
-    state.SkipWithError("ReverseConnectivityGen requires unstructured data.");
-    return;
+    state.SkipWithError("ReverseConnectivityGen requires unstructured data (--use tetra).");
   }
 
-  auto cellset = InputDataSet.GetCellSet();
+  auto cellset = UnstructuredInputDataSet.GetCellSet();
   PrepareForInput functor;
   for (auto _ : state)
   {
@@ -764,15 +776,15 @@ struct Arg : vtkm::cont::internal::option::Arg
   {
     if ((option.arg != nullptr) && (option.arg[0] != '\0'))
     {
+      return vtkm::cont::internal::option::ARG_OK;
+    }
+    else
+    {
       if (msg)
       {
         std::cerr << "Option " << option.name << " requires an argument." << std::endl;
       }
       return vtkm::cont::internal::option::ARG_ILLEGAL;
-    }
-    else
-    {
-      return vtkm::cont::internal::option::ARG_OK;
     }
   }
 };
@@ -861,8 +873,12 @@ void InitDataSet(int& argc, char** argv)
 
   if (options[HELP])
   {
-    // FIXME: Print google benchmark usage too
-    option::printUsage(std::cerr, usage.data());
+    option::printUsage(std::cout, usage.data());
+    // Print google benchmark usage too
+    const char* helpstr = "--help";
+    char* tmpargv[] = { argv[0], const_cast<char*>(helpstr), nullptr };
+    int tmpargc = 2;
+    VTKM_EXECUTE_BENCHMARKS(tmpargc, tmpargv);
     exit(0);
   }
 
@@ -975,6 +991,7 @@ void InitDataSet(int& argc, char** argv)
     std::cerr << "[InitDataSet] Loading file: " << filename << "\n";
     vtkm::io::VTKDataSetReader reader(filename);
     InputDataSet = reader.ReadDataSet();
+    FileAsInput = true;
   }
   else
   {
@@ -986,16 +1003,19 @@ void InitDataSet(int& argc, char** argv)
     InputDataSet = source.Execute();
   }
 
-  if (tetra)
-  {
-    std::cerr << "[InitDataSet] Tetrahedralizing dataset...\n";
-    vtkm::filter::Tetrahedralize tet;
-    tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
-    InputDataSet = tet.Execute(InputDataSet);
-  }
-
   FindFields();
   CreateMissingFields();
+
+  std::cerr
+    << "[InitDataSet] Create UnstructuredInputDataSet from Tetrahedralized InputDataSet...\n";
+  vtkm::filter::Tetrahedralize tet;
+  tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
+  UnstructuredInputDataSet = tet.Execute(InputDataSet);
+
+  if (tetra)
+  {
+    InputDataSet = UnstructuredInputDataSet;
+  }
 
   inputGenTimer.Stop();
 
@@ -1015,16 +1035,12 @@ int main(int argc, char* argv[])
   // Parse VTK-m options:
   Config = vtkm::cont::Initialize(argc, args.data(), opts);
 
-  // This occurs when it is help
-  if (opts == vtkm::cont::InitializeOptions::None)
-  {
-    std::cout << Config.Usage << std::endl;
-  }
-  else
+  // This opts changes when it is help
+  if (opts != vtkm::cont::InitializeOptions::None)
   {
     vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
-    InitDataSet(argc, args.data());
   }
+  InitDataSet(argc, args.data());
 
   const std::string dataSetSummary = []() -> std::string {
     std::ostringstream out;

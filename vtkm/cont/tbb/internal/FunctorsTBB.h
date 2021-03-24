@@ -107,10 +107,15 @@ struct CopyBody
   template <typename InIter, typename OutIter>
   void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type) const
   {
-    using OutputType = typename std::iterator_traits<OutIter>::value_type;
+    using InputType = typename InputPortalType::ValueType;
+    using OutputType = typename OutputPortalType::ValueType;
     while (src != srcEnd)
     {
-      *dst = static_cast<OutputType>(*src);
+      // The conversion to InputType and then OutputType looks weird, but it is necessary.
+      // *src actually returns an ArrayPortalValueReference, which can automatically convert
+      // itself to InputType but not necessarily OutputType. Thus, we first convert to
+      // InputType, and then allow the conversion to OutputType.
+      *dst = static_cast<OutputType>(static_cast<InputType>(*src));
       ++src;
       ++dst;
     }
@@ -455,14 +460,17 @@ struct ReduceBody
 
 
 template <class InputPortalType, typename T, class BinaryOperationType>
-VTKM_CONT static T ReducePortals(InputPortalType inputPortal,
-                                 T initialValue,
-                                 BinaryOperationType binaryOperation)
+VTKM_CONT static auto ReducePortals(InputPortalType inputPortal,
+                                    T initialValue,
+                                    BinaryOperationType binaryOperation)
+  -> decltype(binaryOperation(initialValue, inputPortal.Get(0)))
 {
-  using WrappedBinaryOp = internal::WrappedBinaryOperator<T, BinaryOperationType>;
+  using ResultType = decltype(binaryOperation(initialValue, inputPortal.Get(0)));
+  using WrappedBinaryOp = internal::WrappedBinaryOperator<ResultType, BinaryOperationType>;
 
   WrappedBinaryOp wrappedBinaryOp(binaryOperation);
-  ReduceBody<InputPortalType, T, WrappedBinaryOp> body(inputPortal, initialValue, wrappedBinaryOp);
+  ReduceBody<InputPortalType, ResultType, WrappedBinaryOp> body(
+    inputPortal, initialValue, wrappedBinaryOp);
   vtkm::Id arrayLength = inputPortal.GetNumberOfValues();
 
   if (arrayLength > 1)
@@ -479,7 +487,7 @@ VTKM_CONT static T ReducePortals(InputPortalType inputPortal,
   else // arrayLength == 0
   {
     // ReduceBody does not work with an array of size 0.
-    return initialValue;
+    return static_cast<ResultType>(initialValue);
   }
 }
 

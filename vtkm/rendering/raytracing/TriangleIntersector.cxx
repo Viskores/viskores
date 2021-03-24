@@ -34,7 +34,7 @@ class WaterTightLeafIntersector
 {
 public:
   using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
-  using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
+  using Id4ArrayPortal = typename Id4Handle::ReadPortalType;
   Id4ArrayPortal Triangles;
 
 public:
@@ -87,7 +87,7 @@ class MollerTriLeafIntersector
   //protected:
 public:
   using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
-  using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
+  using Id4ArrayPortal = typename Id4Handle::ReadPortalType;
   Id4ArrayPortal Triangles;
 
 public:
@@ -242,7 +242,7 @@ public:
   {
   private:
     Precision MinScalar;
-    Precision invDeltaScalar;
+    Precision InvDeltaScalar;
     bool Normalize;
 
   public:
@@ -251,21 +251,17 @@ public:
       : MinScalar(minScalar)
     {
       Normalize = true;
-      if (minScalar > maxScalar)
+      if (minScalar >= maxScalar)
       {
         // support the scalar renderer
-        Normalize = false;
-        MinScalar = 0;
-        invDeltaScalar = 1;
+        this->Normalize = false;
+        this->InvDeltaScalar = 1;
       }
       else
       {
         //Make sure the we don't divide by zero on
         //something like an iso-surface
-        if (maxScalar - MinScalar != 0.f)
-          invDeltaScalar = 1.f / (maxScalar - MinScalar);
-        else
-          invDeltaScalar = 1.f / minScalar;
+        this->InvDeltaScalar = 1.f / (maxScalar - this->MinScalar);
       }
     }
     typedef void ControlSignature(FieldIn,
@@ -296,7 +292,7 @@ public:
       //normalize
       if (Normalize)
       {
-        lerpedScalar = (lerpedScalar - MinScalar) * invDeltaScalar;
+        lerpedScalar = (lerpedScalar - this->MinScalar) * this->InvDeltaScalar;
       }
     }
   }; //class LerpScalar
@@ -306,7 +302,7 @@ public:
   {
   private:
     Precision MinScalar;
-    Precision invDeltaScalar;
+    Precision InvDeltaScalar;
     bool Normalize;
 
   public:
@@ -315,21 +311,17 @@ public:
       : MinScalar(minScalar)
     {
       Normalize = true;
-      if (minScalar > maxScalar)
+      if (minScalar >= maxScalar)
       {
         // support the scalar renderer
         Normalize = false;
-        MinScalar = 0;
-        invDeltaScalar = 1;
+        this->InvDeltaScalar = Precision(0.f);
       }
       else
       {
         //Make sure the we don't divide by zero on
         //something like an iso-surface
-        if (maxScalar - MinScalar != 0.f)
-          invDeltaScalar = 1.f / (maxScalar - MinScalar);
-        else
-          invDeltaScalar = 1.f / minScalar;
+        this->InvDeltaScalar = 1.f / (maxScalar - this->MinScalar);
       }
     }
 
@@ -352,7 +344,7 @@ public:
 
       if (Normalize)
       {
-        scalar = (scalar - MinScalar) * invDeltaScalar;
+        scalar = (scalar - this->MinScalar) * this->InvDeltaScalar;
       }
     }
   }; //class LerpScalar
@@ -385,7 +377,7 @@ public:
                 rays.U,
                 rays.V,
                 rays.Scalar,
-                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
                 triangles);
     }
     else
@@ -394,7 +386,7 @@ public:
         NodalScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
         .Invoke(rays.HitIdx,
                 rays.Scalar,
-                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
                 triangles);
     }
   } // Run

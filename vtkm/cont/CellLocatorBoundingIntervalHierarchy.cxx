@@ -21,7 +21,7 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadDevice.h>
-#include <vtkm/exec/CellLocatorBoundingIntervalHierarchyExec.h>
+#include <vtkm/exec/CellLocatorBoundingIntervalHierarchy.h>
 
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -224,17 +224,17 @@ IdArrayHandle CalculateSplitScatterIndices(const IdArrayHandle& cellIds,
 
 } // anonymous namespace
 
-CellLocatorBoundingIntervalHierarchy::~CellLocatorBoundingIntervalHierarchy() = default;
-
 
 void CellLocatorBoundingIntervalHierarchy::Build()
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "CellLocatorBoundingIntervalHierarchy::Build");
+
   vtkm::cont::Invoker invoker;
 
   vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
   vtkm::Id numCells = cellSet.GetNumberOfCells();
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
-  vtkm::cont::ArrayHandleVirtualCoordinates points = coords.GetData();
+  auto points = coords.GetDataAsMultiplexer();
 
   //std::cout << "No of cells: " << numCells << "\n";
   //std::cout.precision(3);
@@ -444,66 +444,32 @@ void CellLocatorBoundingIntervalHierarchy::Build()
   //std::cout << "Total time: " << totalTimer.GetElapsedTime() << "\n";
 }
 
-namespace
+struct CellLocatorBoundingIntervalHierarchy::MakeExecObject
 {
-
-struct CellLocatorBIHPrepareForExecutionFunctor
-{
-  template <typename DeviceAdapter, typename CellSetType>
-  bool operator()(
-    DeviceAdapter,
-    const CellSetType& cellset,
-    vtkm::cont::Token& token,
-    vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& bihExec,
-    const vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode>& nodes,
-    const vtkm::cont::ArrayHandle<vtkm::Id>& processedCellIds,
-    const vtkm::cont::ArrayHandleVirtualCoordinates& coords) const
+  template <typename CellSetType>
+  VTKM_CONT void operator()(const CellSetType& cellSet,
+                            vtkm::cont::DeviceAdapterId device,
+                            vtkm::cont::Token& token,
+                            const CellLocatorBoundingIntervalHierarchy& self,
+                            ExecObjType& execObject) const
   {
-    using ExecutionType =
-      vtkm::exec::CellLocatorBoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
-    ExecutionType* execObject =
-      new ExecutionType(nodes, processedCellIds, cellset, coords, DeviceAdapter(), token);
-    bihExec.Reset(execObject);
-    return true;
+    execObject = vtkm::exec::CellLocatorBoundingIntervalHierarchy<CellSetType>(
+      self.Nodes,
+      self.ProcessedCellIds,
+      cellSet,
+      self.GetCoordinates().GetDataAsMultiplexer(),
+      device,
+      token);
   }
 };
 
-struct BIHCellSetCaster
+CellLocatorBoundingIntervalHierarchy::ExecObjType
+CellLocatorBoundingIntervalHierarchy::PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                          vtkm::cont::Token& token) const
 {
-  template <typename CellSet, typename... Args>
-  void operator()(CellSet&& cellset,
-                  vtkm::cont::DeviceAdapterId device,
-                  vtkm::cont::Token& token,
-                  Args&&... args) const
-  {
-    //We need to go though CastAndCall first
-    const bool success = vtkm::cont::TryExecuteOnDevice(device,
-                                                        CellLocatorBIHPrepareForExecutionFunctor(),
-                                                        cellset,
-                                                        token,
-                                                        std::forward<Args>(args)...);
-    if (!success)
-    {
-      throwFailedRuntimeDeviceTransfer("BoundingIntervalHierarchy", device);
-    }
-  }
-};
-}
-
-
-const vtkm::exec::CellLocator* CellLocatorBoundingIntervalHierarchy::PrepareForExecution(
-  vtkm::cont::DeviceAdapterId device,
-  vtkm::cont::Token& token) const
-{
-  this->GetCellSet().CastAndCall(BIHCellSetCaster{},
-                                 device,
-                                 token,
-                                 this->ExecutionObjectHandle,
-                                 this->Nodes,
-                                 this->ProcessedCellIds,
-                                 this->GetCoordinates().GetData());
-  return this->ExecutionObjectHandle.PrepareForExecution(device, token);
-  ;
+  ExecObjType execObject;
+  this->GetCellSet().CastAndCall(MakeExecObject{}, device, token, *this, execObject);
+  return execObject;
 }
 
 } //namespace cont

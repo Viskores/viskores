@@ -19,6 +19,7 @@ vtkm_install_headers(
 set(headers
   Algorithms.h
   Assert.h
+  Atomic.h
   BinaryPredicates.h
   BinaryOperators.h
   Bitset.h
@@ -57,6 +58,7 @@ set(headers
   VecFromPortalPermute.h
   VecFromVirtPortal.h
   VectorAnalysis.h
+  VecFlat.h
   VecTraits.h
   VecVariable.h
   VirtualObjectBase.h

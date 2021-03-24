@@ -68,12 +68,14 @@ void TestNames()
   vtkm::cont::DeviceAdapterTagTBB tbbTag;
   vtkm::cont::DeviceAdapterTagOpenMP openmpTag;
   vtkm::cont::DeviceAdapterTagCuda cudaTag;
+  vtkm::cont::DeviceAdapterTagKokkos kokkosTag;
 
   TestName("Undefined", undefinedTag, undefinedTag);
   TestName("Serial", serialTag, serialTag);
   TestName("TBB", tbbTag, tbbTag);
   TestName("OpenMP", openmpTag, openmpTag);
   TestName("Cuda", cudaTag, cudaTag);
+  TestName("Kokkos", kokkosTag, kokkosTag);
 }
 
 } // end anon namespace

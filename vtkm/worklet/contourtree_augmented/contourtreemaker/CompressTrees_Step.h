@@ -73,7 +73,7 @@ public:
                                 WholeArrayIn contourTreeSuperarcs,      // (input)
                                 WholeArrayInOut augmentedJoinSuperarcs, // (input/output)
                                 WholeArrayInOut augmentedSplitSuperarcs // (input/output)
-                                );
+  );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
   using InputDomain = _1;
 

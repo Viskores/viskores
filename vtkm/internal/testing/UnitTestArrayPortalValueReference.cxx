@@ -70,12 +70,12 @@ void TryOperatorsNoVec(vtkm::Id,
 template <typename ArrayPortalType>
 void TryOperatorsInt(vtkm::Id index,
                      vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref,
+                     vtkm::internal::ArrayPortalValueReference<ArrayPortalType> scratch,
                      vtkm::TypeTraitsScalarTag,
                      vtkm::TypeTraitsIntegerTag)
 {
   using ValueType = typename ArrayPortalType::ValueType;
 
-  const ValueType operand = TestValue(ARRAY_SIZE, ValueType());
   ValueType expected = TestValue(index, ValueType());
   VTKM_TEST_ASSERT(ref.Get() == expected, "Reference did not start out as expected.");
 
@@ -115,54 +115,63 @@ void TryOperatorsInt(vtkm::Id index,
   VTKM_TEST_ASSERT(ref || expected);
   VTKM_TEST_ASSERT(expected || ref);
 
-#if defined(VTKM_CLANG) && __clang_major__ >= 7
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunknown-warning-option"
-#pragma clang diagnostic ignored "-Wself-assign-overloaded"
-#endif
+  scratch = ValueType(7);
+  const ValueType operand = ValueType(7);
+#define RESET                          \
+  ref = TestValue(index, ValueType()); \
+  expected = TestValue(index, ValueType());
 
-  ref &= ref;
-  expected &= expected;
+  RESET;
+  ref &= scratch;
+  expected &= operand;
   VTKM_TEST_ASSERT(ref == expected);
+  RESET;
   ref &= operand;
   expected &= operand;
   VTKM_TEST_ASSERT(ref == expected);
 
-  ref |= ref;
-  expected |= expected;
+  RESET;
+  ref |= scratch;
+  expected |= operand;
   VTKM_TEST_ASSERT(ref == expected);
+  RESET;
   ref |= operand;
   expected |= operand;
   VTKM_TEST_ASSERT(ref == expected);
 
-  ref >>= ref;
-  expected >>= expected;
+  RESET;
+  ref >>= scratch;
+  expected >>= operand;
   VTKM_TEST_ASSERT(ref == expected);
+  RESET;
   ref >>= operand;
   expected >>= operand;
   VTKM_TEST_ASSERT(ref == expected);
 
-  ref <<= ref;
-  expected <<= expected;
+  RESET;
+  ref <<= scratch;
+  expected <<= operand;
   VTKM_TEST_ASSERT(ref == expected);
+  RESET;
   ref <<= operand;
   expected <<= operand;
   VTKM_TEST_ASSERT(ref == expected);
 
-  ref ^= ref;
-  expected ^= expected;
+  RESET;
+  ref ^= scratch;
+  expected ^= operand;
   VTKM_TEST_ASSERT(ref == expected);
+  RESET;
   ref ^= operand;
   expected ^= operand;
   VTKM_TEST_ASSERT(ref == expected);
 
-#if defined(VTKM_CLANG) && __clang_major__ >= 7
-#pragma clang diagnostic pop
-#endif
+#undef RESET
 }
 
 template <typename ArrayPortalType, typename DimTag, typename NumericTag>
 void TryOperatorsInt(vtkm::Id,
+                     vtkm::internal::ArrayPortalValueReference<ArrayPortalType>,
                      vtkm::internal::ArrayPortalValueReference<ArrayPortalType>,
                      DimTag,
                      NumericTag)
@@ -170,11 +179,12 @@ void TryOperatorsInt(vtkm::Id,
 }
 
 template <typename ArrayPortalType>
-void TryOperators(vtkm::Id index, vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref)
+void TryOperators(vtkm::Id index,
+                  vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref,
+                  vtkm::internal::ArrayPortalValueReference<ArrayPortalType> scratch)
 {
   using ValueType = typename ArrayPortalType::ValueType;
 
-  const ValueType operand = TestValue(ARRAY_SIZE, ValueType());
   ValueType expected = TestValue(index, ValueType());
   VTKM_TEST_ASSERT(ref.Get() == expected, "Reference did not start out as expected.");
 
@@ -206,51 +216,56 @@ void TryOperators(vtkm::Id index, vtkm::internal::ArrayPortalValueReference<Arra
   VTKM_TEST_ASSERT((expected / ref) == (expected / expected));
 
 
-#if defined(VTKM_CLANG) && __clang_major__ >= 7
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunknown-warning-option"
-#pragma clang diagnostic ignored "-Wself-assign-overloaded"
-#endif
+  scratch = ValueType(7);
+  const ValueType operand = ValueType(7);
+#define RESET                          \
+  ref = TestValue(index, ValueType()); \
+  expected = TestValue(index, ValueType());
 
-  ref += ref;
-  expected += expected;
+  RESET;
+  ref += scratch;
+  expected += operand;
   VTKM_TEST_ASSERT(ref == expected);
+  RESET;
   ref += operand;
   expected += operand;
   VTKM_TEST_ASSERT(ref == expected);
 
-  ref -= ref;
-  expected -= expected;
+  RESET;
+  ref -= scratch;
+  expected -= operand;
   VTKM_TEST_ASSERT(ref == expected);
+  RESET;
   ref -= operand;
   expected -= operand;
   VTKM_TEST_ASSERT(ref == expected);
 
-  ref *= ref;
-  expected *= expected;
+  RESET;
+  ref *= scratch;
+  expected *= operand;
   VTKM_TEST_ASSERT(ref == expected);
+  RESET;
   ref *= operand;
   expected *= operand;
   VTKM_TEST_ASSERT(ref == expected);
 
-  ref /= ref;
-  expected /= expected;
+  RESET;
+  ref /= scratch;
+  expected /= operand;
   VTKM_TEST_ASSERT(ref == expected);
+  RESET;
   ref /= operand;
   expected /= operand;
   VTKM_TEST_ASSERT(ref == expected);
 
-#if defined(VTKM_CLANG) && __clang_major__ >= 7
-#pragma clang diagnostic pop
-#endif
-
-  // Reset ref
-  ref = TestValue(index, ValueType());
-
+  RESET;
   TryOperatorsInt(index,
                   ref,
+                  scratch,
                   typename vtkm::TypeTraits<ValueType>::DimensionalityTag(),
                   typename vtkm::TypeTraits<ValueType>::NumericTag());
+
+#undef RESET
 }
 
 struct DoTestForType
@@ -278,11 +293,18 @@ struct DoTestForType
       CheckReference(index, vtkm::internal::ArrayPortalValueReference<PortalType>(portal, index));
     }
 
+    std::cout << "Make a scratch buffer for ref-ref operations." << std::endl;
+    vtkm::cont::ArrayHandle<ValueType> scratchArray;
+    scratchArray.Allocate(1);
+    PortalType scratchPortal = scratchArray.WritePortal();
+
     std::cout << "Check that operators work." << std::endl;
     // Start at 1 to avoid issues with 0.
     for (vtkm::Id index = 1; index < ARRAY_SIZE; ++index)
     {
-      TryOperators(index, vtkm::internal::ArrayPortalValueReference<PortalType>(portal, index));
+      TryOperators(index,
+                   vtkm::internal::ArrayPortalValueReference<PortalType>(portal, index),
+                   vtkm::internal::ArrayPortalValueReference<PortalType>(scratchPortal, 0));
     }
   }
 };

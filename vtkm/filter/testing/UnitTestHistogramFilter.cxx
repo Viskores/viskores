@@ -262,7 +262,7 @@ void VerifyHistogram(const vtkm::cont::DataSet& result,
   VTKM_TEST_ASSERT(result.HasField("histogram"), "Output field missing");
 
   vtkm::cont::ArrayHandle<vtkm::Id> bins;
-  result.GetField("histogram").GetData().CopyTo(bins);
+  result.GetField("histogram").GetData().AsArrayHandle(bins);
 
   vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType binPortal = bins.ReadPortal();
 
@@ -330,8 +330,5 @@ void TestHistogram()
 
 int UnitTestHistogramFilter(int argc, char* argv[])
 {
-  // Setup MPI environment: This test is not intendent to be run in parallel
-  // but filter does make some DIY/MPI calls
-  vtkmdiy::mpi::environment env(argc, argv);
   return vtkm::cont::testing::Testing::Run(TestHistogram, argc, argv);
 }

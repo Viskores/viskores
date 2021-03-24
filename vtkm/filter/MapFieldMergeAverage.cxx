@@ -21,16 +21,15 @@ namespace
 
 struct DoMapFieldMerge
 {
-  bool CalledMap = false;
-
-  template <typename T, typename S>
-  void operator()(const vtkm::cont::ArrayHandle<T, S>& inputArray,
+  template <typename InputArrayType>
+  void operator()(const InputArrayType& input,
                   const vtkm::worklet::internal::KeysBase& keys,
-                  vtkm::cont::VariantArrayHandle& output)
+                  vtkm::cont::UnknownArrayHandle& output) const
   {
-    vtkm::cont::ArrayHandle<T> outputArray = vtkm::worklet::AverageByKey::Run(keys, inputArray);
-    output = vtkm::cont::VariantArrayHandle(outputArray);
-    this->CalledMap = true;
+    using BaseComponentType = typename InputArrayType::ValueType::ComponentType;
+
+    vtkm::worklet::AverageByKey::Run(
+      keys, input, output.ExtractArrayFromComponents<BaseComponentType>(vtkm::CopyFlag::Off));
   }
 };
 
@@ -40,25 +39,30 @@ bool vtkm::filter::MapFieldMergeAverage(const vtkm::cont::Field& inputField,
                                         const vtkm::worklet::internal::KeysBase& keys,
                                         vtkm::cont::Field& outputField)
 {
-  vtkm::cont::VariantArrayHandle outputArray;
-  DoMapFieldMerge functor;
-  inputField.GetData().ResetTypes<vtkm::TypeListAll>().CastAndCall(
-    vtkm::filter::PolicyDefault::StorageList{}, functor, keys, outputArray);
-  if (functor.CalledMap)
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  vtkm::cont::UnknownArrayHandle outputArray = inputField.GetData().NewInstanceBasic();
+  outputArray.Allocate(keys.GetInputRange());
+
+  try
   {
+    inputField.GetData().CastAndCallWithExtractedArray(DoMapFieldMerge{}, keys, outputArray);
     outputField = vtkm::cont::Field(inputField.GetName(), inputField.GetAssociation(), outputArray);
+    return true;
   }
-  else
+  catch (...)
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Faild to map field " << inputField.GetName());
+    return false;
   }
-  return functor.CalledMap;
 }
 
 bool vtkm::filter::MapFieldMergeAverage(const vtkm::cont::Field& inputField,
                                         const vtkm::worklet::internal::KeysBase& keys,
                                         vtkm::cont::DataSet& outputData)
 {
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   vtkm::cont::Field outputField;
   bool success = vtkm::filter::MapFieldMergeAverage(inputField, keys, outputField);
   if (success)

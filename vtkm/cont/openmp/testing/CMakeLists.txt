@@ -9,14 +9,12 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestOpenMPAlgorithms.cxx
   UnitTestOpenMPArrayHandle.cxx
   UnitTestOpenMPArrayHandleFancy.cxx
   UnitTestOpenMPArrayHandleMultiplexer.cxx
-  UnitTestOpenMPArrayHandleVirtualCoordinates.cxx
   UnitTestOpenMPBitField.cxx
   UnitTestOpenMPCellLocatorRectilinearGrid.cxx
-  UnitTestOpenMPCellLocatorUniformBins.cxx
+  UnitTestOpenMPCellLocatorTwoLevel.cxx
   UnitTestOpenMPCellLocatorUniformGrid.cxx
   UnitTestOpenMPColorTable.cxx
   UnitTestOpenMPComputeRange.cxx
@@ -24,7 +22,7 @@ set(unit_tests
   UnitTestOpenMPDataSetSingleType.cxx
   UnitTestOpenMPDeviceAdapter.cxx
   UnitTestOpenMPImplicitFunction.cxx
-  UnitTestOpenMPPointLocatorUniformGrid.cxx
+  UnitTestOpenMPPointLocatorSparseGrid.cxx
   UnitTestOpenMPVirtualObjectHandle.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests}

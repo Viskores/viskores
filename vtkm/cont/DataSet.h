@@ -338,7 +338,7 @@ public:
     vtkmdiy::save(bb, numberOfFields);
     for (vtkm::IdComponent i = 0; i < numberOfFields; ++i)
     {
-      vtkmdiy::save(bb, vtkm::cont::SerializableField<FieldTypeList>(dataset.GetField(i)));
+      vtkmdiy::save(bb, dataset.GetField(i));
     }
   }
 
@@ -364,9 +364,9 @@ public:
     vtkmdiy::load(bb, numberOfFields);
     for (vtkm::IdComponent i = 0; i < numberOfFields; ++i)
     {
-      vtkm::cont::SerializableField<FieldTypeList> field;
+      vtkm::cont::Field field;
       vtkmdiy::load(bb, field);
-      dataset.AddField(field.Field);
+      dataset.AddField(field);
     }
   }
 };

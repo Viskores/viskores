@@ -33,9 +33,7 @@ VTKDataSetReader::VTKDataSetReader(const std::string& fileName)
 {
 }
 
-VTKDataSetReader::~VTKDataSetReader()
-{
-}
+VTKDataSetReader::~VTKDataSetReader() {}
 
 void VTKDataSetReader::PrintSummary(std::ostream& out) const
 {

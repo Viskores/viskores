@@ -17,9 +17,10 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/RK4Integrator.h>
 
 namespace vtkm
 {
@@ -53,11 +54,13 @@ inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
   //compute streamlines
-  GridEvalType eval(coords, cells, field);
+  FieldType velocities(field);
+  GridEvalType eval(coords, cells, velocities);
   RK4Type rk4(eval, this->StepSize);
 
   vtkm::worklet::Streamline streamline;

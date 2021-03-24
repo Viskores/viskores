@@ -50,9 +50,7 @@ MapperRayTracer::MapperRayTracer()
 {
 }
 
-MapperRayTracer::~MapperRayTracer()
-{
-}
+MapperRayTracer::~MapperRayTracer() {}
 
 void MapperRayTracer::SetCanvas(vtkm::rendering::Canvas* canvas)
 {
@@ -107,8 +105,8 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   //
   // Create rays
   //
-  vtkm::Int32 width = (vtkm::Int32) this->Internals->Canvas->GetWidth();
-  vtkm::Int32 height = (vtkm::Int32) this->Internals->Canvas->GetHeight();
+  vtkm::Int32 width = (vtkm::Int32)this->Internals->Canvas->GetWidth();
+  vtkm::Int32 height = (vtkm::Int32)this->Internals->Canvas->GetHeight();
 
   this->Internals->RayCamera.SetParameters(camera, width, height);
 
@@ -149,16 +147,6 @@ void MapperRayTracer::SetCompositeBackground(bool on)
 void MapperRayTracer::SetShadingOn(bool on)
 {
   this->Internals->Shade = on;
-}
-
-void MapperRayTracer::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperRayTracer::EndScene()
-{
-  // Nothing needs to be done.
 }
 
 vtkm::rendering::Mapper* MapperRayTracer::NewCopy() const

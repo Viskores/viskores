@@ -75,7 +75,7 @@ public:
                                 WholeArrayIn indegree,    // (input)
                                 WholeArrayOut outbound,   // (output)
                                 WholeArrayOut inbound     // (output)
-                                );
+  );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 

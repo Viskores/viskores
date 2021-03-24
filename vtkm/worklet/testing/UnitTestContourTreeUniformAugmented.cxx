@@ -80,8 +80,7 @@ private:
                             vtkm::worklet::contourtree_augmented::IdArrayType& expected,
                             std::string arrayName) const
   {
-    vtkm::cont::testing::TestEqualResult testResult =
-      vtkm::cont::testing::test_equal_ArrayHandles(result, expected);
+    TestEqualResult testResult = test_equal_ArrayHandles(result, expected);
     if (!testResult)
     {
       std::cout << arrayName << " sizes; result=" << result.GetNumberOfValues()
@@ -310,19 +309,17 @@ private:
   template <typename FieldType, typename StorageType>
   void CallTestContourTreeAugmentedSteps(
     const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
-    const vtkm::Id nRows,
-    const vtkm::Id nCols,
-    const vtkm::Id nSlices,
+    const vtkm::Id3 meshSize,
     bool useMarchingCubes,
     unsigned int computeRegularStructure,
     ExpectedStepResults& expectedResults) const
   {
     using namespace vtkm::worklet::contourtree_augmented;
     // 2D Contour Tree
-    if (nSlices == 1)
+    if (meshSize[2] == 1)
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_2D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols);
+      DataSetMeshTriangulation2DFreudenthal mesh(vtkm::Id2{ meshSize[0], meshSize[1] });
       // Run the contour tree on the mesh
       RunTestContourTreeAugmentedSteps(fieldArray,
                                        mesh,
@@ -335,7 +332,7 @@ private:
     else if (useMarchingCubes)
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_3D_MarchingCubes<FieldType, StorageType> mesh(nRows, nCols, nSlices);
+      DataSetMeshTriangulation3DMarchingCubes mesh(meshSize);
       // Run the contour tree on the mesh
       RunTestContourTreeAugmentedSteps(fieldArray,
                                        mesh,
@@ -348,7 +345,7 @@ private:
     else
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_3D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols, nSlices);
+      DataSetMeshTriangulation3DFreudenthal mesh(meshSize);
       // Run the contour tree on the mesh
       RunTestContourTreeAugmentedSteps(fieldArray,
                                        mesh,
@@ -377,16 +374,13 @@ private:
     dataSet.GetCellSet().CopyTo(cellSet);
 
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
-    vtkm::Id nRows = pointDimensions[0];
-    vtkm::Id nCols = pointDimensions[1];
-    vtkm::Id nSlices = pointDimensions[2];
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Run the specific test
     CallTestContourTreeAugmentedSteps(
-      field, nRows, nCols, nSlices, useMarchingCubes, computeRegularStructure, expectedResults);
+      field, pointDimensions, useMarchingCubes, computeRegularStructure, expectedResults);
   }
 
   ///
@@ -727,13 +721,11 @@ public:
     vtkm::cont::CellSetStructured<2> cellSet;
     dataSet.GetCellSet().CopyTo(cellSet);
 
-    vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
-    vtkm::Id nRows = pointDimensions[0];
-    vtkm::Id nCols = pointDimensions[1];
-    vtkm::Id nSlices = 1;
+    vtkm::Id2 pointDimensions2D = cellSet.GetPointDimensions();
+    vtkm::Id3 meshSize{ pointDimensions2D[0], pointDimensions2D[1], 1 };
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
@@ -747,9 +739,7 @@ public:
                            contourTree,
                            meshSortOrder,
                            numIterations,
-                           nRows,
-                           nCols,
-                           nSlices,
+                           meshSize,
                            useMarchingCubes,
                            computeRegularStructure);
 
@@ -759,7 +749,7 @@ public:
       contourTree, meshSortOrder, saddlePeak);
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArrayColumnLayout(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0           12" << std::endl;
@@ -799,12 +789,9 @@ public:
     dataSet.GetCellSet().CopyTo(cellSet);
 
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
-    vtkm::Id nRows = pointDimensions[0];
-    vtkm::Id nCols = pointDimensions[1];
-    vtkm::Id nSlices = pointDimensions[2];
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
@@ -818,9 +805,7 @@ public:
                            contourTree,
                            meshSortOrder,
                            numIterations,
-                           nRows,
-                           nCols,
-                           nSlices,
+                           pointDimensions,
                            useMarchingCubes,
                            computeRegularStructure);
 
@@ -830,7 +815,7 @@ public:
       contourTree, meshSortOrder, saddlePeak);
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArrayColumnLayout(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0           67" << std::endl;
@@ -877,12 +862,9 @@ public:
     dataSet.GetCellSet().CopyTo(cellSet);
 
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
-    vtkm::Id nRows = pointDimensions[0];
-    vtkm::Id nCols = pointDimensions[1];
-    vtkm::Id nSlices = pointDimensions[2];
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
@@ -896,9 +878,7 @@ public:
                            contourTree,
                            meshSortOrder,
                            numIterations,
-                           nRows,
-                           nCols,
-                           nSlices,
+                           pointDimensions,
                            useMarchingCubes,
                            computeRegularStructure);
 
@@ -908,7 +888,7 @@ public:
       contourTree, meshSortOrder, saddlePeak);
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArrayColumnLayout(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0          118" << std::endl;
@@ -964,7 +944,7 @@ public:
       37,  83,  91,  33,  41,  82,  92,  32,  42,  86,  88,  36,  38,  81,  93,  31,  43
     };
     vtkm::worklet::contourtree_augmented::IdArrayType expectedSortOrder =
-      vtkm::cont::make_ArrayHandle(expectedSortOrderArr, 125);
+      vtkm::cont::make_ArrayHandle(expectedSortOrderArr, 125, vtkm::CopyFlag::On);
 
     vtkm::Id expectedSortIndicesArr[125] = {
       0,   1,   2,   3,   4,   5,   6,   7,   8,  9,   10,  11,  12,  13,  14,  15,  16,  17,
@@ -976,7 +956,7 @@ public:
       81,  82,  83,  84,  85,  86,  87,  88,  89, 90,  91,  92,  93,  94,  95,  96,  97
     };
     vtkm::worklet::contourtree_augmented::IdArrayType expectedSortIndices =
-      vtkm::cont::make_ArrayHandle(expectedSortIndicesArr, 125);
+      vtkm::cont::make_ArrayHandle(expectedSortIndicesArr, 125, vtkm::CopyFlag::On);
 
     //
     // Join Tree Set Starts
@@ -996,7 +976,7 @@ public:
         meshExtremaPeaksJoinArr[i] | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
     vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPeaksJoin =
-      vtkm::cont::make_ArrayHandle(meshExtremaPeaksJoinArr, 125);
+      vtkm::cont::make_ArrayHandle(meshExtremaPeaksJoinArr, 125, vtkm::CopyFlag::On);
     vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPitsJoin;
     vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, 125),
                                 meshExtremaPitsJoin);
@@ -1019,7 +999,8 @@ public:
         vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
     vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPeaksBuildRegularChainsJoin =
-      vtkm::cont::make_ArrayHandle(meshExtremaPeaksBuildRegularChainsJoinArr, 125);
+      vtkm::cont::make_ArrayHandle(
+        meshExtremaPeaksBuildRegularChainsJoinArr, 125, vtkm::CopyFlag::On);
 
     vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPitsBuildRegularChainsJoin =
       meshExtremaPitsJoin; // should remain all at 0
@@ -1043,7 +1024,7 @@ public:
         meshExtremaPeaksSplitArr[i] | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
     vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPeaksSplit =
-      vtkm::cont::make_ArrayHandle(meshExtremaPeaksSplitArr, 125);
+      vtkm::cont::make_ArrayHandle(meshExtremaPeaksSplitArr, 125, vtkm::CopyFlag::On);
 
     vtkm::Id meshExtremaPitsSplitArr[125] = {
       0,   0,  1,   2,  3,  0,  1,  2,  3,  4,   5,  6,  7,  8,   9,  10, 11, 12, 13, 14, 15,
@@ -1058,7 +1039,7 @@ public:
     meshExtremaPitsSplitArr[98] =
       meshExtremaPitsSplitArr[97] | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPitsSplit =
-      vtkm::cont::make_ArrayHandle(meshExtremaPitsSplitArr, 125);
+      vtkm::cont::make_ArrayHandle(meshExtremaPitsSplitArr, 125, vtkm::CopyFlag::On);
 
     //
     // Split Tree Build Regular chains
@@ -1079,7 +1060,8 @@ public:
         vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
     vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPeaksBuildRegularChainsSplit =
-      vtkm::cont::make_ArrayHandle(meshExtremaPeaksBuildRegularChainsSplitArr, 125);
+      vtkm::cont::make_ArrayHandle(
+        meshExtremaPeaksBuildRegularChainsSplitArr, 125, vtkm::CopyFlag::On);
 
     vtkm::Id meshExtremaPitsBuildRegularChainsSplitArr[125] = {
       0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,
@@ -1094,7 +1076,8 @@ public:
         vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
     vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPitsBuildRegularChainsSplit =
-      vtkm::cont::make_ArrayHandle(meshExtremaPitsBuildRegularChainsSplitArr, 125);
+      vtkm::cont::make_ArrayHandle(
+        meshExtremaPitsBuildRegularChainsSplitArr, 125, vtkm::CopyFlag::On);
 
     //
     // Join Graph Initialize
@@ -1103,19 +1086,19 @@ public:
     vtkm::Id activeGraphJoinTreeInitGlobalIndexArr[12] = { 103, 104, 105, 106, 113, 114,
                                                            115, 116, 121, 122, 123, 124 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitGlobalIndex =
-      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitGlobalIndexArr, 12);
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitGlobalIndexArr, 12, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize FirstEdge
     vtkm::Id activeGraphJoinTreeInitFirstEdgeArr[12] = {
       0, 2, 4, 6, 8, 10, 12, 14, 16, 16, 16, 16
     };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitFirstEdge =
-      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitFirstEdgeArr, 12);
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitFirstEdgeArr, 12, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize Outdegree
     vtkm::Id activeGraphJoinTreeInitOutdegreeArr[12] = { 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitOutdegree =
-      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitOutdegreeArr, 12);
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitOutdegreeArr, 12, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize Hyperarcs
     vtkm::Id activeGraphJoinTreeInitHyperarcsArr[12] = {
@@ -1127,32 +1110,33 @@ public:
         vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitHyperarcs =
-      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitHyperarcsArr, 12);
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitHyperarcsArr, 12, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize ActiveVertices
     vtkm::Id activeGraphJoinTreeInitActiveVerticesArr[12] = {
       0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
     };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitActiveVertices =
-      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitActiveVerticesArr, 12);
+      vtkm::cont::make_ArrayHandle(
+        activeGraphJoinTreeInitActiveVerticesArr, 12, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize EdgeNear
     vtkm::Id activeGraphJoinTreeInitEdgeNearArr[16] = { 0, 0, 1, 1, 2, 2, 3, 3,
                                                         4, 4, 5, 5, 6, 6, 7, 7 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitEdgeNear =
-      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitEdgeNearArr, 16);
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitEdgeNearArr, 16, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize , EdgeFar
     vtkm::Id activeGraphJoinTreeInitEdgeFarArr[16] = { 10, 8, 10, 9, 10, 9,  10, 8,
                                                        8,  9, 8,  9, 10, 11, 10, 11 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitEdgeFar =
-      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitEdgeFarArr, 16);
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitEdgeFarArr, 16, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize , ActiveEdges
     vtkm::Id activeGraphJoinTreeInitActiveEdgesArr[16] = { 0, 1, 2,  3,  4,  5,  6,  7,
                                                            8, 9, 10, 11, 12, 13, 14, 15 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitActiveEdges =
-      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitActiveEdgesArr, 16);
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitActiveEdgesArr, 16, vtkm::CopyFlag::On);
 
     //
     // Split Graph Initialize
@@ -1160,17 +1144,17 @@ public:
     // Active graph join graph initialize GlobalIndex
     vtkm::Id activeGraphSplitTreeInitGlobalIndexArr[8] = { 0, 98, 99, 100, 101, 102, 107, 108 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitGlobalIndex =
-      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitGlobalIndexArr, 8);
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitGlobalIndexArr, 8, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize FirstEdge
     vtkm::Id activeGraphSplitTreeInitFirstEdgeArr[8] = { 0, 0, 0, 2, 4, 6, 8, 10 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitFirstEdge =
-      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitFirstEdgeArr, 8);
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitFirstEdgeArr, 8, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize Outdegree
     vtkm::Id activeGraphSplitTreeInitOutdegreeArr[8] = { 0, 0, 2, 2, 2, 2, 2, 2 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitOutdegree =
-      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitOutdegreeArr, 8);
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitOutdegreeArr, 8, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize Hyperarcs
     vtkm::Id activeGraphSplitTreeInitHyperarcsArr[8] = { 0, 1, 1, 1, 0, 0, 0, 0 };
@@ -1180,27 +1164,28 @@ public:
         vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitHyperarcs =
-      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitHyperarcsArr, 8);
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitHyperarcsArr, 8, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize ActiveVertices
     vtkm::Id activeGraphSplitTreeInitActiveVerticesArr[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitActiveVertices =
-      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitActiveVerticesArr, 8);
+      vtkm::cont::make_ArrayHandle(
+        activeGraphSplitTreeInitActiveVerticesArr, 8, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize EdgeNear
     vtkm::Id activeGraphSplitTreeInitEdgeNearArr[12] = { 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitEdgeNear =
-      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitEdgeNearArr, 12);
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitEdgeNearArr, 12, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize , EdgeFar
     vtkm::Id activeGraphSplitTreeInitEdgeFarArr[12] = { 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitEdgeFar =
-      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitEdgeFarArr, 12);
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitEdgeFarArr, 12, vtkm::CopyFlag::On);
 
     // Active graph join graph initialize , ActiveEdges
     vtkm::Id activeGraphSplitTreeInitActiveEdgesArr[12] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitActiveEdges =
-      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitActiveEdgesArr, 12);
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitActiveEdgesArr, 12, vtkm::CopyFlag::On);
 
     //
     // JoinTree MakeMergeTree
@@ -1219,7 +1204,7 @@ public:
     makeJoinTreeArcsArr[0] =
       makeJoinTreeArcsArr[0] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
     vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeArcs =
-      vtkm::cont::make_ArrayHandle(makeJoinTreeArcsArr, 125);
+      vtkm::cont::make_ArrayHandle(makeJoinTreeArcsArr, 125, vtkm::CopyFlag::On);
 
     vtkm::Id makeJoinTreeSuperparentsArr[125] = {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1229,35 +1214,35 @@ public:
       0, 0, 0, 0, 0, 0, 0, 1, 2, 1, 1, 2, 2, 1, 1, 2, 2, 3, 4, 5, 6, 3, 4, 5, 6
     };
     vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeSuperparents =
-      vtkm::cont::make_ArrayHandle(makeJoinTreeSuperparentsArr, 125);
+      vtkm::cont::make_ArrayHandle(makeJoinTreeSuperparentsArr, 125, vtkm::CopyFlag::On);
 
     vtkm::Id makeJoinTreeSupernodesArr[7] = { 106, 114, 116, 121, 122, 123, 124 };
     vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeSupernodes =
-      vtkm::cont::make_ArrayHandle(makeJoinTreeSupernodesArr, 7);
+      vtkm::cont::make_ArrayHandle(makeJoinTreeSupernodesArr, 7, vtkm::CopyFlag::On);
 
     vtkm::Id makeJoinTreeSuperarcsArr[7] = { 0, 0, 0, 1, 1, 2, 2 };
     makeJoinTreeSuperarcsArr[0] =
       makeJoinTreeSuperarcsArr[0] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
     vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeSuperarcs =
-      vtkm::cont::make_ArrayHandle(makeJoinTreeSuperarcsArr, 7);
+      vtkm::cont::make_ArrayHandle(makeJoinTreeSuperarcsArr, 7, vtkm::CopyFlag::On);
 
     vtkm::Id makeJoinTreeHyperparentsArr[7] = { 0, 1, 2, 3, 4, 5, 6 };
     vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeHyperparents =
-      vtkm::cont::make_ArrayHandle(makeJoinTreeHyperparentsArr, 7);
+      vtkm::cont::make_ArrayHandle(makeJoinTreeHyperparentsArr, 7, vtkm::CopyFlag::On);
 
     vtkm::Id makeJoinTreeHypernodesArr[7] = { 0, 1, 2, 3, 4, 5, 6 };
     vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeHypernodes =
-      vtkm::cont::make_ArrayHandle(makeJoinTreeHypernodesArr, 7);
+      vtkm::cont::make_ArrayHandle(makeJoinTreeHypernodesArr, 7, vtkm::CopyFlag::On);
 
     vtkm::Id makeJoinTreeHyperarcsArr[7] = { 0, 0, 0, 1, 1, 2, 2 };
     makeJoinTreeHyperarcsArr[0] =
       makeJoinTreeHyperarcsArr[0] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
     vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeHyperarcs =
-      vtkm::cont::make_ArrayHandle(makeJoinTreeHyperarcsArr, 7);
+      vtkm::cont::make_ArrayHandle(makeJoinTreeHyperarcsArr, 7, vtkm::CopyFlag::On);
 
     vtkm::Id makeJoinTreeFirstSuperchildArr[7] = { 0, 1, 2, 3, 4, 5, 6 };
     vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeFirstSuperchild =
-      vtkm::cont::make_ArrayHandle(makeJoinTreeFirstSuperchildArr, 7);
+      vtkm::cont::make_ArrayHandle(makeJoinTreeFirstSuperchildArr, 7, vtkm::CopyFlag::On);
 
 
     //
@@ -1277,7 +1262,7 @@ public:
     makeSplitTreeArcsArr[124] =
       makeSplitTreeArcsArr[124] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeArcs =
-      vtkm::cont::make_ArrayHandle(makeSplitTreeArcsArr, 125);
+      vtkm::cont::make_ArrayHandle(makeSplitTreeArcsArr, 125, vtkm::CopyFlag::On);
 
     vtkm::Id makeSplitTreeSuperparentsArr[125] = {
       2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -1287,37 +1272,39 @@ public:
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     };
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeSuperparents =
-      vtkm::cont::make_ArrayHandle(makeSplitTreeSuperparentsArr, 125);
+      vtkm::cont::make_ArrayHandle(makeSplitTreeSuperparentsArr, 125, vtkm::CopyFlag::On);
 
     vtkm::Id makeSplitTreeSupernodesArr[3] = { 99, 98, 0 };
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeSupernodes =
-      vtkm::cont::make_ArrayHandle(makeSplitTreeSupernodesArr, 3);
+      vtkm::cont::make_ArrayHandle(makeSplitTreeSupernodesArr, 3, vtkm::CopyFlag::On);
 
     vtkm::Id makeSplitTreeSuperarcsArr[3] = {
       0 | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT, 0, 0
     };
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeSuperarcs =
-      vtkm::cont::make_ArrayHandle(makeSplitTreeSuperarcsArr, 3);
+      vtkm::cont::make_ArrayHandle(makeSplitTreeSuperarcsArr, 3, vtkm::CopyFlag::On);
 
     vtkm::Id makeSplitTreeHyperparentsArr[3] = { 2, 1, 0 };
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeHyperparents =
-      vtkm::cont::make_ArrayHandle(makeSplitTreeHyperparentsArr, 3);
+      vtkm::cont::make_ArrayHandle(makeSplitTreeHyperparentsArr, 3, vtkm::CopyFlag::On);
 
     vtkm::Id makeSplitTreeHypernodesArr[3] = {
-      2, 1, 0,
+      2,
+      1,
+      0,
     };
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeHypernodes =
-      vtkm::cont::make_ArrayHandle(makeSplitTreeHypernodesArr, 3);
+      vtkm::cont::make_ArrayHandle(makeSplitTreeHypernodesArr, 3, vtkm::CopyFlag::On);
 
     vtkm::Id makeSplitTreeHyperarcsArr[3] = {
       0, 0, 0 | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT
     };
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeHyperarcs =
-      vtkm::cont::make_ArrayHandle(makeSplitTreeHyperarcsArr, 3);
+      vtkm::cont::make_ArrayHandle(makeSplitTreeHyperarcsArr, 3, vtkm::CopyFlag::On);
 
     vtkm::Id makeSplitTreeFirstSuperchildArr[3] = { 2, 1, 0 };
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeFirstSuperchild =
-      vtkm::cont::make_ArrayHandle(makeSplitTreeFirstSuperchildArr, 3);
+      vtkm::cont::make_ArrayHandle(makeSplitTreeFirstSuperchildArr, 3, vtkm::CopyFlag::On);
 
     //
     //  Contour Tree Compute
@@ -1337,7 +1324,7 @@ public:
 
     vtkm::Id makeContourTreeSupernodesArr[10] = { 121, 122, 123, 124, 0, 98, 114, 116, 99, 106 };
     vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeSupernodes =
-      vtkm::cont::make_ArrayHandle(makeContourTreeSupernodesArr, 10);
+      vtkm::cont::make_ArrayHandle(makeContourTreeSupernodesArr, 10, vtkm::CopyFlag::On);
 
     vtkm::Id makeContourTreeSuperarcsArr[10] = { 6, 6, 7, 7, 8, 8, 9, 9, 9, 0 };
     makeContourTreeSuperarcsArr[4] =
@@ -1350,7 +1337,7 @@ public:
       makeContourTreeSuperarcsArr[9] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
 
     vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeSuperarcs =
-      vtkm::cont::make_ArrayHandle(makeContourTreeSuperarcsArr, 10);
+      vtkm::cont::make_ArrayHandle(makeContourTreeSuperarcsArr, 10, vtkm::CopyFlag::On);
 
     vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeAugmentnodes;
 
@@ -1358,7 +1345,7 @@ public:
 
     vtkm::Id makeContourTreeHyperparentsArr[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeHyperparents =
-      vtkm::cont::make_ArrayHandle(makeContourTreeHyperparentsArr, 10);
+      vtkm::cont::make_ArrayHandle(makeContourTreeHyperparentsArr, 10, vtkm::CopyFlag::On);
 
     vtkm::Id makeContourTreeWhenTransferredArr[10] = { 0, 0, 0, 0, 1, 1, 2, 2, 3, 4 };
     for (vtkm::Id i = 0; i < 10; i++)
@@ -1367,11 +1354,11 @@ public:
         makeContourTreeWhenTransferredArr[i] | vtkm::worklet::contourtree_augmented::IS_HYPERNODE;
     }
     vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeWhenTransferred =
-      vtkm::cont::make_ArrayHandle(makeContourTreeWhenTransferredArr, 10);
+      vtkm::cont::make_ArrayHandle(makeContourTreeWhenTransferredArr, 10, vtkm::CopyFlag::On);
 
     vtkm::Id makeContourTreeHypernodesArr[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeHypernodes =
-      vtkm::cont::make_ArrayHandle(makeContourTreeHypernodesArr, 10);
+      vtkm::cont::make_ArrayHandle(makeContourTreeHypernodesArr, 10, vtkm::CopyFlag::On);
 
     vtkm::Id makeContourTreeHyperarcsArr[10] = { 6, 6, 7, 7, 8, 8, 9, 9, 9, 0 };
     makeContourTreeHyperarcsArr[4] =
@@ -1383,7 +1370,7 @@ public:
     makeContourTreeHyperarcsArr[9] =
       makeContourTreeHyperarcsArr[9] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
     vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeHyperarcs =
-      vtkm::cont::make_ArrayHandle(makeContourTreeHyperarcsArr, 10);
+      vtkm::cont::make_ArrayHandle(makeContourTreeHyperarcsArr, 10, vtkm::CopyFlag::On);
 
     vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureNodes;
     vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureArcs;
@@ -1432,7 +1419,8 @@ public:
         82,  83,  84,  85,  86,  87,  88,  89,  90,  91, 92,  93,  94,  95,  96,  97,  98, 114,
         113, 110, 109, 107, 116, 115, 112, 111, 108, 99, 100, 101, 102, 103, 104, 105, 106
       };
-      makeRegularStructureNodes = vtkm::cont::make_ArrayHandle(makeRegularStructureNodesArr, 125);
+      makeRegularStructureNodes =
+        vtkm::cont::make_ArrayHandle(makeRegularStructureNodesArr, 125, vtkm::CopyFlag::On);
 
       makeRegularStructureArcsArr = new vtkm::Id[125]{
         1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,  17, 18,
@@ -1450,7 +1438,8 @@ public:
         makeRegularStructureArcsArr[i] =
           makeRegularStructureArcsArr[i] | vtkm::worklet::contourtree_augmented::IS_ASCENDING;
       }
-      makeRegularStructureArcs = vtkm::cont::make_ArrayHandle(makeRegularStructureArcsArr, 125);
+      makeRegularStructureArcs =
+        vtkm::cont::make_ArrayHandle(makeRegularStructureArcsArr, 125, vtkm::CopyFlag::On);
 
       makeRegularStructureSuperparentsArr =
         new vtkm::Id[125]{ 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -1460,7 +1449,7 @@ public:
                            4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 8, 8, 8, 8, 8, 8,
                            8, 9, 6, 7, 6, 6, 7, 7, 6, 6, 7, 7, 0, 1, 2, 3, 0, 1, 2, 3 };
       makeRegularStructureSuperparents =
-        vtkm::cont::make_ArrayHandle(makeRegularStructureSuperparentsArr, 125);
+        vtkm::cont::make_ArrayHandle(makeRegularStructureSuperparentsArr, 125, vtkm::CopyFlag::On);
       makeRegularStructureSupernodes = makeContourTreeSupernodes;
       makeRegularStructureSuperarcs = makeContourTreeSuperarcs;
       makeRegularStructureAugmentnodes = makeContourTreeAugmentnodes;
@@ -1487,7 +1476,7 @@ public:
                            80, 81, 82, 83, 84,  85,  86,  87,  88,  89,  90, 91, 92, 93, 94, 95,
                            96, 97, 98, 99, 106, 114, 116, 121, 122, 123, 124 };
       makeRegularStructureAugmentnodes =
-        vtkm::cont::make_ArrayHandle(makeRegularStructureAugmentnodesArr, 107);
+        vtkm::cont::make_ArrayHandle(makeRegularStructureAugmentnodesArr, 107, vtkm::CopyFlag::On);
 
       makeRegularStructureAugmentarcsArr =
         new vtkm::Id[107]{ 1,  2,  3,  4,   5,  6,   7,   8,   9,   10,  11, 12, 13, 14, 15, 16,
@@ -1506,7 +1495,7 @@ public:
       }
 
       makeRegularStructureAugmentarcs =
-        vtkm::cont::make_ArrayHandle(makeRegularStructureAugmentarcsArr, 107);
+        vtkm::cont::make_ArrayHandle(makeRegularStructureAugmentarcsArr, 107, vtkm::CopyFlag::On);
 
 
       makeRegularStructureHyperparents = makeContourTreeHyperparents;

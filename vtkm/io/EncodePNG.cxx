@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <algorithm> // for std::equal
 #include <vtkm/io/EncodePNG.h>
+#include <vtkm/io/FileUtils.h>
 
 #include <vtkm/cont/Logging.h>
 #include <vtkm/internal/Configure.h>
@@ -45,15 +45,7 @@ vtkm::UInt32 SavePNG(std::string const& filename,
                      unsigned long width,
                      unsigned long height)
 {
-  auto ends_with = [](std::string const& value, std::string const& ending) {
-    if (ending.size() > value.size())
-    {
-      return false;
-    }
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-  };
-
-  if (!ends_with(filename, ".png"))
+  if (!vtkm::io::EndsWith(filename, ".png"))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
                "File " << filename << " does not end with .png; this is required.");

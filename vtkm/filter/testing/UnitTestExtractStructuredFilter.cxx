@@ -41,9 +41,9 @@ public:
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -78,8 +78,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -116,8 +116,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -153,8 +153,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -190,8 +190,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -228,8 +228,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -266,8 +266,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -304,8 +304,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -342,8 +342,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -379,8 +379,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -418,8 +418,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -455,8 +455,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),

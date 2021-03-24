@@ -10,6 +10,7 @@
 
 #include <vtkm/source/Wavelet.h>
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace
 {

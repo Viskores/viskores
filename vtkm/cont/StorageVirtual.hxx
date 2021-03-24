@@ -12,8 +12,9 @@
 
 #include <vtkm/cont/StorageVirtual.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/TransferInfo.h>
 
+#include <vtkm/cont/internal/ArrayTransfer.h>
+#include <vtkm/cont/internal/TransferInfo.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 
@@ -101,8 +102,8 @@ StorageVirtualImpl<T, S>::StorageVirtualImpl(const vtkm::cont::ArrayHandle<T, S>
 VTKM_CONT
 template <typename T, typename S>
 StorageVirtualImpl<T, S>::StorageVirtualImpl(vtkm::cont::ArrayHandle<T, S>&& ah) noexcept
-  : vtkm::cont::internal::detail::StorageVirtual(),
-    Handle(std::move(ah))
+  : vtkm::cont::internal::detail::StorageVirtual()
+  , Handle(std::move(ah))
 {
 }
 
@@ -133,7 +134,7 @@ template <typename T, typename S>
 void StorageVirtualImpl<T, S>::Shrink(vtkm::Id numberOfValues)
 {
   this->DropAllPortals();
-  this->Handle.Shrink(numberOfValues);
+  this->Handle.Allocate(numberOfValues, vtkm::CopyFlag::On);
 }
 
 struct PortalWrapperToDevice
@@ -235,6 +236,7 @@ void StorageVirtualImpl<T, S>::TransferPortalForOutput(
 }
 } // namespace detail
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T>
 void Storage<T, vtkm::cont::StorageTagVirtual>::Allocate(vtkm::Id numberOfValues)
 {
@@ -359,10 +361,10 @@ public:
 
 #ifndef vtk_m_cont_StorageVirtual_cxx
 
-#define VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(T)                                                     \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<T>;                         \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>;           \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>;           \
+#define VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(T)                                           \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<T>;               \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>; \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 4>>
 
 VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(char);
@@ -433,6 +435,7 @@ struct ArrayTransfer<T, vtkm::cont::StorageTagVirtual, Device> : detail::ArrayTr
     return this->Superclass::PrepareForInPlace(Device());
   }
 };
+VTKM_DEPRECATED_SUPPRESS_END
 }
 }
 } // namespace vtkm::cont::internal

@@ -61,7 +61,7 @@ public:
 
       //verify the cellvar result
       vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
-      result.GetField("cellvar").GetData().CopyTo(cellFieldArrayOut);
+      result.GetField("cellvar").GetData().AsArrayHandle(cellFieldArrayOut);
 
       vtkm::cont::Algorithm::Sort(cellFieldArrayOut);
       {
@@ -140,17 +140,18 @@ public:
 
   void TestContourWedges() const
   {
-    auto pathname =
-      vtkm::cont::testing::Testing::GetTestDataBasePath() + "/unstructured/wedge_cells.vtk";
+    std::cout << "Testing Contour filter on wedge cells" << std::endl;
+
+    auto pathname = vtkm::cont::testing::Testing::DataPath("unstructured/wedge_cells.vtk");
     vtkm::io::VTKDataSetReader reader(pathname);
 
     vtkm::cont::DataSet dataSet = reader.ReadDataSet();
 
-    vtkm::cont::CellSetExplicit<> cellSet;
+    vtkm::cont::CellSetSingleType<> cellSet;
     dataSet.GetCellSet().CopyTo(cellSet);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-    dataSet.GetPointField("gyroid").GetData().CopyTo(fieldArray);
+    dataSet.GetPointField("gyroid").GetData().AsArrayHandle(fieldArray);
 
     vtkm::worklet::Contour isosurfaceFilter;
     isosurfaceFilter.SetMergeDuplicatePoints(false);

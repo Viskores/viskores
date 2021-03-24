@@ -13,9 +13,11 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/ErrorBadDevice.h>
 
 //Bring in each device adapters runtime class
 #include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
+#include <vtkm/cont/kokkos/internal/DeviceAdapterRuntimeDetectorKokkos.h>
 #include <vtkm/cont/openmp/internal/DeviceAdapterRuntimeDetectorOpenMP.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterRuntimeDetectorTBB.h>
@@ -24,6 +26,59 @@
 
 namespace
 {
+class DeviceAdapterMemoryManagerInvalid
+  : public vtkm::cont::internal::DeviceAdapterMemoryManagerBase
+{
+public:
+  VTKM_CONT virtual ~DeviceAdapterMemoryManagerInvalid() override {}
+
+  VTKM_CONT virtual vtkm::cont::internal::BufferInfo Allocate(vtkm::BufferSizeType) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
+
+  VTKM_CONT virtual vtkm::cont::DeviceAdapterId GetDevice() const override
+  {
+    return vtkm::cont::DeviceAdapterTagUndefined{};
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyHostToDevice(
+    const vtkm::cont::internal::BufferInfo&) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
+
+  VTKM_CONT virtual void CopyHostToDevice(const vtkm::cont::internal::BufferInfo&,
+                                          const vtkm::cont::internal::BufferInfo&) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToHost(
+    const vtkm::cont::internal::BufferInfo&) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
+
+  VTKM_CONT virtual void CopyDeviceToHost(const vtkm::cont::internal::BufferInfo&,
+                                          const vtkm::cont::internal::BufferInfo&) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToDevice(
+    const vtkm::cont::internal::BufferInfo&) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
+
+  VTKM_CONT virtual void CopyDeviceToDevice(const vtkm::cont::internal::BufferInfo&,
+                                            const vtkm::cont::internal::BufferInfo&) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
+};
+
 struct VTKM_NEVER_EXPORT InitializeDeviceNames
 {
   vtkm::cont::DeviceAdapterNameType* Names;
@@ -58,6 +113,42 @@ struct VTKM_NEVER_EXPORT InitializeDeviceNames
   }
 };
 
+struct VTKM_NEVER_EXPORT InitializeDeviceMemoryManagers
+{
+  std::unique_ptr<vtkm::cont::internal::DeviceAdapterMemoryManagerBase>* Managers;
+
+  VTKM_CONT
+  InitializeDeviceMemoryManagers(
+    std::unique_ptr<vtkm::cont::internal::DeviceAdapterMemoryManagerBase>* managers)
+    : Managers(managers)
+  {
+  }
+
+  template <typename Device>
+  VTKM_CONT void CreateManager(Device device, std::true_type)
+  {
+    auto id = device.GetValue();
+
+    if (id > 0 && id < VTKM_MAX_DEVICE_ADAPTER_ID)
+    {
+      auto name = vtkm::cont::DeviceAdapterTraits<Device>::GetName();
+      this->Managers[id].reset(new vtkm::cont::internal::DeviceAdapterMemoryManager<Device>);
+    }
+  }
+
+  template <typename Device>
+  VTKM_CONT void CreateManager(Device, std::false_type)
+  {
+    // No manager for invalid devices.
+  }
+
+  template <typename Device>
+  VTKM_CONT void operator()(Device device)
+  {
+    this->CreateManager(device, std::integral_constant<bool, device.IsEnabled>{});
+  }
+};
+
 struct VTKM_NEVER_EXPORT RuntimeDeviceInformationFunctor
 {
   bool Exists = false;
@@ -70,24 +161,16 @@ struct VTKM_NEVER_EXPORT RuntimeDeviceInformationFunctor
     }
   }
 };
-}
-
-namespace vtkm
-{
-namespace cont
-{
-namespace detail
-{
 
 class RuntimeDeviceNames
 {
 public:
-  static const DeviceAdapterNameType& GetDeviceName(vtkm::Int8 id)
+  static const vtkm::cont::DeviceAdapterNameType& GetDeviceName(vtkm::Int8 id)
   {
     return Instance().DeviceNames[id];
   }
 
-  static const DeviceAdapterNameType& GetLowerCaseDeviceName(vtkm::Int8 id)
+  static const vtkm::cont::DeviceAdapterNameType& GetLowerCaseDeviceName(vtkm::Int8 id)
   {
     return Instance().LowerCaseDeviceNames[id];
   }
@@ -107,9 +190,63 @@ private:
 
   friend struct InitializeDeviceNames;
 
-  DeviceAdapterNameType DeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
-  DeviceAdapterNameType LowerCaseDeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
+  vtkm::cont::DeviceAdapterNameType DeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
+  vtkm::cont::DeviceAdapterNameType LowerCaseDeviceNames[VTKM_MAX_DEVICE_ADAPTER_ID];
 };
+
+class RuntimeDeviceMemoryManagers
+{
+public:
+  static vtkm::cont::internal::DeviceAdapterMemoryManagerBase& GetDeviceMemoryManager(
+    vtkm::cont::DeviceAdapterId device)
+  {
+    const auto id = device.GetValue();
+
+    if (device.IsValueValid())
+    {
+      auto&& manager = Instance().DeviceMemoryManagers[id];
+      if (manager)
+      {
+        return *manager.get();
+      }
+      else
+      {
+        return Instance().InvalidManager;
+      }
+    }
+    else
+    {
+      return Instance().InvalidManager;
+    }
+  }
+
+private:
+  static RuntimeDeviceMemoryManagers& Instance()
+  {
+    static RuntimeDeviceMemoryManagers instance;
+    return instance;
+  }
+
+  RuntimeDeviceMemoryManagers()
+  {
+    InitializeDeviceMemoryManagers functor(this->DeviceMemoryManagers);
+    vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST());
+  }
+
+  friend struct InitializeDeviceMemoryManagers;
+
+  std::unique_ptr<vtkm::cont::internal::DeviceAdapterMemoryManagerBase>
+    DeviceMemoryManagers[VTKM_MAX_DEVICE_ADAPTER_ID];
+  DeviceAdapterMemoryManagerInvalid InvalidManager;
+};
+}
+
+namespace vtkm
+{
+namespace cont
+{
+namespace detail
+{
 }
 
 VTKM_CONT
@@ -119,7 +256,7 @@ DeviceAdapterNameType RuntimeDeviceInformation::GetName(DeviceAdapterId device) 
 
   if (device.IsValueValid())
   {
-    return detail::RuntimeDeviceNames::GetDeviceName(id);
+    return RuntimeDeviceNames::GetDeviceName(id);
   }
   else if (id == VTKM_DEVICE_ADAPTER_UNDEFINED)
   {
@@ -131,7 +268,7 @@ DeviceAdapterNameType RuntimeDeviceInformation::GetName(DeviceAdapterId device) 
   }
 
   // Deviceis invalid:
-  return detail::RuntimeDeviceNames::GetDeviceName(0);
+  return RuntimeDeviceNames::GetDeviceName(0);
 }
 
 VTKM_CONT
@@ -156,7 +293,7 @@ DeviceAdapterId RuntimeDeviceInformation::GetId(DeviceAdapterNameType name) cons
 
   for (vtkm::Int8 id = 0; id < VTKM_MAX_DEVICE_ADAPTER_ID; ++id)
   {
-    if (name == detail::RuntimeDeviceNames::GetLowerCaseDeviceName(id))
+    if (name == RuntimeDeviceNames::GetLowerCaseDeviceName(id))
     {
       return vtkm::cont::make_DeviceAdapterId(id);
     }
@@ -177,6 +314,20 @@ bool RuntimeDeviceInformation::Exists(DeviceAdapterId id) const
   RuntimeDeviceInformationFunctor functor;
   vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST(), id);
   return functor.Exists;
+}
+
+VTKM_CONT vtkm::cont::internal::DeviceAdapterMemoryManagerBase&
+RuntimeDeviceInformation::GetMemoryManager(DeviceAdapterId device) const
+{
+  if (device.IsValueValid())
+  {
+    return RuntimeDeviceMemoryManagers::GetDeviceMemoryManager(device);
+  }
+  else
+  {
+    throw vtkm::cont::ErrorBadValue(
+      "Attempted to get a DeviceAdapterMemoryManager for an invalid device.");
+  }
 }
 }
 } // namespace vtkm::cont

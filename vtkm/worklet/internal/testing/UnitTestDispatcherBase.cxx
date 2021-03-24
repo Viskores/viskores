@@ -293,13 +293,12 @@ inline vtkm::Id SchedulingRange(const std::vector<T>* const inputDomain)
 }
 
 template <typename WorkletType>
-class TestDispatcher : public vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
-                                                                      WorkletType,
-                                                                      TestWorkletBase>
+class TestDispatcher
+  : public vtkm::worklet::internal::
+      DispatcherBase<TestDispatcher<WorkletType>, WorkletType, TestWorkletBase>
 {
-  using Superclass = vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
-                                                             WorkletType,
-                                                             TestWorkletBase>;
+  using Superclass = vtkm::worklet::internal::
+    DispatcherBase<TestDispatcher<WorkletType>, WorkletType, TestWorkletBase>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:

@@ -105,8 +105,6 @@ struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, true, false>
   using StorageTagSuperclass = StorageTagTransform<vtkm::cont::ArrayHandle<SourceT, SourceStorage>,
                                                    vtkm::cont::internal::Cast<SourceT, TargetT>>;
   using StorageSuperclass = vtkm::cont::internal::Storage<TargetT, StorageTagSuperclass>;
-  template <typename Device>
-  using ArrayTransferSuperclass = ArrayTransfer<TargetT, StorageTagSuperclass, Device>;
 };
 
 // Case where both forward and backward casts are valid.
@@ -117,32 +115,16 @@ struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, true, true>
                                                    vtkm::cont::internal::Cast<SourceT, TargetT>,
                                                    vtkm::cont::internal::Cast<TargetT, SourceT>>;
   using StorageSuperclass = vtkm::cont::internal::Storage<TargetT, StorageTagSuperclass>;
-  template <typename Device>
-  using ArrayTransferSuperclass = ArrayTransfer<TargetT, StorageTagSuperclass, Device>;
 };
 
 } // namespace detail
 
-template <typename TargetT, typename SourceT, typename SourceStorage>
-struct Storage<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>>
-  : detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage>::StorageSuperclass
+template <typename TargetT, typename SourceT, typename SourceStorage_>
+struct Storage<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage_>>
+  : detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage_>::StorageSuperclass
 {
   using Superclass =
-    typename detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage>::StorageSuperclass;
-
-  using Superclass::Superclass;
-};
-
-template <typename TargetT, typename SourceT, typename SourceStorage, typename Device>
-struct ArrayTransfer<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>, Device>
-  : detail::ArrayHandleCastTraits<TargetT,
-                                  SourceT,
-                                  SourceStorage>::template ArrayTransferSuperclass<Device>
-{
-  using Superclass =
-    typename detail::ArrayHandleCastTraits<TargetT,
-                                           SourceT,
-                                           SourceStorage>::template ArrayTransferSuperclass<Device>;
+    typename detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage_>::StorageSuperclass;
 
   using Superclass::Superclass;
 };
@@ -171,7 +153,7 @@ public:
 
   ArrayHandleCast(const vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
                                                 typename ArrayHandleType::StorageTag>& handle)
-    : Superclass(typename Superclass::StorageType(handle))
+    : Superclass(Superclass::StorageType::CreateBuffers(handle))
   {
     this->ValidateTypeCast<typename ArrayHandleType::ValueType>();
   }
@@ -182,6 +164,12 @@ public:
   /// created for all devices, and it would not be valid for all devices.
   ///
   ~ArrayHandleCast() {}
+
+  /// \brief Returns the `ArrayHandle` that is being transformed.
+  ArrayHandleType GetSourceArray() const
+  {
+    return Superclass::StorageType::GetArray(this->GetBuffers());
+  }
 
 private:
   // Log warnings if type cast is valid but lossy:
@@ -287,9 +275,8 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleCast<T, AH>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Cast<" + SerializableTypeString<T>::Get() + "," +
-      SerializableTypeString<typename AH::ValueType>::Get() + "," +
-      SerializableTypeString<typename AH::StorageTag>::Get() + ">";
+    static std::string name =
+      "AH_Cast<" + SerializableTypeString<T>::Get() + "," + SerializableTypeString<AH>::Get() + ">";
     return name;
   }
 };
@@ -316,14 +303,16 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    vtkmdiy::save(bb, obj.GetStorage().GetArray());
+    vtkm::cont::ArrayHandleCast<TargetT, vtkm::cont::ArrayHandle<SourceT, SourceStorage>>
+      castArray = obj;
+    vtkmdiy::save(bb, castArray.GetSourceArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
   {
     vtkm::cont::ArrayHandle<SourceT, SourceStorage> array;
     vtkmdiy::load(bb, array);
-    obj = BaseType(array);
+    obj = vtkm::cont::make_ArrayHandleCast<TargetT>(array);
   }
 };
 

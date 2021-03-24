@@ -127,10 +127,13 @@ if(VTKm_ENABLE_CUDA)
       requires_static_builds TRUE
     )
 
+    target_compile_options(vtkm_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 
-    set_target_properties(vtkm_cuda PROPERTIES
-      INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
-    )
+    if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
+      CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.0)
+      # CUDA 11+ deprecated C++11 support
+      target_compile_features(vtkm_cuda INTERFACE cxx_std_14)
+    endif()
 
     # add the -gencode flags so that all cuda code
     # way compiled properly
@@ -164,7 +167,10 @@ if(VTKm_ENABLE_CUDA)
     # 6 - volta
     #   - Uses: --generate-code=arch=compute_70,code=sm_70
     # 7 - turing
-    #   - Uses: --generate-code=arch=compute_75code=sm_75
+    #   - Uses: --generate-code=arch=compute_75,code=sm_75
+    # 8 - ampere
+    #   - Uses: --generate-code=arch=compute_80,code=sm_80
+    #   - Uses: --generate-code=arch=compute_86,code=sm_86
     # 8 - all
     #   - Uses: --generate-code=arch=compute_30,code=sm_30
     #   - Uses: --generate-code=arch=compute_35,code=sm_35
@@ -172,12 +178,14 @@ if(VTKm_ENABLE_CUDA)
     #   - Uses: --generate-code=arch=compute_60,code=sm_60
     #   - Uses: --generate-code=arch=compute_70,code=sm_70
     #   - Uses: --generate-code=arch=compute_75,code=sm_75
+    #   - Uses: --generate-code=arch=compute_80,code=sm_80
+    #   - Uses: --generate-code=arch=compute_86,code=sm_86
     # 8 - none
     #
 
     #specify the property
     set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
-    set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta turing all none)
+    set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta turing ampere all none)
 
     #detect what the property is set too
     if(VTKm_CUDA_Architecture STREQUAL "native")
@@ -231,23 +239,124 @@ if(VTKm_ENABLE_CUDA)
       set(arch_flags --generate-code=arch=compute_70,code=sm_70)
     elseif(VTKm_CUDA_Architecture STREQUAL "turing")
       set(arch_flags --generate-code=arch=compute_75,code=sm_75)
+    elseif(VTKm_CUDA_Architecture STREQUAL "ampere")
+      set(arch_flags --generate-code=arch=compute_80,code=sm_80)
+      set(arch_flags --generate-code=arch=compute_86,code=sm_86)
     elseif(VTKm_CUDA_Architecture STREQUAL "all")
       set(arch_flags --generate-code=arch=compute_30,code=sm_30
                      --generate-code=arch=compute_35,code=sm_35
                      --generate-code=arch=compute_50,code=sm_50
                      --generate-code=arch=compute_60,code=sm_60
                      --generate-code=arch=compute_70,code=sm_70
-                     --generate-code=arch=compute_75,code=sm_75)
+                     --generate-code=arch=compute_75,code=sm_75
+                     --generate-code=arch=compute_80,code=sm_80
+                     --generate-code=arch=compute_86,code=sm_86)
     endif()
 
     string(REPLACE ";" " " arch_flags "${arch_flags}")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+      #We propagate cuda flags via target* options so that they
+      #export cleanly
+      set(CMAKE_CUDA_ARCHITECTURES OFF)
+      target_compile_options(vtkm_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${arch_flags}>)
+      target_link_options(vtkm_cuda INTERFACE $<DEVICE_LINK:${arch_flags}>)
+    else()
+      # Before 3.18 we had to use CMAKE_CUDA_FLAGS as we had no way
+      # to propagate flags to the device link step
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
+    endif()
 
     # This needs to be lower-case for the property to be properly exported
     # CMake 3.15 we can add `cuda_architecture_flags` to the EXPORT_PROPERTIES
     # target property to have this automatically exported for us
-    set_target_properties(vtkm_cuda PROPERTIES cuda_architecture_flags "${arch_flags}")
     set(VTKm_CUDA_Architecture_Flags "${arch_flags}")
+    set_target_properties(vtkm_cuda PROPERTIES cuda_architecture_flags "${arch_flags}")
+    unset(arch_flags)
+  endif()
+endif()
+
+#-----------------------------------------------------------------------------
+# Kokkos with its Cuda backend enabled, expects everything to be compiled using its
+# `nvcc-wrapper` as the CXX compiler. As the name suggests, nvcc-wrapper is a wrapper around
+# Cuda's nvcc compiler. Kokkos targets have all of the flags meant for the nvcc compiler set as the
+# CXX compiler flags. This function changes all such flags to be CUDA flags so that we can use
+# CMake and vtk-m's existing infrastructure to compile for Cuda and Host separately. Without this
+# all of the files will be compiled using nvcc which can be very time consuming. It can also have
+# issues with calling host functions from device functions when compiling code for other backends.
+function(kokkos_fix_compile_options)
+  set(targets Kokkos::kokkos)
+  set(seen_targets)
+  set(cuda_arch)
+
+  while(targets)
+    list(GET targets 0 target_name)
+    list(REMOVE_AT targets 0)
+
+    get_target_property(link_libraries ${target_name} INTERFACE_LINK_LIBRARIES)
+    foreach(lib_target IN LISTS link_libraries)
+      if (TARGET ${lib_target})
+        if (lib_target IN_LIST seen_targets)
+          continue()
+        endif()
+
+        list(APPEND seen_targets ${lib_target})
+        list(APPEND targets ${lib_target})
+        get_target_property(compile_options ${lib_target} INTERFACE_COMPILE_OPTIONS)
+        if (compile_options)
+          string(REGEX MATCH "[$]<[$]<COMPILE_LANGUAGE:CXX>:-Xcompiler;.*>" cxx_compile_options "${compile_options}")
+          string(REGEX MATCH "-arch=sm_[0-9][0-9]" cuda_arch "${compile_options}")
+          string(REPLACE "-Xcompiler;" "" cxx_compile_options "${cxx_compile_options}")
+          list(TRANSFORM compile_options REPLACE "--relocatable-device-code=true" "") #We use CMake for this flag
+          list(TRANSFORM compile_options REPLACE "COMPILE_LANGUAGE:CXX" "COMPILE_LANGUAGE:CUDA")
+          list(APPEND compile_options "${cxx_compile_options}")
+          set_property(TARGET ${lib_target} PROPERTY INTERFACE_COMPILE_OPTIONS ${compile_options})
+        endif()
+
+        set_property(TARGET ${lib_target} PROPERTY INTERFACE_LINK_OPTIONS "")
+      endif()
+    endforeach()
+  endwhile()
+
+  set_property(TARGET vtkm::kokkos PROPERTY INTERFACE_LINK_OPTIONS "$<DEVICE_LINK:${cuda_arch}>")
+  if (OPENMP IN_LIST Kokkos_DEVICES)
+    set_property(TARGET vtkm::kokkos PROPERTY INTERFACE_LINK_OPTIONS "$<HOST_LINK:-fopenmp>")
+  endif()
+endfunction()
+
+if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm::kokkos)
+  cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+
+  find_package(Kokkos REQUIRED)
+  if (CUDA IN_LIST Kokkos_DEVICES)
+    cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+    enable_language(CUDA)
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND
+       CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL "10.0" AND CMAKE_CUDA_COMPILER_VERSION VERSION_LESS "11.0" AND
+       CMAKE_BUILD_TYPE STREQUAL "Release")
+      message(WARNING "There is a known issue with Cuda 10 and -O3 optimization. Switching to -O2. Please refer to issue #555.")
+      string(REPLACE "-O3" "-O2" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
+      string(REPLACE "-O3" "-O2" CMAKE_CUDA_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
+    endif()
+
+    string(REGEX MATCH "[0-9][0-9]$" cuda_arch ${Kokkos_ARCH})
+    set(CMAKE_CUDA_ARCHITECTURES ${cuda_arch})
+    message(STATUS "Detected Cuda arch from Kokkos: ${cuda_arch}")
+
+    add_library(vtkm::kokkos_cuda INTERFACE IMPORTED GLOBAL)
+  elseif(HIP IN_LIST Kokkos_DEVICES)
+    cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+    enable_language(HIP)
+    add_library(vtkm::kokkos_hip INTERFACE IMPORTED GLOBAL)
+    set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_COMPILE_OPTIONS "")
+    set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_LINK_OPTIONS "")
+  endif()
+
+  add_library(vtkm::kokkos INTERFACE IMPORTED GLOBAL)
+  set_target_properties(vtkm::kokkos PROPERTIES INTERFACE_LINK_LIBRARIES "Kokkos::kokkos")
+
+  if (TARGET vtkm::kokkos_cuda)
+    kokkos_fix_compile_options()
   endif()
 endif()
 

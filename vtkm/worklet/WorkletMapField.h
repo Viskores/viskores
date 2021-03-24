@@ -24,13 +24,12 @@
 #include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 
+#include <vtkm/worklet/DispatcherMapField.h>
+
 namespace vtkm
 {
 namespace worklet
 {
-
-template <typename WorkletType>
-class DispatcherMapField;
 
 /// Base class for worklets that do a simple mapping of field arrays. All
 /// inputs and outputs are on the same domain. That is, all the arrays are the

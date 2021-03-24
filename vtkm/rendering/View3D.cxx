@@ -34,24 +34,20 @@ View3D::View3D(const vtkm::rendering::Scene& scene,
 {
 }
 
-View3D::~View3D()
-{
-}
+View3D::~View3D() {}
 
 void View3D::Paint()
 {
-  this->GetCanvas().Activate();
   this->GetCanvas().Clear();
 
   this->SetupForWorldSpace();
-  this->RenderWorldAnnotations();
+  if (this->WorldAnnotationsEnabled)
+    this->RenderWorldAnnotations();
   this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
 
   this->SetupForScreenSpace();
   this->RenderAnnotations();
   this->RenderScreenAnnotations();
-
-  this->GetCanvas().Finish();
 }
 
 void View3D::RenderScreenAnnotations()

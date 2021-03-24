@@ -10,7 +10,6 @@
 #ifndef vtk_m_exec_Derivative_h
 #define vtk_m_exec_Derivative_h
 
-#include <vtkm/Assert.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Deprecated.h>
 #include <vtkm/ErrorCode.h>

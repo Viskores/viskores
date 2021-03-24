@@ -17,6 +17,7 @@ function(vtkm_test_install )
       "-DVTKm_INSTALL_INCLUDE_DIR=${VTKm_INSTALL_INCLUDE_DIR}"
       "-DVTKm_ENABLE_RENDERING=${VTKm_ENABLE_RENDERING}"
       "-DVTKm_ENABLE_LOGGING=${VTKm_ENABLE_LOGGING}"
+      "-DVTKm_ENABLE_HDF5_IO=${VTKm_ENABLE_HDF5_IO}"
       )
 
     #By having this as separate tests using fixtures, it will allow us in
@@ -108,6 +109,10 @@ function(vtkm_test_against_install dir)
       -DTBB_LIBRARY_RELEASE:FILEPATH=${TBB_LIBRARY_RELEASE}
       -DTBB_INCLUDE_DIR:PATH=${TBB_INCLUDE_DIR}
     )
+  endif()
+
+  if(TARGET vtkm::kokkos)
+    list(APPEND args "-DKokkos_DIR=${Kokkos_DIR}")
   endif()
 
   #determine if the test is expected to compile or fail to build. We use

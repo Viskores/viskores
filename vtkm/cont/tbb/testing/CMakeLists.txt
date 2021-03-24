@@ -9,14 +9,12 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestTBBAlgorithms.cxx
   UnitTestTBBArrayHandle.cxx
   UnitTestTBBArrayHandleFancy.cxx
   UnitTestTBBArrayHandleMultiplexer.cxx
-  UnitTestTBBArrayHandleVirtualCoordinates.cxx
   UnitTestTBBBitField.cxx
   UnitTestTBBCellLocatorRectilinearGrid.cxx
-  UnitTestTBBCellLocatorUniformBins.cxx
+  UnitTestTBBCellLocatorTwoLevel.cxx
   UnitTestTBBCellLocatorUniformGrid.cxx
   UnitTestTBBColorTable.cxx
   UnitTestTBBComputeRange.cxx
@@ -24,7 +22,7 @@ set(unit_tests
   UnitTestTBBDataSetSingleType.cxx
   UnitTestTBBDeviceAdapter.cxx
   UnitTestTBBImplicitFunction.cxx
-  UnitTestTBBPointLocatorUniformGrid.cxx
+  UnitTestTBBPointLocatorSparseGrid.cxx
   UnitTestTBBVirtualObjectHandle.cxx
   )
 

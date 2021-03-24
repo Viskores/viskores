@@ -752,6 +752,7 @@ public:
   void Next() { std::swap(src_, dst_); }
 
   ValueType* GetResult() { return src_; }
+
 private:
   size_t max_elems_;
   int max_threads_;
@@ -894,25 +895,25 @@ public:
 private:
 };
 
-#define KEY_SORT_CASE(plain_type, compare_type, unsigned_type, encoder_type)                       \
-  template <typename ThreaderType>                                                                 \
-  class KeySort<ThreaderType, plain_type, compare_type>                                            \
-    : public KeySort<ThreaderType,                                                                 \
-                     plain_type,                                                                   \
-                     compare_type,                                                                 \
-                     unsigned_type,                                                                \
-                     encoder::Encoder##encoder_type>                                               \
-  {                                                                                                \
-  };                                                                                               \
-  template <typename V, typename ThreaderType>                                                     \
-  class PairSort<ThreaderType, plain_type, V, compare_type>                                        \
-    : public PairSort<ThreaderType,                                                                \
-                      plain_type,                                                                  \
-                      V,                                                                           \
-                      compare_type,                                                                \
-                      unsigned_type,                                                               \
-                      encoder::Encoder##encoder_type>                                              \
-  {                                                                                                \
+#define KEY_SORT_CASE(plain_type, compare_type, unsigned_type, encoder_type) \
+  template <typename ThreaderType>                                           \
+  class KeySort<ThreaderType, plain_type, compare_type>                      \
+    : public KeySort<ThreaderType,                                           \
+                     plain_type,                                             \
+                     compare_type,                                           \
+                     unsigned_type,                                          \
+                     encoder::Encoder##encoder_type>                         \
+  {                                                                          \
+  };                                                                         \
+  template <typename V, typename ThreaderType>                               \
+  class PairSort<ThreaderType, plain_type, V, compare_type>                  \
+    : public PairSort<ThreaderType,                                          \
+                      plain_type,                                            \
+                      V,                                                     \
+                      compare_type,                                          \
+                      unsigned_type,                                         \
+                      encoder::Encoder##encoder_type>                        \
+  {                                                                          \
   };
 
 // Unsigned integers
@@ -974,15 +975,15 @@ struct run_kx_radix_sort_keys
   }
 };
 
-#define KX_SORT_KEYS(key_type)                                                                     \
-  template <>                                                                                      \
-  struct run_kx_radix_sort_keys<key_type, std::less<key_type>>                                     \
-  {                                                                                                \
-    static void run(key_type* data, size_t num_elems, const std::less<key_type>& comp)             \
-    {                                                                                              \
-      (void)comp;                                                                                  \
-      kx::radix_sort(data, data + num_elems);                                                      \
-    }                                                                                              \
+#define KX_SORT_KEYS(key_type)                                                         \
+  template <>                                                                          \
+  struct run_kx_radix_sort_keys<key_type, std::less<key_type>>                         \
+  {                                                                                    \
+    static void run(key_type* data, size_t num_elems, const std::less<key_type>& comp) \
+    {                                                                                  \
+      (void)comp;                                                                      \
+      kx::radix_sort(data, data + num_elems);                                          \
+    }                                                                                  \
   };
 
 KX_SORT_KEYS(unsigned short int);
@@ -1009,58 +1010,58 @@ bool use_serial_sort_keys(T* data, size_t num_elems, const CompareType& comp)
 }
 
 // Generate radix sort interfaces for key and key value sorts.
-#define VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(threader_type, key_type)                              \
-  VTKM_CONT_EXPORT void parallel_radix_sort_key_values(                                            \
-    key_type* keys, vtkm::Id* vals, size_t num_elems, const std::greater<key_type>& comp)          \
-  {                                                                                                \
-    using namespace vtkm::cont::internal::radix;                                                   \
-    PairSort<threader_type, key_type, vtkm::Id, std::greater<key_type>> ps;                        \
-    ps.InitAndSort(keys, vals, num_elems, threader_type(), comp);                                  \
-  }                                                                                                \
-  VTKM_CONT_EXPORT void parallel_radix_sort_key_values(                                            \
-    key_type* keys, vtkm::Id* vals, size_t num_elems, const std::less<key_type>& comp)             \
-  {                                                                                                \
-    using namespace vtkm::cont::internal::radix;                                                   \
-    PairSort<threader_type, key_type, vtkm::Id, std::less<key_type>> ps;                           \
-    ps.InitAndSort(keys, vals, num_elems, threader_type(), comp);                                  \
-  }                                                                                                \
-  VTKM_CONT_EXPORT void parallel_radix_sort(                                                       \
-    key_type* data, size_t num_elems, const std::greater<key_type>& comp)                          \
-  {                                                                                                \
-    using namespace vtkm::cont::internal::radix;                                                   \
-    if (!use_serial_sort_keys(data, num_elems, comp))                                              \
-    {                                                                                              \
-      KeySort<threader_type, key_type, std::greater<key_type>> ks;                                 \
-      ks.InitAndSort(data, num_elems, threader_type(), comp);                                      \
-    }                                                                                              \
-  }                                                                                                \
-  VTKM_CONT_EXPORT void parallel_radix_sort(                                                       \
-    key_type* data, size_t num_elems, const std::less<key_type>& comp)                             \
-  {                                                                                                \
-    using namespace vtkm::cont::internal::radix;                                                   \
-    if (!use_serial_sort_keys(data, num_elems, comp))                                              \
-    {                                                                                              \
-      KeySort<threader_type, key_type, std::less<key_type>> ks;                                    \
-      ks.InitAndSort(data, num_elems, threader_type(), comp);                                      \
-    }                                                                                              \
+#define VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(threader_type, key_type)                     \
+  VTKM_CONT_EXPORT void parallel_radix_sort_key_values(                                   \
+    key_type* keys, vtkm::Id* vals, size_t num_elems, const std::greater<key_type>& comp) \
+  {                                                                                       \
+    using namespace vtkm::cont::internal::radix;                                          \
+    PairSort<threader_type, key_type, vtkm::Id, std::greater<key_type>> ps;               \
+    ps.InitAndSort(keys, vals, num_elems, threader_type(), comp);                         \
+  }                                                                                       \
+  VTKM_CONT_EXPORT void parallel_radix_sort_key_values(                                   \
+    key_type* keys, vtkm::Id* vals, size_t num_elems, const std::less<key_type>& comp)    \
+  {                                                                                       \
+    using namespace vtkm::cont::internal::radix;                                          \
+    PairSort<threader_type, key_type, vtkm::Id, std::less<key_type>> ps;                  \
+    ps.InitAndSort(keys, vals, num_elems, threader_type(), comp);                         \
+  }                                                                                       \
+  VTKM_CONT_EXPORT void parallel_radix_sort(                                              \
+    key_type* data, size_t num_elems, const std::greater<key_type>& comp)                 \
+  {                                                                                       \
+    using namespace vtkm::cont::internal::radix;                                          \
+    if (!use_serial_sort_keys(data, num_elems, comp))                                     \
+    {                                                                                     \
+      KeySort<threader_type, key_type, std::greater<key_type>> ks;                        \
+      ks.InitAndSort(data, num_elems, threader_type(), comp);                             \
+    }                                                                                     \
+  }                                                                                       \
+  VTKM_CONT_EXPORT void parallel_radix_sort(                                              \
+    key_type* data, size_t num_elems, const std::less<key_type>& comp)                    \
+  {                                                                                       \
+    using namespace vtkm::cont::internal::radix;                                          \
+    if (!use_serial_sort_keys(data, num_elems, comp))                                     \
+    {                                                                                     \
+      KeySort<threader_type, key_type, std::less<key_type>> ks;                           \
+      ks.InitAndSort(data, num_elems, threader_type(), comp);                             \
+    }                                                                                     \
   }
 
-#define VTKM_INSTANTIATE_RADIX_SORT_FOR_THREADER(ThreaderType)                                     \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, short int)                                    \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, unsigned short int)                           \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, int)                                          \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, unsigned int)                                 \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, long int)                                     \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, unsigned long int)                            \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, long long int)                                \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, unsigned long long int)                       \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, unsigned char)                                \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, signed char)                                  \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, char)                                         \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, char16_t)                                     \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, char32_t)                                     \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, wchar_t)                                      \
-  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, float)                                        \
+#define VTKM_INSTANTIATE_RADIX_SORT_FOR_THREADER(ThreaderType)               \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, short int)              \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, unsigned short int)     \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, int)                    \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, unsigned int)           \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, long int)               \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, unsigned long int)      \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, long long int)          \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, unsigned long long int) \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, unsigned char)          \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, signed char)            \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, char)                   \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, char16_t)               \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, char32_t)               \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, wchar_t)                \
+  VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, float)                  \
   VTKM_INTERNAL_RADIX_SORT_INSTANTIATE(ThreaderType, double)
 
 VTKM_THIRDPARTY_POST_INCLUDE

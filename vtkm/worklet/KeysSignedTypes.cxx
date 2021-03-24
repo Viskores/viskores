@@ -12,15 +12,11 @@
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/Keys.hxx>
 
-#define VTK_M_KEYS_EXPORT(T)                                                                       \
-  template class VTKM_WORKLET_EXPORT vtkm::worklet::Keys<T>;                                       \
-  template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays(                 \
-    const vtkm::cont::ArrayHandle<T>& keys,                                                        \
-    vtkm::worklet::KeysSortType sort,                                                              \
-    vtkm::cont::DeviceAdapterId device);                                                           \
-  template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays(                 \
-    const vtkm::cont::ArrayHandleVirtual<T>& keys,                                                 \
-    vtkm::worklet::KeysSortType sort,                                                              \
+#define VTK_M_KEYS_EXPORT(T)                                                       \
+  template class VTKM_WORKLET_EXPORT vtkm::worklet::Keys<T>;                       \
+  template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
+    const vtkm::cont::ArrayHandle<T>& keys,                                        \
+    vtkm::worklet::KeysSortType sort,                                              \
     vtkm::cont::DeviceAdapterId device)
 
 VTK_M_KEYS_EXPORT(vtkm::Id);

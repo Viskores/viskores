@@ -170,7 +170,7 @@
 /// and modified using the passed arguments; see the Google Benchmark documentation
 /// for more details. The `preamble` string may be used to supply additional
 /// information that will be appended to the output's preamble.
-#define VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble)                                     \
+#define VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble) \
   vtkm::bench::detail::ExecuteBenchmarks(argc, argv, preamble)
 
 /// \def VTKM_BENCHMARK(BenchFunc)
@@ -181,7 +181,7 @@
 /// ```
 /// void BenchFunc(::benchmark::State& state)
 /// ```
-#define VTKM_BENCHMARK(BenchFunc)                                                                  \
+#define VTKM_BENCHMARK(BenchFunc) \
   BENCHMARK(BenchFunc)->UseManualTime()->Unit(benchmark::kMillisecond)
 
 /// \def VTKM_BENCHMARK_OPTS(BenchFunc, Args)
@@ -196,7 +196,7 @@
 /// Note the similarity to the raw Google Benchmark usage of
 /// `BENCHMARK(MyBenchmark)->ArgName("MyParam")->Range(32, 1024*1024);`. See
 /// the Google Benchmark documentation for more details on the available options.
-#define VTKM_BENCHMARK_OPTS(BenchFunc, options)                                                    \
+#define VTKM_BENCHMARK_OPTS(BenchFunc, options) \
   BENCHMARK(BenchFunc)->UseManualTime()->Unit(benchmark::kMillisecond) options
 
 /// \def VTKM_BENCHMARK_APPLY(BenchFunc, ConfigFunc)
@@ -211,7 +211,7 @@
 /// ```
 ///
 /// See the Google Benchmark documentation for more details on the available options.
-#define VTKM_BENCHMARK_APPLY(BenchFunc, applyFunctor)                                              \
+#define VTKM_BENCHMARK_APPLY(BenchFunc, applyFunctor) \
   BENCHMARK(BenchFunc)->Apply(applyFunctor)->UseManualTime()->Unit(benchmark::kMillisecond)
 
 /// \def VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList)
@@ -224,7 +224,7 @@
 /// template <typename T>
 /// void BenchFunc(::benchmark::State& state)
 /// ```
-#define VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList)                                              \
+#define VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList) \
   VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, vtkm::bench::detail::NullApply, TypeList)
 
 /// \def VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, Args, TypeList)
@@ -237,10 +237,10 @@
 ///                                ->ArgName("MyParam")->Range(32, 1024*1024),
 ///                              vtkm::List<vtkm::Float32, vtkm::Vec3f_32>);
 /// ```
-#define VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                                \
-  VTKM_BENCHMARK_TEMPLATES_APPLY(                                                                  \
-    BenchFunc,                                                                                     \
-    [](::benchmark::internal::Benchmark* bm) { bm options->Unit(benchmark::kMillisecond); },       \
+#define VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                          \
+  VTKM_BENCHMARK_TEMPLATES_APPLY(                                                            \
+    BenchFunc,                                                                               \
+    [](::benchmark::internal::Benchmark* bm) { bm options->Unit(benchmark::kMillisecond); }, \
     TypeList)
 
 /// \def VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ConfigFunc, TypeList)
@@ -255,22 +255,22 @@
 /// ```
 ///
 /// See the Google Benchmark documentation for more details on the available options.
-#define VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ApplyFunctor, TypeList)                                                                                                             \
-  namespace                                                                                                                                                                           \
+#define VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ApplyFunctor, TypeList)                            \
+  namespace                                                                                          \
   { /* A template function cannot be used as a template parameter, so wrap the function with       \
      * a template struct to get it into the GenerateTemplateBenchmarks class. */ \
-  template <typename... Ts>                                                                                                                                                           \
-  struct VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                                                                                                       \
-  {                                                                                                                                                                                   \
-    static ::benchmark::internal::Function* GetFunction() { return BenchFunc<Ts...>; }                                                                                                \
-  };                                                                                                                                                                                  \
-  } /* end anon namespace */                                                                                                                                                          \
-  int BENCHMARK_PRIVATE_NAME(BenchFunc) = vtkm::bench::detail::GenerateTemplateBenchmarks<                                                                                            \
-    brigand::bind<VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)>,                                                                                                                            \
+  template <typename... Ts>                                                                          \
+  struct VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                      \
+  {                                                                                                  \
+    static ::benchmark::internal::Function* GetFunction() { return BenchFunc<Ts...>; }               \
+  };                                                                                                 \
+  } /* end anon namespace */                                                                         \
+  int BENCHMARK_PRIVATE_NAME(BenchFunc) = vtkm::bench::detail::GenerateTemplateBenchmarks<           \
+    brigand::bind<VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)>,                                           \
     TypeList>::Register(#BenchFunc, ApplyFunctor)
 
 // Internal use only:
-#define VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                     \
+#define VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc) \
   BENCHMARK_PRIVATE_CONCAT(_wrapper_, BenchFunc, __LINE__)
 
 namespace vtkm
@@ -280,9 +280,7 @@ namespace bench
 namespace detail
 {
 
-static inline void NullApply(::benchmark::internal::Benchmark*)
-{
-}
+static inline void NullApply(::benchmark::internal::Benchmark*) {}
 
 /// Do not use directly. The VTKM_BENCHMARK_TEMPLATES macros should be used
 /// instead.

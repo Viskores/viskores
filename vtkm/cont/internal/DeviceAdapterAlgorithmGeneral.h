@@ -12,8 +12,8 @@
 #define vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleDecorator.h>
 #include <vtkm/cont/ArrayHandleDiscard.h>
-#include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/ArrayHandleZip.h>
@@ -146,7 +146,7 @@ public:
 
     numBits = static_cast<vtkm::Id>(popCount.load(std::memory_order_seq_cst));
 
-    indices.Shrink(numBits);
+    indices.Allocate(numBits, vtkm::CopyFlag::On);
     return numBits;
   }
 
@@ -241,10 +241,11 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
-    if (input == output && ((outputIndex >= inputStartIndex &&
-                             outputIndex < inputStartIndex + numberOfElementsToCopy) ||
-                            (inputStartIndex >= outputIndex &&
-                             inputStartIndex < outputIndex + numberOfElementsToCopy)))
+    if (input == output &&
+        ((outputIndex >= inputStartIndex &&
+          outputIndex < inputStartIndex + numberOfElementsToCopy) ||
+         (inputStartIndex >= outputIndex &&
+          inputStartIndex < outputIndex + numberOfElementsToCopy)))
     {
       return false;
     }
@@ -320,7 +321,7 @@ public:
 
     if (numBits == 0)
     {
-      bits.Shrink(0);
+      bits.Allocate(0);
       return;
     }
 
@@ -375,7 +376,7 @@ public:
 
     if (numBits == 0)
     {
-      bits.Shrink(0);
+      bits.Allocate(0);
       return;
     }
 
@@ -457,7 +458,7 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
     if (numValues == 0)
     {
-      handle.Shrink(0);
+      handle.ReleaseResources();
       return;
     }
 
@@ -528,6 +529,33 @@ public:
 
   //--------------------------------------------------------------------------
   // Reduce
+private:
+  template <typename T, typename BinaryFunctor>
+  class ReduceDecoratorImpl
+  {
+  public:
+    VTKM_CONT ReduceDecoratorImpl() = default;
+
+    VTKM_CONT
+    ReduceDecoratorImpl(const T& initialValue, const BinaryFunctor& binaryFunctor)
+      : InitialValue(initialValue)
+      , ReduceOperator(binaryFunctor)
+    {
+    }
+
+    template <typename Portal>
+    VTKM_CONT ReduceKernel<Portal, T, BinaryFunctor> CreateFunctor(const Portal& portal) const
+    {
+      return ReduceKernel<Portal, T, BinaryFunctor>(
+        portal, this->InitialValue, this->ReduceOperator);
+    }
+
+  private:
+    T InitialValue;
+    BinaryFunctor ReduceOperator;
+  };
+
+public:
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
@@ -543,24 +571,16 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::cont::Token token;
-
     //Crazy Idea:
-    //We create a implicit array handle that wraps the input
-    //array handle. The implicit functor is passed the input array handle, and
-    //the number of elements it needs to sum. This way the implicit handle
-    //acts as the first level reduction. Say for example reducing 16 values
-    //at a time.
-    //
-    //Now that we have an implicit array that is 1/16 the length of full array
-    //we can use scan inclusive to compute the final sum
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
-    ReduceKernel<decltype(inputPortal), U, BinaryFunctor> kernel(
-      inputPortal, initialValue, binary_functor);
-
+    //We perform the reduction in two levels. The first level is performed by
+    //an `ArrayHandleDecorator` which reduces 16 input values and maps them to
+    //one value. The decorator array is then 1/16 the length of the input array,
+    //and we can use inclusive scan as the second level to compute the final
+    //result.
     vtkm::Id length = (input.GetNumberOfValues() / 16);
     length += (input.GetNumberOfValues() % 16 == 0) ? 0 : 1;
-    auto reduced = vtkm::cont::make_ArrayHandleImplicit(kernel, length);
+    auto reduced = vtkm::cont::make_ArrayHandleDecorator(
+      length, ReduceDecoratorImpl<U, BinaryFunctor>(initialValue, binary_functor), input);
 
     vtkm::cont::ArrayHandle<U, vtkm::cont::StorageTagBasic> inclusiveScanStorage;
     const U scanResult =
@@ -660,7 +680,7 @@ public:
     vtkm::Id numValues = input.GetNumberOfValues();
     if (numValues <= 0)
     {
-      output.Shrink(0);
+      output.ReleaseResources();
       return initialValue;
     }
 
@@ -824,6 +844,22 @@ public:
     return DerivedAlgorithm::ScanInclusive(input, output, vtkm::Add());
   }
 
+private:
+  template <typename T1, typename S1, typename T2, typename S2>
+  VTKM_CONT static bool ArrayHandlesAreSame(const vtkm::cont::ArrayHandle<T1, S1>&,
+                                            const vtkm::cont::ArrayHandle<T2, S2>&)
+  {
+    return false;
+  }
+
+  template <typename T, typename S>
+  VTKM_CONT static bool ArrayHandlesAreSame(const vtkm::cont::ArrayHandle<T, S>& a1,
+                                            const vtkm::cont::ArrayHandle<T, S>& a2)
+  {
+    return a1 == a2;
+  }
+
+public:
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output,
@@ -831,7 +867,10 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    DerivedAlgorithm::Copy(input, output);
+    if (!ArrayHandlesAreSame(input, output))
+    {
+      DerivedAlgorithm::Copy(input, output);
+    }
 
     vtkm::Id numValues = output.GetNumberOfValues();
     if (numValues < 1)

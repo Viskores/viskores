@@ -55,9 +55,7 @@ MapperPoint::MapperPoint()
 {
 }
 
-MapperPoint::~MapperPoint()
-{
-}
+MapperPoint::~MapperPoint() {}
 
 void MapperPoint::SetCanvas(vtkm::rendering::Canvas* canvas)
 {
@@ -181,8 +179,8 @@ void MapperPoint::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   //
   // Create rays
   //
-  vtkm::Int32 width = (vtkm::Int32) this->Internals->Canvas->GetWidth();
-  vtkm::Int32 height = (vtkm::Int32) this->Internals->Canvas->GetHeight();
+  vtkm::Int32 width = (vtkm::Int32)this->Internals->Canvas->GetWidth();
+  vtkm::Int32 height = (vtkm::Int32)this->Internals->Canvas->GetHeight();
 
   this->Internals->RayCamera.SetParameters(camera, width, height);
 
@@ -214,16 +212,6 @@ void MapperPoint::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 void MapperPoint::SetCompositeBackground(bool on)
 {
   this->Internals->CompositeBackground = on;
-}
-
-void MapperPoint::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperPoint::EndScene()
-{
-  // Nothing needs to be done.
 }
 
 vtkm::rendering::Mapper* MapperPoint::NewCopy() const

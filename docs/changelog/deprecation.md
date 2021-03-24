@@ -40,11 +40,11 @@ using OldAlias VTKM_DEPRECATED(1.6, "Use NewClass instead.") = NewClass;
 ```
 
 Functions and methods are marked as deprecated by adding `VTKM_DEPRECATED`
-as a modifier before the return value.
+as a modifier before the return value and any markup (VTKM_CONT, VTKM_EXEC, or VTKM_EXEC_CONT).
 
 ``` cpp
-VTKM_EXEC_CONT
 VTKM_DEPRECATED(1.6, "You must now specify a tolerance.") void ImportantMethod(double x)
+VTKM_EXEC_CONT
 {
   this->ImportantMethod(x, 1e-6);
 }
@@ -83,8 +83,8 @@ support this a pair of macros, `VTKM_DEPRECATED_SUPPRESS_BEGIN` and
 deprecated items should be wrapped in these macros.
 
 ``` cpp
-VTKM_EXEC_CONT
 VTKM_DEPRECATED(1.6, "You must now specify both a value and tolerance.")
+VTKM_EXEC_CONT
 void ImportantMethod()
 {
   // It can be the case that to implement a deprecated method you need to

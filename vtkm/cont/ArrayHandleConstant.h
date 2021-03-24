@@ -47,16 +47,6 @@ using StorageTagConstantSuperclass =
 template <typename T>
 struct Storage<T, vtkm::cont::StorageTagConstant> : Storage<T, StorageTagConstantSuperclass<T>>
 {
-  using Superclass = Storage<T, StorageTagConstantSuperclass<T>>;
-  using Superclass::Superclass;
-};
-
-template <typename T, typename Device>
-struct ArrayTransfer<T, vtkm::cont::StorageTagConstant, Device>
-  : ArrayTransfer<T, StorageTagConstantSuperclass<T>, Device>
-{
-  using Superclass = ArrayTransfer<T, StorageTagConstantSuperclass<T>, Device>;
-  using Superclass::Superclass;
 };
 
 } // namespace internal
@@ -79,11 +69,16 @@ public:
 
   VTKM_CONT
   ArrayHandleConstant(T value, vtkm::Id numberOfValues = 0)
-    : Superclass(typename internal::Storage<T, StorageTag>::PortalConstType(
-        internal::ConstantFunctor<T>(value),
-        numberOfValues))
+    : Superclass(internal::FunctorToArrayHandleImplicitBuffers(internal::ConstantFunctor<T>(value),
+                                                               numberOfValues))
   {
   }
+
+  /// \brief Returns the constant value stored in this array.
+  ///
+  /// The value set in the constructor of this array is returned even if the number of values is 0.
+  ///
+  VTKM_CONT T GetValue() const { return this->ReadPortal().GetFunctor()(0); }
 };
 
 /// make_ArrayHandleConstant is convenience function to generate an

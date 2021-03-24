@@ -21,8 +21,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/ComputeNDHistogram.h>
 
 #include <vtkm/cont/Field.h>
 
@@ -60,8 +58,8 @@ public:
     }
     else
     {
-      CastAndCall(
-        fieldArray.ResetTypes(vtkm::TypeListScalarAll()),
+      vtkm::cont::CastAndCall(
+        fieldArray.ResetTypes(vtkm::TypeListScalarAll{}, VTKM_DEFAULT_STORAGE_LIST{}),
         vtkm::worklet::histogram::ComputeBins(Bin1DIndex, numberOfBins, rangeOfValues, binDelta));
     }
   }

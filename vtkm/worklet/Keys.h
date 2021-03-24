@@ -17,7 +17,6 @@
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/Logging.h>
 
 #include <vtkm/Hash.h>
@@ -67,30 +66,27 @@ public:
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const { return this->SortedValuesMap.GetNumberOfValues(); }
 
-  template <typename Device>
-  struct ExecutionTypes
-  {
-    using IdPortal =
-      typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::PortalConst;
-    using IdComponentPortal = typename vtkm::cont::ArrayHandle<
-      vtkm::IdComponent>::template ExecutionTypes<Device>::PortalConst;
+  using ExecLookup = vtkm::exec::internal::ReduceByKeyLookupBase<
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType,
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType>;
 
-    using Lookup = vtkm::exec::internal::ReduceByKeyLookupBase<IdPortal, IdComponentPortal>;
+  template <typename Device>
+  struct VTKM_DEPRECATED(1.6, "Replace ExecutionTypes<D>::Lookup with ExecLookup.") ExecutionTypes
+  {
+    using Lookup = ExecLookup;
   };
 
-  template <typename Device>
-  VTKM_CONT typename ExecutionTypes<Device>::Lookup PrepareForInput(Device device,
-                                                                    vtkm::cont::Token& token) const
+  VTKM_CONT ExecLookup PrepareForInput(vtkm::cont::DeviceAdapterId device,
+                                       vtkm::cont::Token& token) const
   {
-    return
-      typename ExecutionTypes<Device>::Lookup(this->SortedValuesMap.PrepareForInput(device, token),
-                                              this->Offsets.PrepareForInput(device, token),
-                                              this->Counts.PrepareForInput(device, token));
+    return ExecLookup(this->SortedValuesMap.PrepareForInput(device, token),
+                      this->Offsets.PrepareForInput(device, token),
+                      this->Counts.PrepareForInput(device, token));
   }
 
-  template <typename Device>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
-    typename ExecutionTypes<Device>::Lookup PrepareForInput(Device device) const
+  VTKM_CONT VTKM_DEPRECATED(1.6,
+                            "PrepareForInput now requires a vtkm::cont::Token object.") ExecLookup
+    PrepareForInput(vtkm::cont::DeviceAdapterId device) const
   {
     vtkm::cont::Token token;
     return this->PrepareForInput(device, token);
@@ -192,32 +188,29 @@ public:
   VTKM_CONT
   KeyArrayHandleType GetUniqueKeys() const { return this->UniqueKeys; }
 
-  template <typename Device>
-  struct ExecutionTypes
-  {
-    using KeyPortal = typename KeyArrayHandleType::template ExecutionTypes<Device>::PortalConst;
-    using IdPortal =
-      typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::PortalConst;
-    using IdComponentPortal = typename vtkm::cont::ArrayHandle<
-      vtkm::IdComponent>::template ExecutionTypes<Device>::PortalConst;
+  using ExecLookup = vtkm::exec::internal::ReduceByKeyLookup<
+    typename KeyArrayHandleType::ReadPortalType,
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType,
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType>;
 
-    using Lookup = vtkm::exec::internal::ReduceByKeyLookup<KeyPortal, IdPortal, IdComponentPortal>;
+  template <typename Device>
+  struct VTKM_DEPRECATED(1.6, "Replace ExecutionTypes<D>::Lookup with ExecLookup.") ExecutionTypes
+  {
+    using Lookup = ExecLookup;
   };
 
-  template <typename Device>
-  VTKM_CONT typename ExecutionTypes<Device>::Lookup PrepareForInput(Device device,
-                                                                    vtkm::cont::Token& token) const
+  VTKM_CONT ExecLookup PrepareForInput(vtkm::cont::DeviceAdapterId device,
+                                       vtkm::cont::Token& token) const
   {
-    return
-      typename ExecutionTypes<Device>::Lookup(this->UniqueKeys.PrepareForInput(device, token),
-                                              this->SortedValuesMap.PrepareForInput(device, token),
-                                              this->Offsets.PrepareForInput(device, token),
-                                              this->Counts.PrepareForInput(device, token));
+    return ExecLookup(this->UniqueKeys.PrepareForInput(device, token),
+                      this->SortedValuesMap.PrepareForInput(device, token),
+                      this->Offsets.PrepareForInput(device, token),
+                      this->Counts.PrepareForInput(device, token));
   }
 
-  template <typename Device>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
-    typename ExecutionTypes<Device>::Lookup PrepareForInput(Device device) const
+  VTKM_CONT VTKM_DEPRECATED(1.6,
+                            "PrepareForInput now requires a vtkm::cont::Token object.") ExecLookup
+    PrepareForInput(vtkm::cont::DeviceAdapterId device) const
   {
     vtkm::cont::Token token;
     return this->PrepareForInput(device, token);
@@ -305,7 +298,7 @@ template <typename KeyType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagKeysIn, KeyType, Device>
 {
   using ContObjectType = KeyType;
-  using ExecObjectType = typename ContObjectType::template ExecutionTypes<Device>::Lookup;
+  using ExecObjectType = typename ContObjectType::ExecLookup;
 
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType& object,
@@ -340,7 +333,7 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesIn, ArrayHandleType, De
   using PermutedArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, ContObjectType>;
   using GroupedArrayType = vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
 
-  using ExecObjectType = typename GroupedArrayType::template ExecutionTypes<Device>::PortalConst;
+  using ExecObjectType = typename GroupedArrayType::ReadPortalType;
 
   VTKM_CONT ExecObjectType operator()(const ContObjectType& object,
                                       const vtkm::worklet::internal::KeysBase& keys,
@@ -375,7 +368,7 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesInOut, ArrayHandleType,
   using PermutedArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, ContObjectType>;
   using GroupedArrayType = vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
 
-  using ExecObjectType = typename GroupedArrayType::template ExecutionTypes<Device>::Portal;
+  using ExecObjectType = typename GroupedArrayType::WritePortalType;
 
   VTKM_CONT ExecObjectType operator()(ContObjectType object,
                                       const vtkm::worklet::internal::KeysBase& keys,
@@ -410,7 +403,7 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, D
   using PermutedArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, ContObjectType>;
   using GroupedArrayType = vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
 
-  using ExecObjectType = typename GroupedArrayType::template ExecutionTypes<Device>::Portal;
+  using ExecObjectType = typename GroupedArrayType::WritePortalType;
 
   VTKM_CONT ExecObjectType operator()(ContObjectType object,
                                       const vtkm::worklet::internal::KeysBase& keys,
@@ -443,10 +436,6 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, D
   extern template class VTKM_WORKLET_TEMPLATE_EXPORT vtkm::worklet::Keys<T>;                       \
   extern template VTKM_WORKLET_TEMPLATE_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
     const vtkm::cont::ArrayHandle<T>& keys,                                                        \
-    vtkm::worklet::KeysSortType sort,                                                              \
-    vtkm::cont::DeviceAdapterId device);                                                           \
-  extern template VTKM_WORKLET_TEMPLATE_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
-    const vtkm::cont::ArrayHandleVirtual<T>& keys,                                                 \
     vtkm::worklet::KeysSortType sort,                                                              \
     vtkm::cont::DeviceAdapterId device)
 

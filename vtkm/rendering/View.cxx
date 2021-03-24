@@ -76,9 +76,7 @@ View::View(const vtkm::rendering::Scene& scene,
   this->AxisColor = foregroundColor;
 }
 
-View::~View()
-{
-}
+View::~View() {}
 
 const vtkm::rendering::Scene& View::GetScene() const
 {
@@ -152,7 +150,7 @@ void View::SetForegroundColor(const vtkm::rendering::Color& color)
 
 void View::Initialize()
 {
-  this->GetCanvas().Initialize();
+  // does nothing
 }
 
 void View::SaveAs(const std::string& fileName) const

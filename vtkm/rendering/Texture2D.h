@@ -41,10 +41,10 @@ public:
 
   class Texture2DSampler;
 
-#define UV_BOUNDS_CHECK(u, v, NoneType)                                                            \
-  if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f)                                                \
-  {                                                                                                \
-    return NoneType();                                                                             \
+#define UV_BOUNDS_CHECK(u, v, NoneType)             \
+  if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) \
+  {                                                 \
+    return NoneType();                              \
   }
 
   VTKM_CONT
@@ -92,8 +92,7 @@ public:
   class Texture2DSamplerExecutionObject
   {
   public:
-    using TextureExecPortal =
-      typename TextureDataHandle::template ExecutionTypes<Device>::PortalConst;
+    using TextureExecPortal = typename TextureDataHandle::ReadPortalType;
 
     VTKM_CONT
     Texture2DSamplerExecutionObject()

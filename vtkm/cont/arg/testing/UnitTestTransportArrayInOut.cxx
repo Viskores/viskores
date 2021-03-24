@@ -49,9 +49,9 @@ struct TryArrayInOutType
     }
 
     using ArrayHandleType = vtkm::cont::ArrayHandle<T>;
-    ArrayHandleType handle = vtkm::cont::make_ArrayHandle(array, ARRAY_SIZE);
+    ArrayHandleType handle = vtkm::cont::make_ArrayHandle(array, ARRAY_SIZE, vtkm::CopyFlag::Off);
 
-    using PortalType = typename ArrayHandleType::template ExecutionTypes<Device>::Portal;
+    using PortalType = typename ArrayHandleType::WritePortalType;
 
     vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayInOut, ArrayHandleType, Device>
       transport;

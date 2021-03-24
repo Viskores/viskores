@@ -36,8 +36,9 @@ void TestFilledImage(vtkm::cont::DataSet& dataSet,
                    "wrong image dimensions");
   VTKM_TEST_ASSERT(pointField.GetData().template IsType<vtkm::cont::ArrayHandle<vtkm::Vec4f_32>>(),
                    "wrong ArrayHandle type");
-  auto pixelPortal =
-    pointField.GetData().template Cast<vtkm::cont::ArrayHandle<vtkm::Vec4f_32>>().ReadPortal();
+  auto pixelPortal = pointField.GetData()
+                       .template AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec4f_32>>()
+                       .ReadPortal();
 
   auto colorPortal = canvas.GetColorBuffer().ReadPortal();
 
@@ -129,7 +130,6 @@ void TestReadAndWritePNM(const vtkm::rendering::Canvas& canvas,
   }
 }
 
-
 void TestBaseImageMethods(const vtkm::rendering::Canvas& canvas)
 {
   TestCreateImageDataSet(canvas);
@@ -151,8 +151,6 @@ void TestImage()
 {
   vtkm::rendering::Canvas canvas(16, 16);
   canvas.SetBackgroundColor(vtkm::rendering::Color::red);
-  canvas.Initialize();
-  canvas.Activate();
   canvas.Clear();
   // Line from top left to bottom right, ensures correct transposedness
   canvas.AddLine(-0.9, 0.9, 0.9, -0.9, 2.0f, vtkm::rendering::Color::black);

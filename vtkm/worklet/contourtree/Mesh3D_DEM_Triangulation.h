@@ -149,10 +149,10 @@ Mesh3D_DEM_Triangulation<T, StorageType>::Mesh3D_DEM_Triangulation(
   for (vtkm::Id shifter = NumVertices; shifter > 0; shifter >>= 1)
     nLogSteps++;
 
-  neighbourOffsets3D =
-    vtkm::cont::make_ArrayHandle(vtkm::worklet::contourtree::neighbourOffsets3D, 42);
-  linkComponentCaseTable3D =
-    vtkm::cont::make_ArrayHandle(vtkm::worklet::contourtree::linkComponentCaseTable3D, 16384);
+  neighbourOffsets3D = vtkm::cont::make_ArrayHandle(
+    vtkm::worklet::contourtree::neighbourOffsets3D, 42, vtkm::CopyFlag::Off);
+  linkComponentCaseTable3D = vtkm::cont::make_ArrayHandle(
+    vtkm::worklet::contourtree::linkComponentCaseTable3D, 16384, vtkm::CopyFlag::Off);
 }
 
 // sets outgoing paths for saddles

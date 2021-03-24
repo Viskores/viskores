@@ -263,9 +263,7 @@ ConnectivityProxy::ConnectivityProxy(const vtkm::cont::DynamicCellSet& cellset,
 }
 
 VTKM_CONT
-ConnectivityProxy::~ConnectivityProxy()
-{
-}
+ConnectivityProxy::~ConnectivityProxy() {}
 
 VTKM_CONT
 void ConnectivityProxy::SetSampleDistance(const vtkm::Float32& distance)

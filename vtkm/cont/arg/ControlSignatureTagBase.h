@@ -54,8 +54,8 @@ struct ControlSignatureTagCheck
 /// that a template argument is actually an \c ControlSignature tag. (You can
 /// get weird errors elsewhere in the code when a mistake is made.)
 ///
-#define VTKM_IS_CONTROL_SIGNATURE_TAG(tag)                                                         \
-  VTKM_STATIC_ASSERT_MSG(::vtkm::cont::arg::internal::ControlSignatureTagCheck<tag>::Valid,        \
+#define VTKM_IS_CONTROL_SIGNATURE_TAG(tag)                                                  \
+  VTKM_STATIC_ASSERT_MSG(::vtkm::cont::arg::internal::ControlSignatureTagCheck<tag>::Valid, \
                          "Provided a type that is not a valid ControlSignature tag.")
 }
 }

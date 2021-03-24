@@ -19,6 +19,8 @@ set(headers
   FetchTagArrayDirectIn.h
   FetchTagArrayDirectInOut.h
   FetchTagArrayDirectOut.h
+  FetchTagArrayDirectOutArrayHandleGroupVecVariable.h
+  FetchTagArrayDirectOutArrayHandleRecombineVec.h
   FetchTagArrayNeighborhoodIn.h
   FetchTagArrayTopologyMapIn.h
   FetchTagExecObject.h
@@ -33,6 +35,8 @@ set(headers
   ThreadIndicesBasic.h
   ThreadIndicesBasic3D.h
   ThreadIndicesExtrude.h
+  ThreadIndicesNeighborhood.h
+  ThreadIndicesCellNeighborhood.h
   ThreadIndicesPointNeighborhood.h
   ThreadIndicesReduceByKey.h
   ThreadIndicesTopologyMap.h

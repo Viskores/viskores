@@ -39,7 +39,7 @@ public:
                      "Wrong number of fields in the output dataset");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
-    output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+    output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
                        cellFieldArray.ReadPortal().Get(0) == 200.1f,
@@ -68,7 +68,7 @@ public:
                      "Wrong number of fields in the output dataset");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
-    output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+    output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
                        cellFieldArray.ReadPortal().Get(0) == 100.1f &&
@@ -98,7 +98,7 @@ public:
                      "Wrong number of fields in the output dataset");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
-    output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+    output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
                        cellFieldArray.ReadPortal().Get(0) == 100.1f &&
@@ -128,7 +128,7 @@ public:
                      "Wrong number of fields in the output dataset");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
-    output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+    output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 0, "field should be empty");
 

@@ -41,10 +41,11 @@ struct DeduceCoordType
   }
 
   template <typename... Args>
-  void operator()(const vtkm::cont::ArrayHandleUniformPointCoordinates& coords,
-                  const vtkm::cont::CellSetStructured<3>& cells,
-                  vtkm::cont::CellSetSingleType<>& result,
-                  Args&&... args) const
+  void operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>& coords,
+    const vtkm::cont::CellSetStructured<3>& cells,
+    vtkm::cont::CellSetSingleType<>& result,
+    Args&&... args) const
   {
     result = flying_edges::execute(cells, coords, std::forward<Args>(args)...);
   }

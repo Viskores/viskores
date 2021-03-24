@@ -15,7 +15,6 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -53,16 +52,7 @@ vtkm::cont::ArrayHandle<ValueType, StorageTag> MakeInputArray(int arrayId)
   }
 
   // Make an array handle that points to this buffer.
-  using ArrayHandleType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-  ArrayHandleType bufferHandle = vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE);
-
-  // When this function returns, the array is going to go out of scope, which
-  // will invalidate the array handle we just created. So copy to a new buffer
-  // that will stick around after we return.
-  ArrayHandleType copyHandle;
-  vtkm::cont::ArrayCopy(bufferHandle, copyHandle);
-
-  return copyHandle;
+  return vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE, vtkm::CopyFlag::On);
 }
 
 template <typename ValueType, typename C>
@@ -253,26 +243,6 @@ void TrySpecialArrays()
   }
 }
 
-void TestBadArrayLengths()
-{
-  std::cout << "Checking behavior when size of input arrays do not agree." << std::endl;
-
-  using InArrayType = vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag>;
-  InArrayType longInArray = MakeInputArray<vtkm::FloatDefault>(0);
-  InArrayType shortInArray = MakeInputArray<vtkm::FloatDefault>(1);
-  shortInArray.Shrink(ARRAY_SIZE / 2);
-
-  try
-  {
-    vtkm::cont::make_ArrayHandleCompositeVector(longInArray, shortInArray);
-    VTKM_TEST_FAIL("Did not get exception like expected.");
-  }
-  catch (vtkm::cont::ErrorBadValue& error)
-  {
-    std::cout << "Got expected error: " << std::endl << error.GetMessage() << std::endl;
-  }
-}
-
 void TestCompositeVector()
 {
   TryScalarArray<2>();
@@ -282,8 +252,6 @@ void TestCompositeVector()
   TryVector();
 
   TrySpecialArrays();
-
-  TestBadArrayLengths();
 }
 
 } // anonymous namespace

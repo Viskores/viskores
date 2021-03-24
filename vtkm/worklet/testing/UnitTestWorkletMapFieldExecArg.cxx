@@ -75,7 +75,8 @@ struct DoTestWorklet
     }
 
     vtkm::cont::ArrayHandleIndex counting(ARRAY_SIZE);
-    vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inputHandle =
+      vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE, vtkm::CopyFlag::Off);
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> outputFieldArray;
     outputHandle.Allocate(ARRAY_SIZE);

@@ -34,22 +34,19 @@ View2D::View2D(const vtkm::rendering::Scene& scene,
 {
 }
 
-View2D::~View2D()
-{
-}
+View2D::~View2D() {}
 
 void View2D::Paint()
 {
-  this->GetCanvas().Activate();
   this->GetCanvas().Clear();
   this->UpdateCameraProperties();
   this->SetupForWorldSpace();
   this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
-  this->RenderWorldAnnotations();
+  if (this->WorldAnnotationsEnabled)
+    this->RenderWorldAnnotations();
   this->SetupForScreenSpace();
   this->RenderScreenAnnotations();
   this->RenderAnnotations();
-  this->GetCanvas().Finish();
 }
 
 void View2D::RenderScreenAnnotations()

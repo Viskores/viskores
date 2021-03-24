@@ -121,12 +121,12 @@ void TestSplitSharpEdgesSplitEveryEdge(vtkm::cont::DataSet& simpleCube,
   splitSharpEdges.Run(simpleCube.GetCellSet(),
                       featureAngle,
                       faceNormals,
-                      simpleCube.GetCoordinateSystem().GetData(),
+                      simpleCube.GetCoordinateSystem().GetDataAsMultiplexer(),
                       newCoords,
                       newCellset);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> pointvar;
-  simpleCube.GetPointField("pointvar").GetData().CopyTo(pointvar);
+  simpleCube.GetPointField("pointvar").GetData().AsArrayHandle(pointvar);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointFields =
     splitSharpEdges.ProcessPointField(pointvar);
   VTKM_TEST_ASSERT(newCoords.GetNumberOfValues() == 24,
@@ -166,12 +166,12 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
   splitSharpEdges.Run(simpleCube.GetCellSet(),
                       featureAngle,
                       faceNormals,
-                      simpleCube.GetCoordinateSystem().GetData(),
+                      simpleCube.GetCoordinateSystem().GetDataAsMultiplexer(),
                       newCoords,
                       newCellset);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> pointvar;
-  simpleCube.GetPointField("pointvar").GetData().CopyTo(pointvar);
+  simpleCube.GetPointField("pointvar").GetData().AsArrayHandle(pointvar);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointFields =
     splitSharpEdges.ProcessPointField(pointvar);
   VTKM_TEST_ASSERT(newCoords.GetNumberOfValues() == 8,
@@ -213,7 +213,8 @@ void TestSplitSharpEdges()
   vtkm::cont::DataSet simpleCube = Make3DExplicitSimpleCube();
   NormalsArrayHandle faceNormals;
   vtkm::worklet::FacetedSurfaceNormals faceted;
-  faceted.Run(simpleCube.GetCellSet(), simpleCube.GetCoordinateSystem().GetData(), faceNormals);
+  faceted.Run(
+    simpleCube.GetCellSet(), simpleCube.GetCoordinateSystem().GetDataAsMultiplexer(), faceNormals);
 
   vtkm::worklet::SplitSharpEdges splitSharpEdges;
 

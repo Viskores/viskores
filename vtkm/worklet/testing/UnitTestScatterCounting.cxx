@@ -33,65 +33,35 @@ struct TestScatterArrays
 
 TestScatterArrays MakeScatterArraysShort()
 {
-  const vtkm::Id countArraySize = 18;
-  const vtkm::IdComponent countArray[countArraySize] = { 1, 2, 0, 0, 1, 0, 1, 0, 0,
-                                                         0, 0, 0, 0, 0, 1, 0, 0, 0 };
-  const vtkm::Id inputToOutputMap[countArraySize] = { 0, 1, 3, 3, 3, 4, 4, 5, 5,
-                                                      5, 5, 5, 5, 5, 5, 6, 6, 6 };
-  const vtkm::Id outputSize = 6;
-  const vtkm::Id outputToInputMap[outputSize] = { 0, 1, 1, 4, 6, 14 };
-  const vtkm::IdComponent visitArray[outputSize] = { 0, 0, 1, 0, 0, 0 };
-
   TestScatterArrays arrays;
-  using Algorithm = vtkm::cont::Algorithm;
-
-  // Need to copy arrays so that the data does not go out of scope.
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize), arrays.CountArray);
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(inputToOutputMap, countArraySize),
-                  arrays.InputToOutputMap);
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(outputToInputMap, outputSize),
-                  arrays.OutputToInputMap);
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(visitArray, outputSize), arrays.VisitArray);
+  arrays.CountArray = vtkm::cont::make_ArrayHandle<vtkm::IdComponent>(
+    { 1, 2, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 });
+  arrays.InputToOutputMap = vtkm::cont::make_ArrayHandle<vtkm::Id>(
+    { 0, 1, 3, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6 });
+  arrays.OutputToInputMap = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 1, 1, 4, 6, 14 });
+  arrays.VisitArray = vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 1, 0, 0, 0 });
 
   return arrays;
 }
 
 TestScatterArrays MakeScatterArraysLong()
 {
-  const vtkm::Id countArraySize = 6;
-  const vtkm::IdComponent countArray[countArraySize] = { 0, 1, 2, 3, 4, 5 };
-  const vtkm::Id inputToOutputMap[countArraySize] = { 0, 0, 1, 3, 6, 10 };
-  const vtkm::Id outputSize = 15;
-  const vtkm::Id outputToInputMap[outputSize] = { 1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5 };
-  const vtkm::IdComponent visitArray[outputSize] = { 0, 0, 1, 0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4 };
-
   TestScatterArrays arrays;
-  using Algorithm = vtkm::cont::Algorithm;
-
-  // Need to copy arrays so that the data does not go out of scope.
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize), arrays.CountArray);
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(inputToOutputMap, countArraySize),
-                  arrays.InputToOutputMap);
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(outputToInputMap, outputSize),
-                  arrays.OutputToInputMap);
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(visitArray, outputSize), arrays.VisitArray);
+  arrays.CountArray = vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 1, 2, 3, 4, 5 });
+  arrays.InputToOutputMap = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 0, 1, 3, 6, 10 });
+  arrays.OutputToInputMap =
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5 });
+  arrays.VisitArray = vtkm::cont::make_ArrayHandle<vtkm::IdComponent>(
+    { 0, 0, 1, 0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4 });
 
   return arrays;
 }
 
 TestScatterArrays MakeScatterArraysZero()
 {
-  const vtkm::Id countArraySize = 6;
-  const vtkm::IdComponent countArray[countArraySize] = { 0, 0, 0, 0, 0, 0 };
-  const vtkm::Id inputToOutputMap[countArraySize] = { 0, 0, 0, 0, 0, 0 };
-
   TestScatterArrays arrays;
-  using Algorithm = vtkm::cont::Algorithm;
-
-  // Need to copy arrays so that the data does not go out of scope.
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize), arrays.CountArray);
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(inputToOutputMap, countArraySize),
-                  arrays.InputToOutputMap);
+  arrays.CountArray = vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 0, 0, 0, 0 });
+  arrays.InputToOutputMap = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 0, 0, 0, 0, 0 });
   arrays.OutputToInputMap.Allocate(0);
   arrays.VisitArray.Allocate(0);
 
