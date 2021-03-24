@@ -45,7 +45,7 @@ public:
 
   VTKM_CONT
   ExecutionGridEvaluator(const vtkm::cont::CellLocatorGeneral& locator,
-                         std::shared_ptr<vtkm::cont::CellInterpolationHelper> interpolationHelper,
+                         const vtkm::cont::CellInterpolationHelper interpolationHelper,
                          const vtkm::Bounds& bounds,
                          const FieldType& field,
                          const GhostCellArrayType& ghostCells,
@@ -55,7 +55,7 @@ public:
     , Field(field.PrepareForExecution(device, token))
     , GhostCells(ghostCells.PrepareForInput(device, token))
     , HaveGhostCells(ghostCells.GetNumberOfValues() > 0)
-    , InterpolationHelper(interpolationHelper->PrepareForExecution(device, token))
+    , InterpolationHelper(interpolationHelper.PrepareForExecution(device, token))
     , Locator(locator.PrepareForExecution(device, token))
   {
   }
@@ -124,8 +124,7 @@ public:
       vtkm::IdComponent nVerts;
       vtkm::VecVariable<vtkm::Id, 8> ptIndices;
       vtkm::VecVariable<vtkm::Vec3f, 8> fieldValues;
-      InterpolationHelper->GetCellInfo(cellId, cellShape, nVerts, ptIndices);
-
+      this->InterpolationHelper.GetCellInfo(cellId, cellShape, nVerts, ptIndices);
       this->Field.GetValue(ptIndices, nVerts, parametric, cellShape, out);
       status.SetOk();
     }
@@ -148,7 +147,7 @@ private:
   typename FieldType::ExecutionType Field;
   GhostCellPortal GhostCells;
   bool HaveGhostCells;
-  const vtkm::exec::CellInterpolationHelper* InterpolationHelper;
+  vtkm::exec::CellInterpolationHelper InterpolationHelper;
   typename vtkm::cont::CellLocatorGeneral::ExecObjType Locator;
 };
 
@@ -216,32 +215,13 @@ private:
     this->Locator.SetCoordinates(coordinates);
     this->Locator.SetCellSet(cellset);
     this->Locator.Update();
-    if (cellset.IsSameType(Structured2DType()) || cellset.IsSameType(Structured3DType()))
-    {
-      vtkm::cont::StructuredCellInterpolationHelper interpolationHelper(cellset);
-      this->InterpolationHelper =
-        std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
-    }
-    else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
-    {
-      vtkm::cont::SingleCellTypeInterpolationHelper interpolationHelper(cellset);
-      this->InterpolationHelper =
-        std::make_shared<vtkm::cont::SingleCellTypeInterpolationHelper>(interpolationHelper);
-    }
-    else if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
-    {
-      vtkm::cont::ExplicitCellInterpolationHelper interpolationHelper(cellset);
-      this->InterpolationHelper =
-        std::make_shared<vtkm::cont::ExplicitCellInterpolationHelper>(interpolationHelper);
-    }
-    else
-      throw vtkm::cont::ErrorInternal("Unsupported cellset type.");
+    this->InterpolationHelper = vtkm::cont::CellInterpolationHelper(cellset);
   }
 
   vtkm::Bounds Bounds;
   FieldType Field;
   GhostCellArrayType GhostCellArray;
-  std::shared_ptr<vtkm::cont::CellInterpolationHelper> InterpolationHelper;
+  vtkm::cont::CellInterpolationHelper InterpolationHelper;
   vtkm::cont::CellLocatorGeneral Locator;
 };
 
