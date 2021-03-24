@@ -56,13 +56,47 @@ template <typename UnionType>
 using VariantUnionToList =
   typename VariantUnionToListImpl<typename std::decay<UnionType>::type>::type;
 
+struct VariantCopyConstructFunctor
+{
+  template <typename T, typename UnionType>
+  VTK_M_DEVICE void operator()(const T& src, UnionType& destUnion) const noexcept
+  {
+    constexpr vtkm::IdComponent Index = vtkm::ListIndexOf<VariantUnionToList<UnionType>, T>::value;
+    // If we are using this functor, we can assume the union does not hold a valid type.
+    new (&VariantUnionGet<Index>(destUnion)) T(src);
+  }
+};
+
 struct VariantCopyFunctor
 {
   template <typename T, typename UnionType>
   VTK_M_DEVICE void operator()(const T& src, UnionType& destUnion) const noexcept
   {
     constexpr vtkm::IdComponent Index = vtkm::ListIndexOf<VariantUnionToList<UnionType>, T>::value;
-    new (&VariantUnionGet<Index>(destUnion)) T(src);
+    // If we are using this functor, we can assume the union holds type T.
+    this->DoCopy(
+      src, VariantUnionGet<Index>(destUnion), typename std::is_copy_assignable<T>::type{});
+  }
+
+  template <typename T>
+  VTK_M_DEVICE void DoCopy(const T& src, T& dest, std::true_type) const noexcept
+  {
+    dest = src;
+  }
+
+  template <typename T>
+  VTK_M_DEVICE void DoCopy(const T& src, T& dest, std::false_type) const noexcept
+  {
+    if (&src != &dest)
+    {
+      // Do not have an assignment operator, so destroy the old object and create a new one.
+      dest.~T();
+      new (&dest) T(src);
+    }
+    else
+    {
+      // Objects are already the same.
+    }
   }
 };
 
@@ -228,15 +262,22 @@ struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
   VTK_M_DEVICE VariantConstructorImpl(const VariantConstructorImpl& src) noexcept
     : VariantStorageImpl<Ts...>(vtkm::internal::NullType{})
   {
-    src.CastAndCall(VariantCopyFunctor{}, this->Storage);
+    src.CastAndCall(VariantCopyConstructFunctor{}, this->Storage);
     this->Index = src.Index;
   }
 
   VTK_M_DEVICE VariantConstructorImpl& operator=(const VariantConstructorImpl& src) noexcept
   {
-    this->Reset();
-    src.CastAndCall(detail::VariantCopyFunctor{}, this->Storage);
-    this->Index = src.Index;
+    if (this->GetIndex() == src.GetIndex())
+    {
+      src.CastAndCall(detail::VariantCopyFunctor{}, this->Storage);
+    }
+    else
+    {
+      this->Reset();
+      src.CastAndCall(detail::VariantCopyConstructFunctor{}, this->Storage);
+      this->Index = src.Index;
+    }
     return *this;
   }
 };
@@ -312,7 +353,14 @@ public:
   template <typename T>
   VTK_M_DEVICE Variant& operator=(const T& src)
   {
-    this->Emplace<T>(src);
+    if (this->GetIndex() == this->GetIndexOf<T>())
+    {
+      this->Get<T>() = src;
+    }
+    else
+    {
+      this->Emplace<T>(src);
+    }
     return *this;
   }
 

@@ -34,7 +34,7 @@ static vtkm::Id g_NonTrivialCount;
 // A class that must is not trivial to copy nor construct.
 struct NonTrivial
 {
-  vtkm::Id Value = 12345;
+  vtkm::Id Value;
   NonTrivial* Self;
 
   void CheckState() const
@@ -44,17 +44,19 @@ struct NonTrivial
   }
 
   NonTrivial()
-    : Self(this)
+    : Value(12345)
+    , Self(this)
   {
     this->CheckState();
     ++g_NonTrivialCount;
   }
 
   NonTrivial(const NonTrivial& src)
-    : Self(this)
+    : Value(src.Value)
   {
-    this->CheckState();
     src.CheckState();
+    this->Self = this;
+    this->CheckState();
     ++g_NonTrivialCount;
   }
 
@@ -445,9 +447,9 @@ void TestCopyDestroy()
   using VariantType = vtkm::exec::internal::Variant<TypePlaceholder<0>,
                                                     TypePlaceholder<1>,
                                                     CountConstructDestruct,
-                                                    TypePlaceholder<2>,
-                                                    TypePlaceholder<3>>;
-#ifndef VTKM_USING_GLIBCXX_4
+                                                    TypePlaceholder<3>,
+                                                    TypePlaceholder<4>>;
+#ifdef VTKM_USE_STD_IS_TRIVIAL
   VTKM_STATIC_ASSERT(!std::is_trivially_copyable<VariantType>::value);
 #endif // !VTKM_USING_GLIBCXX_4
   vtkm::Id count = 0;
@@ -547,6 +549,19 @@ void TestConstructDestruct()
   VTKM_TEST_ASSERT(g_NonTrivialCount == 0);
 }
 
+void TestCopySelf()
+{
+  std::cout << "Make sure copying a Variant to itself works" << std::endl;
+
+  using VariantType =
+    vtkm::exec::internal::Variant<TypePlaceholder<0>, NonTrivial, TypePlaceholder<2>>;
+
+  VariantType variant{ NonTrivial{} };
+  VariantType& variantRef = variant;
+  variant = variantRef;
+  variant = variant.Get<NonTrivial>();
+}
+
 void RunTest()
 {
   TestSize();
@@ -557,6 +572,7 @@ void RunTest()
   TestCopyDestroy();
   TestEmplace();
   TestConstructDestruct();
+  TestCopySelf();
 }
 
 } // namespace test_variant
