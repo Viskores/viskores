@@ -22,8 +22,8 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/Stepper.h>
 
 #ifdef VTKM_CUDA
 #include <vtkm/cont/cuda/internal/ScopedCudaStackSize.h>
@@ -48,7 +48,7 @@ public:
 
   template <typename IntegratorType, typename IntegralCurveType>
   VTKM_EXEC void operator()(const vtkm::Id& idx,
-                            const IntegratorType* integrator,
+                            const IntegratorType& integrator,
                             IntegralCurveType& integralCurve,
                             const vtkm::Id& maxSteps) const
   {
@@ -66,7 +66,7 @@ public:
     do
     {
       vtkm::Vec3f outpos;
-      auto status = integrator->Step(&particle, time, outpos);
+      auto status = integrator.Step(particle, time, outpos);
       if (status.CheckOk())
       {
         integralCurve.StepUpdate(idx, time, outpos);
@@ -78,7 +78,7 @@ public:
       //Try and take a step just past the boundary.
       else if (status.CheckSpatialBounds())
       {
-        status = integrator->SmallStep(&particle, time, outpos);
+        status = integrator.SmallStep(particle, time, outpos);
         if (status.CheckOk())
         {
           integralCurve.StepUpdate(idx, time, outpos);

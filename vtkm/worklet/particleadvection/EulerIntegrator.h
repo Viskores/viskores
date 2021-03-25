@@ -13,8 +13,6 @@
 #ifndef vtk_m_worklet_particleadvection_EulerIntegrator_h
 #define vtk_m_worklet_particleadvection_EulerIntegrator_h
 
-#include <vtkm/worklet/particleadvection/IntegratorBase.h>
-
 namespace vtkm
 {
 namespace worklet
@@ -22,73 +20,56 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename FieldEvaluateType>
-class EulerIntegrator : public IntegratorBase
+template <typename EvaluatorType>
+class ExecEulerIntegrator
 {
+public:
+  VTKM_EXEC_CONT
+  ExecEulerIntegrator(const EvaluatorType& evaluator)
+    : Evaluator(evaluator)
+  {
+  }
+
+  template <typename Particle>
+  VTKM_EXEC IntegratorStatus CheckStep(Particle& particle,
+                                       vtkm::FloatDefault stepLength,
+                                       vtkm::Vec3f& velocity) const
+  {
+    auto time = particle.Time;
+    auto inpos = particle.Pos;
+    vtkm::VecVariable<vtkm::Vec3f, 2> vectors;
+    GridEvaluatorStatus status = this->Evaluator.Evaluate(inpos, time, vectors);
+    if (status.CheckOk())
+      velocity = particle.Velocity(vectors, stepLength);
+    return IntegratorStatus(status);
+  }
+
+private:
+  EvaluatorType Evaluator;
+};
+
+template <typename EvaluatorType>
+class EulerIntegrator
+{
+private:
+  EvaluatorType Evaluator;
+
 public:
   EulerIntegrator() = default;
 
   VTKM_CONT
-  EulerIntegrator(const FieldEvaluateType& evaluator, const vtkm::FloatDefault stepLength)
-    : IntegratorBase(stepLength)
-    , Evaluator(evaluator)
+  EulerIntegrator(const EvaluatorType& evaluator)
+    : Evaluator(evaluator)
   {
   }
 
-  template <typename Device>
-  class ExecObject
-    : public IntegratorBase::ExecObjectBaseImpl<
-        vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>,
-        typename EulerIntegrator::template ExecObject<Device>>
+  VTKM_CONT auto PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                     vtkm::cont::Token& token) const
+    -> ExecEulerIntegrator<decltype(this->Evaluator.PrepareForExecution(device, token))>
   {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    using FieldEvaluateExecType =
-      vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>;
-    using Superclass =
-      IntegratorBase::ExecObjectBaseImpl<FieldEvaluateExecType,
-                                         typename EulerIntegrator::template ExecObject<Device>>;
-
-  public:
-    VTKM_EXEC_CONT
-    ExecObject(const FieldEvaluateExecType& evaluator,
-               vtkm::FloatDefault stepLength,
-               vtkm::FloatDefault tolerance)
-      : Superclass(evaluator, stepLength, tolerance)
-    {
-    }
-
-    VTKM_EXEC
-    IntegratorStatus CheckStep(vtkm::Particle* particle,
-                               vtkm::FloatDefault stepLength,
-                               vtkm::Vec3f& velocity) const
-    {
-      auto time = particle->Time;
-      auto inpos = particle->Pos;
-      vtkm::VecVariable<vtkm::Vec3f, 2> vectors;
-      GridEvaluatorStatus status = this->Evaluator.Evaluate(inpos, time, vectors);
-      if (status.CheckOk())
-        velocity = particle->Velocity(vectors, stepLength);
-      return IntegratorStatus(status);
-    }
-  };
-
-private:
-  FieldEvaluateType Evaluator;
-
-protected:
-  VTKM_CONT virtual void PrepareForExecutionImpl(
-    vtkm::cont::DeviceAdapterId device,
-    vtkm::cont::VirtualObjectHandle<IntegratorBase::ExecObject>& execObjectHandle,
-    vtkm::cont::Token& token) const override
-  {
-    vtkm::cont::TryExecuteOnDevice(device,
-                                   detail::IntegratorPrepareForExecutionFunctor<ExecObject>(),
-                                   execObjectHandle,
-                                   this->Evaluator,
-                                   this->StepLength,
-                                   this->Tolerance,
-                                   token);
+    auto evaluator = this->Evaluator.PrepareForExecution(device, token);
+    using ExecEvaluatorType = decltype(evaluator);
+    return ExecEulerIntegrator<ExecEvaluatorType>(evaluator);
   }
 }; //EulerIntegrator
 

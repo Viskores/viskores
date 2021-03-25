@@ -16,9 +16,9 @@
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 #include <vtkm/worklet/particleadvection/RK4Integrator.h>
+#include <vtkm/worklet/particleadvection/Stepper.h>
 
 #include <vtkm/worklet/LagrangianStructures.h>
 
@@ -86,7 +86,8 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
   using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
   using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using Integrator = vtkm::worklet::particleadvection::RK4Integrator<GridEvaluator>;
+  using IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<GridEvaluator>;
+  using Stepper = vtkm::worklet::particleadvection::Stepper<IntegratorType, GridEvaluator>;
 
   vtkm::FloatDefault stepSize = this->GetStepSize();
   vtkm::Id numberOfSteps = this->GetNumberOfSteps();
@@ -138,7 +139,7 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
 
     FieldType velocities(field);
     GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), velocities);
-    Integrator integrator(evaluator, stepSize);
+    Stepper integrator(evaluator, stepSize);
     vtkm::worklet::ParticleAdvection particles;
     vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> advectionResult;
     vtkm::cont::ArrayHandle<vtkm::Particle> advectionPoints;

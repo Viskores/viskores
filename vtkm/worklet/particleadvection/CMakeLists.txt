@@ -14,7 +14,7 @@ set(headers
   Field.h
   GridEvaluators.h
   GridEvaluatorStatus.h
-  IntegratorBase.h
+  Stepper.h
   IntegratorStatus.h
   Particles.h
   ParticleAdvectionWorklets.h

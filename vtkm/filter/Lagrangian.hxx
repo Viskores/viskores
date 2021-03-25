@@ -25,9 +25,9 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 #include <vtkm/worklet/particleadvection/RK4Integrator.h>
+#include <vtkm/worklet/particleadvection/Stepper.h>
 
 #include <cstring>
 #include <sstream>
@@ -279,12 +279,14 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
+
   vtkm::worklet::ParticleAdvection particleadvection;
   vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
 
   FieldType velocities(field);
   GridEvalType gridEval(coords, cells, velocities);
-  RK4Type rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
+  Stepper rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
 
   res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
   auto particles = res.Particles;

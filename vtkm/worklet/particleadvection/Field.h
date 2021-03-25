@@ -26,22 +26,8 @@ namespace worklet
 namespace particleadvection
 {
 
-class ExecutionField : public vtkm::VirtualObjectBase
-{
-public:
-  VTKM_EXEC_CONT
-  virtual ~ExecutionField() noexcept override {}
-
-  VTKM_EXEC
-  virtual void GetValue(const vtkm::VecVariable<vtkm::Id, 8>& indices,
-                        const vtkm::Id vertices,
-                        const vtkm::Vec3f& parametric,
-                        const vtkm::UInt8 cellShape,
-                        vtkm::VecVariable<vtkm::Vec3f, 2>& value) const = 0;
-};
-
 template <typename FieldArrayType>
-class ExecutionVelocityField : public vtkm::worklet::particleadvection::ExecutionField
+class ExecutionVelocityField
 {
 public:
   using FieldPortalType = typename FieldArrayType::ReadPortalType;
@@ -73,7 +59,7 @@ private:
 };
 
 template <typename FieldArrayType>
-class ExecutionElectroMagneticField : public vtkm::worklet::particleadvection::ExecutionField
+class ExecutionElectroMagneticField
 {
 public:
   using FieldPortalType = typename FieldArrayType::ReadPortalType;
@@ -112,22 +98,15 @@ private:
   FieldPortalType MagneticValues;
 };
 
-class Field : public vtkm::cont::ExecutionObjectBase
+template <typename FieldArrayType>
+class VelocityField : public vtkm::cont::ExecutionObjectBase
 {
 public:
-  using HandleType = vtkm::cont::VirtualObjectHandle<ExecutionField>;
-
-  virtual ~Field() = default;
+  using ExecutionType = ExecutionVelocityField<FieldArrayType>;
 
   VTKM_CONT
-  virtual const ExecutionField* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
-                                                    vtkm::cont::Token& token) const = 0;
-};
+  VelocityField() = default;
 
-template <typename FieldArrayType>
-class VelocityField : public vtkm::worklet::particleadvection::Field
-{
-public:
   VTKM_CONT
   VelocityField(const FieldArrayType& fieldValues)
     : FieldValues(fieldValues)
@@ -135,24 +114,25 @@ public:
   }
 
   VTKM_CONT
-  const ExecutionField* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
-                                            vtkm::cont::Token& token) const override
+  const ExecutionType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                          vtkm::cont::Token& token) const
   {
-    using ExecutionType = ExecutionVelocityField<FieldArrayType>;
-    ExecutionType* execObject = new ExecutionType(this->FieldValues, device, token);
-    this->ExecHandle.Reset(execObject);
-    return this->ExecHandle.PrepareForExecution(device, token);
+    return ExecutionType(this->FieldValues, device, token);
   }
 
 private:
   FieldArrayType FieldValues;
-  mutable HandleType ExecHandle;
 };
 
 template <typename FieldArrayType>
-class ElectroMagneticField : public vtkm::worklet::particleadvection::Field
+class ElectroMagneticField : public vtkm::cont::ExecutionObjectBase
 {
 public:
+  using ExecutionType = ExecutionElectroMagneticField<FieldArrayType>;
+
+  VTKM_CONT
+  ElectroMagneticField() = default;
+
   VTKM_CONT
   ElectroMagneticField(const FieldArrayType& electricField, const FieldArrayType& magneticField)
     : ElectricField(electricField)
@@ -161,20 +141,15 @@ public:
   }
 
   VTKM_CONT
-  const ExecutionField* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
-                                            vtkm::cont::Token& token) const override
+  const ExecutionType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                          vtkm::cont::Token& token) const
   {
-    using ExecutionType = ExecutionElectroMagneticField<FieldArrayType>;
-    ExecutionType* execObject =
-      new ExecutionType(this->ElectricField, this->MagneticField, device, token);
-    this->ExecHandle.Reset(execObject);
-    return this->ExecHandle.PrepareForExecution(device, token);
+    return ExecutionType(this->ElectricField, this->MagneticField, device, token);
   }
 
 private:
   FieldArrayType ElectricField;
   FieldArrayType MagneticField;
-  mutable HandleType ExecHandle;
 };
 
 } // namespace particleadvection

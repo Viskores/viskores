@@ -21,6 +21,7 @@
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 #include <vtkm/worklet/particleadvection/RK4Integrator.h>
+#include <vtkm/worklet/particleadvection/Stepper.h>
 
 namespace vtkm
 {
@@ -57,11 +58,12 @@ inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(
   using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
 
   //compute streamlines
   FieldType velocities(field);
   GridEvalType eval(coords, cells, velocities);
-  RK4Type rk4(eval, this->StepSize);
+  Stepper rk4(eval, this->StepSize);
 
   vtkm::worklet::Streamline streamline;
 
