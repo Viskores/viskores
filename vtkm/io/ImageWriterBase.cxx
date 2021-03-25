@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/io/FileUtils.h>
 #include <vtkm/io/ImageWriterBase.h>
 
 #include <vtkm/cont/Logging.h>
@@ -75,7 +76,13 @@ void ImageWriterBase::WriteDataSet(const vtkm::cont::DataSet& dataSet,
     }
   }
 
+  if (CreateDirectoriesFromFilePath(this->FileName))
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "Created output directory: " << ParentPath(this->FileName));
+  }
   this->Write(width, height, colorField.GetData().AsArrayHandle<ColorArrayType>());
 }
-}
+
 } // namespace vtkm::io
+} // namespace vtkm

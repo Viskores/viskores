@@ -13,11 +13,13 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Error.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/ImageDifference.h>
 #include <vtkm/internal/Configure.h>
+#include <vtkm/io/FileUtils.h>
 #include <vtkm/io/ImageUtils.h>
 
 #include <fstream>
@@ -36,14 +38,15 @@
 /// missing the image will be generated for that file and the test will continue.
 ///
 template <typename ViewType>
-inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
-                                         const std::vector<std::string>& fileNames,
-                                         const vtkm::IdComponent& averageRadius = 0,
-                                         const vtkm::IdComponent& pixelShiftRadius = 0,
-                                         const vtkm::FloatDefault& allowedPixelErrorRatio = 0.0001f,
-                                         const vtkm::FloatDefault& threshold = 0.05f,
-                                         const bool& writeDiff = true,
-                                         const bool& returnOnPass = true)
+inline TestEqualResult test_equal_images(
+  const std::shared_ptr<ViewType> view,
+  const std::vector<std::string>& fileNames,
+  const vtkm::IdComponent& averageRadius = 0,
+  const vtkm::IdComponent& pixelShiftRadius = 0,
+  const vtkm::FloatDefault& allowedPixelErrorRatio = 0.00025f,
+  const vtkm::FloatDefault& threshold = 0.05f,
+  const bool& writeDiff = true,
+  const bool& returnOnPass = true)
 {
   vtkm::cont::ScopedRuntimeDeviceTracker runtime(vtkm::cont::DeviceAdapterTagAny{});
   TestEqualResult testResults;
@@ -56,8 +59,8 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
 
   view->Paint();
   view->GetCanvas().RefreshColorBuffer();
-  const std::string testImageName =
-    vtkm::cont::testing::Testing::WriteDirPath("test-" + fileNames[0]);
+  const std::string testImageName = vtkm::cont::testing::Testing::WriteDirPath(
+    vtkm::io::PrefixStringToFilename(fileNames[0], "test-"));
   vtkm::io::WriteImageFile(view->GetCanvas().GetDataSet(), testImageName, "color");
 
   for (const auto& fileName : fileNames)
@@ -79,7 +82,8 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
       const std::string outputImagePath = vtkm::cont::testing::Testing::WriteDirPath(fileName);
       vtkm::io::WriteImageFile(view->GetCanvas().GetDataSet(), outputImagePath, "color");
 
-      imageResult.PushMessage("File '" + fileName + "' did not exist but has been generated");
+      imageResult.PushMessage("File '" + fileName +
+                              "' did not exist but has been generated here: " + outputImagePath);
       testResults.PushMessage(imageResult.GetMergedMessage());
       continue;
     }
@@ -110,7 +114,8 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
 
     if (writeDiff && resultDataSet.HasPointField("image-diff"))
     {
-      const std::string diffName = vtkm::cont::testing::Testing::WriteDirPath("diff-" + fileName);
+      const std::string diffName = vtkm::cont::testing::Testing::WriteDirPath(
+        vtkm::io::PrefixStringToFilename(fileName, "diff-"));
       vtkm::io::WriteImageFile(resultDataSet, diffName, "image-diff");
     }
 
@@ -133,13 +138,14 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
 }
 
 template <typename ViewType>
-inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
-                                         const std::string& fileName,
-                                         const vtkm::IdComponent& averageRadius = 0,
-                                         const vtkm::IdComponent& pixelShiftRadius = 0,
-                                         const vtkm::FloatDefault& allowedPixelErrorRatio = 0.0001f,
-                                         const vtkm::FloatDefault& threshold = 0.05f,
-                                         const bool& writeDiff = true)
+inline TestEqualResult test_equal_images(
+  const std::shared_ptr<ViewType> view,
+  const std::string& fileName,
+  const vtkm::IdComponent& averageRadius = 0,
+  const vtkm::IdComponent& pixelShiftRadius = 0,
+  const vtkm::FloatDefault& allowedPixelErrorRatio = 0.00025f,
+  const vtkm::FloatDefault& threshold = 0.05f,
+  const bool& writeDiff = true)
 {
   std::vector<std::string> fileNames{ fileName };
   return test_equal_images(
@@ -165,7 +171,7 @@ inline TestEqualResult test_equal_images_matching_name(
   const std::string& fileName,
   const vtkm::IdComponent& averageRadius = 0,
   const vtkm::IdComponent& pixelShiftRadius = 0,
-  const vtkm::FloatDefault& allowedPixelErrorRatio = 0.0001f,
+  const vtkm::FloatDefault& allowedPixelErrorRatio = 0.00025f,
   const vtkm::FloatDefault& threshold = 0.05f,
   const bool& writeDiff = true,
   const bool& returnOnPass = true)

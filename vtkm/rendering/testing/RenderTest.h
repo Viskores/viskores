@@ -23,6 +23,7 @@
 #include <vtkm/rendering/View1D.h>
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
+#include <vtkm/rendering/testing/Testing.h>
 
 #include <memory>
 
@@ -87,6 +88,11 @@ void Render(ViewType& view, const std::string& outputFile)
   view.SaveAs(outputFile);
 }
 
+// Different methods in which to create a View when provided with different
+// field names, colors, and other utilities for testing 1D, 2D, and 3D views
+
+// Testing Methods for working with what are normally 3D datasets
+// --------------------------------------------------------------
 template <typename MapperType, typename CanvasType, typename ViewType>
 std::shared_ptr<ViewType> GetViewPtr(const vtkm::cont::DataSet& ds,
                                      const std::string& fieldNm,
@@ -117,44 +123,66 @@ template <typename MapperType, typename CanvasType, typename ViewType>
 void Render(const vtkm::cont::DataSet& ds,
             const std::string& fieldNm,
             const vtkm::cont::ColorTable& colorTable,
-            const std::string& outputFile)
+            const std::string& outputFile,
+            const vtkm::Float64& dataViewPadding = 0)
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
   vtkm::rendering::Scene scene;
 
-  auto view =
-    GetViewPtr<MapperType, CanvasType, ViewType>(ds, fieldNm, canvas, mapper, scene, colorTable);
-  Render<MapperType, CanvasType, ViewType>(*view.get(), outputFile);
+  auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
+    ds, fieldNm, canvas, mapper, scene, colorTable, dataViewPadding);
+  Render<MapperType, CanvasType, ViewType>(*view, outputFile);
 }
 
-// A render test that allows for testing different mapper params
 template <typename MapperType, typename CanvasType, typename ViewType>
-void Render(MapperType& mapper,
-            const vtkm::cont::DataSet& ds,
-            const std::string& fieldNm,
-            const vtkm::cont::ColorTable& colorTable,
-            const std::string& outputFile,
-            const vtkm::Float64& dataViewPadding = 0)
+void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
+                             const std::string& fieldNm,
+                             const vtkm::cont::ColorTable& colorTable,
+                             const std::string& outputFile,
+                             const vtkm::Float64& dataViewPadding = 0)
 {
+  MapperType mapper;
   CanvasType canvas(512, 512);
   vtkm::rendering::Scene scene;
 
-  scene.AddActor(vtkm::rendering::Actor(
-    ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fieldNm), colorTable));
+  auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
+    ds, fieldNm, canvas, mapper, scene, colorTable, dataViewPadding);
+  VTKM_TEST_ASSERT(test_equal_images(view, outputFile));
+}
+// --------------------------------------------------------------
+
+// Testing Methods for working with what are normally 2D datasets
+// --------------------------------------------------------------
+template <typename MapperType, typename CanvasType, typename ViewType>
+std::shared_ptr<ViewType> GetViewPtr(const vtkm::cont::DataSet& ds,
+                                     const std::vector<std::string>& fields,
+                                     const std::vector<vtkm::rendering::Color>& colors,
+                                     const CanvasType& canvas,
+                                     const MapperType& mapper,
+                                     vtkm::rendering::Scene& scene,
+                                     const vtkm::Float64& dataViewPadding = 0)
+{
+  size_t numFields = fields.size();
+  for (size_t i = 0; i < numFields; ++i)
+  {
+    scene.AddActor(vtkm::rendering::Actor(
+      ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fields[i]), colors[i]));
+  }
   vtkm::rendering::Camera camera;
   SetCamera<ViewType>(
-    camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fieldNm), dataViewPadding);
+    camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fields[0]), dataViewPadding);
+
   vtkm::rendering::Color background(1.0f, 1.0f, 1.0f, 1.0f);
   vtkm::rendering::Color foreground(0.0f, 0.0f, 0.0f, 1.0f);
-  ViewType view(scene, mapper, canvas, camera, background, foreground);
+  auto view = std::make_shared<ViewType>(scene, mapper, canvas, camera, background, foreground);
 
   // Print the title
   std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen(
       "Test Plot", vtkm::rendering::Color(1, 1, 1, 1), .075f, vtkm::Vec2f_32(-.11f, .92f), 0.f));
-  view.AddAnnotation(std::move(titleAnnotation));
-  Render<MapperType, CanvasType, ViewType>(view, outputFile);
+  view->AddAnnotation(std::move(titleAnnotation));
+  return view;
 }
 
 template <typename MapperType, typename CanvasType, typename ViewType>
@@ -169,26 +197,59 @@ void Render(const vtkm::cont::DataSet& ds,
   canvas.SetBackgroundColor(vtkm::rendering::Color::white);
   vtkm::rendering::Scene scene;
 
-  size_t numFields = fields.size();
-  for (size_t i = 0; i < numFields; ++i)
-  {
-    scene.AddActor(vtkm::rendering::Actor(
-      ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fields[i]), colors[i]));
-  }
+  auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
+    ds, fields, colors, canvas, mapper, scene, dataViewPadding);
+  Render<MapperType, CanvasType, ViewType>(*view, outputFile);
+}
+
+template <typename MapperType, typename CanvasType, typename ViewType>
+void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
+                             const std::vector<std::string>& fields,
+                             const std::vector<vtkm::rendering::Color>& colors,
+                             const std::string& outputFile,
+                             const vtkm::Float64& dataViewPadding = 0)
+{
+  MapperType mapper;
+  CanvasType canvas(512, 512);
+  canvas.SetBackgroundColor(vtkm::rendering::Color::white);
+  vtkm::rendering::Scene scene;
+
+  auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
+    ds, fields, colors, canvas, mapper, scene, dataViewPadding);
+  VTKM_TEST_ASSERT(test_equal_images(view, outputFile));
+}
+// --------------------------------------------------------------
+
+// Testing Methods for working with what are normally 1D datasets
+// --------------------------------------------------------------
+template <typename MapperType, typename CanvasType, typename ViewType>
+std::shared_ptr<ViewType> GetViewPtr(const vtkm::cont::DataSet& ds,
+                                     const std::string& fieldNm,
+                                     const CanvasType& canvas,
+                                     const MapperType& mapper,
+                                     vtkm::rendering::Scene& scene,
+                                     const vtkm::rendering::Color& color,
+                                     const bool logY = false,
+                                     const vtkm::Float64& dataViewPadding = 0)
+{
+  //DRP Actor? no field? no colortable (or a constant colortable) ??
+  scene.AddActor(
+    vtkm::rendering::Actor(ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fieldNm), color));
   vtkm::rendering::Camera camera;
   SetCamera<ViewType>(
-    camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fields[0]), dataViewPadding);
+    camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fieldNm), dataViewPadding);
 
   vtkm::rendering::Color background(1.0f, 1.0f, 1.0f, 1.0f);
   vtkm::rendering::Color foreground(0.0f, 0.0f, 0.0f, 1.0f);
-  ViewType view(scene, mapper, canvas, camera, background, foreground);
+  auto view = std::make_shared<ViewType>(scene, mapper, canvas, camera, background, foreground);
 
   // Print the title
   std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen(
-      "Test Plot", vtkm::rendering::Color(1, 1, 1, 1), .075f, vtkm::Vec2f_32(-.11f, .92f), 0.f));
-  view.AddAnnotation(std::move(titleAnnotation));
-  Render<MapperType, CanvasType, ViewType>(view, outputFile);
+      "1D Test Plot", foreground, .1f, vtkm::Vec2f_32(-.27f, .87f), 0.f));
+  view->AddAnnotation(std::move(titleAnnotation));
+  view->SetLogY(logY);
+  return view;
 }
 
 template <typename MapperType, typename CanvasType, typename ViewType>
@@ -203,25 +264,48 @@ void Render(const vtkm::cont::DataSet& ds,
   CanvasType canvas(512, 512);
   vtkm::rendering::Scene scene;
 
-  //DRP Actor? no field? no colortable (or a constant colortable) ??
-  scene.AddActor(
-    vtkm::rendering::Actor(ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fieldNm), color));
-  vtkm::rendering::Camera camera;
-  SetCamera<ViewType>(
-    camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fieldNm), dataViewPadding);
-
-  vtkm::rendering::Color background(1.0f, 1.0f, 1.0f, 1.0f);
-  vtkm::rendering::Color foreground(0.0f, 0.0f, 0.0f, 1.0f);
-
-  ViewType view(scene, mapper, canvas, camera, background, foreground);
-  // Print the title
-  std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
-    new vtkm::rendering::TextAnnotationScreen(
-      "1D Test Plot", foreground, .1f, vtkm::Vec2f_32(-.27f, .87f), 0.f));
-  view.AddAnnotation(std::move(titleAnnotation));
-  view.SetLogY(logY);
+  auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
+    ds, fieldNm, canvas, mapper, scene, color, logY, dataViewPadding);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
+
+template <typename MapperType, typename CanvasType, typename ViewType>
+void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
+                             const std::string& fieldNm,
+                             const vtkm::rendering::Color& color,
+                             const std::string& outputFile,
+                             const bool logY = false,
+                             const vtkm::Float64& dataViewPadding = 0)
+{
+  MapperType mapper;
+  CanvasType canvas(512, 512);
+  vtkm::rendering::Scene scene;
+
+  auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
+    ds, fieldNm, canvas, mapper, scene, color, logY, dataViewPadding);
+  VTKM_TEST_ASSERT(test_equal_images(view, outputFile));
+}
+// --------------------------------------------------------------
+
+
+// A render test that allows for testing different mapper params
+template <typename MapperType, typename CanvasType, typename ViewType>
+void Render(MapperType& mapper,
+            const vtkm::cont::DataSet& ds,
+            const std::string& fieldNm,
+            const vtkm::cont::ColorTable& colorTable,
+            const std::string& outputFile,
+            const vtkm::Float64& dataViewPadding = 0)
+{
+  CanvasType canvas(512, 512);
+  vtkm::rendering::Scene scene;
+
+  auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
+    ds, fieldNm, canvas, mapper, scene, colorTable, dataViewPadding);
+  Render<MapperType, CanvasType, ViewType>(*view, outputFile);
+}
+
+
 
 template <typename MapperType1, typename MapperType2, typename CanvasType, typename ViewType>
 void MultiMapperRender(const vtkm::cont::DataSet& ds1,

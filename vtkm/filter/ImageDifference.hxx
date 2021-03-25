@@ -41,7 +41,7 @@ inline VTKM_CONT ImageDifference::ImageDifference()
   : vtkm::filter::FilterField<ImageDifference>()
   , AverageRadius(0)
   , PixelShiftRadius(0)
-  , AllowedPixelErrorRatio(0.0001f)
+  , AllowedPixelErrorRatio(0.00025f)
   , PixelDiffThreshold(0.05f)
   , ImageDiffWithinThreshold(true)
   , SecondaryFieldName("image-2")
@@ -122,9 +122,9 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
              "Difference within threshold: "
                << this->ImageDiffWithinThreshold
                << ", for pixels outside threshold: " << errorPixels.GetNumberOfValues()
-               << ", with total number of pixels: " << thresholdOutput.GetNumberOfValues()
-               << ", and an allowable percentage of errored pixels: "
-               << this->AllowedPixelErrorRatio << ", with a total summed threshold error: "
+               << ", with a total number of pixesl: " << thresholdOutput.GetNumberOfValues()
+               << ", and an allowable pixel error ratio: " << this->AllowedPixelErrorRatio
+               << ", with a total summed threshold error: "
                << vtkm::cont::Algorithm::Reduce(errorPixels, static_cast<FloatDefault>(0)));
 
   vtkm::cont::DataSet clone;
