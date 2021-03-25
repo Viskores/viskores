@@ -606,7 +606,8 @@ void TreeGrafter<MeshType, FieldType>::InitializeActiveSuperarcs()
     // vtkm::cont::Algorithm::ScanInclusive(activeSuperarcId , activeSuperarcId);
   }
   // the final element will hold the result
-  vtkm::Id nFree = activeSuperarcId.ReadPortal().Get(activeSuperarcId.GetNumberOfValues() - 1);
+  vtkm::Id nFree =
+    vtkm::cont::ArrayGetValue(activeSuperarcId.GetNumberOfValues() - 1, activeSuperarcId);
   // TODO FIX nFree is 0 here. Check that this is correct. I believe it should be non-zero.
   // resize the active list accordingly
   this->ActiveSuperarcs.Allocate(nFree);
@@ -1422,14 +1423,15 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
 #endif
 
   // update the round counts
-  hierarchicalTree.NumRegularNodesInRound.WritePortal().Set(theRound,
-                                                            this->NewNodes.GetNumberOfValues());
-  hierarchicalTree.NumSupernodesInRound.WritePortal().Set(theRound,
-                                                          this->NewSupernodes.GetNumberOfValues());
-  hierarchicalTree.NumHypernodesInRound.WritePortal().Set(theRound,
-                                                          this->NewHypernodes.GetNumberOfValues());
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    theRound, this->NewNodes.GetNumberOfValues(), hierarchicalTree.NumRegularNodesInRound);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    theRound, this->NewSupernodes.GetNumberOfValues(), hierarchicalTree.NumSupernodesInRound);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    theRound, this->NewHypernodes.GetNumberOfValues(), hierarchicalTree.NumHypernodesInRound);
   // last iteration is just setting attachment points (but we are including this now) (previously added -1)
-  hierarchicalTree.NumIterations.WritePortal().Set(theRound, this->NumTransferIterations);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    theRound, this->NumTransferIterations, hierarchicalTree.NumIterations);
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -1501,10 +1503,6 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
       hierarchicalTree.FirstHypernodePerIteration[static_cast<std::size_t>(theRound)] //output
     );
   }
-
-  // force the extra one to be one-off-the end for safety; REMOVED - SEE ABOVE FOR LOGIC
-  //hierarchicalTree.FirstHypernodePerIteration[static_cast<size_t>(theRound)].WritePortal().Set(
-  //  this->NumTransferIterations, hierarchicalTree.Hypernodes.GetNumberOfValues());
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,

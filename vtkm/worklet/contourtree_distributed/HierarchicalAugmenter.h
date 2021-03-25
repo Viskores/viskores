@@ -519,6 +519,7 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   // The last element in the array is always set to the size as a sentinel value
   // We need to pull the firstAttachmentPointInRound array to the control environment
   // anyways for the loop afterwards so can do this set here without using Copy
+  // Use regular WritePortal here since we need to update a number of values and the array should be small
   auto firstAttachmentPointInRoundPortal = this - FirstAttachmentPointInRound.WritePortal();
   firstAttachmentPointInRoundPortal.Set(this->BaseTree->nRounds + 1,
                                         this->AttachmentIs.GetNumberOfValues());
@@ -894,13 +895,12 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
   vtkm::Id newSupernodeCount = numSupernodesAlready + numSupernodesThisLevel;
 
   // conveniently, the value numSupernodesThisLevel is the number of supernodes *!AND!* regular nodes to store for the round
-  // TODO: These calls could be changed to avoid potential device copy, but I believe they are actually used
-  //       mainly in the control environment and they should be small arrays, so setting them directly should be Ok.
-  this->AugmentedTree->NumRegularNodesInRound.WritePortal().Set(roundNumber,
-                                                                numSupernodesThisLevel);
-  this->AugmentedTree->NumSupernodesInRound.WritePortal().Set(roundNumber, numSupernodesThisLevel);
-  this->AugmentedTree->FirstSupernodePerIteration[roundNumber].WritePortal().Set(
-    0, numSupernodesAlready);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    roundNumber, numSupernodesThisLevel, this->AugmentedTree->NumRegularNodesInRound);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    roundNumber, numSupernodesThisLevel, this->AugmentedTree->NumSupernodesInRound);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    0, numSupernodesAlready, this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
 
   // resize the arrays accordingly
   {
@@ -1158,12 +1158,15 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(vtkm::Id roundNumber)
     if (lastIterationThisLevel < iterationArraySize - 1)
     { // attachment point round was removed
       // decrement the iteration count (still with an extra element as sentinel)
-      this->AugmentedTree->NumIterations.WritePortal(roundNumber, iterationArraySize - 1);
+      vtkm::worklet::contourtree_augmented::IdArraySetValue(
+        roundNumber, iterationArraySize - 1, this->AugmentedTree->NumIterations);
       // shrink the supernode array
       this->AugmentedTree->FirstSupernodePerIteration[roundNumber].Allocate(
         iterationArraySize, vtkm::CopyFlag::On); // shrink array but keep values
-      this->AugmentedTree->FirstSupernodePerIteration[roundNumber].WritePortal().Set(
-        iterationArraySize - 1, this->AugmentedTree->Supernodes.GetNumberOfValues());
+      vtkm::worklet::contourtree_augmented::IdArraySetValue(
+        iterationArraySize - 1,
+        this->AugmentedTree->Supernodes.GetNumberOfValues(),
+        this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
       // for the hypernode array, the last iteration is guaranteed not to have hyperarcs by construction
       // so the last iteration will already have the correct sentinel value, and we just need to shrink the array
       this->AugmentedTree->FirstHypernodePerIteration[roundNumber].Allocate(

@@ -55,7 +55,9 @@
 #define vtk_m_worklet_contourtree_augmented_types_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/CellSetStructured.h>
 
 namespace vtkm
@@ -126,12 +128,20 @@ inline vtkm::Id MaskedIndex(vtkm::Id flaggedIndex)
   return (flaggedIndex & INDEX_MASK);
 } // MaskedIndex()
 
-// Used in the context of CombinedVector class used in ContourTreeMesh to merge the mesh of contour trees
+/// Used in the context of CombinedVector class used in ContourTreeMesh to merge the mesh of contour trees
 VTKM_EXEC_CONT
 inline bool IsThis(vtkm::Id flaggedIndex)
 { // IsThis
   return ((flaggedIndex & CV_OTHER_FLAG) == 0);
 } // IsThis
+
+/// Helper function to set a single array valye with CopySubRange to avoid pulling the array to the control environment
+VTKM_EXEC_CONT
+inline void IdArraySetValue(vtkm::Id index, vtkm::Id value, IdArrayType& arr)
+{ // IdArraySetValue
+  vtkm::cont::Algorithm::CopySubRange(
+    vtkm::cont::ArrayHandleConstant<vtkm::Id>(value, 1), 0, 1, arr, index);
+} // IdArraySetValues
 
 template <typename T>
 struct MaskedIndexFunctor

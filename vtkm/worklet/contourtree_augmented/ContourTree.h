@@ -253,6 +253,7 @@ inline void ContourTree::PrintDotSuperStructure() const
   printf("digraph G\n\t{\n");
   printf("\tsize=\"6.5, 9\"\n\tratio=\"fill\"\n");
 
+  // We use regular ReadPortal here since we need access to most values on the host anyways
   auto whenTransferredPortal = this->WhenTransferred.ReadPortal();
   auto supernodesPortal = this->Supernodes.ReadPortal();
   auto superarcsPortal = this->Superarcs.ReadPortal();
@@ -341,6 +342,7 @@ inline std::string ContourTree::PrintHyperStructureStatistics(bool print) const
   std::vector<vtkm::Id> maxPath;
   std::vector<vtkm::Id> supernodeCount;
   std::vector<vtkm::Id> hypernodeCount;
+  // We use regular ReadPortal here since we need access to all values anyways
   auto whenTransferredPortal = this->WhenTransferred.ReadPortal();
   auto hypernodesPortal = this->Hypernodes.ReadPortal();
 
