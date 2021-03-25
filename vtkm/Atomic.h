@@ -236,7 +236,7 @@ VTKM_EXEC_CONT inline vtkm::Float32 vtkmAtomicAddImpl(vtkm::Float32* address,
   do
   {
     assumed = old;
-    old = atomicCAS(reinterpret_cast<volatile vtkm::UInt32*>(address),
+    old = atomicCAS(reinterpret_cast<vtkm::UInt32*>(address),
                     assumed,
                     __float_as_int(__int_as_float(assumed) + value));
   } while (assumed != old);
@@ -255,7 +255,7 @@ VTKM_EXEC_CONT inline vtkm::Float64 vtkmAtomicAdd(vtkm::Float64* address,
   do
   {
     assumed = old;
-    old = atomicCAS(reinterpret_cast<volatile vtkm::UInt64*>(address),
+    old = atomicCAS(reinterpret_cast<vtkm::UInt64*>(address),
                     assumed,
                     __double_as_longlong(__longlong_as_double(assumed) + value));
   } while (assumed != old);
