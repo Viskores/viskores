@@ -207,7 +207,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(const vtkm::cont::Unknown
     }
     if (array.IsStorageType<vtkm::cont::StorageTagXGCCoordinates>())
     {
-      return ComputeForStorage<vtkm::TypeListFieldScalar, vtkm::cont::StorageTagXGCCoordinates>(
+      return ComputeForStorage<vtkm::TypeListFieldVec3, vtkm::cont::StorageTagXGCCoordinates>(
         array, device);
     }
     if (array.IsStorageType<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>())
@@ -222,7 +222,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(const vtkm::cont::Unknown
                                              vtkm::cont::StorageTagBasic>;
     if (array.IsStorageType<CartesianProductStorage>())
     {
-      return ComputeForStorage<vtkm::TypeListFieldScalar, CartesianProductStorage>(array, device);
+      return ComputeForStorage<vtkm::TypeListFieldVec3, CartesianProductStorage>(array, device);
     }
     if (array.IsStorageType<vtkm::cont::StorageTagConstant>())
     {
