@@ -306,6 +306,7 @@ union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13,
   T17 V17;
   T18 V18;
   T19 V19;
+  vtkm::internal::NullType Remaining;
 
   VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
   VariantUnionTD() = default;
@@ -334,6 +335,7 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13
   T17 V17;
   T18 V18;
   T19 V19;
+  vtkm::internal::NullType Remaining;
 
   VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
   VariantUnionNTD() = default;
@@ -343,7 +345,6 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
 union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
 {
-  vtkm::internal::NullType Dummy;
   T0 V0;
   T1 V1;
   T2 V2;
@@ -373,7 +374,6 @@ union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13,
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
 union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
 {
-  vtkm::internal::NullType Dummy;
   T0 V0;
   T1 V1;
   T2 V2;
@@ -728,892 +728,201 @@ VTK_M_DEVICE auto VariantUnionGet(UnionType& storage) noexcept
   return VariantUnionGetImpl<I, typename std::decay<UnionType>::type>::Get(storage);
 }
 
-// --------------------------------------------------------------------------------
-// Internal implementation of CastAndCall for Variant
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 1>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 2>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 3>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 4>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 5>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 6>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 7>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 8>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 9>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 10>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 11>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 12>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    case 11:
-      return f(storage.V11, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 13>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    case 11:
-      return f(storage.V11, std::forward<Args>(args)...);
-    case 12:
-      return f(storage.V12, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 14>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    case 11:
-      return f(storage.V11, std::forward<Args>(args)...);
-    case 12:
-      return f(storage.V12, std::forward<Args>(args)...);
-    case 13:
-      return f(storage.V13, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 15>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    case 11:
-      return f(storage.V11, std::forward<Args>(args)...);
-    case 12:
-      return f(storage.V12, std::forward<Args>(args)...);
-    case 13:
-      return f(storage.V13, std::forward<Args>(args)...);
-    case 14:
-      return f(storage.V14, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 16>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    case 11:
-      return f(storage.V11, std::forward<Args>(args)...);
-    case 12:
-      return f(storage.V12, std::forward<Args>(args)...);
-    case 13:
-      return f(storage.V13, std::forward<Args>(args)...);
-    case 14:
-      return f(storage.V14, std::forward<Args>(args)...);
-    case 15:
-      return f(storage.V15, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 17>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    case 11:
-      return f(storage.V11, std::forward<Args>(args)...);
-    case 12:
-      return f(storage.V12, std::forward<Args>(args)...);
-    case 13:
-      return f(storage.V13, std::forward<Args>(args)...);
-    case 14:
-      return f(storage.V14, std::forward<Args>(args)...);
-    case 15:
-      return f(storage.V15, std::forward<Args>(args)...);
-    case 16:
-      return f(storage.V16, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 18>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    case 11:
-      return f(storage.V11, std::forward<Args>(args)...);
-    case 12:
-      return f(storage.V12, std::forward<Args>(args)...);
-    case 13:
-      return f(storage.V13, std::forward<Args>(args)...);
-    case 14:
-      return f(storage.V14, std::forward<Args>(args)...);
-    case 15:
-      return f(storage.V15, std::forward<Args>(args)...);
-    case 16:
-      return f(storage.V16, std::forward<Args>(args)...);
-    case 17:
-      return f(storage.V17, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 19>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    case 11:
-      return f(storage.V11, std::forward<Args>(args)...);
-    case 12:
-      return f(storage.V12, std::forward<Args>(args)...);
-    case 13:
-      return f(storage.V13, std::forward<Args>(args)...);
-    case 14:
-      return f(storage.V14, std::forward<Args>(args)...);
-    case 15:
-      return f(storage.V15, std::forward<Args>(args)...);
-    case 16:
-      return f(storage.V16, std::forward<Args>(args)...);
-    case 17:
-      return f(storage.V17, std::forward<Args>(args)...);
-    case 18:
-      return f(storage.V18, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, 20>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    case 11:
-      return f(storage.V11, std::forward<Args>(args)...);
-    case 12:
-      return f(storage.V12, std::forward<Args>(args)...);
-    case 13:
-      return f(storage.V13, std::forward<Args>(args)...);
-    case 14:
-      return f(storage.V14, std::forward<Args>(args)...);
-    case 15:
-      return f(storage.V15, std::forward<Args>(args)...);
-    case 16:
-      return f(storage.V16, std::forward<Args>(args)...);
-    case 17:
-      return f(storage.V17, std::forward<Args>(args)...);
-    case 18:
-      return f(storage.V18, std::forward<Args>(args)...);
-    case 19:
-      return f(storage.V19, std::forward<Args>(args)...);
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
 //clang-format on
 
-// Recurse for cases where Variant has more than 20 types
-template <vtkm::IdComponent N,
+// --------------------------------------------------------------------------------
+// Internal implementation of CastAndCall for Variant
+template <typename ReturnType,
           typename Functor,
-          typename UnionType,
+          typename CastMember,
           typename... Args>
+VTK_M_DEVICE inline ReturnType VariantCallFunctor(
+  std::false_type,
+  Functor&& f,
+  CastMember& value,
+  Args&&... args) noexcept(noexcept(f(value, args...)))
+{
+  // If you get a compile error here, it probably means that you have called Variant::CastAndCall
+  // with a functor that does not accept one of the types in the Variant. The functor you provide
+  // must be callable with all types in the Variant, not just the one that it currently holds.
+  return f(value, std::forward<Args>(args)...);
+}
+
+template <typename ReturnType,
+          typename Functor,
+          typename... Args>
+VTK_M_DEVICE inline ReturnType VariantCallFunctor(
+  std::true_type, Functor&&, vtkm::internal::NullType, Args&&...) noexcept
+{
+  // If we are here, it means a Variant had an inappropriate index.
+  VTKM_ASSERT(false && "Internal error, bad Variant state.");
+  return VariantDummyReturn<ReturnType>::F();
+}
+
+// Terminating condition in recursive template
+template <typename ReturnType, typename Functor, typename... Args>
+VTK_M_DEVICE inline ReturnType VariantCastAndCallImplR(
+  std::true_type,
+  vtkm::IdComponent vtkmNotUsed(index),
+  Functor&& vtkmNotUsed(f),
+  vtkm::internal::NullType,
+  Args&&... vtkmNotUsed(args)) noexcept
+{
+  // If we are here, it means a Variant had an inappropriate index.
+  VTKM_ASSERT(false && "Internal error, bad Variant state.");
+  return VariantDummyReturn<ReturnType>::F();
+}
+
+template <typename ReturnType, typename Functor, typename UnionType, typename... Args>
+VTK_M_DEVICE inline ReturnType VariantCastAndCallImplR(
+  std::false_type,
+  vtkm::IdComponent index,
+  Functor&& f,
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+{
+  switch (index)
+  {
+    case 0:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V0), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V0,
+        std::forward<Args>(args)...);
+    case 1:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V1), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V1,
+        std::forward<Args>(args)...);
+    case 2:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V2), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V2,
+        std::forward<Args>(args)...);
+    case 3:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V3), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V3,
+        std::forward<Args>(args)...);
+    case 4:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V4), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V4,
+        std::forward<Args>(args)...);
+    case 5:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V5), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V5,
+        std::forward<Args>(args)...);
+    case 6:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V6), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V6,
+        std::forward<Args>(args)...);
+    case 7:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V7), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V7,
+        std::forward<Args>(args)...);
+    case 8:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V8), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V8,
+        std::forward<Args>(args)...);
+    case 9:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V9), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V9,
+        std::forward<Args>(args)...);
+    case 10:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V10), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V10,
+        std::forward<Args>(args)...);
+    case 11:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V11), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V11,
+        std::forward<Args>(args)...);
+    case 12:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V12), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V12,
+        std::forward<Args>(args)...);
+    case 13:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V13), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V13,
+        std::forward<Args>(args)...);
+    case 14:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V14), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V14,
+        std::forward<Args>(args)...);
+    case 15:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V15), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V15,
+        std::forward<Args>(args)...);
+    case 16:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V16), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V16,
+        std::forward<Args>(args)...);
+    case 17:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V17), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V17,
+        std::forward<Args>(args)...);
+    case 18:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V18), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V18,
+        std::forward<Args>(args)...);
+    case 19:
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V19), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V19,
+        std::forward<Args>(args)...);
+    default:
+      return VariantCastAndCallImplR<ReturnType>(
+        typename std::is_same<decltype(storage.Remaining), vtkm::internal::NullType>::type{},
+        index - 20,
+        std::forward<Functor>(f),
+        storage.Remaining,
+        std::forward<Args>(args)...);
+  }
+}
+
+template <typename Functor, typename UnionType, typename... Args>
 VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, N>,
   vtkm::IdComponent index,
   Functor&& f,
   UnionType& storage,
   Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
   -> decltype(f(storage.V0, args...))
 {
-  switch (index)
-  {
-    case 0:
-      return f(storage.V0, std::forward<Args>(args)...);
-    case 1:
-      return f(storage.V1, std::forward<Args>(args)...);
-    case 2:
-      return f(storage.V2, std::forward<Args>(args)...);
-    case 3:
-      return f(storage.V3, std::forward<Args>(args)...);
-    case 4:
-      return f(storage.V4, std::forward<Args>(args)...);
-    case 5:
-      return f(storage.V5, std::forward<Args>(args)...);
-    case 6:
-      return f(storage.V6, std::forward<Args>(args)...);
-    case 7:
-      return f(storage.V7, std::forward<Args>(args)...);
-    case 8:
-      return f(storage.V8, std::forward<Args>(args)...);
-    case 9:
-      return f(storage.V9, std::forward<Args>(args)...);
-    case 10:
-      return f(storage.V10, std::forward<Args>(args)...);
-    case 11:
-      return f(storage.V11, std::forward<Args>(args)...);
-    case 12:
-      return f(storage.V12, std::forward<Args>(args)...);
-    case 13:
-      return f(storage.V13, std::forward<Args>(args)...);
-    case 14:
-      return f(storage.V14, std::forward<Args>(args)...);
-    case 15:
-      return f(storage.V15, std::forward<Args>(args)...);
-    case 16:
-      return f(storage.V16, std::forward<Args>(args)...);
-    case 17:
-      return f(storage.V17, std::forward<Args>(args)...);
-    case 18:
-      return f(storage.V18, std::forward<Args>(args)...);
-    case 19:
-      return f(storage.V19, std::forward<Args>(args)...);
-    default:
-      return VariantCastAndCallImpl(std::integral_constant<vtkm::IdComponent, N - 20>{},
-                                    index - 20,
-                                    std::forward<Functor>(f),
-                                    storage.Remaining,
-                                    std::forward<Args>(args)...);
-  }
+  return VariantCastAndCallImplR<decltype(f(storage.V0, args...))>(
+    std::false_type{}, index, std::forward<Functor>(f), storage, std::forward<Args>(args)...);
 }
 
 }

@@ -197,6 +197,7 @@ union VariantUnionTD<$type_list(max_expanded - 1)>
 $for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
 $endfor\
+  vtkm::internal::NullType Remaining;
 
   VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
   VariantUnionTD() = default;
@@ -208,6 +209,7 @@ union VariantUnionNTD<$type_list(max_expanded - 1)>
 $for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
 $endfor\
+  vtkm::internal::NullType Remaining;
 
   VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
   VariantUnionNTD() = default;
@@ -217,7 +219,6 @@ $endfor\
 template <$typename_list(max_expanded), typename... Ts>
 union VariantUnionTD<$type_list(max_expanded), Ts...>
 {
-  vtkm::internal::NullType Dummy;
 $for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
 $endfor\
@@ -230,7 +231,6 @@ $endfor\
 template <$typename_list(max_expanded), typename... Ts>
 union VariantUnionNTD<$type_list(max_expanded), Ts...>
 {
-  vtkm::internal::NullType Dummy;
 $for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
 $endfor\
@@ -304,62 +304,89 @@ VTK_M_DEVICE auto VariantUnionGet(UnionType& storage) noexcept
   return VariantUnionGetImpl<I, typename std::decay<UnionType>::type>::Get(storage);
 }
 
-// --------------------------------------------------------------------------------
-// Internal implementation of CastAndCall for Variant
-$for(num_params in range(max_expanded))\
-template <typename Functor,
-          typename UnionType,
-          typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, $(num_params + 1)>,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
-{
-  switch (index)
-  {
-$for(param_index in range(num_params + 1))\
-    case $(param_index):
-      return f(storage.V$(param_index), std::forward<Args>(args)...);
-$endfor\
-    default:
-      // If we are here, it means we failed to find the appropriate type in a variant
-      VTKM_ASSERT(false && "Internal error, bad Variant state.");
-      return VariantDummyReturn<decltype(f(storage.V0, args...))>::F();
-  }
-}
-
-$endfor\
 //clang-format on
 
-// Recurse for cases where Variant has more than $(max_expanded) types
-template <vtkm::IdComponent N,
+// --------------------------------------------------------------------------------
+// Internal implementation of CastAndCall for Variant
+template <typename ReturnType,
           typename Functor,
-          typename UnionType,
+          typename CastMember,
           typename... Args>
-VTK_M_DEVICE inline auto VariantCastAndCallImpl(
-  std::integral_constant<vtkm::IdComponent, N>,
+VTK_M_DEVICE inline ReturnType VariantCallFunctor(
+  std::false_type,
+  Functor&& f,
+  CastMember& value,
+  Args&&... args) noexcept(noexcept(f(value, args...)))
+{
+  // If you get a compile error here, it probably means that you have called Variant::CastAndCall
+  // with a functor that does not accept one of the types in the Variant. The functor you provide
+  // must be callable with all types in the Variant, not just the one that it currently holds.
+  return f(value, std::forward<Args>(args)...);
+}
+
+template <typename ReturnType,
+          typename Functor,
+          typename... Args>
+VTK_M_DEVICE inline ReturnType VariantCallFunctor(
+  std::true_type, Functor&&, vtkm::internal::NullType, Args&&...) noexcept
+{
+  // If we are here, it means a Variant had an inappropriate index.
+  VTKM_ASSERT(false && "Internal error, bad Variant state.");
+  return VariantDummyReturn<ReturnType>::F();
+}
+
+// Terminating condition in recursive template
+template <typename ReturnType, typename Functor, typename... Args>
+VTK_M_DEVICE inline ReturnType VariantCastAndCallImplR(
+  std::true_type,
+  vtkm::IdComponent vtkmNotUsed(index),
+  Functor&& vtkmNotUsed(f),
+  vtkm::internal::NullType,
+  Args&&... vtkmNotUsed(args)) noexcept
+{
+  // If we are here, it means a Variant had an inappropriate index.
+  VTKM_ASSERT(false && "Internal error, bad Variant state.");
+  return VariantDummyReturn<ReturnType>::F();
+}
+
+template <typename ReturnType, typename Functor, typename UnionType, typename... Args>
+VTK_M_DEVICE inline ReturnType VariantCastAndCallImplR(
+  std::false_type,
   vtkm::IdComponent index,
   Functor&& f,
   UnionType& storage,
   Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-  -> decltype(f(storage.V0, args...))
 {
   switch (index)
   {
 $for(param_index in range(max_expanded))\
     case $(param_index):
-      return f(storage.V$(param_index), std::forward<Args>(args)...);
+      return VariantCallFunctor<ReturnType>(
+        typename std::is_same<decltype(storage.V$(param_index)), vtkm::internal::NullType>::type{},
+        std::forward<Functor>(f),
+        storage.V$(param_index),
+        std::forward<Args>(args)...);
 $endfor\
     default:
-      return VariantCastAndCallImpl(std::integral_constant<vtkm::IdComponent, N - $(max_expanded)>{},
-                                    index - $(max_expanded),
-                                    std::forward<Functor>(f),
-                                    storage.Remaining,
-                                    std::forward<Args>(args)...);
+      return VariantCastAndCallImplR<ReturnType>(
+        typename std::is_same<decltype(storage.Remaining), vtkm::internal::NullType>::type{},
+        index - $(max_expanded),
+        std::forward<Functor>(f),
+        storage.Remaining,
+        std::forward<Args>(args)...);
   }
+}
+
+template <typename Functor, typename UnionType, typename... Args>
+VTK_M_DEVICE inline auto VariantCastAndCallImpl(
+  vtkm::IdComponent index,
+  Functor&& f,
+  UnionType& storage,
+  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+  -> decltype(f(storage.V0, args...))
+{
+  return VariantCastAndCallImplR<decltype(f(storage.V0, args...))>(
+    std::false_type{}, index, std::forward<Functor>(f), storage, std::forward<Args>(args)...);
 }
 
 }

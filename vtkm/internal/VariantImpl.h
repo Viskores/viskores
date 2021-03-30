@@ -179,11 +179,8 @@ struct VariantStorageImpl
       -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
-    return detail::VariantCastAndCallImpl(vtkm::ListSize<vtkm::List<Ts...>>{},
-                                          this->GetIndex(),
-                                          std::forward<Functor>(f),
-                                          this->Storage,
-                                          std::forward<Args>(args)...);
+    return detail::VariantCastAndCallImpl(
+      this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 
   template <typename Functor, typename... Args>
@@ -192,11 +189,8 @@ struct VariantStorageImpl
     -> decltype(f(std::declval<TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
-    return detail::VariantCastAndCallImpl(vtkm::ListSize<vtkm::List<Ts...>>{},
-                                          this->GetIndex(),
-                                          std::forward<Functor>(f),
-                                          this->Storage,
-                                          std::forward<Args>(args)...);
+    return detail::VariantCastAndCallImpl(
+      this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 };
 
@@ -466,11 +460,7 @@ public:
   {
     VTKM_ASSERT(this->IsValid());
     return detail::VariantCastAndCallImpl(
-      std::integral_constant<vtkm::IdComponent, NumberOfTypes>{},
-      this->GetIndex(),
-      std::forward<Functor>(f),
-      this->Storage,
-      std::forward<Args>(args)...);
+      this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 
   template <typename Functor, typename... Args>
@@ -480,11 +470,7 @@ public:
   {
     VTKM_ASSERT(this->IsValid());
     return detail::VariantCastAndCallImpl(
-      std::integral_constant<vtkm::IdComponent, NumberOfTypes>{},
-      this->GetIndex(),
-      std::forward<Functor>(f),
-      this->Storage,
-      std::forward<Args>(args)...);
+      this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 
   /// Destroys any object the Variant is holding and sets the Variant to an invalid state. This
