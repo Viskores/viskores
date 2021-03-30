@@ -36,6 +36,10 @@ using FloatVec3 = vtkm::Vec3f;
 struct Grid
 {
   DimVec3 Dimensions;
+  // Bug in CUDA 9.2 where having this gap for alignment was for some reason setting garbage
+  // in a union with other cell locators (or perhaps not properly copying data). This appears
+  // to be fixed by CUDA 10.2.
+  DimensionType Padding;
   FloatVec3 Origin;
   FloatVec3 BinSize;
 };
@@ -54,6 +58,7 @@ VTKM_EXEC inline vtkm::Id ComputeFlatIndex(const DimVec3& idx, const DimVec3 dim
 VTKM_EXEC inline Grid ComputeLeafGrid(const DimVec3& idx, const DimVec3& dim, const Grid& l1Grid)
 {
   return { dim,
+           0,
            l1Grid.Origin + (static_cast<FloatVec3>(idx) * l1Grid.BinSize),
            l1Grid.BinSize / static_cast<FloatVec3>(dim) };
 }
