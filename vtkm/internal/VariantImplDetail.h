@@ -51,258 +51,32 @@ struct VariantDummyReturn<void>
 
 // --------------------------------------------------------------------------------
 // Helper classes to determine if all Variant types are trivial.
-template <typename... Ts>
+template <typename T0 = vtkm::internal::NullType,
+          typename T1 = vtkm::internal::NullType,
+          typename T2 = vtkm::internal::NullType,
+          typename T3 = vtkm::internal::NullType,
+          typename T4 = vtkm::internal::NullType,
+          typename T5 = vtkm::internal::NullType,
+          typename T6 = vtkm::internal::NullType,
+          typename T7 = vtkm::internal::NullType,
+          typename T8 = vtkm::internal::NullType,
+          typename T9 = vtkm::internal::NullType,
+          typename T10 = vtkm::internal::NullType,
+          typename T11 = vtkm::internal::NullType,
+          typename T12 = vtkm::internal::NullType,
+          typename T13 = vtkm::internal::NullType,
+          typename T14 = vtkm::internal::NullType,
+          typename T15 = vtkm::internal::NullType,
+          typename T16 = vtkm::internal::NullType,
+          typename T17 = vtkm::internal::NullType,
+          typename T18 = vtkm::internal::NullType,
+          typename T19 = vtkm::internal::NullType,
+          typename... Ts>
 struct AllTriviallyCopyable;
 
-template <typename T0>
-struct AllTriviallyCopyable<T0>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  true)> { };
-template <typename T0, typename T1>
-struct AllTriviallyCopyable<T0, T1>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2>
-struct AllTriviallyCopyable<T0, T1, T2>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3>
-struct AllTriviallyCopyable<T0, T1, T2, T3>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  vtkmstd::is_trivially_copyable<T11>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  vtkmstd::is_trivially_copyable<T11>::value &&
-                                  vtkmstd::is_trivially_copyable<T12>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  vtkmstd::is_trivially_copyable<T11>::value &&
-                                  vtkmstd::is_trivially_copyable<T12>::value &&
-                                  vtkmstd::is_trivially_copyable<T13>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  vtkmstd::is_trivially_copyable<T11>::value &&
-                                  vtkmstd::is_trivially_copyable<T12>::value &&
-                                  vtkmstd::is_trivially_copyable<T13>::value &&
-                                  vtkmstd::is_trivially_copyable<T14>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  vtkmstd::is_trivially_copyable<T11>::value &&
-                                  vtkmstd::is_trivially_copyable<T12>::value &&
-                                  vtkmstd::is_trivially_copyable<T13>::value &&
-                                  vtkmstd::is_trivially_copyable<T14>::value &&
-                                  vtkmstd::is_trivially_copyable<T15>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  vtkmstd::is_trivially_copyable<T11>::value &&
-                                  vtkmstd::is_trivially_copyable<T12>::value &&
-                                  vtkmstd::is_trivially_copyable<T13>::value &&
-                                  vtkmstd::is_trivially_copyable<T14>::value &&
-                                  vtkmstd::is_trivially_copyable<T15>::value &&
-                                  vtkmstd::is_trivially_copyable<T16>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  vtkmstd::is_trivially_copyable<T11>::value &&
-                                  vtkmstd::is_trivially_copyable<T12>::value &&
-                                  vtkmstd::is_trivially_copyable<T13>::value &&
-                                  vtkmstd::is_trivially_copyable<T14>::value &&
-                                  vtkmstd::is_trivially_copyable<T15>::value &&
-                                  vtkmstd::is_trivially_copyable<T16>::value &&
-                                  vtkmstd::is_trivially_copyable<T17>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  vtkmstd::is_trivially_copyable<T11>::value &&
-                                  vtkmstd::is_trivially_copyable<T12>::value &&
-                                  vtkmstd::is_trivially_copyable<T13>::value &&
-                                  vtkmstd::is_trivially_copyable<T14>::value &&
-                                  vtkmstd::is_trivially_copyable<T15>::value &&
-                                  vtkmstd::is_trivially_copyable<T16>::value &&
-                                  vtkmstd::is_trivially_copyable<T17>::value &&
-                                  vtkmstd::is_trivially_copyable<T18>::value &&
-                                  true)> { };
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+struct AllTriviallyCopyable<
+    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
   : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
                                   vtkmstd::is_trivially_copyable<T1>::value &&
                                   vtkmstd::is_trivially_copyable<T2>::value &&
@@ -322,284 +96,41 @@ struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T1
                                   vtkmstd::is_trivially_copyable<T16>::value &&
                                   vtkmstd::is_trivially_copyable<T17>::value &&
                                   vtkmstd::is_trivially_copyable<T18>::value &&
-                                  vtkmstd::is_trivially_copyable<T19>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  vtkmstd::is_trivially_copyable<T11>::value &&
-                                  vtkmstd::is_trivially_copyable<T12>::value &&
-                                  vtkmstd::is_trivially_copyable<T13>::value &&
-                                  vtkmstd::is_trivially_copyable<T14>::value &&
-                                  vtkmstd::is_trivially_copyable<T15>::value &&
-                                  vtkmstd::is_trivially_copyable<T16>::value &&
-                                  vtkmstd::is_trivially_copyable<T17>::value &&
-                                  vtkmstd::is_trivially_copyable<T18>::value &&
-                                  vtkmstd::is_trivially_copyable<T19>::value &&
-                                  AllTriviallyCopyable<T20, Ts...>::value)> { };
+                                  vtkmstd::is_trivially_copyable<T19>::value)> { };
 
-template <typename... Ts>
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
+struct AllTriviallyCopyable<
+    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+  : std::integral_constant<bool, (
+      AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>::value &&
+      AllTriviallyCopyable<T20, Ts...>::value)> {  };
+
+template <typename T0 = vtkm::internal::NullType,
+          typename T1 = vtkm::internal::NullType,
+          typename T2 = vtkm::internal::NullType,
+          typename T3 = vtkm::internal::NullType,
+          typename T4 = vtkm::internal::NullType,
+          typename T5 = vtkm::internal::NullType,
+          typename T6 = vtkm::internal::NullType,
+          typename T7 = vtkm::internal::NullType,
+          typename T8 = vtkm::internal::NullType,
+          typename T9 = vtkm::internal::NullType,
+          typename T10 = vtkm::internal::NullType,
+          typename T11 = vtkm::internal::NullType,
+          typename T12 = vtkm::internal::NullType,
+          typename T13 = vtkm::internal::NullType,
+          typename T14 = vtkm::internal::NullType,
+          typename T15 = vtkm::internal::NullType,
+          typename T16 = vtkm::internal::NullType,
+          typename T17 = vtkm::internal::NullType,
+          typename T18 = vtkm::internal::NullType,
+          typename T19 = vtkm::internal::NullType,
+          typename... Ts>
 struct AllTriviallyConstructible;
 
-template <typename T0>
-struct AllTriviallyConstructible<T0>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  true)> { };
-template <typename T0, typename T1>
-struct AllTriviallyConstructible<T0, T1>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2>
-struct AllTriviallyConstructible<T0, T1, T2>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3>
-struct AllTriviallyConstructible<T0, T1, T2, T3>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  vtkmstd::is_trivially_constructible<T11>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  vtkmstd::is_trivially_constructible<T11>::value &&
-                                  vtkmstd::is_trivially_constructible<T12>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  vtkmstd::is_trivially_constructible<T11>::value &&
-                                  vtkmstd::is_trivially_constructible<T12>::value &&
-                                  vtkmstd::is_trivially_constructible<T13>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  vtkmstd::is_trivially_constructible<T11>::value &&
-                                  vtkmstd::is_trivially_constructible<T12>::value &&
-                                  vtkmstd::is_trivially_constructible<T13>::value &&
-                                  vtkmstd::is_trivially_constructible<T14>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  vtkmstd::is_trivially_constructible<T11>::value &&
-                                  vtkmstd::is_trivially_constructible<T12>::value &&
-                                  vtkmstd::is_trivially_constructible<T13>::value &&
-                                  vtkmstd::is_trivially_constructible<T14>::value &&
-                                  vtkmstd::is_trivially_constructible<T15>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  vtkmstd::is_trivially_constructible<T11>::value &&
-                                  vtkmstd::is_trivially_constructible<T12>::value &&
-                                  vtkmstd::is_trivially_constructible<T13>::value &&
-                                  vtkmstd::is_trivially_constructible<T14>::value &&
-                                  vtkmstd::is_trivially_constructible<T15>::value &&
-                                  vtkmstd::is_trivially_constructible<T16>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  vtkmstd::is_trivially_constructible<T11>::value &&
-                                  vtkmstd::is_trivially_constructible<T12>::value &&
-                                  vtkmstd::is_trivially_constructible<T13>::value &&
-                                  vtkmstd::is_trivially_constructible<T14>::value &&
-                                  vtkmstd::is_trivially_constructible<T15>::value &&
-                                  vtkmstd::is_trivially_constructible<T16>::value &&
-                                  vtkmstd::is_trivially_constructible<T17>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  vtkmstd::is_trivially_constructible<T11>::value &&
-                                  vtkmstd::is_trivially_constructible<T12>::value &&
-                                  vtkmstd::is_trivially_constructible<T13>::value &&
-                                  vtkmstd::is_trivially_constructible<T14>::value &&
-                                  vtkmstd::is_trivially_constructible<T15>::value &&
-                                  vtkmstd::is_trivially_constructible<T16>::value &&
-                                  vtkmstd::is_trivially_constructible<T17>::value &&
-                                  vtkmstd::is_trivially_constructible<T18>::value &&
-                                  true)> { };
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+struct AllTriviallyConstructible<
+    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
   : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
                                   vtkmstd::is_trivially_constructible<T1>::value &&
                                   vtkmstd::is_trivially_constructible<T2>::value &&
@@ -619,284 +150,41 @@ struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T1
                                   vtkmstd::is_trivially_constructible<T16>::value &&
                                   vtkmstd::is_trivially_constructible<T17>::value &&
                                   vtkmstd::is_trivially_constructible<T18>::value &&
-                                  vtkmstd::is_trivially_constructible<T19>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  vtkmstd::is_trivially_constructible<T11>::value &&
-                                  vtkmstd::is_trivially_constructible<T12>::value &&
-                                  vtkmstd::is_trivially_constructible<T13>::value &&
-                                  vtkmstd::is_trivially_constructible<T14>::value &&
-                                  vtkmstd::is_trivially_constructible<T15>::value &&
-                                  vtkmstd::is_trivially_constructible<T16>::value &&
-                                  vtkmstd::is_trivially_constructible<T17>::value &&
-                                  vtkmstd::is_trivially_constructible<T18>::value &&
-                                  vtkmstd::is_trivially_constructible<T19>::value &&
-                                  AllTriviallyConstructible<T20, Ts...>::value)> { };
+                                  vtkmstd::is_trivially_constructible<T19>::value)> { };
 
-template <typename... Ts>
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
+struct AllTriviallyConstructible<
+    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+  : std::integral_constant<bool, (
+      AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>::value &&
+      AllTriviallyConstructible<T20, Ts...>::value)> {  };
+
+template <typename T0 = vtkm::internal::NullType,
+          typename T1 = vtkm::internal::NullType,
+          typename T2 = vtkm::internal::NullType,
+          typename T3 = vtkm::internal::NullType,
+          typename T4 = vtkm::internal::NullType,
+          typename T5 = vtkm::internal::NullType,
+          typename T6 = vtkm::internal::NullType,
+          typename T7 = vtkm::internal::NullType,
+          typename T8 = vtkm::internal::NullType,
+          typename T9 = vtkm::internal::NullType,
+          typename T10 = vtkm::internal::NullType,
+          typename T11 = vtkm::internal::NullType,
+          typename T12 = vtkm::internal::NullType,
+          typename T13 = vtkm::internal::NullType,
+          typename T14 = vtkm::internal::NullType,
+          typename T15 = vtkm::internal::NullType,
+          typename T16 = vtkm::internal::NullType,
+          typename T17 = vtkm::internal::NullType,
+          typename T18 = vtkm::internal::NullType,
+          typename T19 = vtkm::internal::NullType,
+          typename... Ts>
 struct AllTriviallyDestructible;
 
-template <typename T0>
-struct AllTriviallyDestructible<T0>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  true)> { };
-template <typename T0, typename T1>
-struct AllTriviallyDestructible<T0, T1>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2>
-struct AllTriviallyDestructible<T0, T1, T2>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3>
-struct AllTriviallyDestructible<T0, T1, T2, T3>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  vtkmstd::is_trivially_destructible<T11>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  vtkmstd::is_trivially_destructible<T11>::value &&
-                                  vtkmstd::is_trivially_destructible<T12>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  vtkmstd::is_trivially_destructible<T11>::value &&
-                                  vtkmstd::is_trivially_destructible<T12>::value &&
-                                  vtkmstd::is_trivially_destructible<T13>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  vtkmstd::is_trivially_destructible<T11>::value &&
-                                  vtkmstd::is_trivially_destructible<T12>::value &&
-                                  vtkmstd::is_trivially_destructible<T13>::value &&
-                                  vtkmstd::is_trivially_destructible<T14>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  vtkmstd::is_trivially_destructible<T11>::value &&
-                                  vtkmstd::is_trivially_destructible<T12>::value &&
-                                  vtkmstd::is_trivially_destructible<T13>::value &&
-                                  vtkmstd::is_trivially_destructible<T14>::value &&
-                                  vtkmstd::is_trivially_destructible<T15>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  vtkmstd::is_trivially_destructible<T11>::value &&
-                                  vtkmstd::is_trivially_destructible<T12>::value &&
-                                  vtkmstd::is_trivially_destructible<T13>::value &&
-                                  vtkmstd::is_trivially_destructible<T14>::value &&
-                                  vtkmstd::is_trivially_destructible<T15>::value &&
-                                  vtkmstd::is_trivially_destructible<T16>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  vtkmstd::is_trivially_destructible<T11>::value &&
-                                  vtkmstd::is_trivially_destructible<T12>::value &&
-                                  vtkmstd::is_trivially_destructible<T13>::value &&
-                                  vtkmstd::is_trivially_destructible<T14>::value &&
-                                  vtkmstd::is_trivially_destructible<T15>::value &&
-                                  vtkmstd::is_trivially_destructible<T16>::value &&
-                                  vtkmstd::is_trivially_destructible<T17>::value &&
-                                  true)> { };
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  vtkmstd::is_trivially_destructible<T11>::value &&
-                                  vtkmstd::is_trivially_destructible<T12>::value &&
-                                  vtkmstd::is_trivially_destructible<T13>::value &&
-                                  vtkmstd::is_trivially_destructible<T14>::value &&
-                                  vtkmstd::is_trivially_destructible<T15>::value &&
-                                  vtkmstd::is_trivially_destructible<T16>::value &&
-                                  vtkmstd::is_trivially_destructible<T17>::value &&
-                                  vtkmstd::is_trivially_destructible<T18>::value &&
-                                  true)> { };
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+struct AllTriviallyDestructible<
+    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
   : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
                                   vtkmstd::is_trivially_destructible<T1>::value &&
                                   vtkmstd::is_trivially_destructible<T2>::value &&
@@ -916,31 +204,14 @@ struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11
                                   vtkmstd::is_trivially_destructible<T16>::value &&
                                   vtkmstd::is_trivially_destructible<T17>::value &&
                                   vtkmstd::is_trivially_destructible<T18>::value &&
-                                  vtkmstd::is_trivially_destructible<T19>::value &&
-                                  true)> { };
+                                  vtkmstd::is_trivially_destructible<T19>::value)> { };
+
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  vtkmstd::is_trivially_destructible<T11>::value &&
-                                  vtkmstd::is_trivially_destructible<T12>::value &&
-                                  vtkmstd::is_trivially_destructible<T13>::value &&
-                                  vtkmstd::is_trivially_destructible<T14>::value &&
-                                  vtkmstd::is_trivially_destructible<T15>::value &&
-                                  vtkmstd::is_trivially_destructible<T16>::value &&
-                                  vtkmstd::is_trivially_destructible<T17>::value &&
-                                  vtkmstd::is_trivially_destructible<T18>::value &&
-                                  vtkmstd::is_trivially_destructible<T19>::value &&
-                                  AllTriviallyDestructible<T20, Ts...>::value)> { };
+struct AllTriviallyDestructible<
+    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+  : std::integral_constant<bool, (
+      AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>::value &&
+      AllTriviallyDestructible<T20, Ts...>::value)> {  };
 
 // --------------------------------------------------------------------------------
 // Union type used inside of Variant

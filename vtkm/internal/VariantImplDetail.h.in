@@ -84,65 +84,74 @@ struct VariantDummyReturn<void>
 
 // --------------------------------------------------------------------------------
 // Helper classes to determine if all Variant types are trivial.
-template <typename... Ts>
+template <typename T0 = vtkm::internal::NullType,
+$for(param_index in range(1, max_expanded))\
+          typename T$(param_index) = vtkm::internal::NullType,
+$endfor\
+          typename... Ts>
 struct AllTriviallyCopyable;
 
-$for(num_params in range(max_expanded))\
-template <$typename_list(num_params)>
-struct AllTriviallyCopyable<$type_list(num_params)>
+template <$typename_list(max_expanded - 1)>
+struct AllTriviallyCopyable<
+    $type_list(max_expanded - 1)>
   : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-$for(param_index in range(1, num_params + 1))\
+$for(param_index in range(1, max_expanded - 1))\
                                   vtkmstd::is_trivially_copyable<T$(param_index)>::value &&
 $endfor\
-                                  true)> { };
-$endfor\
-template <$typename_list(max_expanded), typename... Ts>
-struct AllTriviallyCopyable<$type_list(max_expanded), Ts...>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-$for(param_index in range(1, max_expanded))\
-                                  vtkmstd::is_trivially_copyable<T$(param_index)>::value &&
-$endfor\
-                                  AllTriviallyCopyable<T$(max_expanded), Ts...>::value)> { };
+                                  vtkmstd::is_trivially_copyable<T$(max_expanded - 1)>::value)> { };
 
-template <typename... Ts>
+template <$typename_list(max_expanded), typename... Ts>
+struct AllTriviallyCopyable<
+    $type_list(max_expanded), Ts...>
+  : std::integral_constant<bool, (
+      AllTriviallyCopyable<$type_list(max_expanded - 1)>::value &&
+      AllTriviallyCopyable<T$(max_expanded), Ts...>::value)> {  };
+
+template <typename T0 = vtkm::internal::NullType,
+$for(param_index in range(1, max_expanded))\
+          typename T$(param_index) = vtkm::internal::NullType,
+$endfor\
+          typename... Ts>
 struct AllTriviallyConstructible;
 
-$for(num_params in range(max_expanded))\
-template <$typename_list(num_params)>
-struct AllTriviallyConstructible<$type_list(num_params)>
+template <$typename_list(max_expanded - 1)>
+struct AllTriviallyConstructible<
+    $type_list(max_expanded - 1)>
   : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-$for(param_index in range(1, num_params + 1))\
+$for(param_index in range(1, max_expanded - 1))\
                                   vtkmstd::is_trivially_constructible<T$(param_index)>::value &&
 $endfor\
-                                  true)> { };
-$endfor\
-template <$typename_list(max_expanded), typename... Ts>
-struct AllTriviallyConstructible<$type_list(max_expanded), Ts...>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-$for(param_index in range(1, max_expanded))\
-                                  vtkmstd::is_trivially_constructible<T$(param_index)>::value &&
-$endfor\
-                                  AllTriviallyConstructible<T$(max_expanded), Ts...>::value)> { };
+                                  vtkmstd::is_trivially_constructible<T$(max_expanded - 1)>::value)> { };
 
-template <typename... Ts>
+template <$typename_list(max_expanded), typename... Ts>
+struct AllTriviallyConstructible<
+    $type_list(max_expanded), Ts...>
+  : std::integral_constant<bool, (
+      AllTriviallyConstructible<$type_list(max_expanded - 1)>::value &&
+      AllTriviallyConstructible<T$(max_expanded), Ts...>::value)> {  };
+
+template <typename T0 = vtkm::internal::NullType,
+$for(param_index in range(1, max_expanded))\
+          typename T$(param_index) = vtkm::internal::NullType,
+$endfor\
+          typename... Ts>
 struct AllTriviallyDestructible;
 
-$for(num_params in range(max_expanded))\
-template <$typename_list(num_params)>
-struct AllTriviallyDestructible<$type_list(num_params)>
+template <$typename_list(max_expanded - 1)>
+struct AllTriviallyDestructible<
+    $type_list(max_expanded - 1)>
   : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-$for(param_index in range(1, num_params + 1))\
+$for(param_index in range(1, max_expanded - 1))\
                                   vtkmstd::is_trivially_destructible<T$(param_index)>::value &&
 $endfor\
-                                  true)> { };
-$endfor\
+                                  vtkmstd::is_trivially_destructible<T$(max_expanded - 1)>::value)> { };
+
 template <$typename_list(max_expanded), typename... Ts>
-struct AllTriviallyDestructible<$type_list(max_expanded), Ts...>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-$for(param_index in range(1, max_expanded))\
-                                  vtkmstd::is_trivially_destructible<T$(param_index)>::value &&
-$endfor\
-                                  AllTriviallyDestructible<T$(max_expanded), Ts...>::value)> { };
+struct AllTriviallyDestructible<
+    $type_list(max_expanded), Ts...>
+  : std::integral_constant<bool, (
+      AllTriviallyDestructible<$type_list(max_expanded - 1)>::value &&
+      AllTriviallyDestructible<T$(max_expanded), Ts...>::value)> {  };
 
 // --------------------------------------------------------------------------------
 // Union type used inside of Variant
