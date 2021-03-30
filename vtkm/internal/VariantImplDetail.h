@@ -75,8 +75,7 @@ template <typename T0 = vtkm::internal::NullType,
 struct AllTriviallyCopyable;
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-struct AllTriviallyCopyable<
-    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
   : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
                                   vtkmstd::is_trivially_copyable<T1>::value &&
                                   vtkmstd::is_trivially_copyable<T2>::value &&
@@ -99,8 +98,7 @@ struct AllTriviallyCopyable<
                                   vtkmstd::is_trivially_copyable<T19>::value)> { };
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-struct AllTriviallyCopyable<
-    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
   : std::integral_constant<bool, (
       AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>::value &&
       AllTriviallyCopyable<T20, Ts...>::value)> {  };
@@ -129,8 +127,7 @@ template <typename T0 = vtkm::internal::NullType,
 struct AllTriviallyConstructible;
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-struct AllTriviallyConstructible<
-    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
   : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
                                   vtkmstd::is_trivially_constructible<T1>::value &&
                                   vtkmstd::is_trivially_constructible<T2>::value &&
@@ -153,8 +150,7 @@ struct AllTriviallyConstructible<
                                   vtkmstd::is_trivially_constructible<T19>::value)> { };
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-struct AllTriviallyConstructible<
-    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
   : std::integral_constant<bool, (
       AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>::value &&
       AllTriviallyConstructible<T20, Ts...>::value)> {  };
@@ -183,8 +179,7 @@ template <typename T0 = vtkm::internal::NullType,
 struct AllTriviallyDestructible;
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-struct AllTriviallyDestructible<
-    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
   : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
                                   vtkmstd::is_trivially_destructible<T1>::value &&
                                   vtkmstd::is_trivially_destructible<T2>::value &&
@@ -207,8 +202,7 @@ struct AllTriviallyDestructible<
                                   vtkmstd::is_trivially_destructible<T19>::value)> { };
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-struct AllTriviallyDestructible<
-    T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
+struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
   : std::integral_constant<bool, (
       AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>::value &&
       AllTriviallyDestructible<T20, Ts...>::value)> {  };
@@ -242,677 +236,52 @@ struct AllTriviallyDestructible<
 //
 
 // TD = trivially deconstructible
-template <typename... Ts>
+template <typename T0 = vtkm::internal::NullType,
+          typename T1 = vtkm::internal::NullType,
+          typename T2 = vtkm::internal::NullType,
+          typename T3 = vtkm::internal::NullType,
+          typename T4 = vtkm::internal::NullType,
+          typename T5 = vtkm::internal::NullType,
+          typename T6 = vtkm::internal::NullType,
+          typename T7 = vtkm::internal::NullType,
+          typename T8 = vtkm::internal::NullType,
+          typename T9 = vtkm::internal::NullType,
+          typename T10 = vtkm::internal::NullType,
+          typename T11 = vtkm::internal::NullType,
+          typename T12 = vtkm::internal::NullType,
+          typename T13 = vtkm::internal::NullType,
+          typename T14 = vtkm::internal::NullType,
+          typename T15 = vtkm::internal::NullType,
+          typename T16 = vtkm::internal::NullType,
+          typename T17 = vtkm::internal::NullType,
+          typename T18 = vtkm::internal::NullType,
+          typename T19 = vtkm::internal::NullType,
+          typename... Ts>
 union VariantUnionTD;
 
 // NTD = non-trivially deconstructible
-template <typename... Ts>
+template <typename T0 = vtkm::internal::NullType,
+          typename T1 = vtkm::internal::NullType,
+          typename T2 = vtkm::internal::NullType,
+          typename T3 = vtkm::internal::NullType,
+          typename T4 = vtkm::internal::NullType,
+          typename T5 = vtkm::internal::NullType,
+          typename T6 = vtkm::internal::NullType,
+          typename T7 = vtkm::internal::NullType,
+          typename T8 = vtkm::internal::NullType,
+          typename T9 = vtkm::internal::NullType,
+          typename T10 = vtkm::internal::NullType,
+          typename T11 = vtkm::internal::NullType,
+          typename T12 = vtkm::internal::NullType,
+          typename T13 = vtkm::internal::NullType,
+          typename T14 = vtkm::internal::NullType,
+          typename T15 = vtkm::internal::NullType,
+          typename T16 = vtkm::internal::NullType,
+          typename T17 = vtkm::internal::NullType,
+          typename T18 = vtkm::internal::NullType,
+          typename T19 = vtkm::internal::NullType,
+          typename... Ts>
 union VariantUnionNTD;
-
-template <typename T0>
-union VariantUnionTD<T0>
-{
-  T0 V0;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0>
-union VariantUnionNTD<T0>
-{
-  T0 V0;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1>
-union VariantUnionTD<T0, T1>
-{
-  T0 V0;
-  T1 V1;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1>
-union VariantUnionNTD<T0, T1>
-{
-  T0 V0;
-  T1 V1;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2>
-union VariantUnionTD<T0, T1, T2>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2>
-union VariantUnionNTD<T0, T1, T2>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3>
-union VariantUnionTD<T0, T1, T2, T3>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3>
-union VariantUnionNTD<T0, T1, T2, T3>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4>
-union VariantUnionTD<T0, T1, T2, T3, T4>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4>
-union VariantUnionNTD<T0, T1, T2, T3, T4>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  T16 V16;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  T16 V16;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  T16 V16;
-  T17 V17;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  T16 V16;
-  T17 V17;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  T16 V16;
-  T17 V17;
-  T18 V18;
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  T16 V16;
-  T17 V17;
-  T18 V18;
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
 union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
@@ -937,6 +306,7 @@ union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13,
   T17 V17;
   T18 V18;
   T19 V19;
+
   VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
   VariantUnionTD() = default;
 };
@@ -964,11 +334,11 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13
   T17 V17;
   T18 V18;
   T19 V19;
+
   VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
   VariantUnionNTD() = default;
   VTK_M_DEVICE ~VariantUnionNTD() { }
 };
-
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
 union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
@@ -995,6 +365,7 @@ union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13,
   T18 V18;
   T19 V19;
   VariantUnionTD<T20, Ts...> Remaining;
+
   VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
   VariantUnionTD() = default;
 };
@@ -1024,6 +395,7 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13
   T18 V18;
   T19 V19;
   VariantUnionNTD<T20, Ts...> Remaining;
+
   VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
   VariantUnionNTD() = default;
   VTK_M_DEVICE ~VariantUnionNTD() { }

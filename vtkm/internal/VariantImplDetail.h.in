@@ -92,8 +92,7 @@ $endfor\
 struct AllTriviallyCopyable;
 
 template <$typename_list(max_expanded - 1)>
-struct AllTriviallyCopyable<
-    $type_list(max_expanded - 1)>
+struct AllTriviallyCopyable<$type_list(max_expanded - 1)>
   : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
 $for(param_index in range(1, max_expanded - 1))\
                                   vtkmstd::is_trivially_copyable<T$(param_index)>::value &&
@@ -101,8 +100,7 @@ $endfor\
                                   vtkmstd::is_trivially_copyable<T$(max_expanded - 1)>::value)> { };
 
 template <$typename_list(max_expanded), typename... Ts>
-struct AllTriviallyCopyable<
-    $type_list(max_expanded), Ts...>
+struct AllTriviallyCopyable<$type_list(max_expanded), Ts...>
   : std::integral_constant<bool, (
       AllTriviallyCopyable<$type_list(max_expanded - 1)>::value &&
       AllTriviallyCopyable<T$(max_expanded), Ts...>::value)> {  };
@@ -115,8 +113,7 @@ $endfor\
 struct AllTriviallyConstructible;
 
 template <$typename_list(max_expanded - 1)>
-struct AllTriviallyConstructible<
-    $type_list(max_expanded - 1)>
+struct AllTriviallyConstructible<$type_list(max_expanded - 1)>
   : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
 $for(param_index in range(1, max_expanded - 1))\
                                   vtkmstd::is_trivially_constructible<T$(param_index)>::value &&
@@ -124,8 +121,7 @@ $endfor\
                                   vtkmstd::is_trivially_constructible<T$(max_expanded - 1)>::value)> { };
 
 template <$typename_list(max_expanded), typename... Ts>
-struct AllTriviallyConstructible<
-    $type_list(max_expanded), Ts...>
+struct AllTriviallyConstructible<$type_list(max_expanded), Ts...>
   : std::integral_constant<bool, (
       AllTriviallyConstructible<$type_list(max_expanded - 1)>::value &&
       AllTriviallyConstructible<T$(max_expanded), Ts...>::value)> {  };
@@ -138,8 +134,7 @@ $endfor\
 struct AllTriviallyDestructible;
 
 template <$typename_list(max_expanded - 1)>
-struct AllTriviallyDestructible<
-    $type_list(max_expanded - 1)>
+struct AllTriviallyDestructible<$type_list(max_expanded - 1)>
   : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
 $for(param_index in range(1, max_expanded - 1))\
                                   vtkmstd::is_trivially_destructible<T$(param_index)>::value &&
@@ -147,8 +142,7 @@ $endfor\
                                   vtkmstd::is_trivially_destructible<T$(max_expanded - 1)>::value)> { };
 
 template <$typename_list(max_expanded), typename... Ts>
-struct AllTriviallyDestructible<
-    $type_list(max_expanded), Ts...>
+struct AllTriviallyDestructible<$type_list(max_expanded), Ts...>
   : std::integral_constant<bool, (
       AllTriviallyDestructible<$type_list(max_expanded - 1)>::value &&
       AllTriviallyDestructible<T$(max_expanded), Ts...>::value)> {  };
@@ -182,36 +176,43 @@ struct AllTriviallyDestructible<
 //
 
 // TD = trivially deconstructible
-template <typename... Ts>
+template <typename T0 = vtkm::internal::NullType,
+$for(param_index in range(1, max_expanded))\
+          typename T$(param_index) = vtkm::internal::NullType,
+$endfor\
+          typename... Ts>
 union VariantUnionTD;
 
 // NTD = non-trivially deconstructible
-template <typename... Ts>
+template <typename T0 = vtkm::internal::NullType,
+$for(param_index in range(1, max_expanded))\
+          typename T$(param_index) = vtkm::internal::NullType,
+$endfor\
+          typename... Ts>
 union VariantUnionNTD;
 
-$for(num_params in range(max_expanded))\
-template <$typename_list(num_params)>
-union VariantUnionTD<$type_list(num_params)>
+template <$typename_list(max_expanded - 1)>
+union VariantUnionTD<$type_list(max_expanded - 1)>
 {
-$for(param_index in range(num_params + 1))\
+$for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
 $endfor\
+
   VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
   VariantUnionTD() = default;
 };
 
-template <$typename_list(num_params)>
-union VariantUnionNTD<$type_list(num_params)>
+template <$typename_list(max_expanded - 1)>
+union VariantUnionNTD<$type_list(max_expanded - 1)>
 {
-$for(param_index in range(num_params + 1))\
+$for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
 $endfor\
+
   VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
   VariantUnionNTD() = default;
   VTK_M_DEVICE ~VariantUnionNTD() { }
 };
-
-$endfor\
 
 template <$typename_list(max_expanded), typename... Ts>
 union VariantUnionTD<$type_list(max_expanded), Ts...>
@@ -221,6 +222,7 @@ $for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
 $endfor\
   VariantUnionTD<T$(max_expanded), Ts...> Remaining;
+
   VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
   VariantUnionTD() = default;
 };
@@ -233,6 +235,7 @@ $for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
 $endfor\
   VariantUnionNTD<T$(max_expanded), Ts...> Remaining;
+
   VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
   VariantUnionNTD() = default;
   VTK_M_DEVICE ~VariantUnionNTD() { }
