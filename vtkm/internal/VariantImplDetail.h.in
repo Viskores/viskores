@@ -156,16 +156,18 @@ struct AllTriviallyDestructible<$type_list(max_expanded), Ts...>
 // reinterpret_cast. However, doing that leads to undefined behavior. The C++ compiler assumes that
 // 2 pointers of different types point to different memory (even if it is clear that they are set
 // to the same address). That means optimizers can remove code because it "knows" that data in one
-// type cannot affect data in another type. To safely change the type of an std::aligned_union,
-// you really have to do an std::memcpy. This is problematic for types that cannot be trivially
-// copied. Another problem is that we found that device compilers do not optimize the memcpy
-// as well as most CPU compilers. Likely, memcpy is used much less frequently on GPU devices.
+// type cannot affect data in another type. (See Shafik Yaghmour's excellent writeup at
+// https://gist.github.com/shafik/848ae25ee209f698763cffee272a58f8 for more details.) To safely
+// change the type of an std::aligned_union, you really have to do an std::memcpy. This is
+// problematic for types that cannot be trivially copied. Another problem is that we found that
+// device compilers do not optimize the memcpy as well as most CPU compilers. Likely, memcpy is
+// used much less frequently on GPU devices.
 //
 // Part of the trickiness of the union implementation is trying to preserve when the type is
 // trivially constructible and copyable. The trick is that if members of the union are not trivial,
 // then the default constructors are deleted. To get around that, a non-default constructor is
 // added, which we can use to construct the union for non-trivial types. Working with types with
-// non-trivial destructors are particularly trick. Again, if any member of the union has a
+// non-trivial destructors are particularly tricky. Again, if any member of the union has a
 // non-trivial destructor, the destructor is deleted. Unlike a constructor, you cannot just say to
 // use a different destructor. Thus, we have to define our own destructor for the union.
 // Technically, the destructor here does not do anything, but the actual destruction should be
