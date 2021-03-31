@@ -49,10 +49,12 @@ set(unit_tests
 
 # Unit tests that have device-specific code to be tested
 set(unit_tests_device
-  UnitTestAlgorithms.cxx
   UnitTestAtomic.cxx
+  UnitTestBinarySearch.cxx
   UnitTestGeometry.cxx
+  UnitTestLowerBound.cxx
   UnitTestMath.cxx
+  UnitTestUpperBound.cxx
   )
 
 
