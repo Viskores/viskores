@@ -27,7 +27,8 @@ struct View::InternalData
   vtkm::rendering::Mapper* MapperPointer{ nullptr };
   vtkm::rendering::Canvas* CanvasPointer{ nullptr };
   vtkm::rendering::WorldAnnotator* WorldAnnotatorPointer{ nullptr };
-  std::vector<std::unique_ptr<vtkm::rendering::TextAnnotation>> Annotations;
+  std::vector<std::unique_ptr<vtkm::rendering::TextAnnotation>> TextAnnotations;
+  std::vector<std::function<void(void)>> AdditionalAnnotations;
   vtkm::rendering::Camera Camera;
 };
 
@@ -148,10 +149,7 @@ void View::SetForegroundColor(const vtkm::rendering::Color& color)
   this->Internal->CanvasPointer->SetForegroundColor(color);
 }
 
-void View::Initialize()
-{
-  // does nothing
-}
+void View::Initialize() {}
 
 void View::SaveAs(const std::string& fileName) const
 {
@@ -165,31 +163,66 @@ void View::SetAxisColor(vtkm::rendering::Color c)
 
 void View::ClearAnnotations()
 {
-  this->Internal->Annotations.clear();
+  this->Internal->TextAnnotations.clear();
 }
 
 void View::AddAnnotation(std::unique_ptr<vtkm::rendering::TextAnnotation> ann)
 {
-  this->Internal->Annotations.push_back(std::move(ann));
+  this->Internal->TextAnnotations.push_back(std::move(ann));
+}
+
+void View::ClearTextAnnotations()
+{
+  this->Internal->TextAnnotations.clear();
+}
+
+void View::AddTextAnnotation(std::unique_ptr<vtkm::rendering::TextAnnotation> ann)
+{
+  this->Internal->TextAnnotations.push_back(std::move(ann));
+}
+
+void View::ClearAdditionalAnnotations()
+{
+  this->Internal->AdditionalAnnotations.clear();
+}
+
+void View::AddAdditionalAnnotation(std::function<void(void)> ann)
+{
+  this->Internal->AdditionalAnnotations.emplace_back(ann);
 }
 
 void View::RenderAnnotations()
 {
-  for (unsigned int i = 0; i < this->Internal->Annotations.size(); ++i)
-    this->Internal->Annotations[i]->Render(
-      this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
+  if (this->RenderAnnotationsEnabled)
+  {
+    this->SetupForScreenSpace();
+    this->RenderScreenAnnotations();
+    for (auto& textAnnotation : this->Internal->TextAnnotations)
+    {
+      textAnnotation->Render(this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
+    }
+    for (auto& additionalAnnotation : this->Internal->AdditionalAnnotations)
+    {
+      additionalAnnotation();
+    }
+
+    this->SetupForWorldSpace();
+    if (this->WorldAnnotationsEnabled)
+    {
+      this->RenderWorldAnnotations();
+    }
+  }
 }
 
 void View::SetupForWorldSpace(bool viewportClip)
 {
-  //this->Camera.SetupMatrices();
   this->GetCanvas().SetViewToWorldSpace(this->Internal->Camera, viewportClip);
 }
 
 void View::SetupForScreenSpace(bool viewportClip)
 {
-  //this->Camera.SetupMatrices();
   this->GetCanvas().SetViewToScreenSpace(this->Internal->Camera, viewportClip);
 }
-}
+
 } // namespace vtkm::rendering
+} // namespace vtkm

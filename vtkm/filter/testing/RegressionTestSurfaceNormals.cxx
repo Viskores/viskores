@@ -48,7 +48,7 @@ void TestSurfaceNormals()
   result.PrintSummary(std::cout);
 
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "filter/surface-normals.png");
+    result, "pointvar", colorTable, "filter/surface-normals.png", false);
 }
 } // namespace
 

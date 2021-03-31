@@ -53,7 +53,7 @@ void TestPointTransform()
   result.PrintSummary(std::cout);
 
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "filter/point-transform.png");
+    result, "pointvar", colorTable, "filter/point-transform.png", false);
 }
 } // namespace
 

@@ -39,15 +39,8 @@ View3D::~View3D() {}
 void View3D::Paint()
 {
   this->GetCanvas().Clear();
-
-  this->SetupForWorldSpace();
-  if (this->WorldAnnotationsEnabled)
-    this->RenderWorldAnnotations();
-  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
-
-  this->SetupForScreenSpace();
   this->RenderAnnotations();
-  this->RenderScreenAnnotations();
+  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
 }
 
 void View3D::RenderScreenAnnotations()
