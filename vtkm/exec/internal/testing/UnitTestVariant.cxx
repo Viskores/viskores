@@ -34,7 +34,7 @@ static vtkm::Id g_NonTrivialCount;
 // A class that must is not trivial to copy nor construct.
 struct NonTrivial
 {
-  vtkm::Id Value = 12345;
+  vtkm::Id Value;
   NonTrivial* Self;
 
   void CheckState() const
@@ -44,17 +44,19 @@ struct NonTrivial
   }
 
   NonTrivial()
-    : Self(this)
+    : Value(12345)
+    , Self(this)
   {
     this->CheckState();
     ++g_NonTrivialCount;
   }
 
   NonTrivial(const NonTrivial& src)
-    : Self(this)
+    : Value(src.Value)
   {
-    this->CheckState();
     src.CheckState();
+    this->Self = this;
+    this->CheckState();
     ++g_NonTrivialCount;
   }
 
@@ -234,65 +236,66 @@ void TestTriviallyCopyable()
 {
 #ifdef VTKM_USE_STD_IS_TRIVIAL
   // Make sure base types are behaving as expected
-  VTKM_STATIC_ASSERT(std::is_trivially_constructible<float>::value);
-  VTKM_STATIC_ASSERT(std::is_trivially_copyable<float>::value);
-  VTKM_STATIC_ASSERT(std::is_trivial<float>::value);
-  VTKM_STATIC_ASSERT(std::is_trivially_constructible<int>::value);
-  VTKM_STATIC_ASSERT(std::is_trivially_copyable<int>::value);
-  VTKM_STATIC_ASSERT(std::is_trivial<int>::value);
-  VTKM_STATIC_ASSERT(!std::is_trivially_constructible<NonTrivial>::value);
-  VTKM_STATIC_ASSERT(!std::is_trivially_copyable<NonTrivial>::value);
-  VTKM_STATIC_ASSERT(!std::is_trivial<NonTrivial>::value);
-  VTKM_STATIC_ASSERT(!std::is_trivially_constructible<TrivialCopy>::value);
-  VTKM_STATIC_ASSERT(std::is_trivially_copyable<TrivialCopy>::value);
-  VTKM_STATIC_ASSERT(!std::is_trivial<TrivialCopy>::value);
+  VTKM_STATIC_ASSERT(vtkmstd::is_trivially_constructible<float>::value);
+  VTKM_STATIC_ASSERT(vtkmstd::is_trivially_copyable<float>::value);
+  VTKM_STATIC_ASSERT(vtkmstd::is_trivial<float>::value);
+  VTKM_STATIC_ASSERT(vtkmstd::is_trivially_constructible<int>::value);
+  VTKM_STATIC_ASSERT(vtkmstd::is_trivially_copyable<int>::value);
+  VTKM_STATIC_ASSERT(vtkmstd::is_trivial<int>::value);
+  VTKM_STATIC_ASSERT(!vtkmstd::is_trivially_constructible<NonTrivial>::value);
+  VTKM_STATIC_ASSERT(!vtkmstd::is_trivially_copyable<NonTrivial>::value);
+  VTKM_STATIC_ASSERT(!vtkmstd::is_trivial<NonTrivial>::value);
+  VTKM_STATIC_ASSERT(!vtkmstd::is_trivially_constructible<TrivialCopy>::value);
+  VTKM_STATIC_ASSERT(vtkmstd::is_trivially_copyable<TrivialCopy>::value);
+  VTKM_STATIC_ASSERT(!vtkmstd::is_trivial<TrivialCopy>::value);
 
   // A variant of trivially constructable things should be trivially constructable
-  VTKM_STATIC_ASSERT((vtkm::exec::internal::detail::AllTriviallyConstructible<float, int>::value));
+  VTKM_STATIC_ASSERT((vtkmstd::is_trivially_constructible<
+                      vtkm::exec::internal::detail::VariantUnion<float, int>>::value));
   VTKM_STATIC_ASSERT(
-    (std::is_trivially_constructible<vtkm::exec::internal::Variant<float, int>>::value));
+    (vtkmstd::is_trivially_constructible<vtkm::exec::internal::Variant<float, int>>::value));
 
   // A variant of trivially copyable things should be trivially copyable
-  VTKM_STATIC_ASSERT(
-    (vtkm::exec::internal::detail::AllTriviallyCopyable<float, int, TrivialCopy>::value));
-  VTKM_STATIC_ASSERT(
-    (std::is_trivially_copyable<vtkm::exec::internal::Variant<float, int, TrivialCopy>>::value));
+  VTKM_STATIC_ASSERT((vtkmstd::is_trivially_copyable<
+                      vtkm::exec::internal::detail::VariantUnion<float, int, TrivialCopy>>::value));
+  VTKM_STATIC_ASSERT((
+    vtkmstd::is_trivially_copyable<vtkm::exec::internal::Variant<float, int, TrivialCopy>>::value));
 
   // A variant of any non-trivially constructable things is not trivially copyable
-  VTKM_STATIC_ASSERT(
-    (!vtkm::exec::internal::detail::AllTriviallyConstructible<NonTrivial, float, int>::value));
-  VTKM_STATIC_ASSERT(
-    (!vtkm::exec::internal::detail::AllTriviallyConstructible<float, NonTrivial, int>::value));
-  VTKM_STATIC_ASSERT(
-    (!vtkm::exec::internal::detail::AllTriviallyConstructible<float, int, NonTrivial>::value));
-  VTKM_STATIC_ASSERT((!std::is_trivially_constructible<
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
+                      vtkm::exec::internal::detail::VariantUnion<NonTrivial, float, int>>::value));
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
+                      vtkm::exec::internal::detail::VariantUnion<float, NonTrivial, int>>::value));
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
+                      vtkm::exec::internal::detail::VariantUnion<float, int, NonTrivial>>::value));
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
                       vtkm::exec::internal::Variant<NonTrivial, float, int>>::value));
-  VTKM_STATIC_ASSERT((!std::is_trivially_constructible<
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
                       vtkm::exec::internal::Variant<float, NonTrivial, int>>::value));
-  VTKM_STATIC_ASSERT((!std::is_trivially_constructible<
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
                       vtkm::exec::internal::Variant<float, int, NonTrivial>>::value));
 
   // A variant of any non-trivially copyable things is not trivially copyable
-  VTKM_STATIC_ASSERT(
-    (!vtkm::exec::internal::detail::AllTriviallyCopyable<NonTrivial, float, int>::value));
-  VTKM_STATIC_ASSERT(
-    (!vtkm::exec::internal::detail::AllTriviallyCopyable<float, NonTrivial, int>::value));
-  VTKM_STATIC_ASSERT(
-    (!vtkm::exec::internal::detail::AllTriviallyCopyable<float, int, NonTrivial>::value));
-  VTKM_STATIC_ASSERT(
-    (!std::is_trivially_copyable<vtkm::exec::internal::Variant<NonTrivial, float, int>>::value));
-  VTKM_STATIC_ASSERT(
-    (!std::is_trivially_copyable<vtkm::exec::internal::Variant<float, NonTrivial, int>>::value));
-  VTKM_STATIC_ASSERT(
-    (!std::is_trivially_copyable<vtkm::exec::internal::Variant<float, int, NonTrivial>>::value));
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_copyable<
+                      vtkm::exec::internal::detail::VariantUnion<NonTrivial, float, int>>::value));
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_copyable<
+                      vtkm::exec::internal::detail::VariantUnion<float, NonTrivial, int>>::value));
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_copyable<
+                      vtkm::exec::internal::detail::VariantUnion<float, int, NonTrivial>>::value));
+  VTKM_STATIC_ASSERT((
+    !vtkmstd::is_trivially_copyable<vtkm::exec::internal::Variant<NonTrivial, float, int>>::value));
+  VTKM_STATIC_ASSERT((
+    !vtkmstd::is_trivially_copyable<vtkm::exec::internal::Variant<float, NonTrivial, int>>::value));
+  VTKM_STATIC_ASSERT((
+    !vtkmstd::is_trivially_copyable<vtkm::exec::internal::Variant<float, int, NonTrivial>>::value));
 
   // A variant of trivial things should be trivial
-  VTKM_STATIC_ASSERT((std::is_trivial<vtkm::exec::internal::Variant<float, int>>::value));
+  VTKM_STATIC_ASSERT((vtkmstd::is_trivial<vtkm::exec::internal::Variant<float, int>>::value));
   VTKM_STATIC_ASSERT(
-    (!std::is_trivial<vtkm::exec::internal::Variant<float, int, TrivialCopy>>::value));
+    (!vtkmstd::is_trivial<vtkm::exec::internal::Variant<float, int, TrivialCopy>>::value));
   VTKM_STATIC_ASSERT(
-    (!std::is_trivial<vtkm::exec::internal::Variant<float, int, NonTrivial>>::value));
-#endif // !VTKM_USING_GLIBCXX_4
+    (!vtkmstd::is_trivial<vtkm::exec::internal::Variant<float, int, NonTrivial>>::value));
+#endif // VTKM_USE_STD_IS_TRIVIAL
 }
 
 struct TestFunctor
@@ -434,6 +437,7 @@ struct CountConstructDestruct
     ++(*this->Count);
   }
   ~CountConstructDestruct() { --(*this->Count); }
+  CountConstructDestruct& operator=(const CountConstructDestruct&) = delete;
 };
 
 void TestCopyDestroy()
@@ -443,11 +447,11 @@ void TestCopyDestroy()
   using VariantType = vtkm::exec::internal::Variant<TypePlaceholder<0>,
                                                     TypePlaceholder<1>,
                                                     CountConstructDestruct,
-                                                    TypePlaceholder<2>,
-                                                    TypePlaceholder<3>>;
-#ifndef VTKM_USING_GLIBCXX_4
-  VTKM_STATIC_ASSERT(!std::is_trivially_copyable<VariantType>::value);
-#endif // !VTKM_USING_GLIBCXX_4
+                                                    TypePlaceholder<3>,
+                                                    TypePlaceholder<4>>;
+#ifdef VTKM_USE_STD_IS_TRIVIAL
+  VTKM_STATIC_ASSERT(!vtkmstd::is_trivially_copyable<VariantType>::value);
+#endif // VTKM_USE_STD_IS_TRIVIAL
   vtkm::Id count = 0;
 
   VariantType variant1 = CountConstructDestruct(&count);
@@ -545,6 +549,19 @@ void TestConstructDestruct()
   VTKM_TEST_ASSERT(g_NonTrivialCount == 0);
 }
 
+void TestCopySelf()
+{
+  std::cout << "Make sure copying a Variant to itself works" << std::endl;
+
+  using VariantType =
+    vtkm::exec::internal::Variant<TypePlaceholder<0>, NonTrivial, TypePlaceholder<2>>;
+
+  VariantType variant{ NonTrivial{} };
+  VariantType& variantRef = variant;
+  variant = variantRef;
+  variant = variant.Get<NonTrivial>();
+}
+
 void RunTest()
 {
   TestSize();
@@ -555,6 +572,7 @@ void RunTest()
   TestCopyDestroy();
   TestEmplace();
   TestConstructDestruct();
+  TestCopySelf();
 }
 
 } // namespace test_variant

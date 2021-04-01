@@ -34,11 +34,7 @@ class ConnectivityStructured
 public:
   using SchedulingRangeType = typename InternalsType::SchedulingRangeType;
 
-  VTKM_EXEC_CONT
-  ConnectivityStructured()
-    : Internals()
-  {
-  }
+  ConnectivityStructured() = default;
 
   VTKM_EXEC_CONT
   ConnectivityStructured(const InternalsType& src)
@@ -46,11 +42,7 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
-  ConnectivityStructured(const ConnectivityStructured& src)
-    : Internals(src.Internals)
-  {
-  }
+  ConnectivityStructured(const ConnectivityStructured& src) = default;
 
   VTKM_EXEC_CONT
   ConnectivityStructured(

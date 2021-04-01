@@ -20,8 +20,7 @@
 #include <vtkm/Deprecated.h>
 #include <vtkm/List.h>
 
-#include <vtkmstd/aligned_union.h>
-#include <vtkmstd/is_trivial.h>
+#include <vtkm/internal/Assume.h>
 
 namespace vtkm
 {
@@ -37,12 +36,67 @@ class Variant;
 namespace detail
 {
 
+// --------------------------------------------------------------------------------
+// Helper classes for Variant
+
+template <typename UnionType>
+struct VariantUnionToListImpl;
+template <typename... Ts>
+struct VariantUnionToListImpl<detail::VariantUnionTD<Ts...>>
+{
+  using type = vtkm::List<Ts...>;
+};
+template <typename... Ts>
+struct VariantUnionToListImpl<detail::VariantUnionNTD<Ts...>>
+{
+  using type = vtkm::List<Ts...>;
+};
+
+template <typename UnionType>
+using VariantUnionToList =
+  typename VariantUnionToListImpl<typename std::decay<UnionType>::type>::type;
+
+struct VariantCopyConstructFunctor
+{
+  template <typename T, typename UnionType>
+  VTK_M_DEVICE void operator()(const T& src, UnionType& destUnion) const noexcept
+  {
+    constexpr vtkm::IdComponent Index = vtkm::ListIndexOf<VariantUnionToList<UnionType>, T>::value;
+    // If we are using this functor, we can assume the union does not hold a valid type.
+    new (&VariantUnionGet<Index>(destUnion)) T(src);
+  }
+};
+
 struct VariantCopyFunctor
 {
-  template <typename T>
-  VTK_M_DEVICE void operator()(const T& src, void* destPointer) const noexcept
+  template <typename T, typename UnionType>
+  VTK_M_DEVICE void operator()(const T& src, UnionType& destUnion) const noexcept
   {
-    new (destPointer) T(src);
+    constexpr vtkm::IdComponent Index = vtkm::ListIndexOf<VariantUnionToList<UnionType>, T>::value;
+    // If we are using this functor, we can assume the union holds type T.
+    this->DoCopy(
+      src, VariantUnionGet<Index>(destUnion), typename std::is_copy_assignable<T>::type{});
+  }
+
+  template <typename T>
+  VTK_M_DEVICE void DoCopy(const T& src, T& dest, std::true_type) const noexcept
+  {
+    dest = src;
+  }
+
+  template <typename T>
+  VTK_M_DEVICE void DoCopy(const T& src, T& dest, std::false_type) const noexcept
+  {
+    if (&src != &dest)
+    {
+      // Do not have an assignment operator, so destroy the old object and create a new one.
+      dest.~T();
+      new (&dest) T(src);
+    }
+    else
+    {
+      // Objects are already the same.
+    }
   }
 };
 
@@ -68,115 +122,12 @@ struct VariantCheckType
   VTKM_STATIC_ASSERT_MSG(!std::is_pointer<T>::value, "Pointers are not allowed in VTK-m Variant.");
 };
 
-template <typename... Ts>
-struct AllTriviallyCopyable;
-
-template <>
-struct AllTriviallyCopyable<> : std::true_type
-{
-};
-
-template <typename T0>
-struct AllTriviallyCopyable<T0>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value)>
-{
-};
-
-template <typename T0, typename T1>
-struct AllTriviallyCopyable<T0, T1>
-  : std::integral_constant<bool,
-                           (vtkmstd::is_trivially_copyable<T0>::value &&
-                            vtkmstd::is_trivially_copyable<T1>::value)>
-{
-};
-
-template <typename T0, typename T1, typename T2>
-struct AllTriviallyCopyable<T0, T1, T2>
-  : std::integral_constant<bool,
-                           (vtkmstd::is_trivially_copyable<T0>::value &&
-                            vtkmstd::is_trivially_copyable<T1>::value &&
-                            vtkmstd::is_trivially_copyable<T2>::value)>
-{
-};
-
-template <typename T0, typename T1, typename T2, typename T3>
-struct AllTriviallyCopyable<T0, T1, T2, T3>
-  : std::integral_constant<
-      bool,
-      (vtkmstd::is_trivially_copyable<T0>::value && vtkmstd::is_trivially_copyable<T1>::value &&
-       vtkmstd::is_trivially_copyable<T2>::value && vtkmstd::is_trivially_copyable<T3>::value)>
-{
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename... Ts>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, Ts...>
-  : std::integral_constant<
-      bool,
-      (vtkmstd::is_trivially_copyable<T0>::value && vtkmstd::is_trivially_copyable<T1>::value &&
-       vtkmstd::is_trivially_copyable<T2>::value && vtkmstd::is_trivially_copyable<T3>::value &&
-       vtkmstd::is_trivially_copyable<T4>::value && AllTriviallyCopyable<Ts...>::value)>
-{
-};
-
 template <typename VariantType>
 struct VariantTriviallyCopyable;
 
 template <typename... Ts>
 struct VariantTriviallyCopyable<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>>
   : AllTriviallyCopyable<Ts...>
-{
-};
-
-template <typename... Ts>
-struct AllTriviallyConstructible;
-
-template <>
-struct AllTriviallyConstructible<> : std::true_type
-{
-};
-
-template <typename T0>
-struct AllTriviallyConstructible<T0>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value)>
-{
-};
-
-template <typename T0, typename T1>
-struct AllTriviallyConstructible<T0, T1>
-  : std::integral_constant<bool,
-                           (vtkmstd::is_trivially_constructible<T0>::value &&
-                            vtkmstd::is_trivially_constructible<T1>::value)>
-{
-};
-
-template <typename T0, typename T1, typename T2>
-struct AllTriviallyConstructible<T0, T1, T2>
-  : std::integral_constant<bool,
-                           (vtkmstd::is_trivially_constructible<T0>::value &&
-                            vtkmstd::is_trivially_constructible<T1>::value &&
-                            vtkmstd::is_trivially_constructible<T2>::value)>
-{
-};
-
-template <typename T0, typename T1, typename T2, typename T3>
-struct AllTriviallyConstructible<T0, T1, T2, T3>
-  : std::integral_constant<bool,
-                           (vtkmstd::is_trivially_constructible<T0>::value &&
-                            vtkmstd::is_trivially_constructible<T1>::value &&
-                            vtkmstd::is_trivially_constructible<T2>::value &&
-                            vtkmstd::is_trivially_constructible<T3>::value)>
-{
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename... Ts>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, Ts...>
-  : std::integral_constant<bool,
-                           (vtkmstd::is_trivially_constructible<T0>::value &&
-                            vtkmstd::is_trivially_constructible<T1>::value &&
-                            vtkmstd::is_trivially_constructible<T2>::value &&
-                            vtkmstd::is_trivially_constructible<T3>::value &&
-                            vtkmstd::is_trivially_constructible<T4>::value &&
-                            AllTriviallyConstructible<Ts...>::value)>
 {
 };
 
@@ -189,21 +140,23 @@ struct VariantTriviallyConstructible<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts
 {
 };
 
+// --------------------------------------------------------------------------------
+// Variant superclass that defines its storage
 template <typename... Ts>
 struct VariantStorageImpl
 {
-  typename vtkmstd::aligned_union<0, Ts...>::type Storage;
-
+  VariantUnion<Ts...> Storage;
   vtkm::IdComponent Index;
+
+  VariantStorageImpl() = default;
+
+  VTK_M_DEVICE VariantStorageImpl(vtkm::internal::NullType dummy)
+    : Storage({ dummy })
+  {
+  }
 
   template <vtkm::IdComponent Index>
   using TypeAt = typename vtkm::ListAt<vtkm::List<Ts...>, Index>;
-
-  VTK_M_DEVICE void* GetPointer() { return reinterpret_cast<void*>(&this->Storage); }
-  VTK_M_DEVICE const void* GetPointer() const
-  {
-    return reinterpret_cast<const void*>(&this->Storage);
-  }
 
   VTK_M_DEVICE vtkm::IdComponent GetIndex() const noexcept { return this->Index; }
   VTK_M_DEVICE bool IsValid() const noexcept
@@ -226,12 +179,8 @@ struct VariantStorageImpl
       -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
-    return detail::VariantCastAndCallImpl<decltype(f(std::declval<const TypeAt<0>&>(), args...))>(
-      brigand::list<Ts...>{},
-      this->GetIndex(),
-      std::forward<Functor>(f),
-      this->GetPointer(),
-      std::forward<Args>(args)...);
+    return detail::VariantCastAndCallImpl(
+      this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 
   template <typename Functor, typename... Args>
@@ -240,15 +189,14 @@ struct VariantStorageImpl
     -> decltype(f(std::declval<TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
-    return detail::VariantCastAndCallImpl<decltype(f(std::declval<TypeAt<0>&>(), args...))>(
-      brigand::list<Ts...>{},
-      this->GetIndex(),
-      std::forward<Functor>(f),
-      this->GetPointer(),
-      std::forward<Args>(args)...);
+    return detail::VariantCastAndCallImpl(
+      this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 };
 
+// --------------------------------------------------------------------------------
+// Variant superclass that helps preserve trivially copyable and trivially constructable
+// properties where possible.
 template <typename VariantType,
           typename TriviallyConstructible =
             typename VariantTriviallyConstructible<VariantType>::type,
@@ -277,7 +225,11 @@ struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
                               std::false_type,
                               std::true_type> : VariantStorageImpl<Ts...>
 {
-  VTK_M_DEVICE VariantConstructorImpl() { this->Index = -1; }
+  VTK_M_DEVICE VariantConstructorImpl()
+    : VariantStorageImpl<Ts...>(vtkm::internal::NullType{})
+  {
+    this->Index = -1;
+  }
 
   // Any trivially copyable class is trivially destructable.
   ~VariantConstructorImpl() = default;
@@ -294,20 +246,32 @@ struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
                               construct_type,
                               std::false_type> : VariantStorageImpl<Ts...>
 {
-  VTK_M_DEVICE VariantConstructorImpl() { this->Index = -1; }
+  VTK_M_DEVICE VariantConstructorImpl()
+    : VariantStorageImpl<Ts...>(vtkm::internal::NullType{})
+  {
+    this->Index = -1;
+  }
   VTK_M_DEVICE ~VariantConstructorImpl() { this->Reset(); }
 
   VTK_M_DEVICE VariantConstructorImpl(const VariantConstructorImpl& src) noexcept
+    : VariantStorageImpl<Ts...>(vtkm::internal::NullType{})
   {
-    src.CastAndCall(VariantCopyFunctor{}, this->GetPointer());
+    src.CastAndCall(VariantCopyConstructFunctor{}, this->Storage);
     this->Index = src.Index;
   }
 
   VTK_M_DEVICE VariantConstructorImpl& operator=(const VariantConstructorImpl& src) noexcept
   {
-    this->Reset();
-    src.CastAndCall(detail::VariantCopyFunctor{}, this->GetPointer());
-    this->Index = src.Index;
+    if (this->GetIndex() == src.GetIndex())
+    {
+      src.CastAndCall(detail::VariantCopyFunctor{}, this->Storage);
+    }
+    else
+    {
+      this->Reset();
+      src.CastAndCall(detail::VariantCopyConstructFunctor{}, this->Storage);
+      this->Index = src.Index;
+    }
     return *this;
   }
 };
@@ -323,20 +287,6 @@ class Variant : detail::VariantConstructorImpl<Variant<Ts...>>
   using CheckTypes = vtkm::List<detail::VariantCheckType<Ts>...>;
 
 public:
-  /// Returns the index of the type of object this variant is storing. If no object is currently
-  /// stored (i.e. the `Variant` is invalid), an invalid is returned.
-  ///
-  VTK_M_DEVICE vtkm::IdComponent GetIndex() const noexcept { return this->Superclass::GetIndex(); }
-
-  /// Returns true if this `Variant` is storing an object from one of the types in the template
-  /// list, false otherwise.
-  ///
-  /// Note that if this `Variant` was not initialized with an object, the result of `IsValid`
-  /// is undefined. The `Variant` could report itself as validly containing an object that
-  /// is trivially constructed.
-  ///
-  VTK_M_DEVICE bool IsValid() const noexcept { return this->Superclass::IsValid(); }
-
   /// Type that converts to a std::integral_constant containing the index of the given type (or
   /// -1 if that type is not in the list).
   template <typename T>
@@ -353,11 +303,28 @@ public:
   /// Type that converts to the type at the given index.
   ///
   template <vtkm::IdComponent Index>
-  using TypeAt = typename Superclass::template TypeAt<Index>;
+  using TypeAt = typename vtkm::ListAt<vtkm::List<Ts...>, Index>;
 
   /// The number of types representable by this Variant.
   ///
   static constexpr vtkm::IdComponent NumberOfTypes = vtkm::IdComponent{ sizeof...(Ts) };
+
+  /// Returns the index of the type of object this variant is storing. If no object is currently
+  /// stored (i.e. the `Variant` is invalid), an invalid is returned.
+  ///
+  VTK_M_DEVICE vtkm::IdComponent GetIndex() const noexcept { return this->Index; }
+
+  /// Returns true if this `Variant` is storing an object from one of the types in the template
+  /// list, false otherwise.
+  ///
+  /// Note that if this `Variant` was not initialized with an object, the result of `IsValid`
+  /// is undefined. The `Variant` could report itself as validly containing an object that
+  /// is trivially constructed.
+  ///
+  VTK_M_DEVICE bool IsValid() const noexcept
+  {
+    return (this->Index >= 0) && (this->Index < NumberOfTypes);
+  }
 
   Variant() = default;
   ~Variant() = default;
@@ -373,19 +340,22 @@ public:
     // Might be a way to use an enable_if to enforce a proper type.
     VTKM_STATIC_ASSERT_MSG(index >= 0, "Attempting to put invalid type into a Variant");
 
-    new (this->GetPointer()) T(src);
     this->Index = index;
+    new (&this->Get<index>()) T(src);
   }
 
   template <typename T>
-  VTK_M_DEVICE Variant(const T&& src) noexcept
+  VTK_M_DEVICE Variant& operator=(const T& src)
   {
-    constexpr vtkm::IdComponent index = IndexOf<T>::value;
-    // Might be a way to use an enable_if to enforce a proper type.
-    VTKM_STATIC_ASSERT_MSG(index >= 0, "Attempting to put invalid type into a Variant");
-
-    new (this->GetPointer()) T(std::move(src));
-    this->Index = index;
+    if (this->GetIndex() == this->GetIndexOf<T>())
+    {
+      this->Get<T>() = src;
+    }
+    else
+    {
+      this->Emplace<T>(src);
+    }
+    return *this;
   }
 
   template <typename T, typename... Args>
@@ -425,18 +395,16 @@ private:
   VTK_M_DEVICE T& EmplaceImpl(Args&&... args)
   {
     this->Reset();
-    T* value = new (this->GetPointer()) T{ args... };
     this->Index = I;
-    return *value;
+    return *(new (&this->Get<I>()) T{ args... });
   }
 
   template <typename T, vtkm::IdComponent I, typename U, typename... Args>
   VTK_M_DEVICE T& EmplaceImpl(std::initializer_list<U> il, Args&&... args)
   {
     this->Reset();
-    T* value = new (this->GetPointer()) T(il, args...);
     this->Index = I;
-    return *value;
+    return *(new (&this->Get<I>()) T(il, args...));
   }
 
 public:
@@ -448,14 +416,14 @@ public:
   VTK_M_DEVICE TypeAt<I>& Get() noexcept
   {
     VTKM_ASSERT(I == this->GetIndex());
-    return *reinterpret_cast<TypeAt<I>*>(this->GetPointer());
+    return detail::VariantUnionGet<I>(this->Storage);
   }
 
   template <vtkm::IdComponent I>
   VTK_M_DEVICE const TypeAt<I>& Get() const noexcept
   {
     VTKM_ASSERT(I == this->GetIndex());
-    return *reinterpret_cast<const TypeAt<I>*>(this->GetPointer());
+    return detail::VariantUnionGet<I>(this->Storage);
   }
   //@}
 
@@ -467,14 +435,14 @@ public:
   VTK_M_DEVICE T& Get() noexcept
   {
     VTKM_ASSERT(this->GetIndexOf<T>() == this->GetIndex());
-    return *reinterpret_cast<T*>(this->GetPointer());
+    return detail::VariantUnionGet<IndexOf<T>::value>(this->Storage);
   }
 
   template <typename T>
   VTK_M_DEVICE const T& Get() const noexcept
   {
     VTKM_ASSERT(this->GetIndexOf<T>() == this->GetIndex());
-    return *reinterpret_cast<const T*>(this->GetPointer());
+    return detail::VariantUnionGet<IndexOf<T>::value>(this->Storage);
   }
   //@}
 
@@ -490,7 +458,9 @@ public:
     noexcept(noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
       -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
-    return this->Superclass::CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
+    VTKM_ASSERT(this->IsValid());
+    return detail::VariantCastAndCallImpl(
+      this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 
   template <typename Functor, typename... Args>
@@ -498,13 +468,22 @@ public:
     noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
     -> decltype(f(std::declval<TypeAt<0>&>(), args...))
   {
-    return this->Superclass::CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
+    VTKM_ASSERT(this->IsValid());
+    return detail::VariantCastAndCallImpl(
+      this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 
   /// Destroys any object the Variant is holding and sets the Variant to an invalid state. This
   /// method is not thread safe.
   ///
-  VTK_M_DEVICE void Reset() noexcept { this->Superclass::Reset(); }
+  VTK_M_DEVICE void Reset() noexcept
+  {
+    if (this->IsValid())
+    {
+      this->CastAndCall(detail::VariantDestroyFunctor{});
+      this->Index = -1;
+    }
+  }
 };
 
 /// \brief Convert a ListTag to a Variant.
