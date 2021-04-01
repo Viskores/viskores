@@ -8,14 +8,15 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/BinarySearch.h>
+#include <vtkm/cont/testing/Testing.h>
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+#include <vtkm/Algorithms.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Invoker.h>
 
 #include <vtkm/worklet/WorkletMapField.h>
-
-#include <vtkm/cont/testing/Testing.h>
 
 #include <vector>
 
@@ -74,7 +75,7 @@ struct TestBinarySearch
   }
 };
 
-void RunBinarySearchTest()
+void RunAlgorithmsTests()
 {
   std::cout << "Testing binary search." << std::endl;
   TestBinarySearch::Run();
@@ -82,7 +83,9 @@ void RunBinarySearchTest()
 
 } // anon namespace
 
-int UnitTestBinarySearch(int argc, char* argv[])
+VTKM_DEPRECATED_SUPPRESS_END
+
+int UnitTestAlgorithms(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunBinarySearchTest, argc, argv);
+  return vtkm::cont::testing::Testing::Run(RunAlgorithmsTests, argc, argv);
 }

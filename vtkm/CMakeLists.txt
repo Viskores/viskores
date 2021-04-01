@@ -17,12 +17,11 @@ vtkm_install_headers(
   vtkm ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Version.h)
 
 set(headers
-  Algorithms.h # Deprecated, split into BinarySearch.h, LowerBound.h, UpperBound.h
+  Algorithms.h # Deprecated, split into LowerBound.h, UpperBound.h
   Assert.h
   Atomic.h
   BinaryPredicates.h
   BinaryOperators.h
-  BinarySearch.h
   Bitset.h
   Bounds.h
   CellClassification.h
