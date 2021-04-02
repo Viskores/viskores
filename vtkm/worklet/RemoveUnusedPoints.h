@@ -15,6 +15,8 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ScatterCounting.h>
@@ -222,6 +224,7 @@ private:
       outHolder = vtkm::cont::UnknownArrayHandle{ outArray };
     }
 
+    VTKM_DEPRECATED_SUPPRESS_BEGIN
     template <typename InT, typename InS>
     VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<InT, InS>& inArray,
                               vtkm::cont::VariantArrayHandleCommon& outHolder,
@@ -231,6 +234,7 @@ private:
       (*this)(inArray, outArray, self);
       outHolder = vtkm::cont::VariantArrayHandleCommon{ outArray };
     }
+    VTKM_DEPRECATED_SUPPRESS_END
   };
 
 public:
@@ -278,6 +282,7 @@ public:
     return outArray;
   }
 
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   template <typename InArrayTypes, typename OutArrayHandle>
   VTKM_CONT void MapPointFieldDeep(const vtkm::cont::VariantArrayHandleBase<InArrayTypes>& inArray,
                                    OutArrayHandle& outArray) const
@@ -294,6 +299,7 @@ public:
 
     return outArray;
   }
+  VTKM_DEPRECATED_SUPPRESS_END
   ///@}
 
   const vtkm::worklet::ScatterCounting& GetPointScatter() const

@@ -163,9 +163,8 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   //Set point scalar
   dataSet.AddField(vtkm::cont::Field(
     "distanceToOrigin", vtkm::cont::Field::Association::POINTS, distanceToOrigin));
-  dataSet.AddField(vtkm::cont::Field("distanceToOther",
-                                     vtkm::cont::Field::Association::POINTS,
-                                     vtkm::cont::VariantArrayHandle(distanceToOther)));
+  dataSet.AddField(
+    vtkm::cont::Field("distanceToOther", vtkm::cont::Field::Association::POINTS, distanceToOther));
 
   CellSet cellSet;
   cellSet.Fill((dim + 1) * (dim + 1) * (dim + 1), HexTag::Id, HexTraits::NUM_POINTS, connectivity);

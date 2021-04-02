@@ -9,7 +9,7 @@
 //============================================================================
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -77,9 +77,12 @@ struct DoTestWholeArrayWorklet
     outHandle.Allocate(ARRAY_SIZE);
 
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(vtkm::cont::VariantArrayHandle(inHandle).ResetTypes(vtkm::List<T>{}),
-                      vtkm::cont::VariantArrayHandle(inOutHandle).ResetTypes(vtkm::List<T>{}),
-                      vtkm::cont::VariantArrayHandle(outHandle).ResetTypes(vtkm::List<T>{}));
+    dispatcher.Invoke(vtkm::cont::UnknownArrayHandle(inHandle)
+                        .ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(),
+                      vtkm::cont::UnknownArrayHandle(inOutHandle)
+                        .ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(),
+                      vtkm::cont::UnknownArrayHandle(outHandle)
+                        .ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>());
 
     std::cout << "Check result." << std::endl;
     CheckPortal(inOutHandle.ReadPortal());

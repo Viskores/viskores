@@ -194,7 +194,7 @@ vtkm::cont::Field make_FieldPoint(std::string name, const vtkm::cont::ArrayHandl
   return vtkm::cont::Field(name, vtkm::cont::Field::Association::POINTS, data);
 }
 
-/// Convenience function to build point fields from vtkm::cont::VariantArrayHandle
+/// Convenience function to build point fields from vtkm::cont::UnknownArrayHandle
 inline vtkm::cont::Field make_FieldPoint(std::string name,
                                          const vtkm::cont::UnknownArrayHandle& data)
 {
@@ -209,7 +209,7 @@ vtkm::cont::Field make_FieldCell(std::string name, const vtkm::cont::ArrayHandle
 }
 
 
-/// Convenience function to build cell fields from vtkm::cont::VariantArrayHandle
+/// Convenience function to build cell fields from vtkm::cont::UnknownArrayHandle
 inline vtkm::cont::Field make_FieldCell(std::string name,
                                         const vtkm::cont::UnknownArrayHandle& data)
 {

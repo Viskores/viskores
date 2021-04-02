@@ -50,7 +50,7 @@ void VTKRectilinearGridReader::Read()
   //Read the points.
   std::string fileStorageDataType;
   std::size_t numPoints[3];
-  vtkm::cont::VariantArrayHandle X, Y, Z;
+  vtkm::cont::UnknownArrayHandle X, Y, Z;
 
   this->DataFile->Stream >> tag >> numPoints[0] >> fileStorageDataType >> std::ws;
   if (tag != "X_COORDINATES")
@@ -90,13 +90,13 @@ void VTKRectilinearGridReader::Read()
 
   // We need to store all coordinate arrays as FloatDefault.
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
-  // But the VariantArrayHandle has type fileStorageDataType.
+  // But the UnknownArrayHandle has type fileStorageDataType.
   // If the fileStorageDataType is the same as the storage type, no problem:
   if (fileStorageDataType == vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name())
   {
-    X.CopyTo(Xc);
-    Y.CopyTo(Yc);
-    Z.CopyTo(Zc);
+    X.AsArrayHandle(Xc);
+    Y.AsArrayHandle(Yc);
+    Z.AsArrayHandle(Zc);
   }
   else
   {
@@ -104,9 +104,9 @@ void VTKRectilinearGridReader::Read()
     if (fileStorageDataType == "float")
     {
       vtkm::cont::ArrayHandle<vtkm::Float32> Xcf, Ycf, Zcf;
-      X.CopyTo(Xcf);
-      Y.CopyTo(Ycf);
-      Z.CopyTo(Zcf);
+      X.AsArrayHandle(Xcf);
+      Y.AsArrayHandle(Ycf);
+      Z.AsArrayHandle(Zcf);
       vtkm::cont::ArrayCopy(Xcf, Xc);
       vtkm::cont::ArrayCopy(Ycf, Yc);
       vtkm::cont::ArrayCopy(Zcf, Zc);
@@ -114,9 +114,9 @@ void VTKRectilinearGridReader::Read()
     else
     {
       vtkm::cont::ArrayHandle<vtkm::Float64> Xcd, Ycd, Zcd;
-      X.CopyTo(Xcd);
-      Y.CopyTo(Ycd);
-      Z.CopyTo(Zcd);
+      X.AsArrayHandle(Xcd);
+      Y.AsArrayHandle(Ycd);
+      Z.AsArrayHandle(Zcd);
       vtkm::cont::ArrayCopy(Xcd, Xc);
       vtkm::cont::ArrayCopy(Ycd, Yc);
       vtkm::cont::ArrayCopy(Zcd, Zc);

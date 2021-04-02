@@ -17,7 +17,7 @@
 #include <vtkm/CellTraits.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 
 namespace vtkm
 {
@@ -194,10 +194,14 @@ public:
     vtkm::worklet::DispatcherMapTopology<Worklet>().Invoke(cellset, faceNormals, pointNormals);
   }
 
-  template <typename CellSetType, typename FaceNormalTypeList, typename NormalCompType>
-  void Run(const CellSetType& cellset,
-           const vtkm::cont::VariantArrayHandleBase<FaceNormalTypeList>& faceNormals,
-           vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals)
+  template <typename CellSetType,
+            typename FaceNormalTypeList,
+            typename FaceNormalStorageList,
+            typename NormalCompType>
+  void Run(
+    const CellSetType& cellset,
+    const vtkm::cont::UncertainArrayHandle<FaceNormalTypeList, FaceNormalStorageList>& faceNormals,
+    vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals)
   {
     vtkm::worklet::DispatcherMapTopology<Worklet>().Invoke(cellset, faceNormals, pointNormals);
   }

@@ -18,7 +18,7 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 namespace vtkm
 {
@@ -133,7 +133,7 @@ public:
   //@}
 
   VTKM_CONT
-  void AddPointField(const std::string& fieldName, const vtkm::cont::VariantArrayHandle& field)
+  void AddPointField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
   {
     this->AddField(make_FieldPoint(fieldName, field));
   }
@@ -161,7 +161,7 @@ public:
 
   //Cell centered field
   VTKM_CONT
-  void AddCellField(const std::string& fieldName, const vtkm::cont::VariantArrayHandle& field)
+  void AddCellField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
   {
     this->AddField(make_FieldCell(fieldName, field));
   }

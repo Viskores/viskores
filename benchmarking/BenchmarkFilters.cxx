@@ -604,7 +604,7 @@ public:
   }
 };
 
-// Get the number of components in a VariantArrayHandle, ArrayHandle, or Field's
+// Get the number of components in a UnknownArrayHandle, ArrayHandle, or Field's
 // ValueType.
 struct NumberOfComponents
 {
