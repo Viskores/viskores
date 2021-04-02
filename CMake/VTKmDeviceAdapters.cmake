@@ -254,9 +254,12 @@ if(VTKm_ENABLE_CUDA)
     endif()
 
     string(REPLACE ";" " " arch_flags "${arch_flags}")
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
-      #We propagate cuda flags via target* options so that they
-      #export cleanly
+
+    if(POLICY CMP0105)
+      cmake_policy(GET CMP0105 policy_105_enabled)
+    endif()
+
+    if(policy_105_enabled STREQUAL "NEW")
       set(CMAKE_CUDA_ARCHITECTURES OFF)
       target_compile_options(vtkm_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${arch_flags}>)
       target_link_options(vtkm_cuda INTERFACE $<DEVICE_LINK:${arch_flags}>)
