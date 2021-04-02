@@ -56,7 +56,6 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/Initialize.h>
 
 #include <vtkm/filter/ContourTreeUniform.h>
@@ -90,11 +89,11 @@ int main(int argc, char* argv[])
   inFile >> vdims[0];
   inFile >> vdims[1];
   inFile >> vdims[2];
-  std::size_t nVertices = static_cast<std::size_t>(vdims[0] * vdims[1] * vdims[2]);
+  std::size_t numVertices = static_cast<std::size_t>(vdims[0] * vdims[1] * vdims[2]);
 
   // read data
-  std::vector<vtkm::Float32> values(nVertices);
-  for (std::size_t vertex = 0; vertex < nVertices; vertex++)
+  std::vector<vtkm::Float32> values(numVertices);
+  for (std::size_t vertex = 0; vertex < numVertices; vertex++)
   {
     inFile >> values[vertex];
   }
@@ -104,8 +103,7 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSetBuilderUniform dsb;
   vtkm::cont::DataSet inDataSet = dsb.Create(vdims);
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(inDataSet, "values", values);
+  inDataSet.AddPointField("values", values);
 
   // Convert 3D mesh of values into contour tree, pairs of vertex ids
   vtkm::filter::ContourTreeMesh3D filter;
@@ -115,7 +113,7 @@ int main(int argc, char* argv[])
 
   vtkm::cont::Field resultField = output.GetField("saddlePeak");
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-  resultField.GetData().CopyTo(saddlePeak);
+  resultField.GetData().AsArrayHandle(saddlePeak);
 
   return 0;
 }

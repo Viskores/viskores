@@ -17,15 +17,17 @@ namespace vtkm
 namespace filter
 {
 
-struct GhostCellClassifyPolicy : vtkm::filter::PolicyBase<GhostCellClassifyPolicy>
+struct VTKM_DEPRECATED(1.6,
+                       "GhostCellClassifyPolicy no longer has an effect.") GhostCellClassifyPolicy
+  : vtkm::filter::PolicyBase<GhostCellClassifyPolicy>
 {
-  using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8>;
+  using FieldTypeList = vtkm::List<vtkm::UInt8>;
 };
 
 class GhostCellClassify : public vtkm::filter::FilterDataSet<GhostCellClassify>
 {
 public:
-  using SupportedTypes = vtkm::ListTagBase<vtkm::UInt8>;
+  using SupportedTypes = vtkm::List<vtkm::UInt8>;
 
   VTKM_CONT
   GhostCellClassify();

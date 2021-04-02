@@ -19,8 +19,6 @@ void RenderTests()
 {
   vtkm::rendering::Canvas canvas;
   canvas.SetBackgroundColor(vtkm::rendering::Color::white);
-  canvas.Initialize();
-  canvas.Activate();
   canvas.Clear();
   canvas.AddLine(-0.8, 0.8, 0.8, 0.8, 1.0f, vtkm::rendering::Color::black);
   canvas.AddLine(0.8, 0.8, 0.8, -0.8, 1.0f, vtkm::rendering::Color::black);

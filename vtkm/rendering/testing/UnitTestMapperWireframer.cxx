@@ -33,7 +33,7 @@ vtkm::cont::DataSet Make3DUniformDataSet(vtkm::Id size = 64)
     0.0f, 10.0f / static_cast<vtkm::Float32>(numValues), numValues);
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarField;
   vtkm::cont::ArrayCopy(fieldValues, scalarField);
-  vtkm::cont::DataSetFieldAdd().AddPointField(dataSet, fieldName, scalarField);
+  dataSet.AddPointField(fieldName, scalarField);
   return dataSet;
 }
 
@@ -67,7 +67,7 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   connectivity.Allocate(8);
-  auto connPortal = connectivity.GetPortalControl();
+  auto connPortal = connectivity.WritePortal();
   connPortal.Set(0, 0);
   connPortal.Set(1, 1);
 
@@ -82,9 +82,8 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
 
   cellSet.Fill(nVerts, vtkm::CELL_SHAPE_LINE, 2, connectivity);
   dataSet.SetCellSet(cellSet);
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(dataSet, "pointVar", pointVar);
-  dsf.AddCellField(dataSet, "cellVar", cellVar);
+  dataSet.AddPointField("pointVar", pointVar);
+  dataSet.AddCellField("cellVar", cellVar);
 
   return dataSet;
 }

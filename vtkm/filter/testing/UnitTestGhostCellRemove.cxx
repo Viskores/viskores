@@ -12,13 +12,9 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/GhostCellRemove.h>
-
-#include <vtkm/io/writer/VTKDataSetWriter.h>
-
 
 namespace
 {
@@ -38,7 +34,7 @@ static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostCellArray(vtkm::Id nx
 
   vtkm::cont::ArrayHandle<vtkm::UInt8> ghosts;
   ghosts.Allocate(numCells);
-  auto portal = ghosts.GetPortalControl();
+  auto portal = ghosts.WritePortal();
   for (vtkm::Id i = 0; i < numCells; i++)
   {
     if (numLayers == 0)
@@ -99,8 +95,7 @@ static vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
     ds = dsb.Create(vtkm::Id3(numI + 1, numJ + 1, numK + 1));
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
+  ds.AddCellField("vtkmGhostCells", ghosts);
 
   return ds;
 }
@@ -135,8 +130,7 @@ static vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
+  ds.AddCellField("vtkmGhostCells", ghosts);
 
   return ds;
 }
@@ -165,11 +159,10 @@ static void MakeExplicitCells(const CellSetType& cellSet,
   {
     auto ptIds = structured.GetPointsOfCell(i);
     for (vtkm::IdComponent j = 0; j < NDIM; j++, idx++)
-      conn.GetPortalControl().Set(idx, ptIds[j]);
+      conn.WritePortal().Set(idx, ptIds[j]);
 
-    shapes.GetPortalControl().Set(
-      i, (NDIM == 4 ? vtkm::CELL_SHAPE_QUAD : vtkm::CELL_SHAPE_HEXAHEDRON));
-    numIndices.GetPortalControl().Set(i, NDIM);
+    shapes.WritePortal().Set(i, (NDIM == 4 ? vtkm::CELL_SHAPE_QUAD : vtkm::CELL_SHAPE_HEXAHEDRON));
+    numIndices.WritePortal().Set(i, NDIM);
   }
 }
 
@@ -179,13 +172,13 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
 
   vtkm::cont::DataSet dsUniform = MakeUniform(numI, numJ, numK, numLayers);
 
-  auto coordData = dsUniform.GetCoordinateSystem(0).GetData();
+  auto coordData = dsUniform.GetCoordinateSystem(0).GetDataAsMultiplexer();
   vtkm::Id numPts = coordData.GetNumberOfValues();
   vtkm::cont::ArrayHandle<CoordType> explCoords;
 
   explCoords.Allocate(numPts);
-  auto explPortal = explCoords.GetPortalControl();
-  auto cp = coordData.GetPortalConstControl();
+  auto explPortal = explCoords.WritePortal();
+  auto cp = coordData.ReadPortal();
   for (vtkm::Id i = 0; i < numPts; i++)
     explPortal.Set(i, cp.Get(i));
 
@@ -213,8 +206,7 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers);
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
+  ds.AddCellField("vtkmGhostCells", ghosts);
 
   return ds;
 }

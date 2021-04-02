@@ -24,14 +24,109 @@ namespace vtkm
 namespace cont
 {
 
+template <typename SourceT, typename SourceStorage>
+struct VTKM_ALWAYS_EXPORT StorageTagCast
+{
+};
+
 namespace internal
 {
 
 template <typename FromType, typename ToType>
 struct VTKM_ALWAYS_EXPORT Cast
 {
+// The following operator looks like it should never issue a cast warning because of
+// the static_cast (and we don't want it to issue a warning). However, if ToType is
+// an object that has a constructor that takes a value that FromType can be cast to,
+// that cast can cause a warning. For example, if FromType is vtkm::Float64 and ToType
+// is vtkm::Vec<vtkm::Float32, 3>, the static_cast will first implicitly cast the
+// Float64 to a Float32 (which causes a warning) before using the static_cast to
+// construct the Vec with the Float64. The easiest way around the problem is to
+// just disable all conversion warnings here. (The pragmas are taken from those
+// used in Types.h for the VecBase class.)
+#if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#endif // gcc || clang
+#endif //not using cuda < 8
+#if defined(VTKM_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4244)
+#endif
+
   VTKM_EXEC_CONT
   ToType operator()(const FromType& val) const { return static_cast<ToType>(val); }
+
+#if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif // gcc || clang
+#endif // not using cuda < 8
+#if defined(VTKM_MSVC)
+#pragma warning(pop)
+#endif
+};
+
+namespace detail
+{
+
+template <typename TargetT, typename SourceT, typename SourceStorage, bool... CastFlags>
+struct ArrayHandleCastTraits;
+
+template <typename TargetT, typename SourceT, typename SourceStorage>
+struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage>
+  : ArrayHandleCastTraits<TargetT,
+                          SourceT,
+                          SourceStorage,
+                          std::is_convertible<SourceT, TargetT>::value,
+                          std::is_convertible<TargetT, SourceT>::value>
+{
+};
+
+// Case where the forward cast is invalid, so this array is invalid.
+template <typename TargetT, typename SourceT, typename SourceStorage, bool CanCastBackward>
+struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, false, CanCastBackward>
+{
+  struct StorageSuperclass : vtkm::cont::internal::UndefinedStorage
+  {
+    using PortalType = vtkm::cont::internal::detail::UndefinedArrayPortal<TargetT>;
+    using PortalConstType = vtkm::cont::internal::detail::UndefinedArrayPortal<TargetT>;
+  };
+};
+
+// Case where the forward cast is valid but the backward cast is invalid.
+template <typename TargetT, typename SourceT, typename SourceStorage>
+struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, true, false>
+{
+  using StorageTagSuperclass = StorageTagTransform<vtkm::cont::ArrayHandle<SourceT, SourceStorage>,
+                                                   vtkm::cont::internal::Cast<SourceT, TargetT>>;
+  using StorageSuperclass = vtkm::cont::internal::Storage<TargetT, StorageTagSuperclass>;
+};
+
+// Case where both forward and backward casts are valid.
+template <typename TargetT, typename SourceT, typename SourceStorage>
+struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, true, true>
+{
+  using StorageTagSuperclass = StorageTagTransform<vtkm::cont::ArrayHandle<SourceT, SourceStorage>,
+                                                   vtkm::cont::internal::Cast<SourceT, TargetT>,
+                                                   vtkm::cont::internal::Cast<TargetT, SourceT>>;
+  using StorageSuperclass = vtkm::cont::internal::Storage<TargetT, StorageTagSuperclass>;
+};
+
+} // namespace detail
+
+template <typename TargetT, typename SourceT, typename SourceStorage_>
+struct Storage<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage_>>
+  : detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage_>::StorageSuperclass
+{
+  using Superclass =
+    typename detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage_>::StorageSuperclass;
+
+  using Superclass::Superclass;
 };
 
 } // namespace internal
@@ -44,22 +139,36 @@ struct VTKM_ALWAYS_EXPORT Cast
 ///
 template <typename T, typename ArrayHandleType>
 class ArrayHandleCast
-  : public vtkm::cont::ArrayHandleTransform<ArrayHandleType,
-                                            internal::Cast<typename ArrayHandleType::ValueType, T>,
-                                            internal::Cast<T, typename ArrayHandleType::ValueType>>
+  : public vtkm::cont::ArrayHandle<
+      T,
+      StorageTagCast<typename ArrayHandleType::ValueType, typename ArrayHandleType::StorageTag>>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleCast,
     (ArrayHandleCast<T, ArrayHandleType>),
-    (vtkm::cont::ArrayHandleTransform<ArrayHandleType,
-                                      internal::Cast<typename ArrayHandleType::ValueType, T>,
-                                      internal::Cast<T, typename ArrayHandleType::ValueType>>));
+    (vtkm::cont::ArrayHandle<
+      T,
+      StorageTagCast<typename ArrayHandleType::ValueType, typename ArrayHandleType::StorageTag>>));
 
-  ArrayHandleCast(const ArrayHandleType& handle)
-    : Superclass(handle)
+  ArrayHandleCast(const vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
+                                                typename ArrayHandleType::StorageTag>& handle)
+    : Superclass(Superclass::StorageType::CreateBuffers(handle))
   {
     this->ValidateTypeCast<typename ArrayHandleType::ValueType>();
+  }
+
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated destructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  ~ArrayHandleCast() {}
+
+  /// \brief Returns the `ArrayHandle` that is being transformed.
+  ArrayHandleType GetSourceArray() const
+  {
+    return Superclass::StorageType::GetArray(this->GetBuffers());
   }
 
 private:
@@ -161,23 +270,20 @@ namespace vtkm
 namespace cont
 {
 
-template <typename T1, typename T2>
-struct SerializableTypeString<vtkm::cont::internal::Cast<T1, T2>>
+template <typename T, typename AH>
+struct SerializableTypeString<vtkm::cont::ArrayHandleCast<T, AH>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Cast_Functor<" + SerializableTypeString<T1>::Get() + "," +
-      SerializableTypeString<T2>::Get() + ">";
+    static std::string name =
+      "AH_Cast<" + SerializableTypeString<T>::Get() + "," + SerializableTypeString<AH>::Get() + ">";
     return name;
   }
 };
 
-template <typename T, typename AH>
-struct SerializableTypeString<vtkm::cont::ArrayHandleCast<T, AH>>
-  : SerializableTypeString<
-      vtkm::cont::ArrayHandleTransform<AH,
-                                       vtkm::cont::internal::Cast<typename AH::ValueType, T>,
-                                       vtkm::cont::internal::Cast<T, typename AH::ValueType>>>
+template <typename T1, typename T2, typename S>
+struct SerializableTypeString<vtkm::cont::ArrayHandle<T1, vtkm::cont::StorageTagCast<T2, S>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleCast<T1, vtkm::cont::ArrayHandle<T2, S>>>
 {
 };
 }
@@ -186,20 +292,35 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleCast<T, AH>>
 namespace mangled_diy_namespace
 {
 
-template <typename T1, typename T2>
-struct Serialization<vtkm::cont::internal::Cast<T1, T2>>
+template <typename TargetT, typename SourceT, typename SourceStorage>
+struct Serialization<
+  vtkm::cont::ArrayHandle<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>>>
 {
-  static VTKM_CONT void save(BinaryBuffer&, const vtkm::cont::internal::Cast<T1, T2>&) {}
+private:
+  using BaseType =
+    vtkm::cont::ArrayHandle<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>>;
 
-  static VTKM_CONT void load(BinaryBuffer&, vtkm::cont::internal::Cast<T1, T2>&) {}
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    vtkm::cont::ArrayHandleCast<TargetT, vtkm::cont::ArrayHandle<SourceT, SourceStorage>>
+      castArray = obj;
+    vtkmdiy::save(bb, castArray.GetSourceArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    vtkm::cont::ArrayHandle<SourceT, SourceStorage> array;
+    vtkmdiy::load(bb, array);
+    obj = vtkm::cont::make_ArrayHandleCast<TargetT>(array);
+  }
 };
 
-template <typename T, typename AH>
-struct Serialization<vtkm::cont::ArrayHandleCast<T, AH>>
-  : Serialization<
-      vtkm::cont::ArrayHandleTransform<AH,
-                                       vtkm::cont::internal::Cast<typename AH::ValueType, T>,
-                                       vtkm::cont::internal::Cast<T, typename AH::ValueType>>>
+template <typename TargetT, typename AH>
+struct Serialization<vtkm::cont::ArrayHandleCast<TargetT, AH>>
+  : Serialization<vtkm::cont::ArrayHandle<
+      TargetT,
+      vtkm::cont::StorageTagCast<typename AH::ValueType, typename AH::StorageTag>>>
 {
 };
 

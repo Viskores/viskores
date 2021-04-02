@@ -2511,31 +2511,31 @@ public:
     }
 
   private:
-    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ExecutionTypes<DeviceAdapter>::PortalConst
-      ClipTablesDataPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::UInt16>::ExecutionTypes<DeviceAdapter>::PortalConst
-      ClipTablesIndicesPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ExecutionTypes<DeviceAdapter>::PortalConst
-      CellEdgesPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType ClipTablesDataPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::UInt16>::ReadPortalType ClipTablesIndicesPortal;
+    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType CellEdgesPortal;
 
     friend class ClipTables;
   };
 
   ClipTables()
-    : ClipTablesDataArray(vtkm::cont::make_ArrayHandle(ClipTablesData, CLIP_TABLES_DATA_SIZE))
-    , ClipTablesIndicesArray(
-        vtkm::cont::make_ArrayHandle(ClipTablesIndices, CLIP_TABLES_INDICES_SIZE))
-    , CellEdgesArray(vtkm::cont::make_ArrayHandle(CellEdges, CELL_EDGES_SIZE))
+    : ClipTablesDataArray(
+        vtkm::cont::make_ArrayHandle(ClipTablesData, CLIP_TABLES_DATA_SIZE, vtkm::CopyFlag::Off))
+    , ClipTablesIndicesArray(vtkm::cont::make_ArrayHandle(ClipTablesIndices,
+                                                          CLIP_TABLES_INDICES_SIZE,
+                                                          vtkm::CopyFlag::Off))
+    , CellEdgesArray(vtkm::cont::make_ArrayHandle(CellEdges, CELL_EDGES_SIZE, vtkm::CopyFlag::Off))
   {
   }
 
   template <typename DeviceAdapter>
-  DevicePortal<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  DevicePortal<DeviceAdapter> PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
   {
     DevicePortal<DeviceAdapter> portal;
-    portal.ClipTablesDataPortal = this->ClipTablesDataArray.PrepareForInput(DeviceAdapter());
-    portal.ClipTablesIndicesPortal = this->ClipTablesIndicesArray.PrepareForInput(DeviceAdapter());
-    portal.CellEdgesPortal = this->CellEdgesArray.PrepareForInput(DeviceAdapter());
+    portal.ClipTablesDataPortal = this->ClipTablesDataArray.PrepareForInput(DeviceAdapter(), token);
+    portal.ClipTablesIndicesPortal =
+      this->ClipTablesIndicesArray.PrepareForInput(DeviceAdapter(), token);
+    portal.CellEdgesPortal = this->CellEdgesArray.PrepareForInput(DeviceAdapter(), token);
     return portal;
   }
 

@@ -16,7 +16,10 @@
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
+
+#include <vtkm/BinaryOperators.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -45,15 +48,13 @@ class TestingArrayHandleMultiplexer
     using T = typename std::remove_reference<decltype(multiplexerArray)>::type::ValueType;
 
     vtkm::cont::printSummary_ArrayHandle(multiplexerArray, std::cout);
-    VTKM_TEST_ASSERT(test_equal_portals(multiplexerArray.GetPortalConstControl(),
-                                        expectedArray.GetPortalConstControl()),
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexerArray.ReadPortal(), expectedArray.ReadPortal()),
                      "Multiplexer array gave wrong result in control environment");
 
     vtkm::cont::ArrayHandle<T> copy;
     vtkm::cont::ArrayCopy(multiplexerArray, copy);
-    VTKM_TEST_ASSERT(
-      test_equal_portals(copy.GetPortalConstControl(), expectedArray.GetPortalConstControl()),
-      "Multiplexer did not copy correctly in execution environment");
+    VTKM_TEST_ASSERT(test_equal_portals(copy.ReadPortal(), expectedArray.ReadPortal()),
+                     "Multiplexer did not copy correctly in execution environment");
   }
 
   static void BasicSwitch()
@@ -86,7 +87,51 @@ class TestingArrayHandleMultiplexer
     CheckArray(multiplexer, array3);
   }
 
-  static void TestAll() { BasicSwitch(); }
+  static void Reduce()
+  {
+    // Regression test for an issue with compiling ArrayHandleMultiplexer with the thrust reduce
+    // algorithm on CUDA. Most likely related to:
+    // https://github.com/thrust/thrust/issues/928
+    // https://github.com/thrust/thrust/issues/1044
+    std::cout << std::endl << "--- Reduce" << std::endl;
+
+    using ValueType = vtkm::Vec3f;
+    using MultiplexerType = vtkm::cont::ArrayHandleMultiplexer<
+      vtkm::cont::ArrayHandleConstant<ValueType>,
+      vtkm::cont::ArrayHandleCounting<ValueType>,
+      vtkm::cont::ArrayHandle<ValueType>,
+      vtkm::cont::ArrayHandleUniformPointCoordinates,
+      vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                              vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                              vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>;
+
+    MultiplexerType multiplexer =
+      vtkm::cont::ArrayHandleCounting<ValueType>(vtkm::Vec3f(1), vtkm::Vec3f(1), ARRAY_SIZE);
+
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+
+    {
+      std::cout << "Basic Reduce" << std::endl;
+      ValueType result = Algorithm::Reduce(multiplexer, ValueType(0.0));
+      VTKM_TEST_ASSERT(test_equal(result, ValueType(0.5 * (ARRAY_SIZE * (ARRAY_SIZE + 1)))));
+    }
+
+    {
+      std::cout << "Reduce with custom operator" << std::endl;
+      vtkm::Vec<ValueType, 2> initial(ValueType(10000), ValueType(0));
+      vtkm::Vec<ValueType, 2> result =
+        Algorithm::Reduce(multiplexer, initial, vtkm::MinAndMax<ValueType>{});
+      VTKM_TEST_ASSERT(test_equal(result[0], ValueType(1)));
+      VTKM_TEST_ASSERT(
+        test_equal(result[1], ValueType(static_cast<vtkm::FloatDefault>(ARRAY_SIZE))));
+    }
+  }
+
+  static void TestAll()
+  {
+    BasicSwitch();
+    Reduce();
+  }
 
 public:
   static int Run(int argc, char* argv[])

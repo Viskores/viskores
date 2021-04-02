@@ -20,6 +20,9 @@
 #include <ctime>
 #include <random>
 
+#define CHECK_CALL(call) \
+  VTKM_TEST_ASSERT((call) == vtkm::ErrorCode::Success, "Call resulted in error.")
+
 namespace
 {
 
@@ -57,23 +60,15 @@ static void CompareCoordinates(const PointWCoordsType& pointWCoords,
 {
   using Vector3 = vtkm::Vec<T, 3>;
 
-  // Stuff to fake running in the execution environment.
-  char messageBuffer[256];
-  messageBuffer[0] = '\0';
-  vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
-  vtkm::exec::FunctorBase workletProxy;
-  workletProxy.SetErrorMessageBuffer(errorMessage);
-
-  Vector3 computedWCoords = vtkm::exec::ParametricCoordinatesToWorldCoordinates(
-    pointWCoords, truePCoords, shape, workletProxy);
-  VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+  Vector3 computedWCoords;
+  CHECK_CALL(vtkm::exec::ParametricCoordinatesToWorldCoordinates(
+    pointWCoords, truePCoords, shape, computedWCoords));
   VTKM_TEST_ASSERT(test_equal(computedWCoords, trueWCoords, 0.01),
                    "Computed wrong world coords from parametric coords.");
 
-  bool success = false;
-  Vector3 computedPCoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-    pointWCoords, trueWCoords, shape, success, workletProxy);
-  VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+  Vector3 computedPCoords;
+  CHECK_CALL(vtkm::exec::WorldCoordinatesToParametricCoordinates(
+    pointWCoords, trueWCoords, shape, computedPCoords));
   VTKM_TEST_ASSERT(test_equal(computedPCoords, truePCoords, 0.01),
                    "Computed wrong parametric coords from world coords.");
 }
@@ -84,27 +79,17 @@ void TestPCoordsSpecial(const PointWCoordsType& pointWCoords, CellShapeTag shape
   using Vector3 = typename PointWCoordsType::ComponentType;
   using T = typename Vector3::ComponentType;
 
-  // Stuff to fake running in the execution environment.
-  char messageBuffer[256];
-  messageBuffer[0] = '\0';
-  vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
-  vtkm::exec::FunctorBase workletProxy;
-  workletProxy.SetErrorMessageBuffer(errorMessage);
-
   const vtkm::IdComponent numPoints = pointWCoords.GetNumberOfComponents();
 
-  std::cout << "    Test parametric coordinates at cell nodes." << std::endl;
   for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
   {
     Vector3 pcoords;
-    vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, pcoords, shape, workletProxy);
-    VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+    CHECK_CALL(vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, pcoords));
     Vector3 wcoords = pointWCoords[pointIndex];
     CompareCoordinates(pointWCoords, pcoords, wcoords, shape);
   }
 
   {
-    std::cout << "    Test parametric coordinates at cell center." << std::endl;
     Vector3 wcoords = pointWCoords[0];
     for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; pointIndex++)
     {
@@ -113,7 +98,7 @@ void TestPCoordsSpecial(const PointWCoordsType& pointWCoords, CellShapeTag shape
     wcoords = wcoords / Vector3(T(numPoints));
 
     Vector3 pcoords;
-    vtkm::exec::ParametricCoordinatesCenter(numPoints, pcoords, shape, workletProxy);
+    CHECK_CALL(vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, pcoords));
     CompareCoordinates(pointWCoords, pcoords, wcoords, shape);
   }
 }
@@ -122,13 +107,6 @@ template <typename PointWCoordsType, typename CellShapeTag>
 void TestPCoordsSample(const PointWCoordsType& pointWCoords, CellShapeTag shape)
 {
   using Vector3 = typename PointWCoordsType::ComponentType;
-
-  // Stuff to fake running in the execution environment.
-  char messageBuffer[256];
-  messageBuffer[0] = '\0';
-  vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
-  vtkm::exec::FunctorBase workletProxy;
-  workletProxy.SetErrorMessageBuffer(errorMessage);
 
   const vtkm::IdComponent numPoints = pointWCoords.GetNumberOfComponents();
 
@@ -141,26 +119,23 @@ void TestPCoordsSample(const PointWCoordsType& pointWCoords, CellShapeTag shape)
     vtkm::FloatDefault totalWeight = 0;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      vtkm::Vec3f pointPcoords =
-        vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, workletProxy);
-      VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+      vtkm::Vec3f pointPcoords;
+      CHECK_CALL(
+        vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, pointPcoords));
       vtkm::FloatDefault weight = randomDist(g_RandomGenerator);
       pcoords = pcoords + weight * pointPcoords;
       totalWeight += weight;
     }
     pcoords = (1 / totalWeight) * pcoords;
 
-    std::cout << "    Test parametric coordinates at " << pcoords << std::endl;
-
     // If you convert to world coordinates and back, you should get the
     // same value.
-    Vector3 wcoords = vtkm::exec::ParametricCoordinatesToWorldCoordinates(
-      pointWCoords, pcoords, shape, workletProxy);
-    VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
-    bool success = false;
-    Vector3 computedPCoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-      pointWCoords, wcoords, shape, success, workletProxy);
-    VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+    Vector3 wcoords;
+    CHECK_CALL(
+      vtkm::exec::ParametricCoordinatesToWorldCoordinates(pointWCoords, pcoords, shape, wcoords));
+    Vector3 computedPCoords;
+    CHECK_CALL(vtkm::exec::WorldCoordinatesToParametricCoordinates(
+      pointWCoords, wcoords, shape, computedPCoords));
 
     VTKM_TEST_ASSERT(test_equal(pcoords, computedPCoords, 0.05),
                      "pcoord/wcoord transform not symmetrical");
@@ -183,13 +158,6 @@ struct TestPCoordsFunctor
   template <typename CellShapeTag>
   PointWCoordType MakePointWCoords(CellShapeTag, vtkm::IdComponent numPoints) const
   {
-    // Stuff to fake running in the execution environment.
-    char messageBuffer[256];
-    messageBuffer[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
-    vtkm::exec::FunctorBase workletProxy;
-    workletProxy.SetErrorMessageBuffer(errorMessage);
-
     std::uniform_real_distribution<T> randomDist(-1, 1);
 
     Vector3 sheerVec(randomDist(g_RandomGenerator), randomDist(g_RandomGenerator), 0);
@@ -198,9 +166,8 @@ struct TestPCoordsFunctor
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
       Vector3 pcoords;
-      vtkm::exec::ParametricCoordinatesPoint(
-        numPoints, pointIndex, pcoords, CellShapeTag(), workletProxy);
-      VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+      CHECK_CALL(
+        vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, CellShapeTag(), pcoords));
 
       Vector3 wCoords = Vector3(pcoords[0], pcoords[1], pcoords[2] + vtkm::Dot(pcoords, sheerVec));
       pointWCoords.Append(wCoords);

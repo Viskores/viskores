@@ -56,7 +56,7 @@ void TestNormal()
 
   vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> inputArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> outputArray;
-  inputArray = vtkm::cont::make_ArrayHandle(inputVecs);
+  inputArray = vtkm::cont::make_ArrayHandle(inputVecs, vtkm::CopyFlag::On);
 
   vtkm::worklet::Normal normalWorklet;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Normal> dispatcherNormal(normalWorklet);
@@ -72,8 +72,8 @@ void TestNormal()
   for (vtkm::Id i = 0; i < inputArray.GetNumberOfValues(); i++)
   {
     //Make sure that the value is correct.
-    vtkm::Vec<T, N> v = inputArray.GetPortalConstControl().Get(i);
-    vtkm::Vec<T, N> vN = outputArray.GetPortalConstControl().Get(i);
+    vtkm::Vec<T, N> v = inputArray.ReadPortal().Get(i);
+    vtkm::Vec<T, N> vN = outputArray.ReadPortal().Get(i);
     T len = vtkm::Magnitude(v);
     VTKM_TEST_ASSERT(test_equal(v / len, vN), "Wrong result for Normalize worklet");
 
@@ -91,7 +91,7 @@ void TestNormalize()
 
   vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> inputArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> outputArray;
-  inputArray = vtkm::cont::make_ArrayHandle(inputVecs);
+  inputArray = vtkm::cont::make_ArrayHandle(inputVecs, vtkm::CopyFlag::On);
 
   vtkm::worklet::Normalize normalizeWorklet;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Normalize> dispatcherNormalize(normalizeWorklet);
@@ -102,7 +102,7 @@ void TestNormalize()
   {
     //Make sure that the value is correct.
     vtkm::Vec<T, N> v = inputVecs[static_cast<std::size_t>(i)];
-    vtkm::Vec<T, N> vN = inputArray.GetPortalConstControl().Get(i);
+    vtkm::Vec<T, N> vN = inputArray.ReadPortal().Get(i);
     T len = vtkm::Magnitude(v);
     VTKM_TEST_ASSERT(test_equal(v / len, vN), "Wrong result for Normalize worklet");
 

@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_find_super_and_hyper_nodes_worklet_h
-#define vtkm_worklet_contourtree_augmented_active_graph_find_super_and_hyper_nodes_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_find_super_and_hyper_nodes_worklet_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_find_super_and_hyper_nodes_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -76,7 +76,7 @@ public:
                                 WholeArrayOut hyperId,             // (output) hyperId
                                 WholeArrayOut treeHypernodes, // (output) hypernodes of the tree
                                 WholeArrayOut treeSupernodes  // (output) supernodes of the tree
-                                );                            // (input/output) hyperarcs
+  );                                                          // (input/output) hyperarcs
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 
@@ -98,7 +98,7 @@ public:
 
     // deal with hypernodes
     // must do this first, else supernode ID is incorrect
-    if (isHypernode(graphTarget))
+    if (IsHypernode(graphTarget))
     { // hypernode
       // set the IDs for later
       hyperIdPortal.Set(graphVertex, newHypernodePositionPortal.Get(graphVertex));
@@ -109,7 +109,7 @@ public:
       hyperIdPortal.Set(graphVertex, (vtkm::Id)NO_SUCH_ELEMENT);
 
     // supernode IDs
-    if (isSupernode(graphTarget))
+    if (IsSupernode(graphTarget))
     { // supernode
       // set the supernode indices up
       treeSupernodesPortal.Set(newSupernodePositionPortal.Get(graphVertex), graphVertex);
@@ -124,7 +124,7 @@ public:
 
           // deal with hypernodes
           // must do this first, else supernode ID is incorrect
-          if (isHypernode(graphTarget))
+          if (IsHypernode(graphTarget))
             { // hypernode
               // set the IDs for later
               hyperID[graphVertex] = newHypernodePosition[graphVertex];
@@ -135,7 +135,7 @@ public:
             hyperID[graphVertex] = NO_SUCH_ELEMENT;
 
           // supernode IDs
-          if (isSupernode(graphTarget))
+          if (IsSupernode(graphTarget))
             { // supernode
               // set the supernode indices up
               tree.supernodes[newSupernodePosition[graphVertex]] = graphVertex;

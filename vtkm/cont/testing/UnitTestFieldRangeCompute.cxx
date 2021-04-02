@@ -9,7 +9,6 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/FieldRangeCompute.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -30,8 +29,9 @@ vtkm::cont::ArrayHandle<T> CreateArray(T min, T max, vtkm::Id numVals, vtkm::Typ
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(numVals);
 
-  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()),
-                vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalControl()),
+  auto portal = handle.WritePortal();
+  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                vtkm::cont::ArrayPortalToIteratorEnd(portal),
                 [&]() { return static_cast<T>(dis(gen)); });
   return handle;
 }
@@ -52,8 +52,9 @@ vtkm::cont::ArrayHandle<T> CreateArray(const T& min,
   }
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(numVals);
-  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()),
-                vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalControl()),
+  auto portal = handle.WritePortal();
+  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                vtkm::cont::ArrayPortalToIteratorEnd(portal),
                 [&]() {
                   T val;
                   for (int cc = 0; cc < size; ++cc)
@@ -74,7 +75,7 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
 {
   VTKM_TEST_ASSERT(ranges.GetNumberOfValues() == 1, "Wrong number of ranges");
 
-  auto portal = ranges.GetPortalConstControl();
+  auto portal = ranges.ReadPortal();
   auto range = portal.Get(0);
   std::cout << "  expecting [" << min << ", " << max << "], got [" << range.Min << ", " << range.Max
             << "]" << std::endl;
@@ -90,7 +91,7 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
 {
   VTKM_TEST_ASSERT(ranges.GetNumberOfValues() == size, "Wrong number of ranges");
 
-  auto portal = ranges.GetPortalConstControl();
+  auto portal = ranges.ReadPortal();
   for (int cc = 0; cc < size; ++cc)
   {
     auto range = portal.Get(cc);
@@ -108,8 +109,7 @@ void TryRangeComputeDS(const ValueType& min, const ValueType& max)
   std::cout << "Trying type (dataset): " << vtkm::testing::TypeName<ValueType>::Name() << std::endl;
   // let's create a dummy dataset with a bunch of fields.
   vtkm::cont::DataSet dataset;
-  vtkm::cont::DataSetFieldAdd::AddPointField(
-    dataset,
+  dataset.AddPointField(
     "pointvar",
     CreateArray(min, max, ARRAY_SIZE, typename vtkm::TypeTraits<ValueType>::DimensionalityTag()));
 
@@ -128,8 +128,7 @@ void TryRangeComputePDS(const ValueType& min, const ValueType& max)
   {
     // let's create a dummy dataset with a bunch of fields.
     vtkm::cont::DataSet dataset;
-    vtkm::cont::DataSetFieldAdd::AddPointField(
-      dataset,
+    dataset.AddPointField(
       "pointvar",
       CreateArray(min, max, ARRAY_SIZE, typename vtkm::TypeTraits<ValueType>::DimensionalityTag()));
     mb.AppendPartition(dataset);

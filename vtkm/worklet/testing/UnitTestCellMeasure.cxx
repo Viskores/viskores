@@ -27,12 +27,13 @@ void TestCellMeasureUniform3D()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellMeasure<vtkm::Volume>> dispatcher;
-  dispatcher.Invoke(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), result);
+  dispatcher.Invoke(
+    dataSet.GetCellSet(), dataSet.GetCoordinateSystem().GetDataAsMultiplexer(), result);
 
   vtkm::Float32 expected[4] = { 1.f, 1.f, 1.f, 1.f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(vtkm::Id(i)), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(vtkm::Id(i)), expected[i]),
                      "Wrong result for CellMeasure worklet on 3D uniform data");
   }
 }
@@ -48,24 +49,25 @@ void TestCellMeasureWorklet(vtkm::cont::DataSet& dataset,
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellMeasure<IntegrationType>> dispatcher;
-  dispatcher.Invoke(dataset.GetCellSet(), dataset.GetCoordinateSystem(), result);
+  dispatcher.Invoke(
+    dataset.GetCellSet(), dataset.GetCoordinateSystem().GetDataAsMultiplexer(), result);
 
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()),
                    "Wrong number of values in the output array");
 
   for (unsigned int i = 0; i < static_cast<unsigned int>(expected.size()); ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(vtkm::Id(i)), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(vtkm::Id(i)), expected[i]),
                      "Wrong result for CellMeasure filter");
   }
 }
 
 void TestCellMeasure()
 {
+  using vtkm::AllMeasures;
   using vtkm::ArcLength;
   using vtkm::Area;
   using vtkm::Volume;
-  using vtkm::AllMeasures;
 
   TestCellMeasureUniform3D();
 
@@ -106,7 +108,7 @@ void TestCellMeasure()
   TestCellMeasureWorklet(data,
                          "explicit dataset 6 (empty)",
                          { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.0f, 0.0f },
-                         vtkm::ListTagBase<>());
+                         vtkm::List<>());
 }
 }
 

@@ -17,16 +17,14 @@ namespace rendering
 {
 
 ColorBarAnnotation::ColorBarAnnotation()
-  : ColorTable(vtkm::cont::ColorSpace::LAB)
+  : ColorTable(vtkm::ColorSpace::Lab)
   , Position(vtkm::Range(-0.88, +0.88), vtkm::Range(+0.87, +0.92), vtkm::Range(0, 0))
   , Horizontal(true)
   , FieldName("")
 {
 }
 
-ColorBarAnnotation::~ColorBarAnnotation()
-{
-}
+ColorBarAnnotation::~ColorBarAnnotation() {}
 
 void ColorBarAnnotation::SetFieldName(const std::string& fieldName)
 {

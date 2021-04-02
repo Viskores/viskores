@@ -14,7 +14,6 @@
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -45,9 +44,10 @@ private:
       return false;
     }
 
+    auto portal = ah.ReadPortal();
     for (vtkm::Id i = 0; i < size; ++i)
     {
-      if (ah.GetPortalConstControl().Get(i) != expected[i])
+      if (portal.Get(i) != expected[i])
       {
         return false;
       }
@@ -88,8 +88,7 @@ private:
     const int nVerts = 5;
     vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f };
 
-    vtkm::cont::DataSetFieldAdd fieldAdder;
-    fieldAdder.AddPointField(ds, "pointvar", vars, nVerts);
+    ds.AddPointField("pointvar", vars, nVerts);
 
     return ds;
   }
@@ -128,9 +127,10 @@ private:
     dispatcher.Invoke(cellset, dataSet.GetField("pointvar"), result);
 
     vtkm::Float32 expected[3] = { 20.1333f, 30.1667f, 40.2333f };
+    auto portal = result.ReadPortal();
     for (int i = 0; i < 3; ++i)
     {
-      VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+      VTKM_TEST_ASSERT(test_equal(portal.Get(i), expected[i]),
                        "Wrong result for CellAverage worklet on explicit single type cellset data");
     }
   }

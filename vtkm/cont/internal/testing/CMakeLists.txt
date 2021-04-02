@@ -10,9 +10,8 @@
 
 
 set(unit_tests
-  UnitTestArrayManagerExecutionShareWithControl.cxx
   UnitTestArrayPortalFromIterators.cxx
-  UnitTestDynamicTransform.cxx
+  UnitTestBuffer.cxx
   UnitTestIteratorFromArrayPortal.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)

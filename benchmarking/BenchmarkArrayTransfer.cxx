@@ -10,561 +10,511 @@
 
 #include "Benchmarker.h"
 
-#include <vtkm/TypeTraits.h>
-
-#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/exec/FunctorBase.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <sstream>
 #include <string>
 #include <vector>
 
-// 256 MB of floats:
-const vtkm::Id ARRAY_SIZE = 256 * 1024 * 1024 / 4;
-
-namespace vtkm
-{
-namespace benchmarking
+namespace
 {
 
-struct BenchmarkArrayTransfer
+// Make this global so benchmarks can access the current device id:
+vtkm::cont::InitializeResult Config;
+
+const vtkm::UInt64 COPY_SIZE_MIN = (1 << 10); // 1 KiB
+const vtkm::UInt64 COPY_SIZE_MAX = (1 << 30); // 1 GiB
+
+using TestTypes = vtkm::List<vtkm::Float32>;
+
+//------------- Functors for benchmarks --------------------------------------
+
+// Reads all values in ArrayHandle.
+struct ReadValues : vtkm::worklet::WorkletMapField
 {
-  using Algo = vtkm::cont::Algorithm;
-  using StorageTag = vtkm::cont::StorageTagBasic;
-  using Timer = vtkm::cont::Timer;
+  using ControlSignature = void(FieldIn);
 
-  //------------- Functors for benchmarks --------------------------------------
-
-  // Reads all values in ArrayHandle.
-  template <typename PortalType>
-  struct ReadValues : vtkm::exec::FunctorBase
+  template <typename T>
+  VTKM_EXEC void operator()(const T& val) const
   {
-    using ValueType = typename PortalType::ValueType;
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-
-    PortalType Portal;
-    const ValueType MinValue;
-
-    VTKM_CONT
-    ReadValues(const PortalType& portal, const ValueType& minValue)
-      : Portal(portal)
-      , MinValue(minValue)
+    if (val < 0)
     {
+      // We don't really do anything with this, we just need to do *something*
+      // to prevent the compiler from optimizing out the array accesses.
+      this->RaiseError("Unexpected value.");
     }
-
-    VTKM_EXEC
-    void operator()(vtkm::Id i) const
-    {
-      if (this->Portal.Get(i) < this->MinValue)
-      {
-        // We don't really do anything with this, we just need to do *something*
-        // to prevent the compiler from optimizing out the array accesses.
-        this->RaiseError("Unexpected value.");
-      }
-    }
-
-    // unused int argument is simply to distinguish this method from the
-    // VTKM_EXEC overload (VTKM_EXEC_CONT won't work here because of the
-    // RaiseError call).
-    VTKM_CONT
-    void operator()(vtkm::Id i, int) const
-    {
-      if (this->Portal.Get(i) < this->MinValue)
-      {
-        // We don't really do anything with this, we just need to do *something*
-        // to prevent the compiler from optimizing out the array accesses.
-        std::cerr << "Unexpected value.\n";
-      }
-    }
-  };
-
-  // Writes values to ArrayHandle.
-  template <typename PortalType>
-  struct WriteValues : vtkm::exec::FunctorBase
-  {
-    using ValueType = typename PortalType::ValueType;
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-
-    PortalType Portal;
-
-    VTKM_CONT
-    WriteValues(const PortalType& portal)
-      : Portal(portal)
-    {
-    }
-
-    VTKM_EXEC_CONT
-    void operator()(vtkm::Id i) const { this->Portal.Set(i, static_cast<ValueType>(i)); }
-  };
-
-  // Reads and writes values to ArrayHandle.
-  template <typename PortalType>
-  struct ReadWriteValues : vtkm::exec::FunctorBase
-  {
-    using ValueType = typename PortalType::ValueType;
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-
-    PortalType Portal;
-
-    VTKM_CONT
-    ReadWriteValues(const PortalType& portal)
-      : Portal(portal)
-    {
-    }
-
-    VTKM_EXEC_CONT
-    void operator()(vtkm::Id i) const
-    {
-      ValueType val = this->Portal.Get(i);
-      val += static_cast<ValueType>(i);
-      this->Portal.Set(i, val);
-    }
-  };
-
-  //------------- Benchmark functors -------------------------------------------
-
-  // Copies NumValues from control environment to execution environment and
-  // accesses them as read-only.
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchContToExecRead
-  {
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
-
-    vtkm::Id NumValues;
-
-    VTKM_CONT
-    BenchContToExecRead(vtkm::Id numValues)
-      : NumValues(numValues)
-    {
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream out;
-      out << "Copying from Control --> Execution (read-only): " << this->NumValues << " values ("
-          << (this->NumValues * static_cast<vtkm::Id>(sizeof(ValueType))) << " bytes)";
-      return out.str();
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()() const
-    {
-      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
-                                 ValueTypeTraits::ZeroInitialization());
-      ArrayType array = vtkm::cont::make_ArrayHandle(vec);
-
-      // Time the copy:
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto portal = array.PrepareForInput(DeviceAdapter());
-      ReadValues<decltype(portal)> functor(portal, ValueTypeTraits::ZeroInitialization());
-      Algo::Schedule(functor, this->NumValues);
-      return timer.GetElapsedTime();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(ContToExecRead, BenchContToExecRead, ARRAY_SIZE);
-
-  // Writes values to ArrayHandle in execution environment. There is no actual
-  // copy between control/execution in this case.
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchContToExecWrite
-  {
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
-
-    vtkm::Id NumValues;
-
-    VTKM_CONT
-    BenchContToExecWrite(vtkm::Id numValues)
-      : NumValues(numValues)
-    {
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream out;
-      out << "Copying from Control --> Execution (write-only): " << this->NumValues << " values ("
-          << (this->NumValues * static_cast<vtkm::Id>(sizeof(ValueType))) << " bytes)";
-      return out.str();
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()() const
-    {
-      ArrayType array;
-
-      // Time the write:
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto portal = array.PrepareForOutput(this->NumValues, DeviceAdapter());
-      WriteValues<decltype(portal)> functor(portal);
-      Algo::Schedule(functor, this->NumValues);
-
-      return timer.GetElapsedTime();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(ContToExecWrite, BenchContToExecWrite, ARRAY_SIZE);
-
-  // Copies NumValues from control environment to execution environment and
-  // both reads and writes them.
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchContToExecReadWrite
-  {
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
-
-    vtkm::Id NumValues;
-
-    VTKM_CONT
-    BenchContToExecReadWrite(vtkm::Id numValues)
-      : NumValues(numValues)
-    {
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream out;
-      out << "Copying from Control --> Execution (read-write): " << this->NumValues << " values ("
-          << (this->NumValues * static_cast<vtkm::Id>(sizeof(ValueType))) << " bytes)";
-      return out.str();
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()() const
-    {
-      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
-                                 ValueTypeTraits::ZeroInitialization());
-      ArrayType array = vtkm::cont::make_ArrayHandle(vec);
-
-      // Time the copy:
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto portal = array.PrepareForInPlace(DeviceAdapter());
-      ReadWriteValues<decltype(portal)> functor(portal);
-      Algo::Schedule(functor, this->NumValues);
-      return timer.GetElapsedTime();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(ContToExecReadWrite, BenchContToExecReadWrite, ARRAY_SIZE);
-
-  // Copies NumValues from control environment to execution environment and
-  // back, then accesses them as read-only.
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchRoundTripRead
-  {
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using PortalContType = typename ArrayType::PortalConstControl;
-    using PortalExecType = typename ArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-    using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
-
-    vtkm::Id NumValues;
-
-    VTKM_CONT
-    BenchRoundTripRead(vtkm::Id numValues)
-      : NumValues(numValues)
-    {
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream out;
-      out << "Copying from Control --> Execution --> Control (read-only): " << this->NumValues
-          << " values (" << (this->NumValues * static_cast<vtkm::Id>(sizeof(ValueType)))
-          << " bytes)";
-      return out.str();
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()() const
-    {
-      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
-                                 ValueTypeTraits::ZeroInitialization());
-      ArrayType array = vtkm::cont::make_ArrayHandle(vec);
-
-      // Ensure data is in control before we start:
-      array.ReleaseResourcesExecution();
-
-      // Time the copy:
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      // Copy to device:
-      auto portal = array.PrepareForInput(DeviceAdapter());
-      ReadValues<PortalExecType> functor(portal, ValueTypeTraits::ZeroInitialization());
-      Algo::Schedule(functor, this->NumValues);
-
-      // Copy back to host and read:
-      ReadValues<PortalContType> cFunctor(array.GetPortalConstControl(),
-                                          ValueTypeTraits::ZeroInitialization());
-      for (vtkm::Id i = 0; i < this->NumValues; ++i)
-      {
-        cFunctor(i, 0);
-      }
-
-      return timer.GetElapsedTime();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(RoundTripRead, BenchRoundTripRead, ARRAY_SIZE);
-
-  // Copies NumValues from control environment to execution environment and
-  // back, then reads and writes them in-place.
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchRoundTripReadWrite
-  {
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using PortalContType = typename ArrayType::PortalControl;
-    using PortalExecType = typename ArrayType::template ExecutionTypes<DeviceAdapter>::Portal;
-    using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
-
-    vtkm::Id NumValues;
-
-    VTKM_CONT
-    BenchRoundTripReadWrite(vtkm::Id numValues)
-      : NumValues(numValues)
-    {
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream out;
-      out << "Copying from Control --> Execution --> Control (read-write): " << this->NumValues
-          << " values (" << (this->NumValues * static_cast<vtkm::Id>(sizeof(ValueType)))
-          << " bytes)";
-      return out.str();
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()() const
-    {
-      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
-                                 ValueTypeTraits::ZeroInitialization());
-      ArrayType array = vtkm::cont::make_ArrayHandle(vec);
-
-      // Ensure data is in control before we start:
-      array.ReleaseResourcesExecution();
-
-      // Time the copy:
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      // Do work on device:
-      auto portal = array.PrepareForInPlace(DeviceAdapter());
-      ReadWriteValues<PortalExecType> functor(portal);
-      Algo::Schedule(functor, this->NumValues);
-
-      ReadWriteValues<PortalContType> cFunctor(array.GetPortalControl());
-      for (vtkm::Id i = 0; i < this->NumValues; ++i)
-      {
-        cFunctor(i);
-      }
-
-      return timer.GetElapsedTime();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(RoundTripReadWrite, BenchRoundTripReadWrite, ARRAY_SIZE);
-
-  // Write NumValues to device allocated memory and copies them back to control
-  // for reading.
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchExecToContRead
-  {
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using PortalContType = typename ArrayType::PortalConstControl;
-    using PortalExecType = typename ArrayType::template ExecutionTypes<DeviceAdapter>::Portal;
-    using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
-
-    vtkm::Id NumValues;
-
-    VTKM_CONT
-    BenchExecToContRead(vtkm::Id numValues)
-      : NumValues(numValues)
-    {
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream out;
-      out << "Copying from Execution --> Control (read-only on control): " << this->NumValues
-          << " values (" << (this->NumValues * static_cast<vtkm::Id>(sizeof(ValueType)))
-          << " bytes)";
-      return out.str();
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()() const
-    {
-      ArrayType array;
-
-      // Time the copy:
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      // Allocate/write data on device
-      auto portal = array.PrepareForOutput(this->NumValues, DeviceAdapter());
-      WriteValues<PortalExecType> functor(portal);
-      Algo::Schedule(functor, this->NumValues);
-
-      // Read back on host:
-      ReadValues<PortalContType> cFunctor(array.GetPortalConstControl(),
-                                          ValueTypeTraits::ZeroInitialization());
-      for (vtkm::Id i = 0; i < this->NumValues; ++i)
-      {
-        cFunctor(i, 0);
-      }
-
-      return timer.GetElapsedTime();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(ExecToContRead, BenchExecToContRead, ARRAY_SIZE);
-
-  // Write NumValues to device allocated memory and copies them back to control
-  // and overwrites them.
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchExecToContWrite
-  {
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using PortalContType = typename ArrayType::PortalControl;
-    using PortalExecType = typename ArrayType::template ExecutionTypes<DeviceAdapter>::Portal;
-    using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
-
-    vtkm::Id NumValues;
-
-    VTKM_CONT
-    BenchExecToContWrite(vtkm::Id numValues)
-      : NumValues(numValues)
-    {
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream out;
-      out << "Copying from Execution --> Control (write-only on control): " << this->NumValues
-          << " values (" << (this->NumValues * static_cast<vtkm::Id>(sizeof(ValueType)))
-          << " bytes)";
-      return out.str();
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      ArrayType array;
-
-      // Time the copy:
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      // Allocate/write data on device
-      auto portal = array.PrepareForOutput(this->NumValues, DeviceAdapter());
-      WriteValues<PortalExecType> functor(portal);
-      Algo::Schedule(functor, this->NumValues);
-
-      // Read back on host:
-      WriteValues<PortalContType> cFunctor(array.GetPortalControl());
-      for (vtkm::Id i = 0; i < this->NumValues; ++i)
-      {
-        cFunctor(i);
-      }
-
-      return timer.GetElapsedTime();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(ExecToContWrite, BenchExecToContWrite, ARRAY_SIZE);
-
-  // Write NumValues to device allocated memory and copies them back to control
-  // for reading and writing.
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchExecToContReadWrite
-  {
-    using ArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-    using PortalContType = typename ArrayType::PortalControl;
-    using PortalExecType = typename ArrayType::template ExecutionTypes<DeviceAdapter>::Portal;
-    using ValueTypeTraits = vtkm::TypeTraits<ValueType>;
-
-    vtkm::Id NumValues;
-
-    VTKM_CONT
-    BenchExecToContReadWrite(vtkm::Id numValues)
-      : NumValues(numValues)
-    {
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream out;
-      out << "Copying from Execution --> Control (read-write on control): " << this->NumValues
-          << " values (" << (this->NumValues * static_cast<vtkm::Id>(sizeof(ValueType)))
-          << " bytes)";
-      return out.str();
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      ArrayType array;
-
-      // Time the copy:
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      // Allocate/write data on device
-      auto portal = array.PrepareForOutput(this->NumValues, DeviceAdapter());
-      WriteValues<PortalExecType> functor(portal);
-      Algo::Schedule(functor, this->NumValues);
-
-      // Read back on host:
-      ReadWriteValues<PortalContType> cFunctor(array.GetPortalControl());
-      for (vtkm::Id i = 0; i < this->NumValues; ++i)
-      {
-        cFunctor(i);
-      }
-
-      return timer.GetElapsedTime();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(ExecToContReadWrite, BenchExecToContReadWrite, ARRAY_SIZE);
-
-  //----------- Benchmark caller -----------------------------------------------
-
-  using TestTypes = vtkm::ListTagBase<vtkm::Float32>;
-
-  static VTKM_CONT bool Run(vtkm::cont::DeviceAdapterId id)
-  {
-    VTKM_RUN_BENCHMARK(ContToExecRead, TestTypes(), id);
-    VTKM_RUN_BENCHMARK(ContToExecWrite, TestTypes(), id);
-    VTKM_RUN_BENCHMARK(ContToExecReadWrite, TestTypes(), id);
-    VTKM_RUN_BENCHMARK(RoundTripRead, TestTypes(), id);
-    VTKM_RUN_BENCHMARK(RoundTripReadWrite, TestTypes(), id);
-    VTKM_RUN_BENCHMARK(ExecToContRead, TestTypes(), id);
-    VTKM_RUN_BENCHMARK(ExecToContWrite, TestTypes(), id);
-    VTKM_RUN_BENCHMARK(ExecToContReadWrite, TestTypes(), id);
-    return true;
   }
 };
+
+// Writes values to ArrayHandle.
+struct WriteValues : vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldOut);
+  using ExecutionSignature = void(_1, InputIndex);
+
+  template <typename T>
+  VTKM_EXEC void operator()(T& val, vtkm::Id idx) const
+  {
+    val = static_cast<T>(idx);
+  }
+};
+
+// Reads and writes values to ArrayHandle.
+struct ReadWriteValues : vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldInOut);
+  using ExecutionSignature = void(_1, InputIndex);
+
+  template <typename T>
+  VTKM_EXEC void operator()(T& val, vtkm::Id idx) const
+  {
+    val += static_cast<T>(idx);
+  }
+};
+
+// Takes a vector of data and creates a fresh ArrayHandle with memory just allocated
+// in the control environment.
+template <typename T>
+vtkm::cont::ArrayHandle<T> CreateFreshArrayHandle(const std::vector<T>& vec)
+{
+  return vtkm::cont::make_ArrayHandleMove(std::vector<T>(vec));
 }
-} // end namespace vtkm::benchmarking
+
+//------------- Benchmark functors -------------------------------------------
+
+// Copies NumValues from control environment to execution environment and
+// accesses them as read-only.
+template <typename ValueType>
+void BenchContToExecRead(benchmark::State& state)
+{
+  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(state.range(0));
+  const vtkm::Id numValues = static_cast<vtkm::Id>(numBytes / sizeof(ValueType));
+
+  {
+    std::ostringstream desc;
+    desc << "Control --> Execution (read-only): " << numValues << " values ("
+         << vtkm::cont::GetHumanReadableSize(numBytes) << ")";
+    state.SetLabel(desc.str());
+  }
+
+  std::vector<ValueType> vec(static_cast<std::size_t>(numValues), 2);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+
+    // Make a fresh array each iteration to force a copy from control to execution each time.
+    // (Prevents unified memory devices from caching data.)
+    ArrayType array = CreateFreshArrayHandle(vec);
+
+    timer.Start();
+    invoker(ReadValues{}, array);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
+  state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchContToExecRead,
+                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                ->ArgName("Bytes"),
+                              TestTypes);
+
+// Writes values to ArrayHandle in execution environment. There is no actual
+// copy between control/execution in this case.
+template <typename ValueType>
+void BenchContToExecWrite(benchmark::State& state)
+{
+  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(state.range(0));
+  const vtkm::Id numValues = static_cast<vtkm::Id>(numBytes / sizeof(ValueType));
+
+  {
+    std::ostringstream desc;
+    desc << "Copying from Control --> Execution (write-only): " << numValues << " values ("
+         << vtkm::cont::GetHumanReadableSize(numBytes) << ")";
+    state.SetLabel(desc.str());
+  }
+
+  ArrayType array;
+  array.Allocate(numValues);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    invoker(WriteValues{}, array);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
+  state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchContToExecWrite,
+                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                ->ArgName("Bytes"),
+                              TestTypes);
+
+// Copies NumValues from control environment to execution environment and
+// both reads and writes them.
+template <typename ValueType>
+void BenchContToExecReadWrite(benchmark::State& state)
+{
+  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(state.range(0));
+  const vtkm::Id numValues = static_cast<vtkm::Id>(numBytes / sizeof(ValueType));
+
+  {
+    std::ostringstream desc;
+    desc << "Control --> Execution (read-write): " << numValues << " values ("
+         << vtkm::cont::GetHumanReadableSize(numBytes) << ")";
+    state.SetLabel(desc.str());
+  }
+
+  std::vector<ValueType> vec(static_cast<std::size_t>(numValues), 2);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+
+    // Make a fresh array each iteration to force a copy from control to execution each time.
+    // (Prevents unified memory devices from caching data.)
+    ArrayType array = CreateFreshArrayHandle(vec);
+
+    timer.Start();
+    invoker(ReadWriteValues{}, array);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+
+    // Remove data from execution environment so it has to be transferred again.
+    array.ReleaseResourcesExecution();
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
+  state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchContToExecReadWrite,
+                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                ->ArgName("Bytes"),
+                              TestTypes);
+
+// Copies NumValues from control environment to execution environment and
+// back, then accesses them as read-only.
+template <typename ValueType>
+void BenchRoundTripRead(benchmark::State& state)
+{
+  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(state.range(0));
+  const vtkm::Id numValues = static_cast<vtkm::Id>(numBytes / sizeof(ValueType));
+
+  {
+    std::ostringstream desc;
+    desc << "Copying from Control --> Execution --> Control (read-only): " << numValues
+         << " values (" << vtkm::cont::GetHumanReadableSize(numBytes) << ")";
+    state.SetLabel(desc.str());
+  }
+
+  std::vector<ValueType> vec(static_cast<std::size_t>(numValues), 2);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+
+    // Make a fresh array each iteration to force a copy from control to execution each time.
+    // (Prevents unified memory devices from caching data.)
+    ArrayType array = CreateFreshArrayHandle(vec);
+
+    timer.Start();
+    invoker(ReadValues{}, array);
+
+    // Copy back to host and read:
+    // (Note, this probably does not copy. The array exists in both control and execution for read.)
+    auto portal = array.ReadPortal();
+    for (vtkm::Id i = 0; i < numValues; ++i)
+    {
+      benchmark::DoNotOptimize(portal.Get(i));
+    }
+
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
+  state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchRoundTripRead,
+                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                ->ArgName("Bytes"),
+                              TestTypes);
+
+// Copies NumValues from control environment to execution environment and
+// back, then reads and writes them in-place.
+template <typename ValueType>
+void BenchRoundTripReadWrite(benchmark::State& state)
+{
+  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(state.range(0));
+  const vtkm::Id numValues = static_cast<vtkm::Id>(numBytes / sizeof(ValueType));
+
+  {
+    std::ostringstream desc;
+    desc << "Copying from Control --> Execution --> Control (read-write): " << numValues
+         << " values (" << vtkm::cont::GetHumanReadableSize(numBytes) << ")";
+    state.SetLabel(desc.str());
+  }
+
+  std::vector<ValueType> vec(static_cast<std::size_t>(numValues));
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+
+    // Make a fresh array each iteration to force a copy from control to execution each time.
+    // (Prevents unified memory devices from caching data.)
+    ArrayType array = CreateFreshArrayHandle(vec);
+
+    timer.Start();
+
+    // Do work on device:
+    invoker(ReadWriteValues{}, array);
+
+    // Copy back to host and read/write:
+    auto portal = array.WritePortal();
+    for (vtkm::Id i = 0; i < numValues; ++i)
+    {
+      portal.Set(i, portal.Get(i) - static_cast<ValueType>(i));
+    }
+
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
+  state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchRoundTripReadWrite,
+                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                ->ArgName("Bytes"),
+                              TestTypes);
+
+// Write NumValues to device allocated memory and copies them back to control
+// for reading.
+template <typename ValueType>
+void BenchExecToContRead(benchmark::State& state)
+{
+  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(state.range(0));
+  const vtkm::Id numValues = static_cast<vtkm::Id>(numBytes / sizeof(ValueType));
+
+  {
+    std::ostringstream desc;
+    desc << "Copying from Execution --> Control (read-only on control): " << numValues
+         << " values (" << vtkm::cont::GetHumanReadableSize(numBytes) << ")";
+    state.SetLabel(desc.str());
+  }
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    ArrayType array;
+    array.Allocate(numValues);
+
+    // Time the copy:
+    timer.Start();
+
+    // Allocate/write data on device
+    invoker(WriteValues{}, array);
+
+    // Read back on host:
+    auto portal = array.WritePortal();
+    for (vtkm::Id i = 0; i < numValues; ++i)
+    {
+      benchmark::DoNotOptimize(portal.Get(i));
+    }
+
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
+  state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
+};
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchExecToContRead,
+                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                ->ArgName("Bytes"),
+                              TestTypes);
+
+// Write NumValues to device allocated memory and copies them back to control
+// and overwrites them.
+template <typename ValueType>
+void BenchExecToContWrite(benchmark::State& state)
+{
+  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(state.range(0));
+  const vtkm::Id numValues = static_cast<vtkm::Id>(numBytes / sizeof(ValueType));
+
+  {
+    std::ostringstream desc;
+    desc << "Copying from Execution --> Control (write-only on control): " << numValues
+         << " values (" << vtkm::cont::GetHumanReadableSize(numBytes) << ")";
+    state.SetLabel(desc.str());
+  }
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    ArrayType array;
+    array.Allocate(numValues);
+
+    timer.Start();
+
+    // Allocate/write data on device
+    invoker(WriteValues{}, array);
+
+    // Read back on host:
+    auto portal = array.WritePortal();
+    for (vtkm::Id i = 0; i < numValues; ++i)
+    {
+      portal.Set(i, portal.Get(i) - static_cast<ValueType>(i));
+    }
+
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
+  state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchExecToContWrite,
+                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                ->ArgName("Bytes"),
+                              TestTypes);
+
+// Write NumValues to device allocated memory and copies them back to control
+// for reading and writing.
+template <typename ValueType>
+void BenchExecToContReadWrite(benchmark::State& state)
+{
+  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(state.range(0));
+  const vtkm::Id numValues = static_cast<vtkm::Id>(numBytes / sizeof(ValueType));
+
+  {
+    std::ostringstream desc;
+    desc << "Copying from Execution --> Control (read-write on control): " << numValues
+         << " values (" << vtkm::cont::GetHumanReadableSize(numBytes) << ")";
+    state.SetLabel(desc.str());
+  }
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    ArrayType array;
+    array.Allocate(numValues);
+
+    timer.Start();
+
+    // Allocate/write data on device
+    invoker(WriteValues{}, array);
+
+    // Read back on host:
+    auto portal = array.WritePortal();
+    for (vtkm::Id i = 0; i < numValues; ++i)
+    {
+      benchmark::DoNotOptimize(portal.Get(i));
+    }
+
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
+  state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchExecToContReadWrite,
+                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                ->ArgName("Bytes"),
+                              TestTypes);
+
+} // end anon namespace
 
 int main(int argc, char* argv[])
 {
-  auto opts =
-    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
-  auto config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
 
-  using Benchmarks = vtkm::benchmarking::BenchmarkArrayTransfer;
+  // Initialize command line args
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
 
-  bool result = Benchmarks::Run(config.Device);
-  return result ? EXIT_SUCCESS : EXIT_FAILURE;
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This occurs when it is help
+  if (opts == vtkm::cont::InitializeOptions::None)
+  {
+    std::cout << Config.Usage << std::endl;
+  }
+  else
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  }
+
+  // handle benchmarking related args and run benchmarks:
+  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
 }

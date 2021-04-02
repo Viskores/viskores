@@ -100,15 +100,15 @@ void TestNDimsHistogram()
                           1, 1, 4, 11, 4, 1, 1, 3, 3, 1, 1,  1, 1, 1, 2, 1 };
 
   // Check result
-  vtkm::Id nonSparseBins = binIds[0].GetPortalControl().GetNumberOfValues();
+  vtkm::Id nonSparseBins = binIds[0].WritePortal().GetNumberOfValues();
   VTKM_TEST_ASSERT(nonSparseBins == gtNonSparseBins, "Incorrect ND-histogram results");
 
   for (int i = 0; i < nonSparseBins; i++)
   {
-    vtkm::Id idx0 = binIds[0].GetPortalControl().Get(i);
-    vtkm::Id idx1 = binIds[1].GetPortalControl().Get(i);
-    vtkm::Id idx2 = binIds[2].GetPortalControl().Get(i);
-    vtkm::Id f = freqs.GetPortalControl().Get(i);
+    vtkm::Id idx0 = binIds[0].WritePortal().Get(i);
+    vtkm::Id idx1 = binIds[1].WritePortal().Get(i);
+    vtkm::Id idx2 = binIds[2].WritePortal().Get(i);
+    vtkm::Id f = freqs.WritePortal().Get(i);
     VTKM_TEST_ASSERT(idx0 == gtIdx0[i] && idx1 == gtIdx1[i] && idx2 == gtIdx2[i] && f == gtFreq[i],
                      "Incorrect ND-histogram results");
   }

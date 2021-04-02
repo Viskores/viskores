@@ -9,12 +9,11 @@
 //============================================================================
 #ifndef vtk_m_cont_CellSetExplicit_hxx
 #define vtk_m_cont_CellSetExplicit_hxx
-
+#include <vtkm/Deprecated.h>
 #include <vtkm/cont/CellSetExplicit.h>
 
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayGetValues.h>
-#include <vtkm/cont/ArrayHandleDecorator.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
@@ -135,11 +134,11 @@ VTKM_CONT
 void CellSetExplicit<SST, CST, OST>::GetCellPointIds(vtkm::Id cellId,
                                                      vtkm::Id* ptids) const
 {
-  const auto offPortal = this->Data->CellPointIds.Offsets.GetPortalConstControl();
+  const auto offPortal = this->Data->CellPointIds.Offsets.ReadPortal();
   const vtkm::Id start = offPortal.Get(cellId);
   const vtkm::Id end = offPortal.Get(cellId + 1);
   const vtkm::IdComponent numIndices = static_cast<vtkm::IdComponent>(end - start);
-  auto connPortal = this->Data->CellPointIds.Connectivity.GetPortalConstControl();
+  auto connPortal = this->Data->CellPointIds.Connectivity.ReadPortal();
   for (vtkm::IdComponent i = 0; i < numIndices; i++)
   {
     ptids[i] = connPortal.Get(start + i);
@@ -169,18 +168,28 @@ VTKM_CONT
 vtkm::IdComponent CellSetExplicit<SST, CST, OST>
 ::GetNumberOfPointsInCell(vtkm::Id cellid) const
 {
-  const auto portal = this->Data->CellPointIds.Offsets.GetPortalConstControl();
+  const auto portal = this->Data->CellPointIds.Offsets.ReadPortal();
   return static_cast<vtkm::IdComponent>(portal.Get(cellid + 1) -
                                         portal.Get(cellid));
 }
 
 template <typename SST, typename CST, typename OST>
 VTKM_CONT
+typename vtkm::cont::ArrayHandle<vtkm::UInt8, SST>::ReadPortalType
+CellSetExplicit<SST, CST, OST>::ShapesReadPortal() const
+{
+  return this->Data->CellPointIds.Shapes.ReadPortal();
+}
+
+template <typename SST, typename CST, typename OST>
+VTKM_CONT
+VTKM_DEPRECATED(1.6, "Calling GetCellShape(cellid) is a performance bug. Call ShapesReadPortal() and loop over the Get.")
 vtkm::UInt8 CellSetExplicit<SST, CST, OST>
 ::GetCellShape(vtkm::Id cellid) const
 {
-  return this->Data->CellPointIds.Shapes.GetPortalConstControl().Get(cellid);
+  return this->ShapesReadPortal().Get(cellid);
 }
+
 
 template <typename SST, typename CST, typename OST>
 template <vtkm::IdComponent NumVecIndices>
@@ -188,11 +197,11 @@ VTKM_CONT
 void CellSetExplicit<SST, CST, OST>
 ::GetIndices(vtkm::Id cellId, vtkm::Vec<vtkm::Id, NumVecIndices>& ids) const
 {
-  const auto offPortal = this->Data->CellPointIds.Offsets.GetPortalConstControl();
+  const auto offPortal = this->Data->CellPointIds.Offsets.ReadPortal();
   const vtkm::Id start = offPortal.Get(cellId);
   const vtkm::Id end = offPortal.Get(cellId + 1);
   const auto numCellIndices = static_cast<vtkm::IdComponent>(end - start);
-  const auto connPortal = this->Data->CellPointIds.Connectivity.GetPortalConstControl();
+  const auto connPortal = this->Data->CellPointIds.Connectivity.ReadPortal();
 
   VTKM_LOG_IF_S(vtkm::cont::LogLevel::Warn,
                 numCellIndices != NumVecIndices,
@@ -213,14 +222,14 @@ VTKM_CONT
 void CellSetExplicit<SST, CST, OST>
 ::GetIndices(vtkm::Id cellId, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const
 {
-  const auto offPortal = this->Data->CellPointIds.Offsets.GetPortalConstControl();
+  const auto offPortal = this->Data->CellPointIds.Offsets.ReadPortal();
   const vtkm::Id start = offPortal.Get(cellId);
   const vtkm::Id end = offPortal.Get(cellId + 1);
   const vtkm::IdComponent numIndices = static_cast<vtkm::IdComponent>(end - start);
   ids.Allocate(numIndices);
-  auto connPortal = this->Data->CellPointIds.Connectivity.GetPortalConstControl();
+  auto connPortal = this->Data->CellPointIds.Connectivity.ReadPortal();
 
-  auto outIdPortal = ids.GetPortalControl();
+  auto outIdPortal = ids.WritePortal();
 
   for (vtkm::IdComponent i = 0; i < numIndices; i++)
   {
@@ -241,7 +250,7 @@ SetFirstToZeroIfWritable(ArrayType&& array)
 {
   using ValueType = typename std::decay<ArrayType>::type::ValueType;
   using Traits = vtkm::TypeTraits<ValueType>;
-  array.GetPortalControl().Set(0, Traits::ZeroInitialization());
+  array.WritePortal().Set(0, Traits::ZeroInitialization());
 }
 
 template <typename ArrayType>
@@ -292,9 +301,9 @@ void CellSetExplicit<SST, CST, OST>::AddCell(vtkm::UInt8 cellType,
       "Connectivity increased past estimated maximum connectivity.");
   }
 
-  auto shapes = this->Data->CellPointIds.Shapes.GetPortalControl();
-  auto conn = this->Data->CellPointIds.Connectivity.GetPortalControl();
-  auto offsets = this->Data->CellPointIds.Offsets.GetPortalControl();
+  auto shapes = this->Data->CellPointIds.Shapes.WritePortal();
+  auto conn = this->Data->CellPointIds.Connectivity.WritePortal();
+  auto offsets = this->Data->CellPointIds.Offsets.WritePortal();
 
   shapes.Set(this->Data->NumberOfCellsAdded, cellType);
   for (vtkm::IdComponent iVec = 0; iVec < numVertices; ++iVec)
@@ -315,7 +324,7 @@ VTKM_CONT
 void CellSetExplicit<SST, CST, OST>::CompleteAddingCells(vtkm::Id numPoints)
 {
   this->Data->NumberOfPoints = numPoints;
-  this->Data->CellPointIds.Connectivity.Shrink(this->Data->ConnectivityAdded);
+  this->Data->CellPointIds.Connectivity.Allocate(this->Data->ConnectivityAdded, vtkm::CopyFlag::On);
   this->Data->CellPointIds.ElementsValid = true;
 
   if (this->Data->NumberOfCellsAdded != this->GetNumberOfCells())
@@ -360,27 +369,23 @@ void CellSetExplicit<SST, CST, OST>
 //----------------------------------------------------------------------------
 
 template <typename SST, typename CST, typename OST>
-template <typename Device, typename VisitTopology, typename IncidentTopology>
+template <typename VisitTopology, typename IncidentTopology>
 VTKM_CONT
 auto CellSetExplicit<SST, CST, OST>
-::PrepareForInput(Device, VisitTopology, IncidentTopology) const
--> typename ExecutionTypes<Device,
-                           VisitTopology,
-                           IncidentTopology>::ExecObjectType
+::PrepareForInput(vtkm::cont::DeviceAdapterId device, VisitTopology, IncidentTopology, vtkm::cont::Token& token) const
+-> ExecConnectivityType<VisitTopology, IncidentTopology>
 {
-  this->BuildConnectivity(Device{}, VisitTopology{}, IncidentTopology{});
+  this->BuildConnectivity(device, VisitTopology{}, IncidentTopology{});
 
   const auto& connectivity = this->GetConnectivity(VisitTopology{},
                                                    IncidentTopology{});
   VTKM_ASSERT(connectivity.ElementsValid);
 
-  using ExecObjType = typename ExecutionTypes<Device,
-                                              VisitTopology,
-                                              IncidentTopology>::ExecObjectType;
+  using ExecObjType = ExecConnectivityType<VisitTopology, IncidentTopology>;
 
-  return ExecObjType(connectivity.Shapes.PrepareForInput(Device{}),
-                     connectivity.Connectivity.PrepareForInput(Device{}),
-                     connectivity.Offsets.PrepareForInput(Device{}));
+  return ExecObjType(connectivity.Shapes.PrepareForInput(device, token),
+                     connectivity.Connectivity.PrepareForInput(device, token),
+                     connectivity.Offsets.PrepareForInput(device, token));
 }
 
 //----------------------------------------------------------------------------
@@ -436,11 +441,8 @@ auto CellSetExplicit<SST, CST, OST>
 -> typename ConnectivityChooser<VisitTopology,
                                 IncidentTopology>::NumIndicesArrayType
 {
-  auto offsets = this->GetOffsetsArray(visited, incident);
-  const vtkm::Id numVals = offsets.GetNumberOfValues() - 1;
-  return vtkm::cont::make_ArrayHandleDecorator(numVals,
-                                               detail::NumIndicesDecorator{},
-                                               std::move(offsets));
+  // Converts to NumIndicesArrayType (which is an ArrayHandleOffsetsToNumComponents)
+  return this->GetOffsetsArray(visited, incident);
 }
 
 //----------------------------------------------------------------------------
@@ -469,9 +471,9 @@ void CellSetExplicit<SST, CST, OST>::DeepCopy(const CellSet* src)
   const auto ct = vtkm::TopologyElementTagCell{};
   const auto pt = vtkm::TopologyElementTagPoint{};
 
-  vtkm::cont::ArrayCopy(other->GetShapesArray(ct, pt), shapes);
-  vtkm::cont::ArrayCopy(other->GetConnectivityArray(ct, pt), conn);
-  vtkm::cont::ArrayCopy(other->GetOffsetsArray(ct, pt), offsets);
+  shapes.DeepCopyFrom(other->GetShapesArray(ct, pt));
+  conn.DeepCopyFrom(other->GetConnectivityArray(ct, pt));
+  offsets.DeepCopyFrom(other->GetOffsetsArray(ct, pt));
 
   this->Fill(other->GetNumberOfPoints(), shapes, conn, offsets);
 }

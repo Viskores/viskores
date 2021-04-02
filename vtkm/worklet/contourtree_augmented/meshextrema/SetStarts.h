@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_extrema_inc_set_starts_h
-#define vtkm_worklet_contourtree_augmented_mesh_extrema_inc_set_starts_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_extrema_inc_set_starts_h
+#define vtk_m_worklet_contourtree_augmented_mesh_extrema_inc_set_starts_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 

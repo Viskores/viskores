@@ -22,14 +22,20 @@
 #include <memory>
 #include <type_traits>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "ArrayHandleVirtualCoordiantes is removed. Do not include ArrayHandleVirtualCoordinates.h"
+#endif
+
 namespace vtkm
 {
 namespace cont
 {
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 /// ArrayHandleVirtualCoordinates is a specialization of ArrayHandle.
-class VTKM_ALWAYS_EXPORT ArrayHandleVirtualCoordinates final
-  : public vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Virtual ArrayHandles are being phased out.")
+  ArrayHandleVirtualCoordinates final : public vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleVirtualCoordinates,
@@ -66,6 +72,8 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
   static VTKM_CONT const std::string Get() { return "AH_VirtualCoordinates"; }
 };
 
+VTKM_DEPRECATED_SUPPRESS_END
+
 } // namespace cont
 } // namespace vtkm
 
@@ -74,6 +82,8 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
 /// @cond SERIALIZATION
 namespace mangled_diy_namespace
 {
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 template <>
 struct Serialization<vtkm::cont::ArrayHandleVirtualCoordinates>
@@ -114,8 +124,30 @@ public:
     }
     else
     {
+      using HandleType = BasicCoordsType;
+      using T = typename HandleType::ValueType;
+      using S = typename HandleType::StorageTag;
+      HandleType array;
+      if (obj.IsType<BasicCoordsType>())
+      {
+        // If the object actually is a BasicCoordsType, just save it.
+        array =
+          storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>()->GetHandle();
+      }
+      else
+      {
+        // Give up and deep copy data.
+        vtkm::Id size = obj.GetNumberOfValues();
+        array.Allocate(size);
+        auto src = obj.ReadPortal();
+        auto dest = array.WritePortal();
+        for (vtkm::IdComponent index = 0; index < size; ++index)
+        {
+          dest.Set(index, src.Get(index));
+        }
+      }
       vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<BasicCoordsType>::Get());
-      vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
+      vtkmdiy::save(bb, array);
     }
   }
 
@@ -150,6 +182,8 @@ public:
     }
   }
 };
+
+VTKM_DEPRECATED_SUPPRESS_END
 
 } // diy
 /// @endcond SERIALIZATION

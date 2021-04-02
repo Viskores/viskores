@@ -203,6 +203,8 @@ void vtkm::worklet::ScatterCounting::BuildArrays(const VariantArrayHandleCount& 
                                                  vtkm::cont::DeviceAdapterId device,
                                                  bool saveInputToOutputMap)
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "ScatterCounting::BuildArrays");
+
   countArray.CastAndCall(
     vtkm::worklet::detail::ScatterCountingBuilder(), device, saveInputToOutputMap, this);
 }

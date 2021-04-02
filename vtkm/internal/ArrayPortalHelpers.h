@@ -33,11 +33,43 @@ struct PortalSupportsGetsImpl
 };
 
 template <typename PortalType>
+struct PortalSupportsGets3DImpl
+{
+  template <typename U, typename S = decltype(std::declval<U>().Get(vtkm::Id3{}))>
+  static std::true_type has(int);
+  template <typename U>
+  static std::false_type has(...);
+  using type = decltype(has<PortalType>(0));
+};
+
+template <typename PortalType>
 struct PortalSupportsSetsImpl
 {
   template <typename U,
             typename S = decltype(std::declval<U>().Set(vtkm::Id{},
                                                         std::declval<typename U::ValueType>()))>
+  static std::true_type has(int);
+  template <typename U>
+  static std::false_type has(...);
+  using type = decltype(has<PortalType>(0));
+};
+
+template <typename PortalType>
+struct PortalSupportsSets3DImpl
+{
+  template <typename U,
+            typename S = decltype(std::declval<U>().Set(vtkm::Id3{},
+                                                        std::declval<typename U::ValueType>()))>
+  static std::true_type has(int);
+  template <typename U>
+  static std::false_type has(...);
+  using type = decltype(has<PortalType>(0));
+};
+
+template <typename PortalType>
+struct PortalSupportsIteratorsImpl
+{
+  template <typename U, typename S = decltype(std::declval<U>().GetIteratorBegin())>
   static std::true_type has(int);
   template <typename U>
   static std::false_type has(...);
@@ -51,8 +83,20 @@ using PortalSupportsGets =
   typename detail::PortalSupportsGetsImpl<typename std::decay<PortalType>::type>::type;
 
 template <typename PortalType>
+using PortalSupportsGets3D =
+  typename detail::PortalSupportsGets3DImpl<typename std::decay<PortalType>::type>::type;
+
+template <typename PortalType>
 using PortalSupportsSets =
   typename detail::PortalSupportsSetsImpl<typename std::decay<PortalType>::type>::type;
+
+template <typename PortalType>
+using PortalSupportsSets3D =
+  typename detail::PortalSupportsSets3DImpl<typename std::decay<PortalType>::type>::type;
+
+template <typename PortalType>
+using PortalSupportsIterators =
+  typename detail::PortalSupportsIteratorsImpl<typename std::decay<PortalType>::type>::type;
 }
 } // namespace vtkm::internal
 

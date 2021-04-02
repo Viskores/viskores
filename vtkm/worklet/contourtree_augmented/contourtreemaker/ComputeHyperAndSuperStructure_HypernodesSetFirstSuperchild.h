@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_hypernodes_set_first_superchild_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_hypernodes_set_first_superchild_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_hypernodes_set_first_superchild_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_hypernodes_set_first_superchild_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -73,7 +73,7 @@ public:
   typedef void ControlSignature(WholeArrayIn contourTreeHyperparents, // (input)
                                 WholeArrayIn superSortIndex,          // (input)
                                 WholeArrayOut contourTreeHypernodes   // (output)
-                                );
+  );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   using InputDomain = _1;
 
@@ -98,12 +98,12 @@ public:
 
     // set the hyperparent's first superchild
     if (isFirstSuperchild)
-      contourTreeHypernodesPortal.Set(superSortIndexPortal.Get(maskedIndex(hyperparent)),
+      contourTreeHypernodesPortal.Set(superSortIndexPortal.Get(MaskedIndex(hyperparent)),
                                       supernode);
 
     // In serial this worklet implements the following operation
     /*
-      for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
+      for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.size(); supernode++)
         { // per supernode
           bool isFirstSuperchild = false;
           vtkm::Id hyperparent = contourTree.hyperparents[supernode];
@@ -116,7 +116,7 @@ public:
 
           // set the hyperparent's first superchild
           if (isFirstSuperchild)
-                  contourTree.hypernodes[superSortIndex[maskedIndex(hyperparent)]] = supernode;
+                  contourTree.hypernodes[superSortIndex[MaskedIndex(hyperparent)]] = supernode;
         } // per supernode
       */
   }

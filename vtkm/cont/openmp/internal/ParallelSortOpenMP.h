@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/openmp/internal/ArrayManagerExecutionOpenMP.h>
 #include <vtkm/cont/openmp/internal/FunctorsOpenMP.h>
 #include <vtkm/cont/openmp/internal/ParallelQuickSortOpenMP.h>
 #include <vtkm/cont/openmp/internal/ParallelRadixSortOpenMP.h>
@@ -45,7 +44,9 @@ void parallel_sort(HandleType& values,
                    BinaryCompare binary_compare,
                    vtkm::cont::internal::radix::PSortTag)
 {
-  auto portal = values.PrepareForInPlace(DeviceAdapterTagOpenMP());
+  vtkm::cont::Token token;
+
+  auto portal = values.PrepareForInPlace(DeviceAdapterTagOpenMP(), token);
   auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
   vtkm::Id2 range(0, values.GetNumberOfValues());
 
@@ -63,8 +64,10 @@ void parallel_sort(vtkm::cont::ArrayHandle<T, StorageT>& values,
                    vtkm::cont::internal::radix::RadixSortTag)
 {
   auto c = vtkm::cont::internal::radix::get_std_compare(binary_compare, T{});
+  vtkm::cont::Token token;
+  auto valuesPortal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagOpenMP{}, token);
   radix::parallel_radix_sort(
-    values.GetStorage().GetArray(), static_cast<std::size_t>(values.GetNumberOfValues()), c);
+    valuesPortal.GetIteratorBegin(), static_cast<std::size_t>(values.GetNumberOfValues()), c);
 }
 
 // Value sort -- static switch between quicksort & radix sort
@@ -101,10 +104,11 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
 
     // Generate an in-memory index array:
     {
+      vtkm::cont::Token token;
       auto handle = ArrayHandleIndex(keys.GetNumberOfValues());
-      auto inputPortal = handle.PrepareForInput(DeviceAdapterTagOpenMP());
+      auto inputPortal = handle.PrepareForInput(DeviceAdapterTagOpenMP(), token);
       auto outputPortal =
-        indexArray.PrepareForOutput(keys.GetNumberOfValues(), DeviceAdapterTagOpenMP());
+        indexArray.PrepareForOutput(keys.GetNumberOfValues(), DeviceAdapterTagOpenMP(), token);
       openmp::CopyHelper(inputPortal, outputPortal, 0, 0, keys.GetNumberOfValues());
     }
 
@@ -116,9 +120,11 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
 
     // Permute the values to their sorted locations:
     {
-      auto valuesInPortal = values.PrepareForInput(DeviceAdapterTagOpenMP());
-      auto indexPortal = indexArray.PrepareForInput(DeviceAdapterTagOpenMP());
-      auto valuesOutPortal = valuesScattered.PrepareForOutput(size, DeviceAdapterTagOpenMP());
+      vtkm::cont::Token token;
+      auto valuesInPortal = values.PrepareForInput(DeviceAdapterTagOpenMP(), token);
+      auto indexPortal = indexArray.PrepareForInput(DeviceAdapterTagOpenMP(), token);
+      auto valuesOutPortal =
+        valuesScattered.PrepareForOutput(size, DeviceAdapterTagOpenMP(), token);
 
       VTKM_OPENMP_DIRECTIVE(parallel for
                             default(none)
@@ -133,9 +139,10 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
 
     // Copy the values back into the input array:
     {
-      auto inputPortal = valuesScattered.PrepareForInput(DeviceAdapterTagOpenMP());
-      auto outputPortal =
-        values.PrepareForOutput(valuesScattered.GetNumberOfValues(), DeviceAdapterTagOpenMP());
+      vtkm::cont::Token token;
+      auto inputPortal = valuesScattered.PrepareForInput(DeviceAdapterTagOpenMP(), token);
+      auto outputPortal = values.PrepareForOutput(
+        valuesScattered.GetNumberOfValues(), DeviceAdapterTagOpenMP(), token);
       openmp::CopyHelper(inputPortal, outputPortal, 0, 0, size);
     }
   }
@@ -160,8 +167,11 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
 {
   using namespace vtkm::cont::internal::radix;
   auto c = get_std_compare(binary_compare, T{});
-  radix::parallel_radix_sort_key_values(keys.GetStorage().GetArray(),
-                                        values.GetStorage().GetArray(),
+  vtkm::cont::Token token;
+  auto keysPortal = keys.PrepareForInPlace(vtkm::cont::DeviceAdapterTagOpenMP{}, token);
+  auto valuesPortal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagOpenMP{}, token);
+  radix::parallel_radix_sort_key_values(keysPortal.GetIteratorBegin(),
+                                        valuesPortal.GetIteratorBegin(),
                                         static_cast<std::size_t>(keys.GetNumberOfValues()),
                                         c);
 }
@@ -181,10 +191,11 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
   const vtkm::Id size = values.GetNumberOfValues();
 
   {
+    vtkm::cont::Token token;
     auto handle = ArrayHandleIndex(keys.GetNumberOfValues());
-    auto inputPortal = handle.PrepareForInput(DeviceAdapterTagOpenMP());
+    auto inputPortal = handle.PrepareForInput(DeviceAdapterTagOpenMP(), token);
     auto outputPortal =
-      indexArray.PrepareForOutput(keys.GetNumberOfValues(), DeviceAdapterTagOpenMP());
+      indexArray.PrepareForOutput(keys.GetNumberOfValues(), DeviceAdapterTagOpenMP(), token);
     openmp::CopyHelper(inputPortal, outputPortal, 0, 0, keys.GetNumberOfValues());
   }
 
@@ -203,9 +214,10 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
 
   // Permute the values to their sorted locations:
   {
-    auto valuesInPortal = values.PrepareForInput(DeviceAdapterTagOpenMP());
-    auto indexPortal = indexArray.PrepareForInput(DeviceAdapterTagOpenMP());
-    auto valuesOutPortal = valuesScattered.PrepareForOutput(size, DeviceAdapterTagOpenMP());
+    vtkm::cont::Token token;
+    auto valuesInPortal = values.PrepareForInput(DeviceAdapterTagOpenMP(), token);
+    auto indexPortal = indexArray.PrepareForInput(DeviceAdapterTagOpenMP(), token);
+    auto valuesOutPortal = valuesScattered.PrepareForOutput(size, DeviceAdapterTagOpenMP(), token);
 
     VTKM_OPENMP_DIRECTIVE(parallel for
                           default(none)
@@ -219,9 +231,10 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
   }
 
   {
-    auto inputPortal = valuesScattered.PrepareForInput(DeviceAdapterTagOpenMP());
+    vtkm::cont::Token token;
+    auto inputPortal = valuesScattered.PrepareForInput(DeviceAdapterTagOpenMP(), token);
     auto outputPortal =
-      values.PrepareForOutput(valuesScattered.GetNumberOfValues(), DeviceAdapterTagOpenMP());
+      values.PrepareForOutput(valuesScattered.GetNumberOfValues(), DeviceAdapterTagOpenMP(), token);
     openmp::CopyHelper(inputPortal, outputPortal, 0, 0, valuesScattered.GetNumberOfValues());
   }
 }

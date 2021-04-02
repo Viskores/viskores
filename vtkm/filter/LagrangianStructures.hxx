@@ -13,9 +13,12 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/Invoker.h>
+#include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/RK4Integrator.h>
 
 #include <vtkm/worklet/LagrangianStructures.h>
 
@@ -23,6 +26,39 @@ namespace vtkm
 {
 namespace filter
 {
+
+namespace detail
+{
+class ExtractParticlePosition : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn particle, FieldOut position);
+  using ExecutionSignature = void(_1, _2);
+  using InputDomain = _1;
+
+  VTKM_EXEC void operator()(const vtkm::Particle& particle, vtkm::Vec3f& pt) const
+  {
+    pt = particle.Pos;
+  }
+};
+
+class MakeParticles : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn seed, FieldOut particle);
+  using ExecutionSignature = void(WorkIndex, _1, _2);
+  using InputDomain = _1;
+
+  VTKM_EXEC void operator()(const vtkm::Id index,
+                            const vtkm::Vec3f& seed,
+                            vtkm::Particle& particle) const
+  {
+    particle.ID = index;
+    particle.Pos = seed;
+  }
+};
+
+} //detail
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT LagrangianStructures::LagrangianStructures()
@@ -48,7 +84,8 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using Integrator = vtkm::worklet::particleadvection::RK4Integrator<GridEvaluator>;
 
   vtkm::FloatDefault stepSize = this->GetStepSize();
@@ -97,14 +134,17 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   }
   else
   {
-    GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), field);
+    vtkm::cont::Invoker invoke;
+
+    FieldType velocities(field);
+    GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), velocities);
     Integrator integrator(evaluator, stepSize);
     vtkm::worklet::ParticleAdvection particles;
-    vtkm::worklet::ParticleAdvectionResult advectionResult;
-    vtkm::cont::ArrayHandle<vtkm::Vec3f> advectionPoints;
-    vtkm::cont::ArrayCopy(lcsInputPoints, advectionPoints);
+    vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> advectionResult;
+    vtkm::cont::ArrayHandle<vtkm::Particle> advectionPoints;
+    invoke(detail::MakeParticles{}, lcsInputPoints, advectionPoints);
     advectionResult = particles.Run(integrator, advectionPoints, numberOfSteps);
-    lcsOutputPoints = advectionResult.positions;
+    invoke(detail::ExtractParticlePosition{}, advectionResult.Particles, lcsOutputPoints);
   }
   // FTLE output field
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputField;
@@ -127,22 +167,28 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   }
 
   vtkm::cont::DataSet output;
-  vtkm::cont::DataSetFieldAdd fieldAdder;
   output.AddCoordinateSystem(lcsInput.GetCoordinateSystem());
   output.SetCellSet(lcsInput.GetCellSet());
-  fieldAdder.AddPointField(output, this->GetOutputFieldName(), outputField);
+  output.AddPointField(this->GetOutputFieldName(), outputField);
   return output;
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool LagrangianStructures::DoMapField(
-  vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<T, StorageType>&,
-  const vtkm::filter::FieldMetadata&,
+template <typename DerivedPolicy>
+inline VTKM_CONT bool LagrangianStructures::MapFieldOntoOutput(
+  vtkm::cont::DataSet& result,
+  const vtkm::cont::Field& field,
   vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  return false;
+  if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 }
 } // namespace vtkm::filter

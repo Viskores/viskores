@@ -11,331 +11,418 @@
 #ifndef vtk_m_benchmarking_Benchmarker_h
 #define vtk_m_benchmarking_Benchmarker_h
 
-#include <vtkm/ListTag.h>
-#include <vtkm/Math.h>
-#include <vtkm/cont/DeviceAdapterTag.h>
-#include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
+#include <vtkm/cont/Timer.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
-#include <algorithm>
-#include <iostream>
-#include <vector>
+#include <vtkm/internal/brigand.hpp>
 
-/*
- * Writing a Benchmark
- * -------------------
- * To write a benchmark you must provide a functor that will run the operations
- * you want to time and return the run time of those operations using the timer
- * for the device. The benchmark should also be templated on the value type being
- * operated on. Then use VTKM_MAKE_BENCHMARK to generate a maker functor and
- * VTKM_RUN_BENCHMARK to run the benchmark on a list of types.
- *
- * For Example:
- *
- * template<typename Value>
- * struct BenchSilly {
- *   // Setup anything that doesn't need to change per run in the constructor
- *   VTKM_CONT BenchSilly(){}
- *
- *   // The overloaded call operator will run the operations being timed and
- *   // return the execution time
- *   VTKM_CONT
- *   vtkm::Float64 operator()(){
- *     return 0.05;
- *   }
- *
- *   // The benchmark must also provide a method describing itself, this is
- *   // used when printing out run time statistics
- *   VTKM_CONT
- *   std::string Description() const {
- *     return "A silly benchmark";
- *   }
- * };
- *
- * // Now use the VTKM_MAKE_BENCHMARK macro to generate a maker functor for
- * // your benchmark. This lets us generate the benchmark functor for each type
- * // we want to test
- * VTKM_MAKE_BENCHMARK(Silly, BenchSilly);
- *
- * // You can also optionally pass arguments to the constructor like so:
- * // VTKM_MAKE_BENCHMARK(Blah, BenchBlah, 1, 2, 3);
- * // Note that benchmark names (the first argument) must be unique so different
- * // parameters to the constructor should have different names
- *
- * // We can now run our benchmark using VTKM_RUN_BENCHMARK, passing the
- * // benchmark name and type list to run on
- * int main(int, char**){
- *   VTKM_RUN_BENCHMARK(Silly, vtkm::ListTagBase<vtkm::Float32>());
- *   return 0;
- * }
- *
- * Check out vtkm/benchmarking/BenchmarkDeviceAdapter.h for some example usage
- */
+#include <benchmark/benchmark.h>
 
-/*
- * Use the VTKM_MAKE_BENCHMARK macro to define a maker functor for your benchmark.
- * This is used to allow you to template the benchmark functor on the type being benchmarked
- * and the device adapter so you can write init code in the constructor. Then the maker will
- * return a constructed instance of your benchmark for the type being benchmarked.
- * The VA_ARGS are used to pass any extra arguments needed by your benchmark
- */
-#define VTKM_MAKE_BENCHMARK(Name, Bench, ...)                                                      \
-  struct MakeBench##Name                                                                           \
-  {                                                                                                \
-    template <typename Value, typename DeviceAdapter>                                              \
-    VTKM_CONT Bench<Value, DeviceAdapter> operator()(const Value vtkmNotUsed(v),                   \
-                                                     DeviceAdapter vtkmNotUsed(id)) const          \
-    {                                                                                              \
-      return Bench<Value, DeviceAdapter>(__VA_ARGS__);                                             \
-    }                                                                                              \
-  }
+#include <ostream>
 
-/*
- * Use the VTKM_RUN_BENCHMARK macro to run your benchmark on the type list passed.
- * You must have previously defined a maker functor with VTKM_MAKE_BENCHMARK that this
- * macro will look for and use
- */
-#define VTKM_RUN_BENCHMARK(Name, Types, Id)                                                        \
-  vtkm::benchmarking::BenchmarkTypes(MakeBench##Name(), (Types), (Id))
+/// \file Benchmarker.h
+/// \brief Benchmarking utilities
+///
+/// VTK-m's benchmarking framework is built on top of Google Benchmark.
+///
+/// A benchmark is now a single function, which is passed to a macro:
+///
+/// ```
+/// void MyBenchmark(::benchmark::State& state)
+/// {
+///   MyClass someClass;
+///
+///   // Optional: Add a descriptive label with additional benchmark details:
+///   state.SetLabel("Blah blah blah.");
+///
+///   // Must use a vtkm timer to properly capture eg. CUDA execution times.
+///   vtkm::cont::Timer timer;
+///   for (auto _ : state)
+///   {
+///     someClass.Reset();
+///
+///     timer.Start();
+///     someClass.DoWork();
+///     timer.Stop();
+///
+///     state.SetIterationTime(timer.GetElapsedTime());
+///   }
+///
+///   // Optional: Report items and/or bytes processed per iteration in output:
+///   state.SetItemsProcessed(state.iterations() * someClass.GetNumberOfItems());
+///   state.SetBytesProcessed(state.iterations() * someClass.GetNumberOfBytes());
+/// }
+/// }
+/// VTKM_BENCHMARK(MyBenchmark);
+/// ```
+///
+/// Google benchmark also makes it easy to implement parameter sweep benchmarks:
+///
+/// ```
+/// void MyParameterSweep(::benchmark::State& state)
+/// {
+///   // The current value in the sweep:
+///   const vtkm::Id currentValue = state.range(0);
+///
+///   MyClass someClass;
+///   someClass.SetSomeParameter(currentValue);
+///
+///   vtkm::cont::Timer timer;
+///   for (auto _ : state)
+///   {
+///     someClass.Reset();
+///
+///     timer.Start();
+///     someClass.DoWork();
+///     timer.Stop();
+///
+///     state.SetIterationTime(timer.GetElapsedTime());
+///   }
+/// }
+/// VTKM_BENCHMARK_OPTS(MyBenchmark, ->ArgName("Param")->Range(32, 1024 * 1024));
+/// ```
+///
+/// will generate and launch several benchmarks, exploring the parameter space of
+/// `SetSomeParameter` between the values of 32 and (1024*1024). The chain of
+///   functions calls in the second argument is applied to an instance of
+/// ::benchmark::internal::Benchmark. See Google Benchmark's documentation for
+/// more details.
+///
+/// For more complex benchmark configurations, the VTKM_BENCHMARK_APPLY macro
+///   accepts a function with the signature
+/// `void Func(::benchmark::internal::Benchmark*)` that may be used to generate
+/// more complex configurations.
+///
+/// To instantiate a templated benchmark across a list of types, the
+/// VTKM_BENCHMARK_TEMPLATE* macros take a vtkm::List of types as an additional
+/// parameter. The templated benchmark function will be instantiated and called
+/// for each type in the list:
+///
+/// ```
+/// template <typename T>
+/// void MyBenchmark(::benchmark::State& state)
+/// {
+///   MyClass<T> someClass;
+///
+///   // Must use a vtkm timer to properly capture eg. CUDA execution times.
+///   vtkm::cont::Timer timer;
+///   for (auto _ : state)
+///   {
+///     someClass.Reset();
+///
+///     timer.Start();
+///     someClass.DoWork();
+///     timer.Stop();
+///
+///     state.SetIterationTime(timer.GetElapsedTime());
+///   }
+/// }
+/// }
+/// VTKM_BENCHMARK_TEMPLATE(MyBenchmark, vtkm::List<vtkm::Float32, vtkm::Vec3f_32>);
+/// ```
+///
+/// The benchmarks are executed by calling the `VTKM_EXECUTE_BENCHMARKS(argc, argv)`
+/// macro from `main`. There is also a `VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, some_string)`
+/// macro that appends the contents of `some_string` to the Google Benchmark preamble.
+///
+/// If a benchmark is not compatible with some configuration, it may call
+/// `state.SkipWithError("Error message");` on the `::benchmark::State` object and return. This is
+/// useful, for instance in the filter tests when the input is not compatible with the filter.
+///
+/// When launching a benchmark executable, the following options are supported by Google Benchmark:
+///
+/// - `--benchmark_list_tests`: List all available tests.
+/// - `--benchmark_filter="[regex]"`: Only run benchmark with names that match `[regex]`.
+/// - `--benchmark_filter="-[regex]"`: Only run benchmark with names that DON'T match `[regex]`.
+/// - `--benchmark_min_time=[float]`: Make sure each benchmark repetition gathers `[float]` seconds
+///   of data.
+/// - `--benchmark_repetitions=[int]`: Run each benchmark `[int]` times and report aggregate statistics
+///   (mean, stdev, etc). A "repetition" refers to a single execution of the benchmark function, not
+///   an "iteration", which is a loop of the `for(auto _:state){...}` section.
+/// - `--benchmark_report_aggregates_only="true|false"`: If true, only the aggregate statistics are
+///   reported (affects both console and file output). Requires `--benchmark_repetitions` to be useful.
+/// - `--benchmark_display_aggregates_only="true|false"`: If true, only the aggregate statistics are
+///   printed to the terminal. Any file output will still contain all repetition info.
+/// - `--benchmark_format="console|json|csv"`: Specify terminal output format: human readable
+///   (`console`) or `csv`/`json` formats.
+/// - `--benchmark_out_format="console|json|csv"`: Specify file output format: human readable
+///   (`console`) or `csv`/`json` formats.
+/// - `--benchmark_out=[filename]`: Specify output file.
+/// - `--benchmark_color="true|false"`: Toggle color output in terminal when using `console` output.
+/// - `--benchmark_counters_tabular="true|false"`: Print counter information (e.g. bytes/sec, items/sec)
+///   in the table, rather than appending them as a label.
+///
+/// For more information and examples of practical usage, take a look at the existing benchmarks in
+/// vtk-m/benchmarking/.
+
+/// \def VTKM_EXECUTE_BENCHMARKS(argc, argv)
+///
+/// Run the benchmarks defined in the current file. Benchmarks may be filtered
+/// and modified using the passed arguments; see the Google Benchmark documentation
+/// for more details.
+#define VTKM_EXECUTE_BENCHMARKS(argc, argv) vtkm::bench::detail::ExecuteBenchmarks(argc, argv)
+
+/// \def VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble)
+///
+/// Run the benchmarks defined in the current file. Benchmarks may be filtered
+/// and modified using the passed arguments; see the Google Benchmark documentation
+/// for more details. The `preamble` string may be used to supply additional
+/// information that will be appended to the output's preamble.
+#define VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble) \
+  vtkm::bench::detail::ExecuteBenchmarks(argc, argv, preamble)
+
+/// \def VTKM_BENCHMARK(BenchFunc)
+///
+/// Define a simple benchmark. A single benchmark will be generated that executes
+/// `BenchFunc`. `BenchFunc` must have the signature:
+///
+/// ```
+/// void BenchFunc(::benchmark::State& state)
+/// ```
+#define VTKM_BENCHMARK(BenchFunc) \
+  BENCHMARK(BenchFunc)->UseManualTime()->Unit(benchmark::kMillisecond)
+
+/// \def VTKM_BENCHMARK_OPTS(BenchFunc, Args)
+///
+/// Similar to `VTKM_BENCHMARK`, but allows additional options to be specified
+/// on the `::benchmark::internal::Benchmark` object. Example usage:
+///
+/// ```
+/// VTKM_BENCHMARK_OPTS(MyBenchmark, ->ArgName("MyParam")->Range(32, 1024*1024));
+/// ```
+///
+/// Note the similarity to the raw Google Benchmark usage of
+/// `BENCHMARK(MyBenchmark)->ArgName("MyParam")->Range(32, 1024*1024);`. See
+/// the Google Benchmark documentation for more details on the available options.
+#define VTKM_BENCHMARK_OPTS(BenchFunc, options) \
+  BENCHMARK(BenchFunc)->UseManualTime()->Unit(benchmark::kMillisecond) options
+
+/// \def VTKM_BENCHMARK_APPLY(BenchFunc, ConfigFunc)
+///
+/// Similar to `VTKM_BENCHMARK`, but allows advanced benchmark configuration
+/// via a supplied ConfigFunc, similar to Google Benchmark's
+/// `BENCHMARK(BenchFunc)->Apply(ConfigFunc)`. `ConfigFunc` must have the
+/// signature:
+///
+/// ```
+/// void ConfigFunc(::benchmark::internal::Benchmark*);
+/// ```
+///
+/// See the Google Benchmark documentation for more details on the available options.
+#define VTKM_BENCHMARK_APPLY(BenchFunc, applyFunctor) \
+  BENCHMARK(BenchFunc)->Apply(applyFunctor)->UseManualTime()->Unit(benchmark::kMillisecond)
+
+/// \def VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList)
+///
+/// Define a family of benchmark that vary by template argument. A single
+/// benchmark will be generated for each type in `TypeList` (a vtkm::List of
+/// types) that executes `BenchFunc<T>`. `BenchFunc` must have the signature:
+///
+/// ```
+/// template <typename T>
+/// void BenchFunc(::benchmark::State& state)
+/// ```
+#define VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList) \
+  VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, vtkm::bench::detail::NullApply, TypeList)
+
+/// \def VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, Args, TypeList)
+///
+/// Similar to `VTKM_BENCHMARK_TEMPLATES`, but allows additional options to be specified
+/// on the `::benchmark::internal::Benchmark` object. Example usage:
+///
+/// ```
+/// VTKM_BENCHMARK_TEMPLATES_OPTS(MyBenchmark,
+///                                ->ArgName("MyParam")->Range(32, 1024*1024),
+///                              vtkm::List<vtkm::Float32, vtkm::Vec3f_32>);
+/// ```
+#define VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                          \
+  VTKM_BENCHMARK_TEMPLATES_APPLY(                                                            \
+    BenchFunc,                                                                               \
+    [](::benchmark::internal::Benchmark* bm) { bm options->Unit(benchmark::kMillisecond); }, \
+    TypeList)
+
+/// \def VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ConfigFunc, TypeList)
+///
+/// Similar to `VTKM_BENCHMARK_TEMPLATES`, but allows advanced benchmark configuration
+/// via a supplied ConfigFunc, similar to Google Benchmark's
+/// `BENCHMARK(BenchFunc)->Apply(ConfigFunc)`. `ConfigFunc` must have the
+/// signature:
+///
+/// ```
+/// void ConfigFunc(::benchmark::internal::Benchmark*);
+/// ```
+///
+/// See the Google Benchmark documentation for more details on the available options.
+#define VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ApplyFunctor, TypeList)                            \
+  namespace                                                                                          \
+  { /* A template function cannot be used as a template parameter, so wrap the function with       \
+     * a template struct to get it into the GenerateTemplateBenchmarks class. */ \
+  template <typename... Ts>                                                                          \
+  struct VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                      \
+  {                                                                                                  \
+    static ::benchmark::internal::Function* GetFunction() { return BenchFunc<Ts...>; }               \
+  };                                                                                                 \
+  } /* end anon namespace */                                                                         \
+  int BENCHMARK_PRIVATE_NAME(BenchFunc) = vtkm::bench::detail::GenerateTemplateBenchmarks<           \
+    brigand::bind<VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)>,                                           \
+    TypeList>::Register(#BenchFunc, ApplyFunctor)
+
+// Internal use only:
+#define VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc) \
+  BENCHMARK_PRIVATE_CONCAT(_wrapper_, BenchFunc, __LINE__)
 
 namespace vtkm
 {
-namespace benchmarking
+namespace bench
 {
-namespace stats
+namespace detail
 {
-// Checks that the sequence is sorted, returns true if it's sorted, false
-// otherwise
-template <typename ForwardIt>
-bool is_sorted(ForwardIt first, ForwardIt last)
+
+static inline void NullApply(::benchmark::internal::Benchmark*) {}
+
+/// Do not use directly. The VTKM_BENCHMARK_TEMPLATES macros should be used
+/// instead.
+// TypeLists could be expanded to compute cross products if we ever have that
+// need.
+template <typename BoundBench, typename TypeLists>
+struct GenerateTemplateBenchmarks;
+
+template <template <typename...> class BenchType, typename TypeList>
+struct GenerateTemplateBenchmarks<brigand::bind<BenchType>, TypeList>
 {
-  ForwardIt next = first;
-  ++next;
-  for (; next != last; ++next, ++first)
+private:
+  template <typename T>
+  using MakeBenchType = BenchType<T>;
+
+  using Benchmarks = brigand::transform<TypeList, brigand::bind<MakeBenchType, brigand::_1>>;
+
+  template <typename ApplyFunctor>
+  struct RegisterImpl
   {
-    if (*first > *next)
+    std::string BenchName;
+    ApplyFunctor Apply;
+
+    template <typename P>
+    void operator()(brigand::type_<BenchType<P>>) const
+    {
+      std::ostringstream name;
+      name << this->BenchName << "<" << vtkm::testing::TypeName<P>::Name() << ">";
+      auto bm = ::benchmark::internal::RegisterBenchmarkInternal(
+        new ::benchmark::internal::FunctionBenchmark(name.str().c_str(),
+                                                     BenchType<P>::GetFunction()));
+      this->Apply(bm);
+
+      // Always use manual time with vtkm::cont::Timer to capture CUDA times accurately.
+      bm->UseManualTime()->Unit(benchmark::kMillisecond);
+    }
+  };
+
+public:
+  template <typename ApplyFunctor>
+  static int Register(const std::string& benchName, ApplyFunctor&& apply)
+  {
+    brigand::for_each<Benchmarks>(
+      RegisterImpl<ApplyFunctor>{ benchName, std::forward<ApplyFunctor>(apply) });
+    return 0;
+  }
+};
+
+class VTKmConsoleReporter : public ::benchmark::ConsoleReporter
+{
+  std::string UserPreamble;
+
+public:
+  VTKmConsoleReporter() = default;
+
+  explicit VTKmConsoleReporter(const std::string& preamble)
+    : UserPreamble{ preamble }
+  {
+  }
+
+  bool ReportContext(const Context& context) override
+  {
+    if (!::benchmark::ConsoleReporter::ReportContext(context))
     {
       return false;
     }
-  }
-  return true;
-}
 
-// Get the value representing the `percent` percentile of the
-// sorted samples using linear interpolation
-vtkm::Float64 PercentileValue(const std::vector<vtkm::Float64>& samples,
-                              const vtkm::Float64 percent)
-{
-  VTKM_ASSERT(!samples.empty());
-  if (samples.size() == 1)
-  {
-    return samples.front();
-  }
-  VTKM_ASSERT(percent >= 0.0);
-  VTKM_ASSERT(percent <= 100.0);
-  VTKM_ASSERT(vtkm::benchmarking::stats::is_sorted(samples.begin(), samples.end()));
-  if (percent == 100.0)
-  {
-    return samples.back();
-  }
-  // Find the two nearest percentile values and linearly
-  // interpolate between them
-  const vtkm::Float64 rank = percent / 100.0 * (static_cast<vtkm::Float64>(samples.size()) - 1.0);
-  const vtkm::Float64 low_rank = vtkm::Floor(rank);
-  const vtkm::Float64 dist = rank - low_rank;
-  const size_t k = static_cast<size_t>(low_rank);
-  const vtkm::Float64 low = samples[k];
-  const vtkm::Float64 high = samples[k + 1];
-  return low + (high - low) * dist;
-}
-// Winsorize the samples to clean up any very extreme outliers
-// Will replace all samples below `percent` and above 100 - `percent` percentiles
-// with the value at the percentile
-// NOTE: Assumes the samples have been sorted, as we make use of PercentileValue
-void Winsorize(std::vector<vtkm::Float64>& samples, const vtkm::Float64 percent)
-{
-  const vtkm::Float64 low_percentile = PercentileValue(samples, percent);
-  const vtkm::Float64 high_percentile = PercentileValue(samples, 100.0 - percent);
-  for (std::vector<vtkm::Float64>::iterator it = samples.begin(); it != samples.end(); ++it)
-  {
-    if (*it < low_percentile)
+    // The rest of the preamble is printed to the error stream, so be consistent:
+    auto& out = this->GetErrorStream();
+
+    // Print list of devices:
+    out << "VTK-m Device State:\n";
+    vtkm::cont::GetRuntimeDeviceTracker().PrintSummary(out);
+    if (!this->UserPreamble.empty())
     {
-      *it = low_percentile;
+      out << this->UserPreamble << "\n";
     }
-    else if (*it > high_percentile)
-    {
-      *it = high_percentile;
-    }
-  }
-}
-// Compute the mean value of the dataset
-vtkm::Float64 Mean(const std::vector<vtkm::Float64>& samples)
-{
-  vtkm::Float64 mean = 0;
-  for (std::vector<vtkm::Float64>::const_iterator it = samples.begin(); it != samples.end(); ++it)
-  {
-    mean += *it;
-  }
-  return mean / static_cast<vtkm::Float64>(samples.size());
-}
-// Compute the sample variance of the samples
-vtkm::Float64 Variance(const std::vector<vtkm::Float64>& samples)
-{
-  vtkm::Float64 mean = Mean(samples);
-  vtkm::Float64 square_deviations = 0;
-  for (std::vector<vtkm::Float64>::const_iterator it = samples.begin(); it != samples.end(); ++it)
-  {
-    square_deviations += vtkm::Pow(*it - mean, 2.0);
-  }
-  return square_deviations / (static_cast<vtkm::Float64>(samples.size()) - 1.0);
-}
-// Compute the standard deviation of the samples
-vtkm::Float64 StandardDeviation(const std::vector<vtkm::Float64>& samples)
-{
-  return vtkm::Sqrt(Variance(samples));
-}
-// Compute the median absolute deviation of the dataset
-vtkm::Float64 MedianAbsDeviation(const std::vector<vtkm::Float64>& samples)
-{
-  std::vector<vtkm::Float64> abs_deviations;
-  abs_deviations.reserve(samples.size());
-  const vtkm::Float64 median = PercentileValue(samples, 50.0);
-  for (std::vector<vtkm::Float64>::const_iterator it = samples.begin(); it != samples.end(); ++it)
-  {
-    abs_deviations.push_back(vtkm::Abs(*it - median));
-  }
-  std::sort(abs_deviations.begin(), abs_deviations.end());
-  return PercentileValue(abs_deviations, 50.0);
-}
-} // stats
+    out.flush();
 
-/*
- * The benchmarker takes a functor to benchmark and runs it multiple times,
- * printing out statistics of the run time at the end.
- * The functor passed should return the run time of the thing being benchmarked
- * in seconds, this lets us avoid including any per-run setup time in the benchmark.
- * However any one-time setup should be done in the functor's constructor
- */
-struct Benchmarker
-{
-  std::vector<vtkm::Float64> Samples;
-  std::string BenchmarkName;
-
-  const vtkm::Float64 MaxRuntime;
-  const size_t MaxIterations;
-
-public:
-  VTKM_CONT
-  Benchmarker(vtkm::Float64 maxRuntime = 30, std::size_t maxIterations = 100)
-    : MaxRuntime(maxRuntime)
-    , MaxIterations(maxIterations)
-  {
-  }
-
-  template <typename Functor>
-  VTKM_CONT void GatherSamples(Functor func)
-  {
-    this->Samples.clear();
-    this->BenchmarkName = func.Description();
-
-    // Do a warm-up run. If the benchmark allocates any additional memory
-    // eg. storage for output results, this will let it do that and
-    // allow us to avoid measuring the allocation time in the actual benchmark run
-    func();
-
-    this->Samples.reserve(this->MaxIterations);
-
-    // Run each benchmark for MAX_RUNTIME seconds or MAX_ITERATIONS iterations, whichever
-    // takes less time. This kind of assumes that running for 500 iterations or 30s will give
-    // good statistics, but if median abs dev and/or std dev are too high both these limits
-    // could be increased
-    size_t iter = 0;
-    for (vtkm::Float64 elapsed = 0.0; elapsed < this->MaxRuntime && iter < this->MaxIterations;
-         elapsed += this->Samples.back(), ++iter)
-    {
-      this->Samples.push_back(func());
-    }
-
-    std::sort(this->Samples.begin(), this->Samples.end());
-    stats::Winsorize(this->Samples, 5.0);
-  }
-
-  VTKM_CONT void PrintSummary(std::ostream& out = std::cout)
-  {
-    out << "Benchmark \'" << this->BenchmarkName << "\' results:\n";
-
-    if (this->Samples.empty())
-    {
-      out << "\tNo samples gathered!\n";
-      return;
-    }
-
-    out << "\tnumSamples = " << this->Samples.size() << "\n"
-        << "\tmedian = " << stats::PercentileValue(this->Samples, 50.0) << "s\n"
-        << "\tmedian abs dev = " << stats::MedianAbsDeviation(this->Samples) << "s\n"
-        << "\tmean = " << stats::Mean(this->Samples) << "s\n"
-        << "\tstd dev = " << stats::StandardDeviation(this->Samples) << "s\n"
-        << "\tmin = " << this->Samples.front() << "s\n"
-        << "\tmax = " << this->Samples.back() << "s\n";
-  }
-
-  template <typename DeviceAdapter, typename MakerFunctor, typename T>
-  VTKM_CONT bool operator()(DeviceAdapter id, MakerFunctor&& makerFunctor, T t)
-  {
-    auto func = makerFunctor(t, id);
-    std::cout << "Running '" << func.Description() << "'" << std::endl;
-    this->GatherSamples(func);
-    this->PrintSummary();
     return true;
   }
-
-  VTKM_CONT const std::vector<vtkm::Float64>& GetSamples() const { return this->Samples; }
-
-  VTKM_CONT void Reset()
-  {
-    this->Samples.clear();
-    this->BenchmarkName.clear();
-  }
 };
 
-template <typename MakerFunctor>
-class InternalPrintTypeAndBench
+// Returns the number of executed benchmarks:
+static inline vtkm::Id ExecuteBenchmarks(int& argc,
+                                         char* argv[],
+                                         const std::string& preamble = std::string{})
 {
-  MakerFunctor Maker;
-
-public:
-  VTKM_CONT
-  InternalPrintTypeAndBench(MakerFunctor maker)
-    : Maker(maker)
+  ::benchmark::Initialize(&argc, argv);
+  if (::benchmark::ReportUnrecognizedArguments(argc, argv))
   {
+    return 1;
   }
 
-  template <typename T>
-  VTKM_CONT void operator()(T t, vtkm::cont::DeviceAdapterId id) const
+  VTKmConsoleReporter reporter{ preamble };
+
+  vtkm::cont::Timer timer;
+  timer.Start();
+  std::size_t num = ::benchmark::RunSpecifiedBenchmarks(&reporter);
+  timer.Stop();
+
+  reporter.GetOutputStream().flush();
+  reporter.GetErrorStream().flush();
+
+  reporter.GetErrorStream() << "Ran " << num << " benchmarks in " << timer.GetElapsedTime()
+                            << " seconds." << std::endl;
+
+  return static_cast<vtkm::Id>(num);
+}
+
+void InitializeArgs(int* argc, std::vector<char*>& args, vtkm::cont::InitializeOptions& opts)
+{
+  bool isHelp = false;
+
+  // Inject --help
+  if (*argc == 1)
   {
-    std::cout << "*** " << vtkm::testing::TypeName<T>::Name() << " on device " << id.GetName()
-              << " ***************" << std::endl;
-    Benchmarker bench;
-    try
+    const char* help = "--help"; // We want it to be static
+    args.push_back(const_cast<char*>(help));
+    *argc = *argc + 1;
+  }
+
+  args.push_back(nullptr);
+
+  for (size_t i = 0; i < static_cast<size_t>(*argc); ++i)
+  {
+    auto opt_s = std::string(args[i]);
+    if (opt_s == "--help" || opt_s == "-help" || opt_s == "-h")
     {
-      vtkm::cont::TryExecuteOnDevice(id, bench, Maker, t);
-    }
-    catch (std::exception& e)
-    {
-      std::cout << "\n"
-                << "An exception occurring during a benchmark:\n\t" << e.what() << "\n"
-                << "Attempting to continue with remaining benchmarks...\n\n";
+      isHelp = true;
     }
   }
-};
 
-template <class MakerFunctor, class TypeList>
-VTKM_CONT void BenchmarkTypes(MakerFunctor&& maker, TypeList, vtkm::cont::DeviceAdapterId id)
-{
-  vtkm::ListForEach(
-    InternalPrintTypeAndBench<MakerFunctor>(std::forward<MakerFunctor>(maker)), TypeList(), id);
+  if (!isHelp)
+  {
+    return;
+  }
+
+  opts = vtkm::cont::InitializeOptions::None;
 }
 }
 }
+} // end namespace vtkm::bench::detail
 
 #endif

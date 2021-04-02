@@ -17,23 +17,24 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/ParametricCoordinates.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 namespace
 {
 struct CellCentroidCalculator : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
-  typedef void ControlSignature(CellSetIn, FieldInPoint, FieldOut);
-  typedef _3 ExecutionSignature(_1, PointCount, _2);
+  using ControlSignature = void(CellSetIn, FieldInPoint, FieldOut);
+  using ExecutionSignature = void(_1, PointCount, _2, _3);
 
   template <typename CellShape, typename InputPointField>
-  VTKM_EXEC typename InputPointField::ComponentType operator()(
-    CellShape shape,
-    vtkm::IdComponent numPoints,
-    const InputPointField& inputPointField) const
+  VTKM_EXEC void operator()(CellShape shape,
+                            vtkm::IdComponent numPoints,
+                            const InputPointField& inputPointField,
+                            typename InputPointField::ComponentType& outputField) const
   {
-    vtkm::Vec3f parametricCenter = vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, *this);
-    return vtkm::exec::CellInterpolate(inputPointField, parametricCenter, shape, *this);
+    vtkm::Vec3f parametricCenter;
+    vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, parametricCenter);
+    vtkm::exec::CellInterpolate(inputPointField, parametricCenter, shape, outputField);
   }
 }; // struct CellCentroidCalculator
 
@@ -49,7 +50,7 @@ struct BoundingIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
   {
     vtkm::Vec3f parametric;
     vtkm::Id cellId;
-    bih->FindCell(point, cellId, parametric, *this);
+    bih.FindCell(point, cellId, parametric);
     return (1 - static_cast<vtkm::IdComponent>(expectedId == cellId));
   }
 }; // struct BoundingIntervalHierarchyTester
@@ -64,7 +65,7 @@ void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponen
   using Timer = vtkm::cont::Timer;
 
   vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
-  vtkm::cont::ArrayHandleVirtualCoordinates vertices = dataSet.GetCoordinateSystem().GetData();
+  auto vertices = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
 
   std::cout << "Using numPlanes: " << numPlanes << "\n";
   std::cout << "Building Bounding Interval Hierarchy Tree" << std::endl;

@@ -13,6 +13,8 @@
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
 #include <vtkm/exec/cuda/internal/IteratorFromArrayPortal.h>
 
+#include <vtkm/internal/ArrayPortalBasic.h>
+
 namespace vtkm
 {
 namespace cont
@@ -59,6 +61,30 @@ inline const T* IteratorBegin(
 
 template <typename T>
 inline const T* IteratorEnd(const vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T>& portal)
+{
+  return portal.GetIteratorEnd();
+}
+
+template <typename T>
+inline T* IteratorBegin(const vtkm::internal::ArrayPortalBasicWrite<T>& portal)
+{
+  return portal.GetIteratorBegin();
+}
+
+template <typename T>
+inline T* IteratorEnd(const vtkm::internal::ArrayPortalBasicWrite<T>& portal)
+{
+  return portal.GetIteratorEnd();
+}
+
+template <typename T>
+inline const T* IteratorBegin(const vtkm::internal::ArrayPortalBasicRead<T>& portal)
+{
+  return portal.GetIteratorBegin();
+}
+
+template <typename T>
+inline const T* IteratorEnd(const vtkm::internal::ArrayPortalBasicRead<T>& portal)
 {
   return portal.GetIteratorEnd();
 }

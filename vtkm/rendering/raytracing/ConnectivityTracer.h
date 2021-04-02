@@ -13,6 +13,7 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CellLocatorGeneral.h>
 
 #include <vtkm/rendering/raytracing/MeshConnectivityContainers.h>
 #include <vtkm/rendering/raytracing/PartialComposite.h>
@@ -72,6 +73,7 @@ class VTKM_RENDERING_EXPORT ConnectivityTracer
 public:
   ConnectivityTracer()
     : MeshContainer(nullptr)
+    , BumpEpsilon(1e-3)
     , CountRayStatus(false)
     , UnitScalar(1.f)
   {
@@ -113,6 +115,7 @@ public:
   void SetDebugOn(bool on) { CountRayStatus = on; }
 
   void SetUnitScalar(const vtkm::Float32 unitScalar) { UnitScalar = unitScalar; }
+  void SetEpsilon(const vtkm::Float64 epsilon) { BumpEpsilon = epsilon; }
 
 
   vtkm::Id GetNumberOfMeshCells() const;
@@ -191,6 +194,9 @@ protected:
   IntegrationMode Integrator;
 
   MeshConnContainer* MeshContainer;
+  vtkm::cont::CellLocatorGeneral Locator;
+  vtkm::Float64 BumpEpsilon;
+  vtkm::Float64 BumpDistance;
   //
   // flags
   bool CountRayStatus;

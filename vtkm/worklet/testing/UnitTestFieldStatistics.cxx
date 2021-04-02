@@ -319,7 +319,7 @@ void TestFieldSimple()
 
   // Cell data
   vtkm::cont::ArrayHandle<vtkm::Float32> data;
-  ds.GetField("data").GetData().CopyTo(data);
+  ds.GetField("data").GetData().AsArrayHandle(data);
 
   // Run
   vtkm::worklet::FieldStatistics<vtkm::Float32>().Run(data, statinfo);
@@ -350,13 +350,13 @@ void TestFieldStandardDistributions()
 
   // Point data
   vtkm::cont::ArrayHandle<vtkm::Float32> p_poisson;
-  ds.GetField("p_poisson").GetData().CopyTo(p_poisson);
+  ds.GetField("p_poisson").GetData().AsArrayHandle(p_poisson);
   vtkm::cont::ArrayHandle<vtkm::Float32> p_normal;
-  ds.GetField("p_normal").GetData().CopyTo(p_normal);
+  ds.GetField("p_normal").GetData().AsArrayHandle(p_normal);
   vtkm::cont::ArrayHandle<vtkm::Float32> p_chiSquare;
-  ds.GetField("p_chiSquare").GetData().CopyTo(p_chiSquare);
+  ds.GetField("p_chiSquare").GetData().AsArrayHandle(p_chiSquare);
   vtkm::cont::ArrayHandle<vtkm::Float32> p_uniform;
-  ds.GetField("p_uniform").GetData().CopyTo(p_uniform);
+  ds.GetField("p_uniform").GetData().AsArrayHandle(p_uniform);
 
   // Run Poisson data
   vtkm::worklet::FieldStatistics<vtkm::Float32>().Run(p_poisson, statinfo);

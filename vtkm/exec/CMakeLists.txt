@@ -16,9 +16,10 @@ set(headers
   CellFace.h
   CellInside.h
   CellInterpolate.h
-  CellLocator.h
-  CellLocatorBoundingIntervalHierarchyExec.h
+  CellLocatorBoundingIntervalHierarchy.h
+  CellLocatorMultiplexer.h
   CellLocatorRectilinearGrid.h
+  CellLocatorTwoLevel.h
   CellLocatorUniformGrid.h
   CellMeasure.h
   ColorTable.h
@@ -31,13 +32,19 @@ set(headers
   FunctorBase.h
   ParametricCoordinates.h
   PointLocator.h
-  PointLocatorUniformGrid.h
+  PointLocatorSparseGrid.h
   TaskBase.h
   )
 
 set(header_impls
   ColorTable.hxx
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    CellLocator.h
+    )
+endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
@@ -53,6 +60,7 @@ add_subdirectory(serial)
 add_subdirectory(tbb)
 add_subdirectory(openmp)
 add_subdirectory(cuda)
+add_subdirectory(kokkos)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

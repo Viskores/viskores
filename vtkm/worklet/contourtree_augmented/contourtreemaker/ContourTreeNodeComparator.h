@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_contour_tree_node_comparator_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_contour_tree_node_comparator_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_contour_tree_node_comparator_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_contour_tree_node_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -68,22 +68,23 @@ namespace contourtree_maker_inc
 
 
 // comparator used for initial sort of data values
-template <typename DeviceAdapter>
 class ContourTreeNodeComparatorImpl
 {
 public:
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
 
-  IdPortalType superparentsPortal;
-  IdPortalType superarcsPortal;
+  IdPortalType SuperparentsPortal;
+  IdPortalType SuperarcsPortal;
 
   // constructor
   VTKM_CONT
-  ContourTreeNodeComparatorImpl(const IdArrayType& superparents, const IdArrayType& superarcs)
+  ContourTreeNodeComparatorImpl(const IdArrayType& superparents,
+                                const IdArrayType& superarcs,
+                                vtkm::cont::DeviceAdapterId device,
+                                vtkm::cont::Token& token)
   {
-    superparentsPortal = superparents.PrepareForInput(DeviceAdapter());
-    superarcsPortal = superarcs.PrepareForInput(DeviceAdapter());
+    this->SuperparentsPortal = superparents.PrepareForInput(device, token);
+    this->SuperarcsPortal = superarcs.PrepareForInput(device, token);
   }
 
   // () operator - gets called to do comparison
@@ -91,8 +92,8 @@ public:
   bool operator()(const vtkm::Id& leftNode, const vtkm::Id& rightNode) const
   { // operator()
     // first compare the left & right superparents
-    vtkm::Id leftSuperparent = superparentsPortal.Get(leftNode);
-    vtkm::Id rightSuperparent = superparentsPortal.Get(rightNode);
+    vtkm::Id leftSuperparent = this->SuperparentsPortal.Get(leftNode);
+    vtkm::Id rightSuperparent = this->SuperparentsPortal.Get(rightNode);
     if (leftSuperparent < rightSuperparent)
       return true;
     else if (leftSuperparent > rightSuperparent)
@@ -100,7 +101,7 @@ public:
 
     // the parents are equal, so we compare the nodes, which are sort indices & indicate value
     // but we need to flip for ascending edges - we retrieve this information from the superarcs array
-    bool isAscendingSuperarc = isAscending(superarcsPortal.Get(leftSuperparent));
+    bool isAscendingSuperarc = IsAscending(this->SuperarcsPortal.Get(leftSuperparent));
     if (leftNode < rightNode)
       return isAscendingSuperarc;
     else if (leftNode > rightNode)
@@ -121,10 +122,10 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ContourTreeNodeComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  VTKM_CONT ContourTreeNodeComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                              vtkm::cont::Token& token)
   {
-    return ContourTreeNodeComparatorImpl<DeviceAdapter>(this->Superparents, this->Superarcs);
+    return ContourTreeNodeComparatorImpl(this->Superparents, this->Superarcs, device, token);
   }
 
 private:

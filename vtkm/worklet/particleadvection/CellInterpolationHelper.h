@@ -16,7 +16,10 @@
 #include <vtkm/VecVariable.h>
 
 #include <vtkm/cont/ArrayGetValues.h>
+#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/CellInterpolate.h>
 
 /*
@@ -31,7 +34,7 @@ namespace exec
 class CellInterpolationHelper : public vtkm::VirtualObjectBase
 {
 public:
-  VTKM_EXEC_CONT virtual ~CellInterpolationHelper() noexcept
+  VTKM_EXEC_CONT virtual ~CellInterpolationHelper() noexcept override
   {
     // This must not be defaulted, since defaulted virtual destructors are
     // troublesome with CUDA __host__ __device__ markup.
@@ -99,11 +102,10 @@ private:
   bool Is3D = true;
 };
 
-template <typename DeviceAdapter>
 class SingleCellTypeInterpolationHelper : public vtkm::exec::CellInterpolationHelper
 {
   using ConnType = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using ConnPortalType = typename ConnType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using ConnPortalType = typename ConnType::ReadPortalType;
 
 public:
   SingleCellTypeInterpolationHelper() = default;
@@ -111,10 +113,12 @@ public:
   VTKM_CONT
   SingleCellTypeInterpolationHelper(vtkm::UInt8 cellShape,
                                     vtkm::IdComponent pointsPerCell,
-                                    const ConnType& connectivity)
+                                    const ConnType& connectivity,
+                                    vtkm::cont::DeviceAdapterId device,
+                                    vtkm::cont::Token& token)
     : CellShape(cellShape)
     , PointsPerCell(pointsPerCell)
-    , Connectivity(connectivity.PrepareForInput(DeviceAdapter()))
+    , Connectivity(connectivity.PrepareForInput(device, token))
   {
   }
 
@@ -139,16 +143,15 @@ private:
   ConnPortalType Connectivity;
 };
 
-template <typename DeviceAdapter>
 class ExplicitCellInterpolationHelper : public vtkm::exec::CellInterpolationHelper
 {
   using ShapeType = vtkm::cont::ArrayHandle<vtkm::UInt8>;
   using OffsetType = vtkm::cont::ArrayHandle<vtkm::Id>;
   using ConnType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
-  using ShapePortalType = typename ShapeType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using OffsetPortalType = typename OffsetType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using ConnPortalType = typename ConnType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using ShapePortalType = typename ShapeType::ReadPortalType;
+  using OffsetPortalType = typename OffsetType::ReadPortalType;
+  using ConnPortalType = typename ConnType::ReadPortalType;
 
 public:
   ExplicitCellInterpolationHelper() = default;
@@ -156,10 +159,12 @@ public:
   VTKM_CONT
   ExplicitCellInterpolationHelper(const ShapeType& shape,
                                   const OffsetType& offset,
-                                  const ConnType& connectivity)
-    : Shape(shape.PrepareForInput(DeviceAdapter()))
-    , Offset(offset.PrepareForInput(DeviceAdapter()))
-    , Connectivity(connectivity.PrepareForInput(DeviceAdapter()))
+                                  const ConnType& connectivity,
+                                  vtkm::cont::DeviceAdapterId device,
+                                  vtkm::cont::Token& token)
+    : Shape(shape.PrepareForInput(device, token))
+    , Offset(offset.PrepareForInput(device, token))
+    , Connectivity(connectivity.PrepareForInput(device, token))
   {
   }
 
@@ -199,7 +204,8 @@ public:
   virtual ~CellInterpolationHelper() = default;
 
   VTKM_CONT virtual const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device) const = 0;
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token) const = 0;
 };
 
 class StructuredCellInterpolationHelper : public vtkm::cont::CellInterpolationHelper
@@ -237,7 +243,8 @@ public:
 
   VTKM_CONT
   const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId deviceId) const override
+    vtkm::cont::DeviceAdapterId deviceId,
+    vtkm::cont::Token& token) const override
   {
     auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
     const bool valid = tracker.CanRunOn(deviceId);
@@ -250,7 +257,7 @@ public:
     ExecutionType* execObject = new ExecutionType(this->CellDims, this->PointDims, this->Is3D);
     this->ExecHandle.Reset(execObject);
 
-    return this->ExecHandle.PrepareForExecution(deviceId);
+    return this->ExecHandle.PrepareForExecution(deviceId, token);
   }
 
 private:
@@ -290,14 +297,17 @@ public:
 
   struct SingleCellTypeFunctor
   {
-    template <typename DeviceAdapter>
-    VTKM_CONT bool operator()(DeviceAdapter,
+    VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterId device,
                               const vtkm::cont::SingleCellTypeInterpolationHelper& contInterpolator,
-                              HandleType& execInterpolator) const
+                              HandleType& execInterpolator,
+                              vtkm::cont::Token& token) const
     {
-      using ExecutionType = vtkm::exec::SingleCellTypeInterpolationHelper<DeviceAdapter>;
-      ExecutionType* execObject = new ExecutionType(
-        contInterpolator.CellShape, contInterpolator.PointsPerCell, contInterpolator.Connectivity);
+      using ExecutionType = vtkm::exec::SingleCellTypeInterpolationHelper;
+      ExecutionType* execObject = new ExecutionType(contInterpolator.CellShape,
+                                                    contInterpolator.PointsPerCell,
+                                                    contInterpolator.Connectivity,
+                                                    device,
+                                                    token);
       execInterpolator.Reset(execObject);
       return true;
     }
@@ -305,15 +315,16 @@ public:
 
   VTKM_CONT
   const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId deviceId) const override
+    vtkm::cont::DeviceAdapterId deviceId,
+    vtkm::cont::Token& token) const override
   {
-    const bool success =
-      vtkm::cont::TryExecuteOnDevice(deviceId, SingleCellTypeFunctor(), *this, this->ExecHandle);
+    const bool success = vtkm::cont::TryExecuteOnDevice(
+      deviceId, SingleCellTypeFunctor(), *this, this->ExecHandle, token);
     if (!success)
     {
       throwFailedRuntimeDeviceTransfer("SingleCellTypeInterpolationHelper", deviceId);
     }
-    return this->ExecHandle.PrepareForExecution(deviceId);
+    return this->ExecHandle.PrepareForExecution(deviceId, token);
   }
 
 private:
@@ -345,32 +356,16 @@ public:
       throw vtkm::cont::ErrorBadType("Cell set is not of type CellSetExplicit");
   }
 
-  struct ExplicitCellFunctor
-  {
-    template <typename DeviceAdapter>
-    VTKM_CONT bool operator()(DeviceAdapter,
-                              const vtkm::cont::ExplicitCellInterpolationHelper& contInterpolator,
-                              HandleType& execInterpolator) const
-    {
-      using ExecutionType = vtkm::exec::ExplicitCellInterpolationHelper<DeviceAdapter>;
-      ExecutionType* execObject = new ExecutionType(
-        contInterpolator.Shape, contInterpolator.Offset, contInterpolator.Connectivity);
-      execInterpolator.Reset(execObject);
-      return true;
-    }
-  };
-
   VTKM_CONT
   const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId deviceId) const override
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token) const override
   {
-    const bool success =
-      vtkm::cont::TryExecuteOnDevice(deviceId, ExplicitCellFunctor(), *this, this->ExecHandle);
-    if (!success)
-    {
-      throwFailedRuntimeDeviceTransfer("ExplicitCellInterpolationHelper", deviceId);
-    }
-    return this->ExecHandle.PrepareForExecution(deviceId);
+    using ExecutionType = vtkm::exec::ExplicitCellInterpolationHelper;
+    ExecutionType* execObject =
+      new ExecutionType(this->Shape, this->Offset, this->Connectivity, device, token);
+    this->ExecHandle.Reset(execObject);
+    return this->ExecHandle.PrepareForExecution(device, token);
   }
 
 private:

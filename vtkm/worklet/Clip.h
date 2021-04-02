@@ -26,14 +26,15 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/VariantArrayHandle.h>
+
+#include <vtkm/ImplicitFunction.h>
 
 #include <utility>
 #include <vtkm/exec/FunctorBase.h>
 
-#if defined(THRUST_MAJOR_VERSION) && THRUST_MAJOR_VERSION == 1 && THRUST_MINOR_VERSION == 8 &&     \
+#if defined(THRUST_MAJOR_VERSION) && THRUST_MAJOR_VERSION == 1 && THRUST_MINOR_VERSION == 8 && \
   THRUST_SUBMINOR_VERSION < 3
 // Workaround a bug in thrust 1.8.0 - 1.8.2 scan implementations which produces
 // wrong results
@@ -123,12 +124,9 @@ template <typename Device>
 class ExecutionConnectivityExplicit
 {
 private:
-  using UInt8Portal =
-    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::template ExecutionTypes<Device>::Portal;
-  using IdComponentPortal =
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<Device>::Portal;
-  using IdPortal =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::Portal;
+  using UInt8Portal = typename vtkm::cont::ArrayHandle<vtkm::UInt8>::WritePortalType;
+  using IdComponentPortal = typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::WritePortalType;
+  using IdPortal = typename vtkm::cont::ArrayHandle<vtkm::Id>::WritePortalType;
 
 public:
   VTKM_CONT
@@ -139,11 +137,12 @@ public:
                                 vtkm::cont::ArrayHandle<vtkm::IdComponent> numberOfIndices,
                                 vtkm::cont::ArrayHandle<vtkm::Id> connectivity,
                                 vtkm::cont::ArrayHandle<vtkm::Id> offsets,
-                                ClipStats stats)
-    : Shapes(shapes.PrepareForOutput(stats.NumberOfCells, Device()))
-    , NumberOfIndices(numberOfIndices.PrepareForOutput(stats.NumberOfCells, Device()))
-    , Connectivity(connectivity.PrepareForOutput(stats.NumberOfIndices, Device()))
-    , Offsets(offsets.PrepareForOutput(stats.NumberOfCells, Device()))
+                                ClipStats stats,
+                                vtkm::cont::Token& token)
+    : Shapes(shapes.PrepareForOutput(stats.NumberOfCells, Device(), token))
+    , NumberOfIndices(numberOfIndices.PrepareForOutput(stats.NumberOfCells, Device(), token))
+    , Connectivity(connectivity.PrepareForOutput(stats.NumberOfIndices, Device(), token))
+    , Offsets(offsets.PrepareForOutput(stats.NumberOfCells, Device(), token))
   {
   }
 
@@ -196,10 +195,12 @@ public:
   }
 
   template <typename Device>
-  VTKM_CONT ExecutionConnectivityExplicit<Device> PrepareForExecution(Device) const
+  VTKM_CONT ExecutionConnectivityExplicit<Device> PrepareForExecution(
+    Device,
+    vtkm::cont::Token& token) const
   {
     ExecutionConnectivityExplicit<Device> execConnectivity(
-      this->Shapes, this->NumberOfIndices, this->Connectivity, this->Offsets, this->Stats);
+      this->Shapes, this->NumberOfIndices, this->Connectivity, this->Offsets, this->Stats, token);
     return execConnectivity;
   }
 
@@ -218,13 +219,9 @@ class Clip
 {
   // Add support for invert
 public:
-  struct TypeClipStats : vtkm::ListTagBase<ClipStats>
-  {
-  };
+  using TypeClipStats = vtkm::List<ClipStats>;
 
-  struct TypeEdgeInterp : vtkm::ListTagBase<EdgeInterpolation>
-  {
-  };
+  using TypeEdgeInterp = vtkm::List<EdgeInterpolation>;
 
   class ComputeStats : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
@@ -699,14 +696,14 @@ public:
     return output;
   }
 
-  template <typename DynamicCellSet>
+  template <typename DynamicCellSet, typename ImplicitFunction>
   class ClipWithImplicitFunction
   {
   public:
     VTKM_CONT
     ClipWithImplicitFunction(Clip* clipper,
                              const DynamicCellSet& cellSet,
-                             const vtkm::cont::ImplicitFunctionHandle& function,
+                             const ImplicitFunction& function,
                              const bool invert,
                              vtkm::cont::CellSetExplicit<>* result)
       : Clipper(clipper)
@@ -722,7 +719,8 @@ public:
     {
       // Evaluate the implicit function on the input coordinates using
       // ArrayHandleTransform
-      vtkm::cont::ArrayHandleTransform<ArrayHandleType, vtkm::cont::ImplicitFunctionValueHandle>
+      vtkm::cont::ArrayHandleTransform<ArrayHandleType,
+                                       vtkm::ImplicitFunctionValueFunctor<ImplicitFunction>>
         clipScalars(handle, this->Function);
 
       // Clip at locations where the implicit function evaluates to 0
@@ -732,20 +730,20 @@ public:
   private:
     Clip* Clipper;
     const DynamicCellSet* CellSet;
-    vtkm::cont::ImplicitFunctionHandle Function;
+    ImplicitFunction Function;
     bool Invert;
     vtkm::cont::CellSetExplicit<>* Result;
   };
 
-  template <typename CellSetList>
+  template <typename CellSetList, typename ImplicitFunction>
   vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
-                                    const vtkm::cont::ImplicitFunctionHandle& clipFunction,
+                                    const ImplicitFunction& clipFunction,
                                     const vtkm::cont::CoordinateSystem& coords,
                                     const bool invert)
   {
     vtkm::cont::CellSetExplicit<> output;
 
-    ClipWithImplicitFunction<vtkm::cont::DynamicCellSetBase<CellSetList>> clip(
+    ClipWithImplicitFunction<vtkm::cont::DynamicCellSetBase<CellSetList>, ImplicitFunction> clip(
       this, cellSet, clipFunction, invert, &output);
 
     CastAndCall(coords, clip);
@@ -757,9 +755,7 @@ public:
   {
   public:
     using ValueType = typename ArrayHandleType::ValueType;
-    struct TypeMappedValue : vtkm::ListTagBase<ValueType>
-    {
-    };
+    using TypeMappedValue = vtkm::List<ValueType>;
 
     InterpolateField(vtkm::cont::ArrayHandle<EdgeInterpolation> edgeInterpolationArray,
                      vtkm::cont::ArrayHandle<vtkm::Id> inCellInterpolationKeys,
@@ -902,6 +898,11 @@ public:
     vtkm::cont::ArrayCopy(tmp, result);
 
     return result;
+  }
+
+  vtkm::cont::ArrayHandle<vtkm::Id> GetCellMapOutputToInput() const
+  {
+    return this->CellMapOutputToInput;
   }
 
 private:

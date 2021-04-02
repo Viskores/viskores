@@ -25,7 +25,7 @@ public:
   //currently the HistogramMPI filter only works on scalar data.
   //this mainly has to do with getting the ranges for each bin
   //would require returning a more complex value type
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
 
   //Construct a HistogramMPI with a default of 10 bins
   VTKM_CONT

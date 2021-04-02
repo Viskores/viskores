@@ -11,7 +11,9 @@
 #ifndef vtk_m_filter_ExtractGeometry_h
 #define vtk_m_filter_ExtractGeometry_h
 
-#include <vtkm/cont/ImplicitFunctionHandle.h>
+#include <vtkm/filter/vtkm_filter_common_export.h>
+
+#include <vtkm/ImplicitFunction.h>
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExtractGeometry.h>
 
@@ -35,22 +37,19 @@ namespace filter
 /// This differs from Clip in that Clip will subdivide boundary cells into new
 /// cells, while this filter will not, producing a more 'crinkly' output.
 ///
-class ExtractGeometry : public vtkm::filter::FilterDataSet<ExtractGeometry>
+class VTKM_FILTER_COMMON_EXPORT ExtractGeometry
+  : public vtkm::filter::FilterDataSet<ExtractGeometry>
 {
 public:
   //currently the ExtractGeometry filter only works on scalar data.
-  using SupportedTypes = TypeListTagScalarAll;
+  using SupportedTypes = TypeListScalarAll;
 
-  VTKM_CONT
-  ExtractGeometry();
+  VTKM_CONT ExtractGeometry();
 
   // Set the volume of interest to extract
-  void SetImplicitFunction(const vtkm::cont::ImplicitFunctionHandle& func)
-  {
-    this->Function = func;
-  }
+  void SetImplicitFunction(const vtkm::ImplicitFunctionGeneral& func) { this->Function = func; }
 
-  const vtkm::cont::ImplicitFunctionHandle& GetImplicitFunction() const { return this->Function; }
+  const vtkm::ImplicitFunctionGeneral& GetImplicitFunction() const { return this->Function; }
 
   VTKM_CONT
   bool GetExtractInside() { return this->ExtractInside; }
@@ -81,25 +80,32 @@ public:
 
   template <typename DerivedPolicy>
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+                                vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  //Map a new field onto the resulting dataset after running the filter
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  bool DoMapField(vtkm::cont::DataSet& result,
-                  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                  const vtkm::filter::FieldMetadata& fieldMeta,
-                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
+
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy>)
+  {
+    return this->MapFieldOntoOutput(result, field);
+  }
 
 private:
   bool ExtractInside;
   bool ExtractBoundaryCells;
   bool ExtractOnlyBoundaryCells;
-  vtkm::cont::ImplicitFunctionHandle Function;
+  vtkm::ImplicitFunctionGeneral Function;
   vtkm::worklet::ExtractGeometry Worklet;
 };
+
+#ifndef vtkm_filter_ExtractGeometry_cxx
+extern template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::DataSet ExtractGeometry::DoExecute(
+  const vtkm::cont::DataSet&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+#endif
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/ExtractGeometry.hxx>
 
 #endif // vtk_m_filter_ExtractGeometry_h

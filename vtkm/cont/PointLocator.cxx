@@ -24,6 +24,8 @@ namespace vtkm
 {
 namespace cont
 {
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 PointLocator::~PointLocator() = default;
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 }
 }

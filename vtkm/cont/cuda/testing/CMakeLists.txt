@@ -12,21 +12,20 @@ set(unit_tests
   UnitTestCudaArrayHandle.cu
   UnitTestCudaArrayHandleFancy.cu
   UnitTestCudaArrayHandleMultiplexer.cu
-  UnitTestCudaArrayHandleVirtualCoordinates.cu
   UnitTestCudaBitField.cu
   UnitTestCudaCellLocatorRectilinearGrid.cu
-  UnitTestCudaCellLocatorUniformBins.cu
+  UnitTestCudaCellLocatorTwoLevel.cu
   UnitTestCudaCellLocatorUniformGrid.cu
   UnitTestCudaComputeRange.cu
   UnitTestCudaColorTable.cu
   UnitTestCudaDataSetExplicit.cu
   UnitTestCudaDataSetSingleType.cu
   UnitTestCudaDeviceAdapter.cu
-  UnitTestCudaGeometry.cu
   UnitTestCudaImplicitFunction.cu
-  UnitTestCudaMath.cu
+  UnitTestCudaIterators.cu
+  UnitTestCudaMathEdgeCases.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
-  UnitTestCudaPointLocatorUniformGrid.cu
+  UnitTestCudaPointLocatorSparseGrid.cu
   UnitTestCudaVirtualObjectHandle.cu
   )
 vtkm_unit_tests(SOURCES ${unit_tests} LABEL "CUDA" LIBRARIES vtkm_worklet)

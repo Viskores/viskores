@@ -29,10 +29,6 @@ namespace worklet
 class Mask
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool>
-  {
-  };
-
   template <typename CellSetType>
   vtkm::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet, const vtkm::Id stride)
   {
@@ -61,6 +57,8 @@ public:
 
     return result;
   }
+
+  vtkm::cont::ArrayHandle<vtkm::Id> GetValidCellIds() const { return this->ValidCellIds; }
 
 private:
   vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;

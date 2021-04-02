@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_init_in_and_outbound_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_init_in_and_outbound_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_init_in_and_outbound_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_init_in_and_outbound_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -75,7 +75,7 @@ public:
                                 WholeArrayIn indegree,    // (input)
                                 WholeArrayOut outbound,   // (output)
                                 WholeArrayOut inbound     // (output)
-                                );
+  );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
@@ -114,7 +114,7 @@ public:
 
     // if the inbound neighbour is regular, we want to set its outbound link
     // check whether it's the root in the tree (points to infinite root)
-    if (!noSuchElement(inNeighbour))
+    if (!NoSuchElement(inNeighbour))
     { // inwards exists
       // if the inwards neighbour is regular, set the reverse link
       if ((outdegreePortal.Get(inNeighbour) == 1) && (indegreePortal.Get(inNeighbour) == 1))
@@ -151,7 +151,7 @@ public:
 
           // if the inbound neighbour is regular, we want to set its outbound link
           // check whether it's the root in the tree (points to infinite root)
-          if (!noSuchElement(inNeighbour))
+          if (!NoSuchElement(inNeighbour))
             { // inwards exists
               // if the inwards neighbour is regular, set the reverse link
               if ((outdegree[inNeighbour] == 1) && (indegree[inNeighbour] == 1))

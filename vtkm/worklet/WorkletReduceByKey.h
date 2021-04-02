@@ -19,7 +19,9 @@
 #include <vtkm/cont/arg/TransportTagKeyedValuesInOut.h>
 #include <vtkm/cont/arg/TransportTagKeyedValuesOut.h>
 #include <vtkm/cont/arg/TransportTagKeysIn.h>
-#include <vtkm/cont/arg/TypeCheckTagArray.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayIn.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayInOut.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagKeys.h>
 
 #include <vtkm/exec/internal/ReduceByKeyLookup.h>
@@ -30,14 +32,12 @@
 #include <vtkm/exec/arg/FetchTagKeysIn.h>
 #include <vtkm/exec/arg/ThreadIndicesReduceByKey.h>
 #include <vtkm/exec/arg/ValueCount.h>
+#include <vtkm/worklet/DispatcherReduceByKey.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-
-template <typename WorkletType>
-class DispatcherReduceByKey;
 
 class WorkletReduceByKey : public vtkm::worklet::internal::WorkletBase
 {
@@ -69,7 +69,7 @@ public:
   ///
   struct ValuesIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
     using TransportTag = vtkm::cont::arg::TransportTagKeyedValuesIn;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -85,7 +85,7 @@ public:
   ///
   struct ValuesInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayInOut;
     using TransportTag = vtkm::cont::arg::TransportTagKeyedValuesInOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -101,7 +101,7 @@ public:
   ///
   struct ValuesOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayOut;
     using TransportTag = vtkm::cont::arg::TransportTagKeyedValuesOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -118,7 +118,7 @@ public:
   ///
   struct ReducedValuesIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
     using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -135,7 +135,7 @@ public:
   ///
   struct ReducedValuesInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayInOut;
     using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };
@@ -149,7 +149,7 @@ public:
   ///
   struct ReducedValuesOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayOut;
     using TransportTag = vtkm::cont::arg::TransportTagArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
@@ -177,16 +177,11 @@ public:
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
-    const InputDomainType& inputDomain,
-    vtkm::Id globalThreadIndexOffset = 0) const
+    const InputDomainType& inputDomain) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex);
-    return vtkm::exec::arg::ThreadIndicesReduceByKey(threadIndex,
-                                                     outToIn.Get(outIndex),
-                                                     visit.Get(outIndex),
-                                                     outIndex,
-                                                     inputDomain,
-                                                     globalThreadIndexOffset);
+    return vtkm::exec::arg::ThreadIndicesReduceByKey(
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, inputDomain);
   }
 };
 }

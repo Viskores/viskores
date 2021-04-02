@@ -158,8 +158,8 @@ class VTKM_ALWAYS_EXPORT MeshConnUnstructured : public MeshConnectivityBase
 protected:
   using IdHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
   using UCharHandle = typename vtkm::cont::ArrayHandle<vtkm::UInt8>;
-  using IdConstPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
-  using UCharConstPortal = typename UCharHandle::ExecutionTypes<Device>::PortalConst;
+  using IdConstPortal = typename IdHandle::ReadPortalType;
+  using UCharConstPortal = typename UCharHandle::ReadPortalType;
 
   // Constant Portals for the execution Environment
   //FaceConn
@@ -178,12 +178,13 @@ public:
                        const IdHandle& faceOffsets,
                        const IdHandle& cellConn,
                        const IdHandle& cellOffsets,
-                       const UCharHandle& shapes)
-    : FaceConnPortal(faceConnectivity.PrepareForInput(Device()))
-    , FaceOffsetsPortal(faceOffsets.PrepareForInput(Device()))
-    , CellConnPortal(cellConn.PrepareForInput(Device()))
-    , CellOffsetsPortal(cellOffsets.PrepareForInput(Device()))
-    , ShapesPortal(shapes.PrepareForInput(Device()))
+                       const UCharHandle& shapes,
+                       vtkm::cont::Token& token)
+    : FaceConnPortal(faceConnectivity.PrepareForInput(Device(), token))
+    , FaceOffsetsPortal(faceOffsets.PrepareForInput(Device(), token))
+    , CellConnPortal(cellConn.PrepareForInput(Device(), token))
+    , CellOffsetsPortal(cellOffsets.PrepareForInput(Device(), token))
+    , ShapesPortal(shapes.PrepareForInput(Device(), token))
   {
   }
 
@@ -218,7 +219,7 @@ public:
   VTKM_EXEC
   vtkm::UInt8 GetCellShape(const vtkm::Id& cellId) const override
   {
-    BOUNDS_CHECK(ShapesPortal, cellId)
+    BOUNDS_CHECK(ShapesPortal, cellId);
     return ShapesPortal.Get(cellId);
   }
 
@@ -229,10 +230,10 @@ class MeshConnSingleType : public MeshConnectivityBase
 {
 protected:
   using IdHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
-  using IdConstPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using IdConstPortal = typename IdHandle::ReadPortalType;
 
   using CountingHandle = typename vtkm::cont::ArrayHandleCounting<vtkm::Id>;
-  using CountingPortal = typename CountingHandle::ExecutionTypes<Device>::PortalConst;
+  using CountingPortal = typename CountingHandle::ReadPortalType;
   // Constant Portals for the execution Environment
   IdConstPortal FaceConnPortal;
   IdConstPortal CellConnectivityPortal;
@@ -253,10 +254,11 @@ public:
                      CountingHandle& cellOffsets,
                      vtkm::Int32 shapeId,
                      vtkm::Int32 numIndices,
-                     vtkm::Int32 numFaces)
-    : FaceConnPortal(faceConn.PrepareForInput(Device()))
-    , CellConnectivityPortal(cellConn.PrepareForInput(Device()))
-    , CellOffsetsPortal(cellOffsets.PrepareForInput(Device()))
+                     vtkm::Int32 numFaces,
+                     vtkm::cont::Token& token)
+    : FaceConnPortal(faceConn.PrepareForInput(Device(), token))
+    , CellConnectivityPortal(cellConn.PrepareForInput(Device(), token))
+    , CellOffsetsPortal(cellOffsets.PrepareForInput(Device(), token))
     , ShapeId(shapeId)
     , NumIndices(numIndices)
     , NumFaces(numFaces)
@@ -308,8 +310,7 @@ private:
 public:
   MeshConnHandle() = default;
 
-  template <typename MeshConnType,
-            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+  template <typename MeshConnType, typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
   explicit MeshConnHandle(MeshConnType* meshConn,
                           bool aquireOwnership = true,
                           DeviceAdapterList devices = DeviceAdapterList())
@@ -318,7 +319,7 @@ public:
   }
 };
 
-template <typename MeshConnType, typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+template <typename MeshConnType, typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
 VTKM_CONT MeshConnHandle make_MeshConnHandle(MeshConnType&& func,
                                              DeviceAdapterList devices = DeviceAdapterList())
 {
@@ -329,19 +330,19 @@ VTKM_CONT MeshConnHandle make_MeshConnHandle(MeshConnType&& func,
 }
 } //namespace vtkm::rendering::raytracing
 
-#ifdef VTKM_CUDA
 
 // Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
 // to be instantiated in a consistent order among all the translation units of an
 // executable. Failing to do so results in random crashes and incorrect results.
 // We workaroud this issue by explicitly instantiating VirtualObjectTransfer for
 // all the implicit functions here.
-
-#include <vtkm/cont/cuda/internal/VirtualObjectTransferCuda.h>
+#ifdef VTKM_CUDA
+#include <vtkm/cont/internal/VirtualObjectTransferInstantiate.h>
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::rendering::raytracing::MeshConnStructured);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(
+VTKM_EXPLICITLY_INSTANTIATE_TRANSFER_CUDA(
   vtkm::rendering::raytracing::MeshConnUnstructured<vtkm::cont::DeviceAdapterTagCuda>);
-
+VTKM_EXPLICITLY_INSTANTIATE_TRANSFER_KOKKOS(
+  vtkm::rendering::raytracing::MeshConnUnstructured<vtkm::cont::DeviceAdapterTagKokkos>);
 #endif
 
 #endif // MeshConnectivityBase

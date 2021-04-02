@@ -14,7 +14,6 @@
 #include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
-
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
@@ -49,9 +48,7 @@ MapperVolume::MapperVolume()
 {
 }
 
-MapperVolume::~MapperVolume()
-{
-}
+MapperVolume::~MapperVolume() {}
 
 void MapperVolume::SetCanvas(vtkm::rendering::Canvas* canvas)
 {
@@ -103,7 +100,10 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     vtkm::rendering::raytracing::Camera rayCamera;
     vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
 
-    rayCamera.SetParameters(camera, *this->Internals->Canvas);
+    vtkm::Int32 width = (vtkm::Int32)this->Internals->Canvas->GetWidth();
+    vtkm::Int32 height = (vtkm::Int32)this->Internals->Canvas->GetHeight();
+
+    rayCamera.SetParameters(camera, width, height);
 
     rayCamera.CreateRays(rays, coords.GetBounds());
     rays.Buffers.at(0).InitConst(0.f);
@@ -133,16 +133,6 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     time = tot_timer.GetElapsedTime();
     logger->CloseLogEntry(time);
   }
-}
-
-void MapperVolume::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperVolume::EndScene()
-{
-  // Nothing needs to be done.
 }
 
 vtkm::rendering::Mapper* MapperVolume::NewCopy() const

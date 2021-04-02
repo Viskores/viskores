@@ -11,20 +11,40 @@
 #define vtk_m_cont_CellSetExtrude_h
 
 #include <vtkm/TopologyElementTag.h>
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayHandleExtrudeCoords.h>
+#include <vtkm/cont/ArrayHandleXGCCoordinates.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/exec/ConnectivityExtrude.h>
 #include <vtkm/exec/arg/ThreadIndicesExtrude.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
 namespace cont
 {
+
+namespace detail
+{
+
+template <typename VisitTopology, typename IncidentTopology>
+struct CellSetExtrudeConnectivityChooser;
+
+template <>
+struct CellSetExtrudeConnectivityChooser<vtkm::TopologyElementTagCell,
+                                         vtkm::TopologyElementTagPoint>
+{
+  using ExecConnectivityType = vtkm::exec::ConnectivityExtrude;
+};
+
+template <>
+struct CellSetExtrudeConnectivityChooser<vtkm::TopologyElementTagPoint,
+                                         vtkm::TopologyElementTagCell>
+{
+  using ExecConnectivityType = vtkm::exec::ReverseConnectivityExtrude;
+};
+
+} // namespace detail
 
 class VTKM_CONT_EXPORT CellSetExtrude : public CellSet
 {
@@ -43,7 +63,7 @@ public:
   VTKM_CONT CellSetExtrude& operator=(const CellSetExtrude& src);
   VTKM_CONT CellSetExtrude& operator=(CellSetExtrude&& src) noexcept;
 
-  virtual ~CellSetExtrude();
+  virtual ~CellSetExtrude() override;
 
   vtkm::Int32 GetNumberOfPlanes() const;
 
@@ -80,39 +100,52 @@ public:
 
   bool GetIsPeriodic() const { return this->IsPeriodic; }
 
-  template <typename DeviceAdapter>
-  using ConnectivityP2C = vtkm::exec::ConnectivityExtrude<DeviceAdapter>;
-  template <typename DeviceAdapter>
-  using ConnectivityC2P = vtkm::exec::ReverseConnectivityExtrude<DeviceAdapter>;
+  template <typename VisitTopology, typename IncidentTopology>
+  using ExecConnectivityType =
+    typename detail::CellSetExtrudeConnectivityChooser<VisitTopology,
+                                                       IncidentTopology>::ExecConnectivityType;
 
   template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
-  struct ExecutionTypes;
-
-  template <typename DeviceAdapter>
-  struct ExecutionTypes<DeviceAdapter, vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
+  struct VTKM_DEPRECATED(
+    1.6,
+    "Replace ExecutionTypes<D, V, I>::ExecObjectType with ExecConnectivityType<V, I>.")
+    ExecutionTypes
   {
-    using ExecObjectType = ConnectivityP2C<DeviceAdapter>;
+    using ExecObjectType = ExecConnectivityType<VisitTopology, IncidentTopology>;
   };
 
-  template <typename DeviceAdapter>
-  struct ExecutionTypes<DeviceAdapter, vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
+  vtkm::exec::ConnectivityExtrude PrepareForInput(vtkm::cont::DeviceAdapterId,
+                                                  vtkm::TopologyElementTagCell,
+                                                  vtkm::TopologyElementTagPoint,
+                                                  vtkm::cont::Token&) const;
+
+  vtkm::exec::ReverseConnectivityExtrude PrepareForInput(vtkm::cont::DeviceAdapterId,
+                                                         vtkm::TopologyElementTagPoint,
+                                                         vtkm::TopologyElementTagCell,
+                                                         vtkm::cont::Token&) const;
+
+  VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
+  vtkm::exec::ConnectivityExtrude PrepareForInput(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::TopologyElementTagCell visitTopology,
+    vtkm::TopologyElementTagPoint incidentTopology) const
   {
-    using ExecObjectType = ConnectivityC2P<DeviceAdapter>;
-  };
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
+  }
 
-  template <typename Device>
-  ConnectivityP2C<Device> PrepareForInput(Device,
-                                          vtkm::TopologyElementTagCell,
-                                          vtkm::TopologyElementTagPoint) const;
-
-  template <typename Device>
-  ConnectivityC2P<Device> PrepareForInput(Device,
-                                          vtkm::TopologyElementTagPoint,
-                                          vtkm::TopologyElementTagCell) const;
+  VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
+  vtkm::exec::ReverseConnectivityExtrude PrepareForInput(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::TopologyElementTagPoint visitTopology,
+    vtkm::TopologyElementTagCell incidentTopology) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
+  }
 
 private:
-  template <typename Device>
-  void BuildReverseConnectivity(Device);
+  void BuildReverseConnectivity();
 
   bool IsPeriodic;
 
@@ -131,7 +164,7 @@ private:
 
 template <typename T>
 CellSetExtrude make_CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
-                                   const vtkm::cont::ArrayHandleExtrudeCoords<T>& coords,
+                                   const vtkm::cont::ArrayHandleXGCCoordinates<T>& coords,
                                    const vtkm::cont::ArrayHandle<vtkm::Int32>& nextNode,
                                    bool periodic = true)
 {
@@ -142,14 +175,27 @@ CellSetExtrude make_CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& c
 
 template <typename T>
 CellSetExtrude make_CellSetExtrude(const std::vector<vtkm::Int32>& conn,
-                                   const vtkm::cont::ArrayHandleExtrudeCoords<T>& coords,
+                                   const vtkm::cont::ArrayHandleXGCCoordinates<T>& coords,
                                    const std::vector<vtkm::Int32>& nextNode,
                                    bool periodic = true)
 {
-  return CellSetExtrude{ vtkm::cont::make_ArrayHandle(conn),
+  return CellSetExtrude{ vtkm::cont::make_ArrayHandle(conn, vtkm::CopyFlag::On),
                          static_cast<vtkm::Int32>(coords.GetNumberOfPointsPerPlane()),
-                         coords.GetNumberOfPlanes(),
-                         vtkm::cont::make_ArrayHandle(nextNode),
+                         static_cast<vtkm::Int32>(coords.GetNumberOfPlanes()),
+                         vtkm::cont::make_ArrayHandle(nextNode, vtkm::CopyFlag::On),
+                         periodic };
+}
+
+template <typename T>
+CellSetExtrude make_CellSetExtrude(std::vector<vtkm::Int32>&& conn,
+                                   const vtkm::cont::ArrayHandleXGCCoordinates<T>& coords,
+                                   std::vector<vtkm::Int32>&& nextNode,
+                                   bool periodic = true)
+{
+  return CellSetExtrude{ vtkm::cont::make_ArrayHandleMove(std::move(conn)),
+                         static_cast<vtkm::Int32>(coords.GetNumberOfPointsPerPlane()),
+                         static_cast<vtkm::Int32>(coords.GetNumberOfPlanes()),
+                         vtkm::cont::make_ArrayHandleMove(std::move(nextNode)),
                          periodic };
 }
 }
@@ -215,7 +261,5 @@ public:
 
 } // diy
 /// @endcond SERIALIZATION
-
-#include <vtkm/cont/CellSetExtrude.hxx>
 
 #endif // vtk_m_cont_CellSetExtrude.h

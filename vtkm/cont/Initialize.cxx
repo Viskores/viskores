@@ -14,6 +14,10 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/OptionParser.h>
 
+#if defined(VTKM_ENABLE_KOKKOS)
+#include <vtkm/cont/kokkos/internal/Initialize.h>
+#endif
+
 #include <memory>
 #include <sstream>
 
@@ -42,9 +46,7 @@ struct VtkmArg : public opt::Arg
         VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
                           "Missing device after option '"
                             << std::string(option.name, static_cast<size_t>(option.namelen))
-                            << "'.\nValid devices are: "
-                            << VtkmArg::GetValidDeviceNames()
-                            << "\n");
+                            << "'.\nValid devices are: " << VtkmArg::GetValidDeviceNames() << "\n");
       }
       return opt::ARG_ILLEGAL;
     }
@@ -55,12 +57,9 @@ struct VtkmArg : public opt::Arg
     {
       VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
                         "Unavailable device specificed after option '"
-                          << std::string(option.name, static_cast<size_t>(option.namelen))
-                          << "': '"
+                          << std::string(option.name, static_cast<size_t>(option.namelen)) << "': '"
                           << option.arg
-                          << "'.\nValid devices are: "
-                          << VtkmArg::GetValidDeviceNames()
-                          << "\n");
+                          << "'.\nValid devices are: " << VtkmArg::GetValidDeviceNames() << "\n");
       return opt::ARG_ILLEGAL;
     }
 
@@ -182,6 +181,10 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     vtkm::cont::InitLogging(argc, argv);
   }
 
+#ifdef VTKM_ENABLE_KOKKOS
+  vtkm::cont::kokkos::internal::Initialize(argc, argv);
+#endif
+
   { // Parse VTKm options
     std::vector<opt::Descriptor> usage;
     if ((opts & InitializeOptions::AddHelp) != InitializeOptions::None)
@@ -274,7 +277,6 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
 
     for (const opt::Option* opt = options[UNKNOWN]; opt != nullptr; opt = opt->next())
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Unknown option to Initialize: " << opt->name << "\n");
       if ((opts & InitializeOptions::ErrorOnBadOption) != InitializeOptions::None)
       {
         std::cerr << "Unknown option: " << opt->name << std::endl;

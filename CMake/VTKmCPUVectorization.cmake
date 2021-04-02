@@ -77,7 +77,7 @@ endif()
 set(vec_levels none native)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  #for now we presume gcc >= 4.8
+  #for now we presume gcc >= 5.4
   list(APPEND vec_levels avx avx2)
 
   #common flags for the avx and avx2 instructions for the gcc compiler

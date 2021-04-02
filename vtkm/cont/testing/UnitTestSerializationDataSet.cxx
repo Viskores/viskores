@@ -15,20 +15,18 @@ using namespace vtkm::cont::testing::serialization;
 namespace
 {
 
-using FieldTypeList = vtkm::ListTagBase<vtkm::Float32, vtkm::Vec3f>;
-using CellSetTypes = vtkm::ListTagBase<vtkm::cont::CellSetExplicit<>,
-                                       vtkm::cont::CellSetSingleType<>,
-                                       vtkm::cont::CellSetStructured<1>,
-                                       vtkm::cont::CellSetStructured<2>,
-                                       vtkm::cont::CellSetStructured<3>>;
+using FieldTypeList = vtkm::List<vtkm::Float32, vtkm::Vec3f>;
+using CellSetTypes = vtkm::List<vtkm::cont::CellSetExplicit<>,
+                                vtkm::cont::CellSetSingleType<>,
+                                vtkm::cont::CellSetStructured<1>,
+                                vtkm::cont::CellSetStructured<2>,
+                                vtkm::cont::CellSetStructured<3>>;
 
 using DataSetWrapper = vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTypes>;
 
 VTKM_CONT void TestEqualDataSet(const DataSetWrapper& ds1, const DataSetWrapper& ds2)
 {
-  auto result = vtkm::cont::testing::test_equal_DataSets(
-    ds1.DataSet, ds2.DataSet, CellSetTypes{}, FieldTypeList{});
-  VTKM_TEST_ASSERT(result, result.GetMergedMessage());
+  VTKM_TEST_ASSERT(test_equal_DataSets(ds1.DataSet, ds2.DataSet, CellSetTypes{}));
 }
 
 void RunTest(const vtkm::cont::DataSet& ds)

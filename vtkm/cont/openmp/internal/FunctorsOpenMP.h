@@ -62,8 +62,8 @@ namespace cont
 namespace openmp
 {
 
-constexpr static vtkm::Id CACHE_LINE_SIZE = 64;
-constexpr static vtkm::Id PAGE_SIZE = 4096;
+constexpr static vtkm::Id VTKM_CACHE_LINE_SIZE = 64;
+constexpr static vtkm::Id VTKM_PAGE_SIZE = 4096;
 
 // Returns ceil(num/den) for integral types
 template <typename T>
@@ -83,12 +83,27 @@ static void ComputeChunkSize(const vtkm::Id numVals,
 {
   // try to evenly distribute pages across chunks:
   const vtkm::Id bytesIn = numVals * bytesPerValue;
-  const vtkm::Id pagesIn = CeilDivide(bytesIn, PAGE_SIZE);
+  const vtkm::Id pagesIn = CeilDivide(bytesIn, VTKM_PAGE_SIZE);
   // If we don't have enough pages to honor chunksPerThread, ignore it:
   numChunks = (pagesIn > numThreads * chunksPerThread) ? numThreads * chunksPerThread : numThreads;
   const vtkm::Id pagesPerChunk = CeilDivide(pagesIn, numChunks);
-  valuesPerChunk = CeilDivide(pagesPerChunk * PAGE_SIZE, bytesPerValue);
+  valuesPerChunk = CeilDivide(pagesPerChunk * VTKM_PAGE_SIZE, bytesPerValue);
 }
+
+template <typename T>
+struct CleanArrayRefImpl
+{
+  using type = T;
+};
+
+template <typename PortalType>
+struct CleanArrayRefImpl<vtkm::internal::ArrayPortalValueReference<PortalType>>
+{
+  using type = typename PortalType::ValueType;
+};
+
+template <typename T>
+using CleanArrayRef = typename CleanArrayRefImpl<T>::type;
 
 template <typename T, typename U>
 static void DoCopy(T src, U dst, vtkm::Id numVals, std::true_type)
@@ -103,19 +118,24 @@ static void DoCopy(T src, U dst, vtkm::Id numVals, std::true_type)
 template <typename InIterT, typename OutIterT>
 static void DoCopy(InIterT inIter, OutIterT outIter, vtkm::Id numVals, std::false_type)
 {
-  using ValueType = typename std::iterator_traits<OutIterT>::value_type;
+  using InValueType = CleanArrayRef<typename std::iterator_traits<InIterT>::value_type>;
+  using OutValueType = CleanArrayRef<typename std::iterator_traits<OutIterT>::value_type>;
 
   for (vtkm::Id i = 0; i < numVals; ++i)
   {
-    *(outIter++) = static_cast<ValueType>(*(inIter++));
+    // The conversion to InputType and then OutputType looks weird, but it is necessary.
+    // *inItr actually returns an ArrayPortalValueReference, which can automatically convert
+    // itself to InputType but not necessarily OutputType. Thus, we first convert to
+    // InputType, and then allow the conversion to OutputType.
+    *(outIter++) = static_cast<OutValueType>(static_cast<InValueType>(*(inIter++)));
   }
 }
 
 template <typename InIterT, typename OutIterT>
 static void DoCopy(InIterT inIter, OutIterT outIter, vtkm::Id numVals)
 {
-  using InValueType = typename std::iterator_traits<InIterT>::value_type;
-  using OutValueType = typename std::iterator_traits<OutIterT>::value_type;
+  using InValueType = CleanArrayRef<typename std::iterator_traits<InIterT>::value_type>;
+  using OutValueType = CleanArrayRef<typename std::iterator_traits<OutIterT>::value_type>;
 
   DoCopy(inIter, outIter, numVals, std::is_same<InValueType, OutValueType>());
 }
@@ -136,7 +156,8 @@ static void CopyHelper(InPortalT inPortal,
   auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(outPortal) + outStart;
   vtkm::Id valuesPerChunk;
 
-  VTKM_OPENMP_DIRECTIVE(parallel default(none) shared(inIter, outIter, valuesPerChunk, numVals))
+  VTKM_OPENMP_DIRECTIVE(parallel default(none) shared(inIter, outIter, valuesPerChunk, numVals)
+                          VTKM_OPENMP_SHARED_CONST(isSame))
   {
 
     VTKM_OPENMP_DIRECTIVE(single)
@@ -148,12 +169,12 @@ static void CopyHelper(InPortalT inPortal,
         numVals, omp_get_num_threads(), 8, sizeof(InValueT), numChunks, valuesPerChunk);
     }
 
-VTKM_OPENMP_DIRECTIVE(for schedule(static))
-for (vtkm::Id i = 0; i < numVals; i += valuesPerChunk)
-{
-  vtkm::Id chunkSize = std::min(numVals - i, valuesPerChunk);
-  DoCopy(inIter + i, outIter + i, chunkSize, isSame);
-}
+    VTKM_OPENMP_DIRECTIVE(for schedule(static))
+    for (vtkm::Id i = 0; i < numVals; i += valuesPerChunk)
+    {
+      vtkm::Id chunkSize = std::min(numVals - i, valuesPerChunk);
+      DoCopy(inIter + i, outIter + i, chunkSize, isSame);
+    }
   }
 }
 
@@ -358,25 +379,34 @@ struct ReduceHelper
   // This gives faster code for floats and non-trivial types.
   template <typename ReturnType, typename IterType, typename FunctorType>
   static ReturnType DoParallelReduction(IterType data,
-                                        vtkm::Id numVals,
-                                        int tid,
-                                        int numThreads,
+                                        const vtkm::Id& numVals,
+                                        const int& tid,
+                                        const int& numThreads,
                                         FunctorType f,
                                         std::false_type /* isIntegral */)
   {
     // Use the first (numThreads*2) values for initializing:
     ReturnType accum = f(data[2 * tid], data[2 * tid + 1]);
 
-    vtkm::Id i = numThreads * 2;
-    const vtkm::Id unrollEnd = ((numVals / 4) * 4) - 4;
+    const vtkm::Id offset = numThreads * 2;
+    const vtkm::Id end = std::max(((numVals / 4) * 4) - 4, offset);
+    const vtkm::Id unrollEnd = end - ((end - offset) % 4);
+    vtkm::Id i = offset;
+
+// When initializing the looping iterator to a non integral type, intel compilers will
+// convert the iterator type to an unsigned value
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
     VTKM_OPENMP_DIRECTIVE(for schedule(static))
-    for (i = numThreads * 2; i < unrollEnd; i += 4)
+    for (i = offset; i < unrollEnd; i += 4)
+#pragma GCC diagnostic pop
     {
       const auto t1 = f(data[i], data[i + 1]);
       const auto t2 = f(data[i + 2], data[i + 3]);
       accum = f(accum, t1);
       accum = f(accum, t2);
     }
+
     // Let the last thread mop up any remaining values as it would
     // have just accessed the adjacent data
     if (tid == numThreads - 1)
@@ -394,18 +424,21 @@ struct ReduceHelper
   // hurt performance.
   template <typename ReturnType, typename IterType, typename FunctorType>
   static ReturnType DoParallelReduction(IterType data,
-                                        vtkm::Id numVals,
-                                        int tid,
-                                        int numThreads,
+                                        const vtkm::Id& numVals,
+                                        const int& tid,
+                                        const int& numThreads,
                                         FunctorType f,
                                         std::true_type /* isIntegral */)
   {
     // Use the first (numThreads*2) values for initializing:
     ReturnType accum = f(data[2 * tid], data[2 * tid + 1]);
 
-    // Assign each thread chunks of the remaining values for local reduction
+// Assign each thread chunks of the remaining values for local reduction
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
     VTKM_OPENMP_DIRECTIVE(for schedule(static))
     for (vtkm::Id i = numThreads * 2; i < numVals; i++)
+#pragma GCC diagnostic pop
     {
       accum = f(accum, data[i]);
     }
@@ -416,23 +449,23 @@ struct ReduceHelper
 #ifdef VTKM_OPENMP_USE_NATIVE_REDUCTION
 
 // Specialize for vtkm functors with OpenMP special cases:
-#define VTKM_OPENMP_SPECIALIZE_REDUCE1(FunctorType, PragmaString)                                  \
-  template <typename PortalT, typename ReturnType>                                                 \
-  static ReturnType Execute(                                                                       \
-    PortalT portal, ReturnType value, FunctorType functorIn, std::true_type)                       \
-  {                                                                                                \
-    const vtkm::Id numValues = portal.GetNumberOfValues();                                         \
-    internal::WrappedBinaryOperator<ReturnType, FunctorType> f(functorIn);                         \
-    _Pragma(#PragmaString) for (vtkm::Id i = 0; i < numValues; ++i)                                \
-    {                                                                                              \
-      value = f(value, portal.Get(i));                                                             \
-    }                                                                                              \
-    return value;                                                                                  \
+#define VTKM_OPENMP_SPECIALIZE_REDUCE1(FunctorType, PragmaString)            \
+  template <typename PortalT, typename ReturnType>                           \
+  static ReturnType Execute(                                                 \
+    PortalT portal, ReturnType value, FunctorType functorIn, std::true_type) \
+  {                                                                          \
+    const vtkm::Id numValues = portal.GetNumberOfValues();                   \
+    internal::WrappedBinaryOperator<ReturnType, FunctorType> f(functorIn);   \
+    _Pragma(#PragmaString) for (vtkm::Id i = 0; i < numValues; ++i)          \
+    {                                                                        \
+      value = f(value, portal.Get(i));                                       \
+    }                                                                        \
+    return value;                                                            \
   }
 
 // Constructing the pragma string inside the _Pragma call doesn't work so
 // we jump through a hoop:
-#define VTKM_OPENMP_SPECIALIZE_REDUCE(FunctorType, Operator)                                       \
+#define VTKM_OPENMP_SPECIALIZE_REDUCE(FunctorType, Operator) \
   VTKM_OPENMP_SPECIALIZE_REDUCE1(FunctorType, "omp parallel for reduction(" #Operator ":value)")
 
   // + (Add, Sum)
@@ -478,14 +511,17 @@ void ReduceByKeyHelper(KeysInArray keysInArray,
   using KeyType = typename KeysInArray::ValueType;
   using ValueType = typename ValuesInArray::ValueType;
 
+  vtkm::cont::Token token;
+
   const vtkm::Id numValues = keysInArray.GetNumberOfValues();
-  auto keysInPortal = keysInArray.PrepareForInput(DeviceAdapterTagOpenMP());
-  auto valuesInPortal = valuesInArray.PrepareForInput(DeviceAdapterTagOpenMP());
+  auto keysInPortal = keysInArray.PrepareForInput(DeviceAdapterTagOpenMP(), token);
+  auto valuesInPortal = valuesInArray.PrepareForInput(DeviceAdapterTagOpenMP(), token);
   auto keysIn = vtkm::cont::ArrayPortalToIteratorBegin(keysInPortal);
   auto valuesIn = vtkm::cont::ArrayPortalToIteratorBegin(valuesInPortal);
 
-  auto keysOutPortal = keysOutArray.PrepareForOutput(numValues, DeviceAdapterTagOpenMP());
-  auto valuesOutPortal = valuesOutArray.PrepareForOutput(numValues, DeviceAdapterTagOpenMP());
+  auto keysOutPortal = keysOutArray.PrepareForOutput(numValues, DeviceAdapterTagOpenMP(), token);
+  auto valuesOutPortal =
+    valuesOutArray.PrepareForOutput(numValues, DeviceAdapterTagOpenMP(), token);
   auto keysOut = vtkm::cont::ArrayPortalToIteratorBegin(keysOutPortal);
   auto valuesOut = vtkm::cont::ArrayPortalToIteratorBegin(valuesOutPortal);
 
@@ -576,8 +612,10 @@ void ReduceByKeyHelper(KeysInArray keysInArray,
     }   // end combine reduction
   }     // end parallel
 
-  keysOutArray.Shrink(outIdx);
-  valuesOutArray.Shrink(outIdx);
+  token.DetachFromAll();
+
+  keysOutArray.Allocate(outIdx, vtkm::CopyFlag::On);
+  valuesOutArray.Allocate(outIdx, vtkm::CopyFlag::On);
 }
 
 template <typename IterT, typename RawPredicateT>
@@ -593,8 +631,8 @@ struct UniqueHelper
 
     // Pad the node out to the size of a cache line to prevent false sharing:
     static constexpr size_t DataSize = 2 * sizeof(vtkm::Id2);
-    static constexpr size_t NumCacheLines = CeilDivide<size_t>(DataSize, CACHE_LINE_SIZE);
-    static constexpr size_t PaddingSize = NumCacheLines * CACHE_LINE_SIZE - DataSize;
+    static constexpr size_t NumCacheLines = CeilDivide<size_t>(DataSize, VTKM_CACHE_LINE_SIZE);
+    static constexpr size_t PaddingSize = NumCacheLines * VTKM_CACHE_LINE_SIZE - DataSize;
     unsigned char Padding[PaddingSize];
   };
 

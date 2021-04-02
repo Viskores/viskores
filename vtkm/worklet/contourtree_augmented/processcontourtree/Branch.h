@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_inc_branch_h
-#define vtkm_worklet_contourtree_augmented_process_contourtree_inc_branch_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_inc_branch_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_inc_branch_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
@@ -73,13 +73,14 @@ template <typename T>
 class Branch
 {
 public:
-  vtkm::Id extremum;                // Index of the extremum in the mesh
-  T extremumVal;                    // Value at the extremum
-  vtkm::Id saddle;                  // Index of the saddle in the mesh (or minimum for root branch)
-  T saddleVal;                      // Corresponding value
-  vtkm::Id volume;                  // Volume
-  Branch<T>* parent;                // Pointer to parent, or nullptr if no parent
-  std::vector<Branch<T>*> children; // List of pointers to children
+  vtkm::Id OriginalId;              // Index of the extremum in the mesh
+  vtkm::Id Extremum;                // Index of the extremum in the mesh
+  T ExtremumVal;                    // Value at the extremum:w
+  vtkm::Id Saddle;                  // Index of the saddle in the mesh (or minimum for root branch)
+  T SaddleVal;                      // Corresponding value
+  vtkm::Id Volume;                  // Volume
+  Branch<T>* Parent;                // Pointer to parent, or nullptr if no parent
+  std::vector<Branch<T>*> Children; // List of pointers to children
 
   // Create branch decomposition from contour tree
   template <typename StorageType>
@@ -96,76 +97,51 @@ public:
     bool dataFieldIsSorted);
 
   // Simplify branch composition down to target size (i.e., consisting of targetSize branches)
-  void simplifyToSize(vtkm::Id targetSize, bool usePersistenceSorter = true);
+  void SimplifyToSize(vtkm::Id targetSize, bool usePersistenceSorter = true);
 
   // Print the branch decomposition
-  void print(std::ostream& os, std::string::size_type indent = 0) const;
+  void PrintBranchDecomposition(std::ostream& os, std::string::size_type indent = 0) const;
 
   // Persistence of branch
-  T persistence() { return std::fabs(extremumVal - saddleVal); }
+  T Persistence() { return std::fabs(ExtremumVal - SaddleVal); }
 
-  // Save branch decomposition (with current branch as root) to file
-  // void save(const char *filename) const;
-
-  // Load branch decomposition from file (static function that returns pointer to root branch)
-  static Branch<T>* load(const char* filename);
-
-  // Destroy branch (deleting children and propagating volume to parent)
+  // Destroy branch (deleting children and propagating Volume to parent)
   ~Branch();
 
   // Compute list of relevant/interesting isovalues
-  void getRelevantValues(int type, T eps, std::vector<T>& values) const;
+  void GetRelevantValues(int type, T eps, std::vector<T>& values) const;
 
-  void accumulateIntervals(int type, T eps, PiecewiseLinearFunction<T>& plf) const;
+  void AccumulateIntervals(int type, T eps, PiecewiseLinearFunction<T>& plf) const;
 
 private:
   // Private default constructore to ensure that branch decomposition can only be created from a contour tree or loaded from storate (via static methods)
   Branch()
-    : extremum((vtkm::Id)NO_SUCH_ELEMENT)
-    , extremumVal(0)
-    , saddle((vtkm::Id)NO_SUCH_ELEMENT)
-    , saddleVal(0)
-    , volume(0)
-    , parent(nullptr)
-    , children()
+    : Extremum((vtkm::Id)NO_SUCH_ELEMENT)
+    , ExtremumVal(0)
+    , Saddle((vtkm::Id)NO_SUCH_ELEMENT)
+    , SaddleVal(0)
+    , Volume(0)
+    , Parent(nullptr)
+    , Children()
   {
   }
 
   // Remove symbolic perturbation, i.e., branches with zero persistence
   void removeSymbolicPerturbation();
-
-  // Internal functions to save/load branches to/from a stream
-  // void save(std::ostream& os) const;
-  // static Branch<T>* load(std::istream& is);
 }; // class Branch
 
-
-/*
-template <typename T>
-static void writeBinary(std::ostream& os, const T& val)
-  { // writeBinary()
-    os.write(reinterpret_cast<const char*>(&val), sizeof(T));
-  } // writeBinary()
-
-
-template <typename T>
-static void readBinary(std::istream& is, T& val)
-  { // readBinary()
-    is.read(reinterpret_cast<char*>(&val), sizeof(T));
-  } // readBinary()
-*/
 
 template <typename T>
 struct PersistenceSorter
 { // PersistenceSorter()
-  inline bool operator()(Branch<T>* a, Branch<T>* b) { return a->persistence() < b->persistence(); }
+  inline bool operator()(Branch<T>* a, Branch<T>* b) { return a->Persistence() < b->Persistence(); }
 }; // PersistenceSorter()
 
 
 template <typename T>
 struct VolumeSorter
 { // VolumeSorter()
-  inline bool operator()(Branch<T>* a, Branch<T>* b) { return a->volume < b->volume; }
+  inline bool operator()(Branch<T>* a, Branch<T>* b) { return a->Volume < b->Volume; }
 }; // VolumeSorter()
 
 
@@ -182,14 +158,14 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   const IdArrayType& sortOrder,
   const vtkm::cont::ArrayHandle<T, StorageType>& dataField,
   bool dataFieldIsSorted)
-{ // ComputeBranchDecomposition()
-  auto branchMinimumPortal = branchMinimum.GetPortalConstControl();
-  auto branchMaximumPortal = branchMaximum.GetPortalConstControl();
-  auto branchSaddlePortal = branchSaddle.GetPortalConstControl();
-  auto branchParentPortal = branchParent.GetPortalConstControl();
-  auto sortOrderPortal = sortOrder.GetPortalConstControl();
-  auto supernodesPortal = contourTreeSupernodes.GetPortalConstControl();
-  auto dataFieldPortal = dataField.GetPortalConstControl();
+{ // C)omputeBranchDecomposition()
+  auto branchMinimumPortal = branchMinimum.ReadPortal();
+  auto branchMaximumPortal = branchMaximum.ReadPortal();
+  auto branchSaddlePortal = branchSaddle.ReadPortal();
+  auto branchParentPortal = branchParent.ReadPortal();
+  auto sortOrderPortal = sortOrder.ReadPortal();
+  auto supernodesPortal = contourTreeSupernodes.ReadPortal();
+  auto dataFieldPortal = dataField.ReadPortal();
   vtkm::Id nBranches = branchSaddle.GetNumberOfValues();
   std::vector<Branch<T>*> branches;
   Branch<T>* root = nullptr;
@@ -201,18 +177,19 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   // Reconstruct explicit branch decomposition from array representation
   for (std::size_t branchID = 0; branchID < static_cast<std::size_t>(nBranches); ++branchID)
   {
-    if (!noSuchElement(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID))))
+    branches[branchID]->OriginalId = static_cast<vtkm::Id>(branchID);
+    if (!NoSuchElement(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID))))
     {
-      branches[branchID]->saddle = maskedIndex(
-        supernodesPortal.Get(maskedIndex(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID)))));
-      vtkm::Id branchMin = maskedIndex(supernodesPortal.Get(
-        maskedIndex(branchMinimumPortal.Get(static_cast<vtkm::Id>(branchID)))));
-      vtkm::Id branchMax = maskedIndex(supernodesPortal.Get(
-        maskedIndex(branchMaximumPortal.Get(static_cast<vtkm::Id>(branchID)))));
-      if (branchMin < branches[branchID]->saddle)
-        branches[branchID]->extremum = branchMin;
-      else if (branchMax > branches[branchID]->saddle)
-        branches[branchID]->extremum = branchMax;
+      branches[branchID]->Saddle = MaskedIndex(
+        supernodesPortal.Get(MaskedIndex(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID)))));
+      vtkm::Id branchMin = MaskedIndex(supernodesPortal.Get(
+        MaskedIndex(branchMinimumPortal.Get(static_cast<vtkm::Id>(branchID)))));
+      vtkm::Id branchMax = MaskedIndex(supernodesPortal.Get(
+        MaskedIndex(branchMaximumPortal.Get(static_cast<vtkm::Id>(branchID)))));
+      if (branchMin < branches[branchID]->Saddle)
+        branches[branchID]->Extremum = branchMin;
+      else if (branchMax > branches[branchID]->Saddle)
+        branches[branchID]->Extremum = branchMax;
       else
       {
         std::cerr << "Internal error";
@@ -221,49 +198,49 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
     }
     else
     {
-      branches[branchID]->saddle =
-        supernodesPortal.Get(maskedIndex(branchMinimumPortal.Get(static_cast<vtkm::Id>(branchID))));
-      branches[branchID]->extremum =
-        supernodesPortal.Get(maskedIndex(branchMaximumPortal.Get(static_cast<vtkm::Id>(branchID))));
+      branches[branchID]->Saddle =
+        supernodesPortal.Get(MaskedIndex(branchMinimumPortal.Get(static_cast<vtkm::Id>(branchID))));
+      branches[branchID]->Extremum =
+        supernodesPortal.Get(MaskedIndex(branchMaximumPortal.Get(static_cast<vtkm::Id>(branchID))));
     }
 
     if (dataFieldIsSorted)
     {
-      branches[branchID]->saddleVal = dataFieldPortal.Get(branches[branchID]->saddle);
-      branches[branchID]->extremumVal = dataFieldPortal.Get(branches[branchID]->extremum);
+      branches[branchID]->SaddleVal = dataFieldPortal.Get(branches[branchID]->Saddle);
+      branches[branchID]->ExtremumVal = dataFieldPortal.Get(branches[branchID]->Extremum);
     }
     else
     {
-      branches[branchID]->saddleVal =
-        dataFieldPortal.Get(sortOrderPortal.Get(branches[branchID]->saddle));
-      branches[branchID]->extremumVal =
-        dataFieldPortal.Get(sortOrderPortal.Get(branches[branchID]->extremum));
+      branches[branchID]->SaddleVal =
+        dataFieldPortal.Get(sortOrderPortal.Get(branches[branchID]->Saddle));
+      branches[branchID]->ExtremumVal =
+        dataFieldPortal.Get(sortOrderPortal.Get(branches[branchID]->Extremum));
     }
 
-    branches[branchID]->saddle = sortOrderPortal.Get(branches[branchID]->saddle);
-    branches[branchID]->extremum = sortOrderPortal.Get(branches[branchID]->extremum);
+    branches[branchID]->Saddle = sortOrderPortal.Get(branches[branchID]->Saddle);
+    branches[branchID]->Extremum = sortOrderPortal.Get(branches[branchID]->Extremum);
 
-    if (noSuchElement(branchParentPortal.Get(static_cast<vtkm::Id>(branchID))))
+    if (NoSuchElement(branchParentPortal.Get(static_cast<vtkm::Id>(branchID))))
     {
       root = branches[branchID]; // No parent -> this is the root branch
     }
     else
     {
-      branches[branchID]->parent = branches[static_cast<size_t>(
-        maskedIndex(branchParentPortal.Get(static_cast<vtkm::Id>(branchID))))];
-      branches[branchID]->parent->children.push_back(branches[branchID]);
+      branches[branchID]->Parent = branches[static_cast<size_t>(
+        MaskedIndex(branchParentPortal.Get(static_cast<vtkm::Id>(branchID))))];
+      branches[branchID]->Parent->Children.push_back(branches[branchID]);
     }
   }
 
-  // FIXME: This is a somewhat hackish way to compute the volume, but it works
-  // It would probably be better to compute this from the already computed volume information
-  auto whichBranchPortal = whichBranch.GetPortalConstControl();
-  auto superparentsPortal = contourTreeSuperparents.GetPortalConstControl();
+  // FIXME: This is a somewhat hackish way to compute the Volume, but it works
+  // It would probably be better to compute this from the already computed Volume information
+  auto whichBranchPortal = whichBranch.ReadPortal();
+  auto superparentsPortal = contourTreeSuperparents.ReadPortal();
   for (vtkm::Id i = 0; i < contourTreeSuperparents.GetNumberOfValues(); i++)
   {
     branches[static_cast<size_t>(
-               maskedIndex(whichBranchPortal.Get(maskedIndex(superparentsPortal.Get(i)))))]
-      ->volume++; // Increment volume
+               MaskedIndex(whichBranchPortal.Get(MaskedIndex(superparentsPortal.Get(i)))))]
+      ->Volume++; // Increment Volume
   }
   if (root)
   {
@@ -275,8 +252,8 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
 
 
 template <typename T>
-void Branch<T>::simplifyToSize(vtkm::Id targetSize, bool usePersistenceSorter)
-{ // simplifyToSize()
+void Branch<T>::SimplifyToSize(vtkm::Id targetSize, bool usePersistenceSorter)
+{ // SimplifyToSize()
   if (targetSize <= 1)
     return;
 
@@ -293,7 +270,7 @@ void Branch<T>::simplifyToSize(vtkm::Id targetSize, bool usePersistenceSorter)
         q.begin(),
         q.end(),
         PersistenceSorter<
-          T>()); // FIXME: This should be volume, but we were doing this wrong for the demo, so let's start with doing this wrong here, too
+          T>()); // FIXME: This should be Volume, but we were doing this wrong for the demo, so let's start with doing this wrong here, too
     }
     else
     {
@@ -301,14 +278,14 @@ void Branch<T>::simplifyToSize(vtkm::Id targetSize, bool usePersistenceSorter)
         q.begin(),
         q.end(),
         VolumeSorter<
-          T>()); // FIXME: This should be volume, but we were doing this wrong for the demo, so let's start with doing this wrong here, too
+          T>()); // FIXME: This should be Volume, but we were doing this wrong for the demo, so let's start with doing this wrong here, too
     }
     Branch<T>* b = q.back();
     q.pop_back();
 
     active.push_back(b);
 
-    for (Branch<T>* c : b->children)
+    for (Branch<T>* c : b->Children)
     {
       q.push_back(c);
       if (usePersistenceSorter)
@@ -326,122 +303,106 @@ void Branch<T>::simplifyToSize(vtkm::Id targetSize, bool usePersistenceSorter)
   for (Branch<T>* b : q)
   {
     // Hackish, remove c from its parents child list
-    if (b->parent)
-      b->parent->children.erase(
-        std::remove(b->parent->children.begin(), b->parent->children.end(), b));
+    if (b->Parent)
+      b->Parent->Children.erase(
+        std::remove(b->Parent->Children.begin(), b->Parent->Children.end(), b));
 
     delete b;
   }
-} // simplifyToSize()
+} // SimplifyToSize()
 
 
 template <typename T>
-void Branch<T>::print(std::ostream& os, std::string::size_type indent) const
-{ // print()
+void Branch<T>::PrintBranchDecomposition(std::ostream& os, std::string::size_type indent) const
+{ // PrintBranchDecomposition()
   os << std::string(indent, ' ') << "{" << std::endl;
-  os << std::string(indent, ' ') << "  saddle = " << saddleVal << " (" << saddle << ")"
+  os << std::string(indent, ' ') << "  Saddle = " << SaddleVal << " (" << Saddle << ")"
      << std::endl;
-  os << std::string(indent, ' ') << "  extremum = " << extremumVal << " (" << extremum << ")"
+  os << std::string(indent, ' ') << "  Extremum = " << ExtremumVal << " (" << Extremum << ")"
      << std::endl;
-  os << std::string(indent, ' ') << "  volume = " << volume << std::endl;
-  if (!children.empty())
+  os << std::string(indent, ' ') << "  Volume = " << Volume << std::endl;
+  if (!Children.empty())
   {
-    os << std::string(indent, ' ') << "  children = [" << std::endl;
-    for (Branch<T>* c : children)
-      c->print(os, indent + 4);
+    os << std::string(indent, ' ') << "  Children = [" << std::endl;
+    for (Branch<T>* c : Children)
+      c->PrintBranchDecomposition(os, indent + 4);
     os << std::string(indent, ' ') << std::string(indent, ' ') << "  ]" << std::endl;
   }
   os << std::string(indent, ' ') << "}" << std::endl;
-} // print()
+} // PrintBranchDecomposition()
 
-
-/*template<typename T>
-void Branch<T>::save(const char *filename) const
-  { // save()
-    std::ofstream os(filename);
-    save(os);
-  } // save()
-
-
-template<typename T>
-Branch<T>* Branch<T>::load(const char* filename)
-  { // load()
-    std::ifstream is(filename);
-    return load(is);
-  } // load()
-*/
 
 template <typename T>
 Branch<T>::~Branch()
 { // ~Branch()
-  for (Branch<T>* c : children)
+  for (Branch<T>* c : Children)
     delete c;
-  if (parent)
-    parent->volume += volume;
+  if (Parent)
+    Parent->Volume += Volume;
 } // ~Branch()
 
 
 // TODO this recursive accumlation of values does not lend itself well to the use of VTKM data structures
 template <typename T>
-void Branch<T>::getRelevantValues(int type, T eps, std::vector<T>& values) const
-{ // getRelevantValues()
+void Branch<T>::GetRelevantValues(int type, T eps, std::vector<T>& values) const
+{ // GetRelevantValues()
   T val;
 
   bool isMax = false;
-  if (extremumVal > saddleVal)
+  if (ExtremumVal > SaddleVal)
     isMax = true;
 
   switch (type)
   {
     default:
     case 0:
-      val = saddleVal + (isMax ? +eps : -eps);
+      val = SaddleVal + (isMax ? +eps : -eps);
       break;
     case 1:
-      val = T(0.5f) * (extremumVal + saddleVal);
+      val = T(0.5f) * (ExtremumVal + SaddleVal);
       break;
     case 2:
-      val = extremumVal + (isMax ? -eps : +eps);
+      val = ExtremumVal + (isMax ? -eps : +eps);
       break;
   }
-  if (parent)
-    values.push_back(val);
-  for (Branch* c : children)
-    c->getRelevantValues(type, eps, values);
-} // getRelevantValues()
+  if (Parent)
+    values.push_back({ val });
+  for (Branch* c : Children)
+    c->GetRelevantValues(type, eps, values);
+} // GetRelevantValues()
 
 
 template <typename T>
-void Branch<T>::accumulateIntervals(int type, T eps, PiecewiseLinearFunction<T>& plf) const
-{ //accumulateIntervals()
-  bool isMax = (extremumVal > saddleVal);
+void Branch<T>::AccumulateIntervals(int type, T eps, PiecewiseLinearFunction<T>& plf) const
+{ //AccumulateIntervals()
+  bool isMax = (ExtremumVal > SaddleVal);
   T val;
 
   switch (type)
   {
     default:
     case 0:
-      val = saddleVal + (isMax ? +eps : -eps);
+      val = SaddleVal + (isMax ? +eps : -eps);
       break;
     case 1:
-      val = T(0.5f) * (extremumVal + saddleVal);
+      val = T(0.5f) * (ExtremumVal + SaddleVal);
       break;
     case 2:
-      val = extremumVal + (isMax ? -eps : +eps);
+      val = ExtremumVal + (isMax ? -eps : +eps);
       break;
   }
 
-  if (parent)
+  if (Parent)
   {
     PiecewiseLinearFunction<T> addPLF;
-    addPLF.addSample(saddleVal, 0.0);
-    addPLF.addSample(extremumVal, 0.0);
+    addPLF.addSample(SaddleVal, 0.0);
+    addPLF.addSample(ExtremumVal, 0.0);
     addPLF.addSample(val, 1.0);
     plf += addPLF;
   }
-  for (Branch<T>* c : children)
-    c->accumulateIntervals(type, eps, plf);
-} // accumulateIntervals()
+  for (Branch<T>* c : Children)
+    c->AccumulateIntervals(type, eps, plf);
+} // AccumulateIntervals()
 
 
 template <typename T>
@@ -449,17 +410,17 @@ void Branch<T>::removeSymbolicPerturbation()
 {                                      // removeSymbolicPerturbation()
   std::vector<Branch<T>*> newChildren; // Temporary list of children that are not flat
 
-  for (Branch<T>* c : children)
+  for (Branch<T>* c : Children)
   {
     // First recursively remove symbolic perturbation (zero persistence branches) for  all children below the current child
     // Necessary to be able to detect whether we can remove the current child
     c->removeSymbolicPerturbation();
 
     // Does child have zero persistence (flat region)
-    if (c->extremumVal == c->saddleVal && c->children.empty())
+    if (c->ExtremumVal == c->SaddleVal && c->Children.empty())
     {
-      // If yes, then we get its associated volume and delete it
-      delete c; // Will add volume to parent, i.e., us
+      // If yes, then we get its associated Volume and delete it
+      delete c; // Will add Volume to parent, i.e., us
     }
     else
     {
@@ -468,48 +429,12 @@ void Branch<T>::removeSymbolicPerturbation()
     }
   }
   // Swap out new list of children
-  children.swap(newChildren);
+  Children.swap(newChildren);
 } // removeSymbolicPerturbation()
-
-/*
-template<typename T>
-void Branch<T>::save(std::ostream& os) const
-  { // save()
-    writeBinary(os, extremum);
-    writeBinary(os, extremumVal);
-    writeBinary(os, saddle);
-    writeBinary(os, saddleVal);
-    writeBinary(os, volume);
-    vtkm::Id n_children = children.size();
-    writeBinary(os, n_children);
-    for (Branch<T> *c : children) c->save(os);
-  } // save()
-
-
-template<typename T>
-Branch<T>* Branch<T>::load(std::istream& is)
-  { // load()
-    Branch<T> *res = new Branch<T>;
-    readBinary(is, res->extremum);
-    readBinary(is, res->extremumVal);
-    readBinary(is, res->saddle);
-    readBinary(is, res->saddleVal);
-    readBinary(is, res->volume);
-    vtkm::Id n_children;
-    readBinary(is, n_children);
-    for (vtkm::Id cNo = 0; cNo < n_children; ++cNo)
-    {
-        Branch<T> *c = load(is);
-        c->parent = res;
-        res->children.push_back(c);
-    }
-    return res;
-  } // load()
-*/
 
 } // process_contourtree_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm
 
-#endif
+#endif // vtk_m_worklet_contourtree_augmented_process_contourtree_inc_branch_h

@@ -8,7 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/arg/TypeCheckTagArray.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayIn.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayInOut.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagAtomicArray.h>
 
 #include <vtkm/cont/ArrayHandle.h>
@@ -26,27 +28,50 @@ struct TryArraysOfType
   void operator()(T) const
   {
     using vtkm::cont::arg::TypeCheck;
-    using vtkm::cont::arg::TypeCheckTagArray;
+    using vtkm::cont::arg::TypeCheckTagArrayIn;
+    using vtkm::cont::arg::TypeCheckTagArrayInOut;
+    using vtkm::cont::arg::TypeCheckTagArrayOut;
 
     using StandardArray = vtkm::cont::ArrayHandle<T>;
-    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray, StandardArray>::value),
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayIn, StandardArray>::value),
+                     "Standard array type check failed.");
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayInOut, StandardArray>::value),
+                     "Standard array type check failed.");
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayOut, StandardArray>::value),
                      "Standard array type check failed.");
 
     using CountingArray = vtkm::cont::ArrayHandleCounting<T>;
-    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray, CountingArray>::value),
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayIn, CountingArray>::value),
+                     "Counting array type check failed.");
+    VTKM_TEST_ASSERT((!TypeCheck<TypeCheckTagArrayInOut, CountingArray>::value),
+                     "Counting array type check failed.");
+    VTKM_TEST_ASSERT((!TypeCheck<TypeCheckTagArrayOut, CountingArray>::value),
                      "Counting array type check failed.");
 
-    using CompositeArray = vtkm::cont::ArrayHandleCompositeVector<StandardArray, CountingArray>;
-    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray, CompositeArray>::value),
+    using CompositeArray = vtkm::cont::ArrayHandleCompositeVector<StandardArray, StandardArray>;
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayIn, CompositeArray>::value),
                      "Composite array type check failed.");
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayInOut, CompositeArray>::value),
+                     "Counting array type check failed.");
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayOut, CompositeArray>::value),
+                     "Counting array type check failed.");
 
     // Just some type that is not a valid array.
-    using NotAnArray = typename StandardArray::PortalControl;
-    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArray, NotAnArray>::value),
+    using NotAnArray = typename StandardArray::WritePortalType;
+    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayIn, NotAnArray>::value),
+                     "Not an array type check failed.");
+    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayInOut, NotAnArray>::value),
+                     "Not an array type check failed.");
+    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayOut, NotAnArray>::value),
                      "Not an array type check failed.");
 
     // Another type that is not a valid array.
-    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArray, T>::value), "Not an array type check failed.");
+    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayIn, T>::value),
+                     "Not an array type check failed.");
+    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayInOut, T>::value),
+                     "Not an array type check failed.");
+    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayOut, T>::value),
+                     "Not an array type check failed.");
   }
 };
 

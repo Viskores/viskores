@@ -245,12 +245,11 @@ void TestNDimsHistMarginalization()
   // setup for histogram marginalization
   // use a bool array to indicate the marginal variable (true -> marginal variable)
   // the length of this array has to be equal to number of input variables
-  bool marginalVariableAry[3] = { true, false, true };
   vtkm::cont::ArrayHandle<bool> marginalVariable =
-    vtkm::cont::make_ArrayHandle(marginalVariableAry, 3);
+    vtkm::cont::make_ArrayHandle({ true, false, true });
 
-  std::vector<vtkm::Id> numberOfBinsVec(3, 10);
-  vtkm::cont::ArrayHandle<vtkm::Id> numberOfBins = vtkm::cont::make_ArrayHandle(numberOfBinsVec);
+  vtkm::cont::ArrayHandle<vtkm::Id> numberOfBins =
+    vtkm::cont::make_ArrayHandleMove(std::vector<vtkm::Id>(3, 10));
 
   // calculate marginal histogram by the setup (return sparse represetnation)
   std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> marginalBinIds;
@@ -274,15 +273,15 @@ void TestNDimsHistMarginalization()
                           10, 2, 5, 1, 1, 1, 6, 7, 9, 6, 3, 3, 2, 3, 2, 2, 3, 2, 1, 1 };
 
   // Check result
-  vtkm::Id nonSparseBins = marginalBinIds[0].GetPortalControl().GetNumberOfValues();
+  vtkm::Id nonSparseBins = marginalBinIds[0].WritePortal().GetNumberOfValues();
   VTKM_TEST_ASSERT(nonSparseBins == gtNonSparseBins,
                    "Incorrect ND-histogram marginalization results");
 
   for (int i = 0; i < nonSparseBins; i++)
   {
-    vtkm::Id idx0 = marginalBinIds[0].GetPortalControl().Get(i);
-    vtkm::Id idx1 = marginalBinIds[1].GetPortalControl().Get(i);
-    vtkm::Id f = marginalFreqs.GetPortalControl().Get(i);
+    vtkm::Id idx0 = marginalBinIds[0].WritePortal().Get(i);
+    vtkm::Id idx1 = marginalBinIds[1].WritePortal().Get(i);
+    vtkm::Id f = marginalFreqs.WritePortal().Get(i);
     VTKM_TEST_ASSERT(idx0 == gtIdx0[i] && idx1 == gtIdx1[i] && f == gtFreq[i],
                      "Incorrect ND-histogram marginalization results");
   }

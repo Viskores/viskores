@@ -65,8 +65,8 @@ public:
   {
     if (Mode != VOLUME_MODE)
     {
-      std::cout << "Volume Tracer Error: must set volume mode before setting sample dist\n";
-      return;
+      throw vtkm::cont::ErrorBadValue(
+        "Conn Proxy: volume mode must be set before sample distance set");
     }
     Tracer.SetSampleDistance(distance);
   }
@@ -82,7 +82,7 @@ public:
   {
     ScalarField = Dataset.GetField(fieldName);
     const vtkm::cont::ArrayHandle<vtkm::Range> range = this->ScalarField.GetRange();
-    ScalarRange = range.GetPortalConstControl().Get(0);
+    ScalarRange = range.ReadPortal().Get(0);
   }
 
   VTKM_CONT
@@ -98,12 +98,15 @@ public:
   void SetDebugPrints(bool on) { Tracer.SetDebugOn(on); }
 
   VTKM_CONT
+  void SetEpsilon(vtkm::Float64 epsilon) { Tracer.SetEpsilon(epsilon); }
+
+  VTKM_CONT
   void SetEmissionField(const std::string& fieldName)
   {
     if (Mode != ENERGY_MODE)
     {
-      std::cout << "Volume Tracer Error: must set energy mode before setting emission field\n";
-      return;
+      throw vtkm::cont::ErrorBadValue(
+        "Conn Proxy: energy mode must be set before setting emission field");
     }
     EmissionField = Dataset.GetField(fieldName);
   }
@@ -115,12 +118,15 @@ public:
   vtkm::Range GetScalarFieldRange()
   {
     const vtkm::cont::ArrayHandle<vtkm::Range> range = this->ScalarField.GetRange();
-    ScalarRange = range.GetPortalConstControl().Get(0);
+    ScalarRange = range.ReadPortal().Get(0);
     return ScalarRange;
   }
 
   VTKM_CONT
-  void SetScalarRange(const vtkm::Range& range) { ScalarRange = range; }
+  void SetScalarRange(const vtkm::Range& range) { this->ScalarRange = range; }
+
+  VTKM_CONT
+  vtkm::Range GetScalarRange() { return this->ScalarRange; }
 
   VTKM_CONT
   void Trace(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays)
@@ -206,11 +212,11 @@ public:
 
     if (canvas == nullptr)
     {
-      std::cout << "Conn proxy: canvas is NULL\n";
       throw vtkm::cont::ErrorBadValue("Conn Proxy: null canvas");
     }
     vtkm::rendering::raytracing::Camera rayCamera;
-    rayCamera.SetParameters(camera, *canvas);
+    rayCamera.SetParameters(
+      camera, (vtkm::Int32)canvas->GetWidth(), (vtkm::Int32)canvas->GetHeight());
     vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
     rayCamera.CreateRays(rays, this->Coords.GetBounds());
     rays.Buffers.at(0).InitConst(0.f);
@@ -257,14 +263,7 @@ ConnectivityProxy::ConnectivityProxy(const vtkm::cont::DynamicCellSet& cellset,
 }
 
 VTKM_CONT
-ConnectivityProxy::~ConnectivityProxy()
-{
-}
-
-VTKM_CONT
-ConnectivityProxy::ConnectivityProxy()
-{
-}
+ConnectivityProxy::~ConnectivityProxy() {}
 
 VTKM_CONT
 void ConnectivityProxy::SetSampleDistance(const vtkm::Float32& distance)
@@ -318,6 +317,12 @@ VTKM_CONT
 void ConnectivityProxy::SetScalarRange(const vtkm::Range& range)
 {
   Internals->SetScalarRange(range);
+}
+
+VTKM_CONT
+vtkm::Range ConnectivityProxy::GetScalarRange()
+{
+  return Internals->GetScalarRange();
 }
 
 VTKM_CONT
@@ -416,6 +421,12 @@ VTKM_CONT
 void ConnectivityProxy::SetDebugPrints(bool on)
 {
   Internals->SetDebugPrints(on);
+}
+
+VTKM_CONT
+void ConnectivityProxy::SetEpsilon(vtkm::Float64 epsilon)
+{
+  Internals->SetEpsilon(epsilon);
 }
 
 VTKM_CONT

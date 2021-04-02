@@ -45,10 +45,11 @@ vtkm::Id ArrayLength(const T (&)[Length])
 vtkm::cont::CellSetExplicit<> MakeTestCellSet1()
 {
   vtkm::cont::CellSetExplicit<> cs;
-  cs.Fill(numberOfPoints,
-          vtkm::cont::make_ArrayHandle(g_shapes, ArrayLength(g_shapes)),
-          vtkm::cont::make_ArrayHandle(g_connectivity, ArrayLength(g_connectivity)),
-          vtkm::cont::make_ArrayHandle(g_offsets, ArrayLength(g_offsets)));
+  cs.Fill(
+    numberOfPoints,
+    vtkm::cont::make_ArrayHandle(g_shapes, ArrayLength(g_shapes), vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(g_connectivity, ArrayLength(g_connectivity), vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(g_offsets, ArrayLength(g_offsets), vtkm::CopyFlag::Off));
   return cs;
 }
 
@@ -57,9 +58,10 @@ vtkm::cont::CellSetExplicit<> MakeTestCellSet2()
 {
   vtkm::cont::CellSetExplicit<> cs;
   cs.Fill(numberOfPoints,
-          vtkm::cont::make_ArrayHandle(g_shapes2, ArrayLength(g_shapes2)),
-          vtkm::cont::make_ArrayHandle(g_connectivity2, ArrayLength(g_connectivity2)),
-          vtkm::cont::make_ArrayHandle(g_offsets2, ArrayLength(g_offsets2)));
+          vtkm::cont::make_ArrayHandle(g_shapes2, ArrayLength(g_shapes2), vtkm::CopyFlag::Off),
+          vtkm::cont::make_ArrayHandle(
+            g_connectivity2, ArrayLength(g_connectivity2), vtkm::CopyFlag::Off),
+          vtkm::cont::make_ArrayHandle(g_offsets2, ArrayLength(g_offsets2), vtkm::CopyFlag::Off));
   return cs;
 }
 
@@ -103,10 +105,10 @@ void TestCellSetExplicit()
 
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == cellset.GetNumberOfCells(),
                    "result length not equal to number of cells");
+  auto portal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == cellset.GetNumberOfPointsInCell(i),
-                     "incorrect result");
+    VTKM_TEST_ASSERT(portal.Get(i) == cellset.GetNumberOfPointsInCell(i), "incorrect result");
   }
 
   std::cout << "\tTesting CellToPoint\n";
@@ -116,9 +118,10 @@ void TestCellSetExplicit()
                    "result length not equal to number of points");
 
   vtkm::Id expected1[] = { 1, 2, 2, 1, 2, 4, 4, 2, 2, 1, 2 };
+  portal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == expected1[i], "incorrect result");
+    VTKM_TEST_ASSERT(portal.Get(i) == expected1[i], "incorrect result");
   }
 
   std::cout << "----------------------------------------------------\n";
@@ -130,10 +133,10 @@ void TestCellSetExplicit()
 
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == cellset.GetNumberOfCells(),
                    "result length not equal to number of cells");
+  portal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == cellset.GetNumberOfPointsInCell(i),
-                     "incorrect result");
+    VTKM_TEST_ASSERT(portal.Get(i) == cellset.GetNumberOfPointsInCell(i), "incorrect result");
   }
 
   std::cout << "\tTesting CellToPoint\n";
@@ -143,10 +146,10 @@ void TestCellSetExplicit()
                    "result length not equal to number of points");
 
   vtkm::Id expected2[] = { 0, 1, 1, 0, 0, 2, 2, 0, 2, 0, 1 };
+  portal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(
-      result.GetPortalConstControl().Get(i) == expected2[i], "incorrect result at ", i);
+    VTKM_TEST_ASSERT(portal.Get(i) == expected2[i], "incorrect result at ", i);
   }
 
   std::cout << "----------------------------------------------------\n";
@@ -167,7 +170,8 @@ void TestCellSetExplicit()
                    "CellToPoint table exists before PrepareForInput.");
 
   // Test a raw PrepareForInput call:
-  cellset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, PointTag{}, CellTag{});
+  vtkm::cont::Token token;
+  cellset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, PointTag{}, CellTag{}, token);
 
   VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(PointTag{}, CellTag{})),
                    "CellToPoint table missing after PrepareForInput.");

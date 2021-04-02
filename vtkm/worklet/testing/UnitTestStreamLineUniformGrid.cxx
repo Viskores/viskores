@@ -112,19 +112,19 @@ void TestStreamLineUniformGrid()
   const vtkm::Id3 vdims(5, 5, 5);
 
   // Read vector data at each point of the uniform grid and store
-  vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
+  vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2];
 
   std::vector<vtkm::Vec3f_32> field;
   for (vtkm::Id i = 0; i < nElements; i++)
   {
-    vtkm::Float32 x = data[i];
-    vtkm::Float32 y = data[++i];
-    vtkm::Float32 z = data[++i];
+    vtkm::Float32 x = data[(3 * i) + 0];
+    vtkm::Float32 y = data[(3 * i) + 1];
+    vtkm::Float32 z = data[(3 * i) + 2];
     vtkm::Vec3f_32 vecData(x, y, z);
     field.push_back(Normalize(vecData));
   }
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(&field[0], nElements);
+  fieldArray = vtkm::cont::make_ArrayHandle(&field[0], nElements, vtkm::CopyFlag::On);
 
   // Construct the input dataset (uniform) to hold the input and set vector data
   vtkm::cont::DataSet inDataSet;

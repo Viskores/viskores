@@ -21,14 +21,14 @@ namespace detail
 {
 
 VTKM_EXEC
-inline void RGBToHSV(const vtkm::Vec<float, 3>& rgb, vtkm::Vec<float, 3>& hsv)
+inline void RGBToHSV(const vtkm::Vec3f_32& rgb, vtkm::Vec3f_32& hsv)
 {
-  constexpr float onethird = 1.0f / 3.0f;
-  constexpr float onesixth = 1.0f / 6.0f;
-  constexpr float twothird = 2.0f / 3.0f;
+  constexpr vtkm::Float32 onethird = 1.0f / 3.0f;
+  constexpr vtkm::Float32 onesixth = 1.0f / 6.0f;
+  constexpr vtkm::Float32 twothird = 2.0f / 3.0f;
 
-  const float cmax = vtkm::Max(rgb[0], vtkm::Max(rgb[1], rgb[2]));
-  const float cmin = vtkm::Min(rgb[0], vtkm::Min(rgb[1], rgb[2]));
+  const vtkm::Float32 cmax = vtkm::Max(rgb[0], vtkm::Max(rgb[1], rgb[2]));
+  const vtkm::Float32 cmin = vtkm::Min(rgb[0], vtkm::Min(rgb[1], rgb[2]));
 
   hsv[0] = 0.0f;
   hsv[1] = 0.0f;
@@ -57,13 +57,13 @@ inline void RGBToHSV(const vtkm::Vec<float, 3>& rgb, vtkm::Vec<float, 3>& hsv)
 }
 
 VTKM_EXEC
-inline vtkm::Vec<float, 3> HSVToRGB(const vtkm::Vec<float, 3>& hsv)
+inline vtkm::Vec3f_32 HSVToRGB(const vtkm::Vec3f_32& hsv)
 {
-  vtkm::Vec<float, 3> rgb;
-  constexpr float onethird = 1.0f / 3.0f;
-  constexpr float onesixth = 1.0f / 6.0f;
-  constexpr float twothird = 2.0f / 3.0f;
-  constexpr float fivesixth = 5.0f / 6.0f;
+  vtkm::Vec3f_32 rgb;
+  constexpr vtkm::Float32 onethird = 1.0f / 3.0f;
+  constexpr vtkm::Float32 onesixth = 1.0f / 6.0f;
+  constexpr vtkm::Float32 twothird = 2.0f / 3.0f;
+  constexpr vtkm::Float32 fivesixth = 5.0f / 6.0f;
 
   // compute RGB from HSV
   if (hsv[0] > onesixth && hsv[0] <= onethird) // green/red
@@ -115,7 +115,7 @@ inline vtkm::Vec<float, 3> HSVToRGB(const vtkm::Vec<float, 3>& hsv)
 }
 
 VTKM_EXEC
-inline void RGBToLab(const vtkm::Vec<float, 3>& rgb, vtkm::Vec<float, 3>& lab)
+inline void RGBToLab(const vtkm::Vec3f_32& rgb, vtkm::Vec3f_32& lab)
 {
   // clang-format off
 
@@ -128,9 +128,9 @@ inline void RGBToLab(const vtkm::Vec<float, 3>& rgb, vtkm::Vec<float, 3>& lab)
   // management.  OpenGL is agnostic on its RGB color space, but it is reasonable
   // to assume it is close to this one.
   { //rgb to xyz start ( lab == xyz )
-  float r = rgb[0];
-  float g = rgb[1];
-  float b = rgb[2];
+  vtkm::Float32 r = rgb[0];
+  vtkm::Float32 g = rgb[1];
+  vtkm::Float32 b = rgb[2];
   if ( r > 0.04045f ) r = vtkm::Pow(( r + 0.055f ) / 1.055f, 2.4f);
   else                r = r / 12.92f;
   if ( g > 0.04045f ) g = vtkm::Pow(( g + 0.055f ) / 1.055f, 2.4f);
@@ -145,15 +145,15 @@ inline void RGBToLab(const vtkm::Vec<float, 3>& rgb, vtkm::Vec<float, 3>& lab)
   } //rgb to xyz end ( lab == xyz )
 
   //xyz to lab start
-  constexpr float onethird = 1.0f / 3.0f;
-  constexpr float sixteen_onesixteen = 16.0f / 116.0f;
+  constexpr vtkm::Float32 onethird = 1.0f / 3.0f;
+  constexpr vtkm::Float32 sixteen_onesixteen = 16.0f / 116.0f;
 
-  constexpr float ref_X = 0.9505f;
-  constexpr float ref_Y = 1.000f;
-  constexpr float ref_Z = 1.089f;
-  float var_X = lab[0] / ref_X;
-  float var_Y = lab[1] / ref_Y;
-  float var_Z = lab[2] / ref_Z;
+  constexpr vtkm::Float32 ref_X = 0.9505f;
+  constexpr vtkm::Float32 ref_Y = 1.000f;
+  constexpr vtkm::Float32 ref_Z = 1.089f;
+  vtkm::Float32 var_X = lab[0] / ref_X;
+  vtkm::Float32 var_Y = lab[1] / ref_Y;
+  vtkm::Float32 var_Z = lab[2] / ref_Z;
 
   if ( var_X > 0.008856f ) var_X = vtkm::Pow(var_X, onethird);
   else                     var_X = ( 7.787f * var_X ) + sixteen_onesixteen;
@@ -170,12 +170,12 @@ inline void RGBToLab(const vtkm::Vec<float, 3>& rgb, vtkm::Vec<float, 3>& lab)
 }
 
 VTKM_EXEC
-inline vtkm::Vec<float, 3> LabToRGB(const vtkm::Vec<float, 3>& lab)
+inline vtkm::Vec3f_32 LabToRGB(const vtkm::Vec3f_32& lab)
 {
   // clang-format off
-  vtkm::Vec<float, 3> rgb;
+  vtkm::Vec3f_32 rgb;
   { //lab to xyz start ( rgb == xyz )
-  constexpr float sixteen_onesixteen = 16.0f / 116.0f;
+  constexpr vtkm::Float32 sixteen_onesixteen = 16.0f / 116.0f;
 
   //notice that we are mapping L => g, a => r, and b => b
   rgb[1] = ( lab[0] + 16.0f ) / 116.0f;
@@ -190,22 +190,22 @@ inline vtkm::Vec<float, 3> LabToRGB(const vtkm::Vec<float, 3>& lab)
 
   if ( vtkm::Pow(rgb[2],3) > 0.008856f ) rgb[2] = vtkm::Pow(rgb[2],3);
   else rgb[2] = ( rgb[2] - sixteen_onesixteen ) / 7.787f;
-  constexpr float ref_X = 0.9505f;
-  constexpr float ref_Y = 1.000f;
-  constexpr float ref_Z = 1.089f;
+  constexpr vtkm::Float32 ref_X = 0.9505f;
+  constexpr vtkm::Float32 ref_Y = 1.000f;
+  constexpr vtkm::Float32 ref_Z = 1.089f;
   rgb[0] *= ref_X; //Observer= 2 deg Illuminant= D65
   rgb[1] *= ref_Y;
   rgb[2] *= ref_Z;
   } // lab to xyz end
 
   //xyz to rgb start
-  rgb = vtkm::Vec<float,3>(
+  rgb = vtkm::Vec3f_32(
     rgb[0] *  3.2406f + rgb[1] * -1.5372f + rgb[2] * -0.4986f,
     rgb[0] * -0.9689f + rgb[1] *  1.8758f + rgb[2] *  0.0415f,
     rgb[0] *  0.0557f + rgb[1] * -0.2040f + rgb[2] *  1.0570f);
-  float& r = rgb[0];
-  float& g = rgb[1];
-  float& b = rgb[2];
+  vtkm::Float32& r = rgb[0];
+  vtkm::Float32& g = rgb[1];
+  vtkm::Float32& b = rgb[2];
 
   // The following performs a "gamma correction" specified by the sRGB color
   // space.  sRGB is defined by a canonical definition of a display monitor and
@@ -215,7 +215,7 @@ inline vtkm::Vec<float, 3> LabToRGB(const vtkm::Vec<float, 3>& lab)
   // several applications including Adobe Photoshop and Microsoft Windows color
   // management.  OpenGL is agnostic on its RGB color space, but it is reasonable
   // to assume it is close to this one.
-  constexpr float one_twopointfour = ( 1.0f / 2.4f );
+  constexpr vtkm::Float32 one_twopointfour = ( 1.0f / 2.4f );
   if (r > 0.0031308f) r = 1.055f * (vtkm::Pow(r, one_twopointfour)) - 0.055f;
   else r = 12.92f * r;
   if (g > 0.0031308f) g = 1.055f * (vtkm::Pow(g ,one_twopointfour)) - 0.055f;
@@ -226,7 +226,7 @@ inline vtkm::Vec<float, 3> LabToRGB(const vtkm::Vec<float, 3>& lab)
   // Clip colors. ideally we would do something that is perceptually closest
   // (since we can see colors outside of the display gamut), but this seems to
   // work well enough.
-  const float maxVal = vtkm::Max(r, vtkm::Max(g,b));
+  const vtkm::Float32 maxVal = vtkm::Max(r, vtkm::Max(g,b));
   if (maxVal > 1.0f)
   {
     r /= maxVal;
@@ -243,14 +243,14 @@ inline vtkm::Vec<float, 3> LabToRGB(const vtkm::Vec<float, 3>& lab)
 // Convert to a special polar version of CIELAB (useful for creating
 // continuous diverging color maps).
 VTKM_EXEC
-inline void LabToMsh(const vtkm::Vec<float, 3>& lab, vtkm::Vec<float, 3>& msh)
+inline void LabToMsh(const vtkm::Vec3f_32& lab, vtkm::Vec3f_32& msh)
 {
-  const float& L = lab[0];
-  const float& a = lab[1];
-  const float& b = lab[2];
-  float& M = msh[0];
-  float& s = msh[1];
-  float& h = msh[2];
+  const vtkm::Float32& L = lab[0];
+  const vtkm::Float32& a = lab[1];
+  const vtkm::Float32& b = lab[2];
+  vtkm::Float32& M = msh[0];
+  vtkm::Float32& s = msh[1];
+  vtkm::Float32& h = msh[2];
 
   M = vtkm::Sqrt(L * L + a * a + b * b);
   s = (M > 0.001f) ? vtkm::ACos(L / M) : 0.0f;
@@ -260,23 +260,23 @@ inline void LabToMsh(const vtkm::Vec<float, 3>& lab, vtkm::Vec<float, 3>& msh)
 // Convert from a special polar version of CIELAB (useful for creating
 // continuous diverging color maps).
 VTKM_EXEC
-inline vtkm::Vec<float, 3> MshToLab(const vtkm::Vec<float, 3>& msh)
+inline vtkm::Vec3f_32 MshToLab(const vtkm::Vec3f_32& msh)
 {
-  const float& M = msh[0];
-  const float& s = msh[1];
-  const float& h = msh[2];
-  vtkm::Vec<float, 3> r(
+  const vtkm::Float32& M = msh[0];
+  const vtkm::Float32& s = msh[1];
+  const vtkm::Float32& h = msh[2];
+  vtkm::Vec3f_32 r(
     M * vtkm::Cos(s), M * vtkm::Sin(s) * vtkm::Cos(h), M * vtkm::Sin(s) * vtkm::Sin(h));
   return r;
 }
 
 // Given two angular orientations, returns the smallest angle between the two.
 VTKM_EXEC
-inline float DivergingAngleDiff(float a1, float a2)
+inline vtkm::Float32 DivergingAngleDiff(vtkm::Float32 a1, vtkm::Float32 a2)
 {
-  constexpr float f_pi = vtkm::Pif();
-  constexpr float f_two_pi = vtkm::TwoPif();
-  float adiff = a1 - a2;
+  constexpr vtkm::Float32 f_pi = vtkm::Pif();
+  constexpr vtkm::Float32 f_two_pi = vtkm::TwoPif();
+  vtkm::Float32 adiff = a1 - a2;
   if (adiff < 0.0f)
     adiff = -adiff;
   while (adiff >= f_two_pi)
@@ -289,9 +289,9 @@ inline float DivergingAngleDiff(float a1, float a2)
 // For the case when interpolating from a saturated color to an unsaturated
 // color, find a hue for the unsaturated color that makes sense.
 VTKM_EXEC
-inline float DivergingAdjustHue(const vtkm::Vec<float, 3>& msh, float unsatM)
+inline vtkm::Float32 DivergingAdjustHue(const vtkm::Vec3f_32& msh, vtkm::Float32 unsatM)
 {
-  const float sinS = vtkm::Sin(msh[1]);
+  const vtkm::Float32 sinS = vtkm::Sin(msh[1]);
 
   if (msh[0] >= unsatM - 0.1f)
   {
@@ -302,9 +302,10 @@ inline float DivergingAdjustHue(const vtkm::Vec<float, 3>& msh, float unsatM)
   {
     // This equation is designed to make the perceptual change of the
     // interpolation to be close to constant.
-    float hueSpin = msh[1] * vtkm::Sqrt(unsatM * unsatM - msh[0] * msh[0]) / (msh[0] * sinS);
+    vtkm::Float32 hueSpin =
+      msh[1] * vtkm::Sqrt(unsatM * unsatM - msh[0] * msh[0]) / (msh[0] * sinS);
 
-    constexpr float one_third_pi = vtkm::Pi_3f();
+    constexpr vtkm::Float32 one_third_pi = vtkm::Pi_3f();
     // Spin hue away from 0 except in purple hues.
     if (msh[2] > -one_third_pi)
     {
@@ -322,10 +323,10 @@ inline float DivergingAdjustHue(const vtkm::Vec<float, 3>& msh, float unsatM)
 
 //---------------------------------------------------------------------------
 VTKM_EXEC
-vtkm::Vec<float, 3> ColorTableBase::MapThroughColorSpace(double value) const
+vtkm::Vec3f_32 ColorTable::MapThroughColorSpace(vtkm::Float64 value) const
 {
-  vtkm::Vec<float, 3> rgb1, rgb2;
-  float weight = 0;
+  vtkm::Vec3f_32 rgb1, rgb2;
+  vtkm::Float32 weight = 0;
   this->FindColors(value, rgb1, rgb2, weight);
   if (weight == 0)
   {
@@ -343,10 +344,33 @@ vtkm::Vec<float, 3> ColorTableBase::MapThroughColorSpace(double value) const
 
 //---------------------------------------------------------------------------
 VTKM_EXEC
-void ColorTableBase::FindColors(double value,
-                                vtkm::Vec<float, 3>& rgb1,
-                                vtkm::Vec<float, 3>& rgb2,
-                                float& weight) const
+vtkm::Vec3f_32 ColorTable::MapThroughColorSpace(const vtkm::Vec3f_32& rgb1,
+                                                const vtkm::Vec3f_32& rgb2,
+                                                vtkm::Float32 weight) const
+{
+  switch (this->Space)
+  {
+    case vtkm::ColorSpace::RGB:
+      return this->MapThroughColorSpaceRGB(rgb1, rgb2, weight);
+    case vtkm::ColorSpace::HSV:
+      return this->MapThroughColorSpaceHSV(rgb1, rgb2, weight);
+    case vtkm::ColorSpace::HSVWrap:
+      return this->MapThroughColorSpaceHSVWrap(rgb1, rgb2, weight);
+    case vtkm::ColorSpace::Lab:
+      return this->MapThroughColorSpaceLab(rgb1, rgb2, weight);
+    case vtkm::ColorSpace::Diverging:
+      return this->MapThroughColorSpaceDiverging(rgb1, rgb2, weight);
+  }
+  // Should not get here, but some compilers give a warning if this is not here.
+  return vtkm::Vec3f_32{};
+}
+
+//---------------------------------------------------------------------------
+VTKM_EXEC
+void ColorTable::FindColors(vtkm::Float64 value,
+                            vtkm::Vec3f_32& rgb1,
+                            vtkm::Vec3f_32& rgb2,
+                            vtkm::Float32& weight) const
 {
   // All the special cases have equivalent rgb1 and rgb2 values so we
   // set the weight to 0.0f as a default
@@ -402,13 +426,13 @@ void ColorTableBase::FindColors(double value,
 
     const auto w =
       (value - this->ColorNodes[first]) / (this->ColorNodes[second] - this->ColorNodes[first]);
-    weight = static_cast<float>(w);
+    weight = static_cast<vtkm::Float32>(w);
   }
 }
 
 //---------------------------------------------------------------------------
 VTKM_EXEC
-float ColorTableBase::MapThroughOpacitySpace(double value) const
+vtkm::Float32 ColorTable::MapThroughOpacitySpace(vtkm::Float64 value) const
 {
   if (vtkm::IsNan(value))
   { //If we are trying to find the opacity of NaN use a constant of 1.0
@@ -442,7 +466,7 @@ float ColorTableBase::MapThroughOpacitySpace(double value) const
       }
     }
     const auto w = (value - this->ONodes[first]) / (this->ONodes[second] - this->ONodes[first]);
-    float weight = static_cast<float>(w);
+    vtkm::Float32 weight = static_cast<vtkm::Float32>(w);
 
     //we only need the previous midpoint and sharpness as they control this region
     const auto& alpha1 = this->Alpha[first];
@@ -490,20 +514,20 @@ float ColorTableBase::MapThroughOpacitySpace(double value) const
       }
 
       // Compute some coefficients we will need for the hermite curve
-      const float ww = weight * weight;
-      const float www = weight * weight * weight;
+      const vtkm::Float32 ww = weight * weight;
+      const vtkm::Float32 www = weight * weight * weight;
 
-      const float h1 = 2.0f * www - 3.0f * ww + 1.0f;
-      const float h2 = -2.0f * www + 3.0f * ww;
-      const float h3 = www - 2.0f * ww + weight;
-      const float h4 = www - ww;
+      const vtkm::Float32 h1 = 2.0f * www - 3.0f * ww + 1.0f;
+      const vtkm::Float32 h2 = -2.0f * www + 3.0f * ww;
+      const vtkm::Float32 h3 = www - 2.0f * ww + weight;
+      const vtkm::Float32 h4 = www - ww;
 
       // Use one slope for both end points
-      const float slope = alpha2 - alpha1;
-      const float t = (1.0f - midsharp[1]) * slope;
+      const vtkm::Float32 slope = alpha2 - alpha1;
+      const vtkm::Float32 t = (1.0f - midsharp[1]) * slope;
 
       // Compute the value
-      float result = h1 * alpha1 + h2 * alpha2 + h3 * t + h4 * t;
+      vtkm::Float32 result = h1 * alpha1 + h2 * alpha2 + h3 * t + h4 * t;
 
       // Final error check to make sure we don't go outside
       // the Y range
@@ -515,20 +539,20 @@ float ColorTableBase::MapThroughOpacitySpace(double value) const
 }
 //---------------------------------------------------------------------------
 VTKM_EXEC
-vtkm::Vec<float, 3> ColorTableRGB::MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                        const vtkm::Vec<float, 3>& rgb2,
-                                                        float weight) const
+vtkm::Vec3f_32 ColorTable::MapThroughColorSpaceRGB(const vtkm::Vec3f_32& rgb1,
+                                                   const vtkm::Vec3f_32& rgb2,
+                                                   vtkm::Float32 weight) const
 {
   return vtkm::Lerp(rgb1, rgb2, weight);
 }
 
 //---------------------------------------------------------------------------
 VTKM_EXEC
-vtkm::Vec<float, 3> ColorTableHSV::MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                        const vtkm::Vec<float, 3>& rgb2,
-                                                        float weight) const
+vtkm::Vec3f_32 ColorTable::MapThroughColorSpaceHSV(const vtkm::Vec3f_32& rgb1,
+                                                   const vtkm::Vec3f_32& rgb2,
+                                                   vtkm::Float32 weight) const
 {
-  vtkm::Vec<float, 3> hsv1, hsv2;
+  vtkm::Vec3f_32 hsv1, hsv2;
   detail::RGBToHSV(rgb1, hsv1);
   detail::RGBToHSV(rgb2, hsv2);
 
@@ -542,15 +566,15 @@ vtkm::Vec<float, 3> ColorTableHSV::MapThroughColorSpace(const vtkm::Vec<float, 3
 
 //---------------------------------------------------------------------------
 VTKM_EXEC
-vtkm::Vec<float, 3> ColorTableHSVWrap::MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                            const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const
+vtkm::Vec3f_32 ColorTable::MapThroughColorSpaceHSVWrap(const vtkm::Vec3f_32& rgb1,
+                                                       const vtkm::Vec3f_32& rgb2,
+                                                       vtkm::Float32 weight) const
 {
-  vtkm::Vec<float, 3> hsv1, hsv2;
+  vtkm::Vec3f_32 hsv1, hsv2;
   detail::RGBToHSV(rgb1, hsv1);
   detail::RGBToHSV(rgb2, hsv2);
 
-  const float diff = hsv1[0] - hsv2[0];
+  const vtkm::Float32 diff = hsv1[0] - hsv2[0];
   if (diff > 0.5f)
   {
     hsv1[0] -= 1.0f;
@@ -570,11 +594,11 @@ vtkm::Vec<float, 3> ColorTableHSVWrap::MapThroughColorSpace(const vtkm::Vec<floa
 
 //---------------------------------------------------------------------------
 VTKM_EXEC
-vtkm::Vec<float, 3> ColorTableLab::MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                        const vtkm::Vec<float, 3>& rgb2,
-                                                        float weight) const
+vtkm::Vec3f_32 ColorTable::MapThroughColorSpaceLab(const vtkm::Vec3f_32& rgb1,
+                                                   const vtkm::Vec3f_32& rgb2,
+                                                   vtkm::Float32 weight) const
 {
-  vtkm::Vec<float, 3> lab1, lab2;
+  vtkm::Vec3f_32 lab1, lab2;
   detail::RGBToLab(rgb1, lab1);
   detail::RGBToLab(rgb2, lab2);
 
@@ -585,27 +609,27 @@ vtkm::Vec<float, 3> ColorTableLab::MapThroughColorSpace(const vtkm::Vec<float, 3
 
 //---------------------------------------------------------------------------
 VTKM_EXEC
-vtkm::Vec<float, 3> ColorTableDiverging::MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                              const vtkm::Vec<float, 3>& rgb2,
-                                                              float weight) const
+vtkm::Vec3f_32 ColorTable::MapThroughColorSpaceDiverging(const vtkm::Vec3f_32& rgb1,
+                                                         const vtkm::Vec3f_32& rgb2,
+                                                         vtkm::Float32 weight) const
 {
-  vtkm::Vec<float, 3> lab1, lab2;
+  vtkm::Vec3f_32 lab1, lab2;
   detail::RGBToLab(rgb1, lab1);
   detail::RGBToLab(rgb2, lab2);
 
-  vtkm::Vec<float, 3> msh1, msh2;
+  vtkm::Vec3f_32 msh1, msh2;
   detail::LabToMsh(lab1, msh1);
   detail::LabToMsh(lab2, msh2);
   // If the endpoints are distinct saturated colors, then place white in between
   // them.
 
-  constexpr float one_third_pi = vtkm::Pi_3f();
+  constexpr vtkm::Float32 one_third_pi = vtkm::Pi_3f();
   if ((msh1[1] > 0.05f) && (msh2[1] > 0.05f) &&
       (detail::DivergingAngleDiff(msh1[2], msh2[2]) > one_third_pi))
   {
     // Insert the white midpoint by setting one end to white and adjusting the
     // scalar value.
-    float Mmid = vtkm::Max(msh1[0], msh2[0]);
+    vtkm::Float32 Mmid = vtkm::Max(msh1[0], msh2[0]);
     Mmid = vtkm::Max(88.0f, Mmid);
     if (weight < 0.5f)
     {
@@ -640,20 +664,6 @@ vtkm::Vec<float, 3> ColorTableDiverging::MapThroughColorSpace(const vtkm::Vec<fl
   return detail::LabToRGB(tmp);
 }
 }
-}
-
-// Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
-// to be instantiated in a consistent order among all the translation units of an
-// executable. Failing to do so results in random crashes and incorrect results.
-// We workaroud this issue by explicitly instantiating VirtualObjectTransfer for
-// all the portal types here.
-#ifdef VTKM_CUDA
-#include <vtkm/cont/cuda/internal/VirtualObjectTransferCuda.h>
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::exec::ColorTableRGB);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::exec::ColorTableHSV);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::exec::ColorTableHSVWrap);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::exec::ColorTableLab);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::exec::ColorTableDiverging);
-#endif
+} // namespace vtkm::exec
 
 #endif

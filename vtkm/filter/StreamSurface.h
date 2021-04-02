@@ -15,7 +15,7 @@
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/StreamSurface.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 
 namespace vtkm
 {
@@ -28,7 +28,7 @@ namespace filter
 class StreamSurface : public vtkm::filter::FilterDataSetWithField<StreamSurface>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   StreamSurface();
@@ -40,7 +40,7 @@ public:
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds) { this->Seeds = seeds; }
+  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds) { this->Seeds = seeds; }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -49,23 +49,22 @@ public:
     const vtkm::filter::FieldMetadata& fieldMeta,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
-  //Map a new field onto the resulting dataset after running the filter
-  //this call is only valid
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   vtkm::Id NumberOfSteps;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
+  vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
   vtkm::FloatDefault StepSize;
   vtkm::worklet::StreamSurface Worklet;
 };
 }
 } // namespace vtkm::filter
 
+#ifndef vtk_m_filter_StreamSurface_hxx
 #include <vtkm/filter/StreamSurface.hxx>
+#endif
 
 #endif // vtk_m_filter_StreamSurface_h

@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_inc_piecewise_linear_function_h
-#define vtkm_worklet_contourtree_augmented_process_contourtree_inc_piecewise_linear_function_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_inc_piecewise_linear_function_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_inc_piecewise_linear_function_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/cont/ArrayHandle.h>

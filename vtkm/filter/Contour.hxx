@@ -41,11 +41,10 @@ inline bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& input,
+                                       const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                       const vtkm::filter::FieldMetadata& fieldMeta,
+                                       vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -97,9 +96,8 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
     : !this->ComputeFastNormalsForUnstructured;
   if (this->GenerateNormals && generateHighQualityNormals)
   {
-    outputCells = this->Worklet.Run(&ivalues[0],
-                                    static_cast<vtkm::Id>(ivalues.size()),
-                                    vtkm::filter::ApplyPolicyCellSet(cells, policy),
+    outputCells = this->Worklet.Run(ivalues,
+                                    vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                     coords.GetData(),
                                     field,
                                     vertices,
@@ -107,9 +105,8 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   }
   else
   {
-    outputCells = this->Worklet.Run(&ivalues[0],
-                                    static_cast<vtkm::Id>(ivalues.size()),
-                                    vtkm::filter::ApplyPolicyCellSet(cells, policy),
+    outputCells = this->Worklet.Run(ivalues,
+                                    vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                     coords.GetData(),
                                     field,
                                     vertices);

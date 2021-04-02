@@ -24,12 +24,6 @@ namespace worklet
 namespace gradient
 {
 
-template <typename T>
-struct CellGradientInType : vtkm::ListTagBase<T>
-{
-};
-
-template <typename T>
 struct CellGradient : vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn,
@@ -50,9 +44,10 @@ struct CellGradient : vtkm::worklet::WorkletVisitCellsWithPoints
                             const FieldInVecType& field,
                             GradientOutType& outputGradient) const
   {
-    vtkm::Vec3f center = vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, *this);
+    vtkm::Vec3f center;
+    vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, center);
 
-    outputGradient = vtkm::exec::CellDerivative(field, wCoords, center, shape, *this);
+    vtkm::exec::CellDerivative(field, wCoords, center, shape, outputGradient);
   }
 };
 }

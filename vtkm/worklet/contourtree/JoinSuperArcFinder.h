@@ -99,9 +99,7 @@ template <typename T>
 class JoinSuperArcFinder : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
+  using TagType = vtkm::List<T>;
 
   using ControlSignature = void(FieldIn vertex,           // (input) index into sorted edges
                                 WholeArrayIn values,      // (input) data values

@@ -87,16 +87,19 @@ static void TestMaxPointOrCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<::test_explicit::MaxPointOrCellValue> dispatcher;
-  dispatcher.Invoke(
-    dataSet.GetField("cellvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
-    dataSet.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
-    &cellset,
-    result);
+  dispatcher.Invoke(dataSet.GetField("cellvar")
+                      .GetData()
+                      .ResetTypes<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(),
+                    dataSet.GetField("pointvar")
+                      .GetData()
+                      .ResetTypes<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(),
+                    &cellset,
+                    result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
-  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
+  VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(0), 100.1f),
                    "Wrong result for PointToCellMax worklet");
-  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 100.2f),
+  VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(1), 100.2f),
                    "Wrong result for PointToCellMax worklet");
 }
 
@@ -114,9 +117,9 @@ static void TestAvgPointToCell()
   dispatcher.Invoke(&cellset, dataSet.GetField("pointvar"), &result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
-  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 20.1333f),
+  VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(0), 20.1333f),
                    "Wrong result for PointToCellAverage worklet");
-  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 35.2f),
+  VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(1), 35.2f),
                    "Wrong result for PointToCellAverage worklet");
 
   std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
@@ -149,9 +152,9 @@ static void TestAvgCellToPoint()
   dispatcher.Invoke(dataSet.GetCellSet(), &field, result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
-  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
+  VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(0), 100.1f),
                    "Wrong result for CellToPointAverage worklet");
-  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 100.15f),
+  VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(1), 100.15f),
                    "Wrong result for CellToPointAverage worklet");
 
   std::cout << "Try to invoke with an input array of the wrong size." << std::endl;

@@ -79,8 +79,8 @@ struct CellShapeTagVtkmToVtkc;
 /// concept check to make sure that a template argument is a proper cell shape
 /// tag.
 ///
-#define VTKM_IS_CELL_SHAPE_TAG(tag)                                                                \
-  VTKM_STATIC_ASSERT_MSG(::vtkm::internal::CellShapeTagCheck<tag>::value,                          \
+#define VTKM_IS_CELL_SHAPE_TAG(tag)                                       \
+  VTKM_STATIC_ASSERT_MSG(::vtkm::internal::CellShapeTagCheck<tag>::value, \
                          "Provided type is not a valid VTK-m cell shape tag.")
 
 /// A traits-like class to get an CellShapeId known at compile time to a tag.
@@ -98,32 +98,32 @@ struct CellShapeIdToTag
 // Define a tag for each cell shape as well as the support structs to go
 // between tags and ids. The following macro is only valid here.
 
-#define VTKM_DEFINE_CELL_TAG(name, idname)                                                         \
-  struct CellShapeTag##name                                                                        \
-  {                                                                                                \
-    static constexpr vtkm::UInt8 Id = vtkm::idname;                                                \
-  };                                                                                               \
-  namespace internal                                                                               \
-  {                                                                                                \
-  template <>                                                                                      \
-  struct CellShapeTagCheck<vtkm::CellShapeTag##name> : std::true_type                              \
-  {                                                                                                \
-  };                                                                                               \
-  template <>                                                                                      \
-  struct CellShapeTagVtkmToVtkc<vtkm::CellShapeTag##name>                                          \
-  {                                                                                                \
-    using Type = lcl::name;                                                                        \
-  };                                                                                               \
-  }                                                                                                \
-  static inline VTKM_EXEC_CONT const char* GetCellShapeName(vtkm::CellShapeTag##name)              \
-  {                                                                                                \
-    return #name;                                                                                  \
-  }                                                                                                \
-  template <>                                                                                      \
-  struct CellShapeIdToTag<vtkm::idname>                                                            \
-  {                                                                                                \
-    using valid = std::true_type;                                                                  \
-    using Tag = vtkm::CellShapeTag##name;                                                          \
+#define VTKM_DEFINE_CELL_TAG(name, idname)                                            \
+  struct CellShapeTag##name                                                           \
+  {                                                                                   \
+    static constexpr vtkm::UInt8 Id = vtkm::idname;                                   \
+  };                                                                                  \
+  namespace internal                                                                  \
+  {                                                                                   \
+  template <>                                                                         \
+  struct CellShapeTagCheck<vtkm::CellShapeTag##name> : std::true_type                 \
+  {                                                                                   \
+  };                                                                                  \
+  template <>                                                                         \
+  struct CellShapeTagVtkmToVtkc<vtkm::CellShapeTag##name>                             \
+  {                                                                                   \
+    using Type = lcl::name;                                                           \
+  };                                                                                  \
+  }                                                                                   \
+  static inline VTKM_EXEC_CONT const char* GetCellShapeName(vtkm::CellShapeTag##name) \
+  {                                                                                   \
+    return #name;                                                                     \
+  }                                                                                   \
+  template <>                                                                         \
+  struct CellShapeIdToTag<vtkm::idname>                                               \
+  {                                                                                   \
+    using valid = std::true_type;                                                     \
+    using Tag = vtkm::CellShapeTag##name;                                             \
   }
 
 VTKM_DEFINE_CELL_TAG(Empty, CELL_SHAPE_EMPTY);
@@ -164,7 +164,7 @@ namespace internal
 {
 
 template <typename VtkmCellShapeTag>
-VTKM_EXEC_CONT inline typename CellShapeTagVtkmToVtkc<VtkmCellShapeTag>::Type make_VtkcCellShapeTag(
+VTKM_EXEC_CONT inline typename CellShapeTagVtkmToVtkc<VtkmCellShapeTag>::Type make_LclCellShapeTag(
   const VtkmCellShapeTag&,
   vtkm::IdComponent numPoints = 0)
 {
@@ -174,27 +174,27 @@ VTKM_EXEC_CONT inline typename CellShapeTagVtkmToVtkc<VtkmCellShapeTag>::Type ma
 }
 
 VTKM_EXEC_CONT
-inline lcl::Polygon make_VtkcCellShapeTag(const vtkm::CellShapeTagPolygon&,
-                                          vtkm::IdComponent numPoints = 0)
+inline lcl::Polygon make_LclCellShapeTag(const vtkm::CellShapeTagPolygon&,
+                                         vtkm::IdComponent numPoints = 0)
 {
   return lcl::Polygon(numPoints);
 }
 
 VTKM_EXEC_CONT
-inline lcl::Cell make_VtkcCellShapeTag(const vtkm::CellShapeTagGeneric& tag,
-                                       vtkm::IdComponent numPoints = 0)
+inline lcl::Cell make_LclCellShapeTag(const vtkm::CellShapeTagGeneric& tag,
+                                      vtkm::IdComponent numPoints = 0)
 {
   return lcl::Cell(static_cast<std::int8_t>(tag.Id), numPoints);
 }
 
 } // namespace internal
 
-#define vtkmGenericCellShapeMacroCase(cellShapeId, call)                                           \
-  case vtkm::cellShapeId:                                                                          \
-  {                                                                                                \
-    using CellShapeTag = vtkm::CellShapeIdToTag<vtkm::cellShapeId>::Tag;                           \
-    call;                                                                                          \
-  }                                                                                                \
+#define vtkmGenericCellShapeMacroCase(cellShapeId, call)                 \
+  case vtkm::cellShapeId:                                                \
+  {                                                                      \
+    using CellShapeTag = vtkm::CellShapeIdToTag<vtkm::cellShapeId>::Tag; \
+    call;                                                                \
+  }                                                                      \
   break
 
 /// \brief A macro used in a \c switch statement to determine cell shape.
@@ -227,17 +227,17 @@ inline lcl::Cell make_VtkcCellShapeTag(const vtkm::CellShapeTagGeneric& tag,
 /// Note that \c vtkmGenericCellShapeMacro does not have a default case. You
 /// should consider adding one that gives a
 ///
-#define vtkmGenericCellShapeMacro(call)                                                            \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_EMPTY, call);                                           \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_VERTEX, call);                                          \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_LINE, call);                                            \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_POLY_LINE, call);                                       \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_TRIANGLE, call);                                        \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_POLYGON, call);                                         \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_QUAD, call);                                            \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_TETRA, call);                                           \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_HEXAHEDRON, call);                                      \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_WEDGE, call);                                           \
+#define vtkmGenericCellShapeMacro(call)                       \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_EMPTY, call);      \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_VERTEX, call);     \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_LINE, call);       \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_POLY_LINE, call);  \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_TRIANGLE, call);   \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_POLYGON, call);    \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_QUAD, call);       \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_TETRA, call);      \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_HEXAHEDRON, call); \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_WEDGE, call);      \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_PYRAMID, call)
 
 } // namespace vtkm

@@ -21,25 +21,24 @@ namespace arg
 {
 
 // Specialization for extrude types.
-template <typename Device>
-class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>
+template <typename ScatterAndMaskMode>
+class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude, ScatterAndMaskMode>
 {
 
-  using ConnectivityType = vtkm::exec::ConnectivityExtrude<Device>;
+  using ConnectivityType = vtkm::exec::ConnectivityExtrude;
 
 public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
-
+  using Connectivity = vtkm::exec::ConnectivityExtrude;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
                                      vtkm::Id vtkmNotUsed(inputIndex),
                                      vtkm::IdComponent vtkmNotUsed(visitIndex),
                                      vtkm::Id vtkmNotUsed(outputIndex),
-                                     const ConnectivityType& connectivity,
-                                     vtkm::Id globalThreadIndexOffset = 0)
+                                     const ConnectivityType& connectivity)
   {
     const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
     const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
@@ -51,29 +50,55 @@ public:
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     //this->CellShape = connectivity.GetCellShape(index);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
+
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex,
-                           const ConnectivityType& connectivity,
-                           vtkm::Id globalThreadIndexOffset = 0)
+  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
+                           vtkm::Id threadIndex1D,
+                           const ConnectivityType& connectivity)
   {
-    // We currently only support multidimensional indices on one-to-one input-
-    // to-output mappings. (We don't have a use case otherwise.)
-    // That is why we treat teh threadIndex as also the inputIndex and outputIndex
-    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
-    const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
+    // This constructor handles multidimensional indices on one-to-one input-to-output
+    auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
 
-    this->ThreadIndex = index;
-    this->InputIndex = index;
-    this->OutputIndex = index;
+    this->ThreadIndex = threadIndex1D;
+    this->InputIndex = threadIndex1D;
+    this->OutputIndex = threadIndex1D;
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     //this->CellShape = connectivity.GetCellShape(index);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
+                           vtkm::Id threadIndex1D,
+                           vtkm::Id inputIndex,
+                           vtkm::IdComponent visitIndex,
+                           vtkm::Id outputIndex,
+                           const ConnectivityType& connectivity)
+  {
+    // This constructor handles multidimensional indices on many-to-many input-to-output
+    auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
+
+    this->ThreadIndex = threadIndex1D;
+    this->InputIndex = inputIndex;
+    this->OutputIndex = outputIndex;
+    this->VisitIndex = visitIndex;
+    this->LogicalIndex = logicalIndex;
+    this->IndicesIncident = connectivity.GetIndices(logicalIndex);
+    //this->CellShape = connectivity.GetCellShape(index);
+  }
+
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   /// \brief The logical index into the input domain.
   ///
@@ -116,9 +141,6 @@ public:
   ///
   VTKM_EXEC
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
-
-  VTKM_EXEC
-  vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->OutputIndex); }
 
   /// \brief The input indices of the "from" elements.
   ///
@@ -159,20 +181,19 @@ private:
   vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
   IndicesIncidentType IndicesIncident;
-  //CellShapeTag CellShape;
-  vtkm::Id GlobalThreadIndexOffset;
 };
 
 // Specialization for extrude types.
-template <typename Device>
-class ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>>
+template <typename ScatterAndMaskMode>
+class ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude, ScatterAndMaskMode>
 {
-  using ConnectivityType = vtkm::exec::ReverseConnectivityExtrude<Device>;
+  using ConnectivityType = vtkm::exec::ReverseConnectivityExtrude;
 
 public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
+  using Connectivity = ConnectivityType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
@@ -180,8 +201,7 @@ public:
                            vtkm::Id vtkmNotUsed(inputIndex),
                            vtkm::IdComponent vtkmNotUsed(visitIndex),
                            vtkm::Id vtkmNotUsed(outputIndex),
-                           const ConnectivityType& connectivity,
-                           vtkm::Id globalThreadIndexOffset = 0)
+                           const ConnectivityType& connectivity)
   {
     const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
     const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
@@ -192,27 +212,52 @@ public:
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
-    //this->CellShape = connectivity.GetCellShape(index);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
-  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex,
-                           const ConnectivityType& connectivity,
-                           vtkm::Id globalThreadIndexOffset = 0)
+  VTKM_EXEC
+  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
+                           vtkm::Id threadIndex1D,
+                           const ConnectivityType& connectivity)
   {
 
-    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
-    const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
+    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
 
-    this->ThreadIndex = index;
-    this->InputIndex = index;
-    this->OutputIndex = index;
+    this->ThreadIndex = threadIndex1D;
+    this->InputIndex = threadIndex1D;
+    this->OutputIndex = threadIndex1D;
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
-    //this->CellShape = connectivity.GetCellShape(index);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
+
+  VTKM_EXEC
+  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
+                           vtkm::Id threadIndex1D,
+                           vtkm::Id inputIndex,
+                           vtkm::IdComponent visitIndex,
+                           vtkm::Id outputIndex,
+                           const ConnectivityType& connectivity)
+  {
+
+    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
+
+    this->ThreadIndex = threadIndex1D;
+    this->InputIndex = inputIndex;
+    this->OutputIndex = outputIndex;
+    this->VisitIndex = visitIndex;
+    this->LogicalIndex = logicalIndex;
+    this->IndicesIncident = connectivity.GetIndices(logicalIndex);
+  }
+
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
+
   /// \brief The logical index into the input domain.
   ///
   /// This is similar to \c GetIndex3D except the Vec size matches the actual
@@ -255,9 +300,6 @@ public:
   VTKM_EXEC
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
-  VTKM_EXEC
-  vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->OutputIndex); }
-
   /// \brief The input indices of the "from" elements.
   ///
   /// A topology map has "from" and "to" elements (for example from points to
@@ -297,8 +339,6 @@ private:
   vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
   IndicesIncidentType IndicesIncident;
-  //CellShapeTag CellShape;
-  vtkm::Id GlobalThreadIndexOffset;
 };
 
 } //namespace arg

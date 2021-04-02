@@ -52,11 +52,10 @@ public:
     VTKM_CONT
     TrianglesPerCell() {}
 
-    template <typename DeviceAdapter>
     VTKM_EXEC vtkm::IdComponent operator()(
       vtkm::UInt8 shape,
       vtkm::IdComponent numPoints,
-      const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter>& tables) const
+      const vtkm::worklet::internal::TriangulateTablesExecutionObject& tables) const
     {
       return tables.GetCount(vtkm::CellShapeTagGeneric(shape), numPoints);
     }
@@ -84,14 +83,11 @@ public:
     }
 
     // Each cell produces triangles and write result at the offset
-    template <typename CellShapeTag,
-              typename ConnectivityInVec,
-              typename ConnectivityOutVec,
-              typename DeviceAdapter>
+    template <typename CellShapeTag, typename ConnectivityInVec, typename ConnectivityOutVec>
     VTKM_EXEC void operator()(
       CellShapeTag shape,
       const ConnectivityInVec& connectivityIn,
-      const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter>& tables,
+      const vtkm::worklet::internal::TriangulateTablesExecutionObject& tables,
       ConnectivityOutVec& connectivityOut,
       vtkm::IdComponent visitIndex) const
     {

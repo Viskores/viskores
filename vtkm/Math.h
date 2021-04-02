@@ -17,8 +17,10 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
+#include <limits> // must be found with or without CUDA.
 #ifndef VTKM_CUDA
 #include <cmath>
+#include <cstring>
 #include <limits.h>
 #include <math.h>
 #include <stdlib.h>
@@ -1720,7 +1722,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y)
 ///
 template <typename T>
 static inline VTKM_EXEC_CONT T Min(const T& x, const T& y);
-#ifdef VTKM_USE_STL
+#if defined(VTKM_USE_STL) && !defined(VTKM_HIP)
 static inline VTKM_EXEC_CONT vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y)
 {
   return (std::min)(x, y);
@@ -1729,7 +1731,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y)
 {
   return (std::min)(x, y);
 }
-#else // !VTKM_USE_STL
+#else // !VTKM_USE_STL OR HIP
 static inline VTKM_EXEC_CONT vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y)
 {
 #ifdef VTKM_CUDA
@@ -2379,7 +2381,8 @@ static inline VTKM_EXEC_CONT vtkm::Float32 RemainderQuotient(vtkm::Float32 numer
                                                              QType& quotient)
 {
   int iQuotient;
-#ifdef VTKM_CUDA
+  // See: https://github.com/ROCm-Developer-Tools/HIP/issues/2169
+#if defined(VTKM_CUDA) || defined(VTKM_HIP)
   const vtkm::Float32 result =
     VTKM_CUDA_MATH_FUNCTION_32(remquo)(numerator, denominator, &iQuotient);
 #else
@@ -2409,11 +2412,20 @@ static inline VTKM_EXEC_CONT vtkm::Float64 RemainderQuotient(vtkm::Float64 numer
 ///
 static inline VTKM_EXEC_CONT vtkm::Float32 ModF(vtkm::Float32 x, vtkm::Float32& integral)
 {
+  // See: https://github.com/ROCm-Developer-Tools/HIP/issues/2169
+#if defined(VTKM_CUDA) || defined(VTKM_HIP)
+  return VTKM_CUDA_MATH_FUNCTION_32(modf)(x, &integral);
+#else
   return std::modf(x, &integral);
+#endif
 }
 static inline VTKM_EXEC_CONT vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64& integral)
 {
+#if defined(VTKM_CUDA)
+  return VTKM_CUDA_MATH_FUNCTION_64(modf)(x, &integral);
+#else
   return std::modf(x, &integral);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -2550,7 +2562,8 @@ static inline VTKM_EXEC_CONT vtkm::Vec<T, N> CopySign(const vtkm::Vec<T, N>& x,
 
 inline VTKM_EXEC_CONT vtkm::Float32 Frexp(vtkm::Float32 x, vtkm::Int32 *exponent)
 {
-#ifdef VTKM_CUDA
+  // See: https://github.com/ROCm-Developer-Tools/HIP/issues/2169
+#if defined(VTKM_CUDA) || defined(VTKM_HIP)
   return VTKM_CUDA_MATH_FUNCTION_32(frexp)(x, exponent);
 #else
   return std::frexp(x, exponent);
@@ -2582,6 +2595,105 @@ inline VTKM_EXEC_CONT vtkm::Float64 Ldexp(vtkm::Float64 x, vtkm::Int32 exponent)
 #else
   return std::ldexp(x, exponent);
 #endif
+}
+
+// See: https://randomascii.wordpress.com/2012/01/23/stupid-float-tricks-2/ for why this works.
+inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float64 x, vtkm::Float64 y)
+{
+  static_assert(sizeof(vtkm::Float64) == sizeof(vtkm::UInt64), "vtkm::Float64 is incorrect size.");
+  static_assert(std::numeric_limits<vtkm::Float64>::has_denorm == std::denorm_present, "FloatDistance presumes the floating-point type has subnormal numbers.");
+
+  if (!vtkm::IsFinite(x) || !vtkm::IsFinite(y)) {
+    return 0xFFFFFFFFFFFFFFFFL;
+  }
+
+  // Signed zero is the sworn enemy of this process.
+  if (y == 0) {
+    y = vtkm::Abs(y);
+  }
+  if (x == 0) {
+    x = vtkm::Abs(x);
+  }
+
+  if ( (x < 0 && y >= 0) || (x >= 0 && y < 0) )
+  {
+    vtkm::UInt64 dx, dy;
+    if (x < 0) {
+      dy = FloatDistance(0.0, y);
+      dx = FloatDistance(0.0, -x);
+    }
+    else {
+      dy = FloatDistance(0.0, -y);
+      dx = FloatDistance(0.0, x);
+    }
+
+    return dx + dy;
+  }
+
+  if (x < 0 && y < 0) {
+    return FloatDistance(-x, -y);
+  }
+
+  // Note that:
+  // int64_t xi = *reinterpret_cast<int64_t*>(&x);
+  // int64_t yi = *reinterpret_cast<int64_t*>(&y);
+  // also works, but generates warnings.
+  // Good option to have if we get compile errors off memcpy or don't want to #include <cstring> though.
+  // At least on gcc, both versions generate the same assembly.
+  vtkm::UInt64 xi;
+  vtkm::UInt64 yi;
+  memcpy(&xi, &x, sizeof(vtkm::UInt64));
+  memcpy(&yi, &y, sizeof(vtkm::UInt64));
+  if (yi > xi) {
+    return yi - xi;
+  }
+  return xi - yi;
+}
+
+inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float32 x, vtkm::Float32 y)
+{
+  static_assert(sizeof(vtkm::Float32) == sizeof(vtkm::Int32), "vtkm::Float32 is incorrect size.");
+  static_assert(std::numeric_limits<vtkm::Float32>::has_denorm == std::denorm_present, "FloatDistance presumes the floating-point type has subnormal numbers.");
+
+  if (!vtkm::IsFinite(x) || !vtkm::IsFinite(y)) {
+    return 0xFFFFFFFFFFFFFFFFL;
+  }
+
+  if (y == 0) {
+    y = vtkm::Abs(y);
+  }
+  if (x == 0) {
+    x = vtkm::Abs(x);
+  }
+
+  if ( (x < 0 && y >= 0) || (x >= 0 && y < 0) )
+  {
+    vtkm::UInt64 dx, dy;
+    if (x < 0) {
+      dy = FloatDistance(0.0f, y);
+      dx = FloatDistance(0.0f, -x);
+    }
+    else {
+      dy = FloatDistance(0.0f, -y);
+      dx = FloatDistance(0.0f, x);
+    }
+    return dx + dy;
+  }
+
+  if (x < 0 && y < 0) {
+    return FloatDistance(-x, -y);
+  }
+
+  vtkm::UInt32 xi_32;
+  vtkm::UInt32 yi_32;
+  memcpy(&xi_32, &x, sizeof(vtkm::UInt32));
+  memcpy(&yi_32, &y, sizeof(vtkm::UInt32));
+  vtkm::UInt64 xi = xi_32;
+  vtkm::UInt64 yi = yi_32;
+  if (yi > xi) {
+    return yi - xi;
+  }
+  return xi - yi;
 }
 
 /// Bitwise operations

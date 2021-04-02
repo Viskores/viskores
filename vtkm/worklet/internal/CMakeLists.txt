@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(headers
-  DecayHelpers.h
   DispatcherBase.h
   MaskBase.h
   Placeholders.h

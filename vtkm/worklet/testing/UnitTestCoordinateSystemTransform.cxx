@@ -107,14 +107,14 @@ void ValidateCoordTransform(const vtkm::cont::CoordinateSystem& coords,
                             const vtkm::cont::ArrayHandle<vtkm::Vec3f>& doubleTransform,
                             const std::vector<bool>& isAngle)
 {
-  auto points = coords.GetData();
+  auto points = coords.GetDataAsMultiplexer();
   VTKM_TEST_ASSERT(points.GetNumberOfValues() == transform.GetNumberOfValues() &&
                      points.GetNumberOfValues() == doubleTransform.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 
   //The double transform should produce the same result.
-  auto pointsPortal = points.GetPortalConstControl();
-  auto resultsPortal = doubleTransform.GetPortalConstControl();
+  auto pointsPortal = points.ReadPortal();
+  auto resultsPortal = doubleTransform.ReadPortal();
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
   {

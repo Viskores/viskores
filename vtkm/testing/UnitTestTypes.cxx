@@ -10,6 +10,8 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkmstd/is_trivial.h>
+
 #include <vtkm/testing/Testing.h>
 
 namespace
@@ -315,7 +317,7 @@ void GeneralVecTypeTest(const vtkm::Vec<ComponentType, Size>&)
 
   // Vector types should preserve the trivial properties of their components.
   // This insures that algorithms like std::copy will optimize fully.
-  VTKM_TEST_ASSERT(std::is_trivial<ComponentType>::value == std::is_trivial<T>::value,
+  VTKM_TEST_ASSERT(vtkmstd::is_trivial<ComponentType>::value == vtkmstd::is_trivial<T>::value,
                    "VectorType's triviality differs from ComponentType.");
 
   VTKM_TEST_ASSERT(T::NUM_COMPONENTS == Size, "NUM_COMPONENTS is wrong size.");
@@ -860,18 +862,16 @@ struct TypeTestFunctor
   }
 };
 
-struct TypesToTest : vtkm::ListTagJoin<vtkm::testing::Testing::TypeListTagExemplarTypes,
-                                       vtkm::ListTagBase<vtkm::Vec<vtkm::FloatDefault, 6>,
-                                                         vtkm::Id4,
-                                                         vtkm::Vec<unsigned char, 4>,
-                                                         vtkm::Vec<vtkm::Id, 1>,
-                                                         vtkm::Id2,
-                                                         vtkm::Vec<vtkm::Float64, 1>,
-                                                         vtkm::Vec<vtkm::Id2, 3>,
-                                                         vtkm::Vec<vtkm::Vec2f_32, 3>,
-                                                         vtkm::Vec<vtkm::Vec2f_32, 5>>>
-{
-};
+using TypesToTest = vtkm::ListAppend<vtkm::testing::Testing::TypeListExemplarTypes,
+                                     vtkm::List<vtkm::Vec<vtkm::FloatDefault, 6>,
+                                                vtkm::Id4,
+                                                vtkm::Vec<unsigned char, 4>,
+                                                vtkm::Vec<vtkm::Id, 1>,
+                                                vtkm::Id2,
+                                                vtkm::Vec<vtkm::Float64, 1>,
+                                                vtkm::Vec<vtkm::Id2, 3>,
+                                                vtkm::Vec<vtkm::Vec2f_32, 3>,
+                                                vtkm::Vec<vtkm::Vec2f_32, 5>>>;
 
 void TestTypes()
 {

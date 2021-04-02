@@ -177,6 +177,24 @@ struct BoundaryState
   //@}
 
   //@{
+  /// Takes a local neighborhood index (in the ranges of -neighborhood size to neighborhood size)
+  /// and returns the ijk of the equivalent point in the full data set. If the given value is out
+  /// of range, the returned value is undefined.
+  ///
+  VTKM_EXEC vtkm::Id3 NeighborIndexToFullIndex(const vtkm::IdComponent3& neighbor) const
+  {
+    return this->IJK + neighbor;
+  }
+
+  VTKM_EXEC vtkm::Id3 NeighborIndexToFullIndex(vtkm::IdComponent neighborI,
+                                               vtkm::IdComponent neighborJ,
+                                               vtkm::IdComponent neighborK) const
+  {
+    return this->NeighborIndexToFullIndex(vtkm::make_Vec(neighborI, neighborJ, neighborK));
+  }
+  //@}
+
+  //@{
   /// Takes a local neighborhood index (in the ranges of -neighborhood size to
   /// neighborhood size), clamps it to the dataset bounds, and returns a new
   /// neighborhood index. For example, if given a neighbor index that is past
@@ -221,6 +239,24 @@ struct BoundaryState
   }
   //@}
 
+  //@{
+  /// Takes a local neighborhood index (in the ranges of -neighborhood size to neighborhood size)
+  /// and returns the flat index of the equivalent point in the full data set. If the given value
+  /// is out of range, the result is undefined.
+  ///
+  VTKM_EXEC vtkm::Id NeighborIndexToFlatIndex(const vtkm::IdComponent3& neighbor) const
+  {
+    vtkm::Id3 full = this->IJK + neighbor;
+    return (full[2] * this->PointDimensions[1] + full[1]) * this->PointDimensions[0] + full[0];
+  }
+
+  VTKM_EXEC vtkm::Id NeighborIndexToFlatIndex(vtkm::IdComponent neighborI,
+                                              vtkm::IdComponent neighborJ,
+                                              vtkm::IdComponent neighborK) const
+  {
+    return this->NeighborIndexToFlatIndex(vtkm::make_Vec(neighborI, neighborJ, neighborK));
+  }
+  //@}
   vtkm::Id3 IJK;
   vtkm::Id3 PointDimensions;
 };

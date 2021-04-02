@@ -86,7 +86,8 @@ public:
 
   void SetLocalHistogram(vtkm::Id index, const vtkm::cont::Field& field)
   {
-    this->SetLocalHistogram(index, field.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Id>>());
+    this->SetLocalHistogram(index,
+                            field.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>());
   }
 
   vtkm::cont::ArrayHandle<vtkm::Id> ReduceAll() const
@@ -212,7 +213,6 @@ template <typename DerivedPolicy>
 inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::PartitionedDataSet& input,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  using TypeList = typename DerivedPolicy::FieldTypeList;
   if (this->Range.IsNonEmpty())
   {
     this->ComputedRange = this->Range;
@@ -220,12 +220,12 @@ inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::PartitionedDataSet
   else
   {
     auto handle = vtkm::cont::FieldRangeGlobalCompute(
-      input, this->GetActiveFieldName(), this->GetActiveFieldAssociation(), TypeList());
+      input, this->GetActiveFieldName(), this->GetActiveFieldAssociation());
     if (handle.GetNumberOfValues() != 1)
     {
       throw vtkm::cont::ErrorFilterExecution("expecting scalar field.");
     }
-    this->ComputedRange = handle.GetPortalConstControl().Get(0);
+    this->ComputedRange = handle.ReadPortal().Get(0);
   }
 }
 

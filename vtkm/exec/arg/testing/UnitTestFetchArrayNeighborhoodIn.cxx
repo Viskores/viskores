@@ -96,7 +96,6 @@ struct FetchArrayNeighborhoodInTests
 
     using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayNeighborhoodIn,
                                              vtkm::exec::arg::AspectTagDefault,
-                                             vtkm::exec::arg::ThreadIndicesPointNeighborhood,
                                              TestPortal<T>>;
 
     FetchType fetch;
@@ -105,10 +104,9 @@ struct FetchArrayNeighborhoodInTests
 
     vtkm::internal::ConnectivityStructuredInternals<3> connectivityInternals;
     connectivityInternals.SetPointDimensions(POINT_DIMS);
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                       vtkm::TopologyElementTagCell,
-                                       3>
-      connectivity(connectivityInternals);
+    vtkm::exec::
+      ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
+        connectivity(connectivityInternals);
 
     // Verify that 3D scheduling works with neighborhoods
     {
@@ -123,7 +121,7 @@ struct FetchArrayNeighborhoodInTests
           for (vtkm::Id i = 0; i < POINT_DIMS[0]; i++, index++)
           {
             index3d[0] = i;
-            vtkm::exec::arg::ThreadIndicesPointNeighborhood indices(index3d, connectivity);
+            vtkm::exec::arg::ThreadIndicesPointNeighborhood indices(index3d, index, connectivity);
 
             auto neighbors = fetch.Load(indices, execObject);
 

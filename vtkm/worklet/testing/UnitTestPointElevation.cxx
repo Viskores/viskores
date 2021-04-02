@@ -78,11 +78,12 @@ void TestPointElevation()
     pointElevationWorklet);
   dispatcher.Invoke(dataSet.GetCoordinateSystem(), result);
 
-  auto coordinates = dataSet.GetCoordinateSystem().GetData();
+  auto coordinates = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
+  auto coordinatesPortal = coordinates.ReadPortal();
+  auto resultPortal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
-                                result.GetPortalConstControl().Get(i)),
+    VTKM_TEST_ASSERT(test_equal(coordinatesPortal.Get(i)[1] * 2.0, resultPortal.Get(i)),
                      "Wrong result for PointElevation worklet");
   }
 }

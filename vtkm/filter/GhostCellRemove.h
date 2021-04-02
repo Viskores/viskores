@@ -22,7 +22,7 @@ namespace filter
 
 struct GhostCellRemovePolicy : vtkm::filter::PolicyBase<GhostCellRemovePolicy>
 {
-  using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8>;
+  using FieldTypeList = vtkm::List<vtkm::UInt8>;
 };
 
 /// \brief Removes ghost cells
@@ -31,7 +31,7 @@ class GhostCellRemove : public vtkm::filter::FilterDataSetWithField<GhostCellRem
 {
 public:
   //currently the GhostCellRemove filter only works on uint8 data.
-  using SupportedTypes = vtkm::ListTagBase<vtkm::UInt8>;
+  using SupportedTypes = vtkm::List<vtkm::UInt8>;
 
   VTKM_CONT
   GhostCellRemove();
@@ -63,12 +63,11 @@ public:
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //Map a new field onto the resulting dataset after running the filter
-  //this call is only valid
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  //this call is only valid after DoExecute is run
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   bool RemoveAll;

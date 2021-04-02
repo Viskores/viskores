@@ -18,6 +18,9 @@
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
+#include <vtkm/thirdparty/diy/mpi-cast.h>
+
+#include <mpi.h>
 
 namespace example
 {
@@ -58,8 +61,8 @@ public:
     // reduce local bins first.
     vtkm::cont::ArrayHandle<vtkm::Id> local;
     local.Allocate(numBins);
-    std::fill(vtkm::cont::ArrayPortalToIteratorBegin(local.GetPortalControl()),
-              vtkm::cont::ArrayPortalToIteratorEnd(local.GetPortalControl()),
+    std::fill(vtkm::cont::ArrayPortalToIteratorBegin(local.WritePortal()),
+              vtkm::cont::ArrayPortalToIteratorEnd(local.WritePortal()),
               static_cast<vtkm::Id>(0));
     for (const auto& lbins : this->LocalBlocks)
     {
@@ -70,8 +73,8 @@ public:
 
     // converting to std::vector
     std::vector<vtkm::Id> send_buf(static_cast<std::size_t>(numBins));
-    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(local.GetPortalConstControl()),
-              vtkm::cont::ArrayPortalToIteratorEnd(local.GetPortalConstControl()),
+    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(local.ReadPortal()),
+              vtkm::cont::ArrayPortalToIteratorEnd(local.ReadPortal()),
               send_buf.begin());
 
     std::vector<vtkm::Id> recv_buf(static_cast<std::size_t>(numBins));
@@ -81,14 +84,14 @@ public:
                sizeof(vtkm::Id) == 4 ? MPI_INT : MPI_LONG,
                MPI_SUM,
                0,
-               comm);
+               vtkmdiy::mpi::mpi_cast(comm.handle()));
 
     if (comm.rank() == 0)
     {
       local.Allocate(numBins);
       std::copy(recv_buf.begin(),
                 recv_buf.end(),
-                vtkm::cont::ArrayPortalToIteratorBegin(local.GetPortalControl()));
+                vtkm::cont::ArrayPortalToIteratorBegin(local.WritePortal()));
       return local;
     }
     return vtkm::cont::ArrayHandle<vtkm::Id>();
@@ -158,7 +161,7 @@ inline VTKM_CONT void HistogramMPI::PreExecute(const vtkm::cont::PartitionedData
     {
       throw vtkm::cont::ErrorFilterExecution("expecting scalar field.");
     }
-    this->ComputedRange = handle.GetPortalConstControl().Get(0);
+    this->ComputedRange = handle.ReadPortal().Get(0);
   }
 }
 

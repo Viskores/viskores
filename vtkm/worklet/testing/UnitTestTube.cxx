@@ -10,7 +10,6 @@
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/Tube.h>
 
@@ -120,10 +119,11 @@ void TestTube(bool capEnds, vtkm::FloatDefault radius, vtkm::Id numSides, vtkm::
   vtkm::worklet::Tube tubeWorklet(capEnds, numSides, radius);
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
-  tubeWorklet.Run(ds.GetCoordinateSystem(0).GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Vec3f>>(),
-                  ds.GetCellSet(),
-                  newPoints,
-                  newCells);
+  tubeWorklet.Run(
+    ds.GetCoordinateSystem(0).GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f>>(),
+    ds.GetCellSet(),
+    newPoints,
+    newCells);
 
   VTKM_TEST_ASSERT(newPoints.GetNumberOfValues() == reqNumPts,
                    "Wrong number of points in Tube worklet");
@@ -179,7 +179,7 @@ void TestLinearPolylines()
     vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
     vtkm::cont::CellSetSingleType<> newCells;
     tubeWorklet.Run(
-      ds.GetCoordinateSystem(0).GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Vec3f>>(),
+      ds.GetCoordinateSystem(0).GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f>>(),
       ds.GetCellSet(),
       newPoints,
       newCells);
@@ -192,7 +192,7 @@ void TestLinearPolylines()
                      "Wrong cell shape in Tube worklet");
 
     //Each of the 3 points should be in the plane defined by dir.
-    auto portal = newPoints.GetPortalConstControl();
+    auto portal = newPoints.ReadPortal();
     for (vtkm::Id i = 0; i < newPoints.GetNumberOfValues(); i += 3)
     {
       auto p0 = portal.Get(i + 0);

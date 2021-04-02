@@ -17,7 +17,11 @@ namespace vtkm
 namespace cont
 {
 
-namespace detail
+struct VTKM_ALWAYS_EXPORT StorageTagConstant
+{
+};
+
+namespace internal
 {
 
 template <typename ValueType>
@@ -36,7 +40,16 @@ private:
   ValueType Value;
 };
 
-} // namespace detail
+template <typename T>
+using StorageTagConstantSuperclass =
+  typename vtkm::cont::ArrayHandleImplicit<ConstantFunctor<T>>::StorageTag;
+
+template <typename T>
+struct Storage<T, vtkm::cont::StorageTagConstant> : Storage<T, StorageTagConstantSuperclass<T>>
+{
+};
+
+} // namespace internal
 
 /// \brief An array handle with a constant value.
 ///
@@ -47,18 +60,25 @@ private:
 /// takes (almost) no memory.
 ///
 template <typename T>
-class ArrayHandleConstant : public vtkm::cont::ArrayHandleImplicit<detail::ConstantFunctor<T>>
+class ArrayHandleConstant : public vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConstant>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleConstant,
                              (ArrayHandleConstant<T>),
-                             (vtkm::cont::ArrayHandleImplicit<detail::ConstantFunctor<T>>));
+                             (vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConstant>));
 
   VTKM_CONT
   ArrayHandleConstant(T value, vtkm::Id numberOfValues = 0)
-    : Superclass(detail::ConstantFunctor<T>(value), numberOfValues)
+    : Superclass(internal::FunctorToArrayHandleImplicitBuffers(internal::ConstantFunctor<T>(value),
+                                                               numberOfValues))
   {
   }
+
+  /// \brief Returns the constant value stored in this array.
+  ///
+  /// The value set in the constructor of this array is returned even if the number of values is 0.
+  ///
+  VTKM_CONT T GetValue() const { return this->ReadPortal().GetFunctor()(0); }
 };
 
 /// make_ArrayHandleConstant is convenience function to generate an
@@ -82,18 +102,18 @@ namespace cont
 {
 
 template <typename T>
-struct SerializableTypeString<vtkm::cont::detail::ConstantFunctor<T>>
+struct SerializableTypeString<vtkm::cont::ArrayHandleConstant<T>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_ConstantFunctor<" + SerializableTypeString<T>::Get() + ">";
+    static std::string name = "AH_Constant<" + SerializableTypeString<T>::Get() + ">";
     return name;
   }
 };
 
 template <typename T>
-struct SerializableTypeString<vtkm::cont::ArrayHandleConstant<T>>
-  : SerializableTypeString<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::ConstantFunctor<T>>>
+struct SerializableTypeString<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConstant>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleConstant<T>>
 {
 };
 }
@@ -104,7 +124,33 @@ namespace mangled_diy_namespace
 
 template <typename T>
 struct Serialization<vtkm::cont::ArrayHandleConstant<T>>
-  : Serialization<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::ConstantFunctor<T>>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleConstant<T>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    vtkmdiy::save(bb, obj.GetNumberOfValues());
+    vtkmdiy::save(bb, obj.ReadPortal().Get(0));
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    vtkm::Id count = 0;
+    vtkmdiy::load(bb, count);
+
+    T value;
+    vtkmdiy::load(bb, value);
+
+    obj = vtkm::cont::make_ArrayHandleConstant(value, count);
+  }
+};
+
+template <typename T>
+struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConstant>>
+  : Serialization<vtkm::cont::ArrayHandleConstant<T>>
 {
 };
 

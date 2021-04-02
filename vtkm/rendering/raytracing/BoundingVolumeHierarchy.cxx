@@ -124,8 +124,8 @@ class LinearBVHBuilder::GatherVecCast : public vtkm::worklet::WorkletMapField
 private:
   using Vec4IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Id4>;
   using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec4i_32>;
-  using PortalConst = typename Vec4IdArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
-  using Portal = typename Vec4IntArrayHandle::ExecutionTypes<DeviceAdapterTag>::Portal;
+  using PortalConst = typename Vec4IdArrayHandle::ReadPortalType;
+  using Portal = typename Vec4IntArrayHandle::WritePortalType;
 
 private:
   PortalConst InputPortal;
@@ -214,7 +214,7 @@ public:
                                 WholeArrayIn,     //rchild
                                 AtomicArrayInOut, //counters
                                 WholeArrayInOut   // flatbvh
-                                );
+  );
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12);
 
   template <typename InputPortalType,
@@ -343,7 +343,7 @@ public:
         cThird4Vec[3] = vtkm::Max(cSecond4Vec[1], cThird4Vec[3]);
         flatBVH.Set(currentNodeOffset + 2, cThird4Vec);
       }
-      vtkm::Vec4f_32 fourth4Vec;
+      vtkm::Vec4f_32 fourth4Vec{ 0.0f };
       vtkm::Int32 leftChild =
         static_cast<vtkm::Int32>((childVector[0] >= 0) ? childVector[0] * 4 : childVector[0]);
       memcpy(&fourth4Vec[0], &leftChild, 4);
@@ -572,7 +572,7 @@ VTKM_CONT void LinearBVHBuilder::SortAABBS(BVHData& bvh, bool singleAABB)
   // primitive
   if (singleAABB)
   {
-    auto iterPortal = iterator.GetPortalControl();
+    auto iterPortal = iterator.WritePortal();
     for (int i = 0; i < 2; ++i)
     {
       iterPortal.Set(i, 0);
@@ -597,12 +597,12 @@ VTKM_CONT void LinearBVHBuilder::Build(LinearBVH& linearBVH)
   {
     numberOfAABBs = 2;
     singleAABB = true;
-    vtkm::Float32 xmin = linearBVH.AABB.xmins.GetPortalControl().Get(0);
-    vtkm::Float32 ymin = linearBVH.AABB.ymins.GetPortalControl().Get(0);
-    vtkm::Float32 zmin = linearBVH.AABB.zmins.GetPortalControl().Get(0);
-    vtkm::Float32 xmax = linearBVH.AABB.xmaxs.GetPortalControl().Get(0);
-    vtkm::Float32 ymax = linearBVH.AABB.ymaxs.GetPortalControl().Get(0);
-    vtkm::Float32 zmax = linearBVH.AABB.zmaxs.GetPortalControl().Get(0);
+    vtkm::Float32 xmin = linearBVH.AABB.xmins.WritePortal().Get(0);
+    vtkm::Float32 ymin = linearBVH.AABB.ymins.WritePortal().Get(0);
+    vtkm::Float32 zmin = linearBVH.AABB.zmins.WritePortal().Get(0);
+    vtkm::Float32 xmax = linearBVH.AABB.xmaxs.WritePortal().Get(0);
+    vtkm::Float32 ymax = linearBVH.AABB.ymaxs.WritePortal().Get(0);
+    vtkm::Float32 zmax = linearBVH.AABB.zmaxs.WritePortal().Get(0);
 
     linearBVH.AABB.xmins.Allocate(2);
     linearBVH.AABB.ymins.Allocate(2);
@@ -612,12 +612,12 @@ VTKM_CONT void LinearBVHBuilder::Build(LinearBVH& linearBVH)
     linearBVH.AABB.zmaxs.Allocate(2);
     for (int i = 0; i < 2; ++i)
     {
-      linearBVH.AABB.xmins.GetPortalControl().Set(i, xmin);
-      linearBVH.AABB.ymins.GetPortalControl().Set(i, ymin);
-      linearBVH.AABB.zmins.GetPortalControl().Set(i, zmin);
-      linearBVH.AABB.xmaxs.GetPortalControl().Set(i, xmax);
-      linearBVH.AABB.ymaxs.GetPortalControl().Set(i, ymax);
-      linearBVH.AABB.zmaxs.GetPortalControl().Set(i, zmax);
+      linearBVH.AABB.xmins.WritePortal().Set(i, xmin);
+      linearBVH.AABB.ymins.WritePortal().Set(i, ymin);
+      linearBVH.AABB.zmins.WritePortal().Set(i, zmin);
+      linearBVH.AABB.xmaxs.WritePortal().Set(i, xmax);
+      linearBVH.AABB.ymaxs.WritePortal().Set(i, ymax);
+      linearBVH.AABB.zmaxs.WritePortal().Set(i, zmax);
     }
   }
 

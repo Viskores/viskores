@@ -16,6 +16,7 @@
 #include <vtkm/rendering/raytracing/ChannelBufferOperations.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
+#include <vtkm/rendering/vtkm_rendering_export.h>
 
 namespace vtkm
 {
@@ -69,12 +70,13 @@ public:
     DoubleInvWidth = 2.f / static_cast<vtkm::Float32>(width);
   }
 
-  using ControlSignature = void(FieldIn, FieldInOut, WholeArrayIn);
-  using ExecutionSignature = void(_1, _2, _3);
+  using ControlSignature = void(FieldIn, FieldInOut, FieldIn, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename Precision, typename DepthPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& pixelId,
                             Precision& maxDistance,
+                            const Vec<Precision, 3>& origin,
                             const DepthPortalType& depths) const
   {
     vtkm::Vec4f_32 position;
@@ -93,7 +95,8 @@ public:
     p[0] = position[0] / position[3];
     p[1] = position[1] / position[3];
     p[2] = position[2] / position[3];
-    p = p - Origin;
+    p = p - origin;
+
 
     maxDistance = vtkm::Magnitude(p);
   }
@@ -132,9 +135,9 @@ public:
     dispatcher.Invoke(rays.HitIdx, rays.Status);
   }
 
-  static void MapCanvasToRays(Ray<vtkm::Float32>& rays,
-                              const vtkm::rendering::Camera& camera,
-                              const vtkm::rendering::CanvasRayTracer& canvas);
+  VTKM_RENDERING_EXPORT static void MapCanvasToRays(Ray<vtkm::Float32>& rays,
+                                                    const vtkm::rendering::Camera& camera,
+                                                    const vtkm::rendering::CanvasRayTracer& canvas);
 
   template <typename T>
   static vtkm::Id RaysInMesh(Ray<T>& rays)
@@ -272,7 +275,7 @@ public:
     vtkm::cont::Algorithm::CopyIf(rays.Status, masks, compactedStatus);
     rays.Status = compactedStatus;
 
-    rays.NumRays = rays.Status.GetPortalConstControl().GetNumberOfValues();
+    rays.NumRays = rays.Status.ReadPortal().GetNumberOfValues();
 
     const size_t bufferCount = static_cast<size_t>(rays.Buffers.size());
     for (size_t i = 0; i < bufferCount; ++i)
@@ -289,35 +292,36 @@ public:
       return; //nothing to do
 
     rays.NumRays = newSize;
+    vtkm::cont::Token token;
 
     if (rays.IntersectionDataEnabled)
     {
-      rays.IntersectionX.PrepareForOutput(rays.NumRays, Device());
-      rays.IntersectionY.PrepareForOutput(rays.NumRays, Device());
-      rays.IntersectionZ.PrepareForOutput(rays.NumRays, Device());
-      rays.U.PrepareForOutput(rays.NumRays, Device());
-      rays.V.PrepareForOutput(rays.NumRays, Device());
-      rays.Scalar.PrepareForOutput(rays.NumRays, Device());
+      rays.IntersectionX.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.IntersectionY.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.IntersectionZ.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.U.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.V.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.Scalar.PrepareForOutput(rays.NumRays, Device(), token);
 
-      rays.NormalX.PrepareForOutput(rays.NumRays, Device());
-      rays.NormalY.PrepareForOutput(rays.NumRays, Device());
-      rays.NormalZ.PrepareForOutput(rays.NumRays, Device());
+      rays.NormalX.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.NormalY.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.NormalZ.PrepareForOutput(rays.NumRays, Device(), token);
     }
 
-    rays.OriginX.PrepareForOutput(rays.NumRays, Device());
-    rays.OriginY.PrepareForOutput(rays.NumRays, Device());
-    rays.OriginZ.PrepareForOutput(rays.NumRays, Device());
+    rays.OriginX.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.OriginY.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.OriginZ.PrepareForOutput(rays.NumRays, Device(), token);
 
-    rays.DirX.PrepareForOutput(rays.NumRays, Device());
-    rays.DirY.PrepareForOutput(rays.NumRays, Device());
-    rays.DirZ.PrepareForOutput(rays.NumRays, Device());
+    rays.DirX.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.DirY.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.DirZ.PrepareForOutput(rays.NumRays, Device(), token);
 
-    rays.Distance.PrepareForOutput(rays.NumRays, Device());
-    rays.MinDistance.PrepareForOutput(rays.NumRays, Device());
-    rays.MaxDistance.PrepareForOutput(rays.NumRays, Device());
-    rays.Status.PrepareForOutput(rays.NumRays, Device());
-    rays.HitIdx.PrepareForOutput(rays.NumRays, Device());
-    rays.PixelIdx.PrepareForOutput(rays.NumRays, Device());
+    rays.Distance.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.MinDistance.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.MaxDistance.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.Status.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.HitIdx.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.PixelIdx.PrepareForOutput(rays.NumRays, Device(), token);
 
     const size_t bufferCount = static_cast<size_t>(rays.Buffers.size());
     for (size_t i = 0; i < bufferCount; ++i)

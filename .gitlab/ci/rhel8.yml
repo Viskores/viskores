@@ -1,0 +1,62 @@
+
+# Build on rhel8 with serial and test on rhel8
+# Uses gcc 8.2.1
+build:rhel8:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .rhel8
+    - .cmake_build_linux
+    - .only-default
+  variables:
+    CMAKE_GENERATOR: "Unix Makefiles"
+    VTKM_SETTINGS: "serial+shared+64bit_floats+32bit_ids"
+
+test:rhel8:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .rhel8
+    - .cmake_test_linux
+    - .only-default
+  dependencies:
+    - build:rhel8
+  needs:
+    - build:rhel8
+
+# Build on rhel8 with serial and the VTK-supported types
+# Uses gcc 8.2.1
+build:rhel8_vtk_types:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .rhel8
+    - .cmake_build_linux
+    - .only-default
+  variables:
+    CMAKE_GENERATOR: "Unix Makefiles"
+    VTKM_SETTINGS: "serial+vtk_types"
+
+test:rhel8_vtk_types:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .rhel8
+    - .cmake_test_linux
+    - .only-default
+  dependencies:
+    - build:rhel8_vtk_types
+  needs:
+    - build:rhel8_vtk_types

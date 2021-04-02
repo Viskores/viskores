@@ -11,7 +11,11 @@
 #ifndef vtk_m_filter_Gradient_h
 #define vtk_m_filter_Gradient_h
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/vtkm_filter_gradient_export.h>
+
+#include <vtkm/filter/FilterField.h>
+
+#include <vtkm/cont/ArrayHandleSOA.h>
 
 namespace vtkm
 {
@@ -27,11 +31,10 @@ namespace filter
 ///
 /// Note: If no explicit name for the output field is provided the filter will
 /// default to "Gradients"
-class Gradient : public vtkm::filter::FilterCell<Gradient>
+class VTKM_FILTER_GRADIENT_EXPORT Gradient : public vtkm::filter::FilterField<Gradient>
 {
 public:
-  using SupportedTypes =
-    vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
+  using SupportedTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
   /// When this flag is on (default is off), the gradient filter will provide a
   /// point based gradients, which are significantly more costly since for each
@@ -92,7 +95,7 @@ public:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                 const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                 const vtkm::filter::FieldMetadata& fieldMeta,
-                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+                                vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   bool ComputePointGradient = false;
@@ -107,9 +110,127 @@ private:
   std::string QCriterionName = "QCriterion";
   std::string VorticityName = "Vorticity";
 };
+
+#ifndef vtkm_filter_Gradient_cxx
+
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float32>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_DEPRECATED_SUPPRESS_END
+#endif
+
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float64>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_DEPRECATED_SUPPRESS_END
+#endif
+
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_32>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_32, vtkm::cont::StorageTagSOA>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_32, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_DEPRECATED_SUPPRESS_END
+#endif
+
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_64>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_64, vtkm::cont::StorageTagSOA>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_64, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_DEPRECATED_SUPPRESS_END
+#endif
+
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<
+    vtkm::Vec3f_32,
+    vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic>>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<
+    vtkm::Vec3f_64,
+    vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic>>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+#ifdef VTKM_ADD_XGC_DEFAULT_TYPES
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec<float, 3>, vtkm::cont::StorageTagXGCCoordinates>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec<double, 3>, vtkm::cont::StorageTagXGCCoordinates>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+#endif
+
+#endif //vtkm_filter_Gradient_cxx
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/Gradient.hxx>
 
 #endif // vtk_m_filter_Gradient_h

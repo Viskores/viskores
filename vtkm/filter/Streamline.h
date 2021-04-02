@@ -11,10 +11,8 @@
 #ifndef vtk_m_filter_Streamline_h
 #define vtk_m_filter_Streamline_h
 
+#include <vtkm/Particle.h>
 #include <vtkm/filter/FilterDataSetWithField.h>
-#include <vtkm/worklet/ParticleAdvection.h>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
 {
@@ -27,7 +25,7 @@ namespace filter
 class Streamline : public vtkm::filter::FilterDataSetWithField<Streamline>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   Streamline();
@@ -39,32 +37,35 @@ public:
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds);
+  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds);
 
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(
-    const vtkm::cont::DataSet& input,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
-    const vtkm::filter::FieldMetadata& fieldMeta,
+  VTKM_CONT
+  bool GetUseThreadedAlgorithm() { return this->UseThreadedAlgorithm; }
+
+  VTKM_CONT
+  void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
+
+  template <typename DerivedPolicy>
+  vtkm::cont::PartitionedDataSet PrepareForExecution(
+    const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
-  //Map a new field onto the resulting dataset after running the filter
-  //this call is only valid
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   vtkm::Id NumberOfSteps;
   vtkm::FloatDefault StepSize;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
-  vtkm::worklet::Streamline Worklet;
+  vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
+  bool UseThreadedAlgorithm;
 };
 }
 } // namespace vtkm::filter
 
+#ifndef vtk_m_filter_Streamline_hxx
 #include <vtkm/filter/Streamline.hxx>
+#endif
 
 #endif // vtk_m_filter_Streamline_h

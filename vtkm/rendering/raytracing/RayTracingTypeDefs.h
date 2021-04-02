@@ -11,15 +11,16 @@
 #define vtk_m_rendering_raytracing_RayTracingTypeDefs_h
 
 #include <type_traits>
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
+#include <vtkm/cont/Field.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 
 namespace vtkm
 {
@@ -27,10 +28,7 @@ namespace rendering
 {
 // A more useful  bounds check that tells you where it happened
 #ifndef NDEBUG
-#define BOUNDS_CHECK(HANDLE, INDEX)                                                                \
-  {                                                                                                \
-    BoundsCheck((HANDLE), (INDEX), __FILE__, __LINE__);                                            \
-  }
+#define BOUNDS_CHECK(HANDLE, INDEX) BoundsCheck((HANDLE), (INDEX), __FILE__, __LINE__)
 #else
 #define BOUNDS_CHECK(HANDLE, INDEX)
 #endif
@@ -92,6 +90,13 @@ inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagCuda>(
   return "cuda";
 }
 
+template <>
+inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagKokkos>(
+  vtkm::cont::DeviceAdapterTagKokkos)
+{
+  return "kokkos";
+}
+
 struct DeviceStringFunctor
 {
   std::string result;
@@ -124,21 +129,21 @@ using ColorBuffer4b = vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>;
 //vec3s
 using Vec3F = vtkm::Vec3f_32;
 using Vec3D = vtkm::Vec3f_64;
-struct Vec3RenderingTypes : vtkm::ListTagBase<Vec3F, Vec3D>
-{
-};
+using Vec3RenderingTypes = vtkm::List<Vec3F, Vec3D>;
 
 // Scalars Types
 using ScalarF = vtkm::Float32;
 using ScalarD = vtkm::Float64;
 
-struct RayStatusType : vtkm::ListTagBase<vtkm::UInt8>
-{
-};
+using RayStatusType = vtkm::List<vtkm::UInt8>;
 
-struct ScalarRenderingTypes : vtkm::ListTagBase<ScalarF, ScalarD>
+using ScalarRenderingTypes = vtkm::List<ScalarF, ScalarD>;
+
+VTKM_CONT inline vtkm::cont::UncertainArrayHandle<ScalarRenderingTypes, VTKM_DEFAULT_STORAGE_LIST>
+GetScalarFieldArray(const vtkm::cont::Field& field)
 {
-};
+  return field.GetData().ResetTypes(ScalarRenderingTypes{}, VTKM_DEFAULT_STORAGE_LIST{});
+}
 }
 }
 } //namespace vtkm::rendering::raytracing

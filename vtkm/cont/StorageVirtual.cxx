@@ -10,6 +10,8 @@
 #define vtk_m_cont_StorageVirtual_cxx
 #include <vtkm/cont/StorageVirtual.h>
 
+#include <vtkm/cont/DeviceAdapter.h>
+
 namespace vtkm
 {
 namespace cont
@@ -22,24 +24,21 @@ namespace detail
 
 //--------------------------------------------------------------------
 StorageVirtual::StorageVirtual(const StorageVirtual& src)
-  : HostUpToDate(src.HostUpToDate)
-  , DeviceUpToDate(src.DeviceUpToDate)
+  : DeviceUpToDate(src.DeviceUpToDate)
   , DeviceTransferState(src.DeviceTransferState)
 {
 }
 
 //--------------------------------------------------------------------
 StorageVirtual::StorageVirtual(StorageVirtual&& src) noexcept
-  : HostUpToDate(src.HostUpToDate),
-    DeviceUpToDate(src.DeviceUpToDate),
-    DeviceTransferState(std::move(src.DeviceTransferState))
+  : DeviceUpToDate(src.DeviceUpToDate)
+  , DeviceTransferState(std::move(src.DeviceTransferState))
 {
 }
 
 //--------------------------------------------------------------------
 StorageVirtual& StorageVirtual::operator=(const StorageVirtual& src)
 {
-  this->HostUpToDate = src.HostUpToDate;
   this->DeviceUpToDate = src.DeviceUpToDate;
   this->DeviceTransferState = src.DeviceTransferState;
   return *this;
@@ -48,16 +47,13 @@ StorageVirtual& StorageVirtual::operator=(const StorageVirtual& src)
 //--------------------------------------------------------------------
 StorageVirtual& StorageVirtual::operator=(StorageVirtual&& src) noexcept
 {
-  this->HostUpToDate = src.HostUpToDate;
   this->DeviceUpToDate = src.DeviceUpToDate;
   this->DeviceTransferState = std::move(src.DeviceTransferState);
   return *this;
 }
 
 //--------------------------------------------------------------------
-StorageVirtual::~StorageVirtual()
-{
-}
+StorageVirtual::~StorageVirtual() {}
 
 //--------------------------------------------------------------------
 void StorageVirtual::DropExecutionPortal()
@@ -70,7 +66,6 @@ void StorageVirtual::DropExecutionPortal()
 void StorageVirtual::DropAllPortals()
 {
   this->DeviceTransferState->releaseAll();
-  this->HostUpToDate = false;
   this->DeviceUpToDate = false;
 }
 
@@ -117,7 +112,6 @@ const vtkm::internal::PortalVirtualBase* StorageVirtual::PrepareForOutput(
   {
     this->TransferPortalForOutput(
       *(this->DeviceTransferState), OutputMode::WRITE, numberOfValues, devId);
-    this->HostUpToDate = false;
     this->DeviceUpToDate = true;
   }
   return this->DeviceTransferState->devicePtr();
@@ -138,37 +132,29 @@ const vtkm::internal::PortalVirtualBase* StorageVirtual::PrepareForInPlace(
     vtkm::Id numberOfValues = this->GetNumberOfValues();
     this->TransferPortalForOutput(
       *(this->DeviceTransferState), OutputMode::READ_WRITE, numberOfValues, devId);
-    this->HostUpToDate = false;
     this->DeviceUpToDate = true;
   }
   return this->DeviceTransferState->devicePtr();
 }
 
 //--------------------------------------------------------------------
-const vtkm::internal::PortalVirtualBase* StorageVirtual::GetPortalControl()
+const vtkm::internal::PortalVirtualBase* StorageVirtual::WritePortal()
 {
-  if (!this->HostUpToDate)
-  {
-    //we need to prepare for input and grab the host ptr
-    auto* payload = this->DeviceTransferState.get();
-    this->ControlPortalForOutput(*payload);
-  }
+  //we need to prepare for input and grab the host ptr
+  auto* payload = this->DeviceTransferState.get();
+  this->ControlPortalForOutput(*payload);
 
   this->DeviceUpToDate = false;
-  this->HostUpToDate = true;
   return this->DeviceTransferState->hostPtr();
 }
 
 //--------------------------------------------------------------------
-const vtkm::internal::PortalVirtualBase* StorageVirtual::GetPortalConstControl() const
+const vtkm::internal::PortalVirtualBase* StorageVirtual::ReadPortal() const
 {
-  if (!this->HostUpToDate)
-  {
-    //we need to prepare for input and grab the host ptr
-    vtkm::cont::internal::TransferInfoArray* payload = this->DeviceTransferState.get();
-    this->ControlPortalForInput(*payload);
-  }
-  this->HostUpToDate = true;
+  //we need to prepare for input and grab the host ptr
+  vtkm::cont::internal::TransferInfoArray* payload = this->DeviceTransferState.get();
+  this->ControlPortalForInput(*payload);
+
   return this->DeviceTransferState->hostPtr();
 }
 
@@ -194,10 +180,10 @@ void StorageVirtual::TransferPortalForOutput(vtkm::cont::internal::TransferInfoA
   throw vtkm::cont::ErrorBadValue("StorageTagVirtual by default doesn't support exec side writes.");
 }
 
-#define VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(T)                                                \
-  template class VTKM_CONT_EXPORT ArrayTransferVirtual<T>;                                         \
-  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>;                           \
-  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>;                           \
+#define VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(T)                      \
+  template class VTKM_CONT_EXPORT ArrayTransferVirtual<T>;               \
+  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>; \
+  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>; \
   template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 4>>
 
 VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(char);
@@ -214,10 +200,10 @@ VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::Float64);
 
 #undef VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE
 
-#define VTK_M_STORAGE_VIRTUAL_INSTANTIATE(T)                                                       \
-  template class VTKM_CONT_EXPORT StorageVirtualImpl<T, VTKM_DEFAULT_STORAGE_TAG>;                 \
-  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 2>, VTKM_DEFAULT_STORAGE_TAG>;   \
-  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 3>, VTKM_DEFAULT_STORAGE_TAG>;   \
+#define VTK_M_STORAGE_VIRTUAL_INSTANTIATE(T)                                                     \
+  template class VTKM_CONT_EXPORT StorageVirtualImpl<T, VTKM_DEFAULT_STORAGE_TAG>;               \
+  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 2>, VTKM_DEFAULT_STORAGE_TAG>; \
+  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 3>, VTKM_DEFAULT_STORAGE_TAG>; \
   template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 4>, VTKM_DEFAULT_STORAGE_TAG>
 
 VTK_M_STORAGE_VIRTUAL_INSTANTIATE(char);

@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
@@ -19,13 +20,21 @@
 
 #include <vtkm/exec/CellLocator.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "CellLocator with virtual methods is removed. Do not include CellLocator.h"
+#endif
+
 namespace vtkm
 {
 namespace cont
 {
 
-class VTKM_CONT_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
+class VTKM_CONT_EXPORT VTKM_DEPRECATED(1.6,
+                                       "CellLocator with virtual methods no longer supported. Use "
+                                       "CellLocatorGeneral or CellLocatorChooser.") CellLocator
+  : public vtkm::cont::ExecutionObjectBase
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 public:
   virtual ~CellLocator();
@@ -56,7 +65,16 @@ public:
   }
 
   VTKM_CONT virtual const vtkm::exec::CellLocator* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device) const = 0;
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token) const = 0;
+
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object.")
+  const vtkm::exec::CellLocator* PrepareForExecution(vtkm::cont::DeviceAdapterId device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForExecution(device, token);
+  }
 
 protected:
   void SetModified() { this->Modified = true; }
@@ -70,6 +88,7 @@ private:
   vtkm::cont::CoordinateSystem Coords;
   bool Modified = true;
 };
+VTKM_DEPRECATED_SUPPRESS_END
 
 } // namespace cont
 } // namespace vtkm

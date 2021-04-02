@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_build_chains_worklet_h
-#define vtkm_worklet_contourtree_augmented_active_graph_build_chains_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_build_chains_worklet_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_build_chains_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -69,8 +69,8 @@ namespace active_graph_inc
 class BuildChainsWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn activeVertices,      // (input) activeVertices
-                                WholeArrayInOut hyperacrcs); // (input/output) hyperarcs
+  typedef void ControlSignature(FieldIn activeVertices,     // (input) activeVertices
+                                WholeArrayInOut hyperarcs); // (input/output) hyperarcs
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 
@@ -86,14 +86,14 @@ public:
     // retrieve neighbour's ID
     vtkm::Id neighbour = hyperarcsPortal.Get(vertexId);
     // test for terminal vertex
-    if (isTerminalElement(neighbour))
+    if (IsTerminalElement(neighbour))
     {
       return;
     }
     // retrieve supernode flags
     vtkm::Id supernodeFlag = neighbour & (IS_SUPERNODE | IS_HYPERNODE);
     // remove the mask to get a raw index
-    neighbour = maskedIndex(neighbour);
+    neighbour = MaskedIndex(neighbour);
     // otherwise, retrieve the double neighbour
     vtkm::Id doubleNeighbour = hyperarcsPortal.Get(neighbour);
     // remove it's supernode & hypernode flags, but preserve the terminal flag
@@ -110,12 +110,12 @@ public:
           // retrieve neighbour's ID
           indexType neighbour = hyperarcs[vertexID];
           // test for terminal vertex
-          if (isTerminalElement(neighbour))
+          if (IsTerminalElement(neighbour))
             continue;
           // retrieve supernode flags
           indexType supernodeFlag = neighbour & (IS_SUPERNODE | IS_HYPERNODE);
           // remove the mask to get a raw index
-          neighbour = maskedIndex(neighbour);
+          neighbour = MaskedIndex(neighbour);
           // otherwise, retrieve the double neighbour
           indexType doubleNeighbour = hyperarcs[neighbour];
           // remove it's supernode & hypernode flags, but preserve the terminal flag

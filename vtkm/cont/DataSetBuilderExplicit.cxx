@@ -16,9 +16,7 @@ namespace cont
 {
 
 VTKM_CONT
-DataSetBuilderExplicitIterative::DataSetBuilderExplicitIterative()
-{
-}
+DataSetBuilderExplicitIterative::DataSetBuilderExplicitIterative() {}
 
 
 VTKM_CONT

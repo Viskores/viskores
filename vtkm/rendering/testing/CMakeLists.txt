@@ -10,7 +10,8 @@
 
 set(headers
   RenderTest.h
-  )
+  Testing.h
+)
 
 vtkm_declare_headers(${headers})
 
@@ -24,17 +25,7 @@ set(unit_tests
   UnitTestMapperRayTracer.cxx
   UnitTestMapperWireframer.cxx
   UnitTestMapperVolume.cxx
+  UnitTestScalarRenderer.cxx
 )
 
 vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES vtkm_rendering)
-
-if(VTKm_ENABLE_GL_CONTEXT)
-  # message(STATUS "rendering testing/glfw needs a FindGLFW")
-  # message(STATUS "rendering testing/glut needs compile corrections")
-  # add_subdirectory(glfw)
-  # add_subdirectory(glut)
-elseif(VTKm_ENABLE_OSMESA_CONTEXT)
-  add_subdirectory(osmesa)
-elseif(VTKm_ENABLE_EGL_CONTEXT)
-  add_subdirectory(egl)
-endif()

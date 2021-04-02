@@ -13,9 +13,11 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/ArrayHandleVirtual.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/StorageVirtual.h>
+#endif
 
 
 #include <vtkm/cont/arg/Transport.h>
@@ -46,7 +48,7 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>,
                  Device>
 {
-  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T, Device>;
+  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T>;
   using ExecType = vtkm::cont::AtomicArray<T>;
 
   template <typename InputDomainType>
@@ -54,22 +56,25 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
   operator()(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& array,
              const InputDomainType&,
              vtkm::Id,
-             vtkm::Id) const
+             vtkm::Id,
+             vtkm::cont::Token& token) const
   {
     // Note: we ignore the size of the domain because the randomly accessed
     // array might not have the same size depending on how the user is using
     // the array.
     ExecType obj(array);
-    return obj.PrepareForExecution(Device());
+    return obj.PrepareForExecution(Device(), token);
   }
 };
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>,
                  Device>
 {
-  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T, Device>;
+  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T>;
   using ExecType = vtkm::cont::AtomicArray<T>;
 
   template <typename InputDomainType>
@@ -99,6 +104,8 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
     return obj.PrepareForExecution(Device());
   }
 };
+VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 }
 }
 } // namespace vtkm::cont::arg

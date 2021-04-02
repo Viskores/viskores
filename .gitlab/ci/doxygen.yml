@@ -1,0 +1,33 @@
+
+# Build on documentation for VTK-m on ubuntu2004 with TBB and OpenMP
+# Uses gcc 9
+# Uses MPICH2
+doxygen:
+  stage: build
+  environment:
+    #establish that we need doxygen related
+    #env variables
+    name: doxygen-upload
+  only:
+    #make sure we are only trigged on
+    #the vtk-m primary project
+    variables:
+      - '$DOXYGEN_UPLOAD_ENABLE == "true"'
+  timeout:  30 minutes
+  interruptible: true
+  tags:
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu2004_doxygen
+  before_script:
+    - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
+    - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
+  script:
+    - doxygen build/docs/doxyfile
+    - chmod 400 $DOC_KEY_FILE
+    - rsync -tv --recursive --delete -e "ssh -i $DOC_KEY_FILE -o StrictHostKeyChecking=no" build/docs/doxygen/html/ kitware@public.kitware.com:vtkm_documentation/
+  variables:
+    CMAKE_BUILD_TYPE: Release
+    VTKM_SETTINGS: "tbb+openmp+mpi+shared+docs"

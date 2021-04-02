@@ -125,17 +125,19 @@ class SphereLeafIntersector
 {
 public:
   using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using IdArrayPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using IdArrayPortal = typename IdHandle::ReadPortalType;
   using FloatHandle = vtkm::cont::ArrayHandle<vtkm::Float32>;
-  using FloatPortal = typename FloatHandle::ExecutionTypes<Device>::PortalConst;
+  using FloatPortal = typename FloatHandle::ReadPortalType;
   IdArrayPortal PointIds;
   FloatPortal Radii;
 
   SphereLeafIntersector() {}
 
-  SphereLeafIntersector(const IdHandle& pointIds, const FloatHandle& radii)
-    : PointIds(pointIds.PrepareForInput(Device()))
-    , Radii(radii.PrepareForInput(Device()))
+  SphereLeafIntersector(const IdHandle& pointIds,
+                        const FloatHandle& radii,
+                        vtkm::cont::Token& token)
+    : PointIds(pointIds.PrepareForInput(Device(), token))
+    , Radii(radii.PrepareForInput(Device(), token))
   {
   }
 
@@ -201,9 +203,10 @@ public:
   }
 
   template <typename Device>
-  VTKM_CONT SphereLeafIntersector<Device> PrepareForExecution(Device) const
+  VTKM_CONT SphereLeafIntersector<Device> PrepareForExecution(Device,
+                                                              vtkm::cont::Token& token) const
   {
-    return SphereLeafIntersector<Device>(PointIds, Radii);
+    return SphereLeafIntersector<Device>(this->PointIds, this->Radii, token);
   }
 };
 
@@ -245,19 +248,27 @@ class GetScalar : public vtkm::worklet::WorkletMapField
 {
 private:
   Precision MinScalar;
-  Precision invDeltaScalar;
+  Precision InvDeltaScalar;
+  bool Normalize;
 
 public:
   VTKM_CONT
   GetScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
     : MinScalar(minScalar)
   {
-    //Make sure the we don't divide by zero on
-    //something like an iso-surface
-    if (maxScalar - MinScalar != 0.f)
-      invDeltaScalar = 1.f / (maxScalar - MinScalar);
+    Normalize = true;
+    if (minScalar >= maxScalar)
+    {
+      // support the scalar renderer
+      Normalize = false;
+      this->InvDeltaScalar = Precision(0.f);
+    }
     else
-      invDeltaScalar = 1.f / minScalar;
+    {
+      //Make sure the we don't divide by zero on
+      //something like an iso-surface
+      this->InvDeltaScalar = 1.f / (maxScalar - this->MinScalar);
+    }
   }
   typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4);
@@ -273,8 +284,10 @@ public:
     vtkm::Id pointId = indicesPortal.Get(hitIndex);
 
     scalar = Precision(scalars.Get(pointId));
-    //normalize
-    scalar = (scalar - MinScalar) * invDeltaScalar;
+    if (Normalize)
+    {
+      scalar = (scalar - this->MinScalar) * this->InvDeltaScalar;
+    }
   }
 }; //class GetScalar
 
@@ -285,9 +298,7 @@ SphereIntersector::SphereIntersector()
 {
 }
 
-SphereIntersector::~SphereIntersector()
-{
-}
+SphereIntersector::~SphereIntersector() {}
 
 void SphereIntersector::SetData(const vtkm::cont::CoordinateSystem& coords,
                                 vtkm::cont::ArrayHandle<vtkm::Id> pointIds,
@@ -360,7 +371,7 @@ void SphereIntersector::IntersectionDataImp(Ray<Precision>& rays,
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
     .Invoke(rays.HitIdx,
             rays.Scalar,
-            scalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+            vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
             PointIds);
 }
 

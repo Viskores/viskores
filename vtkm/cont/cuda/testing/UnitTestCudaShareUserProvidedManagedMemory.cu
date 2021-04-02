@@ -38,6 +38,13 @@ ValueType* AllocateManagedPointer(vtkm::Id numValues)
   return static_cast<ValueType*>(result);
 }
 
+void DeallocateManagedPointer(void* ptr)
+{
+  VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(ptr), "Pointer to delete is not device pointer.");
+  VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(ptr), "Pointer to delete is not managed.");
+  VTKM_CUDA_CALL(cudaFree(ptr));
+}
+
 template <typename ValueType>
 ValueType* AllocateDevicePointer(vtkm::Id numValues)
 {
@@ -50,60 +57,80 @@ ValueType* AllocateDevicePointer(vtkm::Id numValues)
   return static_cast<ValueType*>(result);
 }
 
+void DeallocateDevicePointer(void* ptr)
+{
+  VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(ptr),
+                   "Pointer to delete is not a device pointer.");
+  VTKM_TEST_ASSERT(!CudaAllocator::IsManagedPointer(ptr), "Pointer to delete is managed.");
+  VTKM_CUDA_CALL(cudaFree(ptr));
+}
+
 template <typename ValueType>
 vtkm::cont::ArrayHandle<ValueType> CreateArrayHandle(vtkm::Id numValues, bool managed)
 {
-  ValueType* ptr = managed ? AllocateManagedPointer<ValueType>(numValues)
-                           : AllocateDevicePointer<ValueType>(numValues);
-  return vtkm::cont::make_ArrayHandle(ptr, numValues);
+  if (managed)
+  {
+    return vtkm::cont::ArrayHandleBasic<ValueType>(
+      AllocateManagedPointer<ValueType>(numValues), numValues, [](void* ptr) {
+        DeallocateManagedPointer(ptr);
+      });
+  }
+  else
+  {
+    return vtkm::cont::ArrayHandleBasic<ValueType>(AllocateDevicePointer<ValueType>(numValues),
+                                                   numValues,
+                                                   vtkm::cont::DeviceAdapterTagCuda{},
+                                                   [](void* ptr) { DeallocateDevicePointer(ptr); });
+  }
 }
 
 template <typename ValueType>
 void TestPrepareForInput(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda());
-
-  void* contArray = handle.Internals->ControlArray->GetBasePointer();
-  void* execArray = handle.Internals->ExecutionArray;
-  VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForInput.");
+  vtkm::cont::Token token;
+  auto portal = handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda(), token);
+  const void* execArray = portal.GetIteratorBegin();
   VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForInput.");
-  VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
-                   "PrepareForInput execution array not device pointer.");
-  VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(contArray),
-                   "PrepareForInput control array not device pointer.");
   if (managed)
   {
-    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(execArray),
-                     "PrepareForInput execution array unmanaged.");
-    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(contArray),
-                     "PrepareForInput control array unmanaged.");
+    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(execArray));
   }
-  VTKM_TEST_ASSERT(execArray == contArray, "PrepareForInput managed arrays not shared.");
+  token.DetachFromAll();
+
+  VTKM_TEST_ASSERT(handle.IsOnDevice(vtkm::cont::DeviceAdapterTagCuda{}),
+                   "No execution array after PrepareForInput.");
+  if (managed)
+  {
+    const void* contArray = handle.ReadPortal().GetIteratorBegin();
+    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(contArray), "Control array unmanaged.");
+    VTKM_TEST_ASSERT(execArray == contArray, "PrepareForInput managed arrays not shared.");
+  }
 }
 
 template <typename ValueType>
 void TestPrepareForInPlace(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda());
-
-  void* contArray = handle.Internals->ControlArray->GetBasePointer();
-  void* execArray = handle.Internals->ExecutionArray;
-  VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForInPlace.");
+  vtkm::cont::Token token;
+  auto portal = handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda(), token);
+  const void* execArray = portal.GetIteratorBegin();
   VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForInPlace.");
-  VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
-                   "PrepareForInPlace execution array not device pointer.");
-  VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(contArray),
-                   "PrepareForInPlace control array not device pointer.");
   if (managed)
   {
-    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(execArray),
-                     "PrepareForInPlace execution array unmanaged.");
-    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(contArray),
-                     "PrepareForInPlace control array unmanaged.");
+    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(execArray));
   }
-  VTKM_TEST_ASSERT(execArray == contArray, "PrepareForInPlace managed arrays not shared.");
+  token.DetachFromAll();
+
+  VTKM_TEST_ASSERT(!handle.IsOnHost(), "Control array still exists after PrepareForInPlace.");
+  VTKM_TEST_ASSERT(handle.IsOnDevice(vtkm::cont::DeviceAdapterTagCuda{}),
+                   "No execution array after PrepareForInPlace.");
+  if (managed)
+  {
+    const void* contArray = handle.ReadPortal().GetIteratorBegin();
+    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(contArray), "Control array unmanaged.");
+    VTKM_TEST_ASSERT(execArray == contArray, "PrepareForInPlace managed arrays not shared.");
+  }
 }
 
 template <typename ValueType>
@@ -111,110 +138,92 @@ void TestPrepareForOutput(bool managed)
 {
   // Should reuse a managed control pointer if buffer is large enough.
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda());
-
-  void* contArray = handle.Internals->ControlArray->GetBasePointer();
-  void* execArray = handle.Internals->ExecutionArray;
-  VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForOutput.");
+  vtkm::cont::Token token;
+  auto portal = handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda(), token);
+  const void* execArray = portal.GetIteratorBegin();
   VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForOutput.");
-  VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
-                   "PrepareForOutput execution array not device pointer.");
-  VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(contArray),
-                   "PrepareForOutput control array not device pointer.");
   if (managed)
   {
-    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(execArray),
-                     "PrepareForOutput execution array unmanaged.");
-    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(contArray),
-                     "PrepareForOutput control array unmanaged.");
+    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(execArray));
   }
-  VTKM_TEST_ASSERT(execArray == contArray, "PrepareForOutput managed arrays not shared.");
+  token.DetachFromAll();
+
+  VTKM_TEST_ASSERT(!handle.IsOnHost(), "Control array still exists after PrepareForOutput.");
+  VTKM_TEST_ASSERT(handle.IsOnDevice(vtkm::cont::DeviceAdapterTagCuda{}),
+                   "No execution array after PrepareForOutput.");
+  if (managed)
+  {
+    const void* contArray = handle.ReadPortal().GetIteratorBegin();
+    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(contArray), "Control array unmanaged.");
+    VTKM_TEST_ASSERT(execArray == contArray, "PrepareForOutput managed arrays not shared.");
+  }
 }
 
 template <typename ValueType>
 void TestReleaseResourcesExecution(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda());
-
-  void* origArray = handle.Internals->ExecutionArray;
+  vtkm::cont::Token token;
+  auto portal = handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda(), token);
+  const void* origArray = portal.GetIteratorBegin();
+  token.DetachFromAll();
 
   handle.ReleaseResourcesExecution();
 
-  void* contArray = handle.Internals->ControlArray->GetBasePointer();
-  void* execArray = handle.Internals->ExecutionArray;
+  VTKM_TEST_ASSERT(handle.IsOnHost(),
+                   "Control array does not exist after ReleaseResourcesExecution.");
+  VTKM_TEST_ASSERT(!handle.IsOnDevice(vtkm::cont::DeviceAdapterTagCuda{}),
+                   "Execution array still exists after ReleaseResourcesExecution.");
 
-  VTKM_TEST_ASSERT(contArray != nullptr, "No control array after ReleaseResourcesExecution.");
-  VTKM_TEST_ASSERT(execArray == nullptr,
-                   "Execution array not cleared after ReleaseResourcesExecution.");
-  VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(contArray),
-                   "ReleaseResourcesExecution control array not device pointer.");
   if (managed)
   {
-    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(contArray),
-                     "ReleaseResourcesExecution control array unmanaged.");
+    const void* contArray = handle.ReadPortal().GetIteratorBegin();
+    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(contArray), "Control array unmanaged.");
+    VTKM_TEST_ASSERT(origArray == contArray, "Managed arrays not shared.");
   }
-  VTKM_TEST_ASSERT(origArray == contArray,
-                   "Control array changed after ReleaseResourcesExecution.");
 }
 
 template <typename ValueType>
 void TestRoundTrip(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda());
-
-  void* origContArray = handle.Internals->ControlArray->GetBasePointer();
+  const void* origExecArray;
   {
-    void* contArray = handle.Internals->ControlArray->GetBasePointer();
-    void* execArray = handle.Internals->ExecutionArray;
-    VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForOutput.");
-    VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForOutput.");
-    VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
-                     "PrepareForOutput execution array not device pointer.");
-    VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(contArray),
-                     "PrepareForOutput control array not device pointer.");
-    if (managed)
-    {
-      VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(execArray),
-                       "PrepareForOutput execution array unmanaged.");
-      VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(contArray),
-                       "PrepareForOutput control array unmanaged.");
-    }
-    VTKM_TEST_ASSERT(execArray == contArray, "PrepareForOutput managed arrays not shared.");
+    vtkm::cont::Token token;
+    auto portal = handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda(), token);
+    origExecArray = portal.GetIteratorBegin();
   }
 
-  try
-  {
-    handle.GetPortalControl();
-  }
-  catch (vtkm::cont::ErrorBadValue&)
-  {
-    if (managed)
-    {
-      throw; // Exception is unexpected
-    }
+  VTKM_TEST_ASSERT(!handle.IsOnHost());
+  VTKM_TEST_ASSERT(handle.IsOnDevice(vtkm::cont::DeviceAdapterTagCuda{}));
 
-    // If !managed, this exception is intentional to indicate that the control
-    // array is a non-managed device pointer, and thus unaccessible from the
-    // control environment. Return because we've already validated correct
-    // behavior by catching this exception.
-    return;
+  const void* contArray;
+  {
+    auto portal = handle.WritePortal();
+    contArray = portal.GetIteratorBegin();
   }
 
-  if (!managed)
+  VTKM_TEST_ASSERT(handle.IsOnHost());
+  VTKM_TEST_ASSERT(!handle.IsOnDevice(vtkm::cont::DeviceAdapterTagCuda{}));
+  if (managed)
   {
-    VTKM_TEST_FAIL("Expected exception not thrown.");
+    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(contArray));
+    VTKM_TEST_ASSERT(contArray == origExecArray);
   }
 
+  const void* execArray;
   {
-    void* contArray = handle.Internals->ControlArray->GetBasePointer();
-    void* execArray = handle.Internals->ExecutionArray;
-    VTKM_TEST_ASSERT(contArray != nullptr, "No control array after GetPortalConst.");
-    VTKM_TEST_ASSERT(execArray == nullptr, "Execution array not cleared after GetPortalConst.");
-    VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(contArray),
-                     "GetPortalConst control array not device pointer.");
-    VTKM_TEST_ASSERT(origContArray == contArray, "GetPortalConst changed control array.");
+    vtkm::cont::Token token;
+    auto portal = handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda(), token);
+    execArray = portal.GetIteratorBegin();
+  }
+
+  VTKM_TEST_ASSERT(handle.IsOnHost());
+  VTKM_TEST_ASSERT(handle.IsOnDevice(vtkm::cont::DeviceAdapterTagCuda{}));
+  if (managed)
+  {
+    VTKM_TEST_ASSERT(CudaAllocator::IsManagedPointer(execArray));
+    VTKM_TEST_ASSERT(execArray == contArray);
   }
 }
 
@@ -254,12 +263,12 @@ struct ArgToTemplateType
 
 void Launch()
 {
-  using Types = vtkm::ListTagBase<vtkm::UInt8,
-                                  vtkm::Vec<vtkm::UInt8, 3>,
-                                  vtkm::Float32,
-                                  vtkm::Vec<vtkm::Float32, 4>,
-                                  vtkm::Float64,
-                                  vtkm::Vec<vtkm::Float64, 4>>;
+  using Types = vtkm::List<vtkm::UInt8,
+                           vtkm::Vec<vtkm::UInt8, 3>,
+                           vtkm::Float32,
+                           vtkm::Vec<vtkm::Float32, 4>,
+                           vtkm::Float64,
+                           vtkm::Vec<vtkm::Float64, 4>>;
   vtkm::testing::Testing::TryTypes(ArgToTemplateType(), Types());
 }
 

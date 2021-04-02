@@ -20,12 +20,12 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/CellSetListTag.h>
+#include <vtkm/cont/CellSetList.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
-
-#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
@@ -69,59 +69,31 @@ private:
   bool IncludeBoundary;
 };
 
-template <vtkm::IdComponent Dimensions>
-class LogicalToFlatIndex;
-
-template <>
-class LogicalToFlatIndex<1>
+struct ExtractCopy : public vtkm::worklet::WorkletMapField
 {
-public:
-  LogicalToFlatIndex() = default;
+  using ControlSignature = void(FieldIn, FieldOut, WholeArrayIn);
 
-  explicit LogicalToFlatIndex(const vtkm::Id3&) {}
-
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(const vtkm::Id3& index) const { return index[0]; }
-};
-
-template <>
-class LogicalToFlatIndex<2>
-{
-public:
-  LogicalToFlatIndex() = default;
-
-  explicit LogicalToFlatIndex(const vtkm::Id3& dim)
-    : XDim(dim[0])
-  {
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(const vtkm::Id3& index) const { return index[0] + index[1] * this->XDim; }
-
-private:
-  vtkm::Id XDim;
-};
-
-template <>
-class LogicalToFlatIndex<3>
-{
-public:
-  LogicalToFlatIndex() = default;
-
-  explicit LogicalToFlatIndex(const vtkm::Id3& dim)
+  ExtractCopy(const vtkm::Id3& dim)
     : XDim(dim[0])
     , XYDim(dim[0] * dim[1])
   {
   }
-
   VTKM_EXEC_CONT
-  vtkm::Id operator()(const vtkm::Id3& index) const
+  inline vtkm::Id ToFlat(const vtkm::Id3& index) const
   {
     return index[0] + index[1] * this->XDim + index[2] * this->XYDim;
   }
 
-private:
-  vtkm::Id XDim, XYDim;
+  template <typename ScalarType, typename WholeFieldIn>
+  VTKM_EXEC void operator()(vtkm::Id3& index,
+                            ScalarType& output,
+                            const WholeFieldIn& inputField) const
+  {
+    output = inputField.Get(this->ToFlat(index));
+  }
+
+  vtkm::Id XDim;
+  vtkm::Id XYDim;
 };
 }
 } // extractstructured::internal
@@ -130,21 +102,19 @@ class ExtractStructured
 {
 public:
   using DynamicCellSetStructured =
-    vtkm::cont::DynamicCellSetBase<vtkm::cont::CellSetListTagStructured>;
+    vtkm::cont::DynamicCellSetBase<vtkm::cont::CellSetListStructured>;
 
 private:
   using AxisIndexArrayPoints =
     vtkm::cont::ArrayHandleImplicit<extractstructured::internal::SubArrayPermutePoints>;
-  using PointIndexArray = vtkm::cont::ArrayHandleCartesianProduct<AxisIndexArrayPoints,
-                                                                  AxisIndexArrayPoints,
-                                                                  AxisIndexArrayPoints>;
+  using PointIndexArray = vtkm::cont::
+    ArrayHandleCartesianProduct<AxisIndexArrayPoints, AxisIndexArrayPoints, AxisIndexArrayPoints>;
 
   using AxisIndexArrayCells = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
-  using CellIndexArray = vtkm::cont::ArrayHandleCartesianProduct<AxisIndexArrayCells,
-                                                                 AxisIndexArrayCells,
-                                                                 AxisIndexArrayCells>;
+  using CellIndexArray = vtkm::cont::
+    ArrayHandleCartesianProduct<AxisIndexArrayCells, AxisIndexArrayCells, AxisIndexArrayCells>;
 
-  static AxisIndexArrayPoints MakeAxisIndexArrayPoints(vtkm::Id count,
+  inline AxisIndexArrayPoints MakeAxisIndexArrayPoints(vtkm::Id count,
                                                        vtkm::Id first,
                                                        vtkm::Id last,
                                                        vtkm::Id stride,
@@ -155,82 +125,56 @@ private:
     return vtkm::cont::make_ArrayHandleImplicit(fnctr, count);
   }
 
-  static AxisIndexArrayCells MakeAxisIndexArrayCells(vtkm::Id count,
+  inline AxisIndexArrayCells MakeAxisIndexArrayCells(vtkm::Id count,
                                                      vtkm::Id start,
                                                      vtkm::Id stride)
   {
     return vtkm::cont::make_ArrayHandleCounting(start, stride, count);
   }
 
-  static DynamicCellSetStructured MakeCellSetStructured(const vtkm::Id3& dimensions,
-                                                        const vtkm::Id3 offset)
+  DynamicCellSetStructured MakeCellSetStructured(const vtkm::Id3& inputPointDims,
+                                                 const vtkm::Id3& inputOffsets,
+                                                 vtkm::IdComponent forcedDimensionality = 0)
   {
-    int dimensionality = 0;
-    vtkm::Id xyz[3];
-    for (int i = 0; i < 3; ++i)
+    // when the point dimension for a given axis is 1 we
+    // need to lower the dimensonality by 1. So a Plane
+    // in XZ space would have a dimensonality of 2.
+    // likewise the global offsets need to also
+    // be updated when this occurs
+    vtkm::IdComponent dimensionality = forcedDimensionality;
+    vtkm::Id3 dimensions = inputPointDims;
+    vtkm::Id3 offset = inputOffsets;
+    for (int i = 0; i < 3 && (forcedDimensionality == 0); ++i)
     {
-      if (dimensions[i] > 1)
+      if (inputPointDims[i] > 1)
       {
-        xyz[dimensionality++] = dimensions[i];
+        dimensions[dimensionality] = inputPointDims[i];
+        offset[dimensionality] = inputOffsets[i];
+        ++dimensionality;
       }
     }
+
     switch (dimensionality)
     {
       case 1:
       {
         vtkm::cont::CellSetStructured<1> outCs;
-        outCs.SetPointDimensions(xyz[0]);
+        outCs.SetPointDimensions(dimensions[0]);
         outCs.SetGlobalPointIndexStart(offset[0]);
         return outCs;
       }
       case 2:
       {
         vtkm::cont::CellSetStructured<2> outCs;
-        outCs.SetPointDimensions(vtkm::Id2(xyz[0], xyz[1]));
+        outCs.SetPointDimensions(vtkm::Id2(dimensions[0], dimensions[1]));
         outCs.SetGlobalPointIndexStart(vtkm::Id2(offset[0], offset[1]));
         return outCs;
       }
       case 3:
       {
         vtkm::cont::CellSetStructured<3> outCs;
-        outCs.SetPointDimensions(vtkm::Id3(xyz[0], xyz[1], xyz[2]));
-        outCs.SetGlobalPointIndexStart(vtkm::Id3(offset[0], offset[1], offset[2]));
-        return outCs;
-      }
-      default:
-        return DynamicCellSetStructured();
-    }
-  }
-
-  static DynamicCellSetStructured MakeCellSetStructured(const vtkm::Id3& dimensions)
-  {
-    int dimensionality = 0;
-    vtkm::Id xyz[3];
-    for (int i = 0; i < 3; ++i)
-    {
-      if (dimensions[i] > 1)
-      {
-        xyz[dimensionality++] = dimensions[i];
-      }
-    }
-    switch (dimensionality)
-    {
-      case 1:
-      {
-        vtkm::cont::CellSetStructured<1> outCs;
-        outCs.SetPointDimensions(xyz[0]);
-        return outCs;
-      }
-      case 2:
-      {
-        vtkm::cont::CellSetStructured<2> outCs;
-        outCs.SetPointDimensions(vtkm::Id2(xyz[0], xyz[1]));
-        return outCs;
-      }
-      case 3:
-      {
-        vtkm::cont::CellSetStructured<3> outCs;
-        outCs.SetPointDimensions(vtkm::Id3(xyz[0], xyz[1], xyz[2]));
+        outCs.SetPointDimensions(dimensions);
+        outCs.SetGlobalPointIndexStart(offset);
         return outCs;
       }
       default:
@@ -239,172 +183,126 @@ private:
   }
 
 public:
-  template <vtkm::IdComponent Dimensionality>
-  DynamicCellSetStructured Run(const vtkm::cont::CellSetStructured<Dimensionality>& cellset,
-                               const vtkm::RangeId3& voi,
-                               const vtkm::Id3& sampleRate,
-                               bool includeBoundary,
-                               bool includeOffset)
+  inline DynamicCellSetStructured Run(const vtkm::cont::CellSetStructured<1>& cellset,
+                                      const vtkm::RangeId3& voi,
+                                      const vtkm::Id3& sampleRate,
+                                      bool includeBoundary,
+                                      bool includeOffset)
+  {
+    vtkm::Id pdims = cellset.GetPointDimensions();
+    vtkm::Id offsets = cellset.GetGlobalPointIndexStart();
+    return this->Compute(1,
+                         vtkm::Id3{ pdims, 1, 1 },
+                         vtkm::Id3{ offsets, 0, 0 },
+                         voi,
+                         sampleRate,
+                         includeBoundary,
+                         includeOffset);
+  }
+
+  inline DynamicCellSetStructured Run(const vtkm::cont::CellSetStructured<2>& cellset,
+                                      const vtkm::RangeId3& voi,
+                                      const vtkm::Id3& sampleRate,
+                                      bool includeBoundary,
+                                      bool includeOffset)
+  {
+    vtkm::Id2 pdims = cellset.GetPointDimensions();
+    vtkm::Id2 offsets = cellset.GetGlobalPointIndexStart();
+    return this->Compute(2,
+                         vtkm::Id3{ pdims[0], pdims[1], 1 },
+                         vtkm::Id3{ offsets[0], offsets[1], 0 },
+                         voi,
+                         sampleRate,
+                         includeBoundary,
+                         includeOffset);
+  }
+
+  inline DynamicCellSetStructured Run(const vtkm::cont::CellSetStructured<3>& cellset,
+                                      const vtkm::RangeId3& voi,
+                                      const vtkm::Id3& sampleRate,
+                                      bool includeBoundary,
+                                      bool includeOffset)
+  {
+    vtkm::Id3 pdims = cellset.GetPointDimensions();
+    vtkm::Id3 offsets = cellset.GetGlobalPointIndexStart();
+    return this->Compute(3, pdims, offsets, voi, sampleRate, includeBoundary, includeOffset);
+  }
+
+  DynamicCellSetStructured Compute(const int dimensionality,
+                                   const vtkm::Id3& ptdim,
+                                   const vtkm::Id3& offsets,
+                                   const vtkm::RangeId3& voi,
+                                   const vtkm::Id3& sampleRate,
+                                   bool includeBoundary,
+                                   bool includeOffset)
   {
     // Verify input parameters
-    vtkm::Vec<vtkm::Id, Dimensionality> ptdim(cellset.GetPointDimensions());
     vtkm::Id3 offset_vec(0, 0, 0);
     vtkm::Id3 globalOffset(0, 0, 0);
 
-    switch (Dimensionality)
-    {
-      case 1:
-      {
-        if (sampleRate[0] < 1)
-        {
-          throw vtkm::cont::ErrorBadValue("Bad sampling rate");
-        }
-        break;
-      }
-      case 2:
-      {
-        if (sampleRate[0] < 1 || sampleRate[1] < 1)
-        {
-          throw vtkm::cont::ErrorBadValue("Bad sampling rate");
-        }
-        this->SampleRate = vtkm::Id3(sampleRate[0], sampleRate[1], 1);
-        this->InputDimensions = vtkm::Id3(ptdim[0], ptdim[1], 1);
-        break;
-      }
-      case 3:
-      {
-        if (sampleRate[0] < 1 || sampleRate[1] < 1 || sampleRate[2] < 1)
-        {
-          throw vtkm::cont::ErrorBadValue("Bad sampling rate");
-        }
-        this->SampleRate = sampleRate;
-        this->InputDimensions = vtkm::Id3(ptdim[0], ptdim[1], ptdim[2]);
-        break;
-      }
-      default:
-        VTKM_ASSERT(false && "Unsupported number of dimensions");
-    }
-    this->InputDimensionality = Dimensionality;
+    this->InputDimensions = ptdim;
+    this->InputDimensionality = dimensionality;
+    this->SampleRate = sampleRate;
 
+    if (sampleRate[0] < 1 || sampleRate[1] < 1 || sampleRate[2] < 1)
+    {
+      throw vtkm::cont::ErrorBadValue("Bad sampling rate");
+    }
     if (includeOffset)
     {
-      vtkm::Id3 tmpDims(0, 0, 0);
-      vtkm::Vec<vtkm::Id, Dimensionality> tmpOffset_vec = cellset.GetGlobalPointIndexStart();
-      for (int i = 0; i < Dimensionality; ++i)
+      vtkm::Id3 tmpDims = ptdim;
+      offset_vec = offsets;
+      for (int i = 0; i < dimensionality; ++i)
       {
-        tmpDims[i] = ptdim[i];
-        offset_vec[i] = tmpOffset_vec[i];
-      }
-      if (offset_vec[0] >= voi.X.Min)
-      {
-        globalOffset[0] = offset_vec[0];
-        this->VOI.X.Min = offset_vec[0];
-        if (globalOffset[0] + ptdim[0] < voi.X.Max)
+        if (dimensionality > i)
         {
-          // Start from our GPIS (start point) up to the length of the
-          // dimensions (if that is within VOI)
-          this->VOI.X.Max = globalOffset[0] + ptdim[0];
-        }
-        else
-        {
-          // If it isn't within the voi we set our dimensions from the
-          // GPIS up to the VOI.
-          tmpDims[0] = voi.X.Max - globalOffset[0];
-        }
-      }
-      else if (offset_vec[0] < voi.X.Min)
-      {
-        if (offset_vec[0] + ptdim[0] < voi.X.Min)
-        {
-          // If we're out of bounds we set the dimensions to 0. This
-          // causes a return of DynamicCellSetStructured
-          tmpDims[0] = 0;
-        }
-        else
-        {
-          // If our GPIS is less than VOI min, but our dimensions
-          // include the VOI we go from the minimal value that we
-          // can up to how far has been specified.
-          globalOffset[0] = voi.X.Min;
-          this->VOI.X.Min = voi.X.Min;
-          if (globalOffset[0] + ptdim[0] < voi.X.Max)
+          if (offset_vec[i] >= voi[i].Min)
           {
-            this->VOI.X.Max = globalOffset[0] + ptdim[0];
+            globalOffset[i] = offset_vec[i];
+            this->VOI[i].Min = offset_vec[i];
+            if (globalOffset[i] + ptdim[i] < voi[i].Max)
+            {
+              // Start from our GPIS (start point) up to the length of the
+              // dimensions (if that is within VOI)
+              this->VOI[i].Max = globalOffset[i] + ptdim[i];
+            }
+            else
+            {
+              // If it isn't within the voi we set our dimensions from the
+              // GPIS up to the VOI.
+              tmpDims[i] = voi[i].Max - globalOffset[i];
+            }
           }
-          else
+          else if (offset_vec[i] < voi[i].Min)
           {
-            tmpDims[0] = voi.X.Max - globalOffset[0];
-          }
-        }
-      }
-      if (Dimensionality >= 2 && offset_vec[1] > voi.Y.Min)
-      {
-        globalOffset[1] = offset_vec[1];
-        this->VOI.Y.Min = offset_vec[1];
-        if (globalOffset[1] + ptdim[1] < voi.Y.Max)
-        {
-          this->VOI.Y.Max = globalOffset[1] + ptdim[1];
-        }
-        else
-        {
-          tmpDims[1] = voi.Y.Max - globalOffset[1];
-        }
-      }
-      else if (Dimensionality >= 2 && offset_vec[1] < voi.Y.Min)
-      {
-        if (offset_vec[1] + ptdim[1] < voi.Y.Min)
-        {
-          tmpDims[1] = 0;
-        }
-        else
-        {
-          globalOffset[1] = voi.Y.Min;
-          this->VOI.Y.Min = voi.Y.Min;
-          if (globalOffset[1] + ptdim[1] < voi.Y.Max)
-          {
-            this->VOI.Y.Max = globalOffset[1] + ptdim[1];
-          }
-          else
-          {
-            tmpDims[1] = voi.Y.Max - globalOffset[1];
-          }
-        }
-      }
-      if (Dimensionality == 3 && offset_vec[2] > voi.Z.Min)
-      {
-        globalOffset[2] = offset_vec[2];
-        this->VOI.Z.Min = offset_vec[2];
-        if (globalOffset[2] + ptdim[2] < voi.Z.Max)
-        {
-          this->VOI.Z.Max = globalOffset[2] + ptdim[2];
-        }
-        else
-        {
-          tmpDims[2] = voi.Z.Max - globalOffset[2];
-        }
-      }
-      else if (Dimensionality == 3 && offset_vec[2] < voi.Z.Min)
-      {
-        if (offset_vec[2] + ptdim[2] < voi.Z.Min)
-        {
-          tmpDims[2] = 0;
-        }
-        else
-        {
-          globalOffset[2] = voi.Z.Min;
-          this->VOI.Z.Min = voi.Z.Min;
-          if (globalOffset[2] + ptdim[2] < voi.Z.Max)
-          {
-            this->VOI.Z.Max = globalOffset[2] + ptdim[2];
-          }
-          else
-          {
-            tmpDims[2] = voi.Z.Max - globalOffset[2];
+            if (offset_vec[i] + ptdim[i] < voi[i].Min)
+            {
+              // If we're out of bounds we set the dimensions to 0. This
+              // causes a return of DynamicCellSetStructured
+              tmpDims[i] = 0;
+            }
+            else
+            {
+              // If our GPIS is less than VOI min, but our dimensions
+              // include the VOI we go from the minimal value that we
+              // can up to how far has been specified.
+              globalOffset[i] = voi[i].Min;
+              this->VOI[i].Min = voi[i].Min;
+              if (globalOffset[i] + ptdim[i] < voi[i].Max)
+              {
+                this->VOI[i].Max = globalOffset[i] + ptdim[i];
+              }
+              else
+              {
+                tmpDims[i] = voi[i].Max - globalOffset[i];
+              }
+            }
           }
         }
       }
       this->OutputDimensions = vtkm::Id3(tmpDims[0], tmpDims[1], tmpDims[2]);
     }
+
     this->VOI.X.Min = vtkm::Max(vtkm::Id(0), voi.X.Min);
     this->VOI.X.Max = vtkm::Min(this->InputDimensions[0] + globalOffset[0], voi.X.Max);
     this->VOI.Y.Min = vtkm::Max(vtkm::Id(0), voi.Y.Min);
@@ -414,39 +312,15 @@ public:
 
     if (!this->VOI.IsNonEmpty())
     {
-      vtkm::Id xyz[3] = { 0, 0, 0 };
-      switch (Dimensionality)
-      {
-        case 1:
-        {
-          vtkm::cont::CellSetStructured<1> outCs;
-          outCs.SetPointDimensions(xyz[0]);
-          return outCs;
-        }
-        case 2:
-        {
-          vtkm::cont::CellSetStructured<2> outCs;
-          outCs.SetPointDimensions(vtkm::Id2(xyz[0], xyz[1]));
-          return outCs;
-        }
-        case 3:
-        {
-          vtkm::cont::CellSetStructured<3> outCs;
-          outCs.SetPointDimensions(vtkm::Id3(xyz[0], xyz[1], xyz[2]));
-          return outCs;
-        }
-        default:
-        {
-          return DynamicCellSetStructured();
-        }
-      }
+      vtkm::Id3 empty = { 0, 0, 0 };
+      return MakeCellSetStructured(empty, empty, dimensionality);
     }
     if (!includeOffset)
     {
       // compute output dimensions
-      this->OutputDimensions = vtkm::Id3(1);
+      this->OutputDimensions = vtkm::Id3(1, 1, 1);
       vtkm::Id3 voiDims = this->VOI.Dimensions();
-      for (int i = 0; i < Dimensionality; ++i)
+      for (int i = 0; i < dimensionality; ++i)
       {
         this->OutputDimensions[i] = ((voiDims[i] + this->SampleRate[i] - 1) / this->SampleRate[i]) +
           ((includeBoundary && ((voiDims[i] - 1) % this->SampleRate[i])) ? 1 : 0);
@@ -480,11 +354,7 @@ public:
                                 this->SampleRate[2]));
     }
 
-    if (includeOffset)
-    {
-      return MakeCellSetStructured(this->OutputDimensions, globalOffset);
-    }
-    return MakeCellSetStructured(this->OutputDimensions);
+    return MakeCellSetStructured(this->OutputDimensions, globalOffset);
   }
 
 
@@ -507,8 +377,8 @@ private:
     {
     }
 
-    template <vtkm::IdComponent Dimensionality>
-    void operator()(const vtkm::cont::CellSetStructured<Dimensionality>& cellset) const
+    template <int N>
+    void operator()(const vtkm::cont::CellSetStructured<N>& cellset) const
     {
       *this->Output = this->Worklet->Run(
         cellset, *this->VOI, *this->SampleRate, this->IncludeBoundary, this->IncludeOffset);
@@ -544,22 +414,21 @@ public:
   }
 
 private:
-  using UniformCoordinatesArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates::Superclass;
+  using UniformCoordinatesArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
 
-  using RectilinearCoordinatesArrayHandle = vtkm::cont::ArrayHandleCartesianProduct<
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault>>::Superclass;
+  using RectilinearCoordinatesArrayHandle =
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
 
 
-  vtkm::cont::ArrayHandleVirtualCoordinates MapCoordinatesUniform(
-    const UniformCoordinatesArrayHandle& coords)
+  UniformCoordinatesArrayHandle MapCoordinatesUniform(const UniformCoordinatesArrayHandle& coords)
   {
     using CoordsArray = vtkm::cont::ArrayHandleUniformPointCoordinates;
     using CoordType = CoordsArray::ValueType;
     using ValueType = CoordType::ComponentType;
 
-    const auto& portal = coords.GetPortalConstControl();
+    const auto& portal = coords.ReadPortal();
     CoordType inOrigin = portal.GetOrigin();
     CoordType inSpacing = portal.GetSpacing();
 
@@ -569,24 +438,23 @@ private:
                      inOrigin[2] + static_cast<ValueType>(this->VOI.Z.Min) * inSpacing[2]);
     CoordType outSpacing = inSpacing * static_cast<CoordType>(this->SampleRate);
 
-    auto out = CoordsArray(this->OutputDimensions, outOrigin, outSpacing);
-    return vtkm::cont::ArrayHandleVirtualCoordinates(out);
+    return CoordsArray(this->OutputDimensions, outOrigin, outSpacing);
   }
 
-  vtkm::cont::ArrayHandleVirtualCoordinates MapCoordinatesRectilinear(
+  RectilinearCoordinatesArrayHandle MapCoordinatesRectilinear(
     const RectilinearCoordinatesArrayHandle& coords)
   {
     // For structured datasets, the cellsets are of different types based on
     // its dimensionality, but the coordinates are always 3 dimensional.
     // We can map the axis of the cellset to the coordinates by looking at the
     // length of a coordinate axis array.
-    AxisIndexArrayPoints validIds[3] = { this->ValidPoints.GetStorage().GetFirstArray(),
-                                         this->ValidPoints.GetStorage().GetSecondArray(),
-                                         this->ValidPoints.GetStorage().GetThirdArray() };
+    AxisIndexArrayPoints validIds[3] = { this->ValidPoints.GetFirstArray(),
+                                         this->ValidPoints.GetSecondArray(),
+                                         this->ValidPoints.GetThirdArray() };
 
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> arrays[3] = { coords.GetStorage().GetFirstArray(),
-                                                              coords.GetStorage().GetSecondArray(),
-                                                              coords.GetStorage().GetThirdArray() };
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> arrays[3] = { coords.GetFirstArray(),
+                                                              coords.GetSecondArray(),
+                                                              coords.GetThirdArray() };
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> xyzs[3];
     int dim = 0;
@@ -595,7 +463,7 @@ private:
       if (arrays[i].GetNumberOfValues() == 1)
       {
         xyzs[i].Allocate(1);
-        xyzs[i].GetPortalControl().Set(0, vtkm::cont::ArrayGetValue(0, arrays[i]));
+        xyzs[i].WritePortal().Set(0, vtkm::cont::ArrayGetValue(0, arrays[i]));
       }
       else
       {
@@ -606,52 +474,42 @@ private:
     }
     VTKM_ASSERT(dim == this->InputDimensionality);
 
-    auto out = vtkm::cont::make_ArrayHandleCartesianProduct(xyzs[0], xyzs[1], xyzs[2]);
-    return vtkm::cont::ArrayHandleVirtualCoordinates(out);
+    return vtkm::cont::make_ArrayHandleCartesianProduct(xyzs[0], xyzs[1], xyzs[2]);
   }
+
+  struct MapCoordinatesFunctor
+  {
+    template <typename T, typename S>
+    VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>& coords,
+                              ExtractStructured& self,
+                              vtkm::cont::UnknownArrayHandle& output) const
+    {
+      output = self.ProcessPointField(coords);
+    }
+
+    VTKM_CONT void operator()(const UniformCoordinatesArrayHandle::Superclass& coords,
+                              ExtractStructured& self,
+                              vtkm::cont::UnknownArrayHandle& output) const
+    {
+      output = self.MapCoordinatesUniform(coords);
+    }
+
+    VTKM_CONT void operator()(const RectilinearCoordinatesArrayHandle::Superclass& coords,
+                              ExtractStructured& self,
+                              vtkm::cont::UnknownArrayHandle& output) const
+    {
+      output = self.MapCoordinatesRectilinear(coords);
+    }
+  };
+
+  friend MapCoordinatesFunctor;
 
 public:
-  vtkm::cont::ArrayHandleVirtualCoordinates MapCoordinates(
-    const vtkm::cont::CoordinateSystem& coordinates)
+  vtkm::cont::UnknownArrayHandle MapCoordinates(const vtkm::cont::CoordinateSystem& coordinates)
   {
-    auto coArray = coordinates.GetData();
-    if (coArray.IsType<UniformCoordinatesArrayHandle>())
-    {
-      return this->MapCoordinatesUniform(coArray.Cast<UniformCoordinatesArrayHandle>());
-    }
-    else if (coArray.IsType<RectilinearCoordinatesArrayHandle>())
-    {
-      return this->MapCoordinatesRectilinear(coArray.Cast<RectilinearCoordinatesArrayHandle>());
-    }
-    else
-    {
-      auto out = this->ProcessPointField(coArray);
-      return vtkm::cont::ArrayHandleVirtualCoordinates(out);
-    }
-  }
-
-private:
-  template <vtkm::IdComponent Dimensionality, typename T, typename Storage>
-  void MapPointField(const vtkm::cont::ArrayHandle<T, Storage>& in,
-                     vtkm::cont::ArrayHandle<T>& out) const
-  {
-    using namespace extractstructured::internal;
-
-    auto validPointsFlat = vtkm::cont::make_ArrayHandleTransform(
-      this->ValidPoints, LogicalToFlatIndex<Dimensionality>(this->InputDimensions));
-    vtkm::cont::ArrayCopy(make_ArrayHandlePermutation(validPointsFlat, in), out);
-  }
-
-  template <vtkm::IdComponent Dimensionality, typename T, typename Storage>
-  void MapCellField(const vtkm::cont::ArrayHandle<T, Storage>& in,
-                    vtkm::cont::ArrayHandle<T>& out) const
-  {
-    using namespace extractstructured::internal;
-
-    auto inputCellDimensions = this->InputDimensions - vtkm::Id3(1);
-    auto validCellsFlat = vtkm::cont::make_ArrayHandleTransform(
-      this->ValidCells, LogicalToFlatIndex<Dimensionality>(inputCellDimensions));
-    vtkm::cont::ArrayCopy(make_ArrayHandlePermutation(validCellsFlat, in), out);
+    vtkm::cont::UnknownArrayHandle output;
+    vtkm::cont::CastAndCall(coordinates, MapCoordinatesFunctor{}, *this, output);
+    return output;
   }
 
 public:
@@ -659,21 +517,13 @@ public:
   vtkm::cont::ArrayHandle<T> ProcessPointField(
     const vtkm::cont::ArrayHandle<T, Storage>& field) const
   {
+    using namespace extractstructured::internal;
     vtkm::cont::ArrayHandle<T> result;
-    switch (this->InputDimensionality)
-    {
-      case 1:
-        this->MapPointField<1>(field, result);
-        break;
-      case 2:
-        this->MapPointField<2>(field, result);
-        break;
-      case 3:
-        this->MapPointField<3>(field, result);
-        break;
-      default:
-        break;
-    }
+    result.Allocate(this->ValidPoints.GetNumberOfValues());
+
+    ExtractCopy worklet(this->InputDimensions);
+    DispatcherMapField<ExtractCopy> dispatcher(worklet);
+    dispatcher.Invoke(this->ValidPoints, result, field);
 
     return result;
   }
@@ -682,28 +532,21 @@ public:
   vtkm::cont::ArrayHandle<T> ProcessCellField(
     const vtkm::cont::ArrayHandle<T, Storage>& field) const
   {
+    using namespace extractstructured::internal;
     vtkm::cont::ArrayHandle<T> result;
-    switch (this->InputDimensionality)
-    {
-      case 1:
-        this->MapCellField<1>(field, result);
-        break;
-      case 2:
-        this->MapCellField<2>(field, result);
-        break;
-      case 3:
-        this->MapCellField<3>(field, result);
-        break;
-      default:
-        break;
-    }
+    result.Allocate(this->ValidCells.GetNumberOfValues());
+
+    auto inputCellDimensions = this->InputDimensions - vtkm::Id3(1);
+    ExtractCopy worklet(inputCellDimensions);
+    DispatcherMapField<ExtractCopy> dispatcher(worklet);
+    dispatcher.Invoke(this->ValidCells, result, field);
 
     return result;
   }
 
 private:
   vtkm::RangeId3 VOI;
-  vtkm::Id3 SampleRate;
+  vtkm::Id3 SampleRate = { 1, 1, 1 };
 
   int InputDimensionality;
   vtkm::Id3 InputDimensions;

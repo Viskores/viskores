@@ -12,6 +12,7 @@
 
 #include <vtkm/worklet/WorkletMapField.h>
 
+#include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
 
 namespace vtkm
@@ -29,7 +30,13 @@ public:
                             const vtkm::Vec<T, Size>& v2,
                             T& outValue) const
   {
-    outValue = vtkm::Dot(v1, v2);
+    outValue = static_cast<T>(vtkm::Dot(v1, v2));
+  }
+
+  template <typename T>
+  VTKM_EXEC void operator()(T s1, T s2, T& outValue) const
+  {
+    outValue = static_cast<T>(s1 * s2);
   }
 };
 }

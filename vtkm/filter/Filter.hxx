@@ -249,7 +249,13 @@ inline VTKM_CONT Filter<Derived>::~Filter()
 template <typename Derived>
 inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(const vtkm::cont::DataSet& input)
 {
-  return this->Execute(input, vtkm::filter::PolicyDefault());
+  Derived* self = static_cast<Derived*>(this);
+  vtkm::cont::PartitionedDataSet output = self->Execute(vtkm::cont::PartitionedDataSet(input));
+  if (output.GetNumberOfPartitions() > 1)
+  {
+    throw vtkm::cont::ErrorFilterExecution("Expecting at most 1 block.");
+  }
+  return output.GetNumberOfPartitions() == 1 ? output.GetPartition(0) : vtkm::cont::DataSet();
 }
 
 //----------------------------------------------------------------------------
@@ -257,7 +263,24 @@ template <typename Derived>
 inline VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
   const vtkm::cont::PartitionedDataSet& input)
 {
-  return this->Execute(input, vtkm::filter::PolicyDefault());
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
+                 "Filter (%d partitions): '%s'",
+                 (int)input.GetNumberOfPartitions(),
+                 vtkm::cont::TypeToString<Derived>().c_str());
+
+  Derived* self = static_cast<Derived*>(this);
+
+  vtkm::filter::PolicyDefault policy;
+
+  // Call `void Derived::PreExecute<DerivedPolicy>(input, policy)`, if defined.
+  internal::CallPreExecute(self, input, policy);
+
+  // Call `PrepareForExecution` (which should probably be renamed at some point)
+  vtkm::cont::PartitionedDataSet output = internal::CallPrepareForExecution(self, input, policy);
+
+  // Call `Derived::PostExecute<DerivedPolicy>(input, output, policy)` if defined.
+  internal::CallPostExecute(self, input, output, policy);
+  return output;
 }
 
 
@@ -268,12 +291,11 @@ VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  VTKM_LOG_SCOPE(
-    vtkm::cont::LogLevel::Perf, "Filter: '%s'", vtkm::cont::TypeToString<Derived>().c_str());
-
   Derived* self = static_cast<Derived*>(this);
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   vtkm::cont::PartitionedDataSet output =
     self->Execute(vtkm::cont::PartitionedDataSet(input), policy);
+  VTKM_DEPRECATED_SUPPRESS_END
   if (output.GetNumberOfPartitions() > 1)
   {
     throw vtkm::cont::ErrorFilterExecution("Expecting at most 1 block.");
@@ -289,7 +311,8 @@ VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
-                 "Filter (PartitionedDataSet): '%s'",
+                 "Filter (%d partitions): '%s'",
+                 (int)input.GetNumberOfPartitions(),
                  vtkm::cont::TypeToString<Derived>().c_str());
 
   Derived* self = static_cast<Derived*>(this);

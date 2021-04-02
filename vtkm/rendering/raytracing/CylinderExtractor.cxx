@@ -255,9 +255,11 @@ void CylinderExtractor::SetCylinderIdsFromCells(const vtkm::cont::DynamicCellSet
   //
   if (cells.IsSameType(vtkm::cont::CellSetExplicit<>()))
   {
+    auto cellsExplicit = cells.Cast<vtkm::cont::CellSetExplicit<>>();
+
     vtkm::cont::ArrayHandle<vtkm::Id> points;
     vtkm::worklet::DispatcherMapTopology<detail::CountSegments>(detail::CountSegments())
-      .Invoke(cells, points);
+      .Invoke(cellsExplicit, points);
 
     vtkm::Id totalPoints = 0;
     totalPoints = vtkm::cont::Algorithm::Reduce(points, vtkm::Id(0));
@@ -267,7 +269,7 @@ void CylinderExtractor::SetCylinderIdsFromCells(const vtkm::cont::DynamicCellSet
     CylIds.Allocate(totalPoints);
 
     vtkm::worklet::DispatcherMapTopology<detail::Pointify>(detail::Pointify())
-      .Invoke(cells, cellOffsets, this->CylIds);
+      .Invoke(cellsExplicit, cellOffsets, this->CylIds);
   }
 }
 
@@ -281,12 +283,12 @@ void CylinderExtractor::SetVaryingRadius(const vtkm::Float32 minRadius,
     throw vtkm::cont::ErrorBadValue("Cylinder Extractor: scalar field must have one component");
   }
 
-  vtkm::Range range = rangeArray.GetPortalConstControl().Get(0);
+  vtkm::Range range = rangeArray.ReadPortal().Get(0);
 
   Radii.Allocate(this->CylIds.GetNumberOfValues());
   vtkm::worklet::DispatcherMapField<detail::FieldRadius>(
     detail::FieldRadius(minRadius, maxRadius, range))
-    .Invoke(this->CylIds, this->Radii, field.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
+    .Invoke(this->CylIds, this->Radii, vtkm::rendering::raytracing::GetScalarFieldArray(field));
 }
 
 

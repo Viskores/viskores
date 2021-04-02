@@ -19,6 +19,7 @@
 
 #include <vtkm/RangeId3.h>
 #include <vtkm/filter/ExtractStructured.h>
+#include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/worklet/CellDeepCopy.h>
 
 namespace
@@ -105,21 +106,21 @@ public:
   template <typename Atomic>
   VTKM_EXEC void Max(Atomic& atom, const vtkm::Id& val, const vtkm::Id& index) const
   {
-    vtkm::Id old = -1;
-    do
+    vtkm::Id old = atom.Get(index);
+    while (old < val)
     {
-      old = atom.CompareAndSwap(index, val, old);
-    } while (old < val);
+      atom.CompareExchange(index, &old, val);
+    }
   }
 
   template <typename Atomic>
   VTKM_EXEC void Min(Atomic& atom, const vtkm::Id& val, const vtkm::Id& index) const
   {
-    vtkm::Id old = 1000000000;
-    do
+    vtkm::Id old = atom.Get(index);
+    while (old > val)
     {
-      old = atom.CompareAndSwap(index, val, old);
-    } while (old > val);
+      atom.CompareExchange(index, &old, val);
+    }
   }
 
   template <typename T, typename AtomicType>
@@ -216,16 +217,16 @@ bool CanStrip(const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
 {
   vtkm::cont::ArrayHandle<vtkm::Id> minmax;
   minmax.Allocate(6);
-  minmax.GetPortalControl().Set(0, std::numeric_limits<vtkm::Id>::max());
-  minmax.GetPortalControl().Set(1, std::numeric_limits<vtkm::Id>::max());
-  minmax.GetPortalControl().Set(2, std::numeric_limits<vtkm::Id>::max());
-  minmax.GetPortalControl().Set(3, std::numeric_limits<vtkm::Id>::min());
-  minmax.GetPortalControl().Set(4, std::numeric_limits<vtkm::Id>::min());
-  minmax.GetPortalControl().Set(5, std::numeric_limits<vtkm::Id>::min());
+  minmax.WritePortal().Set(0, std::numeric_limits<vtkm::Id>::max());
+  minmax.WritePortal().Set(1, std::numeric_limits<vtkm::Id>::max());
+  minmax.WritePortal().Set(2, std::numeric_limits<vtkm::Id>::max());
+  minmax.WritePortal().Set(3, std::numeric_limits<vtkm::Id>::min());
+  minmax.WritePortal().Set(4, std::numeric_limits<vtkm::Id>::min());
+  minmax.WritePortal().Set(5, std::numeric_limits<vtkm::Id>::min());
 
   invoke(RealMinMax<3>(cellDims, removeAllGhost, removeType), ghostField, minmax);
 
-  auto portal = minmax.GetPortalConstControl();
+  auto portal = minmax.ReadPortal();
   range = vtkm::RangeId3(
     portal.Get(0), portal.Get(3), portal.Get(1), portal.Get(4), portal.Get(2), portal.Get(5));
 
@@ -335,14 +336,14 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
 
   if (this->GetRemoveAllGhost())
   {
-    cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+    cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                 field,
                                 fieldMeta.GetAssociation(),
                                 RemoveAllGhosts());
   }
   else if (this->GetRemoveByType())
   {
-    cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+    cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                 field,
                                 fieldMeta.GetAssociation(),
                                 RemoveGhostByType(this->GetRemoveType()));
@@ -360,23 +361,24 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool GhostCellRemove::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+VTKM_CONT bool GhostCellRemove::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                   const vtkm::cont::Field& field,
+                                                   vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  if (fieldMeta.IsPointField())
+  if (field.IsFieldPoint())
   {
     //we copy the input handle to the result dataset, reusing the metadata
-    result.AddField(fieldMeta.AsField(input));
+    result.AddField(field);
     return true;
   }
-  else if (fieldMeta.IsCellField())
+  else if (field.IsFieldCell())
   {
-    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input);
-    result.AddField(fieldMeta.AsField(out));
+    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetValidCellIds(), result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
     return true;
   }
   else

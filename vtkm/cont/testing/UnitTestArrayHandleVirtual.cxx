@@ -10,11 +10,14 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/ArrayHandleVirtual.h>
+#include <vtkm/cont/ArrayHandleVirtual.hxx>
+#endif
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
@@ -23,6 +26,9 @@
 #include <vtkm/BinaryOperators.h>
 
 #include <algorithm>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace UnitTestArrayHandleVirtualDetail
 {
@@ -40,6 +46,8 @@ struct Test
 
   void TestConstructors()
   {
+    std::cout << "Constructors" << std::endl;
+
     VirtHandle nullStorage;
     VTKM_TEST_ASSERT(nullStorage.GetStorage().GetStorageVirtual() == nullptr,
                      "storage should be empty when using ArrayHandleVirtual().");
@@ -67,6 +75,8 @@ struct Test
 
   void TestMoveConstructors()
   {
+    std::cout << "Move constructors" << std::endl;
+
     //test ArrayHandle move constructor
     {
       ArrayHandle handle;
@@ -89,6 +99,8 @@ struct Test
 
   void TestAssignmentOps()
   {
+    std::cout << "Assignment operators" << std::endl;
+
     //test assignment operator from ArrayHandleVirtual
     {
       VirtHandle virt;
@@ -126,16 +138,19 @@ struct Test
 
   void TestPrepareForExecution()
   {
+    std::cout << "Prepare for execution" << std::endl;
+
     vtkm::cont::ArrayHandle<ValueType> handle;
-    handle.Allocate(50);
+    handle.Allocate(ARRAY_SIZE);
 
     VirtHandle virt(std::move(handle));
 
     try
     {
-      virt.PrepareForInput(DeviceTag());
-      virt.PrepareForInPlace(DeviceTag());
-      virt.PrepareForOutput(ARRAY_SIZE, DeviceTag());
+      vtkm::cont::Token token;
+      virt.PrepareForInput(DeviceTag(), token);
+      virt.PrepareForInPlace(DeviceTag(), token);
+      virt.PrepareForOutput(ARRAY_SIZE, DeviceTag(), token);
     }
     catch (vtkm::cont::ErrorBadValue&)
     {
@@ -148,6 +163,8 @@ struct Test
 
   void TestIsType()
   {
+    std::cout << "IsType" << std::endl;
+
     vtkm::cont::ArrayHandle<ValueType> handle;
     VirtHandle virt(std::move(handle));
 
@@ -163,6 +180,7 @@ struct Test
 
   void TestCast()
   {
+    std::cout << "Cast" << std::endl;
 
     vtkm::cont::ArrayHandle<ValueType> handle;
     VirtHandle virt(handle);
@@ -184,14 +202,40 @@ struct Test
     }
   }
 
+  void TestControlPortalLocking()
+  {
+    std::cout << "Control portal locking" << std::endl;
+
+    // There was a bug where a control portal was not relinquished and it locked the
+    // ArrayHandle from further use.
+
+    ArrayHandle concreteArray;
+    concreteArray.Allocate(ARRAY_SIZE);
+
+    VirtHandle virtualArray(concreteArray);
+
+    // Make sure you can write to the virtualArray and then read the data from the concreteArray
+    // without the concreteArray getting locked up.
+    SetPortal(virtualArray.WritePortal());
+    CheckPortal(concreteArray.ReadPortal());
+
+    // Make sure you can read from the virtualArray and the write to the concreteArray without
+    // the concreteArray getting locked up.
+    CheckPortal(virtualArray.ReadPortal());
+    SetPortal(concreteArray.WritePortal());
+  }
+
   void operator()()
   {
+    std::cout << std::endl;
+    std::cout << "### Testing for " << vtkm::cont::TypeToString<ValueType>() << std::endl;
     TestConstructors();
     TestMoveConstructors();
     TestAssignmentOps();
     TestPrepareForExecution();
     TestIsType();
     TestCast();
+    TestControlPortalLocking();
   }
 };
 
@@ -207,8 +251,17 @@ void TestArrayHandleVirtual()
 
 } // end namespace UnitTestArrayHandleVirtualDetail
 
+VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
 int UnitTestArrayHandleVirtual(int argc, char* argv[])
 {
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
   using namespace UnitTestArrayHandleVirtualDetail;
   return vtkm::cont::testing::Testing::Run(TestArrayHandleVirtual, argc, argv);
+#else
+  (void)argc;
+  (void)argv;
+  return 0;
+#endif
 }

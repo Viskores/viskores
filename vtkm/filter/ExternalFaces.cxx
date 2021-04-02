@@ -9,7 +9,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #define vtkm_filter_ExternalFaces_cxx
+
 #include <vtkm/filter/ExternalFaces.h>
+#include <vtkm/filter/ExternalFaces.hxx>
 
 namespace vtkm
 {
@@ -56,7 +58,7 @@ vtkm::cont::DataSet ExternalFaces::GenerateOutput(const vtkm::cont::DataSet& inp
   {
     this->Compactor.SetCompactPointFields(true);
     this->Compactor.SetMergePoints(false);
-    return this->Compactor.Execute(output, PolicyDefault{});
+    return this->Compactor.Execute(output);
   }
   else
   {
@@ -64,7 +66,38 @@ vtkm::cont::DataSet ExternalFaces::GenerateOutput(const vtkm::cont::DataSet& inp
   }
 }
 
+bool ExternalFaces::MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field)
+{
+  if (field.IsFieldPoint())
+  {
+    if (this->CompactPoints)
+    {
+      return this->Compactor.MapFieldOntoOutput(result, field);
+    }
+    else
+    {
+      result.AddField(field);
+      return true;
+    }
+  }
+  else if (field.IsFieldCell())
+  {
+    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetCellIdMap(), result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 //-----------------------------------------------------------------------------
-VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(ExternalFaces);
+template VTKM_FILTER_EXTRA_TEMPLATE_EXPORT vtkm::cont::DataSet ExternalFaces::DoExecute(
+  const vtkm::cont::DataSet& inData,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault> policy);
 }
 }

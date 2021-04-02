@@ -36,8 +36,8 @@ void CheckAverageByKey(const KeyArray& uniqueKeys, const ValueArray& averagedVal
   VTKM_TEST_ASSERT(averagedValues.GetNumberOfValues() == NUM_UNIQUE, "Bad number of values.");
 
   // We expect the unique keys to be sorted, and for the test values to be in order.
-  auto keyPortal = uniqueKeys.GetPortalConstControl();
-  auto valuePortal = averagedValues.GetPortalConstControl();
+  auto keyPortal = uniqueKeys.ReadPortal();
+  auto valuePortal = averagedValues.ReadPortal();
   for (vtkm::Id index = 0; index < NUM_UNIQUE; ++index)
   {
     VTKM_TEST_ASSERT(keyPortal.Get(index) == TestValue(index % NUM_UNIQUE, KeyType()),
@@ -60,7 +60,8 @@ void TryKeyType(KeyType)
   {
     keyBuffer[index] = TestValue(index % NUM_UNIQUE, KeyType());
   }
-  vtkm::cont::ArrayHandle<KeyType> keysArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
+  vtkm::cont::ArrayHandle<KeyType> keysArray =
+    vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE, vtkm::CopyFlag::Off);
 
   // Create Keys object
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;

@@ -21,11 +21,10 @@ void TestArrayHandleIndex()
 {
   vtkm::cont::ArrayHandleIndex array(ARRAY_SIZE);
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Bad size.");
-
+  auto portal = array.ReadPortal();
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(index) == index,
-                     "Index array has unexpected value.");
+    VTKM_TEST_ASSERT(portal.Get(index) == index, "Index array has unexpected value.");
   }
 }
 

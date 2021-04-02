@@ -16,11 +16,6 @@ namespace vtkm
 namespace filter
 {
 
-VTKM_CONT ImageConnectivity::ImageConnectivity()
-{
-  this->SetOutputFieldName("component");
-}
-
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
   const vtkm::cont::DataSet& input,
@@ -36,7 +31,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::Id> component;
 
   vtkm::worklet::connectivity::ImageConnectivity().Run(
-    vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy), field, component);
+    vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this), field, component);
 
   auto result = CreateResult(input, component, this->GetOutputFieldName(), fieldMetadata);
   return result;

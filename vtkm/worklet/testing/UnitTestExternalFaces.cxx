@@ -14,7 +14,6 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
 
 #include <vtkm/worklet/ExternalFaces.h>
 
@@ -62,14 +61,14 @@ void TestExternalFaces1()
   using CoordType = vtkm::Vec3f_32;
   vtkm::cont::ArrayHandle<CoordType> coordinates;
   coordinates.Allocate(nVerts);
-  coordinates.GetPortalControl().Set(0, CoordType(0.0f, 0.0f, 0.0f));
-  coordinates.GetPortalControl().Set(1, CoordType(1.0f, 0.0f, 0.0f));
-  coordinates.GetPortalControl().Set(2, CoordType(1.0f, 1.0f, 0.0f));
-  coordinates.GetPortalControl().Set(3, CoordType(0.0f, 1.0f, 0.0f));
-  coordinates.GetPortalControl().Set(4, CoordType(0.0f, 0.0f, 1.0f));
-  coordinates.GetPortalControl().Set(5, CoordType(1.0f, 0.0f, 1.0f));
-  coordinates.GetPortalControl().Set(6, CoordType(1.0f, 1.0f, 1.0f));
-  coordinates.GetPortalControl().Set(7, CoordType(0.0f, 1.0f, 1.0f));
+  coordinates.WritePortal().Set(0, CoordType(0.0f, 0.0f, 0.0f));
+  coordinates.WritePortal().Set(1, CoordType(1.0f, 0.0f, 0.0f));
+  coordinates.WritePortal().Set(2, CoordType(1.0f, 1.0f, 0.0f));
+  coordinates.WritePortal().Set(3, CoordType(0.0f, 1.0f, 0.0f));
+  coordinates.WritePortal().Set(4, CoordType(0.0f, 0.0f, 1.0f));
+  coordinates.WritePortal().Set(5, CoordType(1.0f, 0.0f, 1.0f));
+  coordinates.WritePortal().Set(6, CoordType(1.0f, 1.0f, 1.0f));
+  coordinates.WritePortal().Set(7, CoordType(0.0f, 1.0f, 1.0f));
 
   //Construct the VTK-m shapes and numIndices connectivity arrays
   const int nCells = 6; //The tetrahedrons of the cube
@@ -86,10 +85,10 @@ void TestExternalFaces1()
   int index = 0;
   for (int j = 0; j < nCells; j++)
   {
-    shapes.GetPortalControl().Set(j, static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_TETRA));
-    numIndices.GetPortalControl().Set(j, 4);
+    shapes.WritePortal().Set(j, static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_TETRA));
+    numIndices.WritePortal().Set(j, 4);
     for (int k = 0; k < 4; k++)
-      conn.GetPortalControl().Set(index++, cellVerts[j][k]);
+      conn.WritePortal().Set(index++, cellVerts[j][k]);
   }
 
   vtkm::cont::DataSetBuilderExplicit builder;
@@ -114,9 +113,6 @@ void TestExternalFaces2()
 
   vtkm::cont::testing::MakeTestDataSet dataSetMaker;
   vtkm::cont::DataSet inDataSet = dataSetMaker.Make3DExplicitDataSet5();
-
-  //  vtkm::io::writer::VTKDataSetWriter writer("vtkm_explicit_data_5.vtk");
-  //  writer.WriteDataSet(inDataSet);
 
   // Expected faces
   const vtkm::IdComponent MAX_POINTS_PER_FACE = 4;

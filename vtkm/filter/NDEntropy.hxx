@@ -18,9 +18,7 @@ namespace vtkm
 namespace filter
 {
 
-inline VTKM_CONT NDEntropy::NDEntropy()
-{
-}
+inline VTKM_CONT NDEntropy::NDEntropy() {}
 
 void NDEntropy::AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins)
 {
@@ -48,7 +46,7 @@ inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
   vtkm::Float64 entropy = ndEntropy.Run();
 
   entropyHandle.Allocate(1);
-  entropyHandle.GetPortalControl().Set(0, entropy);
+  entropyHandle.WritePortal().Set(0, entropy);
 
 
   vtkm::cont::DataSet outputData;
@@ -57,11 +55,10 @@ inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool NDEntropy::DoMapField(vtkm::cont::DataSet&,
-                                            const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                            const vtkm::filter::FieldMetadata&,
-                                            vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool NDEntropy::MapFieldOntoOutput(vtkm::cont::DataSet&,
+                                                    const vtkm::cont::Field&,
+                                                    vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }

@@ -20,10 +20,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/MarginalizeNDHistogram.h>
-#include <vtkm/worklet/histogram/MarginalizeNDHistogram.h>
 #include <vtkm/worklet/histogram/MarginalizeNDHistogram.h>
 
 #include <vtkm/cont/Field.h>
@@ -74,8 +70,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;
     vtkm::cont::ArrayCopy(freqsIn, freqs);
     vtkm::Id numMarginalVariables = 0; //count num of marginal variables
-    const auto marginalPortal = marginalVariables.GetPortalConstControl();
-    const auto numBinsPortal = numberOfBins.GetPortalConstControl();
+    const auto marginalPortal = marginalVariables.ReadPortal();
+    const auto numBinsPortal = numberOfBins.ReadPortal();
     for (vtkm::Id i = 0; i < numOfVariable; i++)
     {
       if (marginalPortal.Get(i) == true)
@@ -157,8 +153,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;
     vtkm::cont::ArrayCopy(freqsIn, freqs);
     vtkm::Id numMarginalVariables = 0; //count num of marginal variables
-    const auto marginalPortal = marginalVariables.GetPortalConstControl();
-    const auto numBinsPortal = numberOfBins.GetPortalConstControl();
+    const auto marginalPortal = marginalVariables.ReadPortal();
+    const auto numBinsPortal = numberOfBins.ReadPortal();
     for (vtkm::Id i = 0; i < numOfVariable; i++)
     {
       if (marginalPortal.Get(i) == true)

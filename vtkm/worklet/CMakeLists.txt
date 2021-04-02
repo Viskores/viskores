@@ -10,6 +10,8 @@
 
 set(headers
   AverageByKey.h
+  BoundaryTypes.h
+  AveragePointNeighborhood.h
   CellAverage.h
   CellDeepCopy.h
   CellMeasure.h
@@ -21,9 +23,9 @@ set(headers
   CrossProduct.h
   DispatcherMapField.h
   DispatcherMapTopology.h
+  DispatcherCellNeighborhood.h
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
-  DispatcherStreamingMapField.h
   DotProduct.h
   ExternalFaces.h
   ExtractGeometry.h
@@ -33,6 +35,7 @@ set(headers
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
+  ImageDifference.h
   KdTree3D.h
   KernelSplatter.h
   Keys.h
@@ -69,6 +72,7 @@ set(headers
   ScatterUniform.h
   SplitSharpEdges.h
   StableSortIndices.h
+  DescriptiveStatistics.h
   StreamLineUniformGrid.h
   StreamSurface.h
   SurfaceNormals.h
@@ -84,6 +88,8 @@ set(headers
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h
+  WorkletNeighborhood.h
+  WorkletCellNeighborhood.h
   WorkletPointNeighborhood.h
   WorkletReduceByKey.h
   ZFPCompressor.h
@@ -125,6 +131,7 @@ add_subdirectory(connectivities)
 add_subdirectory(contour)
 add_subdirectory(contourtree)
 add_subdirectory(contourtree_augmented)
+add_subdirectory(contourtree_distributed)
 add_subdirectory(cosmotools)
 add_subdirectory(gradient)
 add_subdirectory(histogram)
@@ -144,9 +151,11 @@ vtkm_library(
   TEMPLATE_SOURCES ${header_impls}
   HEADERS ${headers}
   DEVICE_SOURCES ${sources_device}
+  USE_VTKM_JOB_POOL
   )
 target_link_libraries(vtkm_worklet PUBLIC vtkm_cont)
 
+set_source_files_properties(${sources_device} PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

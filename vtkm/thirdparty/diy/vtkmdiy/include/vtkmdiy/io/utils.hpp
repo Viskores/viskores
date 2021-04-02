@@ -14,7 +14,7 @@
 #include <cstdlib>      // mkstemp() on Linux
 #include <sys/stat.h>
 
-#include "../constants.h" // for DIY_UNUSED
+#include "../constants.h" // for VTKMDIY_UNUSED
 
 namespace diy
 {
@@ -82,8 +82,8 @@ namespace utils
       _close(fd);
     }
 #else
-    auto r = ::truncate(filename.c_str(), static_cast<off_t>(length));
-    (void) r;
+    int error = ::truncate(filename.c_str(), static_cast<off_t>(length));
+    VTKMDIY_UNUSED(error);
 #endif
   }
 
@@ -141,7 +141,7 @@ namespace utils
   inline void sync(int fd)
   {
 #if defined(_WIN32)
-    DIY_UNUSED(fd);
+    VTKMDIY_UNUSED(fd);
 #else
     fsync(fd);
 #endif

@@ -82,7 +82,7 @@ void TestKdTreeBuildNNS(vtkm::cont::DeviceAdapterId deviceId)
   }
 
   ///// preprare data to build 3D kd tree /////
-  auto coordi_Handle = vtkm::cont::make_ArrayHandle(coordi);
+  auto coordi_Handle = vtkm::cont::make_ArrayHandle(coordi, vtkm::CopyFlag::On);
 
   // Run data
   vtkm::worklet::KdTree3D kdtree3d;
@@ -97,7 +97,7 @@ void TestKdTreeBuildNNS(vtkm::cont::DeviceAdapterId deviceId)
   }
 
   ///// preprare testing data /////
-  auto qc_Handle = vtkm::cont::make_ArrayHandle(qcVec);
+  auto qc_Handle = vtkm::cont::make_ArrayHandle(qcVec, vtkm::CopyFlag::On);
 
   vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
   vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
@@ -109,15 +109,17 @@ void TestKdTreeBuildNNS(vtkm::cont::DeviceAdapterId deviceId)
   NearestNeighborSearchBruteForce3DWorklet nnsbf3dWorklet;
   vtkm::worklet::DispatcherMapField<NearestNeighborSearchBruteForce3DWorklet> nnsbf3DDispatcher(
     nnsbf3dWorklet);
-  nnsbf3DDispatcher.Invoke(
-    qc_Handle, vtkm::cont::make_ArrayHandle(coordi), bfnnId_Handle, bfnnDis_Handle);
+  nnsbf3DDispatcher.Invoke(qc_Handle,
+                           vtkm::cont::make_ArrayHandle(coordi, vtkm::CopyFlag::On),
+                           bfnnId_Handle,
+                           bfnnDis_Handle);
 
   ///// verfity search result /////
   bool passTest = true;
   for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
   {
-    vtkm::Id workletIdx = nnId_Handle.GetPortalControl().Get(i);
-    vtkm::Id bfworkletIdx = bfnnId_Handle.GetPortalControl().Get(i);
+    vtkm::Id workletIdx = nnId_Handle.WritePortal().Get(i);
+    vtkm::Id bfworkletIdx = bfnnId_Handle.WritePortal().Get(i);
 
     if (workletIdx != bfworkletIdx)
     {

@@ -30,9 +30,7 @@ MapperConnectivity::MapperConnectivity()
 }
 
 VTKM_CONT
-MapperConnectivity::~MapperConnectivity()
-{
-}
+MapperConnectivity::~MapperConnectivity() {}
 
 VTKM_CONT
 void MapperConnectivity::SetSampleDistance(const vtkm::Float32& distance)
@@ -83,16 +81,6 @@ void MapperConnectivity::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   tracerProxy.SetSampleDistance(SampleDistance);
   tracerProxy.SetColorMap(ColorMap);
   tracerProxy.Trace(camera, CanvasRT);
-}
-
-void MapperConnectivity::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperConnectivity::EndScene()
-{
-  // Nothing needs to be done.
 }
 
 vtkm::rendering::Mapper* MapperConnectivity::NewCopy() const

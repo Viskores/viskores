@@ -47,7 +47,6 @@ void DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Reset()
 void DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>::Start()
 {
   VTKM_CUDA_CALL(cudaEventRecord(this->StartEvent, cudaStreamPerThread));
-  VTKM_CUDA_CALL(cudaEventSynchronize(this->StartEvent));
   this->StartReady = true;
 }
 

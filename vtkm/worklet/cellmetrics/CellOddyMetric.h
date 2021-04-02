@@ -54,7 +54,7 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellOddyMetric(const vtkm::IdComponent& numPts,
                                  const PointCoordVecType& pts,
                                  CellShapeType shape,
-                                 const vtkm::exec::FunctorBase&)
+                                 vtkm::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -92,11 +92,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellOddyMetric(const vtkm::IdComponent& numPts,
                                  const PointCoordVecType& pts,
                                  vtkm::CellShapeTagQuad,
-                                 const vtkm::exec::FunctorBase& worklet)
+                                 vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Oddy metric(quad) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -139,11 +139,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellOddyMetric(const vtkm::IdComponent& numPts,
                                  const PointCoordVecType& pts,
                                  vtkm::CellShapeTagHexahedron,
-                                 const vtkm::exec::FunctorBase& worklet)
+                                 vtkm::ErrorCode& ec)
 {
   if (numPts != 8)
   {
-    worklet.RaiseError("Oddy metric(hexahedron) requires 8 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -164,16 +164,17 @@ VTKM_EXEC OutType CellOddyMetric(const vtkm::IdComponent& numPts,
   Edge principleXAxis = HexEdges[0] + (pts[2] - pts[3]) + HexEdges[8] + (pts[6] - pts[7]);
   Edge principleYAxis = (pts[3] - pts[0]) + HexEdges[1] + (pts[7] - pts[4]) + HexEdges[9];
   Edge principleZAxis = HexEdges[4] + HexEdges[5] + HexEdges[6] + HexEdges[7];
-  Edge hexJacobianMatrices[9]
-                          [3] = { { HexEdges[0], HexEdges[3], HexEdges[4] },
-                                  { HexEdges[1], (-1 * HexEdges[0]), HexEdges[5] },
-                                  { HexEdges[2], (-1 * HexEdges[1]), HexEdges[6] },
-                                  { (-1 * HexEdges[3]), (-1 * HexEdges[2]), HexEdges[7] },
-                                  { HexEdges[11], HexEdges[8], (-1 * HexEdges[4]) },
-                                  { (-1 * HexEdges[8]), HexEdges[9], (-1 * HexEdges[5]) },
-                                  { (-1 * HexEdges[9]), HexEdges[10], (-1 * HexEdges[6]) },
-                                  { (-1 * HexEdges[10]), (-1 * HexEdges[11]), (-1 * HexEdges[7]) },
-                                  { principleXAxis, principleYAxis, principleZAxis } };
+  Edge hexJacobianMatrices[9][3] = {
+    { HexEdges[0], HexEdges[3], HexEdges[4] },
+    { HexEdges[1], (-1 * HexEdges[0]), HexEdges[5] },
+    { HexEdges[2], (-1 * HexEdges[1]), HexEdges[6] },
+    { (-1 * HexEdges[3]), (-1 * HexEdges[2]), HexEdges[7] },
+    { HexEdges[11], HexEdges[8], (-1 * HexEdges[4]) },
+    { (-1 * HexEdges[8]), HexEdges[9], (-1 * HexEdges[5]) },
+    { (-1 * HexEdges[9]), HexEdges[10], (-1 * HexEdges[6]) },
+    { (-1 * HexEdges[10]), (-1 * HexEdges[11]), (-1 * HexEdges[7]) },
+    { principleXAxis, principleYAxis, principleZAxis }
+  };
 
   OutType third = (OutType)(1.0 / 3.0);
   OutType negativeInfinity = vtkm::NegativeInfinity<OutType>();

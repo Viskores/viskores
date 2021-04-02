@@ -21,7 +21,7 @@ namespace filter
 class Lagrangian : public vtkm::filter::FilterDataSetWithField<Lagrangian>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   Lagrangian();
@@ -63,10 +63,13 @@ public:
   void UpdateSeedResolution(vtkm::cont::DataSet input);
 
   VTKM_CONT
-  void WriteDataSet(vtkm::Id cycle, const std::string& filename, vtkm::cont::DataSet dataset);
+  void InitializeSeedPositions(const vtkm::cont::DataSet& input);
 
   VTKM_CONT
-  void InitializeUniformSeeds(const vtkm::cont::DataSet& input);
+  void InitializeCoordinates(const vtkm::cont::DataSet& input,
+                             std::vector<Float64>& xC,
+                             std::vector<Float64>& yC,
+                             std::vector<Float64>& zC);
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -76,11 +79,10 @@ public:
     vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   vtkm::Id rank;

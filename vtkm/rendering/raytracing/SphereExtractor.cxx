@@ -10,10 +10,11 @@
 
 #include <vtkm/rendering/raytracing/SphereExtractor.h>
 
+#include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
+
 #include <vtkm/cont/Algorithm.h>
-#include <vtkm/rendering/raytracing/Worklets.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
 {
@@ -224,9 +225,11 @@ void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::DynamicCellSet& cel
   //
   if (cells.IsSameType(vtkm::cont::CellSetExplicit<>()))
   {
+    auto cellsExplicit = cells.Cast<vtkm::cont::CellSetExplicit<>>();
+
     vtkm::cont::ArrayHandle<vtkm::Id> points;
     vtkm::worklet::DispatcherMapTopology<detail::CountPoints>(detail::CountPoints())
-      .Invoke(cells, points);
+      .Invoke(cellsExplicit, points);
 
     vtkm::Id totalPoints = 0;
     totalPoints = vtkm::cont::Algorithm::Reduce(points, vtkm::Id(0));
@@ -236,7 +239,7 @@ void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::DynamicCellSet& cel
     PointIds.Allocate(totalPoints);
 
     vtkm::worklet::DispatcherMapTopology<detail::Pointify>(detail::Pointify())
-      .Invoke(cells, cellOffsets, this->PointIds);
+      .Invoke(cellsExplicit, cellOffsets, this->PointIds);
   }
   else if (cells.IsSameType(SingleType()))
   {
@@ -261,13 +264,12 @@ void SphereExtractor::SetVaryingRadius(const vtkm::Float32 minRadius,
     throw vtkm::cont::ErrorBadValue("Sphere Extractor: scalar field must have one component");
   }
 
-  vtkm::Range range = rangeArray.GetPortalConstControl().Get(0);
+  vtkm::Range range = rangeArray.ReadPortal().Get(0);
 
   Radii.Allocate(this->PointIds.GetNumberOfValues());
   vtkm::worklet::DispatcherMapField<detail::FieldRadius>(
     detail::FieldRadius(minRadius, maxRadius, range))
-    .Invoke(
-      this->PointIds, this->Radii, field.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
+    .Invoke(this->PointIds, this->Radii, vtkm::rendering::raytracing::GetScalarFieldArray(field));
 }
 
 vtkm::cont::ArrayHandle<vtkm::Id> SphereExtractor::GetPointIds()

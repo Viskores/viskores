@@ -68,21 +68,22 @@ struct DoTestWholeArrayWorklet
       inOutArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
-    vtkm::cont::ArrayHandle<T> inHandle = vtkm::cont::make_ArrayHandle(inArray, ARRAY_SIZE);
-    vtkm::cont::ArrayHandle<T> inOutHandle = vtkm::cont::make_ArrayHandle(inOutArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inHandle =
+      vtkm::cont::make_ArrayHandle(inArray, ARRAY_SIZE, vtkm::CopyFlag::On);
+    vtkm::cont::ArrayHandle<T> inOutHandle =
+      vtkm::cont::make_ArrayHandle(inOutArray, ARRAY_SIZE, vtkm::CopyFlag::On);
     vtkm::cont::ArrayHandle<T> outHandle;
     // Output arrays must be preallocated.
     outHandle.Allocate(ARRAY_SIZE);
 
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(
-      vtkm::cont::VariantArrayHandle(inHandle).ResetTypes(vtkm::ListTagBase<T>{}),
-      vtkm::cont::VariantArrayHandle(inOutHandle).ResetTypes(vtkm::ListTagBase<T>{}),
-      vtkm::cont::VariantArrayHandle(outHandle).ResetTypes(vtkm::ListTagBase<T>{}));
+    dispatcher.Invoke(vtkm::cont::VariantArrayHandle(inHandle).ResetTypes(vtkm::List<T>{}),
+                      vtkm::cont::VariantArrayHandle(inOutHandle).ResetTypes(vtkm::List<T>{}),
+                      vtkm::cont::VariantArrayHandle(outHandle).ResetTypes(vtkm::List<T>{}));
 
     std::cout << "Check result." << std::endl;
-    CheckPortal(inOutHandle.GetPortalConstControl());
-    CheckPortal(outHandle.GetPortalConstControl());
+    CheckPortal(inOutHandle.ReadPortal());
+    CheckPortal(outHandle.ReadPortal());
   }
 };
 
@@ -92,7 +93,7 @@ void TestWorkletMapFieldExecArg(vtkm::cont::DeviceAdapterId id)
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(map_whole_array::DoTestWholeArrayWorklet(),
-                                   vtkm::TypeListTagCommon());
+                                   vtkm::TypeListCommon());
 }
 
 } // anonymous namespace

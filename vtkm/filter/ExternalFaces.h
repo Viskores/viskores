@@ -11,10 +11,11 @@
 #ifndef vtk_m_filter_ExternalFaces_h
 #define vtk_m_filter_ExternalFaces_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_extra_export.h>
 
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/FilterDataSet.h>
+#include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/worklet/ExternalFaces.h>
 
 namespace vtkm
@@ -30,10 +31,9 @@ namespace filter
 /// @warning
 /// This filter is currently only supports propagation of point properties
 ///
-class VTKM_ALWAYS_EXPORT ExternalFaces : public vtkm::filter::FilterDataSet<ExternalFaces>
+class VTKM_FILTER_EXTRA_EXPORT ExternalFaces : public vtkm::filter::FilterDataSet<ExternalFaces>
 {
 public:
-  VTKM_FILTER_EXPORT
   ExternalFaces();
 
   // When CompactPoints is set, instead of copying the points and point fields
@@ -59,53 +59,32 @@ public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  //Map a new field onto the resulting dataset after running the filter
-  //this call is only valid
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy)
-  {
-    if (fieldMeta.IsPointField())
-    {
-      if (this->CompactPoints)
-      {
-        return this->Compactor.DoMapField(result, input, fieldMeta, policy);
-      }
-      else
-      {
-        result.AddField(fieldMeta.AsField(input));
-        return true;
-      }
-    }
-    else if (fieldMeta.IsCellField())
-    {
-      vtkm::cont::ArrayHandle<T> fieldArray;
-      fieldArray = this->Worklet.ProcessCellField(input);
-      result.AddField(fieldMeta.AsField(fieldArray));
-      return true;
-    }
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
 
-    return false;
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy>)
+  {
+    return this->MapFieldOntoOutput(result, field);
   }
 
 private:
   bool CompactPoints;
   bool PassPolyData;
 
-  VTKM_FILTER_EXPORT vtkm::cont::DataSet GenerateOutput(const vtkm::cont::DataSet& input,
-                                                        vtkm::cont::CellSetExplicit<>& outCellSet);
+  vtkm::cont::DataSet GenerateOutput(const vtkm::cont::DataSet& input,
+                                     vtkm::cont::CellSetExplicit<>& outCellSet);
 
   vtkm::filter::CleanGrid Compactor;
   vtkm::worklet::ExternalFaces Worklet;
 };
 #ifndef vtkm_filter_ExternalFaces_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(ExternalFaces);
+extern template VTKM_FILTER_EXTRA_TEMPLATE_EXPORT vtkm::cont::DataSet ExternalFaces::DoExecute(
+  const vtkm::cont::DataSet&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 #endif
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/ExternalFaces.hxx>
 
 #endif // vtk_m_filter_ExternalFaces_h

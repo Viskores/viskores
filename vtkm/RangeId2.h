@@ -142,6 +142,32 @@ struct RangeId2
   {
     return ((this->X != range.X) || (this->Y != range.Y));
   }
+
+  VTKM_EXEC_CONT
+  vtkm::RangeId& operator[](IdComponent c) noexcept
+  {
+    if (c <= 0)
+    {
+      return this->X;
+    }
+    else
+    {
+      return this->Y;
+    }
+  }
+
+  VTKM_EXEC_CONT
+  const vtkm::RangeId& operator[](IdComponent c) const noexcept
+  {
+    if (c <= 0)
+    {
+      return this->X;
+    }
+    else
+    {
+      return this->Y;
+    }
+  }
 };
 
 } // namespace vtkm

@@ -12,7 +12,6 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/GhostCellClassify.h>
@@ -103,7 +102,7 @@ void TestStructured()
 
         vtkm::filter::GhostCellClassify addGhost;
 
-        auto output = addGhost.Execute(ds, vtkm::filter::GhostCellClassifyPolicy());
+        auto output = addGhost.Execute(ds);
 
         //Validate the output.
         VTKM_TEST_ASSERT(output.HasCellField("vtkmGhostCells"),
@@ -115,10 +114,10 @@ void TestStructured()
 
         //Check the number of normal cells.
         vtkm::cont::ArrayHandle<vtkm::UInt8> ghostArray;
-        fieldArray.CopyTo(ghostArray);
+        fieldArray.AsArrayHandle(ghostArray);
 
         vtkm::Id numNormalCells = 0;
-        auto portal = ghostArray.GetPortalConstControl();
+        auto portal = ghostArray.ReadPortal();
         constexpr vtkm::UInt8 normalCell = vtkm::CellClassification::NORMAL;
         for (vtkm::Id i = 0; i < numCells; i++)
           if (portal.Get(i) == normalCell)

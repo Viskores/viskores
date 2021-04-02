@@ -45,32 +45,38 @@ void TestUniformGrid(vtkm::filter::CleanGrid clean)
   VTKM_TEST_ASSERT((cellIds == vtkm::Id4(1, 2, 5, 4)), "Bad cell ids: ", cellIds);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> outPointField;
-  outData.GetField("pointvar").GetData().CopyTo(outPointField);
+  outData.GetField("pointvar").GetData().AsArrayHandle(outPointField);
   VTKM_TEST_ASSERT(outPointField.GetNumberOfValues() == 6,
                    "Wrong point field size: ",
                    outPointField.GetNumberOfValues());
-  VTKM_TEST_ASSERT(test_equal(outPointField.GetPortalConstControl().Get(1), 20.1),
+  VTKM_TEST_ASSERT(test_equal(outPointField.ReadPortal().Get(1), 20.1),
                    "Bad point field value: ",
-                   outPointField.GetPortalConstControl().Get(1));
-  VTKM_TEST_ASSERT(test_equal(outPointField.GetPortalConstControl().Get(4), 50.1),
+                   outPointField.ReadPortal().Get(1));
+  VTKM_TEST_ASSERT(test_equal(outPointField.ReadPortal().Get(4), 50.1),
                    "Bad point field value: ",
-                   outPointField.GetPortalConstControl().Get(1));
+                   outPointField.ReadPortal().Get(1));
 
   vtkm::cont::ArrayHandle<vtkm::Float32> outCellField;
-  outData.GetField("cellvar").GetData().CopyTo(outCellField);
+  outData.GetField("cellvar").GetData().AsArrayHandle(outCellField);
   VTKM_TEST_ASSERT(outCellField.GetNumberOfValues() == 2, "Wrong cell field size.");
-  VTKM_TEST_ASSERT(test_equal(outCellField.GetPortalConstControl().Get(0), 100.1),
+  VTKM_TEST_ASSERT(test_equal(outCellField.ReadPortal().Get(0), 100.1),
                    "Bad cell field value",
-                   outCellField.GetPortalConstControl().Get(0));
-  VTKM_TEST_ASSERT(test_equal(outCellField.GetPortalConstControl().Get(1), 200.1),
+                   outCellField.ReadPortal().Get(0));
+  VTKM_TEST_ASSERT(test_equal(outCellField.ReadPortal().Get(1), 200.1),
                    "Bad cell field value",
-                   outCellField.GetPortalConstControl().Get(0));
+                   outCellField.ReadPortal().Get(0));
 }
 
 void TestPointMerging()
 {
   vtkm::cont::testing::MakeTestDataSet makeDataSet;
   vtkm::cont::DataSet baseData = makeDataSet.Make3DUniformDataSet3(vtkm::Id3(4, 4, 4));
+
+  //Convert the baseData implicit points to explicit points, since the contour
+  //filter for uniform data always does point merging
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newcoords;
+  vtkm::cont::ArrayCopy(baseData.GetCoordinateSystem().GetData(), newcoords);
+  baseData.GetCoordinateSystem().SetData(newcoords);
 
   vtkm::filter::Contour marchingCubes;
   marchingCubes.SetIsoValue(0.05);

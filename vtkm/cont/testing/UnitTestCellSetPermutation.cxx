@@ -81,20 +81,24 @@ std::vector<vtkm::Id> ComputeCellToPointExpected(const CellSetType& cellset,
   vtkm::worklet::DispatcherMapTopology<CellsOfPoint>().Invoke(cellset, indexOffsets, connectivity);
 
   std::vector<bool> permutationMask(static_cast<std::size_t>(cellset.GetNumberOfCells()), false);
+  auto permPortal = permutation.ReadPortal();
   for (vtkm::Id i = 0; i < permutation.GetNumberOfValues(); ++i)
   {
-    permutationMask[static_cast<std::size_t>(permutation.GetPortalConstControl().Get(i))] = true;
+    permutationMask[static_cast<std::size_t>(permPortal.Get(i))] = true;
   }
 
   vtkm::Id numberOfPoints = cellset.GetNumberOfPoints();
   std::vector<vtkm::Id> expected(static_cast<std::size_t>(numberOfPoints), 0);
+  auto indexPortal = indexOffsets.ReadPortal();
+  auto numPortal = numIndices.ReadPortal();
+  auto connPortal = connectivity.ReadPortal();
   for (vtkm::Id i = 0; i < numberOfPoints; ++i)
   {
-    vtkm::Id offset = indexOffsets.GetPortalConstControl().Get(i);
-    vtkm::Id count = numIndices.GetPortalConstControl().Get(i);
+    vtkm::Id offset = indexPortal.Get(i);
+    vtkm::Id count = numPortal.Get(i);
     for (vtkm::Id j = 0; j < count; ++j)
     {
-      vtkm::Id cellId = connectivity.GetPortalConstControl().Get(offset++);
+      vtkm::Id cellId = connPortal.Get(offset++);
       if (permutationMask[static_cast<std::size_t>(cellId)])
       {
         ++expected[static_cast<std::size_t>(i)];
@@ -119,10 +123,11 @@ vtkm::cont::CellSetPermutation<CellSetType, vtkm::cont::ArrayHandleCounting<vtkm
 
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == numberOfCells,
                    "result length not equal to number of cells");
+  auto resultPortal = result.ReadPortal();
+  auto permPortal = permutation.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) ==
-                       cellset.GetNumberOfPointsInCell(permutation.GetPortalConstControl().Get(i)),
+    VTKM_TEST_ASSERT(resultPortal.Get(i) == cellset.GetNumberOfPointsInCell(permPortal.Get(i)),
                      "incorrect result");
   }
 
@@ -132,9 +137,10 @@ vtkm::cont::CellSetPermutation<CellSetType, vtkm::cont::ArrayHandleCounting<vtkm
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == cellset.GetNumberOfPoints(),
                    "result length not equal to number of points");
   auto expected = ComputeCellToPointExpected(cellset, permutation);
+  resultPortal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == expected[static_cast<std::size_t>(i)],
+    VTKM_TEST_ASSERT(resultPortal.Get(i) == expected[static_cast<std::size_t>(i)],
                      "incorrect result");
   }
   std::cout << "Testing resource releasing in CellSetPermutation:\n";

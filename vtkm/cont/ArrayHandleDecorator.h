@@ -11,35 +11,23 @@
 #define vtk_m_ArrayHandleDecorator_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Storage.h>
 
 #include <vtkm/StaticAssert.h>
+#include <vtkm/Tuple.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/internal/ArrayPortalHelpers.h>
 #include <vtkm/internal/brigand.hpp>
 
-#include <vtkmtaotuple/include/Tuple.h>
-#include <vtkmtaotuple/include/tao/seq/make_integer_sequence.hpp>
+#include <vtkmstd/integer_sequence.h>
 
 
 #include <type_traits>
 #include <utility>
 
-// Some compilers like brigand's integer sequences.
-// Some compilers prefer tao's.
-// Brigand seems to have more support, so we'll use that as default and fallback
-// to tao when brigand fails. With C++14, we'll be able to just use the STL.
-#if !defined(VTKM_CUDA_DEVICE_PASS) &&                                                             \
-  (defined(VTKM_GCC) ||                                                                            \
-   (defined(__apple_build_version__) && (__apple_build_version__ >= 10000000)) ||                  \
-   (defined(VTKM_CLANG) && (__clang_major__ >= 5)))
-#define VTKM_USE_TAO_SEQ
-#endif
-
 namespace vtkm
-{
-namespace cont
 {
 namespace internal
 {
@@ -104,6 +92,16 @@ private:
   InverseFunctorType InverseFunctor;
   vtkm::Id NumberOfValues;
 };
+}
+} // namespace vtkm::internal
+
+namespace vtkm
+{
+namespace cont
+{
+
+namespace internal
+{
 
 namespace decor
 {
@@ -125,11 +123,9 @@ template <typename DecoratorImplT, template <typename...> class List, typename..
 struct IsFunctorInvertibleImpl<DecoratorImplT, List<PortalTs...>>
 {
 private:
-  using PortalList = brigand::list<typename std::decay<PortalTs>::type...>;
-
   template <
     typename T,
-    typename U = decltype(std::declval<T>().CreateInverseFunctor(std::declval<PortalTs>()...))>
+    typename U = decltype(std::declval<T>().CreateInverseFunctor(std::declval<PortalTs&&>()...))>
   static std::true_type InverseExistsTest(int);
 
   template <typename T>
@@ -137,6 +133,28 @@ private:
 
 public:
   using type = decltype(InverseExistsTest<DecoratorImplT>(0));
+};
+
+// Tests whether DecoratorImplT has an AllocateSourceArrays(size, Arrays...) method.
+template <typename DecoratorImplT, typename ArrayList>
+struct IsDecoratorAllocatableImpl;
+
+template <typename DecoratorImplT, template <typename...> class List, typename... ArrayTs>
+struct IsDecoratorAllocatableImpl<DecoratorImplT, List<ArrayTs...>>
+{
+private:
+  template <
+    typename T,
+    typename U = decltype(std::declval<T>().AllocateSourceArrays(0,
+                                                                 vtkm::CopyFlag::Off,
+                                                                 std::declval<vtkm::cont::Token&>(),
+                                                                 std::declval<ArrayTs&>()...))>
+  static std::true_type Exists(int);
+  template <typename T>
+  static std::false_type Exists(...);
+
+public:
+  using type = decltype(Exists<DecoratorImplT>(0));
 };
 
 // Deduces the type returned by DecoratorImplT::CreateFunctor when given
@@ -147,7 +165,8 @@ struct GetFunctorTypeImpl;
 template <typename DecoratorImplT, template <typename...> class List, typename... PortalTs>
 struct GetFunctorTypeImpl<DecoratorImplT, List<PortalTs...>>
 {
-  using type = decltype(std::declval<DecoratorImplT>().CreateFunctor(std::declval<PortalTs>()...));
+  using type =
+    decltype(std::declval<DecoratorImplT>().CreateFunctor(std::declval<PortalTs&&>()...));
 };
 
 // Deduces the type returned by DecoratorImplT::CreateInverseFunctor when given
@@ -160,62 +179,36 @@ template <typename DecoratorImplT, template <typename...> class List, typename..
 struct GetInverseFunctorTypeImpl<std::true_type, DecoratorImplT, List<PortalTs...>>
 {
   using type =
-    decltype(std::declval<DecoratorImplT>().CreateInverseFunctor(std::declval<PortalTs>()...));
+    decltype(std::declval<DecoratorImplT>().CreateInverseFunctor(std::declval<PortalTs&&>()...));
 };
 
 template <typename DecoratorImplT, typename PortalList>
 struct GetInverseFunctorTypeImpl<std::false_type, DecoratorImplT, PortalList>
 {
-  using type = NoOpInverseFunctor;
+  using type = vtkm::internal::decor::NoOpInverseFunctor;
 };
 
 // Get appropriate portals from a source array.
 // See note below about using non-writable portals in invertible functors.
 // We need to sub in const portals when writable ones don't exist.
 template <typename ArrayT>
-typename std::decay<ArrayT>::type::PortalControl GetPortalControlImpl(std::true_type,
-                                                                      ArrayT&& array)
+typename std::decay<ArrayT>::type::WritePortalType GetWritePortalImpl(
+  std::true_type,
+  ArrayT&& array,
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token)
 {
-  return array.GetPortalControl();
+  return ArrayT::StorageType::CreateWritePortal(array.GetBuffers(), device, token);
 }
 
 template <typename ArrayT>
-typename std::decay<ArrayT>::type::PortalConstControl GetPortalControlImpl(std::false_type,
-                                                                           ArrayT&& array)
+typename std::decay<ArrayT>::type::ReadPortalType GetWritePortalImpl(
+  std::false_type,
+  ArrayT&& array,
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token)
 {
-  return array.GetPortalConstControl();
-}
-
-template <typename ArrayT, typename Device>
-typename std::decay<ArrayT>::type::template ExecutionTypes<Device>::Portal
-GetPortalInPlaceImpl(std::true_type, ArrayT&& array, Device)
-{
-  return array.PrepareForInPlace(Device{});
-}
-
-template <typename ArrayT, typename Device>
-typename std::decay<ArrayT>::type::template ExecutionTypes<Device>::PortalConst
-GetPortalInPlaceImpl(std::false_type, ArrayT&& array, Device)
-{
-  // ArrayT is read-only -- prepare for input instead.
-  return array.PrepareForInput(Device{});
-}
-
-template <typename ArrayT, typename Device>
-typename std::decay<ArrayT>::type::template ExecutionTypes<Device>::Portal
-GetPortalOutputImpl(std::true_type, ArrayT&& array, Device)
-{
-  // Prepare these for inplace usage instead -- we'll likely need to read
-  // from these in addition to writing.
-  return array.PrepareForInPlace(Device{});
-}
-
-template <typename ArrayT, typename Device>
-typename std::decay<ArrayT>::type::template ExecutionTypes<Device>::PortalConst
-GetPortalOutputImpl(std::false_type, ArrayT&& array, Device)
-{
-  // ArrayT is read-only -- prepare for input instead.
-  return array.PrepareForInput(Device{});
+  return ArrayT::StorageType::CreateReadPortal(array.GetBuffers(), device, token);
 }
 
 } // namespace detail
@@ -227,64 +220,30 @@ GetPortalOutputImpl(std::false_type, ArrayT&& array, Device)
 // const array handles so we can at least read from them in the inverse
 // functors.
 template <typename ArrayT,
-          typename Portal = typename std::decay<ArrayT>::type::PortalControl,
-          typename PortalConst = typename std::decay<ArrayT>::type::PortalConstControl>
-using GetPortalControlType =
+          typename Portal = typename std::decay<ArrayT>::type::WritePortalType,
+          typename PortalConst = typename std::decay<ArrayT>::type::ReadPortalType>
+using GetWritePortalType =
   typename brigand::if_<vtkm::internal::PortalSupportsSets<Portal>, Portal, PortalConst>::type;
 
 template <typename ArrayT>
-using GetPortalConstControlType = typename std::decay<ArrayT>::type::PortalConstControl;
-
-template <typename ArrayT,
-          typename Device,
-          typename Portal =
-            typename std::decay<ArrayT>::type::template ExecutionTypes<Device>::Portal,
-          typename PortalConst =
-            typename std::decay<ArrayT>::type::template ExecutionTypes<Device>::PortalConst>
-using GetPortalExecutionType =
-  typename brigand::if_<vtkm::internal::PortalSupportsSets<Portal>, Portal, PortalConst>::type;
-
-template <typename ArrayT, typename Device>
-using GetPortalConstExecutionType =
-  typename std::decay<ArrayT>::type::template ExecutionTypes<Device>::PortalConst;
+using GetReadPortalType = typename std::decay<ArrayT>::type::ReadPortalType;
 
 // Get portal objects:
 // See note above -- we swap in const portals sometimes.
 template <typename ArrayT>
-GetPortalControlType<typename std::decay<ArrayT>::type> GetPortalControl(ArrayT&& array)
+GetWritePortalType<typename std::decay<ArrayT>::type>
+WritePortal(ArrayT&& array, vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token)
 {
-  return detail::GetPortalControlImpl(IsWritableArrayHandle<ArrayT>{}, std::forward<ArrayT>(array));
+  return detail::GetWritePortalImpl(
+    IsWritableArrayHandle<ArrayT>{}, std::forward<ArrayT>(array), device, token);
 }
 
 template <typename ArrayT>
-GetPortalConstControlType<typename std::decay<ArrayT>::type> GetPortalConstControl(
-  const ArrayT& array)
+GetReadPortalType<typename std::decay<ArrayT>::type> ReadPortal(const ArrayT& array,
+                                                                vtkm::cont::DeviceAdapterId device,
+                                                                vtkm::cont::Token& token)
 {
-  return array.GetPortalConstControl();
-}
-
-template <typename ArrayT, typename Device>
-GetPortalConstExecutionType<typename std::decay<ArrayT>::type, Device> GetPortalInput(
-  const ArrayT& array,
-  Device)
-{
-  return array.PrepareForInput(Device{});
-}
-
-template <typename ArrayT, typename Device>
-GetPortalExecutionType<typename std::decay<ArrayT>::type, Device> GetPortalInPlace(ArrayT&& array,
-                                                                                   Device)
-{
-  return detail::GetPortalInPlaceImpl(
-    IsWritableArrayHandle<ArrayT>{}, std::forward<ArrayT>(array), Device{});
-}
-
-template <typename ArrayT, typename Device>
-GetPortalExecutionType<typename std::decay<ArrayT>::type, Device> GetPortalOutput(ArrayT&& array,
-                                                                                  Device)
-{
-  return detail::GetPortalOutputImpl(
-    IsWritableArrayHandle<ArrayT>{}, std::forward<ArrayT>(array), Device{});
+  return ArrayT::StorageType::CreateReadPortal(array.GetBuffers(), device, token);
 }
 
 // Equivalent to std::true_type if *any* portal in PortalList can be written to.
@@ -299,6 +258,12 @@ using AnyPortalIsWritable =
 template <typename DecoratorImplT, typename PortalList>
 using IsFunctorInvertible =
   typename detail::IsFunctorInvertibleImpl<DecoratorImplT, PortalList>::type;
+
+// Set to std::true_type if DecoratorImplT::AllocateSourceArrays can be called
+// with the supplied arrays, or std::false_type otherwise.
+template <typename DecoratorImplT, typename ArrayList>
+using IsDecoratorAllocatable =
+  typename detail::IsDecoratorAllocatableImpl<DecoratorImplT, ArrayList>::type;
 
 // std::true_type/std::false_type depending on whether the decorator impl has a
 // CreateInversePortal method AND any of the arrays are writable.
@@ -323,24 +288,54 @@ using GetInverseFunctorType =
 // Some notes on this implementation:
 // - MSVC 2015 ICEs when using brigand::transform to convert a brigand::list
 //   of arrayhandles to portals. So instead we pass the ArrayTs.
-// - Just using brigand::list<GetPortalControlType<ArrayTs>...> fails, as
+// - Just using brigand::list<GetWritePortalType<ArrayTs>...> fails, as
 //   apparently that is an improper parameter pack expansion
 // - So we jump through some decltype/declval hoops here to get this to work:
 template <typename... ArrayTs>
-using GetPortalConstControlList =
-  brigand::list<decltype((GetPortalConstControl(std::declval<ArrayTs>())))...>;
-
-template <typename Device, typename... ArrayTs>
-using GetPortalConstExecutionList =
-  brigand::list<decltype((GetPortalInput(std::declval<ArrayTs>(), Device{})))...>;
+using GetReadPortalList =
+  brigand::list<decltype((ReadPortal(std::declval<ArrayTs&>(),
+                                     std::declval<vtkm::cont::DeviceAdapterId>(),
+                                     std::declval<vtkm::cont::Token&>())))...>;
 
 template <typename... ArrayTs>
-using GetPortalControlList =
-  brigand::list<decltype((GetPortalControl(std::declval<ArrayTs>())))...>;
+using GetWritePortalList =
+  brigand::list<decltype((WritePortal(std::declval<ArrayTs&>(),
+                                      std::declval<vtkm::cont::DeviceAdapterId>(),
+                                      std::declval<vtkm::cont::Token&>())))...>;
 
-template <typename Device, typename... ArrayTs>
-using GetPortalExecutionList =
-  brigand::list<decltype((GetPortalInPlace(std::declval<ArrayTs>(), Device{})))...>;
+template <vtkm::IdComponent I, typename ArrayTupleType>
+struct BufferIndexImpl
+{
+  static constexpr vtkm::IdComponent Value()
+  {
+    return BufferIndexImpl<I - 1, ArrayTupleType>::Value() +
+      vtkm::TupleElement<I - 1, ArrayTupleType>::GetNumberOfBuffers();
+  }
+};
+template <typename ArrayTupleType>
+struct BufferIndexImpl<0, ArrayTupleType>
+{
+  static constexpr vtkm::IdComponent Value()
+  {
+    // One buffer reserved for metadata.
+    return 1;
+  }
+};
+
+template <typename DecoratorImplT>
+struct DecoratorMetaData
+{
+  DecoratorImplT Implementation;
+  vtkm::Id NumberOfValues = 0;
+
+  DecoratorMetaData(const DecoratorImplT& implementation, vtkm::Id numValues)
+    : Implementation(implementation)
+    , NumberOfValues(numValues)
+  {
+  }
+
+  DecoratorMetaData() = default;
+};
 
 template <typename DecoratorImplT, typename... ArrayTs>
 struct DecoratorStorageTraits
@@ -360,68 +355,61 @@ struct DecoratorStorageTraits
                          "ArrayHandleDecorator must be a list of ArrayHandle "
                          "types.");
 
-  using ArrayTupleType = vtkmstd::tuple<ArrayTs...>;
+  using ArrayTupleType = vtkm::Tuple<ArrayTs...>;
 
-// size_t integral constants that index ArrayTs:
-#ifndef VTKM_USE_TAO_SEQ
-  using IndexList = brigand::make_sequence<brigand::size_t<0>, sizeof...(ArrayTs)>;
-#else  // VTKM_USE_TAO_SEQ
-  using IndexList = tao::seq::make_index_sequence<sizeof...(ArrayTs)>;
-#endif // VTKM_USE_TAO_SEQ
+  // size_t integral constants that index ArrayTs:
+  using IndexList = vtkmstd::make_index_sequence<sizeof...(ArrayTs)>;
+
+  // Returns the index into the buffers array for the array at the given index.
+  template <vtkm::IdComponent I>
+  static constexpr vtkm::IdComponent BufferIndex()
+  {
+    return BufferIndexImpl<I, ArrayTupleType>::Value();
+  }
+
+  // Converts a buffers array to the ArrayHandle at the given index.
+  template <vtkm::IdComponent I>
+  static vtkm::TupleElement<I, ArrayTupleType> BuffersToArray(
+    const vtkm::cont::internal::Buffer* buffers)
+  {
+    return vtkm::TupleElement<I, ArrayTupleType>(buffers + BufferIndex<I>());
+  }
+
+  using MetaData = DecoratorMetaData<DecoratorImplT>;
+
+  static MetaData& GetMetaData(const vtkm::cont::internal::Buffer* buffers)
+  {
+    return buffers[0].GetMetaData<MetaData>();
+  }
+
+  // true_type/false_type depending on whether the decorator supports Allocate:
+  using IsAllocatable = IsDecoratorAllocatable<DecoratorImplT, ArrayList>;
 
   // Portal lists:
   // NOTE we have to pass the parameter pack here instead of using ArrayList
   // with brigand::transform, since that's causing MSVC 2015 to ice:
-  using PortalControlList = GetPortalControlList<ArrayTs...>;
-  using PortalConstControlList = GetPortalConstControlList<ArrayTs...>;
-  template <typename Device>
-  using PortalExecutionList = GetPortalExecutionList<Device, ArrayTs...>;
-  template <typename Device>
-  using PortalConstExecutionList = GetPortalConstExecutionList<Device, ArrayTs...>;
+  using WritePortalList = GetWritePortalList<ArrayTs...>;
+  using ReadPortalList = GetReadPortalList<ArrayTs...>;
 
   // Functors:
-  using FunctorControlType = GetFunctorType<DecoratorImplT, PortalControlList>;
-  using FunctorConstControlType = GetFunctorType<DecoratorImplT, PortalConstControlList>;
-
-  template <typename Device>
-  using FunctorExecutionType = GetFunctorType<DecoratorImplT, PortalExecutionList<Device>>;
-
-  template <typename Device>
-  using FunctorConstExecutionType =
-    GetFunctorType<DecoratorImplT, PortalConstExecutionList<Device>>;
+  using WriteFunctorType = GetFunctorType<DecoratorImplT, WritePortalList>;
+  using ReadFunctorType = GetFunctorType<DecoratorImplT, ReadPortalList>;
 
   // Inverse functors:
-  using InverseFunctorControlType = GetInverseFunctorType<DecoratorImplT, PortalControlList>;
+  using InverseWriteFunctorType = GetInverseFunctorType<DecoratorImplT, WritePortalList>;
 
-  using InverseFunctorConstControlType = NoOpInverseFunctor;
-
-  template <typename Device>
-  using InverseFunctorExecutionType =
-    GetInverseFunctorType<DecoratorImplT, PortalExecutionList<Device>>;
-
-  template <typename Device>
-  using InverseFunctorConstExecutionType = NoOpInverseFunctor;
+  using InverseReadFunctorType = vtkm::internal::decor::NoOpInverseFunctor;
 
   // Misc:
   // ValueType is derived from DecoratorImplT::CreateFunctor(...)'s operator().
-  using ValueType = decltype(std::declval<FunctorControlType>()(0));
+  using ValueType = decltype(std::declval<WriteFunctorType>()(0));
 
   // Decorator portals:
-  using PortalControlType =
-    ArrayPortalDecorator<ValueType, FunctorControlType, InverseFunctorControlType>;
+  using WritePortalType =
+    vtkm::internal::ArrayPortalDecorator<ValueType, WriteFunctorType, InverseWriteFunctorType>;
 
-  using PortalConstControlType =
-    ArrayPortalDecorator<ValueType, FunctorConstControlType, InverseFunctorConstControlType>;
-
-  template <typename Device>
-  using PortalExecutionType = ArrayPortalDecorator<ValueType,
-                                                   FunctorExecutionType<Device>,
-                                                   InverseFunctorExecutionType<Device>>;
-
-  template <typename Device>
-  using PortalConstExecutionType = ArrayPortalDecorator<ValueType,
-                                                        FunctorConstExecutionType<Device>,
-                                                        InverseFunctorConstExecutionType<Device>>;
+  using ReadPortalType =
+    vtkm::internal::ArrayPortalDecorator<ValueType, ReadFunctorType, InverseReadFunctorType>;
 
   // helper for constructing portals with the appropriate functors. This is
   // where we decide whether or not to call `CreateInverseFunctor` on the
@@ -446,142 +434,67 @@ struct DecoratorStorageTraits
     return { impl.CreateFunctor(portals...), impl.CreateInverseFunctor(portals...), numVals };
   }
 
-#ifndef VTKM_USE_TAO_SEQ
+  // Static dispatch for calling AllocateSourceArrays on supported implementations:
+  VTKM_CONT [[noreturn]] static void CallAllocate(std::false_type,
+                                                  vtkm::Id,
+                                                  vtkm::cont::internal::Buffer*,
+                                                  vtkm::CopyFlag,
+                                                  vtkm::cont::Token&,
+                                                  ArrayTs...)
+  {
+    throw vtkm::cont::ErrorBadType("Allocate not supported by this ArrayHandleDecorator.");
+  }
+
+  VTKM_CONT static void CallAllocate(std::true_type,
+                                     vtkm::Id newSize,
+                                     vtkm::cont::internal::Buffer* buffers,
+                                     vtkm::CopyFlag preserve,
+                                     vtkm::cont::Token& token,
+                                     ArrayTs... arrays)
+  {
+    MetaData& metadata = GetMetaData(buffers);
+    metadata.Implementation.AllocateSourceArrays(newSize, preserve, token, arrays...);
+    metadata.NumberOfValues = newSize;
+  }
+
+
   // Portal construction methods. These actually create portals.
-  template <template <typename...> class List, typename... Indices>
-  VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
-                                                       ArrayTupleType& arrays,
-                                                       vtkm::Id numValues,
-                                                       List<Indices...>)
+  template <std::size_t... Indices>
+  VTKM_CONT static WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::Id numValues,
+                                                     vtkmstd::index_sequence<Indices...>,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
-    return CreatePortalDecorator<PortalControlType>(
+    return CreatePortalDecorator<WritePortalType>(
       numValues,
-      impl,
-      // More MSVC ICE avoidance while expanding the Indices parameter pack,
-      // which is a list of std::integral_constant<size_t, ...>:
-      //
-      // Indices::value : Works everywhere but MSVC2017, which crashes on it.
-      // Indices{} : Works on MSVC2017, but won't compile on MSVC2015.
-      // Indices{}.value : Works on both MSVC2015 and MSVC2017.
-      //
-      // Don't touch the following line unless you really, really have to.
-      GetPortalControl(vtkmstd::get<Indices{}.value>(arrays))...);
+      GetMetaData(buffers).Implementation,
+      WritePortal(BuffersToArray<Indices>(buffers), device, token)...);
   }
 
-  template <template <typename...> class List, typename... Indices>
-  VTKM_CONT static PortalConstControlType MakePortalConstControl(const DecoratorImplT& impl,
-                                                                 const ArrayTupleType& arrays,
-                                                                 vtkm::Id numValues,
-                                                                 List<Indices...>)
+  template <std::size_t... Indices>
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::Id numValues,
+                                                   vtkmstd::index_sequence<Indices...>,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
-    return CreatePortalDecorator<PortalConstControlType>(
+    return CreatePortalDecorator<ReadPortalType>(
       numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      GetPortalConstControl(vtkmstd::get<Indices{}.value>(arrays))...);
+      GetMetaData(buffers).Implementation,
+      ReadPortal(BuffersToArray<Indices>(buffers), device, token)...);
   }
 
-  template <template <typename...> class List, typename... Indices, typename Device>
-  VTKM_CONT static PortalConstExecutionType<Device> MakePortalInput(const DecoratorImplT& impl,
-                                                                    const ArrayTupleType& arrays,
-                                                                    vtkm::Id numValues,
-                                                                    List<Indices...>,
-                                                                    Device dev)
+  template <std::size_t... Indices>
+  VTKM_CONT static void AllocateSourceArrays(vtkm::Id numValues,
+                                             vtkm::cont::internal::Buffer* buffers,
+                                             vtkm::CopyFlag preserve,
+                                             vtkm::cont::Token& token,
+                                             vtkmstd::index_sequence<Indices...>)
   {
-    return CreatePortalDecorator<PortalConstExecutionType<Device>>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      GetPortalInput(vtkmstd::get<Indices{}.value>(arrays), dev)...);
+    CallAllocate(
+      IsAllocatable{}, numValues, buffers, preserve, token, BuffersToArray<Indices>(buffers)...);
   }
-
-  template <template <typename...> class List, typename... Indices, typename Device>
-  VTKM_CONT static PortalExecutionType<Device> MakePortalInPlace(const DecoratorImplT& impl,
-                                                                 ArrayTupleType& arrays,
-                                                                 vtkm::Id numValues,
-                                                                 List<Indices...>,
-                                                                 Device dev)
-  {
-    return CreatePortalDecorator<PortalExecutionType<Device>>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      GetPortalInPlace(vtkmstd::get<Indices{}.value>(arrays), dev)...);
-  }
-
-  template <template <typename...> class List, typename... Indices, typename Device>
-  VTKM_CONT static PortalExecutionType<Device> MakePortalOutput(const DecoratorImplT& impl,
-                                                                ArrayTupleType& arrays,
-                                                                vtkm::Id numValues,
-                                                                List<Indices...>,
-                                                                Device dev)
-  {
-    return CreatePortalDecorator<PortalExecutionType<Device>>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      GetPortalOutput(vtkmstd::get<Indices{}.value>(arrays), dev)...);
-  }
-
-#else  // VTKM_USE_TAO_SEQ
-  // Portal construction methods. These actually create portals.
-  template <template <typename, std::size_t...> class List, std::size_t... Indices>
-  VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
-                                                       ArrayTupleType& arrays,
-                                                       vtkm::Id numValues,
-                                                       List<std::size_t, Indices...>)
-  {
-    return CreatePortalDecorator<PortalControlType>(
-      numValues, impl, GetPortalControl(vtkmstd::get<Indices>(arrays))...);
-  }
-
-  template <template <typename, std::size_t...> class List, std::size_t... Indices>
-  VTKM_CONT static PortalConstControlType MakePortalConstControl(const DecoratorImplT& impl,
-                                                                 const ArrayTupleType& arrays,
-                                                                 vtkm::Id numValues,
-                                                                 List<std::size_t, Indices...>)
-  {
-    return CreatePortalDecorator<PortalConstControlType>(
-      numValues, impl, GetPortalConstControl(vtkmstd::get<Indices>(arrays))...);
-  }
-
-  template <template <typename, std::size_t...> class List, std::size_t... Indices, typename Device>
-  VTKM_CONT static PortalConstExecutionType<Device> MakePortalInput(const DecoratorImplT& impl,
-                                                                    const ArrayTupleType& arrays,
-                                                                    vtkm::Id numValues,
-                                                                    List<std::size_t, Indices...>,
-                                                                    Device dev)
-  {
-    return CreatePortalDecorator<PortalConstExecutionType<Device>>(
-      numValues, impl, GetPortalInput(vtkmstd::get<Indices>(arrays), dev)...);
-  }
-
-  template <template <typename, std::size_t...> class List, std::size_t... Indices, typename Device>
-  VTKM_CONT static PortalExecutionType<Device> MakePortalInPlace(const DecoratorImplT& impl,
-                                                                 ArrayTupleType& arrays,
-                                                                 vtkm::Id numValues,
-                                                                 List<std::size_t, Indices...>,
-                                                                 Device dev)
-  {
-    return CreatePortalDecorator<PortalExecutionType<Device>>(
-      numValues, impl, GetPortalInPlace(vtkmstd::get<Indices>(arrays), dev)...);
-  }
-
-  template <template <typename, std::size_t...> class List, std::size_t... Indices, typename Device>
-  VTKM_CONT static PortalExecutionType<Device> MakePortalOutput(const DecoratorImplT& impl,
-                                                                ArrayTupleType& arrays,
-                                                                vtkm::Id numValues,
-                                                                List<std::size_t, Indices...>,
-                                                                Device dev)
-  {
-    return CreatePortalDecorator<PortalExecutionType<Device>>(
-      numValues, impl, GetPortalOutput(vtkmstd::get<Indices>(arrays), dev)...);
-  }
-#endif // VTKM_USE_TAO_SEQ
 };
 
 } // end namespace decor
@@ -597,107 +510,59 @@ class Storage<typename decor::DecoratorStorageTraits<DecoratorImplT, ArrayTs...>
 {
   using Traits = decor::DecoratorStorageTraits<DecoratorImplT, ArrayTs...>;
   using IndexList = typename Traits::IndexList;
+  using MetaData = typename Traits::MetaData;
 
 public:
-  using ArrayTupleType = typename Traits::ArrayTupleType;
-  using ValueType = typename Traits::ValueType;
-  using PortalType = typename Traits::PortalControlType;
-  using PortalConstType = typename Traits::PortalConstControlType;
+  using ReadPortalType = typename Traits::ReadPortalType;
+  using WritePortalType = typename Traits::WritePortalType;
 
-  VTKM_CONT
-  Storage()
-    : Valid{ false }
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
   {
+    return Traits::template BufferIndex<static_cast<vtkm::IdComponent>(sizeof...(ArrayTs))>();
   }
 
-  VTKM_CONT
-  Storage(const DecoratorImplT& impl, const ArrayTupleType& arrayTuple, vtkm::Id numValues)
-    : Implementation(impl)
-    , ArrayTuple{ arrayTuple }
-    , NumberOfValues(numValues)
-    , Valid{ true }
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
+    return Traits::GetMetaData(buffers).NumberOfValues;
   }
 
-  VTKM_CONT
-  PortalType GetPortal()
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token)
   {
-    VTKM_ASSERT(this->Valid);
-    return Traits::MakePortalControl(
-      this->Implementation, this->ArrayTuple, this->NumberOfValues, IndexList{});
+    if (numValues != GetNumberOfValues(buffers))
+    {
+      Traits::AllocateSourceArrays(numValues, buffers, preserve, token, IndexList{});
+    }
+    else
+    {
+      // Do nothing. We have this condition to allow allocating the same size when the
+      // array cannot be resized.
+    }
   }
 
-  VTKM_CONT
-  PortalConstType GetPortalConst() const
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
-    VTKM_ASSERT(this->Valid);
-    return Traits::MakePortalConstControl(
-      this->Implementation, this->ArrayTuple, this->NumberOfValues, IndexList{});
+    return Traits::CreateReadPortal(
+      buffers, GetNumberOfValues(buffers), IndexList{}, device, token);
   }
 
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
-    VTKM_ASSERT(this->Valid);
-    return this->NumberOfValues;
+    return Traits::CreateWritePortal(
+      buffers, GetNumberOfValues(buffers), IndexList{}, device, token);
   }
 
-  VTKM_CONT
-  void Allocate(vtkm::Id)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer>
+  CreateBuffers(const DecoratorImplT& implementation, vtkm::Id numValues, const ArrayTs&... arrays)
   {
-    VTKM_ASSERT(this->Valid);
-    // No-op. I suppose eventually we could pass numValues down to the
-    // implementation class and let it do something intelligent.
+    return vtkm::cont::internal::CreateBuffers(MetaData(implementation, numValues), arrays...);
   }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id)
-  {
-    VTKM_ASSERT(this->Valid);
-    // No-op. Again, could eventually be passed down to the implementation.
-  }
-
-  VTKM_CONT
-  void ReleaseResources()
-  {
-    VTKM_ASSERT(this->Valid);
-    // No-op. Again, could eventually be passed down to the implementation.
-  }
-
-  VTKM_CONT
-  const ArrayTupleType& GetArrayTuple() const
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->ArrayTuple;
-  }
-
-  VTKM_CONT
-  ArrayTupleType& GetArrayTuple()
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->ArrayTuple;
-  }
-
-  VTKM_CONT
-  const DecoratorImplT& GetImplementation() const
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->Implementation;
-  }
-
-  VTKM_CONT
-  DecoratorImplT& GetImplementation()
-  {
-    VTKM_ASSERT(this->Valid);
-    return this->Implementation;
-  }
-
-private:
-  DecoratorImplT Implementation;
-  ArrayTupleType ArrayTuple;
-  vtkm::Id NumberOfValues;
-
-  bool Valid;
 };
 
 template <typename DecoratorImplT, typename... ArrayTs>
@@ -708,91 +573,6 @@ struct DecoratorHandleTraits
   using StorageTag = StorageTagDecorator<DecoratorImplT, ArrayTs...>;
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
   using Superclass = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-};
-
-template <typename DecoratorImplT, typename... ArrayTs, typename Device>
-class ArrayTransfer<typename decor::DecoratorStorageTraits<DecoratorImplT, ArrayTs...>::ValueType,
-                    StorageTagDecorator<DecoratorImplT, ArrayTs...>,
-                    Device>
-{
-  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-  using HandleTraits = DecoratorHandleTraits<DecoratorImplT, ArrayTs...>;
-  using Traits = typename HandleTraits::StorageTraits;
-  using IndexList = typename Traits::IndexList;
-  using StorageType = typename HandleTraits::StorageType;
-
-public:
-  using ValueType = typename Traits::ValueType;
-
-  using PortalControl = typename Traits::PortalControlType;
-  using PortalConstControl = typename Traits::PortalConstControlType;
-
-  using PortalExecution = typename Traits::template PortalExecutionType<Device>;
-  using PortalConstExecution = typename Traits::template PortalConstExecutionType<Device>;
-
-  VTKM_CONT
-  ArrayTransfer(StorageType* storage)
-    : Storage(storage)
-  {
-  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
-
-  VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) const
-  {
-    return Traits::MakePortalInput(this->Storage->GetImplementation(),
-                                   this->Storage->GetArrayTuple(),
-                                   this->Storage->GetNumberOfValues(),
-                                   IndexList{},
-                                   Device{});
-  }
-
-  VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
-  {
-    return Traits::MakePortalInPlace(this->Storage->GetImplementation(),
-                                     this->Storage->GetArrayTuple(),
-                                     this->Storage->GetNumberOfValues(),
-                                     IndexList{},
-                                     Device{});
-  }
-
-  VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id)
-  {
-    return Traits::MakePortalOutput(this->Storage->GetImplementation(),
-                                    this->Storage->GetArrayTuple(),
-                                    this->Storage->GetNumberOfValues(),
-                                    IndexList{},
-                                    Device{});
-  }
-
-  VTKM_CONT
-  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
-  {
-    // Implementation of this method should be unnecessary. The internal
-    // array handles should automatically retrieve the output data as
-    // necessary.
-  }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id)
-  {
-    // no-op
-  }
-
-
-  VTKM_CONT
-  void ReleaseResources()
-  {
-    // no-op
-  }
-
-private:
-  StorageType* Storage;
 };
 
 } // namespace internal
@@ -813,7 +593,7 @@ private:
 ///   // Takes one portal for each source array handle (only two shown).
 ///   // Returns a functor that defines:
 ///   //
-///   // ValueType operator()(vtkm::Id id) const;
+///   // VTKM_EXEC_CONT ValueType operator()(vtkm::Id id) const;
 ///   //
 ///   // which takes an index and returns a value which should be produced by
 ///   // the source arrays somehow. This ValueType will be the ValueType of the
@@ -822,12 +602,13 @@ private:
 ///   // Both SomeFunctor::operator() and CreateFunctor must be const.
 ///   //
 ///   template <typename Portal1Type, typename Portal2Type>
+///   VTKM_CONT
 ///   SomeFunctor CreateFunctor(Portal1Type portal1, Portal2Type portal2) const;
 ///
 ///   // Takes one portal for each source array handle (only two shown).
 ///   // Returns a functor that defines:
 ///   //
-///   // void operator()(vtkm::Id id, ValueType val) const;
+///   // VTKM_EXEC_CONT void operator()(vtkm::Id id, ValueType val) const;
 ///   //
 ///   // which takes an index and a value, which should be used to modify one
 ///   // or more of the source arrays.
@@ -841,8 +622,26 @@ private:
 ///   // const.
 ///   //
 ///   template <typename Portal1Type, typename Portal2Type>
+///   VTKM_CONT
 ///   SomeInverseFunctor CreateInverseFunctor(Portal1Type portal1,
 ///                                           Portal2Type portal2) const;
+///
+///   // Given a set of ArrayHandles and a size, implement what should happen
+///   // to the source ArrayHandles when Allocate() is called on the decorator
+///   // handle.
+///   //
+///   // AllocateSourceArrays is optional; if not provided, the
+///   // ArrayHandleDecorator will throw if its Allocate method is called. If
+///   // an implementation is present and doesn't throw, the
+///   // ArrayHandleDecorator's internal state is updated to show `size` as the
+///   // number of values.
+///   template <typename Array1Type, typename Array2Type>
+///   VTKM_CONT
+///   void AllocateSourceArrays(vtkm::Id size,
+///                             vtkm::CopyFlag preserve,
+///                             vtkm::cont::Token& token,
+///                             Array1Type array1,
+///                             Array2Type array2) const;
 ///
 /// };
 /// ```
@@ -870,7 +669,7 @@ public:
   ArrayHandleDecorator(vtkm::Id numValues,
                        const typename std::decay<DecoratorImplT>::type& impl,
                        const typename std::decay<ArrayTs>::type&... arrays)
-    : Superclass{ StorageType{ impl, vtkmstd::make_tuple(arrays...), numValues } }
+    : Superclass{ StorageType::CreateBuffers(impl, numValues, arrays...) }
   {
   }
 };

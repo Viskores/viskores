@@ -8,32 +8,80 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#define vtkm_cont_ArrayHandle_cxx
 #include <vtkm/cont/ArrayHandle.h>
 
 namespace vtkm
 {
 namespace cont
 {
+namespace detail
+{
 
-#define VTKM_ARRAYHANDLE_INSTANTIATE(Type)                                                         \
-  template class VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>;                              \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>;                \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>;                \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
+VTKM_CONT void ArrayHandleReleaseResourcesExecution(
+  const std::vector<vtkm::cont::internal::Buffer>& buffers)
+{
+  vtkm::cont::Token token;
 
-VTKM_ARRAYHANDLE_INSTANTIATE(char)
-VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Int8)
-VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::UInt8)
-VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Int16)
-VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::UInt16)
-VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Int32)
-VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::UInt32)
-VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Int64)
-VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::UInt64)
-VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Float32)
-VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Float64)
-
-#undef VTKM_ARRAYHANDLE_INSTANTIATE
+  for (auto&& buf : buffers)
+  {
+    buf.ReleaseDeviceResources();
+  }
 }
-} // end vtkm::cont
+
+VTKM_CONT bool ArrayHandleIsOnDevice(const std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                     vtkm::cont::DeviceAdapterId device)
+{
+  for (auto&& buf : buffers)
+  {
+    if (!buf.IsAllocatedOnDevice(device))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+}
+}
+} // namespace vtkm::cont::detail
+
+namespace
+{
+
+struct DeviceCheckFunctor
+{
+  vtkm::cont::DeviceAdapterId FoundDevice = vtkm::cont::DeviceAdapterTagUndefined{};
+
+  VTKM_CONT void operator()(vtkm::cont::DeviceAdapterId device,
+                            const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    if (this->FoundDevice == vtkm::cont::DeviceAdapterTagUndefined{})
+    {
+      if (vtkm::cont::detail::ArrayHandleIsOnDevice(buffers, device))
+      {
+        this->FoundDevice = device;
+      }
+    }
+  }
+};
+
+} // anonymous namespace
+
+namespace vtkm
+{
+namespace cont
+{
+namespace detail
+{
+
+VTKM_CONT vtkm::cont::DeviceAdapterId ArrayHandleGetDeviceAdapterId(
+  const std::vector<vtkm::cont::internal::Buffer>& buffers)
+{
+  DeviceCheckFunctor functor;
+
+  vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST{}, buffers);
+
+  return functor.FoundDevice;
+}
+}
+}
+} // namespace vtkm::cont::detail

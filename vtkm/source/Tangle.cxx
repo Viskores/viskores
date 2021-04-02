@@ -10,6 +10,7 @@
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/source/Tangle.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
 {

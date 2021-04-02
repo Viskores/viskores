@@ -13,7 +13,6 @@
 
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -43,7 +42,7 @@ vtkm::cont::DataSet MakeWarpScalarTestDataSet()
 
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "scalefactor", scaleFactor);
+  dataSet.AddPointField("scalefactor", scaleFactor);
   return dataSet;
 }
 }
@@ -61,27 +60,28 @@ void TestWarpScalar()
   vecType normal = vtkm::make_Vec<vtkm::FloatDefault>(static_cast<vtkm::FloatDefault>(0.0),
                                                       static_cast<vtkm::FloatDefault>(0.0),
                                                       static_cast<vtkm::FloatDefault>(1.0));
-  auto coordinate = ds.GetCoordinateSystem().GetData();
+  auto coordinate = ds.GetCoordinateSystem().GetDataAsMultiplexer();
   vtkm::Id nov = coordinate.GetNumberOfValues();
   vtkm::cont::ArrayHandleConstant<vecType> normalAH =
     vtkm::cont::make_ArrayHandleConstant(normal, nov);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> scaleFactorArray;
-  auto scaleFactor =
-    ds.GetField("scalefactor").GetData().ResetTypes(vtkm::TypeListTagFieldScalar());
-  scaleFactor.CopyTo(scaleFactorArray);
-  auto sFAPortal = scaleFactorArray.GetPortalControl();
+  auto scaleFactor = ds.GetField("scalefactor")
+                       .GetData()
+                       .ResetTypes<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>();
+  scaleFactor.AsArrayHandle(scaleFactorArray);
 
   vtkm::worklet::WarpScalar warpWorklet;
-  warpWorklet.Run(ds.GetCoordinateSystem(), normalAH, scaleFactor, scaleAmount, result);
-  auto resultPortal = result.GetPortalConstControl();
+  warpWorklet.Run(
+    ds.GetCoordinateSystem().GetDataAsMultiplexer(), normalAH, scaleFactor, scaleAmount, result);
 
+  auto sFAPortal = scaleFactorArray.ReadPortal();
+  auto resultPortal = result.ReadPortal();
   for (vtkm::Id i = 0; i < nov; i++)
   {
     for (vtkm::Id j = 0; j < 3; j++)
     {
-      vtkm::FloatDefault ans =
-        coordinate.GetPortalConstControl().Get(i)[static_cast<vtkm::IdComponent>(j)] +
+      vtkm::FloatDefault ans = coordinate.ReadPortal().Get(i)[static_cast<vtkm::IdComponent>(j)] +
         scaleAmount * normal[static_cast<vtkm::IdComponent>(j)] * sFAPortal.Get(i);
       VTKM_TEST_ASSERT(test_equal(ans, resultPortal.Get(i)[static_cast<vtkm::IdComponent>(j)]),
                        " Wrong result for WarpVector worklet");

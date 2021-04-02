@@ -32,7 +32,7 @@ void TestCellAverageUniform3D()
   vtkm::Float32 expected[4] = { 60.1875f, 70.2125f, 120.3375f, 130.3625f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 3D uniform data");
   }
 }
@@ -53,7 +53,7 @@ void TestCellAverageUniform2D()
   std::cout << std::endl;
   for (int i = 0; i < 2; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 2D uniform data");
   }
 }
@@ -73,7 +73,7 @@ void TestCellAverageExplicit()
   vtkm::Float32 expected[2] = { 20.1333f, 35.2f };
   for (int i = 0; i < 2; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 3D explicit data");
   }
 }

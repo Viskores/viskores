@@ -45,7 +45,7 @@ vtkm::cont::DataSet MakeTestDataSetRectilinear()
   for (int i = 0; i < 3; ++i)
   {
     coords[i].Allocate(64);
-    auto portal = coords[i].GetPortalControl();
+    auto portal = coords[i].WritePortal();
 
     vtkm::FloatDefault cur = 0.0f;
     for (vtkm::Id j = 0; j < portal.GetNumberOfValues(); ++j)
@@ -61,13 +61,13 @@ vtkm::cont::DataSet MakeTestDataSetRectilinear()
 vtkm::cont::DataSet MakeTestDataSetCurvilinear()
 {
   auto recti = MakeTestDataSetRectilinear();
-  auto coords = recti.GetCoordinateSystem().GetData();
+  auto coords = recti.GetCoordinateSystem().GetDataAsMultiplexer();
 
   vtkm::cont::ArrayHandle<PointType> sheared;
   sheared.Allocate(coords.GetNumberOfValues());
 
-  auto inPortal = coords.GetPortalConstControl();
-  auto outPortal = sheared.GetPortalControl();
+  auto inPortal = coords.ReadPortal();
+  auto outPortal = sheared.WritePortal();
   for (vtkm::Id i = 0; i < inPortal.GetNumberOfValues(); ++i)
   {
     auto val = inPortal.Get(i);
@@ -105,7 +105,11 @@ public:
                             const PointType& pc,
                             PointType& wc) const
   {
-    wc = vtkm::exec::CellInterpolate(points, pc, cellShape, *this);
+    auto status = vtkm::exec::CellInterpolate(points, pc, cellShape, wc);
+    if (status != vtkm::ErrorCode::Success)
+    {
+      this->RaiseError(vtkm::ErrorString(status));
+    }
   }
 };
 
@@ -126,17 +130,18 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
 
   for (vtkm::Id i = 0; i < count; ++i)
   {
-    cellIds.GetPortalControl().Set(i, cellIdGen(RandomGenerator));
+    cellIds.WritePortal().Set(i, cellIdGen(RandomGenerator));
 
     PointType pc{ pcoordGen(RandomGenerator),
                   pcoordGen(RandomGenerator),
                   pcoordGen(RandomGenerator) };
-    pcoords.GetPortalControl().Set(i, pc);
+    pcoords.WritePortal().Set(i, pc);
   }
 
   vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
     ParametricToWorldCoordinates::MakeScatter(cellIds));
-  dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
+  dispatcher.Invoke(
+    ds.GetCellSet(), ds.GetCoordinateSystem().GetDataAsMultiplexer(), pcoords, wcoords);
 }
 
 //-----------------------------------------------------------------------------
@@ -155,7 +160,11 @@ public:
                             vtkm::Id& cellId,
                             vtkm::Vec3f& pcoords) const
   {
-    locator->FindCell(point, cellId, pcoords, *this);
+    vtkm::ErrorCode status = locator.FindCell(point, cellId, pcoords);
+    if (status != vtkm::ErrorCode::Success)
+    {
+      this->RaiseError(vtkm::ErrorString(status));
+    }
   }
 };
 
@@ -164,9 +173,6 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
   locator.SetCellSet(dataset.GetCellSet());
   locator.SetCoordinates(dataset.GetCoordinateSystem());
   locator.Update();
-
-  const vtkm::cont::CellLocator& curLoc = *locator.GetCurrentLocator();
-  std::cout << "using locator: " << typeid(curLoc).name() << "\n";
 
   vtkm::cont::ArrayHandle<vtkm::Id> expCellIds;
   vtkm::cont::ArrayHandle<PointType> expPCoords;
@@ -177,17 +183,16 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
   vtkm::cont::ArrayHandle<PointType> pcoords;
 
   vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
-  // CellLocatorGeneral is non-copyable. Pass it via a pointer.
-  dispatcher.Invoke(points, &locator, cellIds, pcoords);
+  dispatcher.Invoke(points, locator, cellIds, pcoords);
 
+  auto cellIdPortal = cellIds.ReadPortal();
+  auto expCellIdsPortal = expCellIds.ReadPortal();
+  auto pcoordsPortal = pcoords.ReadPortal();
+  auto expPCoordsPortal = expPCoords.ReadPortal();
   for (vtkm::Id i = 0; i < 128; ++i)
   {
-    VTKM_TEST_ASSERT(cellIds.GetPortalConstControl().Get(i) ==
-                       expCellIds.GetPortalConstControl().Get(i),
-                     "Incorrect cell ids");
-    VTKM_TEST_ASSERT(test_equal(pcoords.GetPortalConstControl().Get(i),
-                                expPCoords.GetPortalConstControl().Get(i),
-                                1e-3),
+    VTKM_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
+    VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
                      "Incorrect parameteric coordinates");
   }
 

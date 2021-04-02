@@ -51,8 +51,8 @@
 //==============================================================================
 
 // include guard
-#ifndef vtkm_worklet_contourtree_augmented_print_vectors_h
-#define vtkm_worklet_contourtree_augmented_print_vectors_h
+#ifndef vtk_m_worklet_contourtree_augmented_print_vectors_h
+#define vtk_m_worklet_contourtree_augmented_print_vectors_h
 
 // global libraries
 #include <iomanip>
@@ -78,98 +78,91 @@ namespace contourtree_augmented
 
 // local constants to allow changing the spacing as needed
 constexpr int PRINT_WIDTH = 12;
-constexpr int PREFIX_WIDTH = 24;
-
-// and we store a debug value for the number of printing columns
-constexpr vtkm::Id printCols = 10;
+constexpr int PREFIX_WIDTH = 30;
 
 template <typename T, typename StorageType>
-void printValues(std::string label,
+void PrintValues(std::string label,
                  const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
-                 vtkm::Id nValues = -1);
-void printIndices(std::string label,
+                 vtkm::Id nValues = -1,
+                 std::ostream& outStream = std::cout);
+void PrintIndices(std::string label,
                   const vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
-                  vtkm::Id nIndices = -1);
+                  vtkm::Id nIndices = -1,
+                  std::ostream& outStream = std::cout);
 template <typename T, typename StorageType>
-void printSortedValues(std::string label,
+void PrintSortedValues(std::string label,
                        const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                        IdArrayType& sortVec,
-                       vtkm::Id nValues = -1);
+                       vtkm::Id nValues = -1,
+                       std::ostream& outStream = std::cout);
 
 // base routines for printing label & prefix bars
-inline void printLabel(std::string label)
-{ // printLabel()
+inline void PrintLabel(std::string label, std::ostream& outStream = std::cout)
+{ // PrintLabel()
   // print out the front end
-  std::cout << std::setw(PREFIX_WIDTH) << std::left << label;
+  outStream << std::setw(PREFIX_WIDTH) << std::left << label;
   // print out the vertical line
-  std::cout << std::right << "|";
-} // printLabel()
+  outStream << std::right << "|";
+} // PrintLabel()
 
-inline void printSeparatingBar(vtkm::Id howMany)
-{ // printSeparatingBar()
+
+inline void PrintSeparatingBar(vtkm::Id howMany, std::ostream& outStream = std::cout)
+{ // PrintSeparatingBar()
   // print out the front end
-  std::cout << std::setw(PREFIX_WIDTH) << std::setfill('-') << "";
+  outStream << std::setw(PREFIX_WIDTH) << std::setfill('-') << "";
   // now the + at the vertical line
-  std::cout << "+";
+  outStream << "+";
   // now print out the tail end - fixed number of spaces per entry
   for (vtkm::Id block = 0; block < howMany; block++)
   {
-    std::cout << std::setw(PRINT_WIDTH) << std::setfill('-') << "";
+    outStream << std::setw(PRINT_WIDTH) << std::setfill('-') << "";
   }
   // now the std::endl, resetting the fill character
-  std::cout << std::setfill(' ') << std::endl;
-} // printSeparatingBar()
+  outStream << std::setfill(' ') << std::endl;
+} // PrintSeparatingBar()
+
 
 // routine to print out a single value
 template <typename T>
-inline void printDataType(T value)
-{ // printDataType
-  std::cout << std::setw(PRINT_WIDTH) << value;
-} // printDataType
+inline void PrintDataType(T value, std::ostream& outStream = std::cout)
+{ // PrintDataType
+  outStream << std::setw(PRINT_WIDTH) << value;
+} // PrintDataType
+
 
 // routine to print out a single index
-inline void printIndexType(vtkm::Id index)
-{ // printIndexType
-  std::cout << std::setw(PRINT_WIDTH - 6) << maskedIndex(index) << " " << flagString(index);
-} // printIndexType
+inline void PrintIndexType(vtkm::Id index, std::ostream& outStream = std::cout)
+{ // PrintIndexType
+  outStream << std::setw(PRINT_WIDTH - 6) << MaskedIndex(index) << " " << FlagString(index);
+} // PrintIndexType
 
-// print blank of width PRINT_WIDTH
-inline void printBlank()
-{ // printBlank()
-  std::cout << std::setw(PRINT_WIDTH) << "";
-} // printBlank()
-
-// print text with PRINT_WIDTH indent
-inline void printText(std::string text)
-{ // printText()
-  std::cout << std::setw(PRINT_WIDTH) << text;
-} // printText()
 
 // header line
-inline void printHeader(vtkm::Id howMany)
-{ // printHeader()
+inline void PrintHeader(vtkm::Id howMany, std::ostream& outStream = std::cout)
+{ // PrintHeader()
   // print out a separating bar
-  printSeparatingBar(howMany);
+  PrintSeparatingBar(howMany, outStream);
   // print out a label
-  printLabel("ID");
+  PrintLabel("ID", outStream);
   // print out the ID numbers
   for (vtkm::Id entry = 0; entry < howMany; entry++)
   {
-    printIndexType(entry);
+    PrintIndexType(entry, outStream);
   }
   // and an std::endl
-  std::cout << std::endl;
+  outStream << std::endl;
   // print out another separating bar
-  printSeparatingBar(howMany);
-} // printHeader()
+  PrintSeparatingBar(howMany, outStream);
+} // PrintHeader()
 
 
 // base routines for reading & writing host vectors
 template <typename T, typename StorageType>
-inline void printValues(std::string label,
+inline void PrintValues(std::string label,
                         const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
-                        vtkm::Id nValues)
-{ // printValues()
+                        vtkm::Id nValues,
+                        std::ostream& outStream)
+{ // PrintValues()
   // -1 means full size
   if (nValues == -1)
   {
@@ -177,25 +170,27 @@ inline void printValues(std::string label,
   }
 
   // print the label
-  printLabel(label);
+  PrintLabel(label, outStream);
 
   // now print the data
-  auto portal = dVec.GetPortalConstControl();
+  auto portal = dVec.ReadPortal();
   for (vtkm::Id entry = 0; entry < nValues; entry++)
   {
-    printDataType(portal.Get(entry));
+    PrintDataType(portal.Get(entry), outStream);
   }
   // and an std::endl
-  std::cout << std::endl;
-} // printValues()
+  outStream << std::endl;
+} // PrintValues()
+
 
 // base routines for reading & writing host vectors
 template <typename T, typename StorageType>
-inline void printSortedValues(std::string label,
+inline void PrintSortedValues(std::string label,
                               const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                               IdArrayType& sortVec,
-                              vtkm::Id nValues)
-{ // printValues()
+                              vtkm::Id nValues,
+                              std::ostream& outStream)
+{ // PrintSortedValues()
   // -1 means full size
   if (nValues == -1)
   {
@@ -203,24 +198,26 @@ inline void printSortedValues(std::string label,
   }
 
   // print the label
-  printLabel(label);
+  PrintLabel(label, outStream);
 
   // now print the data
-  auto dportal = dVec.GetPortalConstControl();
-  auto sortPortal = sortVec.GetPortalConstControl();
+  auto dportal = dVec.ReadPortal();
+  auto sortPortal = sortVec.ReadPortal();
   for (vtkm::Id entry = 0; entry < nValues; entry++)
   {
-    printDataType(dportal.Get(sortPortal.Get(entry)));
+    PrintDataType(dportal.Get(sortPortal.Get(entry)), outStream);
   }
   // and an std::endl
-  std::cout << std::endl;
-} // printValues()
+  outStream << std::endl;
+} // PrintSortedValues()
 
 
-inline void printIndices(std::string label,
+// routine for printing index arrays
+inline void PrintIndices(std::string label,
                          const vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
-                         vtkm::Id nIndices)
-{ // printIndices()
+                         vtkm::Id nIndices,
+                         std::ostream& outStream)
+{ // PrintIndices()
   // -1 means full size
   if (nIndices == -1)
   {
@@ -228,139 +225,92 @@ inline void printIndices(std::string label,
   }
 
   // print the label
-  printLabel(label);
+  PrintLabel(label, outStream);
 
-  auto portal = iVec.GetPortalConstControl();
+  auto portal = iVec.ReadPortal();
   for (vtkm::Id entry = 0; entry < nIndices; entry++)
-    printIndexType(portal.Get(entry));
+    PrintIndexType(portal.Get(entry), outStream);
 
   // and the std::endl
-  std::cout << std::endl;
-} // printIndices()
-
-// routines for printing indices & data in blocks
-template <typename T, typename StorageType>
-inline void printNakedDataBlock(const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
-                                vtkm::Id nColumns)
-{ // printNakedDataBlock()
-  // loop control variable
-  vtkm::Id entry = 0;
-  // per row
-  for (vtkm::Id row = 0; entry < dVec.GetNumberOfValues(); row++)
-  { // per row
-    // now print the data
-    auto portal = dVec.GetPortalConstControl();
-    for (vtkm::Id col = 0; col < nColumns; col++, entry++)
-    {
-      printIndexType(portal.Get(entry));
-    }
-    std::cout << std::endl;
-  } // per row
-  // and a final std::endl
-  std::cout << std::endl;
-} // printNakedDataBlock()
-
-inline void printNakedIndexBlock(IdArrayType& iVec, vtkm::Id nColumns)
-{ // printNakedIndexBlock()
-  // loop control variable
-  vtkm::Id entry = 0;
-  // per row
-  for (vtkm::Id row = 0; entry < iVec.GetNumberOfValues(); row++)
-  { // per row
-    // now print the data
-    auto portal = iVec.GetPortalConstControl();
-    for (vtkm::Id col = 0; col < nColumns; col++, entry++)
-    {
-      printIndexType(portal.Get(entry));
-    }
-    std::cout << std::endl;
-  } // per row
-  // and a final std::endl
-  std::cout << std::endl;
-} // printNakedIndexBlock()
+  outStream << std::endl;
+} // PrintIndices()
 
 
 template <typename T, typename StorageType>
-inline void printLabelledDataBlock(std::string label,
+inline void PrintLabelledDataBlock(std::string label,
                                    const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
-                                   vtkm::Id nColumns)
-{ // printLabelledDataBlock()
+                                   vtkm::Id nColumns,
+                                   std::ostream& outStream = std::cout)
+{ // PrintLabelledDataBlock()
   // start with a header
-  printHeader(nColumns);
+  PrintHeader(nColumns, outStream);
   // loop control variable
   vtkm::Id entry = 0;
   // per row
-  auto portal = dVec.GetPortalConstControl();
+  auto portal = dVec.ReadPortal();
   for (vtkm::Id row = 0; entry < portal.GetNumberOfValues(); row++)
   { // per row
-    printLabel(label + "[" + std::to_string(row) + "]");
+    PrintLabel(label + "[" + std::to_string(row) + "]", outStream);
     // now print the data
     for (vtkm::Id col = 0; col < nColumns; col++, entry++)
     {
-      printDataType(portal.Get(entry));
+      PrintDataType(portal.Get(entry), outStream);
     }
-    std::cout << std::endl;
+    outStream << std::endl;
   } // per row
   // and a final std::endl
-  std::cout << std::endl;
-} // printLabelledDataBlock()
+  outStream << std::endl;
+} // PrintLabelledDataBlock()
 
 
-
-inline void printLabelledIndexBlock(std::string label, IdArrayType& iVec, vtkm::Id nColumns)
-{ // printLabelledIndexBlock()
-  // start with a header
-  printHeader(nColumns);
-  // loop control variable
-  vtkm::Id entry = 0;
-  // per row
-  auto portal = iVec.GetPortalConstControl();
-  for (vtkm::Id row = 0; entry < portal.GetNumberOfValues(); row++)
-  { // per row
-    printLabel(label + "[" + std::to_string(row) + "]");
-    // now print the data
-    for (vtkm::Id col = 0; col < nColumns; col++, entry++)
-    {
-      printIndexType(portal.Get(entry));
-    }
-    std::cout << std::endl;
-  } // per row
-  // and a final std::endl
-  std::cout << std::endl;
-} // printLabelledIndexBlock()
-
-
-// routine for printing one element per line for diffing
-inline void printByLine(IdArrayType& block)
-{ // printByLine()
-  auto portal = block.GetPortalConstControl();
-  for (vtkm::Id entry = 0; entry < block.GetNumberOfValues(); entry++)
-  { // per entry
-    if (noSuchElement(portal.Get(entry)))
-    {
-      std::cout << std::to_string(-1L) << "\n";
-    }
-    else
-    {
-      std::cout << portal.Get(entry) << "\n";
-    }
-  } // per entry
-} // printByLine()
-
-
-// routine for printing list of edge pairs. Used, e.g., to print the sorted list of saddle peaks from the ContourTree
-inline void printEdgePairArray(const EdgePairArray& edgePairArray)
-{ // printEdgePairArray()
+// routine for printing list of edge pairs in row format, i.e., First and Second of the Edge
+// are printed separated. Used, e.g.,in standard debug.
+inline void PrintEdgePairArray(std::string label,
+                               const EdgePairArray& edgePairArray,
+                               vtkm::Id nIndices,
+                               std::ostream& outStream = std::cout)
+{ // PrintEdgePairArray()
+  // -1 means full size
+  if (nIndices == -1)
+  {
+    nIndices = edgePairArray.GetNumberOfValues();
+  }
   // now print them out
-  auto edgePairArrayConstPortal = edgePairArray.GetPortalConstControl();
+  auto edgePairArrayConstPortal = edgePairArray.ReadPortal();
+
+  // print the low end
+  PrintLabel(label + " High", outStream);
+  for (vtkm::Id superarc = 0; superarc < nIndices; superarc++)
+  { // per superarc
+    PrintIndexType(edgePairArrayConstPortal.Get(superarc).second, outStream);
+  } // per superarc
+  outStream << std::endl;
+
+  // print the high end
+  PrintLabel(label + " Low", outStream);
+  for (vtkm::Id superarc = 0; superarc < nIndices; superarc++)
+  { // per edge
+    PrintIndexType(edgePairArrayConstPortal.Get(superarc).first, outStream);
+  }
+  outStream << std::endl;
+} // PrintEdgePairArray()
+
+
+// routine for printing list of edge pairs in column format (first, second).
+// Used, e.g., to print the sorted list of saddle peaks from the ContourTree
+inline void PrintEdgePairArrayColumnLayout(const EdgePairArray& edgePairArray,
+                                           std::ostream& outStream = std::cout)
+{ // PrintEdgePairArray()
+  // now print them out
+  auto edgePairArrayConstPortal = edgePairArray.ReadPortal();
   for (vtkm::Id superarc = 0; superarc < edgePairArray.GetNumberOfValues(); superarc++)
   { // per superarc
-    std::cout << std::right << std::setw(PRINT_WIDTH)
+    outStream << std::right << std::setw(PRINT_WIDTH)
               << edgePairArrayConstPortal.Get(superarc).first << " ";
-    std::cout << std::right << std::setw(PRINT_WIDTH)
+    outStream << std::right << std::setw(PRINT_WIDTH)
               << edgePairArrayConstPortal.Get(superarc).second << std::endl;
   } // per superarc
-} // printEdgePairArray()
+} // PrintEdgePairArray()
 
 
 } // namespace contourtree_augmented

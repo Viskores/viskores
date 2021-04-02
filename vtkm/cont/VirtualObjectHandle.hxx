@@ -12,7 +12,7 @@
 
 #include <vtkm/cont/VirtualObjectHandle.h>
 
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 

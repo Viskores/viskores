@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_reset_edge_far_h
-#define vtkm_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_reset_edge_far_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_reset_edge_far_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_reset_edge_far_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -86,13 +86,13 @@ public:
                             const InFieldPortalType& hyperarcsPortal,
                             const InOutFieldPortalType& edgeFarPortal) const
   {
-    edgeFarPortal.Set(edgeId, maskedIndex(hyperarcsPortal.Get(edgeFarPortal.Get(edgeId))));
+    edgeFarPortal.Set(edgeId, MaskedIndex(hyperarcsPortal.Get(edgeFarPortal.Get(edgeId))));
 
     // In serial this worklet implements the following operation
     //for (vtkm::Id edge = 0; edge < activeEdges.size(); edge++)
     //    { // per edge
     //    indexType edgeID = activeEdges[edge];
-    //    edgeFar[edgeID] = maskedIndex(hyperarcs[edgeFar[edgeID]]);
+    //    edgeFar[edgeID] = MaskedIndex(hyperarcs[edgeFar[edgeID]]);
     //    } // per edge
   }
 

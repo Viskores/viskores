@@ -73,20 +73,19 @@ void TestWarpVector()
   vecType vector = vtkm::make_Vec<vtkm::FloatDefault>(static_cast<vtkm::FloatDefault>(0.0),
                                                       static_cast<vtkm::FloatDefault>(0.0),
                                                       static_cast<vtkm::FloatDefault>(2.0));
-  auto coordinate = ds.GetCoordinateSystem().GetData();
+  auto coordinate = ds.GetCoordinateSystem().GetDataAsMultiplexer();
   vtkm::Id nov = coordinate.GetNumberOfValues();
   vtkm::cont::ArrayHandleConstant<vecType> vectorAH =
     vtkm::cont::make_ArrayHandleConstant(vector, nov);
 
   vtkm::worklet::WarpVector warpWorklet;
   warpWorklet.Run(ds.GetCoordinateSystem(), vectorAH, scale, result);
-  auto resultPortal = result.GetPortalConstControl();
+  auto resultPortal = result.ReadPortal();
   for (vtkm::Id i = 0; i < nov; i++)
   {
     for (vtkm::Id j = 0; j < 3; j++)
     {
-      vtkm::FloatDefault ans =
-        coordinate.GetPortalConstControl().Get(i)[static_cast<vtkm::IdComponent>(j)] +
+      vtkm::FloatDefault ans = coordinate.ReadPortal().Get(i)[static_cast<vtkm::IdComponent>(j)] +
         scale * vector[static_cast<vtkm::IdComponent>(j)];
       VTKM_TEST_ASSERT(test_equal(ans, resultPortal.Get(i)[static_cast<vtkm::IdComponent>(j)]),
                        " Wrong result for WarpVector worklet");

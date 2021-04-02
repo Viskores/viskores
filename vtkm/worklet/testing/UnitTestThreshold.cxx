@@ -59,7 +59,7 @@ public:
     dataset.GetCellSet().CopyTo(cellset);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> pointvar;
-    dataset.GetField("pointvar").GetData().CopyTo(pointvar);
+    dataset.GetField("pointvar").GetData().AsArrayHandle(pointvar);
 
     vtkm::worklet::Threshold threshold;
     OutCellSetType outCellSet =
@@ -68,11 +68,11 @@ public:
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 1, "Wrong number of cells");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
-    dataset.GetField("cellvar").GetData().CopyTo(cellvar);
+    dataset.GetField("cellvar").GetData().AsArrayHandle(cellvar);
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = threshold.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
-                       cellFieldArray.GetPortalConstControl().Get(0) == 200.1f,
+                       cellFieldArray.ReadPortal().Get(0) == 200.1f,
                      "Wrong cell field data");
   }
 
@@ -89,7 +89,7 @@ public:
     dataset.GetCellSet().CopyTo(cellset);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> pointvar;
-    dataset.GetField("pointvar").GetData().CopyTo(pointvar);
+    dataset.GetField("pointvar").GetData().AsArrayHandle(pointvar);
 
     vtkm::worklet::Threshold threshold;
     OutCellSetType outCellSet =
@@ -98,12 +98,12 @@ public:
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 2, "Wrong number of cells");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
-    dataset.GetField("cellvar").GetData().CopyTo(cellvar);
+    dataset.GetField("cellvar").GetData().AsArrayHandle(cellvar);
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = threshold.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                       cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
-                       cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
+                       cellFieldArray.ReadPortal().Get(0) == 100.1f &&
+                       cellFieldArray.ReadPortal().Get(1) == 100.2f,
                      "Wrong cell field data");
   }
 
@@ -120,7 +120,7 @@ public:
     dataset.GetCellSet().CopyTo(cellset);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
-    dataset.GetField("cellvar").GetData().CopyTo(cellvar);
+    dataset.GetField("cellvar").GetData().AsArrayHandle(cellvar);
 
     vtkm::worklet::Threshold threshold;
     OutCellSetType outCellSet =
@@ -131,7 +131,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = threshold.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
-                       cellFieldArray.GetPortalConstControl().Get(0) == 100.1f,
+                       cellFieldArray.ReadPortal().Get(0) == 100.1f,
                      "Wrong cell field data");
   }
 

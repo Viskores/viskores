@@ -27,8 +27,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/MeshQuality.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 //Adapted from vtkm/cont/testing/MakeTestDataSet.h
 //Modified the content of the MakeExplicitDataSetZoo() function
@@ -123,9 +122,9 @@ bool TestMeshQualityFilter(const vtkm::cont::DataSet& input,
 
   //Test the computed metric values (for all cells) and expected metric
   //values for equality.
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
-  output.GetField(outputname).GetData().CopyTo(values);
-  auto portal1 = values.GetPortalConstControl();
+  vtkm::cont::ArrayHandle<vtkm::Float64> values;
+  output.GetField(outputname).GetData().AsArrayHandle(values);
+  auto portal1 = values.ReadPortal();
   if (portal1.GetNumberOfValues() != (vtkm::Id)expectedVals.size())
   {
     printf("Number of expected values for %s does not match.\n", outputname.c_str());

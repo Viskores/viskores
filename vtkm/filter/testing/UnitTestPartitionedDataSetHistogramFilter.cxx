@@ -13,6 +13,8 @@
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/thirdparty/diy/environment.h>
+
 #include <algorithm>
 #include <numeric>
 #include <random>
@@ -32,8 +34,9 @@ vtkm::cont::ArrayHandle<T> CreateArrayHandle(T min, T max, vtkm::Id numVals)
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(numVals);
 
-  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()),
-                vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalControl()),
+  auto portal = handle.WritePortal();
+  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                vtkm::cont::ArrayPortalToIteratorEnd(portal),
                 [&]() { return static_cast<T>(dis(gen)); });
   return handle;
 }
@@ -52,8 +55,9 @@ vtkm::cont::ArrayHandle<vtkm::Vec<T, size>> CreateArrayHandle(const vtkm::Vec<T,
   }
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(numVals);
-  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()),
-                vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalControl()),
+  auto portal = handle.WritePortal();
+  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                vtkm::cont::ArrayPortalToIteratorEnd(portal),
                 [&]() {
                   vtkm::Vec<T, size> val;
                   for (int cc = 0; cc < size; ++cc)
@@ -106,10 +110,11 @@ static void TestPartitionedDataSetHistogram()
   auto bins = result.GetPartition(0)
                 .GetField("histogram")
                 .GetData()
-                .Cast<vtkm::cont::ArrayHandle<vtkm::Id>>();
+                .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
   VTKM_TEST_ASSERT(bins.GetNumberOfValues() == 10, "Expecting 10 bins.");
-  auto count = std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(bins.GetPortalConstControl()),
-                               vtkm::cont::ArrayPortalToIteratorEnd(bins.GetPortalConstControl()),
+  auto binsPortal = bins.ReadPortal();
+  auto count = std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(binsPortal),
+                               vtkm::cont::ArrayPortalToIteratorEnd(binsPortal),
                                vtkm::Id(0),
                                vtkm::Add());
   VTKM_TEST_ASSERT(count == 1024 * 3, "Expecting 3072 values");
@@ -117,7 +122,7 @@ static void TestPartitionedDataSetHistogram()
   std::cout << "Values [" << count << "] =";
   for (int cc = 0; cc < 10; ++cc)
   {
-    std::cout << " " << bins.GetPortalConstControl().Get(cc);
+    std::cout << " " << binsPortal.Get(cc);
   }
   std::cout << std::endl;
 };

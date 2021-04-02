@@ -42,9 +42,10 @@ private:
       return false;
     }
 
+    auto ahPortal = ah.ReadPortal();
     for (vtkm::Id i = 0; i < size; ++i)
     {
-      if (ah.GetPortalConstControl().Get(i) != expected[i])
+      if (ahPortal.Get(i) != expected[i])
       {
         return false;
       }
@@ -115,6 +116,7 @@ private:
     VTKM_TEST_ASSERT(conn.GetNumberOfValues() == connectivitySize,
                      "Connectivity array wrong size.");
     vtkm::Id connectivityIndex = 0;
+    auto connPortal = conn.ReadPortal();
     for (vtkm::Id pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
       vtkm::IdComponent numIncidentCells = correctNumIndices[pointIndex];
@@ -125,7 +127,7 @@ private:
       }
       for (vtkm::IdComponent cellIndex = 0; cellIndex < numIncidentCells; cellIndex++)
       {
-        vtkm::Id expectedCell = conn.GetPortalConstControl().Get(connectivityIndex + cellIndex);
+        vtkm::Id expectedCell = connPortal.Get(connectivityIndex + cellIndex);
         std::set<vtkm::Id>::iterator foundCell = correctIncidentCells.find(expectedCell);
         VTKM_TEST_ASSERT(foundCell != correctIncidentCells.end(),
                          "An incident cell in the connectivity list is wrong or repeated.");

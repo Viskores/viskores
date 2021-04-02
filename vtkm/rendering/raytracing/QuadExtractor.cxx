@@ -221,9 +221,11 @@ void QuadExtractor::SetQuadIdsFromCells(const vtkm::cont::DynamicCellSet& cells)
   //
   if (cells.IsSameType(vtkm::cont::CellSetExplicit<>()))
   {
+    auto cellsExplicit = cells.Cast<vtkm::cont::CellSetExplicit<>>();
+
     vtkm::cont::ArrayHandle<vtkm::Id> points;
     vtkm::worklet::DispatcherMapTopology<detail::CountQuads>(detail::CountQuads())
-      .Invoke(cells, points);
+      .Invoke(cellsExplicit, points);
 
     vtkm::Id total = 0;
     total = vtkm::cont::Algorithm::Reduce(points, vtkm::Id(0));
@@ -233,7 +235,7 @@ void QuadExtractor::SetQuadIdsFromCells(const vtkm::cont::DynamicCellSet& cells)
     QuadIds.Allocate(total);
 
     vtkm::worklet::DispatcherMapTopology<detail::Pointify>(detail::Pointify())
-      .Invoke(cells, cellOffsets, this->QuadIds);
+      .Invoke(cellsExplicit, cellOffsets, this->QuadIds);
   }
 }
 

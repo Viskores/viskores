@@ -46,22 +46,32 @@ private:
   // template calls std::copy if and only if the types match, otherwise falls
   // back to a iterative casting approach. Since std::copy can only really
   // optimize same-type copies, this shouldn't affect performance.
-  template <typename InIter, typename OutIter>
-  static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type)
+  template <typename InPortal, typename OutPortal>
+  static void DoCopy(InPortal src,
+                     OutPortal dst,
+                     std::false_type,
+                     vtkm::Id startIndex,
+                     vtkm::Id numToCopy,
+                     vtkm::Id outIndex)
   {
-    using OutputType = typename std::iterator_traits<OutIter>::value_type;
-    while (src != srcEnd)
+    using OutputType = typename OutPortal::ValueType;
+    for (vtkm::Id index = 0; index < numToCopy; ++index)
     {
-      *dst = static_cast<OutputType>(*src);
-      ++src;
-      ++dst;
+      dst.Set(index + startIndex, static_cast<OutputType>(src.Get(index + outIndex)));
     }
   }
 
-  template <typename InIter, typename OutIter>
-  static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type)
+  template <typename InPortal, typename OutPortal>
+  static void DoCopy(InPortal src,
+                     OutPortal dst,
+                     std::true_type,
+                     vtkm::Id startIndex,
+                     vtkm::Id numToCopy,
+                     vtkm::Id outIndex)
   {
-    std::copy(src, srcEnd, dst);
+    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(src) + startIndex,
+              vtkm::cont::ArrayPortalToIteratorBegin(src) + startIndex + numToCopy,
+              vtkm::cont::ArrayPortalToIteratorBegin(dst) + outIndex);
   }
 
 public:
@@ -71,9 +81,11 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
+
     const vtkm::Id inSize = input.GetNumberOfValues();
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
-    auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagSerial());
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial(), token);
+    auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagSerial(), token);
 
     if (inSize <= 0)
     {
@@ -83,10 +95,7 @@ public:
     using InputType = decltype(inputPortal.Get(0));
     using OutputType = decltype(outputPortal.Get(0));
 
-    DoCopy(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
-           vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
-           vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
-           std::is_same<InputType, OutputType>());
+    DoCopy(inputPortal, outputPortal, std::is_same<InputType, OutputType>{}, 0, inSize, 0);
   }
 
   template <typename T, typename U, class CIn, class CStencil, class COut>
@@ -108,26 +117,29 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::Id inputSize = input.GetNumberOfValues();
-    VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
-
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
-    auto stencilPortal = stencil.PrepareForInput(DeviceAdapterTagSerial());
-    auto outputPortal = output.PrepareForOutput(inputSize, DeviceAdapterTagSerial());
-
-    vtkm::Id readPos = 0;
     vtkm::Id writePos = 0;
 
-    for (; readPos < inputSize; ++readPos)
     {
-      if (predicate(stencilPortal.Get(readPos)))
+      vtkm::cont::Token token;
+
+      vtkm::Id inputSize = input.GetNumberOfValues();
+      VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
+
+      auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial(), token);
+      auto stencilPortal = stencil.PrepareForInput(DeviceAdapterTagSerial(), token);
+      auto outputPortal = output.PrepareForOutput(inputSize, DeviceAdapterTagSerial(), token);
+
+      for (vtkm::Id readPos = 0; readPos < inputSize; ++readPos)
       {
-        outputPortal.Set(writePos, inputPortal.Get(readPos));
-        ++writePos;
+        if (predicate(stencilPortal.Get(readPos)))
+        {
+          outputPortal.Set(writePos, inputPortal.Get(readPos));
+          ++writePos;
+        }
       }
     }
 
-    output.Shrink(writePos);
+    output.Allocate(writePos, vtkm::CopyFlag::On);
   }
 
   template <typename T, typename U, class CIn, class COut>
@@ -142,10 +154,11 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
-    if (input == output && ((outputIndex >= inputStartIndex &&
-                             outputIndex < inputStartIndex + numberOfElementsToCopy) ||
-                            (inputStartIndex >= outputIndex &&
-                             inputStartIndex < outputIndex + numberOfElementsToCopy)))
+    if (input == output &&
+        ((outputIndex >= inputStartIndex &&
+          outputIndex < inputStartIndex + numberOfElementsToCopy) ||
+         (inputStartIndex >= outputIndex &&
+          inputStartIndex < outputIndex + numberOfElementsToCopy)))
     {
       return false;
     }
@@ -180,18 +193,19 @@ public:
       }
     }
 
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
-    auto outputPortal = output.PrepareForInPlace(DeviceAdapterTagSerial());
-    auto inIter = vtkm::cont::ArrayPortalToIteratorBegin(inputPortal);
-    auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(outputPortal);
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial(), token);
+    auto outputPortal = output.PrepareForInPlace(DeviceAdapterTagSerial(), token);
 
     using InputType = decltype(inputPortal.Get(0));
     using OutputType = decltype(outputPortal.Get(0));
 
-    DoCopy(inIter + inputStartIndex,
-           inIter + inputStartIndex + numberOfElementsToCopy,
-           outIter + outputIndex,
-           std::is_same<InputType, OutputType>());
+    DoCopy(inputPortal,
+           outputPortal,
+           std::is_same<InputType, OutputType>(),
+           inputStartIndex,
+           numberOfElementsToCopy,
+           outputIndex);
 
     return true;
   }
@@ -211,8 +225,10 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
+
     internal::WrappedBinaryOperator<U, BinaryFunctor> wrappedOp(binary_functor);
-    auto inputPortal = input.PrepareForInput(Device());
+    auto inputPortal = input.PrepareForInput(Device(), token);
     return std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                            vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
                            initialValue,
@@ -234,54 +250,58 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    auto keysPortalIn = keys.PrepareForInput(Device());
-    auto valuesPortalIn = values.PrepareForInput(Device());
-    const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
-
-    VTKM_ASSERT(numberOfKeys == values.GetNumberOfValues());
-    if (numberOfKeys == 0)
-    {
-      keys_output.Shrink(0);
-      values_output.Shrink(0);
-      return;
-    }
-
-    auto keysPortalOut = keys_output.PrepareForOutput(numberOfKeys, Device());
-    auto valuesPortalOut = values_output.PrepareForOutput(numberOfKeys, Device());
-
     vtkm::Id writePos = 0;
     vtkm::Id readPos = 0;
 
-    T currentKey = keysPortalIn.Get(readPos);
-    U currentValue = valuesPortalIn.Get(readPos);
-
-    for (++readPos; readPos < numberOfKeys; ++readPos)
     {
-      while (readPos < numberOfKeys && currentKey == keysPortalIn.Get(readPos))
+      vtkm::cont::Token token;
+
+      auto keysPortalIn = keys.PrepareForInput(Device(), token);
+      auto valuesPortalIn = values.PrepareForInput(Device(), token);
+      const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+
+      VTKM_ASSERT(numberOfKeys == values.GetNumberOfValues());
+      if (numberOfKeys == 0)
       {
-        currentValue = binary_functor(currentValue, valuesPortalIn.Get(readPos));
-        ++readPos;
+        keys_output.ReleaseResources();
+        values_output.ReleaseResources();
+        return;
       }
 
-      if (readPos < numberOfKeys)
-      {
-        keysPortalOut.Set(writePos, currentKey);
-        valuesPortalOut.Set(writePos, currentValue);
-        ++writePos;
+      auto keysPortalOut = keys_output.PrepareForOutput(numberOfKeys, Device(), token);
+      auto valuesPortalOut = values_output.PrepareForOutput(numberOfKeys, Device(), token);
 
-        currentKey = keysPortalIn.Get(readPos);
-        currentValue = valuesPortalIn.Get(readPos);
+      T currentKey = keysPortalIn.Get(readPos);
+      U currentValue = valuesPortalIn.Get(readPos);
+
+      for (++readPos; readPos < numberOfKeys; ++readPos)
+      {
+        while (readPos < numberOfKeys && currentKey == keysPortalIn.Get(readPos))
+        {
+          currentValue = binary_functor(currentValue, valuesPortalIn.Get(readPos));
+          ++readPos;
+        }
+
+        if (readPos < numberOfKeys)
+        {
+          keysPortalOut.Set(writePos, currentKey);
+          valuesPortalOut.Set(writePos, currentValue);
+          ++writePos;
+
+          currentKey = keysPortalIn.Get(readPos);
+          currentValue = valuesPortalIn.Get(readPos);
+        }
       }
+
+      //now write out the last set of values
+      keysPortalOut.Set(writePos, currentKey);
+      valuesPortalOut.Set(writePos, currentValue);
     }
-
-    //now write out the last set of values
-    keysPortalOut.Set(writePos, currentKey);
-    valuesPortalOut.Set(writePos, currentValue);
 
     //now we need to shrink to the correct number of keys/values
     //writePos is zero-based so add 1 to get correct length
-    keys_output.Shrink(writePos + 1);
-    values_output.Shrink(writePos + 1);
+    keys_output.Allocate(writePos + 1, vtkm::CopyFlag::On);
+    values_output.Allocate(writePos + 1, vtkm::CopyFlag::On);
   }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
@@ -295,8 +315,10 @@ public:
 
     vtkm::Id numberOfValues = input.GetNumberOfValues();
 
-    auto inputPortal = input.PrepareForInput(Device());
-    auto outputPortal = output.PrepareForOutput(numberOfValues, Device());
+    vtkm::cont::Token token;
+
+    auto inputPortal = input.PrepareForInput(Device(), token);
+    auto outputPortal = output.PrepareForOutput(numberOfValues, Device(), token);
 
     if (numberOfValues <= 0)
     {
@@ -333,8 +355,9 @@ public:
 
     vtkm::Id numberOfValues = input.GetNumberOfValues();
 
-    auto inputPortal = input.PrepareForInput(Device());
-    auto outputPortal = output.PrepareForOutput(numberOfValues, Device());
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(Device(), token);
+    auto outputPortal = output.PrepareForOutput(numberOfValues, Device(), token);
 
     if (numberOfValues <= 0)
     {
@@ -411,9 +434,11 @@ private:
     const vtkm::Id n = values.GetNumberOfValues();
     VTKM_ASSERT(n == index.GetNumberOfValues());
 
-    auto valuesPortal = values.PrepareForInput(Device());
-    auto indexPortal = index.PrepareForInput(Device());
-    auto valuesOutPortal = values_out.PrepareForOutput(n, Device());
+    vtkm::cont::Token token;
+
+    auto valuesPortal = values.PrepareForInput(Device(), token);
+    auto indexPortal = index.PrepareForInput(Device(), token);
+    auto valuesOutPortal = values_out.PrepareForOutput(n, Device(), token);
 
     for (vtkm::Id i = 0; i < n; i++)
     {
@@ -489,7 +514,9 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    auto arrayPortal = values.PrepareForInPlace(Device());
+    vtkm::cont::Token token;
+
+    auto arrayPortal = values.PrepareForInPlace(Device(), token);
     vtkm::cont::ArrayPortalToIterators<decltype(arrayPortal)> iterators(arrayPortal);
 
     internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
@@ -510,12 +537,15 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    auto arrayPortal = values.PrepareForInPlace(Device());
+    vtkm::cont::Token token;
+    auto arrayPortal = values.PrepareForInPlace(Device(), token);
     vtkm::cont::ArrayPortalToIterators<decltype(arrayPortal)> iterators(arrayPortal);
     internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
 
     auto end = std::unique(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
-    values.Shrink(static_cast<vtkm::Id>(end - iterators.GetBegin()));
+    vtkm::Id newSize = static_cast<vtkm::Id>(end - iterators.GetBegin());
+    token.DetachFromAll();
+    values.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   VTKM_CONT static void Synchronize()
@@ -531,19 +561,17 @@ public:
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::serial::internal::TaskTiling1D MakeTask(WorkletType& worklet,
                                                              InvocationType& invocation,
-                                                             vtkm::Id,
-                                                             vtkm::Id globalIndexOffset = 0)
+                                                             vtkm::Id)
   {
-    return vtkm::exec::serial::internal::TaskTiling1D(worklet, invocation, globalIndexOffset);
+    return vtkm::exec::serial::internal::TaskTiling1D(worklet, invocation);
   }
 
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::serial::internal::TaskTiling3D MakeTask(WorkletType& worklet,
                                                              InvocationType& invocation,
-                                                             vtkm::Id3,
-                                                             vtkm::Id globalIndexOffset = 0)
+                                                             vtkm::Id3)
   {
-    return vtkm::exec::serial::internal::TaskTiling3D(worklet, invocation, globalIndexOffset);
+    return vtkm::exec::serial::internal::TaskTiling3D(worklet, invocation);
   }
 };
 }

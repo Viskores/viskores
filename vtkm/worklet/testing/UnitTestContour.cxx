@@ -15,7 +15,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/filter/ClipWithImplicitFunction.h>
 #include <vtkm/source/Tangle.h>
 #include <vtkm/worklet/Contour.h>
@@ -192,30 +191,30 @@ void TestContourUniformGrid()
   vtkm::cont::CellSetStructured<3> cellSet;
   dataSet.GetCellSet().CopyTo(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-  dataSet.GetField("nodevar").GetData().CopyTo(pointFieldArray);
+  dataSet.GetField("nodevar").GetData().AsArrayHandle(pointFieldArray);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
-  dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+  dataSet.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
-  vtkm::worklet::Contour isosurfaceFilter;
-  isosurfaceFilter.SetMergeDuplicatePoints(false);
+  vtkm::worklet::Contour contour;
+  contour.SetMergeDuplicatePoints(false);
 
-  vtkm::Float32 contourValue = 0.5f;
+  std::vector<vtkm::Float32> contourValue{ 0.5f, 0.5f };
+  const vtkm::Id numContours = static_cast<vtkm::Id>(contourValue.size());
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 
-  auto result = isosurfaceFilter.Run(&contourValue,
-                                     1,
-                                     cellSet,
-                                     dataSet.GetCoordinateSystem(),
-                                     pointFieldArray,
-                                     verticesArray,
-                                     normalsArray);
+  auto result = contour.Run(contourValue,
+                            cellSet,
+                            dataSet.GetCoordinateSystem(),
+                            pointFieldArray,
+                            verticesArray,
+                            normalsArray);
 
-  scalarsArray = isosurfaceFilter.ProcessPointField(pointFieldArray);
+  scalarsArray = contour.ProcessPointField(pointFieldArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
-  cellFieldArrayOut = isosurfaceFilter.ProcessCellField(cellFieldArray);
+  cellFieldArrayOut = contour.ProcessCellField(cellFieldArray);
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(verticesArray, std::cout);
@@ -231,10 +230,64 @@ void TestContourUniformGrid()
   std::cout << std::endl;
 
   VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues());
+  VTKM_TEST_ASSERT(result.GetNumberOfCells() == (160 * numContours));
 
-  VTKM_TEST_ASSERT(result.GetNumberOfCells() == 160);
+  VTKM_TEST_ASSERT(verticesArray.GetNumberOfValues() == (72 * numContours));
 
-  VTKM_TEST_ASSERT(verticesArray.GetNumberOfValues() == 480);
+
+  // The flying edge and marching cube algorithms differ in how the generate
+  // multi-contour results. Marching Cubes interlaces output from all contours
+  // together, while flying edges outputs all of contour 1 before any of contour 2.
+  //
+  // To make it possible to consistently compare the result we sort the cell-ids
+  //
+  vtkm::cont::Algorithm::Sort(cellFieldArrayOut);
+  {
+    std::vector<vtkm::Id> correctcellIdStart = { 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4,
+                                                 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6 };
+    std::vector<vtkm::Id> correctcellIdEnd = { 57, 57, 57, 57, 58, 58, 58, 58, 58, 58, 59, 59, 59,
+                                               59, 60, 60, 61, 61, 61, 61, 62, 62, 62, 62, 63, 63 };
+
+    auto id_portal = cellFieldArrayOut.ReadPortal();
+    for (std::size_t i = 0; i < correctcellIdStart.size(); ++i)
+    {
+      VTKM_TEST_ASSERT(id_portal.Get(vtkm::Id(i)) == correctcellIdStart[i]);
+    }
+
+    vtkm::Id index = cellFieldArrayOut.GetNumberOfValues() - vtkm::Id(correctcellIdEnd.size());
+    for (std::size_t i = 0; i < correctcellIdEnd.size(); ++i, ++index)
+    {
+      VTKM_TEST_ASSERT(id_portal.Get(index) == correctcellIdEnd[i]);
+    }
+  }
+
+  // Verify that multiple contours of the same iso value are identical
+  {
+    auto normal_portal = normalsArray.ReadPortal();
+    for (vtkm::Id i = 0; i < 72; ++i)
+    {
+      for (vtkm::Id j = 1; j < numContours; ++j)
+      {
+        vtkm::Id jIndex = i + (72 * j);
+        VTKM_TEST_ASSERT(test_equal(normal_portal.Get(i), normal_portal.Get(jIndex)),
+                         "multi contour failed");
+      }
+    }
+
+    auto outCellPortal =
+      result.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
+        .ReadPortal();
+    for (vtkm::Id i = 0; i < 480; ++i)
+    { //(3*160) as we are iterating triangle soup so the length is numOfCells*3
+      for (vtkm::Id j = 1; j < numContours; ++j)
+      {
+        vtkm::Id jIndex = i + (480 * j);
+        vtkm::Id expectedValue = (72 * j) + outCellPortal.Get(i);
+        VTKM_TEST_ASSERT(test_equal(outCellPortal.Get(jIndex), expectedValue),
+                         "multi contour failed");
+      }
+    }
+  }
 }
 
 void TestContourExplicit()
@@ -248,7 +301,7 @@ void TestContourExplicit()
   DataSetGenerator dataSetGenerator;
 
   vtkm::IdComponent Dimension = 10;
-  vtkm::Float32 contourValue = vtkm::Float32(.45);
+  std::vector<vtkm::Float32> contourValue{ 0.45f };
 
   vtkm::cont::DataSet dataSet = dataSetGenerator.Make3DRadiantDataSet(Dimension);
 
@@ -257,7 +310,7 @@ void TestContourExplicit()
 
   vtkm::cont::Field contourField = dataSet.GetField("distanceToOrigin");
   DataSetGenerator::DataArrayHandle contourArray;
-  contourField.GetData().CopyTo(contourArray);
+  contourField.GetData().AsArrayHandle(contourArray);
   Vec3Handle vertices;
   Vec3Handle normals;
 
@@ -265,19 +318,19 @@ void TestContourExplicit()
   Contour.SetMergeDuplicatePoints(false);
 
   auto result = Contour.Run(
-    &contourValue, 1, cellSet, dataSet.GetCoordinateSystem(), contourArray, vertices, normals);
+    contourValue, cellSet, dataSet.GetCoordinateSystem(), contourArray, vertices, normals);
 
   DataHandle scalars;
 
   vtkm::cont::Field projectedField = dataSet.GetField("distanceToOther");
 
   DataSetGenerator::DataArrayHandle projectedArray;
-  projectedField.GetData().CopyTo(projectedArray);
+  projectedField.GetData().AsArrayHandle(projectedArray);
 
   scalars = Contour.ProcessPointField(projectedArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
-  dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+  dataSet.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
   cellFieldArrayOut = Contour.ProcessCellField(cellFieldArray);
@@ -312,17 +365,17 @@ void TestContourClipped()
 
   vtkm::Plane plane(vtkm::make_Vec(0.51, 0.51, 0.51), vtkm::make_Vec(1, 1, 1));
   vtkm::filter::ClipWithImplicitFunction clip;
-  clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(plane));
+  clip.SetImplicitFunction(plane);
   vtkm::cont::DataSet clipped = clip.Execute(dataSet);
 
   vtkm::cont::CellSetExplicit<> cellSet;
   clipped.GetCellSet().CopyTo(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-  clipped.GetField("nodevar").GetData().CopyTo(pointFieldArray);
+  clipped.GetField("nodevar").GetData().AsArrayHandle(pointFieldArray);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
-  clipped.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+  clipped.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
-  vtkm::Float32 contourValue = 0.5f;
+  std::vector<vtkm::Float32> contourValue{ 0.5f };
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
@@ -330,8 +383,7 @@ void TestContourClipped()
   vtkm::worklet::Contour isosurfaceFilter;
   isosurfaceFilter.SetMergeDuplicatePoints(false);
 
-  auto result = isosurfaceFilter.Run(&contourValue,
-                                     1,
+  auto result = isosurfaceFilter.Run(contourValue,
                                      cellSet,
                                      clipped.GetCoordinateSystem(),
                                      pointFieldArray,

@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_compact_active_edges_new_vertex_outdegree_h
-#define vtkm_worklet_contourtree_augmented_active_graph_compact_active_edges_new_vertex_outdegree_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_compact_active_edges_new_vertex_outdegree_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_compact_active_edges_new_vertex_outdegree_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -122,7 +122,7 @@ public:
       vtkm::Id hyperFar = hyperarcsPortal.Get(farEnd);
 
       // now get rid of the mask to find the real ID
-      farEnd = maskedIndex(hyperFar);
+      farEnd = MaskedIndex(hyperFar);
 
       // we want to ignore edges that lead back to this vertex
       if (farEnd != vertexId)
@@ -167,7 +167,7 @@ public:
               indexType hyperFar = hyperarcs[farEnd];
 
               // now get rid of the mask to find the real ID
-              farEnd = maskedIndex(hyperFar);
+              farEnd = MaskedIndex(hyperFar);
 
               // we want to ignore edges that lead back to this vertex
               if (farEnd != vertexID)

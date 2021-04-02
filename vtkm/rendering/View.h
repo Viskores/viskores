@@ -12,6 +12,7 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
@@ -82,6 +83,13 @@ public:
   VTKM_CONT
   void SetForegroundColor(const vtkm::rendering::Color& color);
 
+  VTKM_CONT
+  bool GetWorldAnnotationsEnabled() const { return this->WorldAnnotationsEnabled; }
+
+  VTKM_CONT
+  void SetWorldAnnotationsEnabled(bool val) { this->WorldAnnotationsEnabled = val; }
+
+  VTKM_DEPRECATED(1.6, "Initialize() does nothing.")
   virtual void Initialize();
 
   virtual void Paint() = 0;
@@ -107,6 +115,7 @@ protected:
   void RenderAnnotations();
 
   vtkm::rendering::Color AxisColor = vtkm::rendering::Color::white;
+  bool WorldAnnotationsEnabled = true;
 
 private:
   std::shared_ptr<InternalData> Internal;

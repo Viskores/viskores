@@ -13,9 +13,11 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ColorTable.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/BitmapFont.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
@@ -42,13 +44,16 @@ public:
 
   virtual vtkm::rendering::Canvas* NewCopy() const;
 
-  virtual void Initialize();
+  VTKM_DEPRECATED(1.6, "Initialize() does nothing.")
+  virtual void Initialize() {}
 
-  virtual void Activate();
+  VTKM_DEPRECATED(1.6, "Activate() does nothing.")
+  virtual void Activate() {}
 
   virtual void Clear();
 
-  virtual void Finish();
+  VTKM_DEPRECATED(1.6, "Finish() does nothing.")
+  virtual void Finish() {}
 
   virtual void BlendBackground();
 
@@ -69,6 +74,22 @@ public:
 
   VTKM_CONT
   DepthBufferType& GetDepthBuffer();
+
+  ///@{
+  /// \brief Gets the image in this `Canvas` as a `vtkm::cont::DataSet`.
+  ///
+  /// The returned `DataSet` will be a uniform structured 2D grid. The color and depth
+  /// buffers will be attached as field with the given names. If the name for the color
+  /// or depth field is empty, then that respective field will not be added.
+  ///
+  /// The arrays of the color and depth buffer are shallow copied. Thus, changes in
+  /// the `Canvas` may cause unexpected behavior in the `DataSet`.
+  ///
+  VTKM_CONT vtkm::cont::DataSet GetDataSet(const std::string& colorFieldName = "color",
+                                           const std::string& depthFieldName = "depth") const;
+  VTKM_CONT vtkm::cont::DataSet GetDataSet(const char* colorFieldName,
+                                           const char* depthFieldName = "depth") const;
+  ///@}
 
   VTKM_CONT
   void ResizeBuffers(vtkm::Id width, vtkm::Id height);

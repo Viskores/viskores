@@ -230,12 +230,8 @@ void AxisAnnotation::CalculateTicksLogarithmic(const vtkm::Range& range,
   }
 }
 
-AxisAnnotation::AxisAnnotation()
-{
-}
+AxisAnnotation::AxisAnnotation() {}
 
-AxisAnnotation::~AxisAnnotation()
-{
-}
+AxisAnnotation::~AxisAnnotation() {}
 }
 } // namespace vtkm::rendering

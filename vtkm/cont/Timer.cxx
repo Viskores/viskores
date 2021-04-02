@@ -11,52 +11,19 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/internal/brigand.hpp>
+#include <tuple>
 
 namespace
 {
-template <typename State, typename T>
-struct RemoveDisabledDevice
-{
-  using type = typename std::conditional<T::IsEnabled, brigand::push_back<State, T>, State>::type;
-};
+template <typename Device>
+using DeviceInvalid = std::integral_constant<bool, !Device::IsEnabled>;
+using EnabledDeviceList = vtkm::ListRemoveIf<vtkm::cont::DeviceAdapterListCommon, DeviceInvalid>;
 
-/// TMP code to generate enabled device timer container
-using AllDeviceList = vtkm::internal::ListTagAsBrigandList<vtkm::cont::DeviceAdapterListTagCommon>;
-using EnabledDeviceList = brigand::fold<AllDeviceList,
-                                        brigand::list<>,
-                                        RemoveDisabledDevice<brigand::_state, brigand::_element>>;
-struct EnabledDeviceListTag : vtkm::ListTagBase<>
-{
-  using list = EnabledDeviceList;
-};
-using EnabledTimerImpls =
-  brigand::transform<EnabledDeviceList,
-                     brigand::bind<vtkm::cont::DeviceAdapterTimerImplementation, brigand::_1>>;
-using EnabledTimerImplTuple = brigand::as_tuple<EnabledTimerImpls>;
-} // anonymous namespace
+template <typename Device>
+using DeviceTimerPtr = std::unique_ptr<vtkm::cont::DeviceAdapterTimerImplementation<Device>>;
 
-namespace vtkm
-{
-namespace cont
-{
-namespace detail
-{
-
-class EnabledDeviceTimerImpls
-{
-public:
-  EnabledDeviceTimerImpls() {}
-  ~EnabledDeviceTimerImpls() {}
-  // A tuple of enabled timer implementations
-  EnabledTimerImplTuple timerImplTuple;
-};
-}
-}
-} // namespace vtkm::cont::detail
-
-namespace
-{
+using EnabledTimerImpls = vtkm::ListTransform<EnabledDeviceList, DeviceTimerPtr>;
+using EnabledTimerImplTuple = vtkm::ListApply<EnabledTimerImpls, std::tuple>;
 
 // C++11 does not support get tuple element by type. C++14 does support that.
 // Get the index of a type in tuple elements
@@ -78,29 +45,51 @@ struct Index<T, Container<U, Types...>>
 template <typename Device>
 VTKM_CONT inline
   typename std::tuple_element<Index<Device, EnabledDeviceList>::value, EnabledTimerImplTuple>::type&
-  GetTimerImpl(Device, vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
+  GetUniqueTimerPtr(Device, EnabledTimerImplTuple& enabledTimers)
 {
-  return std::get<Index<Device, EnabledDeviceList>::value>(timerImpls->timerImplTuple);
+  return std::get<Index<Device, EnabledDeviceList>::value>(enabledTimers);
 }
 
-template <typename Device>
-VTKM_CONT inline const typename std::tuple_element<Index<Device, EnabledDeviceList>::value,
-                                                   EnabledTimerImplTuple>::type&
-GetTimerImpl(Device, const vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
+struct InitFunctor
 {
-  return std::get<Index<Device, EnabledDeviceList>::value>(timerImpls->timerImplTuple);
-}
+  template <typename Device>
+  VTKM_CONT void operator()(Device, EnabledTimerImplTuple& timerImpls)
+  {
+    //We don't use the runtime device tracker to very initializtion support
+    //so that the following use case is supported:
+    //
+    // GetRuntimeDeviceTracker().Disable( openMP );
+    // vtkm::cont::Timer timer; //tracks all active devices
+    // GetRuntimeDeviceTracker().Enable( openMP );
+    // timer.Start() //want to test openmp
+    //
+    // timer.GetElapsedTime()
+    //
+    // When `GetElapsedTime` is called we need to make sure that the OpenMP
+    // device timer is safe to call. At the same time we still need to make
+    // sure that we have the required runtime and not just compile time support
+    // this is why we use `DeviceAdapterRuntimeDetector`
+    bool haveRequiredRuntimeSupport = vtkm::cont::DeviceAdapterRuntimeDetector<Device>{}.Exists();
+    if (haveRequiredRuntimeSupport)
+    {
+      std::get<Index<Device, EnabledDeviceList>::value>(timerImpls)
+        .reset(new vtkm::cont::DeviceAdapterTimerImplementation<Device>());
+    }
+  }
+};
 
 struct ResetFunctor
 {
   template <typename Device>
   VTKM_CONT void operator()(Device device,
-                            vtkm::cont::Timer* timer,
-                            vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
+                            vtkm::cont::DeviceAdapterId deviceToRunOn,
+                            const vtkm::cont::RuntimeDeviceTracker& tracker,
+                            EnabledTimerImplTuple& timerImpls)
   {
-    if ((timer->GetDevice() == device) || (timer->GetDevice() == vtkm::cont::DeviceAdapterTagAny()))
+    if ((deviceToRunOn == device || deviceToRunOn == vtkm::cont::DeviceAdapterTagAny()) &&
+        tracker.CanRunOn(device))
     {
-      GetTimerImpl(device, timerImpls).Reset();
+      GetUniqueTimerPtr(device, timerImpls)->Reset();
     }
   }
 };
@@ -109,12 +98,14 @@ struct StartFunctor
 {
   template <typename Device>
   VTKM_CONT void operator()(Device device,
-                            vtkm::cont::Timer* timer,
-                            vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
+                            vtkm::cont::DeviceAdapterId deviceToRunOn,
+                            const vtkm::cont::RuntimeDeviceTracker& tracker,
+                            EnabledTimerImplTuple& timerImpls)
   {
-    if ((timer->GetDevice() == device) || (timer->GetDevice() == vtkm::cont::DeviceAdapterTagAny()))
+    if ((deviceToRunOn == device || deviceToRunOn == vtkm::cont::DeviceAdapterTagAny()) &&
+        tracker.CanRunOn(device))
     {
-      GetTimerImpl(device, timerImpls).Start();
+      GetUniqueTimerPtr(device, timerImpls)->Start();
     }
   }
 };
@@ -123,12 +114,14 @@ struct StopFunctor
 {
   template <typename Device>
   VTKM_CONT void operator()(Device device,
-                            vtkm::cont::Timer* timer,
-                            vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
+                            vtkm::cont::DeviceAdapterId deviceToRunOn,
+                            const vtkm::cont::RuntimeDeviceTracker& tracker,
+                            EnabledTimerImplTuple& timerImpls)
   {
-    if ((timer->GetDevice() == device) || (timer->GetDevice() == vtkm::cont::DeviceAdapterTagAny()))
+    if ((deviceToRunOn == device || deviceToRunOn == vtkm::cont::DeviceAdapterTagAny()) &&
+        tracker.CanRunOn(device))
     {
-      GetTimerImpl(device, timerImpls).Stop();
+      GetUniqueTimerPtr(device, timerImpls)->Stop();
     }
   }
 };
@@ -139,12 +132,14 @@ struct StartedFunctor
 
   template <typename Device>
   VTKM_CONT void operator()(Device device,
-                            const vtkm::cont::Timer* timer,
-                            const vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
+                            vtkm::cont::DeviceAdapterId deviceToRunOn,
+                            const vtkm::cont::RuntimeDeviceTracker& tracker,
+                            EnabledTimerImplTuple& timerImpls)
   {
-    if ((timer->GetDevice() == device) || (timer->GetDevice() == vtkm::cont::DeviceAdapterTagAny()))
+    if ((deviceToRunOn == device || deviceToRunOn == vtkm::cont::DeviceAdapterTagAny()) &&
+        tracker.CanRunOn(device))
     {
-      this->Value &= GetTimerImpl(device, timerImpls).Started();
+      this->Value &= GetUniqueTimerPtr(device, timerImpls)->Started();
     }
   }
 };
@@ -155,12 +150,14 @@ struct StoppedFunctor
 
   template <typename Device>
   VTKM_CONT void operator()(Device device,
-                            const vtkm::cont::Timer* timer,
-                            const vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
+                            vtkm::cont::DeviceAdapterId deviceToRunOn,
+                            const vtkm::cont::RuntimeDeviceTracker& tracker,
+                            EnabledTimerImplTuple& timerImpls)
   {
-    if ((timer->GetDevice() == device) || (timer->GetDevice() == vtkm::cont::DeviceAdapterTagAny()))
+    if ((deviceToRunOn == device || deviceToRunOn == vtkm::cont::DeviceAdapterTagAny()) &&
+        tracker.CanRunOn(device))
     {
-      this->Value &= GetTimerImpl(device, timerImpls).Stopped();
+      this->Value &= GetUniqueTimerPtr(device, timerImpls)->Stopped();
     }
   }
 };
@@ -171,12 +168,14 @@ struct ReadyFunctor
 
   template <typename Device>
   VTKM_CONT void operator()(Device device,
-                            const vtkm::cont::Timer* timer,
-                            const vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
+                            vtkm::cont::DeviceAdapterId deviceToRunOn,
+                            const vtkm::cont::RuntimeDeviceTracker& tracker,
+                            EnabledTimerImplTuple& timerImpls)
   {
-    if ((timer->GetDevice() == device) || (timer->GetDevice() == vtkm::cont::DeviceAdapterTagAny()))
+    if ((deviceToRunOn == device || deviceToRunOn == vtkm::cont::DeviceAdapterTagAny()) &&
+        tracker.CanRunOn(device))
     {
-      this->Value &= GetTimerImpl(device, timerImpls).Ready();
+      this->Value &= GetUniqueTimerPtr(device, timerImpls)->Ready();
     }
   }
 };
@@ -186,18 +185,43 @@ struct ElapsedTimeFunctor
   vtkm::Float64 ElapsedTime = 0.0;
 
   template <typename Device>
-  VTKM_CONT void operator()(Device deviceToTry,
+  VTKM_CONT void operator()(Device device,
                             vtkm::cont::DeviceAdapterId deviceToRunOn,
-                            const vtkm::cont::detail::EnabledDeviceTimerImpls* timerImpls)
+                            const vtkm::cont::RuntimeDeviceTracker& tracker,
+                            EnabledTimerImplTuple& timerImpls)
   {
-    if ((deviceToRunOn == deviceToTry) || (deviceToRunOn == vtkm::cont::DeviceAdapterTagAny()))
+    if ((deviceToRunOn == device || deviceToRunOn == vtkm::cont::DeviceAdapterTagAny()) &&
+        tracker.CanRunOn(device))
     {
       this->ElapsedTime =
-        vtkm::Max(this->ElapsedTime, GetTimerImpl(deviceToTry, timerImpls).GetElapsedTime());
+        vtkm::Max(this->ElapsedTime, GetUniqueTimerPtr(device, timerImpls)->GetElapsedTime());
     }
   }
 };
 } // anonymous namespace
+
+
+namespace vtkm
+{
+namespace cont
+{
+namespace detail
+{
+
+struct EnabledDeviceTimerImpls
+{
+  EnabledDeviceTimerImpls()
+  {
+    vtkm::ListForEach(InitFunctor(), EnabledDeviceList(), this->EnabledTimers);
+  }
+  ~EnabledDeviceTimerImpls() {}
+  // A tuple of enabled timer implementations
+  EnabledTimerImplTuple EnabledTimers;
+};
+}
+}
+} // namespace vtkm::cont::detail
+
 
 namespace vtkm
 {
@@ -206,50 +230,42 @@ namespace cont
 
 Timer::Timer()
   : Device(vtkm::cont::DeviceAdapterTagAny())
-  , Internal(nullptr)
+  , Internal(new detail::EnabledDeviceTimerImpls)
 {
-  this->Init();
 }
 
 Timer::Timer(vtkm::cont::DeviceAdapterId device)
   : Device(device)
-  , Internal(nullptr)
+  , Internal(new detail::EnabledDeviceTimerImpls)
 {
-  const vtkm::cont::RuntimeDeviceTracker& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   if (!tracker.CanRunOn(device))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "Device '" << device.GetName() << "' can not run on current Device."
-                                                 "Thus timer is not usable");
+               "Device '" << device.GetName()
+                          << "' can not run on current Device."
+                             "Thus timer is not usable");
   }
-
-  this->Init();
 }
-
 
 Timer::~Timer() = default;
 
-void Timer::Init()
-{
-  if (!this->Internal)
-  {
-    this->Internal.reset(new detail::EnabledDeviceTimerImpls);
-  }
-}
-
 void Timer::Reset()
 {
-  vtkm::ListForEach(ResetFunctor(), EnabledDeviceListTag(), this, this->Internal.get());
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  vtkm::ListForEach(
+    ResetFunctor(), EnabledDeviceList(), this->Device, tracker, this->Internal->EnabledTimers);
 }
 
 void Timer::Reset(vtkm::cont::DeviceAdapterId device)
 {
-  const vtkm::cont::RuntimeDeviceTracker& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   if (!tracker.CanRunOn(device))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "Device '" << device.GetName() << "' can not run on current Device."
-                                                 "Thus timer is not usable");
+               "Device '" << device.GetName()
+                          << "' can not run on current Device."
+                             "Thus timer is not usable");
   }
 
   this->Device = device;
@@ -258,76 +274,53 @@ void Timer::Reset(vtkm::cont::DeviceAdapterId device)
 
 void Timer::Start()
 {
-  vtkm::ListForEach(StartFunctor(), EnabledDeviceListTag(), this, this->Internal.get());
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  vtkm::ListForEach(
+    StartFunctor(), EnabledDeviceList(), this->Device, tracker, this->Internal->EnabledTimers);
 }
 
 void Timer::Stop()
 {
-  vtkm::ListForEach(StopFunctor(), EnabledDeviceListTag(), this, this->Internal.get());
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  vtkm::ListForEach(
+    StopFunctor(), EnabledDeviceList(), this->Device, tracker, this->Internal->EnabledTimers);
 }
 
 bool Timer::Started() const
 {
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   StartedFunctor functor;
-  vtkm::ListForEach(functor, EnabledDeviceListTag(), this, this->Internal.get());
+  vtkm::ListForEach(
+    functor, EnabledDeviceList(), this->Device, tracker, this->Internal->EnabledTimers);
   return functor.Value;
 }
 
 bool Timer::Stopped() const
 {
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   StoppedFunctor functor;
-  vtkm::ListForEach(functor, EnabledDeviceListTag(), this, this->Internal.get());
+  vtkm::ListForEach(
+    functor, EnabledDeviceList(), this->Device, tracker, this->Internal->EnabledTimers);
   return functor.Value;
 }
 
 bool Timer::Ready() const
 {
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   ReadyFunctor functor;
-  vtkm::ListForEach(functor, EnabledDeviceListTag(), this, this->Internal.get());
+  vtkm::ListForEach(
+    functor, EnabledDeviceList(), this->Device, tracker, this->Internal->EnabledTimers);
   return functor.Value;
 }
 
-vtkm::Float64 Timer::GetElapsedTime(vtkm::cont::DeviceAdapterId device) const
+vtkm::Float64 Timer::GetElapsedTime() const
 {
-  vtkm::cont::DeviceAdapterId deviceToTime = device;
-
-  if (this->Device != DeviceAdapterTagAny())
-  {
-    // Timer is constructed for a specific device. Only querying on this device is allowed.
-    if (deviceToTime == vtkm::cont::DeviceAdapterTagAny())
-    {
-      // User did not specify a device to time on. Use the one set in the timer.
-      deviceToTime = this->Device;
-    }
-    else if (deviceToTime == this->Device)
-    {
-      // User asked for the same device already set for the timer. We are OK. Nothing to do.
-    }
-    else
-    {
-      // The user selected a device that is differnt than the one set for the timer. This query
-      // is not allowed.
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "Device '" << device.GetName() << "' is not supported for current timer"
-                            << "("
-                            << this->Device.GetName()
-                            << ")");
-      return 0.0;
-    }
-  }
-
-  // If we have specified a specific device, make sure we can run on it.
+  //Throw an exception if a timer bound device now can't be used
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  if (!tracker.CanRunOn(deviceToTime))
-  {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "Device '" << deviceToTime.GetName() << "' can not run on current Device."
-                                                       " Thus timer is not usable");
-    return 0.0;
-  }
 
   ElapsedTimeFunctor functor;
-  vtkm::ListForEach(functor, EnabledDeviceListTag(), deviceToTime, this->Internal.get());
+  vtkm::ListForEach(
+    functor, EnabledDeviceList(), this->Device, tracker, this->Internal->EnabledTimers);
 
   return functor.ElapsedTime;
 }

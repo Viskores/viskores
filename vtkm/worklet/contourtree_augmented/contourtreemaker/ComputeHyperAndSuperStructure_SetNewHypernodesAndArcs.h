@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_set_new_hyper_nodes_and_arcs_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_set_new_hyper_nodes_and_arcs_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_set_new_hyper_nodes_and_arcs_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_set_new_hyper_nodes_and_arcs_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -76,7 +76,7 @@ public:
                                 WholeArrayIn newHypernodePosition,       // (input)
                                 WholeArrayOut newHypernodes,             // (output)
                                 WholeArrayOut newHyperarcs               // (output)
-                                );                                       // (output)
+  );                                                                     // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 
@@ -94,7 +94,7 @@ public:
                             const OutFieldPortalType& newHypernodesPortal,
                             const OutFieldPortalType& newHyperarcsPortal) const
   {
-    bool isAHypernode = isHypernode(contourTreeWhenTransferredPortal.Get(supernode));
+    bool isAHypernode = IsHypernode(contourTreeWhenTransferredPortal.Get(supernode));
     // ignore non-hypernodes
     // all others (including the root hypernode) are kept
     if (isAHypernode)
@@ -107,9 +107,9 @@ public:
 
     // In serial this worklet implements the following operation
     /*
-      for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
+      for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.size(); supernode++)
         { // per supernode
-          bool isAHypernode = isHypernode(contourTree.whenTransferred[supernode]);
+          bool isAHypernode = IsHypernode(contourTree.WhenTransferred[supernode]);
 
           // ignore non-hypernodes
           // all others (including the root hypernode) are kept

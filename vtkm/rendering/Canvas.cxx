@@ -11,16 +11,18 @@
 #include <vtkm/rendering/Canvas.h>
 
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/io/DecodePNG.h>
+#include <vtkm/io/EncodePNG.h>
+#include <vtkm/io/FileUtils.h>
+#include <vtkm/io/ImageUtils.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
-#include <vtkm/rendering/DecodePNG.h>
 #include <vtkm/rendering/LineRenderer.h>
 #include <vtkm/rendering/TextRenderer.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
-
-#include <vtkm/cont/ColorTable.hxx>
 
 #include <fstream>
 #include <iostream>
@@ -232,9 +234,7 @@ Canvas::Canvas(vtkm::Id width, vtkm::Id height)
   this->ResizeBuffers(width, height);
 }
 
-Canvas::~Canvas()
-{
-}
+Canvas::~Canvas() {}
 
 vtkm::rendering::Canvas* Canvas::NewCopy() const
 {
@@ -271,6 +271,29 @@ Canvas::DepthBufferType& Canvas::GetDepthBuffer()
   return Internals->DepthBuffer;
 }
 
+vtkm::cont::DataSet Canvas::GetDataSet(const std::string& colorFieldName,
+                                       const std::string& depthFieldName) const
+{
+  vtkm::cont::DataSetBuilderUniform builder;
+  vtkm::cont::DataSet dataSet = builder.Create(vtkm::Id2(this->GetWidth(), this->GetHeight()));
+  if (!colorFieldName.empty())
+  {
+    dataSet.AddPointField(colorFieldName, this->GetColorBuffer());
+  }
+  if (!depthFieldName.empty())
+  {
+    dataSet.AddPointField(depthFieldName, this->GetDepthBuffer());
+  }
+  return dataSet;
+}
+
+vtkm::cont::DataSet Canvas::GetDataSet(const char* colorFieldName, const char* depthFieldName) const
+{
+  return this->GetDataSet((colorFieldName != nullptr) ? std::string(colorFieldName) : std::string(),
+                          (depthFieldName != nullptr) ? std::string(depthFieldName)
+                                                      : std::string());
+}
+
 const vtkm::rendering::Color& Canvas::GetBackgroundColor() const
 {
   return Internals->BackgroundColor;
@@ -291,23 +314,11 @@ void Canvas::SetForegroundColor(const vtkm::rendering::Color& color)
   Internals->ForegroundColor = color;
 }
 
-void Canvas::Initialize()
-{
-}
-
-void Canvas::Activate()
-{
-}
-
 void Canvas::Clear()
 {
   internal::ClearBuffers worklet;
   vtkm::worklet::DispatcherMapField<internal::ClearBuffers> dispatcher(worklet);
   dispatcher.Invoke(this->GetColorBuffer(), this->GetDepthBuffer());
-}
-
-void Canvas::Finish()
-{
 }
 
 void Canvas::BlendBackground()
@@ -522,20 +533,20 @@ bool Canvas::LoadFont() const
   const std::vector<unsigned char>& rawPNG = Internals->Font.GetRawImageData();
   std::vector<unsigned char> rgba;
   unsigned long textureWidth, textureHeight;
-  auto error = DecodePNG(rgba, textureWidth, textureHeight, &rawPNG[0], rawPNG.size());
+  auto error = io::DecodePNG(rgba, textureWidth, textureHeight, &rawPNG[0], rawPNG.size());
   if (error != 0)
   {
     return false;
   }
-  std::size_t numValues = textureWidth * textureHeight;
-  std::vector<unsigned char> alpha(numValues);
-  for (std::size_t i = 0; i < numValues; ++i)
+  vtkm::Id numValues = static_cast<vtkm::Id>(textureWidth * textureHeight);
+  vtkm::cont::ArrayHandle<UInt8> alpha;
+  alpha.Allocate(numValues);
+  auto alphaPortal = alpha.WritePortal();
+  for (vtkm::Id i = 0; i < numValues; ++i)
   {
-    alpha[i] = rgba[i * 4 + 3];
+    alphaPortal.Set(i, rgba[static_cast<std::size_t>(i * 4 + 3)]);
   }
-  vtkm::cont::ArrayHandle<vtkm::UInt8> textureHandle = vtkm::cont::make_ArrayHandle(alpha);
-  Internals->FontTexture =
-    FontTextureType(vtkm::Id(textureWidth), vtkm::Id(textureHeight), textureHandle);
+  Internals->FontTexture = FontTextureType(vtkm::Id(textureWidth), vtkm::Id(textureHeight), alpha);
   Internals->FontTexture.SetFilterMode(TextureFilterMode::Linear);
   Internals->FontTexture.SetWrapMode(TextureWrapMode::Clamp);
   return true;
@@ -568,11 +579,34 @@ void Canvas::SetViewToScreenSpace(const vtkm::rendering::Camera& vtkmNotUsed(cam
 void Canvas::SaveAs(const std::string& fileName) const
 {
   this->RefreshColorBuffer();
-  std::ofstream of(fileName.c_str(), std::ios_base::binary | std::ios_base::out);
+  ColorBufferType::ReadPortalType colorPortal = GetColorBuffer().ReadPortal();
   vtkm::Id width = GetWidth();
   vtkm::Id height = GetHeight();
+
+  if (vtkm::io::EndsWith(fileName, ".png"))
+  {
+    std::vector<unsigned char> img(static_cast<size_t>(4 * width * height));
+    for (vtkm::Id yIndex = height - 1; yIndex >= 0; yIndex--)
+    {
+      for (vtkm::Id xIndex = 0; xIndex < width; xIndex++)
+      {
+        vtkm::Vec4f_32 tuple = colorPortal.Get(yIndex * width + xIndex);
+        // y = 0 is the top of a .png file.
+        size_t idx = static_cast<size_t>(4 * width * (height - 1 - yIndex) + 4 * xIndex);
+        img[idx + 0] = (unsigned char)(tuple[0] * 255);
+        img[idx + 1] = (unsigned char)(tuple[1] * 255);
+        img[idx + 2] = (unsigned char)(tuple[2] * 255);
+        img[idx + 3] = (unsigned char)(tuple[3] * 255);
+      }
+    }
+
+    vtkm::io::SavePNG(
+      fileName, img, static_cast<unsigned long>(width), static_cast<unsigned long>(height));
+    return;
+  }
+
+  std::ofstream of(fileName.c_str(), std::ios_base::binary | std::ios_base::out);
   of << "P6" << std::endl << width << " " << height << std::endl << 255 << std::endl;
-  ColorBufferType::PortalConstControl colorPortal = GetColorBuffer().GetPortalConstControl();
   for (vtkm::Id yIndex = height - 1; yIndex >= 0; yIndex--)
   {
     for (vtkm::Id xIndex = 0; xIndex < width; xIndex++)

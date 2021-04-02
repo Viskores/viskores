@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_find_degrees_subtract_lhe_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_find_degrees_subtract_lhe_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_find_degrees_subtract_lhe_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_find_degrees_subtract_lhe_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -71,9 +71,9 @@ class FindDegrees_SubtractLHE : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
-    WholeArrayIn inNeighbour, // (input)
-    WholeArrayOut
-      upOrDowndegree); // (output) updegree in the case of the join tree and downdegree in the case of the split tree
+    WholeArrayIn inNeighbour,      // (input)
+    WholeArrayOut upOrDowndegree); // (output) updegree in the case of the
+                                   //join tree and downdegree for the split tree
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 
@@ -88,7 +88,7 @@ public:
                             const OutFieldPortalType& upOrDownDegreePortal) const
   {
     vtkm::Id whichJoinOrSplit = inNeighbourPortal.Get(joinOrSplitIndex);
-    if (!noSuchElement(whichJoinOrSplit))
+    if (!NoSuchElement(whichJoinOrSplit))
     { // an actual neighbour
       // zero is always the LHE of a segment
       if (joinOrSplitIndex == 0)
@@ -104,7 +104,7 @@ public:
         for (vtkm::Id joinIndex = 0; joinIndex < nActiveSupernodes; joinIndex++)
           { // per in edge index
             vtkm::Id whichJoin = inNeighbour[joinIndex];
-            if (!noSuchElement(whichJoin))
+            if (!NoSuchElement(whichJoin))
                     { // an actual neighbour
                     // zero is always the LHE of a segment
                     if (joinIndex == 0)

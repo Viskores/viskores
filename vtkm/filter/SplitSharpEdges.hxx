@@ -10,11 +10,14 @@
 
 #ifndef vtk_m_filter_SplitSharpEdges_hxx
 #define vtk_m_filter_SplitSharpEdges_hxx
+#include <vtkm/filter/SplitSharpEdges.h>
 
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
+
+#include <vtkm/filter/MapFieldPermutation.h>
 
 namespace vtkm
 {
@@ -41,10 +44,10 @@ inline VTKM_CONT vtkm::cont::DataSet SplitSharpEdges::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newCoords;
   vtkm::cont::CellSetExplicit<> newCellset;
 
-  this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+  this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                     this->FeatureAngle,
                     field,
-                    input.GetCoordinateSystem().GetData(),
+                    input.GetCoordinateSystem().GetDataAsMultiplexer(),
                     newCoords,
                     newCellset);
 
@@ -56,23 +59,18 @@ inline VTKM_CONT vtkm::cont::DataSet SplitSharpEdges::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool SplitSharpEdges::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool SplitSharpEdges::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                          const vtkm::cont::Field& field,
+                                                          vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  if (fieldMeta.IsPointField())
+  if (field.IsFieldPoint())
   {
-    // We copy the input handle to the result dataset, reusing the metadata
-    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessPointField(input);
-    result.AddField(fieldMeta.AsField(out));
-    return true;
+    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetNewPointsIdArray(), result);
   }
-  else if (fieldMeta.IsCellField())
+  else if (field.IsFieldCell() || field.IsFieldGlobal())
   {
-    result.AddField(fieldMeta.AsField(input));
+    result.AddField(field); // pass through
     return true;
   }
   else

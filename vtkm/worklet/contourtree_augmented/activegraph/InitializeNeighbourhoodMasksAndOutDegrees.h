@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_initialize_neighbourhood_masks_and_out_degrees_h
-#define vtkm_worklet_contourtree_augmented_active_graph_initialize_neighbourhood_masks_and_out_degrees_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_initialize_neighbourhood_masks_and_out_degrees_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_initialize_neighbourhood_masks_and_out_degrees_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -80,14 +80,14 @@ public:
   // Default Constructor
   VTKM_EXEC_CONT
   InitializeNeighbourhoodMasksAndOutDegrees()
-    : isJoinGraph(true)
+    : IsJoinGraph(true)
   {
   }
 
   // Constructor
   VTKM_EXEC_CONT
   InitializeNeighbourhoodMasksAndOutDegrees(const bool joinGraph)
-    : isJoinGraph(joinGraph)
+    : IsJoinGraph(joinGraph)
   {
   }
 
@@ -98,19 +98,19 @@ public:
                             const OutFieldPortalType& outDegreesPortal) const
   {
     const vtkm::Pair<vtkm::Id, vtkm::Id>& maskAndDegree =
-      meshStructure.GetNeighbourComponentsMaskAndDegree(sortIndex, isJoinGraph);
+      meshStructure.GetNeighbourComponentsMaskAndDegree(sortIndex, this->IsJoinGraph);
     neighbourhoodMasksPortal.Set(sortIndex, maskAndDegree.first);
     outDegreesPortal.Set(sortIndex, maskAndDegree.second);
 
     // In serial this worklet implements the following operation
     // for (indexType sortIndex = 0; sortIndex < mesh.GetNumberOfVertices(); ++sortIndex)
     //    {
-    //       std::tie(neighbourhoodMasks[sortIndex], outDegrees[sortIndex]) = mesh.GetNeighbourComponentsMaskAndDegree(sortIndex, isJoinGraph);
+    //       std::tie(neighbourhoodMasks[sortIndex], outDegrees[sortIndex]) = mesh.GetNeighbourComponentsMaskAndDegree(sortIndex, this->IisJoinGraph);
     //    }
   }
 
 private:
-  bool isJoinGraph;
+  bool IsJoinGraph;
 
 }; // Mesh2D_DEM_VertexStarter
 

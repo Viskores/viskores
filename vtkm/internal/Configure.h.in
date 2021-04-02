@@ -20,6 +20,11 @@
 #define VTKM_CUDA_DEVICE_PASS
 #endif
 
+// Defined when compiling for the HIP language.
+#ifdef __HIP__
+#define VTKM_HIP
+#endif
+
 #if defined(_MSC_VER)
 //MSVC 2015+ can use a clang frontend, so we want to label it only as MSVC
 //and not MSVC and clang
@@ -60,6 +65,14 @@
 
 #if !defined(VTKM_NO_ASSERT)
 #cmakedefine VTKM_NO_ASSERT
+#endif
+
+#if !defined(VTKM_NO_ASSERT_CUDA)
+#cmakedefine VTKM_NO_ASSERT_CUDA
+#endif
+
+#if !defined(VTKM_NO_ASSERT_HIP)
+#cmakedefine VTKM_NO_ASSERT_HIP
 #endif
 
 #if !defined(VTKM_USE_DOUBLE_PRECISION) && !defined(VTKM_NO_DOUBLE_PRECISION)
@@ -106,13 +119,27 @@
 #define VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS
 #endif
 
-// Newer versions of clang have an unused-local-typedef warning, but not older
-// versions. This checks for the apple version of clang, which is different
-// than other clang compiled versions. If using a non-apple version of clang,
-// you might need to extend this condition.
+
 #if defined(VTKM_CLANG) && (__apple_build_version__ >= 7000072)
+// 1. Newer versions of clang have an unused-local-typedef warning, but not older
+// versions. This checks for the apple version of clang, which is different
+// than other clang compiled versions.
+// 2+. Suppress common issues found in third-party code such
+// as DIY
 #define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
-  _Pragma("GCC diagnostic ignored \"-Wunused-local-typedef\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-local-typedef\"") \
+  _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-template\"")
+#elif defined(VTKM_CLANG) && defined(__ibmxl__)
+#define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
+  _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
+#elif defined(VTKM_CLANG)
+#define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
+  _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-template\"")
 #else
 #define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS
 #endif
@@ -252,6 +279,18 @@
 #ifndef VTKM_ENABLE_OPENMP
 #cmakedefine VTKM_ENABLE_OPENMP
 #endif
+//Mark if we are building with Kokkos enabled
+#ifndef VTKM_ENABLE_KOKKOS
+#cmakedefine VTKM_ENABLE_KOKKOS
+#endif
+//Mark if Kokkos has Cuda backend enabled
+#ifndef VTKM_KOKKOS_CUDA
+#cmakedefine VTKM_KOKKOS_CUDA
+#endif
+//Mark if Kokkos has HIP backend enabled
+#ifndef VTKM_KOKKOS_HIP
+#cmakedefine VTKM_KOKKOS_HIP
+#endif
 
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI
@@ -275,6 +314,9 @@
 //Mark if we have enabled logging.
 #cmakedefine VTKM_ENABLE_LOGGING
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#cmakedefine VTKM_NO_DEPRECATED_VIRTUAL
+#endif
 
 // Define a pair of macros, VTKM_SWALLOW_SEMICOLON_PRE_BLOCK and
 // VTKM_SWALLOW_SEMICOLON_POST_BLOCK that can be used around a block in a
@@ -301,30 +343,49 @@
   while (false)
 #endif
 
-// Use a trick to pass arguments containing commas through a macro. This is
-// helpful for mixing template code with macros.
-// See https://stackoverflow.com/questions/13842468
+/// \def VTKM_PASS_COMMAS(...)
+///
+/// A trick to pass arguments containing commas through a macro. This is
+/// helpful for mixing template code with macros.
+///
+/// See https://stackoverflow.com/questions/13842468
 #define VTKM_PASS_COMMAS(...) __VA_ARGS__
+
+/// \def VTKM_EXPAND(expr)
+///
+/// A utility macro to expand the arguments of macro before invoking it in the
+/// preprocessor. This is mostly used to handle the `__VA_ARGS__` created for
+/// variadic preprocessor macros. Often you will have to pass `__VA_ARGS__` to
+/// another macro to tease out particular parameters. For example, to get the
+/// first argument, you might make something like this.
+///
+/// ```cpp
+/// #define GET_FIRST_ARGUMENT(...) GET_FIRST_ARGUMENT_IMPL(__VA_ARGS__, no_arg)
+/// #define GET_FIRST_ARGUMENT_IMPL(first, ...) first
+/// ```
+///
+/// You would expect this pair of macros to give you the first argument or the
+/// token `no_arg` if no arguments were given, and for most compilers that
+/// is what you would get. But Visual Studio in particular has a weird
+/// interpretation of the standard that causes `__VA_ARGS__` to be treated
+/// as a single argument when passed to another macro. Consequently, for the
+/// example above, Visual Studio actually returns all args passed instead of
+/// the first. To get around the problem, you can wrap the entire call to
+/// the secondary macro in VTKM_EXPAND to get Visual Studio (and all other
+/// compilers) to properly treat `__VA_ARGS__` as separate arguments.
+///
+/// ```cpp
+/// #define GET_FIRST_ARGUMENT(...) VTKM_EXPAND(GET_FIRST_ARGUMENT_IMPL(__VA_ARGS__, no_arg))
+/// #define GET_FIRST_ARGUMENT_IMPL(first, ...) first
+/// ```
+///
+#define VTKM_EXPAND(expr) expr
 
 #ifdef VTKM_MSVC
 //With MSVC the types that we generate cause warning C4503 (long symbol names)
 //this doesn't affect the resulting binary so we just suppress that warning
 //
 #pragma warning(disable:4503)
-
-//MSVC has a warning for using "unsafe" algorithms such as fill_n that can
-//easily overrun the end of unchecked pointers. The problem is that there
-//are lots of valid uses of these algorithms, and the signal that this is
-//a valid use is MSVC-specific. Even less fortunate is the fact that if
-//another header violates the warning, it is impossible to suppress it
-//because it happens in a system header file (xutility), which was included
-//far before the actual offending code occurred. Even less fortunate than
-//that, a boost header we (indirectly) use sets off this warning, cannot
-//be suppressed, and is not going to be fixed
-//(https://svn.boost.org/trac/boost/ticket/11426). The best solution is to
-//turn off this problematic warning for everybody.
-//
-#pragma warning(disable:4996)
 
 //In VTK-m libraries, we are typically exporting (with declspec) classes rather
 //than the independent methods within the class. When you are exporting to a

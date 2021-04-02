@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_reset_hyperparents_id_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_reset_hyperparents_id_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_reset_hyperparents_id_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_reset_hyperparents_id_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -71,7 +71,7 @@ class ComputeHyperAndSuperStructure_ResetHyperparentsId : public vtkm::worklet::
 public:
   typedef void ControlSignature(WholeArrayIn superSortIndex,            // (input)
                                 WholeArrayInOut contourTreeHyperparents // (input/output)
-                                );                                      // (output)
+  );                                                                    // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 
@@ -86,12 +86,12 @@ public:
   {
     contourTreeHyperparentsPortal.Set(
       supernode,
-      superSortIndexPortal.Get(maskedIndex(contourTreeHyperparentsPortal.Get(supernode))));
+      superSortIndexPortal.Get(MaskedIndex(contourTreeHyperparentsPortal.Get(supernode))));
 
     // In serial this worklet implements the following operation
     /*
-      for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
-          contourTree.hyperparents[supernode] = superSortIndex[maskedIndex(contourTree.hyperparents[supernode])];
+      for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.size(); supernode++)
+          contourTree.hyperparents[supernode] = superSortIndex[MaskedIndex(contourTree.hyperparents[supernode])];
         } // per supernode
       */
   }

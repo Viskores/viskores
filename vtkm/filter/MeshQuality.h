@@ -23,7 +23,6 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/filter/FilterField.h>
-#include <vtkm/worklet/FieldStatistics.h>
 #include <vtkm/worklet/MeshQuality.h>
 
 namespace vtkm
@@ -97,7 +96,7 @@ enum class CellMetric
 class MeshQuality : public vtkm::filter::FilterField<MeshQuality>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT MeshQuality(CellMetric);
 

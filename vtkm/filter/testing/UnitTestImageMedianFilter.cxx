@@ -29,14 +29,14 @@ void TestImageMedian()
 
   VTKM_TEST_ASSERT(result.HasPointField("median"), "Field missing.");
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  result.GetPointField("median").GetData().CopyTo(resultArrayHandle);
+  result.GetPointField("median").GetData().AsArrayHandle(resultArrayHandle);
 
   auto cells = result.GetCellSet().Cast<vtkm::cont::CellSetStructured<3>>();
   auto pdims = cells.GetPointDimensions();
 
   //verified by hand
   {
-    auto portal = resultArrayHandle.GetPortalConstControl();
+    auto portal = resultArrayHandle.ReadPortal();
     std::cout << "spot to verify x = 1, y = 1, z = 0 is: ";
     vtkm::Float32 temp = portal.Get(1 + pdims[0]);
     std::cout << temp << std::endl << std::endl;

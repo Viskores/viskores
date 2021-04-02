@@ -8,11 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/DispatcherPointNeighborhood.h>
 #include <vtkm/worklet/MaskIndices.h>
 #include <vtkm/worklet/ScatterUniform.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -108,7 +108,7 @@ void TestMapWorklet()
 
   vtkm::cont::ArrayHandle<FieldType> inField;
   inField.Allocate(numPoints);
-  SetPortal(inField.GetPortalControl());
+  SetPortal(inField.WritePortal());
 
   vtkm::cont::ArrayHandle<FieldType> fieldCopy;
   vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleConstant(FieldNull, numPoints * 2), fieldCopy);
@@ -127,8 +127,8 @@ void TestMapWorklet()
   dispatcher.Invoke(cellSet, inField, fieldCopy, visitCopy);
 
   // Check outputs
-  auto fieldCopyPortal = fieldCopy.GetPortalConstControl();
-  auto visitCopyPortal = visitCopy.GetPortalConstControl();
+  auto fieldCopyPortal = fieldCopy.ReadPortal();
+  auto visitCopyPortal = visitCopy.ReadPortal();
   for (vtkm::Id outputIndex = 0; outputIndex < numPoints * 2; ++outputIndex)
   {
     FieldType fieldValue = fieldCopyPortal.Get(outputIndex);

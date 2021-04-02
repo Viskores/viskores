@@ -44,8 +44,8 @@ void WaveletSourceTest()
     auto field = ds.GetPointField("scalars");
     auto dynData = field.GetData();
     VTKM_TEST_ASSERT(dynData.IsType<ScalarHandleType>(), "Invalid scalar handle type.");
-    ScalarHandleType handle = dynData.Cast<ScalarHandleType>();
-    auto data = handle.GetPortalConstControl();
+    ScalarHandleType handle = dynData.AsArrayHandle<ScalarHandleType>();
+    auto data = handle.ReadPortal();
 
     VTKM_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261), "Incorrect number of scalars.");
 

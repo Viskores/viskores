@@ -16,7 +16,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/filter/Lagrangian.h>
 
@@ -48,7 +47,6 @@ vtkm::cont::DataSet make3DRectilinearDataSet(double time)
   vtkm::Vec3f_64 SPACING(xdiff, ydiff, zdiff);
 
   vtkm::cont::DataSet dataset = dsb.Create(DIMS, ORIGIN, SPACING);
-  vtkm::cont::DataSetFieldAdd dsf;
 
   int numPoints = dims[0] * dims[1] * dims[2];
 
@@ -65,12 +63,12 @@ vtkm::cont::DataSet make3DRectilinearDataSet(double time)
         double vec[3];
         double loc[3] = { i * xdiff + xmin, j * ydiff + ymax, k * zdiff + zmin };
         field.calculateVelocity(loc, time, vec);
-        velocityField.GetPortalControl().Set(count, vtkm::Vec3f_64(vec[0], vec[1], vec[2]));
+        velocityField.WritePortal().Set(count, vtkm::Vec3f_64(vec[0], vec[1], vec[2]));
         count++;
       }
     }
   }
-  dsf.AddPointField(dataset, "velocity", velocityField);
+  dataset.AddPointField("velocity", velocityField);
   return dataset;
 }
 

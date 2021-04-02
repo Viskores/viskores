@@ -59,6 +59,11 @@ public:
   {
   }
 
+
+  ConnectivityStructured& operator=(const ConnectivityStructured& src) = default;
+  ConnectivityStructured& operator=(ConnectivityStructured&& src) = default;
+
+
   VTKM_EXEC
   vtkm::Id GetNumberOfElements() const { return Helper::GetNumberOfElements(this->Internals); }
 
@@ -108,6 +113,12 @@ public:
   vtkm::Vec<vtkm::Id, Dimension> GetPointDimensions() const
   {
     return this->Internals.GetPointDimensions();
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Vec<vtkm::Id, Dimension> GetCellDimensions() const
+  {
+    return this->Internals.GetCellDimensions();
   }
 
   VTKM_EXEC_CONT

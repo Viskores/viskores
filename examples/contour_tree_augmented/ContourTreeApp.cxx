@@ -65,8 +65,12 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/io/BOVDataSetReader.h>
+
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
@@ -91,17 +95,16 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <stdio.h>
 #include <string>
 #include <utility>
 #include <vector>
 
-#define DEBUG_TIMING
-
 using ValueType = vtkm::Float32;
 using BranchType = vtkm::worklet::contourtree_augmented::process_contourtree_inc::Branch<ValueType>;
 
-namespace cppp2_ns = vtkm::worklet::contourtree_augmented;
+namespace ctaug_ns = vtkm::worklet::contourtree_augmented;
 
 // Simple helper class for parsing the command line options
 class ParseCL
@@ -130,7 +133,7 @@ public:
     }
     else
     {
-      return (it - this->mCLOptions.begin());
+      return static_cast<vtkm::Id>(it - this->mCLOptions.begin());
     }
   }
 
@@ -165,7 +168,7 @@ int main(int argc, char* argv[])
   auto comm = MPI_COMM_WORLD;
 
   // Tell VTK-m which communicator it should use.
-  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(comm));
+  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator());
 
   // get the rank and size
   int rank, size;
@@ -173,24 +176,28 @@ int main(int argc, char* argv[])
   MPI_Comm_size(comm, &size);
   int numBlocks = size;
   int blocksPerRank = 1;
-  if (rank == 0)
-  {
-    std::cout << "Running with MPI. #ranks=" << size << std::endl;
-  }
+#endif
+
+  // initialize vtkm-m (e.g., logging via -v and device via the -d option)
+  vtkm::cont::InitializeOptions vtkm_initialize_options =
+    vtkm::cont::InitializeOptions::RequireDevice;
+  vtkm::cont::InitializeResult vtkm_config =
+    vtkm::cont::Initialize(argc, argv, vtkm_initialize_options);
+  auto device = vtkm_config.Device;
+
+#ifdef WITH_MPI
+  VTKM_LOG_IF_S(vtkm::cont::LogLevel::Info, rank == 0, "Running with MPI. #ranks=" << size);
 #else
-  std::cout << "Single node run" << std::endl;
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Single node run");
   int rank = 0;
 #endif
 
+  // Setup timing
   vtkm::Float64 prevTime = 0;
   vtkm::Float64 currTime = 0;
   vtkm::cont::Timer totalTime;
 
   totalTime.Start();
-  if (rank == 0)
-  {
-    std::cout << "ContourTreePPP2Mesh <options> <fileName>" << std::endl;
-  }
 
   ////////////////////////////////////////////
   // Parse the command line options
@@ -214,59 +221,33 @@ int main(int argc, char* argv[])
   // We need the fully augmented tree to compute the branch decomposition
   if (computeBranchDecomposition && (computeRegularStructure != 1))
   {
-    std::cout << "Regular structure is required for branch decomposition."
-                 " Disabling branch decomposition"
-              << std::endl;
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Regular structure is required for branch decomposition."
+               " Disabling branch decomposition");
     computeBranchDecomposition = false;
   }
 
-  std::string device("default");
-  if (parser.hasOption("--device"))
-  {
-    device = parser.getOption("--device");
-    auto& rtTracker = vtkm::cont::GetRuntimeDeviceTracker();
-    if (device == "serial" && rtTracker.CanRunOn(vtkm::cont::DeviceAdapterTagSerial()))
-    {
-      rtTracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
-    }
-    else if (device == "openmp" && rtTracker.CanRunOn(vtkm::cont::DeviceAdapterTagOpenMP()))
-    {
-      rtTracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP());
-    }
-    else if (device == "tbb" && rtTracker.CanRunOn(vtkm::cont::DeviceAdapterTagTBB()))
-    {
-      rtTracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB());
-    }
-    else if (device == "cuda" && rtTracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda()))
-    {
-      rtTracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda());
-    }
-    else
-    {
-      std::cout << "Invalid or unavialable device adapter: " << device << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
 
 #ifdef ENABLE_SET_NUM_THREADS
   int numThreads = tbb::task_scheduler_init::default_num_threads();
   if (parser.hasOption("--numThreads"))
   {
-    if (device == "default" &&
-        vtkm::cont::GetRuntimeDeviceTracker().CanRunOn(vtkm::cont::DeviceAdapterTagTBB()))
+    bool deviceIsTBB = (device.GetName() == "TBB");
+    // Set the number of threads to be used for TBB
+    if (deviceIsTBB)
     {
-      std::cout << "--numThreads specified without device. Forcing device as tbb.";
-      device = "tbb";
-      vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagTBB());
+      numThreads = std::stoi(parser.getOption("--numThreads"));
+      tbb::task_scheduler_init schedulerInit(numThreads);
     }
-
-    numThreads = std::stoi(parser.getOption("--numThreads"));
-    if (device != "tbb")
+    // Print warning about mismatch between the --numThreads and -d/--device option
+    else
     {
-      std::cout << "numThreads will be ignored for devices other than tbb";
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "WARNING: Mismatch between --numThreads and -d/--device option."
+                 "numThreads option requires the use of TBB as device. "
+                 "Ignoring the numThread option.");
     }
   }
-  tbb::task_scheduler_init schedulerInit(numThreads);
 #endif
 
   // Iso value selection parameters
@@ -297,21 +278,28 @@ int main(int argc, char* argv[])
     usePersistenceSorter = false;
   if ((numLevels > 0) && (!computeBranchDecomposition))
   {
-    std::cout << "Iso level selection only available when branch decomposition is enabled."
-                 " Disabling iso value selection"
-              << std::endl;
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Iso level selection only available when branch decomposition is enabled. "
+               "Disabling iso value selection");
     numLevels = 0;
   }
 
   if (rank == 0 && (argc < 2 || parser.hasOption("--help") || parser.hasOption("-h")))
   {
-    std::cout << "Parameter is <fileName>" << std::endl;
-    std::cout << "File is expected to be ASCII with either: " << std::endl;
+    std::cout << "ContourTreeAugmented <options> <fileName>" << std::endl;
+    std::cout << std::endl;
+    std::cout << "<fileName>       Name of the input data file." << std::endl;
+    std::cout << "The file is expected to be ASCII with either: " << std::endl;
     std::cout << "  - xdim ydim integers for 2D or" << std::endl;
     std::cout << "  - xdim ydim zdim integers for 3D" << std::endl;
     std::cout << "followed by vector data last dimension varying fastest" << std::endl;
-
     std::cout << std::endl;
+    std::cout << "----------------------------- VTKM Options -----------------------------"
+              << std::endl;
+    std::cout << vtkm_config.Usage << std::endl;
+    std::cout << std::endl;
+    std::cout << "------------------------- Contour Tree Options -------------------------"
+              << std::endl;
     std::cout << "Options: (Bool options are give via int, i.e. =0 for False and =1 for True)"
               << std::endl;
     std::cout << "--mc              Use marching cubes interpolation for contour tree calculation. "
@@ -328,14 +316,13 @@ int main(int argc, char* argv[])
                  "Requires --augmentTree (Default=True)"
               << std::endl;
     std::cout << "--printCT         Print the contour tree. (Default=False)" << std::endl;
-    std::cout << "--device          Set the device to use (serial, openmp, tbb, cuda). "
-                 "Use the default device if unspecified"
-              << std::endl;
 #ifdef ENABLE_SET_NUM_THREADS
     std::cout << "--numThreads      Specifiy the number of threads to use. Available only with TBB."
               << std::endl;
 #endif
     std::cout << std::endl;
+    std::cout << "---------------------- Isovalue Selection Options ----------------------"
+              << std::endl;
     std::cout << "Isovalue selection options: (require --branchDecomp=1 and augmentTree=1)"
               << std::endl;
     std::cout << "--levels=<int>  Number of iso-contour levels to be used (default=0, i.e., "
@@ -352,6 +339,8 @@ int main(int argc, char* argv[])
               << std::endl;
     std::cout << "--method=<int>  Method used for selecting relevant iso-values. (default=0)"
               << std::endl;
+    std::cout << std::endl;
+
 #ifdef WITH_MPI
     MPI_Finalize();
 #endif
@@ -360,31 +349,35 @@ int main(int argc, char* argv[])
 
   if (rank == 0)
   {
-    std::cout << "Settings:" << std::endl;
-    std::cout << "    filename=" << filename << std::endl;
-    std::cout << "    device=" << device << std::endl;
-    std::cout << "    mc=" << useMarchingCubes << std::endl;
-    std::cout << "    augmentTree=" << computeRegularStructure << std::endl;
-    std::cout << "    branchDecomp=" << computeBranchDecomposition << std::endl;
+    std::stringstream logmessage;
+    logmessage << "    ------------ Settings -----------" << std::endl
+               << "    filename=" << filename << std::endl
+               << "    device=" << device.GetName() << std::endl
+               << "    mc=" << useMarchingCubes << std::endl
+               << "    augmentTree=" << computeRegularStructure << std::endl
+               << "    branchDecomp=" << computeBranchDecomposition << std::endl
+               <<
 #ifdef WITH_MPI
-    std::cout << "    nblocks=" << numBlocks << std::endl;
+      "    nblocks=" << numBlocks << std::endl
+               <<
 #endif
 #ifdef ENABLE_SET_NUM_THREADS
-    std::cout << "    numThreads=" << numThreads << std::endl;
+      "    numThreads=" << numThreads << std::endl
+               <<
 #endif
-    std::cout << "    computeIsovalues=" << (numLevels > 0) << std::endl;
-    if (numLevels > 0)
-    {
-      std::cout << "    levels=" << numLevels << std::endl;
-      std::cout << "    eps=" << eps << std::endl;
-      std::cout << "    comp" << numComp << std::endl;
-      std::cout << "    type=" << contourType << std::endl;
-      std::cout << "    method=" << contourSelectMethod << std::endl;
-      std::cout << "    mc=" << useMarchingCubes << std::endl;
-      std::cout << "    use" << (usePersistenceSorter ? "PersistenceSorter" : "VolumeSorter")
-                << std::endl;
-    }
-    std::cout << std::endl;
+      "    computeIsovalues=" << (numLevels > 0);
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info, std::endl << logmessage.str());
+    VTKM_LOG_IF_S(vtkm::cont::LogLevel::Info,
+                  numLevels > 0,
+                  std::endl
+                    << "    ------------ Settings Isolevel Selection -----------" << std::endl
+                    << "    levels=" << numLevels << std::endl
+                    << "    eps=" << eps << std::endl
+                    << "    comp" << numComp << std::endl
+                    << "    type=" << contourType << std::endl
+                    << "    method=" << contourSelectMethod << std::endl
+                    << "    mc=" << useMarchingCubes << std::endl
+                    << "    use" << (usePersistenceSorter ? "PersistenceSorter" : "VolumeSorter"));
   }
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 startUpTime = currTime - prevTime;
@@ -394,8 +387,8 @@ int main(int argc, char* argv[])
 #ifdef WITH_MPI
 #ifdef DEBUG_PRINT
   // From https://www.unix.com/302983597-post2.html
-  char* cstr_filename = new char[15];
-  snprintf(cstr_filename, sizeof(filename), "cout_%d.log", rank);
+  char cstr_filename[32];
+  snprintf(cstr_filename, sizeof(cstr_filename), "cout_%d.log", rank);
   int out = open(cstr_filename, O_RDWR | O_CREAT | O_APPEND, 0600);
   if (-1 == out)
   {
@@ -424,83 +417,112 @@ int main(int argc, char* argv[])
     perror("cannot redirect stderr");
     return 255;
   }
-
-  delete[] cstr_filename;
 #endif
 #endif
 
   ///////////////////////////////////////////////
   // Read the input data
   ///////////////////////////////////////////////
-  std::ifstream inFile(filename);
-  if (inFile.bad())
-    return 0;
-
-  // Read the dimensions of the mesh, i.e,. number of elementes in x, y, and z
-  std::vector<std::size_t> dims;
-  std::string line;
-  getline(inFile, line);
-  std::istringstream linestream(line);
-  std::size_t dimVertices;
-  while (linestream >> dimVertices)
+  vtkm::Float64 dataReadTime = 0;
+  vtkm::Float64 buildDatasetTime = 0;
+  std::vector<vtkm::Float32>::size_type nDims = 0;
+  vtkm::cont::DataSet inDataSet;
+  std::vector<ValueType> values;
+  std::vector<vtkm::Id> dims;
+  if (filename.compare(filename.length() - 3, 3, "bov") == 0)
   {
-    dims.push_back(dimVertices);
+    std::cout << "Reading BOV file" << std::endl;
+    vtkm::io::BOVDataSetReader reader(filename);
+    inDataSet = reader.ReadDataSet();
+    nDims = 3;
+    currTime = totalTime.GetElapsedTime();
+    dataReadTime = currTime - prevTime;
+    prevTime = currTime;
+#ifdef WITH_MPI
+    // Copy the data into the values array so we can construct a multiblock dataset
+    // TODO All we should need to do to implement BOV support is to copy the values
+    // in the values vector and copy the dimensions in the dims vector
+    vtkm::Id3 meshSize;
+    vtkm::worklet::contourtree_augmented::GetPointDimensions temp;
+    temp(inDataSet.GetCellSet(), meshSize);
+    dims[0] = meshSize[0];
+    dims[1] = meshSize[1];
+    dims[2] = meshSize[2];
+    // TODO/FIXME: The following is commented out since it creates a a warning that
+    // AsVirtual() will no longer be supported. Since this implementation is
+    // incomplete anyway, it currently makes more sense to comment it out than
+    // to fix the warning.
+    // auto tempField = inDataSet.GetField("values").GetData();
+    // values.resize(static_cast<std::size_t>(tempField.GetNumberOfValues()));
+    // auto tempFieldHandle = tempField.AsVirtual<ValueType>().ReadPortal();
+    // for (vtkm::Id i = 0; i < tempField.GetNumberOfValues(); i++)
+    // {
+    //   values[static_cast<std::size_t>(i)] = static_cast<ValueType>(tempFieldHandle.Get(i));
+    // }
+    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+               "BOV reader not yet support in MPI mode by this example");
+    MPI_Finalize();
+    return EXIT_FAILURE;
+#endif
   }
-
-  // Compute the number of vertices, i.e., xdim * ydim * zdim
-  unsigned short nDims = static_cast<unsigned short>(dims.size());
-  std::size_t nVertices = static_cast<std::size_t>(
-    std::accumulate(dims.begin(), dims.end(), 1, std::multiplies<std::size_t>()));
-
-  // Print the mesh metadata
-  if (rank == 0)
+  else // Read ASCII data input
   {
-    std::cout << "Number of dimensions: " << nDims << std::endl;
-    std::cout << "Number of mesh vertices: " << nVertices << std::endl;
-  }
-  // Check the the number of dimensiosn is either 2D or 3D
-  bool invalidNumDimensions = (nDims < 2 || nDims > 3);
-  bool invalidMCOption = (useMarchingCubes && nDims != 3);
-  if (rank == 0)
-  {
+    std::cout << "Reading ASCII file" << std::endl;
+    std::ifstream inFile(filename);
+    if (inFile.bad())
+      return 0;
+
+    // Read the dimensions of the mesh, i.e,. number of elementes in x, y, and z
+    std::string line;
+    getline(inFile, line);
+    std::istringstream linestream(line);
+    vtkm::Id dimVertices;
+    while (linestream >> dimVertices)
+    {
+      dims.push_back(dimVertices);
+    }
+
+    // Compute the number of vertices, i.e., xdim * ydim * zdim
+    nDims = static_cast<unsigned short>(dims.size());
+    std::size_t numVertices = static_cast<std::size_t>(
+      std::accumulate(dims.begin(), dims.end(), std::size_t(1), std::multiplies<std::size_t>()));
+
+    // Check for fatal input errors
+    // Check the the number of dimensiosn is either 2D or 3D
+    bool invalidNumDimensions = (nDims < 2 || nDims > 3);
+    // Log any errors if found on rank 0
+    VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
+                  invalidNumDimensions && (rank == 0),
+                  "The input mesh is " << nDims << "D. The input data must be either 2D or 3D.");
+    // If we found any errors in the setttings than finalize MPI and exit the execution
     if (invalidNumDimensions)
     {
-      std::cout << "The input mesh is " << nDims << "D. Input data must be either 2D or 3D."
-                << std::endl;
-    }
-    if (invalidMCOption)
-    {
-      std::cout << "The input mesh is " << nDims
-                << "D. Contour tree using marching cubes only supported for 3D data." << std::endl;
-    }
-  }
-  if (invalidNumDimensions || invalidMCOption)
-  {
 #ifdef WITH_MPI
-    MPI_Finalize();
+      MPI_Finalize();
 #endif
-    return EXIT_SUCCESS;
-  }
+      return EXIT_SUCCESS;
+    }
 
-  // Read data
-  std::vector<ValueType> values(nVertices);
-  for (std::size_t vertex = 0; vertex < nVertices; ++vertex)
-  {
-    inFile >> values[vertex];
-  }
+    // Read data
+    values.resize(numVertices);
+    for (std::size_t vertex = 0; vertex < numVertices; ++vertex)
+    {
+      inFile >> values[vertex];
+    }
 
-  // finish reading the data
-  inFile.close();
+    // finish reading the data
+    inFile.close();
 
-  currTime = totalTime.GetElapsedTime();
-  vtkm::Float64 dataReadTime = currTime - prevTime;
-  prevTime = currTime;
+    currTime = totalTime.GetElapsedTime();
+    dataReadTime = currTime - prevTime;
+    prevTime = currTime;
 
-  vtkm::cont::DataSetBuilderUniform dsb;
-#ifndef WITH_MPI                 // construct regular, single-block VTK-M input dataset
-  vtkm::cont::DataSet inDataSet; // Single block dataset
-  {
+    // swap dims order
+    std::swap(dims[0], dims[1]);
+
+#ifndef WITH_MPI // We only need the inDataSet if are not using MPI otherwise we'll constructe a multi-block dataset
     // build the input dataset
+    vtkm::cont::DataSetBuilderUniform dsb;
     // 2D data
     if (nDims == 2)
     {
@@ -518,11 +540,40 @@ int main(int argc, char* argv[])
       vdims[2] = static_cast<vtkm::Id>(dims[2]);
       inDataSet = dsb.Create(vdims);
     }
-    vtkm::cont::DataSetFieldAdd dsf;
-    dsf.AddPointField(inDataSet, "values", values);
+    inDataSet.AddPointField("values", values);
+#endif
+  } // END ASCII Read
+
+  // Print the mesh metadata
+  if (rank == 0)
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               std::endl
+                 << "    ---------------- Input Mesh Properties --------------" << std::endl
+                 << "    Number of dimensions: " << nDims);
   }
+
+  // Check if marching cubes is enabled for non 3D data
+  bool invalidMCOption = (useMarchingCubes && nDims != 3);
+  VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
+                invalidMCOption && (rank == 0),
+                "The input mesh is "
+                  << nDims << "D. "
+                  << "Contour tree using marching cubes is only supported for 3D data.");
+
+  // If we found any errors in the setttings than finalize MPI and exit the execution
+  if (invalidMCOption)
+  {
+#ifdef WITH_MPI
+    MPI_Finalize();
+#endif
+    return EXIT_SUCCESS;
+  }
+
+#ifndef WITH_MPI                              // construct regular, single-block VTK-M input dataset
+  vtkm::cont::DataSet useDataSet = inDataSet; // Single block dataset
 #else  // Create a multi-block dataset for multi-block DIY-paralle processing
-  vtkm::cont::PartitionedDataSet inDataSet; // Partitioned variant of the input dataset
+  vtkm::cont::PartitionedDataSet useDataSet; // Partitioned variant of the input dataset
   vtkm::Id3 blocksPerDim =
     nDims == 3 ? vtkm::Id3(1, 1, numBlocks) : vtkm::Id3(1, numBlocks, 1); // Decompose the data into
   vtkm::Id3 globalSize = nDims == 3 ? vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
@@ -537,20 +588,19 @@ int main(int argc, char* argv[])
   localBlockIndices.Allocate(blocksPerRank);
   localBlockOrigins.Allocate(blocksPerRank);
   localBlockSizes.Allocate(blocksPerRank);
-  auto localBlockIndicesPortal = localBlockIndices.GetPortalControl();
-  auto localBlockOriginsPortal = localBlockOrigins.GetPortalControl();
-  auto localBlockSizesPortal = localBlockSizes.GetPortalControl();
+  auto localBlockIndicesPortal = localBlockIndices.WritePortal();
+  auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
+  auto localBlockSizesPortal = localBlockSizes.WritePortal();
 
   {
     vtkm::Id lastDimSize =
       (nDims == 2) ? static_cast<vtkm::Id>(dims[1]) : static_cast<vtkm::Id>(dims[2]);
     if (size > (lastDimSize / 2.))
     {
-      if (rank == 0)
-      {
-        std::cout << "Number of ranks to large for data. Use " << lastDimSize / 2
-                  << "or fewer ranks" << std::endl;
-      }
+      VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
+                    rank == 0,
+                    "Number of ranks too large for data. Use " << lastDimSize / 2
+                                                               << "or fewer ranks");
       MPI_Finalize();
       return EXIT_FAILURE;
     }
@@ -577,14 +627,15 @@ int main(int argc, char* argv[])
       }
       vtkm::Id currBlockSize = (vtkm::Id)((blockEnd - blockStart) / blockSliceSize);
 
+      vtkm::cont::DataSetBuilderUniform dsb;
       vtkm::cont::DataSet ds;
 
       // 2D data
       if (nDims == 2)
       {
         vtkm::Id2 vdims;
-        vdims[0] = static_cast<vtkm::Id>(currBlockSize);
-        vdims[1] = static_cast<vtkm::Id>(dims[0]);
+        vdims[0] = static_cast<vtkm::Id>(dims[0]);
+        vdims[1] = static_cast<vtkm::Id>(currBlockSize);
         vtkm::Vec<ValueType, 2> origin(0, blockIndex * blockSize);
         vtkm::Vec<ValueType, 2> spacing(1, 1);
         ds = dsb.Create(vdims, origin, spacing);
@@ -599,8 +650,8 @@ int main(int argc, char* argv[])
       else
       {
         vtkm::Id3 vdims;
-        vdims[0] = static_cast<vtkm::Id>(dims[0]);
-        vdims[1] = static_cast<vtkm::Id>(dims[1]);
+        vdims[0] = static_cast<vtkm::Id>(dims[1]);
+        vdims[1] = static_cast<vtkm::Id>(dims[0]);
         vdims[2] = static_cast<vtkm::Id>(currBlockSize);
         vtkm::Vec<ValueType, 3> origin(0, 0, (blockIndex * blockSize));
         vtkm::Vec<ValueType, 3> spacing(1, 1, 1);
@@ -617,19 +668,18 @@ int main(int argc, char* argv[])
       std::vector<vtkm::Float32> subValues((values.begin() + blockStart),
                                            (values.begin() + blockEnd));
 
-      vtkm::cont::DataSetFieldAdd dsf;
-      dsf.AddPointField(ds, "values", subValues);
-      inDataSet.AppendPartition(ds);
+      ds.AddPointField("values", subValues);
+      useDataSet.AppendPartition(ds);
     }
   }
 #endif // WITH_MPI construct input dataset
 
   currTime = totalTime.GetElapsedTime();
-  vtkm::Float64 buildDatasetTime = currTime - prevTime;
+  buildDatasetTime = currTime - prevTime;
   prevTime = currTime;
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::ContourTreePPP2 filter(useMarchingCubes, computeRegularStructure);
+  vtkm::filter::ContourTreeAugmented filter(useMarchingCubes, computeRegularStructure);
 
 #ifdef WITH_MPI
   filter.SetSpatialDecomposition(
@@ -639,7 +689,7 @@ int main(int argc, char* argv[])
 
   // Execute the contour tree analysis. NOTE: If MPI is used the result  will be
   // a vtkm::cont::PartitionedDataSet instead of a vtkm::cont::DataSet
-  auto result = filter.Execute(inDataSet);
+  auto result = filter.Execute(useDataSet);
 
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 computeContourTreeTime = currTime - prevTime;
@@ -647,95 +697,86 @@ int main(int argc, char* argv[])
 
 #ifdef WITH_MPI
 #ifdef DEBUG_PRINT
-  if (rank == 0)
-  {
-    std::cout << "----- rank=" << rank << " ----Final Contour Tree Data----------------------------"
-              << std::endl;
-    filter.GetContourTree().PrintContent();
-    vtkm::worklet::contourtree_augmented::printIndices("Mesh Sort Order", filter.GetSortOrder());
-  }
+  std::cout << std::flush;
+  close(out);
+  std::cerr << std::flush;
+  close(err);
+
+  dup2(save_out, fileno(stdout));
+  dup2(save_err, fileno(stderr));
+
+  close(save_out);
+  close(save_err);
 #endif
 #endif
-
-#ifdef DEBUG_TIMING
-  if (rank == 0)
-  {
-    std::cout << "----------------------- " << rank << " --------------------------------------"
-              << std::endl;
-    std::cout << "-------------------Contour Tree Timings----------------------" << std::endl;
-
-    // Get the timings from the contour tree computation
-    const std::vector<std::pair<std::string, vtkm::Float64>>& contourTreeTimings =
-      filter.GetTimings();
-    for (std::size_t i = 0; i < contourTreeTimings.size(); ++i)
-      std::cout << std::setw(42) << std::left << contourTreeTimings[i].first << ": "
-                << contourTreeTimings[i].second << " seconds" << std::endl;
-  }
-#endif
-
 
   ////////////////////////////////////////////
   // Compute the branch decomposition
   ////////////////////////////////////////////
   if (rank == 0 && computeBranchDecomposition && computeRegularStructure)
   {
+    // Time branch decompostion
     vtkm::cont::Timer branchDecompTimer;
     branchDecompTimer.Start();
     // compute the volume for each hyperarc and superarc
-    cppp2_ns::IdArrayType superarcIntrinsicWeight;
-    cppp2_ns::IdArrayType superarcDependentWeight;
-    cppp2_ns::IdArrayType supernodeTransferWeight;
-    cppp2_ns::IdArrayType hyperarcDependentWeight;
-
-    cppp2_ns::ProcessContourTree::ComputeVolumeWeights(filter.GetContourTree(),
-                                                       filter.GetNumIterations(),
-                                                       superarcIntrinsicWeight,  // (output)
-                                                       superarcDependentWeight,  // (output)
-                                                       supernodeTransferWeight,  // (output)
-                                                       hyperarcDependentWeight); // (output)
-    std::cout << std::setw(42) << std::left << "Compute Volume Weights"
-              << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
+    ctaug_ns::IdArrayType superarcIntrinsicWeight;
+    ctaug_ns::IdArrayType superarcDependentWeight;
+    ctaug_ns::IdArrayType supernodeTransferWeight;
+    ctaug_ns::IdArrayType hyperarcDependentWeight;
+    ctaug_ns::ProcessContourTree::ComputeVolumeWeightsSerial(filter.GetContourTree(),
+                                                             filter.GetNumIterations(),
+                                                             superarcIntrinsicWeight,  // (output)
+                                                             superarcDependentWeight,  // (output)
+                                                             supernodeTransferWeight,  // (output)
+                                                             hyperarcDependentWeight); // (output)
+    // Record the timings for the branch decomposition
+    std::stringstream timingsStream; // Use a string stream to log in one message
+    timingsStream << std::endl;
+    timingsStream << "    --------------- Branch Decomposition Timings " << rank
+                  << " --------------" << std::endl;
+    timingsStream << "    " << std::setw(38) << std::left << "Compute Volume Weights"
+                  << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
     branchDecompTimer.Start();
 
     // compute the branch decomposition by volume
-    cppp2_ns::IdArrayType whichBranch;
-    cppp2_ns::IdArrayType branchMinimum;
-    cppp2_ns::IdArrayType branchMaximum;
-    cppp2_ns::IdArrayType branchSaddle;
-    cppp2_ns::IdArrayType branchParent;
-
-    cppp2_ns::ProcessContourTree::ComputeVolumeBranchDecomposition(filter.GetContourTree(),
-                                                                   superarcDependentWeight,
-                                                                   superarcIntrinsicWeight,
-                                                                   whichBranch,   // (output)
-                                                                   branchMinimum, // (output)
-                                                                   branchMaximum, // (output)
-                                                                   branchSaddle,  // (output)
-                                                                   branchParent); // (output)
-    std::cout << std::setw(42) << std::left << "Compute Volume Branch Decomposition"
-              << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
+    ctaug_ns::IdArrayType whichBranch;
+    ctaug_ns::IdArrayType branchMinimum;
+    ctaug_ns::IdArrayType branchMaximum;
+    ctaug_ns::IdArrayType branchSaddle;
+    ctaug_ns::IdArrayType branchParent;
+    ctaug_ns::ProcessContourTree::ComputeVolumeBranchDecompositionSerial(filter.GetContourTree(),
+                                                                         superarcDependentWeight,
+                                                                         superarcIntrinsicWeight,
+                                                                         whichBranch,   // (output)
+                                                                         branchMinimum, // (output)
+                                                                         branchMaximum, // (output)
+                                                                         branchSaddle,  // (output)
+                                                                         branchParent); // (output)
+    // Record and log the branch decompostion timings
+    timingsStream << "    " << std::setw(38) << std::left << "Compute Volume Branch Decomposition"
+                  << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info, timingsStream.str());
 
     //----main branch decompostion end
     //----Isovalue seleciton start
     if (numLevels > 0) // if compute isovalues
     {
 // Get the data values for computing the explicit branch decomposition
-// TODO Can we cast the handle we get from GetData() instead of doing a CopyTo?
 #ifdef WITH_MPI
       vtkm::cont::ArrayHandle<ValueType> dataField;
-      result.GetPartitions()[0].GetField(0).GetData().CopyTo(dataField);
+      result.GetPartitions()[0].GetField(0).GetData().AsArrayHandle(dataField);
       bool dataFieldIsSorted = true;
 #else
       vtkm::cont::ArrayHandle<ValueType> dataField;
-      inDataSet.GetField(0).GetData().CopyTo(dataField);
+      useDataSet.GetField(0).GetData().AsArrayHandle(dataField);
       bool dataFieldIsSorted = false;
 #endif
 
       // create explicit representation of the branch decompostion from the array representation
       BranchType* branchDecompostionRoot =
-        cppp2_ns::ProcessContourTree::ComputeBranchDecomposition<ValueType>(
-          filter.GetContourTree().superparents,
-          filter.GetContourTree().supernodes,
+        ctaug_ns::ProcessContourTree::ComputeBranchDecomposition<ValueType>(
+          filter.GetContourTree().Superparents,
+          filter.GetContourTree().Supernodes,
           whichBranch,
           branchMinimum,
           branchMaximum,
@@ -746,11 +787,11 @@ int main(int argc, char* argv[])
           dataFieldIsSorted);
 
 #ifdef DEBUG_PRINT
-      branchDecompostionRoot->print(std::cout);
+      branchDecompostionRoot->PrintBranchDecomposition(std::cout);
 #endif
 
       // Simplify the contour tree of the branch decompostion
-      branchDecompostionRoot->simplifyToSize(numComp, usePersistenceSorter);
+      branchDecompostionRoot->SimplifyToSize(numComp, usePersistenceSorter);
 
       // Compute the relevant iso-values
       std::vector<ValueType> isoValues;
@@ -759,7 +800,7 @@ int main(int argc, char* argv[])
         default:
         case 0:
         {
-          branchDecompostionRoot->getRelevantValues(static_cast<int>(contourType), eps, isoValues);
+          branchDecompostionRoot->GetRelevantValues(static_cast<int>(contourType), eps, isoValues);
         }
         break;
         case 1:
@@ -767,30 +808,32 @@ int main(int argc, char* argv[])
           vtkm::worklet::contourtree_augmented::process_contourtree_inc::PiecewiseLinearFunction<
             ValueType>
             plf;
-          branchDecompostionRoot->accumulateIntervals(static_cast<int>(contourType), eps, plf);
+          branchDecompostionRoot->AccumulateIntervals(static_cast<int>(contourType), eps, plf);
           isoValues = plf.nLargest(static_cast<unsigned int>(numLevels));
         }
         break;
       }
 
       // Print the compute iso values
-      std::cout << std::endl;
-      std::cout << "Isovalue Suggestions" << std::endl;
-      std::cout << "====================" << std::endl;
+      std::stringstream isoStream; // Use a string stream to log in one message
+      isoStream << std::endl;
+      isoStream << "    ------------------- Isovalue Suggestions --------------------" << std::endl;
       std::sort(isoValues.begin(), isoValues.end());
-      std::cout << "Isovalues: ";
+      isoStream << "    Isovalues: ";
       for (ValueType val : isoValues)
-        std::cout << val << " ";
-      std::cout << std::endl;
-
+      {
+        isoStream << val << " ";
+      }
+      isoStream << std::endl;
       // Unique isovalues
       std::vector<ValueType>::iterator it = std::unique(isoValues.begin(), isoValues.end());
       isoValues.resize(static_cast<std::size_t>(std::distance(isoValues.begin(), it)));
-      std::cout << isoValues.size() << "  Unique Isovalues: ";
+      isoStream << "    Unique Isovalues (" << isoValues.size() << "):";
       for (ValueType val : isoValues)
-        std::cout << val << " ";
-      std::cout << std::endl;
-      std::cout << std::endl;
+      {
+        isoStream << val << " ";
+      }
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info, isoStream.str());
     } //end if compute isovalue
   }
 
@@ -800,20 +843,19 @@ int main(int argc, char* argv[])
 
   //vtkm::cont::Field resultField =  result.GetField();
   //vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > saddlePeak;
-  //resultField.GetData().CopyTo(saddlePeak);
+  //resultField.GetData().AsArrayHandle(saddlePeak);
 
   // Dump out contour tree for comparison
   if (rank == 0 && printContourTree)
   {
     std::cout << "Contour Tree" << std::endl;
     std::cout << "============" << std::endl;
-    cppp2_ns::EdgePairArray saddlePeak;
-    cppp2_ns::ProcessContourTree::CollectSortedSuperarcs(
+    ctaug_ns::EdgePairArray saddlePeak;
+    ctaug_ns::ProcessContourTree::CollectSortedSuperarcs(
       filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
-    cppp2_ns::printEdgePairArray(saddlePeak);
+    ctaug_ns::PrintEdgePairArrayColumnLayout(saddlePeak, std::cout);
   }
 
-#ifdef DEBUG_TIMING
 #ifdef WITH_MPI
   // Force a simple round-robin on the ranks for the summary prints. Its not perfect for MPI but
   // it works well enough to sort the summaries from the ranks for small-scale debugging.
@@ -824,52 +866,37 @@ int main(int argc, char* argv[])
     MPI_Recv(&temp, 1, MPI_INT, (rank - 1), 0, comm, &status);
   }
 #endif
-
-  std::cout << "---------------------------" << rank << "----------------------------------"
-            << std::endl;
-  std::cout << "--------------------------Totals-----------------------------" << std::endl;
-  std::cout << std::setw(42) << std::left << "Start-up"
-            << ": " << startUpTime << " seconds" << std::endl;
-  std::cout << std::setw(42) << std::left << "Data Read"
-            << ": " << dataReadTime << " seconds" << std::endl;
-  std::cout << std::setw(42) << std::left << "Build VTKM Dataset"
-            << ": " << buildDatasetTime << " seconds" << std::endl;
-  std::cout << std::setw(42) << std::left << "Compute Contour Tree"
-            << ": " << computeContourTreeTime << " seconds" << std::endl;
-  if (computeBranchDecomposition)
-  {
-    std::cout << std::setw(42) << std::left << "Compute Branch Decomposition"
-              << ": " << computeBranchDecompTime << " seconds" << std::endl;
-  }
   currTime = totalTime.GetElapsedTime();
-  //vtkm::Float64 miscTime = currTime - startUpTime - dataReadTime - buildDatasetTime - computeContourTreeTime;
-  //if(computeBranchDecomposition) miscTime -= computeBranchDecompTime;
-  //std::cout<<std::setw(42)<<std::left<<"Misc. Times"<<": "<<miscTime<<" seconds"<<std::endl;
-  std::cout << std::setw(42) << std::left << "Total Time"
-            << ": " << currTime << " seconds" << std::endl;
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+             std::endl
+               << "    -------------------------- Totals " << rank
+               << " -----------------------------" << std::endl
+               << std::setw(42) << std::left << "    Start-up"
+               << ": " << startUpTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Data Read"
+               << ": " << dataReadTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Build VTKM Dataset"
+               << ": " << buildDatasetTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Compute Contour Tree"
+               << ": " << computeContourTreeTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Compute Branch Decomposition"
+               << ": " << computeBranchDecompTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Total Time"
+               << ": " << currTime << " seconds");
 
-  std::cout << "-------------------------------------------------------------" << std::endl;
-  std::cout << "----------------Contour Tree Array Sizes---------------------" << std::endl;
-  const cppp2_ns::ContourTree& ct = filter.GetContourTree();
-  std::cout << std::setw(42) << std::left << "#Nodes"
-            << ": " << ct.nodes.GetNumberOfValues() << std::endl;
-  std::cout << std::setw(42) << std::left << "#Arcs"
-            << ": " << ct.arcs.GetNumberOfValues() << std::endl;
-  std::cout << std::setw(42) << std::left << "#Superparents"
-            << ": " << ct.superparents.GetNumberOfValues() << std::endl;
-  std::cout << std::setw(42) << std::left << "#Superarcs"
-            << ": " << ct.superarcs.GetNumberOfValues() << std::endl;
-  std::cout << std::setw(42) << std::left << "#Supernodes"
-            << ": " << ct.supernodes.GetNumberOfValues() << std::endl;
-  std::cout << std::setw(42) << std::left << "#Hyperparents"
-            << ": " << ct.hyperparents.GetNumberOfValues() << std::endl;
-  std::cout << std::setw(42) << std::left << "#WhenTransferred"
-            << ": " << ct.whenTransferred.GetNumberOfValues() << std::endl;
-  std::cout << std::setw(42) << std::left << "#Hypernodes"
-            << ": " << ct.hypernodes.GetNumberOfValues() << std::endl;
-  std::cout << std::setw(42) << std::left << "#Hyperarcs"
-            << ": " << ct.hyperarcs.GetNumberOfValues() << std::endl;
+  const ctaug_ns::ContourTree& ct = filter.GetContourTree();
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+             std::endl
+               << "    ---------------- Contour Tree Array Sizes ---------------------" << std::endl
+               << ct.PrintArraySizes());
+  // Print hyperstructure statistics
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+             std::endl
+               << ct.PrintHyperStructureStatistics(false) << std::endl);
+
+  // Flush ouput streams just to make sure everything has been logged (in particular when using MPI)
   std::cout << std::flush;
+  std::cerr << std::flush;
 
 #ifdef WITH_MPI
   // Let the next rank know that it is time to print their summary.
@@ -879,7 +906,6 @@ int main(int argc, char* argv[])
     MPI_Send(&message, 1, MPI_INT, (rank + 1), 0, comm);
   }
 #endif
-#endif // DEBUG_TIMING
 
 #ifdef WITH_MPI
   MPI_Finalize();

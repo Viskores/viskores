@@ -11,9 +11,11 @@
 #ifndef vtk_m_filter_ClipWithField_h
 #define vtk_m_filter_ClipWithField_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_extra_export.h>
 
 #include <vtkm/filter/FilterDataSetWithField.h>
+#include <vtkm/filter/MapFieldPermutation.h>
+
 #include <vtkm/worklet/Clip.h>
 
 namespace vtkm
@@ -26,10 +28,11 @@ namespace filter
 /// value are considered outside, and will be discarded. All points that are greater
 /// are kept.
 /// The resulting geometry will not be water tight.
-class VTKM_ALWAYS_EXPORT ClipWithField : public vtkm::filter::FilterDataSetWithField<ClipWithField>
+class VTKM_FILTER_EXTRA_EXPORT ClipWithField
+  : public vtkm::filter::FilterDataSetWithField<ClipWithField>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
 
   VTKM_CONT
   void SetClipValue(vtkm::Float64 value) { this->ClipValue = value; }
@@ -46,6 +49,35 @@ public:
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy)
+  {
+    if (field.IsFieldPoint())
+    {
+      // If the field is a point field, then we need to do a custom interpolation of the points.
+      // In this case, we need to call the superclass's MapFieldOntoOutput, which will in turn
+      // call our DoMapField.
+      return this->FilterDataSetWithField<ClipWithField>::MapFieldOntoOutput(result, field, policy);
+    }
+    else if (field.IsFieldCell())
+    {
+      // Use the precompiled field permutation function.
+      vtkm::cont::ArrayHandle<vtkm::Id> permutation = this->Worklet.GetCellMapOutputToInput();
+      return vtkm::filter::MapFieldPermutation(field, permutation, result);
+    }
+    else if (field.IsFieldGlobal())
+    {
+      result.AddField(field);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
   //Map a new field onto the resulting dataset after running the filter.
   //This call is only valid after Execute has been called.
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -54,20 +86,11 @@ public:
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             vtkm::filter::PolicyBase<DerivedPolicy>)
   {
-    vtkm::cont::ArrayHandle<T> output;
+    // All other conditions should be handled by MapFieldOntoOutput directly.
+    VTKM_ASSERT(fieldMeta.IsPointField());
 
-    if (fieldMeta.IsPointField())
-    {
-      output = this->Worklet.ProcessPointField(input);
-    }
-    else if (fieldMeta.IsCellField())
-    {
-      output = this->Worklet.ProcessCellField(input);
-    }
-    else
-    {
-      return false;
-    }
+    vtkm::cont::ArrayHandle<T> output;
+    output = this->Worklet.ProcessPointField(input);
 
     //use the same meta data as the input so we get the same field name, etc.
     result.AddField(fieldMeta.AsField(output));
@@ -81,11 +104,9 @@ private:
 };
 
 #ifndef vtkm_filter_Clip_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(ClipWithField);
+VTKM_FILTER_EXTRA_EXPORT_EXECUTE_METHOD(ClipWithField);
 #endif
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/ClipWithField.hxx>
 
 #endif // vtk_m_filter_ClipWithField_h

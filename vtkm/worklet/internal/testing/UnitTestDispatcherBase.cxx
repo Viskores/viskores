@@ -67,7 +67,7 @@ struct TestExecObjectType : vtkm::cont::ExecutionObjectBase
     f(*this, std::forward<Args>(args)...);
   }
   template <typename Device>
-  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device) const
+  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device, vtkm::cont::Token&) const
   {
     ExecutionObject<Device> object;
     object.Value = this->Value;
@@ -125,7 +125,8 @@ struct Transport<TestTransportTagIn, std::vector<vtkm::Id>, Device>
   ExecObjectType operator()(const std::vector<vtkm::Id>& contData,
                             const std::vector<vtkm::Id>&,
                             vtkm::Id inputRange,
-                            vtkm::Id outputRange) const
+                            vtkm::Id outputRange,
+                            vtkm::cont::Token&) const
   {
     VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
     VTKM_TEST_ASSERT(outputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
@@ -142,7 +143,8 @@ struct Transport<TestTransportTagOut, std::vector<vtkm::Id>, Device>
   ExecObjectType operator()(const std::vector<vtkm::Id>& contData,
                             const std::vector<vtkm::Id>&,
                             vtkm::Id inputRange,
-                            vtkm::Id outputRange) const
+                            vtkm::Id outputRange,
+                            vtkm::cont::Token&) const
   {
     VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
     VTKM_TEST_ASSERT(outputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
@@ -183,10 +185,7 @@ namespace arg
 {
 
 template <>
-struct Fetch<TestFetchTagInput,
-             vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic,
-             TestExecObjectIn>
+struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault, TestExecObjectIn>
 {
   using ValueType = vtkm::Id;
 
@@ -205,10 +204,7 @@ struct Fetch<TestFetchTagInput,
 };
 
 template <>
-struct Fetch<TestFetchTagOutput,
-             vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic,
-             TestExecObjectOut>
+struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, TestExecObjectOut>
 {
   using ValueType = vtkm::Id;
 
@@ -284,30 +280,59 @@ public:
   }
 };
 
-template <typename WorkletType>
-class TestDispatcher : public vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
-                                                                      WorkletType,
-                                                                      TestWorkletBase>
+
+template <typename T>
+inline vtkm::Id SchedulingRange(const std::vector<T>& inputDomain)
 {
-  using Superclass = vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
-                                                             WorkletType,
-                                                             TestWorkletBase>;
+  return static_cast<vtkm::Id>(inputDomain.size());
+}
+template <typename T>
+inline vtkm::Id SchedulingRange(const std::vector<T>* const inputDomain)
+{
+  return static_cast<vtkm::Id>(inputDomain->size());
+}
+
+template <typename WorkletType>
+class TestDispatcher
+  : public vtkm::worklet::internal::
+      DispatcherBase<TestDispatcher<WorkletType>, WorkletType, TestWorkletBase>
+{
+  using Superclass = vtkm::worklet::internal::
+    DispatcherBase<TestDispatcher<WorkletType>, WorkletType, TestWorkletBase>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:
-  VTKM_CONT
-  TestDispatcher(const WorkletType& worklet = WorkletType(),
-                 const ScatterType& scatter = ScatterType())
-    : Superclass(worklet, scatter)
+  template <typename... T>
+  VTKM_CONT TestDispatcher(T&&... args)
+    : Superclass(std::forward<T>(args)...)
   {
   }
 
   VTKM_CONT
   template <typename Invocation>
-  void DoInvoke(Invocation&& invocation) const
+  void DoInvoke(Invocation& invocation) const
   {
     std::cout << "In TestDispatcher::DoInvoke()" << std::endl;
-    this->BasicInvoke(invocation, ARRAY_SIZE);
+
+    using namespace vtkm::worklet::internal;
+
+    // This is the type for the input domain
+    using InputDomainType = typename Invocation::InputDomainType;
+
+    // We can pull the input domain parameter (the data specifying the input
+    // domain) from the invocation object.
+    const InputDomainType& inputDomain = invocation.GetInputDomain();
+
+    // For a DispatcherMapField, the inputDomain must be an ArrayHandle (or
+    // an VariantArrayHandle that gets cast to one). The size of the domain
+    // (number of threads/worklet instances) is equal to the size of the
+    // array.
+    //verify the overloads for SchedulingRange work
+    auto numInstances = SchedulingRange(inputDomain);
+
+    // A MapField is a pretty straightforward dispatch. Once we know the number
+    // of invocations, the superclass can take care of the rest.
+    this->BasicInvoke(invocation, numInstances);
   }
 
 private:

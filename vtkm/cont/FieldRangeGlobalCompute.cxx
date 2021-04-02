@@ -27,7 +27,8 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(const vtkm::cont::D
                                                              const std::string& name,
                                                              vtkm::cont::Field::Association assoc)
 {
-  return detail::FieldRangeGlobalComputeImpl(dataset, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG());
+  auto lrange = vtkm::cont::FieldRangeCompute(dataset, name, assoc);
+  return vtkm::cont::detail::MergeRangesGlobal(lrange);
 }
 
 //-----------------------------------------------------------------------------
@@ -37,7 +38,8 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const std::string& name,
   vtkm::cont::Field::Association assoc)
 {
-  return detail::FieldRangeGlobalComputeImpl(pds, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG());
+  auto lrange = vtkm::cont::FieldRangeCompute(pds, name, assoc);
+  return vtkm::cont::detail::MergeRangesGlobal(lrange);
 }
 
 //-----------------------------------------------------------------------------
@@ -54,17 +56,18 @@ vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
   }
 
   std::vector<vtkm::Range> v_ranges(static_cast<size_t>(ranges.GetNumberOfValues()));
-  std::copy(vtkm::cont::ArrayPortalToIteratorBegin(ranges.GetPortalConstControl()),
-            vtkm::cont::ArrayPortalToIteratorEnd(ranges.GetPortalConstControl()),
+  std::copy(vtkm::cont::ArrayPortalToIteratorBegin(ranges.ReadPortal()),
+            vtkm::cont::ArrayPortalToIteratorEnd(ranges.ReadPortal()),
             v_ranges.begin());
 
   using VectorOfRangesT = std::vector<vtkm::Range>;
 
-  vtkmdiy::Master master(comm,
-                         1,
-                         -1,
-                         []() -> void* { return new VectorOfRangesT(); },
-                         [](void* ptr) { delete static_cast<VectorOfRangesT*>(ptr); });
+  vtkmdiy::Master master(
+    comm,
+    1,
+    -1,
+    []() -> void* { return new VectorOfRangesT(); },
+    [](void* ptr) { delete static_cast<VectorOfRangesT*>(ptr); });
 
   vtkmdiy::ContiguousAssigner assigner(/*num ranks*/ comm.size(),
                                        /*global-num-blocks*/ comm.size());
@@ -76,8 +79,9 @@ vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
 
   vtkmdiy::RegularAllReducePartners all_reduce_partners(decomposer, /*k*/ 2);
 
-  auto callback = [](
-    VectorOfRangesT* data, const vtkmdiy::ReduceProxy& srp, const vtkmdiy::RegularMergePartners&) {
+  auto callback = [](VectorOfRangesT* data,
+                     const vtkmdiy::ReduceProxy& srp,
+                     const vtkmdiy::RegularMergePartners&) {
     const auto selfid = srp.gid();
     // 1. dequeue.
     std::vector<int> incoming;

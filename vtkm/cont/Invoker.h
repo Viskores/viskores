@@ -10,10 +10,8 @@
 #ifndef vtk_m_cont_Invoker_h
 #define vtk_m_cont_Invoker_h
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/DispatcherPointNeighborhood.h>
-#include <vtkm/worklet/DispatcherReduceByKey.h>
+#include <vtkm/worklet/internal/MaskBase.h>
+#include <vtkm/worklet/internal/ScatterBase.h>
 
 #include <vtkm/cont/TryExecute.h>
 
@@ -69,7 +67,7 @@ struct Invoker
             typename std::enable_if<detail::scatter_or_mask<T>::value, int>::type* = nullptr>
   inline void operator()(Worklet&& worklet, T&& scatterOrMask, Args&&... args) const
   {
-    using WorkletType = worklet::internal::remove_cvref<Worklet>;
+    using WorkletType = vtkm::internal::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet, scatterOrMask);
@@ -94,7 +92,7 @@ struct Invoker
                          U&& scatterOrMaskB,
                          Args&&... args) const
   {
-    using WorkletType = worklet::internal::remove_cvref<Worklet>;
+    using WorkletType = vtkm::internal::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet, scatterOrMaskA, scatterOrMaskB);
@@ -112,7 +110,7 @@ struct Invoker
             typename std::enable_if<!detail::scatter_or_mask<T>::value, int>::type* = nullptr>
   inline void operator()(Worklet&& worklet, T&& t, Args&&... args) const
   {
-    using WorkletType = worklet::internal::remove_cvref<Worklet>;
+    using WorkletType = vtkm::internal::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet);

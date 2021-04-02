@@ -41,9 +41,9 @@ public:
                      "Wrong result for ExtractStructured worklet");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -51,13 +51,11 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 71.0f,
-                     "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(8) == 91.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 71.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(8) == 91.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 5.0f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(3) == 10.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 5.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(3) == 10.0f, "Wrong cell field data");
   }
 
   void TestUniform3D0() const
@@ -80,8 +78,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -89,13 +87,11 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 99.0f,
-                     "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 97.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 99.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(26) == 97.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 21.0f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(7) == 42.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 21.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(7) == 42.0f, "Wrong cell field data");
   }
 
   void TestUniform3D1() const
@@ -120,8 +116,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -129,13 +125,11 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(31) == 99.0f,
-                     "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(93) == 97.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(31) == 99.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(93) == 97.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.0f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(63) == 63.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 0.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(63) == 63.0f, "Wrong cell field data");
   }
 
   void TestUniform3D2() const
@@ -159,8 +153,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -168,12 +162,11 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 15.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(26) == 15.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.0f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(7) == 21.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 0.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(7) == 21.0f, "Wrong cell field data");
   }
 
   void TestUniform3D3() const
@@ -197,8 +190,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -206,13 +199,11 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 99.0f,
-                     "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(63) == 0.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 99.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(63) == 0.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 21.0f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(26) == 63.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 21.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(26) == 63.0f, "Wrong cell field data");
   }
 
   void TestUniform3D4() const
@@ -237,8 +228,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -246,13 +237,11 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 90.0f,
-                     "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 0.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 90.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(26) == 0.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 22.0f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(7) == 43.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 22.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(7) == 43.0f, "Wrong cell field data");
   }
 
   void TestUniform3D5() const
@@ -277,8 +266,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -286,12 +275,11 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 90.0f,
-                     "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(8) == 0.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 90.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(8) == 0.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 22.0f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(3) == 39.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 22.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(3) == 39.0f, "Wrong cell field data");
   }
 
   void TestUniform3D6() const
@@ -316,8 +304,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -325,12 +313,11 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 0.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(26) == 0.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 16.0f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(3) == 26.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 16.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(3) == 26.0f, "Wrong cell field data");
   }
 
   void TestUniform3D7() const
@@ -355,8 +342,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -364,11 +351,10 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(7) == 97.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(7) == 97.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 16.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 16.0f, "Wrong cell field data");
   }
 
   void TestUniform3D8() const
@@ -393,8 +379,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -402,14 +388,12 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(4) == 99.0f,
-                     "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(13) == 97.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(4) == 99.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(13) == 97.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 16.0f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(3) == 31.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 16.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(3) == 31.0f, "Wrong cell field data");
   }
 
   void TestRectilinear2D() const
@@ -434,8 +418,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -443,10 +427,10 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(3) == 4.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(3) == 4.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 0.0f, "Wrong cell field data");
   }
 
   void TestRectilinear3D() const
@@ -471,8 +455,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -480,11 +464,10 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
                      "Data/Geometry mismatch for ExtractStructured filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(7) == 10.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(7) == 10.0f, "Wrong point field data");
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 0.0f, "Wrong cell field data");
   }
 
   void operator()() const

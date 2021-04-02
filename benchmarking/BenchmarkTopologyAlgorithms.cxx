@@ -7,40 +7,37 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+
+#include "Benchmarker.h"
+
 #include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include "Benchmarker.h"
 #include <vtkm/cont/testing/Testing.h>
 
 #include <cctype>
 #include <random>
 #include <string>
 
-namespace vtkm
-{
-namespace benchmarking
+namespace
 {
 
 #define CUBE_SIZE 256
-static const std::string DIVIDER(40, '-');
 
-enum BenchmarkName
-{
-  CELL_TO_POINT = 1 << 1,
-  POINT_TO_CELL = 1 << 2,
-  MC_CLASSIFY = 1 << 3,
-  ALL = CELL_TO_POINT | POINT_TO_CELL | MC_CLASSIFY
-};
+using ValueTypes = vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
+
+using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
+
+// Hold configuration state (e.g. active device)
+vtkm::cont::InitializeResult Config;
 
 class AveragePointToCell : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
@@ -118,376 +115,289 @@ public:
   }
 };
 
-struct ValueTypes
-  : vtkm::ListTagBase<vtkm::UInt32, vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>
+template <typename T, typename Enable = void>
+struct NumberGenerator
 {
 };
 
-/// This class runs a series of micro-benchmarks to measure
-/// performance of different field operations
-class BenchmarkTopologyAlgorithms
+template <typename T>
+struct NumberGenerator<T, typename std::enable_if<std::is_floating_point<T>::value>::type>
 {
-  using StorageTag = vtkm::cont::StorageTagBasic;
-
-  using Timer = vtkm::cont::Timer;
-
-  using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
-
-private:
-  template <typename T, typename Enable = void>
-  struct NumberGenerator
+  std::mt19937 rng;
+  std::uniform_real_distribution<T> distribution;
+  NumberGenerator(T low, T high)
+    : rng()
+    , distribution(low, high)
   {
-  };
+  }
+  T next() { return distribution(rng); }
+};
 
-  template <typename T>
-  struct NumberGenerator<T, typename std::enable_if<std::is_floating_point<T>::value>::type>
+template <typename T>
+struct NumberGenerator<T, typename std::enable_if<!std::is_floating_point<T>::value>::type>
+{
+  std::mt19937 rng;
+  std::uniform_int_distribution<T> distribution;
+
+  NumberGenerator(T low, T high)
+    : rng()
+    , distribution(low, high)
   {
-    std::mt19937 rng;
-    std::uniform_real_distribution<T> distribution;
-    NumberGenerator(T low, T high)
-      : rng()
-      , distribution(low, high)
-    {
-    }
-    T next() { return distribution(rng); }
-  };
+  }
+  T next() { return distribution(rng); }
+};
 
-  template <typename T>
-  struct NumberGenerator<T, typename std::enable_if<!std::is_floating_point<T>::value>::type>
+// Returns an extra random value.
+// Like, an additional random value.
+// Not a random value that's somehow "extra random".
+template <typename ArrayT>
+VTKM_CONT typename ArrayT::ValueType FillRandomValues(ArrayT& array,
+                                                      vtkm::Id size,
+                                                      vtkm::Float64 min,
+                                                      vtkm::Float64 max)
+{
+  using ValueType = typename ArrayT::ValueType;
+
+  NumberGenerator<ValueType> generator{ static_cast<ValueType>(min), static_cast<ValueType>(max) };
+  array.Allocate(size);
+  auto portal = array.WritePortal();
+  for (vtkm::Id i = 0; i < size; ++i)
   {
-    std::mt19937 rng;
-    std::uniform_int_distribution<T> distribution;
+    portal.Set(i, generator.next());
+  }
+  return generator.next();
+}
 
-    NumberGenerator(T low, T high)
-      : rng()
-      , distribution(low, high)
-    {
-    }
-    T next() { return distribution(rng); }
-  };
+template <typename Value>
+struct BenchCellToPointAvgImpl
+{
+  vtkm::cont::ArrayHandle<Value> Input;
 
-  template <typename Value, typename DeviceAdapter>
-  struct BenchCellToPointAvg
+  ::benchmark::State& State;
+  vtkm::Id CubeSize;
+  vtkm::Id NumCells;
+
+  vtkm::cont::Timer Timer;
+  vtkm::cont::Invoker Invoker;
+
+  VTKM_CONT
+  BenchCellToPointAvgImpl(::benchmark::State& state)
+    : State{ state }
+    , CubeSize{ CUBE_SIZE }
+    , NumCells{ (this->CubeSize - 1) * (this->CubeSize - 1) * (this->CubeSize - 1) }
+    , Timer{ Config.Device }
+    , Invoker{ Config.Device }
   {
-    std::vector<Value> input;
-    vtkm::cont::ArrayHandle<Value, StorageTag> InputHandle;
-    std::size_t DomainSize;
+    FillRandomValues(this->Input, this->NumCells, 1., 100.);
 
-    VTKM_CONT
-    BenchCellToPointAvg()
-    {
-      NumberGenerator<Value> generator(static_cast<Value>(1.0), static_cast<Value>(100.0));
-      //cube size is points in each dim
-      this->DomainSize = (CUBE_SIZE - 1) * (CUBE_SIZE - 1) * (CUBE_SIZE - 1);
-      this->input.resize(DomainSize);
-      for (std::size_t i = 0; i < DomainSize; ++i)
-      {
-        this->input[i] = generator.next();
-      }
-      this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
+    { // Configure label:
+      std::ostringstream desc;
+      desc << "CubeSize:" << this->CubeSize;
+      this->State.SetLabel(desc.str());
     }
+  }
 
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      vtkm::cont::CellSetStructured<3> cellSet;
-      cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
-      vtkm::cont::ArrayHandle<Value, StorageTag> result;
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      vtkm::worklet::DispatcherMapTopology<AverageCellToPoint> dispatcher;
-      dispatcher.Invoke(this->InputHandle, cellSet, result);
-
-      return timer.GetElapsedTime();
-    }
-
-    virtual std::string Type() const { return std::string("Static"); }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-
-      std::stringstream description;
-      description << "Computing Cell To Point Average "
-                  << "[" << this->Type() << "] "
-                  << "with a domain size of: " << this->DomainSize;
-      return description.str();
-    }
-  };
-
-  template <typename Value, typename DeviceAdapter>
-  struct BenchCellToPointAvgDynamic : public BenchCellToPointAvg<Value, DeviceAdapter>
+  template <typename BenchArrayType>
+  VTKM_CONT void Run(const BenchArrayType& input)
   {
+    vtkm::cont::CellSetStructured<3> cellSet;
+    cellSet.SetPointDimensions(vtkm::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
+    vtkm::cont::ArrayHandle<Value> result;
 
-    VTKM_CONT
-    vtkm::Float64 operator()()
+    for (auto _ : this->State)
     {
-      vtkm::cont::CellSetStructured<3> cellSet;
-      cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
+      (void)_;
+      this->Timer.Start();
+      this->Invoker(AverageCellToPoint{}, input, cellSet, result);
+      this->Timer.Stop();
 
-      ValueVariantHandle dinput(this->InputHandle);
-      vtkm::cont::ArrayHandle<Value, StorageTag> result;
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      vtkm::worklet::DispatcherMapTopology<AverageCellToPoint> dispatcher;
-      dispatcher.Invoke(dinput, cellSet, result);
-
-      return timer.GetElapsedTime();
+      this->State.SetIterationTime(this->Timer.GetElapsedTime());
     }
 
-    virtual std::string Type() const { return std::string("Dynamic"); }
-  };
-
-  VTKM_MAKE_BENCHMARK(CellToPointAvg, BenchCellToPointAvg);
-  VTKM_MAKE_BENCHMARK(CellToPointAvgDynamic, BenchCellToPointAvgDynamic);
-
-  template <typename Value, typename DeviceAdapter>
-  struct BenchPointToCellAvg
-  {
-    std::vector<Value> input;
-    vtkm::cont::ArrayHandle<Value, StorageTag> InputHandle;
-    std::size_t DomainSize;
-
-    VTKM_CONT
-    BenchPointToCellAvg()
-    {
-      NumberGenerator<Value> generator(static_cast<Value>(1.0), static_cast<Value>(100.0));
-
-      this->DomainSize = (CUBE_SIZE) * (CUBE_SIZE) * (CUBE_SIZE);
-      this->input.resize(DomainSize);
-      for (std::size_t i = 0; i < DomainSize; ++i)
-      {
-        this->input[i] = generator.next();
-      }
-      this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      vtkm::cont::CellSetStructured<3> cellSet;
-      cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
-      vtkm::cont::ArrayHandle<Value, StorageTag> result;
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      vtkm::worklet::DispatcherMapTopology<AveragePointToCell> dispatcher;
-      dispatcher.Invoke(this->InputHandle, cellSet, result);
-
-      return timer.GetElapsedTime();
-    }
-
-    virtual std::string Type() const { return std::string("Static"); }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-
-      std::stringstream description;
-      description << "Computing Point To Cell Average "
-                  << "[" << this->Type() << "] "
-                  << "with a domain size of: " << this->DomainSize;
-      return description.str();
-    }
-  };
-
-  template <typename Value, typename DeviceAdapter>
-  struct BenchPointToCellAvgDynamic : public BenchPointToCellAvg<Value, DeviceAdapter>
-  {
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      vtkm::cont::CellSetStructured<3> cellSet;
-      cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
-
-      ValueVariantHandle dinput(this->InputHandle);
-      vtkm::cont::ArrayHandle<Value, StorageTag> result;
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      vtkm::worklet::DispatcherMapTopology<AveragePointToCell> dispatcher;
-      dispatcher.Invoke(dinput, cellSet, result);
-
-      return timer.GetElapsedTime();
-    }
-
-    virtual std::string Type() const { return std::string("Dynamic"); }
-  };
-
-  VTKM_MAKE_BENCHMARK(PointToCellAvg, BenchPointToCellAvg);
-  VTKM_MAKE_BENCHMARK(PointToCellAvgDynamic, BenchPointToCellAvgDynamic);
-
-  template <typename Value, typename DeviceAdapter>
-  struct BenchClassification
-  {
-    std::vector<Value> input;
-    vtkm::cont::ArrayHandle<Value, StorageTag> InputHandle;
-    Value IsoValue;
-    size_t DomainSize;
-
-    VTKM_CONT
-    BenchClassification()
-    {
-      NumberGenerator<Value> generator(static_cast<Value>(1.0), static_cast<Value>(100.0));
-
-      this->DomainSize = (CUBE_SIZE) * (CUBE_SIZE) * (CUBE_SIZE);
-      this->input.resize(DomainSize);
-      for (std::size_t i = 0; i < DomainSize; ++i)
-      {
-        this->input[i] = generator.next();
-      }
-      this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
-      this->IsoValue = generator.next();
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      vtkm::cont::CellSetStructured<3> cellSet;
-      cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
-      vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageTag> result;
-
-      ValueVariantHandle dinput(this->InputHandle);
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      Classification<Value> worklet(this->IsoValue);
-      vtkm::worklet::DispatcherMapTopology<Classification<Value>> dispatcher(worklet);
-      dispatcher.Invoke(dinput, cellSet, result);
-
-      return timer.GetElapsedTime();
-    }
-
-    virtual std::string Type() const { return std::string("Static"); }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-
-      std::stringstream description;
-      description << "Computing Marching Cubes Classification "
-                  << "[" << this->Type() << "] "
-                  << "with a domain size of: " << this->DomainSize;
-      return description.str();
-    }
-  };
-
-  template <typename Value, typename DeviceAdapter>
-  struct BenchClassificationDynamic : public BenchClassification<Value, DeviceAdapter>
-  {
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      vtkm::cont::CellSetStructured<3> cellSet;
-      cellSet.SetPointDimensions(vtkm::Id3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
-      vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageTag> result;
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-
-      Classification<Value> worklet(this->IsoValue);
-      vtkm::worklet::DispatcherMapTopology<Classification<Value>> dispatcher(worklet);
-      dispatcher.Invoke(this->InputHandle, cellSet, result);
-
-      timer.Stop();
-      return timer.GetElapsedTime();
-    }
-
-    virtual std::string Type() const { return std::string("Dynamic"); }
-  };
-
-  VTKM_MAKE_BENCHMARK(Classification, BenchClassification);
-  VTKM_MAKE_BENCHMARK(ClassificationDynamic, BenchClassificationDynamic);
-
-public:
-  static VTKM_CONT int Run(int benchmarks, vtkm::cont::DeviceAdapterId id)
-  {
-    std::cout << DIVIDER << "\nRunning Topology Algorithm benchmarks\n";
-
-    if (benchmarks & CELL_TO_POINT)
-    {
-      std::cout << DIVIDER << "\nBenchmarking Cell To Point Average\n";
-      VTKM_RUN_BENCHMARK(CellToPointAvg, ValueTypes(), id);
-      VTKM_RUN_BENCHMARK(CellToPointAvgDynamic, ValueTypes(), id);
-    }
-
-    if (benchmarks & POINT_TO_CELL)
-    {
-      std::cout << DIVIDER << "\nBenchmarking Point to Cell Average\n";
-      VTKM_RUN_BENCHMARK(PointToCellAvg, ValueTypes(), id);
-      VTKM_RUN_BENCHMARK(PointToCellAvgDynamic, ValueTypes(), id);
-    }
-
-    if (benchmarks & MC_CLASSIFY)
-    {
-      std::cout << DIVIDER << "\nBenchmarking Hex/Voxel MC Classification\n";
-      VTKM_RUN_BENCHMARK(Classification, ValueTypes(), id);
-      VTKM_RUN_BENCHMARK(ClassificationDynamic, ValueTypes(), id);
-    }
-
-    return 0;
+    // #items = #points
+    const int64_t iterations = static_cast<int64_t>(this->State.iterations());
+    this->State.SetItemsProcessed(static_cast<int64_t>(cellSet.GetNumberOfPoints()) * iterations);
   }
 };
 
-#undef ARRAY_SIZE
-}
-} // namespace vtkm::benchmarking
+template <typename ValueType>
+void BenchCellToPointAvgStatic(::benchmark::State& state)
+{
+  BenchCellToPointAvgImpl<ValueType> impl{ state };
+  impl.Run(impl.Input);
+};
+VTKM_BENCHMARK_TEMPLATES(BenchCellToPointAvgStatic, ValueTypes);
+
+template <typename ValueType>
+void BenchCellToPointAvgDynamic(::benchmark::State& state)
+{
+  BenchCellToPointAvgImpl<ValueType> impl{ state };
+  impl.Run(ValueVariantHandle{ impl.Input });
+};
+VTKM_BENCHMARK_TEMPLATES(BenchCellToPointAvgDynamic, ValueTypes);
+
+template <typename Value>
+struct BenchPointToCellAvgImpl
+{
+  vtkm::cont::ArrayHandle<Value> Input;
+
+  ::benchmark::State& State;
+  vtkm::Id CubeSize;
+  vtkm::Id NumPoints;
+
+  vtkm::cont::Timer Timer;
+  vtkm::cont::Invoker Invoker;
+
+  VTKM_CONT
+  BenchPointToCellAvgImpl(::benchmark::State& state)
+    : State{ state }
+    , CubeSize{ CUBE_SIZE }
+    , NumPoints{ (this->CubeSize) * (this->CubeSize) * (this->CubeSize) }
+    , Timer{ Config.Device }
+    , Invoker{ Config.Device }
+  {
+    FillRandomValues(this->Input, this->NumPoints, 1., 100.);
+
+    { // Configure label:
+      std::ostringstream desc;
+      desc << "CubeSize:" << this->CubeSize;
+      this->State.SetLabel(desc.str());
+    }
+  }
+
+  template <typename BenchArrayType>
+  VTKM_CONT void Run(const BenchArrayType& input)
+  {
+    vtkm::cont::CellSetStructured<3> cellSet;
+    cellSet.SetPointDimensions(vtkm::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
+    vtkm::cont::ArrayHandle<Value> result;
+
+    for (auto _ : this->State)
+    {
+      (void)_;
+      this->Timer.Start();
+      this->Invoker(AveragePointToCell{}, input, cellSet, result);
+      this->Timer.Stop();
+
+      this->State.SetIterationTime(this->Timer.GetElapsedTime());
+    }
+
+    // #items = #cells
+    const int64_t iterations = static_cast<int64_t>(this->State.iterations());
+    this->State.SetItemsProcessed(static_cast<int64_t>(cellSet.GetNumberOfCells()) * iterations);
+  }
+};
+
+template <typename ValueType>
+void BenchPointToCellAvgStatic(::benchmark::State& state)
+{
+  BenchPointToCellAvgImpl<ValueType> impl{ state };
+  impl.Run(impl.Input);
+};
+VTKM_BENCHMARK_TEMPLATES(BenchPointToCellAvgStatic, ValueTypes);
+
+template <typename ValueType>
+void BenchPointToCellAvgDynamic(::benchmark::State& state)
+{
+  BenchPointToCellAvgImpl<ValueType> impl{ state };
+  impl.Run(ValueVariantHandle{ impl.Input });
+};
+VTKM_BENCHMARK_TEMPLATES(BenchPointToCellAvgDynamic, ValueTypes);
+
+template <typename Value>
+struct BenchClassificationImpl
+{
+  vtkm::cont::ArrayHandle<Value> Input;
+
+  ::benchmark::State& State;
+  vtkm::Id CubeSize;
+  vtkm::Id DomainSize;
+  Value IsoValue;
+
+  vtkm::cont::Timer Timer;
+  vtkm::cont::Invoker Invoker;
+
+  VTKM_CONT
+  BenchClassificationImpl(::benchmark::State& state)
+    : State{ state }
+    , CubeSize{ CUBE_SIZE }
+    , DomainSize{ this->CubeSize * this->CubeSize * this->CubeSize }
+    , Timer{ Config.Device }
+    , Invoker{ Config.Device }
+  {
+    this->IsoValue = FillRandomValues(this->Input, this->DomainSize, 1., 100.);
+
+    { // Configure label:
+      std::ostringstream desc;
+      desc << "CubeSize:" << this->CubeSize;
+      this->State.SetLabel(desc.str());
+    }
+  }
+
+  template <typename BenchArrayType>
+  VTKM_CONT void Run(const BenchArrayType& input)
+  {
+    vtkm::cont::CellSetStructured<3> cellSet;
+    cellSet.SetPointDimensions(vtkm::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> result;
+
+    Classification<Value> worklet(this->IsoValue);
+
+    for (auto _ : this->State)
+    {
+      (void)_;
+      this->Timer.Start();
+      this->Invoker(worklet, input, cellSet, result);
+      this->Timer.Stop();
+
+      this->State.SetIterationTime(this->Timer.GetElapsedTime());
+    }
+
+    // #items = #cells
+    const int64_t iterations = static_cast<int64_t>(this->State.iterations());
+    this->State.SetItemsProcessed(static_cast<int64_t>(cellSet.GetNumberOfCells()) * iterations);
+  }
+};
+
+template <typename ValueType>
+void BenchClassificationStatic(::benchmark::State& state)
+{
+  BenchClassificationImpl<ValueType> impl{ state };
+  impl.Run(impl.Input);
+};
+VTKM_BENCHMARK_TEMPLATES(BenchClassificationStatic, ValueTypes);
+
+template <typename ValueType>
+void BenchClassificationDynamic(::benchmark::State& state)
+{
+  BenchClassificationImpl<ValueType> impl{ state };
+  impl.Run(ValueVariantHandle{ impl.Input });
+};
+VTKM_BENCHMARK_TEMPLATES(BenchClassificationDynamic, ValueTypes);
+
+} // end anon namespace
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  auto config = vtkm::cont::Initialize(argc, argv, opts);
+  // Parse VTK-m options:
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
 
-  int benchmarks = 0;
-  if (argc <= 1)
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This occurs when it is help
+  if (opts == vtkm::cont::InitializeOptions::None)
   {
-    benchmarks = vtkm::benchmarking::ALL;
+    std::cout << Config.Usage << std::endl;
   }
   else
   {
-    for (int i = 1; i < argc; ++i)
-    {
-      std::string arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
-        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-      });
-      if (arg == "celltopoint")
-      {
-        benchmarks |= vtkm::benchmarking::CELL_TO_POINT;
-      }
-      else if (arg == "pointtocell")
-      {
-        benchmarks |= vtkm::benchmarking::POINT_TO_CELL;
-      }
-      else if (arg == "classify")
-      {
-        benchmarks |= vtkm::benchmarking::MC_CLASSIFY;
-      }
-      else
-      {
-        std::cerr << "Unrecognized benchmark: " << argv[i] << std::endl;
-        std::cerr << "USAGE: " << argv[0] << " [options] [<benchmarks>]" << std::endl;
-        std::cerr << "Options are: " << std::endl;
-        std::cerr << config.Usage << std::endl;
-        std::cerr << "Benchmarks are one or more of the following:" << std::endl;
-        std::cerr << "  CellToPoint\tFind average of point data on each cell" << std::endl;
-        std::cerr << "  PointToCell\tFind average of cell data on each point" << std::endl;
-        std::cerr << "  Classify\tFind Marching Cube case of each cell" << std::endl;
-        std::cerr << "If no benchmarks are specified, all are run." << std::endl;
-        return 1;
-      }
-    }
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
 
-  //now actually execute the benchmarks
-
-  return vtkm::benchmarking::BenchmarkTopologyAlgorithms::Run(benchmarks, config.Device);
+  // handle benchmarking related args and run benchmarks:
+  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
 }

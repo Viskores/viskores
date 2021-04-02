@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_AtomicArray_h
 #define vtk_m_cont_AtomicArray_h
 
+#include <vtkm/List.h>
 #include <vtkm/ListTag.h>
 #include <vtkm/StaticAssert.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -24,10 +25,16 @@ namespace cont
 
 /// \brief A type list containing types that can be used with an AtomicArray.
 ///
-struct AtomicArrayTypeListTag
-  : vtkm::ListTagBase<vtkm::UInt32, vtkm::Int32, vtkm::UInt64, vtkm::Int64>
+/// @cond NONE
+using AtomicArrayTypeList = vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::UInt64, vtkm::Int64>;
+
+struct VTKM_DEPRECATED(1.6,
+                       "AtomicArrayTypeListTag replaced by AtomicArrayTypeList. Note that the "
+                       "new AtomicArrayTypeList cannot be subclassed.") AtomicArrayTypeListTag
+  : vtkm::internal::ListAsListTag<AtomicArrayTypeList>
 {
 };
+/// @endcond
 
 
 /// A class that can be used to atomically operate on an array of values safely
@@ -48,7 +55,7 @@ struct AtomicArrayTypeListTag
 template <typename T>
 class AtomicArray : public vtkm::cont::ExecutionObjectBase
 {
-  static constexpr bool ValueTypeIsValid = vtkm::ListContains<AtomicArrayTypeListTag, T>::value;
+  static constexpr bool ValueTypeIsValid = vtkm::ListHas<AtomicArrayTypeList, T>::value;
   VTKM_STATIC_ASSERT_MSG(ValueTypeIsValid, "AtomicArray used with unsupported ValueType.");
 
 
@@ -66,14 +73,25 @@ public:
   {
   }
 
-  template <typename Device>
-  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(Device) const
+  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token) const
   {
-    return vtkm::exec::AtomicArrayExecutionObject<T, Device>(this->Handle);
+    return vtkm::exec::AtomicArrayExecutionObject<T>(this->Handle, device, token);
+  }
+
+  template <typename Device>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object.")
+    vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(Device device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForExecution(device, token);
   }
 
 private:
+  /// @cond NONE
   vtkm::cont::ArrayHandle<T> Handle;
+  /// @endcond
 };
 }
 } // namespace vtkm::exec

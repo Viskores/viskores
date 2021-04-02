@@ -21,6 +21,9 @@
 #include <set>
 #include <vector>
 
+#define CHECK_CALL(call) \
+  VTKM_TEST_ASSERT((call) == vtkm::ErrorCode::Success, "Call resulted in error.")
+
 namespace
 {
 
@@ -41,13 +44,6 @@ struct TestCellFacesFunctor
               CellShapeTag shape,
               vtkm::CellTopologicalDimensionsTag<3>) const
   {
-    // Stuff to fake running in the execution environment.
-    char messageBuffer[256];
-    messageBuffer[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
-    vtkm::exec::FunctorBase workletProxy;
-    workletProxy.SetErrorMessageBuffer(errorMessage);
-
     std::vector<vtkm::Id> pointIndexProxyBuffer(static_cast<std::size_t>(numPoints));
     for (std::size_t index = 0; index < pointIndexProxyBuffer.size(); ++index)
     {
@@ -55,14 +51,16 @@ struct TestCellFacesFunctor
     }
     vtkm::VecCConst<vtkm::Id> pointIndexProxy(&pointIndexProxyBuffer.at(0), numPoints);
 
-    vtkm::IdComponent numEdges = vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, workletProxy);
+    vtkm::IdComponent numEdges;
+    CHECK_CALL(vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, numEdges));
     VTKM_TEST_ASSERT(numEdges > 0, "No edges?");
 
     std::set<EdgeType> edgeSet;
     for (vtkm::IdComponent edgeIndex = 0; edgeIndex < numEdges; edgeIndex++)
     {
-      EdgeType edge(vtkm::exec::CellEdgeLocalIndex(numPoints, 0, edgeIndex, shape, workletProxy),
-                    vtkm::exec::CellEdgeLocalIndex(numPoints, 1, edgeIndex, shape, workletProxy));
+      EdgeType edge;
+      CHECK_CALL(vtkm::exec::CellEdgeLocalIndex(numPoints, 0, edgeIndex, shape, edge[0]));
+      CHECK_CALL(vtkm::exec::CellEdgeLocalIndex(numPoints, 1, edgeIndex, shape, edge[1]));
       VTKM_TEST_ASSERT(edge[0] >= 0, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[0] < numPoints, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[1] >= 0, "Bad index in edge.");
@@ -73,49 +71,50 @@ struct TestCellFacesFunctor
       VTKM_TEST_ASSERT(edgeSet.find(edge) == edgeSet.end(), "Found duplicate edge");
       edgeSet.insert(edge);
 
-      vtkm::Id2 canonicalEdgeId =
-        vtkm::exec::CellEdgeCanonicalId(numPoints, edgeIndex, shape, pointIndexProxy, workletProxy);
+      vtkm::Id2 canonicalEdgeId;
+      CHECK_CALL(vtkm::exec::CellEdgeCanonicalId(
+        numPoints, edgeIndex, shape, pointIndexProxy, canonicalEdgeId));
       VTKM_TEST_ASSERT(canonicalEdgeId[0] > 0, "Not using global ids?");
       VTKM_TEST_ASSERT(canonicalEdgeId[0] < canonicalEdgeId[1], "Bad order.");
     }
 
-    vtkm::IdComponent numFaces = vtkm::exec::CellFaceNumberOfFaces(shape, workletProxy);
+    vtkm::IdComponent numFaces;
+    CHECK_CALL(vtkm::exec::CellFaceNumberOfFaces(shape, numFaces));
     VTKM_TEST_ASSERT(numFaces > 0, "No faces?");
 
     std::set<EdgeType> edgesFoundInFaces;
     for (vtkm::IdComponent faceIndex = 0; faceIndex < numFaces; faceIndex++)
     {
-      const vtkm::IdComponent numPointsInFace =
-        vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, workletProxy);
+      vtkm::IdComponent numPointsInFace;
+      CHECK_CALL(vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
 
       VTKM_TEST_ASSERT(numPointsInFace >= 3, "Face has fewer points than a triangle.");
 
       for (vtkm::IdComponent pointIndex = 0; pointIndex < numPointsInFace; pointIndex++)
       {
-        vtkm::IdComponent localFaceIndex =
-          vtkm::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, workletProxy);
+        vtkm::IdComponent localFaceIndex;
+        CHECK_CALL(vtkm::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, localFaceIndex));
         VTKM_TEST_ASSERT(localFaceIndex >= 0, "Invalid point index for face.");
         VTKM_TEST_ASSERT(localFaceIndex < numPoints, "Invalid point index for face.");
         EdgeType edge;
         if (pointIndex < numPointsInFace - 1)
         {
-          edge = EdgeType(
-            vtkm::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, workletProxy),
-            vtkm::exec::CellFaceLocalIndex(pointIndex + 1, faceIndex, shape, workletProxy));
+          CHECK_CALL(vtkm::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, edge[0]));
+          CHECK_CALL(vtkm::exec::CellFaceLocalIndex(pointIndex + 1, faceIndex, shape, edge[1]));
         }
         else
         {
-          edge =
-            EdgeType(vtkm::exec::CellFaceLocalIndex(0, faceIndex, shape, workletProxy),
-                     vtkm::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, workletProxy));
+          CHECK_CALL(vtkm::exec::CellFaceLocalIndex(0, faceIndex, shape, edge[0]));
+          CHECK_CALL(vtkm::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, edge[1]));
         }
         MakeEdgeCanonical(edge);
         VTKM_TEST_ASSERT(edgeSet.find(edge) != edgeSet.end(), "Edge in face not in cell's edges");
         edgesFoundInFaces.insert(edge);
       }
 
-      vtkm::Id3 canonicalFaceId =
-        vtkm::exec::CellFaceCanonicalId(faceIndex, shape, pointIndexProxy, workletProxy);
+      vtkm::Id3 canonicalFaceId;
+      CHECK_CALL(
+        vtkm::exec::CellFaceCanonicalId(faceIndex, shape, pointIndexProxy, canonicalFaceId));
       VTKM_TEST_ASSERT(canonicalFaceId[0] > 0, "Not using global ids?");
       VTKM_TEST_ASSERT(canonicalFaceId[0] < canonicalFaceId[1], "Bad order.");
       VTKM_TEST_ASSERT(canonicalFaceId[1] < canonicalFaceId[2], "Bad order.");
@@ -130,13 +129,6 @@ struct TestCellFacesFunctor
               CellShapeTag shape,
               vtkm::CellTopologicalDimensionsTag<2>) const
   {
-    // Stuff to fake running in the execution environment.
-    char messageBuffer[256];
-    messageBuffer[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
-    vtkm::exec::FunctorBase workletProxy;
-    workletProxy.SetErrorMessageBuffer(errorMessage);
-
     std::vector<vtkm::Id> pointIndexProxyBuffer(static_cast<std::size_t>(numPoints));
     for (std::size_t index = 0; index < pointIndexProxyBuffer.size(); ++index)
     {
@@ -144,14 +136,16 @@ struct TestCellFacesFunctor
     }
     vtkm::VecCConst<vtkm::Id> pointIndexProxy(&pointIndexProxyBuffer.at(0), numPoints);
 
-    vtkm::IdComponent numEdges = vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, workletProxy);
+    vtkm::IdComponent numEdges;
+    CHECK_CALL(vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, numEdges));
     VTKM_TEST_ASSERT(numEdges == numPoints, "Polygons should have same number of points and edges");
 
     std::set<EdgeType> edgeSet;
     for (vtkm::IdComponent edgeIndex = 0; edgeIndex < numEdges; edgeIndex++)
     {
-      EdgeType edge(vtkm::exec::CellEdgeLocalIndex(numPoints, 0, edgeIndex, shape, workletProxy),
-                    vtkm::exec::CellEdgeLocalIndex(numPoints, 1, edgeIndex, shape, workletProxy));
+      EdgeType edge;
+      CHECK_CALL(vtkm::exec::CellEdgeLocalIndex(numPoints, 0, edgeIndex, shape, edge[0]));
+      CHECK_CALL(vtkm::exec::CellEdgeLocalIndex(numPoints, 1, edgeIndex, shape, edge[1]));
       VTKM_TEST_ASSERT(edge[0] >= 0, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[0] < numPoints, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[1] >= 0, "Bad index in edge.");
@@ -162,13 +156,15 @@ struct TestCellFacesFunctor
       VTKM_TEST_ASSERT(edgeSet.find(edge) == edgeSet.end(), "Found duplicate edge");
       edgeSet.insert(edge);
 
-      vtkm::Id2 canonicalEdgeId =
-        vtkm::exec::CellEdgeCanonicalId(numPoints, edgeIndex, shape, pointIndexProxy, workletProxy);
+      vtkm::Id2 canonicalEdgeId;
+      CHECK_CALL(vtkm::exec::CellEdgeCanonicalId(
+        numPoints, edgeIndex, shape, pointIndexProxy, canonicalEdgeId));
       VTKM_TEST_ASSERT(canonicalEdgeId[0] > 0, "Not using global ids?");
       VTKM_TEST_ASSERT(canonicalEdgeId[0] < canonicalEdgeId[1], "Bad order.");
     }
 
-    vtkm::IdComponent numFaces = vtkm::exec::CellFaceNumberOfFaces(shape, workletProxy);
+    vtkm::IdComponent numFaces;
+    CHECK_CALL(vtkm::exec::CellFaceNumberOfFaces(shape, numFaces));
     VTKM_TEST_ASSERT(numFaces == 0, "Non 3D shape should have no faces");
   }
 
@@ -179,17 +175,12 @@ struct TestCellFacesFunctor
               CellShapeTag shape,
               vtkm::CellTopologicalDimensionsTag<NumDimensions>) const
   {
-    // Stuff to fake running in the execution environment.
-    char messageBuffer[256];
-    messageBuffer[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
-    vtkm::exec::FunctorBase workletProxy;
-    workletProxy.SetErrorMessageBuffer(errorMessage);
-
-    vtkm::IdComponent numEdges = vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, workletProxy);
+    vtkm::IdComponent numEdges;
+    CHECK_CALL(vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, numEdges));
     VTKM_TEST_ASSERT(numEdges == 0, "0D or 1D shape should have no edges");
 
-    vtkm::IdComponent numFaces = vtkm::exec::CellFaceNumberOfFaces(shape, workletProxy);
+    vtkm::IdComponent numFaces;
+    CHECK_CALL(vtkm::exec::CellFaceNumberOfFaces(shape, numFaces));
     VTKM_TEST_ASSERT(numFaces == 0, "Non 3D shape should have no faces");
   }
 

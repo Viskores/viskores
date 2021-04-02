@@ -34,55 +34,48 @@ struct TestMaskArrays
 
 TestMaskArrays MakeMaskArraysShort()
 {
-  const vtkm::Id selectArraySize = 18;
-  const vtkm::IdComponent selectArray[selectArraySize] = { 1, 1, 0, 0, 0, 0, 1, 0, 0,
-                                                           0, 0, 0, 0, 0, 0, 0, 0, 1 };
-  const vtkm::Id threadRange = 4;
-  const vtkm::Id threadToOutputMap[threadRange] = { 0, 1, 6, 17 };
-
   TestMaskArrays arrays;
 
-  // Need to copy arrays so that the data does not go out of scope.
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandle(selectArray, selectArraySize),
-                        arrays.SelectArray);
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandle(threadToOutputMap, threadRange),
-                        arrays.ThreadToOutputMap);
+  arrays.SelectArray = vtkm::cont::make_ArrayHandle<vtkm::IdComponent>(
+    { 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 });
+  arrays.ThreadToOutputMap = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 1, 6, 17 });
 
   return arrays;
 }
 
 TestMaskArrays MakeMaskArraysLong()
 {
-  const vtkm::Id selectArraySize = 16;
-  const vtkm::IdComponent selectArray[selectArraySize] = {
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
-  };
-  const vtkm::Id threadRange = 15;
-  const vtkm::Id threadToOutputMap[threadRange] = {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15
-  };
-
   TestMaskArrays arrays;
 
-  // Need to copy arrays so that the data does not go out of scope.
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandle(selectArray, selectArraySize),
-                        arrays.SelectArray);
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandle(threadToOutputMap, threadRange),
-                        arrays.ThreadToOutputMap);
+  arrays.SelectArray = vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+  });
+  arrays.ThreadToOutputMap =
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15 });
 
   return arrays;
 }
 
 TestMaskArrays MakeMaskArraysZero()
 {
-  const vtkm::Id selectArraySize = 6;
-  const vtkm::IdComponent selectArray[selectArraySize] = { 0, 0, 0, 0, 0, 0 };
-
   TestMaskArrays arrays;
 
-  // Need to copy arrays so that the data does not go out of scope.
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandle(selectArray, selectArraySize),
-                        arrays.SelectArray);
+  arrays.SelectArray = vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 0, 0, 0, 0 });
   arrays.ThreadToOutputMap.Allocate(0);
 
   return arrays;
@@ -106,9 +99,9 @@ void CompareArrays(vtkm::cont::ArrayHandle<T> array1,
 {
   VTKM_IS_ARRAY_HANDLE(SelectArrayType);
 
-  auto portal1 = array1.GetPortalConstControl();
-  auto portal2 = array2.GetPortalConstControl();
-  auto selectPortal = selectArray.GetPortalConstControl();
+  auto portal1 = array1.ReadPortal();
+  auto portal2 = array2.ReadPortal();
+  auto selectPortal = selectArray.ReadPortal();
 
   VTKM_TEST_ASSERT(portal1.GetNumberOfValues() == portal2.GetNumberOfValues());
   VTKM_TEST_ASSERT(portal1.GetNumberOfValues() == selectArray.GetNumberOfValues());

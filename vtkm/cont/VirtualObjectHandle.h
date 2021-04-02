@@ -10,7 +10,7 @@
 #ifndef vtk_m_cont_VirtualObjectHandle_h
 #define vtk_m_cont_VirtualObjectHandle_h
 
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
@@ -71,7 +71,7 @@ public:
   }
 
   template <typename VirtualDerivedType,
-            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
   VTKM_CONT explicit VirtualObjectHandle(VirtualDerivedType* derived,
                                          bool acquireOwnership = true,
                                          DeviceAdapterList devices = DeviceAdapterList())
@@ -95,11 +95,12 @@ public:
 
   /// Reset the underlying derived type object
   template <typename VirtualDerivedType,
-            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
   VTKM_CONT void Reset(VirtualDerivedType* derived,
                        bool acquireOwnership = true,
                        DeviceAdapterList devices = DeviceAdapterList())
   {
+    VTKM_DEPRECATED_SUPPRESS_BEGIN
     VTKM_STATIC_ASSERT_MSG((std::is_base_of<VirtualBaseType, VirtualDerivedType>::value),
                            "Tried to bind a type that is not a subclass of the base class.");
 
@@ -118,6 +119,7 @@ public:
       vtkm::cont::internal::ForEachValidDevice(
         devices, internal::CreateTransferInterface(), this->Internals.get(), derived);
     }
+    VTKM_DEPRECATED_SUPPRESS_END
   }
 
   /// Release all host and execution side resources
@@ -133,7 +135,8 @@ public:
   /// 2. VirtualObjectHandle is destroyed
   /// 3. Reset or ReleaseResources is called
   ///
-  VTKM_CONT const VirtualBaseType* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const
+  VTKM_CONT const VirtualBaseType* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+                                                       vtkm::cont::Token&) const
   {
     const bool validId = this->Internals->DeviceIdIsValid(deviceId);
     if (!validId)
@@ -143,6 +146,14 @@ public:
     }
 
     return static_cast<const VirtualBaseType*>(this->Internals->PrepareForExecution(deviceId));
+  }
+
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object.")
+  const VirtualBaseType* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForExecution(deviceId, token);
   }
 
   /// Used as part of the \c ExecutionAndControlObjectBase interface. Returns the same pointer

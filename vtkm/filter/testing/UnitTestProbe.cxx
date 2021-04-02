@@ -11,7 +11,6 @@
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/worklet/CellDeepCopy.h>
@@ -33,8 +32,8 @@ vtkm::cont::DataSet MakeInputDataSet()
 
   auto input = vtkm::cont::DataSetBuilderUniform::Create(
     vtkm::Id2(4, 4), vtkm::make_Vec(0.0f, 0.0f), vtkm::make_Vec(1.0f, 1.0f));
-  vtkm::cont::DataSetFieldAdd::AddPointField(input, "pointdata", pvec);
-  vtkm::cont::DataSetFieldAdd::AddCellField(input, "celldata", cvec);
+  input.AddPointField("pointdata", pvec);
+  input.AddCellField("celldata", cvec);
   return input;
 }
 
@@ -68,13 +67,20 @@ vtkm::cont::DataSet ConvertDataSetUniformToExplicit(const vtkm::cont::DataSet& u
 const std::vector<vtkm::Float32>& GetExpectedPointData()
 {
   static std::vector<vtkm::Float32> expected = {
-    1.05f,  1.155f, 1.26f,  1.365f, 1.47f,  1.575f, 1.68f,  0.0f,   0.0f,   1.47f,  1.575f, 1.68f,
-    1.785f, 1.89f,  1.995f, 2.1f,   0.0f,   0.0f,   1.89f,  1.995f, 2.1f,   2.205f, 2.31f,  2.415f,
-    2.52f,  0.0f,   0.0f,   2.31f,  2.415f, 2.52f,  2.625f, 2.73f,  2.835f, 2.94f,  0.0f,   0.0f,
-    2.73f,  2.835f, 2.94f,  3.045f, 3.15f,  3.255f, 3.36f,  0.0f,   0.0f,   3.15f,  3.255f, 3.36f,
-    3.465f, 3.57f,  3.675f, 3.78f,  0.0f,   0.0f,   3.57f,  3.675f, 3.78f,  3.885f, 3.99f,  4.095f,
-    4.2f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,
-    0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f
+    1.05f,         1.155f,        1.26f,         1.365f,        1.47f,         1.575f,
+    1.68f,         vtkm::Nan32(), vtkm::Nan32(), 1.47f,         1.575f,        1.68f,
+    1.785f,        1.89f,         1.995f,        2.1f,          vtkm::Nan32(), vtkm::Nan32(),
+    1.89f,         1.995f,        2.1f,          2.205f,        2.31f,         2.415f,
+    2.52f,         vtkm::Nan32(), vtkm::Nan32(), 2.31f,         2.415f,        2.52f,
+    2.625f,        2.73f,         2.835f,        2.94f,         vtkm::Nan32(), vtkm::Nan32(),
+    2.73f,         2.835f,        2.94f,         3.045f,        3.15f,         3.255f,
+    3.36f,         vtkm::Nan32(), vtkm::Nan32(), 3.15f,         3.255f,        3.36f,
+    3.465f,        3.57f,         3.675f,        3.78f,         vtkm::Nan32(), vtkm::Nan32(),
+    3.57f,         3.675f,        3.78f,         3.885f,        3.99f,         4.095f,
+    4.2f,          vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32()
   };
   return expected;
 }
@@ -82,12 +88,20 @@ const std::vector<vtkm::Float32>& GetExpectedPointData()
 const std::vector<vtkm::Float32>& GetExpectedCellData()
 {
   static std::vector<vtkm::Float32> expected = {
-    0.0f, 0.7f, 0.7f, 0.7f, 1.4f, 1.4f, 1.4f, 0.0f, 0.0f, 2.1f, 2.8f, 2.8f, 2.8f, 3.5f,
-    3.5f, 3.5f, 0.0f, 0.0f, 2.1f, 2.8f, 2.8f, 2.8f, 3.5f, 3.5f, 3.5f, 0.0f, 0.0f, 2.1f,
-    2.8f, 2.8f, 2.8f, 3.5f, 3.5f, 3.5f, 0.0f, 0.0f, 4.2f, 4.9f, 4.9f, 4.9f, 5.6f, 5.6f,
-    5.6f, 0.0f, 0.0f, 4.2f, 4.9f, 4.9f, 4.9f, 5.6f, 5.6f, 5.6f, 0.0f, 0.0f, 4.2f, 4.9f,
-    4.9f, 4.9f, 5.6f, 5.6f, 5.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
+    0.0f,          0.7f,          0.7f,          0.7f,          1.4f,          1.4f,
+    1.4f,          vtkm::Nan32(), vtkm::Nan32(), 2.1f,          2.8f,          2.8f,
+    2.8f,          3.5f,          3.5f,          3.5f,          vtkm::Nan32(), vtkm::Nan32(),
+    2.1f,          2.8f,          2.8f,          2.8f,          3.5f,          3.5f,
+    3.5f,          vtkm::Nan32(), vtkm::Nan32(), 2.1f,          2.8f,          2.8f,
+    2.8f,          3.5f,          3.5f,          3.5f,          vtkm::Nan32(), vtkm::Nan32(),
+    4.2f,          4.9f,          4.9f,          4.9f,          5.6f,          5.6f,
+    5.6f,          vtkm::Nan32(), vtkm::Nan32(), 4.2f,          4.9f,          4.9f,
+    4.9f,          5.6f,          5.6f,          5.6f,          vtkm::Nan32(), vtkm::Nan32(),
+    4.2f,          4.9f,          4.9f,          4.9f,          5.6f,          5.6f,
+    5.6f,          vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32()
   };
   return expected;
 }
@@ -117,7 +131,7 @@ void TestResultArray(const vtkm::cont::ArrayHandle<T>& result, const std::vector
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()),
                    "Incorrect field size");
 
-  auto portal = result.GetPortalConstControl();
+  auto portal = result.ReadPortal();
   vtkm::Id size = portal.GetNumberOfValues();
   for (vtkm::Id i = 0; i < size; ++i)
   {

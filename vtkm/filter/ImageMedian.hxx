@@ -12,6 +12,7 @@
 #define vtk_m_filter_ImageMedian_hxx
 
 #include <vtkm/Swap.h>
+#include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 namespace vtkm
 {
@@ -86,11 +87,6 @@ struct ImageMedian : public vtkm::worklet::WorkletPointNeighborhood
 namespace filter
 {
 
-VTKM_CONT ImageMedian::ImageMedian()
-{
-  this->SetOutputFieldName("median");
-}
-
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ImageMedian::DoExecute(
   const vtkm::cont::DataSet& input,
@@ -108,7 +104,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageMedian::DoExecute(
   if (this->Neighborhood == 1 || this->Neighborhood == 2)
   {
     this->Invoke(worklet::ImageMedian{ this->Neighborhood },
-                 vtkm::filter::ApplyPolicyCellSetStructured(cells, policy),
+                 vtkm::filter::ApplyPolicyCellSetStructured(cells, policy, *this),
                  field,
                  result);
   }

@@ -44,13 +44,17 @@ void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
 const vtkm::cont::Field& DataSet::GetField(vtkm::Id index) const
 {
   VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
-  return this->Fields[static_cast<std::size_t>(index)];
+  auto it = this->Fields.cbegin();
+  std::advance(it, index);
+  return it->second;
 }
 
 vtkm::cont::Field& DataSet::GetField(vtkm::Id index)
 {
   VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
-  return this->Fields[static_cast<std::size_t>(index)];
+  auto it = this->Fields.begin();
+  std::advance(it, index);
+  return it->second;
 }
 
 vtkm::Id DataSet::GetFieldIndex(const std::string& name, vtkm::cont::Field::Association assoc) const
@@ -150,18 +154,21 @@ vtkm::Id DataSet::FindFieldIndex(const std::string& name,
                                  vtkm::cont::Field::Association association,
                                  bool& found) const
 {
-  for (std::size_t index = 0; index < this->Fields.size(); ++index)
+  const auto it = this->Fields.find({ name, association });
+  if (it != this->Fields.end())
   {
-    if ((association == vtkm::cont::Field::Association::ANY ||
-         association == this->Fields[index].GetAssociation()) &&
-        this->Fields[index].GetName() == name)
-    {
-      found = true;
-      return static_cast<vtkm::Id>(index);
-    }
+    found = true;
+    return static_cast<vtkm::Id>(std::distance(this->Fields.begin(), it));
   }
+
   found = false;
   return -1;
+}
+
+VTKM_CONT void DataSet::AddField(const Field& field)
+{
+  // map::insert will not replace the duplicated element
+  this->Fields[{ field.GetName(), field.GetAssociation() }] = field;
 }
 
 } // namespace cont

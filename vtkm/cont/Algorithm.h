@@ -12,29 +12,30 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/BitField.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/Token.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/ArrayManagerExecution.h>
 
 
 namespace vtkm
 {
 namespace cont
 {
-
+/// @cond NONE
 namespace detail
 {
 template <typename Device, typename T>
-inline auto DoPrepareArgForExec(T&& object, std::true_type)
-  -> decltype(std::declval<T>().PrepareForExecution(Device()))
+inline auto DoPrepareArgForExec(T&& object, vtkm::cont::Token& token, std::true_type) -> decltype(
+  vtkm::cont::internal::CallPrepareForExecution(std::forward<T>(object), Device{}, token))
 {
   VTKM_IS_EXECUTION_OBJECT(T);
-  return object.PrepareForExecution(Device{});
+  return vtkm::cont::internal::CallPrepareForExecution(std::forward<T>(object), Device{}, token);
 }
 
 template <typename Device, typename T>
-inline T&& DoPrepareArgForExec(T&& object, std::false_type)
+inline T&& DoPrepareArgForExec(T&& object, vtkm::cont::Token&, std::false_type)
 {
   static_assert(!vtkm::cont::internal::IsExecutionObjectBase<T>::value,
                 "Internal error: failed to detect execution object.");
@@ -42,12 +43,13 @@ inline T&& DoPrepareArgForExec(T&& object, std::false_type)
 }
 
 template <typename Device, typename T>
-auto PrepareArgForExec(T&& object)
+auto PrepareArgForExec(T&& object, vtkm::cont::Token& token)
   -> decltype(DoPrepareArgForExec<Device>(std::forward<T>(object),
+                                          token,
                                           vtkm::cont::internal::IsExecutionObjectBase<T>{}))
 {
-  return DoPrepareArgForExec<Device>(std::forward<T>(object),
-                                     vtkm::cont::internal::IsExecutionObjectBase<T>{});
+  return DoPrepareArgForExec<Device>(
+    std::forward<T>(object), token, vtkm::cont::internal::IsExecutionObjectBase<T>{});
 }
 
 struct BitFieldToUnorderedSetFunctor
@@ -58,8 +60,9 @@ struct BitFieldToUnorderedSetFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     this->Result = vtkm::cont::DeviceAdapterAlgorithm<Device>::BitFieldToUnorderedSet(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -70,8 +73,9 @@ struct CopyFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -83,8 +87,9 @@ struct CopyIfFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::CopyIf(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -102,8 +107,9 @@ struct CopySubRangeFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     valid = vtkm::cont::DeviceAdapterAlgorithm<Device>::CopySubRange(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -115,8 +121,10 @@ struct CountSetBitsFunctor
   template <typename Device, typename... Args>
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     this->PopCount = vtkm::cont::DeviceAdapterAlgorithm<Device>::CountSetBits(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -126,8 +134,10 @@ struct FillFunctor
   template <typename Device, typename... Args>
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Fill(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -139,8 +149,9 @@ struct LowerBoundsFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::LowerBounds(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -159,8 +170,9 @@ struct ReduceFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     result = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -171,8 +183,9 @@ struct ReduceByKeyFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::ReduceByKey(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -191,78 +204,9 @@ struct ScanInclusiveResultFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     result = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanInclusive(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
-    return true;
-  }
-};
-
-template <typename T>
-struct StreamingScanExclusiveFunctor
-{
-  T result;
-  StreamingScanExclusiveFunctor()
-    : result(T(0))
-  {
-  }
-
-  template <typename Device, class CIn, class COut>
-  VTKM_CONT bool operator()(Device,
-                            const vtkm::Id numBlocks,
-                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                            vtkm::cont::ArrayHandle<T, COut>& output)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    result =
-      vtkm::cont::DeviceAdapterAlgorithm<Device>::StreamingScanExclusive(numBlocks, input, output);
-    return true;
-  }
-
-  template <typename Device, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT bool operator()(Device,
-                            const vtkm::Id numBlocks,
-                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                            vtkm::cont::ArrayHandle<T, COut>& output,
-                            BinaryFunctor binary_functor,
-                            const T& initialValue)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::StreamingScanExclusive(
-      numBlocks, input, output, binary_functor, initialValue);
-    return true;
-  }
-};
-
-template <typename U>
-struct StreamingReduceFunctor
-{
-  U result;
-  StreamingReduceFunctor()
-    : result(U(0))
-  {
-  }
-  template <typename Device, typename T, class CIn>
-  VTKM_CONT bool operator()(Device,
-                            const vtkm::Id numBlocks,
-                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                            U initialValue)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    result =
-      vtkm::cont::DeviceAdapterAlgorithm<Device>::StreamingReduce(numBlocks, input, initialValue);
-    return true;
-  }
-
-  template <typename Device, typename T, class CIn, class BinaryFunctor>
-  VTKM_CONT bool operator()(Device,
-                            const vtkm::Id numBlocks,
-                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                            U InitialValue,
-                            BinaryFunctor binaryFunctor)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::StreamingReduce(
-      numBlocks, input, InitialValue, binaryFunctor);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -275,8 +219,9 @@ struct ScanInclusiveByKeyFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanInclusiveByKey(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -295,8 +240,9 @@ struct ScanExclusiveFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     result = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -309,8 +255,9 @@ struct ScanExclusiveByKeyFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusiveByKey(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -322,8 +269,9 @@ struct ScanExtendedFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExtended(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -334,8 +282,9 @@ struct ScheduleFunctor
   VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -346,8 +295,9 @@ struct SortFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Sort(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -358,8 +308,9 @@ struct SortByKeyFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::SortByKey(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -381,8 +332,9 @@ struct TransformFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Transform(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -393,8 +345,9 @@ struct UniqueFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Unique(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
@@ -405,12 +358,14 @@ struct UpperBoundsFunctor
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::UpperBounds(
-      PrepareArgForExec<Device>(std::forward<Args>(args))...);
+      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
     return true;
   }
 };
 } // namespace detail
+/// @endcond
 
 struct Algorithm
 {
@@ -773,66 +728,6 @@ struct Algorithm
     return ScanInclusive(vtkm::cont::DeviceAdapterTagAny(), input, output);
   }
 
-
-  template <typename T, class CIn, class COut>
-  VTKM_CONT static T StreamingScanExclusive(vtkm::cont::DeviceAdapterId devId,
-                                            const vtkm::Id numBlocks,
-                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                            vtkm::cont::ArrayHandle<T, COut>& output)
-  {
-    detail::StreamingScanExclusiveFunctor<T> functor;
-    vtkm::cont::TryExecuteOnDevice(devId, functor, numBlocks, input, output);
-    return functor.result;
-  }
-
-  template <typename T, class CIn, class COut>
-  VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
-                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                            vtkm::cont::ArrayHandle<T, COut>& output)
-  {
-    return StreamingScanExclusive(vtkm::cont::DeviceAdapterTagAny(), numBlocks, input, output);
-  }
-
-  template <typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
-                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                            vtkm::cont::ArrayHandle<T, COut>& output,
-                                            BinaryFunctor binary_functor,
-                                            const T& initialValue)
-  {
-    detail::StreamingScanExclusiveFunctor<T> functor;
-    vtkm::cont::TryExecuteOnDevice(vtkm::cont::DeviceAdapterTagAny(),
-                                   functor,
-                                   numBlocks,
-                                   input,
-                                   output,
-                                   binary_functor,
-                                   initialValue);
-    return functor.result;
-  }
-
-  template <typename T, typename U, class CIn>
-  VTKM_CONT static U StreamingReduce(const vtkm::Id numBlocks,
-                                     const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                     U initialValue)
-  {
-    detail::StreamingReduceFunctor<U> functor;
-    vtkm::cont::TryExecuteOnDevice(
-      vtkm::cont::DeviceAdapterTagAny(), functor, numBlocks, input, initialValue);
-    return functor.result;
-  }
-
-  template <typename T, typename U, class CIn, class BinaryFunctor>
-  VTKM_CONT static U StreamingReduce(const vtkm::Id numBlocks,
-                                     const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                     U initialValue,
-                                     BinaryFunctor binaryFunctor)
-  {
-    detail::StreamingReduceFunctor<U> functor;
-    vtkm::cont::TryExecuteOnDevice(
-      vtkm::cont::DeviceAdapterTagAny(), functor, numBlocks, input, initialValue, binaryFunctor);
-    return functor.result;
-  }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T ScanInclusive(vtkm::cont::DeviceAdapterId devId,

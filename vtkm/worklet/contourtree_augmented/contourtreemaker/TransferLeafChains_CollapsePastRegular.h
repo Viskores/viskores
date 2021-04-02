@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_collapse_past_regular_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_collapse_past_regular_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_collapse_past_regular_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_collapse_past_regular_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -74,7 +74,7 @@ public:
   typedef void ControlSignature(FieldIn activeSupernodes, // (input)
                                 WholeArrayInOut outbound, // (output)
                                 WholeArrayInOut inbound   // (output)
-                                );
+  );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   using InputDomain = _1;
 
@@ -93,11 +93,11 @@ public:
     vtkm::Id inNeighbour = inboundPortal.Get(superID);
 
     // if the outbound is terminal, we're done, otherwise update
-    if (!isTerminalElement(outNeighbour))
+    if (!IsTerminalElement(outNeighbour))
       outboundPortal.Set(superID, outboundPortal.Get(outNeighbour));
 
     // if the inNeighbour is not terminal, update
-    if (!isTerminalElement(inNeighbour))
+    if (!IsTerminalElement(inNeighbour))
       inboundPortal.Set(superID, inboundPortal.Get(inNeighbour));
 
     // In serial this worklet implements the following operation
@@ -109,11 +109,11 @@ public:
             vtkm::Id inNeighbour = inbound[superID];
 
             // if the outbound is terminal, we're done, otherwise update
-            if (!isTerminalElement(outNeighbour))
+            if (!IsTerminalElement(outNeighbour))
                     outbound[superID] = outbound[outNeighbour];
 
             // if the inNeighbour is not terminal, update
-            if (!isTerminalElement(inNeighbour))
+            if (!IsTerminalElement(inNeighbour))
                     inbound[superID] = inbound[inNeighbour];
           } // per active vertex
 

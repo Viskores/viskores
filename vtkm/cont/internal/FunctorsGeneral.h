@@ -10,16 +10,18 @@
 #ifndef vtk_m_cont_internal_FunctorsGeneral_h
 #define vtk_m_cont_internal_FunctorsGeneral_h
 
+#include <vtkm/Algorithms.h>
 #include <vtkm/BinaryOperators.h>
+#include <vtkm/BinaryPredicates.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/internal/AtomicInterfaceExecution.h>
 
 #include <vtkm/exec/FunctorBase.h>
 
 #include <algorithm>
 #include <atomic>
+#include <iterator>
 
 namespace vtkm
 {
@@ -43,50 +45,46 @@ struct WrappedBinaryOperator
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Argument1, typename Argument2>
-  VTKM_CONT ResultType operator()(const Argument1& x, const Argument2& y) const
+  VTKM_EXEC_CONT ResultType operator()(const Argument1& x, const Argument2& y) const
   {
-    return m_f(x, y);
+    return static_cast<ResultType>(m_f(x, y));
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Argument1, typename Argument2>
-  VTKM_CONT ResultType
+  VTKM_EXEC_CONT ResultType
   operator()(const vtkm::internal::ArrayPortalValueReference<Argument1>& x,
              const vtkm::internal::ArrayPortalValueReference<Argument2>& y) const
   {
     using ValueTypeX = typename vtkm::internal::ArrayPortalValueReference<Argument1>::ValueType;
     using ValueTypeY = typename vtkm::internal::ArrayPortalValueReference<Argument2>::ValueType;
-    return m_f((ValueTypeX)x, (ValueTypeY)y);
+    return static_cast<ResultType>(m_f((ValueTypeX)x, (ValueTypeY)y));
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Argument1, typename Argument2>
-  VTKM_CONT ResultType
+  VTKM_EXEC_CONT ResultType
   operator()(const Argument1& x,
              const vtkm::internal::ArrayPortalValueReference<Argument2>& y) const
   {
     using ValueTypeY = typename vtkm::internal::ArrayPortalValueReference<Argument2>::ValueType;
-    return m_f(x, (ValueTypeY)y);
+    return static_cast<ResultType>(m_f(x, (ValueTypeY)y));
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Argument1, typename Argument2>
-  VTKM_CONT ResultType operator()(const vtkm::internal::ArrayPortalValueReference<Argument1>& x,
-                                  const Argument2& y) const
+  VTKM_EXEC_CONT ResultType
+  operator()(const vtkm::internal::ArrayPortalValueReference<Argument1>& x,
+             const Argument2& y) const
   {
     using ValueTypeX = typename vtkm::internal::ArrayPortalValueReference<Argument1>::ValueType;
-    return m_f((ValueTypeX)x, y);
+    return static_cast<ResultType>(m_f((ValueTypeX)x, y));
   }
 };
 
-//needs to be in a location that TBB DeviceAdapterAlgorithm can reach
-struct DefaultCompareFunctor
-{
-
-  template <typename T>
-  VTKM_EXEC bool operator()(const T& first, const T& second) const
-  {
-    return first < second;
-  }
-};
+using DefaultCompareFunctor = vtkm::SortLess;
 
 //needs to be in a location that TBB DeviceAdapterAlgorithm can reach
 template <typename T, typename U, class BinaryCompare = DefaultCompareFunctor>
@@ -120,7 +118,7 @@ struct ReduceKernel : vtkm::exec::FunctorBase
   BinaryFunctor BinaryOperator;
   vtkm::Id PortalLength;
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ReduceKernel()
     : Portal()
     , InitialValue()
@@ -149,11 +147,11 @@ struct ReduceKernel : vtkm::exec::FunctorBase
     {
       //This will only occur for a single index value, so this is the case
       //that needs to handle the initialValue
-      T partialSum = BinaryOperator(this->InitialValue, this->Portal.Get(offset));
+      T partialSum = static_cast<T>(BinaryOperator(this->InitialValue, this->Portal.Get(offset)));
       vtkm::Id currentIndex = offset + 1;
       while (currentIndex < this->PortalLength)
       {
-        partialSum = BinaryOperator(partialSum, this->Portal.Get(currentIndex));
+        partialSum = static_cast<T>(BinaryOperator(partialSum, this->Portal.Get(currentIndex)));
         ++currentIndex;
       }
       return partialSum;
@@ -162,10 +160,11 @@ struct ReduceKernel : vtkm::exec::FunctorBase
     {
       //optimize the usecase where all values are valid and we don't
       //need to check that we might go out of bounds
-      T partialSum = BinaryOperator(this->Portal.Get(offset), this->Portal.Get(offset + 1));
+      T partialSum =
+        static_cast<T>(BinaryOperator(this->Portal.Get(offset), this->Portal.Get(offset + 1)));
       for (int i = 2; i < reduceWidth; ++i)
       {
-        partialSum = BinaryOperator(partialSum, this->Portal.Get(offset + i));
+        partialSum = static_cast<T>(BinaryOperator(partialSum, this->Portal.Get(offset + i)));
       }
       return partialSum;
     }
@@ -262,7 +261,7 @@ struct ReduceByKeyAdd
   }
 
   template <typename T>
-  vtkm::Pair<T, ReduceKeySeriesStates> operator()(
+  VTKM_EXEC vtkm::Pair<T, ReduceKeySeriesStates> operator()(
     const vtkm::Pair<T, ReduceKeySeriesStates>& a,
     const vtkm::Pair<T, ReduceKeySeriesStates>& b) const
   {
@@ -286,6 +285,7 @@ struct ReduceByKeyAdd
 
 struct ReduceByKeyUnaryStencilOp
 {
+  VTKM_EXEC
   bool operator()(ReduceKeySeriesStates keySeriesState) const { return keySeriesState.fEnd; }
 };
 
@@ -311,6 +311,7 @@ struct ShiftCopyAndInit : vtkm::exec::FunctorBase
   {
   }
 
+  VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
     if (this->KeyState.Get(index).fStart)
@@ -480,8 +481,7 @@ struct CopyKernel
   {
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
     using ValueType = typename OutputPortalType::ValueType;
@@ -637,6 +637,57 @@ private:
   ValueType Value;
 };
 
+template <typename Iterator, typename IteratorTag>
+VTKM_EXEC static inline vtkm::Id IteratorDistanceImpl(const Iterator& from,
+                                                      const Iterator& to,
+                                                      IteratorTag)
+{
+  vtkm::Id dist = 0;
+  for (auto it = from; it != to; ++it)
+  {
+    ++dist;
+  }
+  return dist;
+}
+
+template <typename Iterator>
+VTKM_EXEC static inline vtkm::Id IteratorDistanceImpl(const Iterator& from,
+                                                      const Iterator& to,
+                                                      std::random_access_iterator_tag)
+{
+  return static_cast<vtkm::Id>(to - from);
+}
+
+#if defined(VTKM_HIP)
+
+template <typename Iterator>
+__host__ static inline vtkm::Id IteratorDistance(const Iterator& from, const Iterator& to)
+{
+  return static_cast<vtkm::Id>(std::distance(from, to));
+}
+
+template <typename Iterator>
+__device__ static inline vtkm::Id IteratorDistance(const Iterator& from, const Iterator& to)
+{
+  return IteratorDistanceImpl(
+    from, to, typename std::iterator_traits<Iterator>::iterator_category{});
+}
+
+#else
+
+template <typename Iterator>
+VTKM_EXEC static inline vtkm::Id IteratorDistance(const Iterator& from, const Iterator& to)
+{
+#ifndef VTKM_CUDA_DEVICE_PASS
+  return static_cast<vtkm::Id>(std::distance(from, to));
+#else
+  return IteratorDistanceImpl(
+    from, to, typename std::iterator_traits<Iterator>::iterator_category{});
+#endif
+}
+
+#endif
+
 template <class InputPortalType, class ValuesPortalType, class OutputPortalType>
 struct LowerBoundsKernel
 {
@@ -667,11 +718,10 @@ struct LowerBoundsKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    auto resultPos = std::lower_bound(
+    auto resultPos = vtkm::LowerBound(
       inputIterators.GetBegin(), inputIterators.GetEnd(), this->ValuesPortal.Get(index));
 
-    vtkm::Id resultIndex =
-      static_cast<vtkm::Id>(std::distance(inputIterators.GetBegin(), resultPos));
+    vtkm::Id resultIndex = IteratorDistance(inputIterators.GetBegin(), resultPos);
     this->OutputPortal.Set(index, resultIndex);
   }
 
@@ -715,13 +765,12 @@ struct LowerBoundsComparisonKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    auto resultPos = std::lower_bound(inputIterators.GetBegin(),
+    auto resultPos = vtkm::LowerBound(inputIterators.GetBegin(),
                                       inputIterators.GetEnd(),
                                       this->ValuesPortal.Get(index),
                                       this->CompareFunctor);
 
-    vtkm::Id resultIndex =
-      static_cast<vtkm::Id>(std::distance(inputIterators.GetBegin(), resultPos));
+    vtkm::Id resultIndex = IteratorDistance(inputIterators.GetBegin(), resultPos);
     this->OutputPortal.Set(index, resultIndex);
   }
 
@@ -1018,11 +1067,10 @@ struct UpperBoundsKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    auto resultPos = std::upper_bound(
+    auto resultPos = vtkm::UpperBound(
       inputIterators.GetBegin(), inputIterators.GetEnd(), this->ValuesPortal.Get(index));
 
-    vtkm::Id resultIndex =
-      static_cast<vtkm::Id>(std::distance(inputIterators.GetBegin(), resultPos));
+    vtkm::Id resultIndex = IteratorDistance(inputIterators.GetBegin(), resultPos);
     this->OutputPortal.Set(index, resultIndex);
   }
 
@@ -1066,13 +1114,12 @@ struct UpperBoundsKernelComparisonKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    auto resultPos = std::upper_bound(inputIterators.GetBegin(),
+    auto resultPos = vtkm::UpperBound(inputIterators.GetBegin(),
                                       inputIterators.GetEnd(),
                                       this->ValuesPortal.Get(index),
                                       this->CompareFunctor);
 
-    vtkm::Id resultIndex =
-      static_cast<vtkm::Id>(std::distance(inputIterators.GetBegin(), resultPos));
+    vtkm::Id resultIndex = IteratorDistance(inputIterators.GetBegin(), resultPos);
     this->OutputPortal.Set(index, resultIndex);
   }
 
@@ -1145,8 +1192,8 @@ struct InclusiveToExtendedKernel : vtkm::exec::FunctorBase
   {
     // The output array has one more value than the input, which holds the
     // total sum.
-    const ValueType result =
-      (index == 0) ? this->InitialValue : (index == this->InPortal.GetNumberOfValues())
+    const ValueType result = (index == 0) ? this->InitialValue
+                                          : (index == this->InPortal.GetNumberOfValues())
         ? this->FinalValue
         : this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
 

@@ -12,7 +12,6 @@
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 #include <vtkm/exec/arg/Fetch.h>
-#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm
 {
@@ -38,25 +37,19 @@ struct CellShape : vtkm::exec::arg::ExecutionSignatureTagBase
   using AspectTag = vtkm::exec::arg::AspectTagCellShape;
 };
 
-template <typename FetchTag, typename ConnectivityType, typename ExecObjectType>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagCellShape,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
-             ExecObjectType>
+template <typename FetchTag, typename ExecObjectType>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagCellShape, ExecObjectType>
 {
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
-
-  using ValueType = typename ThreadIndicesType::CellShapeTag;
-
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC auto Load(const ThreadIndicesType& indices, const ExecObjectType&) const
+    -> decltype(indices.GetCellShape())
   {
     return indices.GetCellShape();
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
+  template <typename ThreadIndicesType, typename ValueType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op.
   }

@@ -25,10 +25,6 @@ namespace worklet
 class ThresholdPoints
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool>
-  {
-  };
-
   template <typename UnaryPredicate>
   class ThresholdPointField : public vtkm::worklet::WorkletVisitPointsWithCells
   {

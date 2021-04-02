@@ -13,6 +13,8 @@
 #include <unordered_set>
 #include <type_traits>              // this is used for a safety check for default serialization
 
+#include <cassert>
+
 namespace diy
 {
   //! A serialization buffer. \ingroup Serialization
@@ -29,6 +31,11 @@ namespace diy
   {
                         MemoryBuffer(size_t position_ = 0):
                           position(position_)                       {}
+
+                        MemoryBuffer(MemoryBuffer&&)                =default;
+                        MemoryBuffer(const MemoryBuffer&)           =delete;
+    MemoryBuffer&       operator=(MemoryBuffer&&)                   =default;
+    MemoryBuffer&       operator=(const MemoryBuffer&)              =delete;
 
     virtual inline void save_binary(const char* x, size_t count) override;   //!< copy `count` bytes from `x` into the buffer
     virtual inline void append_binary(const char* x, size_t count) override; //!< append `count` bytes from `x` to end of buffer
@@ -52,7 +59,7 @@ namespace diy
     static float        growth_multiplier()                         { return 1.5; }
 
     // simple file IO
-    void                write(const std::string& fn) const          { std::ofstream out(fn.c_str()); out.write(&buffer[0], size()); }
+    void                write(const std::string& fn) const          { std::ofstream out(fn.c_str()); out.write(&buffer[0], static_cast<std::streamsize>(size())); }
     void                read(const std::string& fn)
     {
         std::ifstream in(fn.c_str(), std::ios::binary | std::ios::ate);
@@ -92,14 +99,23 @@ namespace diy
   template<class T>
   struct Serialization: public detail::Default
   {
-#if (defined(__clang__) && !defined(__ppc64__)) || (defined(__GNUC__) && __GNUC__ >= 5)
-    //exempt power-pc clang variants due to: https://gitlab.kitware.com/vtk/vtk-m/issues/201
+// GCC release date mapping
+// 20160726 == 4.9.4
+// 20150626 == 4.9.3
+// 20150623 == 4.8.5
+// 20150422 == 5.1
+// 20141030 == 4.9.2
+// See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html#abi.versioning.__GLIBCXX__
+#if !(defined(__GLIBCXX__) &&                                                                      \
+  (__GLIBCXX__ < 20150422 || __GLIBCXX__ == 20160726 || __GLIBCXX__ == 20150626 ||                 \
+   __GLIBCXX__ == 20150623))
+    //exempt glibcxx-4 variants as they don't have is_trivially_copyable implemented
     static_assert(std::is_trivially_copyable<T>::value, "Default serialization works only for trivially copyable types");
 #endif
 
     static void         save(BinaryBuffer& bb, const T& x)          { bb.save_binary((const char*)  &x, sizeof(T)); }
     static void         load(BinaryBuffer& bb, T& x)                { bb.load_binary((char*)        &x, sizeof(T)); }
-    static size_t       size(const T& x)                            { return sizeof(T); }
+    static size_t       size(const T&)                              { return sizeof(T); }
   };
 
   //! Saves `x` to `bb` by calling `diy::Serialization<T>::save(bb,x)`.
@@ -170,14 +186,16 @@ namespace diy
     static void         save(BinaryBuffer& bb, const MemoryBuffer& x)
     {
       diy::save(bb, x.position);
-      diy::save(bb, &x.buffer[0], x.position);
+      if (x.position > 0)
+          diy::save(bb, &x.buffer[0], x.position);
     }
 
     static void         load(BinaryBuffer& bb, MemoryBuffer& x)
     {
       diy::load(bb, x.position);
       x.buffer.resize(x.position);
-      diy::load(bb, &x.buffer[0], x.position);
+      if (x.position > 0)
+          diy::load(bb, &x.buffer[0], x.position);
     }
 
     static size_t       size(const MemoryBuffer& x)
@@ -204,7 +222,7 @@ namespace diy
     {
       size_t s;
       diy::load(bb, s);
-      v.resize(s);
+      v.resize(s, U());
       if (s > 0)
         diy::load(bb, &v[0], s);
     }
@@ -227,7 +245,7 @@ namespace diy
     {
       size_t s;
       diy::load(bb, s);
-      v.resize(s);
+      v.resize(s, U());
       if (s > 0)
         diy::load(bb, &v[0], s);
     }

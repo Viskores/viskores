@@ -209,25 +209,27 @@ static void TestMaxNeighborValue()
   vtkm::cont::ArrayHandle<vtkm::Float32> output;
 
   vtkm::cont::DataSet dataSet3D = testDataSet.Make3DUniformDataSet0();
-  dispatcher.Invoke(
-    dataSet3D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
-    dataSet3D.GetCellSet(),
-    output);
+  dispatcher.Invoke(dataSet3D.GetField("pointvar")
+                      .GetData()
+                      .ResetTypes<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(),
+                    dataSet3D.GetCellSet(),
+                    output);
 
   vtkm::Float32 expected3D[18] = { 110.3f, 120.3f, 120.3f, 110.3f, 120.3f, 120.3f,
                                    170.5f, 180.5f, 180.5f, 170.5f, 180.5f, 180.5f,
                                    170.5f, 180.5f, 180.5f, 170.5f, 180.5f, 180.5f };
   for (int i = 0; i < 18; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(output.GetPortalConstControl().Get(i), expected3D[i]),
+    VTKM_TEST_ASSERT(test_equal(output.ReadPortal().Get(i), expected3D[i]),
                      "Wrong result for MaxNeighborValue worklet");
   }
 
   vtkm::cont::DataSet dataSet2D = testDataSet.Make2DUniformDataSet1();
-  dispatcher.Invoke(
-    dataSet2D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
-    dataSet2D.GetCellSet(),
-    output);
+  dispatcher.Invoke(dataSet2D.GetField("pointvar")
+                      .GetData()
+                      .ResetTypes<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(),
+                    dataSet2D.GetCellSet(),
+                    output);
 
   vtkm::Float32 expected2D[25] = { 100.0f, 100.0f, 78.0f, 49.0f, 33.0f, 100.0f, 100.0f,
                                    78.0f,  50.0f,  48.0f, 94.0f, 94.0f, 91.0f,  91.0f,
@@ -236,7 +238,7 @@ static void TestMaxNeighborValue()
 
   for (int i = 0; i < 25; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(output.GetPortalConstControl().Get(i), expected2D[i]),
+    VTKM_TEST_ASSERT(test_equal(output.ReadPortal().Get(i), expected2D[i]),
                      "Wrong result for MaxNeighborValue worklet");
   }
 }

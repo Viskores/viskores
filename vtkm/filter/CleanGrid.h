@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_CleanGrid_h
 #define vtk_m_filter_CleanGrid_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_common_export.h>
 
 #include <vtkm/filter/FilterDataSet.h>
 
@@ -37,10 +37,9 @@ namespace filter
 /// \todo Add a feature to merge points that are coincident or within a
 /// tolerance.
 ///
-class VTKM_ALWAYS_EXPORT CleanGrid : public vtkm::filter::FilterDataSet<CleanGrid>
+class VTKM_FILTER_COMMON_EXPORT CleanGrid : public vtkm::filter::FilterDataSet<CleanGrid>
 {
 public:
-  VTKM_FILTER_EXPORT
   CleanGrid();
 
   /// When the CompactPointFields flag is true, the filter will identify any
@@ -87,40 +86,14 @@ public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData,
                                           vtkm::filter::PolicyBase<Policy> policy);
 
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
 
-  template <typename ValueType, typename Storage, typename Policy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<Policy>)
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy>)
   {
-    if (fieldMeta.IsPointField() && (this->GetCompactPointFields() || this->GetMergePoints()))
-    {
-      vtkm::cont::ArrayHandle<ValueType> compactedArray;
-      if (this->GetCompactPointFields())
-      {
-        compactedArray = this->PointCompactor.MapPointFieldDeep(input);
-        if (this->GetMergePoints())
-        {
-          compactedArray = this->PointMerger.MapPointField(compactedArray);
-        }
-      }
-      else if (this->GetMergePoints())
-      {
-        compactedArray = this->PointMerger.MapPointField(input);
-      }
-      result.AddField(fieldMeta.AsField(compactedArray));
-    }
-    else if (fieldMeta.IsCellField() && this->GetRemoveDegenerateCells())
-    {
-      result.AddField(fieldMeta.AsField(this->CellCompactor.ProcessCellField(input)));
-    }
-    else
-    {
-      result.AddField(fieldMeta.AsField(input));
-    }
-
-    return true;
+    return this->MapFieldOntoOutput(result, field);
   }
 
 private:
@@ -131,9 +104,8 @@ private:
   bool RemoveDegenerateCells;
   bool FastMerge;
 
-  VTKM_FILTER_EXPORT vtkm::cont::DataSet GenerateOutput(
-    const vtkm::cont::DataSet& inData,
-    vtkm::cont::CellSetExplicit<>& outputCellSet);
+  vtkm::cont::DataSet GenerateOutput(const vtkm::cont::DataSet& inData,
+                                     vtkm::cont::CellSetExplicit<>& outputCellSet);
 
   vtkm::worklet::RemoveUnusedPoints PointCompactor;
   vtkm::worklet::RemoveDegenerateCells CellCompactor;
@@ -141,11 +113,11 @@ private:
 };
 
 #ifndef vtkm_filter_CleanGrid_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(CleanGrid);
+extern template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::DataSet CleanGrid::DoExecute(
+  const vtkm::cont::DataSet&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 #endif
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/CleanGrid.hxx>
 
 #endif //vtk_m_filter_CleanGrid_h

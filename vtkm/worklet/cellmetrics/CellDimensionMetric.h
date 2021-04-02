@@ -62,7 +62,7 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellDimensionMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       CellShapeType shape,
-                                      const vtkm::exec::FunctorBase&)
+                                      vtkm::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -74,10 +74,10 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellDimensionMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagHexahedron,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
-  UNUSED(worklet);
+  UNUSED(ec);
 
   OutType gradop[8][3];
   OutType x1 = pts[0][0];

@@ -50,7 +50,7 @@
 ##  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 ##  Oliver Ruebel (LBNL)
 ##==============================================================================
-cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 
 # Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
@@ -59,12 +59,13 @@ find_package(VTKm REQUIRED QUIET)
 # Serial
 ####################################
 add_executable(ContourTree_Augmented ContourTreeApp.cxx)
-target_link_libraries(ContourTree_Augmented vtkm_filter)
+target_link_libraries(ContourTree_Augmented vtkm_filter vtkm_io)
 vtkm_add_target_information(ContourTree_Augmented
                             DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES ContourTreeApp.cxx)
 
 option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
+mark_as_advanced(VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
 if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
   target_compile_definitions(ContourTree_Augmented PRIVATE "DEBUG_PRINT")
 endif()
@@ -78,13 +79,14 @@ endif()
 ####################################
 if (VTKm_ENABLE_MPI)
   add_executable(ContourTree_Augmented_MPI ContourTreeApp.cxx)
-  target_link_libraries(ContourTree_Augmented_MPI vtkm_filter)
+  target_link_libraries(ContourTree_Augmented_MPI vtkm_filter vtkm_io MPI::MPI_CXX)
   vtkm_add_target_information(ContourTree_Augmented_MPI
                               MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES ContourTreeApp.cxx)
   target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "WITH_MPI")
 
   option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
+  mark_as_advanced(VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
   if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
     target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "DEBUG_PRINT")
   endif()

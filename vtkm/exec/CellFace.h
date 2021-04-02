@@ -10,11 +10,11 @@
 #ifndef vtk_m_exec_CellFace_h
 #define vtk_m_exec_CellFace_h
 
-#include <vtkm/Assert.h>
 #include <vtkm/CellShape.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/ErrorCode.h>
 #include <vtkm/Types.h>
 #include <vtkm/exec/FunctorBase.h>
-#include <vtkm/internal/Assume.h>
 
 namespace vtkm
 {
@@ -131,8 +131,8 @@ public:
       // 14: CELL_SHAPE_PYRAMID
       { { 0, 3, 2, 1 }, { 0, 1, 4, -1 }, { 1, 2, 4, -1 },
         { 2, 3, 4, -1 }, { 3, 0, 4, -1 },{ -1, -1, -1, -1 } }
-                                                          // clang-format on
-                                                        };
+        // clang-format on
+      };
     return pointsInFace[cellShapeId][faceIndex][localPointIndex];
   }
 };
@@ -140,65 +140,148 @@ public:
 } // namespace detail
 
 template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfFaces(CellShapeTag shape,
-                                                                const vtkm::exec::FunctorBase&)
+static inline VTKM_EXEC vtkm::ErrorCode CellFaceNumberOfFaces(CellShapeTag shape,
+                                                              vtkm::IdComponent& result)
 {
   (void)shape; //C4100 false positive workaround
   detail::CellFaceTables table;
-  return table.NumFaces(shape.Id);
+  result = table.NumFaces(shape.Id);
+  return vtkm::ErrorCode::Success;
 }
 
 template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfPoints(
-  vtkm::IdComponent faceIndex,
-  CellShapeTag shape,
-  const vtkm::exec::FunctorBase& worklet)
+VTKM_DEPRECATED(1.6, "Signature changed to CellFaceNumberOfFaces(shape, result).")
+static inline VTKM_EXEC vtkm::IdComponent
+  CellFaceNumberOfFaces(CellShapeTag shape, const vtkm::exec::FunctorBase& worklet)
 {
-  VTKM_ASSUME(faceIndex >= 0);
-  VTKM_ASSUME(faceIndex < detail::CellFaceTables::MAX_NUM_FACES);
-  if (faceIndex >= vtkm::exec::CellFaceNumberOfFaces(shape, worklet))
+  vtkm::IdComponent result;
+  vtkm::ErrorCode status = CellFaceNumberOfFaces(shape, result);
+  if (status != vtkm::ErrorCode::Success)
   {
-    worklet.RaiseError("Invalid face number.");
-    return 0;
+    worklet.RaiseError(vtkm::ErrorString(status));
+  }
+  return result;
+}
+
+template <typename CellShapeTag>
+static inline VTKM_EXEC vtkm::ErrorCode CellFaceNumberOfPoints(vtkm::IdComponent faceIndex,
+                                                               CellShapeTag shape,
+                                                               vtkm::IdComponent& result)
+{
+  if ((faceIndex < 0) || (faceIndex >= detail::CellFaceTables::MAX_NUM_FACES))
+  {
+    result = -1;
+    return vtkm::ErrorCode::InvalidFaceId;
+  }
+
+  vtkm::IdComponent numFaces;
+  VTKM_RETURN_ON_ERROR(vtkm::exec::CellFaceNumberOfFaces(shape, numFaces));
+  if (faceIndex >= numFaces)
+  {
+    result = -1;
+    return vtkm::ErrorCode::InvalidFaceId;
   }
   detail::CellFaceTables table;
-  return table.NumPointsInFace(shape.Id, faceIndex);
+  result = table.NumPointsInFace(shape.Id, faceIndex);
+  return vtkm::ErrorCode::Success;
 }
 
 template <typename CellShapeTag>
+VTKM_DEPRECATED(1.6, "Signature changed to CellFaceNumberOfPoints(faceIndex, shape, result).")
+static inline VTKM_EXEC vtkm::IdComponent
+  CellFaceNumberOfPoints(vtkm::IdComponent faceIndex,
+                         CellShapeTag shape,
+                         const vtkm::exec::FunctorBase& worklet)
+{
+  vtkm::IdComponent result;
+  vtkm::ErrorCode status = CellFaceNumberOfPoints(faceIndex, shape, result);
+  if (status != vtkm::ErrorCode::Success)
+  {
+    worklet.RaiseError(vtkm::ErrorString(status));
+  }
+  return result;
+}
+
+template <typename CellShapeTag>
+static inline VTKM_EXEC vtkm::ErrorCode CellFaceShape(vtkm::IdComponent faceIndex,
+                                                      CellShapeTag shape,
+                                                      vtkm::UInt8& result)
+{
+
+  if ((faceIndex < 0) || (faceIndex >= detail::CellFaceTables::MAX_NUM_FACES))
+  {
+    result = vtkm::CELL_SHAPE_EMPTY;
+    return vtkm::ErrorCode::InvalidFaceId;
+  }
+
+  vtkm::IdComponent numFacePoints;
+  VTKM_RETURN_ON_ERROR(CellFaceNumberOfPoints(faceIndex, shape, numFacePoints));
+  switch (numFacePoints)
+  {
+    case 3:
+      result = vtkm::CELL_SHAPE_TRIANGLE;
+      break;
+    case 4:
+      result = vtkm::CELL_SHAPE_QUAD;
+      break;
+    default:
+      result = vtkm::CELL_SHAPE_POLYGON;
+      break;
+  }
+  return vtkm::ErrorCode::Success;
+}
+
+template <typename CellShapeTag>
+VTKM_DEPRECATED(1.6, "Signature changed to CellFaceShape(faceIndex, shape, result).")
 static inline VTKM_EXEC vtkm::UInt8 CellFaceShape(vtkm::IdComponent faceIndex,
                                                   CellShapeTag shape,
                                                   const vtkm::exec::FunctorBase& worklet)
 {
-  VTKM_ASSUME(faceIndex >= 0);
-  VTKM_ASSUME(faceIndex < detail::CellFaceTables::MAX_NUM_FACES);
-  switch (CellFaceNumberOfPoints(faceIndex, shape, worklet))
+  vtkm::UInt8 result;
+  vtkm::ErrorCode status = CellFaceShape(faceIndex, shape, result);
+  if (status != vtkm::ErrorCode::Success)
   {
-    case 3:
-      return vtkm::CELL_SHAPE_TRIANGLE;
-    case 4:
-      return vtkm::CELL_SHAPE_QUAD;
-    default:
-      return vtkm::CELL_SHAPE_POLYGON;
+    worklet.RaiseError(vtkm::ErrorString(status));
   }
+  return result;
 }
 
 template <typename CellShapeTag>
+static inline VTKM_EXEC vtkm::ErrorCode CellFaceLocalIndex(vtkm::IdComponent pointIndex,
+                                                           vtkm::IdComponent faceIndex,
+                                                           CellShapeTag shape,
+                                                           vtkm::IdComponent& result)
+{
+  vtkm::IdComponent numPointsInFace;
+  result = -1;
+  VTKM_RETURN_ON_ERROR(vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
+  if (numPointsInFace < 1)
+  {
+    // An invalid face. We should already have gotten an error from
+    // CellFaceNumberOfPoints.
+    return vtkm::ErrorCode::InvalidFaceId;
+  }
+
+  detail::CellFaceTables table;
+  result = table.PointsInFace(shape.Id, faceIndex, pointIndex);
+  return vtkm::ErrorCode::Success;
+}
+
+template <typename CellShapeTag>
+VTKM_DEPRECATED(1.6,
+                "Signature changed to CellFaceLocalIndex(pointIndex, faceIndex, shape, result).")
 static inline VTKM_EXEC vtkm::IdComponent CellFaceLocalIndex(vtkm::IdComponent pointIndex,
                                                              vtkm::IdComponent faceIndex,
                                                              CellShapeTag shape,
                                                              const vtkm::exec::FunctorBase& worklet)
 {
-  vtkm::IdComponent numPointsInFace = vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, worklet);
-  if (numPointsInFace < 1)
+  vtkm::IdComponent result;
+  vtkm::ErrorCode status = CellFaceLocalIndex(pointIndex, faceIndex, shape, result);
+  if (status != vtkm::ErrorCode::Success)
   {
-    // An invalid face. We should already have gotten an error from
-    // CellFaceNumberOfPoints.
-    return -1;
+    worklet.RaiseError(vtkm::ErrorString(status));
   }
-
-  detail::CellFaceTables table;
-  return table.PointsInFace(shape.Id, faceIndex, pointIndex);
+  return result;
 }
 
 /// \brief Returns a canonical identifier for a cell face
@@ -212,68 +295,69 @@ static inline VTKM_EXEC vtkm::IdComponent CellFaceLocalIndex(vtkm::IdComponent p
 /// than a single point or single edge.
 ///
 template <typename CellShapeTag, typename GlobalPointIndicesVecType>
-static inline VTKM_EXEC vtkm::Id3 CellFaceCanonicalId(
+static inline VTKM_EXEC vtkm::ErrorCode CellFaceCanonicalId(
   vtkm::IdComponent faceIndex,
   CellShapeTag shape,
   const GlobalPointIndicesVecType& globalPointIndicesVec,
-  const vtkm::exec::FunctorBase& worklet)
+  vtkm::Id3& result)
 {
-  const vtkm::IdComponent numPointsInFace =
-    vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, worklet);
+  vtkm::IdComponent numPointsInFace;
+  result = { -1 };
+  VTKM_RETURN_ON_ERROR(vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
   if (numPointsInFace == 0)
   {
     // An invalid face. We should already have gotten an error from
     // CellFaceNumberOfPoints.
-    return vtkm::Id3(0);
+    return vtkm::ErrorCode::InvalidFaceId;
   }
 
   detail::CellFaceTables table;
   //Sort the first 3 face points/nodes in ascending order
-  vtkm::Id3 sorted(globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 0)],
-                   globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 1)],
-                   globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 2)]);
+  result = vtkm::Id3(globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 0)],
+                     globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 1)],
+                     globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 2)]);
   vtkm::Id temp;
-  if (sorted[0] > sorted[2])
+  if (result[0] > result[2])
   {
-    temp = sorted[0];
-    sorted[0] = sorted[2];
-    sorted[2] = temp;
+    temp = result[0];
+    result[0] = result[2];
+    result[2] = temp;
   }
-  if (sorted[0] > sorted[1])
+  if (result[0] > result[1])
   {
-    temp = sorted[0];
-    sorted[0] = sorted[1];
-    sorted[1] = temp;
+    temp = result[0];
+    result[0] = result[1];
+    result[1] = temp;
   }
-  if (sorted[1] > sorted[2])
+  if (result[1] > result[2])
   {
-    temp = sorted[1];
-    sorted[1] = sorted[2];
-    sorted[2] = temp;
+    temp = result[1];
+    result[1] = result[2];
+    result[2] = temp;
   }
 
   // Check the rest of the points to see if they are in the lowest 3
   for (vtkm::IdComponent pointIndex = 3; pointIndex < numPointsInFace; pointIndex++)
   {
     vtkm::Id nextPoint = globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, pointIndex)];
-    if (nextPoint < sorted[2])
+    if (nextPoint < result[2])
     {
-      if (nextPoint < sorted[1])
+      if (nextPoint < result[1])
       {
-        sorted[2] = sorted[1];
-        if (nextPoint < sorted[0])
+        result[2] = result[1];
+        if (nextPoint < result[0])
         {
-          sorted[1] = sorted[0];
-          sorted[0] = nextPoint;
+          result[1] = result[0];
+          result[0] = nextPoint;
         }
         else // nextPoint > P0, nextPoint < P1
         {
-          sorted[1] = nextPoint;
+          result[1] = nextPoint;
         }
       }
       else // nextPoint > P1, nextPoint < P2
       {
-        sorted[2] = nextPoint;
+        result[2] = nextPoint;
       }
     }
     else // nextPoint > P2
@@ -282,7 +366,25 @@ static inline VTKM_EXEC vtkm::Id3 CellFaceCanonicalId(
     }
   }
 
-  return sorted;
+  return vtkm::ErrorCode::Success;
+}
+
+template <typename CellShapeTag, typename GlobalPointIndicesVecType>
+VTKM_DEPRECATED(1.6,
+                "Signature changed to CellFaceCononicalId(faceIndex, shape, globalIds, result).")
+static inline VTKM_EXEC vtkm::Id3
+  CellFaceCanonicalId(vtkm::IdComponent faceIndex,
+                      CellShapeTag shape,
+                      const GlobalPointIndicesVecType& globalPointIndicesVec,
+                      const vtkm::exec::FunctorBase& worklet)
+{
+  vtkm::Id3 result;
+  vtkm::ErrorCode status = CellFaceCanonicalId(faceIndex, shape, globalPointIndicesVec, result);
+  if (status != vtkm::ErrorCode::Success)
+  {
+    worklet.RaiseError(vtkm::ErrorString(status));
+  }
+  return result;
 }
 }
 } // namespace vtkm::exec

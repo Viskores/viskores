@@ -88,8 +88,6 @@
 #include <iomanip>
 #include <iostream>
 
-//#define DEBUG_PRINT 1
-
 namespace
 {
 
@@ -103,10 +101,10 @@ void DebugPrint(const char* msg, vtkm::cont::ArrayHandle<U>& array)
 {
   vtkm::Id count = 20;
   count = std::min(count, array.GetNumberOfValues());
+  auto portal = array.ReadPortal();
   std::cout << std::setw(15) << msg << ": ";
   for (vtkm::Id i = 0; i < count; i++)
-    std::cout << std::setprecision(3) << std::setw(5) << array.GetPortalConstControl().Get(i)
-              << " ";
+    std::cout << std::setprecision(3) << std::setw(5) << portal.Get(i) << " ";
   std::cout << std::endl;
 }
 
@@ -115,9 +113,10 @@ void DebugPrint(const char* msg, vtkm::cont::ArrayHandleReverse<vtkm::cont::Arra
 {
   vtkm::Id count = 20;
   count = std::min(count, array.GetNumberOfValues());
+  auto portal = array.ReadPortal();
   std::cout << std::setw(15) << msg << ": ";
   for (vtkm::Id i = 0; i < count; i++)
-    std::cout << std::setw(5) << array.GetPortalConstControl().Get(i) << " ";
+    std::cout << std::setw(5) << portal.Get(i) << " ";
   std::cout << std::endl;
 }
 }

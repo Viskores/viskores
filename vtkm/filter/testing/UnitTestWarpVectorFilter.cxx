@@ -41,35 +41,23 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
 
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec1", vec1);
+  dataSet.AddPointField("vec1", vec1);
 
   vecType vector = vtkm::make_Vec<T>(static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(2.0));
   vtkm::cont::ArrayHandleConstant<vecType> vectorAH =
     vtkm::cont::make_ArrayHandleConstant(vector, dim * dim);
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec2", vectorAH);
+  dataSet.AddPointField("vec2", vectorAH);
 
   return dataSet;
 }
-
-class PolicyWarpVector : public vtkm::filter::PolicyBase<PolicyWarpVector>
-{
-public:
-  using vecType = vtkm::Vec3f;
-  struct TypeListTagWarpVectorTags
-    : vtkm::ListTagBase<vtkm::cont::ArrayHandleConstant<vecType>::StorageTag,
-                        vtkm::cont::ArrayHandle<vecType>::StorageTag>
-  {
-  };
-  using FieldStorageList = TypeListTagWarpVectorTags;
-};
 
 void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataSet& result)
 {
   VTKM_TEST_ASSERT(result.HasPointField("warpvector"), "Output filed WarpVector is missing");
   using vecType = vtkm::Vec3f;
   vtkm::cont::ArrayHandle<vecType> outputArray;
-  result.GetPointField("warpvector").GetData().CopyTo(outputArray);
-  auto outPortal = outputArray.GetPortalConstControl();
+  result.GetPointField("warpvector").GetData().AsArrayHandle(outputArray);
+  auto outPortal = outputArray.ReadPortal();
 
   for (vtkm::Id j = 0; j < dim; ++j)
   {
@@ -103,7 +91,7 @@ void TestWarpVectorFilter()
     vtkm::filter::WarpVector filter(scale);
     filter.SetUseCoordinateSystemAsField(true);
     filter.SetVectorField("vec2");
-    vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpVector());
+    vtkm::cont::DataSet result = filter.Execute(ds);
     CheckResult(filter, result);
   }
 
@@ -112,7 +100,7 @@ void TestWarpVectorFilter()
     vtkm::filter::WarpVector filter(scale);
     filter.SetActiveField("vec1");
     filter.SetVectorField("vec2");
-    vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpVector());
+    vtkm::cont::DataSet result = filter.Execute(ds);
     CheckResult(filter, result);
   }
 }

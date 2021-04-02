@@ -116,31 +116,28 @@ VTKM_CONT void TryCellConnectivity(const CellSetType& cellSet,
 
   TestWholeCellSetIn::RunCells(cellSet, numberOfElements, shapeIds, numberOfIndices, connectionSum);
 
-  std::cout << "    Number of elements: " << numberOfElements.GetPortalConstControl().Get(0)
-            << std::endl;
-  VTKM_TEST_ASSERT(test_equal_portals(numberOfElements.GetPortalConstControl(),
+  std::cout << "    Number of elements: " << numberOfElements.ReadPortal().Get(0) << std::endl;
+  VTKM_TEST_ASSERT(test_equal_portals(numberOfElements.ReadPortal(),
                                       vtkm::cont::make_ArrayHandleConstant(
                                         cellSet.GetNumberOfCells(), cellSet.GetNumberOfCells())
-                                        .GetPortalConstControl()),
+                                        .ReadPortal()),
                    "Incorrect number of elements.");
 
   std::cout << "    Shape Ids: ";
   vtkm::cont::printSummary_ArrayHandle(shapeIds, std::cout, true);
-  VTKM_TEST_ASSERT(
-    test_equal_portals(shapeIds.GetPortalConstControl(), expectedShapeIds.GetPortalConstControl()),
-    "Incorrect shape Ids.");
+  VTKM_TEST_ASSERT(test_equal_portals(shapeIds.ReadPortal(), expectedShapeIds.ReadPortal()),
+                   "Incorrect shape Ids.");
 
   std::cout << "    Number of indices: ";
   vtkm::cont::printSummary_ArrayHandle(numberOfIndices, std::cout, true);
-  VTKM_TEST_ASSERT(test_equal_portals(numberOfIndices.GetPortalConstControl(),
-                                      expectedNumberOfIndices.GetPortalConstControl()),
-                   "Incorrect number of indices.");
+  VTKM_TEST_ASSERT(
+    test_equal_portals(numberOfIndices.ReadPortal(), expectedNumberOfIndices.ReadPortal()),
+    "Incorrect number of indices.");
 
   std::cout << "    Sum of indices: ";
   vtkm::cont::printSummary_ArrayHandle(connectionSum, std::cout, true);
-  VTKM_TEST_ASSERT(
-    test_equal_portals(connectionSum.GetPortalConstControl(), expectedSum.GetPortalConstControl()),
-    "Incorrect sum of indices.");
+  VTKM_TEST_ASSERT(test_equal_portals(connectionSum.ReadPortal(), expectedSum.ReadPortal()),
+                   "Incorrect sum of indices.");
 }
 
 template <typename CellSetType,
@@ -161,31 +158,28 @@ VTKM_CONT void TryPointConnectivity(const CellSetType& cellSet,
   TestWholeCellSetIn::RunPoints(
     &cellSet, numberOfElements, shapeIds, numberOfIndices, connectionSum);
 
-  std::cout << "    Number of elements: " << numberOfElements.GetPortalConstControl().Get(0)
-            << std::endl;
-  VTKM_TEST_ASSERT(test_equal_portals(numberOfElements.GetPortalConstControl(),
+  std::cout << "    Number of elements: " << numberOfElements.ReadPortal().Get(0) << std::endl;
+  VTKM_TEST_ASSERT(test_equal_portals(numberOfElements.ReadPortal(),
                                       vtkm::cont::make_ArrayHandleConstant(
                                         cellSet.GetNumberOfPoints(), cellSet.GetNumberOfPoints())
-                                        .GetPortalConstControl()),
+                                        .ReadPortal()),
                    "Incorrect number of elements.");
 
   std::cout << "    Shape Ids: ";
   vtkm::cont::printSummary_ArrayHandle(shapeIds, std::cout, true);
-  VTKM_TEST_ASSERT(
-    test_equal_portals(shapeIds.GetPortalConstControl(), expectedShapeIds.GetPortalConstControl()),
-    "Incorrect shape Ids.");
+  VTKM_TEST_ASSERT(test_equal_portals(shapeIds.ReadPortal(), expectedShapeIds.ReadPortal()),
+                   "Incorrect shape Ids.");
 
   std::cout << "    Number of indices: ";
   vtkm::cont::printSummary_ArrayHandle(numberOfIndices, std::cout, true);
-  VTKM_TEST_ASSERT(test_equal_portals(numberOfIndices.GetPortalConstControl(),
-                                      expectedNumberOfIndices.GetPortalConstControl()),
-                   "Incorrect number of indices.");
+  VTKM_TEST_ASSERT(
+    test_equal_portals(numberOfIndices.ReadPortal(), expectedNumberOfIndices.ReadPortal()),
+    "Incorrect number of indices.");
 
   std::cout << "    Sum of indices: ";
   vtkm::cont::printSummary_ArrayHandle(connectionSum, std::cout, true);
-  VTKM_TEST_ASSERT(
-    test_equal_portals(connectionSum.GetPortalConstControl(), expectedSum.GetPortalConstControl()),
-    "Incorrect sum of indices.");
+  VTKM_TEST_ASSERT(test_equal_portals(connectionSum.ReadPortal(), expectedSum.ReadPortal()),
+                   "Incorrect sum of indices.");
 }
 
 VTKM_CONT
@@ -206,10 +200,11 @@ void TryExplicitGrid()
   vtkm::Id expectedCellIndexSum[] = { 28, 22, 29, 41 };
 
   vtkm::Id numCells = cellSet.GetNumberOfCells();
-  TryCellConnectivity(cellSet,
-                      vtkm::cont::make_ArrayHandle(expectedCellShapes, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellNumIndices, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+  TryCellConnectivity(
+    cellSet,
+    vtkm::cont::make_ArrayHandle(expectedCellShapes, numCells, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedCellNumIndices, numCells, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells, vtkm::CopyFlag::Off));
 
   vtkm::IdComponent expectedPointNumIndices[] = { 1, 2, 2, 1, 2, 4, 4, 2, 2, 1, 2 };
 
@@ -219,8 +214,8 @@ void TryExplicitGrid()
   TryPointConnectivity(
     cellSet,
     vtkm::cont::make_ArrayHandleConstant(vtkm::CellShapeTagVertex::Id, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints, vtkm::CopyFlag::Off));
 }
 
 VTKM_CONT
@@ -234,7 +229,8 @@ void TryCellSetPermutation()
   vtkm::Id permutationArray[] = { 2, 0, 1 };
 
   vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>, vtkm::cont::ArrayHandle<vtkm::Id>>
-    cellSet(vtkm::cont::make_ArrayHandle(permutationArray, 3), originalCellSet);
+    cellSet(vtkm::cont::make_ArrayHandle(permutationArray, 3, vtkm::CopyFlag::Off),
+            originalCellSet);
 
   vtkm::UInt8 expectedCellShapes[] = { vtkm::CELL_SHAPE_TETRA,
                                        vtkm::CELL_SHAPE_HEXAHEDRON,
@@ -245,10 +241,11 @@ void TryCellSetPermutation()
   vtkm::Id expectedCellIndexSum[] = { 29, 28, 22 };
 
   vtkm::Id numCells = cellSet.GetNumberOfCells();
-  TryCellConnectivity(cellSet,
-                      vtkm::cont::make_ArrayHandle(expectedCellShapes, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellNumIndices, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+  TryCellConnectivity(
+    cellSet,
+    vtkm::cont::make_ArrayHandle(expectedCellShapes, numCells, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedCellNumIndices, numCells, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells, vtkm::CopyFlag::Off));
 
   // Permutation cell set does not support cell to point connectivity.
 }
@@ -268,7 +265,7 @@ void TryStructuredGrid3D()
     cellSet,
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON, numCells),
     vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(8, numCells),
-    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells, vtkm::CopyFlag::Off));
 
   vtkm::IdComponent expectedPointNumIndices[18] = { 1, 2, 1, 1, 2, 1, 2, 4, 2,
                                                     2, 4, 2, 1, 2, 1, 1, 2, 1 };
@@ -279,8 +276,8 @@ void TryStructuredGrid3D()
   TryPointConnectivity(
     cellSet,
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_VERTEX, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints, vtkm::CopyFlag::Off));
 }
 
 VTKM_CONT
@@ -294,10 +291,11 @@ void TryStructuredGrid2D()
   vtkm::Id expectedCellIndexSum[2] = { 8, 12 };
 
   vtkm::Id numCells = cellSet.GetNumberOfCells();
-  TryCellConnectivity(cellSet,
-                      vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_QUAD, numCells),
-                      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(4, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+  TryCellConnectivity(
+    cellSet,
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_QUAD, numCells),
+    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(4, numCells),
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells, vtkm::CopyFlag::Off));
 
   vtkm::IdComponent expectedPointNumIndices[6] = { 1, 2, 1, 1, 2, 1 };
 
@@ -307,8 +305,8 @@ void TryStructuredGrid2D()
   TryPointConnectivity(
     cellSet,
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_VERTEX, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints, vtkm::CopyFlag::Off));
 }
 
 VTKM_CONT
@@ -322,10 +320,11 @@ void TryStructuredGrid1D()
   vtkm::Id expectedCellIndexSum[5] = { 1, 3, 5, 7, 9 };
 
   vtkm::Id numCells = cellSet.GetNumberOfCells();
-  TryCellConnectivity(cellSet,
-                      vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_LINE, numCells),
-                      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(2, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+  TryCellConnectivity(
+    cellSet,
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_LINE, numCells),
+    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(2, numCells),
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells, vtkm::CopyFlag::Off));
 
   vtkm::IdComponent expectedPointNumIndices[6] = { 1, 2, 2, 2, 2, 1 };
 
@@ -335,8 +334,8 @@ void TryStructuredGrid1D()
   TryPointConnectivity(
     cellSet,
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_VERTEX, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints, vtkm::CopyFlag::Off));
 }
 
 VTKM_CONT

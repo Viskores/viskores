@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_set_arcs_set_super_and_hypernode_arcs_h
-#define vtkm_worklet_contourtree_augmented_active_graph_set_arcs_set_super_and_hypernode_arcs_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_set_arcs_set_super_and_hypernode_arcs_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_set_arcs_set_super_and_hypernode_arcs_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -92,26 +92,26 @@ public:
   {
     vtkm::Id graphTarget = graphHyperarcsPortal.Get(graphVertex);
     // ignore all regular points
-    if (!isSupernode(graphTarget))
+    if (!IsSupernode(graphTarget))
       return;
 
     // copy the target to the arcs array
     vtkm::Id nodeID = graphGlobalIndexPortal.Get(graphVertex);
-    if (noSuchElement(graphTarget))
+    if (NoSuchElement(graphTarget))
     { // trunk hypernode
       treeArcsPortal.Set(nodeID, ((vtkm::Id)NO_SUCH_ELEMENT) | IS_HYPERNODE | IS_SUPERNODE);
       treeSuperparentsPortal.Set(nodeID, graphHyperIDPortal.Get(graphVertex));
     } // trunk hypernode
-    else if (isHypernode(graphTarget))
+    else if (IsHypernode(graphTarget))
     { // hypernode
       treeArcsPortal.Set(
-        nodeID, graphGlobalIndexPortal.Get(maskedIndex(graphTarget)) | IS_HYPERNODE | IS_SUPERNODE);
+        nodeID, graphGlobalIndexPortal.Get(MaskedIndex(graphTarget)) | IS_HYPERNODE | IS_SUPERNODE);
       treeSuperparentsPortal.Set(nodeID, graphHyperIDPortal.Get(graphVertex));
     } // hypernode
     else
     { // supernode
       treeArcsPortal.Set(nodeID,
-                         graphGlobalIndexPortal.Get(maskedIndex(graphTarget)) | IS_SUPERNODE);
+                         graphGlobalIndexPortal.Get(MaskedIndex(graphTarget)) | IS_SUPERNODE);
     } // supernode
 
     // In serial this worklet implements the following operation
@@ -122,24 +122,24 @@ public:
           indexType graphTarget = hyperarcs[graphVertex];
 
           // ignore all regular points
-          if (!isSupernode(graphTarget))
+          if (!IsSupernode(graphTarget))
             continue;
 
           // copy the target to the arcs array
           indexType nodeID = globalIndex[graphVertex];
-          if (noSuchElement(graphTarget))
+          if (NoSuchElement(graphTarget))
             { // trunk hypernode
-              tree.arcs[nodeID] = NO_SUCH_ELEMENT | IS_HYPERNODE | IS_SUPERNODE;
-              tree.superparents[nodeID] = hyperID[graphVertex];
+              tree.Arcs[nodeID] = NO_SUCH_ELEMENT | IS_HYPERNODE | IS_SUPERNODE;
+              tree.Superparents[nodeID] = hyperID[graphVertex];
             } // trunk hypernode
-          else if (isHypernode(graphTarget))
+          else if (IsHypernode(graphTarget))
             { // hypernode
-              tree.arcs[nodeID] = globalIndex[maskedIndex(graphTarget)] | IS_HYPERNODE | IS_SUPERNODE;
-              tree.superparents[nodeID] = hyperID[graphVertex];
+              tree.Arcs[nodeID] = globalIndex[MaskedIndex(graphTarget)] | IS_HYPERNODE | IS_SUPERNODE;
+              tree.Superparents[nodeID] = hyperID[graphVertex];
             } // hypernode
           else
             { // supernode
-              tree.arcs[nodeID] = globalIndex[maskedIndex(graphTarget)] | IS_SUPERNODE;
+              tree.Arcs[nodeID] = globalIndex[MaskedIndex(graphTarget)] | IS_SUPERNODE;
             } // supernode
 
         } // per graph vertex

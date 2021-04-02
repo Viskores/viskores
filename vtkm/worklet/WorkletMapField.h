@@ -12,25 +12,24 @@
 
 #include <vtkm/worklet/internal/WorkletBase.h>
 
-#include <vtkm/TypeListTag.h>
-
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagArrayIn.h>
 #include <vtkm/cont/arg/TransportTagArrayInOut.h>
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
-#include <vtkm/cont/arg/TypeCheckTagArray.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayIn.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayInOut.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayOut.h>
 
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 
+#include <vtkm/worklet/DispatcherMapField.h>
+
 namespace vtkm
 {
 namespace worklet
 {
-
-template <typename WorkletType>
-class DispatcherMapField;
 
 /// Base class for worklets that do a simple mapping of field arrays. All
 /// inputs and outputs are on the same domain. That is, all the arrays are the
@@ -49,7 +48,7 @@ public:
   ///
   struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
     using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -60,7 +59,7 @@ public:
   ///
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayOut;
     using TransportTag = vtkm::cont::arg::TransportTagArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
@@ -71,7 +70,7 @@ public:
   ///
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayInOut;
     using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };

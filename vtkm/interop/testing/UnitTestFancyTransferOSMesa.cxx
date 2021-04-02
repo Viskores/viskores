@@ -18,8 +18,6 @@ int UnitTestFancyTransferOSMesa(int argc, char* argv[])
 
   //get osmesa canvas to construct a context for us
   vtkm::rendering::CanvasOSMesa canvas(1024, 1024);
-  canvas.Initialize();
-  canvas.Activate();
 
   //get glew to bind all the opengl functions
   glewInit();

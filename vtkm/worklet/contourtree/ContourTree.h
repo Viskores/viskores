@@ -146,7 +146,6 @@
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
-#include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -182,10 +181,10 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Id> activeSupernodes;
 
   // references to join & split trees
-  MergeTree<T, StorageType> &joinTree, &splitTree;
+  MergeTree<T, StorageType>&joinTree, &splitTree;
 
   // references to join & split graphs
-  ChainGraph<T, StorageType> &joinGraph, &splitGraph;
+  ChainGraph<T, StorageType>&joinGraph, &splitGraph;
 
   // vectors of up & down degree used during computation
   vtkm::cont::ArrayHandle<vtkm::Id> updegree, downdegree;
@@ -866,8 +865,8 @@ void ContourTree<T, StorageType>::CollectSaddlePeak(
 {
   // Collect the valid saddle peak pairs
   std::vector<vtkm::Pair<vtkm::Id, vtkm::Id>> superarcVector;
-  const auto supernodePortal = supernodes.GetPortalConstControl();
-  const auto superarcPortal = superarcs.GetPortalConstControl();
+  const auto supernodePortal = supernodes.ReadPortal();
+  const auto superarcPortal = superarcs.ReadPortal();
   for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
   {
     // ID of regular node
@@ -903,7 +902,7 @@ void ContourTree<T, StorageType>::CollectSaddlePeak(
 
   // Setting saddlePeak reference to the make_ArrayHandle directly does not work
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> tempArray =
-    vtkm::cont::make_ArrayHandle(superarcVector);
+    vtkm::cont::make_ArrayHandle(superarcVector, vtkm::CopyFlag::Off);
 
   // now sort it
   vtkm::cont::Algorithm::Sort(tempArray, SaddlePeakSort());
@@ -913,8 +912,8 @@ void ContourTree<T, StorageType>::CollectSaddlePeak(
   const vtkm::Id arcVecSize = static_cast<vtkm::Id>(superarcVector.size());
   for (vtkm::Id superarc = 0; superarc < arcVecSize; superarc++)
   {
-    std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).first << " ";
-    std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).second
+    std::cout << std::setw(PRINT_WIDTH) << saddlePeak.WritePortal().Get(superarc).first << " ";
+    std::cout << std::setw(PRINT_WIDTH) << saddlePeak.WritePortal().Get(superarc).second
               << std::endl;
   }
 #endif
@@ -931,46 +930,46 @@ void ContourTree<T, StorageType>::DebugPrint(const char* message)
 
   // print out the supernode arrays
   vtkm::Id nSupernodes = supernodes.GetNumberOfValues();
-  printHeader(nSupernodes);
+  PrintHeader(nSupernodes);
 
-  printIndices("Supernodes", supernodes);
+  PrintIndices("Supernodes", supernodes);
 
   vtkm::cont::ArrayHandle<vtkm::Id> supervalues;
   vtkm::cont::ArrayCopy(PermuteValueType(supernodes, values), supervalues);
-  printValues("Value", supervalues);
+  PrintValues("Value", supervalues);
 
-  printIndices("Up degree", updegree);
-  printIndices("Down degree", downdegree);
-  printIndices("Join arc", joinArcs);
-  printIndices("Split arc", splitArcs);
-  printIndices("Superarcs", superarcs);
+  PrintIndices("Up degree", updegree);
+  PrintIndices("Down degree", downdegree);
+  PrintIndices("Join arc", joinArcs);
+  PrintIndices("Split arc", splitArcs);
+  PrintIndices("Superarcs", superarcs);
   std::cout << std::endl;
 
   // print out the active supernodes
   vtkm::Id nActiveSupernodes = activeSupernodes.GetNumberOfValues();
-  printHeader(nActiveSupernodes);
+  PrintHeader(nActiveSupernodes);
 
-  printIndices("Active Supernodes", activeSupernodes);
+  PrintIndices("Active Supernodes", activeSupernodes);
 
   vtkm::cont::ArrayHandle<vtkm::Id> activeUpdegree;
   vtkm::cont::ArrayCopy(PermuteIndexType(activeSupernodes, updegree), activeUpdegree);
-  printIndices("Active Up Degree", activeUpdegree);
+  PrintIndices("Active Up Degree", activeUpdegree);
 
   vtkm::cont::ArrayHandle<vtkm::Id> activeDowndegree;
   vtkm::cont::ArrayCopy(PermuteIndexType(activeSupernodes, downdegree), activeDowndegree);
-  printIndices("Active Down Degree", activeDowndegree);
+  PrintIndices("Active Down Degree", activeDowndegree);
 
   vtkm::cont::ArrayHandle<vtkm::Id> activeJoinArcs;
   vtkm::cont::ArrayCopy(PermuteIndexType(activeSupernodes, joinArcs), activeJoinArcs);
-  printIndices("Active Join Arcs", activeJoinArcs);
+  PrintIndices("Active Join Arcs", activeJoinArcs);
 
   vtkm::cont::ArrayHandle<vtkm::Id> activeSplitArcs;
   vtkm::cont::ArrayCopy(PermuteIndexType(activeSupernodes, splitArcs), activeSplitArcs);
-  printIndices("Active Split Arcs", activeSplitArcs);
+  PrintIndices("Active Split Arcs", activeSplitArcs);
 
   vtkm::cont::ArrayHandle<vtkm::Id> activeSuperarcs;
   vtkm::cont::ArrayCopy(PermuteIndexType(activeSupernodes, superarcs), activeSuperarcs);
-  printIndices("Active Superarcs", activeSuperarcs);
+  PrintIndices("Active Superarcs", activeSuperarcs);
   std::cout << std::endl;
 } // DebugPrint()
 }

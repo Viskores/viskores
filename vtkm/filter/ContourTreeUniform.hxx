@@ -69,7 +69,7 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 ContourTreeMesh2D::ContourTreeMesh2D()
-  : vtkm::filter::FilterCell<ContourTreeMesh2D>()
+  : vtkm::filter::FilterField<ContourTreeMesh2D>()
 {
   this->SetOutputFieldName("saddlePeak");
 }
@@ -105,7 +105,7 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
 }
 //-----------------------------------------------------------------------------
 ContourTreeMesh3D::ContourTreeMesh3D()
-  : vtkm::filter::FilterCell<ContourTreeMesh3D>()
+  : vtkm::filter::FilterField<ContourTreeMesh3D>()
 {
   this->SetOutputFieldName("saddlePeak");
 }

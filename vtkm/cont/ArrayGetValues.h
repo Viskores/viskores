@@ -35,8 +35,8 @@ namespace cont
 ///
 /// These functions should not be called repeatedly in a loop to fetch all
 /// values from an array handle. The much more efficient way to do this is to
-/// use the proper control-side portals (ArrayHandle::GetPortalControl() and
-/// ArrayHandle::GetPortalConstControl()).
+/// use the proper control-side portals (ArrayHandle::WritePortal() and
+/// ArrayHandle::ReadPortal()).
 ///
 /// This method will attempt to copy the data using the device that the input
 /// data is already valid on. If the input data is only valid in the control
@@ -101,8 +101,7 @@ VTKM_CONT void ArrayGetValues(const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids
     { // Retry on any device if the first attempt failed.
       VTKM_LOG_S(vtkm::cont::LogLevel::Error,
                  "Failed to run ArrayGetValues on device '"
-                   << devId.GetName()
-                   << "'. Falling back to control-side copy.");
+                   << devId.GetName() << "'. Falling back to control-side copy.");
       copyComplete = vtkm::cont::Algorithm::Copy(vtkm::cont::DeviceAdapterTagAny{}, input, output);
     }
   }
@@ -111,10 +110,10 @@ VTKM_CONT void ArrayGetValues(const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids
   { // Fallback to a control-side copy if the device copy fails or if the device
     // is undefined:
     const vtkm::Id numVals = ids.GetNumberOfValues();
-    auto idPortal = ids.GetPortalConstControl();
-    auto dataPortal = data.GetPortalConstControl();
+    auto idPortal = ids.ReadPortal();
+    auto dataPortal = data.ReadPortal();
     output.Allocate(numVals);
-    auto outPortal = output.GetPortalControl();
+    auto outPortal = output.WritePortal();
     for (vtkm::Id i = 0; i < numVals; ++i)
     {
       outPortal.Set(i, dataPortal.Get(idPortal.Get(i)));

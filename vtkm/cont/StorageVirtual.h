@@ -15,17 +15,23 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Storage.h>
+#include <vtkm/cont/internal/ArrayHandleDeprecated.h>
+#include <vtkm/cont/internal/StorageDeprecated.h>
 #include <vtkm/cont/internal/TransferInfo.h>
 #include <vtkm/internal/ArrayPortalVirtual.h>
 
 #include <typeinfo>
+
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "ArrayHandleVirtual is removed. Do not include StorageVirtual.h"
+#endif
 
 namespace vtkm
 {
 namespace cont
 {
 
-struct VTKM_ALWAYS_EXPORT StorageTagVirtual
+struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6) StorageTagVirtual
 {
 };
 
@@ -122,11 +128,11 @@ public:
 
   //This needs to cause a host side sync!
   //This needs to work before we execute on a device
-  const vtkm::internal::PortalVirtualBase* GetPortalControl();
+  const vtkm::internal::PortalVirtualBase* WritePortal();
 
   //This needs to cause a host side sync!
   //This needs to work before we execute on a device
-  const vtkm::internal::PortalVirtualBase* GetPortalConstControl() const;
+  const vtkm::internal::PortalVirtualBase* ReadPortal() const;
 
   /// Returns the DeviceAdapterId for the current device. If there is no device
   /// with an up-to-date copy of the data, VTKM_DEVICE_ADAPTER_UNDEFINED is
@@ -170,8 +176,7 @@ private:
                                        vtkm::Id numberOfValues,
                                        vtkm::cont::DeviceAdapterId devId);
 
-  //These might need to exist in TransferInfoArray
-  mutable bool HostUpToDate = false;
+  //This might need to exist in TransferInfoArray
   mutable bool DeviceUpToDate = false;
   std::shared_ptr<vtkm::cont::internal::TransferInfoArray> DeviceTransferState =
     std::make_shared<vtkm::cont::internal::TransferInfoArray>();
@@ -188,7 +193,7 @@ public:
   explicit StorageVirtualImpl(vtkm::cont::ArrayHandle<T, S>&& ah) noexcept;
 
   VTKM_CONT
-  ~StorageVirtualImpl() = default;
+  ~StorageVirtualImpl() override = default;
 
   const vtkm::cont::ArrayHandle<T, S>& GetHandle() const { return this->Handle; }
 
@@ -224,6 +229,7 @@ private:
 
 } // namespace detail
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T>
 class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagVirtual>
 {
@@ -249,15 +255,15 @@ public:
   PortalType GetPortal()
   {
     return make_ArrayPortalRef(
-      static_cast<const vtkm::ArrayPortalVirtual<T>*>(this->VirtualStorage->GetPortalControl()),
+      reinterpret_cast<const vtkm::ArrayPortalVirtual<T>*>(this->VirtualStorage->WritePortal()),
       this->GetNumberOfValues());
   }
 
   PortalConstType GetPortalConst() const
   {
-    return make_ArrayPortalRef(static_cast<const vtkm::ArrayPortalVirtual<T>*>(
-                                 this->VirtualStorage->GetPortalConstControl()),
-                               this->GetNumberOfValues());
+    return make_ArrayPortalRef(
+      reinterpret_cast<const vtkm::ArrayPortalVirtual<T>*>(this->VirtualStorage->ReadPortal()),
+      this->GetNumberOfValues());
   }
 
   vtkm::Id GetNumberOfValues() const { return this->VirtualStorage->GetNumberOfValues(); }
@@ -280,7 +286,10 @@ private:
     : VirtualStorage(virtualStorage)
   {
   }
+
+  VTKM_STORAGE_OLD_STYLE;
 };
+VTKM_DEPRECATED_SUPPRESS_END
 
 } // namespace internal
 }

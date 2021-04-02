@@ -62,16 +62,6 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor3D::DoExecute(
 
   return dataset;
 }
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ZFPCompressor3D::DoMapField(vtkm::cont::DataSet&,
-                                                  const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                                  const vtkm::filter::FieldMetadata&,
-                                                  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  return false;
-}
 }
 } // namespace vtkm::filter
 #endif

@@ -9,7 +9,6 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -26,10 +25,10 @@ static unsigned int uid = 1;
 
 #define PRINT_INFO(msg) std::cout << "[" << comm.rank() << ":" << __LINE__ << "] " msg << std::endl;
 
-#define PRINT_INFO_0(msg)                                                                          \
-  if (comm.rank() == 0)                                                                            \
-  {                                                                                                \
-    std::cout << "[" << comm.rank() << ":" << __LINE__ << "] " msg << std::endl;                   \
+#define PRINT_INFO_0(msg)                                                        \
+  if (comm.rank() == 0)                                                          \
+  {                                                                              \
+    std::cout << "[" << comm.rank() << ":" << __LINE__ << "] " msg << std::endl; \
   }
 
 template <typename T>
@@ -41,8 +40,9 @@ vtkm::cont::ArrayHandle<T> CreateArray(T min, T max, vtkm::Id numVals, vtkm::Typ
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(numVals);
 
-  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()),
-                vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalControl()),
+  auto portal = handle.WritePortal();
+  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                vtkm::cont::ArrayPortalToIteratorEnd(portal),
                 [&]() { return static_cast<T>(dis(gen)); });
   return handle;
 }
@@ -63,8 +63,9 @@ vtkm::cont::ArrayHandle<T> CreateArray(const T& min,
   }
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(numVals);
-  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()),
-                vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalControl()),
+  auto portal = handle.WritePortal();
+  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                vtkm::cont::ArrayPortalToIteratorEnd(portal),
                 [&]() {
                   T val;
                   for (int cc = 0; cc < size; ++cc)
@@ -86,11 +87,10 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
   vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   VTKM_TEST_ASSERT(ranges.GetNumberOfValues() == 1, "Wrong number of ranges");
 
-  auto portal = ranges.GetPortalConstControl();
+  auto portal = ranges.ReadPortal();
   auto range = portal.Get(0);
   PRINT_INFO(<< "  expecting [" << min << ", " << max << "], got [" << range.Min << ", "
-             << range.Max
-             << "]");
+             << range.Max << "]");
   VTKM_TEST_ASSERT(range.IsNonEmpty() && range.Min >= static_cast<ValueType>(min) &&
                      range.Max <= static_cast<ValueType>(max),
                    "Got wrong range.");
@@ -104,15 +104,12 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
   vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   VTKM_TEST_ASSERT(ranges.GetNumberOfValues() == size, "Wrong number of ranges");
 
-  auto portal = ranges.GetPortalConstControl();
+  auto portal = ranges.ReadPortal();
   for (int cc = 0; cc < size; ++cc)
   {
     auto range = portal.Get(cc);
     PRINT_INFO(<< "  [" << cc << "] expecting [" << min[cc] << ", " << max[cc] << "], got ["
-               << range.Min
-               << ", "
-               << range.Max
-               << "]");
+               << range.Min << ", " << range.Max << "]");
     VTKM_TEST_ASSERT(range.IsNonEmpty() && range.Min >= static_cast<T>(min[cc]) &&
                        range.Max <= static_cast<T>(max[cc]),
                      "Got wrong range.");
@@ -151,8 +148,7 @@ void TryRangeGlobalComputeDS(const ValueType& min, const ValueType& max)
 
   // let's create a dummy dataset with a bunch of fields.
   vtkm::cont::DataSet dataset;
-  vtkm::cont::DataSetFieldAdd::AddPointField(
-    dataset,
+  dataset.AddPointField(
     "pointvar",
     CreateArray(lmin, lmax, ARRAY_SIZE, typename vtkm::TypeTraits<ValueType>::DimensionalityTag()));
 
@@ -172,8 +168,7 @@ void TryRangeGlobalComputePDS(const ValueType& min, const ValueType& max)
   {
     // let's create a dummy dataset with a bunch of fields.
     vtkm::cont::DataSet dataset;
-    vtkm::cont::DataSetFieldAdd::AddPointField(
-      dataset,
+    dataset.AddPointField(
       "pointvar",
       CreateArray(min, max, ARRAY_SIZE, typename vtkm::TypeTraits<ValueType>::DimensionalityTag()));
     mb.AppendPartition(dataset);

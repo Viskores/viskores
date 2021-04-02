@@ -35,9 +35,9 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Invoker.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/MaskIndices.h>
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
@@ -164,17 +164,11 @@ public:
     vtkm::cont::DynamicCellSet Result;
 
     // Generic handler:
-    template <typename CellSetType,
-              typename PointComponentType,
-              typename PointStorageType,
-              typename CellNormalComponentType,
-              typename CellNormalStorageType>
-    VTKM_CONT void operator()(
-      const CellSetType& cellSet,
-      const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& coords,
-      const vtkm::cont::ArrayHandle<vtkm::Vec<CellNormalComponentType, 3>, CellNormalStorageType>&
-        cellNormals,
-      ...)
+    template <typename CellSetType, typename CoordsType, typename CellNormalsType>
+    VTKM_CONT void operator()(const CellSetType& cellSet,
+                              const CoordsType& coords,
+                              const CellNormalsType& cellNormals,
+                              ...)
     {
       const auto numCells = cellSet.GetNumberOfCells();
       if (numCells == 0)
@@ -202,8 +196,8 @@ public:
 
         cellShapes.ReleaseResourcesExecution();
 
-        auto rangeSizes = rangeHandleSizes.GetPortalConstControl().Get(0);
-        auto rangeShapes = rangeHandleShapes.GetPortalConstControl().Get(0);
+        auto rangeSizes = rangeHandleSizes.ReadPortal().Get(0);
+        auto rangeShapes = rangeHandleShapes.ReadPortal().Get(0);
 
         const bool sameSize = vtkm::Abs(rangeSizes.Max - rangeSizes.Min) < 0.5;
         const bool sameShape = vtkm::Abs(rangeShapes.Max - rangeShapes.Min) < 0.5;
@@ -245,9 +239,7 @@ public:
         conn.Allocate(connSize);
 
         // Trim the last value off for the group vec array:
-        auto offsetsTrim =
-          vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-        auto connGroupVec = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsetsTrim);
+        auto connGroupVec = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
         WorkletWindToCellNormalsGeneric worklet;
         invoker(worklet, cellSet, coords, cellNormals, connGroupVec);
@@ -259,19 +251,11 @@ public:
     }
 
     // Specialization for CellSetExplicit
-    template <typename S,
-              typename C,
-              typename O,
-              typename PointComponentType,
-              typename PointStorageType,
-              typename CellNormalComponentType,
-              typename CellNormalStorageType>
-    VTKM_CONT void operator()(
-      const vtkm::cont::CellSetExplicit<S, C, O>& cellSet,
-      const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& coords,
-      const vtkm::cont::ArrayHandle<vtkm::Vec<CellNormalComponentType, 3>, CellNormalStorageType>&
-        cellNormals,
-      int)
+    template <typename S, typename C, typename O, typename CoordsType, typename CellNormalsType>
+    VTKM_CONT void operator()(const vtkm::cont::CellSetExplicit<S, C, O>& cellSet,
+                              const CoordsType& coords,
+                              const CellNormalsType& cellNormals,
+                              int)
     {
       using WindToCellNormals = vtkm::worklet::DispatcherMapField<WorkletWindToCellNormals>;
 
@@ -291,9 +275,7 @@ public:
 
       const auto& offsets =
         cellSet.GetOffsetsArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
-      auto offsetsTrim =
-        vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsetsTrim);
+      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
       WindToCellNormals dispatcher;
       dispatcher.Invoke(cellNormals, cells, coords);
@@ -307,17 +289,11 @@ public:
     }
 
     // Specialization for CellSetSingleType
-    template <typename C,
-              typename PointComponentType,
-              typename PointStorageType,
-              typename CellNormalComponentType,
-              typename CellNormalStorageType>
-    VTKM_CONT void operator()(
-      const vtkm::cont::CellSetSingleType<C>& cellSet,
-      const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& coords,
-      const vtkm::cont::ArrayHandle<vtkm::Vec<CellNormalComponentType, 3>, CellNormalStorageType>&
-        cellNormals,
-      int)
+    template <typename C, typename CoordsType, typename CellNormalsType>
+    VTKM_CONT void operator()(const vtkm::cont::CellSetSingleType<C>& cellSet,
+                              const CoordsType& coords,
+                              const CellNormalsType& cellNormals,
+                              int)
     {
       using WindToCellNormals = vtkm::worklet::DispatcherMapField<WorkletWindToCellNormals>;
 
@@ -337,9 +313,7 @@ public:
 
       const auto& offsets =
         cellSet.GetOffsetsArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
-      auto offsetsTrim =
-        vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsetsTrim);
+      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
       WindToCellNormals dispatcher;
       dispatcher.Invoke(cellNormals, cells, coords);
@@ -354,16 +328,10 @@ public:
     }
   };
 
-  template <typename CellSetType,
-            typename PointComponentType,
-            typename PointStorageType,
-            typename CellNormalComponentType,
-            typename CellNormalStorageType>
-  VTKM_CONT static vtkm::cont::DynamicCellSet Run(
-    const CellSetType& cellSet,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& coords,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<CellNormalComponentType, 3>, CellNormalStorageType>&
-      cellNormals)
+  template <typename CellSetType, typename CoordsType, typename CellNormalsType>
+  VTKM_CONT static vtkm::cont::DynamicCellSet Run(const CellSetType& cellSet,
+                                                  const CoordsType& coords,
+                                                  const CellNormalsType& cellNormals)
   {
     Launcher launcher;
     // The last arg is just to help with overload resolution on the templated

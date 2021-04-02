@@ -72,18 +72,17 @@ void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
   vtkm::cont::ArrayHandle<vtkm::Vec3f> resultArrayHandle;
   result.GetField(fieldName, vtkm::cont::Field::Association::POINTS)
     .GetData()
-    .CopyTo(resultArrayHandle);
+    .AsArrayHandle(resultArrayHandle);
 
-  vtkm::cont::ArrayHandleVirtualCoordinates outPointsArrayHandle =
-    result.GetCoordinateSystem().GetData();
+  auto outPointsArrayHandle = result.GetCoordinateSystem().GetDataAsMultiplexer();
 
-  auto points = coords.GetData();
+  auto points = coords.GetDataAsMultiplexer();
   VTKM_TEST_ASSERT(points.GetNumberOfValues() == resultArrayHandle.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 
-  auto pointsPortal = points.GetPortalConstControl();
-  auto resultsPortal = resultArrayHandle.GetPortalConstControl();
-  auto outPointsPortal = outPointsArrayHandle.GetPortalConstControl();
+  auto pointsPortal = points.ReadPortal();
+  auto resultsPortal = resultArrayHandle.ReadPortal();
+  auto outPointsPortal = outPointsArrayHandle.ReadPortal();
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
   {

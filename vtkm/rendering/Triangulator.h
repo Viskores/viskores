@@ -79,14 +79,14 @@ public:
   }; //class CountTriangles
 
   template <int DIM>
-  class TrianglulateStructured : public vtkm::worklet::WorkletVisitCellsWithPoints
+  class TriangulateStructured : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:
     using ControlSignature = void(CellSetIn cellset, FieldInCell, WholeArrayOut);
     using ExecutionSignature = void(IncidentElementIndices, _2, _3);
     VTKM_CONT
-    TrianglulateStructured() {}
+    TriangulateStructured() {}
 
 #if defined(VTKM_MSVC)
 #pragma warning(push)
@@ -267,12 +267,12 @@ public:
     }
   }; //class UniqueTriangles
 
-  class Trianglulate : public vtkm::worklet::WorkletVisitCellsWithPoints
+  class Triangulate : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
 
   public:
     VTKM_CONT
-    Trianglulate() {}
+    Triangulate() {}
     using ControlSignature = void(CellSetIn cellset, FieldInCell, WholeArrayOut);
     using ExecutionSignature = void(_2, CellShape, PointIndices, WorkIndex, _3);
 
@@ -610,14 +610,14 @@ public:
         outputIndices.Set(triangleOffset + 5, triangle);
       }
     }
-  }; //class Trianglulate
+  }; //class Triangulate
 
 public:
   VTKM_CONT
   Triangulator() {}
 
   VTKM_CONT
-  void ExternalTrianlges(vtkm::cont::ArrayHandle<vtkm::Id4>& outputIndices,
+  void ExternalTriangles(vtkm::cont::ArrayHandle<vtkm::Id4>& outputIndices,
                          vtkm::Id& outputTriangles)
   {
     //Eliminate unseen triangles
@@ -660,7 +660,7 @@ public:
 
       vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0, 1, numCells);
       outputIndices.Allocate(numCells * 12);
-      vtkm::worklet::DispatcherMapTopology<TrianglulateStructured<3>>(TrianglulateStructured<3>())
+      vtkm::worklet::DispatcherMapTopology<TriangulateStructured<3>>(TriangulateStructured<3>())
         .Invoke(cellSetStructured3D, cellIdxs, outputIndices);
 
       outputTriangles = numCells * 12;
@@ -673,7 +673,7 @@ public:
 
       vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0, 1, numCells);
       outputIndices.Allocate(numCells * 2);
-      vtkm::worklet::DispatcherMapTopology<TrianglulateStructured<2>>(TrianglulateStructured<2>())
+      vtkm::worklet::DispatcherMapTopology<TriangulateStructured<2>>(TriangulateStructured<2>())
         .Invoke(cellSetStructured2D, cellIdxs, outputIndices);
 
       outputTriangles = numCells * 2;
@@ -682,9 +682,11 @@ public:
     }
     else
     {
+      auto cellSetUnstructured =
+        cellset.ResetCellSetList(VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED{});
       vtkm::cont::ArrayHandle<vtkm::Id> trianglesPerCell;
       vtkm::worklet::DispatcherMapTopology<CountTriangles>(CountTriangles())
-        .Invoke(cellset, trianglesPerCell);
+        .Invoke(cellSetUnstructured, trianglesPerCell);
 
       vtkm::Id totalTriangles = 0;
       totalTriangles = vtkm::cont::Algorithm::Reduce(trianglesPerCell, vtkm::Id(0));
@@ -693,8 +695,8 @@ public:
       vtkm::cont::Algorithm::ScanExclusive(trianglesPerCell, cellOffsets);
       outputIndices.Allocate(totalTriangles);
 
-      vtkm::worklet::DispatcherMapTopology<Trianglulate>(Trianglulate())
-        .Invoke(cellset, cellOffsets, outputIndices);
+      vtkm::worklet::DispatcherMapTopology<Triangulate>(Triangulate())
+        .Invoke(cellSetUnstructured, cellOffsets, outputIndices);
 
       outputTriangles = totalTriangles;
     }
@@ -702,7 +704,7 @@ public:
     //get rid of any triagles we cannot see
     if (!fastPath)
     {
-      ExternalTrianlges(outputIndices, outputTriangles);
+      ExternalTriangles(outputIndices, outputTriangles);
     }
   }
 }; // class Triangulator

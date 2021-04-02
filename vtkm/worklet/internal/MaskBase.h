@@ -10,8 +10,8 @@
 #ifndef vtk_m_worklet_internal_MaskBase_h
 #define vtk_m_worklet_internal_MaskBase_h
 
+#include <vtkm/internal/DecayHelpers.h>
 #include <vtkm/internal/ExportMacros.h>
-#include <vtkm/worklet/internal/DecayHelpers.h>
 
 namespace vtkm
 {
@@ -30,7 +30,7 @@ struct VTKM_ALWAYS_EXPORT MaskBase
 };
 
 template <typename T>
-using is_mask = std::is_base_of<MaskBase, remove_cvref<T>>;
+using is_mask = std::is_base_of<MaskBase, vtkm::internal::remove_cvref<T>>;
 }
 }
 }

@@ -12,8 +12,9 @@
 
 #include <vtkm/cont/StorageVirtual.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/TransferInfo.h>
 
+#include <vtkm/cont/internal/ArrayTransfer.h>
+#include <vtkm/cont/internal/TransferInfo.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 
@@ -101,8 +102,8 @@ StorageVirtualImpl<T, S>::StorageVirtualImpl(const vtkm::cont::ArrayHandle<T, S>
 VTKM_CONT
 template <typename T, typename S>
 StorageVirtualImpl<T, S>::StorageVirtualImpl(vtkm::cont::ArrayHandle<T, S>&& ah) noexcept
-  : vtkm::cont::internal::detail::StorageVirtual(),
-    Handle(std::move(ah))
+  : vtkm::cont::internal::detail::StorageVirtual()
+  , Handle(std::move(ah))
 {
 }
 
@@ -133,7 +134,7 @@ template <typename T, typename S>
 void StorageVirtualImpl<T, S>::Shrink(vtkm::Id numberOfValues)
 {
   this->DropAllPortals();
-  this->Handle.Shrink(numberOfValues);
+  this->Handle.Allocate(numberOfValues, vtkm::CopyFlag::On);
 }
 
 struct PortalWrapperToDevice
@@ -143,7 +144,8 @@ struct PortalWrapperToDevice
                          Handle&& handle,
                          vtkm::cont::internal::TransferInfoArray& payload) const
   {
-    auto portal = handle.PrepareForInput(device);
+    vtkm::cont::Token token;
+    auto portal = handle.PrepareForInput(device, token);
     using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
     vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
     return transfer(device, payload, portal);
@@ -158,14 +160,16 @@ struct PortalWrapperToDevice
     using ACCESS_MODE = vtkm::cont::internal::detail::StorageVirtual::OutputMode;
     if (mode == ACCESS_MODE::WRITE)
     {
-      auto portal = handle.PrepareForOutput(numberOfValues, device);
+      vtkm::cont::Token token;
+      auto portal = handle.PrepareForOutput(numberOfValues, device, token);
       using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
       vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
       return transfer(device, payload, portal);
     }
     else
     {
-      auto portal = handle.PrepareForInPlace(device);
+      vtkm::cont::Token token;
+      auto portal = handle.PrepareForInPlace(device, token);
       using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
       vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
       return transfer(device, payload, portal);
@@ -177,7 +181,7 @@ template <typename T, typename S>
 void StorageVirtualImpl<T, S>::ControlPortalForInput(
   vtkm::cont::internal::TransferInfoArray& payload) const
 {
-  auto portal = this->Handle.GetPortalConstControl();
+  auto portal = this->Handle.ReadPortal();
   using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
   vtkm::cont::make_hostPortal<DerivedPortal>(payload, portal);
 }
@@ -187,7 +191,7 @@ inline void make_writableHostPortal(std::true_type,
                                     vtkm::cont::internal::TransferInfoArray& payload,
                                     HandleType& handle)
 {
-  auto portal = handle.GetPortalControl();
+  auto portal = handle.WritePortal();
   using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
   vtkm::cont::make_hostPortal<DerivedPortal>(payload, portal);
 }
@@ -232,6 +236,7 @@ void StorageVirtualImpl<T, S>::TransferPortalForOutput(
 }
 } // namespace detail
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T>
 void Storage<T, vtkm::cont::StorageTagVirtual>::Allocate(vtkm::Id numberOfValues)
 {
@@ -356,10 +361,10 @@ public:
 
 #ifndef vtk_m_cont_StorageVirtual_cxx
 
-#define VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(T)                                                     \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<T>;                         \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>;           \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>;           \
+#define VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(T)                                           \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<T>;               \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>; \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 4>>
 
 VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(char);
@@ -412,21 +417,25 @@ struct ArrayTransfer<T, vtkm::cont::StorageTagVirtual, Device> : detail::ArrayTr
   {
   }
 
-  VTKM_CONT typename Superclass::PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  VTKM_CONT typename Superclass::PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData),
+                                                                      vtkm::cont::Token&)
   {
     return this->Superclass::PrepareForInput(Device());
   }
 
-  VTKM_CONT typename Superclass::PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  VTKM_CONT typename Superclass::PortalExecution PrepareForOutput(vtkm::Id numberOfValues,
+                                                                  vtkm::cont::Token&)
   {
     return this->Superclass::PrepareForOutput(numberOfValues, Device());
   }
 
-  VTKM_CONT typename Superclass::PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  VTKM_CONT typename Superclass::PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData),
+                                                                   vtkm::cont::Token&)
   {
     return this->Superclass::PrepareForInPlace(Device());
   }
 };
+VTKM_DEPRECATED_SUPPRESS_END
 }
 }
 } // namespace vtkm::cont::internal

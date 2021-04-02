@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_initialize_edge_far_from_active_indices_h
-#define vtkm_worklet_contourtree_augmented_active_graph_initialize_edge_far_from_active_indices_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_initialize_edge_far_from_active_indices_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_initialize_edge_far_from_active_indices_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -91,7 +91,7 @@ public:
     // first we retrieve the ID of the far end
     vtkm::Id currEdgeFar = edgeFarPortal.Get(edge);
     // next we follow up to an extremum
-    currEdgeFar = vtkm::worklet::contourtree_augmented::maskedIndex(extremaPortal.Get(currEdgeFar));
+    currEdgeFar = vtkm::worklet::contourtree_augmented::MaskedIndex(extremaPortal.Get(currEdgeFar));
     // now we reverse lookup to get the new ID
     edgeFarPortal.Set(edge, activeIndicesPortal.Get(currEdgeFar));
 
@@ -101,7 +101,7 @@ public:
     //   // first we retrieve the ID of the far end
     //   indexType currEdgeFar = edgeFar[edge];
     //   // next we follow up to an extremum
-    //   currEdgeFar = maskedIndex(extrema[currEdgeFar]);
+    //   currEdgeFar = MaskedIndex(extrema[currEdgeFar]);
     //   // now we reverse lookup to get the new ID
     //   edgeFar[edge] = activeIndices[currEdgeFar];
     // } per edge

@@ -10,11 +10,15 @@
 
 set(headers
   CellInterpolationHelper.h
-  EvaluatorStatus.h
+  EulerIntegrator.h
+  Field.h
   GridEvaluators.h
-  Integrators.h
+  GridEvaluatorStatus.h
+  IntegratorBase.h
+  IntegratorStatus.h
   Particles.h
   ParticleAdvectionWorklets.h
+  RK4Integrator.h
   TemporalGridEvaluators.h
   )
 

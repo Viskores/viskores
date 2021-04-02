@@ -10,15 +10,19 @@
 #ifndef vtk_m_cont_ArrayHandleCounting_h
 #define vtk_m_cont_ArrayHandleCounting_h
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/StorageImplicit.h>
+#include <vtkm/cont/ArrayHandleImplicit.h>
 
+#include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
 
 namespace vtkm
 {
 namespace cont
 {
+
+struct VTKM_ALWAYS_EXPORT StorageTagCounting
+{
+};
 
 namespace internal
 {
@@ -48,24 +52,6 @@ public:
   {
   }
 
-  template <typename OtherValueType>
-  VTKM_EXEC_CONT ArrayPortalCounting(const ArrayPortalCounting<OtherValueType>& src)
-    : Start(src.Start)
-    , Step(src.Step)
-    , NumberOfValues(src.NumberOfValues)
-  {
-  }
-
-  template <typename OtherValueType>
-  VTKM_EXEC_CONT ArrayPortalCounting<ValueType>& operator=(
-    const ArrayPortalCounting<OtherValueType>& src)
-  {
-    this->Start = src.Start;
-    this->Step = src.Step;
-    this->NumberOfValues = src.NumberOfValues;
-    return *this;
-  }
-
   VTKM_EXEC_CONT
   ValueType GetStart() const { return this->Start; }
 
@@ -87,12 +73,49 @@ private:
   vtkm::Id NumberOfValues;
 };
 
-/// A convenience class that provides a typedef to the appropriate tag for
-/// a counting storage.
-template <typename ValueType>
-struct ArrayHandleCountingTraits
+namespace detail
 {
-  using Tag = vtkm::cont::StorageTagImplicit<vtkm::cont::internal::ArrayPortalCounting<ValueType>>;
+
+template <typename T, typename UseVecTraits = vtkm::HasVecTraits<T>>
+struct CanCountImpl;
+
+template <typename T>
+struct CanCountImpl<T, std::false_type>
+{
+  using TTraits = vtkm::TypeTraits<T>;
+  static constexpr bool IsNumeric =
+    !std::is_same<typename TTraits::NumericTag, vtkm::TypeTraitsUnknownTag>::value;
+
+  static constexpr bool value = IsNumeric;
+};
+
+template <typename T>
+struct CanCountImpl<T, std::true_type>
+{
+  using VTraits = vtkm::VecTraits<T>;
+  using BaseType = typename VTraits::BaseComponentType;
+  static constexpr bool IsBool = std::is_same<BaseType, bool>::value;
+
+  static constexpr bool value = CanCountImpl<BaseType, std::false_type>::value && !IsBool;
+};
+
+} // namespace detail
+
+// Not all types can be counted.
+template <typename T>
+struct CanCount
+{
+  static constexpr bool value = detail::CanCountImpl<T>::value;
+};
+
+template <typename T>
+using StorageTagCountingSuperclass =
+  vtkm::cont::StorageTagImplicit<internal::ArrayPortalCounting<T>>;
+
+template <typename T>
+struct Storage<T, typename std::enable_if<CanCount<T>::value, vtkm::cont::StorageTagCounting>::type>
+  : Storage<T, StorageTagCountingSuperclass<T>>
+{
 };
 
 } // namespace internal
@@ -101,21 +124,18 @@ struct ArrayHandleCountingTraits
 /// contains a increment value, that is increment for each step between zero
 /// and the passed in length
 template <typename CountingValueType>
-class ArrayHandleCounting : public vtkm::cont::ArrayHandle<
-                              CountingValueType,
-                              typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag>
+class ArrayHandleCounting
+  : public vtkm::cont::ArrayHandle<CountingValueType, vtkm::cont::StorageTagCounting>
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(
-    ArrayHandleCounting,
-    (ArrayHandleCounting<CountingValueType>),
-    (vtkm::cont::ArrayHandle<
-      CountingValueType,
-      typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag>));
+  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleCounting,
+                             (ArrayHandleCounting<CountingValueType>),
+                             (vtkm::cont::ArrayHandle<CountingValueType, StorageTagCounting>));
 
   VTKM_CONT
   ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::Id length)
-    : Superclass(typename Superclass::PortalConstControl(start, step, length))
+    : Superclass(internal::PortalToArrayHandleImplicitBuffers(
+        internal::ArrayPortalCounting<CountingValueType>(start, step, length)))
   {
   }
 };
@@ -150,8 +170,7 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleCounting<T>>
 };
 
 template <typename T>
-struct SerializableTypeString<
-  vtkm::cont::ArrayHandle<T, typename vtkm::cont::ArrayHandleCounting<T>::StorageTag>>
+struct SerializableTypeString<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagCounting>>
   : SerializableTypeString<vtkm::cont::ArrayHandleCounting<T>>
 {
 };
@@ -171,7 +190,7 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    auto portal = obj.GetPortalConstControl();
+    auto portal = obj.ReadPortal();
     vtkmdiy::save(bb, portal.GetStart());
     vtkmdiy::save(bb, portal.GetStep());
     vtkmdiy::save(bb, portal.GetNumberOfValues());
@@ -191,8 +210,7 @@ public:
 };
 
 template <typename T>
-struct Serialization<
-  vtkm::cont::ArrayHandle<T, typename vtkm::cont::ArrayHandleCounting<T>::StorageTag>>
+struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagCounting>>
   : Serialization<vtkm::cont::ArrayHandleCounting<T>>
 {
 };

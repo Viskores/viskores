@@ -73,11 +73,23 @@ struct TemplatedTests
     ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*> const_portal(
       array, array + ARRAY_SIZE);
 
+    using PortalType = decltype(portal);
+    using PortalConstType = decltype(const_portal);
+
+    std::cout << "Check that PortalSupports* results are valid:" << std::endl;
+    VTKM_TEST_ASSERT(vtkm::internal::PortalSupportsSets<PortalType>::value,
+                     "Writable portals should support Set operations");
+    VTKM_TEST_ASSERT(vtkm::internal::PortalSupportsGets<PortalType>::value,
+                     "Writable portals should support Get operations");
+    VTKM_TEST_ASSERT(!vtkm::internal::PortalSupportsSets<PortalConstType>::value,
+                     "Read-only portals should not allow Set operations");
+    VTKM_TEST_ASSERT(vtkm::internal::PortalSupportsGets<PortalConstType>::value,
+                     "Read-only portals should support Get operations");
+
     std::cout << "  Check that ArrayPortalToIterators is not doing indirection." << std::endl;
-// If you get a compile error here about mismatched types, it might be
-// that ArrayPortalToIterators is not properly overloaded to return the
-// original iterator.
-#if !defined(VTKM_MSVC) || (defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0)
+    // If you get a compile error here about mismatched types, it might be
+    // that ArrayPortalToIterators is not properly overloaded to return the
+    // original iterator.
     VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorBegin(portal) == array,
                      "Begin iterator wrong.");
     VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(portal) == array + ARRAY_SIZE,
@@ -86,24 +98,6 @@ struct TemplatedTests
                      "Begin const iterator wrong.");
     VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(const_portal) == array + ARRAY_SIZE,
                      "End const iterator wrong.");
-#else  //VTKM_MSVC
-    // The MSVC compiler issues warnings when using raw pointer math when in
-    // debug mode. To keep the compiler happy (and add some safety checks),
-    // wrap the iterator in checked_array_iterator.
-    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorBegin(portal) ==
-                       stdext::checked_array_iterator<ValueType*>(array, ARRAY_SIZE),
-                     "Begin iterator wrong.");
-    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(portal) ==
-                       stdext::checked_array_iterator<ValueType*>(array, ARRAY_SIZE) + ARRAY_SIZE,
-                     "End iterator wrong.");
-    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorBegin(const_portal) ==
-                       stdext::checked_array_iterator<const ValueType*>(array, ARRAY_SIZE),
-                     "Begin const iterator wrong.");
-    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(const_portal) ==
-                       stdext::checked_array_iterator<const ValueType*>(array, ARRAY_SIZE) +
-                         ARRAY_SIZE,
-                     "End const iterator wrong.");
-#endif // VTKM_MSVC
 
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE, "Portal array size wrong.");
     VTKM_TEST_ASSERT(const_portal.GetNumberOfValues() == ARRAY_SIZE,

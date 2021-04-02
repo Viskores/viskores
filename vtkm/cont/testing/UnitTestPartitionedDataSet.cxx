@@ -16,7 +16,6 @@
 #include <vtkm/cont/BoundsCompute.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/FieldRangeCompute.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -83,11 +82,9 @@ static void PartitionedDataSetTest()
   Field2GlobeRange.Include(Set2Field2Range);
 
   using vtkm::cont::FieldRangeCompute;
-  VTKM_TEST_ASSERT(FieldRangeCompute(pds, "pointvar").GetPortalConstControl().Get(0) ==
-                     Field1GlobeRange,
+  VTKM_TEST_ASSERT(FieldRangeCompute(pds, "pointvar").ReadPortal().Get(0) == Field1GlobeRange,
                    "Local field value range info incorrect");
-  VTKM_TEST_ASSERT(FieldRangeCompute(pds, "cellvar").GetPortalConstControl().Get(0) ==
-                     Field2GlobeRange,
+  VTKM_TEST_ASSERT(FieldRangeCompute(pds, "cellvar").ReadPortal().Get(0) == Field2GlobeRange,
                    "Local field value range info incorrect");
 
   vtkm::Range SourceRange; //test the validity of member function GetField(FieldName, BlockId)
@@ -127,9 +124,9 @@ void DataSet_Compare(vtkm::cont::DataSet& leftDataSet, vtkm::cont::DataSet& righ
   for (vtkm::Id j = 0; j < leftDataSet.GetNumberOfFields(); j++)
   {
     vtkm::cont::ArrayHandle<vtkm::Float32> lDataArray;
-    leftDataSet.GetField(j).GetData().CopyTo(lDataArray);
+    leftDataSet.GetField(j).GetData().AsArrayHandle(lDataArray);
     vtkm::cont::ArrayHandle<vtkm::Float32> rDataArray;
-    rightDataSet.GetField(j).GetData().CopyTo(rDataArray);
+    rightDataSet.GetField(j).GetData().AsArrayHandle(rDataArray);
     VTKM_TEST_ASSERT(lDataArray == rDataArray, "field value info incorrect");
   }
   return;

@@ -9,31 +9,34 @@
 ##============================================================================
 
 set(headers
-  ArrayExportMacros.h
-  ArrayHandleBasicImpl.h
-  ArrayHandleBasicImpl.hxx
+  ArrayHandleDeprecated.h
   ArrayHandleExecutionManager.h
-  ArrayManagerExecution.h
-  ArrayManagerExecutionShareWithControl.h
   ArrayPortalFromIterators.h
   ArrayTransfer.h
   AtomicInterfaceControl.h
   AtomicInterfaceExecution.h
+  Buffer.h
+  CastInvalidValue.h
+  CellLocatorBase.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
+  DeviceAdapterMemoryManager.h
+  DeviceAdapterMemoryManagerShared.h
   DeviceAdapterListHelpers.h
-  DynamicTransform.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
   KXSort.h
   OptionParser.h
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
+  PointLocatorBase.h
   ReverseConnectivityBuilder.h
+  StorageDeprecated.h
   StorageError.h
   TransferInfo.h
-  VariantArrayHandleContainer.h
+  Variant.h
   VirtualObjectTransfer.h
+  VirtualObjectTransferInstantiate.h
   VirtualObjectTransferShareWithControl.h
   )
 

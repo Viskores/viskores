@@ -10,15 +10,9 @@
 
 set(headers
   BOVDataSetReader.h
-  VTKDataSetReaderBase.h
-  VTKPolyDataReader.h
-  VTKStructuredGridReader.h
-  VTKRectilinearGridReader.h
-  VTKStructuredPointsReader.h
-  VTKUnstructuredGridReader.h
   VTKDataSetReader.h
 )
 
-vtkm_declare_headers(${headers})
-
-add_subdirectory(testing)
+vtkm_declare_headers(
+  ${headers}
+)

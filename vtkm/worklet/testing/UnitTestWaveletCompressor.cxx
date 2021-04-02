@@ -229,10 +229,11 @@ void TestDecomposeReconstruct3D(vtkm::Float64 cratio)
   compressor.EvaluateReconstruction(inputArray, reconstructArray);
 
   timer.Start();
+  auto reconstructPortal = reconstructArray.ReadPortal();
+  auto inputPortal = inputArray.ReadPortal();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
-    VTKM_TEST_ASSERT(test_equal(reconstructArray.GetPortalConstControl().Get(i),
-                                inputArray.GetPortalConstControl().Get(i)),
+    VTKM_TEST_ASSERT(test_equal(reconstructPortal.Get(i), inputPortal.Get(i)),
                      "WaveletCompressor 3D failed...");
   }
   elapsedTime1 = timer.GetElapsedTime();
@@ -296,10 +297,11 @@ void TestDecomposeReconstruct2D(vtkm::Float64 cratio)
   compressor.EvaluateReconstruction(inputArray, reconstructArray);
 
   timer.Start();
+  auto reconstructPortal = reconstructArray.ReadPortal();
+  auto inputPortal = inputArray.ReadPortal();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
-    VTKM_TEST_ASSERT(test_equal(reconstructArray.GetPortalConstControl().Get(i),
-                                inputArray.GetPortalConstControl().Get(i)),
+    VTKM_TEST_ASSERT(test_equal(reconstructPortal.Get(i), inputPortal.Get(i)),
                      "WaveletCompressor 2D failed...");
   }
   elapsedTime1 = timer.GetElapsedTime();
@@ -317,7 +319,8 @@ void TestDecomposeReconstruct1D(vtkm::Float64 cratio)
   {
     tmpVector.push_back(100.0 * vtkm::Sin(static_cast<vtkm::Float64>(i) / 100.0));
   }
-  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = vtkm::cont::make_ArrayHandle(tmpVector);
+  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray =
+    vtkm::cont::make_ArrayHandle(tmpVector, vtkm::CopyFlag::On);
 
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
@@ -357,10 +360,11 @@ void TestDecomposeReconstruct1D(vtkm::Float64 cratio)
   compressor.EvaluateReconstruction(inputArray, reconstructArray);
 
   timer.Start();
+  auto reconstructPortal = reconstructArray.ReadPortal();
+  auto inputPortal = inputArray.ReadPortal();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
-    VTKM_TEST_ASSERT(test_equal(reconstructArray.GetPortalConstControl().Get(i),
-                                inputArray.GetPortalConstControl().Get(i)),
+    VTKM_TEST_ASSERT(test_equal(reconstructPortal.Get(i), inputPortal.Get(i)),
                      "WaveletCompressor 1D failed...");
   }
   elapsedTime = timer.GetElapsedTime();

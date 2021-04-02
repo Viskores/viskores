@@ -35,23 +35,38 @@ struct TransportTagArrayIn
 template <typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
 {
+  // MSVC will issue deprecation warnings here if this template is instantiated with
+  // a deprecated class even if the template is used from a section of code where
+  // deprecation warnings are suppressed. This is annoying behavior since this template
+  // has no control over what class it is used with. To get around it, we have to
+  // suppress all deprecation warnings here.
+#ifdef VTKM_MSVC
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+#endif
+
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInput(Device()));
+  using ExecObjectType = decltype(
+    std::declval<ContObjectType>().PrepareForInput(Device(), std::declval<vtkm::cont::Token&>()));
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(const ContObjectType& object,
                                       const InputDomainType& vtkmNotUsed(inputDomain),
                                       vtkm::Id inputRange,
-                                      vtkm::Id vtkmNotUsed(outputRange)) const
+                                      vtkm::Id vtkmNotUsed(outputRange),
+                                      vtkm::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != inputRange)
     {
       throw vtkm::cont::ErrorBadValue("Input array to worklet invocation the wrong size.");
     }
 
-    return object.PrepareForInput(Device());
+    return object.PrepareForInput(Device(), token);
   }
+
+#ifdef VTKM_MSVC
+  VTKM_DEPRECATED_SUPPRESS_END
+#endif
 };
 }
 }

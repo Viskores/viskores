@@ -12,13 +12,19 @@
 
 #include <vtkm/VirtualObjectBase.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "PointLocator with virtual methods is removed. Do not include PointLocator.h"
+#endif
+
 namespace vtkm
 {
 namespace exec
 {
 
-class VTKM_ALWAYS_EXPORT PointLocator : public vtkm::VirtualObjectBase
+class VTKM_DEPRECATED(1.6, "PointLocator with virtual methods no longer supported.")
+  VTKM_ALWAYS_EXPORT PointLocator : public vtkm::VirtualObjectBase
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
 public:
   VTKM_EXEC_CONT virtual ~PointLocator() noexcept
   {
@@ -26,10 +32,14 @@ public:
     // troublesome with CUDA __host__ __device__ markup.
   }
 
-  VTKM_EXEC virtual void FindNearestNeighbor(const vtkm::Vec3f& queryPoint,
-                                             vtkm::Id& pointId,
-                                             vtkm::FloatDefault& distanceSquared) const = 0;
+  VTKM_EXEC
+  virtual void FindNearestNeighbor(const vtkm::Vec3f& queryPoint,
+                                   vtkm::Id& pointId,
+                                   vtkm::FloatDefault& distanceSquared) const = 0;
+  VTKM_DEPRECATED_SUPPRESS_END
 };
-}
-}
+
+} // vtkm::exec
+} // vtkm
+
 #endif // vtk_m_exec_PointLocator_h

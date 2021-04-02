@@ -34,18 +34,17 @@ namespace internal
 // Given a cell and a point on the cell, find the two edges that are
 // associated with this point in canonical index
 template <typename PointFromCellSetType>
-VTKM_EXEC void FindRelatedEdges(const vtkm::Id& pointIndex,
-                                const vtkm::Id& cellIndexG,
-                                const PointFromCellSetType& pFromCellSet,
-                                vtkm::Id2& edge0G,
-                                vtkm::Id2& edge1G,
-                                const vtkm::exec::FunctorBase& worklet)
+VTKM_EXEC vtkm::ErrorCode FindRelatedEdges(const vtkm::Id& pointIndex,
+                                           const vtkm::Id& cellIndexG,
+                                           const PointFromCellSetType& pFromCellSet,
+                                           vtkm::Id2& edge0G,
+                                           vtkm::Id2& edge1G)
 {
   typename PointFromCellSetType::CellShapeTag cellShape = pFromCellSet.GetCellShape(cellIndexG);
   typename PointFromCellSetType::IndicesType cellConnections = pFromCellSet.GetIndices(cellIndexG);
   vtkm::IdComponent numPointsInCell = pFromCellSet.GetNumberOfIndices(cellIndexG);
-  vtkm::IdComponent numEdges =
-    vtkm::exec::CellEdgeNumberOfEdges(numPointsInCell, cellShape, worklet);
+  vtkm::IdComponent numEdges;
+  VTKM_RETURN_ON_ERROR(vtkm::exec::CellEdgeNumberOfEdges(numPointsInCell, cellShape, numEdges));
   vtkm::IdComponent edgeIndex = -1;
   // Find the two edges with the pointIndex
   while (true)
@@ -53,13 +52,16 @@ VTKM_EXEC void FindRelatedEdges(const vtkm::Id& pointIndex,
     ++edgeIndex;
     if (edgeIndex >= numEdges)
     {
-      worklet.RaiseError("Bad cell. Could not find two incident edges.");
-      return;
+      // Bad cell. Could not find two incident edges.
+      return vtkm::ErrorCode::MalformedCellDetected;
     }
-    vtkm::Id2 canonicalEdgeId(cellConnections[vtkm::exec::CellEdgeLocalIndex(
-                                numPointsInCell, 0, edgeIndex, cellShape, worklet)],
-                              cellConnections[vtkm::exec::CellEdgeLocalIndex(
-                                numPointsInCell, 1, edgeIndex, cellShape, worklet)]);
+    vtkm::IdComponent2 localEdgeIndices;
+    VTKM_RETURN_ON_ERROR(vtkm::exec::CellEdgeLocalIndex(
+      numPointsInCell, 0, edgeIndex, cellShape, localEdgeIndices[0]));
+    VTKM_RETURN_ON_ERROR(vtkm::exec::CellEdgeLocalIndex(
+      numPointsInCell, 1, edgeIndex, cellShape, localEdgeIndices[1]));
+    vtkm::Id2 canonicalEdgeId(cellConnections[localEdgeIndices[0]],
+                              cellConnections[localEdgeIndices[1]]);
     if (canonicalEdgeId[0] == pointIndex || canonicalEdgeId[1] == pointIndex)
     { // Assign value to edge0 first
       if ((edge0G[0] == -1) && (edge0G[1] == -1))
@@ -73,6 +75,7 @@ VTKM_EXEC void FindRelatedEdges(const vtkm::Id& pointIndex,
       }
     }
   }
+  return vtkm::ErrorCode::Success;
 }
 
 // TODO: We should replace this expensive lookup with a WholeCellSetIn<Edge, Cell> map.
@@ -82,8 +85,7 @@ template <typename PointFromCellSetType, typename IncidentCellVecType>
 VTKM_EXEC int FindNeighborCellInLocalIndex(const vtkm::Id2& eOI,
                                            const PointFromCellSetType& pFromCellSet,
                                            const IncidentCellVecType& incidentCells,
-                                           const vtkm::Id currentCellLocalIndex,
-                                           const vtkm::exec::FunctorBase& worklet)
+                                           const vtkm::Id currentCellLocalIndex)
 {
   int neighboringCellIndex = -1;
   vtkm::IdComponent numberOfIncidentCells = incidentCells.GetNumberOfComponents();
@@ -100,8 +102,8 @@ VTKM_EXEC int FindNeighborCellInLocalIndex(const vtkm::Id2& eOI,
     typename PointFromCellSetType::IndicesType cellConnections =
       pFromCellSet.GetIndices(cellIndexG);
     vtkm::IdComponent numPointsInCell = pFromCellSet.GetNumberOfIndices(cellIndexG);
-    vtkm::IdComponent numEdges =
-      vtkm::exec::CellEdgeNumberOfEdges(numPointsInCell, cellShape, worklet);
+    vtkm::IdComponent numEdges;
+    vtkm::exec::CellEdgeNumberOfEdges(numPointsInCell, cellShape, numEdges);
     vtkm::IdComponent edgeIndex = -1;
     // Check if this cell has edge of interest
     while (true)
@@ -111,10 +113,11 @@ VTKM_EXEC int FindNeighborCellInLocalIndex(const vtkm::Id2& eOI,
       {
         break;
       }
-      vtkm::Id2 canonicalEdgeId(cellConnections[vtkm::exec::CellEdgeLocalIndex(
-                                  numPointsInCell, 0, edgeIndex, cellShape, worklet)],
-                                cellConnections[vtkm::exec::CellEdgeLocalIndex(
-                                  numPointsInCell, 1, edgeIndex, cellShape, worklet)]);
+      vtkm::IdComponent2 localEdgeIndices;
+      vtkm::exec::CellEdgeLocalIndex(numPointsInCell, 0, edgeIndex, cellShape, localEdgeIndices[0]);
+      vtkm::exec::CellEdgeLocalIndex(numPointsInCell, 1, edgeIndex, cellShape, localEdgeIndices[1]);
+      vtkm::Id2 canonicalEdgeId(cellConnections[localEdgeIndices[0]],
+                                cellConnections[localEdgeIndices[1]]);
       if ((canonicalEdgeId[0] == eOI[0] && canonicalEdgeId[1] == eOI[1]) ||
           (canonicalEdgeId[0] == eOI[1] && canonicalEdgeId[1] == eOI[0]))
       {
@@ -135,8 +138,7 @@ VTKM_EXEC bool FindConnectedCellOwnerships(vtkm::FloatDefault cosFeatureAngle,
                                            const PointFromCellSetType& pFromCellSet,
                                            const FaceNormalVecType& faceNormals,
                                            vtkm::Id visitedCellsRegionIndex[64],
-                                           vtkm::Id& regionIndex,
-                                           const vtkm::exec::FunctorBase& worklet)
+                                           vtkm::Id& regionIndex)
 {
   const vtkm::IdComponent numberOfIncidentCells = incidentCells.GetNumberOfComponents();
   VTKM_ASSERT(numberOfIncidentCells < 64);
@@ -163,7 +165,7 @@ VTKM_EXEC bool FindConnectedCellOwnerships(vtkm::FloatDefault cosFeatureAngle,
 
       // Find two edges containing the current point in canonial index
       vtkm::Id2 edge0G(-1, -1), edge1G(-1, -1);
-      internal::FindRelatedEdges(pointIndex, cellIndexG, pFromCellSet, edge0G, edge1G, worklet);
+      internal::FindRelatedEdges(pointIndex, cellIndexG, pFromCellSet, edge0G, edge1G);
       // Grow the area along each edge
       for (size_t i = 0; i < 2; i++)
       { // Reset these two values for each grow operation
@@ -173,7 +175,7 @@ VTKM_EXEC bool FindConnectedCellOwnerships(vtkm::FloatDefault cosFeatureAngle,
         {
           // Find the neighbor cell of the current cell edge in local index
           int neighboringCellIndexQuery = internal::FindNeighborCellInLocalIndex(
-            currentEdgeG, pFromCellSet, incidentCells, currentTestingCellIndex, worklet);
+            currentEdgeG, pFromCellSet, incidentCells, currentTestingCellIndex);
           // The edge should be manifold and the neighboring cell should
           // have not been visited
           if (neighboringCellIndexQuery != -1 && !visitedCells.test(neighboringCellIndexQuery))
@@ -199,8 +201,7 @@ VTKM_EXEC bool FindConnectedCellOwnerships(vtkm::FloatDefault cosFeatureAngle,
                                          incidentCells[currentTestingCellIndex],
                                          pFromCellSet,
                                          neighborCellEdge0G,
-                                         neighborCellEdge1G,
-                                         worklet);
+                                         neighborCellEdge1G);
               // Update currentEdgeG
               if ((currentEdgeG == neighborCellEdge0G) ||
                   currentEdgeG == vtkm::Id2(neighborCellEdge0G[1], neighborCellEdge0G[0]))
@@ -284,8 +285,7 @@ public:
                                                                           pFromCellSet,
                                                                           faceNormals,
                                                                           visitedCellsRegionIndex,
-                                                                          regionIndex,
-                                                                          *this);
+                                                                          regionIndex);
       if (!foundConnections)
       {
         newPointNum = 0;
@@ -357,8 +357,7 @@ public:
                                                                           pFromCellSet,
                                                                           faceNormals,
                                                                           visitedCellsRegionIndex,
-                                                                          regionIndex,
-                                                                          *this);
+                                                                          regionIndex);
       if (foundConnections)
       {
         // For each new region you need a new point
@@ -431,7 +430,7 @@ public:
       oldCoords.GetNumberOfValues(),
       this->NewPointsIdArray,
       0);
-    auto newPointsIdArrayPortal = this->NewPointsIdArray.GetPortalControl();
+    auto newPointsIdArrayPortal = this->NewPointsIdArray.WritePortal();
 
     // Fill the new point coordinate system with all the existing values
     newCoords.Allocate(oldCoords.GetNumberOfValues() + totalNewPointsNum);
@@ -441,9 +440,9 @@ public:
     { //only if we have new points do we need add any of the new
       //coordinate locations
       vtkm::Id newCoordsIndex = oldCoords.GetNumberOfValues();
-      auto oldCoordsPortal = oldCoords.GetPortalConstControl();
-      auto newCoordsPortal = newCoords.GetPortalControl();
-      auto newPointNumsPortal = newPointNums.GetPortalControl();
+      auto oldCoordsPortal = oldCoords.ReadPortal();
+      auto newCoordsPortal = newCoords.WritePortal();
+      auto newPointNumsPortal = newPointNums.WritePortal();
       for (vtkm::Id i = 0; i < oldCoords.GetNumberOfValues(); i++)
       { // Find out for each new point, how many times it should be added
         for (vtkm::Id j = 0; j < newPointNumsPortal.Get(i); j++)
@@ -471,7 +470,7 @@ public:
            newpointStartingIndexs,
            pointCellsStartingIndexs,
            cellTopologyUpdateTuples);
-    auto ctutPortal = cellTopologyUpdateTuples.GetPortalConstControl();
+    auto ctutPortal = cellTopologyUpdateTuples.ReadPortal();
     vtkm::cont::printSummary_ArrayHandle(cellTopologyUpdateTuples, std::cout);
 
 
@@ -481,10 +480,10 @@ public:
     // here I just get a non-const copy of the array handle.
     auto connectivityArrayHandle = newCellset.GetConnectivityArray(vtkm::TopologyElementTagCell(),
                                                                    vtkm::TopologyElementTagPoint());
-    auto connectivityArrayHandleP = connectivityArrayHandle.GetPortalControl();
+    auto connectivityArrayHandleP = connectivityArrayHandle.WritePortal();
     auto offsetArrayHandle =
       newCellset.GetOffsetsArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-    auto offsetArrayHandleP = offsetArrayHandle.GetPortalControl();
+    auto offsetArrayHandleP = offsetArrayHandle.WritePortal();
     for (vtkm::Id i = 0; i < cellTopologyUpdateTuples.GetNumberOfValues(); i++)
     {
       vtkm::Id cellId(ctutPortal.Get(i)[0]), oldPointId(ctutPortal.Get(i)[1]),
@@ -516,6 +515,8 @@ public:
 
     return result;
   }
+
+  vtkm::cont::ArrayHandle<vtkm::Id> GetNewPointsIdArray() const { return this->NewPointsIdArray; }
 
 private:
   vtkm::cont::ArrayHandle<vtkm::Id> NewPointsIdArray;

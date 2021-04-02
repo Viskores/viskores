@@ -62,8 +62,9 @@ void TransportWholeCellSetIn(Device)
   using IncidentTopology = vtkm::TopologyElementTagPoint;
   using VisitTopology = vtkm::TopologyElementTagCell;
 
-  using ExecObjectType = typename vtkm::cont::CellSetExplicit<>::
-    template ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType;
+  using ExecObjectType =
+    typename vtkm::cont::CellSetExplicit<>::template ExecConnectivityType<VisitTopology,
+                                                                          IncidentTopology>;
 
   vtkm::cont::arg::Transport<
     vtkm::cont::arg::TransportTagCellSetIn<VisitTopology, IncidentTopology>,
@@ -71,8 +72,10 @@ void TransportWholeCellSetIn(Device)
     Device>
     transport;
 
+  vtkm::cont::Token token;
+
   TestKernel<ExecObjectType> kernel;
-  kernel.CellSet = transport(contObject, nullptr, 1, 1);
+  kernel.CellSet = transport(contObject, nullptr, 1, 1, token);
 
   vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, 1);
 }

@@ -22,7 +22,7 @@
 
 namespace
 {
-struct TypeUInt8 : vtkm::ListTagBase<vtkm::UInt8>
+struct TypeUInt8 : vtkm::List<vtkm::UInt8>
 {
 };
 
@@ -96,9 +96,7 @@ namespace vtkm
 namespace filter
 {
 
-inline VTKM_CONT GhostCellClassify::GhostCellClassify()
-{
-}
+inline VTKM_CONT GhostCellClassify::GhostCellClassify() {}
 
 template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::DataSet& input,

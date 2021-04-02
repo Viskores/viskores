@@ -12,7 +12,6 @@
 #include <vtkm/cont/ArrayHandleDiscard.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
@@ -35,7 +34,7 @@ struct Test
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;
   using Handle = vtkm::cont::ArrayHandle<ValueType>;
   using DiscardHandle = vtkm::cont::ArrayHandleDiscard<ValueType>;
-  using OutputPortal = typename Handle::PortalControl;
+  using OutputPortal = typename Handle::WritePortalType;
   using ReduceOp = vtkm::Add;
 
   // Test discard arrays by using the ReduceByKey algorithm. Two regular arrays
@@ -60,33 +59,35 @@ struct Test
     }
 
     // Prepare array handles:
-    Handle keys = vtkm::cont::make_ArrayHandle(keyData, ARRAY_SIZE);
-    Handle values = vtkm::cont::make_ArrayHandle(valueData, ARRAY_SIZE);
+    Handle keys = vtkm::cont::make_ArrayHandle(keyData, ARRAY_SIZE, vtkm::CopyFlag::Off);
+    Handle values = vtkm::cont::make_ArrayHandle(valueData, ARRAY_SIZE, vtkm::CopyFlag::Off);
     DiscardHandle output_keys;
     Handle output_values;
 
     Algorithm::SortByKey(keys, values);
     Algorithm::ReduceByKey(keys, values, output_keys, output_values, op);
 
-    OutputPortal outputs = output_values.GetPortalControl();
+    OutputPortal outputs = output_values.WritePortal();
 
     VTKM_TEST_ASSERT(outputs.GetNumberOfValues() == NUM_KEYS,
                      "Unexpected number of output values from ReduceByKey.");
 
     for (vtkm::Id i = 0; i < NUM_KEYS; ++i)
     {
-      VTKM_TEST_ASSERT(outputs.Get(i) == refData[i], "Unexpected output value after ReduceByKey.");
+      VTKM_TEST_ASSERT(test_equal(outputs.Get(i), refData[i]),
+                       "Unexpected output value after ReduceByKey.");
     }
   }
 
   void TestPrepareExceptions()
   {
+    vtkm::cont::Token token;
     DiscardHandle handle;
     handle.Allocate(50);
 
     try
     {
-      handle.PrepareForInput(DeviceTag());
+      handle.PrepareForInput(DeviceTag(), token);
     }
     catch (vtkm::cont::ErrorBadValue&)
     {
@@ -95,7 +96,7 @@ struct Test
 
     try
     {
-      handle.PrepareForInPlace(DeviceTag());
+      handle.PrepareForInPlace(DeviceTag(), token);
     }
     catch (vtkm::cont::ErrorBadValue&)
     {
@@ -103,7 +104,7 @@ struct Test
     }
 
     // Shouldn't fail:
-    handle.PrepareForOutput(ARRAY_SIZE, DeviceTag());
+    handle.PrepareForOutput(ARRAY_SIZE, DeviceTag(), token);
   }
 
   void operator()()

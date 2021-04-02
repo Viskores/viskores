@@ -46,11 +46,13 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
   std::vector<vtkm::Id> permutationVec;
 
   vtkm::Id connIdx = 0;
+  auto shapesPortal = shapes.ReadPortal();
+  auto indicesPortal = numIndices.ReadPortal();
+  auto connPortal = connectivity.ReadPortal();
   for (vtkm::Id i = 0; i < shapes.GetNumberOfValues(); ++i)
   {
-    vtkm::UInt8 shape = shapes.GetPortalConstControl().Get(i);
-    vtkm::IdComponent numInds = numIndices.GetPortalConstControl().Get(i);
-    auto connPortal = connectivity.GetPortalConstControl();
+    vtkm::UInt8 shape = shapesPortal.Get(i);
+    vtkm::IdComponent numInds = indicesPortal.Get(i);
     switch (shape)
     {
       case vtkm::CELL_SHAPE_VERTEX:
@@ -189,26 +191,35 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
     permutation.Allocate(static_cast<vtkm::Id>(permutationVec.size()));
     std::copy(permutationVec.begin(),
               permutationVec.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(permutation.GetPortalControl()));
+              vtkm::cont::ArrayPortalToIteratorBegin(permutation.WritePortal()));
   }
 
   shapes.Allocate(static_cast<vtkm::Id>(newShapes.size()));
   std::copy(newShapes.begin(),
             newShapes.end(),
-            vtkm::cont::ArrayPortalToIteratorBegin(shapes.GetPortalControl()));
+            vtkm::cont::ArrayPortalToIteratorBegin(shapes.WritePortal()));
   numIndices.Allocate(static_cast<vtkm::Id>(newNumIndices.size()));
   std::copy(newNumIndices.begin(),
             newNumIndices.end(),
-            vtkm::cont::ArrayPortalToIteratorBegin(numIndices.GetPortalControl()));
+            vtkm::cont::ArrayPortalToIteratorBegin(numIndices.WritePortal()));
   connectivity.Allocate(static_cast<vtkm::Id>(newConnectivity.size()));
   std::copy(newConnectivity.begin(),
             newConnectivity.end(),
-            vtkm::cont::ArrayPortalToIteratorBegin(connectivity.GetPortalControl()));
+            vtkm::cont::ArrayPortalToIteratorBegin(connectivity.WritePortal()));
 }
 
 inline bool IsSingleShape(const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes)
 {
-  auto shapesPortal = shapes.GetPortalConstControl();
+  if (shapes.GetNumberOfValues() < 1)
+  {
+    // If the data has no cells, is it single shape? That would make sense, but having
+    // a single shape cell set requires you to slect a shape, and there are no cells to
+    // make that selection from. We could get around that, but it's easier just to treat
+    // it as a general explicit grid.
+    return false;
+  }
+
+  auto shapesPortal = shapes.ReadPortal();
   vtkm::UInt8 shape0 = shapesPortal.Get(0);
   for (vtkm::Id i = 1; i < shapes.GetNumberOfValues(); ++i)
   {

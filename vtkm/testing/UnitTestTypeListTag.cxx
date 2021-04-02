@@ -8,6 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+// This tests deprecated code until it is deleted.
+
 #include <vtkm/TypeListTag.h>
 
 #include <vtkm/Types.h>
@@ -16,6 +18,8 @@
 
 #include <set>
 #include <string>
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace
 {
@@ -169,6 +173,29 @@ void TestLists()
   scalarsAll.AddExpected(vtkm::UInt64());
   TryList(scalarsAll, vtkm::TypeListTagScalarAll());
 
+  std::cout << "TypeListBaseC" << std::endl;
+  TypeSet baseC;
+  baseC.AddExpected(vtkm::Float32());
+  baseC.AddExpected(vtkm::Float64());
+  baseC.AddExpected(vtkm::Int8());
+  baseC.AddExpected(vtkm::UInt8());
+  baseC.AddExpected(vtkm::Int16());
+  baseC.AddExpected(vtkm::UInt16());
+  baseC.AddExpected(vtkm::Int32());
+  baseC.AddExpected(vtkm::UInt32());
+  baseC.AddExpected(vtkm::Int64());
+  baseC.AddExpected(vtkm::UInt64());
+  // Extra types with same layout as above but considered different by C
+  baseC.AddExpected(bool());
+  baseC.AddExpected(char());
+  baseC.AddExpected((signed int)0);
+  baseC.AddExpected((unsigned int)0);
+  baseC.AddExpected((signed long)0);
+  baseC.AddExpected((unsigned long)0);
+  baseC.AddExpected((signed long long)0);
+  baseC.AddExpected((unsigned long long)0);
+  TryList(baseC, vtkm::TypeListBaseC());
+
   std::cout << "TypeListTagVecCommon" << std::endl;
   TypeSet vecCommon;
   vecCommon.AddExpected(vtkm::Vec2f_32());
@@ -273,3 +300,5 @@ int UnitTestTypeListTag(int argc, char* argv[])
 {
   return vtkm::testing::Testing::Run(TestLists, argc, argv);
 }
+
+VTKM_DEPRECATED_SUPPRESS_END

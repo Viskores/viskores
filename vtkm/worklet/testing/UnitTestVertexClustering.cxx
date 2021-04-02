@@ -34,9 +34,9 @@ void TestVertexClustering()
 
   using FieldArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
   FieldArrayType pointvar = clustering.ProcessPointField(
-    dataSet.GetPointField("pointvar").GetData().Cast<FieldArrayType>());
-  FieldArrayType cellvar =
-    clustering.ProcessCellField(dataSet.GetCellField("cellvar").GetData().Cast<FieldArrayType>());
+    dataSet.GetPointField("pointvar").GetData().AsArrayHandle<FieldArrayType>());
+  FieldArrayType cellvar = clustering.ProcessCellField(
+    dataSet.GetCellField("cellvar").GetData().AsArrayHandle<FieldArrayType>());
 
   // test
   const vtkm::Id output_pointIds = 18;
@@ -69,7 +69,7 @@ void TestVertexClustering()
     auto pointArray = outDataSet.GetCoordinateSystem(0).GetData();
     std::cerr << "output_points = " << pointArray.GetNumberOfValues() << "\n";
     std::cerr << "output_point[] = ";
-    vtkm::cont::printSummary_ArrayHandle(pointArray, std::cerr, true);
+    pointArray.PrintSummary(std::cerr);
   }
 
   vtkm::cont::printSummary_ArrayHandle(pointvar, std::cerr, true);
@@ -78,12 +78,12 @@ void TestVertexClustering()
   VTKM_TEST_ASSERT(outDataSet.GetNumberOfCoordinateSystems() == 1,
                    "Number of output coordinate systems mismatch");
   using PointType = vtkm::Vec3f_64;
-  auto pointArray = outDataSet.GetCoordinateSystem(0).GetData();
+  auto pointArray = outDataSet.GetCoordinateSystem(0).GetDataAsMultiplexer();
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
                    "Number of output points mismatch");
   for (vtkm::Id i = 0; i < pointArray.GetNumberOfValues(); ++i)
   {
-    const PointType& p1 = pointArray.GetPortalConstControl().Get(i);
+    const PointType& p1 = pointArray.ReadPortal().Get(i);
     PointType p2 = vtkm::make_Vec(output_point[i][0], output_point[i][1], output_point[i][2]);
     VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
   }
@@ -102,14 +102,14 @@ void TestVertexClustering()
   {
     vtkm::Id id1 =
       cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
-        .GetPortalConstControl()
+        .ReadPortal()
         .Get(i);
     vtkm::Id id2 = output_pointId[i];
     VTKM_TEST_ASSERT(id1 == id2, "Connectivity Array mismatch");
   }
 
   {
-    auto portal = pointvar.GetPortalConstControl();
+    auto portal = pointvar.ReadPortal();
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == output_points, "Point field size mismatch.");
     for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
     {
@@ -118,7 +118,7 @@ void TestVertexClustering()
   }
 
   {
-    auto portal = cellvar.GetPortalConstControl();
+    auto portal = cellvar.ReadPortal();
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == output_pointIds / 3,
                      "Cell field size mismatch.");
     for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)

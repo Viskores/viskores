@@ -23,28 +23,27 @@ namespace colorconversion
 
 struct TransferFunction : public vtkm::worklet::WorkletMapField
 {
-  TransferFunction(const vtkm::exec::ColorTableBase* table)
-    : ColorTable(table)
-  {
-  }
-
-  using ControlSignature = void(FieldIn in, FieldOut color);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(FieldIn in, ExecObject colorTable, FieldOut color);
+  using ExecutionSignature = void(_1, _2, _3);
 
   template <typename T>
-  VTKM_EXEC void operator()(const T& in, vtkm::Vec3ui_8& output) const
+  VTKM_EXEC void operator()(const T& in,
+                            const vtkm::exec::ColorTable& colorTable,
+                            vtkm::Vec3ui_8& output) const
   {
-    vtkm::Vec<float, 3> rgb = this->ColorTable->MapThroughColorSpace(static_cast<double>(in));
+    vtkm::Vec<float, 3> rgb = colorTable.MapThroughColorSpace(static_cast<double>(in));
     output[0] = colorconversion::ColorToUChar(rgb[0]);
     output[1] = colorconversion::ColorToUChar(rgb[1]);
     output[2] = colorconversion::ColorToUChar(rgb[2]);
   }
 
   template <typename T>
-  VTKM_EXEC void operator()(const T& in, vtkm::Vec4ui_8& output) const
+  VTKM_EXEC void operator()(const T& in,
+                            const vtkm::exec::ColorTable& colorTable,
+                            vtkm::Vec4ui_8& output) const
   {
-    vtkm::Vec<float, 3> rgb = this->ColorTable->MapThroughColorSpace(static_cast<double>(in));
-    float alpha = this->ColorTable->MapThroughOpacitySpace(static_cast<double>(in));
+    vtkm::Vec<float, 3> rgb = colorTable.MapThroughColorSpace(static_cast<double>(in));
+    float alpha = colorTable.MapThroughOpacitySpace(static_cast<double>(in));
     output[0] = colorconversion::ColorToUChar(rgb[0]);
     output[1] = colorconversion::ColorToUChar(rgb[1]);
     output[2] = colorconversion::ColorToUChar(rgb[2]);
@@ -52,23 +51,25 @@ struct TransferFunction : public vtkm::worklet::WorkletMapField
   }
 
   template <typename T>
-  VTKM_EXEC void operator()(const T& in, vtkm::Vec<float, 3>& output) const
+  VTKM_EXEC void operator()(const T& in,
+                            const vtkm::exec::ColorTable& colorTable,
+                            vtkm::Vec3f_32& output) const
   {
-    output = this->ColorTable->MapThroughColorSpace(static_cast<double>(in));
+    output = colorTable.MapThroughColorSpace(static_cast<double>(in));
   }
 
   template <typename T>
-  VTKM_EXEC void operator()(const T& in, vtkm::Vec<float, 4>& output) const
+  VTKM_EXEC void operator()(const T& in,
+                            const vtkm::exec::ColorTable& colorTable,
+                            vtkm::Vec4f_32& output) const
   {
-    vtkm::Vec<float, 3> rgb = this->ColorTable->MapThroughColorSpace(static_cast<double>(in));
-    float alpha = this->ColorTable->MapThroughOpacitySpace(static_cast<double>(in));
+    vtkm::Vec3f_32 rgb = colorTable.MapThroughColorSpace(static_cast<vtkm::Float64>(in));
+    vtkm::Float32 alpha = colorTable.MapThroughOpacitySpace(static_cast<vtkm::Float64>(in));
     output[0] = rgb[0];
     output[1] = rgb[1];
     output[2] = rgb[2];
     output[3] = alpha;
   }
-
-  const vtkm::exec::ColorTableBase* ColorTable;
 };
 }
 }

@@ -23,25 +23,21 @@ namespace internal
 
 /// \brief An array portal that zips two portals together into a single value
 /// for the execution environment
-template <typename ValueType_, typename PortalTypeFirst_, typename PortalTypeSecond_>
+template <typename PortalTypeFirst, typename PortalTypeSecond>
 class ArrayPortalZip
 {
-  using ReadableP1 = vtkm::internal::PortalSupportsGets<PortalTypeFirst_>;
-  using ReadableP2 = vtkm::internal::PortalSupportsGets<PortalTypeSecond_>;
-  using WritableP1 = vtkm::internal::PortalSupportsSets<PortalTypeFirst_>;
-  using WritableP2 = vtkm::internal::PortalSupportsSets<PortalTypeSecond_>;
+  using ReadableP1 = vtkm::internal::PortalSupportsGets<PortalTypeFirst>;
+  using ReadableP2 = vtkm::internal::PortalSupportsGets<PortalTypeSecond>;
+  using WritableP1 = vtkm::internal::PortalSupportsSets<PortalTypeFirst>;
+  using WritableP2 = vtkm::internal::PortalSupportsSets<PortalTypeSecond>;
 
   using Readable = std::integral_constant<bool, ReadableP1::value && ReadableP2::value>;
   using Writable = std::integral_constant<bool, WritableP1::value && WritableP2::value>;
 
 public:
-  using ValueType = ValueType_;
-  using T = typename ValueType::FirstType;
-  using U = typename ValueType::SecondType;
-
-  using IteratorType = ValueType_;
-  using PortalTypeFirst = PortalTypeFirst_;
-  using PortalTypeSecond = PortalTypeSecond_;
+  using T = typename PortalTypeFirst::ValueType;
+  using U = typename PortalTypeSecond::ValueType;
+  using ValueType = vtkm::Pair<T, U>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -62,16 +58,18 @@ public:
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
-  template <class OtherV, class OtherF, class OtherS>
-  VTKM_CONT ArrayPortalZip(const ArrayPortalZip<OtherV, OtherF, OtherS>& src)
+  template <class OtherF, class OtherS>
+  VTKM_CONT ArrayPortalZip(const ArrayPortalZip<OtherF, OtherS>& src)
     : PortalFirst(src.GetFirstPortal())
     , PortalSecond(src.GetSecondPortal())
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->PortalFirst.GetNumberOfValues(); }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Readable_ = Readable,
             typename = typename std::enable_if<Readable_::value>::type>
   VTKM_EXEC_CONT ValueType Get(vtkm::Id index) const noexcept
@@ -79,6 +77,7 @@ public:
     return vtkm::make_Pair(this->PortalFirst.Get(index), this->PortalSecond.Get(index));
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Writable_ = Writable,
             typename = typename std::enable_if<Writable_::value>::type>
   VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const noexcept
@@ -106,13 +105,13 @@ namespace vtkm
 namespace cont
 {
 
-namespace internal
-{
-
-template <typename FirstHandleType, typename SecondHandleType>
+template <typename ST1, typename ST2>
 struct VTKM_ALWAYS_EXPORT StorageTagZip
 {
 };
+
+namespace internal
+{
 
 /// This helper struct defines the value type for a zip container containing
 /// the given two array handles.
@@ -127,186 +126,78 @@ struct ArrayHandleZipTraits
 
   /// The appropriately templated tag.
   ///
-  using Tag = StorageTagZip<FirstHandleType, SecondHandleType>;
+  using Tag =
+    StorageTagZip<typename FirstHandleType::StorageTag, typename SecondHandleType::StorageTag>;
 
   /// The superclass for ArrayHandleZip.
   ///
   using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
 };
 
-template <typename FirstHandleType, typename SecondHandleType>
-class Storage<vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>,
-              StorageTagZip<FirstHandleType, SecondHandleType>>
+template <typename T1, typename T2, typename ST1, typename ST2>
+class Storage<vtkm::Pair<T1, T2>, vtkm::cont::StorageTagZip<ST1, ST2>>
 {
-  VTKM_IS_ARRAY_HANDLE(FirstHandleType);
-  VTKM_IS_ARRAY_HANDLE(SecondHandleType);
+  using FirstStorage = Storage<T1, ST1>;
+  using SecondStorage = Storage<T2, ST2>;
+  using ValueType = vtkm::Pair<T1, T2>;
+
+  template <typename BufferType>
+  VTKM_CONT static BufferType* FirstArrayBuffers(BufferType* buffers)
+  {
+    return buffers;
+  }
+  template <typename BufferType>
+  VTKM_CONT static BufferType* SecondArrayBuffers(BufferType* buffers)
+  {
+    return buffers + FirstStorage::GetNumberOfBuffers();
+  }
 
 public:
-  using ValueType =
-    vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>;
+  using ReadPortalType =
+    vtkm::exec::internal::ArrayPortalZip<typename FirstStorage::ReadPortalType,
+                                         typename SecondStorage::ReadPortalType>;
+  using WritePortalType =
+    vtkm::exec::internal::ArrayPortalZip<typename FirstStorage::WritePortalType,
+                                         typename SecondStorage::WritePortalType>;
 
-  using PortalType = vtkm::exec::internal::ArrayPortalZip<ValueType,
-                                                          typename FirstHandleType::PortalControl,
-                                                          typename SecondHandleType::PortalControl>;
-  using PortalConstType =
-    vtkm::exec::internal::ArrayPortalZip<ValueType,
-                                         typename FirstHandleType::PortalConstControl,
-                                         typename SecondHandleType::PortalConstControl>;
-
-  VTKM_CONT
-  Storage()
-    : FirstArray()
-    , SecondArray()
+  VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers()
   {
+    return FirstStorage::GetNumberOfBuffers() + SecondStorage::GetNumberOfBuffers();
   }
 
-  VTKM_CONT
-  Storage(const FirstHandleType& farray, const SecondHandleType& sarray)
-    : FirstArray(farray)
-    , SecondArray(sarray)
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token)
   {
+    FirstStorage::ResizeBuffers(numValues, FirstArrayBuffers(buffers), preserve, token);
+    SecondStorage::ResizeBuffers(numValues, SecondArrayBuffers(buffers), preserve, token);
   }
 
-  VTKM_CONT
-  PortalType GetPortal()
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    return PortalType(this->FirstArray.GetPortalControl(), this->SecondArray.GetPortalControl());
+    vtkm::Id numValues = FirstStorage::GetNumberOfValues(FirstArrayBuffers(buffers));
+    VTKM_ASSERT(numValues == SecondStorage::GetNumberOfValues(SecondArrayBuffers(buffers)));
+    return numValues;
   }
 
-  VTKM_CONT
-  PortalConstType GetPortalConst() const
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
-    return PortalConstType(this->FirstArray.GetPortalConstControl(),
-                           this->SecondArray.GetPortalConstControl());
+    return ReadPortalType(
+      FirstStorage::CreateReadPortal(FirstArrayBuffers(buffers), device, token),
+      SecondStorage::CreateReadPortal(SecondArrayBuffers(buffers), device, token));
   }
 
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
-    VTKM_ASSERT(this->FirstArray.GetNumberOfValues() == this->SecondArray.GetNumberOfValues());
-    return this->FirstArray.GetNumberOfValues();
+    return WritePortalType(
+      FirstStorage::CreateWritePortal(FirstArrayBuffers(buffers), device, token),
+      SecondStorage::CreateWritePortal(SecondArrayBuffers(buffers), device, token));
   }
-
-  VTKM_CONT
-  void Allocate(vtkm::Id numberOfValues)
-  {
-    this->FirstArray.Allocate(numberOfValues);
-    this->SecondArray.Allocate(numberOfValues);
-  }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues)
-  {
-    this->FirstArray.Shrink(numberOfValues);
-    this->SecondArray.Shrink(numberOfValues);
-  }
-
-  VTKM_CONT
-  void ReleaseResources()
-  {
-    // This request is ignored since it is asking to release the resources
-    // of the two zipped array, which may be used elsewhere.
-  }
-
-  VTKM_CONT
-  const FirstHandleType& GetFirstArray() const { return this->FirstArray; }
-
-  VTKM_CONT
-  const SecondHandleType& GetSecondArray() const { return this->SecondArray; }
-
-private:
-  FirstHandleType FirstArray;
-  SecondHandleType SecondArray;
-};
-
-template <typename FirstHandleType, typename SecondHandleType, typename Device>
-class ArrayTransfer<
-  vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>,
-  StorageTagZip<FirstHandleType, SecondHandleType>,
-  Device>
-{
-public:
-  using ValueType =
-    vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>;
-
-private:
-  using StorageTag = StorageTagZip<FirstHandleType, SecondHandleType>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
-
-  using PortalExecution = vtkm::exec::internal::ArrayPortalZip<
-    ValueType,
-    typename FirstHandleType::template ExecutionTypes<Device>::Portal,
-    typename SecondHandleType::template ExecutionTypes<Device>::Portal>;
-
-  using PortalConstExecution = vtkm::exec::internal::ArrayPortalZip<
-    ValueType,
-    typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
-    typename SecondHandleType::template ExecutionTypes<Device>::PortalConst>;
-
-  VTKM_CONT
-  ArrayTransfer(StorageType* storage)
-    : FirstArray(storage->GetFirstArray())
-    , SecondArray(storage->GetSecondArray())
-  {
-  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    VTKM_ASSERT(this->FirstArray.GetNumberOfValues() == this->SecondArray.GetNumberOfValues());
-    return this->FirstArray.GetNumberOfValues();
-  }
-
-  VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
-  {
-    return PortalConstExecution(this->FirstArray.PrepareForInput(Device()),
-                                this->SecondArray.PrepareForInput(Device()));
-  }
-
-  VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
-  {
-    return PortalExecution(this->FirstArray.PrepareForInPlace(Device()),
-                           this->SecondArray.PrepareForInPlace(Device()));
-  }
-
-  VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
-  {
-    return PortalExecution(this->FirstArray.PrepareForOutput(numberOfValues, Device()),
-                           this->SecondArray.PrepareForOutput(numberOfValues, Device()));
-  }
-
-  VTKM_CONT
-  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
-  {
-    // Implementation of this method should be unnecessary. The internal
-    // first and second array handles should automatically retrieve the
-    // output data as necessary.
-  }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues)
-  {
-    this->FirstArray.Shrink(numberOfValues);
-    this->SecondArray.Shrink(numberOfValues);
-  }
-
-  VTKM_CONT
-  void ReleaseResources()
-  {
-    this->FirstArray.ReleaseResourcesExecution();
-    this->SecondArray.ReleaseResourcesExecution();
-  }
-
-private:
-  FirstHandleType FirstArray;
-  SecondHandleType SecondArray;
 };
 } // namespace internal
 
@@ -332,13 +223,9 @@ public:
     (ArrayHandleZip<FirstHandleType, SecondHandleType>),
     (typename internal::ArrayHandleZipTraits<FirstHandleType, SecondHandleType>::Superclass));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandleZip(const FirstHandleType& firstArray, const SecondHandleType& secondArray)
-    : Superclass(StorageType(firstArray, secondArray))
+    : Superclass(vtkm::cont::internal::CreateBuffers(firstArray, secondArray))
   {
   }
 };
@@ -375,11 +262,11 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
   }
 };
 
-template <typename AH1, typename AH2>
+template <typename T1, typename T2, typename ST1, typename ST2>
 struct SerializableTypeString<
-  vtkm::cont::ArrayHandle<vtkm::Pair<typename AH1::ValueType, typename AH2::ValueType>,
-                          vtkm::cont::internal::StorageTagZip<AH1, AH2>>>
-  : SerializableTypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+  vtkm::cont::ArrayHandle<vtkm::Pair<T1, T2>, vtkm::cont::StorageTagZip<ST1, ST2>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleZip<vtkm::cont::ArrayHandle<T1, ST1>,
+                                                      vtkm::cont::ArrayHandle<T2, ST2>>>
 {
 };
 }
@@ -415,11 +302,11 @@ public:
   }
 };
 
-template <typename AH1, typename AH2>
+template <typename T1, typename T2, typename ST1, typename ST2>
 struct Serialization<
-  vtkm::cont::ArrayHandle<vtkm::Pair<typename AH1::ValueType, typename AH2::ValueType>,
-                          vtkm::cont::internal::StorageTagZip<AH1, AH2>>>
-  : Serialization<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+  vtkm::cont::ArrayHandle<vtkm::Pair<T1, T2>, vtkm::cont::StorageTagZip<ST1, ST2>>>
+  : Serialization<vtkm::cont::ArrayHandleZip<vtkm::cont::ArrayHandle<T1, ST1>,
+                                             vtkm::cont::ArrayHandle<T2, ST2>>>
 {
 };
 

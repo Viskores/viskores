@@ -66,7 +66,6 @@ VTKM_EXEC static void inv_lift(Int* p)
   z = *p;
   p += s;
   w = *p;
-  p += s;
 
   /*
   ** non-orthogonal transform
@@ -90,7 +89,6 @@ VTKM_EXEC static void inv_lift(Int* p)
   x <<= 1;
   x -= w;
 
-  p -= s;
   *p = w;
   p -= s;
   *p = z;
@@ -169,7 +167,8 @@ inline VTKM_EXEC vtkm::Int32 uint2int(vtkm::UInt32 x)
 // Note: I die a little inside everytime I write this sort of template
 template <vtkm::Int32 BlockSize,
           typename PortalType,
-          template <int Size, typename Portal> class ReaderType,
+          template <int Size, typename Portal>
+          class ReaderType,
           typename UInt>
 VTKM_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
                            vtkm::Int32& maxbits,

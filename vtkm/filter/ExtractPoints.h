@@ -11,7 +11,12 @@
 #ifndef vtk_m_filter_ExtractPoints_h
 #define vtk_m_filter_ExtractPoints_h
 
+#include <vtkm/ImplicitFunction.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/ImplicitFunctionHandle.h>
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExtractPoints.h>
@@ -43,12 +48,9 @@ public:
   void SetCompactPoints(bool value) { this->CompactPoints = value; }
 
   /// Set the volume of interest to extract
-  void SetImplicitFunction(const vtkm::cont::ImplicitFunctionHandle& func)
-  {
-    this->Function = func;
-  }
+  void SetImplicitFunction(const vtkm::ImplicitFunctionGeneral& func) { this->Function = func; }
 
-  const vtkm::cont::ImplicitFunctionHandle& GetImplicitFunction() const { return this->Function; }
+  const vtkm::ImplicitFunctionGeneral& GetImplicitFunction() const { return this->Function; }
 
   VTKM_CONT
   bool GetExtractInside() { return this->ExtractInside; }
@@ -64,15 +66,14 @@ public:
                                 vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //Map a new field onto the resulting dataset after running the filter
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  bool DoMapField(vtkm::cont::DataSet& result,
-                  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                  const vtkm::filter::FieldMetadata& fieldMeta,
-                  vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy>);
 
 private:
   bool ExtractInside;
-  vtkm::cont::ImplicitFunctionHandle Function;
+  vtkm::ImplicitFunctionGeneral Function;
 
   bool CompactPoints;
   vtkm::filter::CleanGrid Compactor;

@@ -66,10 +66,10 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
     vtkm::FloatDefault R = 1.0f;
     vtkm::FloatDefault eps = vtkm::Epsilon<float>();
     std::vector<vtkm::FloatDefault> Thetas = {
-      eps, vtkm::Pif() / 4, vtkm::Pif() / 3, vtkm::Pif() / 2, vtkm::Pif() - eps
+      eps, vtkm::Pif() / 4.0f, vtkm::Pif() / 3.0f, vtkm::Pif() / 2.0f, vtkm::Pif() - eps
     };
     std::vector<vtkm::FloatDefault> Phis = {
-      eps, vtkm::TwoPif() / 4, vtkm::TwoPif() / 3, vtkm::TwoPif() / 2, vtkm::TwoPif() - eps
+      eps, vtkm::TwoPif() / 4.0f, vtkm::TwoPif() / 3.0f, vtkm::TwoPif() / 2.0f, vtkm::TwoPif() - eps
     };
     for (std::size_t i = 0; i < Thetas.size(); i++)
       for (std::size_t j = 0; j < Phis.size(); j++)
@@ -102,13 +102,13 @@ void ValidateCoordTransform(const vtkm::cont::DataSet& ds,
                             const vtkm::cont::DataSet& dsTrn,
                             const std::vector<bool>& isAngle)
 {
-  auto points = ds.GetCoordinateSystem().GetData();
-  auto pointsTrn = dsTrn.GetCoordinateSystem().GetData();
+  auto points = ds.GetCoordinateSystem().GetDataAsMultiplexer();
+  auto pointsTrn = dsTrn.GetCoordinateSystem().GetDataAsMultiplexer();
   VTKM_TEST_ASSERT(points.GetNumberOfValues() == pointsTrn.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 
-  auto pointsPortal = points.GetPortalConstControl();
-  auto pointsTrnPortal = pointsTrn.GetPortalConstControl();
+  auto pointsPortal = points.ReadPortal();
+  auto pointsTrnPortal = pointsTrn.ReadPortal();
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
   {
@@ -136,14 +136,12 @@ void TestCoordinateSystemTransform()
   vtkm::cont::DataSet dsCart = MakeTestDataSet(CART);
   vtkm::filter::CylindricalCoordinateTransform cylTrn;
 
-  cylTrn.SetOutputFieldName("cylindricalCoords");
-  cylTrn.SetUseCoordinateSystemAsField(true);
   cylTrn.SetCartesianToCylindrical();
+  cylTrn.SetUseCoordinateSystemAsField(true);
   vtkm::cont::DataSet carToCylDataSet = cylTrn.Execute(dsCart);
 
   cylTrn.SetCylindricalToCartesian();
   cylTrn.SetUseCoordinateSystemAsField(true);
-  cylTrn.SetOutputFieldName("cartesianCoords");
   vtkm::cont::DataSet cylToCarDataSet = cylTrn.Execute(carToCylDataSet);
   ValidateCoordTransform(dsCart, cylToCarDataSet, { false, false, false });
 
@@ -151,24 +149,20 @@ void TestCoordinateSystemTransform()
   vtkm::cont::DataSet dsCyl = MakeTestDataSet(CYL);
   cylTrn.SetCylindricalToCartesian();
   cylTrn.SetUseCoordinateSystemAsField(true);
-  cylTrn.SetOutputFieldName("cartesianCoords");
   cylToCarDataSet = cylTrn.Execute(dsCyl);
 
   cylTrn.SetCartesianToCylindrical();
   cylTrn.SetUseCoordinateSystemAsField(true);
-  cylTrn.SetOutputFieldName("cylindricalCoords");
   carToCylDataSet = cylTrn.Execute(cylToCarDataSet);
   ValidateCoordTransform(dsCyl, carToCylDataSet, { false, true, false });
 
   std::cout << "Testing SphericalCoordinateTransform Filter" << std::endl;
 
   vtkm::filter::SphericalCoordinateTransform sphTrn;
-  sphTrn.SetOutputFieldName("sphericalCoords");
   sphTrn.SetUseCoordinateSystemAsField(true);
   sphTrn.SetCartesianToSpherical();
   vtkm::cont::DataSet carToSphDataSet = sphTrn.Execute(dsCart);
 
-  sphTrn.SetOutputFieldName("cartesianCoords");
   sphTrn.SetUseCoordinateSystemAsField(true);
   sphTrn.SetSphericalToCartesian();
   vtkm::cont::DataSet sphToCarDataSet = sphTrn.Execute(carToSphDataSet);
@@ -177,13 +171,11 @@ void TestCoordinateSystemTransform()
   vtkm::cont::DataSet dsSph = MakeTestDataSet(SPH);
   sphTrn.SetSphericalToCartesian();
   sphTrn.SetUseCoordinateSystemAsField(true);
-  sphTrn.SetOutputFieldName("sphericalCoords");
   sphToCarDataSet = sphTrn.Execute(dsSph);
 
   sphTrn.SetCartesianToSpherical();
   sphTrn.SetUseCoordinateSystemAsField(true);
-  sphTrn.SetOutputFieldName("sphericalCoords");
-  carToSphDataSet = cylTrn.Execute(sphToCarDataSet);
+  carToSphDataSet = sphTrn.Execute(sphToCarDataSet);
   ValidateCoordTransform(dsSph, carToSphDataSet, { false, true, true });
 }
 

@@ -47,9 +47,7 @@ MapperQuad::MapperQuad()
 {
 }
 
-MapperQuad::~MapperQuad()
-{
-}
+MapperQuad::~MapperQuad() {}
 
 void MapperQuad::SetCanvas(vtkm::rendering::Canvas* canvas)
 {
@@ -103,19 +101,18 @@ void MapperQuad::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   //
   // Create rays
   //
-  vtkm::rendering::raytracing::Camera& cam = this->Internals->Tracer.GetCamera();
-  cam.SetParameters(camera, *this->Internals->Canvas);
-  this->Internals->RayCamera.SetParameters(camera, *this->Internals->Canvas);
+  vtkm::Int32 width = (vtkm::Int32)this->Internals->Canvas->GetWidth();
+  vtkm::Int32 height = (vtkm::Int32)this->Internals->Canvas->GetHeight();
+
+  this->Internals->RayCamera.SetParameters(camera, width, height);
 
   this->Internals->RayCamera.CreateRays(this->Internals->Rays, shapeBounds);
   this->Internals->Rays.Buffers.at(0).InitConst(0.f);
   raytracing::RayOperations::MapCanvasToRays(
     this->Internals->Rays, camera, *this->Internals->Canvas);
 
-
-
+  this->Internals->Tracer.GetCamera() = this->Internals->RayCamera;
   this->Internals->Tracer.SetField(scalarField, scalarRange);
-
   this->Internals->Tracer.SetColorMap(this->ColorMap);
   this->Internals->Tracer.Render(this->Internals->Rays);
 
@@ -137,16 +134,6 @@ void MapperQuad::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 void MapperQuad::SetCompositeBackground(bool on)
 {
   this->Internals->CompositeBackground = on;
-}
-
-void MapperQuad::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperQuad::EndScene()
-{
-  // Nothing needs to be done.
 }
 
 vtkm::rendering::Mapper* MapperQuad::NewCopy() const

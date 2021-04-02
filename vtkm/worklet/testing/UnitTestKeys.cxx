@@ -14,6 +14,16 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+// Make sure deprecated types still work (while applicable)
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+VTKM_STATIC_ASSERT((std::is_same<typename vtkm::worklet::internal::KeysBase::ExecutionTypes<
+                                   vtkm::cont::DeviceAdapterTagSerial>::Lookup,
+                                 typename vtkm::worklet::internal::KeysBase::ExecLookup>::value));
+VTKM_STATIC_ASSERT((std::is_same<typename vtkm::worklet::Keys<vtkm::Id>::ExecutionTypes<
+                                   vtkm::cont::DeviceAdapterTagSerial>::Lookup,
+                                 typename vtkm::worklet::Keys<vtkm::Id>::ExecLookup>::value));
+VTKM_DEPRECATED_SUPPRESS_END
+
 namespace
 {
 
@@ -31,7 +41,7 @@ void CheckKeyReduce(const KeyPortal& originalKeys,
   vtkm::Id originalSize = originalKeys.GetNumberOfValues();
   vtkm::Id uniqueSize = uniqueKeys.GetNumberOfValues();
   VTKM_TEST_ASSERT(originalSize == sortedValuesMap.GetNumberOfValues(), "Inconsistent array size.");
-  VTKM_TEST_ASSERT(uniqueSize == offsets.GetNumberOfValues(), "Inconsistent array size.");
+  VTKM_TEST_ASSERT(uniqueSize == offsets.GetNumberOfValues() - 1, "Inconsistent array size.");
   VTKM_TEST_ASSERT(uniqueSize == counts.GetNumberOfValues(), "Inconsistent array size.");
 
   for (vtkm::Id uniqueIndex = 0; uniqueIndex < uniqueSize; uniqueIndex++)
@@ -57,7 +67,8 @@ void TryKeyType(KeyType)
     keyBuffer[index] = TestValue(index % NUM_UNIQUE, KeyType());
   }
 
-  vtkm::cont::ArrayHandle<KeyType> keyArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
+  vtkm::cont::ArrayHandle<KeyType> keyArray =
+    vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE, vtkm::CopyFlag::On);
 
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
   vtkm::cont::ArrayCopy(keyArray, sortedKeys);
@@ -65,11 +76,11 @@ void TryKeyType(KeyType)
   vtkm::worklet::Keys<KeyType> keys(sortedKeys);
   VTKM_TEST_ASSERT(keys.GetInputRange() == NUM_UNIQUE, "Keys has bad input range.");
 
-  CheckKeyReduce(keyArray.GetPortalConstControl(),
-                 keys.GetUniqueKeys().GetPortalConstControl(),
-                 keys.GetSortedValuesMap().GetPortalConstControl(),
-                 keys.GetOffsets().GetPortalConstControl(),
-                 keys.GetCounts().GetPortalConstControl());
+  CheckKeyReduce(keyArray.ReadPortal(),
+                 keys.GetUniqueKeys().ReadPortal(),
+                 keys.GetSortedValuesMap().ReadPortal(),
+                 keys.GetOffsets().ReadPortal(),
+                 keys.GetCounts().ReadPortal());
 }
 
 void TestKeys()

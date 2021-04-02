@@ -106,7 +106,7 @@ public:
   const vtkm::cont::ArrayHandle<T, StorageType>& values;
 
   // size of the mesh
-  vtkm::Id nRows, nCols, nSlices, nVertices, nLogSteps;
+  vtkm::Id nRows, nCols, nSlices, NumVertices, nLogSteps;
 
   // array with neighbourhood masks
   vtkm::cont::ArrayHandle<vtkm::Id> neighbourhoodMask;
@@ -142,17 +142,17 @@ Mesh3D_DEM_Triangulation<T, StorageType>::Mesh3D_DEM_Triangulation(
   , neighbourOffsets3D()
   , linkComponentCaseTable3D()
 {
-  nVertices = nRows * nCols * nSlices;
+  NumVertices = nRows * nCols * nSlices;
 
-  // compute the number of log-jumping steps (i.e. lg_2 (nVertices))
+  // compute the number of log-jumping steps (i.e. lg_2 (NumVertices))
   nLogSteps = 1;
-  for (vtkm::Id shifter = nVertices; shifter > 0; shifter >>= 1)
+  for (vtkm::Id shifter = NumVertices; shifter > 0; shifter >>= 1)
     nLogSteps++;
 
-  neighbourOffsets3D =
-    vtkm::cont::make_ArrayHandle(vtkm::worklet::contourtree::neighbourOffsets3D, 42);
-  linkComponentCaseTable3D =
-    vtkm::cont::make_ArrayHandle(vtkm::worklet::contourtree::linkComponentCaseTable3D, 16384);
+  neighbourOffsets3D = vtkm::cont::make_ArrayHandle(
+    vtkm::worklet::contourtree::neighbourOffsets3D, 42, vtkm::CopyFlag::Off);
+  linkComponentCaseTable3D = vtkm::cont::make_ArrayHandle(
+    vtkm::worklet::contourtree::linkComponentCaseTable3D, 16384, vtkm::CopyFlag::Off);
 }
 
 // sets outgoing paths for saddles
@@ -161,10 +161,10 @@ void Mesh3D_DEM_Triangulation<T, StorageType>::SetStarts(vtkm::cont::ArrayHandle
                                                          bool ascending)
 {
   // create the neighbourhood mask
-  neighbourhoodMask.Allocate(nVertices);
+  neighbourhoodMask.Allocate(NumVertices);
 
   // For each vertex set the next vertex in the chain
-  vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
+  vtkm::cont::ArrayHandleIndex vertexIndexArray(NumVertices);
   Mesh3D_DEM_VertexStarter<T> vertexStarter(nRows, nCols, nSlices, ascending);
   vtkm::worklet::DispatcherMapField<Mesh3D_DEM_VertexStarter<T>> vertexStarterDispatcher(
     vertexStarter);
@@ -186,7 +186,7 @@ void Mesh3D_DEM_Triangulation<T, StorageType>::SetSaddleStarts(
   vtkm::cont::ArrayHandle<vtkm::Id> isCritical;
   vtkm::cont::ArrayHandle<vtkm::Id> outdegree;
 
-  vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
+  vtkm::cont::ArrayHandleIndex vertexIndexArray(NumVertices);
   Mesh3D_DEM_VertexOutdegreeStarter vertexOutdegreeStarter(nRows, nCols, nSlices, ascending);
   vtkm::worklet::DispatcherMapField<Mesh3D_DEM_VertexOutdegreeStarter>
     vertexOutdegreeStarterDispatcher(vertexOutdegreeStarter);
@@ -202,8 +202,8 @@ void Mesh3D_DEM_Triangulation<T, StorageType>::SetSaddleStarts(
   vtkm::cont::Algorithm::ScanExclusive(isCritical, inverseIndex);
 
   // now we can compute how many critical points we carry forward
-  vtkm::Id nCriticalPoints = vtkm::cont::ArrayGetValue(nVertices - 1, inverseIndex) +
-    vtkm::cont::ArrayGetValue(nVertices - 1, isCritical);
+  vtkm::Id nCriticalPoints = vtkm::cont::ArrayGetValue(NumVertices - 1, inverseIndex) +
+    vtkm::cont::ArrayGetValue(NumVertices - 1, isCritical);
 
   // allocate space for the join graph vertex arrays
   mergeGraph.AllocateVertexArrays(nCriticalPoints);

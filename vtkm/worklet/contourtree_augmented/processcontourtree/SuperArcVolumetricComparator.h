@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_inc_superarc_volumetric_comperator_h
-#define vtkm_worklet_contourtree_augmented_process_contourtree_inc_superarc_volumetric_comperator_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_inc_superarc_volumetric_comperator_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_inc_superarc_volumetric_comperator_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
@@ -68,14 +68,11 @@ namespace contourtree_augmented
 namespace process_contourtree_inc
 {
 
-template <typename DeviceAdapter>
 class SuperArcVolumetricComparatorImpl
 { // SuperArcVolumetricComparatorImpl
 public:
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using EdgePairArrayPortalType =
-    typename EdgePairArray::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
+  using EdgePairArrayPortalType = EdgePairArray::ReadPortalType;
 
   IdPortalType weightPortal;
   bool pairsAtLowEnd;
@@ -84,11 +81,13 @@ public:
   // constructor
   SuperArcVolumetricComparatorImpl(const IdArrayType& Weight,
                                    const EdgePairArray& SuperarcList,
-                                   bool PairsAtLowEnd)
+                                   bool PairsAtLowEnd,
+                                   vtkm::cont::DeviceAdapterId device,
+                                   vtkm::cont::Token& token)
     : pairsAtLowEnd(PairsAtLowEnd)
   { // constructor
-    weightPortal = Weight.PrepareForInput(DeviceAdapter());
-    superarcListPortal = SuperarcList.PrepareForInput(DeviceAdapter());
+    weightPortal = Weight.PrepareForInput(device, token);
+    superarcListPortal = SuperarcList.PrepareForInput(device, token);
 
   } // constructor
 
@@ -164,11 +163,11 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT SuperArcVolumetricComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  VTKM_CONT SuperArcVolumetricComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                                 vtkm::cont::Token& token)
   {
-    return SuperArcVolumetricComparatorImpl<DeviceAdapter>(
-      this->Weight, this->SuperArcList, this->PairsAtLowEnd);
+    return SuperArcVolumetricComparatorImpl(
+      this->Weight, this->SuperArcList, this->PairsAtLowEnd, device, token);
   }
 
 private:

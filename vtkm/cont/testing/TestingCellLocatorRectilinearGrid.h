@@ -29,17 +29,19 @@ class LocatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using AxisPortalType = typename AxisHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using AxisPortalType = typename AxisHandle::ReadPortalType;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-  using RectilinearPortalType =
-    typename RectilinearType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using RectilinearPortalType = typename RectilinearType::ReadPortalType;
 
-  LocatorWorklet(vtkm::Bounds& bounds, vtkm::Id3& dims, const RectilinearType& coords)
+  LocatorWorklet(vtkm::Bounds& bounds,
+                 vtkm::Id3& dims,
+                 const RectilinearType& coords,
+                 vtkm::cont::Token& token)
     : Bounds(bounds)
     , Dims(dims)
   {
-    RectilinearPortalType coordsPortal = coords.PrepareForInput(DeviceAdapter());
+    RectilinearPortalType coordsPortal = coords.PrepareForInput(DeviceAdapter(), token);
     xAxis = coordsPortal.GetFirstPortal();
     yAxis = coordsPortal.GetSecondPortal();
     zAxis = coordsPortal.GetThirdPortal();
@@ -101,7 +103,13 @@ public:
                             bool& match) const
   {
     vtkm::Id calculated = CalculateCellId(pointIn);
-    locator->FindCell(pointIn, cellId, parametric, (*this));
+    vtkm::ErrorCode status = locator.FindCell(pointIn, cellId, parametric);
+    if (status != vtkm::ErrorCode::Success)
+    {
+      this->RaiseError(vtkm::ErrorString(status));
+      match = false;
+      return;
+    }
     match = (calculated == cellId);
   }
 
@@ -161,7 +169,8 @@ public:
       pointsVec.push_back(point);
     }
 
-    vtkm::cont::ArrayHandle<PointType> points = vtkm::cont::make_ArrayHandle(pointsVec);
+    vtkm::cont::ArrayHandle<PointType> points =
+      vtkm::cont::make_ArrayHandle(pointsVec, vtkm::CopyFlag::Off);
 
     // Initialize locator
     vtkm::cont::CellLocatorRectilinearGrid locator;
@@ -173,14 +182,15 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
     vtkm::cont::ArrayHandle<PointType> parametric;
     vtkm::cont::ArrayHandle<bool> match;
+    vtkm::cont::Token token;
     LocatorWorklet<DeviceAdapter> worklet(
-      bounds, dims, coords.GetData().template Cast<RectilinearType>());
+      bounds, dims, coords.GetData().template AsArrayHandle<RectilinearType>(), token);
 
     vtkm::worklet::DispatcherMapField<LocatorWorklet<DeviceAdapter>> dispatcher(worklet);
     dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(points, locator, cellIds, parametric, match);
 
-    auto matchPortal = match.GetPortalConstControl();
+    auto matchPortal = match.ReadPortal();
     for (vtkm::Id index = 0; index < match.GetNumberOfValues(); index++)
     {
       VTKM_TEST_ASSERT(matchPortal.Get(index), "Points do not match");

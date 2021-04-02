@@ -23,7 +23,7 @@ template <typename T>
 VTKM_CONT void TestValues(const vtkm::cont::ArrayHandle<T>& ah,
                           const std::initializer_list<T>& expected)
 {
-  auto portal = ah.GetPortalConstControl();
+  auto portal = ah.ReadPortal();
   VTKM_TEST_ASSERT(expected.size() == static_cast<size_t>(ah.GetNumberOfValues()));
   for (vtkm::Id i = 0; i < ah.GetNumberOfValues(); ++i)
   {
@@ -53,8 +53,7 @@ void TryCopy()
   }
 
   { // ArrayHandle ids
-    const std::vector<vtkm::Id> idsVec{ 3, 8, 7 };
-    const auto ids = vtkm::cont::make_ArrayHandle(idsVec);
+    const auto ids = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 3, 8, 7 });
     { // Return vector:
       const std::vector<ValueType> output = vtkm::cont::ArrayGetValues(ids, data);
       TestValues<ValueType>(output, { 3, 8, 7 });

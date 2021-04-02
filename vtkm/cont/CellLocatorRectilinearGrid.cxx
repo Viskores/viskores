@@ -20,15 +20,6 @@ namespace vtkm
 namespace cont
 {
 
-CellLocatorRectilinearGrid::CellLocatorRectilinearGrid() = default;
-
-CellLocatorRectilinearGrid::~CellLocatorRectilinearGrid() = default;
-
-using Structured2DType = vtkm::cont::CellSetStructured<2>;
-using Structured3DType = vtkm::cont::CellSetStructured<3>;
-using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-using RectilinearType = vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-
 void CellLocatorRectilinearGrid::Build()
 {
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
@@ -59,56 +50,33 @@ void CellLocatorRectilinearGrid::Build()
   }
 }
 
-namespace
+vtkm::exec::CellLocatorRectilinearGrid CellLocatorRectilinearGrid::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token) const
 {
+  this->Update();
 
-template <vtkm::IdComponent dimensions>
-struct CellLocatorRectilinearGridPrepareForExecutionFunctor
-{
-  template <typename DeviceAdapter, typename... Args>
-  VTKM_CONT bool operator()(DeviceAdapter,
-                            vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& execLocator,
-                            Args&&... args) const
-  {
-    using ExecutionType = vtkm::exec::CellLocatorRectilinearGrid<DeviceAdapter, dimensions>;
-    ExecutionType* execObject = new ExecutionType(std::forward<Args>(args)..., DeviceAdapter());
-    execLocator.Reset(execObject);
-    return true;
-  }
-};
-}
+  using ExecObjType = vtkm::exec::CellLocatorRectilinearGrid;
 
-const vtkm::exec::CellLocator* CellLocatorRectilinearGrid::PrepareForExecution(
-  vtkm::cont::DeviceAdapterId device) const
-{
-  bool success = false;
   if (this->Is3D)
   {
-    success = vtkm::cont::TryExecuteOnDevice(
-      device,
-      CellLocatorRectilinearGridPrepareForExecutionFunctor<3>(),
-      this->ExecutionObjectHandle,
-      this->PlaneSize,
-      this->RowSize,
-      this->GetCellSet().template Cast<Structured3DType>(),
-      this->GetCoordinates().GetData().template Cast<RectilinearType>());
+    return ExecObjType(this->PlaneSize,
+                       this->RowSize,
+                       this->GetCellSet().template Cast<Structured3DType>(),
+                       this->GetCoordinates().GetData().template AsArrayHandle<RectilinearType>(),
+                       device,
+                       token);
   }
   else
   {
-    success = vtkm::cont::TryExecuteOnDevice(
-      device,
-      CellLocatorRectilinearGridPrepareForExecutionFunctor<2>(),
-      this->ExecutionObjectHandle,
-      this->PlaneSize,
-      this->RowSize,
-      this->GetCellSet().template Cast<Structured2DType>(),
-      this->GetCoordinates().GetData().template Cast<RectilinearType>());
+    return ExecObjType(this->PlaneSize,
+                       this->RowSize,
+                       this->GetCellSet().template Cast<Structured2DType>(),
+                       this->GetCoordinates().GetData().template AsArrayHandle<RectilinearType>(),
+                       device,
+                       token);
   }
-  if (!success)
-  {
-    throwFailedRuntimeDeviceTransfer("CellLocatorRectilinearGrid", device);
-  }
-  return this->ExecutionObjectHandle.PrepareForExecution(device);
 }
+
 } //namespace cont
 } //namespace vtkm

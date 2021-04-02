@@ -78,20 +78,22 @@ struct Transport<vtkm::cont::arg::TransportTagTopologyFieldIn<TopologyElementTag
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
 
-  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInput(Device()));
+  using ExecObjectType = decltype(
+    std::declval<ContObjectType>().PrepareForInput(Device(), std::declval<vtkm::cont::Token&>()));
 
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType& object,
                             const vtkm::cont::CellSet& inputDomain,
                             vtkm::Id,
-                            vtkm::Id) const
+                            vtkm::Id,
+                            vtkm::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != detail::TopologyDomainSize(inputDomain, TopologyElementTag()))
     {
       throw vtkm::cont::ErrorBadValue("Input array to worklet invocation the wrong size.");
     }
 
-    return object.PrepareForInput(Device());
+    return object.PrepareForInput(Device(), token);
   }
 };
 }

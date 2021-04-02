@@ -16,29 +16,12 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ArrayRangeCompute.h>
-#include <vtkm/cont/ArrayRangeCompute.hxx>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 namespace vtkm
 {
 namespace cont
 {
-
-namespace internal
-{
-
-struct ComputeRange
-{
-  template <typename ArrayHandleType>
-  void operator()(const ArrayHandleType& input, vtkm::cont::ArrayHandle<vtkm::Range>& range) const
-  {
-    range = vtkm::cont::ArrayRangeCompute(input);
-  }
-};
-
-} // namespace internal
 
 
 /// A \c Field encapsulates an array on some piece of the mesh, such as
@@ -59,13 +42,13 @@ public:
   Field() = default;
 
   VTKM_CONT
-  Field(std::string name, Association association, const vtkm::cont::VariantArrayHandle& data);
+  Field(std::string name, Association association, const vtkm::cont::UnknownArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Field(name, association, vtkm::cont::VariantArrayHandle{ data })
+    : Field(name, association, vtkm::cont::UnknownArrayHandle{ data })
   {
   }
 
@@ -79,54 +62,39 @@ public:
 
   VTKM_CONT const std::string& GetName() const { return this->Name; }
   VTKM_CONT Association GetAssociation() const { return this->FieldAssociation; }
-  const vtkm::cont::VariantArrayHandle& GetData() const;
-  vtkm::cont::VariantArrayHandle& GetData();
+  const vtkm::cont::UnknownArrayHandle& GetData() const;
+  vtkm::cont::UnknownArrayHandle& GetData();
 
   VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::CELL_SET; }
   VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::POINTS; }
+  VTKM_CONT bool IsFieldGlobal() const { return this->FieldAssociation == Association::WHOLE_MESH; }
 
   VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfValues(); }
 
   template <typename TypeList>
+  VTKM_DEPRECATED(1.6, "TypeList no longer supported in Field::GetRange.")
   VTKM_CONT void GetRange(vtkm::Range* range, TypeList) const
   {
-    this->GetRangeImpl(TypeList());
-    const vtkm::Id length = this->Range.GetNumberOfValues();
-    for (vtkm::Id i = 0; i < length; ++i)
-    {
-      range[i] = this->Range.GetPortalConstControl().Get(i);
-    }
+    this->GetRange(range);
   }
 
   template <typename TypeList>
+  VTKM_DEPRECATED(1.6, "TypeList no longer supported in Field::GetRange.")
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList) const
   {
-    return this->GetRangeImpl(TypeList());
+    return this->GetRange();
   }
 
-  VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const
-  {
-    return this->GetRangeImpl(VTKM_DEFAULT_TYPE_LIST_TAG());
-  };
+  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
 
-  VTKM_CONT void GetRange(vtkm::Range* range) const
-  {
-    return this->GetRange(range, VTKM_DEFAULT_TYPE_LIST_TAG());
-  };
+  VTKM_CONT void GetRange(vtkm::Range* range) const;
+
+  VTKM_CONT void SetData(const vtkm::cont::UnknownArrayHandle& newdata);
 
   template <typename T, typename StorageTag>
   VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, StorageTag>& newdata)
   {
-    this->Data = newdata;
-    this->ModifiedFlag = true;
-  }
-
-  VTKM_CONT
-  void SetData(const vtkm::cont::VariantArrayHandle& newdata)
-  {
-    this->Data = newdata;
-    this->ModifiedFlag = true;
+    this->SetData(vtkm::cont::UnknownArrayHandle(newdata));
   }
 
   VTKM_CONT
@@ -143,24 +111,9 @@ private:
   std::string Name; ///< name of field
 
   Association FieldAssociation = Association::ANY;
-  vtkm::cont::VariantArrayHandle Data;
+  vtkm::cont::UnknownArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag = true;
-
-  template <typename TypeList>
-  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRangeImpl(TypeList) const
-  {
-    VTKM_IS_LIST_TAG(TypeList);
-
-    if (this->ModifiedFlag)
-    {
-      vtkm::cont::CastAndCall(
-        this->Data.ResetTypes(TypeList()), internal::ComputeRange{}, this->Range);
-      this->ModifiedFlag = false;
-    }
-
-    return this->Range;
-  }
 };
 
 template <typename Functor, typename... Args>
@@ -177,18 +130,59 @@ vtkm::cont::Field make_Field(std::string name,
                              Field::Association association,
                              const T* data,
                              vtkm::Id size,
-                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+                             vtkm::CopyFlag copy)
 {
   return vtkm::cont::Field(name, association, vtkm::cont::make_ArrayHandle(data, size, copy));
+}
+
+template <typename T>
+VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_Field.")
+vtkm::cont::Field
+  make_Field(std::string name, Field::Association association, const T* data, vtkm::Id size)
+{
+  return make_Field(name, association, data, size, vtkm::CopyFlag::Off);
 }
 
 template <typename T>
 vtkm::cont::Field make_Field(std::string name,
                              Field::Association association,
                              const std::vector<T>& data,
-                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+                             vtkm::CopyFlag copy)
 {
   return vtkm::cont::Field(name, association, vtkm::cont::make_ArrayHandle(data, copy));
+}
+
+template <typename T>
+VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_Field.")
+vtkm::cont::Field
+  make_Field(std::string name, Field::Association association, const std::vector<T>& data)
+{
+  return make_Field(name, association, data, vtkm::CopyFlag::Off);
+}
+
+template <typename T>
+vtkm::cont::Field make_FieldMove(std::string name,
+                                 Field::Association association,
+                                 std::vector<T>&& data)
+{
+  return vtkm::cont::Field(name, association, vtkm::cont::make_ArrayHandleMove(data));
+}
+
+template <typename T>
+vtkm::cont::Field make_Field(std::string name,
+                             Field::Association association,
+                             std::vector<T>&& data,
+                             vtkm::CopyFlag vtkmNotUsed(copy))
+{
+  return make_FieldMove(name, association, std::move(data));
+}
+
+template <typename T>
+vtkm::cont::Field make_Field(std::string name,
+                             Field::Association association,
+                             std::initializer_list<T>&& data)
+{
+  return make_FieldMove(name, association, vtkm::cont::make_ArrayHandle(std::move(data)));
 }
 
 //@}
@@ -202,7 +196,7 @@ vtkm::cont::Field make_FieldPoint(std::string name, const vtkm::cont::ArrayHandl
 
 /// Convenience function to build point fields from vtkm::cont::VariantArrayHandle
 inline vtkm::cont::Field make_FieldPoint(std::string name,
-                                         const vtkm::cont::VariantArrayHandle& data)
+                                         const vtkm::cont::UnknownArrayHandle& data)
 {
   return vtkm::cont::Field(name, vtkm::cont::Field::Association::POINTS, data);
 }
@@ -217,7 +211,7 @@ vtkm::cont::Field make_FieldCell(std::string name, const vtkm::cont::ArrayHandle
 
 /// Convenience function to build cell fields from vtkm::cont::VariantArrayHandle
 inline vtkm::cont::Field make_FieldCell(std::string name,
-                                        const vtkm::cont::VariantArrayHandle& data)
+                                        const vtkm::cont::UnknownArrayHandle& data)
 {
   return vtkm::cont::Field(name, vtkm::cont::Field::Association::CELL_SET, data);
 }
@@ -248,8 +242,8 @@ namespace vtkm
 {
 namespace cont
 {
-template <typename TypeList = VTKM_DEFAULT_TYPE_LIST_TAG>
-struct SerializableField
+template <typename TypeList = VTKM_DEFAULT_TYPE_LIST>
+struct VTKM_DEPRECATED(1.6, "You can now directly serialize Field.") SerializableField
 {
   SerializableField() = default;
 
@@ -266,6 +260,15 @@ struct SerializableField
 namespace mangled_diy_namespace
 {
 
+template <>
+struct VTKM_CONT_EXPORT Serialization<vtkm::cont::Field>
+{
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::Field& field);
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::Field& field);
+};
+
+// Implement deprecated code
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename TypeList>
 struct Serialization<vtkm::cont::SerializableField<TypeList>>
 {
@@ -275,28 +278,15 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& serializable)
   {
-    const auto& field = serializable.Field;
-
-    vtkmdiy::save(bb, field.GetName());
-    vtkmdiy::save(bb, static_cast<int>(field.GetAssociation()));
-    vtkmdiy::save(bb, field.GetData().ResetTypes(TypeList{}));
+    Serialization<vtkm::cont::Field>::save(bb, serializable.Field);
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& serializable)
   {
-    auto& field = serializable.Field;
-
-    std::string name;
-    vtkmdiy::load(bb, name);
-    int assocVal = 0;
-    vtkmdiy::load(bb, assocVal);
-
-    auto assoc = static_cast<vtkm::cont::Field::Association>(assocVal);
-    vtkm::cont::VariantArrayHandleBase<TypeList> data;
-    vtkmdiy::load(bb, data);
-    field = vtkm::cont::Field(name, assoc, vtkm::cont::VariantArrayHandle(data));
+    Serialization<vtkm::cont::Field>::load(bb, serializable.Field);
   }
 };
+VTKM_DEPRECATED_SUPPRESS_END
 
 } // diy
 /// @endcond SERIALIZATION
