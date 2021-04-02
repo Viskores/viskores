@@ -324,9 +324,9 @@ public:
     const InputDomainType& inputDomain = invocation.GetInputDomain();
 
     // For a DispatcherMapField, the inputDomain must be an ArrayHandle (or
-    // an VariantArrayHandle that gets cast to one). The size of the domain
-    // (number of threads/worklet instances) is equal to the size of the
-    // array.
+    // an UncertainArrayHandle or an UnknownArrayHandle that gets cast to one).
+    // The size of the domain (number of threads/worklet instances) is equal
+    // to the size of the array.
     //verify the overloads for SchedulingRange work
     auto numInstances = SchedulingRange(inputDomain);
 

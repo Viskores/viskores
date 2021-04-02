@@ -157,7 +157,7 @@ private:
   VTKM_CONT void ReadHeader();
   VTKM_CONT void AddField(const std::string& name,
                           vtkm::cont::Field::Association association,
-                          vtkm::cont::VariantArrayHandle& data);
+                          vtkm::cont::UnknownArrayHandle& data);
   VTKM_CONT void ReadScalars(vtkm::cont::Field::Association association, std::size_t numElements);
   VTKM_CONT void ReadColorScalars(vtkm::cont::Field::Association association,
                                   std::size_t numElements);
@@ -182,7 +182,7 @@ protected:
   VTKM_CONT void DoSkipArrayVariant(std::string dataType,
                                     std::size_t numElements,
                                     vtkm::IdComponent numComponents);
-  VTKM_CONT vtkm::cont::VariantArrayHandle DoReadArrayVariant(
+  VTKM_CONT vtkm::cont::UnknownArrayHandle DoReadArrayVariant(
     vtkm::cont::Field::Association association,
     std::string dataType,
     std::size_t numElements,

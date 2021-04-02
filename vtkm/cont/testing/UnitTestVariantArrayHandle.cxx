@@ -8,6 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/Deprecated.h>
+
+// This is testing a deprecated functionality. Remove this test once VariantArrayHandle
+// is completely removed from VTK-m.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 #include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/TypeTraits.h>
@@ -120,7 +126,6 @@ struct CheckFunctor
   }
 
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
   template <typename T>
   void operator()(const vtkm::cont::ArrayHandleVirtual<T>& array,
                   bool& vtkmNotUsed(calledBasic),
@@ -131,7 +136,6 @@ struct CheckFunctor
 
     CheckArray(array);
   }
-  VTKM_DEPRECATED_SUPPRESS_END
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   template <typename T, typename S>
@@ -273,7 +277,6 @@ void CheckCastToVirtualArrayHandle(const ArrayType& array)
 
   VariantArrayType arrayVariant = array;
 
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
   {
     auto testArray = arrayVariant.template AsVirtual<ValueType, StorageList>();
     VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
@@ -329,7 +332,6 @@ void CheckCastToVirtualArrayHandle(const ArrayType& array)
   VTKM_TEST_ASSERT(threw,
                    "Casting to different vector width did not throw expected "
                    "ErrorBadType exception.");
-  VTKM_DEPRECATED_SUPPRESS_END
 }
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
 
@@ -544,3 +546,5 @@ int UnitTestVariantArrayHandle(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestVariantArrayHandle, argc, argv);
 }
+
+VTKM_DEPRECATED_SUPPRESS_END

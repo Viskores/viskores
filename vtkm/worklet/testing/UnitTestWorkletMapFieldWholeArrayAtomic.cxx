@@ -9,7 +9,7 @@
 //============================================================================
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -42,12 +42,14 @@ struct DoTestAtomicArrayWorklet
 
   // This just demonstrates that the WholeArray tags support dynamic arrays.
   VTKM_CONT
-  void CallWorklet(const vtkm::cont::VariantArrayHandle& inOutArray) const
+  void CallWorklet(const vtkm::cont::UnknownArrayHandle& inOutArray) const
   {
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
-                      inOutArray.ResetTypes<vtkm::cont::AtomicArrayTypeList>());
+    dispatcher.Invoke(
+      vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
+      inOutArray
+        .ResetTypes<vtkm::cont::AtomicArrayTypeList, vtkm::List<vtkm::cont::StorageTagBasic>>());
   }
 
   template <typename T>
@@ -56,7 +58,7 @@ struct DoTestAtomicArrayWorklet
     std::cout << "Set up data." << std::endl;
     vtkm::cont::ArrayHandle<T> inOutHandle = vtkm::cont::make_ArrayHandle<T>({ 0 });
 
-    this->CallWorklet(vtkm::cont::VariantArrayHandle(inOutHandle));
+    this->CallWorklet(inOutHandle);
 
     std::cout << "Check result." << std::endl;
     T result = inOutHandle.ReadPortal().Get(0);

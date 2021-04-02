@@ -62,9 +62,9 @@ void TestClipStructured()
   VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 8,
                    "Wrong number of cells in the output dataset");
 
-  vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();
+  vtkm::cont::UnknownArrayHandle temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  temp.CopyTo(resultArrayHandle);
+  temp.AsArrayHandle(resultArrayHandle);
 
   VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 13,
                    "Wrong number of points in the output dataset");
@@ -98,9 +98,9 @@ void TestClipStructuredInverted()
   VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 4,
                    "Wrong number of cells in the output dataset");
 
-  vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();
+  vtkm::cont::UnknownArrayHandle temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  temp.CopyTo(resultArrayHandle);
+  temp.AsArrayHandle(resultArrayHandle);
 
   VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 13,
                    "Wrong number of points in the output dataset");

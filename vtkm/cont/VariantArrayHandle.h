@@ -106,7 +106,10 @@ VTKM_DEPRECATED_SUPPRESS_END
 ///
 /// See the documentation of `VariantArrayHandleBase` for more information.
 ///
-class VTKM_ALWAYS_EXPORT VariantArrayHandleCommon : public vtkm::cont::UnknownArrayHandle
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
+  1.7,
+  "VariantArrayHandle classes replaced with UnknownArrayHandle and UncertainArrayHandle.")
+  VariantArrayHandleCommon : public vtkm::cont::UnknownArrayHandle
 {
   using Superclass = vtkm::cont::UnknownArrayHandle;
 
@@ -263,8 +266,12 @@ public:
 /// named `VariantArrayHandleBase`, which is templated on the list of
 /// component types.
 ///
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename TypeList>
-class VTKM_ALWAYS_EXPORT VariantArrayHandleBase : public VariantArrayHandleCommon
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
+  1.7,
+  "VariantArrayHandle classes replaced with UnknownArrayHandle and UncertainArrayHandle.")
+  VariantArrayHandleBase : public VariantArrayHandleCommon
 {
   VTKM_STATIC_ASSERT_MSG((!std::is_same<TypeList, vtkm::ListUniversal>::value),
                          "Cannot use vtkm::ListUniversal with VariantArrayHandle.");
@@ -319,14 +326,12 @@ public:
   /// be specified in the second template parameter, which will be passed to
   /// the CastAndCall.
   ///
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
   template <typename T, typename StorageList = VTKM_DEFAULT_STORAGE_LIST>
   VTKM_CONT VTKM_DEPRECATED(1.6, "ArrayHandleVirtual is no longer suported.")
     vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
   {
     return this->Superclass::AsVirtual<T, StorageList, TypeList>();
   }
-  VTKM_DEPRECATED_SUPPRESS_END
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   /// Changes the types to try casting to when resolving this variant array,
@@ -406,7 +411,10 @@ private:
   }
 };
 
-using VariantArrayHandle = vtkm::cont::VariantArrayHandleBase<VTKM_DEFAULT_TYPE_LIST>;
+using VariantArrayHandle VTKM_DEPRECATED(
+  1.7,
+  "VariantArrayHandle classes replaced with UnknownArrayHandle and UncertainArrayHandle.") =
+  vtkm::cont::VariantArrayHandleBase<VTKM_DEFAULT_TYPE_LIST>;
 
 
 //=============================================================================
@@ -472,6 +480,8 @@ public:
 
 } // diy
 /// @endcond SERIALIZATION
+
+VTKM_DEPRECATED_SUPPRESS_END
 
 
 #endif //vtk_m_virts_VariantArrayHandle_h

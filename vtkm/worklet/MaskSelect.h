@@ -13,7 +13,7 @@
 #include <vtkm/worklet/internal/MaskBase.h>
 #include <vtkm/worklet/vtkm_worklet_export.h>
 
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 namespace vtkm
 {
@@ -34,22 +34,14 @@ class VTKM_WORKLET_EXPORT MaskSelect : public internal::MaskBase
 {
   using MaskTypes =
     vtkm::List<vtkm::Int32, vtkm::Int64, vtkm::UInt32, vtkm::UInt64, vtkm::Int8, vtkm::UInt8, char>;
-  using VariantArrayHandleMask = vtkm::cont::VariantArrayHandleBase<MaskTypes>;
 
 public:
   using ThreadToOutputMapType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
-  MaskSelect(const VariantArrayHandleMask& maskArray,
+  MaskSelect(const vtkm::cont::UnknownArrayHandle& maskArray,
              vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
     this->ThreadToOutputMap = this->Build(maskArray, device);
-  }
-
-  template <typename TypeList>
-  MaskSelect(const vtkm::cont::VariantArrayHandleBase<TypeList>& indexArray,
-             vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
-  {
-    this->ThreadToOutputMap = this->Build(VariantArrayHandleMask(indexArray), device);
   }
 
   template <typename RangeType>
@@ -67,7 +59,7 @@ public:
 private:
   ThreadToOutputMapType ThreadToOutputMap;
 
-  VTKM_CONT ThreadToOutputMapType Build(const VariantArrayHandleMask& maskArray,
+  VTKM_CONT ThreadToOutputMapType Build(const vtkm::cont::UnknownArrayHandle& maskArray,
                                         vtkm::cont::DeviceAdapterId device);
 };
 }

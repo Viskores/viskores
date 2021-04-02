@@ -11,7 +11,6 @@
 #define vtk_m_cont_testing_TestingSerialization_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/VariantArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/thirdparty/diy/serialization.h>
