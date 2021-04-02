@@ -916,7 +916,7 @@ struct UnknownArrayHandleTry
                   Args&&... args) const
   {
     using DerivedArrayType = vtkm::cont::ArrayHandle<T, S>;
-    if (!called && unknownArray.IsType<DerivedArrayType>())
+    if (!called && unknownArray.CanConvert<DerivedArrayType>())
     {
       called = true;
       DerivedArrayType derivedArray;
