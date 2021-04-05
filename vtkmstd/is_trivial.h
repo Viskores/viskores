@@ -55,10 +55,10 @@ struct is_trivial : std::false_type
 // `VTKM_IS_TRIVIALLY_COPYABLE`, which will always pass on compilers that don't
 // support is_trivially_copyable, but will do the correct check on compilers that
 // do support it.
-#define VTKM_IS_TRIVIALLY_COPYABLE(type) VTKM_STATIC_ASSERT(true)
+#define VTKM_IS_TRIVIALLY_COPYABLE(...) VTKM_STATIC_ASSERT(true)
 #define VTKM_IS_TRIVIALLY_CONSTRUCTIBLE(...) VTKM_STATIC_ASSERT(true)
 #define VTKM_IS_TRIVIALLY_DESTRUCTIBLE(...) VTKM_STATIC_ASSERT(true)
-#define VTKM_IS_TRIVIAL(type) VTKM_STATIC_ASSERT(true)
+#define VTKM_IS_TRIVIAL(...) VTKM_STATIC_ASSERT(true)
 
 } // namespace vtkmstd
 
@@ -71,18 +71,54 @@ using std::is_trivially_constructible;
 using std::is_trivially_copyable;
 using std::is_trivially_destructible;
 
-#define VTKM_IS_TRIVIALLY_COPYABLE(type)                                \
-  VTKM_STATIC_ASSERT_MSG(::vtkmstd::is_trivially_copyable<type>::value, \
-                         "Type must be trivially copyable to be used here.")
-#define VTKM_IS_TRIVIALLY_CONSTRUCTIBLE(...)                                        \
-  VTKM_STATIC_ASSERT_MSG(::vtkmstd::is_trivially_constructible<__VA_ARGS__>::value, \
-                         "Type must be trivially constructible to be used here.")
-#define VTKM_IS_TRIVIALLY_DESTRUCTIBLE(...)                                        \
-  VTKM_STATIC_ASSERT_MSG(::vtkmstd::is_trivially_destructible<__VA_ARGS__>::value, \
-                         "Type must be trivially constructible to be used here.")
-#define VTKM_IS_TRIVIAL(type)                                \
-  VTKM_STATIC_ASSERT_MSG(::vtkmstd::is_trivial<type>::value, \
-                         "Type must be trivial to be used here.")
+namespace detail
+{
+
+// Note: the reason why we redirect the trivial checks to these classes is so when the checks
+// fail it is easier to read from the error messages exactly which type was being checked. If
+// you just do a static assert in a macro, the error message is likely to give you either
+// macro argument names or unresolved types in the error message, which is unhelpful.
+
+template <typename T>
+struct CheckTriviallyCopyable
+{
+  VTKM_STATIC_ASSERT_MSG(vtkmstd::is_trivially_copyable<T>::value,
+                         "Type must be trivially copyable to be used here.");
+  static constexpr bool value = true;
+};
+
+template <typename T>
+struct CheckTriviallyConstructible
+{
+  VTKM_STATIC_ASSERT_MSG(::vtkmstd::is_trivially_constructible<T>::value,
+                         "Type must be trivially constructible to be used here.");
+  static constexpr bool value = true;
+};
+
+template <typename T>
+struct CheckTriviallyDestructible
+{
+  VTKM_STATIC_ASSERT_MSG(::vtkmstd::is_trivially_destructible<T>::value,
+                         "Type must be trivially destructible to be used here.");
+  static constexpr bool value = true;
+};
+
+template <typename T>
+struct CheckTrivial
+{
+  VTKM_STATIC_ASSERT_MSG(::vtkmstd::is_trivial<T>::value, "Type must be trivial to be used here.");
+  static constexpr bool value = true;
+};
+
+} // namespace detail
+
+#define VTKM_IS_TRIVIALLY_COPYABLE(...) \
+  VTKM_STATIC_ASSERT(::vtkmstd::detail::CheckTriviallyCopyable<__VA_ARGS__>::value)
+#define VTKM_IS_TRIVIALLY_CONSTRUCTIBLE(...) \
+  VTKM_STATIC_ASSERT(::vtkmstd::detail::CheckTriviallyConstructible<__VA_ARGS__>::value)
+#define VTKM_IS_TRIVIALLY_DESTRUCTIBLE(...) \
+  VTKM_STATIC_ASSERT(::vtkmstd::detail::CheckTriviallyDestructible<__VA_ARGS__>::value)
+#define VTKM_IS_TRIVIAL(...) VTKM_STATIC_ASSERT(::vtkmstd::detail::CheckTrivial<__VA_ARGS__>::value)
 
 } // namespace vtkmstd
 #endif
