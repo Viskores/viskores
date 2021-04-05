@@ -519,7 +519,7 @@ VTKM_EXEC_CONT T MatrixDeterminant(const vtkm::Matrix<T, 1, 1>& A)
 template <typename T>
 VTKM_EXEC_CONT T MatrixDeterminant(const vtkm::Matrix<T, 2, 2>& A)
 {
-  return A(0, 0) * A(1, 1) - A(1, 0) * A(0, 1);
+  return vtkm::DifferenceOfProducts(A(0, 0), A(1, 1), A(1, 0), A(0, 1));
 }
 
 template <typename T>

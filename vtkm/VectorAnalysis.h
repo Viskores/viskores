@@ -179,7 +179,9 @@ VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 3> C
   const vtkm::Vec<T, 3>& y)
 {
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 3>(
-    x[1] * y[2] - x[2] * y[1], x[2] * y[0] - x[0] * y[2], x[0] * y[1] - x[1] * y[0]);
+    DifferenceOfProducts(x[1], y[2], x[2], y[1]),
+    DifferenceOfProducts(x[2], y[0], x[0], y[2]),
+    DifferenceOfProducts(x[0], y[1], x[1], y[0]));
 }
 
 //-----------------------------------------------------------------------------

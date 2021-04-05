@@ -2696,6 +2696,17 @@ inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float32 x, vtkm::Float32 
   return xi - yi;
 }
 
+// Computes ab - cd.
+// See: https://pharr.org/matt/blog/2019/11/03/difference-of-floats.html
+template<typename T>
+inline VTKM_EXEC_CONT T DifferenceOfProducts(T a, T b, T c, T d)
+{
+    T cd = c * d;
+    T err = std::fma(-c, d, cd);
+    T dop = std::fma(a, b, -cd);
+    return dop + err;
+}
+
 /// Bitwise operations
 ///
 
