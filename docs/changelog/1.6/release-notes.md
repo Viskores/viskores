@@ -60,6 +60,7 @@ VTK-m 1.6 Release Notes
   - Replaced `vtkm::ListTag` with `vtkm::List`
   - Add `ListTagRemoveIf`
   - Write uniform and rectilinear grids to legacy VTK files
+8. [References](#References)
 
 # Core
 
@@ -133,7 +134,7 @@ However, any type used with `VecFlat` must have `VecTraits` defined and the
 number of components must be static (i.e. known at compile time).
 
 
-## Add a vtkm::Tuple class
+## Add a vtkm::[Tuple](Tuple) class
 
 This change added a `vtkm::Tuple` class that is very similar in nature to
 `std::tuple`. This should replace our use of tao tuple.
@@ -151,6 +152,208 @@ simple template cases for the object (with a backup implementation for even
 longer argument lists). I believe the compiler is better and parsing
 through thousands of lines of simple templates than to employ clever MPL to
 build general templates.
+
+### Usage
+
+The `vtkm::Tuple` class is defined in the `vtkm::Tuple.h` header file. A
+`Tuple` is designed to behave much like a `std::tuple` with some minor
+syntax differences to fit VTK-m coding standards.
+
+A tuple is declared with a list of template argument types.
+
+``` cpp
+vtkm::Tuple<vtkm::Id, vtkm::Vec3f, vtkm::cont::ArrayHandle<vtkm::Float32>> myTuple;
+```
+
+If given no arguments, a `vtkm::Tuple` will default-construct its contained
+objects. A `vtkm::Tuple` can also be constructed with the initial values of
+all contained objects.
+
+``` cpp
+vtkm::Tuple<vtkm::Id, vtkm::Vec3f, vtkm::cont::ArrayHandle<vtkm::Float32>> 
+  myTuple(0, vtkm::Vec3f(0, 1, 2), array);
+```
+
+For convenience there is a `vtkm::MakeTuple` function that takes arguments
+and packs them into a `Tuple` of the appropriate type. (There is also a
+`vtkm::make_tuple` alias to the function to match the `std` version.)
+
+``` cpp
+auto myTuple = vtkm::MakeTuple(0, vtkm::Vec3f(0, 1, 2), array);
+```
+
+Data is retrieved from a `Tuple` by using the `vtkm::Get` method. The `Get`
+method is templated on the index to get the value from. The index is of
+type `vtkm::IdComponent`. (There is also a `vtkm::get` that uses a
+`std::size_t` as the index type as an alias to the function to match the
+`std` version.)
+
+``` cpp
+vtkm::Id a = vtkm::Get<0>(myTuple);
+vtkm::Vec3f b = vtkm::Get<1>(myTuple);
+vtkm::cont::ArrayHandle<vtkm::Float32> c = vtkm::Get<2>(myTuple);
+```
+
+Likewise `vtkm::TupleSize` and `vtkm::TupleElement` (and their aliases
+`vtkm::Tuple_size`, `vtkm::tuple_element`, and `vtkm::tuple_element_t`) are
+provided.
+
+### Extended Functionality
+
+The `vtkm::Tuple` class contains some functionality beyond that of
+`std::tuple` to cover some common use cases in VTK-m that are tricky to
+implement. In particular, these methods allow you to use a `Tuple` as you
+would commonly use parameter packs. This allows you to stash parameter
+packs in a `Tuple` and then get them back out again.
+
+#### For Each
+
+`vtkm::Tuple::ForEach()` is a method that takes a function or functor and
+calls it for each of the items in the tuple. Nothing is returned from
+`ForEach` and any return value from the function is ignored.
+
+`ForEach` can be used to check the validity of each item.
+
+``` cpp
+void CheckPositive(vtkm::Float64 x)
+{
+  if (x < 0)
+  {
+    throw vtkm::cont::ErrorBadValue("Values need to be positive.");
+  }
+}
+
+// ...
+
+  vtkm::Tuple<vtkm::Float64, vtkm::Float64, vtkm::Float64> tuple(
+    CreateValue1(), CreateValue2(), CreateValue3());
+
+  // Will throw an error if any of the values are negative.
+  tuple.ForEach(CheckPositive);
+```
+
+`ForEach` can also be used to aggregate values.
+
+``` cpp
+struct SumFunctor
+{
+  vtkm::Float64 Sum = 0;
+  
+  template <typename T>
+  void operator()(const T& x)
+  {
+    this->Sum = this->Sum + static_cast<vtkm::Float64>(x);
+  }
+};
+
+// ...
+
+  vtkm::Tuple<vtkm::Float32, vtkm::Float64, vtkm::Id> tuple(
+    CreateValue1(), CreateValue2(), CreateValue3());
+
+  SumFunctor sum;
+  tuple.ForEach(sum);
+  vtkm::Float64 average = sum.Sum / 3;
+```
+
+#### Transform
+
+`vtkm::Tuple::Transform` is a method that builds a new `Tuple` by calling a
+function or functor on each of the items. The return value is placed in the
+corresponding part of the resulting `Tuple`, and the type is automatically
+created from the return type of the function.
+
+``` cpp
+struct GetReadPortalFunctor
+{
+  template <typename Array>
+  typename Array::ReadPortal operator()(const Array& array) const
+  {
+    VTKM_IS_ARRAY_HANDLE(Array);
+	return array.ReadPortal();
+  }
+};
+
+// ...
+
+  auto arrayTuple = vtkm::MakeTuple(array1, array2, array3);
+  
+  auto portalTuple = arrayTuple.Transform(GetReadPortalFunctor{});
+```
+
+#### Apply
+
+`vtkm::Tuple::Apply` is a method that calls a function or functor using the
+objects in the `Tuple` as the arguments. If the function returns a value,
+that value is returned from `Apply`.
+
+``` cpp
+struct AddArraysFunctor
+{
+  template <typename Array1, typename Array2, typename Array3>
+  vtkm::Id operator()(Array1 inArray1, Array2 inArray2, Array3 outArray) const
+  {
+    VTKM_IS_ARRAY_HANDLE(Array1);
+    VTKM_IS_ARRAY_HANDLE(Array2);
+    VTKM_IS_ARRAY_HANDLE(Array3);
+
+    vtkm::Id length = inArray1.GetNumberOfValues();
+	VTKM_ASSERT(inArray2.GetNumberOfValues() == length);
+	outArray.Allocate(length);
+	
+	auto inPortal1 = inArray1.ReadPortal();
+	auto inPortal2 = inArray2.ReadPortal();
+	auto outPortal = outArray.WritePortal();
+	for (vtkm::Id index = 0; index < length; ++index)
+	{
+	  outPortal.Set(index, inPortal1.Get(index) + inPortal2.Get(index));
+	}
+	
+	return length;
+  }
+};
+
+// ...
+
+  auto arrayTuple = vtkm::MakeTuple(array1, array2, array3);
+
+  vtkm::Id arrayLength = arrayTuple.Apply(AddArraysFunctor{});
+```
+
+If additional arguments are given to `Apply`, they are also passed to the
+function (before the objects in the `Tuple`). This is helpful for passing
+state to the function. (This feature is not available in either `ForEach`
+or `Transform` for technical implementation reasons.)
+
+``` cpp
+struct ScanArrayLengthFunctor
+{
+  template <std::size_t N, typename Array, typename... Remaining>
+  std::array<vtkm::Id, N + 1 + sizeof...(Remaining)>
+  operator()(const std::array<vtkm::Id, N>& partialResult,
+             const Array& nextArray,
+			 const Remaining&... remainingArrays) const
+  {
+    std::array<vtkm::Id, N + 1> nextResult;
+	std::copy(partialResult.begin(), partialResult.end(), nextResult.begin());
+    nextResult[N] = nextResult[N - 1] + nextArray.GetNumberOfValues();
+	return (*this)(nextResult, remainingArray);
+  }
+  
+  template <std::size_t N>
+  std::array<vtkm::Id, N> operator()(const std::array<vtkm::Id, N>& result) const
+  {
+    return result;
+  }
+};
+
+// ...
+
+  auto arrayTuple = vtkm::MakeTuple(array1, array2, array3);
+  
+  std::array<vtkm::Id, 4> = 
+    arrayTuple.Apply(ScanArrayLengthFunctor{}, std::array<vtkm::Id, 1>{ 0 });
+```
 
 ## DataSet now only allows unique field names
 
@@ -272,7 +475,8 @@ For convenience, header files can be added to the VTK_m source directory
 CMake option should be added to select the provided header file.
 
 
-2. [ArrayHandle](#ArrayHandle)
+
+# ArrayHandle
 
 ## Shorter fancy array handle classnames
 
@@ -295,7 +499,7 @@ more robust.
 
 Here is a list of classes that were updated.
 
-######## `ArrayHandleCast<TargetT, vtkm::cont::ArrayHandle<SourceT, SourceStorage>>`
+### `ArrayHandleCast<TargetT, vtkm::cont::ArrayHandle<SourceT, SourceStorage>>`
 
 Old storage: 
 ``` cpp
@@ -312,7 +516,7 @@ vtkm::cont::StorageTagCast<SourceT, SourceStorage>
 
 (Developer's note: Implementing this change to `ArrayHandleCast` was a much bigger PITA than expected.)
 
-######## `ArrayHandleCartesianProduct<AH1, AH2, AH3>`
+### `ArrayHandleCartesianProduct<AH1, AH2, AH3>`
 
 Old storage:
 ``` cpp
@@ -327,7 +531,7 @@ New storage:
 vtkm::cont::StorageTagCartesianProduct<StorageTag1, StorageTag2, StorageTag3>
 ```
 
-######## `ArrayHandleCompositeVector<AH1, AH2, ...>`
+### `ArrayHandleCompositeVector<AH1, AH2, ...>`
 
 Old storage:
 ``` cpp
@@ -345,7 +549,7 @@ New storage:
 vtkm::cont::StorageTagCompositeVec<StorageType1, StorageType2>
 ```
 
-######## `ArrayHandleConcatinate`
+### `ArrayHandleConcatinate`
 
 First an example with two simple types.
 
@@ -378,7 +582,7 @@ vtkm::cont::StorageTagConcatenate<
   vtkm::cont::StorageTagConcatenate<StorageTag1, StorageTag2>, StorageTag3>
 ```
 
-######## `ArrayHandleConstant`
+### `ArrayHandleConstant`
 
 Old storage:
 ``` cpp
@@ -392,7 +596,7 @@ New storage:
 vtkm::cont::StorageTagConstant
 ```
 
-######## `ArrayHandleCounting`
+### `ArrayHandleCounting`
 
 Old storage:
 ``` cpp
@@ -404,7 +608,7 @@ New storage:
 vtkm::cont::StorageTagCounting
 ```
 
-######## `ArrayHandleGroupVec`
+### `ArrayHandleGroupVec`
 
 Old storage:
 ``` cpp
@@ -417,7 +621,7 @@ New storage:
 vtkm::cont::StorageTagGroupVec<StorageTag, N>
 ```
 
-######## `ArrayHandleGroupVecVariable`
+### `ArrayHandleGroupVecVariable`
 
 Old storage:
 ``` cpp
@@ -431,7 +635,7 @@ New storage:
 vtkm::cont::StorageTagGroupVecVariable<StorageTag1, StorageTag2>
 ```
 
-######## `ArrayHandleIndex`
+### `ArrayHandleIndex`
 
 Old storage:
 ``` cpp
@@ -444,7 +648,7 @@ New storage:
 vtkm::cont::StorageTagIndex
 ```
 
-######## `ArrayHandlePermutation`
+### `ArrayHandlePermutation`
 
 Old storage:
 ``` cpp
@@ -458,7 +662,7 @@ New storage:
 vtkm::cont::StorageTagPermutation<StorageTag1, StorageTag2>
 ```
 
-######## `ArrayHandleReverse`
+### `ArrayHandleReverse`
 
 Old storage:
 ``` cpp
@@ -470,7 +674,7 @@ New storage:
 vtkm::cont::StorageTagReverse<StorageTag>
 ```
 
-######## `ArrayHandleUniformPointCoordinates`
+### `ArrayHandleUniformPointCoordinates`
 
 Old storage:
 ``` cpp
@@ -482,7 +686,7 @@ New Storage:
 vtkm::cont::StorageTagUniformPoints
 ```
 
-######## `ArrayHandleView`
+### `ArrayHandleView`
 
 Old storage:
 ``` cpp
@@ -495,7 +699,7 @@ New storage:
 ```
 
 
-######## `ArrayPortalZip`
+### `ArrayPortalZip`
 
 Old storage:
 ``` cpp
@@ -608,12 +812,12 @@ have multiple reasons to completely refactor the `VariantArrayHandle`
 class. These include changing the implementation, some behavior, and even
 the name.
 
-#### Motivation
+### Motivation
 
 We have several reasons that have accumulated to revisit the implementation
 of `VariantArrayHandle`.
 
-###### Move away from `ArrayHandleVirtual`
+#### Move away from `ArrayHandleVirtual`
 
 The current implementation of `VariantArrayHandle` internally stores the
 array wrapped in an `ArrayHandleVirtual`. That makes sense since you might
@@ -627,7 +831,7 @@ its own. We will consider using function pointers rather than actual
 virtual functions because compilers can be slow in creating lots of virtual
 subclasses.
 
-###### Reintroduce storage tag lists
+#### Reintroduce storage tag lists
 
 The original implementation of `VariantArrayHandle` (which at the time was
 called `DynamicArrayHandle`) actually had two type lists: one for the array
@@ -640,7 +844,7 @@ longer possible. We are in need again for the list of storage types to try.
 Thus, we need to reintroduce this template argument to
 `VariantArrayHandle`.
 
-###### More clear name
+#### More clear name
 
 The name of this class has always been unsatisfactory. The first name,
 `DynamicArrayHandle`, makes it sound like the data is always changing. The
@@ -650,7 +854,7 @@ a value type that can vary (like an `std::variant`).
 We can use a more clear name that expresses better that it is holding an
 `ArrayHandle` of an _unknown_ type.
 
-###### Take advantage of default types for less templating
+#### Take advantage of default types for less templating
 
 Once upon a time everything in VTK-m was templated header library. Things
 have changed quite a bit since then. The most recent development is the
@@ -670,7 +874,7 @@ completely typeless version as the base class and have a second version
 templated version to express when the type of the array has been partially
 narrowed down to given type lists.
 
-#### New Name and Structure
+### New Name and Structure
 
 The ultimate purpose of this class is to store an `ArrayHandle` where the
 value and storage types are unknown. Thus, an appropriate name for the
@@ -696,7 +900,7 @@ value types and a list of potential storage types. The behavior of
 inherit from it). However, for `CastAndCall` operations, it will use the
 type lists defined in its template parameters.
 
-#### Serializing UnknownArrayHandle
+### Serializing UnknownArrayHandle
 
 Because `UnknownArrayHandle` is not templated, it contains some
 opportunities to compile things into the `vtkm_cont` library. Templated
@@ -766,7 +970,7 @@ However, there was a flaw with the original implementation. Once requests
 to an `ArrayHandle` get queued up, they are resolved in arbitrary order.
 This might mean that things run in surprising and incorrect order.
 
-#### Problematic use case
+### Problematic use case
 
 To demonstrate the flaw in the original implementation, let us consider a
 future scenario where when you invoke a worklet (on OpenMP or TBB), the
@@ -807,7 +1011,7 @@ chance to claim it).
 Oops. Now `Worklet3` is operating on `array` before `Worklet2` has had a
 chance to put the correct values in it. The results will be wrong.
 
-#### Queuing requests
+### Queuing requests
 
 What we want is to impose the restriction that locks to an `ArrayHandle`
 get resolved in the order that they are requested. In the previous example,
@@ -825,7 +1029,7 @@ variable. In the `CanRead` and `CanWrite` methods, it checks this queue to
 see if the provided `Token` is at the front. If not, then the lock is
 denied and the thread must continue to wait.
 
-#### Early enqueuing
+### Early enqueuing
 
 Another issue that can happen in the previous example is that as threads
 are spawned for the 3 different worklets, they may actually start running
@@ -852,7 +1056,7 @@ first. When `PrepareForInput` is called on `array`, it is queued after the
 
 We have made several improvements to adding data into an `ArrayHandle`.
 
-#### Moving data from an `std::vector`
+### Moving data from an `std::vector`
 
 For numerous reasons, it is convenient to define data in a `std::vector`
 and then wrap that into an `ArrayHandle`. There are two obvious ways to do
@@ -912,7 +1116,7 @@ std::vector<vtkm::Id> vector;
 auto array = vtkm::cont::make_ArrayHandleMove(std::move(vector));
 ```
 
-#### Make `ArrayHandle` from initalizer list
+### Make `ArrayHandle` from initalizer list
 
 A common use case for using `std::vector` (particularly in our unit tests)
 is to quickly add an initalizer list into an `ArrayHandle`. Repeating the
@@ -942,7 +1146,7 @@ argument to `make_ArrayHandle`.
 auto array = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 2, 6, 1, 7, 4, 3, 9 });
 ```
 
-#### Deprecated `make_ArrayHandle` with default shallow copy
+### Deprecated `make_ArrayHandle` with default shallow copy
 
 For historical reasons, passing an `std::vector` or a pointer to
 `make_ArrayHandle` does a shallow copy (i.e. `CopyFlag` defaults to `Off`).
@@ -956,7 +1160,7 @@ creation of an `ArrayHandle` you should explicitly express that.
 This requried quite a few changes through the VTK-m source (particularly in
 the tests).
 
-#### Similar changes to `Field`
+### Similar changes to `Field`
 
 `vtkm::cont::Field` has a `make_Field` helper function that is similar to
 `make_ArrayHandle`. It also features the ability to create fields from
@@ -1187,7 +1391,7 @@ VTK-m. In particular, it would be particularly difficult to convert
 `ArrayHandleVirtual`. It could be done, but it would be a lot of work for a
 class that will likely be removed.
 
-#### Buffer
+### Buffer
 
 Key to these changes is the introduction of a
 `vtkm::cont::internal::Buffer` object. As the name implies, the `Buffer`
@@ -1209,7 +1413,7 @@ the interaction with the devices happen through `Buffer`, it will no longer
 be necessary to compile any reference to `ArrayHandle` for devices (e.g.
 you won't have to use nvcc just because the code links `ArrayHandle.h`).
 
-#### Storage
+### Storage
 
 The `vtkm::cont::internal::Storage` class changes dramatically. Although an
 instance will be kept, the intention is for `Storage` itself to be a
@@ -1221,12 +1425,12 @@ the `Storage` for `ArrayHandleImplicit` must hold on to the instance of the
 portal used to manage the state.
 
 
-#### ArrayTransport
+### ArrayTransport
 
 The `vtkm::cont::internal::ArrayTransfer` class will be removed completely.
 All data transfers will be handled internally with the `Buffer` object
 
-#### Portals
+### Portals
 
 A big change for this design is that the type of a portal for an
 `ArrayHandle` will be the same for all devices and the host. Thus, we no
@@ -1235,12 +1439,12 @@ one portal type. And since they are constructed from `void *` pointers, one
 method can create them all.
 
 
-#### Advantages
+### Advantages
 
 The `ArrayHandle` interface should not change significantly for external
 uses, but this redesign offers several advantages.
 
-###### Faster Compiles
+#### Faster Compiles
 
 Because the memory management is contained in a non-templated `Buffer`
 class, it can be compiled once in a library and used by all template
@@ -1248,7 +1452,7 @@ instances of `ArrayHandle`. It should have similar compile advantages to
 our current specialization of the basic `ArrayHandle`, but applied to all
 types of `ArrayHandle`s.
 
-###### Fewer Templates
+#### Fewer Templates
 
 Hand-in-hand with faster compiles, the new design should require fewer
 templates and template instances. We have immediately gotten rid of
@@ -1258,7 +1462,7 @@ fewer versions of those classes. In the device adapter, we can probably
 collapse the three `ArrayManagerExecution` classes into a single, much
 simpler class that does simple memory allocation and copy.
 
-###### Fewer files need to be compiled for CUDA
+#### Fewer files need to be compiled for CUDA
 
 Including `ArrayHandle.h` no longer adds code that compiles for a device.
 Thus, we should no longer need to compile for a specific device adapter
@@ -1266,13 +1470,13 @@ just because we access an `ArrayHandle`. This should make it much easier to
 achieve our goal of a "firewall". That is, code that just calls VTK-m
 filters does not need to support all its compilers and flags.
 
-###### Simpler ArrayHandle specialization
+#### Simpler ArrayHandle specialization
 
 The newer code should simplify the implementation of special `ArrayHandle`s
 a bit. You need only implement an `ArrayPortal` that operates on one or
 more `void *` arrays and a simple `Storage` class.
 
-###### Out of band memory sharing
+#### Out of band memory sharing
 
 With the current version of `ArrayHandle`, if you want to take data from
 one `ArrayHandle` you pretty much have to create a special template to wrap
@@ -1300,7 +1504,7 @@ an `ArrayHandleUniformPointCoordinates` by just making a small array. This
 allows us to statically access a whole bunch of potential array storage
 classes with a single type.
 
-###### Potentially faster device transfers
+#### Potentially faster device transfers
 
 There is currently a fast-path for basic `ArrayHandle`s that does a block
 cuda memcpy between host and device. But for other `ArrayHandle`s that do
@@ -1310,11 +1514,11 @@ copy the data into a known buffer.
 Because this new design stores all data in `Buffer` objects, any of these
 can be easily and efficiently copied between devices.
 
-#### Disadvantages
+### Disadvantages
 
 This new design gives up some features of the original `ArrayHandle` design.
 
-###### Can only interface data that can be represented in a fixed number of buffers
+#### Can only interface data that can be represented in a fixed number of buffers
 
 Because the original `ArrayHandle` design required the `Storage` to
 completely manage the data, it could represent it in any way possible. In
@@ -1326,7 +1530,7 @@ storable in this. The user's guide has an example of data stored in a
 `std::deque` that will not be representable. But that is probably not a
 particularly practical example.
 
-###### VTK-m would only be able to support hosts and devices with the same endian
+#### VTK-m would only be able to support hosts and devices with the same endian
 
 Because data are transferred as `void *` blocks of memory, there is no way
 to correct words if the endian on the two devices does not agree. As far as
@@ -1336,7 +1540,7 @@ If endian becomes an issue, it might be possible to specify a word length
 in the `Buffer`. That would assume that all numbers stored in the `Buffer`
 have the same word length.
 
-###### ArrayPortals must be completely recompiled in each translation unit
+#### ArrayPortals must be completely recompiled in each translation unit
 
 We can declare that an `ArrayHandle` does not need to include the device
 adapter header files in part because it no longer needs specialized
@@ -1351,7 +1555,7 @@ each translation unit. This will serve to increase the compile times a bit.
 We will probably also still encounter linking errors as there would be no
 way to enforce this requirement.
 
-###### Cannot have specialized portals for the control environment
+#### Cannot have specialized portals for the control environment
 
 Because the new design unifies `ArrayPortal` types across control and
 execution environments, it is no longer possible to have a special version
@@ -1418,7 +1622,7 @@ vectors of any size. Furthermore, when you extract a component from an
 array, the storage gets normalized so that one code path covers all storage
 types.
 
-#### `ArrayExtractComponent`
+### `ArrayExtractComponent`
 
 The basic enabling feature is a new function named `ArrayExtractComponent`.
 This function takes takes an `ArrayHandle` and an index to a component. It
@@ -1449,7 +1653,7 @@ deep copying all the data. We will visit how `ArrayHandleStride` can
 represent different data layouts later, but first let's go into the main
 use case.
 
-#### Extract components from `UnknownArrayHandle`
+### Extract components from `UnknownArrayHandle`
 
 The principle use case for `ArrayExtractComponent` is to get an
 `ArrayHandle` from an unknown array handle without iterating over _every_
@@ -1462,7 +1666,7 @@ component type. You can check for the correct component type by using the
 `IsBaseComponentType` method. The method will then return an
 `ArrayHandleStride` for the component type specified.
 
-###### Example
+#### Example
 
 As an example, let's say you have a worklet, `FooWorklet`, that does some
 per component operation on an array. Furthermore, let's say that you want
@@ -1548,7 +1752,7 @@ time to compile and generates less code, it actually covers more cases.
 Have an array containg values of `Vec<short, 13>`? No problem. The values
 were actually stored in an `ArrayHandleReverse`? It will still work.
 
-#### `ArrayHandleStride`
+### `ArrayHandleStride`
 
 This functionality is made possible with the new `ArrayHandleStride`. This
 array behaves much like `ArrayHandleBasic`, except that it contains an
@@ -1562,7 +1766,7 @@ Here are how `ArrayHandleStride` extracts components from several common
 arrays. For each of these examples, we assume that the `ValueType` of the
 array is `Vec<T, N>`. They are each extracting _component_.
 
-###### Extracting from `ArrayHandleBasic`
+#### Extracting from `ArrayHandleBasic`
 
 When extracting from an `ArrayHandleBasic`, we just need to start at the
 proper component and skip the length of the `Vec`.
@@ -1570,7 +1774,7 @@ proper component and skip the length of the `Vec`.
 * _offset_: _component_
 * _stride_: `N`
 
-###### Extracting from `ArrayHandleSOA`
+#### Extracting from `ArrayHandleSOA`
 
 Since each component is held in a separate array, they are densly packed.
 Each component could be represented by `ArrayHandleBasic`, but of course we
@@ -1579,7 +1783,7 @@ use `ArrayHandleStride` to keep the type consistent.
 * _offset_: 0
 * _stride_: 1
 
-###### Extracting from `ArrayHandleCartesianProduct`
+#### Extracting from `ArrayHandleCartesianProduct`
 
 This array is the basic reason for implementing the _divisor_ and _modulo_
 parameters. Each of the 3 components have different parameters, which are
@@ -1598,7 +1802,7 @@ each dimension).
   * _divisor_: _dims_[0]
   * _modulo_: _ignored_
 
-###### Extracting from `ArrayHandleUniformPointCoordinates`
+#### Extracting from `ArrayHandleUniformPointCoordinates`
 
 This array cannot be represented directly because it is fully implicit.
 However, it can be trivially converted to `ArrayHandleCartesianProduct` in
@@ -1606,7 +1810,7 @@ typically very little memory. (In fact, EAVL always represented uniform
 point coordinates by explicitly storing a Cartesian product.) Thus, for
 very little overhead the `ArrayHandleStride` can be created.
 
-#### Runtime overhead of extracting components
+### Runtime overhead of extracting components
 
 These benefits come at a cost, but not a large one. The "biggest" cost is
 the small cost of computing index arithmetic for each access into
@@ -1771,7 +1975,7 @@ object, it's read or write mode is recorded. Multiple `Token`s can be
 attached to read the `ArrayHandle` at the same time. However, only one
 `Token` can be used to write to the `ArrayHandle`.
 
-#### Basic `ArrayHandle` use
+### Basic `ArrayHandle` use
 
 The basic use of the `PrepareFor*` methods of `ArrayHandle` remain the
 same. The only difference is the addition of a `Token` parameter.
@@ -1790,7 +1994,7 @@ void LowLevelArray(vtkm::cont::ArrayHandle<vtkm::Float32> array, Device)
 }
 ```
 
-#### Execution objects
+### Execution objects
 
 To make sure that execution objects are scoped correctly, many changes
 needed to be made to propagate a `Token` reference from the top of the
@@ -1826,7 +2030,7 @@ It actually still works to use the old style of `PrepareForExecution`.
 However, you will get a deprecation warning (on supported compilers) when
 you try to use it.
 
-#### Invoke and Dispatcher
+### Invoke and Dispatcher
 
 The `Dispatcher` classes now internally define a `Token` object during the
 call to `Invoke`. (Likewise, `Invoker` will have a `Token` defined during
@@ -1872,7 +2076,7 @@ vtkm::cont::Invoker invoke;
 invoke(Worklet1{}, array, array);
 ```
 
-#### Transport
+### Transport
 
 The dispatch mechanism of worklets internally uses
 `vtkm::cont::arg::Transport` objects to automatically move data from the
@@ -1880,7 +2084,7 @@ control environment to the execution environment. These `Transport` object
 now take a `Token` when doing the transportation. This all happens under
 the covers for most users.
 
-#### Control Portals
+### Control Portals
 
 The `GetPortalConstControl` and `GetPortalControl` methods have been
 deprecated. Instead, the methods `ReadPortal` and `WritePortal` should be
@@ -1893,7 +2097,7 @@ nothing will happen immediately. However, if the portal is subsequently
 accessed (i.e. `Set` or `Get` is called on it), then a fatal error will be
 reported to the log.
 
-#### Deadlocks
+### Deadlocks
 
 Now that portal objects from `ArrayHandle`s have finite scope (as opposed
 to able to be immediately invalidated), the scopes have the ability to
@@ -2020,7 +2224,7 @@ To work around this, many of the cell operations in the execution
 environment have been changed to return an error code rather than raise an
 error in the worklet.
 
-#### Error Codes
+### Error Codes
 
 To support cell operations efficiently returning errors, a new enum named
 `vtkm::ErrorCode` is available. This is the current implementation of
@@ -2051,7 +2255,7 @@ A convenience function named `ErrorString` is provided to make it easy to
 convert the `ErrorCode` to a descriptive string that can be placed in an
 error.
 
-#### New Calling Specification
+### New Calling Specification
 
 Previously, most execution environment functions took as an argument the
 worklet calling the function. This made it possible to call `RaiseError` on
@@ -2158,7 +2362,7 @@ deprecated features should remain viable until at least the next major
 version. At the next major version, deprecated features from the previous
 version may be removed.
 
-#### Declaring things deprecated
+### Declaring things deprecated
 
 Classes and methods are marked deprecated using the `VTKM_DEPRECATED`
 macro. The first argument of `VTKM_DEPRECATED` should be set to the first
@@ -2219,7 +2423,7 @@ enum struct NewEnum
 };
 ```
 
-#### Using deprecated items
+### Using deprecated items
 
 Using deprecated items should work, but the compiler will give a warning.
 That is the point. However, sometimes you need to legitimately use a
@@ -2260,209 +2464,6 @@ source code.
 There is now a top level `vtkmstd` directory and in it are header files
 that provide portable versions of these future C++ classes. In each case,
 preprocessor macros are used to select which version of the class to use.
-
-
-#### Usage
-
-The `vtkm::Tuple` class is defined in the `vtkm::Tuple.h` header file. A
-`Tuple` is designed to behave much like a `std::tuple` with some minor
-syntax differences to fit VTK-m coding standards.
-
-A tuple is declared with a list of template argument types.
-
-``` cpp
-vtkm::Tuple<vtkm::Id, vtkm::Vec3f, vtkm::cont::ArrayHandle<vtkm::Float32>> myTuple;
-```
-
-If given no arguments, a `vtkm::Tuple` will default-construct its contained
-objects. A `vtkm::Tuple` can also be constructed with the initial values of
-all contained objects.
-
-``` cpp
-vtkm::Tuple<vtkm::Id, vtkm::Vec3f, vtkm::cont::ArrayHandle<vtkm::Float32>> 
-  myTuple(0, vtkm::Vec3f(0, 1, 2), array);
-```
-
-For convenience there is a `vtkm::MakeTuple` function that takes arguments
-and packs them into a `Tuple` of the appropriate type. (There is also a
-`vtkm::make_tuple` alias to the function to match the `std` version.)
-
-``` cpp
-auto myTuple = vtkm::MakeTuple(0, vtkm::Vec3f(0, 1, 2), array);
-```
-
-Data is retrieved from a `Tuple` by using the `vtkm::Get` method. The `Get`
-method is templated on the index to get the value from. The index is of
-type `vtkm::IdComponent`. (There is also a `vtkm::get` that uses a
-`std::size_t` as the index type as an alias to the function to match the
-`std` version.)
-
-``` cpp
-vtkm::Id a = vtkm::Get<0>(myTuple);
-vtkm::Vec3f b = vtkm::Get<1>(myTuple);
-vtkm::cont::ArrayHandle<vtkm::Float32> c = vtkm::Get<2>(myTuple);
-```
-
-Likewise `vtkm::TupleSize` and `vtkm::TupleElement` (and their aliases
-`vtkm::Tuple_size`, `vtkm::tuple_element`, and `vtkm::tuple_element_t`) are
-provided.
-
-#### Extended Functionality
-
-The `vtkm::Tuple` class contains some functionality beyond that of
-`std::tuple` to cover some common use cases in VTK-m that are tricky to
-implement. In particular, these methods allow you to use a `Tuple` as you
-would commonly use parameter packs. This allows you to stash parameter
-packs in a `Tuple` and then get them back out again.
-
-###### For Each
-
-`vtkm::Tuple::ForEach()` is a method that takes a function or functor and
-calls it for each of the items in the tuple. Nothing is returned from
-`ForEach` and any return value from the function is ignored.
-
-`ForEach` can be used to check the validity of each item.
-
-``` cpp
-void CheckPositive(vtkm::Float64 x)
-{
-  if (x < 0)
-  {
-    throw vtkm::cont::ErrorBadValue("Values need to be positive.");
-  }
-}
-
-// ...
-
-  vtkm::Tuple<vtkm::Float64, vtkm::Float64, vtkm::Float64> tuple(
-    CreateValue1(), CreateValue2(), CreateValue3());
-
-  // Will throw an error if any of the values are negative.
-  tuple.ForEach(CheckPositive);
-```
-
-`ForEach` can also be used to aggregate values.
-
-``` cpp
-struct SumFunctor
-{
-  vtkm::Float64 Sum = 0;
-  
-  template <typename T>
-  void operator()(const T& x)
-  {
-    this->Sum = this->Sum + static_cast<vtkm::Float64>(x);
-  }
-};
-
-// ...
-
-  vtkm::Tuple<vtkm::Float32, vtkm::Float64, vtkm::Id> tuple(
-    CreateValue1(), CreateValue2(), CreateValue3());
-
-  SumFunctor sum;
-  tuple.ForEach(sum);
-  vtkm::Float64 average = sum.Sum / 3;
-```
-
-###### Transform
-
-`vtkm::Tuple::Transform` is a method that builds a new `Tuple` by calling a
-function or functor on each of the items. The return value is placed in the
-corresponding part of the resulting `Tuple`, and the type is automatically
-created from the return type of the function.
-
-``` cpp
-struct GetReadPortalFunctor
-{
-  template <typename Array>
-  typename Array::ReadPortal operator()(const Array& array) const
-  {
-    VTKM_IS_ARRAY_HANDLE(Array);
-	return array.ReadPortal();
-  }
-};
-
-// ...
-
-  auto arrayTuple = vtkm::MakeTuple(array1, array2, array3);
-  
-  auto portalTuple = arrayTuple.Transform(GetReadPortalFunctor{});
-```
-
-###### Apply
-
-`vtkm::Tuple::Apply` is a method that calls a function or functor using the
-objects in the `Tuple` as the arguments. If the function returns a value,
-that value is returned from `Apply`.
-
-``` cpp
-struct AddArraysFunctor
-{
-  template <typename Array1, typename Array2, typename Array3>
-  vtkm::Id operator()(Array1 inArray1, Array2 inArray2, Array3 outArray) const
-  {
-    VTKM_IS_ARRAY_HANDLE(Array1);
-    VTKM_IS_ARRAY_HANDLE(Array2);
-    VTKM_IS_ARRAY_HANDLE(Array3);
-
-    vtkm::Id length = inArray1.GetNumberOfValues();
-	VTKM_ASSERT(inArray2.GetNumberOfValues() == length);
-	outArray.Allocate(length);
-	
-	auto inPortal1 = inArray1.ReadPortal();
-	auto inPortal2 = inArray2.ReadPortal();
-	auto outPortal = outArray.WritePortal();
-	for (vtkm::Id index = 0; index < length; ++index)
-	{
-	  outPortal.Set(index, inPortal1.Get(index) + inPortal2.Get(index));
-	}
-	
-	return length;
-  }
-};
-
-// ...
-
-  auto arrayTuple = vtkm::MakeTuple(array1, array2, array3);
-
-  vtkm::Id arrayLength = arrayTuple.Apply(AddArraysFunctor{});
-```
-
-If additional arguments are given to `Apply`, they are also passed to the
-function (before the objects in the `Tuple`). This is helpful for passing
-state to the function. (This feature is not available in either `ForEach`
-or `Transform` for technical implementation reasons.)
-
-``` cpp
-struct ScanArrayLengthFunctor
-{
-  template <std::size_t N, typename Array, typename... Remaining>
-  std::array<vtkm::Id, N + 1 + sizeof...(Remaining)>
-  operator()(const std::array<vtkm::Id, N>& partialResult,
-             const Array& nextArray,
-			 const Remaining&... remainingArrays) const
-  {
-    std::array<vtkm::Id, N + 1> nextResult;
-	std::copy(partialResult.begin(), partialResult.end(), nextResult.begin());
-    nextResult[N] = nextResult[N - 1] + nextArray.GetNumberOfValues();
-	return (*this)(nextResult, remainingArray);
-  }
-  
-  template <std::size_t N>
-  std::array<vtkm::Id, N> operator()(const std::array<vtkm::Id, N>& result) const
-  {
-    return result;
-  }
-};
-
-// ...
-
-  auto arrayTuple = vtkm::MakeTuple(array1, array2, array3);
-  
-  std::array<vtkm::Id, 4> = 
-    arrayTuple.Apply(ScanArrayLengthFunctor{}, std::array<vtkm::Id, 1>{ 0 });
-```
 
 
 ## Removed OpenGL Rendering Classes
@@ -2782,3 +2783,58 @@ Now, `VTKDataSetWriter` checks the type of the `CoordinateSystem` to
 determine whether the data should be written out as `STRUCTURED_POINTS`
 (i.e. a uniform grid), `RECTILINEAR_GRID`, or `STRUCTURED_GRID`
 (curvilinear).
+
+# References
+
+| Feature                                                                   | Merge Request            |
+| --------------------------------------------------------------------------| ------------------------ |
+| Add Kokkos backend                                                        | Merge-request: !2164     |
+| Extract component arrays from unknown arrays                              | Merge-request: !2354     |
+| `ArrayHandleGroupVecVariable` holds now one more offset.                  | Merge-request: !1964     |
+| Create `ArrayHandleOffsetsToNumComponents`                                | Merge-request: !2299     |
+| Implemented ArrayHandleRandomUniformBits and ArrayHandleRandomUniformReal | Merge-request: !2116     |
+| `ArrayRangeCompute` works on any array type without compiling device code | Merge-request: !2409     |
+| Algorithms for Control and Execution Environments                         | Merge-request: !1920     |
+| Redesign of ArrayHandle to access data using typeless buffers             | Merge-request: !2347     |
+| `vtkm::cont::internal::Buffer` now can have ownership transferred         | Merge-request: !2200     |
+| Provide scripts to build Gitlab-ci workers locally                        | Merge-request: !2030     |
+| Configurable default types                                                | Merge-request: !1997     |
+| Result DataSet of coordinate transform has its CoordinateSystem changed   | Merge-request: !2099     |
+| Precompiled `ArrayCopy` for `UnknownArrayHandle`                          | Merge-request: !2396     |
+| Disable asserts for CUDA architecture builds                              | Merge-request: !2157     |
+| Portals may advertise custom iterators                                    | Merge-request: !1929     |
+| DataSet now only allows unique field names                                | Merge-request: !2099     |
+| ArrayHandleDecorator Allocate and Shrink Support                          | Merge-request: !1933     |
+| Deprecate ArrayHandleVirtualCoordinates                                   | Merge-request: !2177     |
+| Deprecate `DataSetFieldAdd`                                               | Merge-request: !2106     |
+| Deprecate Execute with policy                                             | Merge-request: !2093     |
+| Virtual methods in execution environment deprecated                       | Merge-request: !2256     |
+| Add VTKM_DEPRECATED macro                                                 | Merge-request: !2266     |
+| Filters specify their own field types                                     | Merge-request: !2099     |
+| Flying Edges                                                              | Merge-request: !2099     |
+| Updated Benchmark Framework                                               | Merge-request: !1936     |
+| Disable asserts for HIP architecture builds                               | Merge-request: !2270     |
+| Implemented PNG/PPM image Readers/Writers                                 | Merge-request: !1967     |
+| Reorganization of `io` directory                                          | Merge-request: !2067     |
+| Add `ListTagRemoveIf`                                                     | Merge-request: !1901     |
+| Masks and Scatters Supported for 3D Scheduling                            | Merge-request: !1975     |
+| Improvements to moving data into ArrayHandle                              | Merge-request: !2184     |
+| Avoid raising errors when operating on cells                              | Merge-request: !2099     |
+| Order asynchronous `ArrayHandle` access                                   | Merge-request: !2130     |
+| Enable setting invalid value in probe filter                              | Merge-request: !2122     |
+| `ReadPortal().Get(idx)`                                                   | Merge-request: !2078     |
+| Recombine extracted component arrays from unknown arrays                  | Merge-request: !2381     |
+| Removed old `ArrayHandle` transfer mechanism                              | Merge-request: !2347     |
+| Removed OpenGL Rendering Classes                                          | Merge-request: !2099     |
+| Scope ExecObjects with Tokens                                             | Merge-request: !1988     |
+| Shorter fancy array handle classnames                                     | Merge-request: !1937     |
+| Support `ArrayHandleSOA` as a "default" array                             | Merge-request: !2349     |
+| Porting layer for future std features                                     | Merge-request: !1977     |
+| Add a vtkm::Tuple class                                                   | Merge-request: !1977     |
+| UnknownArrayHandle and UncertainArrayHandle for runtime-determined types  | Merge-request: !2202     |
+| Added VecFlat class                                                       | Merge-request: !2354     |
+| Remove VTKDataSetWriter::WriteDataSet just_points parameter               | Merge-request: !2185     |
+| Move VTK file readers and writers into vtkm_io                            | Merge-request: !2100     |
+| Write uniform and rectilinear grids to legacy VTK files                   | Merge-request: !2173     |
+| Add atomic free functions                                                 | Merge-request: !2223     |
+| Replaced `vtkm::ListTag` with `vtkm::List`                                | Merge-request: !1918     |
