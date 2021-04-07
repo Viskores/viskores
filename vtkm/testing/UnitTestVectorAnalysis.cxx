@@ -108,10 +108,10 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
   Vec3 cross = vtkm::Cross(x, y);
 
   // The cross product result should be perpendicular to input vectors.
-  VTKM_TEST_ASSERT(abs(vtkm::Dot(cross, x)) <
+  VTKM_TEST_ASSERT(vtkm::Abs(vtkm::Dot(cross, x)) <
                      std::numeric_limits<T>::epsilon() * vtkm::MagnitudeSquared(x),
                    "Cross product not perpendicular.");
-  VTKM_TEST_ASSERT(abs(vtkm::Dot(cross, y)) <
+  VTKM_TEST_ASSERT(vtkm::Abs(vtkm::Dot(cross, y)) <
                      std::numeric_limits<T>::epsilon() * vtkm::MagnitudeSquared(y),
                    "Cross product not perpendicular.");
   // The length of cross product should be the lengths of the input vectors
@@ -129,7 +129,7 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
 
   // Test finding the normal to a triangle (similar to cross product).
   Vec3 normal = vtkm::TriangleNormal(x, y, Vec3(0, 0, 0));
-  VTKM_TEST_ASSERT(abs(vtkm::Dot(normal, x - y)) <
+  VTKM_TEST_ASSERT(vtkm::Abs(vtkm::Dot(normal, x - y)) <
                      std::numeric_limits<T>::epsilon() * vtkm::MagnitudeSquared(x),
                    "Triangle normal is not really normal.");
 }
@@ -191,7 +191,7 @@ struct TestCrossFunctor
     TestCross(VectorType(0.0f, 0.0f, 1.0f), VectorType(0.001f, 0.01f, 2.0f));
     // Example from: https://pharr.org/matt/blog/2019/11/03/difference-of-floats.html
     TestCross(VectorType(33962.035f, 41563.4f, 7706.415f),
-              VectorType(-24871.969, -30438.8, -5643.727f));
+              VectorType(-24871.969f, -30438.8f, -5643.727f));
   }
 };
 
