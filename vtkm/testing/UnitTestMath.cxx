@@ -902,6 +902,29 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   VTKM_EXEC
+  void TestDifferenceOfProducts() const
+  {
+    {
+      // Example taken from:
+      // https://pharr.org/matt/blog/2019/11/03/difference-of-floats.html
+      vtkm::Float32 a = 33962.035f;
+      vtkm::Float32 b = -30438.8f;
+      vtkm::Float32 c = 41563.4f;
+      vtkm::Float32 d = -24871.969f;
+      vtkm::Float32 computed = vtkm::DifferenceOfProducts(a, b, c, d);
+      // Expected result, computed in double precision and cast back to float:
+      vtkm::Float32 expected = 5.376600027084351f;
+
+      vtkm::UInt64 dist = vtkm::FloatDistance(expected, computed);
+      VTKM_MATH_ASSERT(
+        dist < 2,
+        "Float distance for difference of products exceeds 1.5; this is in violation of a theorem "
+        "proved by Jeannerod in doi.org/10.1090/S0025-5718-2013-02679-8. Is your build compiled "
+        "with fma's enabled?");
+    }
+  }
+
+  VTKM_EXEC
   void operator()(vtkm::Id) const
   {
     this->TestTriangleTrig();

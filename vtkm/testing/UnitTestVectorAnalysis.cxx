@@ -60,31 +60,24 @@ void TestVector(const VectorType& vector)
 {
   using ComponentType = typename vtkm::VecTraits<VectorType>::ComponentType;
 
-  std::cout << "Testing " << vector << std::endl;
-
   //to do have to implement a norm and normalized call to verify the math ones
   //against
-  std::cout << "  Magnitude" << std::endl;
   ComponentType magnitude = vtkm::Magnitude(vector);
   ComponentType magnitudeCompare = internal::MyMag(vector);
   VTKM_TEST_ASSERT(test_equal(magnitude, magnitudeCompare), "Magnitude failed test.");
 
-  std::cout << "  Magnitude squared" << std::endl;
   ComponentType magnitudeSquared = vtkm::MagnitudeSquared(vector);
   VTKM_TEST_ASSERT(test_equal(magnitude * magnitude, magnitudeSquared),
                    "Magnitude squared test failed.");
 
   if (magnitudeSquared > 0)
   {
-    std::cout << "  Reciprocal magnitude" << std::endl;
     ComponentType rmagnitude = vtkm::RMagnitude(vector);
     VTKM_TEST_ASSERT(test_equal(1 / magnitude, rmagnitude), "Reciprical magnitude failed.");
 
-    std::cout << "  Normal" << std::endl;
     VTKM_TEST_ASSERT(test_equal(vtkm::Normal(vector), internal::MyNormal(vector)),
                      "Normalized vector failed test.");
 
-    std::cout << "  Normalize" << std::endl;
     VectorType normalizedVector = vector;
     vtkm::Normalize(normalizedVector);
     VTKM_TEST_ASSERT(test_equal(normalizedVector, internal::MyNormal(vector)),
@@ -98,13 +91,11 @@ void TestLerp(const VectorType& a,
               const VectorType& w,
               const typename vtkm::VecTraits<VectorType>::ComponentType& wS)
 {
-  std::cout << "Linear interpolation: " << a << "-" << b << ": " << w << std::endl;
   VectorType vtkmLerp = vtkm::Lerp(a, b, w);
   VectorType otherLerp = internal::MyLerp(a, b, w);
   VTKM_TEST_ASSERT(test_equal(vtkmLerp, otherLerp),
                    "Vectors with Vector weight do not lerp() correctly");
 
-  std::cout << "Linear interpolation: " << a << "-" << b << ": " << wS << std::endl;
   VectorType lhsS = internal::MyLerp(a, b, wS);
   VectorType rhsS = vtkm::Lerp(a, b, wS);
   VTKM_TEST_ASSERT(test_equal(lhsS, rhsS), "Vectors with Scalar weight do not lerp() correctly");
@@ -113,19 +104,16 @@ void TestLerp(const VectorType& a,
 template <typename T>
 void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
 {
-  std::cout << "Testing " << x << " x " << y << std::endl;
-
   using Vec3 = vtkm::Vec<T, 3>;
   Vec3 cross = vtkm::Cross(x, y);
 
-  std::cout << "  = " << cross << std::endl;
-
-  std::cout << "  Orthogonality" << std::endl;
   // The cross product result should be perpendicular to input vectors.
-  VTKM_TEST_ASSERT(test_equal(vtkm::Dot(cross, x), T(0.0)), "Cross product not perpendicular.");
-  VTKM_TEST_ASSERT(test_equal(vtkm::Dot(cross, y), T(0.0)), "Cross product not perpendicular.");
-
-  std::cout << "  Length" << std::endl;
+  VTKM_TEST_ASSERT(vtkm::Abs(vtkm::Dot(cross, x)) <
+                     std::numeric_limits<T>::epsilon() * vtkm::MagnitudeSquared(x),
+                   "Cross product not perpendicular.");
+  VTKM_TEST_ASSERT(vtkm::Abs(vtkm::Dot(cross, y)) <
+                     std::numeric_limits<T>::epsilon() * vtkm::MagnitudeSquared(y),
+                   "Cross product not perpendicular.");
   // The length of cross product should be the lengths of the input vectors
   // times the sin of the angle between them.
   T sinAngle = vtkm::Magnitude(cross) * vtkm::RMagnitude(x) * vtkm::RMagnitude(y);
@@ -139,10 +127,10 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
   VTKM_TEST_ASSERT(test_equal(sinAngle * sinAngle + cosAngle * cosAngle, T(1.0)),
                    "Bad cross product length.");
 
-  std::cout << "  Triangle normal" << std::endl;
   // Test finding the normal to a triangle (similar to cross product).
   Vec3 normal = vtkm::TriangleNormal(x, y, Vec3(0, 0, 0));
-  VTKM_TEST_ASSERT(test_equal(vtkm::Dot(normal, x - y), T(0.0)),
+  VTKM_TEST_ASSERT(vtkm::Abs(vtkm::Dot(normal, x - y)) <
+                     std::numeric_limits<T>::epsilon() * vtkm::MagnitudeSquared(x),
                    "Triangle normal is not really normal.");
 }
 
@@ -151,13 +139,6 @@ void TestOrthonormalize(const VectorBasisType& inputs, int expectedRank)
 {
   VectorBasisType outputs;
   int actualRank = vtkm::Orthonormalize(inputs, outputs);
-  std::cout << "Testing orthonormalize\n"
-            << "  Rank " << actualRank << " expected " << expectedRank << "\n"
-            << "  Basis vectors:\n";
-  for (int i = 0; i < actualRank; ++i)
-  {
-    std::cout << "    " << i << "  " << outputs[i] << "\n";
-  }
   VTKM_TEST_ASSERT(test_equal(actualRank, expectedRank), "Orthonormalized rank is unexpected.");
 }
 
@@ -208,6 +189,9 @@ struct TestCrossFunctor
     TestCross(VectorType(1.0f, 0.0f, 0.0f), VectorType(0.0f, 1.0f, 0.0f));
     TestCross(VectorType(1.0f, 2.0f, 3.0f), VectorType(-3.0f, -1.0f, 1.0f));
     TestCross(VectorType(0.0f, 0.0f, 1.0f), VectorType(0.001f, 0.01f, 2.0f));
+    // Example from: https://pharr.org/matt/blog/2019/11/03/difference-of-floats.html
+    TestCross(VectorType(33962.035f, 41563.4f, 7706.415f),
+              VectorType(-24871.969f, -30438.8f, -5643.727f));
   }
 };
 
