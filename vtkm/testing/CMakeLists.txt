@@ -52,7 +52,9 @@ set(unit_tests_device
   UnitTestAlgorithms.cxx
   UnitTestAtomic.cxx
   UnitTestGeometry.cxx
+  UnitTestLowerBound.cxx
   UnitTestMath.cxx
+  UnitTestUpperBound.cxx
   )
 
 

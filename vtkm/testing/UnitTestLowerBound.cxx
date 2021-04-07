@@ -8,15 +8,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/testing/Testing.h>
-
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-#include <vtkm/Algorithms.h>
+#include <vtkm/LowerBound.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Invoker.h>
 
 #include <vtkm/worklet/WorkletMapField.h>
+
+#include <vtkm/cont/testing/Testing.h>
 
 #include <vector>
 
@@ -25,7 +24,7 @@ namespace
 
 using IdArray = vtkm::cont::ArrayHandle<vtkm::Id>;
 
-struct TestBinarySearch
+struct TestLowerBound
 {
   struct Impl : public vtkm::worklet::WorkletMapField
   {
@@ -36,7 +35,7 @@ struct TestBinarySearch
     template <typename HaystackPortal>
     VTKM_EXEC vtkm::Id operator()(vtkm::Id needle, const HaystackPortal& haystack) const
     {
-      return vtkm::BinarySearch(haystack, needle);
+      return vtkm::LowerBound(haystack, needle);
     }
   };
 
@@ -47,45 +46,29 @@ struct TestBinarySearch
       vtkm::cont::make_ArrayHandle<vtkm::Id>({ -3, -2, -2, -2, 0, 0, 1, 1, 1, 4, 4 });
     IdArray results;
 
-    std::vector<bool> expectedFound{
-      false, true, true, false, true, true, false, false, true, false
-    };
+    std::vector<vtkm::Id> expected{ 0, 0, 1, 4, 4, 6, 9, 9, 9, 11 };
 
     vtkm::cont::Invoker invoke;
     invoke(Impl{}, needles, haystack, results);
 
     // Verify:
-    auto needlesPortal = needles.ReadPortal();
-    auto haystackPortal = haystack.ReadPortal();
     auto resultsPortal = results.ReadPortal();
     for (vtkm::Id i = 0; i < needles.GetNumberOfValues(); ++i)
     {
-      if (expectedFound[static_cast<size_t>(i)])
-      {
-        const auto resIdx = resultsPortal.Get(i);
-        const auto expVal = needlesPortal.Get(i);
-        VTKM_TEST_ASSERT(resIdx >= 0);
-        VTKM_TEST_ASSERT(haystackPortal.Get(resIdx) == expVal);
-      }
-      else
-      {
-        VTKM_TEST_ASSERT(resultsPortal.Get(i) == -1);
-      }
+      VTKM_TEST_ASSERT(resultsPortal.Get(i) == expected[static_cast<size_t>(i)]);
     }
   }
 };
 
-void RunAlgorithmsTests()
+void RunLowerBoundTest()
 {
-  std::cout << "Testing binary search." << std::endl;
-  TestBinarySearch::Run();
+  std::cout << "Testing lower bound." << std::endl;
+  TestLowerBound::Run();
 }
 
 } // anon namespace
 
-VTKM_DEPRECATED_SUPPRESS_END
-
-int UnitTestAlgorithms(int argc, char* argv[])
+int UnitTestLowerBound(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunAlgorithmsTests, argc, argv);
+  return vtkm::cont::testing::Testing::Run(RunLowerBoundTest, argc, argv);
 }
