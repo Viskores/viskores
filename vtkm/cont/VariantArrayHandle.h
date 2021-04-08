@@ -91,6 +91,19 @@ private:
     throw vtkm::cont::ErrorBadType(str.str());
   }
 };
+
+template <typename S>
+struct NoCastStorageTransformImpl
+{
+  using type = S;
+};
+template <typename T, typename S>
+struct NoCastStorageTransformImpl<vtkm::cont::StorageTagCast<T, S>>
+{
+  using type = S;
+};
+template <typename S>
+using NoCastStorageTransform = typename NoCastStorageTransformImpl<S>::type;
 VTKM_DEPRECATED_SUPPRESS_END
 
 }
@@ -177,9 +190,12 @@ public:
   {
     VTKM_IS_LIST(StorageList);
     VTKM_IS_LIST(TypeList);
+    // Remove cast storage from storage list because we take care of casting elsewhere
+    using CleanStorageList =
+      vtkm::ListTransform<StorageList, vtkm::cont::internal::variant::NoCastStorageTransform>;
     vtkm::cont::internal::variant::ForceCastToVirtual caster;
     vtkm::cont::ArrayHandleVirtual<T> output;
-    this->CastAndCall<TypeList, StorageList>(caster, output);
+    this->CastAndCall<TypeList, CleanStorageList>(caster, output);
     return output;
   }
   VTKM_DEPRECATED_SUPPRESS_END
