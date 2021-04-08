@@ -2704,6 +2704,7 @@ inline VTKM_EXEC_CONT T DifferenceOfProducts(T a, T b, T c, T d)
     // This is a bit awkward. clang-11 does not define FP_FAST_FMA, but still compiles this to the correct assembly.
     // Windows, however, generates truly horrendous assembly from this, with no fmas, to the extent I assume it could
     // contort itself into a performance bug.
+    // That said, MSVC converts even a*b - c*d into horrible assembly, so it may be a wash.
     // You'd want to just use #ifdef FP_FAST_FMA, but then you'd lose the (correct) generated assembly on clang.
     // See: https://stackoverflow.com/a/40765925/904050
     T cd = c * d;

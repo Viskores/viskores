@@ -931,7 +931,7 @@ VTKM_EXEC
 void TestQuadraticRoots() const
 {
   {
-    // (x-1)(x+1) = x^2 - 1:
+    // (x-1)(x+1) = x² - 1:
     auto roots = vtkm::QuadraticRoots(1.0f, 0.0f, -1.0f);
 
     vtkm::UInt64 dist = vtkm::FloatDistance(-1.0f, roots.first);
@@ -940,11 +940,18 @@ void TestQuadraticRoots() const
     dist = vtkm::FloatDistance(1.0f, roots.second);
     VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
 
+    // No real roots:
+    roots = vtkm::QuadraticRoots(1.0f, 0.0f, 1.0f);
+    VTKM_MATH_ASSERT(vtkm::IsNan(roots.first),
+                     "Roots should be Nan for a quadratic with complex roots.");
+    VTKM_MATH_ASSERT(vtkm::IsNan(roots.second),
+                     "Roots should be Nan for a quadratic with complex roots.");
+
 #ifdef FP_FAST_FMA
     // Wikipedia example:
-    // x^2 + 200x - 0.000015 = 0 has roots
+    // x² + 200x - 0.000015 = 0 has roots
     // -200.000000075, 7.5e-8
-    roots = vtkm::QuadraticRoots(1.0f, 0.0f, -1.0f);
+    roots = vtkm::QuadraticRoots(1.0f, 200.0f, -0.000015f);
     dist = vtkm::FloatDistance(-200.000000075f, roots.first);
     VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
 
