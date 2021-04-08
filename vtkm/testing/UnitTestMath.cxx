@@ -902,95 +902,96 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   VTKM_EXEC
-  void TestDifferenceOfProducts() const {
-#ifdef FP_FAST_FMA
+  void TestDifferenceOfProducts() const
+  {
+
     {
+#ifdef FP_FAST_FMA
       // Example taken from:
       // https://pharr.org/matt/blog/2019/11/03/difference-of-floats.html
       vtkm::Float32 a = 33962.035f;
-  vtkm::Float32 b = -30438.8f;
-  vtkm::Float32 c = 41563.4f;
-  vtkm::Float32 d = -24871.969f;
-  vtkm::Float32 computed = vtkm::DifferenceOfProducts(a, b, c, d);
-  // Expected result, computed in double precision and cast back to float:
-  vtkm::Float32 expected = 5.376600027084351f;
+      vtkm::Float32 b = -30438.8f;
+      vtkm::Float32 c = 41563.4f;
+      vtkm::Float32 d = -24871.969f;
+      vtkm::Float32 computed = vtkm::DifferenceOfProducts(a, b, c, d);
+      // Expected result, computed in double precision and cast back to float:
+      vtkm::Float32 expected = 5.376600027084351f;
 
-  vtkm::UInt64 dist = vtkm::FloatDistance(expected, computed);
-  VTKM_MATH_ASSERT(
-    dist < 2,
-    "Float distance for difference of products is which exceeds 1.5; this is in violation of a "
-    "theorem "
-    "proved by Jeannerod in doi.org/10.1090/S0025-5718-2013-02679-8. Is your build compiled "
-    "with fma's enabled?");
-}
+      vtkm::UInt64 dist = vtkm::FloatDistance(expected, computed);
+      VTKM_MATH_ASSERT(
+        dist < 2,
+        "Float distance for difference of products is which exceeds 1.5; this is in violation of a "
+        "theorem "
+        "proved by Jeannerod in doi.org/10.1090/S0025-5718-2013-02679-8. Is your build compiled "
+        "with fma's enabled?");
 #endif
-}
+    }
+  }
 
-VTKM_EXEC
-void TestQuadraticRoots() const
-{
+  VTKM_EXEC
+  void TestQuadraticRoots() const
   {
-    // (x-1)(x+1) = x² - 1:
-    auto roots = vtkm::QuadraticRoots(1.0f, 0.0f, -1.0f);
+    {
+      // (x-1)(x+1) = x² - 1:
+      auto roots = vtkm::QuadraticRoots(1.0f, 0.0f, -1.0f);
 
-    vtkm::UInt64 dist = vtkm::FloatDistance(-1.0f, roots[0]);
-    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+      vtkm::UInt64 dist = vtkm::FloatDistance(-1.0f, roots[0]);
+      VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
 
-    dist = vtkm::FloatDistance(1.0f, roots[1]);
-    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+      dist = vtkm::FloatDistance(1.0f, roots[1]);
+      VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
 
-    // No real roots:
-    roots = vtkm::QuadraticRoots(1.0f, 0.0f, 1.0f);
-    VTKM_MATH_ASSERT(vtkm::IsNan(roots[0]),
-                     "Roots should be Nan for a quadratic with complex roots.");
-    VTKM_MATH_ASSERT(vtkm::IsNan(roots[1]),
-                     "Roots should be Nan for a quadratic with complex roots.");
+      // No real roots:
+      roots = vtkm::QuadraticRoots(1.0f, 0.0f, 1.0f);
+      VTKM_MATH_ASSERT(vtkm::IsNan(roots[0]),
+                       "Roots should be Nan for a quadratic with complex roots.");
+      VTKM_MATH_ASSERT(vtkm::IsNan(roots[1]),
+                       "Roots should be Nan for a quadratic with complex roots.");
 
 #ifdef FP_FAST_FMA
-    // Wikipedia example:
-    // x² + 200x - 0.000015 = 0 has roots
-    // -200.000000075, 7.5e-8
-    roots = vtkm::QuadraticRoots(1.0f, 200.0f, -0.000015f);
-    dist = vtkm::FloatDistance(-200.000000075f, roots[0]);
-    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+      // Wikipedia example:
+      // x² + 200x - 0.000015 = 0 has roots
+      // -200.000000075, 7.5e-8
+      roots = vtkm::QuadraticRoots(1.0f, 200.0f, -0.000015f);
+      dist = vtkm::FloatDistance(-200.000000075f, roots[0]);
+      VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
 
-    dist = vtkm::FloatDistance(7.5e-8f, roots[1]);
-    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+      dist = vtkm::FloatDistance(7.5e-8f, roots[1]);
+      VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
 
-    // Kahan's example:
-    auto roots64 = vtkm::QuadraticRoots(94906265.625, 94906267.000, 94906268.375);
-    dist = vtkm::FloatDistance(1.0, roots64[0]);
-    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+      // Kahan's example:
+      auto roots64 = vtkm::QuadraticRoots(94906265.625, 94906267.000, 94906268.375);
+      dist = vtkm::FloatDistance(1.0, roots64[0]);
+      VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
 
-    dist = vtkm::FloatDistance(1.000000028975958, roots64[1]);
-    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+      dist = vtkm::FloatDistance(1.000000028975958, roots64[1]);
+      VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
 #endif
+    }
   }
-}
 
-VTKM_EXEC
-void operator()(vtkm::Id) const
-{
-  this->TestTriangleTrig();
-  this->TestHyperbolicTrig();
-  this->TestSqrt();
-  this->TestRSqrt();
-  this->TestCbrt();
-  this->TestRCbrt();
-  this->TestExp();
-  this->TestExp2();
-  this->TestExpM1();
-  this->TestExp10();
-  this->TestLog();
-  this->TestLog10();
-  this->TestLog1P();
-  this->TestCopySign();
-  this->TestFloatDistance();
-  this->TestDifferenceOfProducts();
-  this->TestQuadraticRoots();
-}
-}
-;
+  VTKM_EXEC
+  void operator()(vtkm::Id) const
+  {
+    this->TestTriangleTrig();
+    this->TestHyperbolicTrig();
+    this->TestSqrt();
+    this->TestRSqrt();
+    this->TestCbrt();
+    this->TestRCbrt();
+    this->TestExp();
+    this->TestExp2();
+    this->TestExpM1();
+    this->TestExp10();
+    this->TestLog();
+    this->TestLog10();
+    this->TestLog1P();
+    this->TestCopySign();
+    this->TestFloatDistance();
+    this->TestDifferenceOfProducts();
+    this->TestQuadraticRoots();
+  }
+};
 
 struct TryScalarVectorFieldTests
 {
