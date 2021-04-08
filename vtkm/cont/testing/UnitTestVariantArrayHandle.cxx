@@ -547,4 +547,6 @@ int UnitTestVariantArrayHandle(int argc, char* argv[])
   return vtkm::cont::testing::Testing::Run(TestVariantArrayHandle, argc, argv);
 }
 
-VTKM_DEPRECATED_SUPPRESS_END
+// The MSVC compiler is sometimes complaining about use of deprecated VariantArrayHandle at the
+// end of this file. This is the end of the translation unit, so just keep the suppression on.
+//VTKM_DEPRECATED_SUPPRESS_END
