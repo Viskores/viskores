@@ -2701,12 +2701,6 @@ inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float32 x, vtkm::Float32 
 template<typename T>
 inline VTKM_EXEC_CONT T DifferenceOfProducts(T a, T b, T c, T d)
 {
-    // This is a bit awkward. clang-11 does not define FP_FAST_FMA, but still compiles this to the correct assembly.
-    // Windows, however, generates truly horrendous assembly from this, with no fmas, to the extent I assume it could
-    // contort itself into a performance bug.
-    // That said, MSVC converts even a*b - c*d into horrible assembly, so it may be a wash.
-    // You'd want to just use #ifdef FP_FAST_FMA, but then you'd lose the (correct) generated assembly on clang.
-    // See: https://stackoverflow.com/a/40765925/904050
     T cd = c * d;
     T err = std::fma(-c, d, cd);
     T dop = std::fma(a, b, -cd);
@@ -2719,7 +2713,7 @@ inline VTKM_EXEC_CONT T DifferenceOfProducts(T a, T b, T c, T d)
 // If there are no real roots, both elements are NaNs.
 // The error should be at most 3 ulps.
 template<typename T>
-inline VTKM_EXEC_CONT vtkm::Pair<T, T> QuadraticRoots(T a, T b, T c)
+inline VTKM_EXEC_CONT vtkm::Vec<T, 2> QuadraticRoots(T a, T b, T c)
 {
   if (a == 0)
   {
@@ -2728,19 +2722,19 @@ inline VTKM_EXEC_CONT vtkm::Pair<T, T> QuadraticRoots(T a, T b, T c)
       if (c == 0)
       {
         // A degenerate case. All real numbers are roots; hopefully this arbitrary decision interacts gracefully with use.
-        return vtkm::Pair<T, T>(0,0);
+        return vtkm::Vec<T,2>(0,0);
       }
       else
       {
-        return vtkm::Pair<T, T>(vtkm::Nan<T>(), vtkm::Nan<T>());
+        return vtkm::Vec<T,2>(vtkm::Nan<T>(), vtkm::Nan<T>());
       }
     }
-    return vtkm::Pair<T, T>(-c/b, -c/b);
+    return vtkm::Vec<T,2>(-c/b, -c/b);
   }
   T delta = DifferenceOfProducts(b, b, 4*a, c);
   if (delta < 0)
   {
-    return vtkm::Pair<T, T>(vtkm::Nan<T>(), vtkm::Nan<T>());
+    return vtkm::Vec<T,2>(vtkm::Nan<T>(), vtkm::Nan<T>());
   }
 
   T q = -(b + vtkm::CopySign(vtkm::Sqrt(delta), b)) / 2;
@@ -2748,9 +2742,9 @@ inline VTKM_EXEC_CONT vtkm::Pair<T, T> QuadraticRoots(T a, T b, T c)
   T r1 = c / q;
   if (r0 < r1)
   {
-    return vtkm::Pair<T, T>(r0, r1);
+    return vtkm::Vec<T,2>(r0, r1);
   }
-  return vtkm::Pair<T, T>(r1, r0);
+  return vtkm::Vec<T,2>(r1, r0);
 }
 
 /// Bitwise operations
