@@ -31,6 +31,10 @@
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
 
+// This is a deprecated class. Don't warn about deprecation while implementing
+// deprecated functionality.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 namespace vtkm
 {
 namespace cont
@@ -42,7 +46,6 @@ namespace internal
 namespace variant
 {
 
-VTKM_DEPRECATED_SUPPRESS_BEGIN
 struct ForceCastToVirtual
 {
   template <typename SrcValueType, typename Storage, typename DstValueType>
@@ -104,7 +107,6 @@ struct NoCastStorageTransformImpl<vtkm::cont::StorageTagCast<T, S>>
 };
 template <typename S>
 using NoCastStorageTransform = typename NoCastStorageTransformImpl<S>::type;
-VTKM_DEPRECATED_SUPPRESS_END
 
 }
 } // namespace internal::variant
@@ -136,14 +138,6 @@ public:
   {
   }
 
-  // MSVC will issue deprecation warnings here if this template is instantiated with
-  // a deprecated class even if the template is used from a section of code where
-  // deprecation warnings are suppressed. This is annoying behavior since this template
-  // has no control over what class it is used with. To get around it, we have to
-  // suppress all deprecation warnings here.
-#ifdef VTKM_MSVC
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-#endif
   /// Returns this array cast to the given \c ArrayHandle type. Throws \c
   /// ErrorBadType if the cast does not work. Use \c IsType
   /// to check if the cast can happen.
@@ -153,9 +147,6 @@ public:
   {
     return this->AsArrayHandle<ArrayHandleType>();
   }
-#ifdef VTKM_MSVC
-  VTKM_DEPRECATED_SUPPRESS_END
-#endif
 
   /// \brief Call a functor using the underlying array type.
   ///
@@ -181,7 +172,6 @@ public:
   /// the CastAndCall. You can also specify a list of types to try as the optional
   /// third template argument.
   ///
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
   template <typename T,
             typename StorageList = VTKM_DEFAULT_STORAGE_LIST,
             typename TypeList = vtkm::List<T>>
@@ -198,7 +188,6 @@ public:
     this->CastAndCall<TypeList, CleanStorageList>(caster, output);
     return output;
   }
-  VTKM_DEPRECATED_SUPPRESS_END
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   /// Returns this array cast to a `ArrayHandleMultiplexer` of the given type.
@@ -282,7 +271,6 @@ public:
 /// named `VariantArrayHandleBase`, which is templated on the list of
 /// component types.
 ///
-VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename TypeList>
 class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
   1.7,
