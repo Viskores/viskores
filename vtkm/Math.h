@@ -2701,10 +2701,55 @@ inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float32 x, vtkm::Float32 
 template<typename T>
 inline VTKM_EXEC_CONT T DifferenceOfProducts(T a, T b, T c, T d)
 {
+    // This is a bit awkward. clang-11 does not define FP_FAST_FMA, but still compiles this to the correct assembly.
+    // Windows, however, generates truly horrendous assembly from this, with no fmas, to the extent I assume it could
+    // contort itself into a performance bug.
+    // You'd want to just use #ifdef FP_FAST_FMA, but then you'd lose the (correct) generated assembly on clang.
+    // See: https://stackoverflow.com/a/40765925/904050
     T cd = c * d;
     T err = std::fma(-c, d, cd);
     T dop = std::fma(a, b, -cd);
     return dop + err;
+}
+
+// Solves ax² + bx + c = 0.
+// Only returns the real roots.
+// If there are real roots, the first element of the pair is <= the second.
+// If there are no real roots, both elements are NaNs.
+// The error should be at most 3 ulps.
+template<typename T>
+inline VTKM_EXEC_CONT vtkm::Pair<T, T> QuadraticRoots(T a, T b, T c)
+{
+  if (a == 0)
+  {
+    if (b == 0)
+    {
+      if (c == 0)
+      {
+        // A degenerate case. All real numbers are roots; hopefully this arbitrary decision interacts gracefully with use.
+        return vtkm::Pair<T, T>(0,0);
+      }
+      else
+      {
+        return vtkm::Pair<T, T>(vtkm::Nan<T>(), vtkm::Nan<T>());
+      }
+    }
+    return vtkm::Pair<T, T>(-c/b, -c/b);
+  }
+  T delta = DifferenceOfProducts(b, b, 4*a, c);
+  if (delta < 0)
+  {
+    return vtkm::Pair<T, T>(vtkm::Nan<T>(), vtkm::Nan<T>());
+  }
+
+  T q = -(b + vtkm::CopySign(vtkm::Sqrt(delta), b)) / 2;
+  T r0 = q / a;
+  T r1 = c / q;
+  if (r0 < r1)
+  {
+    return vtkm::Pair<T, T>(r0, r1);
+  }
+  return vtkm::Pair<T, T>(r1, r0);
 }
 
 /// Bitwise operations
