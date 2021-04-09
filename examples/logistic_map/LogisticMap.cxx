@@ -66,15 +66,12 @@ public:
     orange_ = vtkm::Vec4f(1.0, 0.5, 0.0, 0.0);
   }
 
-  using ControlSignature = void(WholeArrayIn, WholeArrayOut);
+  using ControlSignature = void(FieldIn, WholeArrayOut);
   using ExecutionSignature = void(_1, _2, WorkIndex);
 
-  template <typename InputArrayPortalType, typename OutputArrayPortalType>
-  VTKM_EXEC void operator()(const InputArrayPortalType& inputArrayPortal,
-                            OutputArrayPortalType& outputArrayPortal,
-                            vtkm::Id workIndex) const
+  template <typename OutputArrayPortalType>
+  VTKM_EXEC void operator()(T x, OutputArrayPortalType& outputArrayPortal, vtkm::Id workIndex) const
   {
-    T x = inputArrayPortal.Get(workIndex);
     T r = rmin_ + (4.0 - rmin_) * workIndex / (width_ - 1);
     // We can't display need more limit points than pixels of height:
     vtkm::Id limit_points = 0;
