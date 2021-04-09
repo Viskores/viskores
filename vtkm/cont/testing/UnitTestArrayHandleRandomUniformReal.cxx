@@ -15,7 +15,7 @@
 void TestRangeBounds()
 {
   // the random numbers should fall into the range of [0, 1).
-  auto array = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(1000000, { 0xceed });
+  auto array = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(100, { 0xceed });
   auto portal = array.ReadPortal();
   for (vtkm::Id i = 0; i < array.GetNumberOfValues(); ++i)
   {
@@ -26,7 +26,7 @@ void TestRangeBounds()
 
 void TestStatisticsProperty()
 {
-  auto array = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(1000000, { 0xceed });
+  auto array = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(10000, { 0xceed });
   auto result = vtkm::worklet::DescriptiveStatistics::Run(array);
 
   VTKM_TEST_ASSERT(test_equal(result.Mean(), 0.5, 0.001));
