@@ -11,7 +11,7 @@
 #define vtk_m_rendering_raytracing_MeshConnectivityContainer_h
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/rendering/raytracing/MeshConnectivityBase.h>
+#include <vtkm/rendering/raytracing/MeshConnectivity.h>
 #include <vtkm/rendering/raytracing/TriangleIntersector.h>
 
 namespace vtkm
@@ -21,20 +21,14 @@ namespace rendering
 namespace raytracing
 {
 
-class MeshConnContainer : vtkm::cont::ExecutionObjectBase
+class MeshConnectivityContainer : vtkm::cont::ExecutionObjectBase
 {
 public:
-  MeshConnContainer();
-  virtual ~MeshConnContainer();
+  MeshConnectivityContainer();
+  virtual ~MeshConnectivityContainer();
 
-  virtual const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId,
-                                                vtkm::cont::Token& token) = 0;
-
-  MeshWrapper PrepareForExecution(const vtkm::cont::DeviceAdapterId deviceId,
-                                  vtkm::cont::Token& token);
-
-  template <typename T>
-  VTKM_CONT void FindEntryImpl(Ray<T>& rays);
+  virtual MeshConnectivity PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+                                               vtkm::cont::Token& token) const = 0;
 
   void FindEntry(Ray<vtkm::Float32>& rays);
 
@@ -45,10 +39,13 @@ protected:
   // Mesh Boundary
   Id4Handle Triangles;
   TriangleIntersector Intersector;
-  MeshConnHandle Handle;
+
+private:
+  template <typename T>
+  VTKM_CONT void FindEntryImpl(Ray<T>& rays);
 };
 
-class UnstructuredContainer : public MeshConnContainer
+class MeshConnectivityContainerUnstructured : public MeshConnectivityContainer
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandle;
@@ -67,25 +64,21 @@ public:
   vtkm::cont::CellSetExplicit<> Cellset;
   vtkm::cont::CoordinateSystem Coords;
 
-private:
-  VTKM_CONT
-  UnstructuredContainer(){};
-
 public:
   VTKM_CONT
-  UnstructuredContainer(const vtkm::cont::CellSetExplicit<>& cellset,
-                        const vtkm::cont::CoordinateSystem& coords,
-                        IdHandle& faceConn,
-                        IdHandle& faceOffsets,
-                        Id4Handle& triangles);
+  MeshConnectivityContainerUnstructured(const vtkm::cont::CellSetExplicit<>& cellset,
+                                        const vtkm::cont::CoordinateSystem& coords,
+                                        const IdHandle& faceConn,
+                                        const IdHandle& faceOffsets,
+                                        const Id4Handle& triangles);
 
-  virtual ~UnstructuredContainer();
+  virtual ~MeshConnectivityContainerUnstructured();
 
-  const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId,
-                                        vtkm::cont::Token& token) override;
+  MeshConnectivity PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+                                       vtkm::cont::Token& token) const override;
 };
 
-class StructuredContainer : public MeshConnContainer
+class MeshConnectivityContainerStructured : public MeshConnectivityContainer
 {
 protected:
   typedef vtkm::cont::ArrayHandle<vtkm::Id4> Id4Handle;
@@ -95,22 +88,18 @@ protected:
   vtkm::cont::CoordinateSystem Coords;
   vtkm::cont::CellSetStructured<3> Cellset;
 
-private:
-  VTKM_CONT
-  StructuredContainer() {}
-
 public:
   VTKM_CONT
-  StructuredContainer(const vtkm::cont::CellSetStructured<3>& cellset,
-                      const vtkm::cont::CoordinateSystem& coords,
-                      Id4Handle& triangles);
+  MeshConnectivityContainerStructured(const vtkm::cont::CellSetStructured<3>& cellset,
+                                      const vtkm::cont::CoordinateSystem& coords,
+                                      const Id4Handle& triangles);
 
-  const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId,
-                                        vtkm::cont::Token& token) override;
+  MeshConnectivity PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+                                       vtkm::cont::Token& token) const override;
 
 }; //structure mesh conn
 
-class UnstructuredSingleContainer : public MeshConnContainer
+class MeshConnectivityContainerSingleType : public MeshConnectivityContainer
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandle;
@@ -131,19 +120,15 @@ public:
   vtkm::Int32 NumIndices;
   vtkm::Int32 NumFaces;
 
-private:
-  VTKM_CONT
-  UnstructuredSingleContainer();
-
 public:
   VTKM_CONT
-  UnstructuredSingleContainer(const vtkm::cont::CellSetSingleType<>& cellset,
-                              const vtkm::cont::CoordinateSystem& coords,
-                              IdHandle& faceConn,
-                              Id4Handle& externalFaces);
+  MeshConnectivityContainerSingleType(const vtkm::cont::CellSetSingleType<>& cellset,
+                                      const vtkm::cont::CoordinateSystem& coords,
+                                      const IdHandle& faceConn,
+                                      const Id4Handle& externalFaces);
 
-  const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId,
-                                        vtkm::cont::Token& token) override;
+  MeshConnectivity PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+                                       vtkm::cont::Token& token) const override;
 
 }; //UnstructuredSingleContainer
 }

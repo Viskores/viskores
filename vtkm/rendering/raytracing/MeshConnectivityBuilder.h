@@ -27,8 +27,8 @@ public:
   ~MeshConnectivityBuilder();
 
   VTKM_CONT
-  MeshConnContainer* BuildConnectivity(const vtkm::cont::DynamicCellSet& cellset,
-                                       const vtkm::cont::CoordinateSystem& coordinates);
+  MeshConnectivityContainer* BuildConnectivity(const vtkm::cont::DynamicCellSet& cellset,
+                                               const vtkm::cont::CoordinateSystem& coordinates);
 
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Id4> ExternalTrianglesStructured(
