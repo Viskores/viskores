@@ -15,16 +15,8 @@
 
 void WaveletSourceTest()
 {
-  vtkm::cont::Timer timer;
-  timer.Start();
-
   vtkm::source::Wavelet source;
   vtkm::cont::DataSet ds = source.Execute();
-
-
-  double time = timer.GetElapsedTime();
-
-  std::cout << "Default wavelet took " << time << "s.\n";
 
   {
     auto coords = ds.GetCoordinateSystem("coordinates");
