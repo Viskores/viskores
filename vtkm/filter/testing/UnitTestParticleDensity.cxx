@@ -17,7 +17,7 @@
 
 void TestNGP()
 {
-  const vtkm::Id N = 1000000;
+  const vtkm::Id N = 1000;
   // This is a better way to create this array, but I am temporarily breaking this
   // functionality (November 2020) so that I can split up merge requests that move
   // ArrayHandles to the new buffer types. This should be restored once
@@ -68,7 +68,7 @@ void TestNGP()
 
 void TestCIC()
 {
-  const vtkm::Id N = 1000000;
+  const vtkm::Id N = 1000;
   // This is a better way to create this array, but I am temporarily breaking this
   // functionality (November 2020) so that I can split up merge requests that move
   // ArrayHandles to the new buffer types. This should be restored once
