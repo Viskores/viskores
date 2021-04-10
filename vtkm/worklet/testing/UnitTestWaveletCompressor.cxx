@@ -184,7 +184,6 @@ void TestDecomposeReconstruct3D(vtkm::Float64 cratio)
   vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel(sigY);
   vtkm::Id ZMaxLevel = compressor.GetWaveletMaxLevel(sigZ);
   vtkm::Id nLevels = vtkm::Min(vtkm::Min(XMaxLevel, YMaxLevel), ZMaxLevel);
-  vtkm::Float64 computationTime = 0.0;
 
   // Decompose
 
@@ -231,7 +230,6 @@ void TestDecomposeReconstruct2D(vtkm::Float64 cratio)
   vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel(sigY);
   vtkm::Id nLevels = vtkm::Min(XMaxLevel, YMaxLevel);
   std::vector<vtkm::Id> L;
-  vtkm::Float64 computationTime = 0.0;
   computationTime = compressor.WaveDecompose2D(inputArray, nLevels, sigX, sigY, outputArray, L);
   compressor.SquashCoefficients(outputArray, cratio);
 
