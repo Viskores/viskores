@@ -186,16 +186,13 @@ void TestDecomposeReconstruct3D(vtkm::Float64 cratio)
   vtkm::Id nLevels = vtkm::Min(vtkm::Min(XMaxLevel, YMaxLevel), ZMaxLevel);
 
   // Decompose
-
-  computationTime =
-    compressor.WaveDecompose3D(inputArray, nLevels, sigX, sigY, sigZ, outputArray, false);
+  compressor.WaveDecompose3D(inputArray, nLevels, sigX, sigY, sigZ, outputArray, false);
 
   compressor.SquashCoefficients(outputArray, cratio);
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float32> reconstructArray;
-  computationTime =
-    compressor.WaveReconstruct3D(outputArray, nLevels, sigX, sigY, sigZ, reconstructArray, false);
+  compressor.WaveReconstruct3D(outputArray, nLevels, sigX, sigY, sigZ, reconstructArray, false);
   outputArray.ReleaseResources();
 
   //compressor.EvaluateReconstruction(inputArray, reconstructArray);
@@ -230,13 +227,12 @@ void TestDecomposeReconstruct2D(vtkm::Float64 cratio)
   vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel(sigY);
   vtkm::Id nLevels = vtkm::Min(XMaxLevel, YMaxLevel);
   std::vector<vtkm::Id> L;
-  computationTime = compressor.WaveDecompose2D(inputArray, nLevels, sigX, sigY, outputArray, L);
+  compressor.WaveDecompose2D(inputArray, nLevels, sigX, sigY, outputArray, L);
   compressor.SquashCoefficients(outputArray, cratio);
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
-  computationTime =
-    compressor.WaveReconstruct2D(outputArray, nLevels, sigX, sigY, reconstructArray, L);
+  compressor.WaveReconstruct2D(outputArray, nLevels, sigX, sigY, reconstructArray, L);
   outputArray.ReleaseResources();
 
   //compressor.EvaluateReconstruction(inputArray, reconstructArray);
