@@ -78,6 +78,9 @@ struct TestObject
 
 void TestBasicAttachDetatch()
 {
+  std::cout << "Test basic attach detach." << std::endl;
+
+  std::cout << "  Create objects" << std::endl;
   TestObject object1;
   TestObject object2;
   TestObject object3;
@@ -86,8 +89,10 @@ void TestBasicAttachDetatch()
   CHECK_OBJECT(object2, 0, 1);
   CHECK_OBJECT(object3, 0, 1);
 
+  std::cout << "  Create outer token" << std::endl;
   vtkm::cont::Token outerToken;
 
+  std::cout << "  Attach outer token" << std::endl;
   object1.Attach(outerToken);
   object2.Attach(outerToken);
   object3.Attach(outerToken);
@@ -97,6 +102,7 @@ void TestBasicAttachDetatch()
   CHECK_OBJECT(object3, 1, 2);
 
   {
+    std::cout << "  Create/Attach inner token" << std::endl;
     vtkm::cont::Token innerToken;
     object1.Attach(innerToken);
     object2.Attach(innerToken);
@@ -106,16 +112,20 @@ void TestBasicAttachDetatch()
     CHECK_OBJECT(object2, 2, 3);
     CHECK_OBJECT(object3, 2, 3);
 
+    std::cout << "  Recursively attach outer token" << std::endl;
     object1.Attach(outerToken);
 
     CHECK_OBJECT(object1, 2, 3);
     CHECK_OBJECT(object2, 2, 3);
     CHECK_OBJECT(object3, 2, 3);
+
+    std::cout << "  Detach from inner token (through scoping)" << std::endl;
   }
   CHECK_OBJECT(object1, 1, 2);
   CHECK_OBJECT(object2, 1, 2);
   CHECK_OBJECT(object3, 1, 2);
 
+  std::cout << "  Detatch outer token" << std::endl;
   outerToken.DetachFromAll();
 
   CHECK_OBJECT(object1, 0, 1);
@@ -127,10 +137,13 @@ void WaitForDetachment(TestObject* object)
 {
   std::unique_lock<std::mutex> lock(*object->Mutex);
   object->ConditionVariable->wait(lock, [object] { return *object->TokenCount < 1; });
+  std::cout << "  Thread woke up" << std::endl;
 }
 
 void TestThreadWake()
 {
+  std::cout << "Testing thread wakeup" << std::endl;
+
   TestObject object;
   CHECK_OBJECT(object, 0, 1);
 
@@ -138,17 +151,22 @@ void TestThreadWake()
   object.Attach(token);
   CHECK_OBJECT(object, 1, 2);
 
+  std::cout << "  Launching coordinated thread" << std::endl;
   auto future = std::async(std::launch::async, WaitForDetachment, &object);
 
-  // 100 milliseconds should be ample time for the spawned thread to launch. If the systems busy then
+  std::cout << "  Sleep 500 milliseconds for thread to lock" << std::endl;
+  // 500 milliseconds should be ample time for the spawned thread to launch. If the systems busy then
   // we might actually unlock the object before the thread gets there, but hopefully on some
   // systems it will test correctly.
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
+  std::cout << "  Main thread woke up. Detach token." << std::endl;
   token.DetachFromAll();
 
+  std::cout << "  Wait for thread to finish. Could deadlock if did not properly wake." << std::endl;
   future.get();
 
+  std::cout << "  Returned to main thread" << std::endl;
   CHECK_OBJECT(object, 0, 1);
 }
 
