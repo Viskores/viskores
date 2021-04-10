@@ -128,16 +128,16 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
   pcoords.Allocate(count);
   wcoords.Allocate(count);
 
-  auto cwp = cellIds.WritePortal();
-  auto pwp = pcoords.WritePortal();
+  auto cellIdPortal = cellIds.WritePortal();
+  auto pcoordsPortal = pcoords.WritePortal();
   for (vtkm::Id i = 0; i < count; ++i)
   {
-    cwp.Set(i, cellIdGen(RandomGenerator));
+    cellIdPortal.Set(i, cellIdGen(RandomGenerator));
 
     PointType pc{ pcoordGen(RandomGenerator),
                   pcoordGen(RandomGenerator),
                   pcoordGen(RandomGenerator) };
-    pwp.Set(i, pc);
+    pcoordsPortal.Set(i, pc);
   }
 
   vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
