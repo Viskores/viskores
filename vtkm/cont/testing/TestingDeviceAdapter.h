@@ -551,7 +551,7 @@ private:
                      "or the width of vtkm::Id is not large enough to express all "
                      "array sizes.");
     }
-    catch (vtkm::cont::ErrorBadAllocation& error)
+    catch (vtkm::cont::ErrorBadAllocation&)
     {
       caught_expected = true;
     }
