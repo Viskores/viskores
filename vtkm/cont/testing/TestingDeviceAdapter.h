@@ -2171,7 +2171,6 @@ private:
         VTKM_TEST_ASSERT(portal.Get(1) == OFFSET, "Incorrect total sum");
       }
 
-      std::cout << "  size 0" << std::endl;
       array.Allocate(0);
       Algorithm::ScanExtended(array, array);
       VTKM_TEST_ASSERT(array.GetNumberOfValues() == 1);
@@ -2247,7 +2246,6 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exceptions in Execution Environment" << std::endl;
 
-    std::cout << "Generating one error." << std::endl;
     std::string message;
     try
     {
@@ -2256,12 +2254,10 @@ private:
     }
     catch (vtkm::cont::ErrorExecution& error)
     {
-      std::cout << "Got expected error: " << error.GetMessage() << std::endl;
       message = error.GetMessage();
     }
     VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
 
-    std::cout << "Generating lots of errors." << std::endl;
     message = "";
     try
     {
@@ -2270,7 +2266,6 @@ private:
     }
     catch (vtkm::cont::ErrorExecution& error)
     {
-      std::cout << "Got expected error: " << error.GetMessage() << std::endl;
       message = error.GetMessage();
     }
     VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
