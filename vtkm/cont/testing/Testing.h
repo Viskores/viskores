@@ -164,7 +164,7 @@ public:
     }
     catch (vtkm::cont::Error const& error)
     {
-      std::cerr << "Uncaught VTKm exception thrown:" << error.GetMessage() << "\n";
+      std::cerr << error.GetMessage() << "\n";
       return 1;
     }
     catch (std::exception const& error)
@@ -194,14 +194,12 @@ public:
     catch (vtkm::testing::Testing::TestFailure& error)
     {
       std::cerr << "Error at " << error.GetFile() << ":" << error.GetLine() << ":"
-                << error.GetFunc() << "\n\t";
-      << error.GetMessage() << "\n";
+                << error.GetFunc() << "\n\t" << error.GetMessage() << "\n";
       return 1;
     }
     catch (vtkm::cont::Error& error)
     {
-      std::cerr << "Uncaught VTKm exception thrown.\n\t";
-      << error.GetMessage() << "\n";
+      std::cerr << error.GetMessage() << "\n";
       return 1;
     }
     catch (std::exception& error)
@@ -211,7 +209,7 @@ public:
     }
     catch (...)
     {
-      std::cout << "Unidentified exception thrown.\n";
+      std::cerr << "Unidentified exception thrown.\n";
       return 1;
     }
     return 0;
