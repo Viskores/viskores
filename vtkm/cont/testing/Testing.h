@@ -23,7 +23,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
-#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/cont/testing/vtkm_cont_testing_export.h>
 

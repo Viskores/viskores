@@ -43,38 +43,11 @@ endfunction()
 
 if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   find_package(TBB REQUIRED)
-  add_library(vtkm::tbb UNKNOWN IMPORTED GLOBAL)
-
-  set_target_properties(vtkm::tbb PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${TBB_INCLUDE_DIRS}")
-
-  if(EXISTS "${TBB_LIBRARY_RELEASE}")
-    vtkm_extract_real_library("${TBB_LIBRARY_RELEASE}" real_path)
-    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-    set_target_properties(vtkm::tbb PROPERTIES
-      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-      IMPORTED_LOCATION_RELEASE "${real_path}"
-      )
-  elseif(EXISTS "${TBB_LIBRARY}")
-    #When VTK-m is mixed with OSPray we could use the OSPray FindTBB file
-    #which doesn't define TBB_LIBRARY_RELEASE but instead defined only
-    #TBB_LIBRARY
-    vtkm_extract_real_library("${TBB_LIBRARY}" real_path)
-    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-    set_target_properties(vtkm::tbb PROPERTIES
-      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-      IMPORTED_LOCATION_RELEASE "${real_path}"
-      )
-  endif()
-
-  if(EXISTS "${TBB_LIBRARY_DEBUG}")
-    vtkm_extract_real_library("${TBB_LIBRARY_DEBUG}" real_path)
-    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
-    set_target_properties(vtkm::tbb PROPERTIES
-      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-      IMPORTED_LOCATION_DEBUG "${real_path}"
-      )
-  endif()
+  add_library(vtkmTBB INTERFACE)
+  add_library(vtkm::tbb ALIAS vtkmTBB)
+  target_link_libraries(vtkmTBB INTERFACE TBB::tbb)
+  set_target_properties(vtkmTBB PROPERTIES EXPORT_NAME tbb)
+  install(TARGETS vtkmTBB EXPORT ${VTKm_EXPORT_NAME})
 endif()
 
 
