@@ -311,7 +311,7 @@ public:
 
     VTKM_CONT const std::string& GetFile() const { return this->File; }
     VTKM_CONT vtkm::Id GetLine() const { return this->Line; }
-    VTKM_CONT const char* GetFunc() const { return this->Func; }
+    VTKM_CONT const char* GetFunction() const { return this->Func; }
     VTKM_CONT const std::string& GetMessage() const { return this->Message; }
 
   private:
@@ -450,7 +450,7 @@ public:
     catch (TestFailure const& error)
     {
       std::cerr << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << ":"
-                << error.GetFunc() << "\n"
+                << error.GetFunction() << "\n"
                 << error.GetMessage() << "\n";
       return 1;
     }

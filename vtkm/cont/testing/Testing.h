@@ -28,18 +28,14 @@
 
 #include <vtkm/thirdparty/diy/diy.h>
 
-#include <sstream>
-
-#define VTKM_MATH_ASSERT(condition, message)                                     \
-  {                                                                              \
-    if (condition)                                                               \
-    {                                                                            \
-      return;                                                                    \
-    }                                                                            \
-    std::stringstream ss;                                                        \
-    ss << "Error at " << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n"; \
-    ss << "\t" << message;                                                       \
-    this->RaiseError(ss.str().c_str());                                          \
+#define VTKM_MATH_ASSERT(condition, message)                                                 \
+  {                                                                                          \
+    if (!condition)                                                                          \
+    {                                                                                        \
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,                                                \
+                 "\n\tError at " << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n"); \
+      this->RaiseError(message);                                                             \
+    }                                                                                        \
   }
 
 
@@ -159,12 +155,13 @@ public:
     catch (vtkm::testing::Testing::TestFailure const& error)
     {
       std::cerr << "Error at " << error.GetFile() << ":" << error.GetLine() << ":"
-                << error.GetFunc() << "\n\t" << error.GetMessage() << "\n";
+                << error.GetFunction() << "\n\t" << error.GetMessage() << "\n";
       return 1;
     }
     catch (vtkm::cont::Error const& error)
     {
-      std::cerr << error.GetMessage() << "\n";
+      std::cerr << "Uncaught VTKm exception thrown.\n" << error.GetMessage() << "\n";
+      std::cerr << "Stacktrace:\n" << error.GetStackTrace() << "\n";
       return 1;
     }
     catch (std::exception const& error)
@@ -194,12 +191,13 @@ public:
     catch (vtkm::testing::Testing::TestFailure& error)
     {
       std::cerr << "Error at " << error.GetFile() << ":" << error.GetLine() << ":"
-                << error.GetFunc() << "\n\t" << error.GetMessage() << "\n";
+                << error.GetFunction() << "\n\t" << error.GetMessage() << "\n";
       return 1;
     }
     catch (vtkm::cont::Error& error)
     {
-      std::cerr << error.GetMessage() << "\n";
+      std::cerr << "Uncaught VTKm exception thrown.\n" << error.GetMessage() << "\n";
+      std::cerr << "Stacktrace:\n" << error.GetStackTrace() << "\n";
       return 1;
     }
     catch (std::exception& error)
