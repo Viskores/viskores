@@ -40,8 +40,8 @@ add_library(vtkm_compiler_flags INTERFACE)
 target_link_libraries(vtkm_compiler_flags
   INTERFACE $<BUILD_INTERFACE:vtkm_vectorization_flags>)
 
-# setup that we need C++11 support
-target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_11)
+# setup that we need C++14 support
+target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_14)
 
 # setup our static libraries so that a separate ELF section
 # is generated for each function. This allows for the linker to
