@@ -20,12 +20,6 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-#define VTKM_MATH_ASSERT(condition, message) \
-  if (!(condition))                          \
-  {                                          \
-    this->RaiseError(message);               \
-  }
-
 //-----------------------------------------------------------------------------
 namespace
 {

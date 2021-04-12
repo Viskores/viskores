@@ -20,11 +20,6 @@
 
 #include <limits>
 
-#define VTKM_MATH_ASSERT(condition, message) \
-  if (!(condition))                          \
-  {                                          \
-    this->RaiseError(message);               \
-  }
 
 //-----------------------------------------------------------------------------
 namespace UnitTestMathNamespace
@@ -921,7 +916,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
       "Float distance for difference of products is which exceeds 1.5; this is in violation of a "
       "theorem "
       "proved by Jeannerod in doi.org/10.1090/S0025-5718-2013-02679-8. Is your build compiled "
-      "with fma's enabled?");
+      "with FMAs enabled?");
 #endif
   }
 
@@ -1088,7 +1083,7 @@ struct BitOpTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(test_equal(vtkm::CountSetBits(word), this->DumbCountBits(word)),
                      "CountBits returned wrong value.");
     VTKM_MATH_ASSERT(test_equal(vtkm::FindFirstSetBit(word), this->DumbFindFirstSetBit(word)),
-                     "FindFirstSetBit returned wrong value.")
+                     "FindFirstSetBit returned wrong value.");
   }
 
   VTKM_EXEC vtkm::Int32 DumbCountBits(T word) const

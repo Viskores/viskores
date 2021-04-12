@@ -26,7 +26,32 @@
 
 #include <vtkm/cont/testing/vtkm_cont_testing_export.h>
 
+#include <sstream>
 #include <vtkm/thirdparty/diy/diy.h>
+
+// We could, conceivably, use CUDA or Kokkos specific print statements here.
+// But we cannot use std::stringstream on device, so for now, we'll just accept
+// that on CUDA and Kokkos we print less actionalble information.
+#if defined(VTKM_ENABLE_CUDA) || defined(VTKM_ENABLE_KOKKOS)
+#define VTKM_MATH_ASSERT(condition, message) \
+  {                                          \
+    if (!(condition))                        \
+    {                                        \
+      this->RaiseError(message);             \
+    }                                        \
+  }
+#else
+#define VTKM_MATH_ASSERT(condition, message)                                                       \
+  {                                                                                                \
+    if (!(condition))                                                                              \
+    {                                                                                              \
+      std::stringstream ss;                                                                        \
+      ss << "\n\tError at " << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n\t" << message \
+         << "\n";                                                                                  \
+      this->RaiseError(ss.str().c_str());                                                          \
+    }                                                                                              \
+  }
+#endif
 
 namespace opt = vtkm::cont::internal::option;
 
@@ -141,26 +166,26 @@ public:
     {
       function();
     }
-    catch (vtkm::testing::Testing::TestFailure& error)
+    catch (vtkm::testing::Testing::TestFailure const& error)
     {
-      std::cout << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << std::endl
-                << error.GetMessage() << std::endl;
+      std::cerr << "Error at " << error.GetFile() << ":" << error.GetLine() << ":"
+                << error.GetFunction() << "\n\t" << error.GetMessage() << "\n";
       return 1;
     }
-    catch (vtkm::cont::Error& error)
+    catch (vtkm::cont::Error const& error)
     {
-      std::cout << "***** Uncaught VTKm exception thrown." << std::endl
-                << error.GetMessage() << std::endl;
+      std::cerr << "Uncaught VTKm exception thrown.\n" << error.GetMessage() << "\n";
+      std::cerr << "Stacktrace:\n" << error.GetStackTrace() << "\n";
       return 1;
     }
-    catch (std::exception& error)
+    catch (std::exception const& error)
     {
-      std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      std::cerr << "STL exception throw.\n" << error.what() << "\n";
       return 1;
     }
     catch (...)
     {
-      std::cout << "***** Unidentified exception thrown." << std::endl;
+      std::cerr << "Unidentified exception thrown.\n";
       return 1;
     }
     return 0;
@@ -179,24 +204,24 @@ public:
     }
     catch (vtkm::testing::Testing::TestFailure& error)
     {
-      std::cout << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << std::endl
-                << error.GetMessage() << std::endl;
+      std::cerr << "Error at " << error.GetFile() << ":" << error.GetLine() << ":"
+                << error.GetFunction() << "\n\t" << error.GetMessage() << "\n";
       return 1;
     }
     catch (vtkm::cont::Error& error)
     {
-      std::cout << "***** Uncaught VTKm exception thrown." << std::endl
-                << error.GetMessage() << std::endl;
+      std::cerr << "Uncaught VTKm exception thrown.\n" << error.GetMessage() << "\n";
+      std::cerr << "Stacktrace:\n" << error.GetStackTrace() << "\n";
       return 1;
     }
     catch (std::exception& error)
     {
-      std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      std::cerr << "STL exception throw.\n\t" << error.what() << "\n";
       return 1;
     }
     catch (...)
     {
-      std::cout << "***** Unidentified exception thrown." << std::endl;
+      std::cerr << "Unidentified exception thrown.\n";
       return 1;
     }
     return 0;
