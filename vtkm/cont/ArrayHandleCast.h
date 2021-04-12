@@ -193,7 +193,7 @@ private:
     if (RangeLoss && PrecLoss)
     {
       VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
-                 "VariantArrayHandle::AsVirtual: Casting ComponentType of "
+                 "ArrayHandleCast: Casting ComponentType of "
                  "%s to %s reduces range and precision.",
                  vtkm::cont::TypeToString<SrcValueType>().c_str(),
                  vtkm::cont::TypeToString<DstValueType>().c_str());
@@ -201,7 +201,7 @@ private:
     else if (RangeLoss)
     {
       VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
-                 "VariantArrayHandle::AsVirtual: Casting ComponentType of "
+                 "ArrayHandleCast: Casting ComponentType of "
                  "%s to %s reduces range.",
                  vtkm::cont::TypeToString<SrcValueType>().c_str(),
                  vtkm::cont::TypeToString<DstValueType>().c_str());
@@ -209,7 +209,7 @@ private:
     else if (PrecLoss)
     {
       VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
-                 "VariantArrayHandle::AsVirtual: Casting ComponentType of "
+                 "ArrayHandleCast: Casting ComponentType of "
                  "%s to %s reduces precision.",
                  vtkm::cont::TypeToString<SrcValueType>().c_str(),
                  vtkm::cont::TypeToString<DstValueType>().c_str());

@@ -260,9 +260,13 @@ ApplyPolicyFieldOfType(const vtkm::cont::Field& field,
 /// the active field of this filter.
 ///
 template <typename DerivedPolicy, typename FilterType>
-VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename vtkm::filter::DeduceFilterFieldTypes<
-  DerivedPolicy,
-  typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList>::TypeList>
+VTKM_CONT vtkm::cont::UncertainArrayHandle<
+  typename vtkm::filter::DeduceFilterFieldTypes<
+    DerivedPolicy,
+    typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList>::TypeList,
+  typename vtkm::filter::DeduceFilterFieldStorage<
+    DerivedPolicy,
+    typename vtkm::filter::FilterTraits<FilterType>::AdditionalFieldStorage>::StorageList>
 ApplyPolicyFieldActive(const vtkm::cont::Field& field,
                        vtkm::filter::PolicyBase<DerivedPolicy>,
                        vtkm::filter::FilterTraits<FilterType>)
@@ -275,20 +279,6 @@ ApplyPolicyFieldActive(const vtkm::cont::Field& field,
     typename vtkm::filter::DeduceFilterFieldStorage<DerivedPolicy, FilterStorage>::StorageList;
   return field.GetData().ResetTypes(TypeList{}, StorageList{});
 }
-
-////-----------------------------------------------------------------------------
-///// \brief Get an array from a `Field` limited to a given set of types.
-/////
-//template <typename DerivedPolicy, typename ListOfTypes>
-//VTKM_CONT vtkm::cont::VariantArrayHandleBase<
-//  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, ListOfTypes>::TypeList>
-//ApplyPolicyFieldOfTypes(
-//  const vtkm::cont::Field& field, vtkm::filter::PolicyBase<DerivedPolicy>, ListOfTypes)
-//{
-//  using TypeList =
-//    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, ListOfTypes>::TypeList;
-//  return field.GetData().ResetTypes(TypeList());
-//}
 
 //-----------------------------------------------------------------------------
 /// \brief Ge a cell set from a `DynamicCellSet` object.

@@ -67,7 +67,7 @@ public:
   /// but with a new name
   VTKM_CONT
   vtkm::cont::Field AsField(const std::string& name,
-                            const vtkm::cont::VariantArrayHandle& handle) const
+                            const vtkm::cont::UnknownArrayHandle& handle) const
   {
     return vtkm::cont::Field(name, this->Association, handle);
   }
@@ -79,7 +79,7 @@ public:
     return this->AsField(this->Name, handle);
   }
   /// Construct a new field with the same association and name as stored in this FieldMetaData
-  VTKM_CONT vtkm::cont::Field AsField(const vtkm::cont::VariantArrayHandle& handle) const
+  VTKM_CONT vtkm::cont::Field AsField(const vtkm::cont::UnknownArrayHandle& handle) const
   {
     return this->AsField(this->Name, handle);
   }

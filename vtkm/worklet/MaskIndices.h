@@ -59,7 +59,7 @@ public:
   }
   //@}
 
-  // TODO? Create a version that accepts a VariantArrayHandle. Is this needed?
+  // TODO? Create a version that accepts an UnknownArrayHandle. Is this needed?
 
   template <typename RangeType>
   vtkm::Id GetThreadRange(RangeType vtkmNotUsed(outputRange)) const
