@@ -26,18 +26,32 @@
 
 #include <vtkm/cont/testing/vtkm_cont_testing_export.h>
 
+#include <sstream>
 #include <vtkm/thirdparty/diy/diy.h>
 
-#define VTKM_MATH_ASSERT(condition, message)                                                 \
-  {                                                                                          \
-    if (!(condition))                                                                        \
-    {                                                                                        \
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,                                                \
-                 "\n\tError at " << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n"); \
-      this->RaiseError(message);                                                             \
-    }                                                                                        \
+// We could, conceivably, use CUDA or Kokkos specific print statements here.
+// But we cannot use std::stringstream on device, so for now, we'll just accept
+// that on CUDA and Kokkos we print less actionalble information.
+#if defined(VTKM_ENABLE_CUDA) || defined(VTKM_ENABLE_KOKKOS)
+#define VTKM_MATH_ASSERT(condition, message) \
+  {                                          \
+    if (!(condition))                        \
+    {                                        \
+      this->RaiseError(message);             \
+    }                                        \
   }
-
+#else
+#define VTKM_MATH_ASSERT(condition, message)                                                       \
+  {                                                                                                \
+    if (!(condition))                                                                              \
+    {                                                                                              \
+      std::stringstream ss;                                                                        \
+      ss << "\n\tError at " << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n\t" << message \
+         << "\n";                                                                                  \
+      this->RaiseError(ss.str().c_str());                                                          \
+    }                                                                                              \
+  }
+#endif
 
 namespace opt = vtkm::cont::internal::option;
 
