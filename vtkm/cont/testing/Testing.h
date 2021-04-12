@@ -30,7 +30,7 @@
 
 #define VTKM_MATH_ASSERT(condition, message)                                                 \
   {                                                                                          \
-    if (!condition)                                                                          \
+    if (!(condition))                                                                        \
     {                                                                                        \
       VTKM_LOG_S(vtkm::cont::LogLevel::Error,                                                \
                  "\n\tError at " << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n"); \
