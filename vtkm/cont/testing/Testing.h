@@ -28,6 +28,21 @@
 
 #include <vtkm/thirdparty/diy/diy.h>
 
+#include <sstream>
+
+#define VTKM_MATH_ASSERT(condition, message)                                     \
+  {                                                                              \
+    if (condition)                                                               \
+    {                                                                            \
+      return;                                                                    \
+    }                                                                            \
+    std::stringstream ss;                                                        \
+    ss << "Error at " << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n"; \
+    ss << "\t" << message;                                                       \
+    this->RaiseError(ss.str().c_str());                                          \
+  }
+
+
 namespace opt = vtkm::cont::internal::option;
 
 namespace vtkm
@@ -141,26 +156,25 @@ public:
     {
       function();
     }
-    catch (vtkm::testing::Testing::TestFailure& error)
+    catch (vtkm::testing::Testing::TestFailure const& error)
     {
-      std::cout << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << std::endl
-                << error.GetMessage() << std::endl;
+      std::cerr << "Error at " << error.GetFile() << ":" << error.GetLine() << ":"
+                << error.GetFunc() << "\n\t" << error.GetMessage() << "\n";
       return 1;
     }
-    catch (vtkm::cont::Error& error)
+    catch (vtkm::cont::Error const& error)
     {
-      std::cout << "***** Uncaught VTKm exception thrown." << std::endl
-                << error.GetMessage() << std::endl;
+      std::cerr << "Uncaught VTKm exception thrown:" << error.GetMessage() << "\n";
       return 1;
     }
-    catch (std::exception& error)
+    catch (std::exception const& error)
     {
-      std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      std::cerr << "STL exception throw.\n" << error.what() << "\n";
       return 1;
     }
     catch (...)
     {
-      std::cout << "***** Unidentified exception thrown." << std::endl;
+      std::cerr << "Unidentified exception thrown.\n";
       return 1;
     }
     return 0;
@@ -179,24 +193,25 @@ public:
     }
     catch (vtkm::testing::Testing::TestFailure& error)
     {
-      std::cout << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << std::endl
-                << error.GetMessage() << std::endl;
+      std::cerr << "Error at " << error.GetFile() << ":" << error.GetLine() << ":"
+                << error.GetFunc() << "\n\t";
+      << error.GetMessage() << "\n";
       return 1;
     }
     catch (vtkm::cont::Error& error)
     {
-      std::cout << "***** Uncaught VTKm exception thrown." << std::endl
-                << error.GetMessage() << std::endl;
+      std::cerr << "Uncaught VTKm exception thrown.\n\t";
+      << error.GetMessage() << "\n";
       return 1;
     }
     catch (std::exception& error)
     {
-      std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      std::cerr << "STL exception throw.\n\t" << error.what() << "\n";
       return 1;
     }
     catch (...)
     {
-      std::cout << "***** Unidentified exception thrown." << std::endl;
+      std::cout << "Unidentified exception thrown.\n";
       return 1;
     }
     return 0;

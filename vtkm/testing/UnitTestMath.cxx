@@ -20,11 +20,6 @@
 
 #include <limits>
 
-#define VTKM_MATH_ASSERT(condition, message) \
-  if (!(condition))                          \
-  {                                          \
-    this->RaiseError(message);               \
-  }
 
 //-----------------------------------------------------------------------------
 namespace UnitTestMathNamespace
@@ -1088,7 +1083,7 @@ struct BitOpTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(test_equal(vtkm::CountSetBits(word), this->DumbCountBits(word)),
                      "CountBits returned wrong value.");
     VTKM_MATH_ASSERT(test_equal(vtkm::FindFirstSetBit(word), this->DumbFindFirstSetBit(word)),
-                     "FindFirstSetBit returned wrong value.")
+                     "FindFirstSetBit returned wrong value.");
   }
 
   VTKM_EXEC vtkm::Int32 DumbCountBits(T word) const
