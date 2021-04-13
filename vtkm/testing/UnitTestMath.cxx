@@ -856,10 +856,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     vtkm::UInt64 dist = vtkm::FloatDistance(expected, computed);
     VTKM_MATH_ASSERT(
       dist < 2,
-      "Float distance for difference of products is which exceeds 1.5; this is in violation of a "
-      "theorem "
-      "proved by Jeannerod in doi.org/10.1090/S0025-5718-2013-02679-8. Is your build compiled "
-      "with FMAs enabled?");
+      "Float distance for difference of products is " + std::to_string(dist) +
+        " which exceeds 1.5; this is in violation of a theorem "
+        "proved by Jeannerod in doi.org/10.1090/S0025-5718-2013-02679-8. Is your build compiled "
+        "with FMAs enabled?");
 #endif
   }
 
