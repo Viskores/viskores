@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_particle_density_base_h
 #define vtk_m_filter_particle_density_base_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -20,7 +20,7 @@ namespace filter
 {
 // We only need the CoordinateSystem and scalar fields of the input dataset thus a FilterField
 template <typename Derived>
-class ParticleDensityBase : public vtkm::filter::FilterField<Derived>
+class ParticleDensityBase : public vtkm::filter::FilterDataSetWithField<Derived>
 {
 public:
   // deposit scalar field associated with particles, e.g. mass/charge to mesh cells
@@ -67,8 +67,17 @@ public:
     }
     else
     {
-      return this->FilterField<Derived>::PrepareForExecution(input, policy);
+      return this->FilterDataSetWithField<Derived>::PrepareForExecution(input, policy);
     }
+  }
+
+  template <typename T, typename StorageType, typename Policy>
+  VTKM_CONT bool DoMapField(vtkm::cont::DataSet&,
+                            const vtkm::cont::ArrayHandle<T, StorageType>&,
+                            const vtkm::filter::FieldMetadata&,
+                            vtkm::filter::PolicyBase<Policy>)
+  {
+    return false;
   }
 
   VTKM_CONT void SetComputeNumberDensity(bool yes) { this->ComputeNumberDensity = yes; }
