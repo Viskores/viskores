@@ -21,7 +21,7 @@ namespace
 std::vector<vtkm::cont::DataSet> MakeDataSets()
 {
   vtkm::Bounds bounds(0, 10, 0, 10, 0, 10);
-  const vtkm::Id3 dims(16, 16, 16);
+  const vtkm::Id3 dims(8, 8, 8);
   auto dataSets = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
 
   vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
@@ -48,8 +48,7 @@ std::vector<vtkm::cont::DataSet> MakeDataSets()
 
 void TestLagrangianFilterMultiStepInterval()
 {
-  std::cout << "Test: Lagrangian Analysis - Uniform Dataset - Write Interval > 1" << std::endl;
-  vtkm::Id maxCycles = 10;
+  vtkm::Id maxCycles = 5;
   vtkm::Id write_interval = 5;
   vtkm::filter::Lagrangian lagrangianFilter2;
   lagrangianFilter2.SetResetParticles(true);
@@ -67,7 +66,7 @@ void TestLagrangianFilterMultiStepInterval()
       {
         VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 1,
                          "Wrong number of coordinate systems in the output dataset.");
-        VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfPoints() == 4096,
+        VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfPoints() == 512,
                          "Wrong number of basis flows extracted.");
         VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfFields() == 2, "Wrong number of fields.");
       }

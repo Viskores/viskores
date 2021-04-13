@@ -55,9 +55,9 @@ namespace testing
 {
 
 #define ERROR_MESSAGE "Got an error."
-#define ARRAY_SIZE 10000
-#define OFFSET 1000
-#define DIM_SIZE 128
+#define ARRAY_SIZE 100
+#define OFFSET 10
+#define DIM_SIZE 8
 
 /// This class has a single static member, Run, that tests the templated
 /// DeviceAdapter for conformance.
@@ -498,37 +498,37 @@ private:
 
     vtkm::cont::internal::DeviceAdapterMemoryManager<DeviceAdapterTag> memoryManager;
 
-    std::cout << "Allocate a buffer." << std::endl;
+    // Allocate a buffer.
     vtkm::cont::internal::BufferInfo allocatedMemory = memoryManager.Allocate(BUFFER_SIZE);
     VTKM_TEST_ASSERT(allocatedMemory.GetSize() == BUFFER_SIZE);
 
-    std::cout << "Copy data from host to device." << std::endl;
+    // Copy data from host to device.
     allocatedMemory = memoryManager.CopyHostToDevice(hostBufferSrc);
 
-    std::cout << "Copy data within device." << std::endl;
+    // Copy data within device.
     vtkm::cont::internal::BufferInfo workingMemory =
       memoryManager.CopyDeviceToDevice(allocatedMemory);
     VTKM_TEST_ASSERT(workingMemory.GetSize() == BUFFER_SIZE);
 
-    std::cout << "Copy data back to host." << std::endl;
+    // Copy data back to host.
     vtkm::cont::internal::BufferInfo hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
     VTKM_TEST_ASSERT(hostBufferDest.GetSize() == BUFFER_SIZE);
     CheckPortal(makePortal(hostBufferDest));
 
-    std::cout << "Shrink a buffer (and preserve memory)" << std::endl;
+    // Shrink a buffer (and preserve memory)
     memoryManager.Reallocate(workingMemory, BUFFER_SIZE / 2);
     hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
     VTKM_TEST_ASSERT(hostBufferDest.GetSize() == BUFFER_SIZE / 2);
     CheckPortal(makePortal(hostBufferDest));
 
-    std::cout << "Grow a buffer (and preserve memory)" << std::endl;
+    // Grow a buffer (and preserve memory)
     memoryManager.Reallocate(workingMemory, BUFFER_SIZE * 2);
     hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
     VTKM_TEST_ASSERT(hostBufferDest.GetSize() == BUFFER_SIZE * 2);
     hostBufferDest.Reallocate(BUFFER_SIZE / 2);
     CheckPortal(makePortal(hostBufferDest));
 
-    std::cout << "Make sure data is actually available on the device." << std::endl;
+    // Make sure data is actually available on the device.
     // This actually requires running schedule.
     workingMemory = memoryManager.CopyDeviceToDevice(allocatedMemory);
     Algorithm::Schedule(MakeAddArrayKernel(makePortal(workingMemory)), ARRAY_SIZE);
@@ -553,6 +553,7 @@ private:
 #ifdef VTKM_USE_64BIT_IDS
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Out of Memory" << std::endl;
+    bool caughtBadAlloc = false;
     try
     {
       std::cout << "Do array allocation that should fail." << std::endl;
@@ -566,12 +567,11 @@ private:
                      "or the width of vtkm::Id is not large enough to express all "
                      "array sizes.");
     }
-    catch (vtkm::cont::ErrorBadAllocation& error)
+    catch (vtkm::cont::ErrorBadAllocation&)
     {
-      std::cout << "Got the expected error: " << error.GetMessage() << std::endl;
+      caughtBadAlloc = true;
     }
-#else
-    std::cout << "--------- Skipping out of memory test" << std::endl;
+    VTKM_TEST_ASSERT(caughtBadAlloc);
 #endif
   }
 
@@ -646,24 +646,21 @@ private:
     std::cout << "Testing single value Scheduling with vtkm::Id" << std::endl;
 
     {
-      std::cout << "Allocating execution array" << std::endl;
+      // Allocating execution array
       vtkm::cont::ArrayHandle<vtkm::Id> handle;
 
-      std::cout << "Running clear." << std::endl;
       {
         vtkm::cont::Token token;
         Algorithm::Schedule(ClearArrayKernel(handle.PrepareForOutput(1, DeviceAdapterTag{}, token)),
                             1);
       }
 
-      std::cout << "Running add." << std::endl;
       {
         vtkm::cont::Token token;
         Algorithm::Schedule(MakeAddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
                             1);
       }
 
-      std::cout << "Checking results." << std::endl;
       auto portal = handle.ReadPortal();
       for (vtkm::Id index = 0; index < 1; index++)
       {
@@ -677,10 +674,8 @@ private:
     std::cout << "Testing Schedule with vtkm::Id" << std::endl;
 
     {
-      std::cout << "Allocating execution array" << std::endl;
       vtkm::cont::ArrayHandle<vtkm::Id> handle;
 
-      std::cout << "Running clear." << std::endl;
       {
         vtkm::cont::Token token;
         Algorithm::Schedule(
@@ -688,14 +683,12 @@ private:
           ARRAY_SIZE);
       }
 
-      std::cout << "Running add." << std::endl;
       {
         vtkm::cont::Token token;
         Algorithm::Schedule(MakeAddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
                             ARRAY_SIZE);
       }
 
-      std::cout << "Checking results." << std::endl;
       auto portal = handle.ReadPortal();
       for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
@@ -708,10 +701,8 @@ private:
     std::cout << "Testing Schedule with a vary large Id value" << std::endl;
 
     {
-      std::cout << "Allocating execution array" << std::endl;
+      // Allocating execution array.
       vtkm::cont::ArrayHandle<vtkm::Id> handle;
-
-      std::cout << "Running clear." << std::endl;
 
       //size is selected to be larger than the CUDA backend can launch in a
       //single invocation when compiled for SM_2 support
@@ -722,14 +713,12 @@ private:
           ClearArrayKernel(handle.PrepareForOutput(size, DeviceAdapterTag{}, token)), size);
       }
 
-      std::cout << "Running add." << std::endl;
       {
         vtkm::cont::Token token;
         Algorithm::Schedule(MakeAddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
                             size);
       }
 
-      std::cout << "Checking results." << std::endl;
       //Rather than testing for correctness every value of a large array,
       // we randomly test a subset of that array.
       std::default_random_engine generator(static_cast<unsigned int>(std::time(nullptr)));
@@ -753,7 +742,6 @@ private:
       vtkm::cont::ArrayHandle<vtkm::Id> handle;
       vtkm::Id3 maxRange(DIM_SIZE);
 
-      std::cout << "Running clear." << std::endl;
       {
         vtkm::cont::Token token;
         Algorithm::Schedule(
@@ -763,7 +751,6 @@ private:
           maxRange);
       }
 
-      std::cout << "Running add." << std::endl;
       {
         vtkm::cont::Token token;
         Algorithm::Schedule(
@@ -771,7 +758,6 @@ private:
           maxRange);
       }
 
-      std::cout << "Checking results." << std::endl;
       const vtkm::Id maxId = DIM_SIZE * DIM_SIZE * DIM_SIZE;
       auto portal = handle.ReadPortal();
       for (vtkm::Id index = 0; index < maxId; index++)
@@ -811,8 +797,6 @@ private:
                                           valid.PrepareForInPlace(DeviceAdapterTag(), token)),
                             ARRAY_SIZE);
       }
-
-      std::cout << "Checking results." << std::endl;
 
       auto vPortal = valid.ReadPortal();
       for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
@@ -858,8 +842,6 @@ private:
                             dims);
       }
 
-      std::cout << "Checking results." << std::endl;
-
       auto vPortal = valid.ReadPortal();
       for (vtkm::Id i = 0; i < numElems; i++)
       {
@@ -878,7 +860,6 @@ private:
     IdArrayHandle stencil;
     IdArrayHandle result;
 
-    std::cout << "  Standard call" << std::endl;
     //construct the index array
     {
       vtkm::cont::Token token;
@@ -2057,7 +2038,6 @@ private:
     std::cout << "Testing Exclusive Scan" << std::endl;
 
     {
-      std::cout << "  size " << ARRAY_SIZE << std::endl;
       //construct the index array
       IdArrayHandle array;
       {
@@ -2070,7 +2050,6 @@ private:
       // we know have an array whose sum = (OFFSET * ARRAY_SIZE),
       // let's validate that
       vtkm::Id sum = Algorithm::ScanExclusive(array, array);
-      std::cout << "  Sum that was returned " << sum << std::endl;
       VTKM_TEST_ASSERT(sum == (OFFSET * ARRAY_SIZE), "Got bad sum from Exclusive Scan");
 
       auto portal = array.ReadPortal();
@@ -2088,7 +2067,6 @@ private:
       const vtkm::Id value = array.ReadPortal().Get(0);
       VTKM_TEST_ASSERT(value == 0, "Incorrect partial sum");
 
-      std::cout << "  size 0" << std::endl;
       array.Allocate(0);
       sum = Algorithm::ScanExclusive(array, array);
       VTKM_TEST_ASSERT(sum == 0, "Incorrect partial sum");
@@ -2149,7 +2127,6 @@ private:
       Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues, vtkm::CopyFlag::Off);
 
       Vec3 sum = Algorithm::ScanExclusive(values, values);
-      std::cout << "Sum that was returned " << sum << std::endl;
       VTKM_TEST_ASSERT(test_equal(sum, (TestValue(1, Vec3()) * ARRAY_SIZE)),
                        "Got bad sum from Exclusive Scan");
     }
@@ -2161,7 +2138,6 @@ private:
     std::cout << "Testing Extended Scan" << std::endl;
 
     {
-      std::cout << "  size " << ARRAY_SIZE << std::endl;
 
       //construct the index array
       IdArrayHandle array;
@@ -2185,7 +2161,6 @@ private:
         }
       }
 
-      std::cout << "  size 1" << std::endl;
       array.Allocate(1, vtkm::CopyFlag::On);
       array.WritePortal().Set(0, OFFSET);
       Algorithm::ScanExtended(array, array);
@@ -2196,7 +2171,6 @@ private:
         VTKM_TEST_ASSERT(portal.Get(1) == OFFSET, "Incorrect total sum");
       }
 
-      std::cout << "  size 0" << std::endl;
       array.Allocate(0);
       Algorithm::ScanExtended(array, array);
       VTKM_TEST_ASSERT(array.GetNumberOfValues() == 1);
@@ -2272,7 +2246,6 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exceptions in Execution Environment" << std::endl;
 
-    std::cout << "Generating one error." << std::endl;
     std::string message;
     try
     {
@@ -2281,12 +2254,10 @@ private:
     }
     catch (vtkm::cont::ErrorExecution& error)
     {
-      std::cout << "Got expected error: " << error.GetMessage() << std::endl;
       message = error.GetMessage();
     }
     VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
 
-    std::cout << "Generating lots of errors." << std::endl;
     message = "";
     try
     {
@@ -2295,7 +2266,6 @@ private:
     }
     catch (vtkm::cont::ErrorExecution& error)
     {
-      std::cout << "Got expected error: " << error.GetMessage() << std::endl;
       message = error.GetMessage();
     }
     VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");

@@ -200,10 +200,16 @@ struct ValidateNormals
     vtkm::Id numVisitedCells = vtkm::cont::Algorithm::CountSetBits(this->VisitedCellsField);
     if (numPoints != numVisitedPoints)
     {
+      std::cerr << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n";
+      std::cerr << "\tnumPoints is " << numPoints << ", but numVisitedPoints is only "
+                << numVisitedPoints << "\n";
       throw vtkm::cont::ErrorBadValue("Unvisited point!");
     }
     if (numCells != numVisitedCells)
     {
+      std::cerr << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n";
+      std::cerr << "\tnumCells is " << numCells << ", but numVisitedCells is only "
+                << numVisitedCells << "\n";
       throw vtkm::cont::ErrorBadValue("Unvisited cell!");
     }
   }
@@ -252,13 +258,6 @@ private:
         const NormalType curNormal = this->PointNormals.Get(curPtIdx);
         if (!this->SameHemisphere(curNormal, refNormal))
         {
-          const auto coord = points.Get(curPtIdx);
-          std::cerr << "BadPointNormal PtId: " << curPtIdx << "\n\t"
-                    << "- Normal: {" << curNormal[0] << ", " << curNormal[1] << ", " << curNormal[2]
-                    << "}\n\t"
-                    << "- Reference: {" << refNormal[0] << ", " << refNormal[1] << ", "
-                    << refNormal[2] << "}\n\t"
-                    << "- Coord: {" << coord[0] << ", " << coord[1] << ", " << coord[2] << "}\n";
           throw vtkm::cont::ErrorBadValue("Bad point normal found!");
         }
         refNormal = curNormal;
@@ -283,11 +282,6 @@ private:
           const NormalType curNormal = this->CellNormals.Get(curCellIdx);
           if (!this->SameHemisphere(curNormal, refNormal))
           {
-            std::cerr << "BadCellNormal: CellId: " << curCellIdx << "\n\t"
-                      << "- Normal: {" << curNormal[0] << ", " << curNormal[1] << ", "
-                      << curNormal[2] << "}\n\t"
-                      << "- Reference: {" << refNormal[0] << ", " << refNormal[1] << ", "
-                      << refNormal[2] << "}\n";
             throw vtkm::cont::ErrorBadValue("Bad cell normal found!");
           }
           refNormal = curNormal;
@@ -326,14 +320,11 @@ void TestOrientNormals(bool testPoints, bool testCells)
   const bool inputValid = [&]() -> bool {
     try
     {
-      std::cerr << "Expecting to throw a BadNormal exception...\n";
       ValidateNormals::Run(dataset, testPoints, testCells);
       return true; // Dataset is already oriented
     }
     catch (vtkm::cont::ErrorBadValue&)
     {
-      std::cerr << "Expected exception caught! All is well. "
-                   "Future exceptions are errors.\n";
       return false; // Dataset is unoriented
     }
   }();
@@ -348,8 +339,6 @@ void TestOrientNormals(bool testPoints, bool testCells)
   const auto cells = dataset.GetCellSet();
   if (testPoints && testCells)
   {
-    std::cerr << "Testing point and cell normals...\n";
-
     const auto pointNormalField = dataset.GetPointField("normals");
     const auto cellNormalField = dataset.GetCellField("normals");
     auto pointNormals = pointNormalField.GetData().AsArrayHandle<NormalArrayT>();
@@ -359,7 +348,6 @@ void TestOrientNormals(bool testPoints, bool testCells)
   }
   else if (testPoints)
   {
-    std::cerr << "Testing point normals...\n";
     const auto pointNormalField = dataset.GetPointField("normals");
     auto pointNormals = pointNormalField.GetData().AsArrayHandle<NormalArrayT>();
 
@@ -367,7 +355,6 @@ void TestOrientNormals(bool testPoints, bool testCells)
   }
   else if (testCells)
   {
-    std::cerr << "Testing cell normals...\n";
     const auto cellNormalField = dataset.GetCellField("normals");
     auto cellNormals = cellNormalField.GetData().AsArrayHandle<NormalArrayT>();
 

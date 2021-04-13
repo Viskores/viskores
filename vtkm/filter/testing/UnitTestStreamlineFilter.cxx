@@ -225,7 +225,7 @@ void TestAMRStreamline(bool useSL)
     {
       vtkm::filter::Streamline filter;
       filter.SetStepSize(0.1f);
-      filter.SetNumberOfSteps(100000);
+      filter.SetNumberOfSteps(1000);
       filter.SetSeeds(seedArray);
 
       filter.SetActiveField(fieldName);
@@ -297,7 +297,7 @@ void TestAMRStreamline(bool useSL)
     {
       vtkm::filter::ParticleAdvection filter;
       filter.SetStepSize(0.1f);
-      filter.SetNumberOfSteps(100000);
+      filter.SetNumberOfSteps(1000);
       filter.SetSeeds(seedArray);
 
       filter.SetActiveField(fieldName);
@@ -374,7 +374,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, bool useSL)
       vtkm::filter::Streamline streamline;
 
       streamline.SetStepSize(0.1f);
-      streamline.SetNumberOfSteps(100000);
+      streamline.SetNumberOfSteps(1000);
       streamline.SetSeeds(seedArray);
 
       streamline.SetActiveField(fieldName);
@@ -420,7 +420,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, bool useSL)
       vtkm::filter::ParticleAdvection particleAdvection;
 
       particleAdvection.SetStepSize(0.1f);
-      particleAdvection.SetNumberOfSteps(100000);
+      particleAdvection.SetNumberOfSteps(1000);
       particleAdvection.SetSeeds(seedArray);
 
       particleAdvection.SetActiveField(fieldName);
