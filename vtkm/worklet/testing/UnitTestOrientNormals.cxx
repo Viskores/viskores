@@ -51,7 +51,7 @@ namespace
 VTKM_CONT
 vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
 {
-  vtkm::source::Wavelet wavelet({ -5 }, { 5 });
+  vtkm::source::Wavelet wavelet({ -25 }, { 25 });
   wavelet.SetFrequency({ 20, 15, 25 });
   wavelet.SetMagnitude({ 5 });
   auto dataSet = wavelet.Execute();
@@ -200,10 +200,16 @@ struct ValidateNormals
     vtkm::Id numVisitedCells = vtkm::cont::Algorithm::CountSetBits(this->VisitedCellsField);
     if (numPoints != numVisitedPoints)
     {
+      std::cerr << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n";
+      std::cerr << "\tnumPoints is " << numPoints << ", but numVisitedPoints is only "
+                << numVisitedPoints << "\n";
       throw vtkm::cont::ErrorBadValue("Unvisited point!");
     }
     if (numCells != numVisitedCells)
     {
+      std::cerr << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n";
+      std::cerr << "\tnumCells is " << numCells << ", but numVisitedCells is only "
+                << numVisitedCells << "\n";
       throw vtkm::cont::ErrorBadValue("Unvisited cell!");
     }
   }
