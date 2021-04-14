@@ -378,8 +378,8 @@ public:
 
   static VTKM_CONT void Assert(const std::string& conditionString,
                                const std::string& file,
-                               const char* func,
                                vtkm::Id line,
+                               const char* func,
                                bool condition)
   {
     Assert(conditionString, file, line, func, condition, "Test assertion failed");
@@ -387,8 +387,8 @@ public:
 
   static VTKM_CONT void Assert(const std::string& conditionString,
                                const std::string& file,
-                               const char* func,
                                vtkm::Id line,
+                               const char* func,
                                const TestEqualResult& result)
   {
     Assert(conditionString, file, line, func, static_cast<bool>(result), result.GetMergedMessage());
@@ -875,8 +875,8 @@ static inline VTKM_CONT void CheckPortal(const PortalType& portal)
     if (!test_equal(expectedValue, foundValue))
     {
       std::stringstream message;
-      message << "Got unexpected value in array." << std::endl
-              << "Expected: " << expectedValue << ", Found: " << foundValue << std::endl;
+      message << "Got unexpected value in array. Expected: " << expectedValue
+              << ", Found: " << foundValue << "\n";
       VTKM_TEST_FAIL(message.str().c_str());
     }
   }
