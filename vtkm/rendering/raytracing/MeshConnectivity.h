@@ -7,14 +7,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_rendering_raytracing_MeshConnectivityBase
-#define vtk_m_rendering_raytracing_MeshConnectivityBase
+#ifndef vtk_m_rendering_raytracing_MeshConnectivity
+#define vtk_m_rendering_raytracing_MeshConnectivity
 
 #include <sstream>
 #include <vtkm/CellShape.h>
-#include <vtkm/VirtualObjectBase.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
+#include <vtkm/exec/internal/Variant.h>
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/CellTables.h>
 #include <vtkm/rendering/raytracing/Logger.h>
@@ -27,71 +27,24 @@ namespace rendering
 {
 namespace raytracing
 {
-//
-// Base class for different types of face-to-connecting-cell
-// and other mesh information
-//
-class VTKM_ALWAYS_EXPORT MeshConnectivityBase : public VirtualObjectBase
-{
-public:
-  VTKM_EXEC_CONT
-  virtual vtkm::Id GetConnectingCell(const vtkm::Id& cellId, const vtkm::Id& face) const = 0;
 
-  VTKM_EXEC_CONT
-  virtual vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellId) const = 0;
-
-  VTKM_EXEC_CONT
-  virtual vtkm::UInt8 GetCellShape(const vtkm::Id& cellId) const = 0;
-};
-
-// A simple concrete type to wrap MeshConnectivityBase so we can
-// pass an ExeObject to worklets.
-class MeshWrapper
-{
-private:
-  MeshConnectivityBase* MeshConn;
-
-public:
-  MeshWrapper() {}
-
-  MeshWrapper(MeshConnectivityBase* meshConn)
-    : MeshConn(meshConn){};
-
-  VTKM_EXEC_CONT
-  vtkm::Id GetConnectingCell(const vtkm::Id& cellId, const vtkm::Id& face) const
-  {
-    return MeshConn->GetConnectingCell(cellId, face);
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellId) const
-  {
-    return MeshConn->GetCellIndices(cellIndices, cellId);
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::UInt8 GetCellShape(const vtkm::Id& cellId) const { return MeshConn->GetCellShape(cellId); }
-};
-
-class VTKM_ALWAYS_EXPORT MeshConnStructured : public MeshConnectivityBase
+class VTKM_ALWAYS_EXPORT MeshConnectivityStructured
 {
 protected:
   typedef typename vtkm::cont::ArrayHandle<vtkm::Id4> Id4Handle;
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
 
-  VTKM_CONT MeshConnStructured() = default;
-
 public:
   VTKM_CONT
-  MeshConnStructured(const vtkm::Id3& cellDims, const vtkm::Id3& pointDims)
+  MeshConnectivityStructured(const vtkm::Id3& cellDims, const vtkm::Id3& pointDims)
     : CellDims(cellDims)
     , PointDims(pointDims)
   {
   }
 
   VTKM_EXEC_CONT
-  vtkm::Id GetConnectingCell(const vtkm::Id& cellId, const vtkm::Id& face) const override
+  vtkm::Id GetConnectingCell(const vtkm::Id& cellId, const vtkm::Id& face) const
   {
     //TODO: there is probably a better way to do this.
     vtkm::Id3 logicalCellId;
@@ -128,7 +81,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellIndex) const override
+  vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellIndex) const
   {
     vtkm::Id3 cellId;
     cellId[0] = cellIndex % CellDims[0];
@@ -146,14 +99,13 @@ public:
   }
 
   VTKM_EXEC
-  vtkm::UInt8 GetCellShape(const vtkm::Id& vtkmNotUsed(cellId)) const override
+  vtkm::UInt8 GetCellShape(const vtkm::Id& vtkmNotUsed(cellId)) const
   {
     return vtkm::UInt8(CELL_SHAPE_HEXAHEDRON);
   }
 }; // MeshConnStructured
 
-template <typename Device>
-class VTKM_ALWAYS_EXPORT MeshConnUnstructured : public MeshConnectivityBase
+class VTKM_ALWAYS_EXPORT MeshConnectivityUnstructured
 {
 protected:
   using IdHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
@@ -170,26 +122,25 @@ protected:
   IdConstPortal CellOffsetsPortal;
   UCharConstPortal ShapesPortal;
 
-  VTKM_CONT MeshConnUnstructured() = default;
-
 public:
   VTKM_CONT
-  MeshConnUnstructured(const IdHandle& faceConnectivity,
-                       const IdHandle& faceOffsets,
-                       const IdHandle& cellConn,
-                       const IdHandle& cellOffsets,
-                       const UCharHandle& shapes,
-                       vtkm::cont::Token& token)
-    : FaceConnPortal(faceConnectivity.PrepareForInput(Device(), token))
-    , FaceOffsetsPortal(faceOffsets.PrepareForInput(Device(), token))
-    , CellConnPortal(cellConn.PrepareForInput(Device(), token))
-    , CellOffsetsPortal(cellOffsets.PrepareForInput(Device(), token))
-    , ShapesPortal(shapes.PrepareForInput(Device(), token))
+  MeshConnectivityUnstructured(const IdHandle& faceConnectivity,
+                               const IdHandle& faceOffsets,
+                               const IdHandle& cellConn,
+                               const IdHandle& cellOffsets,
+                               const UCharHandle& shapes,
+                               vtkm::cont::DeviceAdapterId device,
+                               vtkm::cont::Token& token)
+    : FaceConnPortal(faceConnectivity.PrepareForInput(device, token))
+    , FaceOffsetsPortal(faceOffsets.PrepareForInput(device, token))
+    , CellConnPortal(cellConn.PrepareForInput(device, token))
+    , CellOffsetsPortal(cellOffsets.PrepareForInput(device, token))
+    , ShapesPortal(shapes.PrepareForInput(device, token))
   {
   }
 
   VTKM_EXEC_CONT
-  vtkm::Id GetConnectingCell(const vtkm::Id& cellId, const vtkm::Id& face) const override
+  vtkm::Id GetConnectingCell(const vtkm::Id& cellId, const vtkm::Id& face) const
   {
     BOUNDS_CHECK(FaceOffsetsPortal, cellId);
     vtkm::Id cellStartIndex = FaceOffsetsPortal.Get(cellId);
@@ -199,7 +150,7 @@ public:
 
   //----------------------------------------------------------------------------
   VTKM_EXEC
-  vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellId) const override
+  vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellId) const
   {
     const vtkm::Int32 shapeId = static_cast<vtkm::Int32>(ShapesPortal.Get(cellId));
     CellTables tables;
@@ -217,7 +168,7 @@ public:
 
   //----------------------------------------------------------------------------
   VTKM_EXEC
-  vtkm::UInt8 GetCellShape(const vtkm::Id& cellId) const override
+  vtkm::UInt8 GetCellShape(const vtkm::Id& cellId) const
   {
     BOUNDS_CHECK(ShapesPortal, cellId);
     return ShapesPortal.Get(cellId);
@@ -225,8 +176,7 @@ public:
 
 }; // MeshConnUnstructured
 
-template <typename Device>
-class MeshConnSingleType : public MeshConnectivityBase
+class MeshConnectivitySingleType
 {
 protected:
   using IdHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
@@ -243,22 +193,19 @@ protected:
   vtkm::Int32 NumIndices;
   vtkm::Int32 NumFaces;
 
-private:
-  VTKM_CONT
-  MeshConnSingleType() {}
-
 public:
   VTKM_CONT
-  MeshConnSingleType(IdHandle& faceConn,
-                     IdHandle& cellConn,
-                     CountingHandle& cellOffsets,
-                     vtkm::Int32 shapeId,
-                     vtkm::Int32 numIndices,
-                     vtkm::Int32 numFaces,
-                     vtkm::cont::Token& token)
-    : FaceConnPortal(faceConn.PrepareForInput(Device(), token))
-    , CellConnectivityPortal(cellConn.PrepareForInput(Device(), token))
-    , CellOffsetsPortal(cellOffsets.PrepareForInput(Device(), token))
+  MeshConnectivitySingleType(const IdHandle& faceConn,
+                             const IdHandle& cellConn,
+                             const CountingHandle& cellOffsets,
+                             vtkm::Int32 shapeId,
+                             vtkm::Int32 numIndices,
+                             vtkm::Int32 numFaces,
+                             vtkm::cont::DeviceAdapterId device,
+                             vtkm::cont::Token& token)
+    : FaceConnPortal(faceConn.PrepareForInput(device, token))
+    , CellConnectivityPortal(cellConn.PrepareForInput(device, token))
+    , CellOffsetsPortal(cellOffsets.PrepareForInput(device, token))
     , ShapeId(shapeId)
     , NumIndices(numIndices)
     , NumFaces(numFaces)
@@ -269,7 +216,7 @@ public:
   //                       Execution Environment Methods
   //----------------------------------------------------------------------------
   VTKM_EXEC
-  vtkm::Id GetConnectingCell(const vtkm::Id& cellId, const vtkm::Id& face) const override
+  vtkm::Id GetConnectingCell(const vtkm::Id& cellId, const vtkm::Id& face) const
   {
     BOUNDS_CHECK(CellOffsetsPortal, cellId);
     vtkm::Id cellStartIndex = cellId * NumFaces;
@@ -278,7 +225,7 @@ public:
   }
 
   VTKM_EXEC
-  vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellId) const override
+  vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellId) const
   {
     BOUNDS_CHECK(CellOffsetsPortal, cellId);
     const vtkm::Id cellOffset = CellOffsetsPortal.Get(cellId);
@@ -294,55 +241,89 @@ public:
 
   //----------------------------------------------------------------------------
   VTKM_EXEC
-  vtkm::UInt8 GetCellShape(const vtkm::Id& vtkmNotUsed(cellId)) const override
+  vtkm::UInt8 GetCellShape(const vtkm::Id& vtkmNotUsed(cellId)) const
   {
     return vtkm::UInt8(ShapeId);
   }
 
 }; //MeshConn Single type specialization
 
-class VTKM_ALWAYS_EXPORT MeshConnHandle
-  : public vtkm::cont::VirtualObjectHandle<MeshConnectivityBase>
+/// \brief General version of mesh connectivity that can be used for all supported mesh types.
+class VTKM_ALWAYS_EXPORT MeshConnectivity
 {
-private:
-  using Superclass = vtkm::cont::VirtualObjectHandle<MeshConnectivityBase>;
+  using ConnectivityType = vtkm::exec::internal::
+    Variant<MeshConnectivityStructured, MeshConnectivityUnstructured, MeshConnectivitySingleType>;
+  ConnectivityType Connectivity;
 
 public:
-  MeshConnHandle() = default;
-
-  template <typename MeshConnType, typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
-  explicit MeshConnHandle(MeshConnType* meshConn,
-                          bool aquireOwnership = true,
-                          DeviceAdapterList devices = DeviceAdapterList())
-    : Superclass(meshConn, aquireOwnership, devices)
+  // Constructor for structured connectivity
+  VTKM_CONT MeshConnectivity(const vtkm::Id3& cellDims, const vtkm::Id3& pointDims)
+    : Connectivity(MeshConnectivityStructured(cellDims, pointDims))
   {
+  }
+
+  // Constructor for unstructured connectivity
+  VTKM_CONT MeshConnectivity(const vtkm::cont::ArrayHandle<vtkm::Id>& faceConnectivity,
+                             const vtkm::cont::ArrayHandle<vtkm::Id>& faceOffsets,
+                             const vtkm::cont::ArrayHandle<vtkm::Id>& cellConn,
+                             const vtkm::cont::ArrayHandle<vtkm::Id>& cellOffsets,
+                             const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
+                             vtkm::cont::DeviceAdapterId device,
+                             vtkm::cont::Token& token)
+    : Connectivity(MeshConnectivityUnstructured(faceConnectivity,
+                                                faceOffsets,
+                                                cellConn,
+                                                cellOffsets,
+                                                shapes,
+                                                device,
+                                                token))
+  {
+  }
+
+  // Constructor for unstructured connectivity with single cell type
+  VTKM_CONT MeshConnectivity(const vtkm::cont::ArrayHandle<vtkm::Id>& faceConn,
+                             const vtkm::cont::ArrayHandle<vtkm::Id>& cellConn,
+                             const vtkm::cont::ArrayHandleCounting<vtkm::Id>& cellOffsets,
+                             vtkm::Int32 shapeId,
+                             vtkm::Int32 numIndices,
+                             vtkm::Int32 numFaces,
+                             vtkm::cont::DeviceAdapterId device,
+                             vtkm::cont::Token& token)
+    : Connectivity(MeshConnectivitySingleType(faceConn,
+                                              cellConn,
+                                              cellOffsets,
+                                              shapeId,
+                                              numIndices,
+                                              numFaces,
+                                              device,
+                                              token))
+  {
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Id GetConnectingCell(const vtkm::Id& cellId, const vtkm::Id& face) const
+  {
+    return this->Connectivity.CastAndCall(
+      [=](auto conn) { return conn.GetConnectingCell(cellId, face); });
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellId) const
+  {
+    return this->Connectivity.CastAndCall(
+      [=](auto conn) { return conn.GetCellIndices(cellIndices, cellId); });
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::UInt8 GetCellShape(const vtkm::Id& cellId) const
+  {
+    return this->Connectivity.CastAndCall([=](auto conn) { return conn.GetCellShape(cellId); });
   }
 };
 
-template <typename MeshConnType, typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
-VTKM_CONT MeshConnHandle make_MeshConnHandle(MeshConnType&& func,
-                                             DeviceAdapterList devices = DeviceAdapterList())
-{
-  using IFType = typename std::remove_reference<MeshConnType>::type;
-  return MeshConnHandle(new IFType(std::forward<MeshConnType>(func)), true, devices);
-}
 }
 }
 } //namespace vtkm::rendering::raytracing
 
 
-// Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
-// to be instantiated in a consistent order among all the translation units of an
-// executable. Failing to do so results in random crashes and incorrect results.
-// We workaroud this issue by explicitly instantiating VirtualObjectTransfer for
-// all the implicit functions here.
-#ifdef VTKM_CUDA
-#include <vtkm/cont/internal/VirtualObjectTransferInstantiate.h>
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::rendering::raytracing::MeshConnStructured);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER_CUDA(
-  vtkm::rendering::raytracing::MeshConnUnstructured<vtkm::cont::DeviceAdapterTagCuda>);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER_KOKKOS(
-  vtkm::rendering::raytracing::MeshConnUnstructured<vtkm::cont::DeviceAdapterTagKokkos>);
-#endif
-
-#endif // MeshConnectivityBase
+#endif // MeshConnectivity

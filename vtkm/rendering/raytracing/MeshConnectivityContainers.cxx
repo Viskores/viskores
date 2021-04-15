@@ -14,7 +14,7 @@
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Logger.h>
-#include <vtkm/rendering/raytracing/MeshConnectivityBase.h>
+#include <vtkm/rendering/raytracing/MeshConnectivity.h>
 #include <vtkm/rendering/raytracing/MeshConnectivityContainers.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/TriangleIntersector.h>
@@ -25,11 +25,11 @@ namespace rendering
 namespace raytracing
 {
 
-MeshConnContainer::MeshConnContainer(){};
-MeshConnContainer::~MeshConnContainer(){};
+MeshConnectivityContainer::MeshConnectivityContainer(){};
+MeshConnectivityContainer::~MeshConnectivityContainer(){};
 
 template <typename T>
-VTKM_CONT void MeshConnContainer::FindEntryImpl(Ray<T>& rays)
+VTKM_CONT void MeshConnectivityContainer::FindEntryImpl(Ray<T>& rays)
 {
   bool getCellIndex = true;
 
@@ -38,28 +38,23 @@ VTKM_CONT void MeshConnContainer::FindEntryImpl(Ray<T>& rays)
   Intersector.IntersectRays(rays, getCellIndex);
 }
 
-MeshWrapper MeshConnContainer::PrepareForExecution(const vtkm::cont::DeviceAdapterId deviceId,
-                                                   vtkm::cont::Token& token)
-{
-  return MeshWrapper(const_cast<MeshConnectivityBase*>(this->Construct(deviceId, token)));
-}
-
-void MeshConnContainer::FindEntry(Ray<vtkm::Float32>& rays)
+void MeshConnectivityContainer::FindEntry(Ray<vtkm::Float32>& rays)
 {
   this->FindEntryImpl(rays);
 }
 
-void MeshConnContainer::FindEntry(Ray<vtkm::Float64>& rays)
+void MeshConnectivityContainer::FindEntry(Ray<vtkm::Float64>& rays)
 {
   this->FindEntryImpl(rays);
 }
 
 VTKM_CONT
-UnstructuredContainer::UnstructuredContainer(const vtkm::cont::CellSetExplicit<>& cellset,
-                                             const vtkm::cont::CoordinateSystem& coords,
-                                             IdHandle& faceConn,
-                                             IdHandle& faceOffsets,
-                                             Id4Handle& triangles)
+MeshConnectivityContainerUnstructured::MeshConnectivityContainerUnstructured(
+  const vtkm::cont::CellSetExplicit<>& cellset,
+  const vtkm::cont::CoordinateSystem& coords,
+  const IdHandle& faceConn,
+  const IdHandle& faceOffsets,
+  const Id4Handle& triangles)
   : FaceConnectivity(faceConn)
   , FaceOffsets(faceOffsets)
   , Cellset(cellset)
@@ -78,96 +73,27 @@ UnstructuredContainer::UnstructuredContainer(const vtkm::cont::CellSetExplicit<>
   Intersector.SetData(Coords, Triangles);
 }
 
-UnstructuredContainer::~UnstructuredContainer(){};
+MeshConnectivityContainerUnstructured::~MeshConnectivityContainerUnstructured(){};
 
-const MeshConnectivityBase* UnstructuredContainer::Construct(
-  const vtkm::cont::DeviceAdapterId deviceId,
-  vtkm::cont::Token& token)
+MeshConnectivity MeshConnectivityContainerUnstructured::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId deviceId,
+  vtkm::cont::Token& token) const
 {
-  switch (deviceId.GetValue())
-  {
-#ifdef VTKM_ENABLE_OPENMP
-    case VTKM_DEVICE_ADAPTER_OPENMP:
-      using OMP = vtkm::cont::DeviceAdapterTagOpenMP;
-      {
-        MeshConnUnstructured<OMP> conn(this->FaceConnectivity,
-                                       this->FaceOffsets,
-                                       this->CellConn,
-                                       this->CellOffsets,
-                                       this->Shapes,
-                                       token);
-        Handle = make_MeshConnHandle(conn);
-      }
-      return Handle.PrepareForExecution(OMP(), token);
-#endif
-#ifdef VTKM_ENABLE_TBB
-    case VTKM_DEVICE_ADAPTER_TBB:
-      using TBB = vtkm::cont::DeviceAdapterTagTBB;
-      {
-        MeshConnUnstructured<TBB> conn(this->FaceConnectivity,
-                                       this->FaceOffsets,
-                                       this->CellConn,
-                                       this->CellOffsets,
-                                       this->Shapes,
-                                       token);
-        Handle = make_MeshConnHandle(conn);
-      }
-      return Handle.PrepareForExecution(TBB(), token);
-#endif
-#ifdef VTKM_ENABLE_CUDA
-    case VTKM_DEVICE_ADAPTER_CUDA:
-      using CUDA = vtkm::cont::DeviceAdapterTagCuda;
-      {
-        MeshConnUnstructured<CUDA> conn(this->FaceConnectivity,
-                                        this->FaceOffsets,
-                                        this->CellConn,
-                                        this->CellOffsets,
-                                        this->Shapes,
-                                        token);
-        Handle = make_MeshConnHandle(conn);
-      }
-      return Handle.PrepareForExecution(CUDA(), token);
-#endif
-#ifdef VTKM_ENABLE_KOKKOS
-    case VTKM_DEVICE_ADAPTER_KOKKOS:
-      using KOKKOS = vtkm::cont::DeviceAdapterTagKokkos;
-      {
-        MeshConnUnstructured<KOKKOS> conn(this->FaceConnectivity,
-                                          this->FaceOffsets,
-                                          this->CellConn,
-                                          this->CellOffsets,
-                                          this->Shapes,
-                                          token);
-        Handle = make_MeshConnHandle(conn);
-      }
-      return Handle.PrepareForExecution(KOKKOS(), token);
-#endif
-    case VTKM_DEVICE_ADAPTER_SERIAL:
-      VTKM_FALLTHROUGH;
-    default:
-      using SERIAL = vtkm::cont::DeviceAdapterTagSerial;
-      {
-        MeshConnUnstructured<SERIAL> conn(this->FaceConnectivity,
-                                          this->FaceOffsets,
-                                          this->CellConn,
-                                          this->CellOffsets,
-                                          this->Shapes,
-                                          token);
-        Handle = make_MeshConnHandle(conn);
-      }
-      return Handle.PrepareForExecution(SERIAL(), token);
-  }
+  return MeshConnectivity(this->FaceConnectivity,
+                          this->FaceOffsets,
+                          this->CellConn,
+                          this->CellOffsets,
+                          this->Shapes,
+                          deviceId,
+                          token);
 }
 
 VTKM_CONT
-UnstructuredSingleContainer::UnstructuredSingleContainer() {}
-
-VTKM_CONT
-UnstructuredSingleContainer::UnstructuredSingleContainer(
+MeshConnectivityContainerSingleType::MeshConnectivityContainerSingleType(
   const vtkm::cont::CellSetSingleType<>& cellset,
   const vtkm::cont::CoordinateSystem& coords,
-  IdHandle& faceConn,
-  Id4Handle& triangles)
+  const IdHandle& faceConn,
+  const Id4Handle& triangles)
   : FaceConnectivity(faceConn)
   , Coords(coords)
   , Cellset(cellset)
@@ -177,16 +103,16 @@ UnstructuredSingleContainer::UnstructuredSingleContainer(
 
   this->Intersector.SetUseWaterTight(true);
 
-  CellConnectivity =
+  this->CellConnectivity =
     Cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
   vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes =
     Cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
-  ShapeId = shapes.ReadPortal().Get(0);
+  this->ShapeId = shapes.ReadPortal().Get(0);
   CellTables tables;
-  NumIndices = tables.FaceLookUp(tables.CellTypeLookUp(ShapeId), 2);
+  this->NumIndices = tables.FaceLookUp(tables.CellTypeLookUp(ShapeId), 2);
 
-  if (NumIndices == 0)
+  if (this->NumIndices == 0)
   {
     std::stringstream message;
     message << "Unstructured Mesh Connecitity Single type Error: unsupported cell type: ";
@@ -194,147 +120,53 @@ UnstructuredSingleContainer::UnstructuredSingleContainer(
     throw vtkm::cont::ErrorBadValue(message.str());
   }
   vtkm::Id start = 0;
-  NumFaces = tables.FaceLookUp(tables.CellTypeLookUp(ShapeId), 1);
-  vtkm::Id numCells = CellConnectivity.ReadPortal().GetNumberOfValues();
-  CellOffsets = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(start, NumIndices, numCells);
+  this->NumFaces = tables.FaceLookUp(tables.CellTypeLookUp(this->ShapeId), 1);
+  vtkm::Id numCells = this->CellConnectivity.ReadPortal().GetNumberOfValues();
+  this->CellOffsets =
+    vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(start, this->NumIndices, numCells);
 
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("mesh_conn_construction");
 
-  Intersector.SetData(Coords, Triangles);
+  this->Intersector.SetData(Coords, Triangles);
 }
 
-const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
-  const vtkm::cont::DeviceAdapterId deviceId,
-  vtkm::cont::Token& token)
+MeshConnectivity MeshConnectivityContainerSingleType::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId deviceId,
+  vtkm::cont::Token& token) const
 {
-  switch (deviceId.GetValue())
-  {
-#ifdef VTKM_ENABLE_OPENMP
-    case VTKM_DEVICE_ADAPTER_OPENMP:
-      using OMP = vtkm::cont::DeviceAdapterTagOpenMP;
-      {
-        MeshConnSingleType<OMP> conn(this->FaceConnectivity,
-                                     this->CellConnectivity,
-                                     this->CellOffsets,
-                                     this->ShapeId,
-                                     this->NumIndices,
-                                     this->NumFaces,
-                                     token);
-        Handle = make_MeshConnHandle(conn);
-      }
-      return Handle.PrepareForExecution(OMP(), token);
-#endif
-#ifdef VTKM_ENABLE_TBB
-    case VTKM_DEVICE_ADAPTER_TBB:
-      using TBB = vtkm::cont::DeviceAdapterTagTBB;
-      {
-        MeshConnSingleType<TBB> conn(this->FaceConnectivity,
-                                     this->CellConnectivity,
-                                     this->CellOffsets,
-                                     this->ShapeId,
-                                     this->NumIndices,
-                                     this->NumFaces,
-                                     token);
-        Handle = make_MeshConnHandle(conn);
-      }
-      return Handle.PrepareForExecution(TBB(), token);
-#endif
-#ifdef VTKM_ENABLE_CUDA
-    case VTKM_DEVICE_ADAPTER_CUDA:
-      using CUDA = vtkm::cont::DeviceAdapterTagCuda;
-      {
-        MeshConnSingleType<CUDA> conn(this->FaceConnectivity,
-                                      this->CellConnectivity,
-                                      this->CellOffsets,
-                                      this->ShapeId,
-                                      this->NumIndices,
-                                      this->NumFaces,
-                                      token);
-        Handle = make_MeshConnHandle(conn);
-      }
-      return Handle.PrepareForExecution(CUDA(), token);
-#endif
-#ifdef VTKM_ENABLE_KOKKOS
-    case VTKM_DEVICE_ADAPTER_KOKKOS:
-      using KOKKOS = vtkm::cont::DeviceAdapterTagKokkos;
-      {
-        MeshConnSingleType<KOKKOS> conn(this->FaceConnectivity,
-                                        this->CellConnectivity,
-                                        this->CellOffsets,
-                                        this->ShapeId,
-                                        this->NumIndices,
-                                        this->NumFaces,
-                                        token);
-        Handle = make_MeshConnHandle(conn);
-      }
-      return Handle.PrepareForExecution(KOKKOS(), token);
-#endif
-    case VTKM_DEVICE_ADAPTER_SERIAL:
-      VTKM_FALLTHROUGH;
-    default:
-      using SERIAL = vtkm::cont::DeviceAdapterTagSerial;
-      {
-        MeshConnSingleType<SERIAL> conn(this->FaceConnectivity,
-                                        this->CellConnectivity,
-                                        this->CellOffsets,
-                                        this->ShapeId,
-                                        this->NumIndices,
-                                        this->NumFaces,
-                                        token);
-        Handle = make_MeshConnHandle(conn);
-      }
-      return Handle.PrepareForExecution(SERIAL(), token);
-  }
+  return MeshConnectivity(this->FaceConnectivity,
+                          this->CellConnectivity,
+                          this->CellOffsets,
+                          this->ShapeId,
+                          this->NumIndices,
+                          this->NumFaces,
+                          deviceId,
+                          token);
 }
 
-StructuredContainer::StructuredContainer(const vtkm::cont::CellSetStructured<3>& cellset,
-                                         const vtkm::cont::CoordinateSystem& coords,
-                                         Id4Handle& triangles)
+MeshConnectivityContainerStructured::MeshConnectivityContainerStructured(
+  const vtkm::cont::CellSetStructured<3>& cellset,
+  const vtkm::cont::CoordinateSystem& coords,
+  const Id4Handle& triangles)
   : Coords(coords)
   , Cellset(cellset)
 {
 
-  Triangles = triangles;
-  Intersector.SetUseWaterTight(true);
+  this->Triangles = triangles;
+  this->Intersector.SetUseWaterTight(true);
 
-  PointDims = Cellset.GetPointDimensions();
-  CellDims = Cellset.GetCellDimensions();
+  this->PointDims = this->Cellset.GetPointDimensions();
+  this->CellDims = this->Cellset.GetCellDimensions();
 
   this->Intersector.SetData(Coords, Triangles);
 }
 
-const MeshConnectivityBase* StructuredContainer::Construct(
-  const vtkm::cont::DeviceAdapterId deviceId,
-  vtkm::cont::Token& token)
+MeshConnectivity MeshConnectivityContainerStructured::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId,
+  vtkm::cont::Token&) const
 {
-
-  MeshConnStructured conn(CellDims, PointDims);
-  Handle = make_MeshConnHandle(conn);
-
-  switch (deviceId.GetValue())
-  {
-#ifdef VTKM_ENABLE_OPENMP
-    case VTKM_DEVICE_ADAPTER_OPENMP:
-      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagOpenMP(), token);
-#endif
-#ifdef VTKM_ENABLE_TBB
-    case VTKM_DEVICE_ADAPTER_TBB:
-      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagTBB(), token);
-#endif
-#ifdef VTKM_ENABLE_CUDA
-    case VTKM_DEVICE_ADAPTER_CUDA:
-      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagCuda(), token);
-#endif
-#ifdef VTKM_ENABLE_KOKKOS
-    case VTKM_DEVICE_ADAPTER_KOKKOS:
-      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagKokkos(), token);
-#endif
-    case VTKM_DEVICE_ADAPTER_SERIAL:
-      VTKM_FALLTHROUGH;
-    default:
-      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagSerial(), token);
-  }
+  return MeshConnectivity(CellDims, PointDims);
 }
 }
 }

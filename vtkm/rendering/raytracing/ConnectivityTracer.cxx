@@ -19,7 +19,6 @@
 #include <vtkm/rendering/raytracing/CellIntersector.h>
 #include <vtkm/rendering/raytracing/CellSampler.h>
 #include <vtkm/rendering/raytracing/CellTables.h>
-#include <vtkm/rendering/raytracing/MeshConnectivityBase.h>
 #include <vtkm/rendering/raytracing/MeshConnectivityBuilder.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
@@ -396,7 +395,7 @@ public:
                                    vtkm::Int32& enterFace,
                                    vtkm::UInt8& rayStatus,
                                    const vtkm::Vec<FloatType, 3>& origin,
-                                   const MeshWrapper& meshConn) const
+                                   const MeshConnectivity& meshConn) const
   {
     if (enterFace != -1 && rayStatus == RAY_ACTIVE)
     {
@@ -505,7 +504,7 @@ public:
                                    vtkm::UInt8& rayStatus,
                                    const vtkm::Vec<FloatType, 3>& origin,
                                    vtkm::Vec<FloatType, 3>& rdir,
-                                   const MeshWrapper& meshConn,
+                                   const MeshConnectivity& meshConn,
                                    const LocatorType& locator) const
   {
     // We only process lost rays
@@ -1036,7 +1035,7 @@ public:
                                    vtkm::UInt8& rayStatus,
                                    const vtkm::Id& pixelIndex,
                                    const vtkm::Vec<FloatType, 3>& origin,
-                                   MeshWrapper& meshConn,
+                                   MeshConnectivity& meshConn,
                                    const ColorMapType& colorMap,
                                    FrameBufferType& frameBuffer,
                                    const FloatType& maxDistance) const
