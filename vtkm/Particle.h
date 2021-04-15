@@ -130,6 +130,13 @@ public:
     return vectors[0];
   }
 
+  inline VTKM_CONT friend std::ostream& operator<<(std::ostream& out, const vtkm::Particle& p)
+  {
+    out << "v(" << p.Time << ") = " << p.Pos << ", ID: " << p.ID << ", NumSteps: " << p.NumSteps
+        << ", Status: " << p.Status;
+    return out;
+  }
+
   vtkm::Vec3f Pos;
   vtkm::Id ID = -1;
   vtkm::Id NumSteps = 0;
