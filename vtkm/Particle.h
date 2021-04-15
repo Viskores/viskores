@@ -10,6 +10,7 @@
 #ifndef vtk_m_Particle_h
 #define vtk_m_Particle_h
 
+#include <ostream>
 #include <vtkm/Bitset.h>
 #include <vtkm/VecVariable.h>
 #include <vtkm/VectorAnalysis.h>
