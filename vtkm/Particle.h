@@ -10,6 +10,7 @@
 #ifndef vtk_m_Particle_h
 #define vtk_m_Particle_h
 
+#include <ostream>
 #include <vtkm/Bitset.h>
 #include <vtkm/VecVariable.h>
 #include <vtkm/VectorAnalysis.h>
@@ -128,6 +129,13 @@ public:
     // and is not influenced by the particle
     VTKM_ASSERT(vectors.GetNumberOfComponents() > 0);
     return vectors[0];
+  }
+
+  inline VTKM_CONT friend std::ostream& operator<<(std::ostream& out, const vtkm::Particle& p)
+  {
+    out << "v(" << p.Time << ") = " << p.Pos << ", ID: " << p.ID << ", NumSteps: " << p.NumSteps
+        << ", Status: " << p.Status;
+    return out;
   }
 
   vtkm::Vec3f Pos;
