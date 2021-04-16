@@ -54,7 +54,7 @@ void ValidateError(const vtkm::cont::Error& error)
     VTKM_TEST_ASSERT(count >= 1, assert_msg);
 #else
     std::string assert_msg = "Expected more entries in the stack frame\n" + stackTrace;
-    VTKM_TEST_ASSERT(count > 4, assert_msg);
+    VTKM_TEST_ASSERT(count > 2, assert_msg);
 #endif
   }
   VTKM_TEST_ASSERT(test_equal(message, error.GetMessage()), "Message was incorrect");
