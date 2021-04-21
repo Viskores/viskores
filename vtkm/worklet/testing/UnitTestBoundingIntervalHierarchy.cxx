@@ -49,7 +49,7 @@ struct BoundingIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
                                          const vtkm::Id expectedId) const
   {
     vtkm::Vec3f parametric;
-    vtkm::Id cellId;
+    vtkm::Id cellId = -1;
     bih.FindCell(point, cellId, parametric);
     return (1 - static_cast<vtkm::IdComponent>(expectedId == cellId));
   }
