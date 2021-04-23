@@ -146,8 +146,6 @@ set(sources
   internal/Buffer.cxx
   internal/DeviceAdapterMemoryManager.cxx
   internal/DeviceAdapterMemoryManagerShared.cxx
-  internal/TransferInfo.cxx
-  internal/VirtualObjectTransfer.cxx
   Initialize.cxx
   Logging.cxx
   RuntimeDeviceTracker.cxx
@@ -206,6 +204,8 @@ if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
   set(device_sources ${device_sources}
     ArrayHandleVirtual.cxx
     CellLocator.cxx
+    internal/TransferInfo.cxx
+    internal/VirtualObjectTransfer.cxx
     PointLocator.cxx
     StorageVirtual.cxx
     )

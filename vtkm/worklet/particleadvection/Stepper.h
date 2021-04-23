@@ -21,7 +21,6 @@
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
 
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/IntegratorStatus.h>

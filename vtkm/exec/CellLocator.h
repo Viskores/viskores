@@ -20,6 +20,8 @@
 #error "CellLocator with virtual methods is removed. Do not include CellLocator.h"
 #endif
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 namespace vtkm
 {
 namespace exec
@@ -61,5 +63,7 @@ public:
 
 } // namespace exec
 } // namespace vtkm
+
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif // vtk_m_exec_CellLocator_h

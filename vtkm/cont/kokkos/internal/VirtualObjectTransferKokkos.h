@@ -17,6 +17,12 @@
 #include <vtkm/cont/kokkos/internal/KokkosAlloc.h>
 #include <vtkm/cont/kokkos/internal/KokkosTypes.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 namespace vtkm
 {
 namespace cont
@@ -106,6 +112,9 @@ private:
   const VirtualDerivedType* ControlObject;
   VirtualDerivedType* ExecutionObject;
 };
+
+VTKM_DEPRECATED_SUPPRESS_END
+
 }
 }
 } // vtkm::cont::internal

@@ -18,6 +18,14 @@
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif
+
+// This is a deprecated class. Don't warn about deprecation while implementing
+// deprecated functionality.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 namespace vtkm
 {
 namespace cont
@@ -439,5 +447,7 @@ VTKM_DEPRECATED_SUPPRESS_END
 }
 }
 } // namespace vtkm::cont::internal
+
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif // vtk_m_cont_StorageVirtual_hxx
