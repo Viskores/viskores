@@ -110,7 +110,12 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(
   vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<T>(0, uniform.GetNumberOfPoints()),
                         density);
 
-  this->Invoke(vtkm::worklet::CICWorklet{}, coords, field, locator, uniform.GetCellSet(), density);
+  this->Invoke(vtkm::worklet::CICWorklet{},
+               coords,
+               field,
+               locator,
+               uniform.GetCellSet().template Cast<vtkm::cont::CellSetStructured<3>>(),
+               density);
 
   if (DivideByVolume)
   {
