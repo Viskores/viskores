@@ -132,6 +132,7 @@ stages:
     - SCCACHE_IDLE_TIMEOUT=0 sccache --start-server
     - sccache --show-stats
     - "cmake --version"
+    - "cmake -V -P .gitlab/ci/config/fetch_vtkm_tags.cmake"
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
