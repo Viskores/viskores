@@ -84,7 +84,7 @@
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 #endif // __has_cpp_attribute(deprecated)
 
-#elif defined(VTKM_MSVC) && (_MSC_VER >= 1900)
+#elif defined(VTKM_MSVC) && (_MSC_VER >= 1920)
 
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 
