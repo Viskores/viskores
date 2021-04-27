@@ -777,6 +777,10 @@ VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds b
   vtkm::cont::ArrayHandleConstant<Precision> inf(infinity, rays.NumRays);
   vtkm::cont::Algorithm::Copy(inf, rays.MaxDistance);
 
+  vtkm::cont::ArrayHandleConstant<vtkm::UInt8> status_active(RAY_ACTIVE, rays.NumRays);
+  vtkm::cont::Algorithm::Copy(status_active, rays.Status);
+
+
   vtkm::cont::ArrayHandleConstant<Precision> zero(0, rays.NumRays);
   vtkm::cont::Algorithm::Copy(zero, rays.MinDistance);
   vtkm::cont::Algorithm::Copy(zero, rays.Distance);
