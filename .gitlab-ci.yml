@@ -133,6 +133,7 @@ stages:
     - sccache --show-stats
     - .gitlab/ci/config/google_benchmarks.sh
     - "cmake --version"
+    - "cmake -V -P .gitlab/ci/config/fetch_vtkm_tags.cmake"
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
