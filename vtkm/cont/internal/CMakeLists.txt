@@ -33,12 +33,17 @@ set(headers
   ReverseConnectivityBuilder.h
   StorageDeprecated.h
   StorageError.h
-  TransferInfo.h
   Variant.h
-  VirtualObjectTransfer.h
-  VirtualObjectTransferInstantiate.h
-  VirtualObjectTransferShareWithControl.h
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    TransferInfo.h
+    VirtualObjectTransfer.h
+    VirtualObjectTransferInstantiate.h
+    VirtualObjectTransferShareWithControl.h
+    )
+endif()
 
 vtkm_declare_headers(${headers})
 

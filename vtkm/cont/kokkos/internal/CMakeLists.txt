@@ -16,7 +16,13 @@ set(headers
   Initialize.h
   KokkosAlloc.h
   KokkosTypes.h
-  VirtualObjectTransferKokkos.h)
+  )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    VirtualObjectTransferKokkos.h
+    )
+endif()
 
 vtkm_declare_headers(${headers})
 

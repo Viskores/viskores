@@ -121,7 +121,6 @@ set(headers
   UncertainArrayHandle.h
   UnknownArrayHandle.h
   VariantArrayHandle.h
-  VirtualObjectHandle.h
   )
 
 set(template_sources
@@ -194,6 +193,7 @@ if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
     CellLocator.h
     PointLocator.h
     StorageVirtual.h
+    VirtualObjectHandle.h
     )
 
   set(template_sources ${template_sources}
