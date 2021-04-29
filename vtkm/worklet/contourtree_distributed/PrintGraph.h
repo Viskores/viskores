@@ -648,8 +648,8 @@ std::string ContourTreeMeshDotGraphPrint(
   // now grab portals to all the variables we will need
   auto globalMeshIndexPortal = mesh.GlobalMeshIndex.ReadPortal();
   auto meshSortedValuesPortal = mesh.SortedValues.ReadPortal();
-  auto meshNeighboursPortal = mesh.Neighbours.ReadPortal();
-  auto meshFirstNeighbourPortal = mesh.FirstNeighbour.ReadPortal();
+  auto meshNeighborConnectivityPortal = mesh.NeighborConnectivity.ReadPortal();
+  auto meshNeighborOffsetsPortal = mesh.NeighborOffsets.ReadPortal();
 
   // print the header information
   outStream << "digraph ContourTreeMesh\n\t{\n";
@@ -682,18 +682,18 @@ std::string ContourTreeMeshDotGraphPrint(
   } // per vertex
 
   // now print out the edges
-  for (vtkm::Id vertex = 0; vertex < mesh.FirstNeighbour.GetNumberOfValues(); vertex++)
+  for (vtkm::Id vertex = 0; vertex < mesh.NeighborOffsets.GetNumberOfValues(); vertex++)
   { // per vertex
     // find iterators for the block of edges for this vertex
-    vtkm::Id neighboursBegin = meshFirstNeighbourPortal.Get(vertex);
+    vtkm::Id neighboursBegin = meshNeighborOffsetsPortal.Get(vertex);
     vtkm::Id neighboursEnd = (vertex < mesh.GetNumberOfVertices() - 1)
-      ? meshFirstNeighbourPortal.Get(vertex + 1)
-      : mesh.Neighbours.GetNumberOfValues();
+      ? meshNeighborOffsetsPortal.Get(vertex + 1)
+      : mesh.NeighborConnectivity.GetNumberOfValues();
 
     // now loop through the neighbours
     for (vtkm::Id whichNbr = neighboursBegin; whichNbr != neighboursEnd; ++whichNbr)
     { // per neighbour
-      vtkm::Id nbrID = meshNeighboursPortal.Get(whichNbr);
+      vtkm::Id nbrID = meshNeighborConnectivityPortal.Get(whichNbr);
       // skip if the neighbour is higher (use sim. of simp.)
       if ((meshSortedValuesPortal.Get(nbrID) > meshSortedValuesPortal.Get(vertex)) ||
           ((meshSortedValuesPortal.Get(nbrID) == meshSortedValuesPortal.Get(vertex)) &&

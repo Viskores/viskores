@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_compress_neighbours_worklet_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_compress_neighbours_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_compress_neighbors_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_compress_neighbors_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -76,29 +76,26 @@ namespace mesh_dem_contourtree_mesh_inc
 {
 
 
-class CompressNeighboursWorklet : public vtkm::worklet::WorkletMapField
+class CompressNeighborsWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn arcs,              // (input) arcs
-                                FieldIn arcTargetIndex,    // (input) arcTargetIndex
-                                WholeArrayOut neighbours); // (output) neighbours
+  typedef void ControlSignature(
+    FieldIn arcs,                        // (input) arcs
+    FieldIn arcTargetIndex,              // (input) arcTargetIndex
+    WholeArrayOut neighborConnectivity); // (output) neighborConnectivity
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   typedef _1 InputDomain;
-
-  // Default Constructor
-  VTKM_EXEC_CONT
-  CompressNeighboursWorklet() {}
 
   template <typename OutFieldPortalType>
   VTKM_EXEC void operator()(vtkm::Id& to,
                             vtkm::Id from,
                             vtkm::Id& arcTargetIndexFrom,
-                            const OutFieldPortalType& neighboursPortal) const
+                            const OutFieldPortalType& neighborConnectivityPortal) const
   {
     if (!NoSuchElement(to))
     {
-      neighboursPortal.Set(2 * arcTargetIndexFrom + 0, 2 * from + 0);
-      neighboursPortal.Set(2 * arcTargetIndexFrom + 1, 2 * from + 1);
+      neighborConnectivityPortal.Set(2 * arcTargetIndexFrom + 0, 2 * from + 0);
+      neighborConnectivityPortal.Set(2 * arcTargetIndexFrom + 1, 2 * from + 1);
     }
 
     // In serial this worklet implements the following operation
@@ -108,13 +105,13 @@ public:
     //    if (!NoSuchElement(to))
     //      {
     //         assert(MaskedIndex(to) != from);
-    //         neighbours[2*arcTargetIndex[from]+0] = 2*from+0;
-    //         neighbours[2*arcTargetIndex[from]+1] = 2*from+1;
+    //         neighbors[2*arcTargetIndex[from]+0] = 2*from+0;
+    //         neighbors[2*arcTargetIndex[from]+1] = 2*from+1;
     //      }
   }
 
 
-}; //  ComputeMaxNeighboursWorklet
+}; //  CompressNeighborsWorklet
 
 
 } // namespace mesh_dem_contourtree_mesh_inc

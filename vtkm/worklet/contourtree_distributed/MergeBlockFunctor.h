@@ -108,9 +108,9 @@ void MergeBlockFunctor(
       contourTreeMeshIn.SortIndices = vtkm::cont::ArrayHandleIndex(contourTreeMeshIn.NumVertices);
       contourTreeMeshIn.SortedValues = recvblock.SortedValue;
       contourTreeMeshIn.GlobalMeshIndex = recvblock.GlobalMeshIndex;
-      contourTreeMeshIn.Neighbours = recvblock.Neighbours;
-      contourTreeMeshIn.FirstNeighbour = recvblock.FirstNeighbour;
-      contourTreeMeshIn.MaxNeighbours = recvblock.MaxNeighbours;
+      contourTreeMeshIn.NeighborConnectivity = recvblock.NeighborConnectivity;
+      contourTreeMeshIn.NeighborOffsets = recvblock.NeighborOffsets;
+      contourTreeMeshIn.MaxNeighbors = recvblock.MaxNeighbors;
 
       vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshOut;
       contourTreeMeshOut.NumVertices = block->NumVertices;
@@ -118,9 +118,9 @@ void MergeBlockFunctor(
       contourTreeMeshOut.SortIndices = vtkm::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
       contourTreeMeshOut.SortedValues = block->SortedValue;
       contourTreeMeshOut.GlobalMeshIndex = block->GlobalMeshIndex;
-      contourTreeMeshOut.Neighbours = block->Neighbours;
-      contourTreeMeshOut.FirstNeighbour = block->FirstNeighbour;
-      contourTreeMeshOut.MaxNeighbours = block->MaxNeighbours;
+      contourTreeMeshOut.NeighborConnectivity = block->NeighborConnectivity;
+      contourTreeMeshOut.NeighborOffsets = block->NeighborOffsets;
+      contourTreeMeshOut.MaxNeighbors = block->MaxNeighbors;
       // Merge the two contour tree meshes
       contourTreeMeshOut.MergeWith(contourTreeMeshIn);
 
@@ -149,9 +149,9 @@ void MergeBlockFunctor(
         block->NumVertices = contourTreeMeshOut.NumVertices;
         block->SortedValue = contourTreeMeshOut.SortedValues;
         block->GlobalMeshIndex = contourTreeMeshOut.GlobalMeshIndex;
-        block->Neighbours = contourTreeMeshOut.Neighbours;
-        block->FirstNeighbour = contourTreeMeshOut.FirstNeighbour;
-        block->MaxNeighbours = contourTreeMeshOut.MaxNeighbours;
+        block->NeighborConnectivity = contourTreeMeshOut.NeighborConnectivity;
+        block->NeighborOffsets = contourTreeMeshOut.NeighborOffsets;
+        block->MaxNeighbors = contourTreeMeshOut.MaxNeighbors;
         block->BlockOrigin = currBlockOrigin;
         block->BlockSize = currBlockSize;
         block->GlobalSize = globalSize;
@@ -201,9 +201,9 @@ void MergeBlockFunctor(
         block->NumVertices = newContourTreeMesh->NumVertices;
         block->SortedValue = newContourTreeMesh->SortedValues;
         block->GlobalMeshIndex = newContourTreeMesh->GlobalMeshIndex;
-        block->Neighbours = newContourTreeMesh->Neighbours;
-        block->FirstNeighbour = newContourTreeMesh->FirstNeighbour;
-        block->MaxNeighbours = newContourTreeMesh->MaxNeighbours;
+        block->NeighborConnectivity = newContourTreeMesh->NeighborConnectivity;
+        block->NeighborOffsets = newContourTreeMesh->NeighborOffsets;
+        block->MaxNeighbors = newContourTreeMesh->MaxNeighbors;
         block->BlockOrigin = currBlockOrigin;
         block->BlockSize = currBlockSize;
         block->GlobalSize = globalSize;

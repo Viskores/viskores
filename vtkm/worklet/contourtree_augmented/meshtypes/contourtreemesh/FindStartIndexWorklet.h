@@ -79,30 +79,26 @@ namespace mesh_dem_contourtree_mesh_inc
 class FindStartIndexWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn neighbours,       // (input) neighbours
-                                WholeArrayIn arcs,             // (input) arcs
-                                WholeArrayOut firstNeighbour); // (output) firstNeighbours
+  typedef void ControlSignature(WholeArrayIn neighborConnectivity, // (input) neighborConnectivity
+                                WholeArrayIn arcs,                 // (input) arcs
+                                WholeArrayOut firstNeighbour);     // (output) firstNeighbours
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   typedef _1 InputDomain;
 
-  // Default Constructor
-  VTKM_EXEC_CONT
-  FindStartIndexWorklet() {}
-
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const InFieldPortalType& neighboursPortal,
+  VTKM_EXEC void operator()(const InFieldPortalType& neighborConnectivityPortal,
                             vtkm::Id sortedArcNo,
                             const InFieldPortalType& arcsPortal,
                             const OutFieldPortalType& firstNeighbourPortal) const
   {
     if (sortedArcNo > 0)
     {
-      vtkm::Id prevFrom = (neighboursPortal.Get(sortedArcNo - 1) % 2 == 0)
-        ? neighboursPortal.Get(sortedArcNo - 1) / 2
-        : MaskedIndex(arcsPortal.Get(neighboursPortal.Get(sortedArcNo - 1) / 2));
-      vtkm::Id currFrom = (neighboursPortal.Get(sortedArcNo) % 2 == 0)
-        ? neighboursPortal.Get(sortedArcNo) / 2
-        : MaskedIndex(arcsPortal.Get(neighboursPortal.Get(sortedArcNo) / 2));
+      vtkm::Id prevFrom = (neighborConnectivityPortal.Get(sortedArcNo - 1) % 2 == 0)
+        ? neighborConnectivityPortal.Get(sortedArcNo - 1) / 2
+        : MaskedIndex(arcsPortal.Get(neighborConnectivityPortal.Get(sortedArcNo - 1) / 2));
+      vtkm::Id currFrom = (neighborConnectivityPortal.Get(sortedArcNo) % 2 == 0)
+        ? neighborConnectivityPortal.Get(sortedArcNo) / 2
+        : MaskedIndex(arcsPortal.Get(neighborConnectivityPortal.Get(sortedArcNo) / 2));
       if (currFrom != prevFrom)
       {
         firstNeighbourPortal.Set(currFrom, sortedArcNo);

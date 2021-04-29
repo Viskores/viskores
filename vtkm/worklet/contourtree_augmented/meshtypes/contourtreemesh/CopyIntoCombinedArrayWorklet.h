@@ -63,7 +63,8 @@
 #ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_into_combined_array_worklet_h
 #define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_into_combined_array_worklet_h
 
-#include <vtkm/Algorithms.h>
+#include <vtkm/LowerBound.h>
+#include <vtkm/UpperBound.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 

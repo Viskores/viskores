@@ -68,6 +68,8 @@
 #include <iostream>
 #include <vtkm/Types.h>
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
@@ -83,11 +85,13 @@
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedSimulatedSimplicityIndexComparator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVectorDifferentFromNext.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CompressNeighboursWorklet.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ComputeMaxNeighboursWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyIntoCombinedArrayWorklet.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyNeighborsToPackedArray.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/FindStartIndexWorklet.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/GetArcFromDecorator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/InitToCombinedSortOrderArraysWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/MergeCombinedOtherStartIndexWorklet.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/MergeNeighborGroups.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ReplaceArcNumWithToVertexWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/SubtractAssignWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/UpdateCombinedNeighboursWorklet.h>
@@ -117,7 +121,6 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-
 template <typename FieldType>
 class ContourTreeMesh : public vtkm::cont::ExecutionObjectBase
 { // class ContourTreeMesh
@@ -191,18 +194,18 @@ public:
   vtkm::cont::ArrayHandleIndex SortIndices;
   vtkm::cont::ArrayHandle<FieldType> SortedValues;
   IdArrayType GlobalMeshIndex;
-  // neighbours stores for each vertex the indices of its neighbours. For each vertex
+  // NeighborConnectivity stores for each vertex the indices of its neighbors. For each vertex
   // the indices are sorted by value, i.e, the first neighbour has the lowest and
   // the last neighbour the highest value for the vertex. In the array we just
-  // concatinate the list of neighbours from all vertices, i.e., we first
-  // have the list of neighbours of the first vertex, then the second vertex and so on, i.e.:
+  // concatinate the list of neighbors from all vertices, i.e., we first
+  // have the list of neighbors of the first vertex, then the second vertex and so on, i.e.:
   // [ n_1_1, n_1_2, n_2_1, n_2_2, n_2_3, etc.]
-  IdArrayType Neighbours;
-  // firstNeighour gives us for each vertex an index into the neighours array indicating
-  // the index where the list of neighbours for the vertex begins
-  IdArrayType FirstNeighbour;
-  // the maximum number of neighbours of a vertex
-  vtkm::Id MaxNeighbours;
+  IdArrayType NeighborConnectivity;
+  // NeighborOffsets gives us for each vertex an index into the neighours array indicating
+  // the index where the list of neighbors for the vertex begins
+  IdArrayType NeighborOffsets;
+  // the maximum number of neighbors of a vertex
+  vtkm::Id MaxNeighbors;
 
   // Print Contents
   void PrintContent(std::ostream& outStream = std::cout) const;
@@ -265,9 +268,8 @@ private:
   bool mGetMax; // Define the behavior for the PrepareForExecution function
 
   // Private init and helper functions
-  void InitialiseNeighboursFromArcs(const IdArrayType& arcs);
-  void ComputeNNeighboursVector(IdArrayType& nNeighbours) const;
-  void ComputeMaxNeighbours();
+  void InitializeNeighborConnectivityFromArcs(const IdArrayType& arcs);
+  void ComputeMaxNeighbors();
 
   // Private helper functions for saving data vectors
   // Internal helper function to save 1D index array to file
@@ -286,12 +288,12 @@ inline void ContourTreeMesh<FieldType>::PrintContent(std::ostream& outStream /*=
 { // PrintContent()
   PrintHeader(this->NumVertices, outStream);
   //PrintIndices("SortOrder", SortOrder, outStream);
-  PrintValues("SortedValues", SortedValues, -1, outStream);
-  PrintIndices("GlobalMeshIndex", GlobalMeshIndex, -1, outStream);
-  PrintIndices("Neighbours", Neighbours, -1, outStream);
-  PrintIndices("FirstNeighbour", FirstNeighbour, -1, outStream);
-  outStream << "MaxNeighbours=" << MaxNeighbours << std::endl;
-  outStream << "mGetMax=" << mGetMax << std::endl;
+  PrintValues("SortedValues", this->SortedValues, -1, outStream);
+  PrintIndices("GlobalMeshIndex", this->GlobalMeshIndex, -1, outStream);
+  PrintIndices("NeighborConnectivity", this->NeighborConnectivity, -1, outStream);
+  PrintIndices("NeighborOffsets", this->NeighborOffsets, -1, outStream);
+  outStream << "MaxNeighbors=" << this->MaxNeighbors << std::endl;
+  outStream << "mGetMax=" << this->mGetMax << std::endl;
 } // PrintContent()
 
 // debug routine
@@ -320,8 +322,8 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
   : SortOrder()
   , SortedValues()
   , GlobalMeshIndex(inGlobalMeshIndex)
-  , Neighbours()
-  , FirstNeighbour()
+  , NeighborConnectivity()
+  , NeighborOffsets()
 {
   this->NumVertices = inSortOrder.GetNumberOfValues();
   // Initalize the SortedIndices as a smart array handle
@@ -331,7 +333,7 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
   auto permutedValues = vtkm::cont::make_ArrayHandlePermutation(inSortOrder, values);
   // TODO check if we actually need to make this copy here. we could just store the permutedValues array to save memory
   vtkm::cont::Algorithm::Copy(permutedValues, this->SortedValues);
-  this->InitialiseNeighboursFromArcs(arcs);
+  this->InitializeNeighborConnectivityFromArcs(arcs);
 #ifdef DEBUG_PRINT
   // Print the contents fo this for debugging
   DebugPrint("ContourTreeMesh Initialized", __FILE__, __LINE__);
@@ -346,10 +348,10 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
                                                    const vtkm::cont::ArrayHandle<FieldType>& values,
                                                    const IdArrayType& inGlobalMeshIndex)
   : GlobalMeshIndex(inGlobalMeshIndex)
-  , Neighbours()
-  , FirstNeighbour()
+  , NeighborConnectivity()
+  , NeighborOffsets()
 {
-  // Initialize the SortedValues array the values permutted by the SortOrder permutted by the nodes, i.e.,
+  // Initialize the SortedValues array with values permuted by the SortOrder permuted by the nodes, i.e.,
   // this->SortedValues[v] = values[inSortOrder[nodes[v]]];
   vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> permutedSortOrder(nodes,
                                                                                  inSortOrder);
@@ -359,7 +361,7 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
   this->NumVertices = this->SortedValues.GetNumberOfValues();
   this->SortIndices = vtkm::cont::ArrayHandleIndex(this->NumVertices);
   this->SortOrder = vtkm::cont::ArrayHandleIndex(this->NumVertices);
-  this->InitialiseNeighboursFromArcs(arcs);
+  this->InitializeNeighborConnectivityFromArcs(arcs);
 #ifdef DEBUG_PRINT
   // Print the contents fo this for debugging
   DebugPrint("ContourTreeMesh Initialized", __FILE__, __LINE__);
@@ -371,14 +373,14 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
                                                    const ContourTreeMesh<FieldType>& mesh)
   : SortedValues(mesh.SortedValues)
   , GlobalMeshIndex(mesh.GlobalMeshIndex)
-  , Neighbours()
-  , FirstNeighbour()
+  , NeighborConnectivity()
+  , NeighborOffsets()
 {
   // Initalize the SortedIndices as a smart array handle
   this->NumVertices = this->SortedValues.GetNumberOfValues();
   this->SortIndices = vtkm::cont::ArrayHandleIndex(this->NumVertices);
   this->SortOrder = vtkm::cont::ArrayHandleIndex(this->NumVertices);
-  this->InitialiseNeighboursFromArcs(arcs);
+  this->InitializeNeighborConnectivityFromArcs(arcs);
 #ifdef DEBUG_PRINT
   // Print the contents fo this for debugging
   DebugPrint("ContourTreeMesh Initialized", __FILE__, __LINE__);
@@ -390,8 +392,8 @@ template <typename FieldType>
 inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
                                                    const IdArrayType& arcs,
                                                    const ContourTreeMesh<FieldType>& mesh)
-  : Neighbours()
-  , FirstNeighbour()
+  : NeighborConnectivity()
+  , NeighborOffsets()
 {
   // Initatlize the global mesh index with the GlobalMeshIndex permutted by the nodes
   vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> permutedGlobalMeshIndex(
@@ -400,11 +402,11 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
   // Initialize the SortedValues array with the SortedValues permutted by the nodes
   auto permutedSortedValues = vtkm::cont::make_ArrayHandlePermutation(nodes, mesh.SortedValues);
   vtkm::cont::Algorithm::Copy(permutedSortedValues, this->SortedValues);
-  // Initialize the neighbours from the arcs
+  // Initialize the neighbors from the arcs
   this->NumVertices = this->SortedValues.GetNumberOfValues();
   this->SortIndices = vtkm::cont::ArrayHandleIndex(this->NumVertices);
   this->SortOrder = vtkm::cont::ArrayHandleIndex(this->NumVertices);
-  this->InitialiseNeighboursFromArcs(arcs);
+  this->InitializeNeighborConnectivityFromArcs(arcs);
 #ifdef DEBUG_PRINT
   // Print the contents fo this for debugging
   DebugPrint("ContourTreeMesh Initialized", __FILE__, __LINE__);
@@ -414,9 +416,17 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
 
 // Initalize the contour tree from the arcs array and sort order
 template <typename FieldType>
-inline void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArrayType& arcs)
+inline void ContourTreeMesh<FieldType>::InitializeNeighborConnectivityFromArcs(
+  const IdArrayType& arcs)
 {
-  // Find target indices for valid arcs in neighbours array ...
+  // This function computes the neighbor connecitvity (NeighborConnectivity, NeighborOffsets) from
+  // an arc array. An arc array consists of undirected arcs. arc[i] connects contour tree nodes
+  // i and arc[i]. For the neighbor connectiviy in the contour tree mesh, we first convert these
+  // into two directed arcs that are then used to compute a list of neighbors in the mesh for
+  // each node.
+
+  // Step 1: Identify valid arcs (i.e., those that are not marked by the NO_SUCH_ELEMENT as having
+  // no target) as well as find target indices for valid arcs in neighbors array ...
   IdArrayType arcTargetIndex;
   arcTargetIndex.Allocate(arcs.GetNumberOfValues());
   OneIfArcValid oneIfArcValidFunctor;
@@ -427,76 +437,76 @@ inline void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArr
     oneIfArcValidFunctor(ArrayGetValue(arcs.GetNumberOfValues() - 1, arcs));
 
   // ... and compress array
-  this->Neighbours.ReleaseResources();
-  this->Neighbours.Allocate(2 * nValidArcs);
+  this->NeighborConnectivity.ReleaseResources();
+  this->NeighborConnectivity.Allocate(
+    2 * nValidArcs); // Number of directed arcs = 2 * number of undirected arcs
 
-  contourtree_mesh_inc_ns::CompressNeighboursWorklet compressNeighboursWorklet;
-  this->Invoke(compressNeighboursWorklet, arcs, arcTargetIndex, this->Neighbours);
-
-  // Sort arcs so that all arcs from the same vertex are adjacent. All arcs are in neighbours array based on
-  // sort index of their 'from' vertex (and then within a run sorted by sort index of their 'to' vertex).
-  vtkm::cont::Algorithm::Sort(this->Neighbours, contourtree_mesh_inc_ns::ArcComparator(arcs));
-
-  // Find start index for each vertex into neighbours array
-  this->FirstNeighbour.Allocate(this->NumVertices);
-
-  contourtree_mesh_inc_ns::FindStartIndexWorklet findStartIndexWorklet;
-  this->Invoke(findStartIndexWorklet,
-               this->Neighbours,
+  this->Invoke(contourtree_mesh_inc_ns::CompressNeighborsWorklet{},
                arcs,
-               this->FirstNeighbour // output
-  );
+               arcTargetIndex,
+               this->NeighborConnectivity);
 
+  // Sort arcs so that all arcs originating at the same vertex are adjacent. All arcs are in neighbors array based on
+  // sort index of their 'from' vertex (and then within a run sorted by sort index of their 'to' vertex).
+  vtkm::cont::Algorithm::Sort(this->NeighborConnectivity,
+                              contourtree_mesh_inc_ns::ArcComparator(arcs));
 
-  // Replace arc number with 'to' vertex in neighbours array
+  // Find start index for each vertex into neighbors array (per vtk-m convention, connectivy array has
+  // one extra element not corresponding to a vertex to avoid special case)
+  auto arcFrom = make_ArrayHandleDecorator(this->NeighborConnectivity.GetNumberOfValues(),
+                                           mesh_dem_contourtree_mesh_inc::GetArcFromDecoratorImpl{},
+                                           this->NeighborConnectivity,
+                                           arcs);
+  auto constOne = vtkm::cont::make_ArrayHandleConstant(
+    vtkm::Id{ 1 }, this->NeighborConnectivity.GetNumberOfValues());
+  vtkm::cont::ArrayHandle<vtkm::Id> uniqueKeys;
+  vtkm::cont::ArrayHandle<vtkm::Id> counts;
+  vtkm::cont::Algorithm::ReduceByKey(arcFrom, constOne, uniqueKeys, counts, vtkm::Add());
+  VTKM_ASSERT(uniqueKeys.GetNumberOfValues() == this->NumVertices);
+
+  vtkm::Id neighborOffsetsSize;
+  //this->NeighborOffsets.Allocate(this->NumVertices + 1);
+  vtkm::cont::ConvertNumComponentsToOffsets(counts, this->NeighborOffsets, neighborOffsetsSize);
+
+  // Replace arc number with 'to' vertex in neighbors array
   contourtree_mesh_inc_ns::ReplaceArcNumWithToVertexWorklet replaceArcNumWithToVertexWorklet;
   this->Invoke(replaceArcNumWithToVertexWorklet,
-               this->Neighbours, // input/output
-               arcs              // input
+               this->NeighborConnectivity, // input/output
+               arcs                        // input
   );
 
-  // Compute maximum number of neighbours
-  this->ComputeMaxNeighbours();
+  // Compute maximum number of neighbors
+  this->ComputeMaxNeighbors();
 
 #ifdef DEBUG_PRINT
   std::cout << std::setw(30) << std::left << __FILE__ << ":" << std::right << std::setw(4)
             << __LINE__ << std::endl;
-  auto firstNeighbourPortal = this->FirstNeighbour.ReadPortal();
-  auto neighboursPortal = this->Neighbours.ReadPortal();
-  for (vtkm::Id vtx = 0; vtx < FirstNeighbour.GetNumberOfValues(); ++vtx)
+  auto neighborOffsetPortal = this->NeighborOffsets.ReadPortal();
+  auto neighborConnectivityPortal = this->NeighborConnectivity.ReadPortal();
+  for (vtkm::Id vtx = 0; vtx < NeighborOffsets.GetNumberOfValues(); ++vtx)
   {
     std::cout << vtx << ": ";
-    vtkm::Id neighboursBeginIndex = firstNeighbourPortal.Get(vtx);
-    vtkm::Id neighboursEndIndex = (vtx < this->NumVertices - 1) ? firstNeighbourPortal.Get(vtx + 1)
-                                                                : Neighbours.GetNumberOfValues();
+    vtkm::Id neighboursBeginIndex = neighborOffsetPortal.Get(vtx);
+    vtkm::Id neighboursEndIndex = (vtx < this->NumVertices - 1)
+      ? neighborOffsetPortal.Get(vtx + 1)
+      : NeighborConnectivity.GetNumberOfValues();
 
     for (vtkm::Id ni = neighboursBeginIndex; ni < neighboursEndIndex; ++ni)
     {
-      std::cout << neighboursPortal.Get(ni) << " ";
+      std::cout << neighborConnectivityPortal.Get(ni) << " ";
     }
     std::cout << std::endl;
   }
-  std::cout << "Max neighbours: " << this->MaxNeighbours << std::endl;
+  std::cout << "Max neighbours: " << this->MaxNeighbors << std::endl;
 #endif
 }
 
 template <typename FieldType>
-inline void ContourTreeMesh<FieldType>::ComputeNNeighboursVector(IdArrayType& nNeighbours) const
+inline void ContourTreeMesh<FieldType>::ComputeMaxNeighbors()
 {
-  nNeighbours.Allocate(this->FirstNeighbour.GetNumberOfValues()); // same as this->NumVertices
-  contourtree_mesh_inc_ns::ComputeMaxNeighboursWorklet computeMaxNeighboursWorklet(
-    this->Neighbours.GetNumberOfValues());
-  this->Invoke(computeMaxNeighboursWorklet, this->FirstNeighbour, nNeighbours);
-}
-
-template <typename FieldType>
-inline void ContourTreeMesh<FieldType>::ComputeMaxNeighbours()
-{
-  // Compute maximum number of neighbours
-  IdArrayType nNeighbours;
-  this->ComputeNNeighboursVector(nNeighbours);
-  vtkm::cont::ArrayHandle<vtkm::Range> rangeArray = vtkm::cont::ArrayRangeCompute(nNeighbours);
-  this->MaxNeighbours = static_cast<vtkm::Id>(ArrayGetValue(0, rangeArray).Max);
+  auto neighborCounts = make_ArrayHandleOffsetsToNumComponents(this->NeighborOffsets);
+  vtkm::cont::ArrayHandle<vtkm::Range> rangeArray = vtkm::cont::ArrayRangeCompute(neighborCounts);
+  this->MaxNeighbors = static_cast<vtkm::Id>(ArrayGetValue(0, rangeArray).Max);
 }
 
 // Define the behavior for the execution object generate by the PrepareForExecution function
@@ -512,8 +522,12 @@ contourtree_mesh_inc_ns::MeshStructureContourTreeMesh inline ContourTreeMesh<
   FieldType>::PrepareForExecution(vtkm::cont::DeviceAdapterId device,
                                   vtkm::cont::Token& token) const
 {
-  return contourtree_mesh_inc_ns::MeshStructureContourTreeMesh(
-    this->Neighbours, this->FirstNeighbour, this->MaxNeighbours, this->mGetMax, device, token);
+  return contourtree_mesh_inc_ns::MeshStructureContourTreeMesh(this->NeighborConnectivity,
+                                                               this->NeighborOffsets,
+                                                               this->MaxNeighbors,
+                                                               this->mGetMax,
+                                                               device,
+                                                               token);
 }
 
 struct NotNoSuchElement
@@ -588,7 +602,7 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
       this->GlobalMeshIndex,
       other.GlobalMeshIndex);
 
-    // Compute the exclusive scan of our transformed combined vector
+    // Compute the extended scan of our transformed combined vector
     vtkm::cont::Algorithm::ScanExtended(differentFromNextArr, overallSortIndex);
   }
   vtkm::Id numVerticesCombined =
@@ -606,9 +620,9 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
 
   // thisToCombinedSortOrder and otherToCombinedSortOrder
   IdArrayType thisToCombinedSortOrder;
-  thisToCombinedSortOrder.Allocate(this->FirstNeighbour.GetNumberOfValues());
+  thisToCombinedSortOrder.Allocate(this->NeighborOffsets.GetNumberOfValues());
   IdArrayType otherToCombinedSortOrder;
-  otherToCombinedSortOrder.Allocate(other.FirstNeighbour.GetNumberOfValues());
+  otherToCombinedSortOrder.Allocate(other.NeighborOffsets.GetNumberOfValues());
   contourtree_mesh_inc_ns::InitToCombinedSortOrderArraysWorklet
     initToCombinedSortOrderArraysWorklet;
   this->Invoke(initToCombinedSortOrderArraysWorklet,
@@ -625,115 +639,105 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
-  IdArrayType combinedNNeighbours;
-  vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numVerticesCombined),
-                              combinedNNeighbours);
+  IdArrayType combinedNeighborCounts;
+  vtkm::cont::Algorithm::Fill(combinedNeighborCounts, vtkm::Id{ 0 }, numVerticesCombined);
   { // New scope so that array gets deleted when leaving scope
-    IdArrayType nNeighbours;
-    this->ComputeNNeighboursVector(nNeighbours);
-    auto permutedCombinedNNeighbours =
-      vtkm::cont::make_ArrayHandlePermutation(thisToCombinedSortOrder, combinedNNeighbours);
-    vtkm::cont::Algorithm::Copy(nNeighbours, permutedCombinedNNeighbours);
+    IdArrayType nNeighbors;
+    auto neighborCounts = make_ArrayHandleOffsetsToNumComponents(this->NeighborOffsets);
+    auto permutedCombinedNNeighbors =
+      vtkm::cont::make_ArrayHandlePermutation(thisToCombinedSortOrder, combinedNeighborCounts);
+    vtkm::cont::Algorithm::Copy(neighborCounts, permutedCombinedNNeighbors);
   }
   timingsStream << "    " << std::setw(38) << std::left << "Create CombinedNNeighbours"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
   IdArrayType combinedOtherStartIndex;
-  vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numVerticesCombined),
-                              combinedOtherStartIndex);
+  vtkm::cont::Algorithm::Fill(combinedOtherStartIndex, vtkm::Id{ 0 }, numVerticesCombined);
   { // New scope so that array gets deleted when leaving scope
-    IdArrayType nNeighbours;
-    other.ComputeNNeighboursVector(nNeighbours);
-    contourtree_mesh_inc_ns::CombinedOtherStartIndexNNeighboursWorklet
-      combinedOtherStartIndexNNeighboursWorklet;
-    this->Invoke(combinedOtherStartIndexNNeighboursWorklet,
-                 nNeighbours,              // input
+    auto neighborCounts = make_ArrayHandleOffsetsToNumComponents(other.NeighborOffsets);
+    this->Invoke(contourtree_mesh_inc_ns::CombinedOtherStartIndexNNeighboursWorklet{},
+                 neighborCounts,           // input
                  otherToCombinedSortOrder, // input
-                 combinedNNeighbours,      // input/output
+                 combinedNeighborCounts,   // input/output
                  combinedOtherStartIndex   // input/output
     );
   }
 
 #ifdef DEBUG_PRINT
-  PrintIndices("combinedNNeighbours", combinedNNeighbours);
+  PrintIndices("combinedNeighborCounts", combinedNeighborCounts);
   PrintIndices("combinedOtherStartIndex", combinedOtherStartIndex);
 #endif
   timingsStream << "    " << std::setw(38) << std::left << "Create CombinedOtherStartIndex"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
-  IdArrayType combinedFirstNeighbour;
-  combinedFirstNeighbour.Allocate(numVerticesCombined);
-  vtkm::cont::Algorithm::ScanExclusive(combinedNNeighbours, combinedFirstNeighbour);
+  IdArrayType combinedNeighborOffsets;
+  combinedNeighborOffsets.Allocate(numVerticesCombined + 1);
+  vtkm::cont::Algorithm::ScanExtended(combinedNeighborCounts, combinedNeighborOffsets);
   vtkm::Id nCombinedNeighbours =
-    ArrayGetValue(combinedFirstNeighbour.GetNumberOfValues() - 1, combinedFirstNeighbour) +
-    ArrayGetValue(combinedNNeighbours.GetNumberOfValues() - 1, combinedNNeighbours);
+    ArrayGetValue(combinedNeighborOffsets.GetNumberOfValues() - 1, combinedNeighborOffsets);
 
-  IdArrayType combinedNeighbours;
-  combinedNeighbours.Allocate(nCombinedNeighbours);
+  IdArrayType combinedNeighborConnectivity;
+  combinedNeighborConnectivity.Allocate(nCombinedNeighbours);
 
   // Update combined neighbours
-  contourtree_mesh_inc_ns::UpdateCombinedNeighboursWorklet updateCombinedNeighboursWorklet;
   // Updata neighbours from this
-  this->Invoke(
-    updateCombinedNeighboursWorklet,
-    this->FirstNeighbour,
-    this->Neighbours,
-    thisToCombinedSortOrder,
-    combinedFirstNeighbour,
-    vtkm::cont::ArrayHandleConstant<vtkm::Id>(
-      0,
-      numVerticesCombined), // Constant 0 array. Just needed so we can use the same worklet for both cases
-    combinedNeighbours);
+  this->Invoke(contourtree_mesh_inc_ns::UpdateCombinedNeighboursWorklet{},
+               this->NeighborOffsets,
+               this->NeighborConnectivity,
+               thisToCombinedSortOrder,
+               combinedNeighborOffsets,
+               // Constant 0 array. Just needed so we can use the same worklet for both cases:
+               vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numVerticesCombined),
+               combinedNeighborConnectivity);
   // Update neighbours from other
-  this->Invoke(updateCombinedNeighboursWorklet,
-               other.FirstNeighbour,
-               other.Neighbours,
+  this->Invoke(contourtree_mesh_inc_ns::UpdateCombinedNeighboursWorklet{},
+               other.NeighborOffsets,
+               other.NeighborConnectivity,
                otherToCombinedSortOrder,
-               combinedFirstNeighbour,
+               combinedNeighborOffsets,
                combinedOtherStartIndex,
-               combinedNeighbours);
+               combinedNeighborConnectivity);
 
   timingsStream << "    " << std::setw(38) << std::left << "Update CombinedNeighbours"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
-  contourtree_mesh_inc_ns::MergeCombinedOtherStartIndexWorklet mergeCombinedOtherStartIndexWorklet;
-  this->Invoke(mergeCombinedOtherStartIndexWorklet,
-               combinedOtherStartIndex, // (input/output)
-               combinedNeighbours,      // (input/output)
-               combinedFirstNeighbour   // (input)
-  );
+  std::cout << "A" << std::endl;
+  // Call the worklet above to merge arrays in each group.
+  auto neighborGroups = vtkm::cont::make_ArrayHandleGroupVecVariable(combinedNeighborConnectivity,
+                                                                     combinedNeighborOffsets);
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> mergedNeighborCounts;
+  this->Invoke(contourtree_mesh_inc_ns::MergeNeighborGroups{},
+               neighborGroups,
+               combinedOtherStartIndex,
+               mergedNeighborCounts);
 
-  timingsStream << "    " << std::setw(38) << std::left << "Merge CombinedOtherStartIndex"
-                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
-  timer.Start();
+  std::cout << "B" << std::endl;
+  // Create the new offsets array for the merged groups (without duplicates).
+  vtkm::Id packedCombinedNeighborConnectivitySize;
+  vtkm::cont::ArrayHandle<vtkm::Id> packedOffsets;
+  vtkm::cont::ConvertNumComponentsToOffsets(
+    mergedNeighborCounts, packedOffsets, packedCombinedNeighborConnectivitySize);
 
-  IdArrayType combinedFirstNeighbourShift;
-  combinedFirstNeighbourShift.Allocate(combinedFirstNeighbour.GetNumberOfValues());
-  vtkm::cont::Algorithm::ScanExclusive(combinedOtherStartIndex, combinedFirstNeighbourShift);
+  std::cout << "C" << std::endl;
+  // Create a new grouped array for the packed connectivity
+  // Note that you have to pre-allocate the connectivity array.
+  vtkm::cont::ArrayHandle<vtkm::Id> packedCombinedNeighborConnectivity;
+  packedCombinedNeighborConnectivity.Allocate(packedCombinedNeighborConnectivitySize);
+  auto packedNeighborGroups =
+    vtkm::cont::make_ArrayHandleGroupVecVariable(packedCombinedNeighborConnectivity, packedOffsets);
+  std::cout << "D" << std::endl;
 
-  {
-    IdArrayType tempCombinedNeighbours;
-    vtkm::cont::Algorithm::CopyIf(
-      combinedNeighbours, combinedNeighbours, tempCombinedNeighbours, NotNoSuchElement());
-    combinedNeighbours = tempCombinedNeighbours; // Swap the two arrays
-  }
-
-  // Adjust firstNeigbour indices by deleted elements
-  { // make sure variables created are deleted after the context
-    contourtree_mesh_inc_ns::SubtractAssignWorklet subAssignWorklet;
-    this->Invoke(subAssignWorklet, combinedFirstNeighbour, combinedFirstNeighbourShift);
-  }
-
-  timingsStream << "    " << std::setw(38) << std::left << "Create CombinedFirstNeighbourShift"
-                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
-  timer.Start();
+  // Copy data to the packed array.
+  this->Invoke(
+    contourtree_mesh_inc_ns::CopyNeighborsToPackedArray{}, neighborGroups, packedNeighborGroups);
+  std::cout << "E" << std::endl;
 
   // Compute combined global mesh index arrays
   IdArrayType combinedGlobalMeshIndex;
-  combinedGlobalMeshIndex.Allocate(combinedFirstNeighbour.GetNumberOfValues());
+  combinedGlobalMeshIndex.Allocate(combinedNeighborOffsets.GetNumberOfValues());
   { // make sure arrays used for copy go out of scope
     auto permutedCombinedGlobalMeshIndex =
       vtkm::cont::make_ArrayHandlePermutation(thisToCombinedSortOrder, combinedGlobalMeshIndex);
@@ -751,7 +755,7 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
 
   // Compute combined sorted values
   vtkm::cont::ArrayHandle<FieldType> combinedSortedValues;
-  combinedSortedValues.Allocate(combinedFirstNeighbour.GetNumberOfValues());
+  combinedSortedValues.Allocate(combinedNeighborOffsets.GetNumberOfValues());
   { // make sure arrays used for copy go out of scope
     auto permutedCombinedSortedValues =
       vtkm::cont::make_ArrayHandlePermutation(thisToCombinedSortOrder, combinedSortedValues);
@@ -770,8 +774,8 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   // Swap in combined version. VTKM ArrayHandles are smart so we can just swap in the new for the old
   this->SortedValues = combinedSortedValues;
   this->GlobalMeshIndex = combinedGlobalMeshIndex;
-  this->Neighbours = combinedNeighbours;
-  this->FirstNeighbour = combinedFirstNeighbour;
+  this->NeighborConnectivity = packedCombinedNeighborConnectivity;
+  this->NeighborOffsets = combinedNeighborOffsets;
   this->NumVertices = SortedValues.GetNumberOfValues();
   this->SortIndices = vtkm::cont::ArrayHandleIndex(this->NumVertices);
   this->SortOrder = vtkm::cont::ArrayHandleIndex(this->NumVertices);
@@ -781,9 +785,9 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   timer.Start();
 
   // Re-compute maximum number of neigbours
-  ComputeMaxNeighbours();
+  ComputeMaxNeighbors();
 
-  timingsStream << "    " << std::setw(38) << std::left << "Compute MaxNeighbours"
+  timingsStream << "    " << std::setw(38) << std::left << "Compute MaxNeighbors"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
   timingsStream << "    " << std::setw(38) << std::left << "Total time MergeWith"
@@ -812,8 +816,8 @@ inline void ContourTreeMesh<FieldType>::Save(const char* filename) const
   std::ofstream os(filename);
   SaveVector(os, this->SortedValues);
   SaveVector(os, this->GlobalMeshIndex);
-  SaveVector(os, this->Neighbours);
-  SaveVector(os, this->FirstNeighbour);
+  SaveVector(os, this->NeighborConnectivity);
+  SaveVector(os, this->NeighborOffsets);
 }
 
 template <typename FieldType>
@@ -826,9 +830,9 @@ inline void ContourTreeMesh<FieldType>::Load(const char* filename)
   }
   LoadVector(is, this->SortedValues);
   LoadVector(is, this->GlobalMeshIndex);
-  LoadVector(is, this->Neighbours);
-  LoadVector(is, this->FirstNeighbour);
-  this->ComputeMaxNeighbours();
+  LoadVector(is, this->NeighborConnectivity);
+  LoadVector(is, this->NeighborOffsets);
+  this->ComputeMaxNeighbors();
   this->NumVertices = this->SortedValues.GetNumberOfValues();
   this->SortOrder = vtkm::cont::ArrayHandleIndex(this->NumVertices);
   this->SortIndices = vtkm::cont::ArrayHandleIndex(this->NumVertices);

@@ -79,14 +79,15 @@ class UpdateCombinedNeighboursWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
-    WholeArrayIn firstNeighbour, // (input) this->firstNerighbour or other.firstNeighbour
-    WholeArrayIn neighbours,     // (input) this->neighbours or other.neighbours array
+    WholeArrayIn neighborOffsets,      // (input) NeighborOffsets array of this or other
+    WholeArrayIn neighborConnectivity, // (input) NeighborConnectivity array of this or other
     WholeArrayIn
       toCombinedSortOrder, // (input) thisToCombinedSortOrder or otherToCombinedSortOrder array
-    WholeArrayIn combinedFirstNeighbour, // (input) combinedFirstNeighbour array in both cases
+    WholeArrayIn combinedNeighborOffsets, // (input) combinedNeighborOffsets array in both cases
     WholeArrayIn
       combinedOtherStartIndex, // (input) const 0 array of length combinedOtherStartIndex for this and combinedOtherStartIndex for other loop
-    WholeArrayOut combinedNeighbours); // (output) combinedNeighbours array in both cases
+    WholeArrayOut
+      combineNeighborConnectivity); // (output) combineNeighborConnectivity array in both cases
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
   typedef _1 InputDomain;
 
@@ -96,26 +97,27 @@ public:
 
   template <typename InFieldPortalType, typename InFieldPortalType2, typename OutFieldPortalType>
   VTKM_EXEC void operator()(
-    const InFieldPortalType& firstNeighbourPortal,
+    const InFieldPortalType& neighborOffsetsPortal,
     const vtkm::Id vtx,
-    const InFieldPortalType& neighboursPortal,
+    const InFieldPortalType& neighborConnectivityPortal,
     const InFieldPortalType& toCombinedSortOrderPortal,
-    const InFieldPortalType& combinedFirstNeighbourPortal,
+    const InFieldPortalType& combinedNeighborOffsetsPortal,
     const InFieldPortalType2&
       combinedOtherStartIndexPortal, // We need another InFieldPortalType here to allow us to hand in a smart array handle instead of a VTKM array
-    const OutFieldPortalType& combinedNeighboursPortal) const
+    const OutFieldPortalType& combineNeighborConnectivityPortal) const
   {
-    vtkm::Id totalNumNeighbours = neighboursPortal.GetNumberOfValues();
-    vtkm::Id totalNumVertices = firstNeighbourPortal.GetNumberOfValues();
+    vtkm::Id totalNumNeighbours = neighborConnectivityPortal.GetNumberOfValues();
+    vtkm::Id totalNumVertices = neighborOffsetsPortal.GetNumberOfValues();
     vtkm::Id numNeighbours = (vtx < totalNumVertices - 1)
-      ? firstNeighbourPortal.Get(vtx + 1) - firstNeighbourPortal.Get(vtx)
-      : totalNumNeighbours - firstNeighbourPortal.Get(vtx);
+      ? neighborOffsetsPortal.Get(vtx + 1) - neighborOffsetsPortal.Get(vtx)
+      : totalNumNeighbours - neighborOffsetsPortal.Get(vtx);
     for (vtkm::Id nbrNo = 0; nbrNo < numNeighbours; ++nbrNo)
     {
-      combinedNeighboursPortal.Set(
-        combinedFirstNeighbourPortal.Get(toCombinedSortOrderPortal.Get(vtx)) +
+      combineNeighborConnectivityPortal.Set(
+        combinedNeighborOffsetsPortal.Get(toCombinedSortOrderPortal.Get(vtx)) +
           combinedOtherStartIndexPortal.Get(toCombinedSortOrderPortal.Get(vtx)) + nbrNo,
-        toCombinedSortOrderPortal.Get(neighboursPortal.Get(firstNeighbourPortal.Get(vtx) + nbrNo)));
+        toCombinedSortOrderPortal.Get(
+          neighborConnectivityPortal.Get(neighborOffsetsPortal.Get(vtx) + nbrNo)));
     }
 
     /*
@@ -143,7 +145,6 @@ public:
       */
   }
 }; //  AdditionAssignWorklet
-
 
 } // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented
