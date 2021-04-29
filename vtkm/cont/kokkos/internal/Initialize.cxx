@@ -47,6 +47,7 @@ inline void ChangeArgumentName(const std::string& origName,
 
 void vtkm::cont::kokkos::internal::Initialize(int& argc, char* argv[])
 {
+  // TODO: remove this argument mangling once DEPRECATED options are fully removed
   // mangle --device to prevent conflict
   ChangeArgumentName("--device", "--vtkm_d", argc, argv);
   // rename to what is expected by kokkos
