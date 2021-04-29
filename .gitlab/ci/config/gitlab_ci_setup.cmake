@@ -52,10 +52,16 @@ if (NOT CTEST_CMAKE_GENERATOR)
 endif ()
 
 # Determine the track to submit to.
-set(CTEST_TRACK "Experimental")
-if ("$ENV{CI_COMMIT_REF_NAME}" STREQUAL "master")
+set(CTEST_TRACK "merge-requests")
+if("$ENV{CI_COMMIT_REF_NAME}" STREQUAL "master")
+  set(CTEST_TRACK "master")
+elseif("$ENV{CI_COMMIT_REF_NAME}" STREQUAL "release")
+  set(CTEST_TRACK "release")
+endif()
+
+if("$ENV{VTKM_CI_NIGHTLY}" STREQUAL "TRUE")
   set(CTEST_TRACK "Nightly")
-endif ()
+endif()
 
 if (CTEST_CMAKE_GENERATOR STREQUAL "Unix Makefiles")
   include(ProcessorCount)
