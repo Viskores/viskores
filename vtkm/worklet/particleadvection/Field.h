@@ -16,7 +16,6 @@
 #include <vtkm/VecVariable.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/CellInterpolate.h>
 
 namespace vtkm

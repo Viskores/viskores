@@ -16,6 +16,8 @@
 #error "PointLocator with virtual methods is removed. Do not include PointLocator.h"
 #endif
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 namespace vtkm
 {
 namespace exec
@@ -41,5 +43,7 @@ public:
 
 } // vtkm::exec
 } // vtkm
+
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif // vtk_m_exec_PointLocator_h

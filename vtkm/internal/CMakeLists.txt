@@ -55,7 +55,6 @@ set(headers
   ArrayPortalHelpers.h
   ArrayPortalUniformPointCoordinates.h
   ArrayPortalValueReference.h
-  ArrayPortalVirtual.h
   Assume.h
   brigand.hpp
   ConfigureFor32.h
@@ -75,6 +74,12 @@ set(headers
   VecOperators.h
   Windows.h
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    ArrayPortalVirtual.h
+    )
+endif()
 
 vtkm_declare_headers(${headers})
 

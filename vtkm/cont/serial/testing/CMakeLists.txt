@@ -23,8 +23,14 @@ set(unit_tests
   UnitTestSerialDeviceAdapter.cxx
   UnitTestSerialImplicitFunction.cxx
   UnitTestSerialPointLocatorSparseGrid.cxx
-  UnitTestSerialVirtualObjectHandle.cxx
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(unit_tests ${unit_tests}
+    UnitTestSerialVirtualObjectHandle.cxx
+    )
+endif()
+
 vtkm_unit_tests(SOURCES ${unit_tests}
                 LABEL "SERIAL"
                 DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG

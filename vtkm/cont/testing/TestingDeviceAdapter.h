@@ -30,7 +30,10 @@
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -337,6 +340,9 @@ public:
     vtkm::exec::AtomicArrayExecutionObject<T> AArray;
   };
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+
   class VirtualObjectTransferKernel
   {
   public:
@@ -369,6 +375,9 @@ public:
     const Interface* Virtual;
     IdPortalType Result;
   };
+
+  VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   struct CustomPairOp
   {
@@ -603,6 +612,9 @@ private:
     }
   }
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+
   VTKM_CONT
   static void TestVirtualObjectTransfer()
   {
@@ -639,6 +651,9 @@ private:
 
     transfer.ReleaseResources();
   }
+
+  VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   static VTKM_CONT void TestAlgorithmSchedule()
   {
@@ -3011,7 +3026,10 @@ private:
       TestMemoryTransfer();
       TestOutOfMemory();
       TestTimer();
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
       TestVirtualObjectTransfer();
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
       TestAlgorithmSchedule();
       TestErrorExecution();

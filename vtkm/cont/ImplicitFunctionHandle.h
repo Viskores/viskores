@@ -238,6 +238,7 @@ VTKM_CONT ImplicitFunctionValueHandle make_ImplicitFunctionValueHandle(Args&&...
 }
 } // vtkm::cont
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 // Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
 // to be instantiated in a consistent order among all the translation units of an
 // executable. Failing to do so results in random crashes and incorrect results.
@@ -256,6 +257,7 @@ VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(
   vtkm::cont::detail::ImplicitFunctionBaseExecWrapper<vtkm::Sphere>);
 #endif
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 VTKM_DEPRECATED_SUPPRESS_END
 

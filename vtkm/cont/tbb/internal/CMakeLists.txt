@@ -15,8 +15,13 @@ set(headers
   DeviceAdapterTagTBB.h
   FunctorsTBB.h
   ParallelSortTBB.h
-  VirtualObjectTransferTBB.h
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    VirtualObjectTransferTBB.h
+    )
+endif()
 
 vtkm_declare_headers(${headers}
    ParallelSortTBB.hxx

@@ -18,8 +18,13 @@ set(headers
   MakeThrustIterator.h
   ScopedCudaStackSize.h
   ThrustExceptionHandler.h
-  VirtualObjectTransferCuda.h
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    VirtualObjectTransferCuda.h
+    )
+endif()
 
 vtkm_declare_headers(${headers})
 

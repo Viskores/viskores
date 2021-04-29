@@ -10,6 +10,10 @@
 #ifndef vtk_m_internal_ArrayPortalVirtual_h
 #define vtk_m_internal_ArrayPortalVirtual_h
 
+#include <vtkm/internal/Configure.h>
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 #include <vtkm/VecTraits.h>
 #include <vtkm/VirtualObjectBase.h>

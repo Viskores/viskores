@@ -26,6 +26,12 @@ set(unit_tests
   UnitTestCudaMathEdgeCases.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
   UnitTestCudaPointLocatorSparseGrid.cu
-  UnitTestCudaVirtualObjectHandle.cu
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(unit_tests ${unit_tests}
+    UnitTestCudaVirtualObjectHandle.cu
+    )
+endif()
+
 vtkm_unit_tests(SOURCES ${unit_tests} LABEL "CUDA" LIBRARIES vtkm_worklet)

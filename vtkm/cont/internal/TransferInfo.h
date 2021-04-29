@@ -12,9 +12,18 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <vtkm/internal/Configure.h>
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
 #include <vtkm/Types.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/internal/ArrayPortalVirtual.h>
+
+// This is a deprecated class. Don't warn about deprecation while implementing
+// deprecated functionality.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 #include <memory>
 
@@ -60,5 +69,7 @@ private:
 }
 }
 }
+
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif

@@ -124,8 +124,19 @@ function(do_verify root_dir prefix)
     cont/PointLocator.h
     cont/StorageVirtual.h
     cont/StorageVirtual.hxx
+    cont/VirtualObjectHandle.h
+    cont/cuda/internal/VirtualObjectTransferCuda.h
+    cont/internal/TransferInfo.h
+    cont/internal/VirtualObjectTransfer.h
+    cont/internal/VirtualObjectTransferInstantiate.h
+    cont/internal/VirtualObjectTransferShareWithControl.h
+    cont/kokkos/internal/VirtualObjectTransferKokkos.h
+    cont/openmp/internal/VirtualObjectTransferOpenMP.h
+    cont/serial/internal/VirtualObjectTransferSerial.h
+    cont/tbb/internal/VirtualObjectTransferTBB.h
     exec/CellLocator.h
     exec/PointLocator.h
+    internal/ArrayPortalVirtual.h
     )
 
   #by default every header in a testing directory doesn't need to be installed

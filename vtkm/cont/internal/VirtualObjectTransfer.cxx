@@ -16,6 +16,7 @@
 #include <array>
 #include <memory>
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace vtkm
 {
@@ -58,3 +59,5 @@ bool TransferState::DeviceIdIsValid(vtkm::cont::DeviceAdapterId deviceId) const
 }
 }
 }
+
+VTKM_DEPRECATED_SUPPRESS_END

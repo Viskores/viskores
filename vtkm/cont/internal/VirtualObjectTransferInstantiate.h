@@ -10,6 +10,12 @@
 #ifndef vtk_m_cont_internal_VirtualObjectTransferInstantiate_h
 #define vtk_m_cont_internal_VirtualObjectTransferInstantiate_h
 
+#include <vtkm/internal/Configure.h>
+
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
 #define VTKM_EXPLICITLY_INSTANTIATE_TRANSFER_FOR_DEVICE(DerivedType, DeviceDapterTagType) \
   template class vtkm::cont::internal::VirtualObjectTransfer<DerivedType, DeviceDapterTagType>
 

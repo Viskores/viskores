@@ -18,8 +18,11 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
-#include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
@@ -80,12 +83,17 @@ class DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagTestAlgorithmGenera
   }
 };
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename TargetClass>
 struct VirtualObjectTransfer<TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral> final
   : public VirtualObjectTransferShareWithControl<TargetClass>
 {
   using VirtualObjectTransferShareWithControl<TargetClass>::VirtualObjectTransferShareWithControl;
 };
+VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
 }
 }
 } // namespace vtkm::cont::internal

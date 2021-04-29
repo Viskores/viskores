@@ -19,7 +19,6 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/CellInterpolate.h>
 
 /*

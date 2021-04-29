@@ -13,8 +13,14 @@ set(headers
   DeviceAdapterMemoryManagerSerial.h
   DeviceAdapterRuntimeDetectorSerial.h
   DeviceAdapterTagSerial.h
-  VirtualObjectTransferSerial.h
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    VirtualObjectTransferSerial.h
+    )
+endif()
+
 vtkm_declare_headers(${headers})
 
 target_sources(vtkm_cont PRIVATE

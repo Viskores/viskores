@@ -13,7 +13,6 @@
 #include <sstream>
 #include <vtkm/CellShape.h>
 #include <vtkm/cont/ErrorBadValue.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/internal/Variant.h>
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/CellTables.h>

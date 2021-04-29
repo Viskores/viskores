@@ -31,7 +31,6 @@ set(headers
   FieldNeighborhood.h
   FunctorBase.h
   ParametricCoordinates.h
-  PointLocator.h
   PointLocatorSparseGrid.h
   TaskBase.h
   )
@@ -43,6 +42,7 @@ set(header_impls
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
   set(headers ${headers}
     CellLocator.h
+    PointLocator.h
     )
 endif()
 

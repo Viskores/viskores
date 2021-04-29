@@ -153,9 +153,8 @@ vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README a
 
 # We are in the process of deprecating the use of virtual methods because they
 # are not well supported on many accelerators. Turn this option on to remove
-# the code entirely. Note that the deprecation of virtual methods is work in
-# progress, so not all use of virtual methods may be done. In VTK-m 2.0
-# virtual methods should be removed entirely and this option will be removed.
+# the code entirely. In VTK-m 2.0 virtual methods should be removed entirely
+# and this option will be removed.
 vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" OFF)
 
 mark_as_advanced(
