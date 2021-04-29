@@ -65,9 +65,12 @@ namespace testing
 enum TestOptionsIndex
 {
   TEST_UNKNOWN,
-  DATADIR,     // base dir containing test data files
-  BASELINEDIR, // base dir for regression test images
-  WRITEDIR     // base dir for generated regression test images
+  DATADIR,                // base dir containing test data files
+  BASELINEDIR,            // base dir for regression test images
+  WRITEDIR,               // base dir for generated regression test images
+  DEPRECATED_DATADIR,     // base dir containing test data files
+  DEPRECATED_BASELINEDIR, // base dir for regression test images
+  DEPRECATED_WRITEDIR     // base dir for generated regression test images
 };
 
 struct TestVtkmArg : public opt::Arg
@@ -245,7 +248,7 @@ private:
     {
       VTKM_LOG_S(
         vtkm::cont::LogLevel::Error,
-        "TestDataBasePath was never set, was --data-dir set correctly? (hint: ../data/data)");
+        "TestDataBasePath was never set, was --vtkm-data-dir set correctly? (hint: ../data/data)");
     }
 
     return TestDataBasePath;
@@ -267,9 +270,10 @@ private:
 
     if (RegressionTestImageBasePath.empty())
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "RegressionTestImageBasePath was never set, was --baseline-dir set correctly? "
-                 "(hint: ../data/baseline)");
+      VTKM_LOG_S(
+        vtkm::cont::LogLevel::Error,
+        "RegressionTestImageBasePath was never set, was --vtkm-baseline-dir set correctly? "
+        "(hint: ../data/baseline)");
     }
 
     return RegressionTestImageBasePath;
@@ -299,19 +303,19 @@ private:
 
       usage.push_back({ DATADIR,
                         0,
-                        "D",
-                        "data-dir",
+                        "",
+                        "vtkm-data-dir",
                         TestVtkmArg::Required,
-                        "  --data-dir, -D "
+                        "  --vtkm-data-dir "
                         "<data-dir-path> \tPath to the "
                         "base data directory in the VTK-m "
                         "src dir." });
       usage.push_back({ BASELINEDIR,
                         0,
-                        "B",
-                        "baseline-dir",
+                        "",
+                        "vtkm-baseline-dir",
                         TestVtkmArg::Required,
-                        "  --baseline-dir, -B "
+                        "  --vtkm-baseline-dir "
                         "<baseline-dir-path> "
                         "\tPath to the base dir "
                         "for regression test "
@@ -319,13 +323,38 @@ private:
       usage.push_back({ WRITEDIR,
                         0,
                         "",
-                        "write-dir",
+                        "vtkm-write-dir",
                         TestVtkmArg::Required,
-                        "  --write-dir "
+                        "  --vtkm-write-dir "
                         "<write-dir-path> "
                         "\tPath to the write dir "
                         "to store generated "
                         "regression test images" });
+      usage.push_back({ DEPRECATED_DATADIR,
+                        0,
+                        "D",
+                        "data-dir",
+                        TestVtkmArg::Required,
+                        "  --data-dir "
+                        "<data-dir-path> "
+                        "\tDEPRECATED: use --vtkm-data-dir instead" });
+      usage.push_back({ DEPRECATED_BASELINEDIR,
+                        0,
+                        "B",
+                        "baseline-dir",
+                        TestVtkmArg::Required,
+                        "  --baseline-dir "
+                        "<baseline-dir-path> "
+                        "\tDEPRECATED: use --vtkm-baseline-dir instead" });
+      usage.push_back({ WRITEDIR,
+                        0,
+                        "",
+                        "write-dir",
+                        TestVtkmArg::Required,
+                        "  --write-dir "
+                        "<write-dir-path> "
+                        "\tDEPRECATED: use --vtkm-write-dir instead" });
+
       // Required to collect unknown arguments when help is off.
       usage.push_back({ TEST_UNKNOWN, 0, "", "", TestVtkmArg::Unknown, "" });
       usage.push_back({ 0, 0, 0, 0, 0, 0 });
@@ -344,6 +373,33 @@ private:
       {
         std::cerr << "Internal Initialize parser error" << std::endl;
         exit(1);
+      }
+
+      if (options[DEPRECATED_DATADIR])
+      {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                   "Supplied deprecated datadir flag: "
+                     << std::string{ options[DEPRECATED_DATADIR].name }
+                     << ", use --vtkm-data-dir instead");
+        SetAndGetTestDataBasePath(options[DEPRECATED_DATADIR].arg);
+      }
+
+      if (options[DEPRECATED_BASELINEDIR])
+      {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                   "Supplied deprecated baselinedir flag: "
+                     << std::string{ options[DEPRECATED_BASELINEDIR].name }
+                     << ", use --vtkm-baseline-dir instead");
+        SetAndGetRegressionImageBasePath(options[DEPRECATED_BASELINEDIR].arg);
+      }
+
+      if (options[DEPRECATED_WRITEDIR])
+      {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                   "Supplied deprecated writedir flag: "
+                     << std::string{ options[DEPRECATED_WRITEDIR].name }
+                     << ", use --vtkm-write-dir instead");
+        SetAndGetWriteDirBasePath(options[DEPRECATED_WRITEDIR].arg);
       }
 
       if (options[DATADIR])

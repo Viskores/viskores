@@ -179,13 +179,13 @@ function(vtkm_unit_tests)
   list(APPEND vtkm_default_test_log_level "--vtkm-log-level" "INFO")
 
   # Add the path to the data directory so tests can find and use data files for testing
-  list(APPEND VTKm_UT_TEST_ARGS "--data-dir=${VTKm_SOURCE_DIR}/data/data")
+  list(APPEND VTKm_UT_TEST_ARGS "--vtkm-data-dir=${VTKm_SOURCE_DIR}/data/data")
 
   # Add the path to the location where regression test images are to be stored
-  list(APPEND VTKm_UT_TEST_ARGS "--baseline-dir=${VTKm_SOURCE_DIR}/data/baseline")
+  list(APPEND VTKm_UT_TEST_ARGS "--vtkm-baseline-dir=${VTKm_SOURCE_DIR}/data/baseline")
 
   # Add the path to the location where generated regression test images should be written
-  list(APPEND VTKm_UT_TEST_ARGS "--write-dir=${VTKm_BINARY_DIR}")
+  list(APPEND VTKm_UT_TEST_ARGS "--vtkm-write-dir=${VTKm_BINARY_DIR}")
 
   if(VTKm_UT_MPI)
     if (VTKm_ENABLE_MPI)
