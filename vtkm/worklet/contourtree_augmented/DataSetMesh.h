@@ -183,30 +183,14 @@ public:
       meshIds, *localToGlobalIdRelabeler);
   } // GetGlobalIDsFromMeshIndices()
 
-  ///Compute a list of the global Iss of all vertices that logically belong to the data block represented by this
-  ///mesh object (used in distributd parallel computation). This is needed  to avoid multiple counting on bousndaries
-  ///in the hierarchy during distributed parallel contour tree computation.
-  ///This function is defined as virtual on the base DataSet mesh to make it easy to reuse across the mesh types
-  ///since in the distributed case we may store the meshes in their generic version. The specific implementation
-  /// must be handled in the specialized mesh types.
-  /// @param[in] localToGlobalIdRelabeler IdRelabeler for the mesh needed to map local to global Ids
-  /// @param[out] ownedVertices List of vertices that logically belong to
-  virtual void GetOwnedVerticesByGlobalId(
-    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
-    IdArrayType& ownedVertices) const
-  {
-    (void)localToGlobalIdRelabeler;
-    (void)ownedVertices;
-    throw std::logic_error("GetOwnedVerticesByGlobalId not implemented on the "
-                           "base DataSetMesh. The function must be implemented "
-                           "on derived classes, typically using  the provided "
-                           "GetOwnedVerticesByGlobalIdImpl function.");
-  }
-
   //routine that dumps out the contents of the mesh
   void DebugPrint(const char* message, const char* fileName, long lineNum);
 
 protected:
+  //TODO/FIXME: Update comment, possibly refactor and move somewhere else (helper function outside class?)
+  ///Compute a list of the global Iss of all vertices that logically belong to the data block represented by this
+  ///mesh object (used in distributd parallel computation). This is needed  to avoid multiple counting on bousndaries
+  ///in the hierarchy during distributed parallel contour tree computation.
   /// Implementation of GetOwnedVerticesByGlobalId used internally by derived classes to
   /// implement the specific variant of the function .The implementations vary based on the
   /// MeshBoundary object used, and so derived classes just need to specify their mesh
