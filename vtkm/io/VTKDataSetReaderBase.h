@@ -271,6 +271,8 @@ protected:
                            vtkm::io::internal::DummyBitType,
                            vtkm::IdComponent numComponents = 1);
 
+  VTKM_CONT void SkipStringArray(std::size_t numStrings);
+
   VTKM_CONT void SkipArrayMetaData(vtkm::IdComponent numComponents);
 };
 }

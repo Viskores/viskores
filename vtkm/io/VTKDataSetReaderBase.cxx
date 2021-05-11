@@ -322,6 +322,12 @@ void VTKDataSetReaderBase::ReadAttributes()
     {
       association = vtkm::cont::Field::Association::CELL_SET;
     }
+    else if (tag == "FIELD") // can see field in this position also
+    {
+      this->ReadGlobalFields(nullptr);
+      this->DataFile->Stream >> tag;
+      continue;
+    }
     else
     {
       internal::parseAssert(false);
@@ -693,16 +699,11 @@ void VTKDataSetReaderBase::DoSkipArrayVariant(std::string dataType,
                                               std::size_t numElements,
                                               vtkm::IdComponent numComponents)
 {
-  // string is unsupported for SkipArrayVariant, so it requires some
-  // special handling
-  if (dataType == "string")
+  // string requires some special handling
+  if (dataType == "string" || dataType == "utf8_string")
   {
     const vtkm::Id stringCount = numComponents * static_cast<vtkm::Id>(numElements);
-    for (vtkm::Id i = 0; i < stringCount; ++i)
-    {
-      std::string trash;
-      this->DataFile->Stream >> trash;
-    }
+    this->SkipStringArray(stringCount);
   }
   else
   {
@@ -722,9 +723,20 @@ vtkm::cont::UnknownArrayHandle VTKDataSetReaderBase::DoReadArrayVariant(
   vtkm::cont::ArrayHandle<vtkm::Float32> empty;
   vtkm::cont::UnknownArrayHandle data(empty);
 
-  vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
-  vtkm::io::internal::SelectTypeAndCall(
-    typeId, numComponents, ReadArrayVariant(this, association, numElements, data));
+  // string requires some special handling
+  if (dataType == "string" || dataType == "utf8_string")
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Support for data type 'string' and 'utf8_string' is not implemented. Skipping.");
+    const vtkm::Id stringCount = numComponents * static_cast<vtkm::Id>(numElements);
+    this->SkipStringArray(stringCount);
+  }
+  else
+  {
+    vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
+    vtkm::io::internal::SelectTypeAndCall(
+      typeId, numComponents, ReadArrayVariant(this, association, numElements, data));
+  }
 
   return data;
 }
@@ -756,6 +768,65 @@ void VTKDataSetReaderBase::SkipArray(std::size_t numElements,
   }
   this->DataFile->Stream >> std::ws;
   this->SkipArrayMetaData(numComponents);
+}
+
+void VTKDataSetReaderBase::SkipStringArray(std::size_t numStrings)
+{
+  if (this->DataFile->IsBinary)
+  {
+    for (std::size_t i = 0; i < numStrings; ++i)
+    {
+      auto firstByte = this->DataFile->Stream.peek();
+      auto type = firstByte >> 6;
+      switch (type)
+      {
+        case 3: // length stored in 1 byte
+        {
+          auto length = this->DataFile->Stream.get();
+          length &= 0x3F;
+          this->DataFile->Stream.seekg(static_cast<std::streamoff>(length), std::ios_base::cur);
+          break;
+        }
+        case 2: // length stored in 2 bytes
+        {
+          vtkm::UInt16 length = 0;
+          auto bytes = reinterpret_cast<char*>(&length);
+          this->DataFile->Stream.read(bytes, 2);
+          std::swap(bytes[0], bytes[1]);
+          length &= 0x3FFF;
+          this->DataFile->Stream.seekg(static_cast<std::streamoff>(length), std::ios_base::cur);
+          break;
+        }
+        case 1: // length stored in 4 bytes
+        {
+          vtkm::UInt32 length = 0;
+          auto bytes = reinterpret_cast<char*>(&length);
+          this->DataFile->Stream.read(bytes, 4);
+          std::reverse(bytes, bytes + 4);
+          length &= 0x3FFFFFFF;
+          this->DataFile->Stream.seekg(static_cast<std::streamoff>(length), std::ios_base::cur);
+          break;
+        }
+        default: // length stored in 8 bytes
+        {
+          vtkm::UInt64 length = 0;
+          auto bytes = reinterpret_cast<char*>(&length);
+          this->DataFile->Stream.read(bytes, 8);
+          std::reverse(bytes, bytes + 8);
+          this->DataFile->Stream.seekg(static_cast<std::streamoff>(length), std::ios_base::cur);
+          break;
+        }
+      }
+    }
+  }
+  else
+  {
+    for (std::size_t i = 0; i < numStrings; ++i)
+    {
+      // ASCII mode stores one string per line
+      this->DataFile->Stream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+  }
 }
 
 void VTKDataSetReaderBase::SkipArrayMetaData(vtkm::IdComponent numComponents)
