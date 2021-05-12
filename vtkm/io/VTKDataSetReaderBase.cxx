@@ -403,6 +403,10 @@ void VTKDataSetReaderBase::ReadAttributes()
       {
         this->ReadFields(association, size);
       }
+      else if (tag == "GLOBAL_IDS" || tag == "PEDIGREE_IDS")
+      {
+        this->ReadGlobalOrPedigreeIds(association, size);
+      }
       else
       {
         break;
@@ -653,6 +657,22 @@ void VTKDataSetReaderBase::ReadGlobalFields(std::vector<vtkm::Float32>* visitBou
       this->DoSkipArrayVariant(dataType, numTuples, numComponents);
     }
   }
+}
+
+void VTKDataSetReaderBase::ReadGlobalOrPedigreeIds(vtkm::cont::Field::Association association,
+                                                   std::size_t numElements)
+{
+  std::string dataName;
+  std::string dataType;
+  this->DataFile->Stream >> dataName >> dataType >> std::ws;
+  internal::parseAssert(dataType == "vtkIdType");
+
+  std::vector<vtkm::Int32> buffer(numElements); // vtk writes vtkIdType as int
+  this->ReadArray(buffer);
+  vtkm::cont::UnknownArrayHandle data(vtkm::cont::make_ArrayHandleMove(std::move(buffer)));
+  this->AddField(dataName, association, data);
+
+  this->SkipArrayMetaData(1);
 }
 
 class VTKDataSetReaderBase::SkipArrayVariant

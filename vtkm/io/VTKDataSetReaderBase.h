@@ -168,6 +168,8 @@ private:
   VTKM_CONT void ReadTensors(vtkm::cont::Field::Association association, std::size_t numElements);
   VTKM_CONT void ReadFields(vtkm::cont::Field::Association association,
                             std::size_t expectedNumElements);
+  VTKM_CONT void ReadGlobalOrPedigreeIds(vtkm::cont::Field::Association association,
+                                         std::size_t numElements);
 
 protected:
   VTKM_CONT void ReadGlobalFields(std::vector<vtkm::Float32>* visitBounds = nullptr);
