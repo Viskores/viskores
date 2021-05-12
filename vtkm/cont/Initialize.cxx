@@ -31,7 +31,9 @@ enum OptionIndex
   UNKNOWN,
   DEVICE,
   LOGLEVEL, // not parsed by this parser, but by loguru
-  HELP
+  HELP,
+  DEPRECATED_DEVICE,
+  DEPRECATED_LOGLEVEL
 };
 
 struct VtkmArg : public opt::Arg
@@ -170,6 +172,10 @@ VTKM_CONT
 InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
 {
   InitializeResult config;
+  const std::string loggingFlagName = "vtkm-log-level";
+  const std::string loggingFlag = "--" + loggingFlagName;
+  const std::string loggingHelp = "  " + loggingFlag +
+    " <#|INFO|WARNING|ERROR|FATAL|OFF> \tSpecify a log level (when logging is enabled).";
 
   // initialize logging first -- it'll pop off the options it consumes:
   if (argc == 0 || argv == nullptr)
@@ -178,7 +184,7 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
   }
   else
   {
-    vtkm::cont::InitLogging(argc, argv);
+    vtkm::cont::InitLogging(argc, argv, loggingFlag);
   }
 
 #ifdef VTKM_ENABLE_KOKKOS
@@ -194,21 +200,33 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     usage.push_back(
       { DEVICE,
         0,
-        "d",
-        "device",
-        VtkmArg::IsDevice,
-        "  --device, -d <dev> \tForce device to dev. Omit device to list available devices." });
-    usage.push_back(
-      { LOGLEVEL,
-        0,
-        "v",
         "",
-        VtkmArg::Required,
-        "  -v <#|INFO|WARNING|ERROR|FATAL|OFF> \tSpecify a log level (when logging is enabled)." });
+        "vtkm-device",
+        VtkmArg::IsDevice,
+        "  --vtkm-device <dev> \tForce device to dev. Omit device to list available devices." });
+    usage.push_back({ DEPRECATED_DEVICE,
+                      0,
+                      "d",
+                      "device",
+                      VtkmArg::IsDevice,
+                      "  --device, -d <dev> \tDEPRECATED: use --vtkm-device to set the device" });
+    usage.push_back(
+      { LOGLEVEL, 0, "", loggingFlagName.c_str(), VtkmArg::Required, loggingHelp.c_str() });
+    usage.push_back({ DEPRECATED_LOGLEVEL,
+                      0,
+                      "v",
+                      "",
+                      VtkmArg::Required,
+                      "  -v <#|INFO|WARNING|ERROR|FATAL|OFF> \tDEPRECATED: use --vtkm-log-level to "
+                      "set the log level" });
     if ((opts & InitializeOptions::AddHelp) != InitializeOptions::None)
     {
-      usage.push_back(
-        { HELP, 0, "h", "help", opt::Arg::None, "  --help, -h \tPrint usage information." });
+      usage.push_back({ HELP,
+                        0,
+                        "h",
+                        "vtkm-help",
+                        opt::Arg::None,
+                        "  --vtkm-help, -h \tPrint usage information." });
     }
     // Required to collect unknown arguments when help is off.
     usage.push_back({ UNKNOWN, 0, "", "", VtkmArg::UnknownOption, "" });
@@ -243,9 +261,34 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
       exit(0);
     }
 
-    if (options[DEVICE])
+    if (options[DEPRECATED_LOGLEVEL])
     {
-      auto id = vtkm::cont::make_DeviceAdapterId(options[DEVICE].arg);
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "Supplied Deprecated log level flag: "
+                   << std::string{ options[DEPRECATED_LOGLEVEL].name } << ", use " << loggingFlag
+                   << " instead.");
+#ifdef VTKM_ENABLE_LOGGING
+      loguru::g_stderr_verbosity =
+        loguru::get_verbosity_from_name(options[DEPRECATED_LOGLEVEL].arg);
+#endif // VTKM_ENABLE_LOGGING
+    }
+
+    if (options[DEVICE] || options[DEPRECATED_DEVICE])
+    {
+      const char* arg = nullptr;
+      if (options[DEPRECATED_DEVICE])
+      {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                   "Supplied Deprecated device flag "
+                     << std::string{ options[DEPRECATED_DEVICE].name }
+                     << ", use --vtkm-device instead");
+        arg = options[DEPRECATED_DEVICE].arg;
+      }
+      if (options[DEVICE])
+      {
+        arg = options[DEVICE].arg;
+      }
+      auto id = vtkm::cont::make_DeviceAdapterId(arg);
       if (id != vtkm::cont::DeviceAdapterTagAny{})
       {
         vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(id);

@@ -104,7 +104,7 @@ namespace cont
 {
 
 VTKM_CONT
-void InitLogging(int& argc, char* argv[])
+void InitLogging(int& argc, char* argv[], const std::string& loggingFlag)
 {
   SetLogLevelName(vtkm::cont::LogLevel::Off, "Off");
   SetLogLevelName(vtkm::cont::LogLevel::Fatal, "FATL");
@@ -126,11 +126,12 @@ void InitLogging(int& argc, char* argv[])
 
   // Set the default log level to warning
   SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
-  loguru::init(argc, argv);
+  loguru::init(argc, argv, loggingFlag.c_str());
 
 #else  // VTKM_ENABLE_LOGGING
   (void)argc;
   (void)argv;
+  (void)loggingFlag;
 #endif // VTKM_ENABLE_LOGGING
 
   // Prevent LogLevelNames from being modified (makes thread safety easier)

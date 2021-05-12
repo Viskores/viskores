@@ -60,7 +60,7 @@
 /// (or preferably, vtkm::cont::Initialize) in an executable. This will:
 /// - Set human-readable names for the log levels in the output.
 /// - Allow the stderr logging level to be set at runtime by passing a
-///   '-v [level]' argument to the executable.
+///   '--vtkm-log-level [level]' argument to the executable.
 /// - Name the main thread.
 /// - Print a preamble with details of the program's startup (args, etc).
 /// - Install signal handlers to automatically print stacktraces and error
@@ -84,12 +84,12 @@
 /// per-thread messages can be easily tracked.
 ///
 /// By default, only Warn, Error, and Fatal messages are printed to
-/// stderr. This can be changed at runtime by passing the '-v' flag to an
+/// stderr. This can be changed at runtime by passing the '--vtkm-log-level' flag to an
 /// executable that calls vtkm::cont::InitLogging. Alternatively, the
 /// application can explicitly call vtkm::cont::SetStderrLogLevel to change the
 /// verbosity. When specifying a verbosity, all log levels with enum values
 /// less-than-or-equal-to the requested level are printed.
-/// vtkm::cont::LogLevel::Off (or "-v Off") may be used to silence the log
+/// vtkm::cont::LogLevel::Off (or "--vtkm-log-level Off") may be used to silence the log
 /// completely.
 ///
 /// The helper functions vtkm::cont::GetHumanReadableSize and
@@ -356,11 +356,11 @@ enum class LogLevel
  * which takes care of logging as well as other initializations.
  *
  * Initializes logging. Sets up custom log level and thread names. Parses any
- * "-v [LogLevel]" arguments to set the stderr log level. This argument may
+ * "--vtkm-log-level [LogLevel]" arguments to set the stderr log level. This argument may
  * be either numeric, or the 4-character string printed in the output. Note that
- * loguru will consume the "-v [LogLevel]" argument and shrink the arg list.
+ * loguru will consume the "--vtkm-log-level [LogLevel]" argument and shrink the arg list.
  *
- * If the parameterless overload is used, the `-v` parsing is not used, but
+ * If the parameterless overload is used, the `--vtkm-log-level` parsing is not used, but
  * other functionality should still work.
  *
  * @note This function is not threadsafe and should only be called from a single
@@ -369,7 +369,7 @@ enum class LogLevel
  */
 VTKM_CONT_EXPORT
 VTKM_CONT
-void InitLogging(int& argc, char* argv[]);
+void InitLogging(int& argc, char* argv[], const std::string& loggingFlag = "--vtkm-log-level");
 VTKM_CONT_EXPORT
 VTKM_CONT
 void InitLogging();

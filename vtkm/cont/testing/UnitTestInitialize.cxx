@@ -108,7 +108,7 @@ void InitializeStandardOptions()
 
   int argc;
   char** argv;
-  MakeArgs(argc, argv, "--device", "Any");
+  MakeArgs(argc, argv, "--vtkm-device", "Any");
   vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::Strict);
   CheckArgs(argc, argv);
 }
@@ -134,20 +134,44 @@ void InitializeMixedOptions()
 
   int argc;
   char** argv;
-  MakeArgs(argc, argv, "--foo", "--device", "Any", "--bar", "baz");
+  MakeArgs(argc, argv, "--foo", "--vtkm-device", "Any", "--bar", "baz");
   vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::AddHelp);
   CheckArgs(argc, argv, "--foo", "--bar", "baz");
 
-  MakeArgs(argc, argv, "--foo", "-v", "OFF", "--", "--device", "Any", "--bar", "baz");
+  MakeArgs(
+    argc, argv, "--foo", "--vtkm-log-level", "OFF", "--", "--vtkm-device", "Any", "--bar", "baz");
   vtkm::cont::Initialize(argc, argv);
-  CheckArgs(argc, argv, "--foo", "--", "--device", "Any", "--bar", "baz");
+  CheckArgs(argc, argv, "--foo", "--", "--vtkm-device", "Any", "--bar", "baz");
 
-  MakeArgs(argc, argv, "--device", "Any", "foo");
+  MakeArgs(argc, argv, "--vtkm-device", "Any", "foo");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "foo");
 }
 
 void InitializeCustomOptionsWithArgs()
+{
+  std::cout << "Calling program has option --foo that takes arg bar." << std::endl;
+
+  int argc;
+  char** argv;
+  MakeArgs(argc, argv, "--vtkm-device", "Any", "--foo=bar", "--baz");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv, "--foo=bar", "--baz");
+
+  MakeArgs(argc, argv, "--foo=bar", "--baz", "--vtkm-device", "Any");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv, "--foo=bar", "--baz");
+
+  MakeArgs(argc, argv, "--vtkm-device", "Any", "--foo", "bar", "--baz");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv, "--foo", "bar", "--baz");
+
+  MakeArgs(argc, argv, "--foo", "bar", "--baz", "--vtkm-device", "Any");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv, "--foo", "bar", "--baz");
+}
+
+void InitializeDeprecatedOptionsWithArgs()
 {
   std::cout << "Calling program has option --foo that takes arg bar." << std::endl;
 
@@ -161,13 +185,17 @@ void InitializeCustomOptionsWithArgs()
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo=bar", "--baz");
 
-  MakeArgs(argc, argv, "--device", "Any", "--foo", "bar", "--baz");
+  MakeArgs(argc, argv, "-d", "Any", "--foo", "bar", "--baz");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo", "bar", "--baz");
 
-  MakeArgs(argc, argv, "--foo", "bar", "--baz", "--device", "Any");
+  MakeArgs(argc, argv, "--foo", "bar", "--baz", "-d", "Any");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo", "bar", "--baz");
+
+  MakeArgs(argc, argv, "--foo", "-v", "OFF", "--", "--device", "Any", "--bar", "baz");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv, "--foo", "--", "--device", "Any", "--bar", "baz");
 }
 
 void InitializeWithHelp()
@@ -176,7 +204,7 @@ void InitializeWithHelp()
 
   int argc;
   char** argv;
-  MakeArgs(argc, argv, "--help");
+  MakeArgs(argc, argv, "--vtkm-help");
   vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::AddHelp);
 
   VTKM_TEST_FAIL("Help argument did not exit as expected.");
@@ -195,6 +223,7 @@ void DoInitializeTests()
   InitializeCustomOptions();
   InitializeMixedOptions();
   InitializeCustomOptionsWithArgs();
+  InitializeDeprecatedOptionsWithArgs();
 
   // This should be the last function called as it should exit with a zero status.
   InitializeWithHelp();

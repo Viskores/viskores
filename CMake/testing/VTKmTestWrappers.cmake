@@ -133,23 +133,23 @@ function(vtkm_unit_tests)
 
   set(enable_all_backends ${VTKm_UT_ALL_BACKENDS})
   if(enable_all_backends)
-    set(per_device_command_line_arguments --device=serial)
+    set(per_device_command_line_arguments --vtkm-device=serial)
     set(per_device_suffix "SERIAL")
     if (VTKm_ENABLE_CUDA)
-      list(APPEND per_device_command_line_arguments --device=cuda)
+      list(APPEND per_device_command_line_arguments --vtkm-device=cuda)
       list(APPEND per_device_suffix "CUDA")
       #CUDA tests generally require more time because of kernel generation.
       list(APPEND per_device_timeout 1500)
       list(APPEND per_device_serial FALSE)
     endif()
     if (VTKm_ENABLE_TBB)
-      list(APPEND per_device_command_line_arguments --device=tbb)
+      list(APPEND per_device_command_line_arguments --vtkm-device=tbb)
       list(APPEND per_device_suffix "TBB")
       list(APPEND per_device_timeout 180)
       list(APPEND per_device_serial FALSE)
     endif()
     if (VTKm_ENABLE_OPENMP)
-      list(APPEND per_device_command_line_arguments --device=openmp)
+      list(APPEND per_device_command_line_arguments --vtkm-device=openmp)
       list(APPEND per_device_suffix "OPENMP")
       list(APPEND per_device_timeout 180)
       #We need to have all OpenMP tests run serially as they
@@ -159,7 +159,7 @@ function(vtkm_unit_tests)
       list(APPEND per_device_serial TRUE)
     endif()
     if (VTKm_ENABLE_KOKKOS)
-      list(APPEND per_device_command_line_arguments --device=kokkos)
+      list(APPEND per_device_command_line_arguments --vtkm-device=kokkos)
       list(APPEND per_device_suffix "KOKKOS")
       #may require more time because of kernel generation.
       list(APPEND per_device_timeout 1500)
@@ -176,16 +176,16 @@ function(vtkm_unit_tests)
   endif()
 
   # For Testing Purposes, we will set the default logging level to INFO
-  list(APPEND vtkm_default_test_log_level "-v" "INFO")
+  list(APPEND vtkm_default_test_log_level "--vtkm-log-level" "INFO")
 
   # Add the path to the data directory so tests can find and use data files for testing
-  list(APPEND VTKm_UT_TEST_ARGS "--data-dir=${VTKm_SOURCE_DIR}/data/data")
+  list(APPEND VTKm_UT_TEST_ARGS "--vtkm-data-dir=${VTKm_SOURCE_DIR}/data/data")
 
   # Add the path to the location where regression test images are to be stored
-  list(APPEND VTKm_UT_TEST_ARGS "--baseline-dir=${VTKm_SOURCE_DIR}/data/baseline")
+  list(APPEND VTKm_UT_TEST_ARGS "--vtkm-baseline-dir=${VTKm_SOURCE_DIR}/data/baseline")
 
   # Add the path to the location where generated regression test images should be written
-  list(APPEND VTKm_UT_TEST_ARGS "--write-dir=${VTKm_BINARY_DIR}")
+  list(APPEND VTKm_UT_TEST_ARGS "--vtkm-write-dir=${VTKm_BINARY_DIR}")
 
   if(VTKm_UT_MPI)
     if (VTKm_ENABLE_MPI)
