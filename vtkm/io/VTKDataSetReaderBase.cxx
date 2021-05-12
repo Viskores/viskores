@@ -11,7 +11,9 @@
 #include <vtkm/io/VTKDataSetReaderBase.h>
 
 #include <vtkm/VecTraits.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleOffsetsToNumComponents.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
@@ -258,25 +260,61 @@ void VTKDataSetReaderBase::ReadPoints()
 void VTKDataSetReaderBase::ReadCells(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices)
 {
-  vtkm::Id numCells, numInts;
-  this->DataFile->Stream >> numCells >> numInts >> std::ws;
-
-  connectivity.Allocate(numInts - numCells);
-  numIndices.Allocate(numCells);
-
-  std::vector<vtkm::Int32> buffer(static_cast<std::size_t>(numInts));
-  this->ReadArray(buffer);
-
-  vtkm::Int32* buffp = buffer.data();
-  auto connectivityPortal = connectivity.WritePortal();
-  auto numIndicesPortal = numIndices.WritePortal();
-  for (vtkm::Id i = 0, connInd = 0; i < numCells; ++i)
+  if (this->DataFile->Version[0] < 5)
   {
-    vtkm::IdComponent numInds = static_cast<vtkm::IdComponent>(*buffp++);
-    numIndicesPortal.Set(i, numInds);
-    for (vtkm::IdComponent j = 0; j < numInds; ++j, ++connInd)
+    vtkm::Id numCells, numInts;
+    this->DataFile->Stream >> numCells >> numInts >> std::ws;
+
+    connectivity.Allocate(numInts - numCells);
+    numIndices.Allocate(numCells);
+
+    std::vector<vtkm::Int32> buffer(static_cast<std::size_t>(numInts));
+    this->ReadArray(buffer);
+
+    vtkm::Int32* buffp = buffer.data();
+    auto connectivityPortal = connectivity.WritePortal();
+    auto numIndicesPortal = numIndices.WritePortal();
+    for (vtkm::Id i = 0, connInd = 0; i < numCells; ++i)
     {
-      connectivityPortal.Set(connInd, static_cast<vtkm::Id>(*buffp++));
+      vtkm::IdComponent numInds = static_cast<vtkm::IdComponent>(*buffp++);
+      numIndicesPortal.Set(i, numInds);
+      for (vtkm::IdComponent j = 0; j < numInds; ++j, ++connInd)
+      {
+        connectivityPortal.Set(connInd, static_cast<vtkm::Id>(*buffp++));
+      }
+    }
+  }
+  else
+  {
+    vtkm::Id offsetsSize, connSize;
+    this->DataFile->Stream >> offsetsSize >> connSize >> std::ws;
+
+    std::string tag, dataType;
+    this->DataFile->Stream >> tag >> dataType >> std::ws;
+    internal::parseAssert(tag == "OFFSETS");
+    auto offsets =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, dataType, offsetsSize, 1);
+    offsets.CastAndCallForTypes<vtkm::List<vtkm::Int64, vtkm::Int32>,
+                                vtkm::List<vtkm::cont::StorageTagBasic>>(
+      [&](const auto& offsetsAH) {
+        vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleOffsetsToNumComponents(
+                                vtkm::cont::make_ArrayHandleCast(offsetsAH, vtkm::Id{})),
+                              numIndices);
+      });
+
+    this->DataFile->Stream >> tag >> dataType >> std::ws;
+    internal::parseAssert(tag == "CONNECTIVITY");
+    auto conn =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, dataType, connSize, 1);
+    if (conn.IsValueType<vtkm::Id>())
+    {
+      conn.AsArrayHandle(connectivity);
+    }
+    else
+    {
+      conn.CastAndCallForTypes<vtkm::List<vtkm::Int64, vtkm::Int32>,
+                               vtkm::List<vtkm::cont::StorageTagBasic>>(
+        [&](const auto& connAH) { vtkm::cont::ArrayCopy(connAH, connectivity); });
     }
   }
 }
