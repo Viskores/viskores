@@ -16,6 +16,7 @@
 #include <vtkm/TypeList.h>
 
 #include <vtkm/cont/CellSetList.h>
+#include <vtkm/cont/StorageList.h>
 
 #cmakedefine VTKM_ADD_XGC_DEFAULT_TYPES
 
@@ -110,17 +111,8 @@ using CellListAllOutVTK = vtkm::ListAppend<CellListStructuredOutVTK, CellListUns
 
 #ifdef VTKM_ADD_XGC_DEFAULT_TYPES
 using StorageListField = vtkm::ListAppend<
-  vtkm::cont::StorageListBasic,
-  vtkm::List<
-    vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                            vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                            vtkm::cont::ArrayHandle<vtkm::Float32>>::StorageTag,
-    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                            vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                            vtkm::cont::ArrayHandle<vtkm::Float64>>::StorageTag,
-    vtkm::cont::StorageTagXGCCoordinates
-    >>;
+  vtkm::cont::StorageListCommon,
+  vtkm::List<vtkm::cont::StorageTagXGCCoordinates>>;
 #endif
 
 } // end namespace tovtkm
