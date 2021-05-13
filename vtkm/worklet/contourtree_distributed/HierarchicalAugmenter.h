@@ -259,7 +259,7 @@ void HierarchicalAugmenter<FieldType>::Initialize(
   {
     vtkm::worklet::contourtree_distributed::hierarchical_augmenter::IsAttachementPointPredicate
       isAttachementPointPredicate(
-        this->BaseTree->Superarcs, this->BaseTree->whichRound, this->BaseTree->NumRounds);
+        this->BaseTree->Superarcs, this->BaseTree->WhichRound, this->BaseTree->NumRounds);
     vtkm::cont::Algorithm::CopyIf(
       // first we generate a list of all of the supernodes
       vtkm::cont::ArrayHandleIndex(this->BaseTree->Supernodes.GetNumberOfValues()),
@@ -1310,5 +1310,40 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
+
+namespace vtkmdiy
+{
+
+// Struct to serialize ContourTreeMesh objects (i.e., load/save) needed in parralle for DIY
+template <typename FieldType>
+struct Serialization<vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType>>
+{
+  static void save(
+    vtkmdiy::BinaryBuffer& bb,
+    const vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType>& ha)
+  {
+    vtkmdiy::save(bb, ha.OutGlobalRegularIds);
+    vtkmdiy::save(bb, ha.OutDataValues);
+    vtkmdiy::save(bb, ha.OutSupernodeIds);
+    vtkmdiy::save(bb, ha.OutSuperparents);
+    vtkmdiy::save(bb, ha.OutSuperparentRounds);
+    vtkmdiy::save(bb, ha.OutWhichRounds);
+  }
+
+  static void load(vtkmdiy::BinaryBuffer& bb,
+                   vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType>& ha)
+  {
+    // TODO/FIXME: Save to Out or some other array?
+    vtkmdiy::load(bb, ha.OutGlobalRegularIds);
+    vtkmdiy::load(bb, ha.OutDataValues);
+    vtkmdiy::load(bb, ha.OutSupernodeIds);
+    vtkmdiy::load(bb, ha.OutSuperparents);
+    vtkmdiy::load(bb, ha.OutSuperparentRounds);
+    vtkmdiy::load(bb, ha.OutWhichRounds);
+  }
+};
+
+} // namespace mangled_vtkmdiy_namespace
+
 
 #endif

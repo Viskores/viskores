@@ -56,6 +56,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalAugmenter.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -82,15 +84,22 @@ struct DistributedContourTreeBlockData
     delete static_cast<DistributedContourTreeBlockData<FieldType>*>(b);
   }
 
-  // Block data
+  // Block metadata
   vtkm::Id BlockIndex;
+  vtkm::Id3 BlockOrigin; // Origin of the data block
+  vtkm::Id3 BlockSize;   // Extends of the data block
+
+  // Fan in data
   std::vector<vtkm::worklet::contourtree_augmented::ContourTree> ContourTrees;
   std::vector<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>> ContourTreeMeshes;
   std::vector<vtkm::worklet::contourtree_distributed::InteriorForest> InteriorForests;
 
-  // Block metadata
-  vtkm::Id3 BlockOrigin; // Origin of the data block
-  vtkm::Id3 BlockSize;   // Extends of the data block
+  // Fan out data
+  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> HierarchicalTree;
+
+  // Augmentation phase
+  vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType> HierarchicalAugmenter;
+  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> AugmentedTree;
 };
 } // namespace contourtree_distributed
 } // namespace worklet

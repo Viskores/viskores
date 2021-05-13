@@ -118,6 +118,7 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
     bool useBoundaryExtremaOnly = true,
     bool useMarchingCubes = false,
+    bool augmentHierarchicalTree = false,
     bool saveDotFiles = false,
     vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
     vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info);
@@ -182,6 +183,9 @@ private:
 
   /// Use marching cubes connectivity for computing the contour tree
   bool UseMarchingCubes;
+
+  /// Augment hierarchical tree
+  bool AugmentHierarchicalTree;
 
   /// Save dot files for all tree computations
   bool SaveDotFiles;

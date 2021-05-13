@@ -840,6 +840,7 @@ int main(int argc, char* argv[])
                                                      localBlockSizes,
                                                      useBoundaryExtremaOnly,
                                                      useMarchingCubes,
+                                                     false,
                                                      saveDotFiles,
                                                      timingsLogLevel,
                                                      treeLogLevel);
