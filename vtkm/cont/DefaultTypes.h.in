@@ -46,30 +46,8 @@
 #endif //VTKM_DEFAULT_TYPE_LIST
 
 #ifndef VTKM_DEFAULT_STORAGE_LIST
-#include <vtkm/cont/ArrayHandleCartesianProduct.h>
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/StorageList.h>
-namespace vtkm
-{
-namespace cont
-{
-namespace internal
-{
-
-using StorageListField = vtkm::ListAppend<
-  vtkm::cont::StorageListBasic,
-  vtkm::List<
-    vtkm::cont::StorageTagSOA,
-    vtkm::cont::StorageTagUniformPoints,
-    vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
-                                           vtkm::cont::StorageTagBasic,
-                                           vtkm::cont::StorageTagBasic>>>;
-}
-}
-} // namespace vtkm::cont
-
-#define VTKM_DEFAULT_STORAGE_LIST ::vtkm::cont::internal::StorageListField
+#define VTKM_DEFAULT_STORAGE_LIST ::vtkm::cont::StorageListCommon
 #endif // VTKM_FIELD_STORAGE_LIST
 
 #ifndef VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED
