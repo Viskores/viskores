@@ -244,6 +244,10 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::InitializeIntrinsicVertexCou
     localInvoke; // Needed because this a static function so we can't use the invoke from the object
   // I.  Call the mesh to get a list of all regular vertices belonging to the block by global Id
   vtkm::worklet::contourtree_augmented::IdArrayType globalIds;
+  // TODO/FIXME: Even though the virtual function on DataSetMesh was removed in commit
+  // 93730495813f7b85e59d4a5dae2076977787fd78, this should call the correct function
+  // since MeshType is templated and should have the appropriate type. Verify that
+  // this is indeed correct.
   baseBlock.GetOwnedVerticesByGlobalId(localToGlobalIdRelabeler, globalIds);
   // and store the size for later reference
   hierarchicalTree.NumOwnedRegularVertices = globalIds.GetNumberOfValues();

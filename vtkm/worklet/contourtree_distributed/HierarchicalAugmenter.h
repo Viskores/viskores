@@ -1333,7 +1333,7 @@ struct Serialization<vtkm::worklet::contourtree_distributed::HierarchicalAugment
   static void load(vtkmdiy::BinaryBuffer& bb,
                    vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType>& ha)
   {
-    // TODO/FIXME: Save to Out or some other array?
+    // TODO/FIXME: Save to Out or some other array? Shoud possibly InGlobalRegularIds etc.. Please check!
     vtkmdiy::load(bb, ha.OutGlobalRegularIds);
     vtkmdiy::load(bb, ha.OutDataValues);
     vtkmdiy::load(bb, ha.OutSupernodeIds);
