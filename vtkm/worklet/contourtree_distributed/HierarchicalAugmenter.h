@@ -308,7 +308,7 @@ void HierarchicalAugmenter<FieldType>::Initialize(
       this->SuperparentRounds);
     //whichRounds[attachmentPoint]    = baseTree->whichRound[supernodeID];
     vtkm::cont::Algorithm::Copy(
-      vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->baseTree->WhichRound),
+      vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->BaseTree->WhichRound),
       this->WhichRounds);
 
     // get the ascending flag from the superparent's superarc and transfer to the superparent
@@ -524,9 +524,9 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   // We need to pull the firstAttachmentPointInRound array to the control environment
   // anyways for the loop afterwards so can do this set here without using Copy
   // Use regular WritePortal here since we need to update a number of values and the array should be small
-  auto firstAttachmentPointInRoundPortal = this - FirstAttachmentPointInRound.WritePortal();
-  firstAttachmentPointInRoundPortal.Set(this->BaseTree->nRounds + 1,
-                                        this->AttachmentIs.GetNumberOfValues());
+  auto firstAttachmentPointInRoundPortal = this->FirstAttachmentPointInRound.WritePortal();
+  firstAttachmentPointInRoundPortal.Set(this->BaseTree->NumRounds + 1,
+                                        this->AttachmentIds.GetNumberOfValues());
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -582,10 +582,10 @@ void HierarchicalAugmenter<FieldType>::CopyHyperstructure()
 
   // this chunk needs to be here to prevent the HierarchicalContourTree::DebugPrint() routine from crashing
   this->AugmentedTree->FirstSupernodePerIteration.resize(
-    this->baseTree->FirstSupernodePerIteration.size());
+    this->BaseTree->FirstSupernodePerIteration.size());
   // this loop doesn't need to be parallelised, as it is a small size: we will fill in values later
   for (vtkm::Id roundNumber = 0;
-       roundNumber < this->AugmentedTree->FirstSupernodePerIteration.GetNumberOfValues();
+       roundNumber < static_cast<vtkm::Id>(this->AugmentedTree->FirstSupernodePerIteration.size());
        roundNumber++)
   {
     vtkm::cont::Algorithm::Copy(
@@ -600,15 +600,15 @@ void HierarchicalAugmenter<FieldType>::CopyHyperstructure()
                               this->AugmentedTree->NumHypernodesInRound);
   vtkm::cont::Algorithm::Copy(this->BaseTree->NumIterations, this->AugmentedTree->NumIterations);
   this->AugmentedTree->FirstHypernodePerIteration.resize(
-    this->BaseTree->FirstHypernodePerIteration.GetNumberOfValues());
+    this->BaseTree->FirstHypernodePerIteration.size());
   // this loop doesn't need to be parallelised, as it is a small size
   for (vtkm::Id roundNumber = 0;
-       roundNumber < this->AugmentedTree->FirstHypernodePerIteration.GetNumberOfValues();
+       roundNumber < static_cast<vtkm::Id>(this->AugmentedTree->FirstHypernodePerIteration.size());
        roundNumber++)
   { // per round
     // duplicate the existing array
     vtkm::cont::Algorithm::Copy(this->BaseTree->FirstHypernodePerIteration[roundNumber],
-                                this->AugmentedTree->firstHypernodePerIteration[roundNumber]);
+                                this->AugmentedTree->FirstHypernodePerIteration[roundNumber]);
   } // per round
 
 #ifdef DEBUG_PRINT
@@ -755,7 +755,7 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
 
   // resize the regular arrays to fit
   vtkm::Id numRegNeeded = this->RegularNodesNeeded.GetNumberOfValues();
-  vtkm::Id numExistingRegular = this->AugmentedTree->rRgularNodeGlobalIDs.GetNumberOfValues();
+  vtkm::Id numExistingRegular = this->AugmentedTree->RegularNodeGlobalIds.GetNumberOfValues();
   vtkm::Id numTotalRegular = numExistingRegular + numRegNeeded;
   this->AugmentedTree->RegularNodeGlobalIds.Allocate(numTotalRegular);
   this->AugmentedTree->DataValues.Allocate(numTotalRegular);
@@ -804,7 +804,7 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
                                        numRegNeeded);      // fill until the end
     // input view of  augmentedTree->regularNodeSortOrder[numExistingRegular:]
     auto augmentedTreeRegularNodeSortOrderView =
-      vtkm::cont::make_ArrayHandleView(this->AugmentedTree->RegularNodeSortOrderView,
+      vtkm::cont::make_ArrayHandleView(this->AugmentedTree->RegularNodeSortOrder,
                                        numExistingRegular, // start writing at numExistingRegular
                                        numRegNeeded);      // fill until the end
     this->Invoke(copyBaseRegularStructureWorklet,          // worklet to call
@@ -941,8 +941,8 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
   // by allocating space and copying them in: this means another set of arrays for the individual elements.  However, we do not
   // need all of the data elements, since superparentRound is fixed (and equal to roundNumber inside this loop), and whichRound will be reset
   vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numSupernodesThisLevel),
-                              this->supernodeSorter);
-  this->GlobalRegularIDSet.Allocate(numSupernodesThisLevel);
+                              this->SupernodeSorter);
+  this->GlobalRegularIdSet.Allocate(numSupernodesThisLevel);
   this->DataValueSet.Allocate(numSupernodesThisLevel);
   this->SuperparentSet.Allocate(numSupernodesThisLevel);
   this->SupernodeIdSet.Allocate(numSupernodesThisLevel);
@@ -1059,7 +1059,7 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
   //  c.  Create a permutation array and sort supernode segment by a. superparent, b. value, d. global index to establish segments (reversing as needed)
   {
     vtkm::worklet::contourtree_distributed::hierarchical_augmenter::
-      AttachmentAndSupernodeComparator<vtkm::cont::ArrayHandle<FieldType>>
+      AttachmentAndSupernodeComparator<FieldType>
         attachmentAndSupernodeComparator(
           this->SuperparentSet, this->DataValueSet, this->GlobalRegularIdSet);
     vtkm::cont::Algorithm::Sort(this->SupernodeSorter, attachmentAndSupernodeComparator);
@@ -1080,7 +1080,7 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
         numSupernodesAlready);
     auto supernodeIndex = vtkm::cont::ArrayHandleIndex(this->SupernodeSorter.GetNumberOfValues());
     auto supernodeIdSetPermuted =
-      vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->supernodeIdSet);
+      vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->SupernodeIdSet);
     this->Invoke(
       resizeArraysBuildNewSupernodeIdsWorklet,
       supernodeIndex, // input domain. We only need the index because supernodeIdSetPermuted already does the permute
@@ -1117,6 +1117,7 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(vtkm::Id roundNumber)
         vtkm::cont::ArrayGetValue(roundNumber, this->AugmentedTree->NumIterations),
         roundNumber);
     // TODO: The CreateSuperarcsWorklet uses a lot of arrays and lots of WholeArrayTransfers. This could probably be further optimized.
+    // TODO: FIX invokation of this worklet
     this->Invoke(
       createSuperarcsWorklet,       // the worklet
       this->SupernodeSorter,        // input domain (we need access to InputIndex and InputIndex+1)
@@ -1131,19 +1132,19 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(vtkm::Id roundNumber)
       this->BaseTree->WhichRound,           // input
       this->BaseTree->WhichIteration,       // input
       this->DataValueSet,                   // input
-      ArrayHandleView(this->AugmentedTree->Superarcs,
-                      this->NumSupernodesAlready,
-                      this->SupernodeSorter.GetNumberOfValues()),   // output
-      this->AugmentedTree->Hyperparents,                            // input/output
-      this->AugmentedTree->FirstSupernodePerIteration[roundNumber], // input/output
-      this->AugmentedTree->Supernodes,                              // input/output
-      this->AugmentedTree->Super2hypernode,                         // input/ouput
-      this->AugmentedTree->WhichRound,                              // input/ouput
-      this->AugmentedTree->WhichIteration,                          // input/ouput
-      this->AugmentedTree->RegularNodeGlobalIds,                    //input/ ouput
-      this->AugmentedTree->DataValues,                              // input/ouput
-      this->AugmentedTree->Regular2Supernode,                       // input/ouput
-      this->AugmentedTree->Superparents                             // input/ouput
+      vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Superarcs,
+                                       numSupernodesAlready,
+                                       this->SupernodeSorter.GetNumberOfValues()), // output
+      this->AugmentedTree->Hyperparents,                                           // input/output
+      this->AugmentedTree->FirstSupernodePerIteration[roundNumber],                // input/output
+      this->AugmentedTree->Supernodes,                                             // input/output
+      this->AugmentedTree->Super2Hypernode,                                        // input/ouput
+      this->AugmentedTree->WhichRound,                                             // input/ouput
+      this->AugmentedTree->WhichIteration,                                         // input/ouput
+      this->AugmentedTree->RegularNodeGlobalIds,                                   //input/ ouput
+      this->AugmentedTree->DataValues,                                             // input/ouput
+      this->AugmentedTree->Regular2Supernode,                                      // input/ouput
+      this->AugmentedTree->Superparents                                            // input/ouput
     );
   }
 
@@ -1181,10 +1182,10 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(vtkm::Id roundNumber)
   // in the interests of debug, we resize the sorting array to zero here,
   // even though we will re-resize them in the next function
   this->SupernodeSorter.ReleaseResources();
-  this->GlobalRegularIDSet.ReleaseResources();
+  this->GlobalRegularIdSet.ReleaseResources();
   this->DataValueSet.ReleaseResources();
   this->SuperparentSet.ReleaseResources();
-  this->SupernodeIDSet.ReleaseResources();
+  this->SupernodeIdSet.ReleaseResources();
 } // CreateSuperarcs()
 
 

@@ -70,7 +70,7 @@ public:
     WholeArrayInOut
       newSupernodeIds // output/input (both are necessary since not all valyes will be overwritten)
   );
-  using ExecutionSignature = void(InputIndex, _1, _2, _3);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
   // Default Constructor

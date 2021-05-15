@@ -79,18 +79,18 @@ namespace hierarchical_augmenter
 ///
 ///  The superparent is assumed to have a flag indicating ascending/descending, and this
 ///  needs to be used to get the correct inwards ordering along each superarc
-template <typename FieldArrayType>
+template <typename FieldType>
 class AttachmentAndSupernodeComparatorImpl
 {
 public:
   using IdArrayPortalType =
     typename vtkm::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
-  using FieldArrayPortalType = typename FieldArrayType::ReadPortalType;
+  using FieldArrayPortalType = typename vtkm::cont::ArrayHandle<FieldType>::ReadPortalType;
 
   // constructor
   VTKM_CONT
   AttachmentAndSupernodeComparatorImpl(IdArrayPortalType superparentSetPortal,
-                                       IdArrayPortalType dataValueSetPortal,
+                                       FieldArrayPortalType dataValueSetPortal,
                                        IdArrayPortalType globalRegularIdSetPortal)
     : SuperparentSetPortal(superparentSetPortal)
     , DataValueSetPortal(dataValueSetPortal)
@@ -158,16 +158,16 @@ private:
 ///
 ///  The superparent is assumed to have a flag indicating ascending/descending, and this
 ///  needs to be used to get the correct inwards ordering along each superarc
-template <typename FieldArrayType>
+template <typename FieldType>
 class AttachmentAndSupernodeComparator : public vtkm::cont::ExecutionObjectBase
 {
 public:
   // constructor - takes vectors as parameters
   VTKM_CONT
   AttachmentAndSupernodeComparator(
-    const vtkm::worklet::contourtree_augmented::IdArrayType superparentSet,
-    const vtkm::worklet::contourtree_augmented::IdArrayType dataValueSet,
-    const vtkm::worklet::contourtree_augmented::IdArrayType globalRegularIdSet)
+    const vtkm::worklet::contourtree_augmented::IdArrayType& superparentSet,
+    const vtkm::cont::ArrayHandle<FieldType>& dataValueSet,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& globalRegularIdSet)
     : SuperparentSet(superparentSet)
     , DataValueSet(dataValueSet)
     , GlobalRegularIdSet(globalRegularIdSet)
@@ -175,11 +175,11 @@ public:
   } // constructor
 
   /// Create a AttachmentAndSupernodeComparatorImpl object for use in the sort or worklet
-  VTKM_CONT AttachmentAndSupernodeComparatorImpl<FieldArrayType> PrepareForExecution(
+  VTKM_CONT AttachmentAndSupernodeComparatorImpl<FieldType> PrepareForExecution(
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const
   {
-    return AttachmentAndSupernodeComparatorImpl<FieldArrayType>(
+    return AttachmentAndSupernodeComparatorImpl<FieldType>(
       this->SuperparentSet.PrepareForInput(device, token),
       this->DataValueSet.PrepareForInput(device, token),
       this->GlobalRegularIdSet.PrepareForInput(device, token));
@@ -189,7 +189,7 @@ private:
   /// the superparent Id
   vtkm::worklet::contourtree_augmented::IdArrayType SuperparentSet;
   /// the global rergular Id for tiebreak
-  FieldArrayType DataValueSet;
+  vtkm::cont::ArrayHandle<FieldType> DataValueSet;
   /// the supernode Id for tiebreak
   vtkm::worklet::contourtree_augmented::IdArrayType GlobalRegularIdSet;
 }; // AttachmentAndSupernodeComparator
