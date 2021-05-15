@@ -489,7 +489,7 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   //: note that we use a standard comparator that tie breaks with index. This separates into
   //    segments with identical superparent round, which is all we need for now
   vtkm::cont::Algorithm::Copy(
-    vtkm::cont::ArrayHandleIndex(this->GlobalRegularIds.GetNumberOfValues), this->AttachmentIds);
+    vtkm::cont::ArrayHandleIndex(this->GlobalRegularIds.GetNumberOfValues()), this->AttachmentIds);
 
   // 1a.  We now need to suppress duplicates,
   {
