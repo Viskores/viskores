@@ -260,17 +260,21 @@ void HierarchicalAugmenter<FieldType>::Initialize(
     vtkm::worklet::contourtree_distributed::hierarchical_augmenter::IsAttachementPointPredicate
       isAttachementPointPredicate(
         this->BaseTree->Superarcs, this->BaseTree->WhichRound, this->BaseTree->NumRounds);
+    auto tempSupernodeIndex =
+      vtkm::cont::ArrayHandleIndex(this->BaseTree->Supernodes.GetNumberOfValues());
     vtkm::cont::Algorithm::CopyIf(
-      // first we generate a list of all of the supernodes
-      vtkm::cont::ArrayHandleIndex(this->BaseTree->Supernodes.GetNumberOfValues()),
-      // then our stencil identifies all attachment points
+      // first a list of all of the supernodes
+      tempSupernodeIndex,
+      // then our stencil
+      tempSupernodeIndex,
+      // And the CopyIf compress the supernodes array to eliminate the non-attachement points and
+      // save to this->AttachmentIds
+      this->AttachmentIds,
+      // then our predicate identifies all attachment points
       // i.e., an attachment point is defined by having no superarc (NO_SUCH_ELEMENT) and not
       // being in the final round (where this indicates the global root) defined by the condition
       // if (noSuchElement(baseTree->superarcs[supernode]) && (baseTree->whichRound[supernode] < baseTree->nRounds))
-      isAttachementPointPredicate,
-      // And the CopyIf compress the supernodes array to eliminate the non-attachement points and
-      // save to this->AttachmentIds
-      this->AttachmentIds);
+      isAttachementPointPredicate);
   }
 
   // we now resize the working arrays
