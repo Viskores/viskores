@@ -1110,14 +1110,16 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(vtkm::Id roundNumber)
 
   //  e.  Connect superarcs for the level & set hyperparents & superchildren count, whichRound, whichIteration, super2hypernode
   {
-    vtkm::worklet::contourtree_distributed::hierarchical_augmenter::CreateSuperarcsWorklet
-      createSuperarcsWorklet(
-        numSupernodesAlready,
-        this->BaseTree->NumRounds,
-        vtkm::cont::ArrayGetValue(roundNumber, this->AugmentedTree->NumIterations),
-        roundNumber);
     // TODO: The CreateSuperarcsWorklet uses a lot of arrays and lots of WholeArrayTransfers. This could probably be further optimized.
     // TODO: FIX invokation of this worklet
+    std::logic_error("Invocation of CreateSuperarcsWorklet currently broken");
+    /*
+    vtkm::worklet::contourtree_distributed::hierarchical_augmenter::CreateSuperarcsWorklet
+    createSuperarcsWorklet(
+      numSupernodesAlready,
+      this->BaseTree->NumRounds,
+      vtkm::cont::ArrayGetValue(roundNumber, this->AugmentedTree->NumIterations),
+      roundNumber);
     this->Invoke(
       createSuperarcsWorklet,       // the worklet
       this->SupernodeSorter,        // input domain (we need access to InputIndex and InputIndex+1)
@@ -1132,20 +1134,21 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(vtkm::Id roundNumber)
       this->BaseTree->WhichRound,           // input
       this->BaseTree->WhichIteration,       // input
       this->DataValueSet,                   // input
-      vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Superarcs,
-                                       numSupernodesAlready,
-                                       this->SupernodeSorter.GetNumberOfValues()), // output
-      this->AugmentedTree->Hyperparents,                                           // input/output
-      this->AugmentedTree->FirstSupernodePerIteration[roundNumber],                // input/output
-      this->AugmentedTree->Supernodes,                                             // input/output
-      this->AugmentedTree->Super2Hypernode,                                        // input/ouput
-      this->AugmentedTree->WhichRound,                                             // input/ouput
-      this->AugmentedTree->WhichIteration,                                         // input/ouput
-      this->AugmentedTree->RegularNodeGlobalIds,                                   //input/ ouput
-      this->AugmentedTree->DataValues,                                             // input/ouput
-      this->AugmentedTree->Regular2Supernode,                                      // input/ouput
-      this->AugmentedTree->Superparents                                            // input/ouput
-    );
+      vtkm::cont::make_ArrayHandleView(
+          this->AugmentedTree->Superarcs,
+          numSupernodesAlready,
+          this->SupernodeSorter.GetNumberOfValues()),   // output
+      this->AugmentedTree->Hyperparents,                            // input/output
+      this->AugmentedTree->FirstSupernodePerIteration[roundNumber], // input/output
+      this->AugmentedTree->Supernodes,                              // input/output
+      this->AugmentedTree->Super2Hypernode,                         // input/ouput
+      this->AugmentedTree->WhichRound,                              // input/ouput
+      this->AugmentedTree->WhichIteration,                          // input/ouput
+      this->AugmentedTree->RegularNodeGlobalIds,                    //input/ ouput
+      this->AugmentedTree->DataValues,                              // input/ouput
+      this->AugmentedTree->Regular2Supernode,                       // input/ouput
+      this->AugmentedTree->Superparents                             // input/ouput
+    );*/
   }
 
   // We have one last bit of cleanup to do.  If there were attachment points, then the round in which they transfer has been removed
@@ -1315,6 +1318,7 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
+
 
 namespace vtkmdiy
 {
