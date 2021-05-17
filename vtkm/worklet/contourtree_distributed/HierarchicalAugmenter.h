@@ -314,12 +314,15 @@ void HierarchicalAugmenter<FieldType>::Initialize(
     // get the ascending flag from the superparent's superarc and transfer to the superparent
     // Array decorator to add the IS_ASCENDING flag to our superparent, i.e.,
     // if (isAscending(baseTree->superarcs[superparent])){ superparent |= IS_ASCENDING; }
-    auto isAscendingSuperparentArr = vtkm::cont::make_ArrayHandleDecorator(
+    // TODO: FIX The copy call fails bacause VTKm can't get the storage flag fomr the Permutted Array in the ArrayHandleDecorator
+    throw std::logic_error(
+      "The last copy call in HierarchicalAugmenter::Initalize is not compiling yet");
+    /*auto isAscendingSuperparentArr = vtkm::cont::make_ArrayHandleDecorator(
       superparents.GetNumberOfValues(),
       vtkm::worklet::contourtree_distributed::hierarchical_augmenter::IsAscendingDecorator{},
       superparents,
       this->BaseTree->Superarcs);
-    vtkm::cont::Algorithm::Copy(isAscendingSuperparentArr, superparents);
+    vtkm::cont::Algorithm::Copy(isAscendingSuperparentArr, superparents);*/
   }
 
   // clean up memory
