@@ -125,6 +125,23 @@ void TestReadingUnstructuredGrid(Format format)
                    "Incorrect cellset type");
 }
 
+void TestReadingV5Format(Format format)
+{
+  std::string testFileName = (format == FORMAT_ASCII)
+    ? vtkm::cont::testing::Testing::DataPath("unstructured/simple_unstructured_ascii_v5.vtk")
+    : vtkm::cont::testing::Testing::DataPath("unstructured/simple_unstructured_bin_v5.vtk");
+
+  vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
+
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 6, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 26, "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
+                   "Incorrect number of points (from cell set)");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 15, "Incorrect number of cells");
+  VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
+                   "Incorrect cellset type");
+}
+
 void TestReadingUnstructuredGridEmpty()
 {
   vtkm::cont::DataSet data =
@@ -468,6 +485,23 @@ void TestReadingFusion()
   VTKM_TEST_ASSERT(test_equal(zVecRange.Max, 0.480726));
 }
 
+void TestSkppingStringFields(Format format)
+{
+  std::string testFileName = (format == FORMAT_ASCII)
+    ? vtkm::cont::testing::Testing::DataPath("uniform/simple_structured_points_strings_ascii.vtk")
+    : vtkm::cont::testing::Testing::DataPath("uniform/simple_structured_points_strings_bin.vtk");
+
+  vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
+
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 1, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 72, "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 72,
+                   "Incorrect number of points (from cell set)");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 30, "Incorrect number of cells");
+  VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
+                   "Incorrect cellset type");
+}
+
 void TestReadingVTKDataSet()
 {
   std::cout << "Test reading VTK Polydata file in ASCII" << std::endl;
@@ -509,6 +543,16 @@ void TestReadingVTKDataSet()
   TestReadingASCIIFishTank();
   std::cout << "Test reading fusion" << std::endl;
   TestReadingFusion();
+
+  std::cout << "Test skipping string fields in ASCII files" << std::endl;
+  TestSkppingStringFields(FORMAT_ASCII);
+  std::cout << "Test skipping string fields in BINARY files" << std::endl;
+  TestSkppingStringFields(FORMAT_BINARY);
+
+  std::cout << "Test reading v5 file format in ASCII" << std::endl;
+  TestReadingV5Format(FORMAT_ASCII);
+  std::cout << "Test reading v5 file format in BINARY" << std::endl;
+  TestReadingV5Format(FORMAT_BINARY);
 }
 
 int UnitTestVTKDataSetReader(int argc, char* argv[])
