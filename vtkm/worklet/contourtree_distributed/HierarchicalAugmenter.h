@@ -1112,7 +1112,7 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(vtkm::Id roundNumber)
   {
     // TODO: The CreateSuperarcsWorklet uses a lot of arrays and lots of WholeArrayTransfers. This could probably be further optimized.
     // TODO: FIX invokation of this worklet
-    std::logic_error("Invocation of CreateSuperarcsWorklet currently broken");
+    throw std::logic_error("Invocation of CreateSuperarcsWorklet currently broken");
     /*
     vtkm::worklet::contourtree_distributed::hierarchical_augmenter::CreateSuperarcsWorklet
     createSuperarcsWorklet(
