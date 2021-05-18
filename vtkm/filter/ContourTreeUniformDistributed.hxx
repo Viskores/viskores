@@ -954,19 +954,53 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   if (this->AugmentHierarchicalTree)
   {
     master.foreach (
-      [&](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
-            blockData,
-          const vtkmdiy::Master::ProxyWithLink&) {
+      [](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
+           blockData,
+         const vtkmdiy::Master::ProxyWithLink&) {
         blockData->HierarchicalAugmenter.Initialize(
           blockData->BlockIndex, &blockData->HierarchicalTree, &blockData->AugmentedTree);
       });
 
     // TODO/FIXME: Exchange
+    vtkmdiy::reduce(
+      master,
+      assigner,
+      partners,
+      [](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
+           blockData,
+         const vtkmdiy::ReduceProxy& rp,
+         const vtkmdiy::RegularMergePartners&) {
+        auto round = rp.round();
+        const auto selfid = rp.gid();
+
+        for (int i = 0; i < rp.in_link().size(); ++i)
+        {
+          int ingid = rp.in_link().target(i).gid;
+          if (ingid == selfid)
+          {
+            worklet::contourtree_distributed::HierarchicalAugmenter<FieldType> inAugmenter;
+            rp.dequeue(ingid, inAugmenter);
+            blockData->HierarchicalAugmenter.RetrieveInAttachmentPoints(inAugmenter);
+          }
+        }
+
+        for (int i = 0; i < rp.out_link().size(); ++i)
+        {
+          auto target = rp.out_link().target(i);
+          if (target.gid != selfid)
+          {
+            blockData->HierarchicalAugmenter.PrepareOutAttachmentPoints(round);
+            // TODO/FIXME: Correct function? Correct round?
+            rp.enqueue(target, blockData->HierarchicalAugmenter);
+            blockData->HierarchicalAugmenter.ReleaseOutArrays(); // TODO/FIXME: Correct function?
+          }
+        }
+      });
 
     master.foreach (
-      [&](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
-            blockData,
-          const vtkmdiy::Master::ProxyWithLink&) {
+      [](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
+           blockData,
+         const vtkmdiy::Master::ProxyWithLink&) {
         blockData->HierarchicalAugmenter.BuildAugmentedTree();
       });
   }
