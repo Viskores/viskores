@@ -953,13 +953,15 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   if (this->AugmentHierarchicalTree)
   {
-    master.foreach (
-      [](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
-           blockData,
-         const vtkmdiy::Master::ProxyWithLink&) {
-        blockData->HierarchicalAugmenter.Initialize(
-          blockData->BlockIndex, &blockData->HierarchicalTree, &blockData->AugmentedTree);
-      });
+    master.foreach ([](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<
+                         FieldType>* blockData,
+                       const vtkmdiy::Master::ProxyWithLink&) {
+      blockData->HierarchicalAugmenter.Initialize(
+        blockData->BlockIndex,
+        &blockData->HierarchicalTree,
+        &blockData
+           ->AugmentedTree); // TODO/FIXME: Is BlockIndex really global block index or just local; this should use global block index
+    });
 
     // TODO/FIXME: Exchange
     vtkmdiy::reduce(
@@ -977,7 +979,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         {
           int ingid = rp.in_link().target(i).gid;
           if (ingid == selfid)
-          {
+          { // Receive and augment
             worklet::contourtree_distributed::HierarchicalAugmenter<FieldType> inAugmenter;
             rp.dequeue(ingid, inAugmenter);
             blockData->HierarchicalAugmenter.RetrieveInAttachmentPoints(inAugmenter);
@@ -988,7 +990,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         {
           auto target = rp.out_link().target(i);
           if (target.gid != selfid)
-          {
+          { // Send to partner
             blockData->HierarchicalAugmenter.PrepareOutAttachmentPoints(round);
             // TODO/FIXME: Correct function? Correct round?
             rp.enqueue(target, blockData->HierarchicalAugmenter);
