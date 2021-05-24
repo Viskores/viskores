@@ -64,148 +64,115 @@ namespace hierarchical_augmenter
 class CreateSuperarcsWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  // VTKm only defines 20 placeholders for the execution signature, but we need a few more here
-  using _21 = vtkm::placeholders::Arg<21>;
-  using _22 = vtkm::placeholders::Arg<22>;
-  using _23 = vtkm::placeholders::Arg<23>;
+  // TODO: Check if augmentedTreeFirstSupernodePerIteration could be changed to WholeArrayOut or if we need the In to preserve orignal values
 
-  // TODO: This worklet could probably be optimized further to reduce the use of WholeArray passing
   /// Control signature for the worklet
+  /// @param[in] supernodeSorter input domain. We need access to InputIndex and InputIndex+1,
+  ///                           therefore this is a WholeArrayIn transfer.
+  /// @param[in] superparentSet WholeArrayIn because we need access to superparentSet[supernodeSorter[InputIndex]]
+  ///                           and superparentSet[supernodeSorter[InputIndex+1]].
+  /// @param[in] baseTreeSuperarcs WholeArrayIn because we need access to baseTreeSuperarcsPortal.Get(superparentOldSuperId)
+  ///                           While this could be done with fancy array magic, it would require a sequence of multiple
+  ///                           fancy arrays and would likely not be cheaper then computing things in the worklet.
+  /// @param[in] newSupernodeIds WholeArrayIn because we need to access newSupernodeIdsPortal.Get(oldTargetSuperId)
+  ///                           where oldTargetSuperId is the unmasked baseTreeSuperarcsPortal.Get(superparentOldSuperId)
+  /// @param[in] baseTreeSupernodes WholeArrayIn because we need to access baseTreeSupernodesPortal.Get(superparentOldSuperId);
+  /// @param[in] baseTreeRegularNodeGlobalIds WholeArrayIn because we need to access
+  ///                           baseTreeRegularNodeGlobalIdsPortal.Get(superparentOldSuperId);
+  /// @param[in] globalRegularIdSet FieldInd. Permute globalRegularIdSet with supernodeSorter in order to allow this to be a FieldIn.
+  /// @param[in] baseTreeSuper2Hypernode WholeArrayIn because we need to access
+  ///                           baseTreeSuper2HypernodePortal.Get(superparentOldSuperId)
+  /// @param[in] baseTreeWhichIteration WholeArrayIn because we need to access baseTreeWhichIterationPortal.Get(superparentOldSuperId)
+  ///                           and baseTreeWhichIterationPortal.Get(superparentOldSuperId+1)
+  /// @param[in] augmentedTreeSuperarcsView  output view of  this->AugmentedTree->Superarcs with
+  ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Superarcs,
+  ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
+  ///                           By using this view allows us to do this one as a FieldOut and it effectively the
+  ///                           same as accessing the array at the newSuppernodeId location.
+  /// @param[in] augmentedTreeFirstSupernodePerIteration WholeArrayInOut because we need to update multiple locations.
+  ///                           In is used to preseve original values. Set to augmentedTree->firstSupernodePerIteration[roundNumber].
+  /// @param[in] augmentedTreeSuper2hypernode FieldOut. Output view of this->AugmentedTree->Super2Hypernode
+  ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Super2Hypernode,
+  ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
+  ///                           By using this view allows us to do this one as a FieldOut and it effectively the
+  ///                           same as accessing the array at the newSuppernodeId location.
   using ControlSignature = void(
-    WholeArrayIn supernodeSorter,   // input domain (we need access to InputIndex and InputIndex+1)
-    WholeArrayIn superparentSet,    // input
-    WholeArrayIn baseTreeSuperarcs, // input
-    WholeArrayIn newSupernodeIds,   // input
-    WholeArrayIn
-      baseTreeHyperparents, // input TODO: could potentially be a FieldIn with some array shuffle magic
-    WholeArrayIn
-      baseTreeSupernodes, // input TODO: could potentially be a FieldIn with some array shuffle magic
-    WholeArrayIn
-      baseTreeRegularNodeGlobalIds, // input TODO: could potentially be a FieldIn with some array shuffle magic
-    WholeArrayIn
-      globalRegularIdSet, // input TODO: could potentially be a FieldIn with some array shuffle magic
-    WholeArrayIn baseTreeSuper2Hypernode, // input TODO: FieldIn possible with array shuffle?
-    WholeArrayIn baseTreeWhichRound,      // input TODO: FieldIn possible with array shuffle?
-    WholeArrayIn baseTreeWhichIteration,  // input TODO: FieldIn possible with array shuffle?
-    WholeArrayIn dataValueSet,            // input TODO: FieldIn possible with array shuffle?
-    FieldOut
-      augmentedTreeSuperarcsView, // output view of ArrayHandleView(this->AugmentedTree->Superarcs[, this->NumSupernodesAlready, this->SupernodeSorter.GetNumberOfValues())
-    WholeArrayInOut augmentedTreeHyperparents, // input/output
-    WholeArrayInOut
-      augmentedTreeFirstSupernodePerIteration, // input/output augmentedTree->firstSupernodePerIteration[roundNumber]
-    WholeArrayInOut
-      augmentedTreeSupernodes, // input/output  TODO: Could potentially change to FieldIn/FieldInOut when permutting the array
-    WholeArrayInOut
-      augmentedTreeSuper2hypernode, // input/ouput  TODO: Is FieldOut possible with array shuffle?
-    WholeArrayInOut
-      augmentedTreeWhichRound, // input/ouput  TODO: Is FieldOut possible with array shuffle?
-    WholeArrayInOut
-      augmentedTreeWhichIteration, // input/ouput  TODO: Is FieldOut possible with array shuffle?
-    WholeArrayInOut
-      augmentedTreeRegularNodeGlobalIds, // input/ouput  TODO: Is FieldOut possible with array shuffle?
-    WholeArrayInOut
-      augmentedTreeDataValues, // input/ouput  TODO: Is FieldOut possible with array shuffle?
-    WholeArrayInOut
-      augmentedTreeRegular2Supernode, // input/ouput  TODO: Is FieldOut possible with array shuffle?
-    WholeArrayInOut
-      augmentedTreeSuperparents // input/ouput  TODO: Is FieldOut possible with array shuffle?
+    WholeArrayIn supernodeSorter,
+    WholeArrayIn superparentSet,                             // input
+    WholeArrayIn baseTreeSuperarcs,                          // input
+    WholeArrayIn newSupernodeIds,                            // input
+    WholeArrayIn baseTreeSupernodes,                         // input
+    WholeArrayIn baseTreeRegularNodeGlobalIds,               // input
+    FieldIn globalRegularIdSet,                              // input
+    WholeArrayIn baseTreeSuper2Hypernode,                    // input
+    WholeArrayIn baseTreeWhichIteration,                     // input
+    FieldOut augmentedTreeSuperarcsView,                     // output
+    WholeArrayInOut augmentedTreeFirstSupernodePerIteration, // input/output
+    FieldOut augmentedTreeSuper2hypernode                    // ouput
   );
-  using ExecutionSignature = void(InputIndex,
-                                  _1,
-                                  _2,
-                                  _3,
-                                  _4,
-                                  _5,
-                                  _6,
-                                  _7,
-                                  _8,
-                                  _9,
-                                  _10,
-                                  _11,
-                                  _12,
-                                  _13,
-                                  _14,
-                                  _15,
-                                  _16,
-                                  _17,
-                                  _18,
-                                  _19,
-                                  _20,
-                                  _21,
-                                  _22,
-                                  _23);
+  using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12);
   using InputDomain = _1;
 
   /// Default Constructor
+  /// @param[in] numSupernodesAlready Set to vtkm::cont::ArrayGetValue(0, this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
+  /// @param[in] baseTreeNumRounds Set to this->BaseTree->NumRounds
+  /// @param[in] augmentedTreeNumIterations Set to  vtkm::cont::ArrayGetValue(roundNumber, this->AugmentedTree->NumIterations);
+  /// @param[in] roundNumber Set the current round
+  /// @param[in] numAugmentedTreeSupernodes Set to augmentedTreeSupernodes this->AugmentedTree->Supernodes.GetNumberOfValues();
   VTKM_EXEC_CONT
-  CreateSuperarcsWorklet(
-    const vtkm::Id& numSupernodesAlready,
-    const vtkm::Id& baseTreeNumRounds,
-    const vtkm::Id&
-      augmentedTreeNumIterations, // set to vtkm::cont::ArrayGetValue(roundNumber, this->AugmentedTree->NumIterations)
-    const vtkm::Id& roundNumber)
+  CreateSuperarcsWorklet(const vtkm::Id& numSupernodesAlready,
+                         const vtkm::Id& baseTreeNumRounds,
+                         const vtkm::Id& augmentedTreeNumIterations,
+                         const vtkm::Id& roundNumber,
+                         const vtkm::Id& numAugmentedTreeSupernodes)
     : NumSupernodesAlready(numSupernodesAlready)
     , BaseTreeNumRounds(baseTreeNumRounds)
     , AugmentedTreeNumIterations(augmentedTreeNumIterations)
     , RoundNumber(roundNumber)
-
+    , NumAugmentedTreeSupernodes(numAugmentedTreeSupernodes)
   {
   }
 
   /// operator() of the workelt
-  template <typename InFieldPortalType,
-            typename InFieldPortalType2,
-            typename InOutFieldPortalType,
-            typename InOutFieldPortalType2>
+  template <typename InFieldPortalType, typename InOutFieldPortalType>
   VTKM_EXEC void operator()(
     const vtkm::Id& supernode, // InputIndex of supernodeSorter
     const InFieldPortalType& supernodeSorterPortal,
     const InFieldPortalType& superparentSetPortal,
     const InFieldPortalType& baseTreeSuperarcsPortal,
     const InFieldPortalType& newSupernodeIdsPortal,
-    const InFieldPortalType& baseTreeHyperparentsPortal,
     const InFieldPortalType& baseTreeSupernodesPortal,
     const InFieldPortalType& baseTreeRegularNodeGlobalIdsPortal,
-    const InFieldPortalType& globalRegularIdSetPortal,
-    const InFieldPortalType& baseTreeSuper2hypernodePortal,
-    const InFieldPortalType& baseTreeWhichRoundPortal,
+    const vtkm::Id& globalRegularIdSetValue,
+    const InFieldPortalType& baseTreeSuper2HypernodePortal,
     const InFieldPortalType& baseTreeWhichIterationPortal,
-    const InFieldPortalType2& dataValueSetPortal,
     vtkm::Id& augmentedTreeSuperarcsValue, // same as augmentedTree->superarcs[newSupernodeId]
-    const InOutFieldPortalType& augmentedTreeHyperparentsPortal,
     const InOutFieldPortalType&
       augmentedTreeFirstSupernodePerIterationPortal, // augmentedTree->firstSupernodePerIteration[roundNumber]
-    const InOutFieldPortalType& augmentedTreeSupernodesPortal,
-    const InOutFieldPortalType& augmentedTreeSuper2hypernodePortal,
-    const InOutFieldPortalType& augmentedTreeWhichRoundPortal,
-    const InOutFieldPortalType& augmentedTreeWhichIterationPortal,
-    const InOutFieldPortalType& augmentedTreeRegularNodeGlobalIdsPortal,
-    const InOutFieldPortalType2& augmentedTreeDataValuesPortal,
-    const InOutFieldPortalType& augmentedTreeRegular2SupernodePortal,
-    const InOutFieldPortalType& augmentedTreeSuperparentsPortal) const
+    vtkm::Id& augmentedTreeSuper2hypernodeValue) const
   {
     // per supernode in the set
     // retrieve the index from the sorting index array
     vtkm::Id supernodeSetIndex = supernodeSorterPortal.Get(supernode);
 
-    // work out the new supernode Id
+    // work out the new supernode Id. We have this defined on the outside as a fancy array handle,
+    // however, using the fancy handle here would not really make a performance differnce and
+    // computing it here is more readable
     vtkm::Id newSupernodeId = this->NumSupernodesAlready + supernode;
 
-    // At all levels above 0, we used to keep regular vertices in case
-    // they are attachment points.  After augmentation, we don't need to.
-    // Instead, at all levels above 0, the regular nodes in each round
-    // are identical to the supernodes. In order to avoid confusion,
-    // we will copy the Id into a separate variable
-    vtkm::Id newRegularId = newSupernodeId;
+    // NOTE: The newRegularId is no longer needed here since all parts
+    //       that used it in the worklet have been moved outside
+    // vtkm::Id newRegularId = newSupernodeId;
 
-    // setting the supernode's regular Id is now trivial
-    augmentedTreeSupernodesPortal.Set(newSupernodeId, newRegularId);
+    // NOTE: This part has been moved out of the worklet and is performed using standard vtkm copy constructs
+    // // setting the supernode's regular Id is now trivial
+    // augmentedTreeSupernodesPortal.Set(newSupernodeId, newRegularId);
 
     // retrieve the ascending flag from the superparent
     vtkm::Id superparentSetVal = superparentSetPortal.Get(supernodeSetIndex);
+    // get the ascending flag from the parent
     bool superarcAscends = vtkm::worklet::contourtree_augmented::IsAscending(superparentSetVal);
-
-    // strip the ascending flag from the superparent
+    // strip the ascending flag from the superparent.
     vtkm::Id superparentOldSuperId =
       vtkm::worklet::contourtree_augmented::MaskedIndex(superparentSetVal);
 
@@ -234,8 +201,8 @@ public:
           (superarcAscends ? vtkm::worklet::contourtree_augmented::IS_ASCENDING : 0x00);
       } // not the tree root
       // since there's an extra entry in the firstSupernode array as a sentinel, set it
-      augmentedTreeFirstSupernodePerIterationPortal.Set(
-        this->AugmentedTreeNumIterations, augmentedTreeSupernodesPortal.GetNumberOfValues());
+      augmentedTreeFirstSupernodePerIterationPortal.Set(this->AugmentedTreeNumIterations,
+                                                        NumAugmentedTreeSupernodes);
     } // last in the array
     else if (superparentOldSuperId !=
              vtkm::worklet::contourtree_augmented::MaskedIndex(
@@ -273,47 +240,50 @@ public:
     // set the first supernode in the first iteration to the beginning of the round
     augmentedTreeFirstSupernodePerIterationPortal.Set(0, this->NumSupernodesAlready);
 
-    // setting the hyperparent is straightforward since the hyperstructure is preserved
-    // we take the superparent (which is guaranteed to be in the baseTree), find it's hyperparent and use that
-    augmentedTreeHyperparentsPortal.Set(newSupernodeId,
-                                        baseTreeHyperparentsPortal.Get(superparentOldSuperId));
 
+    // NOTE: This part has been moved out of the worklet and is performed using standard vtkm copy constructs
+    // // setting the hyperparent is straightforward since the hyperstructure is preserved
+    // // we take the superparent (which is guaranteed to be in the baseTree), find it's hyperparent and use that
+    // augmentedTreeHyperparentsPortal.Set(newSupernodeId, baseTreeHyperparentsPortal.Get(superparentOldSuperId));
+
+    // NOTE: This part could potentially be made a separate worklet but it does not seem necessary
     // similarly, the super2hypernode should carry over, but it's harder to test because of the attachment points which
     // do not have valid old supernode Ids.  Instead, we check their superparent's regular global Id against them: if it
     // matches, then it must be the start of the superarc, in which case it does have an old Id, and we can then use the
     // existing hypernode Id
     vtkm::Id superparentOldRegularId = baseTreeSupernodesPortal.Get(superparentOldSuperId);
     vtkm::Id superparentGlobalId = baseTreeRegularNodeGlobalIdsPortal.Get(superparentOldRegularId);
-    if (superparentGlobalId == globalRegularIdSetPortal.Get(supernodeSetIndex))
+    // Here: globalRegularIdSetValue is the same as globalRegularIdSetPortal.Get(supernodeSetIndex)
+    if (superparentGlobalId == globalRegularIdSetValue)
     {
-      augmentedTreeSuper2hypernodePortal.Set(
-        newSupernodeId, baseTreeSuper2hypernodePortal.Get(superparentOldSuperId));
+      // augmentedTreeSuper2hypernodePortal.Set(newSupernodeId, baseTreeSuper2HypernodePortal.Get(superparentOldSuperId));
+      augmentedTreeSuper2hypernodeValue = baseTreeSuper2HypernodePortal.Get(superparentOldSuperId);
     }
     else
     {
-      augmentedTreeSuper2hypernodePortal.Set(newSupernodeId,
-                                             vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+      // augmentedTreeSuper2hypernodePortal.Set(newSupernodeId, vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+      augmentedTreeSuper2hypernodeValue = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
     }
 
-    // which round and iteration carry over
-    augmentedTreeWhichRoundPortal.Set(newSupernodeId,
-                                      baseTreeWhichRoundPortal.Get(superparentOldSuperId));
-    augmentedTreeWhichIterationPortal.Set(newSupernodeId,
-                                          baseTreeWhichIterationPortal.Get(superparentOldSuperId));
+    // NOTE: This part has been moved out of the worklet and is performed using standard vtkm copy constructs
+    // // which round and iteration carry over
+    // augmentedTreeWhichRoundPortal.Set(newSupernodeId, baseTreeWhichRoundPortal.Get(superparentOldSuperId));
+    // augmentedTreeWhichIterationPortal.Set(newSupernodeId, baseTreeWhichIterationPortal.Get(superparentOldSuperId));
 
     // now we deal with the regular-sized arrays
 
-    // copy the global regular Id and data value
-    augmentedTreeRegularNodeGlobalIdsPortal.Set(newRegularId,
-                                                globalRegularIdSetPortal.Get(supernodeSetIndex));
-    augmentedTreeDataValuesPortal.Set(newRegularId, dataValueSetPortal.Get(supernodeSetIndex));
+    // NOTE: This part has been moved out of the worklet and is performed using standard vtkm copy constructs
+    // // copy the global regular Id and data value
+    // augmentedTreeRegularNodeGlobalIdsPortal.Set(newRegularId, globalRegularIdSetPortal.Get(supernodeSetIndex));
+    // augmentedTreeDataValuesPortal.Set(newRegularId, dataValueSetPortal.Get(supernodeSetIndex));
 
-    // the sort order will be dealt with later
-    // since all of these nodes are supernodes, they will be their own superparent, which means that:
-    //  a.  the regular2node can be set immediately
-    augmentedTreeRegular2SupernodePortal.Set(newRegularId, newSupernodeId);
-    //  b.  as can the superparent
-    augmentedTreeSuperparentsPortal.Set(newRegularId, newSupernodeId);
+    // NOTE: This part has been moved out of the worklet and is performed using standard vtkm copy constructs
+    // // the sort order will be dealt with later
+    // // since all of these nodes are supernodes, they will be their own superparent, which means that:
+    // //  a.  the regular2node can be set immediately
+    // augmentedTreeRegular2SupernodePortal.Set(newRegularId, newSupernodeId);
+    // //  b.  as can the superparent
+    // augmentedTreeSuperparentsPortal.Set(newRegularId, newSupernodeId);
 
     // In serial this worklet implements the following operation
     /*
@@ -434,6 +404,7 @@ private:
   const vtkm::Id BaseTreeNumRounds;
   const vtkm::Id AugmentedTreeNumIterations;
   const vtkm::Id RoundNumber;
+  const vtkm::Id NumAugmentedTreeSupernodes;
 
 }; // CreateSuperarcsWorklet
 

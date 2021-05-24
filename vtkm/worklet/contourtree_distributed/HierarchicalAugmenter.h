@@ -342,14 +342,18 @@ void HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints(vtkm::Id round
     vtkm::worklet::contourtree_distributed::hierarchical_augmenter::
       IsAttachementPointNeededPredicate isAttachementPointNeededPredicate(
         this->SuperparentRounds, this->WhichRounds, round);
+    auto tempAttachmentPointsIndex =
+      vtkm::cont::ArrayHandleIndex(this->GlobalRegularIds.GetNumberOfValues());
     vtkm::cont::Algorithm::CopyIf(
-      // 1.  generate a list of all of the attachment points
-      vtkm::cont::ArrayHandleIndex(this - GlobalRegularIds.GetNumberOfValues()),
-      // 2. then our stencil identifies all attachment points needed
-      isAttachementPointNeededPredicate,
-      // 3. And the CopyIf compress the supernodes array to eliminate the non-attachement points and
-      // save to this->AttachmentIds
-      this->AttachmentIds);
+      // 1. fancy array of all of the attachment points of which parts are copied to this->AttachmentIds
+      tempAttachmentPointsIndex, // input
+      // 2. stencil used with the predicate to decide which AttachementIds to keep
+      tempAttachmentPointsIndex, // stencil
+      // 3. CopyIf compress the supernodes array to eliminate the non-attachement
+      //    points and save to this->AttachmentIds
+      this->AttachmentIds,
+      // 4. the unary predicate uses the stencil to identify all attachment points needed
+      isAttachementPointNeededPredicate);
   }
 
   //  4.  resize the out array
@@ -369,19 +373,19 @@ void HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints(vtkm::Id round
     // outDataValues[outAttachmentPoint]  =  dataValues[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->DataValues),
-      this->outDataValues);
+      this->OutDataValues);
     // outSupernodeIDs[outAttachmentPoint]  =  supernodeIDs[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->SupernodeIds),
       this->OutSupernodeIds);
     // outSuperparents[outAttachmentPoint]  =  superparents[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
-      vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->superparents),
-      this->outSuperparents);
+      vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->Superparents),
+      this->OutSuperparents);
     // outSuperparentRounds[outAttachmentPoint]  =  superparentRounds[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->SuperparentRounds),
-      this->outSuperparentRounds);
+      this->OutSuperparentRounds);
     // outWhichRounds[outAttachmentPoint]  =  whichRounds[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->WhichRounds),
@@ -405,9 +409,9 @@ void HierarchicalAugmenter<FieldType>::RetrieveInAttachmentPoints(HierarchicalAu
   vtkm::Id numTotalAttachments = numAttachmentsCurrently + numIncomingAttachments;
 
   // I.  resize the existing arrays
-  this->GlobalRegularIDs.Allocate(numTotalAttachments);
+  this->GlobalRegularIds.Allocate(numTotalAttachments);
   this->DataValues.Allocate(numTotalAttachments);
-  this->SupernodeIDs.Allocate(numTotalAttachments);
+  this->SupernodeIds.Allocate(numTotalAttachments);
   this->Superparents.Allocate(numTotalAttachments);
   this->SuperparentRounds.Allocate(numTotalAttachments);
   this->WhichRounds.Allocate(numTotalAttachments);
@@ -417,36 +421,31 @@ void HierarchicalAugmenter<FieldType>::RetrieveInAttachmentPoints(HierarchicalAu
     // The following sequence of copy operations implements the following for from the orginal code
     // for (vtkm::Id outAttachmentPoint = 0; outAttachmentPoint < partner.outGlobalRegularIDs.size(); outAttachmentPoint++)
     // globalRegularIDs[attachmentPoint]  =  partner.outGlobalRegularIDs[outAttachmentPoint];
-    vtkm::cont::Algorithm::Copy(partner.OutGlobalRegularIds,
-                                vtkm::cont::make_ArrayHandleView(this->GlobalRegularIds,
-                                                                 numAttachmentsCurrently,
-                                                                 numIncomingAttachments));
+    auto tempGlobalRegularIdsView = vtkm::cont::make_ArrayHandleView(
+      this->GlobalRegularIds, numAttachmentsCurrently, numIncomingAttachments);
+    vtkm::cont::Algorithm::Copy(partner.OutGlobalRegularIds, tempGlobalRegularIdsView);
     // dataValues[attachmentPoint]  =  partner.outDataValues[outAttachmentPoint];
-    vtkm::cont::Algorithm::Copy(partner.OutDataValues,
-                                vtkm::cont::make_ArrayHandleView(this->DataValues,
-                                                                 numAttachmentsCurrently,
-                                                                 numIncomingAttachments));
+    auto tempDataValuesView = vtkm::cont::make_ArrayHandleView(
+      this->DataValues, numAttachmentsCurrently, numIncomingAttachments);
+    vtkm::cont::Algorithm::Copy(partner.OutDataValues, tempDataValuesView);
     // supernodeIDs[attachmentPoint]  =  NO_SUCH_ELEMENT;
-    vtkm::cont::Algorithm::Copy(
-      vtkm::cont::make_ArrayHandleConstant(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                           numIncomingAttachments),
-      vtkm::cont::make_ArrayHandleView(
-        this->SupernodeIds, numAttachmentsCurrently, numIncomingAttachments));
+    auto tempNoSuchElementArr = vtkm::cont::make_ArrayHandleConstant(
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT, numIncomingAttachments);
+    auto tempSupernodeIdsView = vtkm::cont::make_ArrayHandleView(
+      this->SupernodeIds, numAttachmentsCurrently, numIncomingAttachments);
+    vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, tempSupernodeIdsView);
     // superparents[attachmentPoint]  =  partner.outSuperparents[outAttachmentPoint];
-    vtkm::cont::Algorithm::Copy(partner.outSuperparents,
-                                vtkm::cont::make_ArrayHandleView(this->Superparents,
-                                                                 numAttachmentsCurrently,
-                                                                 numIncomingAttachments));
+    auto tempSuperparentsView = vtkm::cont::make_ArrayHandleView(
+      this->Superparents, numAttachmentsCurrently, numIncomingAttachments);
+    vtkm::cont::Algorithm::Copy(partner.OutSuperparents, tempSuperparentsView);
     // superparentRounds[attachmentPoint]  =  partner.outSuperparentRounds[outAttachmentPoint];
-    vtkm::cont::Algorithm::Copy(partner.outSuperparentRounds,
-                                vtkm::cont::make_ArrayHandleView(this->SuperparentRounds,
-                                                                 numAttachmentsCurrently,
-                                                                 numIncomingAttachments));
+    auto tempSuperparentRoundsView = vtkm::cont::make_ArrayHandleView(
+      this->SuperparentRounds, numAttachmentsCurrently, numIncomingAttachments);
+    vtkm::cont::Algorithm::Copy(partner.OutSuperparentRounds, tempSuperparentRoundsView);
     // whichRounds[attachmentPoint]  =  partner.outWhichRounds[outAttachmentPoint];
-    vtkm::cont::Algorithm::Copy(partner.OutWhichRounds,
-                                vtkm::cont::make_ArrayHandleView(this->WhichRounds,
-                                                                 numAttachmentsCurrently,
-                                                                 numIncomingAttachments));
+    auto tempWhichRoundsView = vtkm::cont::make_ArrayHandleView(
+      this->WhichRounds, numAttachmentsCurrently, numIncomingAttachments);
+    vtkm::cont::Algorithm::Copy(partner.OutWhichRounds, tempWhichRoundsView);
   }
 } // RetrieveInAttachmentPoints()
 
@@ -455,9 +454,9 @@ void HierarchicalAugmenter<FieldType>::RetrieveInAttachmentPoints(HierarchicalAu
 template <typename FieldType>
 void HierarchicalAugmenter<FieldType>::ReleaseOutArrays()
 { // ReleaseOutArrays()
-  this->OutGlobalRegularIDs.ReleaseResources();
+  this->OutGlobalRegularIds.ReleaseResources();
   this->OutDataValues.ReleaseResources();
-  this->OutSupernodeIDs.ReleaseResources();
+  this->OutSupernodeIds.ReleaseResources();
   this->OutSuperparents.ReleaseResources();
   this->OutSuperparentRounds.ReleaseResources();
   this->OutWhichRounds.ReleaseResources();
@@ -1110,52 +1109,136 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
 template <typename FieldType>
 void HierarchicalAugmenter<FieldType>::CreateSuperarcs(vtkm::Id roundNumber)
 { // CreateSuperarcs()
-  // retrieve the ID number of the first supernode at this leverl
+  // retrieve the ID number of the first supernode at this level
   vtkm::Id numSupernodesAlready =
     vtkm::cont::ArrayGetValue(0, this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
 
   //  e.  Connect superarcs for the level & set hyperparents & superchildren count, whichRound, whichIteration, super2hypernode
-  {
-    // TODO: The CreateSuperarcsWorklet uses a lot of arrays and lots of WholeArrayTransfers. This could probably be further optimized.
-    // TODO: FIX invokation of this worklet
-    throw std::logic_error("Invocation of CreateSuperarcsWorklet currently broken");
-    /*
-    vtkm::worklet::contourtree_distributed::hierarchical_augmenter::CreateSuperarcsWorklet
-    createSuperarcsWorklet(
-      numSupernodesAlready,
-      this->BaseTree->NumRounds,
-      vtkm::cont::ArrayGetValue(roundNumber, this->AugmentedTree->NumIterations),
-      roundNumber);
-    this->Invoke(
-      createSuperarcsWorklet,       // the worklet
-      this->SupernodeSorter,        // input domain (we need access to InputIndex and InputIndex+1)
-      this->SuperparentSet,         // input
-      this->BaseTree->Superarcs,    // input
-      this->NewSupernodeIds,        // input
-      this->BaseTree->Hyperparents, // input
-      this->BaseTree->Supernodes,   // input
-      this->BaseTree->RegularNodeGlobalIds, // input
-      this->GlobalRegularIdSet,             // input
-      this->BaseTree->Super2Hypernode,      // input
-      this->BaseTree->WhichRound,           // input
-      this->BaseTree->WhichIteration,       // input
-      this->DataValueSet,                   // input
-      vtkm::cont::make_ArrayHandleView(
-          this->AugmentedTree->Superarcs,
+  { // START scope for e. to delete temporary variables
+    // Note:  The original PPP algorithm performed all operations listed in this block
+    //        in a single parralel for loop. Many of those operations were smart array
+    //        copies. So to simplfy the worklet and to make more effective use of
+    //        VTKm algorithm, a large number of copy operations have been extracted from
+    //        the loop and are performed here via combinations of fancy array handles and
+    //        vtkm::cont::Algorithm::Copy operations.
+
+    // Define the new supernode and regular Id. Both are actually the same here since we are
+    // augmenting the tree here, but for clarity we define them as separate variables.
+    // At all levels above 0, we used to keep regular vertices in case
+    // they are attachment points.  After augmentation, we don't need to.
+    // Instead, at all levels above 0, the regular nodes in each round
+    // are identical to the supernodes. In order to avoid confusion,
+    // we will copy the Id into a separate variable
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> newSupernodeId(
+      numSupernodesAlready,                     // start
+      static_cast<vtkm::Id>(1),                 // step
+      this->SupernodeSorter.GetNumberOfValues() // number of values
+    );
+    auto newRegularId = newSupernodeId;
+    // define the superparentOldSuperId
+    auto permutedSuperparentSet =
+      vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->SuperparentSet);
+    auto superparentOldSuperId = vtkm::cont::make_ArrayHandleTransform(
+      permutedSuperparentSet, vtkm::worklet::contourtree_augmented::MaskedIndexFunctor<vtkm::Id>());
+
+    // set the supernode's regular Id. Set: augmentedTree->supernodes[newSupernodeID] = newRegularID;
+    auto permutedAugmentedTreeSupernodes =
+      vtkm::cont::make_ArrayHandlePermutation(newSupernodeId, this->AugmentedTree->Supernodes);
+    vtkm::cont::Algorithm::Copy(newRegularId, permutedAugmentedTreeSupernodes);
+
+    // Run the worklet for more complex operations
+    { // START block for CreateSuperarcsWorklet
+      // create the worklet
+      vtkm::worklet::contourtree_distributed::hierarchical_augmenter::CreateSuperarcsWorklet
+        createSuperarcsWorklet(
           numSupernodesAlready,
-          this->SupernodeSorter.GetNumberOfValues()),   // output
-      this->AugmentedTree->Hyperparents,                            // input/output
-      this->AugmentedTree->FirstSupernodePerIteration[roundNumber], // input/output
-      this->AugmentedTree->Supernodes,                              // input/output
-      this->AugmentedTree->Super2Hypernode,                         // input/ouput
-      this->AugmentedTree->WhichRound,                              // input/ouput
-      this->AugmentedTree->WhichIteration,                          // input/ouput
-      this->AugmentedTree->RegularNodeGlobalIds,                    //input/ ouput
-      this->AugmentedTree->DataValues,                              // input/ouput
-      this->AugmentedTree->Regular2Supernode,                       // input/ouput
-      this->AugmentedTree->Superparents                             // input/ouput
-    );*/
-  }
+          this->BaseTree->NumRounds,
+          vtkm::cont::ArrayGetValue(roundNumber, this->AugmentedTree->NumIterations),
+          roundNumber,
+          this->AugmentedTree->Supernodes.GetNumberOfValues());
+      // create fancy arrays needed to allow use of FieldIn for worklet parameters
+      auto permutedGlobalRegularIdSet =
+        vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->GlobalRegularIdSet);
+      auto augmentedTreeSuperarcsView =
+        vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Superarcs,
+                                         numSupernodesAlready,
+                                         this->SupernodeSorter.GetNumberOfValues());
+      auto augmentedTreeSuper2HypernodeView =
+        vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Super2Hypernode,
+                                         numSupernodesAlready,
+                                         this->SupernodeSorter.GetNumberOfValues());
+      // invoke the worklet
+      this->Invoke(createSuperarcsWorklet,                                       // the worklet
+                   this->SupernodeSorter,                                        // input domain
+                   this->SuperparentSet,                                         // input
+                   this->BaseTree->Superarcs,                                    // input
+                   this->NewSupernodeIds,                                        // input
+                   this->BaseTree->Supernodes,                                   // input
+                   this->BaseTree->RegularNodeGlobalIds,                         // input
+                   permutedGlobalRegularIdSet,                                   // input
+                   this->BaseTree->Super2Hypernode,                              // input
+                   this->BaseTree->WhichIteration,                               // input
+                   augmentedTreeSuperarcsView,                                   // output
+                   this->AugmentedTree->FirstSupernodePerIteration[roundNumber], // input/output
+                   augmentedTreeSuper2HypernodeView                              // output
+      );
+    } // END block for CreateSuperarcsWorklet
+
+    // setting the hyperparent is straightforward since the hyperstructure is preserved
+    // we take the superparent (which is guaranteed to be in the baseTree), find it's hyperparent and use that
+    // Set:  augmentedTree->hyperparents[newSupernodeID] = baseTree->hyperparents[superparentOldSuperID];
+    auto permutedAugmentedTreeHyperparents =
+      vtkm::cont::make_ArrayHandlePermutation(newSupernodeId, this->AugmentedTree->Hyperparents);
+    auto permutedBaseTreeHyperparents =
+      vtkm::cont::make_ArrayHandlePermutation(superparentOldSuperId, this->BaseTree->Hyperparents);
+    vtkm::cont::Algorithm::Copy(permutedBaseTreeHyperparents, permutedAugmentedTreeHyperparents);
+
+    // which round and iteration carry over
+    // Set: augmentedTree->whichRound[newSupernodeID] = baseTree->whichRound[superparentOldSuperID];
+    auto permutedAugmentedTreeWhichRound =
+      vtkm::cont::make_ArrayHandlePermutation(newSupernodeId, this->AugmentedTree->WhichRound);
+    auto permutedBaseTreeWhichRound =
+      vtkm::cont::make_ArrayHandlePermutation(superparentOldSuperId, this->BaseTree->WhichRound);
+    vtkm::cont::Algorithm::Copy(permutedBaseTreeWhichRound, permutedAugmentedTreeWhichRound);
+
+    // Set: augmentedTree->whichIteration[newSupernodeID] = baseTree->whichIteration[superparentOldSuperID];
+    auto permutedAugmentedTreeWhichIteration =
+      vtkm::cont::make_ArrayHandlePermutation(newSupernodeId, this->AugmentedTree->WhichIteration);
+    auto permutedBaseTreeWhichIterationPortal = vtkm::cont::make_ArrayHandlePermutation(
+      superparentOldSuperId, this->BaseTree->WhichIteration);
+    vtkm::cont::Algorithm::Copy(permutedBaseTreeWhichIterationPortal,
+                                permutedAugmentedTreeWhichIteration);
+
+    // now we deal with the regular-sized arrays. In the following supernodeSetIndex is simply supernodeSorterPortal.Get(supernode);
+    // copy the global regular Id and data value
+    // Set: augmentedTree->regularNodeGlobalIDs[newRegularID] = globalRegularIDSet[supernodeSetIndex];
+    auto permutedAugmentedTreeRegularNodeGlobalIds = vtkm::cont::make_ArrayHandlePermutation(
+      newRegularId, this->AugmentedTree->RegularNodeGlobalIds);
+    auto permutedGlobalRegularIdSet =
+      vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->GlobalRegularIdSet);
+    vtkm::cont::Algorithm::Copy(permutedGlobalRegularIdSet,
+                                permutedAugmentedTreeRegularNodeGlobalIds);
+    // SetL augmentedTree->dataValues[newRegularID] = dataValueSet[supernodeSetIndex];
+    auto permutedAugmentedTreeDataValues =
+      vtkm::cont::make_ArrayHandlePermutation(newRegularId, this->AugmentedTree->DataValues);
+    auto permutedDataValueSet =
+      vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->DataValueSet);
+    vtkm::cont::Algorithm::Copy(permutedDataValueSet, permutedAugmentedTreeDataValues);
+
+    // the sort order will be dealt with later
+    // since all of these nodes are supernodes, they will be their own superparent, which means that:
+    //  a.  the regular2node can be set immediately
+    //      Set: augmentedTree->regular2supernode[newRegularID] = newSupernodeID;
+    auto permutedAugmentedTreeRegular2Supernode =
+      vtkm::cont::make_ArrayHandlePermutation(newRegularId, this->AugmentedTree->Regular2Supernode);
+    vtkm::cont::Algorithm::Copy(newSupernodeId, permutedAugmentedTreeRegular2Supernode);
+
+    //  b.  as can the superparent
+    //      Set: augmentedTree->superparents[newRegularID] = newSupernodeID;
+    auto permutedAugmentedTreeSuperparents =
+      vtkm::cont::make_ArrayHandlePermutation(newRegularId, this->AugmentedTree->Superparents);
+    vtkm::cont::Algorithm::Copy(newSupernodeId, permutedAugmentedTreeSuperparents);
+  } // END scope for e. to delete temporary variables
 
   // We have one last bit of cleanup to do.  If there were attachment points, then the round in which they transfer has been removed
   // While it is possible to turn this into a null round, it is better to reduce the iteration count by one and resize the arrays
