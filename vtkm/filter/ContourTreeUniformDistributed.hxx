@@ -980,9 +980,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           int ingid = rp.in_link().target(i).gid;
           if (ingid == selfid)
           { // Receive and augment
-            worklet::contourtree_distributed::HierarchicalAugmenter<FieldType> inAugmenter;
-            rp.dequeue(ingid, inAugmenter);
-            blockData->HierarchicalAugmenter.RetrieveInAttachmentPoints(inAugmenter);
+            rp.dequeue(ingid, blockData->HierarchicalAugmenter.InData);
+            blockData->HierarchicalAugmenter.RetrieveInAttachmentPoints();
           }
         }
 
@@ -993,8 +992,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           { // Send to partner
             blockData->HierarchicalAugmenter.PrepareOutAttachmentPoints(round);
             // TODO/FIXME: Correct function? Correct round?
-            rp.enqueue(target, blockData->HierarchicalAugmenter);
-            blockData->HierarchicalAugmenter.ReleaseOutArrays(); // TODO/FIXME: Correct function?
+            rp.enqueue(target, blockData->HierarchicalAugmenter.OutData);
+            blockData->HierarchicalAugmenter.ReleaseSwapArrays();
           }
         }
       });

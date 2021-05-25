@@ -101,6 +101,7 @@
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/CopyBaseRegularStructureWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/CreateSuperarcsWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/FindSuperparentForNecessaryNodesWorklet.h>
+#include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/HierarchicalAugmenterInOutData.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/IsAscendingDecorator.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/IsAttachementPointNeededPredicate.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/IsAttachementPointPredicate.h>
@@ -160,12 +161,14 @@ public:
   /// if we're not careful, we'll have read-write conflicts when swapping with the partner
   /// there are other solutions, but the simpler solution is to have a transfer buffer for
   /// the set we want to send - which means another set of parallel arrays
-  vtkm::worklet::contourtree_augmented::IdArrayType OutGlobalRegularIds;
-  vtkm::cont::ArrayHandle<FieldType> OutDataValues;
-  vtkm::worklet::contourtree_augmented::IdArrayType OutSupernodeIds;
-  vtkm::worklet::contourtree_augmented::IdArrayType OutSuperparents;
-  vtkm::worklet::contourtree_augmented::IdArrayType OutSuperparentRounds;
-  vtkm::worklet::contourtree_augmented::IdArrayType OutWhichRounds;
+  /// Output arrays used in DIY exchange
+  vtkm::worklet::contourtree_distributed::hierarchical_augmenter::HierarchicalAugmenterInOutData<
+    FieldType>
+    OutData;
+  /// Output arrays used in DIY exchange
+  vtkm::worklet::contourtree_distributed::hierarchical_augmenter::HierarchicalAugmenterInOutData<
+    FieldType>
+    InData;
 
   /// these are essentially temporary local variables, but are placed here to make the DebugPrint()
   /// more comprehensive. They will be allocated where used
@@ -200,10 +203,10 @@ public:
   void PrepareOutAttachmentPoints(vtkm::Id round);
 
   /// routine to retrieve partner's current list of attachment points
-  void RetrieveInAttachmentPoints(HierarchicalAugmenter& partner);
+  void RetrieveInAttachmentPoints();
 
-  /// routine to release memory used for out arrays
-  void ReleaseOutArrays();
+  /// routine to release memory used for swap arrays
+  void ReleaseSwapArrays();
 
   /// routine to reconstruct a hierarchical tree using the augmenting supernodes
   void BuildAugmentedTree();
@@ -357,39 +360,39 @@ void HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints(vtkm::Id round
   }
 
   //  4.  resize the out array
-  this->OutGlobalRegularIds.Allocate(this->AttachmentIds.GetNumberOfValues());
-  this->OutDataValues.Allocate(this->AttachmentIds.GetNumberOfValues());
-  this->OutSupernodeIds.Allocate(this->AttachmentIds.GetNumberOfValues());
-  this->OutSuperparents.Allocate(this->AttachmentIds.GetNumberOfValues());
-  this->OutSuperparentRounds.Allocate(this->AttachmentIds.GetNumberOfValues());
-  this->OutWhichRounds.Allocate(this->AttachmentIds.GetNumberOfValues());
+  this->OutData.GlobalRegularIds.Allocate(this->AttachmentIds.GetNumberOfValues());
+  this->OutData.DataValues.Allocate(this->AttachmentIds.GetNumberOfValues());
+  this->OutData.SupernodeIds.Allocate(this->AttachmentIds.GetNumberOfValues());
+  this->OutData.Superparents.Allocate(this->AttachmentIds.GetNumberOfValues());
+  this->OutData.SuperparentRounds.Allocate(this->AttachmentIds.GetNumberOfValues());
+  this->OutData.WhichRounds.Allocate(this->AttachmentIds.GetNumberOfValues());
 
   //  5.  copy the points we want
   {
     // outGlobalRegularIDs[outAttachmentPoint]  =  globalRegularIDs[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->GlobalRegularIds),
-      this->OutGlobalRegularIds);
+      this->OutData.GlobalRegularIds);
     // outDataValues[outAttachmentPoint]  =  dataValues[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->DataValues),
-      this->OutDataValues);
+      this->OutData.DataValues);
     // outSupernodeIDs[outAttachmentPoint]  =  supernodeIDs[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->SupernodeIds),
-      this->OutSupernodeIds);
+      this->OutData.SupernodeIds);
     // outSuperparents[outAttachmentPoint]  =  superparents[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->Superparents),
-      this->OutSuperparents);
+      this->OutData.Superparents);
     // outSuperparentRounds[outAttachmentPoint]  =  superparentRounds[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->SuperparentRounds),
-      this->OutSuperparentRounds);
+      this->OutData.SuperparentRounds);
     // outWhichRounds[outAttachmentPoint]  =  whichRounds[attachmentPoint];
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->WhichRounds),
-      this->OutWhichRounds);
+      this->OutData.WhichRounds);
   }
 
   // clean up memory
@@ -399,13 +402,13 @@ void HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints(vtkm::Id round
 
 // routine to add partner's current list of attachment points
 template <typename FieldType>
-void HierarchicalAugmenter<FieldType>::RetrieveInAttachmentPoints(HierarchicalAugmenter& partner)
+void HierarchicalAugmenter<FieldType>::RetrieveInAttachmentPoints()
 { // RetrieveInAttachmentPoints()
   // what we want to do here is to copy all of the partner's attachments for the round into our own buffer
   // this code will be replaced in the MPI with a suitable transmit / receive
   // store the current size
   vtkm::Id numAttachmentsCurrently = this->GlobalRegularIds.GetNumberOfValues();
-  vtkm::Id numIncomingAttachments = partner.OutGlobalRegularIds.GetNumberOfValues();
+  vtkm::Id numIncomingAttachments = InData.GlobalRegularIds.GetNumberOfValues();
   vtkm::Id numTotalAttachments = numAttachmentsCurrently + numIncomingAttachments;
 
   // I.  resize the existing arrays
@@ -419,48 +422,44 @@ void HierarchicalAugmenter<FieldType>::RetrieveInAttachmentPoints(HierarchicalAu
   // II. copy the additional points into them
   {
     // The following sequence of copy operations implements the following for from the orginal code
-    // for (vtkm::Id outAttachmentPoint = 0; outAttachmentPoint < partner.outGlobalRegularIDs.size(); outAttachmentPoint++)
-    // globalRegularIDs[attachmentPoint]  =  partner.outGlobalRegularIDs[outAttachmentPoint];
+    // for (vtkm::Id inAttachmentPoint = 0; inAttachmentPoint < inGlobalRegularIDs.size(); inAttachmentPoint++)
+    // globalRegularIDs[attachmentPoint]  =  inGlobalRegularIDs[outAttachmentPoint];
     auto tempGlobalRegularIdsView = vtkm::cont::make_ArrayHandleView(
       this->GlobalRegularIds, numAttachmentsCurrently, numIncomingAttachments);
-    vtkm::cont::Algorithm::Copy(partner.OutGlobalRegularIds, tempGlobalRegularIdsView);
-    // dataValues[attachmentPoint]  =  partner.outDataValues[outAttachmentPoint];
+    vtkm::cont::Algorithm::Copy(InData.GlobalRegularIds, tempGlobalRegularIdsView);
+    // dataValues[attachmentPoint]  =  inDataValues[outAttachmentPoint];
     auto tempDataValuesView = vtkm::cont::make_ArrayHandleView(
       this->DataValues, numAttachmentsCurrently, numIncomingAttachments);
-    vtkm::cont::Algorithm::Copy(partner.OutDataValues, tempDataValuesView);
+    vtkm::cont::Algorithm::Copy(InData.DataValues, tempDataValuesView);
     // supernodeIDs[attachmentPoint]  =  NO_SUCH_ELEMENT;
     auto tempNoSuchElementArr = vtkm::cont::make_ArrayHandleConstant(
       vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT, numIncomingAttachments);
     auto tempSupernodeIdsView = vtkm::cont::make_ArrayHandleView(
       this->SupernodeIds, numAttachmentsCurrently, numIncomingAttachments);
     vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, tempSupernodeIdsView);
-    // superparents[attachmentPoint]  =  partner.outSuperparents[outAttachmentPoint];
+    // superparents[attachmentPoint]  =  inSuperparents[outAttachmentPoint];
     auto tempSuperparentsView = vtkm::cont::make_ArrayHandleView(
       this->Superparents, numAttachmentsCurrently, numIncomingAttachments);
-    vtkm::cont::Algorithm::Copy(partner.OutSuperparents, tempSuperparentsView);
-    // superparentRounds[attachmentPoint]  =  partner.outSuperparentRounds[outAttachmentPoint];
+    vtkm::cont::Algorithm::Copy(InData.Superparents, tempSuperparentsView);
+    // superparentRounds[attachmentPoint]  =  inSuperparentRounds[outAttachmentPoint];
     auto tempSuperparentRoundsView = vtkm::cont::make_ArrayHandleView(
       this->SuperparentRounds, numAttachmentsCurrently, numIncomingAttachments);
-    vtkm::cont::Algorithm::Copy(partner.OutSuperparentRounds, tempSuperparentRoundsView);
-    // whichRounds[attachmentPoint]  =  partner.outWhichRounds[outAttachmentPoint];
+    vtkm::cont::Algorithm::Copy(InData.SuperparentRounds, tempSuperparentRoundsView);
+    // whichRounds[attachmentPoint]  =  inWhichRounds[outAttachmentPoint];
     auto tempWhichRoundsView = vtkm::cont::make_ArrayHandleView(
       this->WhichRounds, numAttachmentsCurrently, numIncomingAttachments);
-    vtkm::cont::Algorithm::Copy(partner.OutWhichRounds, tempWhichRoundsView);
+    vtkm::cont::Algorithm::Copy(InData.WhichRounds, tempWhichRoundsView);
   }
 } // RetrieveInAttachmentPoints()
 
 
 // routine to release memory used for out arrays
 template <typename FieldType>
-void HierarchicalAugmenter<FieldType>::ReleaseOutArrays()
-{ // ReleaseOutArrays()
-  this->OutGlobalRegularIds.ReleaseResources();
-  this->OutDataValues.ReleaseResources();
-  this->OutSupernodeIds.ReleaseResources();
-  this->OutSuperparents.ReleaseResources();
-  this->OutSuperparentRounds.ReleaseResources();
-  this->OutWhichRounds.ReleaseResources();
-} // ReleaseOutArrays()
+void HierarchicalAugmenter<FieldType>::ReleaseSwapArrays()
+{ // ReleaseSwapArrays()
+  this->OutData.ReleaseResources();
+  this->InData.ReleaseResources();
+} // ReleaseSwapArrays()
 
 
 // routine to reconstruct a hierarchical tree using the augmenting supernodes
@@ -1317,19 +1316,36 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
     "WhichRounds", this->WhichRounds, -1, resultStream);
   resultStream << std::endl;
   resultStream << "Outgoing Attachment Points" << std::endl;
-  vtkm::worklet::contourtree_augmented::PrintHeader(this->OutGlobalRegularIds.GetNumberOfValues());
+  vtkm::worklet::contourtree_augmented::PrintHeader(
+    this->OutData.GlobalRegularIds.GetNumberOfValues());
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "Out Global Regular Ids", this->OutGlobalRegularIds, -1, resultStream);
+    "Out Global Regular Ids", this->OutData.GlobalRegularIds, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintValues(
-    "Out Data Values", this->OutDataValues, -1, resultStream);
+    "Out Data Values", this->OutData.DataValues, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "Out Supernode Ids", this->OutSupernodeIds, -1, resultStream);
+    "Out Supernode Ids", this->OutData.SupernodeIds, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "Out Superparents", this->OutSuperparents, -1, resultStream);
+    "Out Superparents", this->OutData.Superparents, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "Out Superparent Rounds", this->OutSuperparentRounds, -1, resultStream);
+    "Out Superparent Rounds", this->OutData.SuperparentRounds, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "Out WhichRounds", this->OutWhichRounds, -1, resultStream);
+    "Out WhichRounds", this->OutData.WhichRounds, -1, resultStream);
+  resultStream << std::endl;
+  resultStream << "Incoming Attachment Points" << std::endl;
+  vtkm::worklet::contourtree_augmented::PrintHeader(
+    this->InData.GlobalRegularIds.GetNumberOfValues());
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "In Global Regular Ids", this->InData.GlobalRegularIds, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintValues(
+    "In Data Values", this->InData.DataValues, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "In Supernode Ids", this->InData.SupernodeIds, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "In Superparents", this->InData.Superparents, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "In Superparent Rounds", this->InData.SuperparentRounds, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "In WhichRounds", this->InData.WhichRounds, -1, resultStream);
   resultStream << std::endl;
   resultStream << "Holding Arrays" << std::endl;
   vtkm::worklet::contourtree_augmented::PrintHeader(
@@ -1402,46 +1418,9 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
 } // DebugPrint()
 
 
-
-
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
-
-
-namespace vtkmdiy
-{
-
-// Struct to serialize ContourTreeMesh objects (i.e., load/save) needed in parralle for DIY
-template <typename FieldType>
-struct Serialization<vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType>>
-{
-  static void save(
-    vtkmdiy::BinaryBuffer& bb,
-    const vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType>& ha)
-  {
-    vtkmdiy::save(bb, ha.OutGlobalRegularIds);
-    vtkmdiy::save(bb, ha.OutDataValues);
-    vtkmdiy::save(bb, ha.OutSupernodeIds);
-    vtkmdiy::save(bb, ha.OutSuperparents);
-    vtkmdiy::save(bb, ha.OutSuperparentRounds);
-    vtkmdiy::save(bb, ha.OutWhichRounds);
-  }
-
-  static void load(vtkmdiy::BinaryBuffer& bb,
-                   vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType>& ha)
-  {
-    // TODO/FIXME: Save to Out or some other array? Shoud possibly InGlobalRegularIds etc.. Please check!
-    vtkmdiy::load(bb, ha.OutGlobalRegularIds);
-    vtkmdiy::load(bb, ha.OutDataValues);
-    vtkmdiy::load(bb, ha.OutSupernodeIds);
-    vtkmdiy::load(bb, ha.OutSuperparents);
-    vtkmdiy::load(bb, ha.OutSuperparentRounds);
-    vtkmdiy::load(bb, ha.OutWhichRounds);
-  }
-};
-
-} // namespace mangled_vtkmdiy_namespace
 
 
 #endif

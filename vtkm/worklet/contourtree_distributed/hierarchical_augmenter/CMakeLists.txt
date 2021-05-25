@@ -23,6 +23,7 @@ set(headers
   AttachmentAndSupernodeComparator.h
   ResizeArraysBuildNewSupernodeIdsWorklet.h
   CreateSuperarcsWorklet.h
+  HierarchicalAugmenterInOutData.h
 )
 
 vtkm_declare_headers(${headers})
