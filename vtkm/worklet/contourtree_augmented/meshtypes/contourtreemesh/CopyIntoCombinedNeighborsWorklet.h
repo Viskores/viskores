@@ -1,11 +1,23 @@
-//============================================================================
+/= == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == ==
+  == == == == ==
+  =
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
-//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -50,55 +62,43 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_into_combined_neighbors_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_into_combined_neighbors_worklet_h
 
-#define DEBUG_PRINT
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-
-namespace
+    namespace vtkm
 {
+  namespace worklet
+  {
+  namespace contourtree_augmented
+  {
+  namespace mesh_dem_contourtree_mesh_inc
+  {
 
-template <typename FieldType>
-void TestContourTreeMeshCombine(const std::string& mesh1_filename,
-                                const std::string& mesh2_filename,
-                                const std::string& combined_filename)
-{
-  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMesh1;
-  contourTreeMesh1.Load(mesh1_filename.c_str());
-  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMesh2;
-  contourTreeMesh2.Load(mesh2_filename.c_str());
-  contourTreeMesh2.MergeWith(contourTreeMesh1);
-  // Result is written to contourTreeMesh2
-  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> combinedContourTreeMesh;
-  combinedContourTreeMesh.Load(combined_filename.c_str());
-  VTKM_TEST_ASSERT(
-    test_equal_ArrayHandles(contourTreeMesh2.SortedValues, combinedContourTreeMesh.SortedValues));
-  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.GlobalMeshIndex,
-                                           combinedContourTreeMesh.GlobalMeshIndex));
-  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.GlobalMeshIndex,
-                                           combinedContourTreeMesh.GlobalMeshIndex));
-  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.NeighborConnectivity,
-                                           combinedContourTreeMesh.NeighborConnectivity));
-  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.NeighborOffsets,
-                                           combinedContourTreeMesh.NeighborOffsets));
-  VTKM_TEST_ASSERT(contourTreeMesh2.NumVertices == combinedContourTreeMesh.NumVertices);
-  VTKM_TEST_ASSERT(contourTreeMesh2.MaxNeighbors == combinedContourTreeMesh.MaxNeighbors);
-}
+  struct CopyIntoCombinedNeighborsWorklet : public vtkm::worklet::WorkletMapField
+  {
+    using ControlSignature = void(FieldIn, FieldInOut, FieldOut);
 
-void TestContourTreeUniformDistributed()
-{
-  using vtkm::cont::testing::Testing;
-  TestContourTreeMeshCombine<vtkm::FloatDefault>(
-    Testing::DataPath("misc/5x6_7_MC_Rank0_Block0_Round1_BeforeCombineMesh1.ctm"),
-    Testing::DataPath("misc/5x6_7_MC_Rank0_Block0_Round1_BeforeCombineMesh2.ctm"),
-    Testing::RegressionImagePath("5x6_7_MC_Rank0_Block0_Round1_CombinedMesh.ctm"));
-}
+    template <typename InGroupType, typename OutGroupType>
+    VTKM_EXEC void operator()(const InGroupType& newNeighbors,
+                              OutGroupType& combinedNeighbors,
+                              vtkm::IdComponent& actualGroupSize) const
+    {
+      actualGroupSize = newNeighbors.GetNumberOfComponents();
+      std::cout << actualGroupSize << " " << combinedNeighbors.GetNumberOfComponents() << std::endl;
+      VTKM_ASSERT(actualGroupSize <= combinedNeighbors.GetNumberOfComponents());
+      for (vtkm::IdComponent index = 0; index < actualGroupSize; ++index)
+      {
+        combinedNeighbors[index] = newNeighbors[index];
+      }
+    }
+  }; // CopyIntoCombinedNeighborsWorklet
 
-} // anonymous namespace
+  } // namespace mesh_dem_contourtree_mesh_inc
+  } // namespace contourtree_augmented
+  } // namespace worklet
+} // namespace vtkm
 
-int UnitTestContourTreeUniformDistributed(int argc, char* argv[])
-{
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributed, argc, argv);
-}
+#endif

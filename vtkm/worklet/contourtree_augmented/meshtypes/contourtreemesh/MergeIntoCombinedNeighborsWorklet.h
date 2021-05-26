@@ -60,13 +60,9 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_merge_neighbor_groups_worklet_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_merge_neighbor_groups_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_add_to_array_elements__worklet_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_add_to_array_elements__worklet_worklet_h
 
-#include <vtkm/Swap.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
@@ -79,64 +75,68 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-struct MergeNeighborGroups : public vtkm::worklet::WorkletMapField
+struct MergeIntoCombinedNeighborsWorklet : public vtkm::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldInOut, FieldIn, FieldOut);
+  using ControlSignature = void(FieldIn, FieldInOut, FieldInOut);
 
-  template <typename GroupType>
-  void operator()(const GroupType& group,
-                  vtkm::IdComponent secondStart,
-                  vtkm::IdComponent& mergedSize) const
+  template <typename InGroupType, typename InOutGroupType>
+  VTKM_EXEC void operator()(const InGroupType& newNeighbors,
+                            InOutGroupType& combinedNeighbors,
+                            vtkm::IdComponent& actualGroupSize) const
   {
-    vtkm::IdComponent groupSize = group.GetNumberOfComponents();
-    mergedSize = 0;
-    vtkm::IdComponent firstI = 0;
-    vtkm::IdComponent secondI = secondStart;
+    VTKM_ASSERT(actualGroupSize + newNeighbors.GetNumberOfComponents() <=
+                combinedNeighbors.GetNumberOfComponents());
 
-    while ((firstI < secondStart) && (secondI < groupSize))
+    if (actualGroupSize == 0)
     {
-      if (group[firstI] < group[secondI])
+      // Most common case, no neighbor list present, yet -> just copy
+      actualGroupSize = newNeighbors.GetNumberOfComponents();
+      for (vtkm::IdComponent index = 0; index < actualGroupSize; ++index)
       {
-        // Next insertion from first group. Just go to next.
-        ++firstI;
-        ++mergedSize;
-      }
-      else if (group[firstI] == group[secondI])
-      {
-        // Both values are the same. "Insert" the first one and advance both.
-        ++firstI;
-        ++secondI;
-        ++mergedSize;
-      }
-      else
-      { // group[secondI] < group[firstI]
-        // Next insertion from second group. Do this by saving the item from the
-        // first group in the second group.
-        //
-        // Insert at correct location in secind group
-        // Save element from first group
-        vtkm::Id tmp = group[firstI];
-        // Move element from second group into correct position
-        group[firstI] = group[secondI];
-
-        vtkm::IdComponent insertPos = secondI;
-        while (group[insertPos]
-        group[secondI] = tmp;
-
-        ++firstI;
-        ++mergedSize;
+        combinedNeighbors[index] = newNeighbors[index];
       }
     }
-    // Add anything left in the second group.
-    while (secondI < groupSize)
+    else
     {
-      group[firstI] = group[secondI];
-      ++firstI;
-      ++secondI;
-      ++mergedSize;
+      // Shared vertex -> Need to merge lists
+      // TODO/FIXME: Better way to merge two sorted lists?
+      vtkm::IdComponent numToInsert = newNeighbors.GetNumberOfComponents();
+      for (vtkm::IdComponent idxToInsert = 0; idxToInsert < numToInsert; ++idxToInsert)
+      {
+        std::cout << "actualGroupSize = " << actualGroupSize;
+        std::cout << " inserting " << newNeighbors[idxToInsert] << std::endl;
+        vtkm::IdComponent insertPos = 0;
+        std::cout << insertPos << " " << (insertPos < actualGroupSize) << " "
+                  << (combinedNeighbors[insertPos] < newNeighbors[idxToInsert]) << std::endl;
+        while (insertPos < actualGroupSize &&
+               combinedNeighbors[insertPos] < newNeighbors[idxToInsert])
+        {
+          std::cout << insertPos << " " << (insertPos < actualGroupSize) << " "
+                    << (combinedNeighbors[insertPos] < newNeighbors[idxToInsert]) << std::endl;
+          ++insertPos;
+        }
+        std::cout << "Insert pos is " << insertPos << std::endl;
+        if ((insertPos >= actualGroupSize) ||
+            combinedNeighbors[insertPos] != newNeighbors[idxToInsert])
+        {
+          // Only insert non-duplicate elements
+          // Shift elements one back
+          for (vtkm::IdComponent idx = actualGroupSize - 1; idx >= insertPos; --idx)
+          {
+            std::cout << "Shifting " << combinedNeighbors[idx] << " from " << idx << " to "
+                      << idx + 1 << std::endl;
+            combinedNeighbors[idx + 1] = combinedNeighbors[idx];
+          }
+          std::cout << "Saving " << newNeighbors[idxToInsert] << " to pos " << insertPos
+                    << std::endl;
+          combinedNeighbors[insertPos] = newNeighbors[idxToInsert];
+          actualGroupSize += 1;
+        }
+      }
     }
   }
-};
+}; // MergeIntoCombinedNeighborsWorklet
+
 
 } // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented

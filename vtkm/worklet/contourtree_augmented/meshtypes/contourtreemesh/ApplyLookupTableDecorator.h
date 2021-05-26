@@ -2,10 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
-//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -50,55 +60,46 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_apply_lookup_table_decorator_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_apply_lookup_table_decorator_h
 
-#define DEBUG_PRINT
-
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-
-namespace
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree_augmented
+{
+namespace mesh_dem_contourtree_mesh_inc
 {
 
-template <typename FieldType>
-void TestContourTreeMeshCombine(const std::string& mesh1_filename,
-                                const std::string& mesh2_filename,
-                                const std::string& combined_filename)
+class ApplyLookupTableDecoratorImpl
 {
-  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMesh1;
-  contourTreeMesh1.Load(mesh1_filename.c_str());
-  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMesh2;
-  contourTreeMesh2.Load(mesh2_filename.c_str());
-  contourTreeMesh2.MergeWith(contourTreeMesh1);
-  // Result is written to contourTreeMesh2
-  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> combinedContourTreeMesh;
-  combinedContourTreeMesh.Load(combined_filename.c_str());
-  VTKM_TEST_ASSERT(
-    test_equal_ArrayHandles(contourTreeMesh2.SortedValues, combinedContourTreeMesh.SortedValues));
-  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.GlobalMeshIndex,
-                                           combinedContourTreeMesh.GlobalMeshIndex));
-  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.GlobalMeshIndex,
-                                           combinedContourTreeMesh.GlobalMeshIndex));
-  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.NeighborConnectivity,
-                                           combinedContourTreeMesh.NeighborConnectivity));
-  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.NeighborOffsets,
-                                           combinedContourTreeMesh.NeighborOffsets));
-  VTKM_TEST_ASSERT(contourTreeMesh2.NumVertices == combinedContourTreeMesh.NumVertices);
-  VTKM_TEST_ASSERT(contourTreeMesh2.MaxNeighbors == combinedContourTreeMesh.MaxNeighbors);
-}
+public:
+  template <typename ArrayPortalType, typename LookupTablePortalType>
+  struct Functor
+  {
+    ArrayPortalType ArrayPortal;
+    LookupTablePortalType LookupTablePortal;
 
-void TestContourTreeUniformDistributed()
-{
-  using vtkm::cont::testing::Testing;
-  TestContourTreeMeshCombine<vtkm::FloatDefault>(
-    Testing::DataPath("misc/5x6_7_MC_Rank0_Block0_Round1_BeforeCombineMesh1.ctm"),
-    Testing::DataPath("misc/5x6_7_MC_Rank0_Block0_Round1_BeforeCombineMesh2.ctm"),
-    Testing::RegressionImagePath("5x6_7_MC_Rank0_Block0_Round1_CombinedMesh.ctm"));
-}
+    VTKM_EXEC_CONT
+    typename LookupTablePortalType::ValueType operator()(vtkm::Id i) const
+    {
+      vtkm::Id val = ArrayPortal.Get(i);
+      VTKM_ASSERT(val >= 0 && val < LookupTablePortal.GetNumberOfValues());
+      return LookupTablePortal.Get(val);
+    }
+  };
 
-} // anonymous namespace
+  template <typename PT1, typename PT2>
+  Functor<PT1, PT2> CreateFunctor(PT1 array, PT2 lookupTable) const
+  {
+    return { array, lookupTable };
+  }
+};
 
-int UnitTestContourTreeUniformDistributed(int argc, char* argv[])
-{
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributed, argc, argv);
-}
+} // namespace mesh_dem_contourtree_mesh_inc
+} // namespace contourtree_augmented
+} // namespace worklet
+} // namespace vtkm
+
+#endif
