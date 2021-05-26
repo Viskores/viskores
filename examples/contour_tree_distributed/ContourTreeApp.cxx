@@ -194,6 +194,12 @@ int main(int argc, char* argv[])
   ParseCL parser;
   parser.parse(argc, argv);
   std::string filename = parser.getOptions().back();
+  bool augmentHierarchicalTree = false;
+  if (parser.hasOption("--augmentHierarchicalTree"))
+  {
+    augmentHierarchicalTree = true;
+  }
+
   bool useBoundaryExtremaOnly = true;
   if (parser.hasOption("--useFullBoundary"))
   {
@@ -270,19 +276,21 @@ int main(int argc, char* argv[])
                 << std::endl;
       std::cout << "--mc             Use marching cubes connectivity (Default=False)." << std::endl;
       std::cout << "--useFullBoundary Use the full boundary during. Typically only useful"
-                << std::endl;
-      std::cout << "                 to compare the performance between using the full boundary"
+                << std::endl
+                << "                  to compare the performance between using the full boundary"
                 << std::endl;
       std::cout << "                 and when using only boundary extrema." << std::endl;
+      std::cout << "--augmentHierarchicalTree Augment the hierarchical tree." << std::endl;
       std::cout << "--preSplitFiles  Input data is already pre-split into blocks." << std::endl;
-      std::cout << "--saveDot        Save DOT files of the distributed contour tree "
-                << "computation (Default=False). " << std::endl;
+      std::cout << "--saveDot        Save DOT files of the distributed contour tree " << std::endl
+                << "                 computation (Default=False). " << std::endl;
       std::cout << "--saveTreeCompilerData  Save data files needed for the tree compiler"
                 << std::endl;
       std::cout << "--numBlocks      Number of blocks to use during computation "
                 << "(Default=number of MPI ranks.)" << std::endl;
-      std::cout << "--forwardSummary Forward the summary timings also to the per-rank "
-                << "log files. Default is to round-robin print the summary instead" << std::endl;
+      std::cout << "--forwardSummary Forward the summary timings also to the per-rank " << std::endl
+                << "                 log files. Default is to round-robin print the " << std::endl
+                << "                 summary instead" << std::endl;
       std::cout << std::endl;
     }
     MPI_Finalize();
@@ -840,7 +848,7 @@ int main(int argc, char* argv[])
                                                      localBlockSizes,
                                                      useBoundaryExtremaOnly,
                                                      useMarchingCubes,
-                                                     false,
+                                                     augmentHierarchicalTree,
                                                      saveDotFiles,
                                                      timingsLogLevel,
                                                      treeLogLevel);
