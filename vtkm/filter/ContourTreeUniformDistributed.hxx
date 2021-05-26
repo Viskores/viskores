@@ -68,6 +68,7 @@
 #include <vtkm/worklet/contourtree_distributed/BoundaryTreeMaker.h>
 #include <vtkm/worklet/contourtree_distributed/ComputeDistributedContourTreeFunctor.h>
 #include <vtkm/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalAugmenterFunctor.h>
 #include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
 #include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
@@ -953,50 +954,20 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   if (this->AugmentHierarchicalTree)
   {
-    master.foreach ([](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<
-                         FieldType>* blockData,
-                       const vtkmdiy::Master::ProxyWithLink&) {
-      blockData->HierarchicalAugmenter.Initialize(
-        blockData->BlockIndex,
-        &blockData->HierarchicalTree,
-        &blockData
-           ->AugmentedTree); // TODO/FIXME: Is BlockIndex really global block index or just local; this should use global block index
-    });
+    master.foreach (
+      [](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
+           blockData,
+         const vtkmdiy::Master::ProxyWithLink&) {
+        // TODO/FIXME: Is BlockIndex really global block index or just local; this should use global block index
+        blockData->HierarchicalAugmenter.Initialize(
+          blockData->BlockIndex, &blockData->HierarchicalTree, &blockData->AugmentedTree);
+      });
 
-    // TODO/FIXME: Exchange
     vtkmdiy::reduce(
       master,
       assigner,
       partners,
-      [](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
-           blockData,
-         const vtkmdiy::ReduceProxy& rp,
-         const vtkmdiy::RegularMergePartners&) {
-        auto round = rp.round();
-        const auto selfid = rp.gid();
-
-        for (int i = 0; i < rp.in_link().size(); ++i)
-        {
-          int ingid = rp.in_link().target(i).gid;
-          if (ingid == selfid)
-          { // Receive and augment
-            rp.dequeue(ingid, blockData->HierarchicalAugmenter.InData);
-            blockData->HierarchicalAugmenter.RetrieveInAttachmentPoints();
-          }
-        }
-
-        for (int i = 0; i < rp.out_link().size(); ++i)
-        {
-          auto target = rp.out_link().target(i);
-          if (target.gid != selfid)
-          { // Send to partner
-            blockData->HierarchicalAugmenter.PrepareOutAttachmentPoints(round);
-            // TODO/FIXME: Correct function? Correct round?
-            rp.enqueue(target, blockData->HierarchicalAugmenter.OutData);
-            blockData->HierarchicalAugmenter.ReleaseSwapArrays();
-          }
-        }
-      });
+      vtkm::worklet::contourtree_distributed::HierarchicalAugmenterFunctor<FieldType>{});
 
     master.foreach (
       [](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
