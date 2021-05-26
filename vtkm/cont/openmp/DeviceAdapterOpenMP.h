@@ -17,6 +17,7 @@
 #ifdef VTKM_ENABLE_OPENMP
 #include <vtkm/cont/openmp/internal/DeviceAdapterAlgorithmOpenMP.h>
 #include <vtkm/cont/openmp/internal/DeviceAdapterMemoryManagerOpenMP.h>
+#include <vtkm/cont/openmp/internal/RuntimeDeviceConfigurationOpenMP.h>
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/openmp/internal/VirtualObjectTransferOpenMP.h>
 #endif //VTKM_NO_DEPRECATED_VIRTUAL

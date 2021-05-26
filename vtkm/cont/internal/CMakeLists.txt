@@ -27,10 +27,14 @@ set(headers
   IteratorFromArrayPortal.h
   KXSort.h
   OptionParser.h
+  OptionParserArguments.h
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
   PointLocatorBase.h
   ReverseConnectivityBuilder.h
+  RuntimeDeviceConfiguration.h
+  RuntimeDeviceConfigurationOptions.h
+  RuntimeDeviceOption.h
   StorageDeprecated.h
   StorageError.h
   Variant.h

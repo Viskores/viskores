@@ -16,6 +16,7 @@ set(headers
   DeviceAdapterTagCuda.h
   DeviceAdapterTimerImplementationCuda.h
   MakeThrustIterator.h
+  RuntimeDeviceConfigurationCuda.h
   ScopedCudaStackSize.h
   ThrustExceptionHandler.h
   )

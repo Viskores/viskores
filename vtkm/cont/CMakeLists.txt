@@ -145,6 +145,9 @@ set(sources
   internal/Buffer.cxx
   internal/DeviceAdapterMemoryManager.cxx
   internal/DeviceAdapterMemoryManagerShared.cxx
+  internal/RuntimeDeviceConfiguration.cxx
+  internal/RuntimeDeviceConfigurationOptions.cxx
+  internal/RuntimeDeviceOption.cxx
   Initialize.cxx
   Logging.cxx
   RuntimeDeviceTracker.cxx

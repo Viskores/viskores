@@ -15,6 +15,7 @@ set(headers
   DeviceAdapterTagTBB.h
   FunctorsTBB.h
   ParallelSortTBB.h
+  RuntimeDeviceConfigurationTBB.h
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)

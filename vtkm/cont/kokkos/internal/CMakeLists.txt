@@ -16,6 +16,7 @@ set(headers
   Initialize.h
   KokkosAlloc.h
   KokkosTypes.h
+  RuntimeDeviceConfigurationKokkos.h
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)

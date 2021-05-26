@@ -13,6 +13,7 @@ set(headers
   DeviceAdapterMemoryManagerSerial.h
   DeviceAdapterRuntimeDetectorSerial.h
   DeviceAdapterTagSerial.h
+  RuntimeDeviceConfigurationSerial.h
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)

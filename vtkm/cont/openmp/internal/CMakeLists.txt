@@ -18,6 +18,7 @@ set(headers
   ParallelRadixSortOpenMP.h
   ParallelScanOpenMP.h
   ParallelSortOpenMP.h
+  RuntimeDeviceConfigurationOpenMP.h
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
