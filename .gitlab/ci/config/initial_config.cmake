@@ -64,6 +64,7 @@ foreach(option IN LISTS options)
 
   elseif(benchmarks STREQUAL option)
     set(VTKm_ENABLE_BENCHMARKS "ON" CACHE STRING "")
+    set(ENV{CMAKE_PREFIX_PATH} "$ENV{HOME}/gbench")
 
   elseif(mpi STREQUAL option)
     set(VTKm_ENABLE_MPI "ON" CACHE STRING "")
