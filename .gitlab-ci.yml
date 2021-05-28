@@ -102,6 +102,7 @@
 
 .only-default: &only-default
   only:
+    - release@vtk/vtk-m
     - master@vtk/vtk-m
     - tags@vtk/vtk-m
     - merge_requests
