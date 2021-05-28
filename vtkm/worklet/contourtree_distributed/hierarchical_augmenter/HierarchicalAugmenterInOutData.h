@@ -53,6 +53,10 @@
 #define vtk_m_worklet_contourtree_distributed_hierarchical_augmenter_hierarchical_augmenter_in_out_data_h
 
 
+#include <iostream> // std::cout
+#include <sstream>  // std::stringstrea
+#include <string>   // std::string
+#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 
@@ -104,6 +108,9 @@ public:
   /// Clear all arrays
   void ReleaseResources();
 
+  /// Print contents fo this objects
+  std::string DebugPrint(std::string message, const char* fileName, long lineNum);
+
 }; // class HierarchicalAugmenterInOutData
 
 template <typename FieldType>
@@ -123,6 +130,34 @@ void HierarchicalAugmenterInOutData<FieldType>::ReleaseResources()
   this->SuperparentRounds.ReleaseResources();
   this->WhichRounds.ReleaseResources();
 } // ReleaseResources()
+
+template <typename FieldType>
+std::string HierarchicalAugmenterInOutData<FieldType>::DebugPrint(std::string message,
+                                                                  const char* fileName,
+                                                                  long lineNum)
+{
+  // DebugPrint()
+  std::stringstream resultStream;
+  resultStream << std::endl;
+  resultStream << "----------------------------------------" << std::endl;
+  resultStream << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
+               << lineNum << std::endl;
+  resultStream << message << std::endl;
+  resultStream << "----------------------------------------" << std::endl;
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Global Regular Ids", this->GlobalRegularIds, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintValues(
+    "Data Values", this->DataValues, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Supernode Ids", this->SupernodeIds, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Superparents", this->Superparents, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Superparent Rounds", this->SuperparentRounds, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Which Rounds", this->WhichRounds, -1, resultStream);
+  return resultStream.str();
+}
 
 } // namespace hierarchical_augmenter
 } // namespace contourtree_distributed
