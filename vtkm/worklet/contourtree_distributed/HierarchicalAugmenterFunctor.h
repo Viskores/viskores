@@ -105,6 +105,7 @@ public:
         blockData->HierarchicalAugmenter.PrepareOutAttachmentPoints(round);
         // TODO/FIXME: Correct function? Correct round?
         rp.enqueue(target, blockData->HierarchicalAugmenter.OutData);
+        // TODO/FIXME: Is it save to already release HierarchicalAugmenter.OutData (and InData) here. Don't we free the arrays before the other block had the chance to complete its rp.dequeue?
         blockData->HierarchicalAugmenter.ReleaseSwapArrays();
       }
     }
