@@ -85,9 +85,10 @@ struct DistributedContourTreeBlockData
   }
 
   // Block metadata
-  vtkm::Id BlockIndex;
-  vtkm::Id3 BlockOrigin; // Origin of the data block
-  vtkm::Id3 BlockSize;   // Extends of the data block
+  vtkm::Id GlobalBlockId; // Global DIY id of this block
+  vtkm::Id BlockIndex;    // Local block id on this rank
+  vtkm::Id3 BlockOrigin;  // Origin of the data block
+  vtkm::Id3 BlockSize;    // Extends of the data block
 
   // Fan in data
   std::vector<vtkm::worklet::contourtree_augmented::ContourTree> ContourTrees;

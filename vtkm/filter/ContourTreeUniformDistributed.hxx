@@ -776,6 +776,12 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       RegularDecomposer::coords_to_gid(diyCoords, diyDivisions);
   }
 
+  // copy global block ids into the local data blocks so we can use them in the hierarchical augmentation
+  for (vtkm::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
+  {
+    localDataBlocks[bi]->GlobalBlockId = vtkmdiyLocalBlockGids[bi];
+  }
+
   // Record time to compute the local block ids
   timingsStream << "    " << std::setw(38) << std::left << "Compute Block Ids and Local Links"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
@@ -964,9 +970,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       [](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
            blockData,
          const vtkmdiy::Master::ProxyWithLink&) {
-        // TODO/FIXME: Is BlockIndex really global block index or just local; this should use global block index
         blockData->HierarchicalAugmenter.Initialize(
-          blockData->BlockIndex, &blockData->HierarchicalTree, &blockData->AugmentedTree);
+          blockData->GlobalBlockId, &blockData->HierarchicalTree, &blockData->AugmentedTree);
       });
 
     timingsStream << "    " << std::setw(38) << std::left << "Initalize Hierarchical Trees"
