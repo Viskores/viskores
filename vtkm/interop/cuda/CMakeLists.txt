@@ -17,6 +17,6 @@ vtkm_declare_headers(${headers})
 
 add_subdirectory(internal)
 
-if(VTKm_ENABLE_OPENGL_TESTS)
+if(VTKm_ENABLE_OPENGL_TESTS AND VTKm_ENABLE_TESTING)
   add_subdirectory(testing)
 endif()

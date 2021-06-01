@@ -63,4 +63,6 @@ add_subdirectory(cuda)
 add_subdirectory(kokkos)
 
 #-----------------------------------------------------------------------------
-add_subdirectory(testing)
+if (VTKm_ENABLE_TESTING)
+  add_subdirectory(testing)
+endif ()
