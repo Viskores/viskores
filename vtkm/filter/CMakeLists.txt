@@ -179,6 +179,7 @@ set(contour_headers
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   ContourTreeUniform.h
+  Slice.h
   )
 
 set(contour_header_template_sources
@@ -186,12 +187,14 @@ set(contour_header_template_sources
   ContourTreeUniformAugmented.hxx
   ContourTreeUniformDistributed.hxx
   ContourTreeUniform.hxx
+  Slice.hxx
   )
 
 set(contour_sources_device
   Contour.cxx
   ContourInteger.cxx
   ContourScalar.cxx
+  Slice.cxx
   )
 
 set(gradient_headers

@@ -88,6 +88,7 @@ if (VTKm_ENABLE_RENDERING)
   list(APPEND unit_tests
     RegressionTestContourFilter.cxx
     RegressionTestPointTransform.cxx
+    RegressionTestSliceFilter.cxx
     RegressionTestSplitSharpEdges.cxx
     RegressionTestStreamline.cxx
     RegressionTestSurfaceNormals.cxx
