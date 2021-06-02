@@ -30,4 +30,6 @@ vtkm_library(NAME vtkm_source
 target_link_libraries(vtkm_source PUBLIC vtkm_cont)
 
 #-----------------------------------------------------------------------------
-add_subdirectory(testing)
+if (VTKm_ENABLE_TESTING)
+  add_subdirectory(testing)
+endif ()

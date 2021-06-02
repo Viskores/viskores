@@ -22,4 +22,6 @@ vtkm_declare_headers(${headers})
 
 vtkm_pyexpander_generated_file(WorkletInvokeFunctorDetail.h)
 
-add_subdirectory(testing)
+if (VTKm_ENABLE_TESTING)
+  add_subdirectory(testing)
+endif ()

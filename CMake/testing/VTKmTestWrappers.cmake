@@ -112,10 +112,6 @@ endfunction()
 #                  backends at runtime.
 #
 function(vtkm_unit_tests)
-  if (NOT VTKm_ENABLE_TESTING)
-    return()
-  endif()
-
   set(options)
   set(global_options ${options} USE_VTKM_JOB_POOL MPI ALL_BACKENDS)
   set(oneValueArgs BACKEND NAME LABEL)

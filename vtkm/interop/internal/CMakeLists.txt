@@ -18,6 +18,6 @@ set(headers
 vtkm_declare_headers(${headers})
 
 #-----------------------------------------------------------------------------
-if(TARGET vtkm_rendering)
+if(TARGET vtkm_rendering AND VTKm_ENABLE_TESTING)
   add_subdirectory(testing)
 endif()

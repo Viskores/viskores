@@ -52,4 +52,6 @@ vtkm_declare_headers(${headers})
 # internal and which are part of the external interface.
 #add_custom_target(vtkmContInternal ALL DEPENDS vtkmCont)
 
-add_subdirectory(testing)
+if (VTKm_ENABLE_TESTING)
+  add_subdirectory(testing)
+endif ()

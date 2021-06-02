@@ -89,7 +89,9 @@ endif()
 add_subdirectory(thirdparty/optionparser)
 add_subdirectory(thirdparty/lcl)
 
-add_subdirectory(testing)
+if (VTKm_ENABLE_TESTING)
+  add_subdirectory(testing)
+endif ()
 add_subdirectory(internal)
 
 #-----------------------------------------------------------------------------
