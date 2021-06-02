@@ -53,8 +53,6 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#define DEBUG_PRINT
-
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
 namespace
