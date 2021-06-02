@@ -98,14 +98,18 @@ struct MergeIntoCombinedNeighborsWorklet : public vtkm::worklet::WorkletMapField
     }
     else
     {
-      // Shared vertex -> Need to merge lists
+      // Shared vertex -> Need to merge sorted list of new neighbors into sorted
+      // list of already existing neighbors
       // TODO/FIXME: Better way to merge two sorted lists?
       vtkm::IdComponent numToInsert = newNeighbors.GetNumberOfComponents();
+      // Define insert pos here. Since both lists are sorted, subsequent inserts
+      // will always occur after the previous one. So it makes sense to start
+      // the search for a new insert position at the last one.
+      vtkm::IdComponent insertPos = 0;
       for (vtkm::IdComponent idxToInsert = 0; idxToInsert < numToInsert; ++idxToInsert)
       {
         //std::cout << "actualGroupSize = " << actualGroupSize;
         //std::cout << " inserting " << newNeighbors[idxToInsert] << std::endl;
-        vtkm::IdComponent insertPos = 0;
         //std::cout << insertPos << " " << (insertPos < actualGroupSize) << " "
         //          << (combinedNeighbors[insertPos] < newNeighbors[idxToInsert]) << std::endl;
         while (insertPos < actualGroupSize &&
@@ -129,8 +133,11 @@ struct MergeIntoCombinedNeighborsWorklet : public vtkm::worklet::WorkletMapField
           }
           //std::cout << "Saving " << newNeighbors[idxToInsert] << " to pos " << insertPos
           //          << std::endl;
+          // Insert element and update group size
           combinedNeighbors[insertPos] = newNeighbors[idxToInsert];
           actualGroupSize += 1;
+          // Since both lists are sorted, the lowest possible insert position is behind the current element
+          insertPos += 1;
         }
       }
     }
