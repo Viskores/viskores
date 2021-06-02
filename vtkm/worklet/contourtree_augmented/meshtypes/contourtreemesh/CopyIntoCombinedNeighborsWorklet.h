@@ -1,6 +1,4 @@
-/= == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == ==
-  == == == == ==
-  =
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -68,37 +66,41 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
-    namespace vtkm
+namespace vtkm
 {
-  namespace worklet
-  {
-  namespace contourtree_augmented
-  {
-  namespace mesh_dem_contourtree_mesh_inc
-  {
+namespace worklet
+{
+namespace contourtree_augmented
+{
+namespace mesh_dem_contourtree_mesh_inc
+{
 
-  struct CopyIntoCombinedNeighborsWorklet : public vtkm::worklet::WorkletMapField
-  {
-    using ControlSignature = void(FieldIn, FieldInOut, FieldOut);
+struct CopyIntoCombinedNeighborsWorklet : public vtkm::worklet::WorkletMapField
+{
+  // TODO/FIXME: Even though the second parameter is only used for output,
+  // GetNumberOfComponents() in the assert only returns the correct value
+  // if defined as FieldInOut. Possibly skip assert, but then the later
+  // assign in the for loop may fail. Check with Ken Moreland what the
+  // correct way to implement this is.
+  using ControlSignature = void(FieldIn, FieldInOut, FieldOut);
 
-    template <typename InGroupType, typename OutGroupType>
-    VTKM_EXEC void operator()(const InGroupType& newNeighbors,
-                              OutGroupType& combinedNeighbors,
-                              vtkm::IdComponent& actualGroupSize) const
+  template <typename InGroupType, typename OutGroupType>
+  VTKM_EXEC void operator()(const InGroupType& newNeighbors,
+                            OutGroupType& combinedNeighbors,
+                            vtkm::IdComponent& actualGroupSize) const
+  {
+    actualGroupSize = newNeighbors.GetNumberOfComponents();
+    VTKM_ASSERT(actualGroupSize <= combinedNeighbors.GetNumberOfComponents());
+    for (vtkm::IdComponent index = 0; index < actualGroupSize; ++index)
     {
-      actualGroupSize = newNeighbors.GetNumberOfComponents();
-      std::cout << actualGroupSize << " " << combinedNeighbors.GetNumberOfComponents() << std::endl;
-      VTKM_ASSERT(actualGroupSize <= combinedNeighbors.GetNumberOfComponents());
-      for (vtkm::IdComponent index = 0; index < actualGroupSize; ++index)
-      {
-        combinedNeighbors[index] = newNeighbors[index];
-      }
+      combinedNeighbors[index] = newNeighbors[index];
     }
-  }; // CopyIntoCombinedNeighborsWorklet
+  }
+}; // CopyIntoCombinedNeighborsWorklet
 
-  } // namespace mesh_dem_contourtree_mesh_inc
-  } // namespace contourtree_augmented
-  } // namespace worklet
+} // namespace mesh_dem_contourtree_mesh_inc
+} // namespace contourtree_augmented
+} // namespace worklet
 } // namespace vtkm
 
 #endif

@@ -118,7 +118,7 @@ VTKM_THIRDPARTY_POST_INCLUDE
 namespace contourtree_mesh_inc_ns =
   vtkm::worklet::contourtree_augmented::mesh_dem_contourtree_mesh_inc;
 
-#define DEBUG_PRINT
+//#define DEBUG_PRINT
 
 namespace vtkm
 {
@@ -511,8 +511,9 @@ inline void ContourTreeMesh<FieldType>::ComputeMaxNeighbors()
 {
   auto neighborCounts = make_ArrayHandleOffsetsToNumComponents(this->NeighborOffsets);
   vtkm::cont::ArrayHandle<vtkm::Range> rangeArray = vtkm::cont::ArrayRangeCompute(neighborCounts);
+  // TODO/FIXME: The following produces a warning:
+  // Extracting component 0 of vtkm::cont::ArrayHandle<int, vtkm::cont::StorageTagOffsetsToNumComponents<vtkm::cont::StorageTagBasic> > requires an inefficient memory copy.
   this->MaxNeighbors = static_cast<vtkm::Id>(ArrayGetValue(0, rangeArray).Max);
-  std::cout << this->MaxNeighbors << std::endl;
 }
 
 // Define the behavior for the execution object generate by the PrepareForExecution function
@@ -541,11 +542,12 @@ struct NotNoSuchElement
   VTKM_EXEC_CONT bool operator()(vtkm::Id x) const { return x != NO_SUCH_ELEMENT; }
 };
 
+/*
 template <typename T>
 inline void printNumComponents(const T& arr)
 {
   auto portal = arr.ReadPortal();
-  for (vtkm::Id idx = 0; idx < portal.GetNumberOfValues(); ++idx)
+  for (vtkm::Id idx = 0; idx <  portal.GetNumberOfValues(); ++idx)
   {
     auto vec = portal.Get(idx);
     std::cout << "[ " << idx << " (" << vec.GetNumberOfComponents() << "): ";
@@ -555,6 +557,7 @@ inline void printNumComponents(const T& arr)
   }
   std::cout << std::endl;
 }
+*/
 
 // Combine two ContourTreeMeshes
 template <typename FieldType>
@@ -688,15 +691,15 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   vtkm::cont::ConvertNumComponentsToOffsets(
     combinedNeighborCounts, combinedNeighborOffsets, nCombinedNeighbours);
 
-  PrintIndices("combinedNeighborCounts", combinedNeighborCounts);
-  PrintIndices("combinedNeighborOffsets", combinedNeighborOffsets);
+  //PrintIndices("combinedNeighborCounts", combinedNeighborCounts);
+  //PrintIndices("combinedNeighborOffsets", combinedNeighborOffsets);
 
   // Create combined neighbor connectivity array and grouped view on it
   IdArrayType combinedNeighborConnectivity;
   combinedNeighborConnectivity.Allocate(nCombinedNeighbours);
   auto combinedNeighborGroups = vtkm::cont::make_ArrayHandleGroupVecVariable(
     combinedNeighborConnectivity, combinedNeighborOffsets);
-  printNumComponents(combinedNeighborGroups);
+  //printNumComponents(combinedNeighborGroups);
 
   // Create array to hold merged neighbor counts (after eliminating duplicate neigbors)
   vtkm::cont::ArrayHandle<vtkm::IdComponent> mergedNeighborCounts;
@@ -710,11 +713,11 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                               this->NeighborConnectivity,
                               thisToCombinedSortOrder);
 
-  PrintArray("thisNeighborConnectivityGlobal", thisNeighborConnectivityGlobal);
-  PrintArray("this->NeighborOffsets", this->NeighborOffsets);
+  //PrintArray("thisNeighborConnectivityGlobal", thisNeighborConnectivityGlobal);
+  //PrintArray("this->NeighborOffsets", this->NeighborOffsets);
   auto thisNeighborConnectivityGlobalGroups = vtkm::cont::make_ArrayHandleGroupVecVariable(
     thisNeighborConnectivityGlobal, this->NeighborOffsets);
-  printNumComponents(thisNeighborConnectivityGlobalGroups);
+  //printNumComponents(thisNeighborConnectivityGlobalGroups);
   auto permutedMergedNeighborCountsThis =
     vtkm::cont::make_ArrayHandlePermutation(thisToCombinedSortOrder, mergedNeighborCounts);
   auto permutedCombinedNeighborGroupsThis =
@@ -725,10 +728,10 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                permutedCombinedNeighborGroupsThis,
                permutedMergedNeighborCountsThis);
 
-  std::cout << "After CopyIntoCombinedNeighborsWorklet" << std::endl;
-  PrintArray("combinedNeighborConnectivity", combinedNeighborConnectivity);
-  PrintArray("combinedNeighborOffsets", combinedNeighborOffsets);
-  printNumComponents(combinedNeighborGroups);
+  //std::cout << "After CopyIntoCombinedNeighborsWorklet" << std::endl;
+  //PrintArray("combinedNeighborConnectivity", combinedNeighborConnectivity);
+  //PrintArray("combinedNeighborOffsets", combinedNeighborOffsets);
+  //printNumComponents(combinedNeighborGroups);
 
   // Insert neighbors from other mesh into combined neighbor connectivity (without duplicates)
   // The following decorator converts vertiex indices from our mesh to the combined mesh
@@ -739,11 +742,11 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                               other.NeighborConnectivity,
                               otherToCombinedSortOrder);
 
-  PrintArray("otherNeighborConnectivityGlobal", otherNeighborConnectivityGlobal);
-  PrintArray("other.NeighborOffsets", other.NeighborOffsets);
+  //PrintArray("otherNeighborConnectivityGlobal", otherNeighborConnectivityGlobal);
+  //PrintArray("other.NeighborOffsets", other.NeighborOffsets);
   auto otherNeighborConnectivityGlobalGroups = vtkm::cont::make_ArrayHandleGroupVecVariable(
     otherNeighborConnectivityGlobal, other.NeighborOffsets);
-  printNumComponents(otherNeighborConnectivityGlobalGroups);
+  //printNumComponents(otherNeighborConnectivityGlobalGroups);
   auto permutedMergedNeighborCountsOther =
     vtkm::cont::make_ArrayHandlePermutation(otherToCombinedSortOrder, mergedNeighborCounts);
   auto permutedCombinedNeighborGroupsOther =
@@ -753,10 +756,10 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                permutedCombinedNeighborGroupsOther,
                permutedMergedNeighborCountsOther);
 
-  std::cout << "After MergeIntoCombinedNeighborsWorklet" << std::endl;
-  PrintArray("combinedNeighborConnectivity", combinedNeighborConnectivity);
-  PrintArray("combinedNeighborOffsets", combinedNeighborOffsets);
-  printNumComponents(combinedNeighborGroups);
+  //std::cout << "After MergeIntoCombinedNeighborsWorklet" << std::endl;
+  //PrintArray("combinedNeighborConnectivity", combinedNeighborConnectivity);
+  //PrintArray("combinedNeighborOffsets", combinedNeighborOffsets);
+  //printNumComponents(combinedNeighborGroups);
   timingsStream << "    " << std::setw(38) << std::left << "Update CombinedNeighbours"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
@@ -958,6 +961,6 @@ inline void ContourTreeMesh<FieldType>::GetBoundaryVertices(
 } // worklet
 } // vtkm
 
-#undef DEBUG_PRINT
+//#undef DEBUG_PRINT
 
 #endif

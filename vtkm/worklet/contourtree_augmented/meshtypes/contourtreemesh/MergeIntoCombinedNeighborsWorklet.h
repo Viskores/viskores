@@ -103,19 +103,19 @@ struct MergeIntoCombinedNeighborsWorklet : public vtkm::worklet::WorkletMapField
       vtkm::IdComponent numToInsert = newNeighbors.GetNumberOfComponents();
       for (vtkm::IdComponent idxToInsert = 0; idxToInsert < numToInsert; ++idxToInsert)
       {
-        std::cout << "actualGroupSize = " << actualGroupSize;
-        std::cout << " inserting " << newNeighbors[idxToInsert] << std::endl;
+        //std::cout << "actualGroupSize = " << actualGroupSize;
+        //std::cout << " inserting " << newNeighbors[idxToInsert] << std::endl;
         vtkm::IdComponent insertPos = 0;
-        std::cout << insertPos << " " << (insertPos < actualGroupSize) << " "
-                  << (combinedNeighbors[insertPos] < newNeighbors[idxToInsert]) << std::endl;
+        //std::cout << insertPos << " " << (insertPos < actualGroupSize) << " "
+        //          << (combinedNeighbors[insertPos] < newNeighbors[idxToInsert]) << std::endl;
         while (insertPos < actualGroupSize &&
                combinedNeighbors[insertPos] < newNeighbors[idxToInsert])
         {
-          std::cout << insertPos << " " << (insertPos < actualGroupSize) << " "
-                    << (combinedNeighbors[insertPos] < newNeighbors[idxToInsert]) << std::endl;
+          //std::cout << insertPos << " " << (insertPos < actualGroupSize) << " "
+          //          << (combinedNeighbors[insertPos] < newNeighbors[idxToInsert]) << std::endl;
           ++insertPos;
         }
-        std::cout << "Insert pos is " << insertPos << std::endl;
+        //std::cout << "Insert pos is " << insertPos << std::endl;
         if ((insertPos >= actualGroupSize) ||
             combinedNeighbors[insertPos] != newNeighbors[idxToInsert])
         {
@@ -123,12 +123,12 @@ struct MergeIntoCombinedNeighborsWorklet : public vtkm::worklet::WorkletMapField
           // Shift elements one back
           for (vtkm::IdComponent idx = actualGroupSize - 1; idx >= insertPos; --idx)
           {
-            std::cout << "Shifting " << combinedNeighbors[idx] << " from " << idx << " to "
-                      << idx + 1 << std::endl;
+            //std::cout << "Shifting " << combinedNeighbors[idx] << " from " << idx << " to "
+            //          << idx + 1 << std::endl;
             combinedNeighbors[idx + 1] = combinedNeighbors[idx];
           }
-          std::cout << "Saving " << newNeighbors[idxToInsert] << " to pos " << insertPos
-                    << std::endl;
+          //std::cout << "Saving " << newNeighbors[idxToInsert] << " to pos " << insertPos
+          //          << std::endl;
           combinedNeighbors[insertPos] = newNeighbors[idxToInsert];
           actualGroupSize += 1;
         }
