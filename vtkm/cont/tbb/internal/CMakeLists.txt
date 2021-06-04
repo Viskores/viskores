@@ -25,7 +25,6 @@ endif()
 
 vtkm_declare_headers(${headers}
    ParallelSortTBB.hxx
-   parallel_sort.h
    )
 
 #These sources need to always be built
