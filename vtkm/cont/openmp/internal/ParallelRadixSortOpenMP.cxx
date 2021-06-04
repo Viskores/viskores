@@ -44,7 +44,7 @@ struct RadixThreaderOpenMP
   }
 
   template <typename TaskType>
-  void RunParentTask(TaskType task)
+  void RunParentTask(TaskType task) const
   {
     assert(!omp_in_parallel());
 #pragma omp parallel default(none) shared(task)
@@ -57,7 +57,7 @@ struct RadixThreaderOpenMP
   }
 
   template <typename TaskType, typename ThreadData>
-  void RunChildTasks(ThreadData, TaskType left, TaskType right)
+  void RunChildTasks(ThreadData, TaskType left, TaskType right) const
   {
     assert(omp_in_parallel());
 #pragma omp task default(none) firstprivate(right)
