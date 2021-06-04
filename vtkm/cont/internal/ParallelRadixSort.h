@@ -485,7 +485,7 @@ struct RunTask
   }
 
   template <typename ThreaderData = void*>
-  void operator()(ThreaderData tData = nullptr)
+  void operator()(ThreaderData tData = nullptr) const
   {
     size_t num_nodes_at_current_height = (size_t)pow(2, (double)binary_tree_height_);
     if (num_threads_ <= num_nodes_at_current_height)
