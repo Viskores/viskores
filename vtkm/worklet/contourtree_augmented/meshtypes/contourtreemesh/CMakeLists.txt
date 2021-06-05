@@ -64,23 +64,16 @@ set(headers
   AddToArrayElementsWorklet.h
   ApplyLookupTableDecorator.h
   ArcComparator.h
-  CombinedOtherStartIndexNNeighboursWorklet.h
   CombinedSimulatedSimplicityIndexComparator.h
   CombinedVectorDifferentFromNext.h
-  CompressNeighboursWorklet.h
-  ComputeMaxNeighboursWorklet.h
+  CompressNeighborsWorklet.h
   CopyIntoCombinedArrayWorklet.h
   CopyIntoCombinedNeighborsWorklet.h
   CopyNeighborsToPackedArray.h
-  FindStartIndexWorklet.h
   GetArcFromDecorator.h
   InitToCombinedSortOrderArraysWorklet.h
-  MergeCombinedOtherStartIndexWorklet.h
   MergeIntoCombinedNeighborsWorklet.h
-  MergeNeighborGroups.h
   ReplaceArcNumWithToVertexWorklet.h
-  SubtractAssignWorklet.h
-  UpdateCombinedNeighboursWorklet.h
  )
 
 #-----------------------------------------------------------------------------

@@ -83,21 +83,16 @@
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/AddToArrayElementsWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ApplyLookupTableDecorator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ArcComparator.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedOtherStartIndexNNeighboursWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedSimulatedSimplicityIndexComparator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVectorDifferentFromNext.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CompressNeighboursWorklet.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CompressNeighborsWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyIntoCombinedArrayWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyIntoCombinedNeighborsWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyNeighborsToPackedArray.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/FindStartIndexWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/GetArcFromDecorator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/InitToCombinedSortOrderArraysWorklet.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/MergeCombinedOtherStartIndexWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/MergeIntoCombinedNeighborsWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ReplaceArcNumWithToVertexWorklet.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/SubtractAssignWorklet.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/UpdateCombinedNeighboursWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/ComputeMeshBoundaryContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
 
