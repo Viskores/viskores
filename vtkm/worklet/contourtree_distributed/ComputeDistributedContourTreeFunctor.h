@@ -327,6 +327,7 @@ public:
                      << std::endl
                      << "    Rank    : " << rank << std::endl
                      << "    DIY Id  : " << selfid << std::endl
+                     << "    In Id   : " << ingid << std::endl
                      << "    Round   : " << rp.round() << std::endl
                      << worklet.TimingsLogString);
         // Log the contour tree size stats
@@ -336,6 +337,7 @@ public:
                      << std::endl
                      << "    Rank    : " << rank << std::endl
                      << "    DIY Id  : " << selfid << std::endl
+                     << "    In Id   : " << ingid << std::endl
                      << "    Round   : " << rp.round() << std::endl
                      << block->ContourTrees.back().PrintArraySizes());
 
