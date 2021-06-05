@@ -83,7 +83,7 @@ struct CopyNeighborsToPackedArray : vtkm::worklet::WorkletMapField
   using ControlSignature = void(FieldIn, FieldOut);
 
   template <typename InGroupType, typename OutGroupType>
-  void operator()(const InGroupType& inGroup, OutGroupType& outGroup) const
+  VTKM_EXEC void operator()(const InGroupType& inGroup, OutGroupType& outGroup) const
   {
     vtkm::IdComponent groupSize = outGroup.GetNumberOfComponents();
     VTKM_ASSERT(groupSize <= inGroup.GetNumberOfComponents());
