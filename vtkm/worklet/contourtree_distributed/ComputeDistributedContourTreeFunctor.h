@@ -465,6 +465,10 @@ public:
         rp.enqueue(target, block->BlockOrigin);
         rp.enqueue(target, block->BlockSize);
         rp.enqueue(target, block->ContourTreeMeshes.back());
+        VTKM_LOG_S(this->TreeLogLevel,
+                   std::endl
+                     << "Rank: " << rank << " Round: " << rp.round() << " DIY Send Id: " << selfid
+                     << " DIY Target ID : " << target.gid << std::endl);
       }
     } // end for
 
