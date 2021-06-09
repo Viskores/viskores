@@ -55,7 +55,10 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
 
   //Make sure bounds are correct.
   vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds();
-  VTKM_TEST_ASSERT(test_equal(bounds, res), "Bounds of coordinates do not match");
+  VTKM_TEST_ASSERT(bounds.Contains(vtkm::Vec3f_64(res.X.Min, res.Y.Min, res.Z.Min)) &&
+                     bounds.Contains(vtkm::Vec3f_64(res.X.Max, res.Y.Max, res.Z.Max)),
+                   test_equal(bounds, res),
+                   "Bounds of coordinates do not match");
   if (dim == 1)
   {
     vtkm::cont::CellSetStructured<1> cellSet;
@@ -95,39 +98,50 @@ void CurvilinearTests()
   std::uniform_real_distribution<T> randomVal(minReal, maxReal);
   std::uniform_int_distribution<vtkm::Id> randomDim(2, 20);
 
+  vtkm::Bounds bounds(minReal, maxReal, minReal, maxReal, minReal, maxReal);
+
   for (int i = 0; i < 10; i++)
   {
     vtkm::Id3 dims(
       randomDim(g_RandomGenerator), randomDim(g_RandomGenerator), randomDim(g_RandomGenerator));
-    vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
-    vtkm::Id numCells = (dims[0] - 1) * (dims[1] - 1) * (dims[2] - 1);
-    std::vector<T> x, y, z;
-    for (vtkm::Id j = 0; j < numPoints; j++)
-    {
-      x.push_back(randomVal(g_RandomGenerator));
-      y.push_back(randomVal(g_RandomGenerator));
-      z.push_back(randomVal(g_RandomGenerator));
-    }
 
-    vtkm::Bounds bounds(minReal, maxReal, minReal, maxReal, minReal, maxReal);
+    vtkm::Id numPoints = 1;
+    vtkm::Id numCells = 1;
 
-    //test 3d
+    for (int ndim = 0; ndim < 3; ndim++)
     {
-      auto ds = vtkm::cont::DataSetBuilderCurvilinear::Create(x, y, z, dims);
-      AddFields<T>(ds, numPoints, numCells);
-      ValidateDataSet(ds, 3, numPoints, numCells, bounds);
-    }
-    //test 2d
-    {
-      auto ds = vtkm::cont::DataSetBuilderCurvilinear::Create(x, y, { dims[0], dims[1] });
-      AddFields<T>(ds, numPoints, numCells);
-      ValidateDataSet(ds, 2, numPoints, numCells, bounds);
-    }
-    //test 1d
-    {
-      auto ds = vtkm::cont::DataSetBuilderCurvilinear::Create(x);
-      AddFields<T>(ds, numPoints, numCells);
-      ValidateDataSet(ds, 1, numPoints, numCells, bounds);
+      numPoints *= dims[ndim];
+      numCells *= (dims[ndim] - 1);
+
+      std::vector<T> x, y, z;
+      for (vtkm::Id j = 0; j < numPoints; j++)
+      {
+        x.push_back(randomVal(g_RandomGenerator));
+        y.push_back(randomVal(g_RandomGenerator));
+        z.push_back(randomVal(g_RandomGenerator));
+      }
+
+      //test 3d
+      if (ndim == 2)
+      {
+        auto ds = vtkm::cont::DataSetBuilderCurvilinear::Create(x, y, z, dims);
+        AddFields<T>(ds, numPoints, numCells);
+        ValidateDataSet(ds, 3, numPoints, numCells, bounds);
+      }
+      //test 2d
+      else if (ndim == 1)
+      {
+        auto ds = vtkm::cont::DataSetBuilderCurvilinear::Create(x, y, { dims[0], dims[1] });
+        AddFields<T>(ds, numPoints, numCells);
+        ValidateDataSet(ds, 2, numPoints, numCells, bounds);
+      }
+      //test 1d
+      else if (ndim == 0)
+      {
+        auto ds = vtkm::cont::DataSetBuilderCurvilinear::Create(x);
+        AddFields<T>(ds, numPoints, numCells);
+        ValidateDataSet(ds, 1, numPoints, numCells, bounds);
+      }
     }
   }
 }

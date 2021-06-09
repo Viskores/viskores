@@ -35,7 +35,7 @@ public:
     vtkm::Id dim = static_cast<vtkm::Id>(xVals.size());
     auto coords = vtkm::cont::make_ArrayHandleSOA<vtkm::Vec<T, 3>>({ xVals, yVals, zVals });
 
-    return DataSetBuilderCurvilinear::Create(coords, { dim, 1, 1 }, 1, coordsNm);
+    return DataSetBuilderCurvilinear::Create(coords, { dim, 0, 0 }, 1, coordsNm);
   }
 
   template <typename T>
@@ -49,7 +49,7 @@ public:
     std::vector<T> zVals(xVals.size(), 0);
     auto coords = vtkm::cont::make_ArrayHandleSOA<vtkm::Vec<T, 3>>({ xVals, yVals, zVals });
 
-    return DataSetBuilderCurvilinear::Create(coords, { dims[0], dims[1], 1 }, 2, coordsNm);
+    return DataSetBuilderCurvilinear::Create(coords, { dims[0], dims[1], 0 }, 2, coordsNm);
   }
 
   template <typename T>
@@ -89,7 +89,7 @@ public:
                                               const vtkm::Id2& dims,
                                               const std::string& coordsNm = "coords")
   {
-    return DataSetBuilderCurvilinear::Create(coords, { dims[0], dims[1], 1 }, 2, coordsNm);
+    return DataSetBuilderCurvilinear::Create(coords, { dims[0], dims[1], 0 }, 2, coordsNm);
   }
 
   template <typename CoordsType>
@@ -97,7 +97,7 @@ public:
                                               const std::string& coordsNm = "coords")
   {
     return DataSetBuilderCurvilinear::Create(
-      coords, { coords.GetNumberOfValues(), 1, 1 }, 1, coordsNm);
+      coords, { coords.GetNumberOfValues(), 0, 0 }, 1, coordsNm);
   }
 
 private:
@@ -107,26 +107,32 @@ private:
                                               const vtkm::Id& cellSetDim,
                                               const std::string& coordsNm = "coords")
   {
-    VTKM_ASSERT(dims[0] >= 1 && dims[1] >= 1 && dims[2] >= 1);
-    VTKM_ASSERT(coords.GetNumberOfValues() == dims[0] * dims[1] * dims[2]);
-
     vtkm::cont::DataSet ds;
     ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordsNm, coords));
 
     if (cellSetDim == 3)
     {
+      VTKM_ASSERT(dims[0] >= 1 && dims[1] >= 1 && dims[2] >= 1);
+      VTKM_ASSERT(coords.GetNumberOfValues() == dims[0] * dims[1] * dims[2]);
+
       vtkm::cont::CellSetStructured<3> cellSet;
       cellSet.SetPointDimensions(dims);
       ds.SetCellSet(cellSet);
     }
     else if (cellSetDim == 2)
     {
+      VTKM_ASSERT(dims[0] >= 1 && dims[1] >= 1 && dims[2] == 0);
+      VTKM_ASSERT(coords.GetNumberOfValues() == dims[0] * dims[1]);
+
       vtkm::cont::CellSetStructured<2> cellSet;
       cellSet.SetPointDimensions({ dims[0], dims[1] });
       ds.SetCellSet(cellSet);
     }
     else if (cellSetDim == 1)
     {
+      VTKM_ASSERT(dims[0] >= 1 && dims[1] == 0 && dims[2] == 0);
+      VTKM_ASSERT(coords.GetNumberOfValues() == dims[0]);
+
       vtkm::cont::CellSetStructured<1> cellSet;
       cellSet.SetPointDimensions(dims[0]);
       ds.SetCellSet(cellSet);
