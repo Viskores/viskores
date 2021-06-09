@@ -10,11 +10,8 @@
 
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSetBuilderCurvilinear.h>
-#include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <algorithm>
 #include <random>
 #include <time.h>
 #include <vector>
