@@ -64,6 +64,7 @@ set(unit_tests
   UnitTestCellSetExtrude.cxx
   UnitTestCellSetPermutation.cxx
   UnitTestContTesting.cxx
+  UnitTestDataSetBuilderCurvilinear.cxx
   UnitTestDataSetBuilderExplicit.cxx
   UnitTestDataSetBuilderRectilinear.cxx
   UnitTestDataSetBuilderUniform.cxx

@@ -75,6 +75,7 @@ set(headers
   ColorTableSamples.h
   CoordinateSystem.h
   DataSet.h
+  DataSetBuilderCurvilinear.h
   DataSetBuilderExplicit.h
   DataSetBuilderRectilinear.h
   DataSetBuilderUniform.h
@@ -173,6 +174,7 @@ set(device_sources
   ColorTable.cxx
   CoordinateSystem.cxx
   DataSet.cxx
+  DataSetBuilderCurvilinear.cxx
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
