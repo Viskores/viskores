@@ -78,19 +78,18 @@ public:
 
   template <typename CoordsType>
   VTKM_CONT static vtkm::cont::DataSet Create(const CoordsType& coords,
-                                              const vtkm::Id3& dimensions,
+                                              const vtkm::Id3& dims,
                                               const std::string& coordsNm = "coords")
   {
-    return DataSetBuilderCurvilinear::Create(coords, dimensions, 3, coordsNm);
+    return DataSetBuilderCurvilinear::Create(coords, dims, 3, coordsNm);
   }
 
   template <typename CoordsType>
   VTKM_CONT static vtkm::cont::DataSet Create(const CoordsType& coords,
-                                              const vtkm::Id2& dimensions,
+                                              const vtkm::Id2& dims,
                                               const std::string& coordsNm = "coords")
   {
-    vtkm::Id3 dims(dimensions[0], dimensions[1], 1);
-    return DataSetBuilderCurvilinear::Create(coords, dims, 2, coordsNm);
+    return DataSetBuilderCurvilinear::Create(coords, { dims[0], dims[1], 1 }, 2, coordsNm);
   }
 
   template <typename CoordsType>
