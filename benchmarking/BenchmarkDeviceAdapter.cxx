@@ -17,6 +17,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Initialize.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/worklet/StableSortIndices.h>
@@ -27,6 +28,8 @@
 #include <random>
 #include <string>
 #include <utility>
+
+#include <vtkmstd/integer_sequence.h>
 
 #include <vtkm/internal/Windows.h>
 
@@ -128,7 +131,37 @@ template <typename T>
 struct TestValueFunctor
 {
   VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return TestValue(i, T{}); }
+  T operator()(vtkm::Id i) const { return static_cast<T>(i + 10); }
+};
+
+template <typename T>
+VTKM_EXEC_CONT T TestValue(vtkm::Id index)
+{
+  return TestValueFunctor<T>{}(index);
+}
+
+template <typename T, typename U>
+struct TestValueFunctor<vtkm::Pair<T, U>>
+{
+  VTKM_EXEC_CONT vtkm::Pair<T, U> operator()(vtkm::Id i) const
+  {
+    return vtkm::make_Pair(TestValue<T>(i), TestValue<U>(i + 1));
+  }
+};
+
+template <typename T, vtkm::IdComponent N>
+struct TestValueFunctor<vtkm::Vec<T, N>>
+{
+  template <std::size_t... Ns>
+  VTKM_EXEC_CONT vtkm::Vec<T, N> FillVec(vtkm::Id i, vtkmstd::index_sequence<Ns...>) const
+  {
+    return vtkm::make_Vec(TestValue<T>(i + static_cast<vtkm::Id>(Ns))...);
+  }
+
+  VTKM_EXEC_CONT vtkm::Vec<T, N> operator()(vtkm::Id i) const
+  {
+    return FillVec(i, vtkmstd::make_index_sequence<static_cast<std::size_t>(N)>{});
+  }
 };
 
 template <typename ArrayT>
@@ -140,27 +173,11 @@ VTKM_CONT void FillTestValue(ArrayT& array, vtkm::Id numValues)
 }
 
 template <typename T>
-struct ScaledTestValueFunctor
-{
-  vtkm::Id Scale;
-  VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return TestValue(i * this->Scale, T{}); }
-};
-
-template <typename ArrayT>
-VTKM_CONT void FillScaledTestValue(ArrayT& array, vtkm::Id scale, vtkm::Id numValues)
-{
-  using T = typename ArrayT::ValueType;
-  vtkm::cont::Algorithm::Copy(
-    vtkm::cont::make_ArrayHandleImplicit(ScaledTestValueFunctor<T>{ scale }, numValues), array);
-}
-
-template <typename T>
 struct ModuloTestValueFunctor
 {
   vtkm::Id Mod;
   VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return TestValue(i % this->Mod, T{}); }
+  T operator()(vtkm::Id i) const { return TestValue<T>(i % this->Mod); }
 };
 
 template <typename ArrayT>
@@ -186,7 +203,7 @@ struct BinaryTestValueFunctor
       T retVal;
       do
       {
-        retVal = TestValue(i++, T{});
+        retVal = TestValue<T>(i++);
       } while (retVal == zero);
       return retVal;
     }
@@ -213,7 +230,7 @@ VTKM_CONT void FillRandomTestValue(ArrayT& array, vtkm::Id numValues)
   auto portal = array.WritePortal();
   for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
   {
-    portal.Set(i, TestValue(static_cast<vtkm::Id>(rng()), ValueType{}));
+    portal.Set(i, TestValue<ValueType>(static_cast<vtkm::Id>(rng())));
   }
 }
 
@@ -228,7 +245,7 @@ VTKM_CONT void FillRandomModTestValue(ArrayT& array, vtkm::Id mod, vtkm::Id numV
   auto portal = array.WritePortal();
   for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
   {
-    portal.Set(i, TestValue(static_cast<vtkm::Id>(rng()) % mod, ValueType{}));
+    portal.Set(i, TestValue<ValueType>(static_cast<vtkm::Id>(rng()) % mod));
   }
 }
 
@@ -593,7 +610,7 @@ void BenchFillArrayHandle(benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::Fill(device, array, TestValue(19, ValueType{}), numValues);
+    vtkm::cont::Algorithm::Fill(device, array, TestValue<ValueType>(19), numValues);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());

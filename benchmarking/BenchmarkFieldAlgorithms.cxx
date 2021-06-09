@@ -27,7 +27,6 @@
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 #include "Benchmarker.h"
-#include <vtkm/cont/testing/Testing.h>
 
 #include <cctype>
 #include <random>
