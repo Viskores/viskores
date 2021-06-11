@@ -8,36 +8,39 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ParticleAdvection_h
-#define vtk_m_filter_ParticleAdvection_h
+#ifndef vtk_m_filter_PathParticle_h
+#define vtk_m_filter_PathParticle_h
 
-#include <vtkm/Particle.h>
-#include <vtkm/filter/FilterParticleAdvection.h>
+#include <vtkm/filter/FilterTemporalParticleAdvection.h>
 
 namespace vtkm
 {
 namespace filter
 {
-/// \brief advect particles in a vector field.
+/// \brief generate streamlines from a vector field.
 
 /// Takes as input a vector field and seed locations and generates the
-/// end points for each seed through the vector field.
-
-class ParticleAdvection : public vtkm::filter::FilterParticleAdvection<ParticleAdvection>
+/// paths taken by the seeds through the vector field.
+class PathParticle : public vtkm::filter::FilterTemporalParticleAdvection<PathParticle>
 {
 public:
-  VTKM_CONT ParticleAdvection();
+  VTKM_CONT
+  PathParticle();
 
   template <typename DerivedPolicy>
   vtkm::cont::PartitionedDataSet PrepareForExecution(
     const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+
+protected:
+private:
 };
+
 }
 } // namespace vtkm::filter
 
-#ifndef vtk_m_filter_ParticleAdvection_hxx
-#include <vtkm/filter/ParticleAdvection.hxx>
+#ifndef vtk_m_filter_PathParticle_hxx
+#include <vtkm/filter/PathParticle.hxx>
 #endif
 
-#endif // vtk_m_filter_ParticleAdvection_h
+#endif // vtk_m_filter_PathParticle_h
