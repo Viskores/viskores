@@ -12,6 +12,7 @@
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 #include <vtkm/exec/arg/Fetch.h>
+#include <vtkm/exec/arg/FetchExtrude.h>
 
 namespace vtkm
 {
@@ -19,15 +20,6 @@ namespace exec
 {
 namespace arg
 {
-
-/// \brief Aspect tag to use for getting the visited indices.
-///
-/// The \c AspectTagIncidentElementIndices aspect tag causes the \c Fetch class
-/// to obtain the indices that map to the current topology element.
-///
-struct AspectTagIncidentElementIndices
-{
-};
 
 /// \brief The \c ExecutionSignature tag to get the indices of visited elements.
 ///

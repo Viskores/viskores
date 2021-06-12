@@ -10,6 +10,7 @@
 
 #include "Benchmarker.h"
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/AtomicArray.h>
 #include <vtkm/cont/DeviceAdapterTag.h>

@@ -17,8 +17,6 @@
 
 #include <vtkm/internal/Configure.h>
 
-#include <vtkm/testing/Testing.h>
-
 #include <vtkm/List.h>
 
 #include <sstream>

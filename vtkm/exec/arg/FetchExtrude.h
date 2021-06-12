@@ -13,7 +13,8 @@
 #include <vtkm/exec/ConnectivityExtrude.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
-#include <vtkm/exec/arg/IncidentElementIndices.h>
+
+#include <vtkm/cont/ArrayHandleXGCCoordinates.h>
 
 //optimized fetches for ArrayPortalXGCCoordinates for
 // - 3D Scheduling
@@ -24,6 +25,15 @@ namespace exec
 {
 namespace arg
 {
+
+/// \brief Aspect tag to use for getting the visited indices.
+///
+/// The \c AspectTagIncidentElementIndices aspect tag causes the \c Fetch class
+/// to obtain the indices that map to the current topology element.
+///
+struct AspectTagIncidentElementIndices
+{
+};
 
 //Optimized fetch for point ids when iterating the cells ConnectivityExtrude
 template <typename FetchType, typename ExecObjectType>

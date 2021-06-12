@@ -11,10 +11,10 @@
 #ifndef vtk_m_benchmarking_Benchmarker_h
 #define vtk_m_benchmarking_Benchmarker_h
 
+#include <vtkm/cont/Initialize.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
-
-#include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/internal/brigand.hpp>
 
@@ -308,7 +308,7 @@ private:
     void operator()(brigand::type_<BenchType<P>>) const
     {
       std::ostringstream name;
-      name << this->BenchName << "<" << vtkm::testing::TypeName<P>::Name() << ">";
+      name << this->BenchName << "<" << vtkm::cont::TypeToString<P>() << ">";
       auto bm = ::benchmark::internal::RegisterBenchmarkInternal(
         new ::benchmark::internal::FunctionBenchmark(name.str().c_str(),
                                                      BenchType<P>::GetFunction()));

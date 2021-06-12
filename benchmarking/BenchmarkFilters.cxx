@@ -25,7 +25,6 @@
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/testing/MakeTestDataSet.h>
 
 #include <vtkm/cont/internal/OptionParser.h>
 
