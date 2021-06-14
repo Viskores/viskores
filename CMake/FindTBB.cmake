@@ -68,6 +68,35 @@
 #  FindTBB helper functions and macros
 #
 
+# Use TBBConfig.cmake if possible.
+
+# Disabling this as it running the TBBConfig.cmake on dragnipur is
+# causing a CMake error. I don't know if this is an install problem
+# or an issue with version 2018.0.
+# set(_tbb_find_quiet)
+# if (TBB_FIND_QUIETLY)
+#   set(_tbb_find_quiet QUIET)
+# endif ()
+# set(_tbb_find_components)
+# set(_tbb_find_optional_components)
+# foreach (_tbb_find_component IN LISTS TBB_FIND_COMPONENTS)
+#   if (TBB_FIND_REQUIRED_${_tbb_find_component})
+#     list(APPEND _tbb_find_components "${_tbb_find_component}")
+#   else ()
+#     list(APPEND _tbb_find_optional_components "${_tbb_find_component}")
+#   endif ()
+# endforeach ()
+# unset(_tbb_find_component)
+# find_package(TBB CONFIG ${_tbb_find_quiet}
+#   COMPONENTS ${_tbb_find_components}
+#   OPTIONAL_COMPONENTS ${_tbb_find_optional_components})
+# unset(_tbb_find_quiet)
+# unset(_tbb_find_components)
+# unset(_tbb_find_optional_components)
+# if (TBB_FOUND)
+#   return ()
+# endif ()
+
 #====================================================
 # Fix the library path in case it is a linker script
 #====================================================
@@ -232,7 +261,7 @@ if (WIN32 AND MSVC)
     set(COMPILER_PREFIX "vc11")
   elseif(MSVC_VERSION EQUAL 1800)
     set(COMPILER_PREFIX "vc12")
-  elseif(MSVC_VERSION EQUAL 1900)
+  elseif(MSVC_VERSION GREATER_EQUAL 1900)
     set(COMPILER_PREFIX "vc14")
   endif ()
 
@@ -277,6 +306,9 @@ endif ()
 # check compiler ABI
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(COMPILER_PREFIX)
+  if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
+    list(APPEND COMPILER_PREFIX "gcc4.8")
+  endif()
   if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
     list(APPEND COMPILER_PREFIX "gcc4.7")
   endif()
@@ -286,6 +318,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   list(APPEND COMPILER_PREFIX "gcc4.1")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(COMPILER_PREFIX)
+  if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0) # Complete guess
+    list(APPEND COMPILER_PREFIX "gcc4.8")
+  endif()
   if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.6)
     list(APPEND COMPILER_PREFIX "gcc4.7")
   endif()
@@ -392,12 +427,18 @@ findpkg_finish(TBB_MALLOC_PROXY tbbmalloc_proxy)
 #=============================================================================
 #parse all the version numbers from tbb
 if(NOT TBB_VERSION)
-
- #only read the start of the file
- file(STRINGS
+  if (EXISTS "${TBB_INCLUDE_DIR}/oneapi/tbb/version.h")
+    file(STRINGS
+      "${TBB_INCLUDE_DIR}/oneapi/tbb/version.h"
+      TBB_VERSION_CONTENTS
+      REGEX "VERSION")
+  else()
+    #only read the start of the file
+    file(STRINGS
       "${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h"
       TBB_VERSION_CONTENTS
       REGEX "VERSION")
+  endif()
 
   string(REGEX REPLACE
     ".*#define TBB_VERSION_MAJOR ([0-9]+).*" "\\1"

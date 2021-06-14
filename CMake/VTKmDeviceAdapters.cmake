@@ -46,7 +46,7 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   add_library(vtkmTBB INTERFACE)
   add_library(vtkm::tbb ALIAS vtkmTBB)
   target_link_libraries(vtkmTBB INTERFACE TBB::tbb)
-  set_target_properties(vtkmTBB PROPERTIES EXPORT_NAME tbb)
+  set_target_properties(vtkmTBB PROPERTIES EXPORT_NAME vtkm::tbb)
   install(TARGETS vtkmTBB EXPORT ${VTKm_EXPORT_NAME})
 endif()
 
