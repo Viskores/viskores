@@ -34,7 +34,7 @@
 #include <vtkm/internal/Windows.h>
 
 #ifdef VTKM_ENABLE_TBB
-#include <tbb/task_scheduler_init.h>
+#include <tbb/tbb.h>
 #endif
 #ifdef VTKM_ENABLE_OPENMP
 #include <omp.h>
@@ -1243,8 +1243,13 @@ int main(int argc, char* argv[])
   }
 
 // Handle NumThreads command-line arg:
+// TODO: Use the VTK-m library to set the number of threads (when that becomes available).
 #ifdef VTKM_ENABLE_TBB
+#if TBB_VERSION_MAJOR >= 2020
+  int numThreads = tbb::task_arena{}.max_concurrency();
+#else
   int numThreads = tbb::task_scheduler_init::automatic;
+#endif
 #endif // TBB
 
   if (argc == 3)
@@ -1261,9 +1266,15 @@ int main(int argc, char* argv[])
     }
   }
 
+  // TODO: Use the VTK-m library to set the number of threads (when that becomes available).
 #ifdef VTKM_ENABLE_TBB
+#if TBB_VERSION_MAJOR >= 2020
+  // Must not be destroyed as long as benchmarks are running:
+  tbb::global_control tbbControl(tbb::global_control::max_allowed_parallelism, numThreads);
+#else
   // Must not be destroyed as long as benchmarks are running:
   tbb::task_scheduler_init init(numThreads);
+#endif
 #endif // TBB
 
   // handle benchmarking related args and run benchmarks:
