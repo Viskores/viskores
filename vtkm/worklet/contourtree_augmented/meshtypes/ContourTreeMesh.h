@@ -73,6 +73,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
+#include <vtkm/cont/ArrayRangeComputeTemplate.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/io/ErrorIO.h>
@@ -506,8 +507,6 @@ inline void ContourTreeMesh<FieldType>::ComputeMaxNeighbors()
 {
   auto neighborCounts = make_ArrayHandleOffsetsToNumComponents(this->NeighborOffsets);
   vtkm::cont::ArrayHandle<vtkm::Range> rangeArray = vtkm::cont::ArrayRangeCompute(neighborCounts);
-  // TODO/FIXME: The following produces a warning:
-  // Extracting component 0 of vtkm::cont::ArrayHandle<int, vtkm::cont::StorageTagOffsetsToNumComponents<vtkm::cont::StorageTagBasic> > requires an inefficient memory copy.
   this->MaxNeighbors = static_cast<vtkm::Id>(ArrayGetValue(0, rangeArray).Max);
 }
 
