@@ -55,7 +55,7 @@
 #include <type_traits>
 
 #ifdef VTKM_ENABLE_TBB
-#include <tbb/task_scheduler_init.h>
+#include <tbb/tbb.h>
 #endif
 #ifdef VTKM_ENABLE_OPENMP
 #include <omp.h>
@@ -923,10 +923,21 @@ void InitDataSet(int& argc, char** argv)
 
   tetra = (options[TETRA] != nullptr);
 
+  // TODO: Use the VTK-m library to set the number of threads (when that becomes available).
 #ifdef VTKM_ENABLE_TBB
+#if TBB_VERSION_MAJOR >= 2020
+  if (numThreads < 1)
+  {
+    // Ask TBB how many threads are available.
+    numThreads = tbb::task_arena{}.max_concurrency();
+  }
+  // Must not be destroyed as long as benchmarks are running:
+  tbb::global_control tbbControl(tbb::global_control::max_allowed_parallelism, numThreads);
+#else // TBB_VERSION_MAJOR < 2020
   // Must not be destroyed as long as benchmarks are running:
   tbb::task_scheduler_init init((numThreads > 0) ? numThreads
                                                  : tbb::task_scheduler_init::automatic);
+#endif
 #endif
 #ifdef VTKM_ENABLE_OPENMP
   omp_set_num_threads((numThreads > 0) ? numThreads : omp_get_max_threads());
