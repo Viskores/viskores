@@ -70,6 +70,7 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
@@ -90,9 +91,10 @@
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyIntoCombinedArrayWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyIntoCombinedNeighborsWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyNeighborsToPackedArray.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/FindDuplicateInOtherWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/GetArcFromDecorator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/InitToCombinedSortOrderArraysWorklet.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/MergeIntoCombinedNeighborsWorklet.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/MergeSortedListsWithoutDuplicatesWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ReplaceArcNumWithToVertexWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/ComputeMeshBoundaryContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
@@ -114,7 +116,7 @@ VTKM_THIRDPARTY_POST_INCLUDE
 namespace contourtree_mesh_inc_ns =
   vtkm::worklet::contourtree_augmented::mesh_dem_contourtree_mesh_inc;
 
-//#define DEBUG_PRINT
+// #define DEBUG_PRINT
 
 namespace vtkm
 {
@@ -414,6 +416,35 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
 #endif
 }
 
+template <typename PT1, typename PT2, typename PT3, typename PT4>
+inline void CopyArrayByIndices(const PT1& srcArray,
+                               const PT2& srcIndices,
+                               PT3& tgtArray,
+                               const PT4& tgtIndices)
+{
+  VTKM_ASSERT(srcIndices.GetNumberOfValues() == tgtIndices.GetNumberOfValues());
+  auto srcPermutation = make_ArrayHandlePermutation(srcIndices, srcArray);
+  auto tgtPermuation = make_ArrayHandlePermutation(tgtIndices, tgtArray);
+  vtkm::cont::Algorithm::Copy(srcPermutation, tgtPermuation);
+}
+
+template <typename PT1, typename PT2, typename PT3, typename PT4>
+inline void CopyVecArrayByIndices(const PT1& srcArray,
+                                  const PT2& srcIndices,
+                                  PT3& tgtArray,
+                                  const PT4& tgtIndices)
+{
+  VTKM_ASSERT(srcIndices.GetNumberOfValues() == tgtIndices.GetNumberOfValues());
+  auto srcPermutation = make_ArrayHandlePermutation(srcIndices, srcArray);
+  auto tgtPermuation = make_ArrayHandlePermutation(tgtIndices, tgtArray);
+  vtkm::cont::Invoker invoke;
+  invoke(
+    contourtree_mesh_inc_ns::CopyIntoCombinedNeighborsWorklet{}, srcPermutation, tgtPermuation);
+  // Why doesn't the following copy work instead?
+  //vtkm::cont::Algorithm::Copy(srcPermutation, tgtPermuation);
+}
+
+
 
 // Initalize the contour tree from the arcs array and sort order
 template <typename FieldType>
@@ -657,124 +688,194 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
-  // Combined neighbor counts (including potential duplicates)
-  IdArrayType combinedNeighborCounts;
-  vtkm::cont::Algorithm::Fill(combinedNeighborCounts, vtkm::Id{ 0 }, numVerticesCombined);
-
-  // First, copy our neighbor counts into the correct locations
-  auto neighborCountsThis = make_ArrayHandleOffsetsToNumComponents(this->NeighborOffsets);
-  auto permutedCombinedNeighborCountsThis =
-    vtkm::cont::make_ArrayHandlePermutation(thisToCombinedSortOrder, combinedNeighborCounts);
-  vtkm::cont::Algorithm::Copy(neighborCountsThis, permutedCombinedNeighborCountsThis);
-
-  // Now, add the neighbor counts from the other mesh at the correct positions
-  auto neighborCountsOther = make_ArrayHandleOffsetsToNumComponents(other.NeighborOffsets);
-  auto permutedCombinedNeighborCountsOther =
-    vtkm::cont::make_ArrayHandlePermutation(otherToCombinedSortOrder, combinedNeighborCounts);
-  this->Invoke(contourtree_mesh_inc_ns::AddToArrayElementsWorklet{},
-               permutedCombinedNeighborCountsOther,
-               neighborCountsOther);
-
-  timingsStream << "    " << std::setw(38) << std::left << "Create CombinedOtherStartIndex"
-                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
-  timer.Start();
-
-  // Compute offsets from counts
-  IdArrayType combinedNeighborOffsets;
-  vtkm::Id nCombinedNeighbours;
-  vtkm::cont::ConvertNumComponentsToOffsets(
-    combinedNeighborCounts, combinedNeighborOffsets, nCombinedNeighbours);
-
-  //PrintIndices("combinedNeighborCounts", combinedNeighborCounts);
-  //PrintIndices("combinedNeighborOffsets", combinedNeighborOffsets);
-
-  // Create combined neighbor connectivity array and grouped view on it
-  IdArrayType combinedNeighborConnectivity;
-  combinedNeighborConnectivity.Allocate(nCombinedNeighbours);
-  auto combinedNeighborGroups = vtkm::cont::make_ArrayHandleGroupVecVariable(
-    combinedNeighborConnectivity, combinedNeighborOffsets);
-  //printNumComponents(combinedNeighborGroups);
-
-  // Create array to hold merged neighbor counts (after eliminating duplicate neigbors)
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> mergedNeighborCounts;
-  vtkm::cont::Algorithm::Fill(mergedNeighborCounts, vtkm::IdComponent{ 0 }, numVerticesCombined);
-
-  // Copy connectivity array from this mesh into combined neighbor connectivity
-  // The following decorator converts vertiex indices from our mesh to the combined mesh
-  auto thisNeighborConnectivityGlobal =
+  // Map neighbor IDs to global ID (ID in the combined) and group them
+  auto neighborConnectivityGlobalThis =
     make_ArrayHandleDecorator(this->NeighborConnectivity.GetNumberOfValues(),
                               mesh_dem_contourtree_mesh_inc::ApplyLookupTableDecoratorImpl{},
                               this->NeighborConnectivity,
                               thisToCombinedSortOrder);
+  auto neighborConnectivityGlobalGroupsThis = vtkm::cont::make_ArrayHandleGroupVecVariable(
+    neighborConnectivityGlobalThis, this->NeighborOffsets);
 
-  //PrintArray("thisNeighborConnectivityGlobal", thisNeighborConnectivityGlobal);
-  //PrintArray("this->NeighborOffsets", this->NeighborOffsets);
-  auto thisNeighborConnectivityGlobalGroups = vtkm::cont::make_ArrayHandleGroupVecVariable(
-    thisNeighborConnectivityGlobal, this->NeighborOffsets);
-  //printNumComponents(thisNeighborConnectivityGlobalGroups);
-  auto permutedMergedNeighborCountsThis =
-    vtkm::cont::make_ArrayHandlePermutation(thisToCombinedSortOrder, mergedNeighborCounts);
-  auto permutedCombinedNeighborGroupsThis =
-    vtkm::cont::make_ArrayHandlePermutation(thisToCombinedSortOrder, combinedNeighborGroups);
-
-  this->Invoke(contourtree_mesh_inc_ns::CopyIntoCombinedNeighborsWorklet{},
-               thisNeighborConnectivityGlobalGroups,
-               permutedCombinedNeighborGroupsThis,
-               permutedMergedNeighborCountsThis);
-
-  //std::cout << "After CopyIntoCombinedNeighborsWorklet" << std::endl;
-  //PrintArray("combinedNeighborConnectivity", combinedNeighborConnectivity);
-  //PrintArray("combinedNeighborOffsets", combinedNeighborOffsets);
-  //printNumComponents(combinedNeighborGroups);
-
-  // Insert neighbors from other mesh into combined neighbor connectivity (without duplicates)
-  // The following decorator converts vertiex indices from our mesh to the combined mesh
-  //
-  auto otherNeighborConnectivityGlobal =
+  auto neighborConnectivityGlobalOther =
     make_ArrayHandleDecorator(other.NeighborConnectivity.GetNumberOfValues(),
                               mesh_dem_contourtree_mesh_inc::ApplyLookupTableDecoratorImpl{},
                               other.NeighborConnectivity,
                               otherToCombinedSortOrder);
+  auto neighborConnectivityGlobalGroupsOther = vtkm::cont::make_ArrayHandleGroupVecVariable(
+    neighborConnectivityGlobalOther, other.NeighborOffsets);
 
-  //PrintArray("otherNeighborConnectivityGlobal", otherNeighborConnectivityGlobal);
-  //PrintArray("other.NeighborOffsets", other.NeighborOffsets);
-  auto otherNeighborConnectivityGlobalGroups = vtkm::cont::make_ArrayHandleGroupVecVariable(
-    otherNeighborConnectivityGlobal, other.NeighborOffsets);
-  //printNumComponents(otherNeighborConnectivityGlobalGroups);
-  auto permutedMergedNeighborCountsOther =
-    vtkm::cont::make_ArrayHandlePermutation(otherToCombinedSortOrder, mergedNeighborCounts);
-  auto permutedCombinedNeighborGroupsOther =
-    vtkm::cont::make_ArrayHandlePermutation(otherToCombinedSortOrder, combinedNeighborGroups);
-  this->Invoke(contourtree_mesh_inc_ns::MergeIntoCombinedNeighborsWorklet{},
-               otherNeighborConnectivityGlobalGroups,
-               permutedCombinedNeighborGroupsOther,
-               permutedMergedNeighborCountsOther);
+  // Merge the two neighborhood connecitivy lists. First, we split neighbor connectivity
+  // into three groups (i) vertices only in this, (ii) vertices only in other, (iii)
+  // vertices in both meshes. We then compute cobmined neighbor connectivity for vertices
+  // in both meshes. Finally, we copy them into the combined array.
 
-  //std::cout << "After MergeIntoCombinedNeighborsWorklet" << std::endl;
-  //PrintArray("combinedNeighborConnectivity", combinedNeighborConnectivity);
-  //PrintArray("combinedNeighborOffsets", combinedNeighborOffsets);
-  //printNumComponents(combinedNeighborGroups);
-  timingsStream << "    " << std::setw(38) << std::left << "Update CombinedNeighbours"
+  // Split vertices into groups (i) uniuqe this, (ii) unique other, (iii) in both
+  // ... compute arrays containing 1 if the element is in the other respective array
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> thisToCombinedSortOrderIsDuplicate;
+  thisToCombinedSortOrderIsDuplicate.Allocate(thisToCombinedSortOrder.GetNumberOfValues());
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> otherToCombinedSortOrderIsDuplicate;
+  vtkm::cont::Algorithm::Fill(otherToCombinedSortOrderIsDuplicate,
+                              vtkm::IdComponent{ 0 },
+                              otherToCombinedSortOrder.GetNumberOfValues());
+  this->Invoke(contourtree_mesh_inc_ns::FindDuplicateInOtherWorklet{},
+               thisToCombinedSortOrder,
+               otherToCombinedSortOrder,
+               thisToCombinedSortOrderIsDuplicate,
+               otherToCombinedSortOrderIsDuplicate);
+
+#ifdef DEBUG_PRINT
+  PrintIndices("thisToCombinedSortOrderIsDuplicate", thisToCombinedSortOrderIsDuplicate);
+  PrintIndices("otherToCombinedSortOrderIsDuplicate", otherToCombinedSortOrderIsDuplicate);
+#endif
+  // ... create lists for all groups to be used to restrict operations to them
+  vtkm::cont::ArrayHandleIndex indicesThis(thisToCombinedSortOrder.GetNumberOfValues());
+  vtkm::cont::ArrayHandleIndex indicesOther(otherToCombinedSortOrder.GetNumberOfValues());
+
+  // ... helper function, basically negates criterion for CopyIf
+  struct IsUnique
+  {
+    VTKM_EXEC_CONT bool operator()(vtkm::IdComponent isInOther) { return isInOther == 0; }
+  };
+
+  IdArrayType indicesThisUnique, indicesThisDuplicate;
+  vtkm::cont::Algorithm::CopyIf(
+    indicesThis, thisToCombinedSortOrderIsDuplicate, indicesThisUnique, IsUnique{});
+  vtkm::cont::Algorithm::CopyIf(
+    indicesThis, thisToCombinedSortOrderIsDuplicate, indicesThisDuplicate);
+
+#ifdef DEBUG_PRINT
+  PrintIndices("indicesThisUnique", indicesThisUnique);
+  PrintIndices("indicesThisDuplicate", indicesThisDuplicate);
+#endif
+
+  IdArrayType indicesOtherUnique, indicesOtherDuplicate;
+  vtkm::cont::Algorithm::CopyIf(
+    indicesOther, otherToCombinedSortOrderIsDuplicate, indicesOtherUnique, IsUnique{});
+  vtkm::cont::Algorithm::CopyIf(
+    indicesOther, otherToCombinedSortOrderIsDuplicate, indicesOtherDuplicate);
+
+#ifdef DEBUG_PRINT
+  PrintIndices("indicesOtherUnique", indicesOtherUnique);
+  PrintIndices("indicesOtherDuplicate", indicesOtherDuplicate);
+#endif
+
+  VTKM_ASSERT(indicesThisDuplicate.GetNumberOfValues() ==
+              indicesOtherDuplicate.GetNumberOfValues());
+
+  // Merge the neighbor groups for vertices that occur in both meshes
+  // ... compute combined counts (with duplicates)
+  auto neighborCountsThis = make_ArrayHandleOffsetsToNumComponents(this->NeighborOffsets);
+  auto permutedNeighborCountsThis =
+    vtkm::cont::make_ArrayHandlePermutation(indicesThisDuplicate, neighborCountsThis);
+  auto neighborCountsOther = make_ArrayHandleOffsetsToNumComponents(other.NeighborOffsets);
+  auto permutedNeighborCountsOther =
+    vtkm::cont::make_ArrayHandlePermutation(indicesOtherDuplicate, neighborCountsOther);
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> combinedCommonNeighborCountSums;
+  vtkm::cont::Algorithm::Transform(permutedNeighborCountsThis,
+                                   permutedNeighborCountsOther,
+                                   combinedCommonNeighborCountSums,
+                                   vtkm::Sum());
+
+  // ... merge sorted lists
+  // ...... create output arrays/groups
+  vtkm::Id unpackedCombinedCommonNeighborConnectivitySize;
+  IdArrayType unpackedCombinedCommonNeighborOffsets;
+  vtkm::cont::ConvertNumComponentsToOffsets(combinedCommonNeighborCountSums,
+                                            unpackedCombinedCommonNeighborOffsets,
+                                            unpackedCombinedCommonNeighborConnectivitySize);
+  IdArrayType unpackedCombinedCommonNeighborConnectivity;
+  unpackedCombinedCommonNeighborConnectivity.Allocate(
+    unpackedCombinedCommonNeighborConnectivitySize);
+  auto unpackedCombinedCommonNeighborConnectivityGroups = make_ArrayHandleGroupVecVariable(
+    unpackedCombinedCommonNeighborConnectivity, unpackedCombinedCommonNeighborOffsets);
+
+  // ....... create permuted input arrays/groups
+  auto permutedNeighborConnectivityGlobalGroupsThis =
+    make_ArrayHandlePermutation(indicesThisDuplicate, neighborConnectivityGlobalGroupsThis);
+  auto permutedNeighborConnectivityGlobalGroupsOther =
+    make_ArrayHandlePermutation(indicesOtherDuplicate, neighborConnectivityGlobalGroupsOther);
+
+  // ........ create array for actual counts of unique neighbors
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> packedCombinedCommonNeighborCounts;
+  packedCombinedCommonNeighborCounts.Allocate(combinedCommonNeighborCountSums.GetNumberOfValues());
+
+  // ........ perform merge
+  this->Invoke(contourtree_mesh_inc_ns::MergeSortedListsWithoutDuplicatesWorklet{},
+               permutedNeighborConnectivityGlobalGroupsThis,
+               permutedNeighborConnectivityGlobalGroupsOther,
+               unpackedCombinedCommonNeighborConnectivityGroups,
+               packedCombinedCommonNeighborCounts);
+
+  // ... pack sorted lists
+  // ...... create the new offsets array for the merged groups (without duplicates).
+  vtkm::Id packedCombinedCommonNeighborConnectivitySize;
+  vtkm::cont::ArrayHandle<vtkm::Id> packedCombinedCommonNeighborOffsets;
+  vtkm::cont::ConvertNumComponentsToOffsets(packedCombinedCommonNeighborCounts,
+                                            packedCombinedCommonNeighborOffsets,
+                                            packedCombinedCommonNeighborConnectivitySize);
+
+  // ...... create a new grouped array for the packed connectivity
+  vtkm::cont::ArrayHandle<vtkm::Id> packedCombinedCommonNeighborConnectivity;
+  packedCombinedCommonNeighborConnectivity.Allocate(packedCombinedCommonNeighborConnectivitySize);
+  auto packedCommonNeighborConnectivityGroups = vtkm::cont::make_ArrayHandleGroupVecVariable(
+    packedCombinedCommonNeighborConnectivity, packedCombinedCommonNeighborOffsets);
+
+  // ...... copy data to the packed array.
+  this->Invoke(contourtree_mesh_inc_ns::CopyNeighborsToPackedArray{},
+               unpackedCombinedCommonNeighborConnectivityGroups,
+               packedCommonNeighborConnectivityGroups);
+
+  // Create array for all three groups
+  // ... create combined counts array
+  IdArrayType combinedNeighborCounts;
+  combinedNeighborCounts.Allocate(numVerticesCombined);
+
+  auto thisOnlyToCombinedSortOrder =
+    make_ArrayHandlePermutation(indicesThisUnique, thisToCombinedSortOrder);
+  auto otherOnlyToCombinedSortOrder =
+    make_ArrayHandlePermutation(indicesOtherUnique, otherToCombinedSortOrder);
+  auto commonToCombinedSortOrder =
+    make_ArrayHandlePermutation(indicesThisDuplicate, thisToCombinedSortOrder);
+
+  CopyArrayByIndices(
+    neighborCountsThis, indicesThisUnique, combinedNeighborCounts, thisOnlyToCombinedSortOrder);
+  CopyArrayByIndices(
+    neighborCountsOther, indicesOtherUnique, combinedNeighborCounts, otherOnlyToCombinedSortOrder);
+  auto commonCombinedNeighborCounts =
+    make_ArrayHandlePermutation(commonToCombinedSortOrder, combinedNeighborCounts);
+  vtkm::cont::Algorithm::Copy(packedCombinedCommonNeighborCounts, commonCombinedNeighborCounts);
+
+  // ... create offsets and allocate combinedNeighborConnectivity array
+  vtkm::Id combinedNeighborConnectivitySize;
+  vtkm::cont::ArrayHandle<vtkm::Id> combinedNeighborOffsets;
+  vtkm::cont::ConvertNumComponentsToOffsets(
+    combinedNeighborCounts, combinedNeighborOffsets, combinedNeighborConnectivitySize);
+  IdArrayType combinedNeighborConnectivity;
+  combinedNeighborConnectivity.Allocate(combinedNeighborConnectivitySize);
+  auto combinedNeighborConnectivityGroups =
+    make_ArrayHandleGroupVecVariable(combinedNeighborConnectivity, combinedNeighborOffsets);
+
+  // ... copy the connectivity data including  previously merged lists
+  CopyVecArrayByIndices(neighborConnectivityGlobalGroupsThis,
+                        indicesThisUnique,
+                        combinedNeighborConnectivityGroups,
+                        thisOnlyToCombinedSortOrder);
+  CopyVecArrayByIndices(neighborConnectivityGlobalGroupsOther,
+                        indicesOtherUnique,
+                        combinedNeighborConnectivityGroups,
+                        otherOnlyToCombinedSortOrder);
+  auto commonCombinedNeighborConnectivityGroups =
+    make_ArrayHandlePermutation(commonToCombinedSortOrder, combinedNeighborConnectivityGroups);
+  this->Invoke(contourtree_mesh_inc_ns::CopyIntoCombinedNeighborsWorklet{},
+               packedCommonNeighborConnectivityGroups,
+               commonCombinedNeighborConnectivityGroups);
+  // Why doesn't the following copy work instead?
+  // vtkm::cont::Algorithm::Copy(packedCommonNeighborConnectivityGroups, commonCombinedNeighborConnectivityGroups);
+
+  timingsStream << "    " << std::setw(38) << std::left << "Compute CombinedNeighborConnectivity"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
-
-  // Create the new offsets array for the merged groups (without duplicates).
-  vtkm::Id packedCombinedNeighborConnectivitySize;
-  vtkm::cont::ArrayHandle<vtkm::Id> packedCombinedNeighborOffsets;
-  vtkm::cont::ConvertNumComponentsToOffsets(
-    mergedNeighborCounts, packedCombinedNeighborOffsets, packedCombinedNeighborConnectivitySize);
-
-  // Create a new grouped array for the packed connectivity
-  // Note that you have to pre-allocate the connectivity array.
-  vtkm::cont::ArrayHandle<vtkm::Id> packedCombinedNeighborConnectivity;
-  packedCombinedNeighborConnectivity.Allocate(packedCombinedNeighborConnectivitySize);
-  auto packedNeighborGroups = vtkm::cont::make_ArrayHandleGroupVecVariable(
-    packedCombinedNeighborConnectivity, packedCombinedNeighborOffsets);
-
-  // Copy data to the packed array.
-  this->Invoke(contourtree_mesh_inc_ns::CopyNeighborsToPackedArray{},
-               combinedNeighborGroups,
-               packedNeighborGroups);
 
   // Compute combined global mesh index arrays
   IdArrayType combinedGlobalMeshIndex;
@@ -815,8 +916,8 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   // Swap in combined version. VTKM ArrayHandles are smart so we can just swap in the new for the old
   this->SortedValues = combinedSortedValues;
   this->GlobalMeshIndex = combinedGlobalMeshIndex;
-  this->NeighborConnectivity = packedCombinedNeighborConnectivity;
-  this->NeighborOffsets = packedCombinedNeighborOffsets;
+  this->NeighborConnectivity = combinedNeighborConnectivity;
+  this->NeighborOffsets = combinedNeighborOffsets;
   this->NumVertices = SortedValues.GetNumberOfValues();
   this->SortIndices = vtkm::cont::ArrayHandleIndex(this->NumVertices);
   this->SortOrder = vtkm::cont::ArrayHandleIndex(this->NumVertices);

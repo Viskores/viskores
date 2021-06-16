@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_into_combined_neighbors_worklet_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_into_combined_neighbors_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_merge_sorted_lists_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_merge_sorted_lists_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -75,25 +75,51 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-struct CopyIntoCombinedNeighborsWorklet : public vtkm::worklet::WorkletMapField
+struct MergeSortedListsWithoutDuplicatesWorklet : public vtkm::worklet::WorkletMapField
 {
-  // NOTE: Even though the second parameter is only used for output, it needs
-  // to be declared as FieldInOut as we use an ArrayHandleGroupVecVariable for
-  // output, which breaks some assumptions. Otherwise GetNumberOfComponents()
-  // and indexing do not work properly (see issue #626) resulting in a crash.
-  using ControlSignature = void(FieldIn, FieldInOut);
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut, FieldOut);
 
   template <typename InGroupType, typename OutGroupType>
-  VTKM_EXEC void operator()(const InGroupType& newNeighbors, OutGroupType& combinedNeighbors) const
+  VTKM_EXEC void operator()(const InGroupType& list1,
+                            const InGroupType& list2,
+                            OutGroupType& combinedList,
+                            vtkm::IdComponent& numberOfUniqueElements) const
   {
-    vtkm::IdComponent groupSize = newNeighbors.GetNumberOfComponents();
-    VTKM_ASSERT(groupSize == combinedNeighbors.GetNumberOfComponents());
-    for (vtkm::IdComponent index = 0; index < groupSize; ++index)
+    VTKM_ASSERT(list1.GetNumberOfComponents() + list2.GetNumberOfComponents() <=
+                combinedList.GetNumberOfComponents());
+
+    numberOfUniqueElements = 0;
+
+    vtkm::IdComponent pos1 = 0;
+    vtkm::IdComponent pos2 = 0;
+    while (pos1 < list1.GetNumberOfComponents() && pos2 < list2.GetNumberOfComponents())
     {
-      combinedNeighbors[index] = newNeighbors[index];
+      if (list1[pos1] < list2[pos2])
+      {
+        combinedList[numberOfUniqueElements++] = list1[pos1++];
+      }
+      else if (list1[pos1] == list2[pos2])
+      {
+        combinedList[numberOfUniqueElements++] = list1[pos1++];
+        ++pos2;
+      }
+      else
+      {
+        VTKM_ASSERT(list1[pos1] > list2[pos2]);
+        combinedList[numberOfUniqueElements++] = list2[pos2++];
+      }
+    }
+    // Either list1 or list2 may have additional elements but not both, so the following is safe
+    while (pos1 < list1.GetNumberOfComponents())
+    {
+      combinedList[numberOfUniqueElements++] = list1[pos1++];
+    }
+    while (pos2 < list2.GetNumberOfComponents())
+    {
+      combinedList[numberOfUniqueElements++] = list2[pos2++];
     }
   }
-}; // CopyIntoCombinedNeighborsWorklet
+}; // MergeSortedListsWithoutDuplicatesWorklet
 
 } // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented
