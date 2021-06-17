@@ -735,7 +735,7 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   // ... helper function, basically negates criterion for CopyIf
   struct IsUnique
   {
-    VTKM_EXEC_CONT bool operator()(vtkm::IdComponent isInOther) { return isInOther == 0; }
+    VTKM_EXEC_CONT bool operator()(vtkm::IdComponent isInOther) const { return isInOther == 0; }
   };
 
   IdArrayType indicesThisUnique, indicesThisDuplicate;
