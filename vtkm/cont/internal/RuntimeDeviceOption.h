@@ -33,7 +33,7 @@ enum class RuntimeDeviceOptionSource
 class VTKM_CONT_EXPORT RuntimeDeviceOption
 {
 public:
-  VTKM_CONT RuntimeDeviceOption(const option::OptionIndex& index, const std::string& envName);
+  VTKM_CONT RuntimeDeviceOption(const vtkm::Id& index, const std::string& envName);
 
   VTKM_CONT virtual ~RuntimeDeviceOption() noexcept;
 
@@ -42,10 +42,11 @@ public:
   VTKM_CONT void SetOptionFromOptionsArray(const option::Option* options);
   VTKM_CONT void SetOption(const vtkm::Id& value);
   VTKM_CONT vtkm::Id GetValue() const;
+  VTKM_CONT RuntimeDeviceOptionSource GetSource() const;
   VTKM_CONT bool IsSet() const;
 
 private:
-  const option::OptionIndex Index;
+  const vtkm::Id Index;
   const std::string EnvName;
   RuntimeDeviceOptionSource Source;
   vtkm::Id Value;

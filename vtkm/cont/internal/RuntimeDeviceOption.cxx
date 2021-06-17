@@ -50,8 +50,7 @@ VTKM_CONT vtkm::Id ParseOption(const std::string& input, const std::string& sour
 
 } // namespace
 
-RuntimeDeviceOption::RuntimeDeviceOption(const option::OptionIndex& index,
-                                         const std::string& envName)
+RuntimeDeviceOption::RuntimeDeviceOption(const vtkm::Id& index, const std::string& envName)
   : Index(index)
   , EnvName(envName)
   , Source(RuntimeDeviceOptionSource::NOT_SET)
@@ -70,17 +69,17 @@ void RuntimeDeviceOption::SetOptionFromEnvironment()
 {
   if (std::getenv(EnvName.c_str()) != nullptr)
   {
-    this->Value = ParseOption(std::getenv(EnvName.c_str()), "ENVIRONMENT: '" + EnvName + "'");
+    this->Value = ParseOption(std::getenv(EnvName.c_str()), "ENVIRONMENT: " + EnvName);
     this->Source = RuntimeDeviceOptionSource::ENVIRONMENT;
   }
 }
 
 void RuntimeDeviceOption::SetOptionFromOptionsArray(const option::Option* options)
 {
-  if (options[this->Index])
+  if (options != nullptr && options[this->Index])
   {
     this->Value = ParseOption(options[this->Index].arg,
-                              "COMMAND_LINE: '" + std::string{ options[this->Index].name } + "'");
+                              "COMMAND_LINE: " + std::string{ options[this->Index].name });
     this->Source = RuntimeDeviceOptionSource::COMMAND_LINE;
   }
 }
@@ -95,9 +94,15 @@ vtkm::Id RuntimeDeviceOption::GetValue() const
 {
   return this->Value;
 }
+
+RuntimeDeviceOptionSource RuntimeDeviceOption::GetSource() const
+{
+  return this->Source;
+}
+
 bool RuntimeDeviceOption::IsSet() const
 {
-  return Source != RuntimeDeviceOptionSource::NOT_SET;
+  return this->Source != RuntimeDeviceOptionSource::NOT_SET;
 }
 
 } // namespace vtkm::cont::internal

@@ -198,6 +198,24 @@ void InitializeDeprecatedOptionsWithArgs()
   CheckArgs(argc, argv, "--foo", "--", "--device", "Any", "--bar", "baz");
 }
 
+void InitializeRuntimeDeviceConfigurationWithArgs()
+{
+  int argc;
+  char** argv;
+  MakeArgs(argc,
+           argv,
+           "--device",
+           "Any",
+           "--vtkm-num-threads",
+           "100",
+           "--vtkm-numa-regions",
+           "4",
+           "--vtkm-device-instance",
+           "2");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv);
+}
+
 void InitializeWithHelp()
 {
   std::cout << "Pass help flag to initialize" << std::endl;
@@ -224,6 +242,7 @@ void DoInitializeTests()
   InitializeMixedOptions();
   InitializeCustomOptionsWithArgs();
   InitializeDeprecatedOptionsWithArgs();
+  InitializeRuntimeDeviceConfigurationWithArgs();
 
   // This should be the last function called as it should exit with a zero status.
   InitializeWithHelp();
