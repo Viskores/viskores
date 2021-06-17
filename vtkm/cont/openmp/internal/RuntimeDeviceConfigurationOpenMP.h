@@ -29,31 +29,29 @@ class RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagOpenMP>
     return vtkm::cont::DeviceAdapterTagOpenMP{};
   }
 
-  VTKM_CONT void Initialize(const RuntimeDeviceConfigurationOptions&) const override final
-  {
-    // TODO: Initialize threads/numa regions in OpenMP
-  }
-
-  VTKM_CONT void SetThreads(const vtkm::Id&) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id&) const override final
   {
     // TODO: Set the threads in OpenMP
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT void SetNumaRegions(const vtkm::Id&) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetNumaRegions(
+    const vtkm::Id&) const override final
   {
     // TODO: Set the numa regions in OpenMP
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT vtkm::Id GetThreads() const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id&) const override final
   {
     // TODO: Get the number of OpenMP threads
-    return 0;
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT vtkm::Id GetNumaRegions() const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetNumaRegions(vtkm::Id&) const override final
   {
     // TODO: Get the number of OpenMP NumaRegions
-    return 0;
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 };
 } // namespace vtkm::cont::internal

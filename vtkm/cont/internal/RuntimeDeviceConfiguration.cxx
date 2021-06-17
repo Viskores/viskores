@@ -9,8 +9,6 @@
 //============================================================================
 #include <vtkm/cont/internal/RuntimeDeviceConfiguration.h>
 
-#include <vtkm/cont/Logging.h>
-
 namespace vtkm
 {
 namespace cont
@@ -25,69 +23,91 @@ void RuntimeDeviceConfigurationBase::Initialize(
 {
   if (configOptions.VTKmNumThreads.IsSet())
   {
-    this->SetThreads(configOptions.VTKmNumThreads.GetValue());
+    auto value = configOptions.VTKmNumThreads.GetValue();
+    auto code = this->SetThreads(value);
+    this->LogReturnCode(code, "SetThreads", value);
   }
   if (configOptions.VTKmNumaRegions.IsSet())
   {
-    this->SetNumaRegions(configOptions.VTKmNumaRegions.GetValue());
+    auto value = configOptions.VTKmNumaRegions.GetValue();
+    auto code = this->SetNumaRegions(value);
+    this->LogReturnCode(code, "SetNumaRegions", value);
   }
   if (configOptions.VTKmDeviceInstance.IsSet())
   {
-    this->SetDeviceInstance(configOptions.VTKmDeviceInstance.GetValue());
+    auto value = configOptions.VTKmDeviceInstance.GetValue();
+    auto code = this->SetDeviceInstance(value);
+    this->LogReturnCode(code, "SetDeviceInstance", value);
   }
 }
 
 void RuntimeDeviceConfigurationBase::Initialize(
   const RuntimeDeviceConfigurationOptions& configOptions,
-  int&,
-  char*[]) const
+  int& argc,
+  char* argv[]) const
 {
+  this->ParseExtraArguments(argc, argv);
   this->Initialize(configOptions);
 }
 
-void RuntimeDeviceConfigurationBase::SetThreads(const vtkm::Id&) const
+RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::SetThreads(const vtkm::Id&) const
 {
-  VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-             "Called 'SetThreads' for unsupported Device '" << this->GetDevice().GetName()
-                                                            << "', no-op");
+  return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }
 
-void RuntimeDeviceConfigurationBase::SetNumaRegions(const vtkm::Id&) const
+RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::SetNumaRegions(const vtkm::Id&) const
 {
-  VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-             "Called 'SetNumaRegions' for unsupported Device '" << this->GetDevice().GetName()
-                                                                << "', no-op");
+  return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }
 
-void RuntimeDeviceConfigurationBase::SetDeviceInstance(const vtkm::Id&) const
+RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::SetDeviceInstance(
+  const vtkm::Id&) const
 {
-  VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-             "Called 'SetDeviceInstance' for unsupported Device '" << this->GetDevice().GetName()
-                                                                   << "', no-op");
+  return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }
 
-vtkm::Id RuntimeDeviceConfigurationBase::GetThreads() const
+RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::GetThreads(vtkm::Id&) const
 {
-  VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-             "Called 'GetThreads' for unsupported Device '" << this->GetDevice().GetName()
-                                                            << "', returning -1");
-  return -1;
+  return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }
 
-vtkm::Id RuntimeDeviceConfigurationBase::GetNumaRegions() const
+RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::GetNumaRegions(vtkm::Id&) const
 {
-  VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-             "Called 'GetNumaRegions' for unsupported Device '" << this->GetDevice().GetName()
-                                                                << "', returning -1");
-  return -1;
+  return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }
 
-vtkm::Id RuntimeDeviceConfigurationBase::GetDeviceInstance() const
+RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::GetDeviceInstance(vtkm::Id&) const
 {
-  VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-             "Called 'GetDeviceInstance' for unsupported Device '" << this->GetDevice().GetName()
-                                                                   << "', returning -1");
-  return -1;
+  return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
+}
+
+void RuntimeDeviceConfigurationBase::ParseExtraArguments(int&, char*[]) const {}
+
+void RuntimeDeviceConfigurationBase::LogReturnCode(const RuntimeDeviceConfigReturnCode& code,
+                                                   const std::string& function,
+                                                   const vtkm::Id& value) const
+{
+  // Note that we intentionally are not logging a warning for INVALID_FOR_DEVICE. When a
+  // user provides a command line argument, it gets sent to all possible devices during
+  // `Initialize` regardless of whether it is used. The user does not need a lot of
+  // useless warnings about (for example) the serial device not supporting parameters
+  // intended for a real parallel device.
+  if (code == RuntimeDeviceConfigReturnCode::OUT_OF_BOUNDS)
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               function << " for " << this->GetDevice().GetName()
+                        << "was OUT_OF_BOUNDS with value: " << value);
+  }
+  else if (code == RuntimeDeviceConfigReturnCode::INVALID_VALUE)
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               function << "for " << this->GetDevice().GetName()
+                        << "had INVLAID_VALUE for value: " << value);
+  }
+#ifndef VTKM_ENABLE_LOGGING
+  (void)function;
+  (void)value;
+#endif
 }
 
 } // namespace vtkm::cont::internal

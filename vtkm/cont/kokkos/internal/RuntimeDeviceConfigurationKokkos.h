@@ -32,51 +32,46 @@ public:
     return vtkm::cont::DeviceAdapterTagKokkos{};
   }
 
-  VTKM_CONT void Initialize(const RuntimeDeviceConfigurationOptions&) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id&) const override final
   {
-    // TODO: load the kokkos config options
+    // TODO: set the kokkos threads
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT void Initialize(const RuntimeDeviceConfigurationOptions& configOptions,
-                            int& argc,
-                            char* argv[]) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetNumaRegions(
+    const vtkm::Id&) const override final
   {
-    // TODO: load the --kokkos command line args and store them for setting later
-    this->ParseKokkosArgs(argc, argv);
-    this->Initialize(configOptions);
+    // TODO: set the kokkos numa regions
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT void SetThreads(const vtkm::Id& numThreads) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(
+    const vtkm::Id&) const override final
   {
-    // TODO: set the kokkos config object's num threads
+    // TODO: set the kokkos device instance
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT void SetNumaRegions(const vtkm::Id& numaRegions) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id&) const override final
   {
-    // TODO: set the kokkos config object's numa regions
+    // TODO: get the kokkos threads
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT void SetDeviceInstance(const vtkm::Id& deviceInstance) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetNumaRegions(vtkm::Id&) const override final
   {
-    // TODO: set the kokkos config object's device instance
+    // TODO: get the kokkos numa regions
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT vtkm::Id GetThreads() const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(vtkm::Id&) const override final
   {
-    // TODO: get the value of the kokkos config object's num threads
+    // TODO: get the kokkos device instance
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT vtkm::Id GetNumaRegions() const override final
-  {
-    // TODO: get the value of the kokkos config object's numa regions
-  }
-
-  VTKM_CONT vtkm::Id GetDeviceInstance() const override final
-  {
-    // TODO: get the value of the kokkos config object's device instance
-  }
-
-  VTKM_CONT void ParseKokkosArgs(int& argc, char* argv[]) const
+protected:
+  VTKM_CONT virtual void ParseExtraArguments(int&, char*[]) const override final
   {
     // TODO: ugh, kokkos. Manually parse the kokkos config args, store them for usage
   }

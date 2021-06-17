@@ -33,14 +33,29 @@ enum class RuntimeDeviceOptionSource
 class VTKM_CONT_EXPORT RuntimeDeviceOption
 {
 public:
+  /// Constructs a RuntimeDeviceOption, sets the Source to NOT_SET
+  /// params:
+  ///   index - index location of this command line argument in an option::Option array
+  ///   envName - The environment variable name of this option
   VTKM_CONT RuntimeDeviceOption(const vtkm::Id& index, const std::string& envName);
 
   VTKM_CONT virtual ~RuntimeDeviceOption() noexcept;
 
+  /// Initializes this option's value from the environment and then the provided options
+  /// array in that order. The options array is expected to be filled in using the
+  /// vtkm::cont::internal::option::OptionIndex with the usage vector defined in
+  /// vtkm::cont::Initialize.
   VTKM_CONT void Initialize(const option::Option* options);
+
+  /// Sets the Value to the environment variable of the constructed EnvName
   VTKM_CONT void SetOptionFromEnvironment();
+
+  /// Grabs and sets the option value using the constructed Index
   VTKM_CONT void SetOptionFromOptionsArray(const option::Option* options);
+
+  /// Directly set the value for this option
   VTKM_CONT void SetOption(const vtkm::Id& value);
+
   VTKM_CONT vtkm::Id GetValue() const;
   VTKM_CONT RuntimeDeviceOptionSource GetSource() const;
   VTKM_CONT bool IsSet() const;

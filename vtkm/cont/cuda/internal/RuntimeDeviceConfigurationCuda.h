@@ -29,19 +29,17 @@ class RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagCuda>
     return vtkm::cont::DeviceAdapterTagCuda{};
   }
 
-  VTKM_CONT void Initialize(const RuntimeDeviceConfigurationOptions&) const override final
-  {
-    // TODO: Init cuda runtime from parsed configOptions
-  }
-
-  VTKM_CONT void SetDeviceInstance(const vtkm::Id&) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(
+    const vtkm::Id&) const override final
   {
     // TODO: set the cuda device instance
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT vtkm::Id GetDeviceInstance() const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(vtkm::Id&) const override final
   {
     // TODO: Get the cuda device instance (also maybe a list of available devices?)
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 };
 } // namespace vtkm::cont::internal

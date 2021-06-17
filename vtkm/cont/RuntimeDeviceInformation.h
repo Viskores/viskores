@@ -64,6 +64,7 @@ public:
   /// devices using parsed vtkm arguments.
   ///
   /// params:
+  ///   id - The specific device to retreive the RuntimeDeviceConfiguration options for
   ///   configOptions - VTKm provided options that should be included when initializing
   ///                   a given RuntimeDeviceConfiguration
   ///   argc - The number of command line arguments to parse when Initializing

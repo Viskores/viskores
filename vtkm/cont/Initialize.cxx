@@ -144,6 +144,12 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
                         "",
                         opt::VtkmArg::UnknownOption,
                         "Usage information:\n" });
+      usage.push_back({ opt::OptionIndex::HELP,
+                        0,
+                        "h",
+                        "vtkm-help",
+                        opt::Arg::None,
+                        "  --vtkm-help, -h \tPrint usage information." });
     }
     usage.push_back(
       { opt::OptionIndex::DEVICE,
@@ -152,18 +158,20 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
         "vtkm-device",
         VtkmDeviceArg::IsDevice,
         "  --vtkm-device <dev> \tForce device to dev. Omit device to list available devices." });
-    usage.push_back({ opt::OptionIndex::DEPRECATED_DEVICE,
-                      0,
-                      "d",
-                      "device",
-                      VtkmDeviceArg::IsDevice,
-                      "  --device, -d <dev> \tDEPRECATED: use --vtkm-device to set the device" });
     usage.push_back({ opt::OptionIndex::LOGLEVEL,
                       0,
                       "",
                       loggingFlagName.c_str(),
                       opt::VtkmArg::Required,
                       loggingHelp.c_str() });
+
+    // TODO: remove deprecated options on next vtk-m release
+    usage.push_back({ opt::OptionIndex::DEPRECATED_DEVICE,
+                      0,
+                      "d",
+                      "device",
+                      VtkmDeviceArg::IsDevice,
+                      "  --device, -d <dev> \tDEPRECATED: use --vtkm-device to set the device" });
     usage.push_back({ opt::OptionIndex::DEPRECATED_LOGLEVEL,
                       0,
                       "v",
@@ -171,15 +179,6 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
                       opt::VtkmArg::Required,
                       "  -v <#|INFO|WARNING|ERROR|FATAL|OFF> \tDEPRECATED: use --vtkm-log-level to "
                       "set the log level" });
-    if ((opts & InitializeOptions::AddHelp) != InitializeOptions::None)
-    {
-      usage.push_back({ opt::OptionIndex::HELP,
-                        0,
-                        "h",
-                        "vtkm-help",
-                        opt::Arg::None,
-                        "  --vtkm-help, -h \tPrint usage information." });
-    }
 
     // Bring in extra args used by the runtime device configuration options
     vtkm::cont::internal::RuntimeDeviceConfigurationOptions runtimeDeviceOptions(usage);

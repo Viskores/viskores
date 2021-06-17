@@ -81,15 +81,6 @@ std::unique_ptr<opt::Option[]> GetOptions(int& argc,
   return options;
 }
 
-void my_unsetenv(const std::string& var)
-{
-#ifdef _MSC_VER
-  my_setenv(var, "");
-#else
-  unsetenv(var.c_str());
-#endif
-}
-
 void my_setenv(const std::string& var, const std::string& value)
 {
 #ifdef _MSC_VER
@@ -97,6 +88,15 @@ void my_setenv(const std::string& var, const std::string& value)
   _putenv_s(iter->first.c_str(), iter->second.c_str());
 #else
   setenv(var.c_str(), value.c_str(), 1);
+#endif
+}
+
+void my_unsetenv(const std::string& var)
+{
+#ifdef _MSC_VER
+  my_setenv(var, "");
+#else
+  unsetenv(var.c_str());
 #endif
 }
 

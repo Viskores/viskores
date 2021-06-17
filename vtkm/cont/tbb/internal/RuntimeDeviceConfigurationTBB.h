@@ -29,20 +29,16 @@ class RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagTBB>
     return vtkm::cont::DeviceAdapterTagTBB{};
   }
 
-  VTKM_CONT void Initialize(const RuntimeDeviceConfigurationOptions&) const override final
-  {
-    // TODO: vtk-m initialize should set the number of threads
-  }
-
-  VTKM_CONT virtual void SetThreads(const vtkm::Id&) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id&) const override final
   {
     // TODO: vtk-m set the number of global threads
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT virtual vtkm::Id GetThreads() const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id&) const override final
   {
     // TODO: Get number of TBB threads here (essentially just threads supported by architecture)
-    return 0;
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 };
 } // namespace vktm::cont::internal

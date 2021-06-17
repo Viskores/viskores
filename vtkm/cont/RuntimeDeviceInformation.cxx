@@ -86,53 +86,45 @@ class RuntimeDeviceConfigurationInvalid
 public:
   VTKM_CONT virtual ~RuntimeDeviceConfigurationInvalid() override final {}
 
-  VTKM_CONT virtual void Initialize(
-    const vtkm::cont::internal::RuntimeDeviceConfigurationOptions&) const override final
-  {
-    throw vtkm::cont::ErrorBadDevice(
-      "Tried to initialiez the runtime device configuration for an invalid device");
-  }
-  VTKM_CONT virtual void Initialize(const vtkm::cont::internal::RuntimeDeviceConfigurationOptions&,
-                                    int&,
-                                    char*[]) const override final
-  {
-    throw vtkm::cont::ErrorBadDevice(
-      "Tried to initialiez the runtime device configuration for an invalid device");
-  }
-
   VTKM_CONT virtual vtkm::cont::DeviceAdapterId GetDevice() const override final
   {
     return vtkm::cont::DeviceAdapterTagUndefined{};
   }
 
-  VTKM_CONT virtual void SetThreads(const vtkm::Id&) const override final
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode SetThreads(
+    const vtkm::Id&) const override final
   {
     throw vtkm::cont::ErrorBadDevice("Tried to set the number of threads on an invalid device");
   }
 
-  VTKM_CONT virtual void SetNumaRegions(const vtkm::Id&) const override final
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode SetNumaRegions(
+    const vtkm::Id&) const override final
   {
     throw vtkm::cont::ErrorBadDevice(
       "Tried to set the number of numa regions on an invalid device");
   }
 
-  VTKM_CONT virtual void SetDeviceInstance(const vtkm::Id&) const override final
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode SetDeviceInstance(
+    const vtkm::Id&) const override final
   {
     throw vtkm::cont::ErrorBadDevice("Tried to set the device instance on an invalid device");
   }
 
-  VTKM_CONT virtual vtkm::Id GetThreads() const override final
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode GetThreads(
+    vtkm::Id&) const override final
   {
     throw vtkm::cont::ErrorBadDevice("Tried to get the number of threads on an invalid device");
   }
 
-  VTKM_CONT virtual vtkm::Id GetNumaRegions() const override final
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode GetNumaRegions(
+    vtkm::Id&) const override final
   {
     throw vtkm::cont::ErrorBadDevice(
       "Tried to get the number of numa regions on an invalid device");
   }
 
-  VTKM_CONT virtual vtkm::Id GetDeviceInstance() const override final
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode GetDeviceInstance(
+    vtkm::Id&) const override final
   {
     throw vtkm::cont::ErrorBadDevice("Tried to get the device instance on an invalid device");
   }

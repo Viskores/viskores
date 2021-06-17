@@ -28,8 +28,6 @@ class RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagSerial>
   {
     return vtkm::cont::DeviceAdapterTagSerial{};
   }
-
-  VTKM_CONT void Initialize(const RuntimeDeviceConfigurationOptions&) const override final {}
 };
 }
 }

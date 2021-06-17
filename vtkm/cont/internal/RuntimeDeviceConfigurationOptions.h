@@ -24,14 +24,23 @@ namespace cont
 namespace internal
 {
 
+/// Provides a default set of RuntimeDeviceOptions that vtk-m currently supports setting.
+/// Each option provided in this class should have a corresponding `Set*` method in the
+/// RuntimeDeviceConfiguration.
 class VTKM_CONT_EXPORT RuntimeDeviceConfigurationOptions
 {
 public:
+  /// Sets the option indices and environment varaible names for the vtkm supported options.
   VTKM_CONT RuntimeDeviceConfigurationOptions();
+
+  /// Calls the default constructor and additionally pushes back additional command line
+  /// options to the provided usage vector for integration with the vtkm option parser.
   VTKM_CONT RuntimeDeviceConfigurationOptions(std::vector<option::Descriptor>& usage);
 
   VTKM_CONT virtual ~RuntimeDeviceConfigurationOptions() noexcept;
 
+  /// Calls Initialize for each of this class's current configuration options and marks
+  /// the options as initialized.
   VTKM_CONT void Initialize(const option::Option* options);
   VTKM_CONT bool IsInitialized() const;
 

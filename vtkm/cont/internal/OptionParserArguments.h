@@ -22,15 +22,22 @@ namespace internal
 namespace option
 {
 
-// Store options supported by the parser here for usage in multiple modules
+/// All options supported by the parser are stored here for usage in multiple modules
 enum OptionIndex
 {
+  // special option for dealing with unknown arguments
   UNKNOWN,
+
+  // general vtkm arguments
+  HELP,
   DEVICE,
   LOGLEVEL, // not parsed by this parser, but by loguru
-  HELP,
+
+  // TODO: remove deprecated arguments on next vtk-m release
   DEPRECATED_DEVICE,
   DEPRECATED_LOGLEVEL,
+
+  // All RuntimeDeviceConfiguration specific options
   NUM_THREADS,
   NUMA_REGIONS,
   DEVICE_INSTANCE
