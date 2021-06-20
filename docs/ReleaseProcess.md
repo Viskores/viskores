@@ -1,193 +1,72 @@
 Release Process
 ===============
 
-# High level view
-1. Craft Release Branch
-    - Generate change log
-    - Commit change log
-    - Commit update to version.txt
-    - Merge release branch
-2. Tag release
-3. Add Gitlab Release Notes
-4. Announce
+## Prologue
 
+This document is divided in two parts: 
+ - A overview of the branching and release scheme used in VTK-m.
+ - A concise instructions to get started with the release process.
 
-# Craft Release Branch
+The actual release process can be found at
+`.gitlab/issue_templates/NewRelease.md`.
 
-Construct a git branch named `release_X.Y`
+# Overview of the branching scheme
 
-## Generate change log
-Construct a `docs/changelog/X.Y/` folder.
-Construct a `docs/changelog/X.Y/release-notes.md` file
+Our current scheme is composed of two branches: release and master.
 
-Use the following template for `release-notes.md`:
+While all of the development is performed in the master branch, once in a while
+when we want to do a release, we tag a commit in master and we push it to the
+release branch.
 
-```md
-VTK-m N Release Notes
-=======================
+Also there are times when we want to get _Hotfix_ that affects previous releases
+to the release branch, in this case we can also push the merge request commit
+with the fix into the release branch.
 
-# Table of Contents
-1. [Core](#Core)
-    - Core change 1
-2. [ArrayHandle](#ArrayHandle)
-3. [Control Environment](#Control-Environment)
-4. [Execution Environment](#Execution-Environment)
-5. [Worklets and Filters](#Worklets-and-Filters)
-6. [Build](#Build)
-7. [Other](#Other)
+A not so simple example of how the branching scheme looks like can be found
+here:
 
+```git
+# → git log --graph --decorate --oneline --all
 
-# Core
-
-## Core change 1 ##
-
-changes in core 1
-
-# ArrayHandle
-
-# Control Enviornment
-
-# Execution Environment
-
-# Execution Environment
-
-# Worklets and Filters
-
-# Build
-
-
-# Other
+*   2e9230d (master) Merge branch 'update'
+|\  
+| * 59279dd (HEAD -> release, tag: v1.0.1) v1.0.1 2nd release of VTKm
+| * b60611b Add release notes for v1.0.1
+| *   9d26451 Merge branch 'master' into update
+| |\  
+| |/  
+|/|   
+* | 75137e5 Unrelated commit
+* | e982be0 Merge branch 'release'
+|\| 
+| *   f2c4eb6 Merge branch 'hotfix' into release
+| |\  
+| | * c1c2655 Hotfix
+| |/  
+* | e53df9e Unrelated commit
+* | ec6b481 Unrelated commit
+|/  
+* 0742a47 (tag: v1.0.0) v1.0.0 1st release of VTKm
+* 4fe993c Add release notes for v1.0.0
 ```
 
-For each individual file in `docs/changelog` move them
-to the relevant `release-notes` section.
+This will make the release branch to only contain tags and _HotFix_ merges as
+shown in here:
 
-  - Make sure each title and entry in the table of contents use full vtkm names `vtkm::cont::Field` instead of Field
-  - Make sure each title and entry DOESNT have a peroid at the end
-  - Make sure any sub-heading as part of the changelog is transformed from `##` to `###`.
-  - Entries for `Core` are reserved for large changes that significantly improve VTK-m users life, or are
-    major breaking changes.
+```git
+# git log --graph --decorate --oneline --first-parent release
 
-## Commit change log
-
-Remove each individual change log file from the git repository
-using `git rm docs/changelog/*.md`
-
-Add the changelog to the git history using `git add changelog/X.Y/release-notes.md`
-
-make a commit with the message:
-```
-Add release notes for vX.Y.Z
+* 59279dd (HEAD -> release, tag: v1.0.1) v1.0.1 2nd release of VTKm
+* b60611b Add release notes for v1.0.1
+* 9d26451 Merge branch 'master' into update
+* f2c4eb6 Merge branch 'hotfix' into release
+* 0742a47 (tag: v1.0.0) v1.0.0 1st release of VTKm
+* 4fe993c Add release notes for v1.0.0
 ```
 
-## Commit update to version.txt
+# Get started with a new Release
 
-Add a second commit to the `release_X.Y` branch that contains the update
-of the `version.txt` file to the correct version. The commit diff should look like:
-```
---- a/version.txt
-+++ b/version.txt
-@@ -1 +1 @@
--1.4.0
-+1.5.0
-```
-
-The commit message should read:
-```
-X.Y.0 is our Nth official release of VTK-m.
-
-The major changes to VTK-m from A.B.C can be found in:
-  docs/changelog/X.Y/release-notes.md
-```
-
-## Merge release branch
-
-At this point you should be ready to merge this branch.
-So push to the `release_X.Y` branch to gitlab and open a merge request.
-The dashboards should produce a configure warning that the new release git tag
-can't be found. This is to be expected.
-
-Before completing the merge it is a good idea to review the rendered markdown of the release notes to ensure that they display properly.
-On the merge request page, click on the Changes tab and then for the `release.X.Y` file click the View file button in the upper right.
-
-# Tag Release
-
-Once the merge request is merged we can add the tag.
-VTK-m marks the commit that contains the modifications to `version.txt` as the tag location, not the merge commit.
-After the merge this would be the second commit shown by git log as shown below:
-
-```
-git checkout master
-git pull
-git log -n2
-  Merge: d3d3e441 f66d980d
-  commit f66d980d (HEAD -> release_X.Y.0, gitlab/release_X.Y.0, master)
-```
-
-To place the tag at the correct location you will use the following command:
-```
-git tag -a -f vX.Y.Z SHA1
-```
-
-For the above example the `SHA1` would be `f66d980d`
-
-This should prompt you to add a message to the tag. The message should be identical to the one
-you used in the commit.
-
-## Push git tags
-
-Now you will need to push the tag back to gitlab so you will need to do the following:
-
-```
-git remote add origin_update_tags git@gitlab.kitware.com:vtk/vtk-m.git
-git push --tags origin_update_tags
-git remote rm origin_update_tags
-
-```
-
-# Add Gitlab Release Notes
-
-Now that the VTK-m release is on gitlab we have to add the associated changelog to the release
-entry on gitlab.
-
-Go to `https://gitlab.kitware.com/vtk/vtk-m/-/tags/vX.Y.Z/release/edit` to edit the release page.
-Copy the contents of `docs/changelog/X.Y/release-notes.md`
-
-# Email Announcements
-
-Announce the new VTK-m release on the mailing list. You will need to compute
-the number of merge requests, changelog entries, and maybe # of authors.
-
-To compute the number of unique committers
-```
-git log --format="%an" v1.4.0..v1.5.0 | sort -u | wc -l
-```
-
-To compute the number of merge requests
-```
-git log v1.4.0..v1.5.0 | grep 'Merge | wc -l
-```
-
-A standard template to use is:
-
-
-```
-Hi All,
-
-VTK-m 1.5.0 is now released, and a special thanks to everyone that has
-contributed to VTK-m since our last release. The 1.5.0 release contains
-over 100000 merge requests, and 100000 entries to the changelog .
-
-Below are all the entries in the changelog, with more details at (
-https://gitlab.kitware.com/vtk/vtk-m/-/tags/vX.Y.0 ) or in the vtkm
-repository at `docs/X.Y/release-notes.md`
-
-1. Core
-    - Core change 1
-2. ArrayHandle
-3. Control Environment
-4. Execution Environment
-5. Worklets and Filters
-6. Build
-7. Other
-```
+1. Go to `https://gitlab.kitware.com/vtkm/vtk-m/` and open a new issue.
+2. At the _issue template_ dropdown menu select: `NewRelease.md`
+3. Now remove the comments and substitute the variables surrounded by `@`.
+4. Post the issue and follow the steps.
