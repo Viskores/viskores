@@ -93,11 +93,14 @@ static vtkm::IdComponent UnknownAHNumberOfComponentsFlat()
 }
 
 template <typename T, typename S>
-static void UnknownAHAllocate(void* mem, vtkm::Id numValues)
+static void UnknownAHAllocate(void* mem,
+                              vtkm::Id numValues,
+                              vtkm::CopyFlag preserve,
+                              vtkm::cont::Token& token)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
-  arrayHandle->Allocate(numValues);
+  arrayHandle->Allocate(numValues, preserve, token);
 }
 
 template <typename T, typename S>
@@ -205,7 +208,7 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   NumberOfComponentsType* NumberOfComponents;
   NumberOfComponentsType* NumberOfComponentsFlat;
 
-  using AllocateType = void(void*, vtkm::Id);
+  using AllocateType = void(void*, vtkm::Id, vtkm::CopyFlag, vtkm::cont::Token&);
   AllocateType* Allocate;
 
   using ExtractComponentType = std::vector<vtkm::cont::internal::Buffer>(void*,
@@ -538,7 +541,14 @@ public:
 
   /// \brief Reallocate the data in the array.
   ///
-  VTKM_CONT void Allocate(vtkm::Id numValues) const;
+  /// The allocation works the same as the `Allocate` method of `vtkm::cont::ArrayHandle`.
+  ///
+  /// @{
+  VTKM_CONT void Allocate(vtkm::Id numValues,
+                          vtkm::CopyFlag preserve,
+                          vtkm::cont::Token& token) const;
+  VTKM_CONT void Allocate(vtkm::Id numValues, vtkm::CopyFlag preserve = vtkm::CopyFlag::Off) const;
+  /// @}
 
   /// \brief Determine if the contained array can be passed to the given array type.
   ///

@@ -237,17 +237,25 @@ VTKM_CONT vtkm::IdComponent UnknownArrayHandle::GetNumberOfComponentsFlat() cons
   }
 }
 
-VTKM_CONT void UnknownArrayHandle::Allocate(vtkm::Id numValues) const
+VTKM_CONT void UnknownArrayHandle::Allocate(vtkm::Id numValues,
+                                            vtkm::CopyFlag preserve,
+                                            vtkm::cont::Token& token) const
 {
   if (this->Container)
   {
-    this->Container->Allocate(this->Container->ArrayHandlePointer, numValues);
+    this->Container->Allocate(this->Container->ArrayHandlePointer, numValues, preserve, token);
   }
   else
   {
     throw vtkm::cont::ErrorBadAllocation(
       "Cannot allocate UnknownArrayHandle that does not contain an array.");
   }
+}
+
+VTKM_CONT void UnknownArrayHandle::Allocate(vtkm::Id numValues, vtkm::CopyFlag preserve) const
+{
+  vtkm::cont::Token token;
+  this->Allocate(numValues, preserve, token);
 }
 
 VTKM_CONT void UnknownArrayHandle::ReleaseResourcesExecution() const
