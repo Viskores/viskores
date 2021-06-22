@@ -17,7 +17,7 @@ namespace vtkm
 {
 namespace filter
 {
-/// \brief generate streamlines from a vector field.
+/// \brief generate pathlines from a time sequence of vector fields.
 
 /// Takes as input a vector field and seed locations and generates the
 /// paths taken by the seeds through the vector field.

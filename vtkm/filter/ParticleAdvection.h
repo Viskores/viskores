@@ -18,7 +18,7 @@ namespace vtkm
 {
 namespace filter
 {
-/// \brief advect particles in a vector field.
+/// \brief Advect particles in a vector field.
 
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.

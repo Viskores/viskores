@@ -17,7 +17,7 @@ namespace vtkm
 {
 namespace filter
 {
-/// \brief generate streamlines from a vector field.
+/// \brief Advect particles in a time varying vector field.
 
 /// Takes as input a vector field and seed locations and generates the
 /// paths taken by the seeds through the vector field.

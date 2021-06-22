@@ -44,8 +44,6 @@ FilterTemporalParticleAdvection<Derived>::CreateDataSetIntegrators(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
 {
-  //  using DSIType = vtkm::filter::particleadvection::TemporalDataSetIntegrator;
-
   std::vector<DSIType> dsi;
   std::string activeField = this->GetActiveFieldName();
 
