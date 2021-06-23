@@ -28,11 +28,8 @@ inline VTKM_CONT FilterParticleAdvection<Derived>::FilterParticleAdvection()
 }
 
 template <typename Derived>
-void FilterParticleAdvection<Derived>::ValidateOptions(
-  const vtkm::cont::PartitionedDataSet& input) const
+void FilterParticleAdvection<Derived>::ValidateOptions() const
 {
-  if (input.GetNumberOfPartitions() == 0)
-    throw vtkm::cont::ErrorFilterExecution("No input dataset provided.");
   if (this->GetUseCoordinateSystemAsField())
     throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");
   if (this->Seeds.GetNumberOfValues() == 0)
@@ -50,6 +47,9 @@ FilterParticleAdvection<Derived>::CreateDataSetIntegrators(
   const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
 {
   std::vector<vtkm::filter::particleadvection::DataSetIntegrator> dsi;
+
+  if (boundsMap.GetTotalNumBlocks() == 0)
+    throw vtkm::cont::ErrorFilterExecution("No input datasets.");
 
   std::string activeField = this->GetActiveFieldName();
 

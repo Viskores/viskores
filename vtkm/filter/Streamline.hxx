@@ -36,7 +36,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Streamline::PrepareForExecution(
   using AlgorithmType = vtkm::filter::particleadvection::StreamlineAlgorithm;
   using ThreadedAlgorithmType = vtkm::filter::particleadvection::StreamlineThreadedAlgorithm;
 
-  this->ValidateOptions(input);
+  this->ValidateOptions();
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
   auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 

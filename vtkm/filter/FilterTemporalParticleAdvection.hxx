@@ -30,7 +30,7 @@ template <typename Derived>
 void FilterTemporalParticleAdvection<Derived>::ValidateOptions(
   const vtkm::cont::PartitionedDataSet& input) const
 {
-  this->vtkm::filter::FilterParticleAdvection<Derived>::ValidateOptions(input);
+  this->vtkm::filter::FilterParticleAdvection<Derived>::ValidateOptions();
 
   if (this->NextDataSet.GetNumberOfPartitions() != input.GetNumberOfPartitions())
     throw vtkm::cont::ErrorFilterExecution("Number of partitions do not match");
@@ -46,6 +46,9 @@ FilterTemporalParticleAdvection<Derived>::CreateDataSetIntegrators(
 {
   std::vector<DSIType> dsi;
   std::string activeField = this->GetActiveFieldName();
+
+  if (boundsMap.GetTotalNumBlocks() == 0)
+    throw vtkm::cont::ErrorFilterExecution("No input datasets.");
 
   for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {

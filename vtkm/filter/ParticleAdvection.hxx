@@ -36,7 +36,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::PrepareForExe
   using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
   using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;
 
-  this->ValidateOptions(input);
+  this->ValidateOptions();
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
   auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 

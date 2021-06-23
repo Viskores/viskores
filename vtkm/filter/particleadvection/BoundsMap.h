@@ -104,6 +104,9 @@ public:
     return blockIDs;
   }
 
+  vtkm::Id GetTotalNumBlocks() const { return this->TotalNumBlocks; }
+  vtkm::Id GetLocalNumBlocks() const { return this->LocalNumBlocks; }
+
 private:
   void Init(const std::vector<vtkm::cont::DataSet>& dataSets)
   {

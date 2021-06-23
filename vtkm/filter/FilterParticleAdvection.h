@@ -69,7 +69,7 @@ public:
   }
 
 protected:
-  VTKM_CONT virtual void ValidateOptions(const vtkm::cont::PartitionedDataSet& input) const;
+  VTKM_CONT virtual void ValidateOptions() const;
 
   using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
   VTKM_CONT std::vector<DSIType> CreateDataSetIntegrators(
