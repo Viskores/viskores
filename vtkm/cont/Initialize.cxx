@@ -13,6 +13,7 @@
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/OptionParser.h>
+#include <vtkm/cont/internal/OptionParserArguments.h>
 
 #if defined(VTKM_ENABLE_KOKKOS)
 #include <vtkm/cont/kokkos/internal/Initialize.h>
@@ -26,17 +27,7 @@ namespace opt = vtkm::cont::internal::option;
 namespace
 {
 
-enum OptionIndex
-{
-  UNKNOWN,
-  DEVICE,
-  LOGLEVEL, // not parsed by this parser, but by loguru
-  HELP,
-  DEPRECATED_DEVICE,
-  DEPRECATED_LOGLEVEL
-};
-
-struct VtkmArg : public opt::Arg
+struct VtkmDeviceArg : public opt::Arg
 {
   static opt::ArgStatus IsDevice(const opt::Option& option, bool msg)
   {
@@ -48,20 +39,21 @@ struct VtkmArg : public opt::Arg
         VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
                           "Missing device after option '"
                             << std::string(option.name, static_cast<size_t>(option.namelen))
-                            << "'.\nValid devices are: " << VtkmArg::GetValidDeviceNames() << "\n");
+                            << "'.\nValid devices are: " << VtkmDeviceArg::GetValidDeviceNames()
+                            << "\n");
       }
       return opt::ARG_ILLEGAL;
     }
 
     auto id = vtkm::cont::make_DeviceAdapterId(option.arg);
 
-    if (!VtkmArg::DeviceIsAvailable(id))
+    if (!VtkmDeviceArg::DeviceIsAvailable(id))
     {
       VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
                         "Unavailable device specificed after option '"
                           << std::string(option.name, static_cast<size_t>(option.namelen)) << "': '"
-                          << option.arg
-                          << "'.\nValid devices are: " << VtkmArg::GetValidDeviceNames() << "\n");
+                          << option.arg << "'.\nValid devices are: "
+                          << VtkmDeviceArg::GetValidDeviceNames() << "\n");
       return opt::ARG_ILLEGAL;
     }
 
@@ -93,7 +85,6 @@ struct VtkmArg : public opt::Arg
     }
     return result;
   }
-
   static std::string GetValidDeviceNames()
   {
     std::ostringstream names;
@@ -102,66 +93,16 @@ struct VtkmArg : public opt::Arg
     for (vtkm::Int8 i = 0; i < VTKM_MAX_DEVICE_ADAPTER_ID; ++i)
     {
       auto id = vtkm::cont::make_DeviceAdapterId(i);
-      if (VtkmArg::DeviceIsAvailable(id))
+      if (VtkmDeviceArg::DeviceIsAvailable(id))
       {
         names << "\"" << id.GetName() << "\" ";
       }
     }
     return names.str();
   }
-
-  static opt::ArgStatus Required(const opt::Option& option, bool msg)
-  {
-    if (option.arg == nullptr)
-    {
-      if (msg)
-      {
-        VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
-                          "Missing argument after option '"
-                            << std::string(option.name, static_cast<size_t>(option.namelen))
-                            << "'.\n");
-      }
-      return opt::ARG_ILLEGAL;
-    }
-    else
-    {
-      return opt::ARG_OK;
-    }
-  }
-
-  // Method used for guessing whether an option that do not support (perhaps that calling
-  // program knows about it) has an option attached to it (which should also be ignored).
-  static opt::ArgStatus UnknownOption(const opt::Option& option, bool msg)
-  {
-    // If we don't have an arg, obviously we don't have an arg.
-    if (option.arg == nullptr)
-    {
-      return opt::ARG_NONE;
-    }
-
-    // The opt::Arg::Optional method will return that the ARG is OK if and only if
-    // the argument is attached to the option (e.g. --foo=bar). If that is the case,
-    // then we definitely want to report that the argument is OK.
-    if (opt::Arg::Optional(option, msg) == opt::ARG_OK)
-    {
-      return opt::ARG_OK;
-    }
-
-    // Now things get tricky. Maybe the next argument is an option or maybe it is an
-    // argument for this option. We will guess that if the next argument does not
-    // look like an option, we will treat it as such.
-    if (option.arg[0] == '-')
-    {
-      return opt::ARG_NONE;
-    }
-    else
-    {
-      return opt::ARG_OK;
-    }
-  }
 };
 
-} // end anon namespace
+} // namespace
 
 namespace vtkm
 {
@@ -187,7 +128,9 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     vtkm::cont::InitLogging(argc, argv, loggingFlag);
   }
 
+
 #ifdef VTKM_ENABLE_KOKKOS
+  // TODO: remove this once runtime config updates are completely implemented
   vtkm::cont::kokkos::internal::Initialize(argc, argv);
 #endif
 
@@ -195,41 +138,53 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     std::vector<opt::Descriptor> usage;
     if ((opts & InitializeOptions::AddHelp) != InitializeOptions::None)
     {
-      usage.push_back({ UNKNOWN, 0, "", "", VtkmArg::UnknownOption, "Usage information:\n" });
-    }
-    usage.push_back(
-      { DEVICE,
-        0,
-        "",
-        "vtkm-device",
-        VtkmArg::IsDevice,
-        "  --vtkm-device <dev> \tForce device to dev. Omit device to list available devices." });
-    usage.push_back({ DEPRECATED_DEVICE,
-                      0,
-                      "d",
-                      "device",
-                      VtkmArg::IsDevice,
-                      "  --device, -d <dev> \tDEPRECATED: use --vtkm-device to set the device" });
-    usage.push_back(
-      { LOGLEVEL, 0, "", loggingFlagName.c_str(), VtkmArg::Required, loggingHelp.c_str() });
-    usage.push_back({ DEPRECATED_LOGLEVEL,
-                      0,
-                      "v",
-                      "",
-                      VtkmArg::Required,
-                      "  -v <#|INFO|WARNING|ERROR|FATAL|OFF> \tDEPRECATED: use --vtkm-log-level to "
-                      "set the log level" });
-    if ((opts & InitializeOptions::AddHelp) != InitializeOptions::None)
-    {
-      usage.push_back({ HELP,
+      usage.push_back({ opt::OptionIndex::UNKNOWN,
+                        0,
+                        "",
+                        "",
+                        opt::VtkmArg::UnknownOption,
+                        "Usage information:\n" });
+      usage.push_back({ opt::OptionIndex::HELP,
                         0,
                         "h",
                         "vtkm-help",
                         opt::Arg::None,
                         "  --vtkm-help, -h \tPrint usage information." });
     }
+    usage.push_back(
+      { opt::OptionIndex::DEVICE,
+        0,
+        "",
+        "vtkm-device",
+        VtkmDeviceArg::IsDevice,
+        "  --vtkm-device <dev> \tForce device to dev. Omit device to list available devices." });
+    usage.push_back({ opt::OptionIndex::LOGLEVEL,
+                      0,
+                      "",
+                      loggingFlagName.c_str(),
+                      opt::VtkmArg::Required,
+                      loggingHelp.c_str() });
+
+    // TODO: remove deprecated options on next vtk-m release
+    usage.push_back({ opt::OptionIndex::DEPRECATED_DEVICE,
+                      0,
+                      "d",
+                      "device",
+                      VtkmDeviceArg::IsDevice,
+                      "  --device, -d <dev> \tDEPRECATED: use --vtkm-device to set the device" });
+    usage.push_back({ opt::OptionIndex::DEPRECATED_LOGLEVEL,
+                      0,
+                      "v",
+                      "",
+                      opt::VtkmArg::Required,
+                      "  -v <#|INFO|WARNING|ERROR|FATAL|OFF> \tDEPRECATED: use --vtkm-log-level to "
+                      "set the log level" });
+
+    // Bring in extra args used by the runtime device configuration options
+    vtkm::cont::internal::RuntimeDeviceConfigurationOptions runtimeDeviceOptions(usage);
+
     // Required to collect unknown arguments when help is off.
-    usage.push_back({ UNKNOWN, 0, "", "", VtkmArg::UnknownOption, "" });
+    usage.push_back({ opt::OptionIndex::UNKNOWN, 0, "", "", opt::VtkmArg::UnknownOption, "" });
     usage.push_back({ 0, 0, 0, 0, 0, 0 });
 
     {
@@ -255,38 +210,38 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
       exit(1);
     }
 
-    if (options[HELP])
+    if (options[opt::OptionIndex::HELP])
     {
       std::cerr << config.Usage;
       exit(0);
     }
 
-    if (options[DEPRECATED_LOGLEVEL])
+    if (options[opt::OptionIndex::DEPRECATED_LOGLEVEL])
     {
       VTKM_LOG_S(vtkm::cont::LogLevel::Error,
                  "Supplied Deprecated log level flag: "
-                   << std::string{ options[DEPRECATED_LOGLEVEL].name } << ", use " << loggingFlag
-                   << " instead.");
+                   << std::string{ options[opt::OptionIndex::DEPRECATED_LOGLEVEL].name } << ", use "
+                   << loggingFlag << " instead.");
 #ifdef VTKM_ENABLE_LOGGING
       loguru::g_stderr_verbosity =
-        loguru::get_verbosity_from_name(options[DEPRECATED_LOGLEVEL].arg);
+        loguru::get_verbosity_from_name(options[opt::OptionIndex::DEPRECATED_LOGLEVEL].arg);
 #endif // VTKM_ENABLE_LOGGING
     }
 
-    if (options[DEVICE] || options[DEPRECATED_DEVICE])
+    if (options[opt::OptionIndex::DEVICE] || options[opt::OptionIndex::DEPRECATED_DEVICE])
     {
       const char* arg = nullptr;
-      if (options[DEPRECATED_DEVICE])
+      if (options[opt::OptionIndex::DEPRECATED_DEVICE])
       {
         VTKM_LOG_S(vtkm::cont::LogLevel::Error,
                    "Supplied Deprecated device flag "
-                     << std::string{ options[DEPRECATED_DEVICE].name }
+                     << std::string{ options[opt::OptionIndex::DEPRECATED_DEVICE].name }
                      << ", use --vtkm-device instead");
-        arg = options[DEPRECATED_DEVICE].arg;
+        arg = options[opt::OptionIndex::DEPRECATED_DEVICE].arg;
       }
-      if (options[DEVICE])
+      if (options[opt::OptionIndex::DEVICE])
       {
-        arg = options[DEVICE].arg;
+        arg = options[opt::OptionIndex::DEVICE].arg;
       }
       auto id = vtkm::cont::make_DeviceAdapterId(arg);
       if (id != vtkm::cont::DeviceAdapterTagAny{})
@@ -306,9 +261,9 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     }
     else if ((opts & InitializeOptions::RequireDevice) != InitializeOptions::None)
     {
-      auto devices = VtkmArg::GetValidDeviceNames();
+      auto devices = VtkmDeviceArg::GetValidDeviceNames();
       VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Device not given on command line.");
-      std::cerr << "Target device must be specified via -d or --device.\n"
+      std::cerr << "Target device must be specified via --vtkm-device.\n"
                    "Valid devices: "
                 << devices << std::endl;
       if ((opts & InitializeOptions::AddHelp) != InitializeOptions::None)
@@ -318,7 +273,9 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
       exit(1);
     }
 
-    for (const opt::Option* opt = options[UNKNOWN]; opt != nullptr; opt = opt->next())
+
+    for (const opt::Option* opt = options[opt::OptionIndex::UNKNOWN]; opt != nullptr;
+         opt = opt->next())
     {
       if ((opts & InitializeOptions::ErrorOnBadOption) != InitializeOptions::None)
       {
@@ -359,7 +316,8 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
       {
         copyArg = true;
       }
-      for (const opt::Option* opt = options[UNKNOWN]; !copyArg && opt != nullptr; opt = opt->next())
+      for (const opt::Option* opt = options[opt::OptionIndex::UNKNOWN]; !copyArg && opt != nullptr;
+           opt = opt->next())
       {
         if (thisArg == opt->name)
         {
@@ -392,6 +350,12 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
       }
     }
     argc = destArg;
+
+    {
+      runtimeDeviceOptions.Initialize(options.get());
+      vtkm::cont::RuntimeDeviceInformation runtimeDevice;
+      runtimeDevice.GetRuntimeConfiguration(config.Device, runtimeDeviceOptions, argc, argv);
+    }
   }
 
   return config;

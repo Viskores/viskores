@@ -19,6 +19,7 @@
 #include <vtkm/cont/kokkos/internal/DeviceAdapterAlgorithmKokkos.h>
 #include <vtkm/cont/kokkos/internal/DeviceAdapterMemoryManagerKokkos.h>
 #include <vtkm/cont/kokkos/internal/DeviceAdapterRuntimeDetectorKokkos.h>
+#include <vtkm/cont/kokkos/internal/RuntimeDeviceConfigurationKokkos.h>
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/kokkos/internal/VirtualObjectTransferKokkos.h>
 #endif //VTKM_NO_DEPRECATED_VIRTUAL

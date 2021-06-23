@@ -73,59 +73,6 @@ enum TestOptionsIndex
   DEPRECATED_WRITEDIR     // base dir for generated regression test images
 };
 
-struct TestVtkmArg : public opt::Arg
-{
-  static opt::ArgStatus Required(const opt::Option& option, bool msg)
-  {
-    if (option.arg == nullptr)
-    {
-      if (msg)
-      {
-        VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
-                          "Missing argument after option '"
-                            << std::string(option.name, static_cast<size_t>(option.namelen))
-                            << "'.\n");
-      }
-      return opt::ARG_ILLEGAL;
-    }
-    else
-    {
-      return opt::ARG_OK;
-    }
-  }
-
-  // Method used for guessing whether an option that do not support (perhaps that calling
-  // program knows about it) has an option attached to it (which should also be ignored).
-  static opt::ArgStatus Unknown(const opt::Option& option, bool msg)
-  {
-    // If we don't have an arg, obviously we don't have an arg.
-    if (option.arg == nullptr)
-    {
-      return opt::ARG_NONE;
-    }
-
-    // The opt::Arg::Optional method will return that the ARG is OK if and only if
-    // the argument is attached to the option (e.g. --foo=bar). If that is the case,
-    // then we definitely want to report that the argument is OK.
-    if (opt::Arg::Optional(option, msg) == opt::ARG_OK)
-    {
-      return opt::ARG_OK;
-    }
-
-    // Now things get tricky. Maybe the next argument is an option or maybe it is an
-    // argument for this option. We will guess that if the next argument does not
-    // look like an option, we will treat it as such.
-    if (option.arg[0] == '-')
-    {
-      return opt::ARG_NONE;
-    }
-    else
-    {
-      return opt::ARG_OK;
-    }
-  }
-};
-
 struct Testing
 {
 public:
@@ -305,7 +252,7 @@ private:
                         0,
                         "",
                         "vtkm-data-dir",
-                        TestVtkmArg::Required,
+                        opt::VtkmArg::Required,
                         "  --vtkm-data-dir "
                         "<data-dir-path> \tPath to the "
                         "base data directory in the VTK-m "
@@ -314,7 +261,7 @@ private:
                         0,
                         "",
                         "vtkm-baseline-dir",
-                        TestVtkmArg::Required,
+                        opt::VtkmArg::Required,
                         "  --vtkm-baseline-dir "
                         "<baseline-dir-path> "
                         "\tPath to the base dir "
@@ -324,7 +271,7 @@ private:
                         0,
                         "",
                         "vtkm-write-dir",
-                        TestVtkmArg::Required,
+                        opt::VtkmArg::Required,
                         "  --vtkm-write-dir "
                         "<write-dir-path> "
                         "\tPath to the write dir "
@@ -334,7 +281,7 @@ private:
                         0,
                         "D",
                         "data-dir",
-                        TestVtkmArg::Required,
+                        opt::VtkmArg::Required,
                         "  --data-dir "
                         "<data-dir-path> "
                         "\tDEPRECATED: use --vtkm-data-dir instead" });
@@ -342,7 +289,7 @@ private:
                         0,
                         "B",
                         "baseline-dir",
-                        TestVtkmArg::Required,
+                        opt::VtkmArg::Required,
                         "  --baseline-dir "
                         "<baseline-dir-path> "
                         "\tDEPRECATED: use --vtkm-baseline-dir instead" });
@@ -350,13 +297,13 @@ private:
                         0,
                         "",
                         "write-dir",
-                        TestVtkmArg::Required,
+                        opt::VtkmArg::Required,
                         "  --write-dir "
                         "<write-dir-path> "
                         "\tDEPRECATED: use --vtkm-write-dir instead" });
 
       // Required to collect unknown arguments when help is off.
-      usage.push_back({ TEST_UNKNOWN, 0, "", "", TestVtkmArg::Unknown, "" });
+      usage.push_back({ TEST_UNKNOWN, 0, "", "", opt::VtkmArg::UnknownOption, "" });
       usage.push_back({ 0, 0, 0, 0, 0, 0 });
 
 

@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/internal/DeviceAdapterMemoryManager.h>
+#include <vtkm/cont/internal/RuntimeDeviceConfiguration.h>
 #include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm
@@ -53,8 +54,42 @@ public:
   ///
   VTKM_CONT
   vtkm::cont::internal::DeviceAdapterMemoryManagerBase& GetMemoryManager(DeviceAdapterId id) const;
+
+  /// Returns a reference to a `RuntimeDeviceConfiguration` that will work with the
+  /// given device. If the device in question is not valid, a placeholder
+  /// `InvalidRuntimeDeviceConfiguration` will be returned. Attempting to
+  /// call any of the methods of this object will result in a runtime exception.
+  /// The fully loaded version of this method is automatically called at the end
+  /// of `vkmt::cont::Initialize` which performs automated setup of all runtime
+  /// devices using parsed vtkm arguments.
+  ///
+  /// params:
+  ///   id - The specific device to retreive the RuntimeDeviceConfiguration options for
+  ///   configOptions - VTKm provided options that should be included when initializing
+  ///                   a given RuntimeDeviceConfiguration
+  ///   argc - The number of command line arguments to parse when Initializing
+  ///          a given RuntimeDeviceConfiguration
+  ///   argv - The extra command line arguments to parse when Initializing a given
+  ///          RuntimeDeviceConfiguration. This argument is mainlued used in conjuction
+  ///          with Kokkos config arg parsing to include specific --kokkos command
+  ///          line flags and environment variables.
+  VTKM_CONT
+  vtkm::cont::internal::RuntimeDeviceConfigurationBase& GetRuntimeConfiguration(
+    DeviceAdapterId id,
+    const vtkm::cont::internal::RuntimeDeviceConfigurationOptions& configOptions,
+    int& argc,
+    char* argv[] = nullptr) const;
+
+  VTKM_CONT
+  vtkm::cont::internal::RuntimeDeviceConfigurationBase& GetRuntimeConfiguration(
+    DeviceAdapterId id,
+    const vtkm::cont::internal::RuntimeDeviceConfigurationOptions& configOptions) const;
+
+  VTKM_CONT
+  vtkm::cont::internal::RuntimeDeviceConfigurationBase& GetRuntimeConfiguration(
+    DeviceAdapterId id) const;
 };
-}
 } // namespace vtkm::cont
+} // namespace vtkm
 
 #endif //vtk_m_cont_RuntimeDeviceInformation_h
