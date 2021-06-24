@@ -592,9 +592,10 @@ contourtree_mesh_inc_ns::MeshStructureContourTreeMesh inline ContourTreeMesh<
                                                                token);
 }
 
-struct NotNoSuchElement
+// Helper functor, basically negates criterion for CopyIf
+struct IsUnique
 {
-  VTKM_EXEC_CONT bool operator()(vtkm::Id x) const { return x != NO_SUCH_ELEMENT; }
+  VTKM_EXEC_CONT bool operator()(vtkm::IdComponent isInOther) const { return isInOther == 0; }
 };
 
 /*
@@ -761,12 +762,6 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   // ... create lists for all groups to be used to restrict operations to them
   vtkm::cont::ArrayHandleIndex indicesThis(thisToCombinedSortOrder.GetNumberOfValues());
   vtkm::cont::ArrayHandleIndex indicesOther(otherToCombinedSortOrder.GetNumberOfValues());
-
-  // ... helper function, basically negates criterion for CopyIf
-  struct IsUnique
-  {
-    VTKM_EXEC_CONT bool operator()(vtkm::IdComponent isInOther) const { return isInOther == 0; }
-  };
 
   IdArrayType indicesThisUnique, indicesThisDuplicate;
   vtkm::cont::Algorithm::CopyIf(
