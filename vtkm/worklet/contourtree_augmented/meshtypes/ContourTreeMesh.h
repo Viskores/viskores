@@ -598,23 +598,6 @@ struct IsUnique
   VTKM_EXEC_CONT bool operator()(vtkm::IdComponent isInOther) const { return isInOther == 0; }
 };
 
-/*
-template <typename T>
-inline void printNumComponents(const T& arr)
-{
-  auto portal = arr.ReadPortal();
-  for (vtkm::Id idx = 0; idx <  portal.GetNumberOfValues(); ++idx)
-  {
-    auto vec = portal.Get(idx);
-    std::cout << "[ " << idx << " (" << vec.GetNumberOfComponents() << "): ";
-    for (vtkm::IdComponent c_idx = 0; c_idx < vec.GetNumberOfComponents(); ++c_idx)
-      std::cout << vec[c_idx] << " ";
-    std::cout << "]";
-  }
-  std::cout << std::endl;
-}
-*/
-
 // Combine two ContourTreeMeshes
 template <typename FieldType>
 inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other,
