@@ -64,12 +64,13 @@ set(headers
   AddToArrayElementsWorklet.h
   ApplyLookupTableDecorator.h
   ArcComparator.h
+  ArcValidDecorator.h
   CombinedSimulatedSimplicityIndexComparator.h
   CombinedVectorDifferentFromNext.h
-  CompressNeighborsWorklet.h
   CopyIntoCombinedArrayWorklet.h
   CopyIntoCombinedNeighborsWorklet.h
   CopyNeighborsToPackedArray.h
+  FindDuplicateInOtherWorklet.h
   GetArcFromDecorator.h
   InitToCombinedSortOrderArraysWorklet.h
   MergeIntoCombinedNeighborsWorklet.h
