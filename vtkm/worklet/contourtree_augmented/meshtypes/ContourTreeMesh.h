@@ -416,35 +416,41 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
 #endif
 }
 
+// Helper function to copy select set of indices of source array into
+// select set of inidces of destination array. Important: srcIndices
+// and  dstIndices must contain the same number of values.
 template <typename PT1, typename PT2, typename PT3, typename PT4>
 inline void CopyArrayByIndices(const PT1& srcArray,
                                const PT2& srcIndices,
-                               PT3& tgtArray,
-                               const PT4& tgtIndices)
+                               PT3& dstArray,
+                               const PT4& dstIndices)
 {
-  VTKM_ASSERT(srcIndices.GetNumberOfValues() == tgtIndices.GetNumberOfValues());
+  VTKM_ASSERT(srcIndices.GetNumberOfValues() == dstIndices.GetNumberOfValues());
   auto srcPermutation = make_ArrayHandlePermutation(srcIndices, srcArray);
-  auto tgtPermuation = make_ArrayHandlePermutation(tgtIndices, tgtArray);
-  vtkm::cont::Algorithm::Copy(srcPermutation, tgtPermuation);
+  auto dstPermuation = make_ArrayHandlePermutation(dstIndices, dstArray);
+  vtkm::cont::Algorithm::Copy(srcPermutation, dstPermuation);
 }
 
+// Helper function doing the same as previous function, but for
+// arrays of vector. This is necessary since we use an array
+// created with ArrayHandleGroupVecVariable as destination,
+// which breaks some conventions of ArrayHandle and does not work
+// with vtkm::cont::Algorithm::Copy.
 template <typename PT1, typename PT2, typename PT3, typename PT4>
 inline void CopyVecArrayByIndices(const PT1& srcArray,
                                   const PT2& srcIndices,
-                                  PT3& tgtArray,
-                                  const PT4& tgtIndices)
+                                  PT3& dstArray,
+                                  const PT4& dstIndices)
 {
-  VTKM_ASSERT(srcIndices.GetNumberOfValues() == tgtIndices.GetNumberOfValues());
+  VTKM_ASSERT(srcIndices.GetNumberOfValues() == dstIndices.GetNumberOfValues());
   auto srcPermutation = make_ArrayHandlePermutation(srcIndices, srcArray);
-  auto tgtPermuation = make_ArrayHandlePermutation(tgtIndices, tgtArray);
+  auto dstPermuation = make_ArrayHandlePermutation(dstIndices, dstArray);
+  // Use a worklet for copying data since ArrayHandleGroupVecVariable does
+  // not work as destination for vtkm::cont::Algorithm::Copy.
   vtkm::cont::Invoker invoke;
   invoke(
-    contourtree_mesh_inc_ns::CopyIntoCombinedNeighborsWorklet{}, srcPermutation, tgtPermuation);
-  // Why doesn't the following copy work instead?
-  //vtkm::cont::Algorithm::Copy(srcPermutation, tgtPermuation);
+    contourtree_mesh_inc_ns::CopyIntoCombinedNeighborsWorklet{}, srcPermutation, dstPermuation);
 }
-
-
 
 // Initalize the contour tree from the arcs array
 template <typename FieldType>
