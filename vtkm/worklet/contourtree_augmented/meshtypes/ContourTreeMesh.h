@@ -459,13 +459,15 @@ inline void ContourTreeMesh<FieldType>::InitializeNeighborConnectivityFromArcs(
   //
   // Take this simple graph for example:
   //
-  // 4
-  //  \
-  //   \> 3 -> 1 <- 0
-  //   /
-  //  /
-  // 2
-  //
+  /* 4
+      \
+       \> 3 -> 1 <- 0
+       /
+      /
+     2
+    (Use this comment style to avoid warnings about multi-line comments triggered by '\' at
+     the end of the line).
+  */
   // (This is a graph with nodes 0 through 4 and edges 0 -> 1, 2 -> 3, 3 -> 1, 4 -> 3).
   // The way the graph is structured, each nodes has at most one outgoing edge.
   // The contour tree algorithm stores this in an arcs array:
