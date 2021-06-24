@@ -110,16 +110,6 @@ inline void PermuteArray(const ArrayType& input, IdArrayType& permute, ArrayType
 } // permuteValues()
 
 
-// transform functor needed for ScanExclusive calculation. Return 0 if noSuchElement else 1
-struct OneIfArcValid
-{
-  VTKM_EXEC_CONT
-  OneIfArcValid() {}
-
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id a) const { return NoSuchElement(a) ? 0 : 1; }
-};
-
 // transform functor used in ContourTreeMesh to flag indicies as other when using the CombinedVectorClass
 struct MarkOther
 {

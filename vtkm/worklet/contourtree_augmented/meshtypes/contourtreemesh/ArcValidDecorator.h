@@ -60,11 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_compress_neighbors_worklet_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_compress_neighbors_worklet_h
-
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_arc_valid_decorator_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_arc_valid_decorator_h
 
 namespace vtkm
 {
@@ -74,45 +71,27 @@ namespace contourtree_augmented
 {
 namespace mesh_dem_contourtree_mesh_inc
 {
-
-
-class CompressNeighborsWorklet : public vtkm::worklet::WorkletMapField
+class ArcValidDecoratorImpl
 {
 public:
-  typedef void ControlSignature(
-    FieldIn arcs,                        // (input) arcs
-    FieldIn arcTargetIndex,              // (input) arcTargetIndex
-    WholeArrayOut neighborConnectivity); // (output) neighborConnectivity
-  typedef void ExecutionSignature(_1, InputIndex, _2, _3);
-  typedef _1 InputDomain;
-
-  template <typename OutFieldPortalType>
-  VTKM_EXEC void operator()(vtkm::Id& to,
-                            vtkm::Id from,
-                            vtkm::Id& arcTargetIndexFrom,
-                            const OutFieldPortalType& neighborConnectivityPortal) const
+  template <typename PortalType>
+  struct Functor
   {
-    if (!NoSuchElement(to))
+    PortalType ArcsPortal;
+
+    VTKM_EXEC_CONT
+    vtkm::Id operator()(vtkm::Id arcNo) const
     {
-      neighborConnectivityPortal.Set(2 * arcTargetIndexFrom + 0, 2 * from + 0);
-      neighborConnectivityPortal.Set(2 * arcTargetIndexFrom + 1, 2 * from + 1);
+      return NoSuchElement(ArcsPortal.Get(arcNo / 2)) ? 0 : 1;
     }
+  };
 
-    // In serial this worklet implements the following operation
-    // for (indexVector::size_type from = 0; from < arcs.size(); ++from)
-    //  {
-    //    indexType to = arcs[from];
-    //    if (!NoSuchElement(to))
-    //      {
-    //         assert(MaskedIndex(to) != from);
-    //         neighbors[2*arcTargetIndex[from]+0] = 2*from+0;
-    //         neighbors[2*arcTargetIndex[from]+1] = 2*from+1;
-    //      }
+  template <typename PT>
+  Functor<PT> CreateFunctor(PT arcsPortal) const
+  {
+    return { arcsPortal };
   }
-
-
-}; //  CompressNeighborsWorklet
-
+}; // ArcValidDecoratorImpl
 
 } // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented

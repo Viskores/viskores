@@ -85,9 +85,9 @@
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/AddToArrayElementsWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ApplyLookupTableDecorator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ArcComparator.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ArcValidDecorator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedSimulatedSimplicityIndexComparator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVectorDifferentFromNext.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CompressNeighborsWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyIntoCombinedArrayWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyIntoCombinedNeighborsWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CopyNeighborsToPackedArray.h>
@@ -446,7 +446,7 @@ inline void CopyVecArrayByIndices(const PT1& srcArray,
 
 
 
-// Initalize the contour tree from the arcs array and sort order
+// Initalize the contour tree from the arcs array
 template <typename FieldType>
 inline void ContourTreeMesh<FieldType>::InitializeNeighborConnectivityFromArcs(
   const IdArrayType& arcs)
@@ -456,51 +456,81 @@ inline void ContourTreeMesh<FieldType>::InitializeNeighborConnectivityFromArcs(
   // i and arc[i]. For the neighbor connectiviy in the contour tree mesh, we first convert these
   // into two directed arcs that are then used to compute a list of neighbors in the mesh for
   // each node.
+  //
+  // Take this simple graph for example:
+  //
+  // 4
+  //  \
+  //   \> 3 -> 1 <- 0
+  //   /
+  //  /
+  // 2
+  //
+  // (This is a graph with nodes 0 through 4 and edges 0 -> 1, 2 -> 3, 3 -> 1, 4 -> 3).
+  // The way the graph is structured, each nodes has at most one outgoing edge.
+  // The contour tree algorithm stores this in an arcs array:
+  //
+  // idx:  0 1 2 3 4
+  // arcs: 1 - 3 1 3 (- = NO_SUCH_ELEMENT, meaning no arc originating from this node)
+  //
+  // This function translates this into the internal contour tree mesh represnetation,
+  // which is "regular" vtk-m connectivity format, i.e., the connectity array is a
+  // flat list of neighbor vertices and offsets give the start index of the
+  // neighbor list for each vertex:
+  //
+  // connectivity: 1 0 3 3 1 2 4 3
+  // counts: 1 2 1 3 1
+  // offset: 0 1 3 4 7 8
 
-  // Step 1: Identify valid arcs (i.e., those that are not marked by the NO_SUCH_ELEMENT as having
-  // no target) as well as find target indices for valid arcs in neighbors array ...
-  IdArrayType arcTargetIndex;
-  arcTargetIndex.Allocate(arcs.GetNumberOfValues());
-  OneIfArcValid oneIfArcValidFunctor;
-  auto oneIfArcValidArrayHandle =
-    vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfArcValid>(arcs, oneIfArcValidFunctor);
-  vtkm::cont::Algorithm::ScanExclusive(oneIfArcValidArrayHandle, arcTargetIndex);
-  vtkm::Id nValidArcs = ArrayGetValue(arcTargetIndex.GetNumberOfValues() - 1, arcTargetIndex) +
-    oneIfArcValidFunctor(ArrayGetValue(arcs.GetNumberOfValues() - 1, arcs));
+  // Step 1: Implictely view arc array as directed arcs and add arcs in the opposite
+  // direction. In the resulting arc list, arc 2*idx is the arc idx->arcs[idx] and arc
+  // 2*idx+1 is the arc arcs[idx]->idx, i.e., in our example,
+  // idx:  0 1 2 3 4 5 6 7 8 9
+  // from: 0 1 1 - 2 3 3 1 4 3
+  // to:   1 0 - 1 3 2 1 3 3 4
+  vtkm::Id nArcsTotal = 2 * arcs.GetNumberOfValues();
+  vtkm::cont::ArrayHandleIndex indexArray(nArcsTotal);
+  auto arcIsValidArray = make_ArrayHandleDecorator(
+    nArcsTotal, mesh_dem_contourtree_mesh_inc::ArcValidDecoratorImpl{}, arcs);
+  // We first generate a list of "valid" arcs in this->NeighborConnectivity, in our
+  // example:
+  // connectivity: 0 1 4 5 6 7 8 9
+  vtkm::cont::Algorithm::CopyIf(indexArray, arcIsValidArray, this->NeighborConnectivity);
+  vtkm::Id nValidArcs = this->NeighborConnectivity.GetNumberOfValues();
 
-  // ... and compress array
-  this->NeighborConnectivity.ReleaseResources();
-  this->NeighborConnectivity.Allocate(
-    2 * nValidArcs); // Number of directed arcs = 2 * number of undirected arcs
-
-  this->Invoke(contourtree_mesh_inc_ns::CompressNeighborsWorklet{},
-               arcs,
-               arcTargetIndex,
-               this->NeighborConnectivity);
-
-  // Sort arcs so that all arcs originating at the same vertex are adjacent. All arcs are in neighbors array based on
-  // sort index of their 'from' vertex (and then within a run sorted by sort index of their 'to' vertex).
+  // Step 2: Sort arcs---by permuting their indices in the connectiviy array---so
+  // that all arcs originating at the same vertex (same `from`) are adjacent.
+  // All arcs are in neighbors array based on  sort index of their 'from' vertex
+  // (and then within a run sorted by sort index of their 'to' vertex).
+  // In our example this results in:
+  // connectivity: 0 1 7 4 6 5 9 8
+  // corresponding to an arc order of
+  // from: 0 1 1 2 3 3 3 4
+  // to:   1 0 3 3 1 2 4 3
   vtkm::cont::Algorithm::Sort(this->NeighborConnectivity,
                               contourtree_mesh_inc_ns::ArcComparator(arcs));
 
-  // Find start index for each vertex into neighbors array (per vtk-m convention, connectivy array has
-  // one extra element not corresponding to a vertex to avoid special case)
-  auto arcFrom = make_ArrayHandleDecorator(this->NeighborConnectivity.GetNumberOfValues(),
+  // We can now obtain counts of the connectivity array by counting the number
+  // of consecutive `from` entries with the same value. In our example:
+  // counts: 1 2 1 3 1
+  auto arcFrom = make_ArrayHandleDecorator(nValidArcs,
                                            mesh_dem_contourtree_mesh_inc::GetArcFromDecoratorImpl{},
                                            this->NeighborConnectivity,
                                            arcs);
-  auto constOne = vtkm::cont::make_ArrayHandleConstant(
-    vtkm::Id{ 1 }, this->NeighborConnectivity.GetNumberOfValues());
+  auto constOne = vtkm::cont::make_ArrayHandleConstant(vtkm::Id{ 1 }, nValidArcs);
   vtkm::cont::ArrayHandle<vtkm::Id> uniqueKeys;
   vtkm::cont::ArrayHandle<vtkm::Id> counts;
   vtkm::cont::Algorithm::ReduceByKey(arcFrom, constOne, uniqueKeys, counts, vtkm::Add());
   VTKM_ASSERT(uniqueKeys.GetNumberOfValues() == this->NumVertices);
 
+  // Convert counts into offsts for the connectivity array
   vtkm::Id neighborOffsetsSize;
-  //this->NeighborOffsets.Allocate(this->NumVertices + 1);
   vtkm::cont::ConvertNumComponentsToOffsets(counts, this->NeighborOffsets, neighborOffsetsSize);
 
-  // Replace arc number with 'to' vertex in neighbors array
+  // Finally, the correct connectivity array correspons to the `to` array,
+  // so replace arc indices with its `to`vertex. In our example, this results in:
+  // connectivity: 1 0 3 3 1 2 4 3
+  // which is exactly the array we needed to compute
   contourtree_mesh_inc_ns::ReplaceArcNumWithToVertexWorklet replaceArcNumWithToVertexWorklet;
   this->Invoke(replaceArcNumWithToVertexWorklet,
                this->NeighborConnectivity, // input/output
