@@ -8,11 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Pathline_hxx
-#define vtk_m_filter_Pathline_hxx
+#ifndef vtk_m_filter_PathParticle_hxx
+#define vtk_m_filter_PathParticle_hxx
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/Pathline.h>
+#include <vtkm/filter/PathParticle.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionAlgorithm.h>
@@ -23,19 +23,19 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT Pathline::Pathline()
-  : vtkm::filter::FilterTemporalParticleAdvection<Pathline>()
+inline VTKM_CONT PathParticle::PathParticle()
+  : vtkm::filter::FilterTemporalParticleAdvection<PathParticle>()
 {
 }
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline::PrepareForExecution(
+inline VTKM_CONT vtkm::cont::PartitionedDataSet PathParticle::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  using AlgorithmType = vtkm::filter::particleadvection::PathlineAlgorithm;
-  using ThreadedAlgorithmType = vtkm::filter::particleadvection::PathlineThreadedAlgorithm;
+  using AlgorithmType = vtkm::filter::particleadvection::PathParticleAlgorithm;
+  using ThreadedAlgorithmType = vtkm::filter::particleadvection::PathParticleThreadedAlgorithm;
 
   this->ValidateOptions(input);
 

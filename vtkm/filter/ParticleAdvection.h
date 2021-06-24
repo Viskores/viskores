@@ -12,54 +12,26 @@
 #define vtk_m_filter_ParticleAdvection_h
 
 #include <vtkm/Particle.h>
-#include <vtkm/filter/FilterDataSetWithField.h>
+#include <vtkm/filter/FilterParticleAdvection.h>
 
 namespace vtkm
 {
 namespace filter
 {
-/// \brief advect particles in a vector field.
+/// \brief Advect particles in a vector field.
 
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
-class ParticleAdvection : public vtkm::filter::FilterDataSetWithField<ParticleAdvection>
+
+class ParticleAdvection : public vtkm::filter::FilterParticleAdvection<ParticleAdvection>
 {
 public:
-  using SupportedTypes = vtkm::TypeListFieldVec3;
-
-  VTKM_CONT
-  ParticleAdvection();
-
-  VTKM_CONT
-  void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
-
-  VTKM_CONT
-  void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
-
-  VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds);
-
-  VTKM_CONT
-  bool GetUseThreadedAlgorithm() { return this->UseThreadedAlgorithm; }
-
-  VTKM_CONT
-  void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
+  VTKM_CONT ParticleAdvection();
 
   template <typename DerivedPolicy>
   vtkm::cont::PartitionedDataSet PrepareForExecution(
     const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                    const vtkm::cont::Field& field,
-                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
-
-private:
-  vtkm::Id NumberOfSteps;
-  vtkm::FloatDefault StepSize;
-  vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
-  bool UseThreadedAlgorithm;
 };
 }
 } // namespace vtkm::filter

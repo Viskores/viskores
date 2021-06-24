@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Pathline_h
-#define vtk_m_filter_Pathline_h
+#ifndef vtk_m_filter_PathParticle_h
+#define vtk_m_filter_PathParticle_h
 
 #include <vtkm/filter/FilterTemporalParticleAdvection.h>
 
@@ -17,15 +17,15 @@ namespace vtkm
 {
 namespace filter
 {
-/// \brief generate pathlines from a time sequence of vector fields.
+/// \brief Advect particles in a time varying vector field.
 
 /// Takes as input a vector field and seed locations and generates the
 /// paths taken by the seeds through the vector field.
-class Pathline : public vtkm::filter::FilterTemporalParticleAdvection<Pathline>
+class PathParticle : public vtkm::filter::FilterTemporalParticleAdvection<PathParticle>
 {
 public:
   VTKM_CONT
-  Pathline();
+  PathParticle();
 
   template <typename DerivedPolicy>
   vtkm::cont::PartitionedDataSet PrepareForExecution(
@@ -39,8 +39,8 @@ private:
 }
 } // namespace vtkm::filter
 
-#ifndef vtk_m_filter_Pathline_hxx
-#include <vtkm/filter/Pathline.hxx>
+#ifndef vtk_m_filter_PathParticle_hxx
+#include <vtkm/filter/PathParticle.hxx>
 #endif
 
-#endif // vtk_m_filter_Pathline_h
+#endif // vtk_m_filter_PathParticle_h
