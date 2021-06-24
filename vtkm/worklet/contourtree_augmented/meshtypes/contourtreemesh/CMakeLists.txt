@@ -73,7 +73,7 @@ set(headers
   FindDuplicateInOtherWorklet.h
   GetArcFromDecorator.h
   InitToCombinedSortOrderArraysWorklet.h
-  MergeIntoCombinedNeighborsWorklet.h
+  MergeSortedListsWithoutDuplicatesWorklet.h
   ReplaceArcNumWithToVertexWorklet.h
  )
 
