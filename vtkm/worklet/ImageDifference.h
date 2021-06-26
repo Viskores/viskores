@@ -50,7 +50,7 @@ public:
     auto minIndices = boundary.MinNeighborIndices(this->ShiftRadius);
     auto maxIndices = boundary.MaxNeighborIndices(this->ShiftRadius);
 
-    T minPixelDiff;
+    T minPixelDiff{};
     vtkm::FloatDefault minPixelDiffThreshold = 10000.0f;
     for (vtkm::IdComponent i = minIndices[0]; i <= maxIndices[0]; i++)
     {

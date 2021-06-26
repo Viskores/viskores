@@ -114,7 +114,7 @@ void TestPathline()
                                        vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
                                        vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-      const vtkm::FloatDefault stepSize = 0.1;
+      const vtkm::FloatDefault stepSize = .1f;
       const vtkm::FloatDefault t0 = 0, t1 = 1;
       const vtkm::Id numSteps = 20;
 
