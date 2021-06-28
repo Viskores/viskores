@@ -628,36 +628,11 @@ int main(int argc, char* argv[])
                                            static_cast<vtkm::Id>(dims[1]),
                                            static_cast<vtkm::Id>(nDims == 3 ? dims[2] : 0) });
 
-#ifdef DEBUG_PRINT_CTUD
-      std::cout << "blockIndex: "
-                << vtkm::Id3{ static_cast<vtkm::Id>(std::ceil(static_cast<float>(offset[0]) /
-                                                              static_cast<float>(dims[0]))),
-                              static_cast<vtkm::Id>(std::ceil(static_cast<float>(offset[1]) /
-                                                              static_cast<float>(dims[1]))),
-                              static_cast<vtkm::Id>(nDims == 3
-                                                      ? std::ceil(static_cast<float>(offset[2]) /
-                                                                  static_cast<float>(dims[2]))
-                                                      : 0) }
-                << std::endl;
-      std::cout << "blockOrigin: "
-                << vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
-                              static_cast<vtkm::Id>(offset[1]),
-                              static_cast<vtkm::Id>(nDims == 3 ? offset[2] : 0) }
-                << std::endl;
-      std::cout << "blockSize: "
-                << vtkm::Id3{ static_cast<vtkm::Id>(dims[0]),
-                              static_cast<vtkm::Id>(dims[1]),
-                              static_cast<vtkm::Id>(nDims == 3 ? dims[2] : 0) };
-#endif
-
       if (blockNo == 0)
       {
         blocksPerDim = vtkm::Id3{ static_cast<vtkm::Id>(bpd[0]),
                                   static_cast<vtkm::Id>(bpd[1]),
                                   static_cast<vtkm::Id>(nDims == 3 ? bpd[2] : 1) };
-#ifdef DEBUG_PRINT_CTUD
-        std::cout << "blocksPerDim: " << blocksPerDim << std::endl;
-#endif
       }
     }
 
