@@ -255,6 +255,7 @@ VTKM_EXEC_CONT int Orthonormalize(const vtkm::Vec<vtkm::Vec<T, N>, N>& inputs,
                                   vtkm::Vec<vtkm::Vec<T, N>, N>& outputs,
                                   T tol = static_cast<T>(1e-6))
 {
+  T tolsqr = tol * tol;
   int j = 0; // j is the number of non-zero-length, non-collinear inputs encountered.
   vtkm::Vec<vtkm::Vec<T, N>, N> u;
   for (int i = 0; i < N; ++i)
@@ -264,13 +265,13 @@ VTKM_EXEC_CONT int Orthonormalize(const vtkm::Vec<vtkm::Vec<T, N>, N>& inputs,
     {
       u[j] -= vtkm::Project(inputs[i], u[k]);
     }
-    T rmag = vtkm::RMagnitude(u[j]);
-    if (rmag * tol > 1.0)
+    T magsqr = vtkm::MagnitudeSquared(u[j]);
+    if (magsqr <= tolsqr)
     {
       // skip this vector, it is zero-length or collinear with others.
       continue;
     }
-    outputs[j] = rmag * u[j];
+    outputs[j] = vtkm::RSqrt(magsqr) * u[j];
     ++j;
   }
   for (int i = j; i < N; ++i)
