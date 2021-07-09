@@ -36,6 +36,10 @@
 
 #include <math.h>
 
+#ifdef VTKM_GCC
+#include <fenv.h>
+#endif
+
 // Try to enforce using the correct testing version. (Those that include the
 // control environment have more possible exceptions.) This is not guaranteed
 // to work. To make it more likely, place the Testing.h include last.
@@ -103,6 +107,29 @@ namespace vtkm
 {
 namespace testing
 {
+
+// TODO: Move these 2 functions to the testing library.
+
+// Note: We are explicitly not trapping FE_INEXACT and FE_UNDERFLOW. Inexact numbers are too common
+// to completely remove (that is the nature of floating point, especially when converting from
+// integers), and underflows are considered normal in rendering (for example, the specular
+// highlight essentially goes to zero most places).
+
+inline void FloatingPointExceptionTrapEnable()
+{
+  // Turn on floating point exception trapping where available
+#ifdef VTKM_GCC
+  feenableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
+#endif
+}
+
+inline void FloatingPointExceptionTrapDisable()
+{
+  // Turn on floating point exception trapping where available
+#ifdef VTKM_GCC
+  fedisableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
+#endif
+}
 
 // If you get an error about this class definition being incomplete, it means
 // that you tried to get the name of a type that is not specified. You can
@@ -442,6 +469,9 @@ public:
     {
       vtkm::cont::InitLogging(argc, argv);
     }
+
+    // Some simulations trap floating point exceptions, and we want to be able to run in them
+    vtkm::testing::FloatingPointExceptionTrapEnable();
 
     try
     {
