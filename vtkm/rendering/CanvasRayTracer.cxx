@@ -59,15 +59,25 @@ public:
     point[2] = static_cast<vtkm::Float32>(intersection[2]);
     point[3] = 1.f;
 
-    vtkm::Vec4f_32 newpoint;
-    newpoint = vtkm::MatrixMultiply(this->ViewProjMat, point);
-    newpoint[0] = newpoint[0] / newpoint[3];
-    newpoint[1] = newpoint[1] / newpoint[3];
-    newpoint[2] = newpoint[2] / newpoint[3];
+    vtkm::Float32 depth;
+    {
+      vtkm::Vec4f_32 newpoint;
+      newpoint = vtkm::MatrixMultiply(this->ViewProjMat, point);
+      if (newpoint[3] > 0)
+      {
+        depth = 0.5f * (newpoint[2] / newpoint[3]) + 0.5f;
+      }
+      else
+      {
+        // This condition can happen when the ray is at the origin (inDepth = 0), which is a
+        // singularity in the projection matrix. I'm not sure this is the right think to do since
+        // it looks like depth is supposed to be between 0 and 1. It seems wrong that you would
+        // ever get a ray in front of the near plane, so the "right" solution may be to fix this
+        // elsewhere.
+        depth = vtkm::NegativeInfinity32();
+      }
+    }
 
-    vtkm::Float32 depth = newpoint[2];
-
-    depth = 0.5f * (depth) + 0.5f;
     vtkm::Vec4f_32 color;
     color[0] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 0));
     color[1] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 1));
