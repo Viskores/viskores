@@ -237,9 +237,7 @@ public:
   vtkm::Int32 Minx;
   vtkm::Int32 Miny;
   vtkm::Int32 SubsetWidth;
-  vtkm::Vec3f_32 nlook; // normalized look
   vtkm::Vec3f_32 PixelDelta;
-  vtkm::Vec3f_32 delta_y;
   vtkm::Vec3f_32 StartOffset;
 
   VTKM_CONT
@@ -279,9 +277,6 @@ public:
     StartOffset[1] = startOffset[1];
     // always push the rays back from the origin
     StartOffset[2] = -1.f;
-
-
-    vtkm::Normalize(nlook);
   }
 
   using ControlSignature =

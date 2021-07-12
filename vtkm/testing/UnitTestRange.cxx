@@ -122,6 +122,8 @@ void TestRange()
   VTKM_TEST_ASSERT(unionRange.Contains(25), "Contains fail");
 
   std::cout << "Try adding NaN." << std::endl;
+  // Turn off floating point exceptions. This is only for conditions that allow NaNs.
+  vtkm::testing::FloatingPointExceptionTrapDisable();
   unionRange.Include(vtkm::Nan64());
   VTKM_TEST_ASSERT(unionRange.IsNonEmpty(), "Empty?");
   VTKM_TEST_ASSERT(!unionRange.Contains(-20), "Contains fail");

@@ -179,10 +179,11 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
 
     // General behavior.
     VTKM_MATH_ASSERT(nan != vtkm::Nan<T>(), "Nan not equal itself.");
-    VTKM_MATH_ASSERT(!(nan >= zero), "Nan not greater or less.");
-    VTKM_MATH_ASSERT(!(nan <= zero), "Nan not greater or less.");
-    VTKM_MATH_ASSERT(!(nan >= finite), "Nan not greater or less.");
-    VTKM_MATH_ASSERT(!(nan <= finite), "Nan not greater or less.");
+    // Disabled because they can cause floating point exceptions
+    //VTKM_MATH_ASSERT(!(nan >= zero), "Nan not greater or less.");
+    //VTKM_MATH_ASSERT(!(nan <= zero), "Nan not greater or less.");
+    //VTKM_MATH_ASSERT(!(nan >= finite), "Nan not greater or less.");
+    //VTKM_MATH_ASSERT(!(nan <= finite), "Nan not greater or less.");
 
     VTKM_MATH_ASSERT(neginf < inf, "Infinity big");
     VTKM_MATH_ASSERT(zero < inf, "Infinity big");

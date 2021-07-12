@@ -29,7 +29,7 @@ void CheckTypeSizes()
   VTKM_TEST_ASSERT(sizeof(vtkm::Int64) == 8, "Int64 wrong size.");
   VTKM_TEST_ASSERT(sizeof(vtkm::UInt64) == 8, "UInt64 wrong size.");
   VTKM_TEST_ASSERT(sizeof(vtkm::Float32) == 4, "Float32 wrong size.");
-  VTKM_TEST_ASSERT(sizeof(vtkm::Float64) == 8, "Float32 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::Float64) == 8, "Float64 wrong size.");
 }
 
 // This part of the test has to be broken out of GeneralVecTypeTest because

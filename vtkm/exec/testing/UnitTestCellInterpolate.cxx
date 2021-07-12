@@ -59,6 +59,11 @@ struct TestInterpolateFunctor
   void DoTestWithField(CellShapeTag shape, const FieldVecType& fieldValues) const
   {
     vtkm::IdComponent numPoints = fieldValues.GetNumberOfComponents();
+    if (numPoints < 1)
+    {
+      return;
+    }
+
     FieldType averageValue = vtkm::TypeTraits<FieldType>::ZeroInitialization();
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
@@ -77,16 +82,13 @@ struct TestInterpolateFunctor
                        "Interpolation at point not point value.");
     }
 
-    if (numPoints > 0)
-    {
-      vtkm::Vec3f pcoord;
-      CHECK_CALL(vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, pcoord));
-      FieldType interpolatedValue;
-      CHECK_CALL(vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, interpolatedValue));
+    vtkm::Vec3f pcoord;
+    CHECK_CALL(vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, pcoord));
+    FieldType interpolatedValue;
+    CHECK_CALL(vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, interpolatedValue));
 
-      VTKM_TEST_ASSERT(test_equal(averageValue, interpolatedValue),
-                       "Interpolation at center not average value.");
-    }
+    VTKM_TEST_ASSERT(test_equal(averageValue, interpolatedValue),
+                     "Interpolation at center not average value.");
   }
 
   template <typename CellShapeTag>

@@ -112,6 +112,9 @@ public:
     vtkm::cont::Initialize(argc, argv);
     ParseAdditionalTestArgs(argc, argv);
 
+    // Turn on floating point exception trapping where available
+    vtkm::testing::FloatingPointExceptionTrapEnable();
+
     try
     {
       function();

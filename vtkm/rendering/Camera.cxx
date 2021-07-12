@@ -268,9 +268,17 @@ void Camera::ResetToBounds(const vtkm::Bounds& dataBounds,
   viewPadAmount = YDataViewPadding * (db.Y.Max - db.Y.Min);
   db.Y.Max += viewPadAmount;
   db.Y.Min -= viewPadAmount;
-  viewPadAmount = ZDataViewPadding * (db.Z.Max - db.Z.Min);
-  db.Z.Max += viewPadAmount;
-  db.Z.Min -= viewPadAmount;
+  if (db.Z.IsNonEmpty())
+  {
+    viewPadAmount = ZDataViewPadding * (db.Z.Max - db.Z.Min);
+    db.Z.Max += viewPadAmount;
+    db.Z.Min -= viewPadAmount;
+  }
+  else
+  {
+    VTKM_ASSERT(saveMode != MODE_3D);
+    db.Z.Include(0);
+  }
 
   // Reset for 3D camera
   vtkm::Vec3f_32 directionOfProjection = this->GetPosition() - this->GetLookAt();

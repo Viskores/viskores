@@ -120,6 +120,8 @@ void TestBounds()
   VTKM_TEST_ASSERT(unionBounds.Contains(Vec3(25)), "Contains fail");
 
   std::cout << "Try adding NaN." << std::endl;
+  // Turn off floating point exceptions. This is only for conditions that allow NaNs.
+  vtkm::testing::FloatingPointExceptionTrapDisable();
   unionBounds.Include(Vec3(vtkm::Nan64()));
   VTKM_TEST_ASSERT(!unionBounds.Contains(Vec3(-20)), "Contains fail");
   VTKM_TEST_ASSERT(!unionBounds.Contains(Vec3(-2)), "Contains fail");
