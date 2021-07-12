@@ -221,9 +221,12 @@ public:
     split.NumRightPoints = pointsToRight;
     split.LMax = static_cast<vtkm::FloatDefault>(lMaxRanges.Max);
     split.RMin = static_cast<vtkm::FloatDefault>(rMinRanges.Min);
-    split.Cost = vtkm::Abs(split.LMax * static_cast<vtkm::FloatDefault>(pointsToLeft) -
-                           split.RMin * static_cast<vtkm::FloatDefault>(pointsToRight));
-    if (vtkm::IsNan(split.Cost))
+    if (lMaxRanges.IsNonEmpty() && rMinRanges.IsNonEmpty())
+    {
+      split.Cost = vtkm::Abs(split.LMax * static_cast<vtkm::FloatDefault>(pointsToLeft) -
+                             split.RMin * static_cast<vtkm::FloatDefault>(pointsToRight));
+    }
+    else
     {
       split.Cost = vtkm::Infinity<vtkm::FloatDefault>();
     }
