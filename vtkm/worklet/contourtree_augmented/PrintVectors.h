@@ -163,6 +163,32 @@ inline void PrintHeader(vtkm::Id howMany, std::ostream& outStream = std::cout)
 
 
 // base routines for reading & writing host vectors
+template <typename ARRAYTYPE>
+inline void PrintArrayHandle(std::string label,
+                             const ARRAYTYPE& dVec,
+                             vtkm::Id nValues,
+                             std::ostream& outStream)
+{ // PrintArrayHandle()
+  // -1 means full size
+  if (nValues == -1)
+  {
+    nValues = dVec.GetNumberOfValues();
+  }
+
+  // print the label
+  PrintLabel(label, outStream);
+
+  // now print the data
+  auto portal = dVec.ReadPortal();
+  for (vtkm::Id entry = 0; entry < nValues; entry++)
+  {
+    PrintDataType(portal.Get(entry), outStream);
+  }
+  // and an std::endl
+  outStream << std::endl;
+} // PrintArrayHandle()
+
+// base routines for reading & writing host vectors
 template <typename T, typename StorageType>
 inline void PrintValues(std::string label,
                         const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
