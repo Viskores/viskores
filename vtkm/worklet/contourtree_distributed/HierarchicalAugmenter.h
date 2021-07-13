@@ -1291,7 +1291,7 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
   resultStream << "----------------------------------------" << std::endl;
   resultStream << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
                << lineNum << std::endl;
-  resultStream << "Block " << std::setw(4) << this->BlockID << ": " << std::left << message
+  resultStream << "Block " << std::setw(4) << this->BlockId << ": " << std::left << message
                << std::endl;
   resultStream << "----------------------------------------" << std::endl;
 
@@ -1378,22 +1378,22 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
   vtkm::worklet::contourtree_augmented::PrintHeader(this->SupernodeSorter.GetNumberOfValues());
   vtkm::worklet::contourtree_augmented::PrintIndices(
     "Supernode Id", this->SupernodeSorter, -1, resultStream);
-  vtkm::worklet::contourtree_augmented::PrintIndices(
+  vtkm::worklet::contourtree_augmented::PrintArrayHandle(
     "Permuted Superparent",
     vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->SuperparentSet),
     -1,
     resultStream);
-  vtkm::worklet::contourtree_augmented::PrintValues(
+  vtkm::worklet::contourtree_augmented::PrintArrayHandle(
     "Permuted Value",
     vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->DataValueSet),
     -1,
     resultStream);
-  vtkm::worklet::contourtree_augmented::PrintIndices(
+  vtkm::worklet::contourtree_augmented::PrintArrayHandle(
     "Permuted Global Id",
     vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->GlobalRegularIdSet),
     -1,
     resultStream);
-  vtkm::worklet::contourtree_augmented::PrintIndices(
+  vtkm::worklet::contourtree_augmented::PrintArrayHandle(
     "Permuted Supernode Id",
     vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->SupernodeIdSet),
     -1,
