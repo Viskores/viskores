@@ -90,7 +90,7 @@ public:
     for (int i = 0; i < rp.in_link().size(); ++i)
     {
       int ingid = rp.in_link().target(i).gid;
-      if (ingid == selfid)
+      if (ingid != selfid)
       { // Receive and augment
         rp.dequeue(ingid, blockData->HierarchicalAugmenter.InData);
         blockData->HierarchicalAugmenter.RetrieveInAttachmentPoints();
