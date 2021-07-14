@@ -60,11 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_compress_neighbours_worklet_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_compress_neighbours_worklet_h
-
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_get_arc_from_functor_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_get_arc_from_functor_h
 
 namespace vtkm
 {
@@ -75,47 +72,29 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-
-class CompressNeighboursWorklet : public vtkm::worklet::WorkletMapField
+class GetArcFromDecoratorImpl
 {
 public:
-  typedef void ControlSignature(FieldIn arcs,              // (input) arcs
-                                FieldIn arcTargetIndex,    // (input) arcTargetIndex
-                                WholeArrayOut neighbours); // (output) neighbours
-  typedef void ExecutionSignature(_1, InputIndex, _2, _3);
-  typedef _1 InputDomain;
-
-  // Default Constructor
-  VTKM_EXEC_CONT
-  CompressNeighboursWorklet() {}
-
-  template <typename OutFieldPortalType>
-  VTKM_EXEC void operator()(vtkm::Id& to,
-                            vtkm::Id from,
-                            vtkm::Id& arcTargetIndexFrom,
-                            const OutFieldPortalType& neighboursPortal) const
+  template <typename Portal1Type, typename Portal2Type>
+  struct Functor
   {
-    if (!NoSuchElement(to))
+    Portal1Type NeighborConnectivityPortal;
+    Portal2Type ArcsPortal;
+
+    VTKM_EXEC_CONT
+    vtkm::Id operator()(vtkm::Id arcNo) const
     {
-      neighboursPortal.Set(2 * arcTargetIndexFrom + 0, 2 * from + 0);
-      neighboursPortal.Set(2 * arcTargetIndexFrom + 1, 2 * from + 1);
+      vtkm::Id arc = NeighborConnectivityPortal.Get(arcNo);
+      return (arc % 2 == 0) ? arc / 2 : MaskedIndex(ArcsPortal.Get(arc / 2));
     }
+  };
 
-    // In serial this worklet implements the following operation
-    // for (indexVector::size_type from = 0; from < arcs.size(); ++from)
-    //  {
-    //    indexType to = arcs[from];
-    //    if (!NoSuchElement(to))
-    //      {
-    //         assert(MaskedIndex(to) != from);
-    //         neighbours[2*arcTargetIndex[from]+0] = 2*from+0;
-    //         neighbours[2*arcTargetIndex[from]+1] = 2*from+1;
-    //      }
+  template <typename PT1, typename PT2>
+  Functor<PT1, PT2> CreateFunctor(PT1 neighborConnectivityPortal, PT2 arcsPortal) const
+  {
+    return { neighborConnectivityPortal, arcsPortal };
   }
-
-
-}; //  ComputeMaxNeighboursWorklet
-
+};
 
 } // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented

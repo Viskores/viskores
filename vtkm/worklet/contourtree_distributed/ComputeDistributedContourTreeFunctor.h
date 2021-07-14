@@ -160,7 +160,13 @@ public:
 #endif
 
         // Merge the two contour tree meshes
-        block->ContourTreeMeshes.back().MergeWith(otherContourTreeMesh);
+        std::stringstream mergeMessageStream;
+        mergeMessageStream << "    Rank    : " << rank << std::endl
+                           << "    DIY Id  : " << selfid << std::endl
+                           << "    Other Id: " << ingid << std::endl
+                           << "    Round   : " << rp.round() << std::endl;
+        block->ContourTreeMeshes.back().MergeWith(
+          otherContourTreeMesh, this->TimingsLogLevel, mergeMessageStream.str());
 
         timingsStream << "        |-->" << std::setw(38) << std::left << "Merge Contour Tree Mesh"
                       << ": " << loopTimer.GetElapsedTime() << " seconds" << std::endl;

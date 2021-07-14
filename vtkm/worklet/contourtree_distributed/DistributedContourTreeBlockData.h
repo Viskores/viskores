@@ -110,9 +110,9 @@ struct Serialization<vtkm::worklet::contourtree_augmented::ContourTreeMesh<Field
     vtkmdiy::save(bb, ctm.NumVertices);
     vtkmdiy::save(bb, ctm.SortedValues);
     vtkmdiy::save(bb, ctm.GlobalMeshIndex);
-    vtkmdiy::save(bb, ctm.Neighbours);
-    vtkmdiy::save(bb, ctm.FirstNeighbour);
-    vtkmdiy::save(bb, ctm.MaxNeighbours);
+    vtkmdiy::save(bb, ctm.NeighborConnectivity);
+    vtkmdiy::save(bb, ctm.NeighborOffsets);
+    vtkmdiy::save(bb, ctm.MaxNeighbors);
   }
 
   static void load(vtkmdiy::BinaryBuffer& bb,
@@ -121,9 +121,9 @@ struct Serialization<vtkm::worklet::contourtree_augmented::ContourTreeMesh<Field
     vtkmdiy::load(bb, ctm.NumVertices);
     vtkmdiy::load(bb, ctm.SortedValues);
     vtkmdiy::load(bb, ctm.GlobalMeshIndex);
-    vtkmdiy::load(bb, ctm.Neighbours);
-    vtkmdiy::load(bb, ctm.FirstNeighbour);
-    vtkmdiy::load(bb, ctm.MaxNeighbours);
+    vtkmdiy::load(bb, ctm.NeighborConnectivity);
+    vtkmdiy::load(bb, ctm.NeighborOffsets);
+    vtkmdiy::load(bb, ctm.MaxNeighbors);
   }
 };
 

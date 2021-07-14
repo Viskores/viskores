@@ -60,9 +60,12 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_other_start_index_nneighbours_worklet_worklet_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_other_start_index_nneighbours_worklet_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_neighbors_to_packed_array_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_neighbors_to_packed_array_worklet_h
 
+#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
@@ -75,47 +78,21 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-class CombinedOtherStartIndexNNeighboursWorklet : public vtkm::worklet::WorkletMapField
+struct CopyNeighborsToPackedArray : vtkm::worklet::WorkletMapField
 {
-public:
-  typedef void ControlSignature(
-    FieldIn nNeighbours,                    // (input) nNeighbours
-    FieldIn otherToCombinedSortOrder,       // (input) otherToCombinedSortOrder
-    WholeArrayInOut combinedNNeighbours,    // (input/output) combinedNNeighbours
-    WholeArrayInOut combinedOtherStartIndex // (input/output) combinedOthertStartIndex
-  );
-  typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using ControlSignature = void(FieldIn, FieldOut);
 
-  // Default Constructor
-  VTKM_EXEC_CONT
-  CombinedOtherStartIndexNNeighboursWorklet() {}
-
-
-  template <typename InOutPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& nneighboursVal,
-                            const vtkm::Id& otherToCombinedSortOrderVal,
-                            const InOutPortalType combinedNNeighboursPortal,
-                            const InOutPortalType combinedOtherStartIndexPortal) const
+  template <typename InGroupType, typename OutGroupType>
+  VTKM_EXEC void operator()(const InGroupType& inGroup, OutGroupType& outGroup) const
   {
-    combinedOtherStartIndexPortal.Set(otherToCombinedSortOrderVal,
-                                      combinedNNeighboursPortal.Get(otherToCombinedSortOrderVal));
-    combinedNNeighboursPortal.Set(otherToCombinedSortOrderVal,
-                                  combinedNNeighboursPortal.Get(otherToCombinedSortOrderVal) +
-                                    nneighboursVal);
-
-    // Implements in reference code
-    // The following is save since each global index is only written by one entry
-    // for (indexVector::size_type vtx = 0; vtx < nNeighbours.size(); ++vtx)
-    // {
-    //     combinedOtherStartIndex[otherToCombinedSortOrder[vtx]] =  combinedNNeighbours[otherToCombinedSortOrder[vtx]];
-    //     combinedNNeighbours[otherToCombinedSortOrder[vtx]] += nNeighbours[vtx];
-    // }
+    vtkm::IdComponent groupSize = outGroup.GetNumberOfComponents();
+    VTKM_ASSERT(groupSize <= inGroup.GetNumberOfComponents());
+    for (vtkm::IdComponent index = 0; index < groupSize; ++index)
+    {
+      outGroup[index] = inGroup[index];
+    }
   }
-
-
-
-}; // CombinedOtherStartIndexNNeighboursWorklet
+};
 
 
 } // namespace mesh_dem_contourtree_mesh_inc

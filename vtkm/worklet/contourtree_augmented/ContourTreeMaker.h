@@ -233,7 +233,7 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
   // test for final edges meeting
   if (this->ActiveSupernodes.GetNumberOfValues() == 1)
   { // meet at a vertex
-    vtkm::Id superID = this->ActiveSupernodes.ReadPortal().Get(0);
+    vtkm::Id superID = ArrayGetValue(0, this->ActiveSupernodes);
     this->ContourTreeResult.Superarcs.WritePortal().Set(superID,
                                                         static_cast<vtkm::Id>(NO_SUCH_ELEMENT));
     this->ContourTreeResult.Hyperarcs.WritePortal().Set(superID,
@@ -325,21 +325,11 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
     this->ContourTreeResult.WhenTransferred, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
-  vtkm::Id nHypernodes = 0;
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> temp;
-    temp.Allocate(2);
-    vtkm::cont::Algorithm::CopySubRange(
-      newHypernodePosition, newHypernodePosition.GetNumberOfValues() - 1, 1, temp);
-    vtkm::cont::Algorithm::CopySubRange(
-      this->ContourTreeResult.WhenTransferred,
-      this->ContourTreeResult.WhenTransferred.GetNumberOfValues() - 1,
-      1,
-      temp,
-      1);
-    auto portal = temp.ReadPortal();
-    nHypernodes = portal.Get(0) + oneIfHypernodeFunctor(portal.Get(1));
-  }
+  vtkm::Id nHypernodes =
+    ArrayGetValue(newHypernodePosition.GetNumberOfValues() - 1, newHypernodePosition) +
+    oneIfHypernodeFunctor(
+      ArrayGetValue(this->ContourTreeResult.WhenTransferred.GetNumberOfValues() - 1,
+                    this->ContourTreeResult.WhenTransferred));
 
   IdArrayType newHypernodes;
   newHypernodes.Allocate(nHypernodes);

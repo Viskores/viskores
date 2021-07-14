@@ -318,9 +318,9 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     // localDataBlocks[bi]->SortOrder = currContourTreeMesh->SortOrder;
     localDataBlocks[bi]->SortedValue = currContourTreeMesh->SortedValues;
     localDataBlocks[bi]->GlobalMeshIndex = currContourTreeMesh->GlobalMeshIndex;
-    localDataBlocks[bi]->Neighbours = currContourTreeMesh->Neighbours;
-    localDataBlocks[bi]->FirstNeighbour = currContourTreeMesh->FirstNeighbour;
-    localDataBlocks[bi]->MaxNeighbours = currContourTreeMesh->MaxNeighbours;
+    localDataBlocks[bi]->NeighborConnectivity = currContourTreeMesh->NeighborConnectivity;
+    localDataBlocks[bi]->NeighborOffsets = currContourTreeMesh->NeighborOffsets;
+    localDataBlocks[bi]->MaxNeighbors = currContourTreeMesh->MaxNeighbors;
     localDataBlocks[bi]->BlockOrigin = localBlocksOriginPortal.Get(static_cast<vtkm::Id>(bi));
     localDataBlocks[bi]->BlockSize = localBlocksSizesPortal.Get(static_cast<vtkm::Id>(bi));
     localDataBlocks[bi]->GlobalSize =
@@ -425,9 +425,9 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     contourTreeMeshOut.SortIndices = vtkm::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
     contourTreeMeshOut.SortedValues = localDataBlocks[0]->SortedValue;
     contourTreeMeshOut.GlobalMeshIndex = localDataBlocks[0]->GlobalMeshIndex;
-    contourTreeMeshOut.Neighbours = localDataBlocks[0]->Neighbours;
-    contourTreeMeshOut.FirstNeighbour = localDataBlocks[0]->FirstNeighbour;
-    contourTreeMeshOut.MaxNeighbours = localDataBlocks[0]->MaxNeighbours;
+    contourTreeMeshOut.NeighborConnectivity = localDataBlocks[0]->NeighborConnectivity;
+    contourTreeMeshOut.NeighborOffsets = localDataBlocks[0]->NeighborOffsets;
+    contourTreeMeshOut.MaxNeighbors = localDataBlocks[0]->MaxNeighbors;
     // Construct the mesh boundary exectuion object needed for boundary augmentation
     vtkm::Id3 minIdx(0, 0, 0);
     vtkm::Id3 maxIdx = this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize;

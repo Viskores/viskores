@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_update_combined_neighbours_worklet_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_update_combined_neighbours_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_merge_sorted_lists_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_merge_sorted_lists_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -75,75 +75,51 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-class UpdateCombinedNeighboursWorklet : public vtkm::worklet::WorkletMapField
+struct MergeSortedListsWithoutDuplicatesWorklet : public vtkm::worklet::WorkletMapField
 {
-public:
-  typedef void ControlSignature(
-    WholeArrayIn firstNeighbour, // (input) this->firstNerighbour or other.firstNeighbour
-    WholeArrayIn neighbours,     // (input) this->neighbours or other.neighbours array
-    WholeArrayIn
-      toCombinedSortOrder, // (input) thisToCombinedSortOrder or otherToCombinedSortOrder array
-    WholeArrayIn combinedFirstNeighbour, // (input) combinedFirstNeighbour array in both cases
-    WholeArrayIn
-      combinedOtherStartIndex, // (input) const 0 array of length combinedOtherStartIndex for this and combinedOtherStartIndex for other loop
-    WholeArrayOut combinedNeighbours); // (output) combinedNeighbours array in both cases
-  typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
-  typedef _1 InputDomain;
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut, FieldOut);
 
-  // Default Constructor
-  VTKM_EXEC_CONT
-  UpdateCombinedNeighboursWorklet() {}
-
-  template <typename InFieldPortalType, typename InFieldPortalType2, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(
-    const InFieldPortalType& firstNeighbourPortal,
-    const vtkm::Id vtx,
-    const InFieldPortalType& neighboursPortal,
-    const InFieldPortalType& toCombinedSortOrderPortal,
-    const InFieldPortalType& combinedFirstNeighbourPortal,
-    const InFieldPortalType2&
-      combinedOtherStartIndexPortal, // We need another InFieldPortalType here to allow us to hand in a smart array handle instead of a VTKM array
-    const OutFieldPortalType& combinedNeighboursPortal) const
+  template <typename InGroupType, typename OutGroupType>
+  VTKM_EXEC void operator()(const InGroupType& list1,
+                            const InGroupType& list2,
+                            OutGroupType& combinedList,
+                            vtkm::IdComponent& numberOfUniqueElements) const
   {
-    vtkm::Id totalNumNeighbours = neighboursPortal.GetNumberOfValues();
-    vtkm::Id totalNumVertices = firstNeighbourPortal.GetNumberOfValues();
-    vtkm::Id numNeighbours = (vtx < totalNumVertices - 1)
-      ? firstNeighbourPortal.Get(vtx + 1) - firstNeighbourPortal.Get(vtx)
-      : totalNumNeighbours - firstNeighbourPortal.Get(vtx);
-    for (vtkm::Id nbrNo = 0; nbrNo < numNeighbours; ++nbrNo)
+    VTKM_ASSERT(list1.GetNumberOfComponents() + list2.GetNumberOfComponents() <=
+                combinedList.GetNumberOfComponents());
+
+    numberOfUniqueElements = 0;
+
+    vtkm::IdComponent pos1 = 0;
+    vtkm::IdComponent pos2 = 0;
+    while (pos1 < list1.GetNumberOfComponents() && pos2 < list2.GetNumberOfComponents())
     {
-      combinedNeighboursPortal.Set(
-        combinedFirstNeighbourPortal.Get(toCombinedSortOrderPortal.Get(vtx)) +
-          combinedOtherStartIndexPortal.Get(toCombinedSortOrderPortal.Get(vtx)) + nbrNo,
-        toCombinedSortOrderPortal.Get(neighboursPortal.Get(firstNeighbourPortal.Get(vtx) + nbrNo)));
+      if (list1[pos1] < list2[pos2])
+      {
+        combinedList[numberOfUniqueElements++] = list1[pos1++];
+      }
+      else if (list1[pos1] == list2[pos2])
+      {
+        combinedList[numberOfUniqueElements++] = list1[pos1++];
+        ++pos2;
+      }
+      else
+      {
+        VTKM_ASSERT(list1[pos1] > list2[pos2]);
+        combinedList[numberOfUniqueElements++] = list2[pos2++];
+      }
     }
-
-    /*
-      This worklet implemnts the following two loops from the original OpenMP code
-      The two loops are the same but the arrays required are different
-
-      for (indexVector::size_type vtx = 0; vtx < firstNeighbour.size(); ++vtx)
-      {
-        indexType numNeighbours = (vtx < GetNumberOfVertices() - 1) ? firstNeighbour[vtx+1] - firstNeighbour[vtx] : neighbours.size() - firstNeighbour[vtx];
-
-        for (indexType nbrNo = 0; nbrNo < numNeighbours; ++nbrNo)
-        {
-            combinedNeighbours[combinedFirstNeighbour[thisToCombinedSortOrder[vtx]] + nbrNo] = thisToCombinedSortOrder[neighbours[firstNeighbour[vtx] + nbrNo]];
-        }
-      }
-
-      for (indexVector::size_type vtx = 0; vtx < other.firstNeighbour.size(); ++vtx)
-      {
-        indexType numNeighbours = (vtx < other.GetNumberOfVertices() - 1) ? other.firstNeighbour[vtx+1] - other.firstNeighbour[vtx] : other.neighbours.size() - other.firstNeighbour[vtx];
-        for (indexType nbrNo = 0; nbrNo < numNeighbours; ++nbrNo)
-        {
-          combinedNeighbours[combinedFirstNeighbour[otherToCombinedSortOrder[vtx]] + combinedOtherStartIndex[otherToCombinedSortOrder[vtx]] + nbrNo] = otherToCombinedSortOrder[other.neighbours[other.firstNeighbour[vtx] + nbrNo]];
-        }
-      }
-      */
+    // Either list1 or list2 may have additional elements but not both, so the following is safe
+    while (pos1 < list1.GetNumberOfComponents())
+    {
+      combinedList[numberOfUniqueElements++] = list1[pos1++];
+    }
+    while (pos2 < list2.GetNumberOfComponents())
+    {
+      combinedList[numberOfUniqueElements++] = list2[pos2++];
+    }
   }
-}; //  AdditionAssignWorklet
-
+}; // MergeSortedListsWithoutDuplicatesWorklet
 
 } // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented

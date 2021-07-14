@@ -60,9 +60,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_find_start_index_worklet_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_find_start_index_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_into_combined_array_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_copy_into_combined_array_worklet_h
 
+#include <vtkm/LowerBound.h>
+#include <vtkm/UpperBound.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
@@ -75,59 +77,43 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-
-class FindStartIndexWorklet : public vtkm::worklet::WorkletMapField
+template <bool useLowerBound>
+class CopyIntoCombinedArrayWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn neighbours,       // (input) neighbours
-                                WholeArrayIn arcs,             // (input) arcs
-                                WholeArrayOut firstNeighbour); // (output) firstNeighbours
-  typedef void ExecutionSignature(_1, InputIndex, _2, _3);
+  typedef void ControlSignature(FieldIn thisArray,
+                                WholeArrayIn otherArray,
+                                ExecObject comparisonFunctor,
+                                WholeArrayOut resultArray);
+  typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
   typedef _1 InputDomain;
 
-  // Default Constructor
-  VTKM_EXEC_CONT
-  FindStartIndexWorklet() {}
-
-  template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const InFieldPortalType& neighboursPortal,
-                            vtkm::Id sortedArcNo,
-                            const InFieldPortalType& arcsPortal,
-                            const OutFieldPortalType& firstNeighbourPortal) const
+  template <typename InputType,
+            typename InputArrayPortalType,
+            typename ComparisonFunctorType,
+            typename OutputArrayPortalType>
+  VTKM_EXEC void operator()(const InputType& value,
+                            vtkm::Id idx,
+                            const InputArrayPortalType& otherArrayPortal,
+                            const ComparisonFunctorType& comparisonFunctor,
+                            OutputArrayPortalType& resultArrayPortal) const
   {
-    if (sortedArcNo > 0)
-    {
-      vtkm::Id prevFrom = (neighboursPortal.Get(sortedArcNo - 1) % 2 == 0)
-        ? neighboursPortal.Get(sortedArcNo - 1) / 2
-        : MaskedIndex(arcsPortal.Get(neighboursPortal.Get(sortedArcNo - 1) / 2));
-      vtkm::Id currFrom = (neighboursPortal.Get(sortedArcNo) % 2 == 0)
-        ? neighboursPortal.Get(sortedArcNo) / 2
-        : MaskedIndex(arcsPortal.Get(neighboursPortal.Get(sortedArcNo) / 2));
-      if (currFrom != prevFrom)
-      {
-        firstNeighbourPortal.Set(currFrom, sortedArcNo);
-      }
-    }
-    else // sortedArcNo == 0
-    {
-      firstNeighbourPortal.Set(0, 0);
-    }
+    // Find position of value in other array. Note: We use lower and upper bounds for
+    // the two different arrays (passed as template bool parameter so that the test
+    // occurs at compile time). If the same value occurs in both arrays, this approach
+    // "shifts" the position upwards for one of the arrays/elements, resulting in a
+    // uniuqe positioj in the result array. (Without this distinction, both values would
+    // end up at the same location in the result array, leaving and "empty"/uninitialized
+    // position.
+    vtkm::Id posInOther = useLowerBound
+      ? vtkm::LowerBound(otherArrayPortal, value, comparisonFunctor)
+      : vtkm::UpperBound(otherArrayPortal, value, comparisonFunctor);
 
-    // In serial this worklet implements the following operation
-    // for (indexVector::size_type sortedArcNo = 1; sortedArcNo < neighbours.size(); ++sortedArcNo)
-    //   {
-    //      indexType prevFrom = (neighbours[sortedArcNo-1] % 2 == 0) ? neighbours[sortedArcNo-1]/2 : MaskedIndex(arcs[neighbours[sortedArcNo-1]/2]);
-    //      indexType currFrom = (neighbours[sortedArcNo  ] % 2 == 0) ? neighbours[sortedArcNo  ]/2 : MaskedIndex(arcs[neighbours[sortedArcNo  ]/2]);
-    //      if (currFrom != prevFrom)
-    //       {
-    //          assert(currFrom < firstNeighbour.size());
-    //          firstNeighbour[currFrom] = sortedArcNo;
-    //        }
-    //   }
+    // The position of the current elemnt is its index in our array plus its
+    // position in the ohter array.
+    resultArrayPortal.Set(idx + posInOther, value);
   }
-
-
-}; //  ComputeMaxNeighboursWorklet
+}; //  CopyIntoCombinedArrayWorklet
 
 
 } // namespace mesh_dem_contourtree_mesh_inc

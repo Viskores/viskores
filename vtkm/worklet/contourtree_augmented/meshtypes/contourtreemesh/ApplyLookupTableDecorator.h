@@ -60,11 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_subtract_assign_worklet_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_subtract_assign_worklet_h
-
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_apply_lookup_table_decorator_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_apply_lookup_table_decorator_h
 
 namespace vtkm
 {
@@ -75,28 +72,30 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-class SubtractAssignWorklet : public vtkm::worklet::WorkletMapField
+class ApplyLookupTableDecoratorImpl
 {
 public:
-  typedef void ControlSignature(FieldInOut leftArray, // (input) n
-                                FieldIn rightArray);  // (input) arcs
-  typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
-
-  // Default Constructor
-  VTKM_EXEC_CONT
-  SubtractAssignWorklet() {}
-
-
-  template <typename InValType>
-  VTKM_EXEC void operator()(InValType& leftVal, const InValType& rightVal) const
+  template <typename ArrayPortalType, typename LookupTablePortalType>
+  struct Functor
   {
-    leftVal -= rightVal;
+    ArrayPortalType ArrayPortal;
+    LookupTablePortalType LookupTablePortal;
+
+    VTKM_EXEC_CONT
+    typename LookupTablePortalType::ValueType operator()(vtkm::Id i) const
+    {
+      vtkm::Id val = ArrayPortal.Get(i);
+      VTKM_ASSERT(val >= 0 && val < LookupTablePortal.GetNumberOfValues());
+      return LookupTablePortal.Get(val);
+    }
+  };
+
+  template <typename PT1, typename PT2>
+  Functor<PT1, PT2> CreateFunctor(PT1 array, PT2 lookupTable) const
+  {
+    return { array, lookupTable };
   }
-
-
-}; //  SubtractAssignWorklet
-
+};
 
 } // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented

@@ -60,10 +60,12 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_compute_max_neighbour_worklet_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_compute_max_neighbour_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_find_duplicate_in_other_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_find_duplicate_in_other_worklet_h
 
+#include <vtkm/LowerBound.h>
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
@@ -74,60 +76,34 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-
-// Worklet to update all of the edges so that the far end resets to the result of the ascent in the previous step
-class ComputeMaxNeighboursWorklet : public vtkm::worklet::WorkletMapField
+struct FindDuplicateInOtherWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn firstNeighbour, // (input) firstNeighbour
-                                WholeArrayOut nNeighbours);  // (output)
-  typedef void ExecutionSignature(_1, InputIndex, _2);
-  typedef _1 InputDomain;
+  using ControlSignature = void(FieldIn, WholeArrayIn, FieldOut, WholeArrayOut);
 
-  // Default Constructor
-  VTKM_EXEC_CONT
-  ComputeMaxNeighboursWorklet(const vtkm::Id neighboursSize)
-    : NeighboursSize(neighboursSize)
-  {
-  }
+  template <typename InputType,
+            typename InputArrayPortalType,
+            typename OutputType,
+            typename OutputArrayPortalType>
 
-  template <typename OutFieldPortalType, typename InFieldPortalType>
-  VTKM_EXEC void operator()(const InFieldPortalType& firstNeighbourPortal,
-                            vtkm::Id startVtxNo,
-                            const OutFieldPortalType& nNeighboursPortal) const
+  VTKM_EXEC void operator()(const InputType& value,
+                            const InputArrayPortalType& otherArrayPortal,
+                            OutputType& isDuplicate,
+                            OutputArrayPortalType& otherDuplicatePortal) const
   {
-    if (startVtxNo < firstNeighbourPortal.GetNumberOfValues() - 1)
+    vtkm::Id posInOther = vtkm::LowerBound(otherArrayPortal, value);
+    if (posInOther < otherArrayPortal.GetNumberOfValues() &&
+        otherArrayPortal.Get(posInOther) == value)
     {
-      nNeighboursPortal.Set(startVtxNo,
-                            firstNeighbourPortal.Get(startVtxNo + 1) -
-                              firstNeighbourPortal.Get(startVtxNo));
+      isDuplicate = 1;
+      otherDuplicatePortal.Set(posInOther, 1);
     }
     else
     {
-      nNeighboursPortal.Set(startVtxNo,
-                            NeighboursSize -
-                              firstNeighbourPortal.Get(nNeighboursPortal.GetNumberOfValues() - 1));
+      isDuplicate = 0;
     }
-
-    // In serial this worklet implements the following operation
-    // for (indexVector::size_type startVtxNo = 0; startVtxNo < firstNeighbour.size()-1; ++startVtxNo)
-    //   {
-    //     nNeighbours[startVtxNo] = firstNeighbour[startVtxNo+1] - firstNeighbour[startVtxNo];
-    //   }
-    //  nNeighbours[nNeighbours.size() - 1] = neighbours.size() - firstNeighbour[nNeighbours.size() - 1];
-    //
-    // // NOTE: In the above we change the loop to run for the full length of the array and instead
-    // //       then do a conditional assign for the last element directly within the loop, rather
-    // //       than shortcutting the loop and doing a special assigne after the loop. This allows
-    // //       us to process all elements on the device in parallel rather than having to pull
-    // //       data back into the control area to do the last assignement
   }
-
-private:
-  vtkm::Id NeighboursSize;
-
-
-}; //  ComputeMaxNeighboursWorklet
+}; //  FindDuplicateInOtherWorklet
 
 
 } // namespace mesh_dem_contourtree_mesh_inc
