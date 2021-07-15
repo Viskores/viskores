@@ -428,14 +428,7 @@ public:
   {
     // Get a cast to a concrete set of point coordiantes so that it can be modified in place
     vtkm::cont::ArrayHandle<vtkm::Vec3f> concretePoints;
-    if (points.template IsType<decltype(concretePoints)>())
-    {
-      points.AsArrayHandle(concretePoints);
-    }
-    else
-    {
-      vtkm::cont::ArrayCopy(points, concretePoints);
-    }
+    vtkm::cont::ArrayCopyShallowIfPossible(points, concretePoints);
 
     Run(delta, fastCheck, bounds, concretePoints);
 
@@ -450,14 +443,7 @@ public:
   {
     // Get a cast to a concrete set of point coordiantes so that it can be modified in place
     vtkm::cont::ArrayHandle<vtkm::Vec3f> concretePoints;
-    if (points.template IsType<decltype(concretePoints)>())
-    {
-      points.AsArrayHandle(concretePoints);
-    }
-    else
-    {
-      vtkm::cont::ArrayCopy(points, concretePoints);
-    }
+    vtkm::cont::ArrayCopyShallowIfPossible(points, concretePoints);
 
     Run(delta, fastCheck, bounds, concretePoints);
 

@@ -306,16 +306,7 @@ void VTKDataSetReaderBase::ReadCells(vtkm::cont::ArrayHandle<vtkm::Id>& connecti
     internal::parseAssert(tag == "CONNECTIVITY");
     auto conn =
       this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, dataType, connSize, 1);
-    if (conn.IsValueType<vtkm::Id>())
-    {
-      conn.AsArrayHandle(connectivity);
-    }
-    else
-    {
-      conn.CastAndCallForTypes<vtkm::List<vtkm::Int64, vtkm::Int32>,
-                               vtkm::List<vtkm::cont::StorageTagBasic>>(
-        [&](const auto& connAH) { vtkm::cont::ArrayCopy(connAH, connectivity); });
-    }
+    vtkm::cont::ArrayCopyShallowIfPossible(conn, connectivity);
   }
 }
 

@@ -710,7 +710,7 @@ public:
       vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
 
     auto coordData = coord.GetData();
-    if (coordData.IsType<CartesianArrayHandle>())
+    if (coordData.CanConvert<CartesianArrayHandle>())
     {
       const auto vertices = coordData.AsArrayHandle<CartesianArrayHandle>();
       const auto vertsSize = vertices.GetNumberOfValues();
