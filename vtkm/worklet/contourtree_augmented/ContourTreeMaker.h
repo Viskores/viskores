@@ -97,6 +97,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
+#include <vtkm/cont/Error.h>
 #include <vtkm/cont/Invoker.h>
 
 
@@ -225,8 +226,8 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
     // Raise error if we have done more itertions than there are active nodes to remove
     if (this->ContourTreeResult.NumIterations >= maxNumIterations)
     {
-      throw new std::domain_error("Bad iteration. This can happen if the input mesh "
-                                  "defines a contour forest rather than a simple tree.");
+      throw new vtkm::cont::ErrorInternal("Bad iteration. This can happen if the input mesh "
+                                          "defines a contour forest rather than a simple tree.");
     }
   } // loop until no active vertices remaining
 

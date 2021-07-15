@@ -98,6 +98,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/Error.h>
 #include <vtkm/cont/Invoker.h>
 
 
@@ -394,7 +395,7 @@ inline void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema
     // we check just to make absolutely sure we won't get stuck in an infinite loop
     if (this->NumIterations >= maxNumIterations)
     {
-      throw new std::domain_error("Bad iteration. Merge tree unable to process all edges.");
+      throw new vtkm::cont::ErrorInternal("Bad iteration. Merge tree unable to process all edges.");
     }
 
     // find & label the extrema with their governing saddles
