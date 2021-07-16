@@ -54,6 +54,7 @@
 #define vtk_m_worklet_contourtree_distributed_computedistributedcontourtreefunctor_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/Error.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
@@ -239,7 +240,7 @@ public:
         }
         // In case the contour tree got stuck, expand the debug information from
         // the message to check whether we combined bad blocks
-        catch (const std::domain_error& ex)
+        catch (const vtkm::cont::ErrorInternal& ex)
         {
           std::stringstream ex_message;
           ex_message << ex.what();
@@ -257,7 +258,7 @@ public:
                      << otherBlockSize[2] << ")";
           ex_message << " Size Comb=(" << currBlockSize[0] << ", " << currBlockSize[1] << ", "
                      << currBlockSize[2] << ")";
-          std::throw_with_nested(std::domain_error(ex_message.str()));
+          std::throw_with_nested(vtkm::cont::ErrorInternal(ex_message.str()));
         }
 
         // Update block extents
