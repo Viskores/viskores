@@ -154,61 +154,49 @@ private:
   std::vector<std::string> mCLOptions;
 };
 
-// Helper functions for splitting up the data set
+inline vtkm::IdComponent FindSplitAxis(vtkm::Id3 globalSize)
+{
+  vtkm::IdComponent splitAxis = 0;
+  for (vtkm::IdComponent d = 1; d < 3; ++d)
+  {
+    if (globalSize[d] > globalSize[splitAxis])
+    {
+      splitAxis = d;
+    }
+  }
+  return splitAxis;
+}
+
 inline vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id numberOfBlocks)
 {
-  // DEBUG: std::cout << "GlobalSize: " << globalSize << " numberOfBlocks:" << numberOfBlocks << " -> ";
-  // Inefficient way to compute log2 of numberOfBlocks, i.e., number of total splits
-  vtkm::Id numSplits = 0;
-  vtkm::Id currNumberOfBlock = numberOfBlocks;
-  bool isPowerOfTwo = true;
-  while (currNumberOfBlock > 1)
+  // Split numberOfBlocks into a power of two and a remainder
+  vtkm::Id powerOfTwoPortion = 1;
+  while (numberOfBlocks % 2 == 0)
   {
-    if (currNumberOfBlock % 2 != 0)
-    {
-      isPowerOfTwo = false;
-      break;
-    }
-    currNumberOfBlock /= 2;
-    ++numSplits;
+    powerOfTwoPortion *= 2;
+    numberOfBlocks /= 2;
   }
 
-  if (isPowerOfTwo)
+  vtkm::Id3 blocksPerAxis{ 1, 1, 1 };
+  if (numberOfBlocks > 1)
   {
-    vtkm::Id3 splitsPerAxis{ 0, 0, 0 };
-    while (numSplits > 0)
-    {
-      // Find split axis as axis with largest extent
-      vtkm::IdComponent splitAxis = 0;
-      for (vtkm::IdComponent d = 1; d < 3; ++d)
-        if (globalSize[d] > globalSize[splitAxis])
-          splitAxis = d;
-      // Split in half along that axis
-      // DEBUG: std::cout << splitAxis << " " << globalSize << std::endl;
-      VTKM_ASSERT(globalSize[splitAxis] > 1);
-      ++splitsPerAxis[splitAxis];
-      globalSize[splitAxis] /= 2;
-      --numSplits;
-    }
-    // DEBUG: std::cout << "splitsPerAxis: " << splitsPerAxis;
-    vtkm::Id3 blocksPerAxis;
-    for (vtkm::IdComponent d = 0; d < 3; ++d)
-      blocksPerAxis[d] = vtkm::Id{ 1 } << splitsPerAxis[d];
-    // DEBUG: std::cout << " blocksPerAxis: " << blocksPerAxis << std::endl;
-    return blocksPerAxis;
-  }
-  else
-  {
-    std::cout << "numberOfBlocks is not a power of two. Splitting along longest axis." << std::endl;
-    vtkm::IdComponent splitAxis = 0;
-    for (vtkm::IdComponent d = 1; d < 3; ++d)
-      if (globalSize[d] > globalSize[splitAxis])
-        splitAxis = d;
-    vtkm::Id3 blocksPerAxis{ 1, 1, 1 };
+    // Split the longest axis according to remainder
+    vtkm::IdComponent splitAxis = FindSplitAxis(globalSize);
     blocksPerAxis[splitAxis] = numberOfBlocks;
-    // DEBUG: std::cout << " blocksPerAxis: " << blocksPerAxis << std::endl;
-    return blocksPerAxis;
+    globalSize[splitAxis] /= numberOfBlocks;
   }
+
+  // Now perform splits for the power of two remainder of numberOfBlocks
+  while (powerOfTwoPortion > 1)
+  {
+    vtkm::IdComponent splitAxis = FindSplitAxis(globalSize);
+    VTKM_ASSERT(globalSize[splitAxis] > 1);
+    blocksPerAxis[splitAxis] *= 2;
+    globalSize[splitAxis] /= 2;
+    powerOfTwoPortion /= 2;
+  }
+
+  return blocksPerAxis;
 }
 
 inline std::tuple<vtkm::Id3, vtkm::Id3, vtkm::Id3> ComputeBlockExtents(vtkm::Id3 globalSize,
