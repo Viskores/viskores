@@ -13,7 +13,6 @@ set(headers
   DeviceAdapterMemoryManagerKokkos.h
   DeviceAdapterRuntimeDetectorKokkos.h
   DeviceAdapterTagKokkos.h
-  Initialize.h
   KokkosAlloc.h
   KokkosTypes.h
   RuntimeDeviceConfigurationKokkos.h
@@ -32,7 +31,6 @@ if (TARGET vtkm::kokkos)
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmKokkos.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterMemoryManagerKokkos.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorKokkos.cxx
-    ${CMAKE_CURRENT_SOURCE_DIR}/Initialize.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/KokkosAlloc.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/KokkosTypes.cxx)
   target_sources(vtkm_cont PRIVATE ${sources})

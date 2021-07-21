@@ -23,46 +23,11 @@ namespace opt = internal::option;
 namespace
 {
 
-static std::vector<std::pair<std::string, std::string>> envVars{};
-
 enum
 {
   UNKNOWN,
   TEST
 };
-
-template <typename... T>
-void MakeArgs(int& argc, char**& argv, T&&... args)
-{
-  constexpr std::size_t numArgs = sizeof...(args);
-
-  std::array<std::string, numArgs> stringArgs = { { args... } };
-
-  // These static variables are declared as static so that the memory will stick around but won't
-  // be reported as a leak.
-  static std::array<std::vector<char>, numArgs> vecArgs;
-  static std::array<char*, numArgs + 1> finalArgs;
-  std::cout << "  starting args:";
-  for (std::size_t i = 0; i < numArgs; ++i)
-  {
-    std::cout << " " << stringArgs[i];
-    // Safely copying a C-style string is a PITA
-    vecArgs[i].resize(0);
-    vecArgs[i].reserve(stringArgs[i].size() + 1);
-    for (auto&& c : stringArgs[i])
-    {
-      vecArgs[i].push_back(c);
-    }
-    vecArgs[i].push_back('\0');
-
-    finalArgs[i] = vecArgs[i].data();
-  }
-  finalArgs[numArgs] = nullptr;
-  std::cout << std::endl;
-
-  argc = static_cast<int>(numArgs);
-  argv = finalArgs.data();
-}
 
 std::unique_ptr<opt::Option[]> GetOptions(int& argc,
                                           char** argv,
@@ -81,25 +46,6 @@ std::unique_ptr<opt::Option[]> GetOptions(int& argc,
   return options;
 }
 
-void my_setenv(const std::string& var, const std::string& value)
-{
-#ifdef _MSC_VER
-  auto iter = envVars.emplace(envVars.end(), var, value);
-  _putenv_s(iter->first.c_str(), iter->second.c_str());
-#else
-  setenv(var.c_str(), value.c_str(), 1);
-#endif
-}
-
-void my_unsetenv(const std::string& var)
-{
-#ifdef _MSC_VER
-  my_setenv(var, "");
-#else
-  unsetenv(var.c_str());
-#endif
-}
-
 void TestRuntimeDeviceOptionHappy()
 {
   std::vector<opt::Descriptor> usage;
@@ -108,7 +54,7 @@ void TestRuntimeDeviceOptionHappy()
   usage.push_back({ 0, 0, 0, 0, 0, 0 });
 
   const std::string env{ "TEST_OPTION" };
-  my_unsetenv(env);
+  vtkm::cont::testing::Testing::UnsetEnv(env);
 
   // Basic no value initialize
   {
@@ -117,7 +63,7 @@ void TestRuntimeDeviceOptionHappy()
     VTKM_TEST_ASSERT(!testOption.IsSet(), "test option should not be set");
   }
 
-  my_setenv(env, "1");
+  vtkm::cont::testing::Testing::SetEnv(env, "1");
 
   // Initialize from environment
   {
@@ -131,7 +77,7 @@ void TestRuntimeDeviceOptionHappy()
 
   int argc;
   char** argv;
-  MakeArgs(argc, argv, "--test-option", "2");
+  vtkm::cont::testing::Testing::MakeArgs(argc, argv, "--test-option", "2");
   auto options = GetOptions(argc, argv, usage);
   VTKM_TEST_ASSERT(options[TEST], "should be and option");
 
@@ -158,7 +104,7 @@ void TestRuntimeDeviceOptionHappy()
     VTKM_TEST_ASSERT(testOption.GetValue() == 3, "Option value should be 3");
   }
 
-  my_unsetenv(env);
+  vtkm::cont::testing::Testing::UnsetEnv(env);
 }
 
 void TestRuntimeDeviceOptionError()
@@ -169,14 +115,14 @@ void TestRuntimeDeviceOptionError()
   usage.push_back({ 0, 0, 0, 0, 0, 0 });
 
   const std::string env{ "TEST_OPTION" };
-  my_unsetenv(env);
+  vtkm::cont::testing::Testing::UnsetEnv(env);
 
   bool threw = true;
 
   // Parse a non integer
   {
     internal::RuntimeDeviceOption testOption(TEST, env);
-    my_setenv(env, "bad");
+    vtkm::cont::testing::Testing::SetEnv(env, "bad");
     try
     {
       testOption.Initialize(nullptr);
@@ -196,7 +142,7 @@ void TestRuntimeDeviceOptionError()
   // Parse an integer that's too large
   {
     internal::RuntimeDeviceOption testOption(TEST, env);
-    my_setenv(env, "9938489298493882949384989");
+    vtkm::cont::testing::Testing::SetEnv(env, "9938489298493882949384989");
     try
     {
       testOption.Initialize(nullptr);
@@ -216,7 +162,7 @@ void TestRuntimeDeviceOptionError()
   // Parse an integer with some stuff on the end
   {
     internal::RuntimeDeviceOption testOption(TEST, env);
-    my_setenv(env, "100bad");
+    vtkm::cont::testing::Testing::SetEnv(env, "100bad");
     try
     {
       testOption.Initialize(nullptr);
@@ -233,40 +179,11 @@ void TestRuntimeDeviceOptionError()
     VTKM_TEST_ASSERT(threw, "Should have thrown");
   }
 
-  my_unsetenv(env);
+  vtkm::cont::testing::Testing::UnsetEnv(env);
 }
 
-void TestRuntimeDeviceConfigurationOptions()
+void TestConfigOptionValues(const internal::RuntimeDeviceConfigurationOptions& configOptions)
 {
-  std::vector<opt::Descriptor> usage;
-  usage.push_back({ opt::OptionIndex::DEVICE, 0, "", "tester", opt::VtkmArg::Required, "" });
-  usage.push_back({ opt::OptionIndex::LOGLEVEL, 0, "", "filler", opt::VtkmArg::Required, "" });
-  usage.push_back({ opt::OptionIndex::HELP, 0, "", "fancy", opt::VtkmArg::Required, "" });
-  usage.push_back(
-    { opt::OptionIndex::DEPRECATED_DEVICE, 0, "", "just", opt::VtkmArg::Required, "" });
-  usage.push_back(
-    { opt::OptionIndex::DEPRECATED_LOGLEVEL, 0, "", "gotta", opt::VtkmArg::Required, "" });
-
-  internal::RuntimeDeviceConfigurationOptions configOptions(usage);
-
-  usage.push_back({ opt::OptionIndex::UNKNOWN, 0, "", "", opt::VtkmArg::UnknownOption, "" });
-  usage.push_back({ 0, 0, 0, 0, 0, 0 });
-
-  int argc;
-  char** argv;
-  MakeArgs(argc,
-           argv,
-           "--vtkm-num-threads",
-           "100",
-           "--vtkm-numa-regions",
-           "2",
-           "--vtkm-device-instance",
-           "1");
-  auto options = GetOptions(argc, argv, usage);
-
-  VTKM_TEST_ASSERT(!configOptions.IsInitialized(),
-                   "runtime config options should not be initialized");
-  configOptions.Initialize(options.get());
   VTKM_TEST_ASSERT(configOptions.IsInitialized(), "runtime config options should be initialized");
 
   VTKM_TEST_ASSERT(configOptions.VTKmNumThreads.IsSet(), "num threads should be set");
@@ -276,6 +193,54 @@ void TestRuntimeDeviceConfigurationOptions()
   VTKM_TEST_ASSERT(configOptions.VTKmNumThreads.GetValue() == 100, "num threads should == 100");
   VTKM_TEST_ASSERT(configOptions.VTKmNumaRegions.GetValue() == 2, "numa regions should == 2");
   VTKM_TEST_ASSERT(configOptions.VTKmDeviceInstance.GetValue() == 1, "device instance should == 1");
+}
+
+void TestRuntimeDeviceConfigurationOptions()
+{
+  {
+    std::vector<opt::Descriptor> usage;
+    usage.push_back({ 0, 0, "", "need", opt::VtkmArg::Required, "" });
+    usage.push_back({ 1, 0, "", "filler", opt::VtkmArg::Required, "" });
+    usage.push_back({ 2, 0, "", "args", opt::VtkmArg::Required, "" });
+    usage.push_back({ 3, 0, "", "to", opt::VtkmArg::Required, "" });
+    usage.push_back({ 4, 0, "", "pass", opt::VtkmArg::Required, "" });
+    internal::RuntimeDeviceConfigurationOptions configOptions(usage);
+
+    usage.push_back({ opt::OptionIndex::UNKNOWN, 0, "", "", opt::VtkmArg::UnknownOption, "" });
+    usage.push_back({ 0, 0, 0, 0, 0, 0 });
+
+    int argc;
+    char** argv;
+    vtkm::cont::testing::Testing::MakeArgs(argc,
+                                           argv,
+                                           "--vtkm-num-threads",
+                                           "100",
+                                           "--vtkm-numa-regions",
+                                           "2",
+                                           "--vtkm-device-instance",
+                                           "1");
+    auto options = GetOptions(argc, argv, usage);
+
+    VTKM_TEST_ASSERT(!configOptions.IsInitialized(),
+                     "runtime config options should not be initialized");
+    configOptions.Initialize(options.get());
+    TestConfigOptionValues(configOptions);
+  }
+
+  {
+    int argc;
+    char** argv;
+    vtkm::cont::testing::Testing::MakeArgs(argc,
+                                           argv,
+                                           "--vtkm-num-threads",
+                                           "100",
+                                           "--vtkm-numa-regions",
+                                           "2",
+                                           "--vtkm-device-instance",
+                                           "1");
+    internal::RuntimeDeviceConfigurationOptions configOptions(argc, argv);
+    TestConfigOptionValues(configOptions);
+  }
 }
 
 void TestRuntimeConfigurationOptions()

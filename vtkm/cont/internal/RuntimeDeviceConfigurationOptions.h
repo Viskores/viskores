@@ -30,12 +30,15 @@ namespace internal
 class VTKM_CONT_EXPORT RuntimeDeviceConfigurationOptions
 {
 public:
-  /// Sets the option indices and environment varaible names for the vtkm supported options.
   VTKM_CONT RuntimeDeviceConfigurationOptions();
 
   /// Calls the default constructor and additionally pushes back additional command line
   /// options to the provided usage vector for integration with the vtkm option parser.
   VTKM_CONT RuntimeDeviceConfigurationOptions(std::vector<option::Descriptor>& usage);
+
+  /// Allows the caller to initialize these runtime config arguments directly from
+  /// command line arguments
+  VTKM_CONT RuntimeDeviceConfigurationOptions(int& argc, char* argv[]);
 
   VTKM_CONT virtual ~RuntimeDeviceConfigurationOptions() noexcept;
 
@@ -47,6 +50,12 @@ public:
   RuntimeDeviceOption VTKmNumThreads;
   RuntimeDeviceOption VTKmNumaRegions;
   RuntimeDeviceOption VTKmDeviceInstance;
+
+protected:
+  /// Sets the option indices and environment varaible names for the vtkm supported options.
+  /// If useOptionIndex is set the OptionParserArguments enum for option indices will be used,
+  /// otherwise ints from 0 - numOptions will be used.
+  VTKM_CONT RuntimeDeviceConfigurationOptions(const bool& useOptionIndex);
 
 private:
   bool Initialized;
