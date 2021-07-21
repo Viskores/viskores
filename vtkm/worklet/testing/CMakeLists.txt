@@ -40,7 +40,6 @@ set(unit_tests
   UnitTestGraphConnectivity.cxx
   UnitTestInnerJoin.cxx
   UnitTestImageConnectivity.cxx
-  UnitTestKdTreeBuildNNS.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
   UnitTestMask.cxx
