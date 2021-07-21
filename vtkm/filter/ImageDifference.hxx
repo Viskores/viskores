@@ -13,6 +13,7 @@
 #include <vtkm/filter/ImageDifference.h>
 
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Logging.h>
 
@@ -89,7 +90,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Not performing average");
     primaryOutput = primary;
-    secondaryField.GetData().AsArrayHandle(secondaryOutput);
+    vtkm::cont::ArrayCopyShallowIfPossible(secondaryField.GetData(), secondaryOutput);
   }
 
   if (this->PixelShiftRadius > 0)

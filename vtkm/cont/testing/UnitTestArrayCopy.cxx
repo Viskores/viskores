@@ -120,11 +120,32 @@ void TryCopy()
   }
 }
 
+void TryArrayCopyShallowIfPossible()
+{
+  vtkm::cont::ArrayHandle<vtkm::Float32> input = MakeInputArray<vtkm::Float32>();
+  vtkm::cont::UnknownArrayHandle unknownInput = input;
+
+  {
+    std::cout << "shallow copy" << std::endl;
+    vtkm::cont::ArrayHandle<vtkm::Float32> output;
+    vtkm::cont::ArrayCopyShallowIfPossible(unknownInput, output);
+    VTKM_TEST_ASSERT(input == output, "Copy was not shallow");
+  }
+
+  {
+    std::cout << "cannot shallow copy" << std::endl;
+    vtkm::cont::ArrayHandle<vtkm::Float64> output;
+    vtkm::cont::ArrayCopyShallowIfPossible(unknownInput, output);
+    TestValues(input, output);
+  }
+}
+
 void TestArrayCopy()
 {
   TryCopy<vtkm::Id>();
   TryCopy<vtkm::IdComponent>();
   TryCopy<vtkm::Float32>();
+  TryArrayCopyShallowIfPossible();
 }
 
 } // anonymous namespace

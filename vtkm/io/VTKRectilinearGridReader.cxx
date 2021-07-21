@@ -91,39 +91,9 @@ void VTKRectilinearGridReader::Read()
   // We need to store all coordinate arrays as FloatDefault.
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
   // But the UnknownArrayHandle has type fileStorageDataType.
-  // If the fileStorageDataType is the same as the storage type, no problem:
-  if (fileStorageDataType == vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name())
-  {
-    X.AsArrayHandle(Xc);
-    Y.AsArrayHandle(Yc);
-    Z.AsArrayHandle(Zc);
-  }
-  else
-  {
-    // Two cases if the data in the file differs from FloatDefault:
-    if (fileStorageDataType == "float")
-    {
-      vtkm::cont::ArrayHandle<vtkm::Float32> Xcf, Ycf, Zcf;
-      X.AsArrayHandle(Xcf);
-      Y.AsArrayHandle(Ycf);
-      Z.AsArrayHandle(Zcf);
-      vtkm::cont::ArrayCopy(Xcf, Xc);
-      vtkm::cont::ArrayCopy(Ycf, Yc);
-      vtkm::cont::ArrayCopy(Zcf, Zc);
-    }
-    else
-    {
-      vtkm::cont::ArrayHandle<vtkm::Float64> Xcd, Ycd, Zcd;
-      X.AsArrayHandle(Xcd);
-      Y.AsArrayHandle(Ycd);
-      Z.AsArrayHandle(Zcd);
-      vtkm::cont::ArrayCopy(Xcd, Xc);
-      vtkm::cont::ArrayCopy(Ycd, Yc);
-      vtkm::cont::ArrayCopy(Zcd, Zc);
-    }
-  }
-  // As a postscript to this somewhat branchy code, I thought that X.CopyTo(Xc) should be able to cast to the value_type of Xc.
-  // But that would break the ability to make the cast lazy, and hence if you change it you induce performance bugs.
+  vtkm::cont::ArrayCopyShallowIfPossible(X, Xc);
+  vtkm::cont::ArrayCopyShallowIfPossible(Y, Yc);
+  vtkm::cont::ArrayCopyShallowIfPossible(Z, Zc);
 
   coords = vtkm::cont::make_ArrayHandleCartesianProduct(Xc, Yc, Zc);
   vtkm::cont::CoordinateSystem coordSys("coordinates", coords);

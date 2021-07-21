@@ -15,6 +15,7 @@
 #include <vtkm/CellClassification.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellLocatorGeneral.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
@@ -177,10 +178,7 @@ public:
     if (dataSet.HasCellField("vtkmGhostCells"))
     {
       auto arr = dataSet.GetCellField("vtkmGhostCells").GetData();
-      if (arr.IsType<GhostCellArrayType>())
-        this->GhostCellArray = arr.AsArrayHandle<GhostCellArrayType>();
-      else
-        throw vtkm::cont::ErrorInternal("vtkmGhostCells not of type vtkm::UInt8");
+      vtkm::cont::ArrayCopyShallowIfPossible(arr, this->GhostCellArray);
     }
   }
 
