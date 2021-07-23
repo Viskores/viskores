@@ -130,6 +130,8 @@ VTKM_CONT void ArrayCopyImpl(const vtkm::cont::ArrayHandle<T, S>& source,
 /// This should work on some non-writable array handles as well, as long as
 /// both \a source and \a destination are the same type.
 ///
+/// @{
+///
 template <typename InValueType, typename InStorage, typename OutValueType, typename OutStorage>
 VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& source,
                          vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination)
@@ -169,9 +171,40 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
                          vtkm::cont::ArrayHandle<T, S>& destination)
 {
   using DestType = vtkm::cont::ArrayHandle<T, S>;
-  if (source.IsType<DestType>())
+  if (source.CanConvert<DestType>())
   {
     ArrayCopy(source.AsArrayHandle<DestType>(), destination);
+  }
+  else
+  {
+    vtkm::cont::UnknownArrayHandle destWrapper(destination);
+    ArrayCopy(source, destWrapper);
+    // Destination array should not change, but just in case.
+    destWrapper.AsArrayHandle(destination);
+  }
+}
+
+/// @}
+
+/// \brief Copies from an unknown to a known array type.
+///
+/// Often times you have an array of an unknown type (likely from a data set),
+/// and you need it to be of a particular type (or can make a reasonable but uncertain
+/// assumption about it being a particular type). You really just want a shallow
+/// copy (a reference in a concrete `ArrayHandle`) if that is possible.
+///
+/// `ArrayCopyShallowIfPossible` pulls an array of a specific type from an
+/// `UnknownArrayHandle`. If the type is compatible, it will perform a shallow copy.
+/// If it is not possible, a deep copy is performed to get it to the correct type.
+///
+template <typename T, typename S>
+VTKM_CONT void ArrayCopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle source,
+                                          vtkm::cont::ArrayHandle<T, S>& destination)
+{
+  using DestType = vtkm::cont::ArrayHandle<T, S>;
+  if (source.CanConvert<DestType>())
+  {
+    source.AsArrayHandle(destination);
   }
   else
   {

@@ -74,11 +74,7 @@ protected:
 
     FieldHandleType fieldArray;
     auto fieldData = ds.GetField(fieldNm).GetData();
-    if (fieldData.IsType<FieldHandleType>())
-      fieldArray = fieldData.AsArrayHandle<FieldHandleType>();
-    else
-      vtkm::cont::ArrayCopy(
-        fieldData.ResetTypes<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>(), fieldArray);
+    vtkm::cont::ArrayCopyShallowIfPossible(fieldData, fieldArray);
 
     return fieldArray;
   }
