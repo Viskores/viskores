@@ -254,6 +254,11 @@ configure_file(${VTKm_SOURCE_DIR}/config/vtkm_config.mk.in
 install(FILES ${VTKm_BINARY_DIR}/vtkm_config.mk
   DESTINATION ${VTKm_INSTALL_SHARE_DIR}
   )
+configure_file(${VTKm_SOURCE_DIR}/config/vtkm.pc.in
+  ${VTKm_BINARY_DIR}/vtkm.pc @ONLY)
+install(FILES ${VTKm_BINARY_DIR}/vtkm.pc
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
+  )
 
 #-----------------------------------------------------------------------------
 # Ready files for find_package
