@@ -317,7 +317,7 @@ void HierarchicalAugmenter<FieldType>::Initialize(
     // get the ascending flag from the superparent's superarc and transfer to the superparent
     // Array decorator to add the IS_ASCENDING flag to our superparent, i.e.,
     // if (isAscending(baseTree->superarcs[superparent])){ superparent |= IS_ASCENDING; }
-    // TODO: When using the superparenes ArrayHandlePermutation in the ArrayHandleDecorator the compiler
+    // TODO: When using the superparents ArrayHandlePermutation in the ArrayHandleDecorator the compiler
     //       has issues discovering the StorageType when calling Copy(isAscendingSuperparentArr, superparents)
     //       by copying superparents to an actual array in tempArrSuperparents we can avoid this issue,
     //       at the cost of an extra copy.
@@ -328,7 +328,7 @@ void HierarchicalAugmenter<FieldType>::Initialize(
       vtkm::worklet::contourtree_distributed::hierarchical_augmenter::IsAscendingDecorator{},
       tempArrSuperparents, //superparents,
       this->BaseTree->Superarcs);
-    vtkm::cont::Algorithm::Copy(isAscendingSuperparentArr, superparents);
+    vtkm::cont::Algorithm::Copy(isAscendingSuperparentArr, this->Superparents);
   }
 
   // clean up memory
@@ -466,20 +466,33 @@ void HierarchicalAugmenter<FieldType>::ReleaseSwapArrays()
 template <typename FieldType>
 void HierarchicalAugmenter<FieldType>::BuildAugmentedTree()
 { // BuildAugmentedTree()
+
+  std::cout << "START PrepareAugmentedTree" << std::endl;
+  std::cout << this->DebugPrint("PrepareAugmentedTree", __FILE__, __LINE__) << std::endl;
   // 1.  Prepare the data structures for filling in, copying in basic information & organising the attachment points
   this->PrepareAugmentedTree();
 
+  std::cout << "START CopyHyperstructure" << std::endl;
+  std::cout << this->DebugPrint("CopyHyperstructure", __FILE__, __LINE__) << std::endl;
   // 2.  Copy the hyperstructure, using the old super IDs for now
   this->CopyHyperstructure();
 
+  std::cout << "START CopySuperstructure" << std::endl;
+  std::cout << this->DebugPrint("CopySuperstructure", __FILE__, __LINE__) << std::endl;
   // 3.  Copy the superstructure, inserting additional points as we do
   this->CopySuperstructure();
 
+  std::cout << "START UpdateHyperstructure" << std::endl;
+  std::cout << this->DebugPrint("UpdateHyperstructure", __FILE__, __LINE__) << std::endl;
   // 4.  Update the hyperstructure to use the new super IDs
   this->UpdateHyperstructure();
 
+  std::cout << "START CopyBaseRegularStructure" << std::endl;
+  std::cout << this->DebugPrint("CopyBaseRegularStructure", __FILE__, __LINE__) << std::endl;
   // 5.  Copy the remaining regular structure at the bottom level, setting up the regular sort order in the process
   this->CopyBaseRegularStructure();
+  std::cout << "FINISHED BuildAugmentedTree(" << std::endl;
+  std::cout << this->DebugPrint("BuildAugmentedTree(", __FILE__, __LINE__) << std::endl;
 } // BuildAugmentedTree()
 
 
@@ -494,7 +507,6 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   //    segments with identical superparent round, which is all we need for now
   vtkm::cont::Algorithm::Copy(
     vtkm::cont::ArrayHandleIndex(this->GlobalRegularIds.GetNumberOfValues()), this->AttachmentIds);
-
   // 1a.  We now need to suppress duplicates,
   {
     // Sort the attachement Ids
@@ -505,7 +517,6 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
     // Remove the duplicate values
     vtkm::cont::Algorithm::Unique(this->AttachmentIds);
   }
-
   //  2.  Set up array with bounds for subsegments
   //    We do +2 because the top level is extra, and we need an extra sentinel value at the end
   //    We initialise to NO_SUCH_ELEMENT because we may have rounds with none and we'll need to clean up serially (over the number of rounds, i.e. lg n)
@@ -523,7 +534,6 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
                  this->SuperparentRounds, // input
                  this->FirstAttachmentPointInRound);
   }
-
   // The last element in the array is always set to the size as a sentinel value
   // We need to pull the firstAttachmentPointInRound array to the control environment
   // anyways for the loop afterwards so can do this set here without using Copy
@@ -536,7 +546,6 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              this->DebugPrint("First Attachment Point Set Where Possible", __FILE__, __LINE__));
 #endif
-
   //     Now clean up by looping through the rounds (serially - this is logarithmic at worst)
   //     We loop backwards so that the next up propagates downwards
   //     WARNING: DO NOT PARALLELISE THIS LOOP
@@ -554,7 +563,6 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info, DebugPrint("Subsegments Identified", __FILE__, __LINE__));
 #endif
-
   //  3.  Initialise an array to keep track of the mapping from old supernode ID to new supernode ID
   vtkm::cont::Algorithm::Copy(
     vtkm::cont::ArrayHandleConstant<vtkm::Id>(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
