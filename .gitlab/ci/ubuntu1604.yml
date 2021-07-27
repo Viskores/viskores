@@ -13,6 +13,7 @@ build:ubuntu1604_gcc5:
     - .ubuntu1604_cuda
     - .cmake_build_linux
     - .only-default
+    - .use_minimum_supported_cmake
   variables:
     CC: "gcc-5"
     CXX: "g++-5"
@@ -50,6 +51,7 @@ build:ubuntu1604_gcc5_2:
     - .ubuntu1604_cuda
     - .cmake_build_linux
     - .only-master
+    - .use_minimum_supported_cmake
   variables:
     CC: "gcc-5"
     CXX: "g++-5"
@@ -87,6 +89,7 @@ build:ubuntu1604_clang5:
     - .ubuntu1604
     - .cmake_build_linux
     - .only-default
+    - .use_minimum_supported_cmake
   variables:
     CC: "clang-5.0"
     CXX: "clang++-5.0"
