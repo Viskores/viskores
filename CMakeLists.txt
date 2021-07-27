@@ -270,14 +270,14 @@ write_basic_package_version_file(
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
 
-#configure_file(${VTKm_SOURCE_DIR}/config/vtkm_config.mk.in
-#  ${VTKm_BINARY_DIR}/config/vtkm_config.mk @ONLY)
-#install(FILES ${VTKm_BINARY_DIR}/config/vtkm_config.mk
-#  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
-#  )
+configure_file(${VTKm_SOURCE_DIR}/config/vtkm_config.mk.in
+  ${VTKm_BINARY_DIR}/config/vtkm_config.mk @ONLY)
+install(FILES ${VTKm_BINARY_DIR}/config/vtkm_config.mk
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
+  )
 configure_file(${VTKm_SOURCE_DIR}/config/vtkm.pc.in
-  ${VTKm_BINARY_DIR}/vtkm.pc @ONLY)
-install(FILES ${VTKm_BINARY_DIR}/vtkm.pc
+  ${VTKm_BINARY_DIR}/config/vtkm.pc @ONLY)
+install(FILES ${VTKm_BINARY_DIR}/config/vtkm.pc
   DESTINATION ${VTKm_INSTALL_SHARE_DIR}
   )
 
