@@ -164,6 +164,13 @@ void RuntimeDeviceTracker::ForceDevice(DeviceAdapterId deviceId)
   }
 }
 
+VTKM_CONT void RuntimeDeviceTracker::CopyStateFrom(const vtkm::cont::RuntimeDeviceTracker& tracker)
+{
+  std::copy(std::cbegin(tracker.Internals->RuntimeAllowed),
+            std::cend(tracker.Internals->RuntimeAllowed),
+            std::begin(this->Internals->RuntimeAllowed));
+}
+
 VTKM_CONT
 void RuntimeDeviceTracker::PrintSummary(std::ostream& out) const
 {
