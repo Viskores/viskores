@@ -36,6 +36,7 @@
       - build/include/
       - build/lib/
       - build/vtkm/thirdparty/diy/vtkmdiy/include
+      - build/config/
 
       # CTest and CMake install files.
       # XXX(globbing): Can be simplified with support from
