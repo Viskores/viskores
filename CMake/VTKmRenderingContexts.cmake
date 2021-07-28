@@ -51,15 +51,7 @@ function(vtkm_find_gl)
 
   #Find GL
   if(DO_GL_FIND AND NOT TARGET OpenGL::GL)
-    if(CMAKE_VERSION VERSION_LESS 3.10)
-      find_package(OpenGL ${GL_REQUIRED} ${QUIETLY} MODULE)
-    else()
-      #clunky but we need to make sure we use the upstream module if it exists
-      set(orig_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
-      set(CMAKE_MODULE_PATH "")
-      find_package(OpenGL ${GL_REQUIRED} ${QUIETLY} MODULE)
-      set(CMAKE_MODULE_PATH ${orig_CMAKE_MODULE_PATH})
-    endif()
+    find_package(OpenGL ${GL_REQUIRED} ${QUIETLY} MODULE)
   endif()
 
   #Find GLEW
@@ -69,6 +61,20 @@ function(vtkm_find_gl)
 
   if(DO_GLUT_FIND AND NOT TARGET GLUT::GLUT)
     find_package(GLUT ${GLUT_REQUIRED} ${QUIETLY})
+
+    if(APPLE AND CMAKE_VERSION VERSION_LESS 3.19.2)
+      get_target_property(lib_path GLUT::GLUT IMPORTED_LOCATION)
+      if(EXISTS "${lib_path}.tbd")
+        set_target_properties(GLUT::GLUT PROPERTIES
+          IMPORTED_LOCATION "${lib_path}.tbd")
+      endif()
+
+      get_target_property(lib_path GLUT::Cocoa IMPORTED_LOCATION)
+      if(EXISTS "${lib_path}.tbd")
+        set_target_properties(GLUT::Cocoa PROPERTIES
+          IMPORTED_LOCATION "${lib_path}.tbd")
+      endif()
+    endif()
   endif()
 
 endfunction()

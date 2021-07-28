@@ -102,9 +102,8 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
   vtkm::FloatDefault vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.3f, 70.3f, 80.3f };
   vtkm::FloatDefault cellvar[nCells] = { 100.1f, 200.2f, 300.3f, 400.4f, 500.5f, 600.6f };
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(dataSet, "pointvar", vars, nVerts);
-  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells);
+  dataSet.AddPointField("pointvar", vars, nVerts);
+  dataSet.AddCellField("cellvar", cellvar, nCells);
 
   return dataSet;
 }
@@ -122,12 +121,12 @@ void TestSplitSharpEdgesSplitEveryEdge(vtkm::cont::DataSet& simpleCube,
   splitSharpEdges.Run(simpleCube.GetCellSet(),
                       featureAngle,
                       faceNormals,
-                      simpleCube.GetCoordinateSystem().GetData(),
+                      simpleCube.GetCoordinateSystem().GetDataAsMultiplexer(),
                       newCoords,
                       newCellset);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> pointvar;
-  simpleCube.GetPointField("pointvar").GetData().CopyTo(pointvar);
+  simpleCube.GetPointField("pointvar").GetData().AsArrayHandle(pointvar);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointFields =
     splitSharpEdges.ProcessPointField(pointvar);
   VTKM_TEST_ASSERT(newCoords.GetNumberOfValues() == 24,
@@ -167,12 +166,12 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
   splitSharpEdges.Run(simpleCube.GetCellSet(),
                       featureAngle,
                       faceNormals,
-                      simpleCube.GetCoordinateSystem().GetData(),
+                      simpleCube.GetCoordinateSystem().GetDataAsMultiplexer(),
                       newCoords,
                       newCellset);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> pointvar;
-  simpleCube.GetPointField("pointvar").GetData().CopyTo(pointvar);
+  simpleCube.GetPointField("pointvar").GetData().AsArrayHandle(pointvar);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointFields =
     splitSharpEdges.ProcessPointField(pointvar);
   VTKM_TEST_ASSERT(newCoords.GetNumberOfValues() == 8,
@@ -214,7 +213,8 @@ void TestSplitSharpEdges()
   vtkm::cont::DataSet simpleCube = Make3DExplicitSimpleCube();
   NormalsArrayHandle faceNormals;
   vtkm::worklet::FacetedSurfaceNormals faceted;
-  faceted.Run(simpleCube.GetCellSet(), simpleCube.GetCoordinateSystem().GetData(), faceNormals);
+  faceted.Run(
+    simpleCube.GetCellSet(), simpleCube.GetCoordinateSystem().GetDataAsMultiplexer(), faceNormals);
 
   vtkm::worklet::SplitSharpEdges splitSharpEdges;
 

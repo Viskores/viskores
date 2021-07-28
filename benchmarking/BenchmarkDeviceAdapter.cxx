@@ -17,9 +17,11 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Initialize.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/worklet/StableSortIndices.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <algorithm>
 #include <cmath>
@@ -27,10 +29,12 @@
 #include <string>
 #include <utility>
 
+#include <vtkmstd/integer_sequence.h>
+
 #include <vtkm/internal/Windows.h>
 
 #ifdef VTKM_ENABLE_TBB
-#include <tbb/task_scheduler_init.h>
+#include <tbb/tbb.h>
 #endif
 #ifdef VTKM_ENABLE_OPENMP
 #include <omp.h>
@@ -38,6 +42,40 @@
 
 namespace
 {
+
+// Parametrize the input size samples for most of the benchmarks
+//
+// Define at compile time:
+//
+//   Being VTKm_BENCHS_RANGE_LOWER_BOUNDARY b0 and,
+//   being VTKm_BENCHS_RANGE_UPPER_BOUNDARY b1
+//
+// This will create the following sample sizes b0, b0*2^3, b0*2^6, ..., b1.
+//
+// Notice that setting up VTKm_BENCHS_RANGE_LOWER_BOUNDARY / VTKm_BENCHS_RANGE_UPPER_BOUNDARY
+// will affect both ShortRange and FullRange.
+//
+#ifndef VTKm_BENCHS_RANGE_LOWER_BOUNDARY
+#define FULL_RANGE_LOWER_BOUNDARY (1 << 12)  //  4 KiB
+#define SHORT_RANGE_LOWER_BOUNDARY (1 << 15) // 32 KiB
+
+#else
+#define FULL_RANGE_LOWER_BOUNDARY (VTKm_BENCHS_RANGE_LOWER_BOUNDARY)
+#define SHORT_RANGE_LOWER_BOUNDARY (VTKm_BENCHS_RANGE_LOWER_BOUNDARY)
+
+#endif
+
+#ifndef VTKm_BENCHS_RANGE_UPPER_BOUNDARY
+#define FULL_RANGE_UPPER_BOUNDARY (1 << 27)             // 128 MiB
+#define SHORT_RANGE_UPPER_BOUNDARY (1 << 27)            // 128 MiB
+#define BITFIELD_TO_UNORDEREDSET_MAX_SAMPLING (1 << 26) // 64 MiB
+
+#else
+#define FULL_RANGE_UPPER_BOUNDARY (VTKm_BENCHS_RANGE_UPPER_BOUNDARY)
+#define SHORT_RANGE_UPPER_BOUNDARY (VTKm_BENCHS_RANGE_UPPER_BOUNDARY)
+#define BITFIELD_TO_UNORDEREDSET_MAX_SAMPLING (VTKm_BENCHS_RANGE_UPPER_BOUNDARY)
+
+#endif
 
 // Default sampling rate is x8 and always includes min/max,
 // so this will generate 7 samples at:
@@ -47,15 +85,17 @@ namespace
 // 4: 2 MiB
 // 5: 16 MiB
 // 6: 128 MiB
-static const std::pair<int64_t, int64_t> FullRange{ 1 << 12, 1 << 27 }; // 4KiB, 128MiB
+static const std::pair<int64_t, int64_t> FullRange{ FULL_RANGE_LOWER_BOUNDARY,
+                                                    FULL_RANGE_UPPER_BOUNDARY };
 
 // Smaller range that can be used to reduce the number of benchmarks. Used
 // with `RangeMultiplier(SmallRangeMultiplier)`, this produces:
 // 1: 32 KiB
 // 2: 2 MiB
 // 3: 128 MiB
-static const std::pair<int64_t, int64_t> SmallRange{ 1 << 15, 1 << 27 }; // 4KiB, 128MiB
-static constexpr int SmallRangeMultiplier = 1 << 21;                     // Ensure a sample at 2MiB
+static const std::pair<int64_t, int64_t> SmallRange{ SHORT_RANGE_LOWER_BOUNDARY,
+                                                     SHORT_RANGE_UPPER_BOUNDARY };
+static constexpr int SmallRangeMultiplier = 1 << 21; // Ensure a sample at 2MiB
 
 using TypeList = vtkm::List<vtkm::UInt8,
                             vtkm::Float32,
@@ -91,7 +131,37 @@ template <typename T>
 struct TestValueFunctor
 {
   VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return TestValue(i, T{}); }
+  T operator()(vtkm::Id i) const { return static_cast<T>(i + 10); }
+};
+
+template <typename T>
+VTKM_EXEC_CONT T TestValue(vtkm::Id index)
+{
+  return TestValueFunctor<T>{}(index);
+}
+
+template <typename T, typename U>
+struct TestValueFunctor<vtkm::Pair<T, U>>
+{
+  VTKM_EXEC_CONT vtkm::Pair<T, U> operator()(vtkm::Id i) const
+  {
+    return vtkm::make_Pair(TestValue<T>(i), TestValue<U>(i + 1));
+  }
+};
+
+template <typename T, vtkm::IdComponent N>
+struct TestValueFunctor<vtkm::Vec<T, N>>
+{
+  template <std::size_t... Ns>
+  VTKM_EXEC_CONT vtkm::Vec<T, N> FillVec(vtkm::Id i, vtkmstd::index_sequence<Ns...>) const
+  {
+    return vtkm::make_Vec(TestValue<T>(i + static_cast<vtkm::Id>(Ns))...);
+  }
+
+  VTKM_EXEC_CONT vtkm::Vec<T, N> operator()(vtkm::Id i) const
+  {
+    return FillVec(i, vtkmstd::make_index_sequence<static_cast<std::size_t>(N)>{});
+  }
 };
 
 template <typename ArrayT>
@@ -103,27 +173,11 @@ VTKM_CONT void FillTestValue(ArrayT& array, vtkm::Id numValues)
 }
 
 template <typename T>
-struct ScaledTestValueFunctor
-{
-  vtkm::Id Scale;
-  VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return TestValue(i * this->Scale, T{}); }
-};
-
-template <typename ArrayT>
-VTKM_CONT void FillScaledTestValue(ArrayT& array, vtkm::Id scale, vtkm::Id numValues)
-{
-  using T = typename ArrayT::ValueType;
-  vtkm::cont::Algorithm::Copy(
-    vtkm::cont::make_ArrayHandleImplicit(ScaledTestValueFunctor<T>{ scale }, numValues), array);
-}
-
-template <typename T>
 struct ModuloTestValueFunctor
 {
   vtkm::Id Mod;
   VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return TestValue(i % this->Mod, T{}); }
+  T operator()(vtkm::Id i) const { return TestValue<T>(i % this->Mod); }
 };
 
 template <typename ArrayT>
@@ -149,7 +203,7 @@ struct BinaryTestValueFunctor
       T retVal;
       do
       {
-        retVal = TestValue(i++, T{});
+        retVal = TestValue<T>(i++);
       } while (retVal == zero);
       return retVal;
     }
@@ -176,7 +230,7 @@ VTKM_CONT void FillRandomTestValue(ArrayT& array, vtkm::Id numValues)
   auto portal = array.WritePortal();
   for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
   {
-    portal.Set(i, TestValue(static_cast<vtkm::Id>(rng()), ValueType{}));
+    portal.Set(i, TestValue<ValueType>(static_cast<vtkm::Id>(rng())));
   }
 }
 
@@ -191,7 +245,7 @@ VTKM_CONT void FillRandomModTestValue(ArrayT& array, vtkm::Id mod, vtkm::Id numV
   auto portal = array.WritePortal();
   for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
   {
-    portal.Set(i, TestValue(static_cast<vtkm::Id>(rng()) % mod, ValueType{}));
+    portal.Set(i, TestValue<ValueType>(static_cast<vtkm::Id>(rng()) % mod));
   }
 }
 
@@ -351,7 +405,7 @@ void BenchBitFieldToUnorderedSetGenerator(benchmark::internal::Benchmark* bm)
 {
   // Use a reduced NUM_BYTES_MAX value here -- these benchmarks allocate one
   // 8-byte id per bit, so this caps the index array out at 512 MB:
-  static constexpr int64_t numBytesMax = 1 << 26; // 64 MiB of bits
+  static int64_t numBytesMax = std::min(1 << 29, BITFIELD_TO_UNORDEREDSET_MAX_SAMPLING);
 
   bm->UseManualTime();
   bm->ArgNames({ "Size", "C" });
@@ -368,7 +422,7 @@ template <typename ValueType>
 void BenchCopy(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -393,6 +447,7 @@ void BenchCopy(benchmark::State& state)
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
+
 VTKM_BENCHMARK_TEMPLATES_OPTS(BenchCopy, ->Ranges({ FullRange })->ArgName("Size"), TypeList);
 
 template <typename ValueType>
@@ -534,7 +589,7 @@ void BenchCountSetBitsGenerator(benchmark::internal::Benchmark* bm)
 
   for (int64_t config = 0; config < 6; ++config)
   {
-    bm->Ranges({ FullRange, { config, config } });
+    bm->Ranges({ { FullRange.first, FullRange.second }, { config, config } });
   }
 }
 VTKM_BENCHMARK_APPLY(BenchCountSetBits, BenchCountSetBitsGenerator);
@@ -543,7 +598,7 @@ template <typename ValueType>
 void BenchFillArrayHandle(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -555,7 +610,7 @@ void BenchFillArrayHandle(benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::Fill(device, array, TestValue(19, ValueType{}), numValues);
+    vtkm::cont::Algorithm::Fill(device, array, TestValue<ValueType>(19), numValues);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -573,7 +628,7 @@ VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFillArrayHandle,
 void BenchFillBitFieldBool(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numBits = numBytes * CHAR_BIT;
   const bool value = state.range(1) != 0;
 
@@ -603,7 +658,7 @@ template <typename WordType>
 void BenchFillBitFieldMask(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numBits = numBytes * CHAR_BIT;
   const WordType mask = static_cast<WordType>(0x1);
 
@@ -680,7 +735,7 @@ template <typename ValueType>
 void BenchReduce(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -715,10 +770,10 @@ void BenchReduceByKey(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentKeys = state.range(1);
+  const vtkm::Id percentKeys = static_cast<vtkm::Id>(state.range(1));
   const vtkm::Id numKeys = std::max((numValues * percentKeys) / 100, vtkm::Id{ 1 });
 
   {
@@ -770,7 +825,7 @@ template <typename ValueType>
 void BenchScanExclusive(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -804,7 +859,7 @@ template <typename ValueType>
 void BenchScanExtended(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -838,7 +893,7 @@ template <typename ValueType>
 void BenchScanInclusive(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -872,7 +927,7 @@ template <typename ValueType>
 void BenchSort(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -913,7 +968,7 @@ void BenchSortByKey(benchmark::State& state)
   const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentKeys = state.range(1);
+  const vtkm::Id percentKeys = static_cast<vtkm::Id>(state.range(1));
   const vtkm::Id numKeys = std::max((numValues * percentKeys) / 100, vtkm::Id{ 1 });
 
   {
@@ -968,7 +1023,7 @@ template <typename ValueType>
 void BenchStableSortIndices(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -1005,10 +1060,10 @@ template <typename ValueType>
 void BenchStableSortIndicesUnique(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentUnique = state.range(1);
+  const vtkm::Id percentUnique = static_cast<vtkm::Id>(state.range(1));
   const vtkm::Id numUnique = std::max((numValues * percentUnique) / 100, vtkm::Id{ 1 });
 
   {
@@ -1053,8 +1108,10 @@ void BenchmarkStableSortIndicesUniqueGenerator(benchmark::internal::Benchmark* b
   bm->ArgNames({ "Size", "%Uniq" });
   for (int64_t pcntUnique = 0; pcntUnique <= 100; pcntUnique += 25)
   {
-    // Cap the max size here at 21 MiB. This sort is too slow.
-    bm->Ranges({ { SmallRange.first, 1 << 21 }, { pcntUnique, pcntUnique } });
+    // Cap the max size here at 2 MiB. This sort is too slow.
+    const int64_t maxSize = 1 << 21;
+    bm->Ranges(
+      { { SmallRange.first, std::min(maxSize, SmallRange.second) }, { pcntUnique, pcntUnique } });
   }
 }
 
@@ -1066,10 +1123,10 @@ template <typename ValueType>
 void BenchUnique(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentUnique = state.range(1);
+  const vtkm::Id percentUnique = static_cast<vtkm::Id>(state.range(1));
   const vtkm::Id numUnique = std::max((numValues * percentUnique) / 100, vtkm::Id{ 1 });
 
   {
@@ -1167,16 +1224,32 @@ VTKM_BENCHMARK_TEMPLATES_OPTS(BenchUpperBounds,
 
 int main(int argc, char* argv[])
 {
-  // Parse VTK-m options:
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::AddHelp;
-  Config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
 
-  // Setup device:
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This occurs when it is help
+  if (opts == vtkm::cont::InitializeOptions::None)
+  {
+    std::cout << Config.Usage << std::endl;
+  }
+  else
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  }
 
 // Handle NumThreads command-line arg:
+// TODO: Use the VTK-m library to set the number of threads (when that becomes available).
 #ifdef VTKM_ENABLE_TBB
+#if TBB_VERSION_MAJOR >= 2020
+  int numThreads = tbb::task_arena{}.max_concurrency();
+#else
   int numThreads = tbb::task_scheduler_init::automatic;
+#endif
 #endif // TBB
 
   if (argc == 3)
@@ -1193,11 +1266,17 @@ int main(int argc, char* argv[])
     }
   }
 
+  // TODO: Use the VTK-m library to set the number of threads (when that becomes available).
 #ifdef VTKM_ENABLE_TBB
+#if TBB_VERSION_MAJOR >= 2020
+  // Must not be destroyed as long as benchmarks are running:
+  tbb::global_control tbbControl(tbb::global_control::max_allowed_parallelism, numThreads);
+#else
   // Must not be destroyed as long as benchmarks are running:
   tbb::task_scheduler_init init(numThreads);
+#endif
 #endif // TBB
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, argv);
+  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
 }

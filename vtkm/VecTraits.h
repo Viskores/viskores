@@ -123,8 +123,8 @@ struct VTKM_NEVER_EXPORT VecTraits
   /// \brief Get a vector of the same type but with a different component.
   ///
   /// This type resolves to another vector with a different component type. For example,
-  /// vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> is vtkm::Vec<T2, N>.
-  /// This replacement is not recursive. So VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>
+  /// @code vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> @endcode is vtkm::Vec<T2, N>.
+  /// This replacement is not recursive. So @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode
   /// is vtkm::Vec<T2, N>.
   ///
   template <typename NewComponentType>
@@ -134,7 +134,7 @@ struct VTKM_NEVER_EXPORT VecTraits
   ///
   /// This type resolves to another vector with a different base component type. The replacement
   /// is recursive for nested types. For example,
-  /// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
+  /// @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode is Vec<Vec<T2, M>, N>.
   ///
   template <typename NewComponentType>
   using ReplaceBaseComponentType = VecTemplate<
@@ -270,8 +270,8 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
 /// \brief Get a vector of the same type but with a different component.
 ///
 /// This type resolves to another vector with a different component type. For example,
-/// vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> is vtkm::Vec<T2, N>.
-/// This replacement is not recursive. So VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>
+/// @code vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> @endcode is vtkm::Vec<T2, N>.
+/// This replacement is not recursive. So @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode
 /// is vtkm::Vec<T2, N>.
 ///@{
 #if defined(VTKM_GCC) && (__GNUC__ <= 5)
@@ -289,7 +289,7 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
 ///
 /// This type resolves to another vector with a different base component type. The replacement
 /// is recursive for nested types. For example,
-/// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
+/// @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode is Vec<Vec<T2, M>, N>.
 ///@{
 #if defined(VTKM_GCC) && (__GNUC__ <= 5)
   // Silly workaround for bug in GCC <= 5
@@ -381,8 +381,8 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::VecC<T>>
   /// \brief Get a vector of the same type but with a different component.
   ///
   /// This type resolves to another vector with a different component type. For example,
-  /// vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> is vtkm::Vec<T2, N>.
-  /// This replacement is not recursive. So VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>
+  /// @code vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> @endcode is vtkm::Vec<T2, N>.
+  /// This replacement is not recursive. So @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode
   /// is vtkm::Vec<T2, N>.
   ///
   template <typename NewComponentType>
@@ -392,7 +392,7 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::VecC<T>>
   ///
   /// This type resolves to another vector with a different base component type. The replacement
   /// is recursive for nested types. For example,
-  /// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
+  /// @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode is Vec<Vec<T2, M>, N>.
   ///
   template <typename NewComponentType>
   using ReplaceBaseComponentType = vtkm::VecC<
@@ -470,8 +470,8 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::VecCConst<T>>
   /// \brief Get a vector of the same type but with a different component.
   ///
   /// This type resolves to another vector with a different component type. For example,
-  /// vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> is vtkm::Vec<T2, N>.
-  /// This replacement is not recursive. So VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>
+  /// @code vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> @endcode is vtkm::Vec<T2, N>.
+  /// This replacement is not recursive. So @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode
   /// is vtkm::Vec<T2, N>.
   ///
   template <typename NewComponentType>
@@ -481,7 +481,7 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::VecCConst<T>>
   ///
   /// This type resolves to another vector with a different base component type. The replacement
   /// is recursive for nested types. For example,
-  /// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
+  /// @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode is Vec<Vec<T2, M>, N>.
   ///
   template <typename NewComponentType>
   using ReplaceBaseComponentType = vtkm::VecCConst<
@@ -556,13 +556,13 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Pair<T, U>>
 
 } // anonymous namespace
 
-#define VTKM_BASIC_TYPE_VECTOR(type)                                                               \
-  namespace vtkm                                                                                   \
-  {                                                                                                \
-  template <>                                                                                      \
-  struct VTKM_NEVER_EXPORT VecTraits<type> : public vtkm::internal::VecTraitsBasic<type>           \
-  {                                                                                                \
-  };                                                                                               \
+#define VTKM_BASIC_TYPE_VECTOR(type)                                                     \
+  namespace vtkm                                                                         \
+  {                                                                                      \
+  template <>                                                                            \
+  struct VTKM_NEVER_EXPORT VecTraits<type> : public vtkm::internal::VecTraitsBasic<type> \
+  {                                                                                      \
+  };                                                                                     \
   }
 
 /// Allows you to treat basic types as if they were vectors.

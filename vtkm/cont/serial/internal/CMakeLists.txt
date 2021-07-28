@@ -9,19 +9,22 @@
 ##============================================================================
 
 set(headers
-  ArrayManagerExecutionSerial.h
-  AtomicInterfaceExecutionSerial.h
   DeviceAdapterAlgorithmSerial.h
+  DeviceAdapterMemoryManagerSerial.h
   DeviceAdapterRuntimeDetectorSerial.h
   DeviceAdapterTagSerial.h
-  ExecutionArrayInterfaceBasicSerial.h
-  VirtualObjectTransferSerial.h
+  RuntimeDeviceConfigurationSerial.h
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    VirtualObjectTransferSerial.h
+    )
+endif()
+
 vtkm_declare_headers(${headers})
 
 target_sources(vtkm_cont PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionSerial.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmSerial.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorSerial.cxx
-  ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicSerial.cxx
 )

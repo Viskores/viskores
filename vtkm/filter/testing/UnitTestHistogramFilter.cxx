@@ -13,6 +13,8 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/thirdparty/diy/environment.h>
+
 //
 // Make a simple 2D, 1000 point dataset populated with stat distributions
 //
@@ -260,7 +262,7 @@ void VerifyHistogram(const vtkm::cont::DataSet& result,
   VTKM_TEST_ASSERT(result.HasField("histogram"), "Output field missing");
 
   vtkm::cont::ArrayHandle<vtkm::Id> bins;
-  result.GetField("histogram").GetData().CopyTo(bins);
+  result.GetField("histogram").GetData().AsArrayHandle(bins);
 
   vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType binPortal = bins.ReadPortal();
 

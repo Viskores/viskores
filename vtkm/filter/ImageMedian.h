@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_ImageMedian_h
 #define vtk_m_filter_ImageMedian_h
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 
 /// \brief Median algorithm for general image blur
 ///
@@ -34,7 +34,7 @@ class ImageMedian : public vtkm::filter::FilterField<ImageMedian>
 public:
   using SupportedTypes = vtkm::TypeListScalarAll;
 
-  VTKM_CONT ImageMedian();
+  VTKM_CONT ImageMedian() { this->SetOutputFieldName("median"); }
 
   VTKM_CONT void Perform3x3() { this->Neighborhood = 1; };
   VTKM_CONT void Perform5x5() { this->Neighborhood = 2; };

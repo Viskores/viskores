@@ -199,10 +199,12 @@ struct ScatterCountingBuilder
 }
 } // namespace vtkm::worklet::detail
 
-void vtkm::worklet::ScatterCounting::BuildArrays(const VariantArrayHandleCount& countArray,
+void vtkm::worklet::ScatterCounting::BuildArrays(const vtkm::cont::UnknownArrayHandle& countArray,
                                                  vtkm::cont::DeviceAdapterId device,
                                                  bool saveInputToOutputMap)
 {
-  countArray.CastAndCall(
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "ScatterCounting::BuildArrays");
+
+  countArray.CastAndCallForTypes<CountTypes, vtkm::List<vtkm::cont::StorageTagBasic>>(
     vtkm::worklet::detail::ScatterCountingBuilder(), device, saveInputToOutputMap, this);
 }

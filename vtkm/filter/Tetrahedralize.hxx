@@ -11,6 +11,10 @@
 #ifndef vtk_m_filter_Tetrahedralize_hxx
 #define vtk_m_filter_Tetrahedralize_hxx
 
+#include <vtkm/filter/Tetrahedralize.h>
+
+#include <vtkm/filter/MapFieldPermutation.h>
+
 namespace
 {
 struct DeduceCellSet
@@ -46,8 +50,10 @@ inline VTKM_CONT vtkm::cont::DataSet Tetrahedralize::DoExecute(
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
-  vtkm::cont::CastAndCall(
-    vtkm::filter::ApplyPolicyCellSet(cells, policy), DeduceCellSet{}, this->Worklet, outCellSet);
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
+                          DeduceCellSet{},
+                          this->Worklet,
+                          outCellSet);
 
   // create the output dataset
   vtkm::cont::DataSet output;
@@ -57,30 +63,33 @@ inline VTKM_CONT vtkm::cont::DataSet Tetrahedralize::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Tetrahedralize::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool Tetrahedralize::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                         const vtkm::cont::Field& field,
+                                                         vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  // point data is copied as is because it was not collapsed
-  if (fieldMeta.IsPointField())
+  if (field.IsFieldPoint())
   {
-    result.AddField(fieldMeta.AsField(input));
+    // point data is copied as is because it was not collapsed
+    result.AddField(field);
     return true;
   }
-
-  // cell data must be scattered to the cells created per input cell
-  if (fieldMeta.IsCellField())
+  else if (field.IsFieldCell())
   {
-    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input);
-
-    result.AddField(fieldMeta.AsField(output));
+    // cell data must be scattered to the cells created per input cell
+    vtkm::cont::ArrayHandle<vtkm::Id> permutation =
+      this->Worklet.GetOutCellScatter().GetOutputToInputMap();
+    return vtkm::filter::MapFieldPermutation(field, permutation, result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
     return true;
   }
-
-  return false;
+  else
+  {
+    return false;
+  }
 }
 }
 }

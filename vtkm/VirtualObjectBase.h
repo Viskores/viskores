@@ -10,7 +10,15 @@
 #ifndef vtk_m_VirtualObjectBase_h
 #define vtk_m_VirtualObjectBase_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+// Do not include this class at all if not compiling virtual methods.
+
+// This is a deprecated class. Don't warn about deprecation while implementing
+// deprecated functionality.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace vtkm
 {
@@ -29,7 +37,9 @@ namespace vtkm
 /// \c Modified on itself so the \c VirtualObjectHandle will know it update the object in the
 /// execution environment.
 ///
-class VTKM_ALWAYS_EXPORT VirtualObjectBase
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
+  1.7,
+  "Virtual methods are no longer supported in the execution environment.") VirtualObjectBase
 {
 public:
   VTKM_EXEC_CONT virtual ~VirtualObjectBase() noexcept
@@ -76,5 +86,9 @@ private:
 };
 
 } // namespace vtkm
+
+VTKM_DEPRECATED_SUPPRESS_END
+
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 #endif //vtk_m_VirtualObjectBase_h

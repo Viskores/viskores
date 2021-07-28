@@ -49,19 +49,21 @@ struct ThreadIndices : vtkm::exec::arg::ExecutionSignatureTagBase
   using AspectTag = vtkm::exec::arg::AspectTagThreadIndices;
 };
 
-template <typename FetchTag, typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<FetchTag, vtkm::exec::arg::AspectTagThreadIndices, ThreadIndicesType, ExecObjectType>
+template <typename FetchTag, typename ExecObjectType>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagThreadIndices, ExecObjectType>
 {
-  using ValueType = const ThreadIndicesType&;
 
-  VTKM_EXEC
-  const ThreadIndicesType& Load(const ThreadIndicesType& indices, const ExecObjectType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC const ThreadIndicesType& Load(const ThreadIndicesType& indices,
+                                          const ExecObjectType&) const
   {
     return indices;
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ThreadIndicesType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType&,
+                       const ExecObjectType&,
+                       const ThreadIndicesType&) const
   {
     // Store is a no-op.
   }

@@ -18,7 +18,6 @@
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
-#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 #include <vtkm/cont/tbb/internal/FunctorsTBB.h>
 #include <vtkm/cont/tbb/internal/ParallelSortTBB.h>
@@ -81,7 +80,7 @@ public:
                          output.PrepareForOutput(inputSize, DeviceAdapterTagTBB(), token),
                          unary_predicate);
     token.DetachFromAll();
-    output.Shrink(outputSize);
+    output.Allocate(outputSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, typename U, class CIn, class COut>
@@ -96,10 +95,11 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
-    if (input == output && ((outputIndex >= inputStartIndex &&
-                             outputIndex < inputStartIndex + numberOfElementsToCopy) ||
-                            (inputStartIndex >= outputIndex &&
-                             inputStartIndex < outputIndex + numberOfElementsToCopy)))
+    if (input == output &&
+        ((outputIndex >= inputStartIndex &&
+          outputIndex < inputStartIndex + numberOfElementsToCopy) ||
+         (inputStartIndex >= outputIndex &&
+          inputStartIndex < outputIndex + numberOfElementsToCopy)))
     {
       return false;
     }
@@ -145,7 +145,8 @@ public:
   }
 
   template <typename T, typename U, class CIn>
-  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
+  VTKM_CONT static auto Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
+    -> decltype(Reduce(input, initialValue, vtkm::Add{}))
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
@@ -153,9 +154,10 @@ public:
   }
 
   template <typename T, typename U, class CIn, class BinaryFunctor>
-  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input,
-                            U initialValue,
-                            BinaryFunctor binary_functor)
+  VTKM_CONT static auto Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               U initialValue,
+                               BinaryFunctor binary_functor)
+    -> decltype(tbb::ReducePortals(input.ReadPortal(), initialValue, binary_functor))
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
@@ -191,8 +193,8 @@ public:
       values_output.PrepareForOutput(inputSize, DeviceAdapterTagTBB(), token),
       binary_functor);
     token.DetachFromAll();
-    keys_output.Shrink(outputSize);
-    values_output.Shrink(outputSize);
+    keys_output.Allocate(outputSize, vtkm::CopyFlag::On);
+    values_output.Allocate(outputSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, class CIn, class COut>
@@ -285,6 +287,8 @@ public:
   template <typename T, class Container>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     //this is required to get sort to work with zip handles
     std::less<T> lessOp;
     vtkm::cont::tbb::sort::parallel_sort(values, lessOp);
@@ -294,6 +298,8 @@ public:
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values,
                              BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::cont::tbb::sort::parallel_sort(values, binary_compare);
   }
 
@@ -301,6 +307,8 @@ public:
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::cont::tbb::sort::parallel_sort_bykey(keys, values, std::less<T>());
   }
 
@@ -309,6 +317,8 @@ public:
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::cont::tbb::sort::parallel_sort_bykey(keys, values, binary_compare);
   }
 
@@ -322,13 +332,15 @@ public:
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                                BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id outputSize;
     {
       vtkm::cont::Token token;
       outputSize =
         tbb::UniquePortals(values.PrepareForInPlace(DeviceAdapterTagTBB(), token), binary_compare);
     }
-    values.Shrink(outputSize);
+    values.Allocate(outputSize, vtkm::CopyFlag::On);
   }
 
   VTKM_CONT static void Synchronize()

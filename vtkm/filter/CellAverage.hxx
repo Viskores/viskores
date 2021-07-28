@@ -20,11 +20,10 @@ namespace filter
 {
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet CellAverage::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& inField,
-  const vtkm::filter::FieldMetadata& fieldMetadata,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+vtkm::cont::DataSet CellAverage::DoExecute(const vtkm::cont::DataSet& input,
+                                           const vtkm::cont::ArrayHandle<T, StorageType>& inField,
+                                           const vtkm::filter::FieldMetadata& fieldMetadata,
+                                           vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   if (!fieldMetadata.IsPointField())
   {
@@ -37,7 +36,8 @@ inline VTKM_CONT vtkm::cont::DataSet CellAverage::DoExecute(
   //If the input is implicit, we should know what to fall back to
   vtkm::cont::ArrayHandle<T> outArray;
 
-  this->Invoke(this->Worklet, vtkm::filter::ApplyPolicyCellSet(cellSet, policy), inField, outArray);
+  this->Invoke(
+    this->Worklet, vtkm::filter::ApplyPolicyCellSet(cellSet, policy, *this), inField, outArray);
 
   std::string outputName = this->GetOutputFieldName();
   if (outputName.empty())

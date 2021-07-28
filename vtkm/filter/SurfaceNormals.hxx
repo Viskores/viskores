@@ -83,8 +83,10 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("No normals selected.");
   }
 
-  const auto cellset = vtkm::filter::ApplyPolicyCellSetUnstructured(input.GetCellSet(), policy);
-  const auto& coords = input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()).GetData();
+  const auto cellset =
+    vtkm::filter::ApplyPolicyCellSetUnstructured(input.GetCellSet(), policy, *this);
+  const auto coords =
+    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()).GetDataAsMultiplexer();
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> faceNormals;
   vtkm::worklet::FacetedSurfaceNormals faceted;

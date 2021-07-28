@@ -109,8 +109,9 @@ public:
     vtkm::Id toID = treeArcsPortal.Get(MaskedIndex(fromID));
 
     // loop to bottom or until to node is "below" this node
-    while (!NoSuchElement(toID) && (IsJoinGraph ? (MaskedIndex(toID) > MaskedIndex(nodeID))
-                                                : (MaskedIndex(toID) < MaskedIndex(nodeID))))
+    while (!NoSuchElement(toID) &&
+           (IsJoinGraph ? (MaskedIndex(toID) > MaskedIndex(nodeID))
+                        : (MaskedIndex(toID) < MaskedIndex(nodeID))))
     { // sliding loop
       fromID = toID;
       toID = treeArcsPortal.Get(MaskedIndex(fromID));

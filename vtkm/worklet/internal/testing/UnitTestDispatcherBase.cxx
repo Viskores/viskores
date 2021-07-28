@@ -185,10 +185,7 @@ namespace arg
 {
 
 template <>
-struct Fetch<TestFetchTagInput,
-             vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic,
-             TestExecObjectIn>
+struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault, TestExecObjectIn>
 {
   using ValueType = vtkm::Id;
 
@@ -207,10 +204,7 @@ struct Fetch<TestFetchTagInput,
 };
 
 template <>
-struct Fetch<TestFetchTagOutput,
-             vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic,
-             TestExecObjectOut>
+struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, TestExecObjectOut>
 {
   using ValueType = vtkm::Id;
 
@@ -299,13 +293,12 @@ inline vtkm::Id SchedulingRange(const std::vector<T>* const inputDomain)
 }
 
 template <typename WorkletType>
-class TestDispatcher : public vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
-                                                                      WorkletType,
-                                                                      TestWorkletBase>
+class TestDispatcher
+  : public vtkm::worklet::internal::
+      DispatcherBase<TestDispatcher<WorkletType>, WorkletType, TestWorkletBase>
 {
-  using Superclass = vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
-                                                             WorkletType,
-                                                             TestWorkletBase>;
+  using Superclass = vtkm::worklet::internal::
+    DispatcherBase<TestDispatcher<WorkletType>, WorkletType, TestWorkletBase>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:
@@ -331,9 +324,9 @@ public:
     const InputDomainType& inputDomain = invocation.GetInputDomain();
 
     // For a DispatcherMapField, the inputDomain must be an ArrayHandle (or
-    // an VariantArrayHandle that gets cast to one). The size of the domain
-    // (number of threads/worklet instances) is equal to the size of the
-    // array.
+    // an UncertainArrayHandle or an UnknownArrayHandle that gets cast to one).
+    // The size of the domain (number of threads/worklet instances) is equal
+    // to the size of the array.
     //verify the overloads for SchedulingRange work
     auto numInstances = SchedulingRange(inputDomain);
 

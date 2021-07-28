@@ -9,7 +9,7 @@
 //============================================================================
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -68,16 +68,21 @@ struct DoTestWholeArrayWorklet
       inOutArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
-    vtkm::cont::ArrayHandle<T> inHandle = vtkm::cont::make_ArrayHandle(inArray, ARRAY_SIZE);
-    vtkm::cont::ArrayHandle<T> inOutHandle = vtkm::cont::make_ArrayHandle(inOutArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inHandle =
+      vtkm::cont::make_ArrayHandle(inArray, ARRAY_SIZE, vtkm::CopyFlag::On);
+    vtkm::cont::ArrayHandle<T> inOutHandle =
+      vtkm::cont::make_ArrayHandle(inOutArray, ARRAY_SIZE, vtkm::CopyFlag::On);
     vtkm::cont::ArrayHandle<T> outHandle;
     // Output arrays must be preallocated.
     outHandle.Allocate(ARRAY_SIZE);
 
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(vtkm::cont::VariantArrayHandle(inHandle).ResetTypes(vtkm::List<T>{}),
-                      vtkm::cont::VariantArrayHandle(inOutHandle).ResetTypes(vtkm::List<T>{}),
-                      vtkm::cont::VariantArrayHandle(outHandle).ResetTypes(vtkm::List<T>{}));
+    dispatcher.Invoke(vtkm::cont::UnknownArrayHandle(inHandle)
+                        .ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(),
+                      vtkm::cont::UnknownArrayHandle(inOutHandle)
+                        .ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(),
+                      vtkm::cont::UnknownArrayHandle(outHandle)
+                        .ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>());
 
     std::cout << "Check result." << std::endl;
     CheckPortal(inOutHandle.ReadPortal());

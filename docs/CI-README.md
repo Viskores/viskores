@@ -60,21 +60,68 @@ Current gitlab runner tags for VTK-m are:
         Used to state that we require a linux based gitlab-runner
     - large-memory
         Used to state that this step will require a machine that has lots of memory.
-        This is currently used for cuda `build` requests
+        This is currently used for CUDA `build` requests
     - cuda-rt
-        Used to state that the runner is required to have the cuda runtime enviornment.
-        This isn't required to `build` VTK-m, only `test`
+        Used to state that the runner is required to have the CUDA runtime environment.
+        This is required to `build` and `test` VTK-m when using CUDA 
     - maxwell
     - pascal
     - turing
-        Only used on a `test` stage to signifiy which GPU hardware is required to
+        Only used on a `test` stage to signify which GPU hardware is required to
         run the VTK-m tests
 
 # How to use docker builders locally
-## Setting up docker
+
+When diagnosing issues from the docker builders it can be useful to iterate locally on a 
+solution.
+
+If you haven't set up docker locally we recommend following the official getting started guide:
+    - https://docs.docker.com/get-started/
+
+
 ## Setting up nvidia runtime
+
+To properly test VTK-m inside docker containers when the CUDA backend is enabled you will need
+to have installed the nvidia-container-runtime ( https://github.com/NVIDIA/nvidia-container-runtime )
+and be using a recent version of docker ( we recommend docker-ce )
+
+
+Once nvidia-container-runtime is installed you will want the default-runtime be `nvidia` so
+that `docker run` will automatically support gpus. The easiest way to do so is to add
+the following to your `/etc/docker/daemon.json`
+
+```
+{
+ "default-runtime": "nvidia",
+    "runtimes": {
+        "nvidia": {
+            "path": "/usr/bin/nvidia-container-runtime",
+            "runtimeArgs": []
+        }
+    },
+}
+```
+
 ## Running docker images
 
+To simplify reproducing docker based CI workers locally, VTK-m has python program that handles all the
+work automatically for you.
+
+The program is located in `[Utilities/CI/reproduce_ci_env.py ]` and requires python3 and pyyaml. 
+
+To use the program is really easy! The following two commands will create the `build:rhel8` gitlab-ci
+worker as a docker image and setup a container just as how gitlab-ci would be before the actual
+compilation of VTK-m. Instead of doing the compilation, instead you will be given an interactive shell. 
+
+```
+./reproduce_ci_env.py create rhel8
+./reproduce_ci_env.py run rhel8
+```
+
+To compile VTK-m from the the interactive shell with the settings of the CI job you would do the following:
+```
+> src]# bash /run-gitlab-stage.sh
+```
 
 # How to Add/Update Kitware Gitlab CI
 
@@ -211,22 +258,3 @@ sudo docker login --username=<docker_hub_name>
 cd .gitlab/ci/docker
 sudo ./update_all.sh 20201230
 ```
-
-# ECP OSTI CI
-
-`.gitlab-ci-ecp.yml` allows for VTK-m to run CI on provided by ECP at NMC.
-
-To have this work properly you will need to make sure that the gitlab repository
-has been updated to this non-standard yaml file location
-( "Settings" -> "CI/CD" -> "General pipelines" -> "Custom CI configuration path").
-
-The ECP CI is setup to verify VTK-m mainly on Power9 hardware as that currently is
-missing from VTK-m standard CI infrastructure.
-
-Currently we verify Power9 support with `cuda` and `openmp` builders. The `cuda` builder
-is setup to use the default cuda SDK on the machine and the required `c++` compiler which
-currently is `gcc-4.8.5`. The `openmp` builder is setup to use the newest `c++` compiler provided
-on the machine so that we maximimze compiler coverage.
-
-## Issues
-Currently these builders don't report back to the VTK-m CDash instance.

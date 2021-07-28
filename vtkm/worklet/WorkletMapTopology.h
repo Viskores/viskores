@@ -34,6 +34,8 @@
 #include <vtkm/exec/arg/IncidentElementIndices.h>
 #include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
+#include <vtkm/worklet/DispatcherMapTopology.h>
+
 namespace vtkm
 {
 namespace worklet
@@ -164,15 +166,17 @@ public:
             typename VisitArrayType,
             typename ThreadToOutArrayType,
             typename InputDomainType>
-  VTKM_EXEC vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType> GetThreadIndices(
-    vtkm::Id threadIndex,
-    const OutToInArrayType& outToIn,
-    const VisitArrayType& visit,
-    const ThreadToOutArrayType& threadToOut,
-    const InputDomainType& connectivity) const
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
+                                                      vtkm::exec::arg::CustomScatterOrMaskTag>
+  GetThreadIndices(vtkm::Id threadIndex,
+                   const OutToInArrayType& outToIn,
+                   const VisitArrayType& visit,
+                   const ThreadToOutArrayType& threadToOut,
+                   const InputDomainType& connectivity) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex);
-    return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(
+    return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
+                                                     vtkm::exec::arg::CustomScatterOrMaskTag>(
       threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, connectivity);
   }
 
@@ -199,7 +203,10 @@ public:
             typename InputDomainType,
             bool S = IsScatterIdentity,
             bool M = IsMaskNone>
-  VTKM_EXEC EnableFnWhen<S && M, vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>>
+  VTKM_EXEC EnableFnWhen<
+    S && M,
+    vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
+                                              vtkm::exec::arg::DefaultScatterAndMaskTag>>
   GetThreadIndices(vtkm::Id threadIndex1D,
                    const vtkm::Id3& threadIndex3D,
                    const OutToInArrayType& vtkmNotUsed(outToIn),
@@ -207,7 +214,8 @@ public:
                    const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
                    const InputDomainType& connectivity) const
   {
-    return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(
+    return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
+                                                     vtkm::exec::arg::DefaultScatterAndMaskTag>(
       threadIndex3D, threadIndex1D, connectivity);
   }
 
@@ -219,21 +227,26 @@ public:
             typename InputDomainType,
             bool S = IsScatterIdentity,
             bool M = IsMaskNone>
-  VTKM_EXEC EnableFnWhen<!(S && M), vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>>
-  GetThreadIndices(vtkm::Id threadIndex1D,
-                   const vtkm::Id3& threadIndex3D,
-                   const OutToInArrayType& outToIn,
-                   const VisitArrayType& visit,
-                   const ThreadToOutArrayType& threadToOut,
-                   const InputDomainType& connectivity) const
+  VTKM_EXEC
+    EnableFnWhen<!(S && M),
+                 vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
+                                                           vtkm::exec::arg::CustomScatterOrMaskTag>>
+    GetThreadIndices(vtkm::Id threadIndex1D,
+                     const vtkm::Id3& threadIndex3D,
+                     const OutToInArrayType& outToIn,
+                     const VisitArrayType& visit,
+                     const ThreadToOutArrayType& threadToOut,
+                     const InputDomainType& connectivity) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex1D);
-    return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(threadIndex3D,
-                                                                      threadIndex1D,
-                                                                      outToIn.Get(outIndex),
-                                                                      visit.Get(outIndex),
-                                                                      outIndex,
-                                                                      connectivity);
+    return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
+                                                     vtkm::exec::arg::CustomScatterOrMaskTag>(
+      threadIndex3D,
+      threadIndex1D,
+      outToIn.Get(outIndex),
+      visit.Get(outIndex),
+      outIndex,
+      connectivity);
   }
 };
 

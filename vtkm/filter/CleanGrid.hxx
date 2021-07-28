@@ -22,8 +22,8 @@ namespace filter
 {
 
 template <typename Policy>
-inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
-                                                          vtkm::filter::PolicyBase<Policy> policy)
+vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
+                                         vtkm::filter::PolicyBase<Policy> policy)
 {
   using CellSetType = vtkm::cont::CellSetExplicit<>;
 
@@ -37,7 +37,7 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
   }
   else
   { // Clean the grid
-    auto deducedCellSet = vtkm::filter::ApplyPolicyCellSet(inCellSet, policy);
+    auto deducedCellSet = vtkm::filter::ApplyPolicyCellSet(inCellSet, policy, *this);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
 
     this->Invoke(worklet::CellDeepCopy::CountCellPoints{}, deducedCellSet, numIndices);

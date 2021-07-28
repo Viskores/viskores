@@ -71,12 +71,14 @@
 #include <vtkm/worklet/contourtree_augmented/ActiveGraph.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTreeMaker.h>
+#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
 #include <vtkm/worklet/contourtree_augmented/MergeTree.h>
 #include <vtkm/worklet/contourtree_augmented/MeshExtrema.h>
-#include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshBoundary.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundary2D.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundary3D.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
 
 namespace vtkm
 {
@@ -87,6 +89,17 @@ namespace worklet
 class ContourTreeAugmented
 {
 public:
+  /*!
+  * Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
+  * Use vtkm::cont::LogLevel::Off to disable outputing the results via vtkm logging here. The
+  * results are saved in the TimingsLogString variable so we can use it to do our own logging
+  */
+  vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;
+
+  /// Remember the results from our time-keeping so we can customize our logging
+  std::string TimingsLogString;
+
+
   /*!
   * Run the contour tree to merge an existing set of contour trees
   *
@@ -107,15 +120,17 @@ public:
   *                 the full regular strucuture this is not needed because all vertices
   *                 (including the boundary) will be addded to the tree anyways.
   */
-  template <typename FieldType, typename StorageType>
-  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType>
-             fieldArray, // TODO: We really should not need this
-           contourtree_augmented::ContourTreeMesh<FieldType>& mesh,
+  template <typename FieldType,
+            typename StorageType,
+            typename MeshType,
+            typename MeshBoundaryMeshExecType>
+  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
+           MeshType& mesh,
            contourtree_augmented::ContourTree& contourTree,
-           contourtree_augmented::IdArrayType sortOrder,
+           contourtree_augmented::IdArrayType& sortOrder,
            vtkm::Id& nIterations,
            unsigned int computeRegularStructure,
-           const contourtree_augmented::MeshBoundaryContourTreeMeshExec& meshBoundary)
+           const MeshBoundaryMeshExecType& meshBoundary)
   {
     RunContourTree(
       fieldArray, // Just a place-holder to fill the required field. Used when calling SortData on the contour tree which is a no-op
@@ -155,18 +170,16 @@ public:
            contourtree_augmented::ContourTree& contourTree,
            contourtree_augmented::IdArrayType& sortOrder,
            vtkm::Id& nIterations,
-           const vtkm::Id nRows,
-           const vtkm::Id nCols,
-           const vtkm::Id nSlices = 1,
+           const vtkm::Id3 meshSize,
            bool useMarchingCubes = false,
            unsigned int computeRegularStructure = 1)
   {
     using namespace vtkm::worklet::contourtree_augmented;
     // 2D Contour Tree
-    if (nSlices == 1)
+    if (meshSize[2] == 1)
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_2D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols);
+      DataSetMeshTriangulation2DFreudenthal mesh(vtkm::Id2{ meshSize[0], meshSize[1] });
       // Run the contour tree on the mesh
       RunContourTree(fieldArray,
                      contourTree,
@@ -181,7 +194,7 @@ public:
     else if (useMarchingCubes)
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_3D_MarchingCubes<FieldType, StorageType> mesh(nRows, nCols, nSlices);
+      DataSetMeshTriangulation3DMarchingCubes mesh(meshSize);
       // Run the contour tree on the mesh
       RunContourTree(fieldArray,
                      contourTree,
@@ -196,7 +209,7 @@ public:
     else
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_3D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols, nSlices);
+      DataSetMeshTriangulation3DFreudenthal mesh(meshSize);
       // Run the contour tree on the mesh
       RunContourTree(fieldArray,
                      contourTree,
@@ -255,9 +268,6 @@ private:
     vtkm::cont::Timer timer;
     timer.Start();
     std::stringstream timingsStream; // Use a string stream to log in one message
-    timingsStream << std::endl;
-    timingsStream << "    ------------------- Contour Tree Worklet Timings ----------------------"
-                  << std::endl;
 
     // Sort the mesh data
     mesh.SortData(fieldArray);
@@ -306,7 +316,7 @@ private:
     MergeTree splitTree(mesh.NumVertices, false);
     ActiveGraph splitGraph(false);
     splitGraph.Initialise(mesh, extrema);
-    timingsStream << "    " << std::setw(38) << std::left << "Splot Tree Initialize Active Graph"
+    timingsStream << "    " << std::setw(38) << std::left << "Split Tree Initialize Active Graph"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
 #ifdef DEBUG_PRINT
     splitGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
@@ -352,14 +362,26 @@ private:
     timer.Start();
 
     // Collect the output data
-    nIterations = treeMaker.NumIterations;
-    sortOrder = mesh.SortOrder;
+    nIterations = treeMaker.ContourTreeResult.NumIterations;
+    //  Need to make a copy of sortOrder since ContourTreeMesh uses a smart array handle
+    // TODO: Check if we can just make sortOrder a return array with variable type or if we can make the SortOrder return optional
+    // TODO/FIXME: According to Ken Moreland the short answer is no. We may need to go back and refactor this when we
+    // improve the contour tree API. https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/2263#note_831128 for more details.
+    vtkm::cont::Algorithm::Copy(mesh.SortOrder, sortOrder);
     // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(contourTree, mesh.SortOrder, saddlePeak);
     // contourTree.SortedArcPrint(mesh.SortOrder);
     // contourTree.PrintDotSuperStructure();
 
     // Log the collected timing results in one coherent log entry
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info, timingsStream.str());
+    this->TimingsLogString = timingsStream.str();
+    if (this->TimingsLogLevel != vtkm::cont::LogLevel::Off)
+    {
+      VTKM_LOG_S(this->TimingsLogLevel,
+                 std::endl
+                   << "    ------------------- Contour Tree Worklet Timings ----------------------"
+                   << std::endl
+                   << this->TimingsLogString);
+    }
   }
 };
 

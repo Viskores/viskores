@@ -12,8 +12,8 @@
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Initialize.h>
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
 
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
   auto config = vtkm::cont::Initialize(argc, argv, opts);
 
   vtkmdiy::mpi::environment env(argc, argv);
-  auto comm = vtkmdiy::mpi::communicator(MPI_COMM_WORLD);
+  vtkmdiy::mpi::communicator comm;
   vtkm::cont::EnvironmentTracker::SetCommunicator(comm);
 
   if (argc != 3)
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSet input;
   if (comm.rank() == 0)
   {
-    vtkm::io::reader::VTKDataSetReader reader(argv[1]);
+    vtkm::io::VTKDataSetReader reader(argv[1]);
     input = reader.ReadDataSet();
   }
 
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
   std::ostringstream str;
   str << argv[2] << "-" << comm.rank() << ".vtk";
 
-  vtkm::io::writer::VTKDataSetWriter writer(str.str());
+  vtkm::io::VTKDataSetWriter writer(str.str());
   writer.WriteDataSet(output);
   return EXIT_SUCCESS;
 }

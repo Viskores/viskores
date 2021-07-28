@@ -13,7 +13,6 @@
 #include <vtkm/cont/DataSet.h>
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
@@ -31,8 +30,7 @@ vtkm::cont::DataSet MakeTestDataSet()
   vtkm::cont::DataSetBuilderUniform builder;
   vtkm::cont::DataSet dataSet = builder.Create(vtkm::Id3(8, 8, 1));
 
-  vtkm::cont::DataSetFieldAdd dataSetFieldAdd;
-  dataSetFieldAdd.AddPointField(dataSet, "color", pixels);
+  dataSet.AddPointField("color", pixels);
 
   return dataSet;
 }
@@ -48,7 +46,7 @@ void TestImageConnectivity()
 
   auto temp = outputData.GetField("component").GetData();
   vtkm::cont::ArrayHandle<vtkm::Id> resultArrayHandle;
-  temp.CopyTo(resultArrayHandle);
+  temp.AsArrayHandle(resultArrayHandle);
 
   std::vector<vtkm::Id> componentExpected = { 0, 1, 1, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 1, 1, 2,
                                               0, 1, 1, 0, 0, 1, 1, 2, 0, 1, 0, 0, 0, 1, 1, 2,

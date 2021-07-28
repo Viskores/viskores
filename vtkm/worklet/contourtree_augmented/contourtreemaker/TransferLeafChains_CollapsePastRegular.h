@@ -74,7 +74,7 @@ public:
   typedef void ControlSignature(FieldIn activeSupernodes, // (input)
                                 WholeArrayInOut outbound, // (output)
                                 WholeArrayInOut inbound   // (output)
-                                );
+  );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   using InputDomain = _1;
 

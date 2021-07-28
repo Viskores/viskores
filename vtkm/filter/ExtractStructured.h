@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_ExtractStructured_h
 #define vtk_m_filter_ExtractStructured_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_common_export.h>
 
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExtractStructured.h>
@@ -36,10 +36,10 @@ namespace filter
 /// for image processing, subsampling large volumes to reduce data size, or
 /// extracting regions of a volume with interesting data.
 ///
-class VTKM_ALWAYS_EXPORT ExtractStructured : public vtkm::filter::FilterDataSet<ExtractStructured>
+class VTKM_FILTER_COMMON_EXPORT ExtractStructured
+  : public vtkm::filter::FilterDataSet<ExtractStructured>
 {
 public:
-  VTKM_FILTER_EXPORT
   ExtractStructured();
 
   // Set the bounding box for the volume of interest
@@ -87,31 +87,26 @@ public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  // Map new field onto the resulting dataset after running the filter
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy>)
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
+
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy>)
   {
-    if (fieldMeta.IsPointField())
-    {
-      vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessPointField(input);
+    return this->MapFieldOntoOutput(result, field);
+  }
 
-      result.AddField(fieldMeta.AsField(output));
-      return true;
-    }
 
-    // cell data must be scattered to the cells created per input cell
-    if (fieldMeta.IsCellField())
-    {
-      vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input);
+  VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet&,
+                             vtkm::cont::PartitionedDataSet&);
 
-      result.AddField(fieldMeta.AsField(output));
-      return true;
-    }
-
-    return false;
+  template <typename DerivedPolicy>
+  VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet& input,
+                             vtkm::cont::PartitionedDataSet& output,
+                             const vtkm::filter::PolicyBase<DerivedPolicy>&)
+  {
+    this->PostExecute(input, output);
   }
 
 private:
@@ -120,14 +115,18 @@ private:
   bool IncludeBoundary;
   bool IncludeOffset;
   vtkm::worklet::ExtractStructured Worklet;
+
+  vtkm::cont::ArrayHandle<vtkm::Id> CellFieldMap;
+  vtkm::cont::ArrayHandle<vtkm::Id> PointFieldMap;
 };
 
 #ifndef vtkm_filter_ExtractStructured_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(ExtractStructured);
+extern template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::DataSet ExtractStructured::DoExecute(
+  const vtkm::cont::DataSet&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 #endif
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/ExtractStructured.hxx>
 
 #endif // vtk_m_filter_ExtractStructured_h

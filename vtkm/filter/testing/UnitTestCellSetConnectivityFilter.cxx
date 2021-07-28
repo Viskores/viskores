@@ -39,7 +39,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
     auto temp = output.GetField("component").GetData();
-    temp.CopyTo(componentArray);
+    temp.AsArrayHandle(componentArray);
 
     using Algorithm = vtkm::cont::Algorithm;
     Algorithm::Sort(componentArray);
@@ -57,7 +57,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
     auto temp = output.GetField("component").GetData();
-    temp.CopyTo(componentArray);
+    temp.AsArrayHandle(componentArray);
 
     using Algorithm = vtkm::cont::Algorithm;
     Algorithm::Sort(componentArray);
@@ -74,7 +74,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
     auto temp = output.GetField("component").GetData();
-    temp.CopyTo(componentArray);
+    temp.AsArrayHandle(componentArray);
 
     using Algorithm = vtkm::cont::Algorithm;
     Algorithm::Sort(componentArray);

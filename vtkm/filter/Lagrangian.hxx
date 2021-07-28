@@ -19,15 +19,15 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/RK4Integrator.h>
+#include <vtkm/worklet/particleadvection/Stepper.h>
 
 #include <cstring>
 #include <sstream>
@@ -184,23 +184,22 @@ inline void Lagrangian::InitializeSeedPositions(const vtkm::cont::DataSet& input
   auto portal1 = BasisParticles.WritePortal();
   auto portal2 = BasisParticlesValidity.WritePortal();
 
-  vtkm::Id count = 0, id = 0;
-  for (int x = 0; x < this->SeedRes[0]; x++)
+  vtkm::Id id = 0;
+  for (int z = 0; z < this->SeedRes[2]; z++)
   {
-    vtkm::FloatDefault xi = static_cast<vtkm::FloatDefault>(x * x_spacing);
+    vtkm::FloatDefault zi = static_cast<vtkm::FloatDefault>(z * z_spacing);
     for (int y = 0; y < this->SeedRes[1]; y++)
     {
       vtkm::FloatDefault yi = static_cast<vtkm::FloatDefault>(y * y_spacing);
-      for (int z = 0; z < this->SeedRes[2]; z++)
+      for (int x = 0; x < this->SeedRes[0]; x++)
       {
-        vtkm::FloatDefault zi = static_cast<vtkm::FloatDefault>(z * z_spacing);
-        portal1.Set(count,
+        vtkm::FloatDefault xi = static_cast<vtkm::FloatDefault>(x * x_spacing);
+        portal1.Set(id,
                     vtkm::Particle(Vec3f(static_cast<vtkm::FloatDefault>(bounds.X.Min) + xi,
                                          static_cast<vtkm::FloatDefault>(bounds.Y.Min) + yi,
                                          static_cast<vtkm::FloatDefault>(bounds.Z.Min) + zi),
                                    id));
-        portal2.Set(count, 1);
-        count++;
+        portal2.Set(id, 1);
         id++;
       }
     }
@@ -277,13 +276,17 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-  vtkm::worklet::ParticleAdvection particleadvection;
-  vtkm::worklet::ParticleAdvectionResult res;
+  using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
 
-  GridEvalType gridEval(coords, cells, field);
-  RK4Type rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
+  vtkm::worklet::ParticleAdvection particleadvection;
+  vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
+
+  FieldType velocities(field);
+  GridEvalType gridEval(coords, cells, velocities);
+  Stepper rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
 
   res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
   auto particles = res.Particles;
@@ -302,9 +305,8 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     std::vector<Float64> xC, yC, zC;
     InitializeCoordinates(input, xC, yC, zC);
     outputData = dataSetBuilder.Create(xC, yC, zC);
-    vtkm::cont::DataSetFieldAdd dataSetFieldAdd;
-    dataSetFieldAdd.AddPointField(outputData, "valid", BasisParticlesValidity);
-    dataSetFieldAdd.AddPointField(outputData, "displacement", BasisParticlesDisplacement);
+    outputData.AddPointField("valid", BasisParticlesValidity);
+    outputData.AddPointField("displacement", BasisParticlesDisplacement);
 
     if (this->resetParticles)
     {
@@ -328,13 +330,20 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
 }
 
 //---------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Lagrangian::DoMapField(vtkm::cont::DataSet&,
-                                             const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                             const vtkm::filter::FieldMetadata&,
-                                             const vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool Lagrangian::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                     const vtkm::cont::Field& field,
+                                                     vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  return false;
+  if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 }
 } // namespace vtkm::filter

@@ -91,13 +91,12 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                                const PointCoordVecType& pts,
                                                CellShapeType shape,
-                                               const vtkm::exec::FunctorBase& worklet)
+                                               vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
   UNUSED(shape);
-  worklet.RaiseError(
-    "Shape type template must be specialized to compute the max aspect frobenius metric.");
+  ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
 }
 
@@ -109,17 +108,16 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                                const PointCoordVecType& pts,
                                                vtkm::CellShapeTagPolygon,
-                                               const vtkm::exec::FunctorBase& worklet)
+                                               vtkm::ErrorCode& ec)
 {
   if (numPts == 3)
     return vtkm::worklet::cellmetrics::CellAspectFrobeniusMetric<OutType>(
-      numPts, pts, vtkm::CellShapeTagTriangle(), worklet);
+      numPts, pts, vtkm::CellShapeTagTriangle(), ec);
   if (numPts == 4)
-    return CellMaxAspectFrobeniusMetric<OutType>(numPts, pts, vtkm::CellShapeTagQuad(), worklet);
+    return CellMaxAspectFrobeniusMetric<OutType>(numPts, pts, vtkm::CellShapeTagQuad(), ec);
   else
   {
-    worklet.RaiseError(
-      "Max aspect frobenius metric is not supported for (n<3)- or  (n>4)-vertex polygons.");
+    ec = vtkm::ErrorCode::InvalidCellMetric;
     return OutType(0.0);
   }
 }
@@ -129,11 +127,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                                const PointCoordVecType& pts,
                                                vtkm::CellShapeTagLine,
-                                               const vtkm::exec::FunctorBase& worklet)
+                                               vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
-  worklet.RaiseError("Max aspect frobenius metric is not supported for lines/edges.");
+  ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
 }
 
@@ -144,15 +142,15 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                                const PointCoordVecType& pts,
                                                vtkm::CellShapeTagTriangle,
-                                               const vtkm::exec::FunctorBase& worklet)
+                                               vtkm::ErrorCode& ec)
 {
   if (numPts != 3)
   {
-    worklet.RaiseError("Max aspect frobenius metric(triangle) requires 3 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
   return vtkm::worklet::cellmetrics::CellAspectFrobeniusMetric<OutType>(
-    numPts, pts, vtkm::CellShapeTagTriangle(), worklet);
+    numPts, pts, vtkm::CellShapeTagTriangle(), ec);
 }
 
 //The max aspect frobenius metric is not supported for pyramids.
@@ -160,11 +158,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                                const PointCoordVecType& pts,
                                                vtkm::CellShapeTagPyramid,
-                                               const vtkm::exec::FunctorBase& worklet)
+                                               vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
-  worklet.RaiseError("Max aspect frobenius metric is not supported for pyramids.");
+  ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
 }
 
@@ -183,11 +181,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                                const PointCoordVecType& pts,
                                                vtkm::CellShapeTagQuad,
-                                               const vtkm::exec::FunctorBase& worklet)
+                                               vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Max aspect frobenius metric(quad) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
   //The 4 edges of a quad
@@ -240,16 +238,16 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                                const PointCoordVecType& pts,
                                                vtkm::CellShapeTagTetra,
-                                               const vtkm::exec::FunctorBase& worklet)
+                                               vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Max aspect frobenius metric(tetrahedron) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
   return vtkm::worklet::cellmetrics::CellAspectFrobeniusMetric<OutType, PointCoordVecType>(
-    numPts, pts, vtkm::CellShapeTagTetra(), worklet);
+    numPts, pts, vtkm::CellShapeTagTetra(), ec);
 }
 
 // Computes the maximum aspect frobenius of a hexahedron.
@@ -265,11 +263,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                                const PointCoordVecType& pts,
                                                vtkm::CellShapeTagHexahedron,
-                                               const vtkm::exec::FunctorBase& worklet)
+                                               vtkm::ErrorCode& ec)
 {
   if (numPts != 8)
   {
-    worklet.RaiseError("Max aspect frobenius metric(hexahedron) requires 8 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -334,11 +332,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                                const PointCoordVecType& pts,
                                                vtkm::CellShapeTagWedge,
-                                               const vtkm::exec::FunctorBase& worklet)
+                                               vtkm::ErrorCode& ec)
 {
   if (numPts != 6)
   {
-    worklet.RaiseError("Max aspect frobenius metric(wedge) requires 6 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -358,12 +356,12 @@ VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
   //Return the maximum metric value among all 6 tets as the maximum aspect frobenius.
   const vtkm::IdComponent tetPts = 4;
   OutType max_aspect_frobenius = vtkm::worklet::cellmetrics::CellAspectFrobeniusMetric<OutType>(
-    tetPts, tetras[0], vtkm::CellShapeTagTetra(), worklet);
+    tetPts, tetras[0], vtkm::CellShapeTagTetra(), ec);
   OutType curr;
   for (vtkm::Id i = 1; i < 6; i++)
   {
     curr = vtkm::worklet::cellmetrics::CellAspectFrobeniusMetric<OutType>(
-      tetPts, tetras[i], vtkm::CellShapeTagTetra(), worklet);
+      tetPts, tetras[i], vtkm::CellShapeTagTetra(), ec);
     if (curr > max_aspect_frobenius)
       max_aspect_frobenius = curr;
   }

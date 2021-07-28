@@ -198,27 +198,29 @@ public:
     Precision low = vtkm::Min(u, vtkm::Min(v, w));
     Precision high = vtkm::Max(u, vtkm::Max(v, w));
 
-    bool invalid = (low < 0.) && (high > 0.);
-
     Precision det = u + v + w;
 
-    if (det == 0.)
-      invalid = true;
+    if (!((low < 0.) && (high > 0.)) && (det != 0.))
+    {
+      // Intersection is valid
+      const Precision Az = s[2] * A[k[2]];
+      const Precision Bz = s[2] * B[k[2]];
+      const Precision Cz = s[2] * C[k[2]];
 
-    const Precision Az = s[2] * A[k[2]];
-    const Precision Bz = s[2] * B[k[2]];
-    const Precision Cz = s[2] * C[k[2]];
+      det = 1.f / det;
 
-    det = 1.f / det;
+      u = u * det;
+      v = v * det;
 
-    u = u * det;
-    v = v * det;
-
-    distance = (u * Az + v * Bz + w * det * Cz);
-    u = v;
-    v = w * det;
-    if (invalid)
+      distance = (u * Az + v * Bz + w * det * Cz);
+      u = v;
+      v = w * det;
+    }
+    else
+    {
+      // Intersection is invalid
       distance = -1.;
+    }
   }
 
   template <typename Precision>
@@ -266,27 +268,29 @@ public:
     Precision low = vtkm::Min(u, vtkm::Min(v, w));
     Precision high = vtkm::Max(u, vtkm::Max(v, w));
 
-    bool invalid = (low < 0.) && (high > 0.);
-
     Precision det = u + v + w;
 
-    if (det == 0.)
-      invalid = true;
+    if (!((low < 0.) && (high > 0.)) && (det != 0.))
+    {
+      // Intersection is valid
+      const Precision Az = s[2] * A[k[2]];
+      const Precision Bz = s[2] * B[k[2]];
+      const Precision Cz = s[2] * C[k[2]];
 
-    const Precision Az = s[2] * A[k[2]];
-    const Precision Bz = s[2] * B[k[2]];
-    const Precision Cz = s[2] * C[k[2]];
+      det = 1.f / det;
 
-    det = 1.f / det;
+      u = u * det;
+      v = v * det;
 
-    u = u * det;
-    v = v * det;
-
-    distance = (u * Az + v * Bz + w * det * Cz);
-    u = v;
-    v = w * det;
-    if (invalid)
+      distance = (u * Az + v * Bz + w * det * Cz);
+      u = v;
+      v = w * det;
+    }
+    else
+    {
+      // Intersection is invalid
       distance = -1.;
+    }
   }
 }; //WaterTight
 
@@ -357,27 +361,30 @@ VTKM_EXEC inline void WaterTight::IntersectTri<vtkm::Float64>(const vtkm::Vec3f_
 
   vtkm::Float64 low = vtkm::Min(u, vtkm::Min(v, w));
   vtkm::Float64 high = vtkm::Max(u, vtkm::Max(v, w));
-  bool invalid = (low < 0.) && (high > 0.);
 
   vtkm::Float64 det = u + v + w;
 
-  if (det == 0.)
-    invalid = true;
+  if (!((low < 0.) && (high > 0.)) && (det != 0.))
+  {
+    // Intersection is valid
+    const vtkm::Float64 Az = Sz * A[kz];
+    const vtkm::Float64 Bz = Sz * B[kz];
+    const vtkm::Float64 Cz = Sz * C[kz];
 
-  const vtkm::Float64 Az = Sz * A[kz];
-  const vtkm::Float64 Bz = Sz * B[kz];
-  const vtkm::Float64 Cz = Sz * C[kz];
+    det = 1. / det;
 
-  det = 1. / det;
+    u = u * det;
+    v = v * det;
 
-  u = u * det;
-  v = v * det;
-
-  distance = (u * Az + v * Bz + w * det * Cz);
-  u = v;
-  v = w * det;
-  if (invalid)
+    distance = (u * Az + v * Bz + w * det * Cz);
+    u = v;
+    v = w * det;
+  }
+  else
+  {
+    // Intersection is invalid
     distance = -1.;
+  }
 }
 }
 }

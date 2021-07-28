@@ -19,11 +19,13 @@ namespace vtkm
 namespace cont
 {
 
+class CoordinateSystem;
+class Field;
+
 template <typename T, typename S>
 class ArrayHandle;
 
-class CoordinateSystem;
-class Field;
+class UnknownArrayHandle;
 
 template <vtkm::IdComponent>
 class CellSetStructured;
@@ -64,6 +66,13 @@ void CastAndCall(const vtkm::cont::ArrayHandle<T, U>& handle, Functor&& f, Args&
 {
   f(handle, std::forward<Args>(args)...);
 }
+
+/// A specialization of CastAndCall for UnknownArrayHandle.
+/// Since we have no hints on the types, use VTKM_DEFAULT_TYPE_LIST
+/// and VTKM_DEFAULT_STORAGE_LIST.
+// actually implemented in vtkm/cont/UnknownArrayHandle
+template <typename Functor, typename... Args>
+void CastAndCall(const UnknownArrayHandle& handle, Functor&& f, Args&&... args);
 
 /// A specialization of CastAndCall for basic CellSetStructured types,
 /// Since the type is already known no deduction is needed.

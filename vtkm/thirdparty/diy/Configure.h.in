@@ -20,16 +20,6 @@
 /* Use the diy library configured for VTM-m. */
 #cmakedefine01 VTKM_USE_EXTERNAL_DIY
 
-/* Whether to use MPI support in DIY */
-#if !defined(VTKM_ENABLE_MPI)
-# define VTKM_DIY_NO_MPI
-#endif
-
-/* initially, we disable DIY threads.
- * once we've sorted out how DIY threads and vtkm work together
- * we will make this configurable.*/
-#define VTKM_DIY_NO_THREADS
-
 /* Need to provide a way to for Serialziation
  * specializations to be injected into the correct
  * namespace. This solves the issue while allowing
@@ -40,6 +30,5 @@
 #else
 # define mangled_diy_namespace vtkmdiy
 #endif
-
 
 #endif

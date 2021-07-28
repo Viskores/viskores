@@ -48,7 +48,6 @@ void createVectors(std::vector<vtkm::Vec<T, 3>>& vecs1, std::vector<vtkm::Vec<T,
 
   //Test some other vector combinations
   std::uniform_real_distribution<vtkm::Float64> randomDist(-10.0, 10.0);
-  randomDist(randGenerator);
 
   for (int i = 0; i < 100; i++)
   {
@@ -67,8 +66,8 @@ void TestCrossProduct()
 
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> inputArray1, inputArray2;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> outputArray;
-  inputArray1 = vtkm::cont::make_ArrayHandle(inputVecs1);
-  inputArray2 = vtkm::cont::make_ArrayHandle(inputVecs2);
+  inputArray1 = vtkm::cont::make_ArrayHandle(inputVecs1, vtkm::CopyFlag::Off);
+  inputArray2 = vtkm::cont::make_ArrayHandle(inputVecs2, vtkm::CopyFlag::Off);
 
   vtkm::worklet::CrossProduct crossProductWorklet;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::CrossProduct> dispatcherCrossProduct(

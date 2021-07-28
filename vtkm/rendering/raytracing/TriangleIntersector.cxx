@@ -34,7 +34,7 @@ class WaterTightLeafIntersector
 {
 public:
   using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
-  using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
+  using Id4ArrayPortal = typename Id4Handle::ReadPortalType;
   Id4ArrayPortal Triangles;
 
 public:
@@ -87,7 +87,7 @@ class MollerTriLeafIntersector
   //protected:
 public:
   using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
-  using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
+  using Id4ArrayPortal = typename Id4Handle::ReadPortalType;
   Id4ArrayPortal Triangles;
 
 public:
@@ -242,19 +242,27 @@ public:
   {
   private:
     Precision MinScalar;
-    Precision invDeltaScalar;
+    Precision InvDeltaScalar;
+    bool Normalize;
 
   public:
     VTKM_CONT
     LerpScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
       : MinScalar(minScalar)
     {
-      //Make sure the we don't divide by zero on
-      //something like an iso-surface
-      if (maxScalar - MinScalar != 0.f)
-        invDeltaScalar = 1.f / (maxScalar - MinScalar);
+      Normalize = true;
+      if (minScalar >= maxScalar)
+      {
+        // support the scalar renderer
+        this->Normalize = false;
+        this->InvDeltaScalar = 1;
+      }
       else
-        invDeltaScalar = 0.f;
+      {
+        //Make sure the we don't divide by zero on
+        //something like an iso-surface
+        this->InvDeltaScalar = 1.f / (maxScalar - this->MinScalar);
+      }
     }
     typedef void ControlSignature(FieldIn,
                                   FieldIn,
@@ -282,7 +290,10 @@ public:
       Precision cScalar = Precision(scalars.Get(indices[3]));
       lerpedScalar = aScalar * n + bScalar * u + cScalar * v;
       //normalize
-      lerpedScalar = (lerpedScalar - MinScalar) * invDeltaScalar;
+      if (Normalize)
+      {
+        lerpedScalar = (lerpedScalar - this->MinScalar) * this->InvDeltaScalar;
+      }
     }
   }; //class LerpScalar
 
@@ -291,19 +302,27 @@ public:
   {
   private:
     Precision MinScalar;
-    Precision invDeltaScalar;
+    Precision InvDeltaScalar;
+    bool Normalize;
 
   public:
     VTKM_CONT
     NodalScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
       : MinScalar(minScalar)
     {
-      //Make sure the we don't divide by zero on
-      //something like an iso-surface
-      if (maxScalar - MinScalar != 0.f)
-        invDeltaScalar = 1.f / (maxScalar - MinScalar);
+      Normalize = true;
+      if (minScalar >= maxScalar)
+      {
+        // support the scalar renderer
+        Normalize = false;
+        this->InvDeltaScalar = Precision(0.f);
+      }
       else
-        invDeltaScalar = 1.f / minScalar;
+      {
+        //Make sure the we don't divide by zero on
+        //something like an iso-surface
+        this->InvDeltaScalar = 1.f / (maxScalar - this->MinScalar);
+      }
     }
 
     typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
@@ -323,8 +342,10 @@ public:
       //Todo: one normalization
       scalar = Precision(scalars.Get(indices[0]));
 
-      //normalize
-      scalar = (scalar - MinScalar) * invDeltaScalar;
+      if (Normalize)
+      {
+        scalar = (scalar - this->MinScalar) * this->InvDeltaScalar;
+      }
     }
   }; //class LerpScalar
 
@@ -356,7 +377,7 @@ public:
                 rays.U,
                 rays.V,
                 rays.Scalar,
-                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
                 triangles);
     }
     else
@@ -365,7 +386,7 @@ public:
         NodalScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
         .Invoke(rays.HitIdx,
                 rays.Scalar,
-                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
                 triangles);
     }
   } // Run

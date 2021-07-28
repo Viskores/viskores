@@ -314,9 +314,10 @@ public:
   void Print2DArray(const std::string& str, const ArrayType& arr, vtkm::Id dimX)
   {
     std::cerr << str << std::endl;
+    auto portal = arr.ReadPortal();
     for (vtkm::Id i = 0; i < arr.GetNumberOfValues(); i++)
     {
-      std::cerr << arr.ReadPortal().Get(i) << "  ";
+      std::cerr << portal.Get(i) << "  ";
       if (i % dimX == dimX - 1)
       {
         std::cerr << std::endl;
@@ -337,9 +338,10 @@ protected:
     }
     else
     {
-      level = static_cast<vtkm::Id>(
-        vtkm::Floor(1.0 + vtkm::Log2(static_cast<vtkm::Float64>(sigInLen) /
-                                     static_cast<vtkm::Float64>(filterLength))));
+      level =
+        static_cast<vtkm::Id>(vtkm::Floor(1.0 +
+                                          vtkm::Log2(static_cast<vtkm::Float64>(sigInLen) /
+                                                     static_cast<vtkm::Float64>(filterLength))));
     }
   }
 

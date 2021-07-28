@@ -86,13 +86,13 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
   {
     vtkm::worklet::PointGradient gradient;
     outArray = gradient.Run(
-      vtkm::filter::ApplyPolicyCellSet(cells, policy), coords, inField, gradientfields);
+      vtkm::filter::ApplyPolicyCellSet(cells, policy, *this), coords, inField, gradientfields);
   }
   else
   {
     vtkm::worklet::CellGradient gradient;
     outArray = gradient.Run(
-      vtkm::filter::ApplyPolicyCellSet(cells, policy), coords, inField, gradientfields);
+      vtkm::filter::ApplyPolicyCellSet(cells, policy, *this), coords, inField, gradientfields);
   }
   if (!this->RowOrdering)
   {

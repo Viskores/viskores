@@ -20,13 +20,13 @@
 
 #include <vtkm/cont/CellSetList.h>
 
-#define VTK_M_OLD_CELL_LIST_DEFINITION(name)                                                       \
-  struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(                                                       \
-    1.6,                                                                                           \
-    "CellSetListTag" #name " replaced by CellSetList" #name ". "                                   \
-    "Note that the new CellSetList" #name " cannot be subclassed.") CellSetListTag##name           \
-    : vtkm::internal::ListAsListTag<CellSetList##name>                                             \
-  {                                                                                                \
+#define VTK_M_OLD_CELL_LIST_DEFINITION(name)                                             \
+  struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(                                             \
+    1.6,                                                                                 \
+    "CellSetListTag" #name " replaced by CellSetList" #name ". "                         \
+    "Note that the new CellSetList" #name " cannot be subclassed.") CellSetListTag##name \
+    : vtkm::internal::ListAsListTag<CellSetList##name>                                   \
+  {                                                                                      \
   }
 
 namespace vtkm

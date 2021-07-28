@@ -28,6 +28,7 @@
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/ScatterPermutation.h>
 
+#include <vtkm/worklet/WorkletReduceByKey.h>
 #include <vtkm/worklet/contour/CommonState.h>
 #include <vtkm/worklet/contour/MarchingCellTables.h>
 #include <vtkm/worklet/gradient/PointGradient.h>
@@ -118,18 +119,12 @@ public:
 class EdgeWeightGenerateMetaData : vtkm::cont::ExecutionObjectBase
 {
 public:
-  template <typename DeviceAdapter>
   class ExecObject
   {
     template <typename FieldType>
-    struct PortalTypes
-    {
-      using HandleType = vtkm::cont::ArrayHandle<FieldType>;
-      using ExecutionTypes = typename HandleType::template ExecutionTypes<DeviceAdapter>;
-
-      using Portal = typename ExecutionTypes::Portal;
-      using PortalConst = typename ExecutionTypes::PortalConst;
-    };
+    using ReadPortalType = typename vtkm::cont::ArrayHandle<FieldType>::ReadPortalType;
+    template <typename FieldType>
+    using WritePortalType = typename vtkm::cont::ArrayHandle<FieldType>::WritePortalType;
 
   public:
     ExecObject() = default;
@@ -140,19 +135,20 @@ public:
                vtkm::cont::ArrayHandle<vtkm::Id2>& interpIds,
                vtkm::cont::ArrayHandle<vtkm::Id>& interpCellIds,
                vtkm::cont::ArrayHandle<vtkm::UInt8>& interpContourId,
+               vtkm::cont::DeviceAdapterId device,
                vtkm::cont::Token& token)
-      : InterpWeightsPortal(interpWeights.PrepareForOutput(3 * size, DeviceAdapter(), token))
-      , InterpIdPortal(interpIds.PrepareForOutput(3 * size, DeviceAdapter(), token))
-      , InterpCellIdPortal(interpCellIds.PrepareForOutput(3 * size, DeviceAdapter(), token))
-      , InterpContourPortal(interpContourId.PrepareForOutput(3 * size, DeviceAdapter(), token))
+      : InterpWeightsPortal(interpWeights.PrepareForOutput(3 * size, device, token))
+      , InterpIdPortal(interpIds.PrepareForOutput(3 * size, device, token))
+      , InterpCellIdPortal(interpCellIds.PrepareForOutput(3 * size, device, token))
+      , InterpContourPortal(interpContourId.PrepareForOutput(3 * size, device, token))
     {
       // Interp needs to be 3 times longer than size as they are per point of the
       // output triangle
     }
-    typename PortalTypes<vtkm::FloatDefault>::Portal InterpWeightsPortal;
-    typename PortalTypes<vtkm::Id2>::Portal InterpIdPortal;
-    typename PortalTypes<vtkm::Id>::Portal InterpCellIdPortal;
-    typename PortalTypes<vtkm::UInt8>::Portal InterpContourPortal;
+    WritePortalType<vtkm::FloatDefault> InterpWeightsPortal;
+    WritePortalType<vtkm::Id2> InterpIdPortal;
+    WritePortalType<vtkm::Id> InterpCellIdPortal;
+    WritePortalType<vtkm::UInt8> InterpContourPortal;
   };
 
   VTKM_CONT
@@ -169,15 +165,16 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
+  VTKM_CONT ExecObject PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                           vtkm::cont::Token& token)
   {
-    return ExecObject<DeviceAdapter>(this->Size,
-                                     this->InterpWeights,
-                                     this->InterpIds,
-                                     this->InterpCellIds,
-                                     this->InterpContourId,
-                                     token);
+    return ExecObject(this->Size,
+                      this->InterpWeights,
+                      this->InterpIds,
+                      this->InterpCellIds,
+                      this->InterpContourId,
+                      device,
+                      token);
   }
 
 private:
@@ -219,12 +216,11 @@ public:
             typename FieldInType, // Vec-like, one per input point
             typename ClassifyTableType,
             typename TriTableType,
-            typename IndicesVecType,
-            typename DeviceAdapter>
+            typename IndicesVecType>
   VTKM_EXEC void operator()(const CellShape shape,
                             const IsoValuesType& isovalues,
                             const FieldInType& fieldIn, // Input point field defining the contour
-                            const EdgeWeightGenerateMetaData::ExecObject<DeviceAdapter>& metaData,
+                            const EdgeWeightGenerateMetaData::ExecObject& metaData,
                             const ClassifyTableType& classifyTable,
                             const TriTableType& triTable,
                             vtkm::Id inputCellId,
@@ -614,10 +610,10 @@ vtkm::cont::CellSetSingleType<> execute(
   vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
   vtkm::worklet::contour::CommonState& sharedState)
 {
+  using vtkm::worklet::contour::MapPointField;
   using vtkm::worklet::marching_cells::ClassifyCell;
   using vtkm::worklet::marching_cells::EdgeWeightGenerate;
   using vtkm::worklet::marching_cells::EdgeWeightGenerateMetaData;
-  using vtkm::worklet::contour::MapPointField;
 
   vtkm::worklet::marching_cells::CellClassifyTable classTable;
   vtkm::worklet::marching_cells::TriangleGenerationTable triTable;
@@ -625,7 +621,8 @@ vtkm::cont::CellSetSingleType<> execute(
   // Setup the invoker
   vtkm::cont::Invoker invoker;
 
-  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle = vtkm::cont::make_ArrayHandle(isovalues);
+  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle =
+    vtkm::cont::make_ArrayHandle(isovalues, vtkm::CopyFlag::Off);
 
   // Call the ClassifyCell functor to compute the Marching Cubes case numbers
   // for each cell, and the number of vertices to be generated

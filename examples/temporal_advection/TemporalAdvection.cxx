@@ -18,8 +18,8 @@
 
 #include <vtkm/filter/Pathline.h>
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 int main(int argc, char** argv)
 {
@@ -31,20 +31,23 @@ int main(int argc, char** argv)
   // These example with these datasets can be used for this example as :
   // ./Temporal_Advection DoubleGyre_0.vtk 0.0 DoubleGyre_5.vtk 5.0
   //                      velocity 500 0.025 pathlines.vtk
-  std::cout
-    << "Parameters : [options] slice1 time1 slice2 time2 field num_steps step_size output\n"
-    << "slice1 : Time slice 1, sample data in vtk-m/data/temporal_datasets/Double_Gyre0.vtk\n"
-    << "time1 : simulation time for slice 1, for sample data use 0.0\n"
-    << "slice2 : Time slice 2, sample data in vtk-m/data/temporal_datasets/Double_Gyre5.vtk\n"
-    << "time2 : simulation time for slice 2, for sample data use 5.0\n"
-    << "field : active velocity field in the data set, for sample data use 'velocity'\n"
-    << "num_steps : maximum number of steps for advection, for sample data use 500\n"
-    << "step_size : the size of a single step during advection, for sample data use 0.025\n"
-    << "output : the name of the output file" << std::endl;
-
   if (argc < 8)
   {
-    std::cout << "Wrong number of parameters provided" << std::endl;
+    std::cout
+      << "Usage:\n"
+      << "./Temporal_Advection slice1 time1 slice2 time2 field num_steps step_size output\n"
+      << "\tslice1 : Time slice 1, sample data in vtk-m/data/data/rectilinear/Double_Gyre0.vtk\n"
+      << "\ttime1 : simulation time for slice 1, for sample data use 0.0\n"
+      << "\tslice2 : Time slice 2, sample data in vtk-m/data/data/rectilinear/Double_Gyre5.vtk\n"
+      << "\ttime2 : simulation time for slice 2, for sample data use 5.0\n"
+      << "\tfield : active velocity field in the data set, for sample data use 'velocity'\n"
+      << "\tnum_steps : maximum number of steps for advection, for sample data use 500\n"
+      << "\tstep_size : the size of a single step during advection, for sample data use 0.025\n"
+      << "\toutput : the name of the output file" << std::endl;
+    std::cout << "Example:\n";
+    std::cout << "./Temporal_Advection ~/vtk-m/data/data/rectilinear/DoubleGyre_0.vtk 0.0 "
+                 "~/vtk-m/data/data/rectilinear/DoubleGyre_5.vtk 5.0 velocity  500 0.025 "
+                 "pathlines.vtk\n";
     exit(EXIT_FAILURE);
   }
 
@@ -63,10 +66,10 @@ int main(int argc, char** argv)
   stepSize = static_cast<vtkm::Float32>(atof(argv[7]));
   outputName = std::string(argv[8]);
 
-  vtkm::io::reader::VTKDataSetReader reader1(datasetName1);
+  vtkm::io::VTKDataSetReader reader1(datasetName1);
   vtkm::cont::DataSet ds1 = reader1.ReadDataSet();
 
-  vtkm::io::reader::VTKDataSetReader reader2(datasetName2);
+  vtkm::io::VTKDataSetReader reader2(datasetName2);
   vtkm::cont::DataSet ds2 = reader2.ReadDataSet();
 
   // Use the coordinate system as seeds for performing advection
@@ -77,7 +80,7 @@ int main(int argc, char** argv)
   vtkm::Id numPts = pts.GetNumberOfValues();
   seeds.Allocate(numPts);
   auto ptsPortal = pts.ReadPortal();
-  auto seedPortal = seeds.ReadPortal();
+  auto seedPortal = seeds.WritePortal();
   for (vtkm::Id i = 0; i < numPts; i++)
   {
     vtkm::Particle p;
@@ -109,7 +112,7 @@ int main(int argc, char** argv)
   // The way to verify if the code produces correct streamlines
   // is to do a visual test by using VisIt/ParaView to visualize
   // the file written by this method.
-  vtkm::io::writer::VTKDataSetWriter writer(outputName);
+  vtkm::io::VTKDataSetWriter writer(outputName);
   writer.WriteDataSet(output);
   return 0;
 }

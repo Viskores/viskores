@@ -226,4 +226,4 @@ vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker();
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_filter_RuntimeDeviceTracker_h
+#endif //vtk_m_cont_RuntimeDeviceTracker_h

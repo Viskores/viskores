@@ -17,6 +17,6 @@ add_subdirectory(internal)
 vtkm_declare_headers(${headers})
 
 #-----------------------------------------------------------------------------
-if (TARGET vtkm::openmp)
+if (TARGET vtkm::openmp AND VTKm_ENABLE_TESTING)
   add_subdirectory(testing)
 endif()

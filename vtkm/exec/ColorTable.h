@@ -10,85 +10,121 @@
 #ifndef vtk_m_exec_ColorTable_h
 #define vtk_m_exec_ColorTable_h
 
-#include <vtkm/VirtualObjectBase.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/Types.h>
+
+namespace vtkm
+{
+
+enum struct ColorSpace
+{
+  RGB,
+  HSV,
+  HSVWrap,
+  Lab,
+  Diverging
+};
+
+} // namespace vtkm
 
 namespace vtkm
 {
 namespace exec
 {
 
-class VTKM_ALWAYS_EXPORT ColorTableBase : public vtkm::VirtualObjectBase
+class VTKM_ALWAYS_EXPORT ColorTable
 {
 public:
-  inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(double) const;
+  inline VTKM_EXEC vtkm::Vec3f_32 MapThroughColorSpace(vtkm::Float64) const;
 
-  VTKM_EXEC virtual vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                             const vtkm::Vec<float, 3>& rgb2,
-                                                             float weight) const = 0;
+  inline VTKM_EXEC vtkm::Vec3f_32 MapThroughColorSpace(const vtkm::Vec3f_32& rgb1,
+                                                       const vtkm::Vec3f_32& rgb2,
+                                                       vtkm::Float32 weight) const;
 
-  inline VTKM_EXEC float MapThroughOpacitySpace(double value) const;
+  inline VTKM_EXEC vtkm::Float32 MapThroughOpacitySpace(vtkm::Float64 value) const;
 
-  double const* ColorNodes = nullptr;
-  vtkm::Vec<float, 3> const* RGB = nullptr;
+  vtkm::ColorSpace Space;
 
-  double const* ONodes = nullptr;
-  float const* Alpha = nullptr;
-  vtkm::Vec<float, 2> const* MidSharp = nullptr;
+  vtkm::Float64 const* ColorNodes = nullptr;
+  vtkm::Vec3f_32 const* RGB = nullptr;
+
+  vtkm::Float64 const* ONodes = nullptr;
+  vtkm::Float32 const* Alpha = nullptr;
+  vtkm::Vec2f_32 const* MidSharp = nullptr;
 
   vtkm::Int32 ColorSize = 0;
   vtkm::Int32 OpacitySize = 0;
 
-  vtkm::Vec<float, 3> NaNColor = { 0.5f, 0.0f, 0.0f };
-  vtkm::Vec<float, 3> BelowRangeColor = { 0.0f, 0.0f, 0.0f };
-  vtkm::Vec<float, 3> AboveRangeColor = { 0.0f, 0.0f, 0.0f };
+  vtkm::Vec3f_32 NaNColor = { 0.5f, 0.0f, 0.0f };
+  vtkm::Vec3f_32 BelowRangeColor = { 0.0f, 0.0f, 0.0f };
+  vtkm::Vec3f_32 AboveRangeColor = { 0.0f, 0.0f, 0.0f };
 
   bool UseClamping = true;
 
 private:
-  inline VTKM_EXEC void FindColors(double value,
-                                   vtkm::Vec<float, 3>& first,
-                                   vtkm::Vec<float, 3>& second,
-                                   float& weight) const;
+  inline VTKM_EXEC void FindColors(vtkm::Float64 value,
+                                   vtkm::Vec3f_32& first,
+                                   vtkm::Vec3f_32& second,
+                                   vtkm::Float32& weight) const;
+
+  inline VTKM_EXEC vtkm::Vec3f_32 MapThroughColorSpaceRGB(const vtkm::Vec3f_32& rgb1,
+                                                          const vtkm::Vec3f_32& rgb2,
+                                                          vtkm::Float32 weight) const;
+
+  inline VTKM_EXEC vtkm::Vec3f_32 MapThroughColorSpaceHSV(const vtkm::Vec3f_32& rgb1,
+                                                          const vtkm::Vec3f_32& rgb2,
+                                                          vtkm::Float32 weight) const;
+
+  inline VTKM_EXEC vtkm::Vec3f_32 MapThroughColorSpaceHSVWrap(const vtkm::Vec3f_32& rgb1,
+                                                              const vtkm::Vec3f_32& rgb2,
+                                                              vtkm::Float32 weight) const;
+
+  inline VTKM_EXEC vtkm::Vec3f_32 MapThroughColorSpaceLab(const vtkm::Vec3f_32& rgb1,
+                                                          const vtkm::Vec3f_32& rgb2,
+                                                          vtkm::Float32 weight) const;
+
+  inline VTKM_EXEC vtkm::Vec3f_32 MapThroughColorSpaceDiverging(const vtkm::Vec3f_32& rgb1,
+                                                                const vtkm::Vec3f_32& rgb2,
+                                                                vtkm::Float32 weight) const;
 };
 
-class VTKM_ALWAYS_EXPORT ColorTableRGB final : public ColorTableBase
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use vtkm::exec::ColorTable.") ColorTableBase
+  : public vtkm::exec::ColorTable
 {
-public:
-  inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                            const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const;
 };
 
-class VTKM_ALWAYS_EXPORT ColorTableHSV final : public ColorTableBase
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use vtkm::exec::ColorTable.") ColorTableRGB final
+  : public ColorTable
 {
 public:
-  inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                            const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const;
+  ColorTableRGB() { this->Space = vtkm::ColorSpace::RGB; }
 };
 
-class VTKM_ALWAYS_EXPORT ColorTableHSVWrap final : public ColorTableBase
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use vtkm::exec::ColorTable.") ColorTableHSV final
+  : public ColorTable
 {
 public:
-  inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                            const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const;
+  ColorTableHSV() { this->Space = vtkm::ColorSpace::HSV; }
 };
 
-class VTKM_ALWAYS_EXPORT ColorTableLab final : public ColorTableBase
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use vtkm::exec::ColorTable.") ColorTableHSVWrap final
+  : public ColorTable
 {
 public:
-  inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                            const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const;
+  ColorTableHSVWrap() { this->Space = vtkm::ColorSpace::HSVWrap; }
 };
 
-class VTKM_ALWAYS_EXPORT ColorTableDiverging final : public ColorTableBase
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use vtkm::exec::ColorTable.") ColorTableLab final
+  : public ColorTable
 {
 public:
-  inline VTKM_EXEC vtkm::Vec<float, 3> MapThroughColorSpace(const vtkm::Vec<float, 3>& rgb1,
-                                                            const vtkm::Vec<float, 3>& rgb2,
-                                                            float weight) const;
+  ColorTableLab() { this->Space = vtkm::ColorSpace::Lab; }
+};
+
+class VTKM_ALWAYS_EXPORT ColorTableDiverging final : public ColorTable
+{
+public:
+  ColorTableDiverging() { this->Space = vtkm::ColorSpace::Diverging; }
 };
 }
 }

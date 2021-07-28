@@ -1,12 +1,13 @@
 
 # Build on centos7 with CUDA and test on rhel8 and centos7
-# gcc 4.8
-build:centos7_gcc48:
+# gcc 7.3.1
+build:centos7_gcc73:
   tags:
     - build
     - vtkm
     - docker
     - linux
+    - cuda-rt
     - large-memory
   extends:
     - .centos7
@@ -15,38 +16,40 @@ build:centos7_gcc48:
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"
-    VTKM_SETTINGS: "cuda+turing+32bit_ids"
+    VTKM_SETTINGS: "cuda+turing+32bit_ids+no_rendering"
 
-test:centos7_gcc48:
+test:centos7_gcc73:
   tags:
     - test
-    - cuda-rt
-    - turing
     - vtkm
     - docker
     - linux
+    - cuda-rt
+    - turing
   extends:
     - .centos7
     - .cmake_test_linux
     - .only-default
   dependencies:
-    - build:centos7_gcc48
+    - build:centos7_gcc73
   needs:
-    - build:centos7_gcc48
+    - build:centos7_gcc73
 
 test:rhel8_test_centos7:
   tags:
     - test
-    - cuda-rt
-    - turing
     - vtkm
     - docker
     - linux
+    - cuda-rt
+    - turing
   extends:
     - .rhel8
     - .cmake_test_linux
     - .only-default
+  variables:
+      CTEST_EXCLUSIONS: "built_against_test_install"
   dependencies:
-    - build:centos7_gcc48
+    - build:centos7_gcc73
   needs:
-    - build:centos7_gcc48
+    - build:centos7_gcc73

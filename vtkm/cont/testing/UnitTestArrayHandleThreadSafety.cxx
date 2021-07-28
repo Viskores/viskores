@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleExtractComponent.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/Token.h>
@@ -18,7 +19,9 @@
 #include <vtkm/cont/testing/Testing.h>
 
 #include <array>
+#include <chrono>
 #include <future>
+#include <thread>
 
 namespace
 {
@@ -35,7 +38,7 @@ bool IncrementArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
   auto portal = array.PrepareForInPlace(vtkm::cont::DeviceAdapterTagSerial{}, token);
   if (portal.GetNumberOfValues() != ARRAY_SIZE)
   {
-    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues();
+    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues() << std::endl;
     return false;
   }
 
@@ -55,13 +58,49 @@ bool IncrementArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 }
 
 template <typename Storage>
+bool IncrementArrayOrdered(vtkm::cont::ArrayHandle<ValueType, Storage> array,
+                           vtkm::cont::Token&& token_,
+                           std::size_t threadNum)
+{
+  // Make sure the Token is moved to the proper scope.
+  vtkm::cont::Token token = std::move(token_);
+
+  // Sleep for a bit to make sure that threads at the end wait for threads before that
+  // are sleeping.
+  std::this_thread::sleep_for(
+    std::chrono::milliseconds(10 * static_cast<long long>(NUM_THREADS - threadNum)));
+
+  auto portal = array.PrepareForInPlace(vtkm::cont::DeviceAdapterTagSerial{}, token);
+  if (portal.GetNumberOfValues() != ARRAY_SIZE)
+  {
+    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues() << std::endl;
+    return false;
+  }
+
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+  {
+    ValueType value = portal.Get(index);
+    ValueType base = TestValue(index, ValueType{});
+    if (!test_equal(value, base + static_cast<ValueType>(threadNum)))
+    {
+      std::cout << "!!!!! Unexpected value in array: " << value << std::endl;
+      std::cout << "!!!!! ArrayHandle access likely out of order." << std::endl;
+      return false;
+    }
+    portal.Set(index, value + 1);
+  }
+
+  return true;
+}
+
+template <typename Storage>
 bool CheckArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 {
   vtkm::cont::Token token;
   auto portal = array.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, token);
   if (portal.GetNumberOfValues() != ARRAY_SIZE)
   {
-    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues();
+    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues() << std::endl;
     return false;
   }
 
@@ -86,7 +125,7 @@ bool DecrementArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
   auto portal = array.PrepareForInPlace(vtkm::cont::DeviceAdapterTagSerial{}, token);
   if (portal.GetNumberOfValues() != ARRAY_SIZE)
   {
-    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues();
+    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues() << std::endl;
     return false;
   }
 
@@ -181,36 +220,60 @@ void ThreadsDecrementArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 }
 
 template <typename Storage>
-void InvalidateControlPortal(vtkm::cont::ArrayHandle<ValueType, Storage> array)
+void ThreadsIncrementToArrayOrdered(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 {
-  std::cout << "  Starting invalidate control portal" << std::endl;
-  auto writePortal = array.WritePortal();
+  VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE);
+  SetPortal(array.WritePortal());
 
-  {
-    // PrepareForInPlace should invalidate the local control portal. It should work, but
-    // further use of writePortal will be invalid.
-    vtkm::cont::Token token;
-    array.PrepareForInPlace(vtkm::cont::DeviceAdapterTagSerial{}, token);
-
-#if 0
-    std::cout << "    This should result in an error in the log and possibly a crash." << std::endl;
-    // Unfortunately, there is no way to check this other than visual inspection or outright crash
-    writePortal.Get(0);
-#endif
-  }
-
-  auto readPortal = array.ReadPortal();
-
+  std::cout << "  Starting ordered write threads" << std::endl;
+  std::array<decltype(std::async(std::launch::async, IncrementArray<Storage>, array)), NUM_THREADS>
+    futures;
+  for (std::size_t index = 0; index < NUM_THREADS; ++index)
   {
     vtkm::cont::Token token;
-    array.PrepareForInPlace(vtkm::cont::DeviceAdapterTagSerial{}, token);
-
-#if 0
-    std::cout << "    This should result in an error in the log and possibly a crash." << std::endl;
-    // Unfortunately, there is no way to check this other than visual inspection or outright crash
-    readPortal.Get(0);
-#endif
+    array.Enqueue(token);
+    futures[index] = std::async(
+      std::launch::async, IncrementArrayOrdered<Storage>, array, std::move(token), index);
   }
+
+  std::cout << "  Wait for threads to complete" << std::endl;
+  for (std::size_t index = 0; index < NUM_THREADS; ++index)
+  {
+    bool futureResult = futures[index].get();
+    VTKM_TEST_ASSERT(futureResult, "Failure in IncrementArray");
+  }
+}
+
+template <typename Storage>
+void AllocateQueuedArray(vtkm::cont::ArrayHandle<ValueType, Storage>& array)
+{
+  std::cout << "  Check allocating queued array." << std::endl;
+
+  // We have had instances where a PrepareForOutput that resized the array would lock
+  // up even when the given Token had the lock because the allocation used a different
+  // token. This regression tests makes sure we don't reintroduce that.
+
+  vtkm::cont::Token token;
+
+  array.Enqueue(token);
+
+  // If we deadlock in this call, then there is probably an issue with the allocation
+  // not waiting for write access correctly.
+  auto writePortal =
+    array.PrepareForOutput(ARRAY_SIZE * 2, vtkm::cont::DeviceAdapterTagSerial{}, token);
+  VTKM_TEST_ASSERT(writePortal.GetNumberOfValues() == ARRAY_SIZE * 2);
+  SetPortal(writePortal);
+
+  token.DetachFromAll();
+  CheckPortal(array.ReadPortal());
+}
+
+template <typename S1, typename S2>
+void AllocateQueuedArray(
+  vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagPermutation<S1, S2>>&)
+{
+  // Permutation array cannot be resized.
+  std::cout << "  Check allocating queued array... skipping" << std::endl;
 }
 
 template <typename Storage>
@@ -219,7 +282,8 @@ void DoThreadSafetyTest(vtkm::cont::ArrayHandle<ValueType, Storage> array)
   ThreadsIncrementToArray(array);
   ThreadsCheckArray(array);
   ThreadsDecrementArray(array);
-  InvalidateControlPortal(array);
+  ThreadsIncrementToArrayOrdered(array);
+  AllocateQueuedArray(array);
 }
 
 void DoTest()
@@ -228,12 +292,18 @@ void DoTest()
   vtkm::cont::ArrayHandle<ValueType> basicArray;
   DoThreadSafetyTest(basicArray);
 
-  std::cout << "Fancy array handle." << std::endl;
+  std::cout << "Fancy array handle 1." << std::endl;
   vtkm::cont::ArrayHandle<ValueType> valueArray;
   valueArray.Allocate(ARRAY_SIZE);
-  auto fancyArray =
+  auto fancyArray1 =
     vtkm::cont::make_ArrayHandlePermutation(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), valueArray);
-  DoThreadSafetyTest(fancyArray);
+  DoThreadSafetyTest(fancyArray1);
+
+  std::cout << "Fancy array handle 2." << std::endl;
+  vtkm::cont::ArrayHandle<vtkm::Vec<ValueType, 3>> vecArray;
+  vecArray.Allocate(ARRAY_SIZE);
+  auto fancyArray2 = vtkm::cont::make_ArrayHandleExtractComponent(vecArray, 0);
+  DoThreadSafetyTest(fancyArray2);
 }
 
 } // anonymous namespace

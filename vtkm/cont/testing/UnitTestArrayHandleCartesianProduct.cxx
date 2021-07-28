@@ -44,15 +44,18 @@ void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x,
 
   //Make sure the values are correct.
   vtkm::Vec<T, 3> val;
+  auto xPortal = x.ReadPortal();
+  auto yPortal = y.ReadPortal();
+  auto zPortal = z.ReadPortal();
+  auto cpPortal = cpArray.ReadPortal();
   for (vtkm::Id i = 0; i < n; i++)
   {
     vtkm::Id idx0 = (i % (nx * ny)) % nx;
     vtkm::Id idx1 = (i % (nx * ny)) / nx;
     vtkm::Id idx2 = i / (nx * ny);
 
-    val =
-      vtkm::Vec<T, 3>(x.ReadPortal().Get(idx0), y.ReadPortal().Get(idx1), z.ReadPortal().Get(idx2));
-    VTKM_TEST_ASSERT(test_equal(cpArray.ReadPortal().Get(i), val), "Wrong value in array");
+    val = vtkm::Vec<T, 3>(xPortal.Get(idx0), yPortal.Get(idx1), zPortal.Get(idx2));
+    VTKM_TEST_ASSERT(test_equal(cpPortal.Get(i), val), "Wrong value in array");
   }
 }
 
@@ -80,9 +83,9 @@ void RunTest()
         createArr(Y, nY);
         createArr(Z, nZ);
 
-        ArrayHandleCPBasic(vtkm::cont::make_ArrayHandle(X),
-                           vtkm::cont::make_ArrayHandle(Y),
-                           vtkm::cont::make_ArrayHandle(Z));
+        ArrayHandleCPBasic(vtkm::cont::make_ArrayHandle(X, vtkm::CopyFlag::Off),
+                           vtkm::cont::make_ArrayHandle(Y, vtkm::CopyFlag::Off),
+                           vtkm::cont::make_ArrayHandle(Z, vtkm::CopyFlag::Off));
       }
     }
   }

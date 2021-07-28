@@ -26,13 +26,13 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleBitField.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/SurfaceNormals.h>
@@ -48,14 +48,6 @@
 namespace
 {
 
-struct TestPolicy : public vtkm::filter::PolicyBase<TestPolicy>
-{
-  using StructuredCellSetList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
-  using UnstructuredCellSetList = vtkm::List<vtkm::cont::CellSetSingleType<>>;
-  using AllCellSetList = vtkm::ListAppend<StructuredCellSetList, UnstructuredCellSetList>;
-  using FieldTypeList = vtkm::List<vtkm::FloatDefault, vtkm::Vec<vtkm::FloatDefault, 3>>;
-};
-
 VTKM_CONT
 vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
 {
@@ -64,14 +56,16 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
   wavelet.SetMagnitude({ 5 });
   auto dataSet = wavelet.Execute();
 
-  // Cut a contour
+  vtkm::filter::CleanGrid toGrid;
+
+  // unstructured grid contour
   vtkm::filter::Contour contour;
   contour.SetActiveField("scalars", vtkm::cont::Field::Association::POINTS);
   contour.SetNumberOfIsoValues(1);
   contour.SetIsoValue(192);
   contour.SetMergeDuplicatePoints(true);
   contour.SetGenerateNormals(false);
-  dataSet = contour.Execute(dataSet);
+  dataSet = contour.Execute(toGrid.Execute(dataSet));
 
   vtkm::filter::SurfaceNormals normals;
   normals.SetGeneratePointNormals(pointNormals);
@@ -79,7 +73,7 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
   normals.SetPointNormalsName("normals");
   normals.SetCellNormalsName("normals");
   normals.SetAutoOrientNormals(false);
-  dataSet = normals.Execute(dataSet, TestPolicy{});
+  dataSet = normals.Execute(dataSet);
 
   return dataSet;
 }
@@ -87,10 +81,10 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
 struct ValidateNormals
 {
   using CellSetType = vtkm::cont::CellSetSingleType<>;
-  using NormalType = vtkm::Vec<vtkm::FloatDefault, 3>;
-  using NormalsArrayType = vtkm::cont::ArrayHandleVirtual<NormalType>;
+  using NormalType = vtkm::Vec3f;
+  using NormalsArrayType = vtkm::cont::ArrayHandle<NormalType>;
   using NormalsPortalType = decltype(std::declval<NormalsArrayType>().ReadPortal());
-  using PointsType = decltype(std::declval<vtkm::cont::CoordinateSystem>().GetData().ReadPortal());
+  using PointsType = decltype(std::declval<vtkm::cont::CoordinateSystem>().GetDataAsMultiplexer());
 
   vtkm::cont::CoordinateSystem Coords;
   CellSetType Cells;
@@ -144,7 +138,7 @@ struct ValidateNormals
                   const vtkm::cont::Field& cellNormalsField)
     : Coords{ dataset.GetCoordinateSystem() }
     , Cells{ dataset.GetCellSet().Cast<CellSetType>() }
-    , Points{ this->Coords.GetData().ReadPortal() }
+    , Points{ this->Coords.GetDataAsMultiplexer() }
     , CheckPoints(checkPoints)
     , CheckCells(checkCells)
   {
@@ -159,12 +153,12 @@ struct ValidateNormals
 
     if (this->CheckPoints)
     {
-      this->PointNormalsArray = pointNormalsField.GetData().AsVirtual<NormalType>();
+      pointNormalsField.GetData().AsArrayHandle(this->PointNormalsArray);
       this->PointNormals = this->PointNormalsArray.ReadPortal();
     }
     if (this->CheckCells)
     {
-      this->CellNormalsArray = cellNormalsField.GetData().AsVirtual<NormalType>();
+      cellNormalsField.GetData().AsArrayHandle(this->CellNormalsArray);
       this->CellNormals = this->CellNormalsArray.ReadPortal();
     }
   }
@@ -175,7 +169,8 @@ struct ValidateNormals
     // Locate a point with the minimum x coordinate:
     const vtkm::Id startPoint = [&]() -> vtkm::Id {
       const vtkm::Float64 xMin = this->Coords.GetBounds().X.Min;
-      const auto points = this->Coords.GetData().ReadPortal();
+      const auto pointArray = this->Coords.GetDataAsMultiplexer();
+      const auto points = pointArray.ReadPortal();
       const vtkm::Id numPoints = points.GetNumberOfValues();
       vtkm::Id resultIdx = -1;
       for (vtkm::Id pointIdx = 0; pointIdx < numPoints; ++pointIdx)
@@ -205,10 +200,16 @@ struct ValidateNormals
     vtkm::Id numVisitedCells = vtkm::cont::Algorithm::CountSetBits(this->VisitedCellsField);
     if (numPoints != numVisitedPoints)
     {
+      std::cerr << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n";
+      std::cerr << "\tnumPoints is " << numPoints << ", but numVisitedPoints is only "
+                << numVisitedPoints << "\n";
       throw vtkm::cont::ErrorBadValue("Unvisited point!");
     }
     if (numCells != numVisitedCells)
     {
+      std::cerr << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n";
+      std::cerr << "\tnumCells is " << numCells << ", but numVisitedCells is only "
+                << numVisitedCells << "\n";
       throw vtkm::cont::ErrorBadValue("Unvisited cell!");
     }
   }
@@ -245,6 +246,7 @@ private:
                                                           vtkm::TopologyElementTagCell{},
                                                           token);
 
+    auto points = this->Points.ReadPortal();
     while (!queue.empty())
     {
       const vtkm::Id curPtIdx = queue.back().first;
@@ -256,13 +258,6 @@ private:
         const NormalType curNormal = this->PointNormals.Get(curPtIdx);
         if (!this->SameHemisphere(curNormal, refNormal))
         {
-          const auto coord = this->Points.Get(curPtIdx);
-          std::cerr << "BadPointNormal PtId: " << curPtIdx << "\n\t"
-                    << "- Normal: {" << curNormal[0] << ", " << curNormal[1] << ", " << curNormal[2]
-                    << "}\n\t"
-                    << "- Reference: {" << refNormal[0] << ", " << refNormal[1] << ", "
-                    << refNormal[2] << "}\n\t"
-                    << "- Coord: {" << coord[0] << ", " << coord[1] << ", " << coord[2] << "}\n";
           throw vtkm::cont::ErrorBadValue("Bad point normal found!");
         }
         refNormal = curNormal;
@@ -287,11 +282,6 @@ private:
           const NormalType curNormal = this->CellNormals.Get(curCellIdx);
           if (!this->SameHemisphere(curNormal, refNormal))
           {
-            std::cerr << "BadCellNormal: CellId: " << curCellIdx << "\n\t"
-                      << "- Normal: {" << curNormal[0] << ", " << curNormal[1] << ", "
-                      << curNormal[2] << "}\n\t"
-                      << "- Reference: {" << refNormal[0] << ", " << refNormal[1] << ", "
-                      << refNormal[2] << "}\n";
             throw vtkm::cont::ErrorBadValue("Bad cell normal found!");
           }
           refNormal = curNormal;
@@ -330,14 +320,11 @@ void TestOrientNormals(bool testPoints, bool testCells)
   const bool inputValid = [&]() -> bool {
     try
     {
-      std::cerr << "Expecting to throw a BadNormal exception...\n";
       ValidateNormals::Run(dataset, testPoints, testCells);
       return true; // Dataset is already oriented
     }
     catch (vtkm::cont::ErrorBadValue&)
     {
-      std::cerr << "Expected exception caught! All is well. "
-                   "Future exceptions are errors.\n";
       return false; // Dataset is unoriented
     }
   }();
@@ -348,32 +335,28 @@ void TestOrientNormals(bool testPoints, bool testCells)
   }
 
   // modify normals in place
-  const auto coords = dataset.GetCoordinateSystem().GetData();
+  const auto coords = dataset.GetCoordinateSystem().GetDataAsMultiplexer();
   const auto cells = dataset.GetCellSet();
   if (testPoints && testCells)
   {
-    std::cerr << "Testing point and cell normals...\n";
-
     const auto pointNormalField = dataset.GetPointField("normals");
     const auto cellNormalField = dataset.GetCellField("normals");
-    auto pointNormals = pointNormalField.GetData().Cast<NormalArrayT>();
-    auto cellNormals = cellNormalField.GetData().Cast<NormalArrayT>();
+    auto pointNormals = pointNormalField.GetData().AsArrayHandle<NormalArrayT>();
+    auto cellNormals = cellNormalField.GetData().AsArrayHandle<NormalArrayT>();
 
     vtkm::worklet::OrientNormals::RunPointAndCellNormals(cells, coords, pointNormals, cellNormals);
   }
   else if (testPoints)
   {
-    std::cerr << "Testing point normals...\n";
     const auto pointNormalField = dataset.GetPointField("normals");
-    auto pointNormals = pointNormalField.GetData().Cast<NormalArrayT>();
+    auto pointNormals = pointNormalField.GetData().AsArrayHandle<NormalArrayT>();
 
     vtkm::worklet::OrientNormals::RunPointNormals(cells, coords, pointNormals);
   }
   else if (testCells)
   {
-    std::cerr << "Testing cell normals...\n";
     const auto cellNormalField = dataset.GetCellField("normals");
-    auto cellNormals = cellNormalField.GetData().Cast<NormalArrayT>();
+    auto cellNormals = cellNormalField.GetData().AsArrayHandle<NormalArrayT>();
 
     vtkm::worklet::OrientNormals::RunCellNormals(cells, coords, cellNormals);
   }

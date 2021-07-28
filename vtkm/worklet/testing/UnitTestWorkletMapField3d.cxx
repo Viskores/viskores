@@ -10,8 +10,6 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 
-#include <vtkm/cont/VariantArrayHandle.h>
-
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -59,21 +57,21 @@ namespace arg
 template <typename PType>
 struct Fetch<vtkm::exec::arg::FetchTagExecObject,
              vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic3D,
              mapfield3d::ExecutionObject<PType>>
 {
   using ValueType = typename PType::ValueType;
   using PortalType = mapfield3d::ExecutionObject<PType>;
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesBasic3D;
 
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const PortalType& field) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC ValueType Load(const ThreadIndicesType& indices, const PortalType& field) const
   {
     return field.Portal.Get(indices.GetInputIndex());
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const PortalType&, const ValueType&) const {}
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, const PortalType&, const ValueType&) const
+  {
+  }
 };
 }
 }
@@ -142,7 +140,8 @@ struct DoTestWorklet
       inputArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
-    vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inputHandle =
+      vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE, vtkm::CopyFlag::Off);
     vtkm::cont::ArrayHandle<T> outputHandleAsPtr;
     vtkm::cont::ArrayHandle<T> inoutHandleAsPtr;
 

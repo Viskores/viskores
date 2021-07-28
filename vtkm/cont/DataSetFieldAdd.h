@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_DataSetFieldAdd_h
 #define vtk_m_cont_DataSetFieldAdd_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 
@@ -18,7 +19,9 @@ namespace vtkm
 namespace cont
 {
 
-class DataSetFieldAdd
+class VTKM_DEPRECATED(1.6,
+                      "The AddPointField and AddCellField methods should now be called "
+                      "directly on the vtkm::cont::DataSet object") DataSetFieldAdd
 {
 public:
   VTKM_CONT
@@ -28,7 +31,7 @@ public:
   VTKM_CONT
   static void AddPointField(vtkm::cont::DataSet& dataSet,
                             const std::string& fieldName,
-                            const vtkm::cont::VariantArrayHandle& field)
+                            const vtkm::cont::UnknownArrayHandle& field)
   {
     dataSet.AddField(make_FieldPoint(fieldName, field));
   }
@@ -64,7 +67,7 @@ public:
   VTKM_CONT
   static void AddCellField(vtkm::cont::DataSet& dataSet,
                            const std::string& fieldName,
-                           const vtkm::cont::VariantArrayHandle& field)
+                           const vtkm::cont::UnknownArrayHandle& field)
   {
     dataSet.AddField(make_FieldCell(fieldName, field));
   }

@@ -127,10 +127,13 @@ struct MaskBuilder
 } // anonymous namespace
 
 vtkm::worklet::MaskSelect::ThreadToOutputMapType vtkm::worklet::MaskSelect::Build(
-  const VariantArrayHandleMask& maskArray,
+  const vtkm::cont::UnknownArrayHandle& maskArray,
   vtkm::cont::DeviceAdapterId device)
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "MaskSelect::Build");
+
   vtkm::worklet::MaskSelect::ThreadToOutputMapType threadToOutputMap;
-  maskArray.CastAndCall(MaskBuilder(), threadToOutputMap, device);
+  maskArray.CastAndCallForTypes<MaskTypes, vtkm::List<vtkm::cont::StorageTagBasic>>(
+    MaskBuilder(), threadToOutputMap, device);
   return threadToOutputMap;
 }

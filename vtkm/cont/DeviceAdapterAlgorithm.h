@@ -14,7 +14,6 @@
 
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/Logging.h>
-#include <vtkm/cont/internal/ArrayManagerExecution.h>
 
 
 #ifdef _WIN32
@@ -721,14 +720,6 @@ public:
   VTKM_CONT bool Exists() const;
 #endif
 };
-
-/// \brief Class providing a device-specific support for atomic operations.
-///
-/// AtomicInterfaceControl provides atomic operations for the control
-/// environment, and may be subclassed to implement the device interface when
-/// appropriate for a CPU-based device.
-template <typename DeviceTag>
-class AtomicInterfaceExecution;
 
 /// \brief Class providing a device-specific support for selecting the optimal
 /// Task type for a given worklet.

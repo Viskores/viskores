@@ -21,17 +21,17 @@ namespace arg
 {
 
 // Specialization for extrude types.
-template <typename Device>
-class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>
+template <typename ScatterAndMaskMode>
+class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude, ScatterAndMaskMode>
 {
 
-  using ConnectivityType = vtkm::exec::ConnectivityExtrude<Device>;
+  using ConnectivityType = vtkm::exec::ConnectivityExtrude;
 
 public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
-
+  using Connectivity = vtkm::exec::ConnectivityExtrude;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
@@ -90,6 +90,15 @@ public:
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     //this->CellShape = connectivity.GetCellShape(index);
   }
+
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   /// \brief The logical index into the input domain.
   ///
@@ -175,15 +184,16 @@ private:
 };
 
 // Specialization for extrude types.
-template <typename Device>
-class ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>>
+template <typename ScatterAndMaskMode>
+class ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude, ScatterAndMaskMode>
 {
-  using ConnectivityType = vtkm::exec::ReverseConnectivityExtrude<Device>;
+  using ConnectivityType = vtkm::exec::ReverseConnectivityExtrude;
 
 public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
+  using Connectivity = ConnectivityType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
@@ -204,6 +214,7 @@ public:
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
   }
 
+  VTKM_EXEC
   ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
                            vtkm::Id threadIndex1D,
                            const ConnectivityType& connectivity)
@@ -219,6 +230,7 @@ public:
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
   }
 
+  VTKM_EXEC
   ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
                            vtkm::Id threadIndex1D,
                            vtkm::Id inputIndex,
@@ -236,6 +248,15 @@ public:
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
   }
+
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   /// \brief The logical index into the input domain.
   ///

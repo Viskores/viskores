@@ -32,7 +32,7 @@ void TestCellGradientExplicit()
   VTKM_TEST_ASSERT(result.HasCellField("gradient"), "Result field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> resultArrayHandle;
-  result.GetCellField("gradient").GetData().CopyTo(resultArrayHandle);
+  result.GetCellField("gradient").GetData().AsArrayHandle(resultArrayHandle);
   vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, -0.0f } };
   for (int i = 0; i < 2; ++i)
   {
@@ -58,7 +58,7 @@ void TestPointGradientExplicit()
   VTKM_TEST_ASSERT(result.HasPointField("gradient"), "Result field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> resultArrayHandle;
-  result.GetPointField("gradient").GetData().CopyTo(resultArrayHandle);
+  result.GetPointField("gradient").GetData().AsArrayHandle(resultArrayHandle);
 
   vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, 0.0f } };
   for (int i = 0; i < 2; ++i)

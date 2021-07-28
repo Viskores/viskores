@@ -24,7 +24,6 @@
 #include <vtkm/cont/ErrorInternal.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/cont/internal/OptionParser.h>
@@ -39,12 +38,13 @@
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/filter/Threshold.h>
 #include <vtkm/filter/ThresholdPoints.h>
+#include <vtkm/filter/Triangulate.h>
 #include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/filter/VertexClustering.h>
 #include <vtkm/filter/WarpScalar.h>
 #include <vtkm/filter/WarpVector.h>
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/source/Wavelet.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -55,7 +55,7 @@
 #include <type_traits>
 
 #ifdef VTKM_ENABLE_TBB
-#include <tbb/task_scheduler_init.h>
+#include <tbb/tbb.h>
 #endif
 #ifdef VTKM_ENABLE_OPENMP
 #include <omp.h>
@@ -92,12 +92,15 @@ vtkm::cont::InitializeResult Config;
 
 // The input dataset we'll use on the filters:
 static vtkm::cont::DataSet InputDataSet;
+static vtkm::cont::DataSet UnstructuredInputDataSet;
 // The point scalars to use:
 static std::string PointScalarsName;
 // The cell scalars to use:
 static std::string CellScalarsName;
 // The point vectors to use:
 static std::string PointVectorsName;
+// Whether the input is a file or is generated
+bool FileAsInput = false;
 
 bool InputIsStructured()
 {
@@ -105,27 +108,6 @@ bool InputIsStructured()
     InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<2>>() ||
     InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<1>>();
 }
-
-// Limit the filter executions to only consider the following types, otherwise
-// compile times and binary sizes are nuts.
-using FieldTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
-
-using StructuredCellList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
-
-using UnstructuredCellList =
-  vtkm::List<vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>;
-
-using AllCellList = vtkm::ListAppend<StructuredCellList, UnstructuredCellList>;
-
-class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
-{
-public:
-  using FieldTypeList = FieldTypes;
-
-  using StructuredCellSetList = StructuredCellList;
-  using UnstructuredCellSetList = UnstructuredCellList;
-  using AllCellSetList = AllCellList;
-};
 
 enum GradOpts : int
 {
@@ -174,13 +156,12 @@ void BenchGradient(::benchmark::State& state, int options)
     filter.SetColumnMajorOrdering();
   }
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -188,8 +169,8 @@ void BenchGradient(::benchmark::State& state, int options)
   }
 }
 
-#define VTKM_PRIVATE_GRADIENT_BENCHMARK(Name, Opts)                                                \
-  void BenchGradient##Name(::benchmark::State& state) { BenchGradient(state, Opts); }              \
+#define VTKM_PRIVATE_GRADIENT_BENCHMARK(Name, Opts)                                   \
+  void BenchGradient##Name(::benchmark::State& state) { BenchGradient(state, Opts); } \
   VTKM_BENCHMARK(BenchGradient##Name)
 
 VTKM_PRIVATE_GRADIENT_BENCHMARK(Scalar, Gradient | ScalarInput);
@@ -224,13 +205,12 @@ void BenchThreshold(::benchmark::State& state)
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -261,13 +241,12 @@ void BenchThresholdPoints(::benchmark::State& state)
   filter.SetUpperThreshold(mid + quarter);
   filter.SetCompactPoints(compactPoints);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -283,13 +262,12 @@ void BenchCellAverage(::benchmark::State& state)
   vtkm::filter::CellAverage filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -305,13 +283,12 @@ void BenchPointAverage(::benchmark::State& state)
   vtkm::filter::PointAverage filter;
   filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -329,13 +306,12 @@ void BenchWarpScalar(::benchmark::State& state)
   filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
   filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -352,13 +328,12 @@ void BenchWarpVector(::benchmark::State& state)
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -371,10 +346,11 @@ void BenchContour(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  const vtkm::Id numIsoVals = static_cast<vtkm::Id>(state.range(0));
-  const bool mergePoints = static_cast<bool>(state.range(1));
-  const bool normals = static_cast<bool>(state.range(2));
-  const bool fastNormals = static_cast<bool>(state.range(3));
+  const bool isStructured = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numIsoVals = static_cast<vtkm::Id>(state.range(1));
+  const bool mergePoints = static_cast<bool>(state.range(2));
+  const bool normals = static_cast<bool>(state.range(3));
+  const bool fastNormals = static_cast<bool>(state.range(4));
 
   vtkm::filter::Contour filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
@@ -399,13 +375,15 @@ void BenchContour(::benchmark::State& state)
   filter.SetComputeFastNormalsForStructured(fastNormals);
   filter.SetComputeFastNormalsForUnstructured(fastNormals);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
+
+  vtkm::cont::DataSet input = isStructured ? InputDataSet : UnstructuredInputDataSet;
+
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -415,19 +393,25 @@ void BenchContour(::benchmark::State& state)
 
 void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
 {
-  bm->ArgNames({ "NIsoVals", "MergePts", "GenNormals", "FastNormals" });
+  bm->ArgNames({ "IsStructuredDataSet", "NIsoVals", "MergePts", "GenNormals", "FastNormals" });
 
   auto helper = [&](const vtkm::Id numIsoVals) {
-    bm->Args({ numIsoVals, 0, 0, 0 });
-    bm->Args({ numIsoVals, 1, 0, 0 });
-    bm->Args({ numIsoVals, 0, 1, 0 });
-    bm->Args({ numIsoVals, 0, 1, 1 });
+    bm->Args({ 0, numIsoVals, 0, 0, 0 });
+    bm->Args({ 0, numIsoVals, 1, 0, 0 });
+    bm->Args({ 0, numIsoVals, 0, 1, 0 });
+    bm->Args({ 0, numIsoVals, 0, 1, 1 });
+    bm->Args({ 1, numIsoVals, 0, 0, 0 });
+    bm->Args({ 1, numIsoVals, 1, 0, 0 });
+    bm->Args({ 1, numIsoVals, 0, 1, 0 });
+    bm->Args({ 1, numIsoVals, 0, 1, 1 });
   };
 
   helper(1);
   helper(3);
   helper(12);
 }
+
+// :TODO: Disabled until SIGSEGV in Countour when passings field is resolved
 VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
 
 void BenchExternalFaces(::benchmark::State& state)
@@ -438,13 +422,12 @@ void BenchExternalFaces(::benchmark::State& state)
   vtkm::filter::ExternalFaces filter;
   filter.SetCompactPoints(compactPoints);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -458,21 +441,19 @@ void BenchTetrahedralize(::benchmark::State& state)
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
   // This filter only supports structured datasets:
-  if (!InputIsStructured())
+  if (FileAsInput && !InputIsStructured())
   {
     state.SkipWithError("Tetrahedralize Filter requires structured data.");
-    return;
   }
 
   vtkm::filter::Tetrahedralize filter;
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -487,22 +468,21 @@ void BenchVertexClustering(::benchmark::State& state)
   const vtkm::Id numDivs = static_cast<vtkm::Id>(state.range(0));
 
   // This filter only supports unstructured datasets:
-  if (InputIsStructured())
+  if (FileAsInput && InputIsStructured())
   {
-    state.SkipWithError("VertexClustering Filter requires unstructured data.");
-    return;
+    state.SkipWithError("VertexClustering Filter requires unstructured data (use --tetra).");
   }
 
   vtkm::filter::VertexClustering filter;
   filter.SetNumberOfDivisions({ numDivs });
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
+
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(UnstructuredInputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -562,13 +542,12 @@ struct PrepareForInput
 
 void BenchReverseConnectivityGen(::benchmark::State& state)
 {
-  if (InputIsStructured())
+  if (FileAsInput && InputIsStructured())
   {
-    state.SkipWithError("ReverseConnectivityGen requires unstructured data.");
-    return;
+    state.SkipWithError("ReverseConnectivityGen requires unstructured data (--use tetra).");
   }
 
-  auto cellset = InputDataSet.GetCellSet();
+  auto cellset = UnstructuredInputDataSet.GetCellSet();
   PrepareForInput functor;
   for (auto _ : state)
   {
@@ -624,7 +603,7 @@ public:
   }
 };
 
-// Get the number of components in a VariantArrayHandle, ArrayHandle, or Field's
+// Get the number of components in a UnknownArrayHandle, ArrayHandle, or Field's
 // ValueType.
 struct NumberOfComponents
 {
@@ -796,15 +775,15 @@ struct Arg : vtkm::cont::internal::option::Arg
   {
     if ((option.arg != nullptr) && (option.arg[0] != '\0'))
     {
+      return vtkm::cont::internal::option::ARG_OK;
+    }
+    else
+    {
       if (msg)
       {
         std::cerr << "Option " << option.name << " requires an argument." << std::endl;
       }
       return vtkm::cont::internal::option::ARG_ILLEGAL;
-    }
-    else
-    {
-      return vtkm::cont::internal::option::ARG_OK;
     }
   }
 };
@@ -893,8 +872,12 @@ void InitDataSet(int& argc, char** argv)
 
   if (options[HELP])
   {
-    // FIXME: Print google benchmark usage too
-    option::printUsage(std::cerr, usage.data());
+    option::printUsage(std::cout, usage.data());
+    // Print google benchmark usage too
+    const char* helpstr = "--help";
+    char* tmpargv[] = { argv[0], const_cast<char*>(helpstr), nullptr };
+    int tmpargc = 2;
+    VTKM_EXECUTE_BENCHMARKS(tmpargc, tmpargv);
     exit(0);
   }
 
@@ -940,10 +923,21 @@ void InitDataSet(int& argc, char** argv)
 
   tetra = (options[TETRA] != nullptr);
 
+  // TODO: Use the VTK-m library to set the number of threads (when that becomes available).
 #ifdef VTKM_ENABLE_TBB
+#if TBB_VERSION_MAJOR >= 2020
+  if (numThreads < 1)
+  {
+    // Ask TBB how many threads are available.
+    numThreads = tbb::task_arena{}.max_concurrency();
+  }
+  // Must not be destroyed as long as benchmarks are running:
+  tbb::global_control tbbControl(tbb::global_control::max_allowed_parallelism, numThreads);
+#else // TBB_VERSION_MAJOR < 2020
   // Must not be destroyed as long as benchmarks are running:
   tbb::task_scheduler_init init((numThreads > 0) ? numThreads
                                                  : tbb::task_scheduler_init::automatic);
+#endif
 #endif
 #ifdef VTKM_ENABLE_OPENMP
   omp_set_num_threads((numThreads > 0) ? numThreads : omp_get_max_threads());
@@ -1005,8 +999,9 @@ void InitDataSet(int& argc, char** argv)
   if (!filename.empty())
   {
     std::cerr << "[InitDataSet] Loading file: " << filename << "\n";
-    vtkm::io::reader::VTKDataSetReader reader(filename);
+    vtkm::io::VTKDataSetReader reader(filename);
     InputDataSet = reader.ReadDataSet();
+    FileAsInput = true;
   }
   else
   {
@@ -1018,16 +1013,19 @@ void InitDataSet(int& argc, char** argv)
     InputDataSet = source.Execute();
   }
 
-  if (tetra)
-  {
-    std::cerr << "[InitDataSet] Tetrahedralizing dataset...\n";
-    vtkm::filter::Tetrahedralize tet;
-    tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
-    InputDataSet = tet.Execute(InputDataSet);
-  }
-
   FindFields();
   CreateMissingFields();
+
+  std::cerr
+    << "[InitDataSet] Create UnstructuredInputDataSet from Tetrahedralized InputDataSet...\n";
+  vtkm::filter::Tetrahedralize tet;
+  tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
+  UnstructuredInputDataSet = tet.Execute(InputDataSet);
+
+  if (tetra)
+  {
+    InputDataSet = UnstructuredInputDataSet;
+  }
 
   inputGenTimer.Stop();
 
@@ -1040,12 +1038,19 @@ void InitDataSet(int& argc, char** argv)
 int main(int argc, char* argv[])
 {
   auto opts = vtkm::cont::InitializeOptions::RequireDevice;
-  Config = vtkm::cont::Initialize(argc, argv, opts);
 
-  // Setup device:
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
 
-  InitDataSet(argc, argv);
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This opts changes when it is help
+  if (opts != vtkm::cont::InitializeOptions::None)
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  }
+  InitDataSet(argc, args.data());
 
   const std::string dataSetSummary = []() -> std::string {
     std::ostringstream out;
@@ -1054,5 +1059,5 @@ int main(int argc, char* argv[])
   }();
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, dataSetSummary);
+  VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, args.data(), dataSetSummary);
 }

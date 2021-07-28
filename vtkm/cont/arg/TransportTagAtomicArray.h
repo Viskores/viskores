@@ -13,9 +13,11 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/ArrayHandleVirtual.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/StorageVirtual.h>
+#endif
 
 
 #include <vtkm/cont/arg/Transport.h>
@@ -46,7 +48,7 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>,
                  Device>
 {
-  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T, Device>;
+  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T>;
   using ExecType = vtkm::cont::AtomicArray<T>;
 
   template <typename InputDomainType>
@@ -65,12 +67,14 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
   }
 };
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>,
                  Device>
 {
-  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T, Device>;
+  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T>;
   using ExecType = vtkm::cont::AtomicArray<T>;
 
   template <typename InputDomainType>
@@ -100,6 +104,8 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
     return obj.PrepareForExecution(Device());
   }
 };
+VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 }
 }
 } // namespace vtkm::cont::arg

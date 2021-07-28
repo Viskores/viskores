@@ -12,7 +12,6 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/worklet/CellDeepCopy.h>
@@ -24,10 +23,8 @@ vtkm::cont::DataSet MakeInputDataSet()
 {
   auto input = vtkm::cont::DataSetBuilderUniform::Create(
     vtkm::Id2(4, 4), vtkm::make_Vec(0.0f, 0.0f), vtkm::make_Vec(1.0f, 1.0f));
-  vtkm::cont::DataSetFieldAdd::AddPointField(
-    input, "pointdata", vtkm::cont::make_ArrayHandleCounting(0.0f, 0.3f, 16));
-  vtkm::cont::DataSetFieldAdd::AddCellField(
-    input, "celldata", vtkm::cont::make_ArrayHandleCounting(0.0f, 0.7f, 9));
+  input.AddPointField("pointdata", vtkm::cont::make_ArrayHandleCounting(0.0f, 0.3f, 16));
+  input.AddCellField("celldata", vtkm::cont::make_ArrayHandleCounting(0.0f, 0.7f, 9));
   return input;
 }
 
@@ -136,8 +133,10 @@ private:
     vtkm::worklet::Probe probe;
     probe.Run(input.GetCellSet(), input.GetCoordinateSystem(), geometry.GetCoordinateSystem());
 
-    auto pf = probe.ProcessPointField(input.GetField("pointdata").GetData().Cast<FieldArrayType>());
-    auto cf = probe.ProcessCellField(input.GetField("celldata").GetData().Cast<FieldArrayType>());
+    auto pf = probe.ProcessPointField(
+      input.GetField("pointdata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
+    auto cf = probe.ProcessCellField(
+      input.GetField("celldata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
     auto hp = probe.GetHiddenPointsField();
     auto hc = probe.GetHiddenCellsField(geometry.GetCellSet());
 
@@ -157,8 +156,10 @@ private:
     vtkm::worklet::Probe probe;
     probe.Run(input.GetCellSet(), input.GetCoordinateSystem(), geometry.GetCoordinateSystem());
 
-    auto pf = probe.ProcessPointField(input.GetField("pointdata").GetData().Cast<FieldArrayType>());
-    auto cf = probe.ProcessCellField(input.GetField("celldata").GetData().Cast<FieldArrayType>());
+    auto pf = probe.ProcessPointField(
+      input.GetField("pointdata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
+    auto cf = probe.ProcessCellField(
+      input.GetField("celldata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
 
     auto hp = probe.GetHiddenPointsField();
     auto hc = probe.GetHiddenCellsField(geometry.GetCellSet());
@@ -179,8 +180,10 @@ private:
     vtkm::worklet::Probe probe;
     probe.Run(input.GetCellSet(), input.GetCoordinateSystem(), geometry.GetCoordinateSystem());
 
-    auto pf = probe.ProcessPointField(input.GetField("pointdata").GetData().Cast<FieldArrayType>());
-    auto cf = probe.ProcessCellField(input.GetField("celldata").GetData().Cast<FieldArrayType>());
+    auto pf = probe.ProcessPointField(
+      input.GetField("pointdata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
+    auto cf = probe.ProcessCellField(
+      input.GetField("celldata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
 
     auto hp = probe.GetHiddenPointsField();
     auto hc = probe.GetHiddenCellsField(geometry.GetCellSet());

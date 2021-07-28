@@ -9,19 +9,23 @@
 ##============================================================================
 
 set(headers
-  ArrayManagerExecutionOpenMP.h
   DeviceAdapterAlgorithmOpenMP.h
+  DeviceAdapterMemoryManagerOpenMP.h
   DeviceAdapterRuntimeDetectorOpenMP.h
   DeviceAdapterTagOpenMP.h
-  AtomicInterfaceExecutionOpenMP.h
-  ExecutionArrayInterfaceBasicOpenMP.h
   FunctorsOpenMP.h
   ParallelQuickSortOpenMP.h
   ParallelRadixSortOpenMP.h
   ParallelScanOpenMP.h
   ParallelSortOpenMP.h
-  VirtualObjectTransferOpenMP.h
+  RuntimeDeviceConfigurationOpenMP.h
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    VirtualObjectTransferOpenMP.h
+    )
+endif()
 
 vtkm_declare_headers(${headers})
 
@@ -33,9 +37,7 @@ target_sources(vtkm_cont PRIVATE
 #-----------------------------------------------------------------------------
 if (TARGET vtkm::openmp)
   target_sources(vtkm_cont PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionOpenMP.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmOpenMP.cxx
-    ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicOpenMP.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/ParallelRadixSortOpenMP.cxx
     )
 endif()

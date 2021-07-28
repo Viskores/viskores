@@ -24,6 +24,34 @@ namespace exec
 namespace internal
 {
 
+/// A superclass of `ReduceBykeyLookup` that can be used when no key values are provided.
+///
+template <typename IdPortalType, typename IdComponentPortalType>
+struct ReduceByKeyLookupBase
+{
+  VTKM_STATIC_ASSERT((std::is_same<typename IdPortalType::ValueType, vtkm::Id>::value));
+  VTKM_STATIC_ASSERT(
+    (std::is_same<typename IdComponentPortalType::ValueType, vtkm::IdComponent>::value));
+
+  IdPortalType SortedValuesMap;
+  IdPortalType Offsets;
+  IdComponentPortalType Counts;
+
+  VTKM_EXEC_CONT
+  ReduceByKeyLookupBase(const IdPortalType& sortedValuesMap,
+                        const IdPortalType& offsets,
+                        const IdComponentPortalType& counts)
+    : SortedValuesMap(sortedValuesMap)
+    , Offsets(offsets)
+    , Counts(counts)
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ReduceByKeyLookupBase() {}
+};
+
 /// \brief Execution object holding lookup info for reduce by key.
 ///
 /// A WorkletReduceByKey needs several arrays to map the current output object
@@ -31,28 +59,19 @@ namespace internal
 /// state.
 ///
 template <typename KeyPortalType, typename IdPortalType, typename IdComponentPortalType>
-struct ReduceByKeyLookup : vtkm::cont::ExecutionObjectBase
+struct ReduceByKeyLookup : ReduceByKeyLookupBase<IdPortalType, IdComponentPortalType>
 {
   using KeyType = typename KeyPortalType::ValueType;
 
-  VTKM_STATIC_ASSERT((std::is_same<typename IdPortalType::ValueType, vtkm::Id>::value));
-  VTKM_STATIC_ASSERT(
-    (std::is_same<typename IdComponentPortalType::ValueType, vtkm::IdComponent>::value));
-
   KeyPortalType UniqueKeys;
-  IdPortalType SortedValuesMap;
-  IdPortalType Offsets;
-  IdComponentPortalType Counts;
 
   VTKM_EXEC_CONT
   ReduceByKeyLookup(const KeyPortalType& uniqueKeys,
                     const IdPortalType& sortedValuesMap,
                     const IdPortalType& offsets,
                     const IdComponentPortalType& counts)
-    : UniqueKeys(uniqueKeys)
-    , SortedValuesMap(sortedValuesMap)
-    , Offsets(offsets)
-    , Counts(counts)
+    : ReduceByKeyLookupBase<IdPortalType, IdComponentPortalType>(sortedValuesMap, offsets, counts)
+    , UniqueKeys(uniqueKeys)
   {
   }
 

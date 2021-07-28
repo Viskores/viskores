@@ -89,16 +89,35 @@ public:
     , NumOfBins(_numOfBins)
     , MinMax(_minMax)
     , BinDelta(_binDelta)
+    , RangeProvided(false)
+  {
+  }
+
+  VTKM_CONT
+  ComputeBins(vtkm::cont::ArrayHandle<vtkm::Id>& _bin1DIdx,
+              vtkm::Id& _numOfBins,
+              vtkm::Range& _minMax,
+              vtkm::Float64& _binDelta,
+              bool _rangeProvided)
+    : Bin1DIdx(_bin1DIdx)
+    , NumOfBins(_numOfBins)
+    , MinMax(_minMax)
+    , BinDelta(_binDelta)
+    , RangeProvided(_rangeProvided)
   {
   }
 
   template <typename T, typename Storage>
   VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>& field) const
   {
-    const vtkm::Vec<T, 2> initValue(vtkm::cont::ArrayGetValue(0, field));
-    vtkm::Vec<T, 2> minMax = vtkm::cont::Algorithm::Reduce(field, initValue, vtkm::MinAndMax<T>());
-    MinMax.Min = static_cast<vtkm::Float64>(minMax[0]);
-    MinMax.Max = static_cast<vtkm::Float64>(minMax[1]);
+    if (!RangeProvided)
+    {
+      const vtkm::Vec<T, 2> initValue(vtkm::cont::ArrayGetValue(0, field));
+      vtkm::Vec<T, 2> minMax =
+        vtkm::cont::Algorithm::Reduce(field, initValue, vtkm::MinAndMax<T>());
+      MinMax.Min = static_cast<vtkm::Float64>(minMax[0]);
+      MinMax.Max = static_cast<vtkm::Float64>(minMax[1]);
+    }
     BinDelta = compute_delta(MinMax.Min, MinMax.Max, NumOfBins);
 
     SetHistogramBin<T> binWorklet(NumOfBins, MinMax.Min, BinDelta);
@@ -112,6 +131,7 @@ private:
   vtkm::Id& NumOfBins;
   vtkm::Range& MinMax;
   vtkm::Float64& BinDelta;
+  bool RangeProvided;
 };
 
 // Convert N-dims bin index into 1D index

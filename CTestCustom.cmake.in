@@ -10,10 +10,16 @@
 
 list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   ".*warning: ignoring loop annotation.*"
-  ".*warning: Included by graph for.*not generated, too many nodes. Consider increasing DOT_GRAPH_MAX_NODES."
+  ".*warning: Included by graph for.*not generated, too many nodes. Consider increasing DOT_GRAPH_MAX_NODES.*"
+
+  # disable doxygen warnings about no matching members caused by auto keyword
+  ".*warning: no matching file member found for.*"
+
+  # disable doxygen warning from VTKM_DEPRECATED usage
+  ".*warning: Found.*while parsing initializer list!.*"
 
   # disable doxygen warning about potential recursion.
-  ".*warning: Detected potential recursive class relation between class vtkm::exec::internal::ArrayPortalTransform"
+  ".*warning: Detected potential recursive class relation between .*"
 
   # disable doxygen warning about not generating graph
   ".*warning: Included by graph for"
@@ -49,7 +55,7 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   "nvlink warning : .*ArrayPortalVirtual.* has address taken but no possible call to it"
   "nvlink warning : .*CellLocatorBoundingIntervalHierarchyExec.* has address taken but no possible call to it"
   "nvlink warning : .*CellLocatorRectilinearGrid.* has address taken but no possible call to it"
-  "nvlink warning : .*CellLocatorUniformBins.* has address taken but no possible call to it"
+  "nvlink warning : .*CellLocatorTwoLevel.* has address taken but no possible call to it"
   "nvlink warning : .*CellLocatorUniformGrid.* has address taken but no possible call to it"
 
 )

@@ -10,10 +10,11 @@
 
 #include <vtkm/rendering/raytracing/SphereExtractor.h>
 
+#include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
+
 #include <vtkm/cont/Algorithm.h>
-#include <vtkm/rendering/raytracing/Worklets.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
 {
@@ -268,7 +269,7 @@ void SphereExtractor::SetVaryingRadius(const vtkm::Float32 minRadius,
   Radii.Allocate(this->PointIds.GetNumberOfValues());
   vtkm::worklet::DispatcherMapField<detail::FieldRadius>(
     detail::FieldRadius(minRadius, maxRadius, range))
-    .Invoke(this->PointIds, this->Radii, field.GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+    .Invoke(this->PointIds, this->Radii, vtkm::rendering::raytracing::GetScalarFieldArray(field));
 }
 
 vtkm::cont::ArrayHandle<vtkm::Id> SphereExtractor::GetPointIds()

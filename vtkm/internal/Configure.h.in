@@ -20,6 +20,11 @@
 #define VTKM_CUDA_DEVICE_PASS
 #endif
 
+// Defined when compiling for the HIP language.
+#ifdef __HIP__
+#define VTKM_HIP
+#endif
+
 #if defined(_MSC_VER)
 //MSVC 2015+ can use a clang frontend, so we want to label it only as MSVC
 //and not MSVC and clang
@@ -34,6 +39,10 @@
 // PGI reports as GNUC as it generates the same ABI, so we need to check for
 // it before gcc.
 #define VTKM_PGI
+
+#elif defined(__ibmxl__)
+//Check for xl before GCC and clang, as xl claims it is many things
+#define VTKM_XL
 
 #elif defined(__clang__)
 //Check for clang before GCC, as clang says it is GNUC since it has ABI
@@ -60,6 +69,14 @@
 
 #if !defined(VTKM_NO_ASSERT)
 #cmakedefine VTKM_NO_ASSERT
+#endif
+
+#if !defined(VTKM_NO_ASSERT_CUDA)
+#cmakedefine VTKM_NO_ASSERT_CUDA
+#endif
+
+#if !defined(VTKM_NO_ASSERT_HIP)
+#cmakedefine VTKM_NO_ASSERT_HIP
 #endif
 
 #if !defined(VTKM_USE_DOUBLE_PRECISION) && !defined(VTKM_NO_DOUBLE_PRECISION)
@@ -118,6 +135,10 @@
   _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
   _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
   _Pragma("GCC diagnostic ignored \"-Wunused-template\"")
+#elif defined(VTKM_CLANG) && defined(__ibmxl__)
+#define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
+  _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
 #elif defined(VTKM_CLANG)
 #define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
@@ -262,6 +283,18 @@
 #ifndef VTKM_ENABLE_OPENMP
 #cmakedefine VTKM_ENABLE_OPENMP
 #endif
+//Mark if we are building with Kokkos enabled
+#ifndef VTKM_ENABLE_KOKKOS
+#cmakedefine VTKM_ENABLE_KOKKOS
+#endif
+//Mark if Kokkos has Cuda backend enabled
+#ifndef VTKM_KOKKOS_CUDA
+#cmakedefine VTKM_KOKKOS_CUDA
+#endif
+//Mark if Kokkos has HIP backend enabled
+#ifndef VTKM_KOKKOS_HIP
+#cmakedefine VTKM_KOKKOS_HIP
+#endif
 
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI
@@ -285,6 +318,9 @@
 //Mark if we have enabled logging.
 #cmakedefine VTKM_ENABLE_LOGGING
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#cmakedefine VTKM_NO_DEPRECATED_VIRTUAL
+#endif
 
 // Define a pair of macros, VTKM_SWALLOW_SEMICOLON_PRE_BLOCK and
 // VTKM_SWALLOW_SEMICOLON_POST_BLOCK that can be used around a block in a

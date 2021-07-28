@@ -28,7 +28,7 @@ void RayOperations::MapCanvasToRays(Ray<vtkm::Float32>& rays,
   (void)valid; // this can be a false negative for really tiny spatial domains.
   vtkm::worklet::DispatcherMapField<detail::RayMapCanvas>(
     detail::RayMapCanvas(inverse, width, height, camera.GetPosition()))
-    .Invoke(rays.PixelIdx, rays.MaxDistance, canvas.GetDepthBuffer());
+    .Invoke(rays.PixelIdx, rays.MaxDistance, rays.Origin, canvas.GetDepthBuffer());
 }
 }
 }

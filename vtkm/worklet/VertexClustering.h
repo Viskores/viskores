@@ -23,6 +23,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -73,7 +74,7 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
     template <typename InputPointsArrayType, typename KeyType>
     VTKM_CONT void operator()(const InputPointsArrayType& points,
                               const vtkm::worklet::Keys<KeyType>& keys,
-                              vtkm::cont::VariantArrayHandle& output) const
+                              vtkm::cont::UnknownArrayHandle& output) const
     {
 
       vtkm::cont::ArrayHandle<typename InputPointsArrayType::ValueType> out;
@@ -85,11 +86,11 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
   };
 
   template <typename KeyType, typename InputDynamicPointsArrayType>
-  VTKM_CONT static vtkm::cont::VariantArrayHandle Run(
+  VTKM_CONT static vtkm::cont::UnknownArrayHandle Run(
     const vtkm::worklet::Keys<KeyType>& keys,
     const InputDynamicPointsArrayType& inputPoints)
   {
-    vtkm::cont::VariantArrayHandle output;
+    vtkm::cont::UnknownArrayHandle output;
     RunTrampoline trampoline;
     vtkm::cont::CastAndCall(inputPoints, trampoline, keys, output);
     return output;
@@ -111,10 +112,8 @@ template <typename T, vtkm::IdComponent N>
 vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> const& other)
 {
   const T* vmem = reinterpret_cast<const T*>(&*other.ReadPortal().GetIteratorBegin());
-  vtkm::cont::ArrayHandle<T> mem =
-    vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues() * N);
-  vtkm::cont::ArrayHandle<T> result;
-  vtkm::cont::ArrayCopy(mem, result);
+  vtkm::cont::ArrayHandle<T> result =
+    vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues() * N, vtkm::CopyFlag::On);
   return result;
 }
 
@@ -122,10 +121,6 @@ vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> 
 
 struct VertexClustering
 {
-  using PointIdMapType = vtkm::cont::ArrayHandlePermutation<
-    vtkm::cont::ArrayHandleView<vtkm::cont::ArrayHandle<vtkm::Id>>,
-    vtkm::cont::ArrayHandle<vtkm::Id>>;
-
   struct GridInfo
   {
     vtkm::Id3 dim;
@@ -371,7 +366,7 @@ public:
 #endif
 
     /// pass 2 : Choose a representative point from each cluster for the output:
-    vtkm::cont::VariantArrayHandle repPointArray;
+    vtkm::cont::UnknownArrayHandle repPointArray;
     {
       vtkm::worklet::Keys<vtkm::Id> keys;
       keys.BuildArrays(pointCidArray, vtkm::worklet::KeysSortType::Stable);
@@ -383,8 +378,7 @@ public:
 
       // For mapping properties, this map will select an arbitrary point from
       // the cluster:
-      this->PointIdMap =
-        vtkm::cont::make_ArrayHandlePermutation(keysView, keys.GetSortedValuesMap());
+      this->PointIdMap = internal::ConcretePermutationArray(keysView, keys.GetSortedValuesMap());
 
       // Compute representative points from each cluster (may not match the
       // PointIdMap indexing)
@@ -508,8 +502,8 @@ public:
     if (cells > 0 && pointId3Array.ReadPortal().Get(cells - 1)[2] >= nPoints)
     {
       cells--;
-      pointId3Array.Shrink(cells);
-      this->CellIdMap.Shrink(cells);
+      pointId3Array.Allocate(cells, vtkm::CopyFlag::On);
+      this->CellIdMap.Allocate(cells, vtkm::CopyFlag::On);
     }
 
     /// output
@@ -548,8 +542,11 @@ public:
     return internal::ConcretePermutationArray(this->CellIdMap, input);
   }
 
+  vtkm::cont::ArrayHandle<vtkm::Id> GetPointIdMap() const { return this->PointIdMap; }
+  vtkm::cont::ArrayHandle<vtkm::Id> GetCellIdMap() const { return this->CellIdMap; }
+
 private:
-  PointIdMapType PointIdMap;
+  vtkm::cont::ArrayHandle<vtkm::Id> PointIdMap;
   vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
 }; // struct VertexClustering
 }

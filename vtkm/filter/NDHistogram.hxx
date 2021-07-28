@@ -19,9 +19,7 @@ namespace vtkm
 namespace filter
 {
 
-inline VTKM_CONT NDHistogram::NDHistogram()
-{
-}
+inline VTKM_CONT NDHistogram::NDHistogram() {}
 
 void NDHistogram::AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins)
 {
@@ -78,11 +76,10 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::Da
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool NDHistogram::DoMapField(vtkm::cont::DataSet&,
-                                              const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                              const vtkm::filter::FieldMetadata&,
-                                              vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool NDHistogram::MapFieldOntoOutput(vtkm::cont::DataSet&,
+                                                      const vtkm::cont::Field&,
+                                                      vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }

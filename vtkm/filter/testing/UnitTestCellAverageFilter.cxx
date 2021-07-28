@@ -30,7 +30,7 @@ void TestCellAverageRegular3D()
   VTKM_TEST_ASSERT(result.HasCellField("avgvals") == true, "Result field not present.");
 
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  result.GetCellField("avgvals").GetData().CopyTo(resultArrayHandle);
+  result.GetCellField("avgvals").GetData().AsArrayHandle(resultArrayHandle);
   {
     vtkm::Float32 expected[4] = { 60.1875f, 70.2125f, 120.3375f, 130.3625f };
     for (vtkm::Id i = 0; i < 4; ++i)
@@ -49,7 +49,7 @@ void TestCellAverageRegular3D()
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> resultPointArray;
   vtkm::cont::Field resultPointField = result.GetCellField("avgpos");
-  resultPointField.GetData().CopyTo(resultPointArray);
+  resultPointField.GetData().AsArrayHandle(resultPointArray);
   {
     vtkm::FloatDefault expected[4][3] = {
       { 0.5f, 0.5f, 0.5f }, { 1.5f, 0.5f, 0.5f }, { 0.5f, 0.5f, 1.5f }, { 1.5f, 0.5f, 1.5f }
@@ -81,7 +81,7 @@ void TestCellAverageRegular2D()
 
   vtkm::cont::Field resultField = result.GetCellField("pointvar");
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  resultField.GetData().CopyTo(resultArrayHandle);
+  resultField.GetData().AsArrayHandle(resultArrayHandle);
   vtkm::Float32 expected[2] = { 30.1f, 40.1f };
   for (int i = 0; i < 2; ++i)
   {
@@ -107,7 +107,7 @@ void TestCellAverageExplicit()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   vtkm::cont::Field resultField = result.GetCellField("pointvar");
-  resultField.GetData().CopyTo(resultArrayHandle);
+  resultField.GetData().AsArrayHandle(resultArrayHandle);
   vtkm::Float32 expected[2] = { 20.1333f, 35.2f };
   for (int i = 0; i < 2; ++i)
   {

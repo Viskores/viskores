@@ -21,10 +21,13 @@
 #include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/Particle.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
-//#include <vtkm/worklet/particleadvection/ParticlesAOS.h>
+#include <vtkm/worklet/particleadvection/Stepper.h>
+
+#ifdef VTKM_CUDA
+#include <vtkm/cont/cuda/internal/ScopedCudaStackSize.h>
+#endif
 
 namespace vtkm
 {
@@ -45,13 +48,12 @@ public:
 
   template <typename IntegratorType, typename IntegralCurveType>
   VTKM_EXEC void operator()(const vtkm::Id& idx,
-                            const IntegratorType* integrator,
+                            const IntegratorType& integrator,
                             IntegralCurveType& integralCurve,
                             const vtkm::Id& maxSteps) const
   {
-    vtkm::Particle particle = integralCurve.GetParticle(idx);
+    auto particle = integralCurve.GetParticle(idx);
 
-    vtkm::Vec3f inpos = particle.Pos;
     vtkm::FloatDefault time = particle.Time;
     bool tookAnySteps = false;
 
@@ -63,46 +65,37 @@ public:
     integralCurve.PreStepUpdate(idx);
     do
     {
-      //vtkm::Particle p = integralCurve.GetParticle(idx);
-      //std::cout<<idx<<": "<<inpos<<" #"<<p.NumSteps<<" "<<p.Status<<std::endl;
       vtkm::Vec3f outpos;
-      auto status = integrator->Step(inpos, time, outpos);
+      auto status = integrator.Step(particle, time, outpos);
       if (status.CheckOk())
       {
         integralCurve.StepUpdate(idx, time, outpos);
+        particle.Pos = outpos;
         tookAnySteps = true;
-        inpos = outpos;
       }
 
       //We can't take a step inside spatial boundary.
       //Try and take a step just past the boundary.
       else if (status.CheckSpatialBounds())
       {
-        IntegratorStatus status2 = integrator->SmallStep(inpos, time, outpos);
-        if (status2.CheckOk())
+        status = integrator.SmallStep(particle, time, outpos);
+        if (status.CheckOk())
         {
           integralCurve.StepUpdate(idx, time, outpos);
+          particle.Pos = outpos;
           tookAnySteps = true;
-
-          //we took a step, so use this status to consider below.
-          status = status2;
         }
       }
-
       integralCurve.StatusUpdate(idx, status, maxSteps);
-
     } while (integralCurve.CanContinue(idx));
 
     //Mark if any steps taken
     integralCurve.UpdateTookSteps(idx, tookAnySteps);
-
-    //particle = integralCurve.GetParticle(idx);
-    //std::cout<<idx<<": "<<inpos<<" #"<<particle.NumSteps<<" "<<particle.Status<<std::endl;
   }
 };
 
 
-template <typename IntegratorType>
+template <typename IntegratorType, typename ParticleType>
 class ParticleAdvectionWorklet
 {
 public:
@@ -111,14 +104,14 @@ public:
   ~ParticleAdvectionWorklet() {}
 
   void Run(const IntegratorType& integrator,
-           vtkm::cont::ArrayHandle<vtkm::Particle>& particles,
+           vtkm::cont::ArrayHandle<ParticleType>& particles,
            vtkm::Id& MaxSteps)
   {
 
     using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorklet;
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-    using ParticleType = vtkm::worklet::particleadvection::Particles;
+    using ParticleArrayType = vtkm::worklet::particleadvection::Particles<ParticleType>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(particles.GetNumberOfValues());
     //Create and invoke the particle advection.
@@ -127,11 +120,11 @@ public:
 
 #ifdef VTKM_CUDA
     // This worklet needs some extra space on CUDA.
-    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    vtkm::cont::cuda::internal::ScopedCudaStackSize stack(16 * 1024);
     (void)stack;
 #endif // VTKM_CUDA
 
-    ParticleType particlesObj(particles, MaxSteps);
+    ParticleArrayType particlesObj(particles, MaxSteps);
 
     //Invoke particle advection worklet
     ParticleWorkletDispatchType particleWorkletDispatch;
@@ -175,13 +168,13 @@ public:
 } // namespace detail
 
 
-template <typename IntegratorType>
+template <typename IntegratorType, typename ParticleType>
 class StreamlineWorklet
 {
 public:
   template <typename PointStorage, typename PointStorage2>
   void Run(const IntegratorType& it,
-           vtkm::cont::ArrayHandle<vtkm::Particle, PointStorage>& particles,
+           vtkm::cont::ArrayHandle<ParticleType, PointStorage>& particles,
            vtkm::Id& MaxSteps,
            vtkm::cont::ArrayHandle<vtkm::Vec3f, PointStorage2>& positions,
            vtkm::cont::CellSetExplicit<>& polyLines)
@@ -189,7 +182,8 @@ public:
 
     using ParticleWorkletDispatchType = typename vtkm::worklet::DispatcherMapField<
       vtkm::worklet::particleadvection::ParticleAdvectWorklet>;
-    using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles;
+    using StreamlineArrayType =
+      vtkm::worklet::particleadvection::StateRecordingParticles<ParticleType>;
 
     vtkm::cont::ArrayHandle<vtkm::Id> initialStepsTaken;
 
@@ -201,12 +195,12 @@ public:
 
 #ifdef VTKM_CUDA
     // This worklet needs some extra space on CUDA.
-    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    vtkm::cont::cuda::internal::ScopedCudaStackSize stack(16 * 1024);
     (void)stack;
 #endif // VTKM_CUDA
 
     //Run streamline worklet
-    StreamlineType streamlines(particles, MaxSteps);
+    StreamlineArrayType streamlines(particles, MaxSteps);
     ParticleWorkletDispatchType particleWorkletDispatch;
     vtkm::cont::ArrayHandleConstant<vtkm::Id> maxSteps(MaxSteps, numSeeds);
     particleWorkletDispatch.Invoke(idxArray, it, streamlines, maxSteps);
@@ -231,8 +225,7 @@ public:
       vtkm::cont::make_ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_POLY_LINE, numSeeds);
     vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
 
-    auto numIndices = vtkm::cont::make_ArrayHandleCast(numPoints, vtkm::IdComponent());
-    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numPoints);
     polyLines.Fill(positions.GetNumberOfValues(), cellTypes, connectivity, offsets);
   }
 };

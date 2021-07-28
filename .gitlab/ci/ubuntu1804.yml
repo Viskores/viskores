@@ -16,7 +16,7 @@ build:ubuntu1804_gcc9:
     CC: "gcc-9"
     CXX: "g++-9"
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "tbb+openmp+mpi+shared"
+    VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5"
 
 test:ubuntu1804_gcc9:
   tags:
@@ -28,13 +28,17 @@ test:ubuntu1804_gcc9:
     - .ubuntu1804
     - .cmake_test_linux
     - .only-default
+  variables:
+    #Restrict OpenMP number of threads since multiple test stages
+    #execute on the same hardware concurrently
+    OMP_NUM_THREADS: 4
   dependencies:
     - build:ubuntu1804_gcc9
   needs:
     - build:ubuntu1804_gcc9
 
 # Build on ubuntu1804 with CUDA + MPI and test on ubuntu1804
-# Uses gcc 7.4
+# Uses gcc 7
 # Uses MPICH2
 build:ubuntu1804_gcc7:
   tags:
@@ -42,6 +46,7 @@ build:ubuntu1804_gcc7:
     - vtkm
     - docker
     - linux
+    - cuda-rt
     - large-memory
   extends:
     - .ubuntu1804_cuda
@@ -50,16 +55,17 @@ build:ubuntu1804_gcc7:
   variables:
     CC: "gcc-7"
     CXX: "g++-7"
-    VTKM_SETTINGS: "cuda+turing+mpi+64bit_floats"
+    CUDAHOSTCXX: "g++-7"
+    VTKM_SETTINGS: "benchmarks+cuda+turing+mpi+64bit_floats+no_virtual"
 
 test:ubuntu1804_gcc7:
   tags:
     - test
-    - cuda-rt
-    - turing
     - vtkm
     - docker
     - linux
+    - cuda-rt
+    - turing
   extends:
     - .ubuntu1804_cuda
     - .cmake_test_linux
@@ -70,42 +76,48 @@ test:ubuntu1804_gcc7:
     - build:ubuntu1804_gcc7
 
 
-# Build on ubuntu1804 with OpenMP and test on ubuntu1804
-# Uses gcc 7.4
+# Build on ubuntu1804 with CUDA+TBB and test on ubuntu1804
+# Uses clang as CUDA host compiler
 # Runs only on nightlies
-build:ubuntu1804_gcc7_2:
+build:ubuntu1804_clang_cuda:
   tags:
     - build
     - vtkm
     - docker
     - linux
+    - cuda-rt
+    - large-memory
   extends:
-    - .ubuntu1804
+    - .ubuntu1804_cuda
     - .cmake_build_linux
-    - .only-master
+    - .only-default
+    # - .only-master
   variables:
-    CC: "gcc-7"
-    CXX: "g++-7"
-    VTKM_SETTINGS: "openmp+shared+examples"
+    CC: "clang-8"
+    CXX: "clang++-8"
+    CUDAHOSTCXX: "clang++-8"
+    VTKM_SETTINGS: "cuda+pascal+tbb+static+examples"
 
-test:ubuntu1804_gcc7_2:
+test:ubuntu1804_clang_cuda:
   tags:
     - test
     - vtkm
     - docker
     - linux
+    - cuda-rt
+    - pascal
   extends:
-    - .ubuntu1804
+    - .ubuntu1804_cuda
     - .cmake_test_linux
-    - .only-master
+    - .only-default
+    # - .only-master
   dependencies:
-    - build:ubuntu1804_gcc7_2
+    - build:ubuntu1804_clang_cuda
   needs:
-    - build:ubuntu1804_gcc7_2
+    - build:ubuntu1804_clang_cuda
 
 # Build on ubuntu1804 with OpenMP and test on ubuntu1804
 # Uses gcc 6.5
-# Runs only on nightlies
 build:ubuntu1804_gcc6:
   tags:
     - build
@@ -115,11 +127,11 @@ build:ubuntu1804_gcc6:
   extends:
     - .ubuntu1804
     - .cmake_build_linux
-    - .only-master
+    - .only-default
   variables:
     CC: "gcc-6"
     CXX: "g++-6"
-    VTKM_SETTINGS: "openmp+shared"
+    VTKM_SETTINGS: "openmp+shared+examples"
 
 test:ubuntu1804_gcc6:
   tags:
@@ -130,7 +142,11 @@ test:ubuntu1804_gcc6:
   extends:
     - .ubuntu1804
     - .cmake_test_linux
-    - .only-master
+    - .only-default
+  variables:
+    #Restrict OpenMP number of threads since multiple test stages
+    #execute on the same hardware concurrently
+    OMP_NUM_THREADS: 3
   dependencies:
     - build:ubuntu1804_gcc6
   needs:
@@ -152,7 +168,7 @@ build:ubuntu1804_clang8:
     CC: "clang-8"
     CXX: "clang++-8"
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "tbb+shared"
+    VTKM_SETTINGS: "tbb+shared+examples"
 
 test:ubuntu1804_clang8:
   tags:
@@ -168,3 +184,39 @@ test:ubuntu1804_clang8:
     - build:ubuntu1804_clang8
   needs:
     - build:ubuntu1804_clang8
+
+# Build on ubuntu1804 with kokkos and test on ubuntu1804
+# Uses CUDA 11
+build:ubuntu1804_kokkos:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+    - cuda-rt
+    - large-memory
+  extends:
+    - .ubuntu1804_cuda_kokkos
+    - .cmake_build_linux
+    - .only-default
+  variables:
+    CMAKE_GENERATOR: "Ninja"
+    CMAKE_BUILD_TYPE: Release
+    VTKM_SETTINGS: "benchmarks+kokkos+turing+static+64bit_floats"
+
+test:ubuntu1804_kokkos:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+    - cuda-rt
+    - turing
+  extends:
+    - .ubuntu1804_cuda_kokkos
+    - .cmake_test_linux
+    - .only-default
+  dependencies:
+    - build:ubuntu1804_kokkos
+  needs:
+    - build:ubuntu1804_kokkos

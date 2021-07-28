@@ -17,7 +17,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -109,16 +108,12 @@ struct TryWholeArrayType
   {
     using ArrayHandleType = vtkm::cont::ArrayHandle<T>;
 
-    using InTransportType = vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayIn,
-                                                       ArrayHandleType,
-                                                       Device>;
-    using InOutTransportType =
-      vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayInOut,
-                                 ArrayHandleType,
-                                 Device>;
-    using OutTransportType = vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayOut,
-                                                        ArrayHandleType,
-                                                        Device>;
+    using InTransportType = vtkm::cont::arg::
+      Transport<vtkm::cont::arg::TransportTagWholeArrayIn, ArrayHandleType, Device>;
+    using InOutTransportType = vtkm::cont::arg::
+      Transport<vtkm::cont::arg::TransportTagWholeArrayInOut, ArrayHandleType, Device>;
+    using OutTransportType = vtkm::cont::arg::
+      Transport<vtkm::cont::arg::TransportTagWholeArrayOut, ArrayHandleType, Device>;
 
     ArrayHandleType array;
     array.Allocate(ARRAY_SIZE);
@@ -149,10 +144,11 @@ struct TryWholeArrayType
     token.DetachFromAll();
 
     VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Array size wrong?");
+    auto portal = array.ReadPortal();
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
       T expectedValue = TestValue(index, T()) + T(OFFSET);
-      T retrievedValue = array.ReadPortal().Get(index);
+      T retrievedValue = portal.Get(index);
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "In/Out array not set correctly.");
     }

@@ -11,15 +11,14 @@
 #define vtk_m_worklet_DispatcherPointNeighborhood_h
 
 #include <vtkm/cont/DeviceAdapter.h>
-
-#include <vtkm/worklet/WorkletPointNeighborhood.h>
-
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
 namespace vtkm
 {
 namespace worklet
 {
+class WorkletNeighborhood;
+class WorkletPointNeighborhood;
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletPointNeighborhood.
 ///
@@ -27,12 +26,12 @@ template <typename WorkletType>
 class DispatcherPointNeighborhood
   : public vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType>,
                                                    WorkletType,
-                                                   vtkm::worklet::WorkletPointNeighborhoodBase>
+                                                   vtkm::worklet::WorkletNeighborhood>
 {
   using Superclass =
     vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType>,
                                             WorkletType,
-                                            vtkm::worklet::WorkletPointNeighborhoodBase>;
+                                            vtkm::worklet::WorkletNeighborhood>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:

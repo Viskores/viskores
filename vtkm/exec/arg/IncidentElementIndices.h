@@ -12,7 +12,7 @@
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 #include <vtkm/exec/arg/Fetch.h>
-#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
+#include <vtkm/exec/arg/FetchExtrude.h>
 
 namespace vtkm
 {
@@ -20,15 +20,6 @@ namespace exec
 {
 namespace arg
 {
-
-/// \brief Aspect tag to use for getting the visited indices.
-///
-/// The \c AspectTagIncidentElementIndices aspect tag causes the \c Fetch class
-/// to obtain the indices that map to the current topology element.
-///
-struct AspectTagIncidentElementIndices
-{
-};
 
 /// \brief The \c ExecutionSignature tag to get the indices of visited elements.
 ///
@@ -43,30 +34,6 @@ struct IncidentElementIndices : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static constexpr vtkm::IdComponent INDEX = 1;
   using AspectTag = vtkm::exec::arg::AspectTagIncidentElementIndices;
-};
-
-template <typename FetchTag, typename ConnectivityType, typename ExecObjectType>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagIncidentElementIndices,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
-             ExecObjectType>
-{
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
-
-  using ValueType = typename ThreadIndicesType::IndicesIncidentType;
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
-  {
-    return indices.GetIndicesIncident();
-  }
-
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
-  {
-    // Store is a no-op.
-  }
 };
 }
 }

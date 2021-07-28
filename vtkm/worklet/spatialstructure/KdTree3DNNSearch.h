@@ -24,6 +24,10 @@
 #include <vtkm/worklet/internal/DispatcherBase.h>
 #include <vtkm/worklet/internal/WorkletBase.h>
 
+#ifdef VTKM_CUDA
+#include <vtkm/cont/cuda/internal/ScopedCudaStackSize.h>
+#endif
+
 namespace vtkm
 {
 namespace worklet
@@ -204,7 +208,7 @@ public:
 
 //set up stack size for cuda environment
 #ifdef VTKM_CUDA
-    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    vtkm::cont::cuda::internal::ScopedCudaStackSize stack(16 * 1024);
     (void)stack;
 #endif
 

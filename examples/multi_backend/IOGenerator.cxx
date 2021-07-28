@@ -12,7 +12,6 @@
 #include <vtkm/Math.h>
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/Invoker.h>
 
 #include <vtkm/worklet/WorkletMapField.h>
@@ -39,14 +38,13 @@ struct WaveField : public vtkm::worklet::WorkletMapField
 vtkm::cont::DataSet make_test3DImageData(vtkm::Id3 dims)
 {
   using Builder = vtkm::cont::DataSetBuilderUniform;
-  using FieldAdd = vtkm::cont::DataSetFieldAdd;
   vtkm::cont::DataSet ds = Builder::Create(dims);
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> field;
   vtkm::cont::Invoker invoke;
-  invoke(WaveField{}, ds.GetCoordinateSystem(), field);
+  invoke(WaveField{}, ds.GetCoordinateSystem().GetDataAsMultiplexer(), field);
 
-  FieldAdd::AddPointField(ds, "vec_field", field);
+  ds.AddPointField("vec_field", field);
   return ds;
 }
 

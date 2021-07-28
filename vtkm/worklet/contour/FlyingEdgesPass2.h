@@ -23,7 +23,6 @@ namespace worklet
 namespace flying_edges
 {
 
-template <typename AxisToSum>
 struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   vtkm::Id3 PointDims;
@@ -40,37 +39,41 @@ struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
                                 FieldInPoint axis_maxs,
                                 FieldOutCell cell_tri_count,
                                 WholeArrayIn edgeData);
-  using ExecutionSignature = void(ThreadIndices, _2, _3, _4, _5, _6);
+  using ExecutionSignature = void(ThreadIndices, _2, _3, _4, _5, _6, Device);
   using InputDomain = _1;
 
   template <typename ThreadIndices,
             typename WholeSumField,
             typename FieldInPointId,
-            typename WholeEdgeField>
+            typename WholeEdgeField,
+            typename Device>
   VTKM_EXEC void operator()(const ThreadIndices& threadIndices,
                             const WholeSumField& axis_sums,
                             const FieldInPointId& axis_mins,
                             const FieldInPointId& axis_maxs,
                             vtkm::Int32& cell_tri_count,
-                            const WholeEdgeField& edges) const
+                            const WholeEdgeField& edges,
+                            Device) const
   {
+    using AxisToSum = typename select_AxisToSum<Device>::type;
+
     // Pass 2. Traverse all cells in the meta data plane. This allows us to
     // easily grab the four edge cases bounding this voxel-row
-
-    // find adjusted trim values.
-    vtkm::Id left = vtkm::Min(axis_mins[0], axis_mins[1]);
-    left = vtkm::Min(left, axis_mins[2]);
-    left = vtkm::Min(left, axis_mins[3]);
-
-    vtkm::Id right = vtkm::Max(axis_maxs[0], axis_maxs[1]);
-    right = vtkm::Max(right, axis_maxs[2]);
-    right = vtkm::Max(right, axis_maxs[3]);
-
     const vtkm::Id3 ijk = compute_ijk(AxisToSum{}, threadIndices.GetInputIndex3D());
     const vtkm::Id3 pdims = this->PointDims;
 
     const vtkm::Id4 startPos = compute_neighbor_starts(AxisToSum{}, ijk, pdims);
     const vtkm::Id axis_inc = compute_inc(AxisToSum{}, pdims);
+
+    // Compute the subset (start and end) of the row that we need
+    // to iterate to generate triangles for the iso-surface
+    vtkm::Id left, right;
+    bool hasWork = computeTrimBounds(
+      pdims[AxisToSum::xindex] - 1, edges, axis_mins, axis_maxs, startPos, axis_inc, left, right);
+    if (!hasWork)
+    {
+      return;
+    }
 
     vtkm::Vec<bool, 3> onBoundary(false, false, false); //updated in for-loop
     onBoundary[AxisToSum::yindex] = (ijk[AxisToSum::yindex] >= (pdims[AxisToSum::yindex] - 2));
@@ -88,30 +91,6 @@ struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
     {
       adj_col_sum = axis_sums.Get(threadIndices.GetIndicesIncident()[3]);
     }
-
-    if (left == pdims[AxisToSum::xindex] && right == 0)
-    {
-      //verify that we have nothing to generate and early terminate.
-      bool mins_same = (axis_mins[0] == axis_mins[1] && axis_mins[0] == axis_mins[2] &&
-                        axis_mins[0] == axis_mins[3]);
-      bool maxs_same = (axis_maxs[0] == axis_maxs[1] && axis_maxs[0] == axis_maxs[2] &&
-                        axis_maxs[0] == axis_maxs[3]);
-      if (mins_same && maxs_same)
-      {
-        return;
-      }
-      else
-      {
-        left = 0;
-        right = pdims[AxisToSum::xindex] - 1;
-      }
-    }
-
-    // The trim edges may need adjustment if the contour travels between rows
-    // of edges (without intersecting these edges). This means checking
-    // whether the trim faces at (left,rightR) made up of the  edges intersect
-    // the contour. Basically just an intersection operation.
-    adjustTrimBounds(pdims[AxisToSum::xindex] - 1, edges, startPos, axis_inc, left, right);
 
     for (vtkm::Id i = left; i < right; ++i) // run along the trimmed voxels
     {
@@ -134,7 +113,8 @@ struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
         sums[AxisToSum::zindex] += edgeUses[8];
 
         // handle boundary
-        this->CountBoundaryEdgeUses(onBoundary, edgeUses, sums, adj_row_sum, adj_col_sum);
+        this->CountBoundaryEdgeUses(
+          AxisToSum{}, onBoundary, edgeUses, sums, adj_row_sum, adj_col_sum);
       }
     }
 
@@ -157,7 +137,9 @@ struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
   //
   // Only on these boundaries do we write to the metaData of our neighbor
   // as it is safe as those
-  VTKM_EXEC inline void CountBoundaryEdgeUses(vtkm::Vec<bool, 3> onBoundary,
+  template <typename AxisToSum>
+  VTKM_EXEC inline void CountBoundaryEdgeUses(AxisToSum,
+                                              vtkm::Vec<bool, 3> onBoundary,
                                               vtkm::UInt8 const* const edgeUses,
                                               vtkm::Id3& sums,
                                               vtkm::Id3& adj_row_sum,

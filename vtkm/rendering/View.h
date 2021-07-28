@@ -12,6 +12,7 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
@@ -82,6 +83,16 @@ public:
   VTKM_CONT
   void SetForegroundColor(const vtkm::rendering::Color& color);
 
+  VTKM_CONT
+  bool GetWorldAnnotationsEnabled() const { return this->WorldAnnotationsEnabled; }
+
+  VTKM_CONT
+  void SetWorldAnnotationsEnabled(bool val) { this->WorldAnnotationsEnabled = val; }
+
+  VTKM_CONT void SetRenderAnnotationsEnabled(bool val) { this->RenderAnnotationsEnabled = val; }
+  VTKM_CONT bool GetRenderAnnotationsEnabled() { return this->RenderAnnotationsEnabled; }
+
+  VTKM_DEPRECATED(1.6, "Initialize() does nothing.")
   virtual void Initialize();
 
   virtual void Paint() = 0;
@@ -90,14 +101,25 @@ public:
 
   void SaveAs(const std::string& fileName) const;
 
+  VTKM_CONT VTKM_DEPRECATED(1.6, "Use ClearTextAnnotations Instead") void ClearAnnotations();
+
+  VTKM_CONT VTKM_DEPRECATED(1.6, "Use AddTextAnnotation Instead") void AddAnnotation(
+    std::unique_ptr<vtkm::rendering::TextAnnotation> ann);
+
   VTKM_CONT
   void SetAxisColor(vtkm::rendering::Color c);
 
   VTKM_CONT
-  void ClearAnnotations();
+  void ClearTextAnnotations();
 
   VTKM_CONT
-  void AddAnnotation(std::unique_ptr<vtkm::rendering::TextAnnotation> ann);
+  void AddTextAnnotation(std::unique_ptr<vtkm::rendering::TextAnnotation> ann);
+
+  VTKM_CONT
+  void ClearAdditionalAnnotations();
+
+  VTKM_CONT
+  void AddAdditionalAnnotation(std::function<void(void)> ann);
 
 protected:
   void SetupForWorldSpace(bool viewportClip = true);
@@ -107,11 +129,14 @@ protected:
   void RenderAnnotations();
 
   vtkm::rendering::Color AxisColor = vtkm::rendering::Color::white;
+  bool WorldAnnotationsEnabled = true;
+  bool RenderAnnotationsEnabled = true;
 
 private:
   std::shared_ptr<InternalData> Internal;
 };
-}
-} //namespace vtkm::rendering
+
+} // namespace vtkm::rendering
+} // namespace vtkm
 
 #endif //vtk_m_rendering_View_h

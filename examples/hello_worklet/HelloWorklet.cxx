@@ -13,7 +13,7 @@
 #include <vtkm/filter/CreateResult.h>
 #include <vtkm/filter/FilterField.h>
 
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/cont/Initialize.h>
 
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
   helloField.SetActiveField("point_vectors");
   vtkm::cont::DataSet outputData = helloField.Execute(inputData);
 
-  vtkm::io::writer::VTKDataSetWriter writer("out_data.vtk");
+  vtkm::io::VTKDataSetWriter writer("out_data.vtk");
   writer.WriteDataSet(outputData);
 
   return 0;

@@ -32,6 +32,8 @@
 
 #include <vtkm/worklet/internal/WorkletBase.h>
 
+#include <vtkmstd/is_trivial.h>
+
 #include <sstream>
 
 namespace vtkm
@@ -315,7 +317,15 @@ struct DispatcherBaseTransportFunctor
       typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
     using T = vtkm::internal::remove_pointer_and_decay<ControlParameter>;
     using TransportType = typename vtkm::cont::arg::Transport<TransportTag, T, Device>;
-    using type = typename TransportType::ExecObjectType;
+    using type = typename std::decay<typename TransportType::ExecObjectType>::type;
+
+    // If you get a compile error here, it means that an execution object type is not
+    // trivially copyable. This is strictly disallowed. All execution objects must be
+    // trivially copyable so that the can be memcpy-ed between host and devices.
+    // Note that it is still legal for execution objects to have pointers or other
+    // references to resources on a particular device. It is up to the generating code
+    // to ensure that all referenced resources are valid on the target device.
+    VTKM_IS_TRIVIALLY_COPYABLE(type);
   };
 
   template <typename ControlParameter, vtkm::IdComponent Index>
@@ -599,7 +609,7 @@ public:
   {
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
                    "Invoking Worklet: '%s'",
-                   vtkm::cont::TypeToString<WorkletType>().c_str());
+                   vtkm::cont::TypeToString<DerivedClass>().c_str());
     this->StartInvoke(std::forward<Args>(args)...);
   }
 

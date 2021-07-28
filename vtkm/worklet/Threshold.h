@@ -11,8 +11,8 @@
 #define vtkm_m_worklet_Threshold_h
 
 #include <vtkm/worklet/CellDeepCopy.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
@@ -184,6 +184,8 @@ public:
 
     return result;
   }
+
+  vtkm::cont::ArrayHandle<vtkm::Id> GetValidCellIds() const { return this->ValidCellIds; }
 
 private:
   vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;

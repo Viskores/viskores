@@ -75,13 +75,14 @@ void TestPointElevationNoPolicy()
   VTKM_TEST_ASSERT(result.HasPointField("height"), "Output field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetPointField("height").GetData().CopyTo(resultArrayHandle);
-  auto coordinates = inputData.GetCoordinateSystem().GetData();
+  result.GetPointField("height").GetData().AsArrayHandle(resultArrayHandle);
+  auto coordinates = inputData.GetCoordinateSystem().GetDataAsMultiplexer();
+  auto coordsPortal = coordinates.ReadPortal();
+  auto resultPortal = resultArrayHandle.ReadPortal();
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(
-      test_equal(coordinates.ReadPortal().Get(i)[1] * 2.0, resultArrayHandle.ReadPortal().Get(i)),
-      "Wrong result for PointElevation worklet");
+    VTKM_TEST_ASSERT(test_equal(coordsPortal.Get(i)[1] * 2.0, resultPortal.Get(i)),
+                     "Wrong result for PointElevation worklet");
   }
 }
 
@@ -99,20 +100,20 @@ void TestPointElevationWithPolicy()
   filter.SetRange(0.0, 2.0);
   filter.SetUseCoordinateSystemAsField(true);
 
-  vtkm::filter::PolicyDefault p;
-  auto result = filter.Execute(inputData, p);
+  auto result = filter.Execute(inputData);
 
   //verify the result
   VTKM_TEST_ASSERT(result.HasPointField("elevation"), "Output field has wrong association");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetPointField("elevation").GetData().CopyTo(resultArrayHandle);
-  auto coordinates = inputData.GetCoordinateSystem().GetData();
+  result.GetPointField("elevation").GetData().AsArrayHandle(resultArrayHandle);
+  auto coordinates = inputData.GetCoordinateSystem().GetDataAsMultiplexer();
+  auto coordsPortal = coordinates.ReadPortal();
+  auto resultPortal = resultArrayHandle.ReadPortal();
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(
-      test_equal(coordinates.ReadPortal().Get(i)[1] * 2.0, resultArrayHandle.ReadPortal().Get(i)),
-      "Wrong result for PointElevation worklet");
+    VTKM_TEST_ASSERT(test_equal(coordsPortal.Get(i)[1] * 2.0, resultPortal.Get(i)),
+                     "Wrong result for PointElevation worklet");
   }
 }
 

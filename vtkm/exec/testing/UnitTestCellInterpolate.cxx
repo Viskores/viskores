@@ -20,7 +20,7 @@
 
 #include <vtkm/testing/Testing.h>
 
-#define CHECK_CALL(call)                                                                           \
+#define CHECK_CALL(call) \
   VTKM_TEST_ASSERT((call) == vtkm::ErrorCode::Success, "Call resulted in error.")
 
 namespace
@@ -59,6 +59,11 @@ struct TestInterpolateFunctor
   void DoTestWithField(CellShapeTag shape, const FieldVecType& fieldValues) const
   {
     vtkm::IdComponent numPoints = fieldValues.GetNumberOfComponents();
+    if (numPoints < 1)
+    {
+      return;
+    }
+
     FieldType averageValue = vtkm::TypeTraits<FieldType>::ZeroInitialization();
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
@@ -66,7 +71,6 @@ struct TestInterpolateFunctor
     }
     averageValue = static_cast<ComponentType>(1.0 / numPoints) * averageValue;
 
-    std::cout << "  Test interpolated value at each cell node." << std::endl;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
       vtkm::Vec3f pcoord;
@@ -78,18 +82,13 @@ struct TestInterpolateFunctor
                        "Interpolation at point not point value.");
     }
 
-    if (numPoints > 0)
-    {
-      std::cout << "  Test interpolated value at cell center." << std::endl;
-      vtkm::Vec3f pcoord;
-      CHECK_CALL(vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, pcoord));
-      FieldType interpolatedValue;
-      CHECK_CALL(vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, interpolatedValue));
+    vtkm::Vec3f pcoord;
+    CHECK_CALL(vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, pcoord));
+    FieldType interpolatedValue;
+    CHECK_CALL(vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, interpolatedValue));
 
-      std::cout << "AVG= " << averageValue << " interp= " << interpolatedValue << std::endl;
-      VTKM_TEST_ASSERT(test_equal(averageValue, interpolatedValue),
-                       "Interpolation at center not average value.");
-    }
+    VTKM_TEST_ASSERT(test_equal(averageValue, interpolatedValue),
+                     "Interpolation at center not average value.");
   }
 
   template <typename CellShapeTag>
@@ -113,18 +112,14 @@ struct TestInterpolateFunctor
     GetMinMaxPoints(
       CellShapeTag(), typename vtkm::CellTraits<CellShapeTag>::IsSizeFixed(), minPoints, maxPoints);
 
-    std::cout << "--- Test shape tag directly" << std::endl;
     for (vtkm::IdComponent numPoints = minPoints; numPoints <= maxPoints; numPoints++)
     {
-      std::cout << numPoints << " points" << std::endl;
       this->DoTest(CellShapeTag(), numPoints);
     }
 
-    std::cout << "--- Test generic shape tag" << std::endl;
     vtkm::CellShapeTagGeneric genericShape(CellShapeTag::Id);
     for (vtkm::IdComponent numPoints = minPoints; numPoints <= maxPoints; numPoints++)
     {
-      std::cout << numPoints << " points" << std::endl;
       this->DoTest(genericShape, numPoints);
     }
   }

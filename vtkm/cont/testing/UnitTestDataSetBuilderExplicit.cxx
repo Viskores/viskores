@@ -83,9 +83,7 @@ std::vector<T> createVec(std::size_t n, const T* data)
 template <typename T>
 vtkm::cont::ArrayHandle<T> createAH(std::size_t n, const T* data)
 {
-  vtkm::cont::ArrayHandle<T> arr;
-  DFA::Copy(vtkm::cont::make_ArrayHandle(data, static_cast<vtkm::Id>(n)), arr);
-  return arr;
+  return vtkm::cont::make_ArrayHandle(data, static_cast<vtkm::Id>(n), vtkm::CopyFlag::On);
 }
 
 template <typename T>
@@ -99,13 +97,15 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
                                      const vtkm::UInt8* shape)
 {
   vtkm::cont::DataSet dataSet;
-  vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::DataSetBuilderExplicit dsb;
   float f = 0.0f;
   if (useSeparatedCoords)
   {
     std::vector<T> xvals(numPoints), yvals(numPoints), zvals(numPoints);
     std::vector<T> varP(numPoints), varC(numCells);
+    std::vector<vtkm::UInt8> shapevals(numCells);
+    std::vector<vtkm::IdComponent> indicesvals(numCells);
+    std::vector<vtkm::Id> connvals(numConn);
     for (std::size_t i = 0; i < numPoints; i++, f++)
     {
       xvals[i] = coords[i * 3 + 0];
@@ -117,17 +117,19 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
     for (std::size_t i = 0; i < numCells; i++, f++)
     {
       varC[i] = static_cast<T>(f * 1.1f);
+      shapevals[i] = shape[i];
+      indicesvals[i] = indices[i];
     }
-    vtkm::cont::ArrayHandle<T> X, Y, Z, P, C;
-    DFA::Copy(vtkm::cont::make_ArrayHandle(xvals), X);
-    DFA::Copy(vtkm::cont::make_ArrayHandle(yvals), Y);
-    DFA::Copy(vtkm::cont::make_ArrayHandle(zvals), Z);
-    DFA::Copy(vtkm::cont::make_ArrayHandle(varP), P);
-    DFA::Copy(vtkm::cont::make_ArrayHandle(varC), C);
-    dataSet = dsb.Create(
-      X, Y, Z, createAH(numCells, shape), createAH(numCells, indices), createAH(numConn, conn));
-    dsf.AddPointField(dataSet, "pointvar", P);
-    dsf.AddCellField(dataSet, "cellvar", C);
+    for (std::size_t i = 0; i < numConn; i++)
+    {
+      connvals[i] = conn[i];
+    }
+    dataSet = dsb.Create(xvals, yvals, zvals, shapevals, indicesvals, connvals);
+
+    vtkm::cont::ArrayHandle<T> P = vtkm::cont::make_ArrayHandle(varP, vtkm::CopyFlag::On);
+    vtkm::cont::ArrayHandle<T> C = vtkm::cont::make_ArrayHandle(varC, vtkm::CopyFlag::On);
+    dataSet.AddPointField("pointvar", P);
+    dataSet.AddCellField("cellvar", C);
     return dataSet;
   }
   else
@@ -146,12 +148,12 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
     {
       varC[i][0] = static_cast<T>(f * 1.1f);
     }
-    vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> pts;
-    DFA::Copy(vtkm::cont::make_ArrayHandle(tmp), pts);
+    vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> pts =
+      vtkm::cont::make_ArrayHandle(tmp, vtkm::CopyFlag::On);
     dataSet = dsb.Create(
       pts, createAH(numCells, shape), createAH(numCells, indices), createAH(numConn, conn));
-    dsf.AddPointField(dataSet, "pointvar", varP);
-    dsf.AddCellField(dataSet, "cellvar", varC);
+    dataSet.AddPointField("pointvar", varP);
+    dataSet.AddCellField("cellvar", varC);
     return dataSet;
   }
 }
@@ -167,7 +169,6 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
                                      const vtkm::UInt8* shape)
 {
   vtkm::cont::DataSet dataSet;
-  vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::DataSetBuilderExplicit dsb;
 
   float f = 0.0f;
@@ -188,8 +189,8 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
     }
     dataSet = dsb.Create(
       X, Y, Z, createVec(numCells, shape), createVec(numCells, indices), createVec(numConn, conn));
-    dsf.AddPointField(dataSet, "pointvar", varP);
-    dsf.AddCellField(dataSet, "cellvar", varC);
+    dataSet.AddPointField("pointvar", varP);
+    dataSet.AddCellField("cellvar", varC);
     return dataSet;
   }
   else
@@ -210,8 +211,8 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
     }
     dataSet = dsb.Create(
       pts, createVec(numCells, shape), createVec(numCells, indices), createVec(numConn, conn));
-    dsf.AddPointField(dataSet, "pointvar", varP);
-    dsf.AddCellField(dataSet, "cellvar", varC);
+    dataSet.AddPointField("pointvar", varP);
+    dataSet.AddCellField("cellvar", varC);
     return dataSet;
   }
 }
@@ -223,15 +224,14 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
     vtkm::cont::testing::ExplicitData##num::numConn, vtkm::cont::testing::ExplicitData##num::conn, \
     vtkm::cont::testing::ExplicitData##num::numIndices,                                            \
     vtkm::cont::testing::ExplicitData##num::shapes
-#define TEST_NUMS(num)                                                                             \
-  vtkm::cont::testing::ExplicitData##num::numPoints,                                               \
+#define TEST_NUMS(num)                               \
+  vtkm::cont::testing::ExplicitData##num::numPoints, \
     vtkm::cont::testing::ExplicitData##num::numCells
-#define TEST_BOUNDS(num)                                                                           \
+#define TEST_BOUNDS(num) \
   vtkm::cont::testing::ExplicitData##num::numPoints, vtkm::cont::testing::ExplicitData##num::coords
 
 void TestDataSetBuilderExplicit()
 {
-  vtkm::cont::DataSetBuilderExplicit dsb;
   vtkm::cont::DataSet ds;
   vtkm::Bounds bounds;
 

@@ -68,23 +68,22 @@ namespace active_graph_inc
 
 
 // comparator used for initial sort of data values
-template <typename DeviceAdapter>
 class EdgePeakComparatorImpl
 {
 public:
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
 
   // constructor - takes vectors as parameters
   VTKM_CONT
   EdgePeakComparatorImpl(const IdArrayType& edgeFar,
                          const IdArrayType& edgeNear,
                          bool joinGraph,
+                         vtkm::cont::DeviceAdapterId device,
                          vtkm::cont::Token& token)
     : IsJoinGraph(joinGraph)
   { // constructor
-    this->EdgeFarPortal = edgeFar.PrepareForInput(DeviceAdapter(), token);
-    this->EdgeNearPortal = edgeNear.PrepareForInput(DeviceAdapter(), token);
+    this->EdgeFarPortal = edgeFar.PrepareForInput(device, token);
+    this->EdgeNearPortal = edgeNear.PrepareForInput(device, token);
   } // constructor
 
   // () operator - gets called to do comparison
@@ -151,13 +150,10 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT EdgePeakComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter,
-    vtkm::cont::Token& token) const
+  VTKM_CONT EdgePeakComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                       vtkm::cont::Token& token) const
   {
-    return EdgePeakComparatorImpl<DeviceAdapter>(
-      this->EdgeFar, this->EdgeNear, this->JoinGraph, token);
+    return EdgePeakComparatorImpl(this->EdgeFar, this->EdgeNear, this->JoinGraph, device, token);
   }
 
 private:

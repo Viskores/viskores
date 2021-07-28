@@ -12,6 +12,7 @@
 #define vtk_m_worklet_connectivity_ImageConnectivity_h
 
 #include <vtkm/cont/Invoker.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
@@ -32,69 +33,59 @@ class ImageGraft : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
   using ControlSignature = void(CellSetIn,
-                                FieldInNeighborhood compIn,
-                                FieldInNeighborhood color,
-                                WholeArrayInOut compOut,
-                                AtomicArrayInOut changed);
+                                FieldInNeighborhood neighborComp,
+                                FieldInNeighborhood neighborColor,
+                                AtomicArrayInOut compOut);
 
-  using ExecutionSignature = void(WorkIndex, _2, _3, _4, _5);
+  using ExecutionSignature = void(Boundary, _2, _3, _4);
 
-  template <typename Comp>
-  VTKM_EXEC vtkm::Id findRoot(Comp& comp, vtkm::Id index) const
-  {
-    while (comp.Get(index) != index)
-      index = comp.Get(index);
-    return index;
-  }
 
-  // compOut is an alias of compIn such that we can update component labels
-  template <typename NeighborComp, typename NeighborColor, typename CompOut, typename AtomicInOut>
-  VTKM_EXEC void operator()(const vtkm::Id index,
+  // compOut is a "linear" alias of neightborComp such that we can update component labels
+  template <typename Boundary,
+            typename NeighborComp,
+            typename NeighborColor,
+            typename AtomicCompOut>
+  VTKM_EXEC void operator()(Boundary boundary,
                             const NeighborComp& neighborComp,
                             const NeighborColor& neighborColor,
-                            CompOut& compOut,
-                            AtomicInOut& updated) const
+                            AtomicCompOut& compOut) const
   {
-    vtkm::Id myComp = neighborComp.Get(0, 0, 0);
-    auto minComp = myComp;
+    auto thisColor = neighborColor.Get(0, 0, 0);
 
-    auto myColor = neighborColor.Get(0, 0, 0);
+    auto minIndices = boundary.MinNeighborIndices(1);
+    auto maxIndices = boundary.MaxNeighborIndices(1);
 
-    for (int k = -1; k <= 1; k++)
+    for (int k = minIndices[2]; k <= maxIndices[2]; k++)
     {
-      for (int j = -1; j <= 1; j++)
+      for (int j = minIndices[1]; j <= maxIndices[1]; j++)
       {
-        for (int i = -1; i <= 1; i++)
+        for (int i = minIndices[0]; i <= maxIndices[0]; i++)
         {
-          if (myColor == neighborColor.Get(i, j, k))
+          if (thisColor == neighborColor.Get(i, j, k))
           {
-            minComp = vtkm::Min(minComp, neighborComp.Get(i, j, k));
+            // We need to reload thisComp and thatComp every iteration since
+            // they might have been changed by Unite(), both as a result of
+            // attaching one tree to the other or as a result of path compaction
+            // in findRoot().
+            auto thisComp = neighborComp.Get(0, 0, 0);
+            auto thatComp = neighborComp.Get(i, j, k);
+
+            // Merge the two components one way or the other, the order will
+            // be resolved by Unite().
+            UnionFind::Unite(compOut, thisComp, thatComp);
           }
         }
       }
-    }
-    // I don't just only want to update the component label of this pixel, I actually
-    // want to Union(FindRoot(myComponent), FindRoot(minComp)) and then Flatten the
-    // result.
-    compOut.Set(index, minComp);
-
-    auto myRoot = findRoot(compOut, myComp);
-    auto newRoot = findRoot(compOut, minComp);
-
-    if (myRoot < newRoot)
-      compOut.Set(newRoot, myRoot);
-    else if (myRoot > newRoot)
-      compOut.Set(myRoot, newRoot);
-
-    // mark an update occurred if no other worklets have done so yet
-    if (myComp != minComp && updated.Get(0) == 0)
-    {
-      updated.Set(0, 1);
     }
   }
 };
 }
 
+// Single pass connected component algorithm from
+// Jaiganesh, Jayadharini, and Martin Burtscher.
+// "A high-performance connected components implementation for GPUs."
+// Proceedings of the 27th International Symposium on High-Performance
+// Parallel and Distributed Computing. 2018.
 class ImageConnectivity
 {
 public:
@@ -104,47 +95,21 @@ public:
     template <int Dimension, typename T, typename StorageT, typename OutputPortalType>
     void operator()(const vtkm::cont::ArrayHandle<T, StorageT>& pixels,
                     const vtkm::cont::CellSetStructured<Dimension>& input,
-                    OutputPortalType& components) const
+                    OutputPortalType& componentsOut) const
     {
       using Algorithm = vtkm::cont::Algorithm;
 
-      Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
-                      components);
-
-      //used as an atomic bool, so we use Int32 as it the
-      //smallest type that VTK-m supports as atomics
-      vtkm::cont::ArrayHandle<vtkm::Int32> updateRequired;
-      updateRequired.Allocate(1);
+      // Initialize the parent pointer to point to the pixel itself. There are other
+      // ways to initialize the parent pointers, for example, a smaller or the minimal
+      // neighbor.
+      Algorithm::Copy(vtkm::cont::ArrayHandleIndex(pixels.GetNumberOfValues()), componentsOut);
 
       vtkm::cont::Invoker invoke;
-      do
-      {
-        updateRequired.WritePortal().Set(0, 0); //reset the atomic state
-        invoke(detail::ImageGraft{}, input, components, pixels, components, updateRequired);
-        invoke(PointerJumping{}, components);
-      } while (updateRequired.WritePortal().Get(0) > 0);
+      invoke(detail::ImageGraft{}, input, componentsOut, pixels, componentsOut);
+      invoke(PointerJumping{}, componentsOut);
 
       // renumber connected component to the range of [0, number of components).
-      vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
-      Algorithm::Copy(components, uniqueComponents);
-      Algorithm::Sort(uniqueComponents);
-      Algorithm::Unique(uniqueComponents);
-
-      vtkm::cont::ArrayHandle<vtkm::Id> pixelIds;
-      Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
-                      pixelIds);
-
-      vtkm::cont::ArrayHandle<vtkm::Id> uniqueColor;
-      Algorithm::Copy(
-        vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, uniqueComponents.GetNumberOfValues()),
-        uniqueColor);
-
-      vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
-      vtkm::cont::ArrayHandle<vtkm::Id> pixelIdsOut;
-      InnerJoin().Run(
-        components, pixelIds, uniqueComponents, uniqueColor, cellColors, pixelIdsOut, components);
-
-      Algorithm::SortByKey(pixelIdsOut, components);
+      Renumber::Run(componentsOut);
     }
   };
 
@@ -160,13 +125,14 @@ public:
     }
   };
 
-  template <int Dimension, typename T, typename OutputPortalType>
+  template <int Dimension, typename OutputPortalType>
   void Run(const vtkm::cont::CellSetStructured<Dimension>& input,
-           const vtkm::cont::VariantArrayHandleBase<T>& pixels,
+           const vtkm::cont::UnknownArrayHandle& pixels,
            OutputPortalType& componentsOut) const
   {
     using Types = vtkm::TypeListScalarAll;
-    vtkm::cont::CastAndCall(pixels.ResetTypes(Types{}), RunImpl(), input, componentsOut);
+    using Storages = VTKM_DEFAULT_STORAGE_LIST;
+    vtkm::cont::CastAndCall(pixels.ResetTypes<Types, Storages>(), RunImpl(), input, componentsOut);
   }
 
   template <int Dimension, typename T, typename S, typename OutputPortalType>

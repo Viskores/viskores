@@ -12,21 +12,25 @@ set(unit_tests
   UnitTestSerialArrayHandle.cxx
   UnitTestSerialArrayHandleFancy.cxx
   UnitTestSerialArrayHandleMultiplexer.cxx
-  UnitTestSerialArrayHandleVirtualCoordinates.cxx
   UnitTestSerialBitField.cxx
   UnitTestSerialCellLocatorRectilinearGrid.cxx
-  UnitTestSerialCellLocatorUniformBins.cxx
+  UnitTestSerialCellLocatorTwoLevel.cxx
   UnitTestSerialCellLocatorUniformGrid.cxx
   UnitTestSerialComputeRange.cxx
   UnitTestSerialColorTable.cxx
   UnitTestSerialDataSetExplicit.cxx
   UnitTestSerialDataSetSingleType.cxx
   UnitTestSerialDeviceAdapter.cxx
-  UnitTestSerialGeometry.cxx
   UnitTestSerialImplicitFunction.cxx
-  UnitTestSerialPointLocatorUniformGrid.cxx
-  UnitTestSerialVirtualObjectHandle.cxx
+  UnitTestSerialPointLocatorSparseGrid.cxx
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(unit_tests ${unit_tests}
+    UnitTestSerialVirtualObjectHandle.cxx
+    )
+endif()
+
 vtkm_unit_tests(SOURCES ${unit_tests}
                 LABEL "SERIAL"
                 DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG

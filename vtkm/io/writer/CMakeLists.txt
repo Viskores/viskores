@@ -10,9 +10,8 @@
 
 set(headers
   VTKDataSetWriter.h
-  )
+)
 
-vtkm_declare_headers(${headers})
-
-#-----------------------------------------------------------------------------
-add_subdirectory(testing)
+vtkm_declare_headers(
+  ${headers}
+)

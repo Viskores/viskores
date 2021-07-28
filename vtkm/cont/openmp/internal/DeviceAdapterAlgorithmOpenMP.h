@@ -116,7 +116,7 @@ public:
 
     vtkm::Id numValues = helper.Reduce(outIter);
     token.DetachFromAll();
-    output.Shrink(numValues);
+    output.Allocate(numValues, vtkm::CopyFlag::On);
   }
 
 
@@ -357,7 +357,7 @@ public:
     Uniqifier uniquifier(iter, portal.GetNumberOfValues(), binary_compare);
     vtkm::Id outSize = uniquifier.Execute();
     token.DetachFromAll();
-    values.Shrink(outSize);
+    values.Allocate(outSize, vtkm::CopyFlag::On);
   }
 
   VTKM_CONT_EXPORT static void ScheduleTask(vtkm::exec::openmp::internal::TaskTiling1D& functor,

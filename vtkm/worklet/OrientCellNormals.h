@@ -29,6 +29,7 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
+#include <vtkm/cont/ArrayRangeComputeTemplate.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Logging.h>
@@ -263,17 +264,16 @@ public:
       // One of the cells must be marked visited already. Find it and use it as
       // an alignment reference for the others:
       const vtkm::IdComponent numCells = cellIds.GetNumberOfComponents();
-      const vtkm::Id refCellId = [&]() -> vtkm::Id {
-        for (vtkm::IdComponent c = 0; c < numCells; ++c)
+      vtkm::Id refCellId = INVALID_ID;
+      for (vtkm::IdComponent c = 0; c < numCells; ++c)
+      {
+        const vtkm::Id cellId = cellIds[c];
+        if (visitedCells.GetBit(cellId))
         {
-          const vtkm::Id cellId = cellIds[c];
-          if (visitedCells.GetBit(cellId))
-          {
-            return cellId;
-          }
+          refCellId = cellId;
+          break;
         }
-        return INVALID_ID;
-      }();
+      }
 
       VTKM_ASSERT("No reference cell found." && refCellId != INVALID_ID);
 

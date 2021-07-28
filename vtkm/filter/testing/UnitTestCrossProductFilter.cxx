@@ -59,7 +59,6 @@ void createVectors(std::size_t numPts,
   {
     //Test some other vector combinations
     std::uniform_real_distribution<vtkm::Float64> randomDist(-10.0, 10.0);
-    randomDist(randGenerator);
 
     vecs1.resize(numPts);
     vecs2.resize(numPts);
@@ -80,7 +79,7 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field1,
   VTKM_TEST_ASSERT(result.HasPointField("crossproduct"), "Output field is missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> outputArray;
-  result.GetPointField("crossproduct").GetData().CopyTo(outputArray);
+  result.GetPointField("crossproduct").GetData().AsArrayHandle(outputArray);
 
   auto v1Portal = field1.ReadPortal();
   auto v2Portal = field2.ReadPortal();
@@ -130,11 +129,11 @@ void TestCrossProduct()
     createVectors(static_cast<std::size_t>(nVerts), i, vecs1, vecs2);
 
     vtkm::cont::ArrayHandle<vtkm::Vec3f> field1, field2;
-    field1 = vtkm::cont::make_ArrayHandle(vecs1);
-    field2 = vtkm::cont::make_ArrayHandle(vecs2);
+    field1 = vtkm::cont::make_ArrayHandle(vecs1, vtkm::CopyFlag::On);
+    field2 = vtkm::cont::make_ArrayHandle(vecs2, vtkm::CopyFlag::On);
 
-    vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec1", field1);
-    vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec2", field2);
+    dataSet.AddPointField("vec1", field1);
+    dataSet.AddPointField("vec2", field2);
     dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("vecA", field1));
     dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("vecB", field2));
 

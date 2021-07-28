@@ -18,6 +18,7 @@
 #        -DVTKm_INSTALL_INCLUDE_DIR=<VTKm_INSTALL_INCLUDE_DIR>
 #        -DVTKm_ENABLE_RENDERING=<VTKm_ENABLE_RENDERING>
 #        -DVTKm_ENABLE_LOGGING=<VTKm_ENABLE_LOGGING>
+#        -DVTKm_ENABLE_HDF5_IO=<VTKm_ENABLE_HDF5_IO>
 #        -P <VTKm_SOURCE_DIR>/CMake/testing/VTKMCheckSourceInInstall.cmake
 ##
 
@@ -39,7 +40,9 @@ endif ()
 if (NOT DEFINED VTKm_ENABLE_LOGGING)
   message(FATAL_ERROR "VTKm_ENABLE_LOGGING not defined.")
 endif ()
-
+if (NOT DEFINED VTKm_ENABLE_HDF5_IO)
+  message(FATAL_ERROR "VTKm_ENABLE_HDF5_IO not defined.")
+endif()
 
 include(CMakeParseArguments)
 # -----------------------------------------------------------------------------
@@ -110,7 +113,30 @@ function(do_verify root_dir prefix)
     )
 
   set(file_exceptions
-    cont/ColorTablePrivate.hxx
+    thirdparty/diy/vtkmdiy/cmake/mpi_types.h
+
+    # Ignore deprecated virtual classes (which are not installed if VTKm_NO_DEPRECATED_VIRTUAL
+    # is on). These exceptions can be removed when these files are completely removed.
+    cont/ArrayHandleVirtual.h
+    cont/ArrayHandleVirtual.hxx
+    cont/ArrayHandleVirtualCoordinates.h
+    cont/CellLocator.h
+    cont/PointLocator.h
+    cont/StorageVirtual.h
+    cont/StorageVirtual.hxx
+    cont/VirtualObjectHandle.h
+    cont/cuda/internal/VirtualObjectTransferCuda.h
+    cont/internal/TransferInfo.h
+    cont/internal/VirtualObjectTransfer.h
+    cont/internal/VirtualObjectTransferInstantiate.h
+    cont/internal/VirtualObjectTransferShareWithControl.h
+    cont/kokkos/internal/VirtualObjectTransferKokkos.h
+    cont/openmp/internal/VirtualObjectTransferOpenMP.h
+    cont/serial/internal/VirtualObjectTransferSerial.h
+    cont/tbb/internal/VirtualObjectTransferTBB.h
+    exec/CellLocator.h
+    exec/PointLocator.h
+    internal/ArrayPortalVirtual.h
     )
 
   #by default every header in a testing directory doesn't need to be installed
@@ -123,7 +149,12 @@ function(do_verify root_dir prefix)
   if(NOT VTKm_ENABLE_LOGGING)
     list(APPEND directory_exceptions thirdparty/loguru)
   endif()
-
+  if (NOT VTKm_ENABLE_HDF5_IO)
+    list(APPEND file_exceptions
+      io/ImageWriterHDF5.h
+      io/ImageReaderHDF5.h
+      )
+  endif()
   #Step 2. Verify the installed files match what headers are listed in each
   # source directory
   verify_install_per_dir("${VTKm_SOURCE_DIR}/vtkm"

@@ -16,7 +16,14 @@
   * Export macros for various parts of the VTKm library.
   */
 
-#ifdef VTKM_CUDA
+#ifdef VTKM_HIP
+
+#include "hip/hip_runtime.h"
+#define VTKM_EXEC __device__ __host__
+#define VTKM_EXEC_CONT __device__ __host__
+#define VTKM_SUPPRESS_EXEC_WARNINGS
+
+#elif defined(VTKM_CUDA)
 
 #define VTKM_EXEC __device__ __host__
 #define VTKM_EXEC_CONT __device__ __host__
@@ -82,8 +89,8 @@
 #define VTKM_ALWAYS_EXPORT
 #define VTKM_NEVER_EXPORT
 #else
-#define VTKM_ALWAYS_EXPORT [[gnu::visibility("default")]]
-#define VTKM_NEVER_EXPORT [[gnu::visibility("hidden")]]
+#define VTKM_ALWAYS_EXPORT __attribute__((visibility("default")))
+#define VTKM_NEVER_EXPORT __attribute__((visibility("hidden")))
 #endif
 
 // cuda 7.5 doesn't support static const or static constexpr variables
@@ -105,7 +112,7 @@
 // http://stackoverflow.com/questions/24511376). These macros will silence the
 // warning for classes defined within them.
 #ifdef VTKM_CLANG
-#define VTKM_SILENCE_WEAK_VTABLE_WARNING_START                                                     \
+#define VTKM_SILENCE_WEAK_VTABLE_WARNING_START \
   _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wweak-vtables\"")
 #define VTKM_SILENCE_WEAK_VTABLE_WARNING_END _Pragma("clang diagnostic pop")
 #else // VTKM_CLANG

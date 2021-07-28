@@ -11,10 +11,10 @@
 #ifndef vtk_m_benchmarking_Benchmarker_h
 #define vtk_m_benchmarking_Benchmarker_h
 
+#include <vtkm/cont/Initialize.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
-
-#include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/internal/brigand.hpp>
 
@@ -170,7 +170,7 @@
 /// and modified using the passed arguments; see the Google Benchmark documentation
 /// for more details. The `preamble` string may be used to supply additional
 /// information that will be appended to the output's preamble.
-#define VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble)                                     \
+#define VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble) \
   vtkm::bench::detail::ExecuteBenchmarks(argc, argv, preamble)
 
 /// \def VTKM_BENCHMARK(BenchFunc)
@@ -181,7 +181,8 @@
 /// ```
 /// void BenchFunc(::benchmark::State& state)
 /// ```
-#define VTKM_BENCHMARK(BenchFunc) BENCHMARK(BenchFunc)->UseManualTime()
+#define VTKM_BENCHMARK(BenchFunc) \
+  BENCHMARK(BenchFunc)->UseManualTime()->Unit(benchmark::kMillisecond)
 
 /// \def VTKM_BENCHMARK_OPTS(BenchFunc, Args)
 ///
@@ -195,7 +196,8 @@
 /// Note the similarity to the raw Google Benchmark usage of
 /// `BENCHMARK(MyBenchmark)->ArgName("MyParam")->Range(32, 1024*1024);`. See
 /// the Google Benchmark documentation for more details on the available options.
-#define VTKM_BENCHMARK_OPTS(BenchFunc, options) BENCHMARK(BenchFunc)->UseManualTime() options
+#define VTKM_BENCHMARK_OPTS(BenchFunc, options) \
+  BENCHMARK(BenchFunc)->UseManualTime()->Unit(benchmark::kMillisecond) options
 
 /// \def VTKM_BENCHMARK_APPLY(BenchFunc, ConfigFunc)
 ///
@@ -209,8 +211,8 @@
 /// ```
 ///
 /// See the Google Benchmark documentation for more details on the available options.
-#define VTKM_BENCHMARK_APPLY(BenchFunc, applyFunctor)                                              \
-  BENCHMARK(BenchFunc)->Apply(applyFunctor)->UseManualTime()
+#define VTKM_BENCHMARK_APPLY(BenchFunc, applyFunctor) \
+  BENCHMARK(BenchFunc)->Apply(applyFunctor)->UseManualTime()->Unit(benchmark::kMillisecond)
 
 /// \def VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList)
 ///
@@ -222,7 +224,7 @@
 /// template <typename T>
 /// void BenchFunc(::benchmark::State& state)
 /// ```
-#define VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList)                                              \
+#define VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList) \
   VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, vtkm::bench::detail::NullApply, TypeList)
 
 /// \def VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, Args, TypeList)
@@ -235,9 +237,11 @@
 ///                                ->ArgName("MyParam")->Range(32, 1024*1024),
 ///                              vtkm::List<vtkm::Float32, vtkm::Vec3f_32>);
 /// ```
-#define VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                                \
-  VTKM_BENCHMARK_TEMPLATES_APPLY(                                                                  \
-    BenchFunc, [](::benchmark::internal::Benchmark* bm) { bm options; }, TypeList)
+#define VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                          \
+  VTKM_BENCHMARK_TEMPLATES_APPLY(                                                            \
+    BenchFunc,                                                                               \
+    [](::benchmark::internal::Benchmark* bm) { bm options->Unit(benchmark::kMillisecond); }, \
+    TypeList)
 
 /// \def VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ConfigFunc, TypeList)
 ///
@@ -251,22 +255,22 @@
 /// ```
 ///
 /// See the Google Benchmark documentation for more details on the available options.
-#define VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ApplyFunctor, TypeList)                                                                                                             \
-  namespace                                                                                                                                                                           \
+#define VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ApplyFunctor, TypeList)                            \
+  namespace                                                                                          \
   { /* A template function cannot be used as a template parameter, so wrap the function with       \
      * a template struct to get it into the GenerateTemplateBenchmarks class. */ \
-  template <typename... Ts>                                                                                                                                                           \
-  struct VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                                                                                                       \
-  {                                                                                                                                                                                   \
-    static ::benchmark::internal::Function* GetFunction() { return BenchFunc<Ts...>; }                                                                                                \
-  };                                                                                                                                                                                  \
-  } /* end anon namespace */                                                                                                                                                          \
-  int BENCHMARK_PRIVATE_NAME(BenchFunc) = vtkm::bench::detail::GenerateTemplateBenchmarks<                                                                                            \
-    brigand::bind<VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)>,                                                                                                                            \
+  template <typename... Ts>                                                                          \
+  struct VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                      \
+  {                                                                                                  \
+    static ::benchmark::internal::Function* GetFunction() { return BenchFunc<Ts...>; }               \
+  };                                                                                                 \
+  } /* end anon namespace */                                                                         \
+  int BENCHMARK_PRIVATE_NAME(BenchFunc) = vtkm::bench::detail::GenerateTemplateBenchmarks<           \
+    brigand::bind<VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)>,                                           \
     TypeList>::Register(#BenchFunc, ApplyFunctor)
 
 // Internal use only:
-#define VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                     \
+#define VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc) \
   BENCHMARK_PRIVATE_CONCAT(_wrapper_, BenchFunc, __LINE__)
 
 namespace vtkm
@@ -276,9 +280,7 @@ namespace bench
 namespace detail
 {
 
-static inline void NullApply(::benchmark::internal::Benchmark*)
-{
-}
+static inline void NullApply(::benchmark::internal::Benchmark*) {}
 
 /// Do not use directly. The VTKM_BENCHMARK_TEMPLATES macros should be used
 /// instead.
@@ -306,14 +308,14 @@ private:
     void operator()(brigand::type_<BenchType<P>>) const
     {
       std::ostringstream name;
-      name << this->BenchName << "<" << vtkm::testing::TypeName<P>::Name() << ">";
+      name << this->BenchName << "<" << vtkm::cont::TypeToString<P>() << ">";
       auto bm = ::benchmark::internal::RegisterBenchmarkInternal(
         new ::benchmark::internal::FunctionBenchmark(name.str().c_str(),
                                                      BenchType<P>::GetFunction()));
       this->Apply(bm);
 
       // Always use manual time with vtkm::cont::Timer to capture CUDA times accurately.
-      bm->UseManualTime();
+      bm->UseManualTime()->Unit(benchmark::kMillisecond);
     }
   };
 
@@ -387,6 +389,37 @@ static inline vtkm::Id ExecuteBenchmarks(int& argc,
                             << " seconds." << std::endl;
 
   return static_cast<vtkm::Id>(num);
+}
+
+void InitializeArgs(int* argc, std::vector<char*>& args, vtkm::cont::InitializeOptions& opts)
+{
+  bool isHelp = false;
+
+  // Inject --help
+  if (*argc == 1)
+  {
+    const char* help = "--help"; // We want it to be static
+    args.push_back(const_cast<char*>(help));
+    *argc = *argc + 1;
+  }
+
+  args.push_back(nullptr);
+
+  for (size_t i = 0; i < static_cast<size_t>(*argc); ++i)
+  {
+    auto opt_s = std::string(args[i]);
+    if (opt_s == "--help" || opt_s == "-help" || opt_s == "-h")
+    {
+      isHelp = true;
+    }
+  }
+
+  if (!isHelp)
+  {
+    return;
+  }
+
+  opts = vtkm::cont::InitializeOptions::None;
 }
 }
 }

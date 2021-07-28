@@ -15,16 +15,8 @@
 
 void WaveletSourceTest()
 {
-  vtkm::cont::Timer timer;
-  timer.Start();
-
   vtkm::source::Wavelet source;
   vtkm::cont::DataSet ds = source.Execute();
-
-
-  double time = timer.GetElapsedTime();
-
-  std::cout << "Default wavelet took " << time << "s.\n";
 
   {
     auto coords = ds.GetCoordinateSystem("coordinates");
@@ -44,7 +36,7 @@ void WaveletSourceTest()
     auto field = ds.GetPointField("scalars");
     auto dynData = field.GetData();
     VTKM_TEST_ASSERT(dynData.IsType<ScalarHandleType>(), "Invalid scalar handle type.");
-    ScalarHandleType handle = dynData.Cast<ScalarHandleType>();
+    ScalarHandleType handle = dynData.AsArrayHandle<ScalarHandleType>();
     auto data = handle.ReadPortal();
 
     VTKM_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261), "Incorrect number of scalars.");

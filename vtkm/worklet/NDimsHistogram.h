@@ -21,8 +21,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/ComputeNDHistogram.h>
 
 #include <vtkm/cont/Field.h>
 
@@ -60,9 +58,32 @@ public:
     }
     else
     {
-      CastAndCall(
-        fieldArray.ResetTypes(vtkm::TypeListScalarAll()),
+      vtkm::cont::CastAndCall(
+        fieldArray.ResetTypes(vtkm::TypeListScalarAll{}, VTKM_DEFAULT_STORAGE_LIST{}),
         vtkm::worklet::histogram::ComputeBins(Bin1DIndex, numberOfBins, rangeOfValues, binDelta));
+    }
+  }
+
+  // Add a field and the bin number for this field along with specific range of the data
+  // Return: binDelta is delta of a bin
+  template <typename HandleType>
+  void AddField(const HandleType& fieldArray,
+                vtkm::Id numberOfBins,
+                vtkm::Range& rangeOfValues,
+                vtkm::Float64& binDelta,
+                bool rangeProvided)
+  {
+    NumberOfBins.push_back(numberOfBins);
+
+    if (fieldArray.GetNumberOfValues() != NumDataPoints)
+    {
+      throw vtkm::cont::ErrorBadValue("Array lengths does not match");
+    }
+    else
+    {
+      CastAndCall(fieldArray.ResetTypes(vtkm::TypeListScalarAll()),
+                  vtkm::worklet::histogram::ComputeBins(
+                    Bin1DIndex, numberOfBins, rangeOfValues, binDelta, rangeProvided));
     }
   }
 

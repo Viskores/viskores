@@ -56,15 +56,16 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                             const PointCoordVecType& pts,
                                             CellShapeType shape,
-                                            const vtkm::exec::FunctorBase& worklet)
+                                            vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
   UNUSED(shape);
-  worklet.RaiseError(
-    "Shape type template must be specialized to compute the aspect frobenius metric.");
+  ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
-} //If the polygon has 3 vertices or 4 vertices, then just call
+}
+
+//If the polygon has 3 vertices or 4 vertices, then just call
 //the functions for Triangle and Quad cell types. Otherwise,
 //this metric is not supported for (n>4)-vertex polygons, such
 //as pentagons or hexagons, or (n<3)-vertex polygons, such as lines or points.
@@ -72,80 +73,91 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                             const PointCoordVecType& pts,
                                             vtkm::CellShapeTagPolygon,
-                                            const vtkm::exec::FunctorBase& worklet)
+                                            vtkm::ErrorCode& ec)
 {
   if (numPts == 3)
-    return CellAspectFrobeniusMetric<OutType>(numPts, pts, vtkm::CellShapeTagTriangle(), worklet);
+    return CellAspectFrobeniusMetric<OutType>(numPts, pts, vtkm::CellShapeTagTriangle(), ec);
   else
   {
-    worklet.RaiseError(
-      "Aspect frobenius metric is not supported for (n<3)- or  (n>4)-vertex polygons.");
+    ec = vtkm::ErrorCode::InvalidCellMetric;
     return OutType(0.0);
   }
-} //The aspect frobenius metric is not supported for lines/edges.
+}
+
+//The aspect frobenius metric is not supported for lines/edges.
 template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                             const PointCoordVecType& pts,
                                             vtkm::CellShapeTagLine,
-                                            const vtkm::exec::FunctorBase& worklet)
+                                            vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
-  worklet.RaiseError("Aspect frobenius metric is not supported for lines/edges.");
+  ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
-} //The aspect frobenius metric is not uniquely defined for quads.
+}
+
+//The aspect frobenius metric is not uniquely defined for quads.
 //Instead, use either the mean or max aspect frobenius metrics, which are
 //defined in terms of the aspect frobenius of triangles.
 template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                             const PointCoordVecType& pts,
                                             vtkm::CellShapeTagQuad,
-                                            const vtkm::exec::FunctorBase& worklet)
+                                            vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
-  worklet.RaiseError("Aspect frobenius metric is not supported for quads.");
+  ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
-} //The aspect frobenius metric is not uniquely defined for hexahedrons.
+}
+
+//The aspect frobenius metric is not uniquely defined for hexahedrons.
 //Instead, use either the mean or max aspect frobenius metrics, which are
 //defined in terms of the aspect frobenius of tetrahedrons.
 template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                             const PointCoordVecType& pts,
                                             vtkm::CellShapeTagHexahedron,
-                                            const vtkm::exec::FunctorBase& worklet)
+                                            vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
-  worklet.RaiseError("Aspect frobenius metric is not supported for hexahedrons.");
+  ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
-} //The aspect frobenius metric is not uniquely defined for pyramids.
+}
+
+//The aspect frobenius metric is not uniquely defined for pyramids.
 //Instead, use either the mean or max aspect frobenius metrics, which are
 //defined in terms of the aspect frobenius of tetrahedrons.
 template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                             const PointCoordVecType& pts,
                                             vtkm::CellShapeTagPyramid,
-                                            const vtkm::exec::FunctorBase& worklet)
+                                            vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
-  worklet.RaiseError("Aspect frobenius metric is not supported for pyramids.");
+  ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
-} //The aspect frobenius metric is not uniquely defined for wedges.
+}
+
+//The aspect frobenius metric is not uniquely defined for wedges.
 //Instead, use either the mean or max aspect frobenius metrics, which are
 //defined in terms of the aspect frobenius of tetrahedrons.
 template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                             const PointCoordVecType& pts,
                                             vtkm::CellShapeTagWedge,
-                                            const vtkm::exec::FunctorBase& worklet)
+                                            vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
-  worklet.RaiseError("Aspect frobenius metric is not supported for wedges.");
+  ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
-} // ========================= 2D cells ==================================
+}
+
+// ========================= 2D cells ==================================
 
 // Computes the aspect frobenius of a triangle.
 // Formula: Sum of lengths of 3 edges, divided by a multiple of the triangle area.
@@ -156,11 +168,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                             const PointCoordVecType& pts,
                                             vtkm::CellShapeTagTriangle,
-                                            const vtkm::exec::FunctorBase& worklet)
+                                            vtkm::ErrorCode& ec)
 {
   if (numPts != 3)
   {
-    worklet.RaiseError("Aspect frobenius metric(triangle) requires 3 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -196,11 +208,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
                                             const PointCoordVecType& pts,
                                             vtkm::CellShapeTagTetra,
-                                            const vtkm::exec::FunctorBase& worklet)
+                                            vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Aspect frobenius metric(tetrahedron) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 

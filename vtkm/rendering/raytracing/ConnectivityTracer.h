@@ -108,7 +108,7 @@ public:
   void SetSampleDistance(const vtkm::Float32& distance);
   void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colorMap);
 
-  MeshConnContainer* GetMeshContainer() { return MeshContainer; }
+  MeshConnectivityContainer* GetMeshContainer() { return MeshContainer; }
 
   void Init();
 
@@ -193,7 +193,7 @@ protected:
   vtkm::Id RaysLost;
   IntegrationMode Integrator;
 
-  MeshConnContainer* MeshContainer;
+  MeshConnectivityContainer* MeshContainer;
   vtkm::cont::CellLocatorGeneral Locator;
   vtkm::Float64 BumpEpsilon;
   vtkm::Float64 BumpDistance;

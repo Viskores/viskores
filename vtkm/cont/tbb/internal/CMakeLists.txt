@@ -9,20 +9,23 @@
 ##============================================================================
 
 set(headers
-  ArrayManagerExecutionTBB.h
-  AtomicInterfaceExecutionTBB.h
   DeviceAdapterAlgorithmTBB.h
+  DeviceAdapterMemoryManagerTBB.h
   DeviceAdapterRuntimeDetectorTBB.h
   DeviceAdapterTagTBB.h
-  ExecutionArrayInterfaceBasicTBB.h
   FunctorsTBB.h
   ParallelSortTBB.h
-  VirtualObjectTransferTBB.h
+  RuntimeDeviceConfigurationTBB.h
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    VirtualObjectTransferTBB.h
+    )
+endif()
 
 vtkm_declare_headers(${headers}
    ParallelSortTBB.hxx
-   parallel_sort.h
    )
 
 #These sources need to always be built
@@ -33,9 +36,7 @@ target_sources(vtkm_cont PRIVATE
 #-----------------------------------------------------------------------------
 if (TARGET vtkm::tbb)
   target_sources(vtkm_cont PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionTBB.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmTBB.cxx
-    ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicTBB.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/ParallelSortTBB.cxx
     )
 endif()

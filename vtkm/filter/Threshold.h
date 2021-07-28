@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_Threshold_h
 #define vtk_m_filter_Threshold_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_common_export.h>
 
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/Threshold.h>
@@ -30,7 +30,7 @@ namespace filter
 /// filter is an permutation of the input dataset.
 ///
 /// You can threshold either on point or cell fields
-class VTKM_ALWAYS_EXPORT Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
+class VTKM_FILTER_COMMON_EXPORT Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
 {
 public:
   using SupportedTypes = vtkm::TypeListScalarAll;
@@ -52,29 +52,15 @@ public:
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //Map a new field onto the resulting dataset after running the filter
-  //this call is only valid
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy>)
+  //this call is only valid after DoExecute is called
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
+
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy>)
   {
-    if (fieldMeta.IsPointField())
-    {
-      //we copy the input handle to the result dataset, reusing the metadata
-      result.AddField(fieldMeta.AsField(input));
-      return true;
-    }
-    else if (fieldMeta.IsCellField())
-    {
-      vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input);
-      result.AddField(fieldMeta.AsField(out));
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    return this->MapFieldOntoOutput(result, field);
   }
 
 private:
@@ -84,7 +70,7 @@ private:
 };
 
 #ifndef vtkm_filter_Threshold_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(Threshold);
+VTKM_FILTER_COMMON_EXPORT_EXECUTE_METHOD(Threshold);
 #endif
 }
 } // namespace vtkm::filter

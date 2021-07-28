@@ -17,13 +17,9 @@ namespace
 static constexpr vtkm::Id MAX_VECTOR_SIZE = 5;
 static constexpr vtkm::Id VecInit[MAX_VECTOR_SIZE] = { 42, 54, 67, 12, 78 };
 
-void ExpectTrueType(std::true_type)
-{
-}
+void ExpectTrueType(std::true_type) {}
 
-void ExpectFalseType(std::false_type)
-{
-}
+void ExpectFalseType(std::false_type) {}
 
 struct TypeWithoutVecTraits
 {

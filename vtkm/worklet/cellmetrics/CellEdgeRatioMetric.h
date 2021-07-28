@@ -92,7 +92,7 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       CellShapeType shape,
-                                      const vtkm::exec::FunctorBase&)
+                                      vtkm::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -110,12 +110,12 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagLine,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   UNUSED(pts);
   if (numPts < 2)
   {
-    worklet.RaiseError("Degenerate line has no edge ratio.");
+    ec = vtkm::ErrorCode::InvalidCellMetric;
     return OutType(0.0);
   }
   return OutType(1.0);
@@ -130,11 +130,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagTriangle,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   if (numPts != 3)
   {
-    worklet.RaiseError("Edge ratio metric(triangle) requires 3 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -156,11 +156,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagQuad,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Edge ratio metric(quad) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -187,11 +187,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagTetra,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Edge ratio metric(tetrahedron) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -214,11 +214,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagHexahedron,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   if (numPts != 8)
   {
-    worklet.RaiseError("Edge ratio metric(hexahedron) requires 8 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -242,11 +242,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagWedge,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   if (numPts != 6)
   {
-    worklet.RaiseError("Edge ratio metric(wedge) requires 6 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -271,11 +271,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagPyramid,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   if (numPts != 5)
   {
-    worklet.RaiseError("Edge ratio metric(pyramid) requires 5 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 

@@ -23,12 +23,11 @@ namespace vtkm
 namespace exec
 {
 
-template <typename Device>
 class VTKM_ALWAYS_EXPORT ConnectivityExtrude
 {
 private:
   using Int32HandleType = vtkm::cont::ArrayHandle<vtkm::Int32>;
-  using Int32PortalType = typename Int32HandleType::template ExecutionTypes<Device>::PortalConst;
+  using Int32PortalType = typename Int32HandleType::ReadPortalType;
 
 public:
   using ConnectivityPortalType = Int32PortalType;
@@ -93,12 +92,11 @@ private:
 };
 
 
-template <typename Device>
 class ReverseConnectivityExtrude
 {
 private:
   using Int32HandleType = vtkm::cont::ArrayHandle<vtkm::Int32>;
-  using Int32PortalType = typename Int32HandleType::template ExecutionTypes<Device>::PortalConst;
+  using Int32PortalType = typename Int32HandleType::ReadPortalType;
 
 public:
   using ConnectivityPortalType = Int32PortalType;
@@ -176,13 +174,12 @@ public:
 };
 
 
-template <typename Device>
-ConnectivityExtrude<Device>::ConnectivityExtrude(const ConnectivityPortalType& conn,
-                                                 const ConnectivityPortalType& nextNode,
-                                                 vtkm::Int32 cellsPerPlane,
-                                                 vtkm::Int32 pointsPerPlane,
-                                                 vtkm::Int32 numPlanes,
-                                                 bool periodic)
+inline ConnectivityExtrude::ConnectivityExtrude(const ConnectivityPortalType& conn,
+                                                const ConnectivityPortalType& nextNode,
+                                                vtkm::Int32 cellsPerPlane,
+                                                vtkm::Int32 pointsPerPlane,
+                                                vtkm::Int32 numPlanes,
+                                                bool periodic)
   : Connectivity(conn)
   , NextNode(nextNode)
   , NumberOfCellsPerPlane(cellsPerPlane)
@@ -193,8 +190,7 @@ ConnectivityExtrude<Device>::ConnectivityExtrude(const ConnectivityPortalType& c
                                  : (static_cast<vtkm::Id>(cellsPerPlane) * (numPlanes - 1));
 }
 
-template <typename Device>
-typename ConnectivityExtrude<Device>::IndicesType ConnectivityExtrude<Device>::GetIndices(
+VTKM_EXEC inline ConnectivityExtrude::IndicesType ConnectivityExtrude::GetIndices(
   const vtkm::Id2& index) const
 {
   vtkm::Id tr = index[0];
@@ -216,14 +212,14 @@ typename ConnectivityExtrude<Device>::IndicesType ConnectivityExtrude<Device>::G
 }
 
 
-template <typename Device>
-ReverseConnectivityExtrude<Device>::ReverseConnectivityExtrude(const ConnectivityPortalType& conn,
-                                                               const OffsetsPortalType& offsets,
-                                                               const CountsPortalType& counts,
-                                                               const PrevNodePortalType& prevNode,
-                                                               vtkm::Int32 cellsPerPlane,
-                                                               vtkm::Int32 pointsPerPlane,
-                                                               vtkm::Int32 numPlanes)
+VTKM_EXEC inline ReverseConnectivityExtrude::ReverseConnectivityExtrude(
+  const ConnectivityPortalType& conn,
+  const OffsetsPortalType& offsets,
+  const CountsPortalType& counts,
+  const PrevNodePortalType& prevNode,
+  vtkm::Int32 cellsPerPlane,
+  vtkm::Int32 pointsPerPlane,
+  vtkm::Int32 numPlanes)
   : Connectivity(conn)
   , Offsets(offsets)
   , Counts(counts)
@@ -234,9 +230,8 @@ ReverseConnectivityExtrude<Device>::ReverseConnectivityExtrude(const Connectivit
 {
 }
 
-template <typename Device>
-typename ReverseConnectivityExtrude<Device>::IndicesType
-ReverseConnectivityExtrude<Device>::GetIndices(const vtkm::Id2& index) const
+VTKM_EXEC inline ReverseConnectivityExtrude::IndicesType ReverseConnectivityExtrude::GetIndices(
+  const vtkm::Id2& index) const
 {
   auto ptCur = index[0];
   auto ptPre = this->PrevNode.Get(ptCur);

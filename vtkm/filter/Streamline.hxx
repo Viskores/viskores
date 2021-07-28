@@ -10,12 +10,11 @@
 #ifndef vtk_m_filter_Streamline_hxx
 #define vtk_m_filter_Streamline_hxx
 
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
-#include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/filter/Streamline.h>
+#include <vtkm/filter/particleadvection/BoundsMap.h>
+#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
+#include <vtkm/filter/particleadvection/ParticleAdvectionAlgorithm.h>
 
 namespace vtkm
 {
@@ -24,70 +23,31 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT Streamline::Streamline()
-  : vtkm::filter::FilterDataSetWithField<Streamline>()
-  , Worklet()
+  : vtkm::filter::FilterParticleAdvection<Streamline>()
 {
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void Streamline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds)
-{
-  this->Seeds = seeds;
-}
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
+template <typename DerivedPolicy>
+inline VTKM_CONT vtkm::cont::PartitionedDataSet Streamline::PrepareForExecution(
+  const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  //Check for some basics.
-  if (this->Seeds.GetNumberOfValues() == 0)
-  {
-    throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
-  }
+  using AlgorithmType = vtkm::filter::particleadvection::StreamlineAlgorithm;
+  using ThreadedAlgorithmType = vtkm::filter::particleadvection::StreamlineThreadedAlgorithm;
 
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
-  const vtkm::cont::CoordinateSystem& coords =
-    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+  this->ValidateOptions();
+  vtkm::filter::particleadvection::BoundsMap boundsMap(input);
+  auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 
-  if (!fieldMeta.IsPointField())
-  {
-    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
-  }
-
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-
-  GridEvalType eval(coords, cells, field);
-  RK4Type rk4(eval, this->StepSize);
-
-  vtkm::worklet::StreamlineResult res;
-
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
-  vtkm::cont::ArrayCopy(this->Seeds, seedArray);
-  res = this->Worklet.Run(rk4, seedArray, this->NumberOfSteps);
-
-  vtkm::cont::DataSet outData;
-  vtkm::cont::CoordinateSystem outputCoords("coordinates", res.Positions);
-  outData.SetCellSet(res.PolyLines);
-  outData.AddCoordinateSystem(outputCoords);
-
-  return outData;
+  if (this->GetUseThreadedAlgorithm())
+    return vtkm::filter::particleadvection::RunAlgo<DSIType, ThreadedAlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+  else
+    return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
 }
 
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Streamline::DoMapField(vtkm::cont::DataSet&,
-                                             const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                             const vtkm::filter::FieldMetadata&,
-                                             vtkm::filter::PolicyBase<DerivedPolicy>)
-{
-  return false;
-}
 }
 } // namespace vtkm::filter
 #endif

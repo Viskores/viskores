@@ -15,6 +15,7 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/CellTraits.h>
+#include <vtkm/ErrorCode.h>
 #include <vtkm/VecTraits.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/exec/FunctorBase.h>
@@ -29,7 +30,7 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
                               const PointCoordVecType& pts,
                               CellShapeType shape,
-                              const vtkm::exec::FunctorBase&)
+                              vtkm::ErrorCode&)
 {
   (void)numPts;
   (void)pts;
@@ -43,12 +44,12 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
                               const PointCoordVecType& pts,
                               vtkm::CellShapeTagLine,
-                              const vtkm::exec::FunctorBase& worklet)
+                              vtkm::ErrorCode& ec)
 {
   OutType arcLength(0.0);
   if (numPts < 2)
   {
-    worklet.RaiseError("Degenerate line has no arc length.");
+    ec = vtkm::ErrorCode::InvalidCellMetric;
   }
   else
   {
@@ -67,11 +68,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
                               const PointCoordVecType& pts,
                               vtkm::CellShapeTagTriangle,
-                              const vtkm::exec::FunctorBase& worklet)
+                              vtkm::ErrorCode& ec)
 {
   if (numPts != 3)
   {
-    worklet.RaiseError("Area(triangle) requires 3 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
   typename PointCoordVecType::ComponentType v1 = pts[1] - pts[0];
@@ -85,16 +86,19 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
                               const PointCoordVecType& pts,
                               vtkm::CellShapeTagQuad,
-                              const vtkm::exec::FunctorBase& worklet)
+                              vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Area(quad) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
   typename PointCoordVecType::ComponentType edges[4] = {
-    pts[1] - pts[0], pts[2] - pts[1], pts[3] - pts[2], pts[0] - pts[3],
+    pts[1] - pts[0],
+    pts[2] - pts[1],
+    pts[3] - pts[2],
+    pts[0] - pts[3],
   };
 
   typename PointCoordVecType::ComponentType cornerNormals[4] = {
@@ -106,7 +110,8 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
 
   // principal axes
   typename PointCoordVecType::ComponentType principalAxes[2] = {
-    edges[0] - edges[2], edges[1] - edges[3],
+    edges[0] - edges[2],
+    edges[1] - edges[3],
   };
 
   // Unit normal at the quadrilateral center
@@ -125,9 +130,9 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType ComputeMeasure(const vtkm::IdComponent&,
                                  const PointCoordVecType&,
                                  vtkm::CellShapeTagPolygon,
-                                 const vtkm::exec::FunctorBase& worklet)
+                                 vtkm::ErrorCode& ec)
 {
-  worklet.RaiseError("CellMeasure does not support area computation for polygons.");
+  ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
 }
 
@@ -138,11 +143,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
                               const PointCoordVecType& pts,
                               vtkm::CellShapeTagTetra,
-                              const vtkm::exec::FunctorBase& worklet)
+                              vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Volume(tetrahedron) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -158,11 +163,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
                               const PointCoordVecType& pts,
                               vtkm::CellShapeTagHexahedron,
-                              const vtkm::exec::FunctorBase& worklet)
+                              vtkm::ErrorCode& ec)
 {
   if (numPts != 8)
   {
-    worklet.RaiseError("Volume(hexahedron) requires 8 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -202,11 +207,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
                               const PointCoordVecType& pts,
                               vtkm::CellShapeTagWedge,
-                              const vtkm::exec::FunctorBase& worklet)
+                              vtkm::ErrorCode& ec)
 {
   if (numPts != 6)
   {
-    worklet.RaiseError("Volume(wedge) requires 6 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -233,11 +238,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
                               const PointCoordVecType& pts,
                               vtkm::CellShapeTagPyramid,
-                              const vtkm::exec::FunctorBase& worklet)
+                              vtkm::ErrorCode& ec)
 {
   if (numPts != 5)
   {
-    worklet.RaiseError("Volume(pyramid) requires 5 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 

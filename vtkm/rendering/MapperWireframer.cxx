@@ -197,9 +197,7 @@ MapperWireframer::MapperWireframer()
 {
 }
 
-MapperWireframer::~MapperWireframer()
-{
-}
+MapperWireframer::~MapperWireframer() {}
 
 vtkm::rendering::Canvas* MapperWireframer::GetCanvas() const
 {
@@ -231,16 +229,6 @@ void MapperWireframer::SetIsOverlay(bool isOverlay)
   this->Internals->IsOverlay = isOverlay;
 }
 
-void MapperWireframer::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperWireframer::EndScene()
-{
-  // Nothing needs to be done.
-}
-
 void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
                                    const vtkm::cont::CoordinateSystem& coords,
                                    const vtkm::cont::Field& inScalarField,
@@ -251,6 +239,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   vtkm::cont::DynamicCellSet cellSet = inCellSet;
 
   bool is1D = cellSet.IsSameType(vtkm::cont::CellSetStructured<1>());
+  bool is2D = cellSet.IsSameType(vtkm::cont::CellSetStructured<2>());
 
   vtkm::cont::CoordinateSystem actualCoords = coords;
   vtkm::cont::Field actualField = inScalarField;
@@ -272,7 +261,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::worklet::DispatcherMapField<Convert1DCoordinates>(
       Convert1DCoordinates(this->LogarithmY, this->LogarithmX))
       .Invoke(coords.GetData(),
-              inScalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+              vtkm::rendering::raytracing::GetScalarFieldArray(inScalarField),
               newCoords,
               newScalars);
 
@@ -289,6 +278,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
 
     vtkm::cont::CellSetSingleType<> newCellSet;
     newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
+
     cellSet = vtkm::cont::DynamicCellSet(newCellSet);
   }
   bool isLines = false;
@@ -301,7 +291,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     isLines = singleType.GetCellShape(0) == vtkm::CELL_SHAPE_LINE;
   }
 
-  bool doExternalFaces = !(this->Internals->ShowInternalZones) && !isLines && !is1D;
+  bool doExternalFaces = !(this->Internals->ShowInternalZones) && !isLines && !is1D && !is2D;
   if (doExternalFaces)
   {
     // If internal zones are to be hidden, the number of edges processed can be reduced by
@@ -339,8 +329,6 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     CanvasRayTracer canvas(this->Internals->Canvas->GetWidth(),
                            this->Internals->Canvas->GetHeight());
     canvas.SetBackgroundColor(vtkm::rendering::Color::white);
-    canvas.Initialize();
-    canvas.Activate();
     canvas.Clear();
     MapperRayTracer raytracer;
     raytracer.SetCanvas(&canvas);

@@ -17,14 +17,12 @@
 
 #include <vtkm/internal/Configure.h>
 
-#include <vtkm/testing/Testing.h>
-
 #include <vtkm/List.h>
 
 #include <sstream>
 
 #ifdef VTKM_ENABLE_TBB
-#include <tbb/task_scheduler_init.h>
+#include <tbb/tbb.h>
 #endif // TBB
 
 // For the TBB implementation, the number of threads can be customized using a
@@ -95,15 +93,32 @@ VTKM_BENCHMARK_TEMPLATES_OPTS(CopySpeed,
 int main(int argc, char* argv[])
 {
   // Parse VTK-m options:
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::AddHelp;
-  Config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
 
-  // Setup device:
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This occurs when it is help
+  if (opts == vtkm::cont::InitializeOptions::None)
+  {
+    std::cout << Config.Usage << std::endl;
+  }
+  else
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  }
 
 // Handle NumThreads command-line arg:
+// TODO: Use the VTK-m library to set the number of threads (when that becomes available).
 #ifdef VTKM_ENABLE_TBB
+#if TBB_VERSION_MAJOR >= 2020
+  int numThreads = tbb::task_arena{}.max_concurrency();
+#else
   int numThreads = tbb::task_scheduler_init::automatic;
+#endif
 #endif // TBB
 
   if (argc == 3)
@@ -120,11 +135,17 @@ int main(int argc, char* argv[])
     }
   }
 
+  // TODO: Use the VTK-m library to set the number of threads (when that becomes available).
 #ifdef VTKM_ENABLE_TBB
+#if TBB_VERSION_MAJOR >= 2020
+  // Must not be destroyed as long as benchmarks are running:
+  tbb::global_control tbbControl(tbb::global_control::max_allowed_parallelism, numThreads);
+#else
   // Must not be destroyed as long as benchmarks are running:
   tbb::task_scheduler_init init(numThreads);
+#endif
 #endif // TBB
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, argv);
+  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
 }

@@ -18,7 +18,7 @@ namespace random
 {
 namespace detail
 {
-VTKM_EXEC_CONT vtkm::Vec<vtkm::UInt32, 2> mulhilo(vtkm::UInt32 a, vtkm::UInt32 b)
+static inline VTKM_EXEC_CONT vtkm::Vec<vtkm::UInt32, 2> mulhilo(vtkm::UInt32 a, vtkm::UInt32 b)
 {
   vtkm::UInt64 r = static_cast<vtkm::UInt64>(a) * b;
   auto lo = static_cast<vtkm::UInt32>(r);

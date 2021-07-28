@@ -273,6 +273,7 @@ VTKM_EXEC_CONT void MatrixLUPFactorFindPivot(vtkm::Matrix<T, Size, Size>& A,
   if (maxValue < vtkm::Epsilon<T>())
   {
     valid = false;
+    return;
   }
 
   if (maxRowIndex != topCornerIndex)
@@ -295,12 +296,25 @@ VTKM_EXEC_CONT void MatrixLUPFactorFindPivot(vtkm::Matrix<T, Size, Size>& A,
 // Used with MatrixLUPFactor
 template <typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT void MatrixLUPFactorFindUpperTriangleElements(vtkm::Matrix<T, Size, Size>& A,
-                                                             vtkm::IdComponent topCornerIndex)
+                                                             vtkm::IdComponent topCornerIndex,
+                                                             bool& valid)
 {
   // Compute values for upper triangle on row topCornerIndex
-  for (vtkm::IdComponent colIndex = topCornerIndex + 1; colIndex < Size; colIndex++)
+  if (A(topCornerIndex, topCornerIndex) == 0)
   {
-    A(topCornerIndex, colIndex) /= A(topCornerIndex, topCornerIndex);
+    valid = false;
+    return;
+  }
+  else
+  {
+    // Let's make the reciprocal approximation here.
+    // Doesn't make things much fast for small 'Size',
+    // but definitely improves performance as 'Size' gets large.
+    T rAdiag = 1 / A(topCornerIndex, topCornerIndex);
+    for (vtkm::IdComponent colIndex = topCornerIndex + 1; colIndex < Size; colIndex++)
+    {
+      A(topCornerIndex, colIndex) *= rAdiag;
+    }
   }
 
   // Update the rest of the matrix for calculations on subsequent rows
@@ -314,7 +328,7 @@ VTKM_EXEC_CONT void MatrixLUPFactorFindUpperTriangleElements(vtkm::Matrix<T, Siz
 }
 
 /// Performs an LUP-factorization on the given matrix using Crout's method. The
-/// LU-factorization takes a matrix A and decomposes it into a lower triangular
+/// LU-factorization takes a matrix A  and decomposes it into a lower triangular
 /// matrix L and upper triangular matrix U such that A = LU. The
 /// LUP-factorization also allows permutation of A, which makes the
 /// decomposition always possible so long as A is not singular. In addition to
@@ -360,7 +374,15 @@ VTKM_EXEC_CONT void MatrixLUPFactor(vtkm::Matrix<T, Size, Size>& A,
   for (vtkm::IdComponent rowIndex = 0; rowIndex < Size; rowIndex++)
   {
     MatrixLUPFactorFindPivot(A, permutation, rowIndex, inversionParity, valid);
-    MatrixLUPFactorFindUpperTriangleElements(A, rowIndex);
+    if (!valid)
+    {
+      break;
+    }
+    MatrixLUPFactorFindUpperTriangleElements(A, rowIndex, valid);
+    if (!valid)
+    {
+      break;
+    }
   }
 }
 
@@ -389,7 +411,14 @@ VTKM_EXEC_CONT vtkm::Vec<T, Size> MatrixLUPSolve(
     {
       y[rowIndex] -= LU(rowIndex, colIndex) * y[colIndex];
     }
-    y[rowIndex] /= LU(rowIndex, rowIndex);
+    if (LU(rowIndex, rowIndex) == 0)
+    {
+      y[rowIndex] = std::numeric_limits<T>::quiet_NaN();
+    }
+    else
+    {
+      y[rowIndex] /= LU(rowIndex, rowIndex);
+    }
   }
 
   // Now that we have y, we can easily solve Ux = y for x.
@@ -498,7 +527,7 @@ VTKM_EXEC_CONT T MatrixDeterminant(const vtkm::Matrix<T, 1, 1>& A)
 template <typename T>
 VTKM_EXEC_CONT T MatrixDeterminant(const vtkm::Matrix<T, 2, 2>& A)
 {
-  return A(0, 0) * A(1, 1) - A(1, 0) * A(0, 1);
+  return vtkm::DifferenceOfProducts(A(0, 0), A(1, 1), A(1, 0), A(0, 1));
 }
 
 template <typename T>

@@ -36,9 +36,6 @@ public:
                            const vtkm::rendering::Camera& camera,
                            const vtkm::Range& scalarRange) override;
 
-  virtual void StartScene() override;
-  virtual void EndScene() override;
-
   vtkm::rendering::Mapper* NewCopy() const override;
   void SetSampleDistance(const vtkm::Float32 distance);
   void SetCompositeBackground(const bool compositeBackground);

@@ -46,13 +46,11 @@ void Scene::Render(vtkm::rendering::Mapper& mapper,
                    vtkm::rendering::Canvas& canvas,
                    const vtkm::rendering::Camera& camera) const
 {
-  mapper.StartScene();
   for (vtkm::IdComponent actorIndex = 0; actorIndex < this->GetNumberOfActors(); actorIndex++)
   {
     const vtkm::rendering::Actor& actor = this->GetActor(actorIndex);
     actor.Render(mapper, canvas, camera);
   }
-  mapper.EndScene();
 }
 
 vtkm::Bounds Scene::GetSpatialBounds() const

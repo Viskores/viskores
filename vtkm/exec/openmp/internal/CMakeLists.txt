@@ -15,6 +15,6 @@ set(headers
 vtkm_declare_headers(${headers})
 
 #-----------------------------------------------------------------------------
-if (VTKm_ENABLE_OPENMP)
+if (VTKm_ENABLE_OPENMP AND VTKm_ENABLE_TESTING)
   add_subdirectory(testing)
 endif()

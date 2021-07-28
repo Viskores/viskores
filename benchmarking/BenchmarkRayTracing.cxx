@@ -16,7 +16,8 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/testing/MakeTestDataSet.h>
+
+#include <vtkm/source/Tangle.h>
 
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/raytracing/Ray.h>
@@ -25,8 +26,6 @@
 #include <vtkm/rendering/raytracing/TriangleExtractor.h>
 
 #include <vtkm/exec/FunctorBase.h>
-
-#include <vtkm/cont/ColorTable.hxx>
 
 #include <sstream>
 #include <string>
@@ -42,9 +41,9 @@ void BenchRayTracing(::benchmark::State& state)
 {
   const vtkm::Id3 dims(128, 128, 128);
 
-  vtkm::cont::testing::MakeTestDataSet maker;
-  auto dataset = maker.Make3DUniformDataSet3(dims);
-  auto coords = dataset.GetCoordinateSystem();
+  vtkm::source::Tangle maker(dims);
+  vtkm::cont::DataSet dataset = maker.Execute();
+  vtkm::cont::CoordinateSystem coords = dataset.GetCoordinateSystem();
 
   vtkm::rendering::Camera camera;
   vtkm::Bounds bounds = dataset.GetCoordinateSystem().GetBounds();
@@ -70,7 +69,7 @@ void BenchRayTracing(::benchmark::State& state)
 
   rays.Buffers.at(0).InitConst(0.f);
 
-  vtkm::cont::Field field = dataset.GetField("pointvar");
+  vtkm::cont::Field field = dataset.GetField("nodevar");
   vtkm::Range range = field.GetRange().ReadPortal().Get(0);
 
   tracer.SetField(field, range);
@@ -116,13 +115,24 @@ VTKM_BENCHMARK(BenchRayTracing);
 
 int main(int argc, char* argv[])
 {
-  // Parse VTK-m options:
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::AddHelp;
-  Config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
 
-  // Setup device:
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This occurs when it is help
+  if (opts == vtkm::cont::InitializeOptions::None)
+  {
+    std::cout << Config.Usage << std::endl;
+  }
+  else
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  }
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, argv);
+  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
 }

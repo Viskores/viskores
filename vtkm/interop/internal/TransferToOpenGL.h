@@ -11,7 +11,7 @@
 #define vtk_m_interop_internal_TransferToOpenGL_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/StorageBasic.h>
+#include <vtkm/cont/Storage.h>
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -66,7 +66,7 @@ public:
 
     T* storage = reinterpret_cast<T*>(this->TempStorage.get());
     //construct a handle that is a view onto the memory
-    return vtkm::cont::make_ArrayHandle(storage, size);
+    return vtkm::cont::make_ArrayHandle(storage, size, vtkm::CopyFlag::Off);
   }
 
   template <typename T>
@@ -160,8 +160,9 @@ VTKM_CONT void CopyFromHandle(
   }
 
   //Allocate the memory and set it as static draw and copy into opengl
-  const ValueType* memory =
-    &(*vtkm::cont::ArrayPortalToIteratorBegin(handle.PrepareForInput(DeviceAdapterTag())));
+  vtkm::cont::Token token;
+  auto portal = handle.PrepareForInput(DeviceAdapterTag{}, token);
+  const ValueType* memory = &(*vtkm::cont::ArrayPortalToIteratorBegin(portal));
   glBufferSubData(state.GetType(), 0, size, memory);
 }
 

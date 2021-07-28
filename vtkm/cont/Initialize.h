@@ -25,7 +25,7 @@ namespace cont
 
 struct InitializeResult
 {
-  /// Device passed into -d, or undefined
+  /// Device passed into --vtkm-device, or undefined
   DeviceAdapterId Device = DeviceAdapterTagUndefined{};
 
   /// Usage statement for arguments parsed by VTK-m
@@ -39,11 +39,11 @@ enum class InitializeOptions
   /// Issue an error if the device argument is not specified.
   RequireDevice = 0x01,
 
-  /// If no device is specified, treat it as if the user gave --device=Any. This means that
+  /// If no device is specified, treat it as if the user gave --vtkm-device=Any. This means that
   /// DeviceAdapterTagUndefined will never be return in the result.
   DefaultAnyDevice = 0x02,
 
-  /// Add a help argument. If -h or --help is provided, prints a usage statement. Of course,
+  /// Add a help argument. If -h or --vtkm-help is provided, prints a usage statement. Of course,
   /// the usage statement will only print out arguments processed by VTK-m.
   AddHelp = 0x04,
 
@@ -79,14 +79,14 @@ inline InitializeOptions operator&(const InitializeOptions& lhs, const Initializ
  * Initialize the VTKm library, parsing arguments when provided:
  * - Sets log level names when logging is configured.
  * - Sets the calling thread as the main thread for logging purposes.
- * - Sets the default log level to the argument provided to -v.
- * - Forces usage of the device name passed to -d or --device.
- * - Prints usage when -h is passed.
+ * - Sets the default log level to the argument provided to --vtkm-log-level.
+ * - Forces usage of the device name passed to --vtkm-device.
+ * - Prints usage when -h or --vtkm-help is passed.
  *
  * The parameterless version only sets up log level names.
  *
  * Additional options may be supplied via the @a opts argument, such as
- * requiring the -d option.
+ * requiring the --vtkm-device option.
  *
  * Results are available in the returned InitializeResult.
  *

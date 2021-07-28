@@ -19,7 +19,8 @@ ctest_read_custom_files("${CTEST_BINARY_DIRECTORY}")
 ctest_start(APPEND)
 
 set(test_exclusions
-  # placeholder for tests to exclude
+  # placeholder for tests to exclude provided by the env
+  $ENV{CTEST_EXCLUSIONS}
 )
 
 string(REPLACE ";" "|" test_exclusions "${test_exclusions}")
@@ -33,9 +34,13 @@ ctest_test(APPEND
   EXCLUDE "${test_exclusions}"
   REPEAT "UNTIL_PASS:3"
   )
-ctest_submit(PARTS Test)
+  message(STATUS "ctest_test RETURN_VALUE: ${test_result}")
+
+if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
+  ctest_submit(PARTS Test BUILD_ID build_id)
+  message(STATUS "Test submission build_id: ${build_id}")
+endif()
 
 if (test_result)
-  message(FATAL_ERROR
-    "Failed to test")
+  message(FATAL_ERROR "Failed to test")
 endif ()

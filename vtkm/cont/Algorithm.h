@@ -12,18 +12,18 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/BitField.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/Token.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/ArrayManagerExecution.h>
 
 
 namespace vtkm
 {
 namespace cont
 {
-
+/// @cond NONE
 namespace detail
 {
 template <typename Device, typename T>
@@ -365,6 +365,7 @@ struct UpperBoundsFunctor
   }
 };
 } // namespace detail
+/// @endcond
 
 struct Algorithm
 {

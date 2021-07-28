@@ -28,9 +28,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
     // Points to extract
-    const int nPoints = 13;
-    vtkm::Id pointids[nPoints] = { 0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 50, 75, 100 };
-    vtkm::cont::ArrayHandle<vtkm::Id> pointIds = vtkm::cont::make_ArrayHandle(pointids, nPoints);
+    vtkm::cont::ArrayHandle<vtkm::Id> pointIds =
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 50, 75, 100 });
 
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
@@ -41,7 +40,7 @@ public:
     OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(), pointIds);
     outDataSet.SetCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), pointIds.GetNumberOfValues()),
                      "Wrong result for ExtractPoints");
   }
 
@@ -65,11 +64,10 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(),
-                        dataset.GetCoordinateSystem("coords"),
-                        vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside);
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(),
+                                                  dataset.GetCoordinateSystem("coords"),
+                                                  vtkm::Box(minPoint, maxPoint),
+                                                  extractInside);
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -96,11 +94,10 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(),
-                        dataset.GetCoordinateSystem("coords"),
-                        vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside);
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(),
+                                                  dataset.GetCoordinateSystem("coords"),
+                                                  vtkm::Box(minPoint, maxPoint),
+                                                  extractInside);
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 98),
@@ -127,11 +124,10 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(),
-                        dataset.GetCoordinateSystem("coords"),
-                        vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
-                        extractInside);
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(),
+                                                  dataset.GetCoordinateSystem("coords"),
+                                                  vtkm::Sphere(center, radius),
+                                                  extractInside);
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -158,11 +154,10 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(),
-                        dataset.GetCoordinateSystem("coordinates"),
-                        vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside);
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(),
+                                                  dataset.GetCoordinateSystem("coordinates"),
+                                                  vtkm::Box(minPoint, maxPoint),
+                                                  extractInside);
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8),
@@ -189,11 +184,10 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(),
-                        dataset.GetCoordinateSystem("coordinates"),
-                        vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
-                        extractInside);
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(),
+                                                  dataset.GetCoordinateSystem("coordinates"),
+                                                  vtkm::Box(minPoint, maxPoint),
+                                                  extractInside);
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 3),
@@ -210,9 +204,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
     // Points to extract
-    const int nPoints = 6;
-    vtkm::Id pointids[nPoints] = { 0, 4, 5, 7, 9, 10 };
-    vtkm::cont::ArrayHandle<vtkm::Id> pointIds = vtkm::cont::make_ArrayHandle(pointids, nPoints);
+    vtkm::cont::ArrayHandle<vtkm::Id> pointIds =
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 4, 5, 7, 9, 10 });
 
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
@@ -223,7 +216,7 @@ public:
     OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(), pointIds);
     outDataSet.SetCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), pointIds.GetNumberOfValues()),
                      "Wrong result for ExtractPoints");
   }
 

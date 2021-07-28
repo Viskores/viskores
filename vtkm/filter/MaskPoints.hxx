@@ -37,7 +37,7 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::MaskPoints worklet;
 
-  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy), this->Stride);
+  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this), this->Stride);
 
   // create the output dataset
   vtkm::cont::DataSet output;
@@ -49,7 +49,7 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   {
     this->Compactor.SetCompactPointFields(true);
     this->Compactor.SetMergePoints(false);
-    return this->Compactor.Execute(output, PolicyDefault{});
+    return this->Compactor.Execute(output);
   }
   else
   {
@@ -58,28 +58,34 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool MaskPoints::DoMapField(vtkm::cont::DataSet& result,
-                                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                             const vtkm::filter::FieldMetadata& fieldMeta,
-                                             vtkm::filter::PolicyBase<DerivedPolicy> policy)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool MaskPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                     const vtkm::cont::Field& field,
+                                                     vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // point data is copied as is because it was not collapsed
-  if (fieldMeta.IsPointField())
+  if (field.IsFieldPoint())
   {
     if (this->CompactPoints)
     {
-      return this->Compactor.DoMapField(result, input, fieldMeta, policy);
+      return this->Compactor.MapFieldOntoOutput(result, field, policy);
     }
     else
     {
-      result.AddField(fieldMeta.AsField(input));
+      result.AddField(field);
       return true;
     }
   }
-
-  // cell data does not apply
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    // cell data does not apply
+    return false;
+  }
 }
 }
 }

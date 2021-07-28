@@ -20,6 +20,7 @@
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/FilterTraits.h>
 #include <vtkm/filter/PolicyBase.h>
+#include <vtkm/filter/vtkm_filter_common_export.h>
 
 
 namespace vtkm
@@ -181,20 +182,38 @@ public:
 
   /// \brief Specify which subset of types a filter supports.
   ///
-  /// A filter is able to state what subset of types it supports
-  /// by default. By default we use ListUniversal to represent that the
-  /// filter accepts all types specified by the users provided policy
-  using SupportedTypes = vtkm::ListUniversal;
+  /// A filter is able to state what subset of types it supports.
+  using SupportedTypes = VTKM_DEFAULT_TYPE_LIST;
 
   /// \brief Specify which additional field storage to support.
   ///
   /// When a filter gets a field value from a DataSet, it has to determine what type
-  /// of storage the array has. Typically this is taken from the policy passed to
-  /// the filter's execute. In some cases it is useful to support additional types.
-  /// For example, the filter might make sense to support ArrayHandleIndex or
+  /// of storage the array has. Typically this is taken from the default storage
+  /// types defined in DefaultTypes.h. In some cases it is useful to support additional
+  /// types. For example, the filter might make sense to support ArrayHandleIndex or
   /// ArrayHandleConstant. If so, the storage of those additional types should be
   /// listed here.
   using AdditionalFieldStorage = vtkm::ListEmpty;
+
+  /// \brief Specify which structured cell sets to support.
+  ///
+  /// When a filter gets a cell set from a DataSet, it has to determine what type
+  /// of concrete cell set it is. This provides a list of supported structured
+  /// cell sets.
+  using SupportedStructuredCellSets = VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED;
+
+  /// \brief Specify which unstructured cell sets to support.
+  ///
+  /// When a filter gets a cell set from a DataSet, it has to determine what type
+  /// of concrete cell set it is. This provides a list of supported unstructured
+  /// cell sets.
+  using SupportedUnstructuredCellSets = VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED;
+
+  /// \brief Specify which unstructured cell sets to support.
+  ///
+  /// When a filter gets a cell set from a DataSet, it has to determine what type
+  /// of concrete cell set it is. This provides a list of supported cell sets.
+  using SupportedCellSets = VTKM_DEFAULT_CELL_SET_LIST;
 
   //@{
   /// \brief Specify which fields get passed from input to output.
@@ -242,8 +261,11 @@ public:
   VTKM_CONT vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input);
 
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input,
-                                        vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  VTKM_DEPRECATED(1.6,
+                  "Filter::Execute no longer guarantees policy modifications. "
+                  "Specify default types in CMake configuration instead.")
+  VTKM_CONT vtkm::cont::DataSet
+    Execute(const vtkm::cont::DataSet& input, vtkm::filter::PolicyBase<DerivedPolicy> policy);
   //@}
 
   //@{
@@ -253,6 +275,9 @@ public:
   VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input);
 
   template <typename DerivedPolicy>
+  VTKM_DEPRECATED(1.6,
+                  "Filter::Execute no longer guarantees policy modifications. "
+                  "Specify default types in CMake configuration instead.")
   VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input,
                                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
   //@}
@@ -279,18 +304,59 @@ private:
 }
 } // namespace vtkm::filter
 
-#define VTKM_FILTER_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, Policy)                                \
-  extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::PartitionedDataSet                       \
-  vtkm::filter::Filter<Name>::Execute(vtkm::cont::PartitionedDataSet const&,                       \
+#define VTKM_FILTER_COMMON_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, Policy)          \
+  extern template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::PartitionedDataSet \
+  vtkm::filter::Filter<Name>::Execute(vtkm::cont::PartitionedDataSet const&,        \
                                       vtkm::filter::PolicyBase<Policy>)
-#define VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, Policy)                           \
-  template VTKM_FILTER_EXPORT vtkm::cont::PartitionedDataSet Filter<Name>::Execute(                \
+#define VTKM_FILTER_COMMON_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, Policy)            \
+  template VTKM_FILTER_COMMON_EXPORT vtkm::cont::PartitionedDataSet Filter<Name>::Execute( \
     vtkm::cont::PartitionedDataSet const&, vtkm::filter::PolicyBase<Policy>)
 
-#define VTKM_FILTER_EXPORT_EXECUTE_METHOD(Name)                                                    \
-  VTKM_FILTER_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
-#define VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(Name)                                               \
-  VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
+#define VTKM_FILTER_COMMON_EXPORT_EXECUTE_METHOD(Name) \
+  VTKM_FILTER_COMMON_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
+#define VTKM_FILTER_COMMON_INSTANTIATE_EXECUTE_METHOD(Name) \
+  VTKM_FILTER_COMMON_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
+
+
+#define VTKM_FILTER_EXTRA_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, Policy)          \
+  extern template VTKM_FILTER_EXTRA_TEMPLATE_EXPORT vtkm::cont::PartitionedDataSet \
+  vtkm::filter::Filter<Name>::Execute(vtkm::cont::PartitionedDataSet const&,       \
+                                      vtkm::filter::PolicyBase<Policy>)
+#define VTKM_FILTER_EXTRA_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, Policy)            \
+  template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::PartitionedDataSet Filter<Name>::Execute( \
+    vtkm::cont::PartitionedDataSet const&, vtkm::filter::PolicyBase<Policy>)
+
+#define VTKM_FILTER_EXTRA_EXPORT_EXECUTE_METHOD(Name) \
+  VTKM_FILTER_EXTRA_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
+#define VTKM_FILTER_EXTRA_INSTANTIATE_EXECUTE_METHOD(Name) \
+  VTKM_FILTER_EXTRA_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
+
+
+#define VTKM_FILTER_CONTOUR_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, Policy)          \
+  extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::PartitionedDataSet \
+  vtkm::filter::Filter<Name>::Execute(vtkm::cont::PartitionedDataSet const&,         \
+                                      vtkm::filter::PolicyBase<Policy>)
+#define VTKM_FILTER_CONTOUR_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, Policy)            \
+  template VTKM_FILTER_CONTOUR_EXPORT vtkm::cont::PartitionedDataSet Filter<Name>::Execute( \
+    vtkm::cont::PartitionedDataSet const&, vtkm::filter::PolicyBase<Policy>)
+
+#define VTKM_FILTER_CONTOUR_EXPORT_EXECUTE_METHOD(Name) \
+  VTKM_FILTER_CONTOUR_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
+#define VTKM_FILTER_CONTOUR_INSTANTIATE_EXECUTE_METHOD(Name) \
+  VTKM_FILTER_CONTOUR_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
+
+#define VTKM_FILTER_GRADIENT_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, Policy)          \
+  extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::PartitionedDataSet \
+  vtkm::filter::Filter<Name>::Execute(vtkm::cont::PartitionedDataSet const&,          \
+                                      vtkm::filter::PolicyBase<Policy>)
+#define VTKM_FILTER_GRADIENT_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, Policy)            \
+  template VTKM_FILTER_GRADIENT_EXPORT vtkm::cont::PartitionedDataSet Filter<Name>::Execute( \
+    vtkm::cont::PartitionedDataSet const&, vtkm::filter::PolicyBase<Policy>)
+
+#define VTKM_FILTER_GRADIENT_EXPORT_EXECUTE_METHOD(Name) \
+  VTKM_FILTER_GRADIENT_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
+#define VTKM_FILTER_GRADIENT_INSTANTIATE_EXECUTE_METHOD(Name) \
+  VTKM_FILTER_GRADIENT_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
 
 #include <vtkm/filter/Filter.hxx>
 #endif

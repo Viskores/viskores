@@ -8,23 +8,25 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/ImplicitFunction.h>
 #include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
-#include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#include <vtkm/cont/ArrayHandleVirtual.h>
+#endif
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 #include "Benchmarker.h"
-#include <vtkm/cont/testing/Testing.h>
 
 #include <cctype>
 #include <random>
@@ -223,20 +225,20 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
-  template <typename WeightType, typename T, typename S, typename D>
+  template <typename WeightType, typename T, typename S>
   VTKM_EXEC void operator()(const vtkm::Id2& low_high,
                             const WeightType& weight,
-                            const vtkm::exec::ExecutionWholeArrayConst<T, S, D>& inPortal,
+                            const vtkm::exec::ExecutionWholeArrayConst<T, S>& inPortal,
                             T& result) const
   {
     //fetch the low / high values from inPortal
     result = vtkm::Lerp(inPortal.Get(low_high[0]), inPortal.Get(low_high[1]), weight);
   }
 
-  template <typename WeightType, typename T, typename S, typename D, typename U>
+  template <typename WeightType, typename T, typename S, typename U>
   VTKM_EXEC void operator()(const vtkm::Id2&,
                             const WeightType&,
-                            const vtkm::exec::ExecutionWholeArrayConst<T, S, D>&,
+                            const vtkm::exec::ExecutionWholeArrayConst<T, S>&,
                             U&) const
   {
     //the inPortal and result need to be the same type so this version only
@@ -245,50 +247,35 @@ public:
   }
 };
 
-template <typename ImplicitFunction>
 class EvaluateImplicitFunction : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(FieldIn, FieldOut, ExecObject);
+  using ExecutionSignature = void(_1, _2, _3);
 
-  EvaluateImplicitFunction(const ImplicitFunction* function)
-    : Function(function)
+  template <typename VecType, typename ScalarType, typename FunctionType>
+  VTKM_EXEC void operator()(const VecType& point,
+                            ScalarType& val,
+                            const FunctionType& function) const
   {
+    val = function.Value(point);
   }
-
-  template <typename VecType, typename ScalarType>
-  VTKM_EXEC void operator()(const VecType& point, ScalarType& val) const
-  {
-    val = this->Function->Value(point);
-  }
-
-private:
-  const ImplicitFunction* Function;
 };
 
-template <typename T1, typename T2>
 class Evaluate2ImplicitFunctions : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(FieldIn, FieldOut, ExecObject, ExecObject);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
-  Evaluate2ImplicitFunctions(const T1* f1, const T2* f2)
-    : Function1(f1)
-    , Function2(f2)
+  template <typename VecType, typename ScalarType, typename FType1, typename FType2>
+  VTKM_EXEC void operator()(const VecType& point,
+                            ScalarType& val,
+                            const FType1& function1,
+                            const FType2& function2) const
   {
+    val = function1.Value(point) + function2.Value(point);
   }
-
-  template <typename VecType, typename ScalarType>
-  VTKM_EXEC void operator()(const VecType& point, ScalarType& val) const
-  {
-    val = this->Function1->Value(point) + this->Function2->Value(point);
-  }
-
-private:
-  const T1* Function1;
-  const T2* Function2;
 };
 
 struct PassThroughFunctor
@@ -433,15 +420,19 @@ void BenchBlackScholesStatic(::benchmark::State& state)
 };
 VTKM_BENCHMARK_TEMPLATES(BenchBlackScholesStatic, ValueTypes);
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 template <typename ValueType>
 void BenchBlackScholesDynamic(::benchmark::State& state)
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   BenchBlackScholesImpl<ValueType> impl{ state };
   impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.StockPrice),
            vtkm::cont::make_ArrayHandleVirtual(impl.OptionStrike),
            vtkm::cont::make_ArrayHandleVirtual(impl.OptionYears));
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 VTKM_BENCHMARK_TEMPLATES(BenchBlackScholesDynamic, ValueTypes);
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <typename ValueType>
 void BenchBlackScholesMultiplexer0(::benchmark::State& state)
@@ -537,15 +528,19 @@ void BenchMathStatic(::benchmark::State& state)
 };
 VTKM_BENCHMARK_TEMPLATES(BenchMathStatic, ValueTypes);
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 template <typename ValueType>
 void BenchMathDynamic(::benchmark::State& state)
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   BenchMathImpl<ValueType> impl{ state };
   impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.InputHandle),
            vtkm::cont::make_ArrayHandleVirtual(impl.TempHandle1),
            vtkm::cont::make_ArrayHandleVirtual(impl.TempHandle2));
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 VTKM_BENCHMARK_TEMPLATES(BenchMathDynamic, ValueTypes);
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <typename ValueType>
 void BenchMathMultiplexer0(::benchmark::State& state)
@@ -636,13 +631,17 @@ void BenchFusedMathStatic(::benchmark::State& state)
 };
 VTKM_BENCHMARK_TEMPLATES(BenchFusedMathStatic, ValueTypes);
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 template <typename ValueType>
 void BenchFusedMathDynamic(::benchmark::State& state)
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   BenchFusedMathImpl<ValueType> impl{ state };
   impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.InputHandle));
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 VTKM_BENCHMARK_TEMPLATES(BenchFusedMathDynamic, ValueTypes);
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <typename ValueType>
 void BenchFusedMathMultiplexer0(::benchmark::State& state)
@@ -756,15 +755,19 @@ void BenchEdgeInterpStatic(::benchmark::State& state)
 };
 VTKM_BENCHMARK_TEMPLATES(BenchEdgeInterpStatic, InterpValueTypes);
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 template <typename ValueType>
 void BenchEdgeInterpDynamic(::benchmark::State& state)
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   BenchEdgeInterpImpl<ValueType> impl{ state };
   impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.EdgePairHandle),
            vtkm::cont::make_ArrayHandleVirtual(impl.WeightHandle),
            vtkm::cont::make_ArrayHandleVirtual(impl.FieldHandle));
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 VTKM_BENCHMARK_TEMPLATES(BenchEdgeInterpDynamic, InterpValueTypes);
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 struct ImplicitFunctionBenchData
 {
@@ -802,7 +805,7 @@ static ImplicitFunctionBenchData MakeImplicitFunctionBenchData()
 
 void BenchImplicitFunction(::benchmark::State& state)
 {
-  using EvalWorklet = EvaluateImplicitFunction<vtkm::Sphere>;
+  using EvalWorklet = EvaluateImplicitFunction;
 
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
@@ -814,10 +817,7 @@ void BenchImplicitFunction(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::Token token;
-  auto handle = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  auto function = static_cast<const vtkm::Sphere*>(handle.PrepareForExecution(device, token));
-  EvalWorklet eval(function);
+  EvalWorklet eval;
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };
@@ -826,7 +826,7 @@ void BenchImplicitFunction(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    invoker(eval, data.Points, data.Result);
+    invoker(eval, data.Points, data.Result, data.Sphere1);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -836,7 +836,7 @@ VTKM_BENCHMARK(BenchImplicitFunction);
 
 void BenchVirtualImplicitFunction(::benchmark::State& state)
 {
-  using EvalWorklet = EvaluateImplicitFunction<vtkm::ImplicitFunction>;
+  using EvalWorklet = EvaluateImplicitFunction;
 
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
@@ -848,9 +848,7 @@ void BenchVirtualImplicitFunction(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::Token token;
-  auto sphere = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  EvalWorklet eval(sphere.PrepareForExecution(device, token));
+  EvalWorklet eval;
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };
@@ -859,7 +857,7 @@ void BenchVirtualImplicitFunction(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    invoker(eval, data.Points, data.Result);
+    invoker(eval, data.Points, data.Result, data.Sphere1);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -869,7 +867,7 @@ VTKM_BENCHMARK(BenchVirtualImplicitFunction);
 
 void Bench2ImplicitFunctions(::benchmark::State& state)
 {
-  using EvalWorklet = Evaluate2ImplicitFunctions<vtkm::Sphere, vtkm::Sphere>;
+  using EvalWorklet = Evaluate2ImplicitFunctions;
 
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
@@ -881,12 +879,7 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::Token token;
-  auto h1 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  auto h2 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere2);
-  auto f1 = static_cast<const vtkm::Sphere*>(h1.PrepareForExecution(device, token));
-  auto f2 = static_cast<const vtkm::Sphere*>(h2.PrepareForExecution(device, token));
-  EvalWorklet eval(f1, f2);
+  EvalWorklet eval;
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };
@@ -895,7 +888,7 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    invoker(eval, data.Points, data.Result);
+    invoker(eval, data.Points, data.Result, data.Sphere1, data.Sphere2);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -903,51 +896,29 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
 }
 VTKM_BENCHMARK(Bench2ImplicitFunctions);
 
-void Bench2VirtualImplicitFunctions(::benchmark::State& state)
-{
-  using EvalWorklet = Evaluate2ImplicitFunctions<vtkm::ImplicitFunction, vtkm::ImplicitFunction>;
-
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-
-  auto data = MakeImplicitFunctionBenchData();
-
-  {
-    std::ostringstream desc;
-    desc << data.Points.GetNumberOfValues() << " points";
-    state.SetLabel(desc.str());
-  }
-
-  vtkm::cont::Token token;
-  auto s1 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  auto s2 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere2);
-  EvalWorklet eval(s1.PrepareForExecution(device, token), s2.PrepareForExecution(device, token));
-
-  vtkm::cont::Timer timer{ device };
-  vtkm::cont::Invoker invoker{ device };
-
-  for (auto _ : state)
-  {
-    (void)_;
-    timer.Start();
-    invoker(eval, data.Points, data.Result);
-    timer.Stop();
-
-    state.SetIterationTime(timer.GetElapsedTime());
-  }
-}
-VTKM_BENCHMARK(Bench2VirtualImplicitFunctions);
-
 } // end anon namespace
 
 int main(int argc, char* argv[])
 {
   // Parse VTK-m options:
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::AddHelp;
-  Config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
 
-  // Setup device:
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This occurs when it is help
+  if (opts == vtkm::cont::InitializeOptions::None)
+  {
+    std::cout << Config.Usage << std::endl;
+  }
+  else
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  }
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, argv);
+  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
 }

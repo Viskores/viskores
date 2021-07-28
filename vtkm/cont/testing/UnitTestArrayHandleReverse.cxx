@@ -24,17 +24,19 @@ void TestArrayHandleReverseRead()
   vtkm::cont::ArrayHandleIndex array(ARRAY_SIZE);
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Bad size.");
 
+  auto portal = array.ReadPortal();
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    VTKM_TEST_ASSERT(array.ReadPortal().Get(index) == index, "Index array has unexpected value.");
+    VTKM_TEST_ASSERT(portal.Get(index) == index, "Index array has unexpected value.");
   }
 
   vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandleIndex> reverse =
     vtkm::cont::make_ArrayHandleReverse(array);
 
+  auto reversedPortal = reverse.ReadPortal();
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    VTKM_TEST_ASSERT(reverse.ReadPortal().Get(index) == array.ReadPortal().Get(9 - index),
+    VTKM_TEST_ASSERT(reversedPortal.Get(index) == portal.Get(9 - index),
                      "ArrayHandleReverse does not reverse array");
   }
 }
@@ -42,7 +44,7 @@ void TestArrayHandleReverseRead()
 void TestArrayHandleReverseWrite()
 {
   std::vector<vtkm::Id> ids(ARRAY_SIZE, 0);
-  vtkm::cont::ArrayHandle<vtkm::Id> handle = vtkm::cont::make_ArrayHandle(ids);
+  vtkm::cont::ArrayHandle<vtkm::Id> handle = vtkm::cont::make_ArrayHandle(ids, vtkm::CopyFlag::Off);
 
   vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<vtkm::Id>> reverse =
     vtkm::cont::make_ArrayHandleReverse(handle);
@@ -52,19 +54,19 @@ void TestArrayHandleReverseWrite()
     reverse.WritePortal().Set(index, index);
   }
 
+  auto portal = handle.ReadPortal();
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    VTKM_TEST_ASSERT(handle.ReadPortal().Get(index) == (9 - index),
-                     "ArrayHandleReverse does not reverse array");
+    VTKM_TEST_ASSERT(portal.Get(index) == (9 - index), "ArrayHandleReverse does not reverse array");
   }
 }
 
 void TestArrayHandleReverseScanInclusiveByKey()
 {
-  vtkm::Id ids[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-  vtkm::Id seg[] = { 0, 0, 0, 0, 1, 1, 2, 3, 3, 4 };
-  vtkm::cont::ArrayHandle<vtkm::Id> values = vtkm::cont::make_ArrayHandle(ids, 10);
-  vtkm::cont::ArrayHandle<vtkm::Id> keys = vtkm::cont::make_ArrayHandle(seg, 10);
+  vtkm::cont::ArrayHandle<vtkm::Id> values =
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+  vtkm::cont::ArrayHandle<vtkm::Id> keys =
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 0, 0, 0, 1, 1, 2, 3, 3, 4 });
 
   vtkm::cont::ArrayHandle<vtkm::Id> output;
   vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<vtkm::Id>> reversed =
@@ -73,12 +75,14 @@ void TestArrayHandleReverseScanInclusiveByKey()
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>;
   Algorithm::ScanInclusiveByKey(keys, values, reversed);
 
-  vtkm::Id expected[] = { 0, 1, 3, 6, 4, 9, 6, 7, 15, 9 };
   vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<vtkm::Id>> expected_reversed =
-    vtkm::cont::make_ArrayHandleReverse(vtkm::cont::make_ArrayHandle(expected, 10));
+    vtkm::cont::make_ArrayHandleReverse(
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 1, 3, 6, 4, 9, 6, 7, 15, 9 }));
+  auto outputPortal = output.ReadPortal();
+  auto reversePortal = expected_reversed.ReadPortal();
   for (int i = 0; i < 10; i++)
   {
-    VTKM_TEST_ASSERT(output.ReadPortal().Get(i) == expected_reversed.ReadPortal().Get(i),
+    VTKM_TEST_ASSERT(outputPortal.Get(i) == reversePortal.Get(i),
                      "ArrayHandleReverse as output of ScanInclusiveByKey");
   }
   std::cout << std::endl;

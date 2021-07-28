@@ -10,10 +10,13 @@
 #ifndef vtk_m_filter_Tube_hxx
 #define vtk_m_filter_Tube_hxx
 
+#include <vtkm/filter/Tube.h>
+
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
+#include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/PolicyBase.h>
 
 namespace vtkm
@@ -51,24 +54,30 @@ inline VTKM_CONT vtkm::cont::DataSet Tube::DoExecute(const vtkm::cont::DataSet& 
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Tube::DoMapField(vtkm::cont::DataSet& result,
-                                       const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                       const vtkm::filter::FieldMetadata& fieldMeta,
-                                       vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool Tube::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                               const vtkm::cont::Field& field,
+                                               vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  vtkm::cont::ArrayHandle<T> fieldArray;
-
-  if (fieldMeta.IsPointField())
-    fieldArray = this->Worklet.ProcessPointField(input);
-  else if (fieldMeta.IsCellField())
-    fieldArray = this->Worklet.ProcessCellField(input);
+  if (field.IsFieldPoint())
+  {
+    return vtkm::filter::MapFieldPermutation(
+      field, this->Worklet.GetOutputPointSourceIndex(), result);
+  }
+  else if (field.IsFieldCell())
+  {
+    return vtkm::filter::MapFieldPermutation(
+      field, this->Worklet.GetOutputCellSourceIndex(), result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
   else
+  {
     return false;
-
-  //use the same meta data as the input so we get the same field name, etc.
-  result.AddField(fieldMeta.AsField(fieldArray));
-  return true;
+  }
 }
 }
 } // namespace vtkm::filter

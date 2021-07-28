@@ -66,7 +66,7 @@ void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
                             const vtkm::cont::ArrayHandle<vtkm::Vec3f>& result,
                             const vtkm::Matrix<vtkm::FloatDefault, 4, 4>& matrix)
 {
-  auto points = coords.GetData();
+  auto points = coords.GetDataAsMultiplexer();
   VTKM_TEST_ASSERT(points.GetNumberOfValues() == result.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 

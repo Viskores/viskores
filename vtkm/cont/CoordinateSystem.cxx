@@ -8,23 +8,36 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/CoordinateSystem.hxx>
 
 namespace vtkm
 {
 namespace cont
 {
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+namespace detail
+{
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+vtkm::cont::ArrayHandleVirtualCoordinates CoordDataDepWrapper::ToArray() const
+{
+  return this->AsArrayHandle<vtkm::cont::ArrayHandleVirtualCoordinates>();
+}
+VTKM_DEPRECATED_SUPPRESS_END
+
+} // namespace detail
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
 VTKM_CONT CoordinateSystem::CoordinateSystem()
   : Superclass()
 {
 }
 
-VTKM_CONT CoordinateSystem::CoordinateSystem(
-  std::string name,
-  const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& data)
+VTKM_CONT CoordinateSystem::CoordinateSystem(std::string name,
+                                             const vtkm::cont::UnknownArrayHandle& data)
   : Superclass(name, Association::POINTS, data)
 {
 }
@@ -38,21 +51,29 @@ CoordinateSystem::CoordinateSystem(std::string name,
                                    vtkm::Vec3f spacing)
   : Superclass(name,
                Association::POINTS,
-               vtkm::cont::ArrayHandleVirtualCoordinates(
-                 vtkm::cont::ArrayHandleUniformPointCoordinates(dimensions, origin, spacing)))
+               vtkm::cont::ArrayHandleUniformPointCoordinates(dimensions, origin, spacing))
 {
 }
 
-VTKM_CONT
-vtkm::cont::ArrayHandleVirtualCoordinates CoordinateSystem::GetData() const
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_CONT vtkm::cont::detail::CoordDataDepWrapper CoordinateSystem::GetData() const
 {
-  return this->Superclass::GetData().Cast<vtkm::cont::ArrayHandleVirtualCoordinates>();
+  return vtkm::cont::detail::CoordDataDepWrapper(this->Superclass::GetData());
 }
-
-VTKM_CONT
-void CoordinateSystem::SetData(const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& newdata)
+#else  //!VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_CONT vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>
+CoordinateSystem::GetData() const
 {
-  this->Superclass::SetData(newdata);
+  return vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>(
+    this->Superclass::GetData());
+}
+#endif //!VTKM_NO_DEPRECATED_VIRTUAL
+
+
+VTKM_CONT vtkm::cont::CoordinateSystem::MultiplexerArrayType
+CoordinateSystem::GetDataAsMultiplexer() const
+{
+  return this->GetData().AsArrayHandle<MultiplexerArrayType>();
 }
 
 VTKM_CONT
@@ -103,14 +124,5 @@ template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(
       vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>,
       vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>,
       vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>>::StorageTag>&);
-
-template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(std::string name,
-                                                             const vtkm::cont::VariantArrayHandle&);
-
-template VTKM_CONT_EXPORT void CoordinateSystem::SetData(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<float, 3>>&);
-template VTKM_CONT_EXPORT void CoordinateSystem::SetData(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<double, 3>>&);
-template VTKM_CONT_EXPORT void CoordinateSystem::SetData(const vtkm::cont::VariantArrayHandle&);
 }
 } // namespace vtkm::cont

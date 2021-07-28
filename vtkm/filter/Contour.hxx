@@ -41,11 +41,10 @@ inline bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& input,
+                                       const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                       const vtkm::filter::FieldMetadata& fieldMeta,
+                                       vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -98,7 +97,7 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   if (this->GenerateNormals && generateHighQualityNormals)
   {
     outputCells = this->Worklet.Run(ivalues,
-                                    vtkm::filter::ApplyPolicyCellSet(cells, policy),
+                                    vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                     coords.GetData(),
                                     field,
                                     vertices,
@@ -106,8 +105,11 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   }
   else
   {
-    outputCells = this->Worklet.Run(
-      ivalues, vtkm::filter::ApplyPolicyCellSet(cells, policy), coords.GetData(), field, vertices);
+    outputCells = this->Worklet.Run(ivalues,
+                                    vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
+                                    coords.GetData(),
+                                    field,
+                                    vertices);
   }
 
   if (this->GenerateNormals)

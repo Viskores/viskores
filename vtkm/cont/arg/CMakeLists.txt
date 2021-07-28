@@ -42,4 +42,6 @@ vtkm_declare_headers(${headers})
 
 
 #-----------------------------------------------------------------------------
-add_subdirectory(testing)
+if (VTKm_ENABLE_TESTING)
+  add_subdirectory(testing)
+endif ()

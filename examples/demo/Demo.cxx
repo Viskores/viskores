@@ -9,11 +9,13 @@
 //============================================================================
 
 #include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/source/Tangle.h>
 
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
+#include <vtkm/rendering/MapperVolume.h>
+#include <vtkm/rendering/MapperWireframer.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
 
@@ -23,82 +25,69 @@
 // write that image to a file. It then computes an isosurface on the input data set and renders
 // this output data set in a separate image file
 
+using vtkm::rendering::CanvasRayTracer;
+using vtkm::rendering::MapperRayTracer;
+using vtkm::rendering::MapperVolume;
+using vtkm::rendering::MapperWireframer;
+
 int main(int argc, char* argv[])
 {
   vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::Strict);
 
-  // Input variable declarations
-  vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::cont::DataSet inputData = maker.Make3DUniformDataSet0();
-  vtkm::Float32 isovalue = 100.0f;
-  std::string fieldName = "pointvar";
-
-  using Mapper = vtkm::rendering::MapperRayTracer;
-  using Canvas = vtkm::rendering::CanvasRayTracer;
+  auto tangle = vtkm::source::Tangle(vtkm::Id3{ 50, 50, 50 });
+  vtkm::cont::DataSet tangleData = tangle.Execute();
+  std::string fieldName = "nodevar";
 
   // Set up a camera for rendering the input data
-  const vtkm::cont::CoordinateSystem coords = inputData.GetCoordinateSystem();
-  Mapper mapper;
   vtkm::rendering::Camera camera;
-
-  //Set3DView
-  vtkm::Bounds coordsBounds = coords.GetBounds();
-
-  camera.ResetToBounds(coordsBounds);
-
-  vtkm::Vec3f_32 totalExtent;
-  totalExtent[0] = vtkm::Float32(coordsBounds.X.Length());
-  totalExtent[1] = vtkm::Float32(coordsBounds.Y.Length());
-  totalExtent[2] = vtkm::Float32(coordsBounds.Z.Length());
-  vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
-  vtkm::Normalize(totalExtent);
-  camera.SetLookAt(totalExtent * (mag * .5f));
+  camera.SetLookAt(vtkm::Vec3f_32(0.5, 0.5, 0.5));
   camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
-  camera.SetClippingRange(1.f, 100.f);
+  camera.SetClippingRange(1.f, 10.f);
   camera.SetFieldOfView(60.f);
-  camera.SetPosition(totalExtent * (mag * 2.f));
+  camera.SetPosition(vtkm::Vec3f_32(1.5, 1.5, 1.5));
   vtkm::cont::ColorTable colorTable("inferno");
 
-  // Create a scene for rendering the input data
-  vtkm::rendering::Scene scene;
+  // Background color:
   vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-  Canvas canvas(512, 512);
-
-  vtkm::rendering::Actor actor(inputData.GetCellSet(),
-                               inputData.GetCoordinateSystem(),
-                               inputData.GetField(fieldName),
+  vtkm::rendering::Actor actor(tangleData.GetCellSet(),
+                               tangleData.GetCoordinateSystem(),
+                               tangleData.GetField(fieldName),
                                colorTable);
+  vtkm::rendering::Scene scene;
   scene.AddActor(actor);
+  // 2048x2048 pixels in the canvas:
+  CanvasRayTracer canvas(2048, 2048);
   // Create a view and use it to render the input data using OS Mesa
-  vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
-  view.Initialize();
-  view.Paint();
-  view.SaveAs("demo_input.pnm");
 
-  // Create an isosurface filter
+  vtkm::rendering::View3D view(scene, MapperVolume(), canvas, camera, bg);
+  view.Paint();
+  view.SaveAs("volume.png");
+
+  // Compute an isosurface:
   vtkm::filter::Contour filter;
-  filter.SetGenerateNormals(false);
-  filter.SetMergeDuplicatePoints(false);
-  filter.SetIsoValue(0, isovalue);
+  // [min, max] of the tangle field is [-0.887, 24.46]:
+  filter.SetIsoValue(3.0);
   filter.SetActiveField(fieldName);
-  vtkm::cont::DataSet outputData = filter.Execute(inputData);
+  vtkm::cont::DataSet isoData = filter.Execute(tangleData);
   // Render a separate image with the output isosurface
-  std::cout << "about to render the results of the Contour filter" << std::endl;
-  vtkm::rendering::Scene scene2;
-  vtkm::rendering::Actor actor2(outputData.GetCellSet(),
-                                outputData.GetCoordinateSystem(),
-                                outputData.GetField(fieldName),
-                                colorTable);
+  vtkm::rendering::Actor isoActor(
+    isoData.GetCellSet(), isoData.GetCoordinateSystem(), isoData.GetField(fieldName), colorTable);
   // By default, the actor will automatically scale the scalar range of the color table to match
   // that of the data. However, we are coloring by the scalar that we just extracted a contour
   // from, so we want the scalar range to match that of the previous image.
-  actor2.SetScalarRange(actor.GetScalarRange());
-  scene2.AddActor(actor2);
+  isoActor.SetScalarRange(actor.GetScalarRange());
+  vtkm::rendering::Scene isoScene;
+  isoScene.AddActor(isoActor);
 
-  vtkm::rendering::View3D view2(scene2, mapper, canvas, camera, bg);
-  view2.Initialize();
-  view2.Paint();
-  view2.SaveAs("demo_output.pnm");
+  // Wireframe surface:
+  vtkm::rendering::View3D isoView(isoScene, MapperWireframer(), canvas, camera, bg);
+  isoView.Paint();
+  isoView.SaveAs("isosurface_wireframer.png");
+
+  // Smooth surface:
+  vtkm::rendering::View3D solidView(isoScene, MapperRayTracer(), canvas, camera, bg);
+  solidView.Paint();
+  solidView.SaveAs("isosurface_raytracer.png");
 
   return 0;
 }

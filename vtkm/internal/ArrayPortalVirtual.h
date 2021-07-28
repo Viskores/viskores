@@ -10,6 +10,10 @@
 #ifndef vtk_m_internal_ArrayPortalVirtual_h
 #define vtk_m_internal_ArrayPortalVirtual_h
 
+#include <vtkm/internal/Configure.h>
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 #include <vtkm/VecTraits.h>
 #include <vtkm/VirtualObjectBase.h>
@@ -59,7 +63,11 @@ class VTKM_ALWAYS_EXPORT ArrayPortalWrapper final
   using T = typename PortalT::ValueType;
 
 public:
-  ArrayPortalWrapper(const PortalT& p) noexcept : ArrayPortalVirtual<T>(), Portal(p) {}
+  ArrayPortalWrapper(const PortalT& p) noexcept
+    : ArrayPortalVirtual<T>()
+    , Portal(p)
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -81,8 +89,10 @@ public:
 
 private:
   // clang-format off
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT inline T Get(std::true_type, vtkm::Id index) const noexcept { return this->Portal.Get(index); }
   VTKM_EXEC_CONT inline T Get(std::false_type, vtkm::Id) const noexcept { return T{}; }
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT inline void Set(std::true_type, vtkm::Id index, const T& value) const noexcept { this->Portal.Set(index, value); }
   VTKM_EXEC_CONT inline void Set(std::false_type, vtkm::Id, const T&) const noexcept {}
   // clang-format on
@@ -98,11 +108,17 @@ class VTKM_ALWAYS_EXPORT ArrayPortalRef
 public:
   using ValueType = T;
 
-  ArrayPortalRef() noexcept : Portal(nullptr), NumberOfValues(0) {}
+  VTKM_EXEC_CONT
+  ArrayPortalRef() noexcept
+    : Portal(nullptr)
+    , NumberOfValues(0)
+  {
+  }
 
+  VTKM_EXEC_CONT
   ArrayPortalRef(const ArrayPortalVirtual<T>* portal, vtkm::Id numValues) noexcept
-    : Portal(portal),
-      NumberOfValues(numValues)
+    : Portal(portal)
+    , NumberOfValues(numValues)
   {
   }
 

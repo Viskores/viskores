@@ -10,16 +10,12 @@
 
 #include <vtkm/rendering/Mapper.h>
 
-#include <vtkm/cont/ColorTable.hxx>
-
 namespace vtkm
 {
 namespace rendering
 {
 
-Mapper::~Mapper()
-{
-}
+Mapper::~Mapper() {}
 
 void Mapper::SetActiveColorTable(const vtkm::cont::ColorTable& colorTable)
 {

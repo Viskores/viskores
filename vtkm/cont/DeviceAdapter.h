@@ -12,17 +12,18 @@
 
 // These are listed in non-alphabetical order because this is the conceptual
 // order in which the sub-files are loaded.  (But the compile should still
-// succeed of the order is changed.)  Turn off formatting to keep the order.
+// succeed if the order is changed.)  Turn off formatting to keep the order.
 
 // clang-format off
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/kokkos/DeviceAdapterKokkos.h>
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
-#include <vtkm/cont/internal/ArrayManagerExecution.h>
+#include <vtkm/cont/internal/DeviceAdapterMemoryManager.h>
 
 // clang-format on
 
@@ -45,6 +46,8 @@ namespace cont
 /// helpful for debugging.
 /// \li \c vtkm::cont::DeviceAdapterTagCuda Dispatches and runs algorithms on a GPU
 /// using CUDA.  Must be compiling with a CUDA compiler (nvcc).
+/// \li \c vtkm::cont::DeviceAdapterTagKokkos Dispatches and runs algorithms using
+/// the Kokkos library.
 /// \li \c vtkm::cont::DeviceAdapterTagOpenMP Dispatches an algorithm over multiple
 /// CPU cores using OpenMP compiler directives.  Must be compiling with an
 /// OpenMP-compliant compiler with OpenMP pragmas enabled.
@@ -55,9 +58,6 @@ namespace cont
 ///
 /// To execute algorithms on any device, see Algorithm.h which allows
 /// for abitrary device execution.
-/// See the ArrayManagerExecution.h and DeviceAdapterAlgorithm.h files for
-/// documentation on all the functions and classes that must be
-/// overloaded/specialized to create a new device adapter.
 ///
 struct DeviceAdapterTag___
 {

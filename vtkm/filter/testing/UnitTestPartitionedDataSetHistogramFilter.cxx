@@ -13,6 +13,8 @@
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/thirdparty/diy/environment.h>
+
 #include <algorithm>
 #include <numeric>
 #include <random>
@@ -108,7 +110,7 @@ static void TestPartitionedDataSetHistogram()
   auto bins = result.GetPartition(0)
                 .GetField("histogram")
                 .GetData()
-                .Cast<vtkm::cont::ArrayHandle<vtkm::Id>>();
+                .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
   VTKM_TEST_ASSERT(bins.GetNumberOfValues() == 10, "Expecting 10 bins.");
   auto binsPortal = bins.ReadPortal();
   auto count = std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(binsPortal),

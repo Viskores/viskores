@@ -10,6 +10,8 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkmstd/is_trivial.h>
+
 #include <vtkm/testing/Testing.h>
 
 namespace
@@ -27,7 +29,7 @@ void CheckTypeSizes()
   VTKM_TEST_ASSERT(sizeof(vtkm::Int64) == 8, "Int64 wrong size.");
   VTKM_TEST_ASSERT(sizeof(vtkm::UInt64) == 8, "UInt64 wrong size.");
   VTKM_TEST_ASSERT(sizeof(vtkm::Float32) == 4, "Float32 wrong size.");
-  VTKM_TEST_ASSERT(sizeof(vtkm::Float64) == 8, "Float32 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::Float64) == 8, "Float64 wrong size.");
 }
 
 // This part of the test has to be broken out of GeneralVecTypeTest because
@@ -315,7 +317,7 @@ void GeneralVecTypeTest(const vtkm::Vec<ComponentType, Size>&)
 
   // Vector types should preserve the trivial properties of their components.
   // This insures that algorithms like std::copy will optimize fully.
-  VTKM_TEST_ASSERT(std::is_trivial<ComponentType>::value == std::is_trivial<T>::value,
+  VTKM_TEST_ASSERT(vtkmstd::is_trivial<ComponentType>::value == vtkmstd::is_trivial<T>::value,
                    "VectorType's triviality differs from ComponentType.");
 
   VTKM_TEST_ASSERT(T::NUM_COMPONENTS == Size, "NUM_COMPONENTS is wrong size.");

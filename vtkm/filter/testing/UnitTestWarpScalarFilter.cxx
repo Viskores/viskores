@@ -43,13 +43,13 @@ vtkm::cont::DataSet MakeWarpScalarTestDataSet()
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
 
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec1", vec1);
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "scalarfactor", scalarFactor);
+  dataSet.AddPointField("vec1", vec1);
+  dataSet.AddPointField("scalarfactor", scalarFactor);
 
   vecType normal = vtkm::make_Vec<T>(static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(1.0));
   vtkm::cont::ArrayHandleConstant<vecType> vectorAH =
     vtkm::cont::make_ArrayHandleConstant(normal, dim * dim);
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "normal", vectorAH);
+  dataSet.AddPointField("normal", vectorAH);
 
   return dataSet;
 }
@@ -59,11 +59,11 @@ void CheckResult(const vtkm::filter::WarpScalar& filter, const vtkm::cont::DataS
   VTKM_TEST_ASSERT(result.HasPointField("warpscalar"), "Output filed warpscalar is missing");
   using vecType = vtkm::Vec3f;
   vtkm::cont::ArrayHandle<vecType> outputArray;
-  result.GetPointField("warpscalar").GetData().CopyTo(outputArray);
+  result.GetPointField("warpscalar").GetData().AsArrayHandle(outputArray);
   auto outPortal = outputArray.ReadPortal();
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> sfArray;
-  result.GetPointField("scalarfactor").GetData().CopyTo(sfArray);
+  result.GetPointField("scalarfactor").GetData().AsArrayHandle(sfArray);
   auto sfPortal = sfArray.ReadPortal();
 
   for (vtkm::Id j = 0; j < dim; ++j)

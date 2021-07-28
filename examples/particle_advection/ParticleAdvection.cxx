@@ -11,8 +11,8 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/filter/Streamline.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 // Example computing streamlines.
 // An example vector field is available in the vtk-m data directory: magField.vtk
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
 
   if (dataFile.find(".vtk") != std::string::npos)
   {
-    vtkm::io::reader::VTKDataSetReader rdr(dataFile);
+    vtkm::io::VTKDataSetReader rdr(dataFile);
     ds = rdr.ReadDataSet();
   }
   else
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     p.ID = i;
     seeds.push_back(p);
   }
-  auto seedArray = vtkm::cont::make_ArrayHandle(seeds);
+  auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
 
   //compute streamlines
   vtkm::filter::Streamline streamline;
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
   streamline.SetActiveField(varName);
   auto output = streamline.Execute(ds);
 
-  vtkm::io::writer::VTKDataSetWriter wrt(outputFile);
+  vtkm::io::VTKDataSetWriter wrt(outputFile);
   wrt.WriteDataSet(output);
 
   return 0;

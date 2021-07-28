@@ -24,28 +24,28 @@ namespace cont
 namespace internal
 {
 
-static vtkm::cont::ColorTable::Preset DEFAULT_PRESET = vtkm::cont::ColorTable::Preset::VIRIDIS;
+static vtkm::cont::ColorTable::Preset DEFAULT_PRESET = vtkm::cont::ColorTable::Preset::Viridis;
 
-std::string GetColorSpaceString(vtkm::cont::ColorSpace space)
+std::string GetColorSpaceString(vtkm::ColorSpace space)
 {
   switch (space)
   {
-    case vtkm::cont::ColorSpace::RGB:
+    case vtkm::ColorSpace::RGB:
       return std::string("RGB");
-    case vtkm::cont::ColorSpace::HSV:
+    case vtkm::ColorSpace::HSV:
       return std::string("HSV");
-    case vtkm::cont::ColorSpace::HSV_WRAP:
-      return std::string("HSV_WRAP");
-    case vtkm::cont::ColorSpace::LAB:
+    case vtkm::ColorSpace::HSVWrap:
+      return std::string("HSVWrap");
+    case vtkm::ColorSpace::Lab:
       return std::string("Lab");
-    case vtkm::cont::ColorSpace::DIVERGING:
+    case vtkm::ColorSpace::Diverging:
       return std::string("Diverging");
   }
 
   throw vtkm::cont::ErrorBadValue("Encountered invalid color space.");
 }
 
-vtkm::cont::ColorSpace GetColorSpaceEnum(const std::string& colorSpaceString)
+vtkm::ColorSpace GetColorSpaceEnum(const std::string& colorSpaceString)
 {
   std::string spaceString = colorSpaceString;
 
@@ -56,27 +56,27 @@ vtkm::cont::ColorSpace GetColorSpaceEnum(const std::string& colorSpaceString)
 
   if (spaceString == "rgb")
   {
-    return vtkm::cont::ColorSpace::RGB;
+    return vtkm::ColorSpace::RGB;
   }
 
   if (spaceString == "hsv")
   {
-    return vtkm::cont::ColorSpace::HSV;
+    return vtkm::ColorSpace::HSV;
   }
 
   if ((spaceString == "hsv_wrap") || (spaceString == "hsv-wrap") || (spaceString == "hsvwrap"))
   {
-    return vtkm::cont::ColorSpace::HSV_WRAP;
+    return vtkm::ColorSpace::HSVWrap;
   }
 
   if (spaceString == "lab")
   {
-    return vtkm::cont::ColorSpace::LAB;
+    return vtkm::ColorSpace::Lab;
   }
 
   if (spaceString == "diverging")
   {
-    return vtkm::cont::ColorSpace::DIVERGING;
+    return vtkm::ColorSpace::Diverging;
   }
 
   std::stringstream message;
@@ -116,7 +116,7 @@ struct ColorTablePreset
 {
   vtkm::cont::ColorTable::Preset Preset;
   std::string Name;
-  vtkm::cont::ColorSpace ColorSpace;
+  vtkm::ColorSpace ColorSpace;
   vtkm::Vec<double, 3> NanColor;
   std::vector<double> RGBPoints;
   std::vector<double> AlphaPoints;
@@ -124,13 +124,13 @@ struct ColorTablePreset
   VTKM_CONT
   ColorTablePreset(vtkm::cont::ColorTable::Preset preset,
                    std::string&& name,
-                   vtkm::cont::ColorSpace colorSpace,
+                   vtkm::ColorSpace colorSpace,
                    vtkm::Vec<double, 3>&& nanColor,
                    std::vector<double>&& rgbPoints,
                    std::vector<double>&& alphaPoints = { 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.5, 0.0 })
     : Preset(preset)
     , Name(std::move(name))
-    , ColorSpace(std::move(colorSpace))
+    , ColorSpace(colorSpace)
     , NanColor(std::move(nanColor))
     , RGBPoints(std::move(rgbPoints))
     , AlphaPoints(std::move(alphaPoints))
@@ -148,9 +148,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
 {
   // clang-format off
   presets = std::vector<ColorTablePreset>{
-    { vtkm::cont::ColorTable::Preset::COOL_TO_WARM,
+    { vtkm::cont::ColorTable::Preset::CoolToWarm,
       "Cool to Warm",
-      vtkm::cont::ColorSpace::DIVERGING,
+      vtkm::ColorSpace::Diverging,
       { 1, 1, 0 },
       {
         0, 0.23137254902, 0.298039215686, 0.752941176471,
@@ -158,9 +158,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1, 0.705882352941, 0.0156862745098, 0.149019607843
       }
     },
-    { vtkm::cont::ColorTable::Preset::COOL_TO_WARM_EXTENDED,
+    { vtkm::cont::ColorTable::Preset::CoolToWarmExtended,
       "Cool to Warm Extended",
-      vtkm::cont::ColorSpace::LAB,
+      vtkm::ColorSpace::Lab,
       { 0.25, 0, 0 },
       {
         0, 0, 0, 0.34902,
@@ -200,9 +200,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1, 0.34902, 0.070588, 0.211765
       }
     },
-    { vtkm::cont::ColorTable::Preset::VIRIDIS,
+    { vtkm::cont::ColorTable::Preset::Viridis,
       "Viridis",
-      vtkm::cont::ColorSpace::LAB,
+      vtkm::ColorSpace::Lab,
       { 1, 0, 0 },
       {
         0.000000, 0.282365, 0.000000, 0.331010,
@@ -463,9 +463,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1.000000, 0.952999, 0.912545, 0.110859
       }
     },
-    { vtkm::cont::ColorTable::Preset::INFERNO,
+    { vtkm::cont::ColorTable::Preset::Inferno,
       "Inferno",
-      vtkm::cont::ColorSpace::LAB,
+      vtkm::ColorSpace::Lab,
       { 0, 1, 0 },
       {
         0.000000, 0.002811, 0.000240, 0.013985,
@@ -726,9 +726,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1.000000, 0.959400, 1.002963, 0.640626
       }
     },
-    { vtkm::cont::ColorTable::Preset::PLASMA,
+    { vtkm::cont::ColorTable::Preset::Plasma,
       "Plasma",
-      vtkm::cont::ColorSpace::LAB,
+      vtkm::ColorSpace::Lab,
       { 0, 1, 0 },
       {
         0.000000, 0.185001, 0.000000, 0.530073,
@@ -989,9 +989,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1.000000, 0.894058, 0.982254, 0.081069
       }
     },
-    { vtkm::cont::ColorTable::Preset::BLACK_BODY_RADIATION,
+    { vtkm::cont::ColorTable::Preset::BlackBodyRadiation,
       "Black-Body Radiation",
-      vtkm::cont::ColorSpace::RGB,
+      vtkm::ColorSpace::RGB,
       { 0, 0.498039215686, 1 },
       {
         0, 0, 0, 0,
@@ -1000,15 +1000,15 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1, 1, 1, 1
       }
     },
-    { vtkm::cont::ColorTable::Preset::X_RAY,
+    { vtkm::cont::ColorTable::Preset::XRay,
       "X Ray",
-      vtkm::cont::ColorSpace::RGB,
+      vtkm::ColorSpace::RGB,
       { 1, 0, 0 },
       { 0, 1, 1, 1, 1, 0, 0, 0 }
     },
-    { vtkm::cont::ColorTable::Preset::GREEN,
+    { vtkm::cont::ColorTable::Preset::Green,
       "Green",
-      vtkm::cont::ColorSpace::LAB,
+      vtkm::ColorSpace::Lab,
       { 0.25, 0, 0 },
       {
         0.00, 0.054902, 0.109804, 0.121569,
@@ -1034,9 +1034,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1.00, 1.000000, 0.984314, 0.901961
       }
     },
-    { vtkm::cont::ColorTable::Preset::BLACK_BLUE_WHITE,
+    { vtkm::cont::ColorTable::Preset::BlackBlueWhite,
       "Black - Blue - White",
-      vtkm::cont::ColorSpace::RGB,
+      vtkm::ColorSpace::RGB,
       { 1, 1, 0 },
       {
         0, 0, 0, 0,
@@ -1045,9 +1045,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1, 1, 1, 1
       }
     },
-    { vtkm::cont::ColorTable::Preset::BLUE_TO_ORANGE,
+    { vtkm::cont::ColorTable::Preset::BlueToOrange,
       "Blue to Orange",
-      vtkm::cont::ColorSpace::LAB,
+      vtkm::ColorSpace::Lab,
       { 0.25, 0, 0 },
       {
         0.000000, 0.086275, 0.003922, 0.298039,
@@ -1098,9 +1098,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1.000000, 0.188235, 0.000000, 0.070588
       }
     },
-    {vtkm::cont::ColorTable::Preset::GRAY_TO_RED,
+    {vtkm::cont::ColorTable::Preset::GrayToRed,
      "Gray to Red",
-     vtkm::cont::ColorSpace::LAB,
+     vtkm::ColorSpace::Lab,
      { 0, 0.498039215686, 1 },
      {
        0.000000, 0.101961, 0.101961, 0.101961,
@@ -1122,9 +1122,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
        1.000000, 0.403922, 0.000000, 0.121569
      }
     },
-    { vtkm::cont::ColorTable::Preset::COLD_AND_HOT,
+    { vtkm::cont::ColorTable::Preset::ColdAndHot,
       "Cold and Hot",
-      vtkm::cont::ColorSpace::RGB,
+      vtkm::ColorSpace::RGB,
       { 1, 1, 0 },
       {
         0, 0, 1, 1,
@@ -1134,9 +1134,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1, 1, 1, 0
       }
     },
-    { vtkm::cont::ColorTable::Preset::BLUE_GREEN_ORANGE,
+    { vtkm::cont::ColorTable::Preset::BlueGreenOrange,
       "Blue - Green - Orange",
-      vtkm::cont::ColorSpace::LAB,
+      vtkm::ColorSpace::Lab,
       { 0.25, 0.0, 0.0 },
       {
         0.0,0.831373,0.909804,0.980392,
@@ -1191,9 +1191,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1.0,0.45098,0.007843,0.0
       }
     },
-    { vtkm::cont::ColorTable::Preset::YELLOW_GRAY_BLUE,
+    { vtkm::cont::ColorTable::Preset::YellowGrayBlue,
       "Yellow - Gray - Blue",
-      vtkm::cont::ColorSpace::LAB,
+      vtkm::ColorSpace::Lab,
       { 0.25, 0, 0 },
       {
         0.000000, 0.301961, 0.047059, 0.090196,
@@ -1253,9 +1253,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1.000000, 0.890196, 0.956863, 0.984314
       }
     },
-    { vtkm::cont::ColorTable::Preset::RAINBOW_UNIFORM,
+    { vtkm::cont::ColorTable::Preset::RainbowUniform,
       "Rainbow Uniform",
-      vtkm::cont::ColorSpace::RGB,
+      vtkm::ColorSpace::RGB,
       { 1, 0, 0 },
       {
         0.000000,0.020000,0.381300,0.998100,
@@ -1303,9 +1303,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1.000000,0.683700,0.050000,0.413900
       }
     },
-    { vtkm::cont::ColorTable::Preset::JET,
+    { vtkm::cont::ColorTable::Preset::Jet,
       "Jet",
-      vtkm::cont::ColorSpace::RGB,
+      vtkm::ColorSpace::RGB,
       { 0.25, 0, 0 },
       {
         0, 0, 0, 0.5625,
@@ -1317,9 +1317,9 @@ VTKM_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& prese
         1, 0.5, 0, 0
       }
     },
-    { vtkm::cont::ColorTable::Preset::RAINBOW_DESATURATED,
+    { vtkm::cont::ColorTable::Preset::RainbowDesaturated,
       "Rainbow Desaturated",
-      vtkm::cont::ColorSpace::RGB,
+      vtkm::ColorSpace::RGB,
       { 1, 1, 0 },
       {
         0, 0.278431372549, 0.278431372549, 0.858823529412,
@@ -1357,7 +1357,7 @@ namespace internal
 VTKM_CONT_EXPORT
 bool LoadColorTablePreset(vtkm::cont::ColorTable::Preset preset, vtkm::cont::ColorTable& table)
 {
-  if (preset == vtkm::cont::ColorTable::Preset::DEFAULT)
+  if (preset == vtkm::cont::ColorTable::Preset::Default)
   {
     preset = DEFAULT_PRESET;
   }
@@ -1369,7 +1369,52 @@ bool LoadColorTablePreset(vtkm::cont::ColorTable::Preset preset, vtkm::cont::Col
       return true;
     }
   }
-  return false;
+
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  // Handle deprecated names
+  switch (preset)
+  {
+    case vtkm::cont::ColorTable::Preset::DEFAULT:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Default, table);
+    case vtkm::cont::ColorTable::Preset::COOL_TO_WARM:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::CoolToWarm, table);
+    case vtkm::cont::ColorTable::Preset::COOL_TO_WARM_EXTENDED:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::CoolToWarmExtended, table);
+    case vtkm::cont::ColorTable::Preset::VIRIDIS:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Viridis, table);
+    case vtkm::cont::ColorTable::Preset::INFERNO:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Inferno, table);
+    case vtkm::cont::ColorTable::Preset::PLASMA:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Plasma, table);
+    case vtkm::cont::ColorTable::Preset::BLACK_BODY_RADIATION:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::BlackBodyRadiation, table);
+    case vtkm::cont::ColorTable::Preset::X_RAY:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::XRay, table);
+    case vtkm::cont::ColorTable::Preset::GREEN:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Green, table);
+    case vtkm::cont::ColorTable::Preset::BLACK_BLUE_WHITE:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::BlackBlueWhite, table);
+    case vtkm::cont::ColorTable::Preset::BLUE_TO_ORANGE:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::BlueToOrange, table);
+    case vtkm::cont::ColorTable::Preset::GRAY_TO_RED:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::GrayToRed, table);
+    case vtkm::cont::ColorTable::Preset::COLD_AND_HOT:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::ColdAndHot, table);
+    case vtkm::cont::ColorTable::Preset::BLUE_GREEN_ORANGE:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::BlueGreenOrange, table);
+    case vtkm::cont::ColorTable::Preset::YELLOW_GRAY_BLUE:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::YellowGrayBlue, table);
+    case vtkm::cont::ColorTable::Preset::RAINBOW_UNIFORM:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::RainbowUniform, table);
+    case vtkm::cont::ColorTable::Preset::JET:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Jet, table);
+    case vtkm::cont::ColorTable::Preset::RAINBOW_DESATURATED:
+      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::RainbowDesaturated, table);
+    default:
+      // Should not get here.
+      return false;
+  }
+  VTKM_DEPRECATED_SUPPRESS_END
 }
 
 VTKM_CONT_EXPORT std::set<std::string> GetPresetNames()

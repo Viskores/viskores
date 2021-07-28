@@ -131,6 +131,7 @@ VTKM_EXEC_CONT auto make_tuple(Ts&&... args) -> decltype(vtkm::MakeTuple(std::fo
   return vtkm::MakeTuple(std::forward<Ts>(args)...);
 }
 
+/// @cond NONE
 namespace detail
 {
 struct TupleTransformFunctor
@@ -171,6 +172,7 @@ VTKM_EXEC_CONT auto TupleForEach(TupleType&& tuple, Function&& f)
 }
 
 } // namespace detail
+/// @endcond
 
 template <>
 class Tuple<>

@@ -98,6 +98,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/Error.h>
 #include <vtkm/cont/Invoker.h>
 
 
@@ -227,7 +228,7 @@ public:
 
 
 // constructor takes necessary references
-ActiveGraph::ActiveGraph(bool isJoinGraph)
+inline ActiveGraph::ActiveGraph(bool isJoinGraph)
   : Invoke()
   , IsJoinGraph(isJoinGraph)
 { // constructor
@@ -240,7 +241,7 @@ ActiveGraph::ActiveGraph(bool isJoinGraph)
 
 // initialises the active graph
 template <class Mesh>
-void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
+inline void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
 { // InitialiseActiveGraph()
   // reference to the correct array in the extrema
   const IdArrayType& extrema = this->IsJoinGraph ? meshExtrema.Peaks : meshExtrema.Pits;
@@ -287,9 +288,9 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
             vtkm::cont::ArrayPortalToIteratorBegin(inverseIndex.WritePortal()) + 1);
     */
   IdArrayType inverseIndex;
-  OnefIfCritical oneIfCriticalFunctor;
+  OneIfCritical oneIfCriticalFunctor;
   auto oneIfCriticalArrayHandle =
-    vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfCritical>(outDegrees, oneIfCriticalFunctor);
+    vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfCritical>(outDegrees, oneIfCriticalFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfCriticalArrayHandle, inverseIndex);
 
   // now we can compute how many critical points we carry forward
@@ -372,11 +373,12 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
 
 // routine that computes the merge tree from the active graph
 // was previously Compute()
-void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema)
+inline void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema)
 { // MakeMergeTree()
   DebugPrint("Active Graph Computation Starting", __FILE__, __LINE__);
 
   // loop until we run out of active edges
+  vtkm::Id maxNumIterations = this->EdgeSorter.GetNumberOfValues();
   this->NumIterations = 0;
   while (true)
   { // main loop
@@ -385,7 +387,16 @@ void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema)
 
     // test whether there are any left (if not, we're on the trunk)
     if (this->EdgeSorter.GetNumberOfValues() <= 0)
+    {
       break;
+    }
+    // test whether we are in a bad infinite loop due to bad input data. Usually
+    // this is not an issue for the merge tree (only for the contour tree), but
+    // we check just to make absolutely sure we won't get stuck in an infinite loop
+    if (this->NumIterations >= maxNumIterations)
+    {
+      throw new vtkm::cont::ErrorInternal("Bad iteration. Merge tree unable to process all edges.");
+    }
 
     // find & label the extrema with their governing saddles
     FindGoverningSaddles();
@@ -421,7 +432,7 @@ void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema)
 
 
 // suppresses non-saddles for the governing saddles pass
-void ActiveGraph::TransferSaddleStarts()
+inline void ActiveGraph::TransferSaddleStarts()
 { // TransferSaddleStarts()
   // update all of the edges so that the far end resets to the result of the ascent in the previous step
 
@@ -476,7 +487,7 @@ void ActiveGraph::TransferSaddleStarts()
 
 
 // sorts saddle starts to find governing saddles
-void ActiveGraph::FindGoverningSaddles()
+inline void ActiveGraph::FindGoverningSaddles()
 { // FindGoverningSaddles()
   // sort with the comparator
   vtkm::cont::Algorithm::Sort(
@@ -502,7 +513,7 @@ void ActiveGraph::FindGoverningSaddles()
 
 
 // marks now regular points for removal
-void ActiveGraph::TransferRegularPoints()
+inline void ActiveGraph::TransferRegularPoints()
 { // TransferRegularPointsWorklet
   // we need to label the regular points that have been identified
   active_graph_inc_ns::TransferRegularPointsWorklet transRegPtWorklet(this->IsJoinGraph);
@@ -513,7 +524,7 @@ void ActiveGraph::TransferRegularPoints()
 
 
 // compacts the active vertex list
-void ActiveGraph::CompactActiveVertices()
+inline void ActiveGraph::CompactActiveVertices()
 { // CompactActiveVertices()
   using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
@@ -536,7 +547,7 @@ void ActiveGraph::CompactActiveVertices()
 
 
 // compacts the active edge list
-void ActiveGraph::CompactActiveEdges()
+inline void ActiveGraph::CompactActiveEdges()
 { // CompactActiveEdges()
   // grab the size of the array for easier reference
   vtkm::Id nActiveVertices = this->ActiveVertices.GetNumberOfValues();
@@ -556,7 +567,7 @@ void ActiveGraph::CompactActiveEdges()
                this->Outdegree,      // (input)
                this->Hyperarcs,      // (input/output)
                newOutdegree          // (output)
-               );
+  );
 
   // now we do a reduction to compute the offsets of each vertex
   vtkm::cont::ArrayHandle<vtkm::Id> newPosition;
@@ -590,7 +601,7 @@ void ActiveGraph::CompactActiveEdges()
                this->FirstEdge,   // (input/output)
                this->Outdegree,   // (input/output)
                this->Hyperarcs    // (input/output)
-               );
+  );
 
   // resize the original array and recopy
   //vtkm::cont::Algorithm::::Copy(newActiveEdges, this-ActiveEdges);
@@ -607,7 +618,7 @@ void ActiveGraph::CompactActiveEdges()
 
 
 // builds the chains for the new active vertices
-void ActiveGraph::BuildChains()
+inline void ActiveGraph::BuildChains()
 { // BuildChains()
   // 1. compute the number of log steps required in this pass
   vtkm::Id numLogSteps = 1;
@@ -626,7 +637,7 @@ void ActiveGraph::BuildChains()
 
 
 // sets all remaining active vertices
-void ActiveGraph::BuildTrunk()
+inline void ActiveGraph::BuildTrunk()
 { //BuildTrunk
   // all remaining vertices belong to the trunk
   active_graph_inc_ns::BuildTrunkWorklet buildTrunkWorklet;
@@ -637,7 +648,7 @@ void ActiveGraph::BuildTrunk()
 
 
 // finds all super and hyper nodes, numbers them & sets up arrays for lookup
-void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
+inline void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
 { // FindSuperAndHyperNodes()
   // allocate memory for nodes
   this->HyperID.ReleaseResources();
@@ -656,8 +667,8 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
             vtkm::cont::ArrayPortalToIteratorBegin(newSupernodePosition.GetPortalControl()) + 1);*/
 
   IdArrayType newSupernodePosition;
-  OnefIfSupernode oneIfSupernodeFunctor;
-  auto oneIfSupernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfSupernode>(
+  OneIfSupernode oneIfSupernodeFunctor;
+  auto oneIfSupernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfSupernode>(
     this->Hyperarcs, oneIfSupernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfSupernodeArrayHandle, newSupernodePosition);
 
@@ -679,8 +690,8 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
              vtkm::cont::ArrayPortalToIteratorBegin(newHypernodePosition.GetPortalControl()) + 1);
     */
   IdArrayType newHypernodePosition;
-  OnefIfHypernode oneIfHypernodeFunctor;
-  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfHypernode>(
+  OneIfHypernode oneIfHypernodeFunctor;
+  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfHypernode>(
     this->Hyperarcs, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
@@ -708,7 +719,7 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
 
 
 // uses active graph to set superarcs & hyperparents in merge tree
-void ActiveGraph::SetSuperArcs(MergeTree& tree)
+inline void ActiveGraph::SetSuperArcs(MergeTree& tree)
 { // SetSuperArcs()
   using PermutedIdArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
@@ -769,7 +780,7 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
                this->HyperID,       // (input)
                tree.Superarcs,      // (output)
                tree.FirstSuperchild // (output)
-               );
+  );
 
   // 6.   Now we can reset the supernodes to mesh IDs
   PermutedIdArrayType permuteGlobalIndex(tree.Supernodes, this->GlobalIndex);
@@ -784,12 +795,12 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
 
 
 // uses active graph to set hypernodes in merge tree
-void ActiveGraph::SetHyperArcs(MergeTree& tree)
+inline void ActiveGraph::SetHyperArcs(MergeTree& tree)
 { // SetHyperArcs()
   //      1.      Allocate memory for hypertree
-  tree.Hypernodes.Shrink(
-    this
-      ->NumHypernodes); // Has been allocated previously. The values are needed but the size may be too large.
+  tree.Hypernodes.Allocate(
+    this->NumHypernodes, // Has been allocated previously.
+    vtkm::CopyFlag::On); // The values are needed but the size may be too large.
   tree.Hyperarcs.ReleaseResources();
   tree.Hyperarcs.Allocate(this->NumHypernodes); // Has not been allocated yet
 
@@ -805,7 +816,7 @@ void ActiveGraph::SetHyperArcs(MergeTree& tree)
 
 
 // uses active graph to set arcs in merge tree
-void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
+inline void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
 { // SetArcs()
   using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
@@ -867,7 +878,7 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
 
 
 // Allocate the vertex array
-void ActiveGraph::AllocateVertexArrays(vtkm::Id nElems)
+inline void ActiveGraph::AllocateVertexArrays(vtkm::Id nElems)
 {
   this->GlobalIndex.Allocate(nElems);
   this->Outdegree.Allocate(nElems);
@@ -877,7 +888,7 @@ void ActiveGraph::AllocateVertexArrays(vtkm::Id nElems)
 
 
 // Allocate the edge array
-void ActiveGraph::AllocateEdgeArrays(vtkm::Id nElems)
+inline void ActiveGraph::AllocateEdgeArrays(vtkm::Id nElems)
 {
   this->ActiveEdges.Allocate(nElems);
   this->EdgeNear.Allocate(nElems);
@@ -886,7 +897,7 @@ void ActiveGraph::AllocateEdgeArrays(vtkm::Id nElems)
 
 
 // releases temporary arrays
-void ActiveGraph::ReleaseTemporaryArrays()
+inline void ActiveGraph::ReleaseTemporaryArrays()
 {
   this->GlobalIndex.ReleaseResources();
   this->FirstEdge.ReleaseResources();
@@ -903,7 +914,7 @@ void ActiveGraph::ReleaseTemporaryArrays()
 
 
 // prints the contents of the active graph in a standard format
-void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lineNum)
+inline void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lineNum)
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "------------------------------------------------------" << std::endl;

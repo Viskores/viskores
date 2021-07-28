@@ -17,6 +17,7 @@ function(vtkm_test_install )
       "-DVTKm_INSTALL_INCLUDE_DIR=${VTKm_INSTALL_INCLUDE_DIR}"
       "-DVTKm_ENABLE_RENDERING=${VTKm_ENABLE_RENDERING}"
       "-DVTKm_ENABLE_LOGGING=${VTKm_ENABLE_LOGGING}"
+      "-DVTKm_ENABLE_HDF5_IO=${VTKm_ENABLE_HDF5_IO}"
       )
 
     #By having this as separate tests using fixtures, it will allow us in
@@ -66,6 +67,8 @@ set(CMAKE_MAKE_PROGRAM \"${CMAKE_MAKE_PROGRAM}\" CACHE FILEPATH \"\")
 set(CMAKE_PREFIX_PATH \"${CMAKE_PREFIX_PATH};${install_prefix}/\" CACHE STRING \"\")
 set(CMAKE_CXX_COMPILER \"${CMAKE_CXX_COMPILER}\" CACHE FILEPATH \"\")
 set(CMAKE_CXX_FLAGS \"$CACHE{CMAKE_CXX_FLAGS}\" CACHE STRING \"\")
+set(CMAKE_CXX_STANDARD \"${CMAKE_CXX_STANDARD}\" CACHE STRING \"\")
+set(CMAKE_CXX_STANDARD_REQUIRED ${CMAKE_CXX_STANDARD_REQUIRED} CACHE BOOL \"\")
 set(CMAKE_CUDA_COMPILER \"${CMAKE_CUDA_COMPILER}\" CACHE FILEPATH \"\")
 set(CMAKE_CUDA_FLAGS \"$CACHE{CMAKE_CUDA_FLAGS}\" CACHE STRING \"\")
 set(CMAKE_CUDA_HOST_COMPILER \"${CMAKE_CUDA_HOST_COMPILER}\" CACHE FILEPATH \"\")
@@ -93,6 +96,8 @@ function(vtkm_test_against_install dir)
       -DCMAKE_CUDA_HOST_COMPILER:FILEPATH=${CMAKE_CUDA_HOST_COMPILER}
       -DCMAKE_CXX_FLAGS:STRING=$CACHE{CMAKE_CXX_FLAGS}
       -DCMAKE_CUDA_FLAGS:STRING=$CACHE{CMAKE_CUDA_FLAGS}
+      -DCMAKE_CXX_STANDARD:STRING=${CMAKE_CXX_STANDARD}
+      -DCMAKE_CXX_STANDARD_REQUIRED:BOOL=${CMAKE_CXX_STANDARD_REQUIRED}
     )
   else()
     set(build_config "${build_dir}build_options.cmake")
@@ -108,6 +113,10 @@ function(vtkm_test_against_install dir)
       -DTBB_LIBRARY_RELEASE:FILEPATH=${TBB_LIBRARY_RELEASE}
       -DTBB_INCLUDE_DIR:PATH=${TBB_INCLUDE_DIR}
     )
+  endif()
+
+  if(TARGET vtkm::kokkos)
+    list(APPEND args "-DKokkos_DIR=${Kokkos_DIR}")
   endif()
 
   #determine if the test is expected to compile or fail to build. We use

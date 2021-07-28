@@ -52,7 +52,7 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellShapeMetric(const vtkm::IdComponent& numPts,
                                   const PointCoordVecType& pts,
                                   CellShapeType shape,
-                                  const vtkm::exec::FunctorBase&)
+                                  vtkm::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -67,11 +67,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellShapeMetric(const vtkm::IdComponent& numPts,
                                   const PointCoordVecType& pts,
                                   vtkm::CellShapeTagTriangle,
-                                  const vtkm::exec::FunctorBase& worklet)
+                                  vtkm::ErrorCode& ec)
 {
   if (numPts != 3)
   {
-    worklet.RaiseError("Shape metric(triangle) requires 3 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
   using Scalar = OutType;
@@ -79,7 +79,7 @@ VTKM_EXEC OutType CellShapeMetric(const vtkm::IdComponent& numPts,
 
   const Scalar condition =
     vtkm::worklet::cellmetrics::CellConditionMetric<Scalar, CollectionOfPoints>(
-      numPts, pts, vtkm::CellShapeTagTriangle(), worklet);
+      numPts, pts, vtkm::CellShapeTagTriangle(), ec);
   const Scalar q(1 / condition);
 
   return q;
@@ -90,11 +90,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellShapeMetric(const vtkm::IdComponent& numPts,
                                   const PointCoordVecType& pts,
                                   vtkm::CellShapeTagQuad,
-                                  const vtkm::exec::FunctorBase& worklet)
+                                  vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Area(quad) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -130,11 +130,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellShapeMetric(const vtkm::IdComponent& numPts,
                                   const PointCoordVecType& pts,
                                   vtkm::CellShapeTagTetra,
-                                  const vtkm::exec::FunctorBase& worklet)
+                                  vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Shape metric(tetrahedron) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
   using Scalar = OutType;
@@ -148,7 +148,7 @@ VTKM_EXEC OutType CellShapeMetric(const vtkm::IdComponent& numPts,
   const Scalar three(3.0);
   const Scalar jacobian =
     vtkm::worklet::cellmetrics::CellJacobianMetric<Scalar, CollectionOfPoints>(
-      numPts, pts, vtkm::CellShapeTagTetra(), worklet);
+      numPts, pts, vtkm::CellShapeTagTetra(), ec);
 
   if (jacobian <= zero)
   {
@@ -182,11 +182,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellShapeMetric(const vtkm::IdComponent& numPts,
                                   const PointCoordVecType& pts,
                                   vtkm::CellShapeTagHexahedron,
-                                  const vtkm::exec::FunctorBase& worklet)
+                                  vtkm::ErrorCode& ec)
 {
   if (numPts != 8)
   {
-    worklet.RaiseError("Volume(hexahedron) requires 8 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
   using Scalar = OutType;

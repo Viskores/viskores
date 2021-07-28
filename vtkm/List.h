@@ -57,8 +57,8 @@ using IsList = typename vtkm::internal::IsListImpl<T>::type;
 /// actually a device adapter tag. (You can get weird errors elsewhere in the
 /// code when a mistake is made.)
 ///
-#define VTKM_IS_LIST(type)                                                                         \
-  VTKM_STATIC_ASSERT_MSG((::vtkm::internal::IsList<type>::value),                                  \
+#define VTKM_IS_LIST(type)                                        \
+  VTKM_STATIC_ASSERT_MSG((::vtkm::internal::IsList<type>::value), \
                          "Provided type is not a valid VTK-m list type.")
 
 namespace detail
@@ -226,8 +226,7 @@ template <vtkm::IdComponent NumSearched,
           typename... Ts>
 struct FindFirstOfType<NumSearched, Target, T0, T1, T2, T3, T4, T5, Ts...>
   : FindFirstOfSplit4<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
-                       std::is_same<Target, T2>::value ||
-                       std::is_same<Target, T3>::value),
+                       std::is_same<Target, T2>::value || std::is_same<Target, T3>::value),
                       NumSearched,
                       Target,
                       T0,
@@ -257,8 +256,7 @@ template <vtkm::IdComponent NumSearched,
           typename... Ts>
 struct FindFirstOfSplit8<true, NumSearched, Target, T0, T1, T2, T3, T4, T5, T6, T7, Ts...>
   : FindFirstOfSplit4<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
-                       std::is_same<Target, T2>::value ||
-                       std::is_same<Target, T3>::value),
+                       std::is_same<Target, T2>::value || std::is_same<Target, T3>::value),
                       NumSearched,
                       Target,
                       T0,
@@ -305,12 +303,9 @@ template <vtkm::IdComponent NumSearched,
           typename... Ts>
 struct FindFirstOfType<NumSearched, Target, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Ts...>
   : FindFirstOfSplit8<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
-                       std::is_same<Target, T2>::value ||
-                       std::is_same<Target, T3>::value ||
-                       std::is_same<Target, T4>::value ||
-                       std::is_same<Target, T5>::value ||
-                       std::is_same<Target, T6>::value ||
-                       std::is_same<Target, T7>::value),
+                       std::is_same<Target, T2>::value || std::is_same<Target, T3>::value ||
+                       std::is_same<Target, T4>::value || std::is_same<Target, T5>::value ||
+                       std::is_same<Target, T6>::value || std::is_same<Target, T7>::value),
                       NumSearched,
                       Target,
                       T0,
@@ -523,6 +518,8 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename Functor, typename... Ts, typename... Args>
 VTKM_EXEC_CONT void ListForEachImpl(Functor&& f, vtkm::List<Ts...>, Args&&... args)
 {
+  VTKM_STATIC_ASSERT_MSG((!std::is_same<vtkm::List<Ts...>, vtkm::ListUniversal>::value),
+                         "Cannot call ListFor on vtkm::ListUniversal.");
   auto init_list = { ListForEachCallThrough(
     std::forward<Functor>(f), Ts{}, std::forward<Args>(args)...)... };
   (void)init_list;

@@ -8,14 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/testing/Testing.h>
+
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
-
 #include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
-
 #include <vtkm/internal/FunctionInterface.h>
 #include <vtkm/internal/Invocation.h>
-
-#include <vtkm/testing/Testing.h>
 
 namespace
 {
@@ -89,11 +87,12 @@ struct FetchArrayTopologyMapInTests
   void TryInvocation(const Invocation& invocation) const
   {
     using ConnectivityType = typename Invocation::InputDomainType;
-    using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
+    using ThreadIndicesType =
+      vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType,
+                                                vtkm::exec::arg::CustomScatterOrMaskTag>;
 
     using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
                                              vtkm::exec::arg::AspectTagDefault,
-                                             ThreadIndicesType,
                                              TestPortal<T>>;
 
     FetchType fetch;
@@ -105,7 +104,7 @@ struct FetchArrayTopologyMapInTests
     ThreadIndicesType indices(
       threadIndex, inputIndex, visitIndex, outputIndex, invocation.GetInputDomain());
 
-    typename FetchType::ValueType value =
+    auto value =
       fetch.Load(indices, vtkm::internal::ParameterGet<ParamIndex>(invocation.Parameters));
     VTKM_TEST_ASSERT(value.GetNumberOfComponents() == 8,
                      "Topology fetch got wrong number of components.");
@@ -127,10 +126,9 @@ struct FetchArrayTopologyMapInTests
 
     vtkm::internal::ConnectivityStructuredInternals<3> connectivityInternals;
     connectivityInternals.SetPointDimensions(vtkm::Id3(2, 2, 2));
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                       vtkm::TopologyElementTagPoint,
-                                       3>
-      connectivity(connectivityInternals);
+    vtkm::exec::
+      ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
+        connectivity(connectivityInternals);
 
     using NullType = vtkm::internal::NullType;
     auto baseFunctionInterface = vtkm::internal::make_FunctionInterface<void>(
@@ -169,11 +167,12 @@ template <vtkm::IdComponent NumDimensions, vtkm::IdComponent ParamIndex, typenam
 void TryStructuredPointCoordinatesInvocation(const Invocation& invocation)
 {
   using ConnectivityType = typename Invocation::InputDomainType;
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
+  using ThreadIndicesType =
+    vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType,
+                                              vtkm::exec::arg::CustomScatterOrMaskTag>;
 
   vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
                          vtkm::exec::arg::AspectTagDefault,
-                         ThreadIndicesType,
                          vtkm::internal::ArrayPortalUniformPointCoordinates>
     fetch;
 

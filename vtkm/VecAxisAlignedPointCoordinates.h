@@ -167,7 +167,7 @@ struct VecTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
   template <typename NewComponentType>
   using ReplaceComponentType = vtkm::Vec<NewComponentType, NUM_COMPONENTS>;
   template <typename NewComponentType>
-  using ReplaceBaseComponenttype = vtkm::Vec<vtkm::Vec<NewComponentType, 3>, NUM_COMPONENTS>;
+  using ReplaceBaseComponentType = vtkm::Vec<vtkm::Vec<NewComponentType, 3>, NUM_COMPONENTS>;
 
   template <vtkm::IdComponent destSize>
   VTKM_EXEC_CONT static void CopyInto(const VecType& src, vtkm::Vec<ComponentType, destSize>& dest)
@@ -175,6 +175,21 @@ struct VecTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
     src.CopyInto(dest);
   }
 };
+
+/// Helper function for printing out vectors during testing.
+///
+template <vtkm::IdComponent NumDimensions>
+inline VTKM_CONT std::ostream& operator<<(
+  std::ostream& stream,
+  const vtkm::VecAxisAlignedPointCoordinates<NumDimensions>& vec)
+{
+  stream << "[";
+  for (vtkm::IdComponent component = 0; component < vec.NUM_COMPONENTS - 1; component++)
+  {
+    stream << vec[component] << ",";
+  }
+  return stream << vec[vec.NUM_COMPONENTS - 1] << "]";
+}
 
 } // namespace vtkm
 

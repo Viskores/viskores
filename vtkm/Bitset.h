@@ -55,6 +55,11 @@ struct Bitset
     return ((this->Mask & (static_cast<MaskType>(1) << bitIndex)) != 0);
   }
 
+  VTKM_EXEC_CONT bool operator==(const vtkm::Bitset<MaskType>& otherBitset) const
+  {
+    return this->Mask == otherBitset.Mask;
+  }
+
 private:
   MaskType Mask = 0;
 };

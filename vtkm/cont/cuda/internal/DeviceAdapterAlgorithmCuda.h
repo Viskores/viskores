@@ -16,6 +16,7 @@
 #include <vtkm/UnaryPredicates.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
@@ -26,8 +27,6 @@
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 
 #include <vtkm/cont/cuda/ErrorCuda.h>
-#include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
-#include <vtkm/cont/cuda/internal/AtomicInterfaceExecutionCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTimerImplementationCuda.h>
@@ -68,37 +67,6 @@ namespace cont
 {
 namespace cuda
 {
-
-/// \brief RAII helper for temporarily changing CUDA stack size in an
-/// exception-safe way.
-struct ScopedCudaStackSize
-{
-  ScopedCudaStackSize(std::size_t newStackSize)
-  {
-    cudaDeviceGetLimit(&this->OldStackSize, cudaLimitStackSize);
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               "Temporarily changing Cuda stack size from "
-                 << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(this->OldStackSize))
-                 << " to "
-                 << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(newStackSize)));
-    cudaDeviceSetLimit(cudaLimitStackSize, newStackSize);
-  }
-
-  ~ScopedCudaStackSize()
-  {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               "Restoring Cuda stack size to " << vtkm::cont::GetHumanReadableSize(
-                 static_cast<vtkm::UInt64>(this->OldStackSize)));
-    cudaDeviceSetLimit(cudaLimitStackSize, this->OldStackSize);
-  }
-
-  // Disable copy
-  ScopedCudaStackSize(const ScopedCudaStackSize&) = delete;
-  ScopedCudaStackSize& operator=(const ScopedCudaStackSize&) = delete;
-
-private:
-  std::size_t OldStackSize;
-};
 
 /// \brief Represents how to schedule 1D, 2D, and 3D Cuda kernels
 ///
@@ -210,8 +178,25 @@ __global__ void SumExclusiveScan(T a, T b, T result, BinaryOperationType binary_
 #pragma GCC diagnostic pop
 #endif
 
+template <typename FunctorType, typename ArgType>
+struct FunctorSupportsUnaryImpl
+{
+  template <typename F, typename A, typename = decltype(std::declval<F>()(std::declval<A>()))>
+  static std::true_type has(int);
+  template <typename F, typename A>
+  static std::false_type has(...);
+  using type = decltype(has<FunctorType, ArgType>(0));
+};
+template <typename FunctorType, typename ArgType>
+using FunctorSupportsUnary = typename FunctorSupportsUnaryImpl<FunctorType, ArgType>::type;
+
+template <typename PortalType,
+          typename BinaryAndUnaryFunctor,
+          typename = FunctorSupportsUnary<BinaryAndUnaryFunctor, typename PortalType::ValueType>>
+struct CastPortal;
+
 template <typename PortalType, typename BinaryAndUnaryFunctor>
-struct CastPortal
+struct CastPortal<PortalType, BinaryAndUnaryFunctor, std::true_type>
 {
   using InputType = typename PortalType::ValueType;
   using ValueType = decltype(std::declval<BinaryAndUnaryFunctor>()(std::declval<InputType>()));
@@ -231,6 +216,28 @@ struct CastPortal
 
   VTKM_EXEC
   ValueType Get(vtkm::Id index) const { return this->Functor(this->Portal.Get(index)); }
+};
+
+template <typename PortalType, typename BinaryFunctor>
+struct CastPortal<PortalType, BinaryFunctor, std::false_type>
+{
+  using InputType = typename PortalType::ValueType;
+  using ValueType =
+    decltype(std::declval<BinaryFunctor>()(std::declval<InputType>(), std::declval<InputType>()));
+
+  PortalType Portal;
+
+  VTKM_CONT
+  CastPortal(const PortalType& portal, const BinaryFunctor&)
+    : Portal(portal)
+  {
+  }
+
+  VTKM_EXEC
+  vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
+
+  VTKM_EXEC
+  ValueType Get(vtkm::Id index) const { return static_cast<ValueType>(this->Portal.Get(index)); }
 };
 
 struct CudaFreeFunctor
@@ -263,6 +270,10 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
 private:
 #endif
 
+  using Superclass = vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
+    vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>,
+    vtkm::cont::DeviceAdapterTagCuda>;
+
   template <typename BitsPortal, typename IndicesPortal, typename GlobalPopCountType>
   struct BitFieldToUnorderedSetFunctor : public vtkm::exec::FunctorBase
   {
@@ -273,8 +284,7 @@ private:
 
     //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
     //which is the GCC required compiler for CUDA 9.2 on summit/power9
-    using Word = typename vtkm::cont::internal::AtomicInterfaceExecution<
-      DeviceAdapterTagCuda>::WordTypePreferred;
+    using Word = vtkm::AtomicTypePreferred;
 
     VTKM_STATIC_ASSERT(
       VTKM_PASS_COMMAS(std::is_same<typename IndicesPortal::ValueType, vtkm::Id>::value));
@@ -486,8 +496,7 @@ private:
 
     //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
     //which is the GCC required compiler for CUDA 9.2 on summit/power9
-    using Word = typename vtkm::cont::internal::AtomicInterfaceExecution<
-      DeviceAdapterTagCuda>::WordTypePreferred;
+    using Word = vtkm::AtomicTypePreferred;
 
     VTKM_CONT
     CountSetBitsFunctor(const BitsPortal& portal, GlobalPopCountType* globalPopCount)
@@ -1124,7 +1133,7 @@ public:
       numBits = BitFieldToUnorderedSetPortal<vtkm::UInt64>(bitsPortal, indicesPortal);
     }
 
-    indices.Shrink(numBits);
+    indices.Allocate(numBits, vtkm::CopyFlag::On);
     return numBits;
   }
 
@@ -1137,7 +1146,7 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
     if (inSize <= 0)
     {
-      output.Shrink(inSize);
+      output.Allocate(inSize, vtkm::CopyFlag::On);
       return;
     }
     vtkm::cont::Token token;
@@ -1155,7 +1164,7 @@ public:
     vtkm::Id size = stencil.GetNumberOfValues();
     if (size <= 0)
     {
-      output.Shrink(size);
+      output.Allocate(size, vtkm::CopyFlag::On);
       return;
     }
 
@@ -1170,7 +1179,7 @@ public:
                              ::vtkm::NotZeroInitialized()); //yes on the stencil
     }
 
-    output.Shrink(newSize);
+    output.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, typename U, class SIn, class SStencil, class SOut, class UnaryPredicate>
@@ -1184,7 +1193,7 @@ public:
     vtkm::Id size = stencil.GetNumberOfValues();
     if (size <= 0)
     {
-      output.Shrink(size);
+      output.Allocate(size, vtkm::CopyFlag::On);
       return;
     }
 
@@ -1198,7 +1207,7 @@ public:
                              unary_predicate);
     }
 
-    output.Shrink(newSize);
+    output.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, typename U, class SIn, class SOut>
@@ -1213,10 +1222,11 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
-    if (input == output && ((outputIndex >= inputStartIndex &&
-                             outputIndex < inputStartIndex + numberOfElementsToCopy) ||
-                            (inputStartIndex >= outputIndex &&
-                             inputStartIndex < outputIndex + numberOfElementsToCopy)))
+    if (input == output &&
+        ((outputIndex >= inputStartIndex &&
+          outputIndex < inputStartIndex + numberOfElementsToCopy) ||
+         (inputStartIndex >= outputIndex &&
+          inputStartIndex < outputIndex + numberOfElementsToCopy)))
     {
       return false;
     }
@@ -1340,6 +1350,25 @@ public:
       input.PrepareForInput(DeviceAdapterTagCuda(), token), initialValue, binary_functor);
   }
 
+  // At least some versions of Thrust/nvcc result in compile errors when calling Thrust's
+  // reduce with sufficiently complex iterators, which can happen with some versions of
+  // ArrayHandleMultiplexer. Thus, don't use the Thrust version for ArrayHandleMultiplexer.
+  template <typename T, typename U, typename... SIns>
+  VTKM_CONT static U Reduce(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagMultiplexer<SIns...>>& input,
+    U initialValue)
+  {
+    return Superclass::Reduce(input, initialValue);
+  }
+  template <typename T, typename U, typename BinaryFunctor, typename... SIns>
+  VTKM_CONT static U Reduce(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagMultiplexer<SIns...>>& input,
+    U initialValue,
+    BinaryFunctor binary_functor)
+  {
+    return Superclass::Reduce(input, initialValue, binary_functor);
+  }
+
   template <typename T,
             typename U,
             class KIn,
@@ -1374,8 +1403,8 @@ public:
         binary_functor);
     }
 
-    keys_output.Shrink(reduced_size);
-    values_output.Shrink(reduced_size);
+    keys_output.Allocate(reduced_size, vtkm::CopyFlag::On);
+    values_output.Allocate(reduced_size, vtkm::CopyFlag::On);
   }
 
   template <typename T, class SIn, class SOut>
@@ -1649,6 +1678,8 @@ public:
   static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided1D<WType, IType>& functor,
                            vtkm::Id numInstances)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     VTKM_ASSERT(numInstances >= 0);
     if (numInstances < 1)
     {
@@ -1681,6 +1712,8 @@ public:
   static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided3D<WType, IType>& functor,
                            vtkm::Id3 rangeMax)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     VTKM_ASSERT((rangeMax[0] >= 0) && (rangeMax[1] >= 0) && (rangeMax[2] >= 0));
     if ((rangeMax[0] < 1) || (rangeMax[1] < 1) || (rangeMax[2] < 1))
     {
@@ -1788,7 +1821,7 @@ public:
       newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token));
     }
 
-    values.Shrink(newSize);
+    values.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, class Storage, class BinaryCompare>
@@ -1804,7 +1837,7 @@ public:
         UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token), binary_compare);
     }
 
-    values.Shrink(newSize);
+    values.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, class SIn, class SVal, class SOut>

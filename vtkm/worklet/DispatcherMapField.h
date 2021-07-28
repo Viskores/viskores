@@ -10,7 +10,6 @@
 #ifndef vtk_m_worklet_Dispatcher_MapField_h
 #define vtk_m_worklet_Dispatcher_MapField_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
 namespace vtkm
@@ -18,17 +17,17 @@ namespace vtkm
 namespace worklet
 {
 
+class WorkletMapField;
+
 /// \brief Dispatcher for worklets that inherit from \c WorkletMapField.
 ///
 template <typename WorkletType>
 class DispatcherMapField
-  : public vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType>,
-                                                   WorkletType,
-                                                   vtkm::worklet::WorkletMapField>
+  : public vtkm::worklet::internal::
+      DispatcherBase<DispatcherMapField<WorkletType>, WorkletType, vtkm::worklet::WorkletMapField>
 {
-  using Superclass = vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType>,
-                                                             WorkletType,
-                                                             vtkm::worklet::WorkletMapField>;
+  using Superclass = vtkm::worklet::internal::
+    DispatcherBase<DispatcherMapField<WorkletType>, WorkletType, vtkm::worklet::WorkletMapField>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:
@@ -51,7 +50,7 @@ public:
     const InputDomainType& inputDomain = invocation.GetInputDomain();
 
     // For a DispatcherMapField, the inputDomain must be an ArrayHandle (or
-    // an VariantArrayHandle that gets cast to one). The size of the domain
+    // an UnknownArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
     auto numInstances = SchedulingRange(inputDomain);

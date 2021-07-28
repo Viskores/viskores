@@ -26,10 +26,8 @@ struct TestPortal
 {
   using ValueType = T;
 
-  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
-  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
     VTKM_TEST_ASSERT(index >= 0, "Bad portal index.");
@@ -37,7 +35,6 @@ struct TestPortal
     return TestValue(index, ValueType());
   }
 
-  VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const
   {
     VTKM_TEST_ASSERT(index >= 0, "Bad portal index.");
@@ -58,7 +55,6 @@ struct FetchArrayDirectInTests
 
     using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayDirectInOut,
                                              vtkm::exec::arg::AspectTagDefault,
-                                             vtkm::exec::arg::ThreadIndicesTesting,
                                              TestPortal<T>>;
 
     FetchType fetch;

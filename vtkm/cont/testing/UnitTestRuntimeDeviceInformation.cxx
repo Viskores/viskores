@@ -60,6 +60,23 @@ struct DoesExist<false>
                      "with cuda backend disabled, runtime support should be disabled");
 #endif
   }
+
+#ifdef VTKM_KOKKOS_CUDA
+  void Exist(vtkm::cont::DeviceAdapterTagKokkos) const
+  {
+    //Since we are in a C++ compilation unit the Device Adapter
+    //trait should be false. But Kokkos could still be enabled.
+    //That is why we check VTKM_ENABLE_KOKKOS.
+    vtkm::cont::RuntimeDeviceInformation runtime;
+#ifdef VTKM_ENABLE_KOKKOS
+    VTKM_TEST_ASSERT(runtime.Exists(vtkm::cont::DeviceAdapterTagKokkos()) == true,
+                     "with kokkos backend enabled, runtime support should be enabled");
+#else
+    VTKM_TEST_ASSERT(runtime.Exists(vtkm::cont::DeviceAdapterTagKokkos()) == false,
+                     "with kokkos backend disabled, runtime support should be disabled");
+#endif
+  }
+#endif
 };
 
 template <>
@@ -81,6 +98,7 @@ void Detection()
   using OpenMPTag = ::vtkm::cont::DeviceAdapterTagOpenMP;
   using TBBTag = ::vtkm::cont::DeviceAdapterTagTBB;
   using CudaTag = ::vtkm::cont::DeviceAdapterTagCuda;
+  using KokkosTag = ::vtkm::cont::DeviceAdapterTagKokkos;
 
   //Verify that for each device adapter we compile code for, that it
   //has valid runtime support.
@@ -88,6 +106,7 @@ void Detection()
   detect_if_exists(OpenMPTag());
   detect_if_exists(CudaTag());
   detect_if_exists(TBBTag());
+  detect_if_exists(KokkosTag());
 }
 
 } // anonymous namespace

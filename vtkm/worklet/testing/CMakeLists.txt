@@ -8,6 +8,10 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
+set(headers
+  GenerateTestDataSets.h
+  )
+
 set(unit_tests
   UnitTestAverageByKey.cxx
   UnitTestBoundingIntervalHierarchy.cxx
@@ -21,9 +25,11 @@ set(unit_tests
   UnitTestContour.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestContourTreeUniformAugmented.cxx
+  UnitTestContourTreeUniformDistributed.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCosmoTools.cxx
   UnitTestCrossProduct.cxx
+  UnitTestDescriptiveStatistics.cxx
   UnitTestDotProduct.cxx
   UnitTestExternalFaces.cxx
   UnitTestExtractGeometry.cxx
@@ -48,6 +54,7 @@ set(unit_tests
   UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
+  UnitTestPointerJumping.cxx
   UnitTestPointGradient.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx
@@ -89,7 +96,7 @@ set(unit_tests
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
-  LIBRARIES vtkm_source vtkm_worklet vtkm_filter
+  LIBRARIES vtkm_source vtkm_worklet vtkm_filter vtkm_io
   ALL_BACKENDS
   USE_VTKM_JOB_POOL
   )

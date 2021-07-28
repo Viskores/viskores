@@ -10,11 +10,14 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/ArrayHandleVirtual.h>
+#include <vtkm/cont/ArrayHandleVirtual.hxx>
+#endif
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
@@ -23,6 +26,9 @@
 #include <vtkm/BinaryOperators.h>
 
 #include <algorithm>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace UnitTestArrayHandleVirtualDetail
 {
@@ -245,8 +251,17 @@ void TestArrayHandleVirtual()
 
 } // end namespace UnitTestArrayHandleVirtualDetail
 
+VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
 int UnitTestArrayHandleVirtual(int argc, char* argv[])
 {
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
   using namespace UnitTestArrayHandleVirtualDetail;
   return vtkm::cont::testing::Testing::Run(TestArrayHandleVirtual, argc, argv);
+#else
+  (void)argc;
+  (void)argv;
+  return 0;
+#endif
 }

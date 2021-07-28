@@ -13,6 +13,7 @@
 #ifndef vtk_m_worklet_contour_flyingedges_pass1_h
 #define vtk_m_worklet_contour_flyingedges_pass1_h
 
+#include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/contour/FlyingEdgesHelpers.h>
 
 namespace vtkm
@@ -43,16 +44,37 @@ namespace flying_edges
 * that is formed by the current and next point.
 *
 */
-template <typename T, typename AxisToSum>
-struct ComputePass1 : public vtkm::worklet::WorkletPointNeighborhood
-{
 
-  vtkm::Id NumberOfPoints = 0;
+template <typename Device, typename WholeEdgeField>
+inline VTKM_EXEC void write_edge(Device,
+                                 vtkm::Id write_index,
+                                 WholeEdgeField& edges,
+                                 vtkm::UInt8 edgeCase)
+{
+  edges.Set(write_index, edgeCase);
+}
+
+template <typename WholeEdgeField>
+inline VTKM_EXEC void write_edge(vtkm::cont::DeviceAdapterTagCuda,
+                                 vtkm::Id write_index,
+                                 WholeEdgeField& edges,
+                                 vtkm::UInt8 edgeCase)
+{
+  if (edgeCase != FlyingEdges3D::Below)
+  {
+    edges.Set(write_index, edgeCase);
+  }
+}
+
+template <typename T>
+struct ComputePass1 : public vtkm::worklet::WorkletVisitPointsWithCells
+{
+  vtkm::Id3 PointDims;
   T IsoValue;
 
   ComputePass1() {}
   ComputePass1(T value, const vtkm::Id3& pdims)
-    : NumberOfPoints(compute_num_pts(AxisToSum{}, pdims[0], pdims[1]))
+    : PointDims(pdims)
     , IsoValue(value)
   {
   }
@@ -63,37 +85,40 @@ struct ComputePass1 : public vtkm::worklet::WorkletPointNeighborhood
                                 FieldOut axis_max,
                                 WholeArrayInOut edgeData,
                                 WholeArrayIn data);
-  using ExecutionSignature = void(Boundary, _2, _3, _4, _5, _6);
+  using ExecutionSignature = void(ThreadIndices, _2, _3, _4, _5, _6, Device);
   using InputDomain = _1;
 
-  template <typename WholeEdgeField, typename WholeDataField>
-  VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary,
+  template <typename ThreadIndices,
+            typename WholeEdgeField,
+            typename WholeDataField,
+            typename Device>
+  VTKM_EXEC void operator()(const ThreadIndices& threadIndices,
                             vtkm::Id3& axis_sum,
                             vtkm::Id& axis_min,
                             vtkm::Id& axis_max,
                             WholeEdgeField& edges,
-                            const WholeDataField& field) const
+                            const WholeDataField& field,
+                            Device device) const
   {
+    using AxisToSum = typename select_AxisToSum<Device>::type;
 
-    const vtkm::Id3 ijk = compute_ijk(AxisToSum{}, boundary.IJK);
-    const vtkm::Id3 dims = compute_pdims(AxisToSum{}, boundary.PointDimensions, NumberOfPoints);
+    const vtkm::Id3 ijk = compute_ijk(AxisToSum{}, threadIndices.GetInputIndex3D());
+    const vtkm::Id3 dims = this->PointDims;
     const vtkm::Id startPos = compute_start(AxisToSum{}, ijk, dims);
     const vtkm::Id offset = compute_inc(AxisToSum{}, dims);
 
     const T value = this->IsoValue;
-    axis_min = this->NumberOfPoints;
+    axis_min = this->PointDims[AxisToSum::xindex];
     axis_max = 0;
     T s1 = field.Get(startPos);
     T s0 = s1;
     axis_sum = { 0, 0, 0 };
-    for (vtkm::Id i = 0; i < NumberOfPoints - 1; ++i)
+    const vtkm::Id end = this->PointDims[AxisToSum::xindex] - 1;
+    for (vtkm::Id i = 0; i < end; ++i)
     {
       s0 = s1;
       s1 = field.Get(startPos + (offset * (i + 1)));
 
-      // We don't explicit write the Below case as that ruins performance.
-      // It is better to initially fill everything as Below and only
-      // write the exceptions
       vtkm::UInt8 edgeCase = FlyingEdges3D::Below;
       if (s0 >= value)
       {
@@ -103,21 +128,72 @@ struct ComputePass1 : public vtkm::worklet::WorkletPointNeighborhood
       {
         edgeCase |= FlyingEdges3D::RightAbove;
       }
-      if (edgeCase != FlyingEdges3D::Below)
-      {
-        edges.Set(startPos + (offset * i), edgeCase);
-      }
+
+      write_edge(device, startPos + (offset * i), edges, edgeCase);
 
       if (edgeCase == FlyingEdges3D::LeftAbove || edgeCase == FlyingEdges3D::RightAbove)
       {
         axis_sum[AxisToSum::xindex] += 1; // increment number of intersections along axis
         axis_max = i + 1;
-        if (axis_min == this->NumberOfPoints)
+        if (axis_min == (end + 1))
         {
           axis_min = i;
         }
       }
     }
+    write_edge(device, startPos + (offset * end), edges, FlyingEdges3D::Below);
+  }
+};
+
+struct launchComputePass1
+{
+  template <typename DeviceAdapterTag, typename T, typename StorageTagField, typename... Args>
+  VTKM_CONT bool LaunchXAxis(DeviceAdapterTag device,
+                             const ComputePass1<T>& worklet,
+                             const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
+                             vtkm::cont::ArrayHandle<vtkm::UInt8>& edgeCases,
+                             vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
+                             Args&&... args) const
+  {
+    vtkm::cont::Invoker invoke(device);
+    metaDataMesh2D = make_metaDataMesh2D(SumXAxis{}, worklet.PointDims);
+
+    invoke(worklet, metaDataMesh2D, std::forward<Args>(args)..., edgeCases, inputField);
+    return true;
+  }
+
+  template <typename DeviceAdapterTag, typename T, typename StorageTagField, typename... Args>
+  VTKM_CONT bool LaunchYAxis(DeviceAdapterTag device,
+                             const ComputePass1<T>& worklet,
+                             const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
+                             vtkm::cont::ArrayHandle<vtkm::UInt8>& edgeCases,
+                             vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
+                             Args&&... args) const
+  {
+    vtkm::cont::Invoker invoke(device);
+    metaDataMesh2D = make_metaDataMesh2D(SumYAxis{}, worklet.PointDims);
+
+    vtkm::cont::Algorithm::Fill(edgeCases, static_cast<vtkm::UInt8>(FlyingEdges3D::Below));
+    invoke(worklet, metaDataMesh2D, std::forward<Args>(args)..., edgeCases, inputField);
+    return true;
+  }
+
+  template <typename DeviceAdapterTag, typename... Args>
+  VTKM_CONT bool operator()(DeviceAdapterTag device, Args&&... args) const
+  {
+    return this->LaunchXAxis(device, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagCuda device, Args&&... args) const
+  {
+    return this->LaunchYAxis(device, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagKokkos device, Args&&... args) const
+  {
+    return this->LaunchYAxis(device, std::forward<Args>(args)...);
   }
 };
 }

@@ -42,6 +42,15 @@ struct TransportTagWholeArrayInOut
 template <typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagWholeArrayInOut, ContObjectType, Device>
 {
+  // MSVC will issue deprecation warnings here if this template is instantiated with
+  // a deprecated class even if the template is used from a section of code where
+  // deprecation warnings are suppressed. This is annoying behavior since this template
+  // has no control over what class it is used with. To get around it, we have to
+  // suppress all deprecation warnings here.
+#ifdef VTKM_MSVC
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+#endif
+
   // If you get a compile error here, it means you tried to use an object that
   // is not an array handle as an argument that is expected to be one.
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
@@ -49,7 +58,7 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayInOut, ContObjectType, D
   using ValueType = typename ContObjectType::ValueType;
   using StorageTag = typename ContObjectType::StorageTag;
 
-  using ExecObjectType = vtkm::exec::ExecutionWholeArray<ValueType, StorageTag, Device>;
+  using ExecObjectType = vtkm::exec::ExecutionWholeArray<ValueType, StorageTag>;
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(ContObjectType& array,
@@ -62,8 +71,12 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayInOut, ContObjectType, D
     // array might not have the same size depending on how the user is using
     // the array.
 
-    return ExecObjectType(array, token);
+    return ExecObjectType(array, Device{}, token);
   }
+
+#ifdef VTKM_MSVC
+  VTKM_DEPRECATED_SUPPRESS_END
+#endif
 };
 }
 }

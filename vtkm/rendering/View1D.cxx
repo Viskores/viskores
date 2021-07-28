@@ -36,23 +36,15 @@ View1D::View1D(const vtkm::rendering::Scene& scene,
 {
 }
 
-View1D::~View1D()
-{
-}
+View1D::~View1D() {}
 
 void View1D::Paint()
 {
-  this->GetCanvas().Activate();
   this->GetCanvas().Clear();
   this->UpdateCameraProperties();
-  this->SetupForWorldSpace();
-  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
-  this->RenderWorldAnnotations();
-  this->SetupForScreenSpace();
-  this->RenderScreenAnnotations();
-  this->RenderColorLegendAnnotations();
+  this->AddAdditionalAnnotation([&]() { this->RenderColorLegendAnnotations(); });
   this->RenderAnnotations();
-  this->GetCanvas().Finish();
+  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
 }
 
 void View1D::RenderScreenAnnotations()

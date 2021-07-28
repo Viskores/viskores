@@ -35,6 +35,15 @@ struct TransportTagArrayOut
 template <typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagArrayOut, ContObjectType, Device>
 {
+  // MSVC will issue deprecation warnings here if this template is instantiated with
+  // a deprecated class even if the template is used from a section of code where
+  // deprecation warnings are suppressed. This is annoying behavior since this template
+  // has no control over what class it is used with. To get around it, we have to
+  // suppress all deprecation warnings here.
+#ifdef VTKM_MSVC
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+#endif
+
   // If you get a compile error here, it means you tried to use an object that
   // is not an array handle as an argument that is expected to be one.
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
@@ -53,6 +62,10 @@ struct Transport<vtkm::cont::arg::TransportTagArrayOut, ContObjectType, Device>
   {
     return object.PrepareForOutput(outputRange, Device(), token);
   }
+
+#ifdef VTKM_MSVC
+  VTKM_DEPRECATED_SUPPRESS_END
+#endif
 };
 }
 }

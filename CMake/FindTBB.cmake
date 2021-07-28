@@ -9,6 +9,7 @@
 #  TBB_INCLUDE_DIRS - the TBB include directories
 #  TBB_LIBRARIES - TBB libraries to be lined, doesn't include malloc or
 #                  malloc proxy
+#  TBB::tbb - imported target for the TBB library
 #
 #  TBB_VERSION_MAJOR - Major Product Version Number
 #  TBB_VERSION_MINOR - Minor Product Version Number
@@ -20,10 +21,12 @@
 #  TBB_MALLOC_FOUND - system has TBB malloc library
 #  TBB_MALLOC_INCLUDE_DIRS - the TBB malloc include directories
 #  TBB_MALLOC_LIBRARIES - The TBB malloc libraries to be lined
+#  TBB::malloc - imported target for the TBB malloc library
 #
 #  TBB_MALLOC_PROXY_FOUND - system has TBB malloc proxy library
 #  TBB_MALLOC_PROXY_INCLUDE_DIRS = the TBB malloc proxy include directories
 #  TBB_MALLOC_PROXY_LIBRARIES - The TBB malloc proxy libraries to be lined
+#  TBB::malloc_proxy - imported target for the TBB malloc proxy library
 #
 #
 # This module reads hints about search locations from variables:
@@ -65,28 +68,113 @@
 #  FindTBB helper functions and macros
 #
 
+# Use TBBConfig.cmake if possible.
+
+# Disabling this as it running the TBBConfig.cmake on dragnipur is
+# causing a CMake error. I don't know if this is an install problem
+# or an issue with version 2018.0.
+# set(_tbb_find_quiet)
+# if (TBB_FIND_QUIETLY)
+#   set(_tbb_find_quiet QUIET)
+# endif ()
+# set(_tbb_find_components)
+# set(_tbb_find_optional_components)
+# foreach (_tbb_find_component IN LISTS TBB_FIND_COMPONENTS)
+#   if (TBB_FIND_REQUIRED_${_tbb_find_component})
+#     list(APPEND _tbb_find_components "${_tbb_find_component}")
+#   else ()
+#     list(APPEND _tbb_find_optional_components "${_tbb_find_component}")
+#   endif ()
+# endforeach ()
+# unset(_tbb_find_component)
+# find_package(TBB CONFIG ${_tbb_find_quiet}
+#   COMPONENTS ${_tbb_find_components}
+#   OPTIONAL_COMPONENTS ${_tbb_find_optional_components})
+# unset(_tbb_find_quiet)
+# unset(_tbb_find_components)
+# unset(_tbb_find_optional_components)
+# if (TBB_FOUND)
+#   return ()
+# endif ()
+
+#====================================================
+# Fix the library path in case it is a linker script
+#====================================================
+function(tbb_extract_real_library library real_library)
+  if(NOT UNIX OR NOT EXISTS ${library})
+    set(${real_library} "${library}" PARENT_SCOPE)
+    return()
+  endif()
+
+  #Read in the first 4 bytes and see if they are the ELF magic number
+  set(_elf_magic "7f454c46")
+  file(READ ${library} _hex_data OFFSET 0 LIMIT 4 HEX)
+  if(_hex_data STREQUAL _elf_magic)
+    #we have opened a elf binary so this is what
+    #we should link to
+    set(${real_library} "${library}" PARENT_SCOPE)
+    return()
+  endif()
+
+  file(READ ${library} _data OFFSET 0 LIMIT 1024)
+  if("${_data}" MATCHES "INPUT \\(([^(]+)\\)")
+    #extract out the .so name from REGEX MATCH command
+    set(_proper_so_name "${CMAKE_MATCH_1}")
+
+    #construct path to the real .so which is presumed to be in the same directory
+    #as the input file
+    get_filename_component(_so_dir "${library}" DIRECTORY)
+    set(${real_library} "${_so_dir}/${_proper_so_name}" PARENT_SCOPE)
+  else()
+    #unable to determine what this library is so just hope everything works
+    #and pass it unmodified.
+    set(${real_library} "${library}" PARENT_SCOPE)
+  endif()
+endfunction()
+
 #===============================================
 # Do the final processing for the package find.
 #===============================================
-macro(findpkg_finish PREFIX)
-  # skip if already processed during this run
-  if (NOT ${PREFIX}_FOUND)
-    if (${PREFIX}_INCLUDE_DIR AND ${PREFIX}_LIBRARY)
-      set(${PREFIX}_FOUND TRUE)
-      set (${PREFIX}_INCLUDE_DIRS ${${PREFIX}_INCLUDE_DIR})
-      set (${PREFIX}_LIBRARIES ${${PREFIX}_LIBRARY})
-    else ()
-      if (${PREFIX}_FIND_REQUIRED AND NOT ${PREFIX}_FIND_QUIETLY)
-        message(FATAL_ERROR "Required library ${PREFIX} not found.")
-      endif ()
+macro(findpkg_finish PREFIX TARGET_NAME)
+  if (${PREFIX}_INCLUDE_DIR AND ${PREFIX}_LIBRARY)
+    set(${PREFIX}_FOUND TRUE)
+    set (${PREFIX}_INCLUDE_DIRS ${${PREFIX}_INCLUDE_DIR})
+    set (${PREFIX}_LIBRARIES ${${PREFIX}_LIBRARY})
+  else ()
+    if (${PREFIX}_FIND_REQUIRED AND NOT ${PREFIX}_FIND_QUIETLY)
+      message(FATAL_ERROR "Required library ${PREFIX} not found.")
     endif ()
-
-   #mark the following variables as internal variables
-   mark_as_advanced(${PREFIX}_INCLUDE_DIR
-                    ${PREFIX}_LIBRARY
-                    ${PREFIX}_LIBRARY_DEBUG
-                    ${PREFIX}_LIBRARY_RELEASE)
   endif ()
+
+  if (NOT TARGET "TBB::${TARGET_NAME}")
+    if (${PREFIX}_LIBRARY_RELEASE)
+      tbb_extract_real_library(${${PREFIX}_LIBRARY_RELEASE} real_release)
+    endif ()
+    if (${PREFIX}_LIBRARY_DEBUG)
+      tbb_extract_real_library(${${PREFIX}_LIBRARY_DEBUG} real_debug)
+    endif ()
+    add_library(TBB::${TARGET_NAME} UNKNOWN IMPORTED)
+    set_target_properties(TBB::${TARGET_NAME} PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${${PREFIX}_INCLUDE_DIR}")
+    if (${PREFIX}_LIBRARY_DEBUG AND ${PREFIX}_LIBRARY_RELEASE)
+      set_target_properties(TBB::${TARGET_NAME} PROPERTIES
+        IMPORTED_LOCATION "${real_release}"
+        IMPORTED_LOCATION_DEBUG "${real_debug}"
+        IMPORTED_LOCATION_RELEASE "${real_release}")
+    elseif (${PREFIX}_LIBRARY_RELEASE)
+      set_target_properties(TBB::${TARGET_NAME} PROPERTIES
+        IMPORTED_LOCATION "${real_release}")
+    elseif (${PREFIX}_LIBRARY_DEBUG)
+      set_target_properties(TBB::${TARGET_NAME} PROPERTIES
+        IMPORTED_LOCATION "${real_debug}")
+    endif ()
+  endif ()
+
+  #mark the following variables as internal variables
+  mark_as_advanced(${PREFIX}_INCLUDE_DIR
+                   ${PREFIX}_LIBRARY
+                   ${PREFIX}_LIBRARY_DEBUG
+                   ${PREFIX}_LIBRARY_RELEASE)
 endmacro()
 
 #===============================================
@@ -136,20 +224,6 @@ set(TBB_INC_SEARCH_PATH "")
 set(TBB_LIB_SEARCH_PATH "")
 
 
-# If we found parts of TBB in a previous pass, add the directories for those
-# components to the list of those we look for.
-if(TBB_INCLUDE_DIR)
-  list(APPEND TBB_INC_SEARCH_PATH ${TBB_INCLUDE_DIR})
-endif()
-
-if(TBB_LIBRARY_RELEASE)
-  get_filename_component(dir ${TBB_LIBRARY_RELEASE} DIRECTORY)
-  list(APPEND TBB_LIB_SEARCH_PATH ${dir})
-elseif(TBB_LIBRARY_DEBUG)
-  get_filename_component(dir ${TBB_LIBRARY_DEBUG} DIRECTORY)
-  list(APPEND TBB_LIB_SEARCH_PATH ${dir})
-endif()
-
 # If user built from sources
 set(TBB_BUILD_PREFIX $ENV{TBB_BUILD_PREFIX})
 if (TBB_BUILD_PREFIX AND ENV_TBB_ROOT)
@@ -187,7 +261,7 @@ if (WIN32 AND MSVC)
     set(COMPILER_PREFIX "vc11")
   elseif(MSVC_VERSION EQUAL 1800)
     set(COMPILER_PREFIX "vc12")
-  elseif(MSVC_VERSION EQUAL 1900)
+  elseif(MSVC_VERSION GREATER_EQUAL 1900)
     set(COMPILER_PREFIX "vc14")
   endif ()
 
@@ -203,12 +277,23 @@ if (WIN32 AND MSVC)
       list(APPEND TBB_LIB_SEARCH_PATH ${dir}/lib/ia32/${COMPILER_PREFIX})
     endif ()
   endforeach ()
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND
-       NOT CMAKE_SYSTEM_VERSION VERSION_LESS 13.0)
-  set (USE_LIBCXX OFF)
+endif ()
 
-  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set (USE_LIBCXX ON)
+# For OS X binary distribution, choose libc++ based libraries for Mavericks (10.9)
+# and above and AppleClang
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND
+    NOT CMAKE_SYSTEM_VERSION VERSION_LESS 13.0)
+  set (USE_LIBCXX OFF)
+  cmake_policy(GET CMP0025 POLICY_VAR)
+
+  if (POLICY_VAR STREQUAL "NEW")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+      set (USE_LIBCXX ON)
+    endif ()
+  else ()
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      set (USE_LIBCXX ON)
+    endif ()
   endif ()
 
   if (USE_LIBCXX)
@@ -216,9 +301,14 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND
       list (APPEND TBB_LIB_SEARCH_PATH ${dir}/lib/libc++ ${dir}/libc++/lib)
     endforeach ()
   endif ()
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  # check compiler ABI
+endif ()
+
+# check compiler ABI
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(COMPILER_PREFIX)
+  if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
+    list(APPEND COMPILER_PREFIX "gcc4.8")
+  endif()
   if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
     list(APPEND COMPILER_PREFIX "gcc4.7")
   endif()
@@ -228,6 +318,9 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   list(APPEND COMPILER_PREFIX "gcc4.1")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(COMPILER_PREFIX)
+  if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0) # Complete guess
+    list(APPEND COMPILER_PREFIX "gcc4.8")
+  endif()
   if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.6)
     list(APPEND COMPILER_PREFIX "gcc4.7")
   endif()
@@ -285,7 +378,7 @@ find_library(TBB_LIBRARY_DEBUG
              PATHS ${TBB_LIB_SEARCH_PATH})
 make_library_set(TBB_LIBRARY)
 
-findpkg_finish(TBB)
+findpkg_finish(TBB tbb)
 
 #if we haven't found TBB no point on going any further
 if (NOT TBB_FOUND)
@@ -309,7 +402,7 @@ find_library(TBB_MALLOC_LIBRARY_DEBUG
              PATHS ${TBB_LIB_SEARCH_PATH})
 make_library_set(TBB_MALLOC_LIBRARY)
 
-findpkg_finish(TBB_MALLOC)
+findpkg_finish(TBB_MALLOC tbbmalloc)
 
 #=============================================================================
 # Look for TBB's malloc proxy package
@@ -328,18 +421,24 @@ find_library(TBB_MALLOC_PROXY_LIBRARY_DEBUG
              PATHS ${TBB_LIB_SEARCH_PATH})
 make_library_set(TBB_MALLOC_PROXY_LIBRARY)
 
-findpkg_finish(TBB_MALLOC_PROXY)
+findpkg_finish(TBB_MALLOC_PROXY tbbmalloc_proxy)
 
 
 #=============================================================================
 #parse all the version numbers from tbb
 if(NOT TBB_VERSION)
-
- #only read the start of the file
- file(READ
+  if (EXISTS "${TBB_INCLUDE_DIR}/oneapi/tbb/version.h")
+    file(STRINGS
+      "${TBB_INCLUDE_DIR}/oneapi/tbb/version.h"
+      TBB_VERSION_CONTENTS
+      REGEX "VERSION")
+  else()
+    #only read the start of the file
+    file(STRINGS
       "${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h"
       TBB_VERSION_CONTENTS
-      LIMIT 2048)
+      REGEX "VERSION")
+  endif()
 
   string(REGEX REPLACE
     ".*#define TBB_VERSION_MAJOR ([0-9]+).*" "\\1"

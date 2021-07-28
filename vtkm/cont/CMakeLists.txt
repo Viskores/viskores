@@ -11,8 +11,10 @@
 set(headers
   Algorithm.h
   ArrayCopy.h
+  ArrayExtractComponent.h
   ArrayGetValues.h
   ArrayHandle.h
+  ArrayHandleBasic.h
   ArrayHandleBitField.h
   ArrayHandleCartesianProduct.h
   ArrayHandleCast.h
@@ -23,37 +25,41 @@ set(headers
   ArrayHandleDecorator.h
   ArrayHandleDiscard.h
   ArrayHandleExtractComponent.h
-  ArrayHandleExtrudeCoords.h
-  ArrayHandleExtrudeField.h
   ArrayHandleGroupVec.h
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
   ArrayHandleMultiplexer.h
+  ArrayHandleOffsetsToNumComponents.h
   ArrayHandlePermutation.h
+  ArrayHandleRecombineVec.h
   ArrayHandleReverse.h
+  ArrayHandleRandomStandardNormal.h
   ArrayHandleRandomUniformBits.h
+  ArrayHandleRandomUniformReal.h
   ArrayHandleSOA.h
+  ArrayHandleStride.h
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
   ArrayHandleView.h
-  ArrayHandleVirtual.h
-  ArrayHandleVirtualCoordinates.h
+  ArrayHandleXGCCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayRangeCompute.h
+  ArrayRangeComputeTemplate.h
   AssignerPartitionedDataSet.h
   AtomicArray.h
   BitField.h
   BoundsCompute.h
   BoundsGlobalCompute.h
   CastAndCall.h
-  CellLocator.h
   CellLocatorBoundingIntervalHierarchy.h
+  CellLocatorChooser.h
   CellLocatorGeneral.h
   CellLocatorRectilinearGrid.h
+  CellLocatorTwoLevel.h
   CellLocatorUniformBins.h
   CellLocatorUniformGrid.h
   CellSet.h
@@ -65,9 +71,11 @@ set(headers
   CellSetSingleType.h
   CellSetStructured.h
   ColorTable.h
+  ColorTableMap.h
   ColorTableSamples.h
   CoordinateSystem.h
   DataSet.h
+  DataSetBuilderCurvilinear.h
   DataSetBuilderExplicit.h
   DataSetBuilderRectilinear.h
   DataSetBuilderUniform.h
@@ -96,76 +104,71 @@ set(headers
   Initialize.h
   Invoker.h
   Logging.h
+  ParticleArrayCopy.h
   PartitionedDataSet.h
-  PointLocator.h
   PointLocatorUniformGrid.h
+  PointLocatorSparseGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageBasic.h
-  StorageExtrude.h
-  StorageImplicit.h
+  StorageImplicit.h # Deprecated, rolled into ArrayHandleImplicit.h
   StorageList.h
   StorageListTag.h
-  StorageVirtual.h
   Timer.h
   Token.h
   TryExecute.h
   SerializableTypeString.h
+  UncertainArrayHandle.h
+  UnknownArrayHandle.h
   VariantArrayHandle.h
-  VirtualObjectHandle.h
   )
 
 set(template_sources
-  ArrayHandle.hxx
-  ArrayHandleVirtual.hxx
-  ArrayRangeCompute.hxx
+  ArrayRangeCompute.hxx # Deprecated, replaced with ArrayRangeComputeTemplate.h
   CellSetExplicit.hxx
-  CellSetExtrude.hxx
-  CellSetStructured.hxx
-  ColorTable.hxx
-  CoordinateSystem.hxx
-  FieldRangeCompute.hxx
-  FieldRangeGlobalCompute.hxx
-  StorageBasic.hxx
-  StorageVirtual.hxx
+  ParticleArrayCopy.hxx
   VirtualObjectHandle.hxx
   )
 
 set(sources
   ArrayHandle.cxx
+  ArrayHandleBasic.cxx
   ArrayHandleSOA.cxx
+  ArrayHandleStride.cxx
+  ArrayHandleUniformPointCoordinates.cxx
+  BitField.cxx
   ColorTablePresets.cxx
   DeviceAdapterTag.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
-  internal/ArrayHandleBasicImpl.cxx
-  internal/ArrayManagerExecutionShareWithControl.cxx
-  internal/TransferInfo.cxx
-  internal/VirtualObjectTransfer.cxx
+  internal/Buffer.cxx
+  internal/DeviceAdapterMemoryManager.cxx
+  internal/DeviceAdapterMemoryManagerShared.cxx
+  internal/RuntimeDeviceConfiguration.cxx
+  internal/RuntimeDeviceConfigurationOptions.cxx
+  internal/RuntimeDeviceOption.cxx
   Initialize.cxx
   Logging.cxx
   RuntimeDeviceTracker.cxx
-  StorageBasic.cxx
+  Storage.cxx
   Token.cxx
   TryExecute.cxx
   )
 
-  # This list of sources has code that uses devices and so might need to be
-  # compiled with a device-specific compiler (like CUDA).
-  set(device_sources
-  ArrayHandleVirtual.cxx
+# This list of sources has code that uses devices and so might need to be
+# compiled with a device-specific compiler (like CUDA).
+set(device_sources
+  ArrayCopy.cxx
   ArrayRangeCompute.cxx
   AssignerPartitionedDataSet.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
-  CellLocator.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorGeneral.cxx
   CellLocatorRectilinearGrid.cxx
-  CellLocatorUniformBins.cxx
+  CellLocatorTwoLevel.cxx
   CellLocatorUniformGrid.cxx
   CellSet.cxx
   CellSetExplicit.cxx
@@ -174,32 +177,85 @@ set(sources
   ColorTable.cxx
   CoordinateSystem.cxx
   DataSet.cxx
+  DataSetBuilderCurvilinear.cxx
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
-  internal/VariantArrayHandleContainer.cxx
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
   PartitionedDataSet.cxx
-  PointLocator.cxx
-  PointLocatorUniformGrid.cxx
+  PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
-  StorageVirtual.cxx
   Timer.cxx
+  UnknownArrayHandle.cxx
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    ArrayHandleVirtual.h
+    ArrayHandleVirtualCoordinates.h
+    CellLocator.h
+    PointLocator.h
+    StorageVirtual.h
+    VirtualObjectHandle.h
+    )
+
+  set(template_sources ${template_sources}
+    ArrayHandleVirtual.hxx
+    StorageVirtual.hxx
+    )
+
+  set(device_sources ${device_sources}
+    ArrayHandleVirtual.cxx
+    CellLocator.cxx
+    internal/TransferInfo.cxx
+    internal/VirtualObjectTransfer.cxx
+    PointLocator.cxx
+    StorageVirtual.cxx
+    )
+endif()
 
 #-----------------------------------------------------------------------------
 # Set up default types, which can be custom configured by other build systems.
 vtkm_get_kit_name(kit_name kit_dir)
 
 # Some custom types included with VTK-m
-vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_VTK "Compile VTK-m algorithms for use with types from VTK." OFF)
+vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_VTK
+  "Compile VTK-m algorithms for use with types from VTK."
+  OFF
+  )
 if (VTKm_USE_DEFAULT_TYPES_FOR_VTK)
   set(VTKm_DEFAULT_TYPES_HEADER "internal/DefaultTypesVTK.h.in")
+  vtkm_option(VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK "Add XGC types to default VTK types." OFF)
+  mark_as_advanced(VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK)
+  if (VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK)
+    set(VTKM_ADD_XGC_DEFAULT_TYPES TRUE)
+  endif()
 endif()
 
-mark_as_advanced(VTKm_USE_DEFAULT_TYPES_FOR_VTK)
+vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_ASCENT
+  "Compile VTK-m algorithms for use with types from Ascent."
+  OFF
+  )
+if (VTKm_USE_DEFAULT_TYPES_FOR_ASCENT)
+  set(VTKm_DEFAULT_TYPES_HEADER "internal/DefaultTypesAscent.h.in")
+  if (VTKm_USE_64BIT_IDS)
+    message(SEND_ERROR
+      "When VTKm_USE_DEFAULT_TYPES_FOR_ASCENT is ON, VTKm_USE_64BIT_IDS must be set to OFF"
+      )
+  endif()
+  if (NOT VTKm_USE_DOUBLE_PRECISION)
+    message(SEND_ERROR
+      "When VTKm_USE_DEFAULT_TYPES_FOR_ASCENT is ON, VTKm_USE_DOUBLE_PRECISION must be set to ON"
+      )
+  endif()
+endif()
+
+mark_as_advanced(
+  VTKm_USE_DEFAULT_TYPES_FOR_VTK
+  VTKm_USE_DEFAULT_TYPES_FOR_ASCENT
+  )
 
 if (VTKm_DEFAULT_TYPES_HEADER)
   set(VTK_M_HAS_DEFAULT_TYPES_HEADER TRUE)
@@ -236,6 +292,7 @@ add_subdirectory(serial)
 add_subdirectory(tbb)
 add_subdirectory(openmp)
 add_subdirectory(cuda)
+add_subdirectory(kokkos)
 
 set(backends )
 if(TARGET vtkm::tbb)
@@ -247,6 +304,9 @@ endif()
 if(TARGET vtkm::openmp)
   list(APPEND backends vtkm::openmp)
 endif()
+if(TARGET vtkm::kokkos)
+  list(APPEND backends vtkm::kokkos)
+endif()
 
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
 target_link_libraries(vtkm_cont PUBLIC Threads::Threads)
@@ -256,4 +316,6 @@ if(TARGET vtkm_loguru)
 endif()
 
 #-----------------------------------------------------------------------------
-add_subdirectory(testing)
+if (VTKm_ENABLE_TESTING)
+  add_subdirectory(testing)
+endif ()

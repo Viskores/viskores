@@ -104,7 +104,7 @@ namespace cont
 {
 
 VTKM_CONT
-void InitLogging(int& argc, char* argv[])
+void InitLogging(int& argc, char* argv[], const std::string& loggingFlag)
 {
   SetLogLevelName(vtkm::cont::LogLevel::Off, "Off");
   SetLogLevelName(vtkm::cont::LogLevel::Fatal, "FATL");
@@ -126,12 +126,12 @@ void InitLogging(int& argc, char* argv[])
 
   // Set the default log level to warning
   SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
-  loguru::init(argc, argv);
+  loguru::init(argc, argv, loggingFlag.c_str());
 
-  LOG_F(INFO, "Logging initialized.");
 #else  // VTKM_ENABLE_LOGGING
   (void)argc;
   (void)argv;
+  (void)loggingFlag;
 #endif // VTKM_ENABLE_LOGGING
 
   // Prevent LogLevelNames from being modified (makes thread safety easier)
@@ -229,7 +229,7 @@ inline VTKM_CONT std::string HumanSize(vtkm::UInt64 bytes, int prec = 2)
   vtkm::UInt64 current = bytes;
   vtkm::UInt64 previous = bytes;
 
-  constexpr const char* units[] = { "bytes", "KiB", "MiB", "GiB", "TiB", "PiB" };
+  constexpr static const char* units[] = { "bytes", "KiB", "MiB", "GiB", "TiB", "PiB" };
 
   //this way reduces the number of float divisions we do
   int i = 0;

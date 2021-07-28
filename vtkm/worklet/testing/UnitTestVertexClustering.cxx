@@ -34,9 +34,9 @@ void TestVertexClustering()
 
   using FieldArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
   FieldArrayType pointvar = clustering.ProcessPointField(
-    dataSet.GetPointField("pointvar").GetData().Cast<FieldArrayType>());
-  FieldArrayType cellvar =
-    clustering.ProcessCellField(dataSet.GetCellField("cellvar").GetData().Cast<FieldArrayType>());
+    dataSet.GetPointField("pointvar").GetData().AsArrayHandle<FieldArrayType>());
+  FieldArrayType cellvar = clustering.ProcessCellField(
+    dataSet.GetCellField("cellvar").GetData().AsArrayHandle<FieldArrayType>());
 
   // test
   const vtkm::Id output_pointIds = 18;
@@ -69,7 +69,7 @@ void TestVertexClustering()
     auto pointArray = outDataSet.GetCoordinateSystem(0).GetData();
     std::cerr << "output_points = " << pointArray.GetNumberOfValues() << "\n";
     std::cerr << "output_point[] = ";
-    vtkm::cont::printSummary_ArrayHandle(pointArray, std::cerr, true);
+    pointArray.PrintSummary(std::cerr);
   }
 
   vtkm::cont::printSummary_ArrayHandle(pointvar, std::cerr, true);
@@ -78,7 +78,7 @@ void TestVertexClustering()
   VTKM_TEST_ASSERT(outDataSet.GetNumberOfCoordinateSystems() == 1,
                    "Number of output coordinate systems mismatch");
   using PointType = vtkm::Vec3f_64;
-  auto pointArray = outDataSet.GetCoordinateSystem(0).GetData();
+  auto pointArray = outDataSet.GetCoordinateSystem(0).GetDataAsMultiplexer();
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
                    "Number of output points mismatch");
   for (vtkm::Id i = 0; i < pointArray.GetNumberOfValues(); ++i)

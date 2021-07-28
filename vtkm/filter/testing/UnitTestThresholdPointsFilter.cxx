@@ -38,7 +38,7 @@ public:
 
     vtkm::cont::Field pointField = output.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-    pointField.GetData().CopyTo(pointFieldArray);
+    pointField.GetData().AsArrayHandle(pointFieldArray);
     VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(12) == 50.0f, "Wrong point field data");
   }
 
@@ -60,7 +60,7 @@ public:
 
     vtkm::cont::Field pointField = output.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-    pointField.GetData().CopyTo(pointFieldArray);
+    pointField.GetData().AsArrayHandle(pointFieldArray);
     VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(0) == 99.0f, "Wrong point field data");
   }
 
@@ -82,7 +82,7 @@ public:
 
     vtkm::cont::Field pointField = output.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-    pointField.GetData().CopyTo(pointFieldArray);
+    pointField.GetData().AsArrayHandle(pointFieldArray);
     VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(4) == 10.f, "Wrong point field data");
   }
 

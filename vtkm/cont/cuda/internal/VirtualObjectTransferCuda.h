@@ -16,6 +16,12 @@
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 namespace vtkm
 {
 namespace cont
@@ -146,8 +152,6 @@ private:
 }
 } // vtkm::cont::internal
 
-#define VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(DerivedType)                                          \
-  template class vtkm::cont::internal::VirtualObjectTransfer<DerivedType,                          \
-                                                             vtkm::cont::DeviceAdapterTagCuda>
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif // vtk_m_cont_cuda_internal_VirtualObjectTransferCuda_h

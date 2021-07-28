@@ -14,6 +14,8 @@ namespace vtkm
 {
 namespace cont
 {
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 CellLocator::~CellLocator() = default;
+VTKM_DEPRECATED_SUPPRESS_END
 }
 }

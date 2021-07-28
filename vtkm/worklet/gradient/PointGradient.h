@@ -15,6 +15,7 @@
 #include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <utility>
 #include <vtkm/worklet/gradient/GradientOutput.h>
 
 
@@ -49,7 +50,11 @@ struct PointGradient : public vtkm::worklet::WorkletVisitPointsWithCells
                             const WholeFieldIn& inputField,
                             GradientOutType& outputGradient) const
   {
-    using CellThreadIndices = vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>;
+    // Use optimized ThreadIndicesTopologyMap
+    using CellThreadIndices =
+      vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType,
+                                                vtkm::exec::arg::DefaultScatterAndMaskTag>;
+
     using ValueType = typename WholeFieldIn::ValueType;
     using CellShapeTag = typename CellSetInType::CellShapeTag;
 
@@ -107,10 +112,9 @@ private:
     }
   }
 
-  template <typename CellSetInType>
-  VTKM_EXEC vtkm::IdComponent GetPointIndexForCell(
-    const vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>& indices,
-    vtkm::Id pointId) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC vtkm::IdComponent GetPointIndexForCell(const ThreadIndicesType& indices,
+                                                   vtkm::Id pointId) const
   {
     vtkm::IdComponent result = 0;
     const auto& topo = indices.GetIndicesIncident();
@@ -128,14 +132,12 @@ private:
   //VecRectilinearPointCoordinates when using structured connectivity, and
   //uniform point coordinates.
   //c++14 would make the return type simply auto
-  template <typename CellSetInType, typename WholeFieldIn>
-  VTKM_EXEC
-    typename vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
-                                    vtkm::exec::arg::AspectTagDefault,
-                                    vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>,
-                                    typename WholeFieldIn::PortalType>::ValueType
-    GetValues(const vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>& indices,
-              const WholeFieldIn& in) const
+  template <typename ThreadIndicesType, typename WholeFieldIn>
+  VTKM_EXEC auto GetValues(const ThreadIndicesType& indices, const WholeFieldIn& in) const
+    -> decltype(std::declval<vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
+                                                    vtkm::exec::arg::AspectTagDefault,
+                                                    typename WholeFieldIn::PortalType>>()
+                  .Load(indices, in.GetPortal()))
   {
     //the current problem is that when the topology is structured
     //we are passing in an vtkm::Id when it wants a Id2 or an Id3 that
@@ -143,7 +145,6 @@ private:
     using ExecObjectType = typename WholeFieldIn::PortalType;
     using Fetch = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
                                          vtkm::exec::arg::AspectTagDefault,
-                                         vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>,
                                          ExecObjectType>;
     Fetch fetch;
     return fetch.Load(indices, in.GetPortal());

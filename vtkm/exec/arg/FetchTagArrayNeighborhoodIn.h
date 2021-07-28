@@ -34,21 +34,20 @@ struct FetchTagArrayNeighborhoodIn
 template <typename ExecObjectType>
 struct Fetch<vtkm::exec::arg::FetchTagArrayNeighborhoodIn,
              vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesPointNeighborhood,
              ExecObjectType>
 {
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesPointNeighborhood;
   using ValueType = vtkm::exec::FieldNeighborhood<ExecObjectType>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType& arrayPortal) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC ValueType Load(const ThreadIndicesType& indices,
+                           const ExecObjectType& arrayPortal) const
   {
     return ValueType(arrayPortal, indices.GetBoundaryState());
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op for this fetch.
   }

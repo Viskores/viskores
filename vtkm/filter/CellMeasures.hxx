@@ -22,9 +22,10 @@ namespace filter
 //-----------------------------------------------------------------------------
 template <typename IntegrationType>
 inline VTKM_CONT CellMeasures<IntegrationType>::CellMeasures()
-  : vtkm::filter::FilterCell<CellMeasures<IntegrationType>>()
+  : vtkm::filter::FilterField<CellMeasures<IntegrationType>>()
 {
   this->SetUseCoordinateSystemAsField(true);
+  this->SetCellMeasureName("measure");
 }
 
 //-----------------------------------------------------------------------------
@@ -45,7 +46,7 @@ inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
   vtkm::cont::ArrayHandle<T> outArray;
 
   this->Invoke(vtkm::worklet::CellMeasure<IntegrationType>{},
-               vtkm::filter::ApplyPolicyCellSet(cellset, policy),
+               vtkm::filter::ApplyPolicyCellSet(cellset, policy, *this),
                points,
                outArray);
 

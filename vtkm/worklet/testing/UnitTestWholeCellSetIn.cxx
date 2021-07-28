@@ -200,10 +200,11 @@ void TryExplicitGrid()
   vtkm::Id expectedCellIndexSum[] = { 28, 22, 29, 41 };
 
   vtkm::Id numCells = cellSet.GetNumberOfCells();
-  TryCellConnectivity(cellSet,
-                      vtkm::cont::make_ArrayHandle(expectedCellShapes, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellNumIndices, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+  TryCellConnectivity(
+    cellSet,
+    vtkm::cont::make_ArrayHandle(expectedCellShapes, numCells, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedCellNumIndices, numCells, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells, vtkm::CopyFlag::Off));
 
   vtkm::IdComponent expectedPointNumIndices[] = { 1, 2, 2, 1, 2, 4, 4, 2, 2, 1, 2 };
 
@@ -213,8 +214,8 @@ void TryExplicitGrid()
   TryPointConnectivity(
     cellSet,
     vtkm::cont::make_ArrayHandleConstant(vtkm::CellShapeTagVertex::Id, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints, vtkm::CopyFlag::Off));
 }
 
 VTKM_CONT
@@ -228,7 +229,8 @@ void TryCellSetPermutation()
   vtkm::Id permutationArray[] = { 2, 0, 1 };
 
   vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>, vtkm::cont::ArrayHandle<vtkm::Id>>
-    cellSet(vtkm::cont::make_ArrayHandle(permutationArray, 3), originalCellSet);
+    cellSet(vtkm::cont::make_ArrayHandle(permutationArray, 3, vtkm::CopyFlag::Off),
+            originalCellSet);
 
   vtkm::UInt8 expectedCellShapes[] = { vtkm::CELL_SHAPE_TETRA,
                                        vtkm::CELL_SHAPE_HEXAHEDRON,
@@ -239,10 +241,11 @@ void TryCellSetPermutation()
   vtkm::Id expectedCellIndexSum[] = { 29, 28, 22 };
 
   vtkm::Id numCells = cellSet.GetNumberOfCells();
-  TryCellConnectivity(cellSet,
-                      vtkm::cont::make_ArrayHandle(expectedCellShapes, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellNumIndices, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+  TryCellConnectivity(
+    cellSet,
+    vtkm::cont::make_ArrayHandle(expectedCellShapes, numCells, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedCellNumIndices, numCells, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells, vtkm::CopyFlag::Off));
 
   // Permutation cell set does not support cell to point connectivity.
 }
@@ -262,7 +265,7 @@ void TryStructuredGrid3D()
     cellSet,
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON, numCells),
     vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(8, numCells),
-    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells, vtkm::CopyFlag::Off));
 
   vtkm::IdComponent expectedPointNumIndices[18] = { 1, 2, 1, 1, 2, 1, 2, 4, 2,
                                                     2, 4, 2, 1, 2, 1, 1, 2, 1 };
@@ -273,8 +276,8 @@ void TryStructuredGrid3D()
   TryPointConnectivity(
     cellSet,
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_VERTEX, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints, vtkm::CopyFlag::Off));
 }
 
 VTKM_CONT
@@ -288,10 +291,11 @@ void TryStructuredGrid2D()
   vtkm::Id expectedCellIndexSum[2] = { 8, 12 };
 
   vtkm::Id numCells = cellSet.GetNumberOfCells();
-  TryCellConnectivity(cellSet,
-                      vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_QUAD, numCells),
-                      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(4, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+  TryCellConnectivity(
+    cellSet,
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_QUAD, numCells),
+    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(4, numCells),
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells, vtkm::CopyFlag::Off));
 
   vtkm::IdComponent expectedPointNumIndices[6] = { 1, 2, 1, 1, 2, 1 };
 
@@ -301,8 +305,8 @@ void TryStructuredGrid2D()
   TryPointConnectivity(
     cellSet,
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_VERTEX, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints, vtkm::CopyFlag::Off));
 }
 
 VTKM_CONT
@@ -316,10 +320,11 @@ void TryStructuredGrid1D()
   vtkm::Id expectedCellIndexSum[5] = { 1, 3, 5, 7, 9 };
 
   vtkm::Id numCells = cellSet.GetNumberOfCells();
-  TryCellConnectivity(cellSet,
-                      vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_LINE, numCells),
-                      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(2, numCells),
-                      vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+  TryCellConnectivity(
+    cellSet,
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_LINE, numCells),
+    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(2, numCells),
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells, vtkm::CopyFlag::Off));
 
   vtkm::IdComponent expectedPointNumIndices[6] = { 1, 2, 2, 2, 2, 1 };
 
@@ -329,8 +334,8 @@ void TryStructuredGrid1D()
   TryPointConnectivity(
     cellSet,
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_VERTEX, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
-    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints, vtkm::CopyFlag::Off));
 }
 
 VTKM_CONT

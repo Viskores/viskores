@@ -147,9 +147,9 @@ class CylinderLeafIntersector
 {
 public:
   using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id3>;
-  using IdArrayPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using IdArrayPortal = typename IdHandle::ReadPortalType;
   using FloatHandle = vtkm::cont::ArrayHandle<vtkm::Float32>;
-  using FloatPortal = typename FloatHandle::ExecutionTypes<Device>::PortalConst;
+  using FloatPortal = typename FloatHandle::ReadPortalType;
   IdArrayPortal CylIds;
   FloatPortal Radii;
 
@@ -370,19 +370,27 @@ class GetScalar : public vtkm::worklet::WorkletMapField
 {
 private:
   Precision MinScalar;
-  Precision invDeltaScalar;
+  Precision InvDeltaScalar;
+  bool Normalize;
 
 public:
   VTKM_CONT
   GetScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
     : MinScalar(minScalar)
   {
-    //Make sure the we don't divide by zero on
-    //something like an iso-surface
-    if (maxScalar - MinScalar != 0.f)
-      invDeltaScalar = 1.f / (maxScalar - MinScalar);
+    Normalize = true;
+    if (minScalar >= maxScalar)
+    {
+      // support the scalar renderer
+      Normalize = false;
+      this->InvDeltaScalar = Precision(0.f);
+    }
     else
-      invDeltaScalar = 1.f / minScalar;
+    {
+      //Make sure the we don't divide by zero on
+      //something like an iso-surface
+      this->InvDeltaScalar = 1.f / (maxScalar - this->MinScalar);
+    }
   }
   typedef void ControlSignature(FieldIn, FieldInOut, WholeArrayIn, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4);
@@ -399,8 +407,10 @@ public:
     vtkm::Id3 pointId = indicesPortal.Get(hitIndex);
 
     scalar = Precision(scalars.Get(pointId[0]));
-    //normalize
-    scalar = (scalar - MinScalar) * invDeltaScalar;
+    if (Normalize)
+    {
+      scalar = (scalar - this->MinScalar) * this->InvDeltaScalar;
+    }
   }
 }; //class GetScalar
 
@@ -411,9 +421,7 @@ CylinderIntersector::CylinderIntersector()
 {
 }
 
-CylinderIntersector::~CylinderIntersector()
-{
-}
+CylinderIntersector::~CylinderIntersector() {}
 
 void CylinderIntersector::SetData(const vtkm::cont::CoordinateSystem& coords,
                                   vtkm::cont::ArrayHandle<vtkm::Id3> cylIds,
@@ -485,8 +493,10 @@ void CylinderIntersector::IntersectionDataImp(Ray<Precision>& rays,
 
   vtkm::worklet::DispatcherMapField<detail::GetScalar<Precision>>(
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-    .Invoke(
-      rays.HitIdx, rays.Scalar, scalarField.GetData().ResetTypes(ScalarRenderingTypes()), CylIds);
+    .Invoke(rays.HitIdx,
+            rays.Scalar,
+            vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
+            CylIds);
 }
 
 void CylinderIntersector::IntersectionData(Ray<vtkm::Float32>& rays,

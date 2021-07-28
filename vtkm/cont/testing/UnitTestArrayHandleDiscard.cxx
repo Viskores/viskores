@@ -12,7 +12,6 @@
 #include <vtkm/cont/ArrayHandleDiscard.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
@@ -60,8 +59,8 @@ struct Test
     }
 
     // Prepare array handles:
-    Handle keys = vtkm::cont::make_ArrayHandle(keyData, ARRAY_SIZE);
-    Handle values = vtkm::cont::make_ArrayHandle(valueData, ARRAY_SIZE);
+    Handle keys = vtkm::cont::make_ArrayHandle(keyData, ARRAY_SIZE, vtkm::CopyFlag::Off);
+    Handle values = vtkm::cont::make_ArrayHandle(valueData, ARRAY_SIZE, vtkm::CopyFlag::Off);
     DiscardHandle output_keys;
     Handle output_values;
 

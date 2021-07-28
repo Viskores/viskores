@@ -19,7 +19,6 @@
 #include <vtkm/rendering/raytracing/CellIntersector.h>
 #include <vtkm/rendering/raytracing/CellSampler.h>
 #include <vtkm/rendering/raytracing/CellTables.h>
-#include <vtkm/rendering/raytracing/MeshConnectivityBase.h>
 #include <vtkm/rendering/raytracing/MeshConnectivityBuilder.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
@@ -396,7 +395,7 @@ public:
                                    vtkm::Int32& enterFace,
                                    vtkm::UInt8& rayStatus,
                                    const vtkm::Vec<FloatType, 3>& origin,
-                                   const MeshWrapper& meshConn) const
+                                   const MeshConnectivity& meshConn) const
   {
     if (enterFace != -1 && rayStatus == RAY_ACTIVE)
     {
@@ -505,7 +504,7 @@ public:
                                    vtkm::UInt8& rayStatus,
                                    const vtkm::Vec<FloatType, 3>& origin,
                                    vtkm::Vec<FloatType, 3>& rdir,
-                                   const MeshWrapper& meshConn,
+                                   const MeshConnectivity& meshConn,
                                    const LocatorType& locator) const
   {
     // We only process lost rays
@@ -528,7 +527,7 @@ public:
         query_distance += bumpDistance;
         vtkm::Vec<FloatType, 3> location = origin + rdir * (query_distance);
         vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
-        locator->FindCell(location, cellId, pcoords);
+        locator.FindCell(location, cellId, pcoords);
       }
 
       currentCell = cellId;
@@ -905,8 +904,9 @@ public:
                                 FieldInOut,
                                 FieldInOut,
                                 WholeArrayIn,
-                                WholeArrayInOut);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
+                                WholeArrayInOut,
+                                FieldIn);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex, _9);
 
   template <typename ScalarPortalType, typename ColorMapType, typename FrameBufferType>
   VTKM_EXEC inline void operator()(const vtkm::Id& currentCell,
@@ -917,7 +917,8 @@ public:
                                    vtkm::UInt8& rayStatus,
                                    const ColorMapType& colorMap,
                                    FrameBufferType& frameBuffer,
-                                   const vtkm::Id& pixelIndex) const
+                                   const vtkm::Id& pixelIndex,
+                                   const FloatType& maxDistance) const
   {
 
     if (rayStatus != RAY_ACTIVE)
@@ -965,12 +966,12 @@ public:
       color[2] = color[2] + sampleColor[2] * alpha;
       color[3] = alpha + color[3];
 
-      if (color[3] > 1.)
+      currentDistance += SampleDistance;
+      if (color[3] >= 1.f || currentDistance >= maxDistance)
       {
         rayStatus = RAY_TERMINATED;
         break;
       }
-      currentDistance += SampleDistance;
     }
 
     BOUNDS_CHECK(frameBuffer, pixelIndex * 4 + 0);
@@ -1015,8 +1016,10 @@ public:
                                 FieldIn,
                                 ExecObject meshConnectivity,
                                 WholeArrayIn,
-                                WholeArrayInOut);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex, _9, _10, _11, _12);
+                                WholeArrayInOut,
+                                FieldIn);
+  using ExecutionSignature =
+    void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex, _9, _10, _11, _12, _13);
 
   template <typename PointPortalType,
             typename ScalarPortalType,
@@ -1032,9 +1035,10 @@ public:
                                    vtkm::UInt8& rayStatus,
                                    const vtkm::Id& pixelIndex,
                                    const vtkm::Vec<FloatType, 3>& origin,
-                                   MeshWrapper& meshConn,
+                                   MeshConnectivity& meshConn,
                                    const ColorMapType& colorMap,
-                                   FrameBufferType& frameBuffer) const
+                                   FrameBufferType& frameBuffer,
+                                   const FloatType& maxDistance) const
   {
 
     if (rayStatus != RAY_ACTIVE)
@@ -1118,12 +1122,12 @@ public:
       color[2] = color[2] + sampleColor[2] * sampleColor[3];
       color[3] = sampleColor[3] + color[3];
 
-      if (color[3] >= 1.0)
+      currentDistance += SampleDistance;
+      if (color[3] >= 1.0 || currentDistance >= maxDistance)
       {
         rayStatus = RAY_TERMINATED;
         break;
       }
-      currentDistance += SampleDistance;
     }
 
     BOUNDS_CHECK(frameBuffer, pixelIndex * 4 + 0);
@@ -1207,7 +1211,7 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
               vtkm::Float32(this->ScalarBounds.Max)));
     dispatcher.Invoke(rays.HitIdx,
                       this->Coords,
-                      this->ScalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                      vtkm::rendering::raytracing::GetScalarFieldArray(this->ScalarField),
                       *(tracker.EnterDist),
                       *(tracker.ExitDist),
                       tracker.CurrentDistance,
@@ -1216,7 +1220,8 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
                       rays.Origin,
                       MeshContainer,
                       this->ColorMap,
-                      rays.Buffers.at(0).Buffer);
+                      rays.Buffers.at(0).Buffer,
+                      rays.MaxDistance);
   }
   else
   {
@@ -1226,13 +1231,14 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
               vtkm::Float32(this->ScalarBounds.Max)));
 
     dispatcher.Invoke(rays.HitIdx,
-                      this->ScalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                      vtkm::rendering::raytracing::GetScalarFieldArray(this->ScalarField),
                       *(tracker.EnterDist),
                       *(tracker.ExitDist),
                       tracker.CurrentDistance,
                       rays.Status,
                       this->ColorMap,
-                      rays.Buffers.at(0).Buffer);
+                      rays.Buffers.at(0).Buffer,
+                      rays.MaxDistance);
   }
 
   this->SampleTime += timer.GetElapsedTime();
@@ -1255,8 +1261,8 @@ void ConnectivityTracer::IntegrateCells(Ray<FloatType>& rays,
                       *(tracker.EnterDist),
                       *(tracker.ExitDist),
                       rays.Distance,
-                      this->ScalarField.GetData().ResetTypes(ScalarRenderingTypes()),
-                      this->EmissionField.GetData().ResetTypes(ScalarRenderingTypes()),
+                      vtkm::rendering::raytracing::GetScalarFieldArray(this->ScalarField),
+                      vtkm::rendering::raytracing::GetScalarFieldArray(this->EmissionField),
                       absorp,
                       emission,
                       rays.HitIdx);
@@ -1269,7 +1275,7 @@ void ConnectivityTracer::IntegrateCells(Ray<FloatType>& rays,
                       *(tracker.EnterDist),
                       *(tracker.ExitDist),
                       rays.Distance,
-                      this->ScalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                      vtkm::rendering::raytracing::GetScalarFieldArray(this->ScalarField),
                       rays.Buffers.at(0).Buffer,
                       rays.HitIdx);
   }

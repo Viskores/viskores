@@ -44,7 +44,7 @@ struct Actor::InternalsType
   InternalsType(const vtkm::cont::DynamicCellSet& cells,
                 const vtkm::cont::CoordinateSystem& coordinates,
                 const vtkm::cont::Field& scalarField,
-                const vtkm::cont::ColorTable& colorTable = vtkm::cont::ColorTable::Preset::DEFAULT)
+                const vtkm::cont::ColorTable& colorTable = vtkm::cont::ColorTable::Preset::Default)
     : Cells(cells)
     , Coordinates(coordinates)
     , ScalarField(scalarField)
@@ -82,7 +82,7 @@ Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
 void Actor::Init(const vtkm::cont::CoordinateSystem& coordinates,
                  const vtkm::cont::Field& scalarField)
 {
-  VTKM_ASSERT(scalarField.GetData().GetNumberOfComponents() == 1);
+  VTKM_ASSERT(scalarField.GetData().GetNumberOfComponentsFlat() == 1);
 
   scalarField.GetRange(&this->Internals->ScalarRange);
   this->Internals->SpatialBounds = coordinates.GetBounds();

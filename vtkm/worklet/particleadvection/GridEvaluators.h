@@ -12,20 +12,21 @@
 #define vtk_m_worklet_particleadvection_GridEvaluators_h
 
 #include <vtkm/Bitset.h>
+#include <vtkm/CellClassification.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellLocator.h>
+#include <vtkm/cont/CellLocatorGeneral.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
-#include <vtkm/cont/CellLocatorUniformBins.h>
+#include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
+#include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluatorStatus.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
 {
@@ -34,27 +35,30 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename DeviceAdapter, typename FieldArrayType>
+template <typename FieldType>
 class ExecutionGridEvaluator
 {
-  using FieldPortalType =
-    typename FieldArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using GhostCellArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8>;
 
 public:
   VTKM_CONT
   ExecutionGridEvaluator() = default;
 
   VTKM_CONT
-  ExecutionGridEvaluator(std::shared_ptr<vtkm::cont::CellLocator> locator,
-                         std::shared_ptr<vtkm::cont::CellInterpolationHelper> interpolationHelper,
+  ExecutionGridEvaluator(const vtkm::cont::CellLocatorGeneral& locator,
+                         const vtkm::cont::CellInterpolationHelper interpolationHelper,
                          const vtkm::Bounds& bounds,
-                         const FieldArrayType& field,
+                         const FieldType& field,
+                         const GhostCellArrayType& ghostCells,
+                         vtkm::cont::DeviceAdapterId device,
                          vtkm::cont::Token& token)
     : Bounds(bounds)
-    , Field(field.PrepareForInput(DeviceAdapter(), token))
+    , Field(field.PrepareForExecution(device, token))
+    , GhostCells(ghostCells.PrepareForInput(device, token))
+    , HaveGhostCells(ghostCells.GetNumberOfValues() > 0)
+    , InterpolationHelper(interpolationHelper.PrepareForExecution(device, token))
+    , Locator(locator.PrepareForExecution(device, token))
   {
-    Locator = locator->PrepareForExecution(DeviceAdapter(), token);
-    InterpolationHelper = interpolationHelper->PrepareForExecution(DeviceAdapter(), token);
   }
 
   template <typename Point>
@@ -63,12 +67,16 @@ public:
     vtkm::Id cellId;
     Point parametric;
 
-    Locator->FindCell(point, cellId, parametric);
-    return cellId != -1;
+    this->Locator.FindCell(point, cellId, parametric);
+
+    if (cellId == -1)
+      return false;
+    else
+      return !this->InGhostCell(cellId);
   }
 
   VTKM_EXEC
-  bool IsWithinTemporalBoundary(const vtkm::FloatDefault vtkmNotUsed(time)) const { return true; }
+  bool IsWithinTemporalBoundary(const vtkm::FloatDefault& vtkmNotUsed(time)) const { return true; }
 
   VTKM_EXEC
   vtkm::Bounds GetSpatialBoundary() const { return this->Bounds; }
@@ -82,50 +90,69 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& pos,
-                                         vtkm::FloatDefault vtkmNotUsed(time),
-                                         Point& out) const
+  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& point,
+                                         const vtkm::FloatDefault& time,
+                                         vtkm::VecVariable<Point, 2>& out) const
   {
-    return this->Evaluate(pos, out);
-  }
-
-  template <typename Point>
-  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& point, Point& out) const
-  {
-    vtkm::Id cellId;
+    vtkm::Id cellId = -1;
     Point parametric;
     GridEvaluatorStatus status;
 
-    Locator->FindCell(point, cellId, parametric);
+    status.SetOk();
+    if (!this->IsWithinTemporalBoundary(time))
+    {
+      status.SetFail();
+      status.SetTemporalBounds();
+    }
+
+    this->Locator.FindCell(point, cellId, parametric);
     if (cellId == -1)
     {
       status.SetFail();
       status.SetSpatialBounds();
-      return status;
+    }
+    else if (this->InGhostCell(cellId))
+    {
+      status.SetFail();
+      status.SetInGhostCell();
+      status.SetSpatialBounds();
     }
 
-    vtkm::UInt8 cellShape;
-    vtkm::IdComponent nVerts;
-    vtkm::VecVariable<vtkm::Id, 8> ptIndices;
-    vtkm::VecVariable<vtkm::Vec3f, 8> fieldValues;
-    InterpolationHelper->GetCellInfo(cellId, cellShape, nVerts, ptIndices);
+    //If initial checks ok, then do the evaluation.
+    if (status.CheckOk())
+    {
+      vtkm::UInt8 cellShape;
+      vtkm::IdComponent nVerts;
+      vtkm::VecVariable<vtkm::Id, 8> ptIndices;
+      vtkm::VecVariable<vtkm::Vec3f, 8> fieldValues;
+      this->InterpolationHelper.GetCellInfo(cellId, cellShape, nVerts, ptIndices);
+      this->Field.GetValue(ptIndices, nVerts, parametric, cellShape, out);
+      status.SetOk();
+    }
 
-    for (vtkm::IdComponent i = 0; i < nVerts; i++)
-      fieldValues.Append(Field.Get(ptIndices[i]));
-    vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, out);
-
-    status.SetOk();
     return status;
   }
 
 private:
-  const vtkm::exec::CellLocator* Locator;
-  const vtkm::exec::CellInterpolationHelper* InterpolationHelper;
+  VTKM_EXEC bool InGhostCell(const vtkm::Id& cellId) const
+  {
+    if (this->HaveGhostCells && cellId != -1)
+      return GhostCells.Get(cellId) == vtkm::CellClassification::GHOST;
+
+    return false;
+  }
+
+  using GhostCellPortal = typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType;
+
   vtkm::Bounds Bounds;
-  FieldPortalType Field;
+  typename FieldType::ExecutionType Field;
+  GhostCellPortal GhostCells;
+  bool HaveGhostCells;
+  vtkm::exec::CellInterpolationHelper InterpolationHelper;
+  typename vtkm::cont::CellLocatorGeneral::ExecObjType Locator;
 };
 
-template <typename FieldArrayType>
+template <typename FieldType>
 class GridEvaluator : public vtkm::cont::ExecutionObjectBase
 {
 public:
@@ -135,88 +162,65 @@ public:
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
   using Structured2DType = vtkm::cont::CellSetStructured<2>;
   using Structured3DType = vtkm::cont::CellSetStructured<3>;
+  using GhostCellArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8>;
 
   VTKM_CONT
   GridEvaluator() = default;
 
   VTKM_CONT
-  GridEvaluator(const vtkm::cont::CoordinateSystem& coordinates,
-                const vtkm::cont::DynamicCellSet& cellset,
-                const FieldArrayType& field)
-    : Vectors(field)
-    , Bounds(coordinates.GetBounds())
+  GridEvaluator(const vtkm::cont::DataSet& dataSet, const FieldType& field)
+    : Bounds(dataSet.GetCoordinateSystem().GetBounds())
+    , Field(field)
+    , GhostCellArray()
   {
-    if (cellset.IsSameType(Structured2DType()) || cellset.IsSameType(Structured3DType()))
+    this->InitializeLocator(dataSet.GetCoordinateSystem(), dataSet.GetCellSet());
+
+    if (dataSet.HasCellField("vtkmGhostCells"))
     {
-      if (coordinates.GetData().IsType<UniformType>())
-      {
-        vtkm::cont::CellLocatorUniformGrid locator;
-        locator.SetCoordinates(coordinates);
-        locator.SetCellSet(cellset);
-        locator.Update();
-        this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformGrid>(locator);
-      }
-      else if (coordinates.GetData().IsType<RectilinearType>())
-      {
-        vtkm::cont::CellLocatorRectilinearGrid locator;
-        locator.SetCoordinates(coordinates);
-        locator.SetCellSet(cellset);
-        locator.Update();
-        this->Locator = std::make_shared<vtkm::cont::CellLocatorRectilinearGrid>(locator);
-      }
-      else
-      {
-        // Default to using an locator for explicit meshes.
-        vtkm::cont::CellLocatorUniformBins locator;
-        locator.SetCoordinates(coordinates);
-        locator.SetCellSet(cellset);
-        locator.Update();
-        this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
-      }
-      vtkm::cont::StructuredCellInterpolationHelper interpolationHelper(cellset);
-      this->InterpolationHelper =
-        std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
+      auto arr = dataSet.GetCellField("vtkmGhostCells").GetData();
+      vtkm::cont::ArrayCopyShallowIfPossible(arr, this->GhostCellArray);
     }
-    else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
-    {
-      vtkm::cont::CellLocatorUniformBins locator;
-      locator.SetCoordinates(coordinates);
-      locator.SetCellSet(cellset);
-      locator.Update();
-      this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
-      vtkm::cont::SingleCellTypeInterpolationHelper interpolationHelper(cellset);
-      this->InterpolationHelper =
-        std::make_shared<vtkm::cont::SingleCellTypeInterpolationHelper>(interpolationHelper);
-    }
-    else if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
-    {
-      vtkm::cont::CellLocatorUniformBins locator;
-      locator.SetCoordinates(coordinates);
-      locator.SetCellSet(cellset);
-      locator.Update();
-      this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
-      vtkm::cont::ExplicitCellInterpolationHelper interpolationHelper(cellset);
-      this->InterpolationHelper =
-        std::make_shared<vtkm::cont::ExplicitCellInterpolationHelper>(interpolationHelper);
-    }
-    else
-      throw vtkm::cont::ErrorInternal("Unsupported cellset type.");
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ExecutionGridEvaluator<DeviceAdapter, FieldArrayType> PrepareForExecution(
-    DeviceAdapter,
+  VTKM_CONT
+  GridEvaluator(const vtkm::cont::CoordinateSystem& coordinates,
+                const vtkm::cont::DynamicCellSet& cellset,
+                const FieldType& field)
+    : Bounds(coordinates.GetBounds())
+    , Field(field)
+    , GhostCellArray()
+  {
+    this->InitializeLocator(coordinates, cellset);
+  }
+
+  VTKM_CONT ExecutionGridEvaluator<FieldType> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const
   {
-    return ExecutionGridEvaluator<DeviceAdapter, FieldArrayType>(
-      this->Locator, this->InterpolationHelper, this->Bounds, this->Vectors, token);
+    return ExecutionGridEvaluator<FieldType>(this->Locator,
+                                             this->InterpolationHelper,
+                                             this->Bounds,
+                                             this->Field,
+                                             this->GhostCellArray,
+                                             device,
+                                             token);
   }
 
 private:
-  std::shared_ptr<vtkm::cont::CellLocator> Locator;
-  std::shared_ptr<vtkm::cont::CellInterpolationHelper> InterpolationHelper;
-  FieldArrayType Vectors;
+  VTKM_CONT void InitializeLocator(const vtkm::cont::CoordinateSystem& coordinates,
+                                   const vtkm::cont::DynamicCellSet& cellset)
+  {
+    this->Locator.SetCoordinates(coordinates);
+    this->Locator.SetCellSet(cellset);
+    this->Locator.Update();
+    this->InterpolationHelper = vtkm::cont::CellInterpolationHelper(cellset);
+  }
+
   vtkm::Bounds Bounds;
+  FieldType Field;
+  GhostCellArrayType GhostCellArray;
+  vtkm::cont::CellInterpolationHelper InterpolationHelper;
+  vtkm::cont::CellLocatorGeneral Locator;
 };
 
 } //namespace particleadvection
