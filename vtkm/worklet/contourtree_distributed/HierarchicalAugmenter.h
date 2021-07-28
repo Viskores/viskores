@@ -853,10 +853,9 @@ void HierarchicalAugmenter<FieldType>::RetrieveOldSupernodes(vtkm::Id roundNumbe
   vtkm::Id supernodeIndexBase =
     vtkm::cont::ArrayGetValue(0, this->BaseTree->FirstSupernodePerIteration[roundNumber]);
   vtkm::cont::ArrayHandleCounting<vtkm::Id> supernodeIdVals(
-    supernodeIndexBase,                      // start
-    1,                                       // step
-    this->KeptSupernodes.GetNumberOfValues() // array size
-  );
+    supernodeIndexBase, // start
+    1,                  // step
+    this->BaseTree->NumSupernodesInRound.ReadPortal().Get(roundNumber));
   // the test for whether to keep it is:
   // a1. at the top level, keep everything
   if (!(roundNumber < this->BaseTree->NumRounds))
@@ -1098,7 +1097,7 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
       supernodeIndex, // input domain. We only need the index because supernodeIdSetPermuted already does the permute
       supernodeIdSetPermuted, // input input supernodeIDSet permuted by supernodeSorter to allow for FieldIn
       this
-        ->NewSupernodeIds // output/input (both are necessary since not all valyes will be overwritten)
+        ->NewSupernodeIds // output/input (both are necessary since not all values will be overwritten)
     );
   }
 
@@ -1303,10 +1302,10 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
                << std::endl;
   resultStream << "----------------------------------------" << std::endl;
 
-  resultStream << this->BaseTree->DebugPrint(
-    (message + std::string(" Base Tree")).c_str(), fileName, lineNum);
-  resultStream << this->AugmentedTree->DebugPrint(
-    (message + std::string(" Augmented Tree")).c_str(), fileName, lineNum);
+  //resultStream << this->BaseTree->DebugPrint(
+  //  (message + std::string(" Base Tree")).c_str(), fileName, lineNum);
+  //resultStream << this->AugmentedTree->DebugPrint(
+  //  (message + std::string(" Augmented Tree")).c_str(), fileName, lineNum);
   resultStream << "========================================" << std::endl;
   resultStream << "Local List of Attachment Points" << std::endl;
   vtkm::worklet::contourtree_augmented::PrintHeader(this->GlobalRegularIds.GetNumberOfValues());
