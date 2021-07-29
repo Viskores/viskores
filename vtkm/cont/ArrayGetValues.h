@@ -26,6 +26,33 @@ namespace vtkm
 namespace cont
 {
 
+namespace detail
+{
+
+struct ArrayGetValuesFunctor
+{
+  template <typename Device, typename IdsArray, typename DataArray, typename OutputArray>
+  VTKM_CONT bool operator()(Device,
+                            const IdsArray& ids,
+                            const DataArray& data,
+                            OutputArray& output) const
+  {
+    // Only get data on a device the data are already on.
+    if (data.IsOnDevice(Device{}))
+    {
+      const auto input = vtkm::cont::make_ArrayHandlePermutation(ids, data);
+      vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(input, output);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+};
+
+} // namespace detail
+
 /// \brief Obtain a small set of values from an ArrayHandle with minimal device
 /// transfers.
 ///
@@ -90,25 +117,17 @@ VTKM_CONT void ArrayGetValues(const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids
 {
   bool copyComplete = false;
 
-  // Find the device that already has a copy of the data:
-  vtkm::cont::DeviceAdapterId devId = data.GetDeviceAdapterId();
-
-  if (devId.GetValue() != VTKM_DEVICE_ADAPTER_UNDEFINED)
-  { // Data exists on some device -- use it:
-    const auto input = vtkm::cont::make_ArrayHandlePermutation(ids, data);
-    copyComplete = vtkm::cont::Algorithm::Copy(devId, input, output);
-    if (!copyComplete)
-    { // Retry on any device if the first attempt failed.
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "Failed to run ArrayGetValues on device '"
-                   << devId.GetName() << "'. Falling back to control-side copy.");
-      copyComplete = vtkm::cont::Algorithm::Copy(vtkm::cont::DeviceAdapterTagAny{}, input, output);
-    }
+  // If the data are not already on the host, attempt to copy on the device.
+  if (!data.IsOnHost())
+  {
+    copyComplete = vtkm::cont::TryExecute(detail::ArrayGetValuesFunctor{}, ids, data, output);
   }
 
   if (!copyComplete)
   { // Fallback to a control-side copy if the device copy fails or if the device
-    // is undefined:
+    // is undefined or if the data were already on the host. In this case, the
+    // best we can do is grab the portals and copy one at a time on the host with
+    // a for loop.
     const vtkm::Id numVals = ids.GetNumberOfValues();
     auto idPortal = ids.ReadPortal();
     auto dataPortal = data.ReadPortal();
