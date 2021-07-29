@@ -638,14 +638,18 @@ void HierarchicalAugmenter<FieldType>::CopySuperstructure()
   for (vtkm::Id roundNumber = this->BaseTree->NumRounds; roundNumber >= 0; roundNumber--)
   { // per round
     // start by retrieving list of old supernodes from the tree (except for attachment points)
+    std::cout << "!!!!!!!!RetrieveOldSupernodes roundNumber=" << roundNumber << std::endl;
     this->RetrieveOldSupernodes(roundNumber);
-
+    std::cout << this->DebugPrint("AFTER RetrieveOldSupernodes", __FILE__, __LINE__) << std::endl;
+    std::cout << "!!!!!!!ResizeArrays roundNumber=" << roundNumber << std::endl;
     // since we know the number of attachment points, we can now allocate space for the level
     // and set up arrays for sorting the supernodes
     this->ResizeArrays(roundNumber);
-
+    std::cout << this->DebugPrint("AFTER ResizeArrays", __FILE__, __LINE__) << std::endl;
+    std::cout << "!!!!!CreateSuperarcs roundNumber=" << roundNumber << std::endl;
     // now we create the superarcs for the round in the new tree
     this->CreateSuperarcs(roundNumber);
+    std::cout << this->DebugPrint("AFTER CreateSuperarcs", __FILE__, __LINE__) << std::endl;
   } // per round
 
 #ifdef DEBUG_PRINT
@@ -953,10 +957,15 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
   // need all of the data elements, since superparentRound is fixed (and equal to roundNumber inside this loop), and whichRound will be reset
   vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numSupernodesThisLevel),
                               this->SupernodeSorter);
-  this->GlobalRegularIdSet.Allocate(numSupernodesThisLevel);
-  this->DataValueSet.Allocate(numSupernodesThisLevel);
-  this->SuperparentSet.Allocate(numSupernodesThisLevel);
-  this->SupernodeIdSet.Allocate(numSupernodesThisLevel);
+  {
+    // TODO: Here we initalize all arrays to 0 for consistency with PPP. Check if we can omit the initalization for some arrays?
+    auto tempZeroArray = vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numSupernodesThisLevel);
+    auto tempZeroValueArray = vtkm::cont::ArrayHandleConstant<FieldType>(0, numSupernodesThisLevel);
+    vtkm::cont::Algorithm::Copy(tempZeroArray, this->GlobalRegularIdSet);
+    vtkm::cont::Algorithm::Copy(tempZeroArray, this->DataValueSet);
+    vtkm::cont::Algorithm::Copy(tempZeroArray, this->SuperparentSet);
+    vtkm::cont::Algorithm::Copy(tempZeroArray, this->SupernodeIdSet);
+  }
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
@@ -964,7 +973,6 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
                         __FILE__,
                         __LINE__));
 #endif
-
 
   // b. Transfer attachment points for level into new supernode array
   // to copy them in, we use the existing array of attachment point IDs by round
@@ -1015,7 +1023,6 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
                         __LINE__));
 #endif
 
-
   // Now we copy in the kept supernodes
   {
     auto oldRegularIdArr =
@@ -1028,7 +1035,7 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
       vtkm::cont::make_ArrayHandlePermutation(oldRegularIdArr, this->BaseTree->DataValues);
 
     // Now use CopySubRange to copy the values into the right places. This allows
-    // us to place them in the right place and avoid shrinking the array on Copy
+    // us to place them in the right place and avoids shrinking the array on Copy
     vtkm::cont::Algorithm::CopySubRange(baseTreeregularNodeGlobalIdsPermuted,
                                         0,
                                         baseTreeregularNodeGlobalIdsPermuted.GetNumberOfValues(),
@@ -1044,7 +1051,7 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
                                         this->KeptSupernodes.GetNumberOfValues(),
                                         this->SupernodeIdSet,
                                         numInsertedSupernodes);
-    // For the last one we need to set values to
+    // For this->SuperparentSet we need to set values to
     // superparentSet[supernodeSetID]  = oldSupernodeID | (isAscending(baseTree->superarcs[oldSupernodeID]) ? IS_ASCENDING: 0x00);
     // so we use an ArrayHanldeDecorator instead to compute the values and copy them in place
     auto setSuperparentSetArrayDecorator = vtkm::cont::make_ArrayHandleDecorator(
@@ -1056,7 +1063,7 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
                                         0,
                                         this->KeptSupernodes.GetNumberOfValues(),
                                         this->SuperparentSet,
-                                        0);
+                                        numInsertedSupernodes);
   }
 
 #ifdef DEBUG_PRINT
