@@ -128,6 +128,13 @@ inline void PrintSeparatingBar(vtkm::Id howMany, std::ostream& outStream = std::
 } // PrintSeparatingBar()
 
 
+// routine to print out a single index
+inline void PrintIndexType(vtkm::Id index, std::ostream& outStream = std::cout)
+{ // PrintIndexType
+  outStream << std::setw(PRINT_WIDTH - 6) << MaskedIndex(index) << " " << FlagString(index);
+} // PrintIndexType
+
+
 // routine to print out a single value
 template <typename T>
 inline void PrintDataType(T value, std::ostream& outStream = std::cout)
@@ -136,11 +143,13 @@ inline void PrintDataType(T value, std::ostream& outStream = std::cout)
 } // PrintDataType
 
 
-// routine to print out a single index
-inline void PrintIndexType(vtkm::Id index, std::ostream& outStream = std::cout)
-{ // PrintIndexType
-  outStream << std::setw(PRINT_WIDTH - 6) << MaskedIndex(index) << " " << FlagString(index);
-} // PrintIndexType
+// Specialization of PrintDataType for vtkm::Id to use PrintIndexType instead so we can properly
+// print Id arrays using the PrintArrayHandle function, e.g,. to pint permutted Id arrays.
+template <>
+inline void PrintDataType<vtkm::Id>(vtkm::Id value, std::ostream& outStream)
+{
+  PrintIndexType(value, outStream);
+}
 
 
 // header line
