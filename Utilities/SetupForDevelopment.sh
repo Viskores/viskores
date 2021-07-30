@@ -37,7 +37,8 @@ git config hooks.SetupForDevelopment ${SetupForDevelopment_VERSION}
 #
 
 
-if git remote get-url origin | grep -Poq '^(https://|git@)gitlab.kitware.com(/|:)vtk/vtk-m.git$'
+OriginURL=$(git remote get-url origin)
+if [[ "$OriginURL" =~ ^(https://|git@)gitlab\.kitware\.com(/|:)vtk/vtk-m\.git$ ]]
 then
 
 
