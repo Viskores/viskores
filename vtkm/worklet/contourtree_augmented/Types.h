@@ -143,6 +143,41 @@ inline void IdArraySetValue(vtkm::Id index, vtkm::Id value, IdArrayType& arr)
     vtkm::cont::ArrayHandleConstant<vtkm::Id>(value, 1), 0, 1, arr, index);
 } // IdArraySetValues
 
+
+/// Helper function used to resize ArrayHandles since VTKm does not provide a
+/// method to grow a vector without loosing the original data values. The input array
+/// is modified or replaced
+/// @param[in] thearray The 1D array to be resized
+/// @param[in] newSize The new size the array should be changed to
+/// @param[in] fillValue The value to be used to fill the array
+template <typename ValueType>
+static void ResizeVector(vtkm::cont::ArrayHandle<ValueType>& thearray,
+                         vtkm::Id newSize,
+                         ValueType fillValue)
+{
+  vtkm::Id oldSize = thearray.GetNumberOfValues();
+  // Simply return if the size of the array does not change
+  if (oldSize == newSize)
+  {
+    return;
+  }
+
+  // Resize the array but keep the original values
+  thearray.Allocate(newSize, vtkm::CopyFlag::On);
+
+  // Add the fill values to the array if we increased the size of the array
+  if (oldSize < newSize)
+  {
+    vtkm::cont::Algorithm::CopySubRange(
+      vtkm::cont::ArrayHandleConstant<ValueType>(fillValue, newSize - oldSize), // copy
+      0,                 // start copying from first index
+      newSize - oldSize, // num values to copy
+      thearray,          // target array to copy to
+      oldSize            // start copy to after oldSize
+    );
+  }
+}
+
 template <typename T>
 struct MaskedIndexFunctor
 {
