@@ -638,20 +638,13 @@ void HierarchicalAugmenter<FieldType>::CopySuperstructure()
   for (vtkm::Id roundNumber = this->BaseTree->NumRounds; roundNumber >= 0; roundNumber--)
   { // per round
     // start by retrieving list of old supernodes from the tree (except for attachment points)
-    std::cout << "!!!!!!!!RetrieveOldSupernodes roundNumber=" << roundNumber << std::endl;
     this->RetrieveOldSupernodes(roundNumber);
-    std::cout << this->DebugPrint("AFTER RetrieveOldSupernodes", __FILE__, __LINE__) << std::endl;
-    std::cout << "!!!!!!!ResizeArrays roundNumber=" << roundNumber << std::endl;
     // since we know the number of attachment points, we can now allocate space for the level
     // and set up arrays for sorting the supernodes
     this->ResizeArrays(roundNumber);
-    std::cout << this->DebugPrint("AFTER ResizeArrays", __FILE__, __LINE__) << std::endl;
-    std::cout << "!!!!!CreateSuperarcs roundNumber=" << roundNumber << std::endl;
     // now we create the superarcs for the round in the new tree
     this->CreateSuperarcs(roundNumber);
-    std::cout << this->DebugPrint("AFTER CreateSuperarcs", __FILE__, __LINE__) << std::endl;
   } // per round
-
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              this->DebugPrint("Superstructure Copied", __FILE__, __LINE__));
@@ -869,8 +862,19 @@ void HierarchicalAugmenter<FieldType>::RetrieveOldSupernodes(vtkm::Id roundNumbe
   // a2. at lower levels, keep them if the superarc is NO_SUCH_ELEMENT
   else
   {
+    // Reset this-KeptSupernodes to the right size and initalize with NO_SUCH_ELEMENT.
+    // TODO: Check if a simple free and allocate without initalizing the array is sufficient
+    vtkm::cont::Algorithm::Copy(
+      // Create const array to copy
+      vtkm::cont::ArrayHandleConstant<vtkm::Id>(
+        vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+        this->BaseTree->NumSupernodesInRound.ReadPortal().Get(roundNumber)),
+      // target array
+      this->KeptSupernodes);
+    // Create the predicate for the CopyIf
     vtkm::worklet::contourtree_distributed::hierarchical_augmenter::NotNoSuchElementPredicate
       notNoSuchElementPredicate;
+    // Copy supernodeId to this->KeptSupernodes
     vtkm::cont::Algorithm::CopyIf(
       // first we generate a list of supernodeIds
       supernodeIdVals,
@@ -880,7 +884,8 @@ void HierarchicalAugmenter<FieldType>::RetrieveOldSupernodes(vtkm::Id roundNumbe
       // And the CopyIf compresses the array to eliminate unnecssary elements
       // save to this->KeptSupernodes
       this->KeptSupernodes,
-      // then our predicate identifies all necessary points. These are all points that suffice the condition
+      // then our predicate identifies all necessary points. These
+      // are all points that suffice the condition
       // vtkm::Id supernodeID = keptSupernode + supernodeIndexBase;
       // !noSuchElement(baseTree->superarcs[supernodeID]);
       notNoSuchElementPredicate);
