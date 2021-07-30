@@ -412,12 +412,25 @@ void HierarchicalAugmenter<FieldType>::RetrieveInAttachmentPoints()
   vtkm::Id numTotalAttachments = numAttachmentsCurrently + numIncomingAttachments;
 
   // I.  resize the existing arrays
-  this->GlobalRegularIds.Allocate(numTotalAttachments);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    this->GlobalRegularIds, numTotalAttachments, static_cast<vtkm::Id>(0));
+  vtkm::worklet::contourtree_augmented::ResizeVector<FieldType>(
+    this->DataValues, numTotalAttachments, static_cast<FieldType>(0));
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    this->SupernodeIds, numTotalAttachments, static_cast<vtkm::Id>(0));
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    this->Superparents, numTotalAttachments, static_cast<vtkm::Id>(0));
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    this->SuperparentRounds, numTotalAttachments, static_cast<vtkm::Id>(0));
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    this->WhichRounds, numTotalAttachments, static_cast<vtkm::Id>(0));
+
+  /*this->GlobalRegularIds.Allocate(numTotalAttachments);
   this->DataValues.Allocate(numTotalAttachments);
   this->SupernodeIds.Allocate(numTotalAttachments);
   this->Superparents.Allocate(numTotalAttachments);
   this->SuperparentRounds.Allocate(numTotalAttachments);
-  this->WhichRounds.Allocate(numTotalAttachments);
+  this->WhichRounds.Allocate(numTotalAttachments);*/
 
   // II. copy the additional points into them
   {
@@ -466,33 +479,16 @@ void HierarchicalAugmenter<FieldType>::ReleaseSwapArrays()
 template <typename FieldType>
 void HierarchicalAugmenter<FieldType>::BuildAugmentedTree()
 { // BuildAugmentedTree()
-
-  std::cout << "START PrepareAugmentedTree" << std::endl;
-  std::cout << this->DebugPrint("PrepareAugmentedTree", __FILE__, __LINE__) << std::endl;
   // 1.  Prepare the data structures for filling in, copying in basic information & organising the attachment points
   this->PrepareAugmentedTree();
-
-  std::cout << "START CopyHyperstructure" << std::endl;
-  std::cout << this->DebugPrint("CopyHyperstructure", __FILE__, __LINE__) << std::endl;
   // 2.  Copy the hyperstructure, using the old super IDs for now
   this->CopyHyperstructure();
-
-  std::cout << "START CopySuperstructure" << std::endl;
-  std::cout << this->DebugPrint("CopySuperstructure", __FILE__, __LINE__) << std::endl;
   // 3.  Copy the superstructure, inserting additional points as we do
   this->CopySuperstructure();
-
-  std::cout << "START UpdateHyperstructure" << std::endl;
-  std::cout << this->DebugPrint("UpdateHyperstructure", __FILE__, __LINE__) << std::endl;
   // 4.  Update the hyperstructure to use the new super IDs
   this->UpdateHyperstructure();
-
-  std::cout << "START CopyBaseRegularStructure" << std::endl;
-  std::cout << this->DebugPrint("CopyBaseRegularStructure", __FILE__, __LINE__) << std::endl;
   // 5.  Copy the remaining regular structure at the bottom level, setting up the regular sort order in the process
   this->CopyBaseRegularStructure();
-  std::cout << "FINISHED BuildAugmentedTree(" << std::endl;
-  std::cout << this->DebugPrint("BuildAugmentedTree", __FILE__, __LINE__) << std::endl;
 } // BuildAugmentedTree()
 
 
@@ -505,6 +501,7 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   //    We add a tertiary sort on supernode ID so that on each block, it gets the correct "home" supernode ID for reconciliation
   //: note that we use a standard comparator that tie breaks with index. This separates into
   //    segments with identical superparent round, which is all we need for now
+  std::cout << this->DebugPrint("PrepareAugmentedTree 1", __FILE__, __LINE__) << std::endl;
   vtkm::cont::Algorithm::Copy(
     vtkm::cont::ArrayHandleIndex(this->GlobalRegularIds.GetNumberOfValues()), this->AttachmentIds);
   // 1a.  We now need to suppress duplicates,
@@ -517,6 +514,9 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
     // Remove the duplicate values
     vtkm::cont::Algorithm::Unique(this->AttachmentIds);
   }
+
+  std::cout << this->DebugPrint("PrepareAugmentedTree 2", __FILE__, __LINE__) << std::endl;
+
   //  2.  Set up array with bounds for subsegments
   //    We do +2 because the top level is extra, and we need an extra sentinel value at the end
   //    We initialise to NO_SUCH_ELEMENT because we may have rounds with none and we'll need to clean up serially (over the number of rounds, i.e. lg n)
@@ -542,6 +542,8 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   firstAttachmentPointInRoundPortal.Set(this->BaseTree->NumRounds + 1,
                                         this->AttachmentIds.GetNumberOfValues());
 
+  std::cout << this->DebugPrint("PrepareAugmentedTree 3", __FILE__, __LINE__) << std::endl;
+
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              this->DebugPrint("First Attachment Point Set Where Possible", __FILE__, __LINE__));
@@ -560,6 +562,8 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
     }
   } // per round
 
+  std::cout << this->DebugPrint("PrepareAugmentedTree 4", __FILE__, __LINE__) << std::endl;
+
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info, DebugPrint("Subsegments Identified", __FILE__, __LINE__));
 #endif
@@ -574,6 +578,9 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
              this->DebugPrint("Augmented Tree Prepared", __FILE__, __LINE__));
 
 #endif
+
+  std::cout << this->DebugPrint("PrepareAugmentedTree 5", __FILE__, __LINE__) << std::endl;
+
 } // PrepareAugmentedTree()
 
 
@@ -765,18 +772,21 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
   vtkm::Id numExistingRegular = this->AugmentedTree->RegularNodeGlobalIds.GetNumberOfValues();
   vtkm::Id numTotalRegular = numExistingRegular + numRegNeeded;
   {
-    // Initalizing with 0 for consistency with PPP2
-    auto tempConstArray = vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numTotalRegular);
-    vtkm::cont::Algorithm::Copy(tempConstArray, this->AugmentedTree->RegularNodeGlobalIds);
-    vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<FieldType>(0, numTotalRegular),
-                                this->AugmentedTree->DataValues);
-    vtkm::cont::Algorithm::Copy(tempConstArray, this->AugmentedTree->RegularNodeSortOrder);
-    vtkm::cont::Algorithm::Copy(tempConstArray, this->AugmentedTree->Superparents);
-    vtkm::cont::Algorithm::Copy(
-      vtkm::cont::ArrayHandleConstant<vtkm::Id>(
-        vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT, numTotalRegular),
-      this->AugmentedTree->Regular2Supernode);
+    // Resize the array, while preserving the orginial values and initalizing new values
+    vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+      this->AugmentedTree->RegularNodeGlobalIds, numTotalRegular, static_cast<vtkm::Id>(0));
+    vtkm::worklet::contourtree_augmented::ResizeVector<FieldType>(
+      this->AugmentedTree->DataValues, numTotalRegular, static_cast<FieldType>(0));
+    vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+      this->AugmentedTree->RegularNodeSortOrder, numTotalRegular, static_cast<vtkm::Id>(0));
+    vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+      this->AugmentedTree->Regular2Supernode,
+      numTotalRegular,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+      this->AugmentedTree->Superparents, numTotalRegular, static_cast<vtkm::Id>(0));
   }
+
   // OK:  we have a complete list of the nodes to transfer. Since we make no guarantees (yet) about sorting, they just copy across
   {
     vtkm::worklet::contourtree_distributed::hierarchical_augmenter::CopyBaseRegularStructureWorklet
@@ -828,6 +838,7 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
                  augmentedTreeRegularNodeSortOrderView     // output
     );
   }
+
   //  Finally, we resort the regular node sort order
   {
     vtkm::worklet::contourtree_distributed::PermuteComparator // hierarchical_contour_tree::
@@ -926,26 +937,56 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
   vtkm::worklet::contourtree_augmented::IdArraySetValue(
     0, numSupernodesAlready, this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
 
-  // resize the arrays accordingly
+  // resize the arrays accordingly.
+  // NOTE: We have to resize arrays (not just allocate them) as we need to
+  // expand the arrays while preserving the original values
   {
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> tempNoSuchElementArr(
-      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT, newSupernodeCount);
-    vtkm::cont::ArrayHandleConstant<FieldType> tempFieldTypeZeroArr(static_cast<FieldType>(0),
-                                                                    newSupernodeCount);
-    vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, this->AugmentedTree->Supernodes);
-    vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, this->AugmentedTree->Superarcs);
-    vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, this->AugmentedTree->Hyperparents);
-    vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, this->AugmentedTree->Super2Hypernode);
-    vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, this->AugmentedTree->WhichRound);
-    vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, this->AugmentedTree->WhichIteration);
+    vtkm::worklet::contourtree_augmented::ResizeVector(
+      this->AugmentedTree->Supernodes,
+      newSupernodeCount,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector(
+      this->AugmentedTree->Supernodes,
+      newSupernodeCount,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector(
+      this->AugmentedTree->Superarcs,
+      newSupernodeCount,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector(
+      this->AugmentedTree->Hyperparents,
+      newSupernodeCount,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector(
+      this->AugmentedTree->Super2Hypernode,
+      newSupernodeCount,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector(
+      this->AugmentedTree->WhichRound,
+      newSupernodeCount,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector(
+      this->AugmentedTree->WhichIteration,
+      newSupernodeCount,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
 
     // we also know that only supernodes are needed as regular nodes at each level, so we resize those here as well
     // we note that it might be possible to update all regular IDs at the end, but leave that optimisation out for now
     // therefore we resize the regular-sized arrays as well
-    vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, this->AugmentedTree->RegularNodeGlobalIds);
-    vtkm::cont::Algorithm::Copy(tempFieldTypeZeroArr, this->AugmentedTree->DataValues);
-    vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, this->AugmentedTree->Regular2Supernode);
-    vtkm::cont::Algorithm::Copy(tempNoSuchElementArr, this->AugmentedTree->Superparents);
+    vtkm::worklet::contourtree_augmented::ResizeVector(
+      this->AugmentedTree->RegularNodeGlobalIds,
+      newSupernodeCount,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector<FieldType>(
+      this->AugmentedTree->DataValues, newSupernodeCount, static_cast<FieldType>(0));
+    vtkm::worklet::contourtree_augmented::ResizeVector(
+      this->AugmentedTree->Regular2Supernode,
+      newSupernodeCount,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector(
+      this->AugmentedTree->Superparents,
+      newSupernodeCount,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
   }
 
 #ifdef DEBUG_PRINT
@@ -963,13 +1004,14 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(vtkm::Id roundNumber)
   vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numSupernodesThisLevel),
                               this->SupernodeSorter);
   {
-    // TODO: Here we initalize all arrays to 0 for consistency with PPP. Check if we can omit the initalization for some arrays?
-    auto tempZeroArray = vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numSupernodesThisLevel);
-    auto tempZeroValueArray = vtkm::cont::ArrayHandleConstant<FieldType>(0, numSupernodesThisLevel);
-    vtkm::cont::Algorithm::Copy(tempZeroArray, this->GlobalRegularIdSet);
-    vtkm::cont::Algorithm::Copy(tempZeroArray, this->DataValueSet);
-    vtkm::cont::Algorithm::Copy(tempZeroArray, this->SuperparentSet);
-    vtkm::cont::Algorithm::Copy(tempZeroArray, this->SupernodeIdSet);
+    vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+      this->GlobalRegularIdSet, numSupernodesThisLevel, static_cast<vtkm::Id>(0));
+    vtkm::worklet::contourtree_augmented::ResizeVector<FieldType>(
+      this->DataValueSet, numSupernodesThisLevel, static_cast<FieldType>(0));
+    vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+      this->SuperparentSet, numSupernodesThisLevel, static_cast<vtkm::Id>(0));
+    vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+      this->SupernodeIdSet, numSupernodesThisLevel, static_cast<vtkm::Id>(0));
   }
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -1314,10 +1356,10 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
                << std::endl;
   resultStream << "----------------------------------------" << std::endl;
 
-  //resultStream << this->BaseTree->DebugPrint(
-  //  (message + std::string(" Base Tree")).c_str(), fileName, lineNum);
-  //resultStream << this->AugmentedTree->DebugPrint(
-  //  (message + std::string(" Augmented Tree")).c_str(), fileName, lineNum);
+  resultStream << this->BaseTree->DebugPrint(
+    (message + std::string(" Base Tree")).c_str(), fileName, lineNum);
+  resultStream << this->AugmentedTree->DebugPrint(
+    (message + std::string(" Augmented Tree")).c_str(), fileName, lineNum);
   resultStream << "========================================" << std::endl;
   resultStream << "Local List of Attachment Points" << std::endl;
   vtkm::worklet::contourtree_augmented::PrintHeader(this->GlobalRegularIds.GetNumberOfValues());
