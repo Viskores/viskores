@@ -492,7 +492,7 @@ void HierarchicalAugmenter<FieldType>::BuildAugmentedTree()
   // 5.  Copy the remaining regular structure at the bottom level, setting up the regular sort order in the process
   this->CopyBaseRegularStructure();
   std::cout << "FINISHED BuildAugmentedTree(" << std::endl;
-  std::cout << this->DebugPrint("BuildAugmentedTree(", __FILE__, __LINE__) << std::endl;
+  std::cout << this->DebugPrint("BuildAugmentedTree", __FILE__, __LINE__) << std::endl;
 } // BuildAugmentedTree()
 
 
@@ -719,7 +719,6 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
   //      return to the block, we will need to pass it in as a parameter and template
   //      on mesh type.  So, for the purposes of tidy coding, I shall use the first
   //      option, which means that not all of the Level 0 regular nodes belong to the block.
-
   {
     //    For each regular node, if it hasn't been transferred to the new tree, search for the superarc to which it belongs
     //    default the superparent to NO_SUCH_ELEMENT to use as a flag for "we can ignore it"
@@ -749,7 +748,6 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
                  this->RegularSuperparents, // output
                  tempRegularNodesNeeded     // output. will be CopyIf'd to this->RegularNodesNeeded
     );
-
     // We now compress to get the set of nodes to transfer. I.e., remove all
     // NO_SUCH_ELEMENT entires and copy the values to keep to our proper arrays
     vtkm::worklet::contourtree_distributed::hierarchical_augmenter::NotNoSuchElementPredicate
@@ -766,16 +764,19 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
   vtkm::Id numRegNeeded = this->RegularNodesNeeded.GetNumberOfValues();
   vtkm::Id numExistingRegular = this->AugmentedTree->RegularNodeGlobalIds.GetNumberOfValues();
   vtkm::Id numTotalRegular = numExistingRegular + numRegNeeded;
-  this->AugmentedTree->RegularNodeGlobalIds.Allocate(numTotalRegular);
-  this->AugmentedTree->DataValues.Allocate(numTotalRegular);
-  this->AugmentedTree->RegularNodeSortOrder.Allocate(numTotalRegular);
-  this->AugmentedTree->Superparents.Allocate(numTotalRegular);
-  // since these are *ALL* only regular nodes, setting this->AugmentedTree->Regular2Supernode is easy:
-  vtkm::cont::Algorithm::Copy(
-    vtkm::cont::ArrayHandleConstant<vtkm::Id>(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                              numTotalRegular),
-    this->AugmentedTree->Regular2Supernode);
-
+  {
+    // Initalizing with 0 for consistency with PPP2
+    auto tempConstArray = vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numTotalRegular);
+    vtkm::cont::Algorithm::Copy(tempConstArray, this->AugmentedTree->RegularNodeGlobalIds);
+    vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<FieldType>(0, numTotalRegular),
+                                this->AugmentedTree->DataValues);
+    vtkm::cont::Algorithm::Copy(tempConstArray, this->AugmentedTree->RegularNodeSortOrder);
+    vtkm::cont::Algorithm::Copy(tempConstArray, this->AugmentedTree->Superparents);
+    vtkm::cont::Algorithm::Copy(
+      vtkm::cont::ArrayHandleConstant<vtkm::Id>(
+        vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT, numTotalRegular),
+      this->AugmentedTree->Regular2Supernode);
+  }
   // OK:  we have a complete list of the nodes to transfer. Since we make no guarantees (yet) about sorting, they just copy across
   {
     vtkm::worklet::contourtree_distributed::hierarchical_augmenter::CopyBaseRegularStructureWorklet
@@ -827,7 +828,6 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
                  augmentedTreeRegularNodeSortOrderView     // output
     );
   }
-
   //  Finally, we resort the regular node sort order
   {
     vtkm::worklet::contourtree_distributed::PermuteComparator // hierarchical_contour_tree::
