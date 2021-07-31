@@ -109,7 +109,7 @@ public:
   /// otherwise it returns global id of the vertex as determined via the IdRelabeler
   VTKM_EXEC_CONT
   inline vtkm::Id GetVertexOwned(const vtkm::Id& meshIndex,
-                                 const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
+                                 const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler&
                                    localToGlobalIdRelabeler) const
   {
     // Get the vertex position
@@ -117,23 +117,22 @@ public:
     // now test - the low ID boundary belongs to this block
     // the high ID boundary belongs to the next block if there is one
     if (((pos[1] == this->MeshSize[1] - 1) &&
-         (pos[1] + localToGlobalIdRelabeler->LocalBlockOrigin[1] !=
-          localToGlobalIdRelabeler->GlobalSize[1] - 1)) ||
+         (pos[1] + localToGlobalIdRelabeler.LocalBlockOrigin[1] !=
+          localToGlobalIdRelabeler.GlobalSize[1] - 1)) ||
         ((pos[0] == this->MeshSize[0] - 1) &&
-         (pos[0] + localToGlobalIdRelabeler->LocalBlockOrigin[0] !=
-          localToGlobalIdRelabeler->GlobalSize[0] - 1)) ||
+         (pos[0] + localToGlobalIdRelabeler.LocalBlockOrigin[0] !=
+          localToGlobalIdRelabeler.GlobalSize[0] - 1)) ||
         ((pos[2] == this->MeshSize[2] - 1) &&
-         (pos[2] + localToGlobalIdRelabeler->LocalBlockOrigin[2] !=
-          localToGlobalIdRelabeler->GlobalSize[2] - 1)))
+         (pos[2] + localToGlobalIdRelabeler.LocalBlockOrigin[2] !=
+          localToGlobalIdRelabeler.GlobalSize[2] - 1)))
     {
       return vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
     }
     else
     {
-      return (*localToGlobalIdRelabeler)(meshIndex);
+      return localToGlobalIdRelabeler(meshIndex);
     }
   }
-
 
   vtkm::Id3 MeshSize;
 

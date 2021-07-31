@@ -75,7 +75,7 @@ public:
   VTKM_EXEC_CONT
   bool operator()(const vtkm::Id& meshVertexId) const
   {
-    return static_cast<bool>(vtkm::worklet::contourtree_augmented::NoSuchElement(meshVertexId));
+    return bool{ !vtkm::worklet::contourtree_augmented::NoSuchElement(meshVertexId) };
   }
 
 private:

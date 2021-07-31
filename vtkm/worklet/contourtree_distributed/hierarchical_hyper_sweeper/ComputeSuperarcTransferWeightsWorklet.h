@@ -76,12 +76,10 @@ public:
       hierarchicalTreeSupernodesView, // view of hierarchicalTree.supernodes[firstSupernode, lastSupernode)
     WholeArrayIn hierarchicalTreeSuperparents, // whole array of hierarchicalTree.superparents
     WholeArrayIn hierarchicalTreeHyperparents, // whole array of hierarchicalTree.hyperparents
-    FieldInOut
+    FieldIn
       hierarchicalTreeSuperarcsView, // view of hierarchicalTree.superarcs[firstSupernode, lastSupernode)
     FieldOut transferTargetView      // view of transferTarget[firstSupernode, lastSupernode)
   );
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
-  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT
@@ -94,14 +92,14 @@ public:
   {
   }
 
-  template <typename InFieldPortalType, typename InOutFieldPortalType>
+  template <typename InFieldPortalType>
   VTKM_EXEC void operator()(
     const vtkm::Id& supernode,
     const vtkm::Id& supernodeRegularId, // same as  hierarchicalTree.supernodes[supernode];
     const InFieldPortalType& hierarchicalTreeSuperparentsPortal,
     const InFieldPortalType& hierarchicalTreeHyperparentsPortal,
-    vtkm::Id& superarcTo,    // same as hierarchicalTree.superarcs[supernode];
-    vtkm::Id& transferTarget // same as transferTarget[supernode]
+    const vtkm::Id& superarcTo, // same as hierarchicalTree.superarcs[supernode];
+    vtkm::Id& transferTarget    // same as transferTarget[supernode]
   ) const
   {
     // per supernode
@@ -131,10 +129,8 @@ public:
       } // not a superarc we care about
       else
       { // a superarc we care about
-        // strip off the flag bits
-        superarcTo = vtkm::worklet::contourtree_augmented::MaskedIndex(superarcTo);
-        // and set the weight & target
-        transferTarget = superarcTo;
+        // strip off the flag bits and set the weight & target
+        transferTarget = vtkm::worklet::contourtree_augmented::MaskedIndex(superarcTo);
       } // a superarc we care about
     }   // actual superarc
 

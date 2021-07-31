@@ -75,8 +75,6 @@ public:
     WholeArrayIn valuePrefixSum,             // whole valuePrefixSum array
     FieldInOut dependentValuesView // output view of dependentValues[firstSupernode, lastSupernode)
   );
-  using ExecutionSignature = void(InputIndex, _1, _2);
-  using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT
@@ -89,7 +87,7 @@ public:
   {
   }
 
-  template <typename InFieldPortalType, typename InOutFieldPortalType>
+  template <typename InFieldPortalType>
   VTKM_EXEC void operator()(
     const vtkm::Id& supernode,
     const vtkm::Id& superarcTo,  // same as hierarchicalTree.superarcs[supernode];

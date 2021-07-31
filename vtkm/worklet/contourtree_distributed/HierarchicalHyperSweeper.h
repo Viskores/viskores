@@ -102,15 +102,12 @@ namespace contourtree_distributed
 {
 
 // the class itself
-template <typename MeshType, typename FieldType>
+template <typename SweepValueType, typename ContourTreeFieldType>
 class HierarchicalHyperSweeper
 { // class HierarchicalHyperSweeper
 public:
   // the tree that it hypersweeps over
-  const HierarchicalContourTree<FieldType>& HierarchicalTree;
-
-  // the underlying mesh base block type
-  const MeshType& BaseBlock;
+  const HierarchicalContourTree<ContourTreeFieldType>& HierarchicalTree;
 
   // the Id of the base block (used for debug output)
   vtkm::Id BlockId;
@@ -118,9 +115,9 @@ public:
   // array of values being operated over (same size as supernode set)
   // keep both intrinsic & dependent values
   // the intrinsic values are just stored but not modifid here
-  const vtkm::cont::ArrayHandle<FieldType>& IntrinsicValues;
+  const vtkm::cont::ArrayHandle<SweepValueType>& IntrinsicValues;
   // the dependent values are what is being sweeped and are updated here
-  const vtkm::cont::ArrayHandle<FieldType>& DependentValues;
+  const vtkm::cont::ArrayHandle<SweepValueType>& DependentValues;
   // and to avoid an extra log summation, store the number of logical nodes for the underlying block
   // (computed when initializing the regular vertex list)
   vtkm::Id NumOwnedRegularVertices;
@@ -129,7 +126,7 @@ public:
   // these are working arrays, lifted up here for ease of debug code
   // Subranges of these arrays will be reused in the rounds / iterations rather than being reallocated
   // an array for temporary storage of the prefix sums
-  vtkm::cont::ArrayHandle<FieldType> ValuePrefixSum;
+  vtkm::cont::ArrayHandle<SweepValueType> ValuePrefixSum;
   // two arrays for collecting targets of transfers
   vtkm::worklet::contourtree_augmented::IdArrayType TransferTarget;
   vtkm::worklet::contourtree_augmented::IdArrayType SortedTransferTarget;
@@ -142,12 +139,11 @@ public:
   /// @param[in] baseBlock the underlying mesh base block type
   /// @param[in] intrinsicValues array of values of intrinisic nodes are just being stored here but not modified
   /// @param[in] dependentValues array of values being operated over (same size as supernode set)
-  HierarchicalHyperSweeper<MeshType, FieldType>(
+  HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>(
     vtkm::Id blockId,
-    const HierarchicalContourTree<FieldType>& hierarchicalTree,
-    const MeshType& baseBlock,
-    const vtkm::cont::ArrayHandle<FieldType>& intrinsicValues,
-    const vtkm::cont::ArrayHandle<FieldType>& dependentValues);
+    const HierarchicalContourTree<ContourTreeFieldType>& hierarchicalTree,
+    const vtkm::cont::ArrayHandle<SweepValueType>& intrinsicValues,
+    const vtkm::cont::ArrayHandle<SweepValueType>& dependentValues);
 
   /// Our routines to initialize the sweep need to be static (or externa)l if we are going to use the constructor
   /// to run the actual hypersweep
@@ -155,10 +151,11 @@ public:
   /// @param[in] baseBlock the underlying mesh base block  to initialize from
   /// @param[in] localToGlobalIdRelabeler Id relabeler used to compute global indices from local mesh indices
   /// @param[out] superarcRegularCounts   arrray for the output superarc regular counts
-  static void InitializeIntrinsicVertexCount(
-    const HierarchicalContourTree<FieldType>& hierarchicalTree,
+  template <typename MeshType>
+  void InitializeIntrinsicVertexCount(
+    const HierarchicalContourTree<ContourTreeFieldType>& hierarchicalTree,
     const MeshType& baseBlock,
-    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
+    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
     vtkm::worklet::contourtree_augmented::IdArrayType& superarcRegularCounts);
 
   /// routine to do the local hypersweep using addition / subtraction
@@ -205,27 +202,27 @@ private:
 }; // class HierarchicalHyperSweeper
 
 
-template <typename MeshType, typename FieldType>
-HierarchicalHyperSweeper<MeshType, FieldType>::HierarchicalHyperSweeper(
+template <typename SweepValueType, typename ContourTreeFieldType>
+HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::HierarchicalHyperSweeper(
   vtkm::Id blockId,
-  const HierarchicalContourTree<FieldType>& hierarchicalTree,
-  const MeshType& baseBlock,
-  const vtkm::cont::ArrayHandle<FieldType>& intrinsicValues,
-  const vtkm::cont::ArrayHandle<FieldType>& dependentValues)
+  const HierarchicalContourTree<ContourTreeFieldType>& hierarchicalTree,
+  const vtkm::cont::ArrayHandle<SweepValueType>& intrinsicValues,
+  const vtkm::cont::ArrayHandle<SweepValueType>& dependentValues)
   : HierarchicalTree(hierarchicalTree)
-  , BaseBlock(baseBlock)
   , BlockId(blockId)
   , IntrinsicValues(intrinsicValues)
   , DependentValues(dependentValues)
-  , NumOwnedRegularVertices(static_cast<vtkm::Id>(0))
+  , NumOwnedRegularVertices(vtkm::Id{ 0 })
 { // constructor
   // Initalize arrays with 0s
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> tempZeroArray(
-    0, this->HierarchicalTree.Supernodes.GetNumberOfValues());
-  vtkm::cont::Algorithm::Copy(tempZeroArray, this->ValuePrefixSum);
-  vtkm::cont::Algorithm::Copy(tempZeroArray, this->TransferTarget);
-  vtkm::cont::Algorithm::Copy(tempZeroArray, this->SortedTransferTarget);
-  // initialise the supersortPermute to the identity
+  vtkm::cont::Algorithm::Fill(
+    this->ValuePrefixSum, vtkm::Id{ 0 }, this->HierarchicalTree.Supernodes.GetNumberOfValues());
+  vtkm::cont::Algorithm::Fill(
+    this->TransferTarget, vtkm::Id{ 0 }, this->HierarchicalTree.Supernodes.GetNumberOfValues());
+  vtkm::cont::Algorithm::Fill(this->SortedTransferTarget,
+                              vtkm::Id{ 0 },
+                              this->HierarchicalTree.Supernodes.GetNumberOfValues());
+  // Initialize the supersortPermute to the identity
   vtkm::cont::ArrayHandleIndex tempIndexArray(
     this->HierarchicalTree.Supernodes.GetNumberOfValues());
   vtkm::cont::Algorithm::Copy(tempIndexArray, this->SuperSortPermute);
@@ -233,15 +230,14 @@ HierarchicalHyperSweeper<MeshType, FieldType>::HierarchicalHyperSweeper(
 
 
 // static function used to compute the initial superarc regular counts
-template <typename MeshType, typename FieldType>
-void HierarchicalHyperSweeper<MeshType, FieldType>::InitializeIntrinsicVertexCount(
-  const HierarchicalContourTree<FieldType>& hierarchicalTree,
+template <typename SweepValueType, typename ContourTreeFieldType>
+template <typename MeshType>
+void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::InitializeIntrinsicVertexCount(
+  const HierarchicalContourTree<ContourTreeFieldType>& hierarchicalTree,
   const MeshType& baseBlock,
-  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
+  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
   vtkm::worklet::contourtree_augmented::IdArrayType& superarcRegularCounts)
 { // InitializeIntrinsicVertexCount()
-  vtkm::cont::Invoker
-    localInvoke; // Needed because this a static function so we can't use the invoke from the object
   // I.  Call the mesh to get a list of all regular vertices belonging to the block by global Id
   vtkm::worklet::contourtree_augmented::IdArrayType globalIds;
   // TODO/FIXME: Even though the virtual function on DataSetMesh was removed in commit
@@ -250,14 +246,15 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::InitializeIntrinsicVertexCou
   // this is indeed correct.
   baseBlock.GetOwnedVerticesByGlobalId(localToGlobalIdRelabeler, globalIds);
   // and store the size for later reference
-  hierarchicalTree.NumOwnedRegularVertices = globalIds.GetNumberOfValues();
+  //hierarchicalTree.NumOwnedRegularVertices = globalIds.GetNumberOfValues();
+  this->NumOwnedRegularVertices = globalIds.GetNumberOfValues();
 
 #ifdef DEBUG_PRINT
   {
     std::stringstream debugStream;
-    debugStream << std::endl << "Owned Regular Vertex List";
+    debugStream << std::endl << "Owned Regular Vertex List" << std::endl;
     vtkm::worklet::contourtree_augmented::PrintHeader(globalIds.GetNumberOfValues(), debugStream);
-    vtkm::worklet::contourtree_augmented::PrintIndices("GlobalId", globalIds, debugStream);
+    vtkm::worklet::contourtree_augmented::PrintIndices("GlobalId", globalIds, -1, debugStream);
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, debugStream.str());
   }
 #endif
@@ -268,19 +265,21 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::InitializeIntrinsicVertexCou
     auto findRegularByGlobal = hierarchicalTree.GetFindRegularByGlobal();
     auto computeSuperparentIdsWorklet = vtkm::worklet::contourtree_distributed::
       hierarchical_hyper_sweeper::InitializeIntrinsicVertexCountComputeSuperparentIdsWorklet();
-    localInvoke(computeSuperparentIdsWorklet,       // worklet to run
-                globalIds,                          // input
-                findRegularByGlobal,                // input
-                hierarchicalTree.Regular2Supernode, // input
-                hierarchicalTree.Superparents,      // input
-                superparents                        // output
+    std::cout << "Invoking computeSuperparentIdsWorklet" << std::endl;
+    Invoke(computeSuperparentIdsWorklet,       // worklet to run
+           globalIds,                          // input
+           findRegularByGlobal,                // input
+           hierarchicalTree.Regular2Supernode, // input
+           hierarchicalTree.Superparents,      // input
+           superparents                        // output
     );
   }
 
 #ifdef DEBUG_PRINT
   {
     std::stringstream debugStream;
-    vtkm::worklet::contourtree_augmented::PrintIndices("Superparents", superparents, debugStream);
+    vtkm::worklet::contourtree_augmented::PrintIndices(
+      "Superparents", superparents, -1, debugStream);
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, debugStream.str());
   }
 #endif
@@ -291,41 +290,34 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::InitializeIntrinsicVertexCou
 #ifdef DEBUG_PRINT
   {
     std::stringstream debugStream;
-    vtkm::worklet::contourtree_augmented::PrintIndices("Sorted SP", superparents, debugStream);
+    vtkm::worklet::contourtree_augmented::PrintIndices("Sorted SP", superparents, -1, debugStream);
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, debugStream.str());
   }
 #endif
 
   // initialize the counts to zero.
-  vtkm::cont::Algorithm::Copy(
-    vtkm::cont::ArrayHandleConstant<vtkm::Id>(static_cast<vtkm::Id>(0),
-                                              hierarchicalTree.Supernodes.GetNumberOfValues()),
-    superarcRegularCounts);
-  { // scope to make sure temporary variables are deleted
-    vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
-      InitializeIntrinsicVertexCountInitalizeCountsWorklet initalizeCountsWorklet;
-    // set the count to the Id one off the high end of each range
-    localInvoke(initalizeCountsWorklet, // worklet
-                superparents,           // input domain
-                superarcRegularCounts   // output
-    );
-  }
+  vtkm::cont::Algorithm::Fill(
+    superarcRegularCounts, vtkm::Id{ 0 }, this->HierarchicalTree.Supernodes.GetNumberOfValues());
+
+  // set the count to the Id one off the high end of each range
+  Invoke(vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
+           InitializeIntrinsicVertexCountInitalizeCountsWorklet{},
+         superparents,         // input domain
+         superarcRegularCounts // output
+  );
 
   // now repeat to subtract out the low end
-  {
-    vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
-      InitializeIntrinsicVertexCountSubtractLowEndWorklet subtractLowEndWorklet;
-    localInvoke(subtractLowEndWorklet, // worklet
-                superparents,          // input domain
-                superarcRegularCounts  // output
-    );
-  }
+  Invoke(vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
+           InitializeIntrinsicVertexCountSubtractLowEndWorklet{},
+         superparents,         // input domain
+         superarcRegularCounts // output
+  );
   // and that is that
 #ifdef DEBUG_PRINT
   {
     std::stringstream debugStream;
     vtkm::worklet::contourtree_augmented::PrintIndices(
-      "SuperarcRegularCounts", superarcRegularCounts, debugStream);
+      "SuperarcRegularCounts", superarcRegularCounts, -1, debugStream);
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, debugStream.str());
   }
 #endif
@@ -333,36 +325,38 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::InitializeIntrinsicVertexCou
 
 
 // routine to do the local hypersweep using addition / subtraction
-template <typename MeshType, typename FieldType>
-void HierarchicalHyperSweeper<MeshType, FieldType>::LocalHyperSweep()
+template <typename SweepValueType, typename ContourTreeFieldType>
+void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::LocalHyperSweep()
 { // LocalHyperSweep()
 // TODO: Implement this function
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-             DebugPrint(std::string("Hypersweep Block ") + std::to_string(blockId) +
+             DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
                           std::string(" Starting Local HyperSweep"),
                         __FILE__,
                         __LINE__));
 #endif
 
   // I.  Iterate over all rounds of the hyperstructure
-  for (vtkm::Id round = 0; round <= this->hierarchicalTree.NumRounds; round++)
+  for (vtkm::Id round = 0; round <= this->HierarchicalTree.NumRounds; round++)
   { // per round
 #ifdef DEBUG_PRINT
     VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               DebugPrint(std::string("Hypersweep Block ") + std::to_string(blockId) +
+               DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
                             std::string(" Round ") + std::to_string(round) +
                             std::string(" Step 0 Starting Round"),
                           __FILE__,
                           __LINE__));
 #endif
     //  A.  Iterate over all iterations of the round
-    for (vtkm::Id iteration = 0; iteration < this->HierarchicalTree.NumIterations[round];
-         iteration++)
+    auto numIterationsPortal =
+      this->HierarchicalTree.NumIterations
+        .ReadPortal(); // TODO/FIXME: Use portal? Or something more efficient?
+    for (vtkm::Id iteration = 0; iteration < numIterationsPortal.Get(round); iteration++)
     { // per iteration
 #ifdef DEBUG_PRINT
       VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(blockId) +
+                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
                               std::string(" Round ") + std::to_string(round) +
                               std::string(" Step 1 Iteration ") + std::to_string(iteration) +
                               std::string(" Step A Starting Iteration"),
@@ -370,16 +364,18 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::LocalHyperSweep()
                             __LINE__));
 #endif
       //  1.  Establish the range of supernode Ids that we want to process
-      vtkm::Id firstSupernode = this->HierarchicalTree.FirstSupernodePerIteration[round][iteration];
-      vtkm::Id lastSupernode =
-        this->HierarchicalTree.FirstSupernodePerIteration[round][iteration + 1];
+      //  TODO/FIXME: Use portal? Or is there a more efficient way?
+      auto firstSupernodePerIterationPortal =
+        this->HierarchicalTree.FirstSupernodePerIteration[round].ReadPortal();
+      vtkm::Id firstSupernode = firstSupernodePerIterationPortal.Get(iteration);
+      vtkm::Id lastSupernode = firstSupernodePerIterationPortal.Get(iteration + 1);
 
       // call the routine that computes the dependent weights for each superarc in that range
       this->ComputeSuperarcDependentWeights(round, iteration, firstSupernode, lastSupernode);
 
 #ifdef DEBUG_PRINT
       VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(blockId) +
+                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
                               std::string(" Round ") + std::to_string(round) +
                               std::string(" Step 1 Iteration ") + std::to_string(iteration) +
                               std::string(" Step B Dependent Weights Computed"),
@@ -391,7 +387,7 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::LocalHyperSweep()
 
 #ifdef DEBUG_PRINT
       VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(blockId) +
+                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
                               std::string(" Round ") + std::to_string(round) +
                               std::string(" Step 1 Iteration ") + std::to_string(iteration) +
                               std::string(" Step C Transfer Weights Computed"),
@@ -404,7 +400,7 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::LocalHyperSweep()
 
 #ifdef DEBUG_PRINT
       VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(blockId) +
+                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
                               std::string(" Round ") + std::to_string(round) +
                               std::string(" Step 1 Iteration ") + std::to_string(iteration) +
                               std::string(" Step D Weights Transferred"),
@@ -415,7 +411,7 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::LocalHyperSweep()
 
 #ifdef DEBUG_PRINT
     VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               DebugPrint(std::string("Hypersweep Block ") + std::to_string(blockId) +
+               DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
                             std::string(" Round ") + std::to_string(round) +
                             std::string(" Step 2 Ending Round"),
                           __FILE__,
@@ -426,30 +422,29 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::LocalHyperSweep()
 
 
 // routine to compute the correct weights dependent on each superarc in a subrange (defined by the round & iteration)
-template <typename MeshType, typename FieldType>
-void HierarchicalHyperSweeper<MeshType, FieldType>::ComputeSuperarcDependentWeights(
-  vtkm::Id round,
-  vtkm::Id iteration,
-  vtkm::Id firstSupernode,
-  vtkm::Id lastSupernode)
+template <typename SweepValueType, typename ContourTreeFieldType>
+void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::
+  ComputeSuperarcDependentWeights(
+    vtkm::Id round,
+    vtkm::Id, // iteration, // Kept parameter in case we need it for debugging.
+    vtkm::Id firstSupernode,
+    vtkm::Id lastSupernode)
 { // ComputeSuperarcDependentWeights()
-  (void)
-    iteration; // avoid compiler warning for unused parmeter. Kept parameter in case we need it for debugging.
+  vtkm::Id numSupernodesToProcess = lastSupernode - firstSupernode;
 
   //  2.  Use sorted prefix sum to compute the total weight to contribute to the super/hypertarget
   // Same as std::partial_sum(sweepValues.begin() + firstSupernode, sweepValues.begin() + lastSupernode, valuePrefixSum.begin() + firstSupernode);
   {
-    vtkm::Id numValuesToCopy = lastSupernode - firstSupernode;
     // DependentValues[firstSuperNode, lastSupernode)
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      dependentValuesView(this->DependentValues, // subset DependentValues
-                          firstSupernode,        // start at firstSupernode
-                          numValuesToCopy);      // until lastSuperNode (not inclued)
+      dependentValuesView(this->DependentValues,   // subset DependentValues
+                          firstSupernode,          // start at firstSupernode
+                          numSupernodesToProcess); // until lastSuperNode (not inclued)
     // Target array
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      valuePrefixSumView(this->ValuePrefixSum, // subset ValuePrefixSum
-                         firstSupernode,       // start at firstSupernode
-                         numValuesToCopy);     // until lastSuperNode (not inclued)
+      valuePrefixSumView(this->ValuePrefixSum,    // subset ValuePrefixSum
+                         firstSupernode,          // start at firstSupernode
+                         numSupernodesToProcess); // until lastSuperNode (not inclued)
     // Compute the partial sum for DependentValues[firstSuperNode, lastSupernode) and write to ValuePrefixSum[firstSuperNode, lastSupernode)
     vtkm::cont::Algorithm::ScanInclusive(dependentValuesView, // input
                                          valuePrefixSumView); // result of partial sum
@@ -466,23 +461,22 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::ComputeSuperarcDependentWeig
   // 3.  Compute the segmented weights from the prefix sum array
   {
     // Create views of the subranges of the arrays we need to update
-    vtkm::Id numValuesToProcess = lastSupernode - firstSupernode;
     vtkm::cont::ArrayHandleCounting<vtkm::Id> supernodeIndex(
-      firstSupernode, static_cast<vtkm::Id>(1), numValuesToProcess);
+      firstSupernode, vtkm::Id{ 1 }, numSupernodesToProcess);
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
       hierarchicalTreeSuperarcsView(
-        this->HierarchicalTree.Superarcs, firstSupernode, numValuesToProcess);
+        this->HierarchicalTree.Superarcs, firstSupernode, numSupernodesToProcess);
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
       hierarchicalTreeHyperparentsView(
-        this->HierarchicalTree.Hyperparents, firstSupernode, numValuesToProcess);
+        this->HierarchicalTree.Hyperparents, firstSupernode, numSupernodesToProcess);
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
       hierarchicalTreeHypernodesView(
-        this->HierarchicalTree.Hypernodes, firstSupernode, numValuesToProcess);
+        this->HierarchicalTree.Hypernodes, firstSupernode, numSupernodesToProcess);
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      dependentValuesView(this->DependentValues, firstSupernode, numValuesToProcess);
+      dependentValuesView(this->DependentValues, firstSupernode, numSupernodesToProcess);
     // create the worklet
     vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
-      ComputeSuperarcDependentWeightsWorklet<FieldType>
+      ComputeSuperarcDependentWeightsWorklet<SweepValueType>
         computeSuperarcDependentWeightsWorklet(
           firstSupernode, round, this->HierarchicalTree.NumRounds);
     // Execute the worklet
@@ -491,7 +485,7 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::ComputeSuperarcDependentWeig
       supernodeIndex,                // input counting index [firstSupernode, lastSupernode)
       hierarchicalTreeSuperarcsView, // input view of  hierarchicalTree.Superarcs[firstSupernode, lastSupernode)
       hierarchicalTreeHyperparentsView, // input view of  hierarchicalTree.Hyperparents[firstSupernode, lastSupernode)
-      this->hierarchicalTree.Hypernodes, // input full hierarchicalTree.Hypernodes array
+      this->HierarchicalTree.Hypernodes, // input full hierarchicalTree.Hypernodes array
       this->ValuePrefixSum,              // input full ValuePrefixSum array
       dependentValuesView                // output view of sweepValues[firstSu
     );
@@ -500,35 +494,32 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::ComputeSuperarcDependentWeig
 
 
 // routine to compute the weights to transfer to superarcs (defined by the round & iteration)
-template <typename MeshType, typename FieldType>
-void HierarchicalHyperSweeper<MeshType, FieldType>::ComputeSuperarcTransferWeights(
+template <typename SweepValueType, typename ContourTreeFieldType>
+void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::ComputeSuperarcTransferWeights(
   vtkm::Id round,
-  vtkm::Id iteration,
+  vtkm::Id, // iteration, // Kept parameter in case we need it for debugging.
   vtkm::Id firstSupernode,
   vtkm::Id lastSupernode)
 { // ComputeSuperarcTransferWeights()
-  (void)
-    iteration; // avoid compiler warning for unused parmeter. Kept parameter in case we need it for debugging.
-
   // At this stage, we would otherwise transfer weights by hyperarc, but attachment points don't *have* hyperarcs
   // so we will do a transfer by superarc instead, making sure that we only transfer from the last superarc in each
   // hyperarc, plus for any attachment point
+  vtkm::Id numSupernodesToProcess = lastSupernode - firstSupernode;
 
   // 4.  Set the amount each superarc wants to transfer, reusing the valuePrefixSum array for the purpose
   //    and the transfer target
   { // scope ComputeSuperarcTransferWeightsWorklet to make sure temp variables are cleared
     // Create ArrayHandleViews of the subrange of values that we need to update
-    vtkm::Id numValuesToProcess = lastSupernode - firstSupernode;
     vtkm::cont::ArrayHandleCounting<vtkm::Id> supernodeIndex(
-      firstSupernode, static_cast<vtkm::Id>(1), numValuesToProcess);
+      firstSupernode, vtkm::Id{ 1 }, numSupernodesToProcess);
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
       hierarchicalTreeSupernodesView(
-        this->HierarchicalTree.Supernodes, firstSupernode, numValuesToProcess);
+        this->HierarchicalTree.Supernodes, firstSupernode, numSupernodesToProcess);
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
       hierarchicalTreeSuperarcsView(
-        this->HierarchicalTree.Superarcs, firstSupernode, numValuesToProcess);
+        this->HierarchicalTree.Superarcs, firstSupernode, numSupernodesToProcess);
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      transferTargetView(this->transferTarget, firstSupernode, numValuesToProcess);
+      transferTargetView(this->TransferTarget, firstSupernode, numSupernodesToProcess);
     // instantiate the worklet
     vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
       ComputeSuperarcTransferWeightsWorklet computeSuperarcTransferWeightsWorklet(
@@ -548,12 +539,11 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::ComputeSuperarcTransferWeigh
   // 5. Now we need to sort the transfer targets into contiguous segments
   {
     // create view of superSortPermute[firstSupernode, lastSupernode) for sorting
-    vtkm::Id numValuesToProcess = lastSupernode - firstSupernode;
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      superSortPermuteView(this->SuperSortPermute, firstSupernode, numValuesToProcess);
+      superSortPermuteView(this->SuperSortPermute, firstSupernode, numSupernodesToProcess);
     // create comperator for the sort
     vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::TransferTargetComperator
-      transferTargetComperator(this->transferTarget);
+      transferTargetComperator(this->TransferTarget);
     // sort the subrange of our array
     vtkm::cont::Algorithm::Sort(superSortPermuteView, transferTargetComperator);
   }
@@ -567,11 +557,10 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::ComputeSuperarcTransferWeigh
   //    }
   {
     // copy transfer target in the sorted order
-    vtkm::Id numValuesToProcess = lastSupernode - firstSupernode;
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      sortedTransferTargetView(this->SortedTransferTarget, firstSupernode, numValuesToProcess);
+      sortedTransferTargetView(this->SortedTransferTarget, firstSupernode, numSupernodesToProcess);
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      superSortPermuteView(this->SuperSortPermute, firstSupernode, numValuesToProcess);
+      superSortPermuteView(this->SuperSortPermute, firstSupernode, numSupernodesToProcess);
     auto permutedTransferTarget =
       vtkm::cont::make_ArrayHandlePermutation(superSortPermuteView,  // idArray
                                               this->TransferTarget); // valueArray
@@ -579,7 +568,7 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::ComputeSuperarcTransferWeigh
     // Note that any values associated with NO_SUCH_ELEMENT will be ignored
     // copy transfer weight in the sorted order
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      valuePrefixSumView(this->ValuePrefixSum, firstSupernode, numValuesToProcess);
+      valuePrefixSumView(this->ValuePrefixSum, firstSupernode, numSupernodesToProcess);
     auto permutedDependentValues =
       vtkm::cont::make_ArrayHandlePermutation(superSortPermuteView,   // idArray
                                               this->DependentValues); // valueArray
@@ -589,31 +578,28 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::ComputeSuperarcTransferWeigh
 
 
 // routine to transfer the weights
-template <typename MeshType, typename FieldType>
-void HierarchicalHyperSweeper<MeshType, FieldType>::TransferWeights(vtkm::Id round,
-                                                                    vtkm::Id iteration,
-                                                                    vtkm::Id firstSupernode,
-                                                                    vtkm::Id lastSupernode)
+template <typename SweepValueType, typename ContourTreeFieldType>
+void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::TransferWeights(
+  vtkm::Id, // round, // Kept parameters in case we need it for debugging.
+  vtkm::Id, // iteration, // Kept parameters in case we need it for debugging.
+  vtkm::Id firstSupernode,
+  vtkm::Id lastSupernode)
 { // TransferWeights()
-  // avoid compiler warning for unused parmeters. Kept parameters in case we need it for debugging.
-  (void)round;
-  (void)iteration;
-
   // 7. Now perform a segmented prefix sum
+  vtkm::Id numSupernodesToProcess = lastSupernode - firstSupernode;
   // Same as std::partial_sum(valuePrefixSum.begin() + firstSupernode, valuePrefixSum.begin() + lastSupernode, valuePrefixSum.begin() + firstSupernode);
   {
-    vtkm::Id numValuesToCopy = lastSupernode - firstSupernode;
     // ValuePrefixSum[firstSuperNode, lastSupernode)
     vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      valuePrefixSumView(this->ValuePrefixSum, // subset ValuePrefixSum
-                         firstSupernode,       // start at firstSupernode
-                         numValuesToCopy);     // until lastSuperNode (not inclued)
+      valuePrefixSumView(this->ValuePrefixSum,    // subset ValuePrefixSum
+                         firstSupernode,          // start at firstSupernode
+                         numSupernodesToProcess); // until lastSuperNode (not inclued)
     // TODO: If it is safe to use the same array as input and output for ScanInclusive then this code should be updated to avoid the extra copy
     // In this case our traget array is the same as our source array. For safety we
     // store the values of our prefix sum in a temporary arrya and then copy the values
     // back into our valuePrefixSumView at the end
-    vtkm::cont::ArrayHandle<FieldType> tempScanInclusiveTarget;
-    tempScanInclusiveTarget.Allocate(numValuesToCopy);
+    vtkm::worklet::contourtree_augmented::IdArrayType tempScanInclusiveTarget;
+    tempScanInclusiveTarget.Allocate(numSupernodesToProcess);
     // Compute the partial sum for DependentValues[firstSuperNode, lastSupernode) and write to ValuePrefixSum[firstSuperNode, lastSupernode)
     vtkm::cont::Algorithm::ScanInclusive(valuePrefixSumView,       // input
                                          tempScanInclusiveTarget); // result of partial sum
@@ -623,60 +609,54 @@ void HierarchicalHyperSweeper<MeshType, FieldType>::TransferWeights(vtkm::Id rou
 
   // 7a. and 7b.
   {
-    // Prepare the approbriate array views for our worklet. This is done to allow us to
-    // use FieldIn instead of having to transfer the entire array to the device when we
-    // really only need a subrange
-    vtkm::Id numValuesToProcess = lastSupernode - firstSupernode;
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> supernodeIndex(
-      firstSupernode, static_cast<vtkm::Id>(1), numValuesToProcess);
-    vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      sortedTransferTargetView(this->SortedTransferTarget, firstSupernode, numValuesToProcess);
-    vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      sortedTransferTargetShiftedView(
-        this->SortedTransferTarget, firstSupernode + 1, numValuesToProcess);
-    vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      valuePrefixSumView(this->ValuePrefixSum, firstSupernode, numValuesToProcess);
-    vtkm::cont::ArrayHandleView<vtkm::worklet::contourtree_augmented::IdArrayType>
-      valuePrefixSumShiftedView(this->ValuePrefixSum, firstSupernode - 1, numValuesToProcess);
-    auto sweepValuePermuted =
-      vtkm::cont::make_ArrayHandlePermutation(sortedTransferTargetView, // idArray
-                                              this->DependentValues);   // valueArray
-
     // 7a. Find the RHE of each group and transfer the prefix sum weight
     // Note that we do not compute the transfer weight separately, we add it in place instead
     // Instantiate the worklet
+    auto supernodeIndex =
+      vtkm::cont::make_ArrayHandleCounting(firstSupernode, vtkm::Id{ 1 }, numSupernodesToProcess);
+    VTKM_ASSERT(firstSupernode + numSupernodesToProcess <=
+                this->ValuePrefixSum.GetNumberOfValues());
+    auto valuePrefixSumView = vtkm::cont::make_ArrayHandleView(
+      this->ValuePrefixSum, firstSupernode, numSupernodesToProcess);
+
     vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
       TransferWeightsUpdateRHEWorklet transferWeightsUpdateRHEWorklet(lastSupernode);
     // Invoke the worklet
-    this->Invoke(
-      transferWeightsUpdateRHEWorklet, // worklet
-      supernodeIndex,                  // input counting array [firstSupernode, lastSupernode)
-      sortedTransferTargetView, // input view of sortedTransferTarget[firstSupernode, lastSupernode)
-      sortedTransferTargetShiftedView, // input view of sortedTransferTarget[firstSupernode+1, lastSupernode+1)
-      valuePrefixSumView, // input view of valuePrefixSum[firstSupernode, lastSupernode)
-      sweepValuePermuted // output view of sweepValues permuted by sortedTransferTarget[firstSupernode, lastSupernode). Use FieldInOut since we don't overwrite all values.
-    );
+    this->Invoke(transferWeightsUpdateRHEWorklet, // worklet
+                 supernodeIndex, // input counting array [firstSupernode, lastSupernode)
+                 this->SortedTransferTarget,
+                 valuePrefixSumView, // input view of valuePrefixSum[firstSupernode, lastSupernode)
+                 this->DependentValues);
+  }
+  {
+    VTKM_ASSERT(firstSupernode + 1 + numSupernodesToProcess - 1 <=
+                this->SortedTransferTarget.GetNumberOfValues());
+    auto sortedTransferTargetView = vtkm::cont::make_ArrayHandleView(
+      this->SortedTransferTarget, firstSupernode + 1, numSupernodesToProcess - 1);
+    VTKM_ASSERT(firstSupernode + 1 + numSupernodesToProcess - 1 <=
+                this->SortedTransferTarget.GetNumberOfValues());
+    auto sortedTransferTargetShiftedView = vtkm::cont::make_ArrayHandleView(
+      this->SortedTransferTarget, firstSupernode + 1, numSupernodesToProcess - 1);
+    auto valuePrefixSumPreviousValueView = vtkm::cont::make_ArrayHandleView(
+      this->ValuePrefixSum, firstSupernode, numSupernodesToProcess - 1);
 
     // 7b. Now find the LHE of each group and subtract out the prior weight
-    vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
-      TransferWeightsUpdateLHEWorklet transferWeightsUpdateLHEWorklet(firstSupernode);
-    this->Invoke(
-      transferWeightsUpdateLHEWorklet, // worklet
-      supernodeIndex,                  // input counting array [firstSupernode, lastSupernode)
-      sortedTransferTargetView, // input view of sortedTransferTarget[firstSupernode, lastSupernode)
-      sortedTransferTargetShiftedView, // input view of sortedTransferTarget[firstSupernode+1, lastSupernode+1)
-      valuePrefixSumShiftedView, // input view of valuePrefixSum[firstSupernode-1, lastSupernode-1)
-      sweepValuePermuted // output view of sweepValues permuted by sortedTransferTarget[firstSupernode, lastSupernode). Use FieldInOut since we don't overwrite all values.
-    );
+    this->Invoke(vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
+                   TransferWeightsUpdateLHEWorklet{},
+                 sortedTransferTargetView,
+                 sortedTransferTargetShiftedView,
+                 valuePrefixSumPreviousValueView,
+                 this->DependentValues);
   }
 } // TransferWeights()
 
 
 // debug routine
-template <typename MeshType, typename FieldType>
-std::string HierarchicalHyperSweeper<MeshType, FieldType>::DebugPrint(std::string message,
-                                                                      const char* fileName,
-                                                                      long lineNum) const
+template <typename SweepValueType, typename ContourTreeFieldType>
+std::string HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::DebugPrint(
+  std::string message,
+  const char* fileName,
+  long lineNum) const
 { // DebugPrint()
   std::stringstream resultStream;
   resultStream << std::endl;
@@ -695,20 +675,20 @@ std::string HierarchicalHyperSweeper<MeshType, FieldType>::DebugPrint(std::strin
   vtkm::worklet::contourtree_augmented::PrintIndices(
     "Dependent", this->DependentValues, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "Prefix Sum", this->ValuePrefixSum - 1, resultStream);
+    "Prefix Sum", this->ValuePrefixSum, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "Transfer To", this->TransferTarget - 1, resultStream);
+    "Transfer To", this->TransferTarget, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "Sorted Transfer", this->SortedTransferTarget - 1, resultStream);
+    "Sorted Transfer", this->SortedTransferTarget, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "Sort Permute", this->SuperSortPermute - 1, resultStream);
+    "Sort Permute", this->SuperSortPermute, -1, resultStream);
   return resultStream.str();
 } // DebugPrint()
 
 
 // Routine to save the hierarchical tree to file
-template <typename MeshType, typename FieldType>
-void HierarchicalHyperSweeper<MeshType, FieldType>::SaveHierarchicalContourTreeDot(
+template <typename SweepValueType, typename ContourTreeFieldType>
+void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::SaveHierarchicalContourTreeDot(
   std::string message,
   const char* outFileName) const
 { // SaveHierarchicalContourTreeDot()

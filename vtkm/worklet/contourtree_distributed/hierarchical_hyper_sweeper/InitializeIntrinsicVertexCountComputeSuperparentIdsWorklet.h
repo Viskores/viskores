@@ -87,11 +87,11 @@ public:
   InitializeIntrinsicVertexCountComputeSuperparentIdsWorklet() {}
 
   template <typename ExecObjType, typename InFieldPortalType>
-  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& globalId,
-                                const ExecObjType& findRegularByGlobal,
-                                const InFieldPortalType& hierarchicalTreeRegular2SupernodePortal,
-                                const InFieldPortalType& hierarchicalTreeSuperparentsPortal,
-                                vtkm::Id& superparent) const
+  VTKM_EXEC void operator()(const vtkm::Id& globalId,
+                            const ExecObjType& findRegularByGlobal,
+                            const InFieldPortalType& hierarchicalTreeRegular2SupernodePortal,
+                            const InFieldPortalType& hierarchicalTreeSuperparentsPortal,
+                            vtkm::Id& superparent) const
   {
     // per vertex
     // retrieve the regular Id (should ALWAYS exist)

@@ -70,56 +70,32 @@ namespace hierarchical_hyper_sweeper
 class TransferWeightsUpdateLHEWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(
-    FieldIn supernodeIndex, // input counting array [firstSupernode, lastSupernode)
-    FieldIn
-      sortedTransferTargetView, // input view of sortedTransferTarget[firstSupernode, lastSupernode)
-    FieldIn
-      sortedTransferTargetShiftedView, // input view of sortedTransferTarget[firstSupernode+1, lastSupernode+1)
-    FieldIn
-      valuePrefixSumShiftedView, // input view of valuePrefixSum[firstSupernode-1, lastSupernode-1)
-    FieldInOut
-      dependentValuePermuted // output view of dependentValues permuted by sortedTransferTarget[firstSupernode, lastSupernode). Use FieldInOut since we don't overwrite all values.
-  );
-  using ExecutionSignature = void(_1, _2, _3, _4, _5);
-  using InputDomain = _1;
+  using ControlSignature = void(FieldIn sortedTransferTargetPortal,
+                                FieldIn sortedTransferTargetShiftedView,
+                                FieldIn valuePrefixSumShiftedView,
+                                WholeArrayInOut dependentValuesPortal);
 
-  // Default Constructor
-  VTKM_EXEC_CONT
-  TransferWeightsUpdateLHEWorklet(const vtkm::Id& firstSupernode)
-    : FirstSupernode(firstSupernode)
-  {
-  }
-
-  VTKM_EXEC void operator()(
-    const vtkm::Id& supernode,
-    const vtkm::Id& sortedTransferTargetValue,     // same as sortedTransferTarget[supernode]
-    const vtkm::Id& sortedTransferTargetNextValue, // same as sortedTransferTarget[supernode+1]
-    const vtkm::Id& valuePrefixSumPreviousValue,   // same as valuePrefixSum[supernode-1]
-    vtkm::Id& dependentValue // same as dependentValues[sortedTransferTarget[supernode]]
-  ) const
+  template <typename InOutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& sortedTransferTargetValue,
+                            const vtkm::Id& sortedTransferTargetPreviusValue,
+                            const vtkm::Id& valuePrefixSumPreviousValue,
+                            InOutPortalType& dependentValuesPortal) const
   {
     // per supernode
     // ignore any that point at NO_SUCH_ELEMENT
-    if (vtkm::worklet::contourtree_augmented::NoSuchElement(sortedTransferTargetValue))
+    if (!vtkm::worklet::contourtree_augmented::NoSuchElement(sortedTransferTargetValue))
     {
-      return;
+      if (sortedTransferTargetValue != sortedTransferTargetPreviusValue)
+      {
+        auto originalValue = dependentValuesPortal.Get(sortedTransferTargetValue);
+        dependentValuesPortal.Set(sortedTransferTargetValue,
+                                  originalValue - valuePrefixSumPreviousValue);
+      }
     }
-
-    // the LHE at 0 is special - it subtracts zero.  In practice, since NO_SUCH_ELEMENT will sort low, this will never
-    // occur, but let's keep the logic strict
-    if (supernode == this->FirstSupernode)
-    { // LHE 0
-      dependentValue -= 0;
-    } // LHE 0
-    else if (sortedTransferTargetValue != sortedTransferTargetNextValue)
-    { // LHE not 0
-      dependentValue -= valuePrefixSumPreviousValue;
-    } // LHE not 0
 
     // In serial this worklet implements the following operation
     /*
-    for (vtkm::Id supernode = firstSupernode; supernode < lastSupernode; supernode++)
+    for (vtkm::Id supernode = firstSupernode + 1; supernode < lastSupernode; supernode++)
     { // per supernode
       // ignore any that point at NO_SUCH_ELEMENT
       if (noSuchElement(sortedTransferTarget[supernode]))
@@ -127,22 +103,14 @@ public:
 
       // the LHE at 0 is special - it subtracts zero.  In practice, since NO_SUCH_ELEMENT will sort low, this will never
       // occur, but let's keep the logic strict
-      if (supernode == firstSupernode)
-      { // LHE 0
-        dependentValues[sortedTransferTarget[supernode]] -= 0;
-      } // LHE 0
-      else if (sortedTransferTarget[supernode] != sortedTransferTarget[supernode-1])
+      if (sortedTransferTarget[supernode] != sortedTransferTarget[supernode-1])
       { // LHE not 0
         dependentValues[sortedTransferTarget[supernode]] -= valuePrefixSum[supernode-1];
       } // LHE not 0
     } // per supernode
     */
   } // operator()()
-
-private:
-  const vtkm::Id FirstSupernode;
-
-}; // TransferWeightsUpdateLHEWorklet
+};  // TransferWeightsUpdateLHEWorklet
 
 } // namespace hierarchical_hyper_sweeper
 } // namespace contourtree_distributed

@@ -203,7 +203,7 @@ protected:
   template <typename MeshTypeObj>
   void GetOwnedVerticesByGlobalIdImpl(
     const MeshTypeObj* mesh,
-    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
+    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
     IdArrayType& ownedVertices) const;
 
   virtual void DebugPrintExtends();
@@ -215,7 +215,7 @@ protected:
 template <typename MeshTypeObj>
 void DataSetMesh::GetOwnedVerticesByGlobalIdImpl(
   const MeshTypeObj* mesh,
-  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
+  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
   IdArrayType& ownedVertices) const
 {
   // use temporary array since we need to compress these at the end via CopyIf so we

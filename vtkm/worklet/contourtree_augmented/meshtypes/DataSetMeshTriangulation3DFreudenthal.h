@@ -103,7 +103,7 @@ public:
   /// Get of global indices of the vertices owned by this mesh. Implemented via
   /// DataSetMesh.GetOwnedVerticesByGlobalIdImpl.
   void GetOwnedVerticesByGlobalId(
-    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
+    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
     IdArrayType& ownedVertices) const;
 
 private:
@@ -180,8 +180,8 @@ inline void DataSetMeshTriangulation3DFreudenthal::GetBoundaryVertices(
 }
 
 // Overwrite the implemenation from the base DataSetMesh parent class
-void DataSetMeshTriangulation3DFreudenthal::GetOwnedVerticesByGlobalId(
-  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
+inline void DataSetMeshTriangulation3DFreudenthal::GetOwnedVerticesByGlobalId(
+  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
   IdArrayType& ownedVertices) const
 {
   return this->GetOwnedVerticesByGlobalIdImpl(this, localToGlobalIdRelabeler, ownedVertices);

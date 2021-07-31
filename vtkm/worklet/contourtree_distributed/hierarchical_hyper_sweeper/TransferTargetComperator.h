@@ -55,6 +55,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
@@ -84,7 +85,27 @@ public:
   VTKM_EXEC
   bool operator()(const vtkm::Id& left, const vtkm::Id& right) const
   { // operator()
-    return this->SuperarcPortal.Get(left) < this->SuperarcPortal.Get(right);
+    // NOTE: We need to explicitly check for NO_SUCH_ELEMENT here since vtkm::Id is signed
+    // while the index time in PPP is unsigned. Thus, for PPP "regular" indices are always
+    // smaller that NO_SUCH_ELEMENT, while with the signed vtkm::Id, NO_SUCH_ELEMENT is
+    // negative and the order is not as intented.
+    // TODO/FIXME: Verify this implementation is correct.
+    // TODO/FIXME: Is there a better way to do this?
+    auto leftVal = this->SuperarcPortal.Get(left);
+    auto rightVal = this->SuperarcPortal.Get(right);
+    if (vtkm::worklet::contourtree_augmented::NoSuchElement(leftVal))
+    {
+      return false;
+    }
+    else if (vtkm::worklet::contourtree_augmented::NoSuchElement(rightVal))
+    {
+      return true;
+    }
+    else
+    {
+      return vtkm::worklet::contourtree_augmented::MaskedIndex(leftVal) <
+        vtkm::worklet::contourtree_augmented::MaskedIndex(rightVal);
+    }
   } // operator()
 
 private:

@@ -71,8 +71,10 @@
 #define VOLUME_PRINT_WIDTH 8
 
 #include <vtkm/Types.h>
+#include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_distributed/LoadArrays.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcForUnknownNode.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/InitalizeSuperchildrenWorklet.h>
@@ -143,8 +145,8 @@ public:
   // how many rounds of fan-in were used to construct it
   vtkm::Id NumRounds;
 
-  // use for debugging?
-  vtkm::Id NumOwnedRegularVertices;
+  // use for debugging? -> This makes more sense in hyper sweeper?
+  // vtkm::Id NumOwnedRegularVertices;
 
   // The following arrays store the numbers of reg/super/hyper nodes at each level of the hierarchy
   // They are filled in from the top down, and are fundamentally CPU side control variables
@@ -165,7 +167,7 @@ public:
 
   /// routine to create a FindRegularByGlobal object that we can use as an input for worklets to call the function
   VTKM_CONT
-  FindRegularByGlobal GetFindRegularByGlobal()
+  FindRegularByGlobal GetFindRegularByGlobal() const
   {
     return FindRegularByGlobal(this->RegularNodeSortOrder, this->RegularNodeGlobalIds);
   }
@@ -215,19 +217,24 @@ public:
   VTKM_CONT
   std::string PrintDotSuperStructure(const char* label) const;
 
+  /// Load from file saved by PPP
+  VTKM_CONT
+  void Load(const char* filename);
+
   /// Print hierarchical tree construction stats, usually used for logging
   VTKM_CONT
   std::string PrintTreeStats() const;
 
   /// debug routine
   VTKM_CONT
-  std::string DebugPrint(const char* message, const char* fileName, long lineNum) const;
+  std::string DebugPrint(std::string message, const char* fileName, long lineNum) const;
 
   // modified version of dumpSuper() that also gives volume counts
   VTKM_CONT
-  std::string DumpVolumes(vtkm::Id totalVolume,
-                          const vtkm::worklet::contourtree_augmented::IdArrayType& intrinsicVolume,
-                          const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume);
+  std::string DumpVolumes(
+    vtkm::Id totalVolume,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& intrinsicVolume,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume) const;
 
 private:
   /// Used internally to Invoke worklets
@@ -236,7 +243,7 @@ private:
 
 template <typename FieldType>
 HierarchicalContourTree<FieldType>::HierarchicalContourTree()
-  : NumOwnedRegularVertices(static_cast<vtkm::Id>(0))
+//: NumOwnedRegularVertices(static_cast<vtkm::Id>(0))
 { // constructor
   NumRegularNodesInRound.ReleaseResources();
   NumSupernodesInRound.ReleaseResources();
@@ -749,9 +756,41 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
   return std::string("HierarchicalContourTree<FieldType>::PrintDotSuperStructure() Complete");
 } // PrintDotSuperStructure
 
+template <typename FieldType>
+void HierarchicalContourTree<FieldType>::Load(const char* filename)
+{
+  std::ifstream is(filename);
+  ReadIndexArray(is, this->RegularNodeGlobalIds);
+  ReadDataArray<FieldType>(is, this->DataValues);
+  ReadIndexArray(is, this->RegularNodeSortOrder);
+  ReadIndexArray(is, this->Regular2Supernode);
+  ReadIndexArray(is, this->Superparents);
+  ReadIndexArray(is, this->Supernodes);
+  ReadIndexArray(is, this->Superarcs);
+  ReadIndexArray(is, this->Hyperparents);
+  ReadIndexArray(is, this->Super2Hypernode);
+  ReadIndexArray(is, this->WhichRound);
+  ReadIndexArray(is, this->WhichIteration);
+  ReadIndexArray(is, this->Hypernodes);
+  ReadIndexArray(is, this->Hyperarcs);
+  ReadIndexArray(is, this->Superchildren);
+  int nRounds;
+  is.read(reinterpret_cast<char*>(&nRounds), sizeof(nRounds));
+  //std::cout << "nRounds = " << nRounds << std::endl;
+  this->NumRounds = nRounds;
+  //this->NumOwnedRegularVertices = 0;
+  ReadIndexArray(is, this->NumRegularNodesInRound);
+  ReadIndexArray(is, this->NumSupernodesInRound);
+  ReadIndexArray(is, this->NumHypernodesInRound);
+  ReadIndexArray(is, this->NumIterations);
+  ReadIndexArrayVector(is, this->FirstSupernodePerIteration);
+  ReadIndexArrayVector(is, this->FirstHypernodePerIteration);
+}
+
+
 /// debug routine
 template <typename FieldType>
-std::string HierarchicalContourTree<FieldType>::DebugPrint(const char* message,
+std::string HierarchicalContourTree<FieldType>::DebugPrint(std::string message,
                                                            const char* fileName,
                                                            long lineNum) const
 { // DebugPrint
@@ -811,7 +850,7 @@ std::string HierarchicalContourTree<FieldType>::DebugPrint(const char* message,
     "nSupernodes In Round", this->NumSupernodesInRound, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
     "nHypernodes In Round", this->NumHypernodesInRound, -1, resultStream);
-  resultStream << "Owned Regular Vertices: " << this->NumOwnedRegularVertices << std::endl;
+  //resultStream << "Owned Regular Vertices: " << this->NumOwnedRegularVertices << std::endl;
   vtkm::worklet::contourtree_augmented::PrintHeader(this->NumIterations.GetNumberOfValues(),
                                                     resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
@@ -861,7 +900,7 @@ template <typename FieldType>
 std::string HierarchicalContourTree<FieldType>::DumpVolumes(
   vtkm::Id totalVolume,
   const vtkm::worklet::contourtree_augmented::IdArrayType& intrinsicVolume,
-  const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume)
+  const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume) const
 { // DumpVolumes()
   // a local string stream to build the output
   std::stringstream outStream;

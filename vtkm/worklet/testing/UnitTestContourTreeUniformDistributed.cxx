@@ -50,10 +50,23 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
+#define DEBUG_PRINT
+
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
 
+#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
+#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
+
+// clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/diy/diy.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+// clang-format on
 
 namespace
 {
@@ -85,13 +98,336 @@ void TestContourTreeMeshCombine(const std::string& mesh1_filename,
   VTKM_TEST_ASSERT(contourTreeMesh2.MaxNeighbors == combinedContourTreeMesh.MaxNeighbors);
 }
 
+/*
+template <typename PortalType, typename T>
+static inline VTKM_CONT bool test_equal_portal_stl_vector(const PortalType1& portal,
+                                                          const T[] array,
+{
+  if (portal.GetNumberOfValues() != size)
+  {
+    return false;
+  }
+
+  for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
+  {
+    if (!test_equal(portal.Get(index), array[index]))
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+*/
+
+template <typename ContourTreeDataFieldType>
+struct HyperSweepBlock
+{
+  HyperSweepBlock(
+    const vtkm::Id& blockNo,
+    const vtkm::Id3& origin,
+    const vtkm::Id3& size,
+    const vtkm::Id3& globalSize,
+    const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
+      hierarchicalContourTree)
+    : BlockNo(blockNo)
+    , Origin(origin)
+    , Size(size)
+    , GlobalSize(globalSize)
+    , HierarchicalContourTree(hierarchicalContourTree)
+  {
+  }
+
+  // Mesh information
+  vtkm::Id BlockNo;
+  vtkm::Id3 Origin;
+  vtkm::Id3 Size;
+  vtkm::Id3 GlobalSize;
+
+  // Hierarchical contour tree for this block
+  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
+    HierarchicalContourTree;
+
+  // Computed values
+  vtkm::cont::ArrayHandle<vtkm::Id> IntrinsicVolume;
+  vtkm::cont::ArrayHandle<vtkm::Id> DependentVolume;
+};
+
+template <typename ContourTreeDataFieldType>
+struct CobmineHyperSweepBlockFunctor
+{
+  void operator()(HyperSweepBlock<ContourTreeDataFieldType>* b,
+                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
+                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
+  ) const
+  {
+    // Get our rank and DIY id
+    //const vtkm::Id rank = vtkm::cont::EnvironmentTracker::GetCommunicator().rank();
+    const auto selfid = rp.gid();
+
+    std::vector<int> incoming;
+    rp.incoming(incoming);
+
+    for (const int ingid : incoming)
+    {
+      std::cout << rp.round() << std::endl;
+      auto roundNo = rp.round() - 1;
+      // NOTE/IMPORTANT: In each round we should have only one swap partner (despite for-loop here).
+      // If that assumption does not hold, it will break things.
+      // NOTE/IMPORTANT: This assumption only holds if the number of blocks is a power of two.
+      // Otherwise, we may need to process more than one incoming block
+      if (ingid != selfid)
+      {
+        vtkm::Id incomingBlockNo;
+        rp.dequeue(ingid, incomingBlockNo);
+        // std::cout << "Combining block " << b->BlockNo << " with " << incomingBlockNo << std::endl;
+        vtkm::cont::ArrayHandle<vtkm::Id> incomingIntrinsicVolume;
+        rp.dequeue(ingid, incomingIntrinsicVolume);
+        vtkm::cont::ArrayHandle<vtkm::Id> incomingDependentVolume;
+        rp.dequeue(ingid, incomingDependentVolume);
+
+        // TODO/FIXME: Replace with something more efficient
+        vtkm::Id numSupernodesToProcess =
+          b->HierarchicalContourTree.FirstSupernodePerIteration[roundNo].ReadPortal().Get(0);
+
+        /*
+        std::cout << "Block " << b->BlockNo << " Round " << roundNo << ": " << numSupernodesToProcess << " entries to process" << std::endl;
+
+        vtkm::worklet::contourtree_augmented::PrintIndices(
+            "Intrinsic Volume (B)", b->IntrinsicVolume, -1, std::cout);
+        vtkm::worklet::contourtree_augmented::PrintIndices(
+            "Dependent Volume (B)", b->DependentVolume, -1, std::cout);
+        */
+        auto intrinsicVolumeView =
+          make_ArrayHandleView(b->IntrinsicVolume, 0, numSupernodesToProcess);
+        auto incomingIntrinsicVolumeView =
+          make_ArrayHandleView(incomingIntrinsicVolume, 0, numSupernodesToProcess);
+        vtkm::cont::ArrayHandle<vtkm::Id> tempSum;
+        vtkm::cont::Algorithm::Transform(
+          intrinsicVolumeView, incomingIntrinsicVolumeView, tempSum, vtkm::Sum());
+        vtkm::cont::Algorithm::Copy(tempSum, intrinsicVolumeView);
+
+        auto dependentVolumeView =
+          make_ArrayHandleView(b->DependentVolume, 0, numSupernodesToProcess);
+        auto incomingDependentVolumeView =
+          make_ArrayHandleView(incomingDependentVolume, 0, numSupernodesToProcess);
+        vtkm::cont::Algorithm::Transform(
+          dependentVolumeView, incomingDependentVolumeView, tempSum, vtkm::Sum());
+        vtkm::cont::Algorithm::Copy(tempSum, dependentVolumeView);
+
+        /*
+        vtkm::worklet::contourtree_augmented::PrintIndices(
+          "Intrinsic Volume (A)", b->IntrinsicVolume, -1, std::cout);
+        vtkm::worklet::contourtree_augmented::PrintIndices(
+          "Dependent Volume (A)", b->DependentVolume, -1, std::cout);
+        */
+      }
+    }
+
+    for (int cc = 0; cc < rp.out_link().size(); ++cc)
+    {
+      auto target = rp.out_link().target(cc);
+      if (target.gid != selfid)
+      {
+        rp.enqueue(target, b->BlockNo);
+        rp.enqueue(target, b->IntrinsicVolume);
+        rp.enqueue(target, b->DependentVolume);
+      }
+    }
+  }
+};
+
+
+void TestHierarchicalHyperSweeper()
+{
+  using vtkm::cont::testing::Testing;
+  using ContourTreeDataFieldType = vtkm::FloatDefault;
+
+  const int numBlocks = 4;
+  const char* filenames[numBlocks] = { "misc/8x9test_HierarchicalAugmentedTree_Block0.dat",
+                                       "misc/8x9test_HierarchicalAugmentedTree_Block1.dat",
+                                       "misc/8x9test_HierarchicalAugmentedTree_Block2.dat",
+                                       "misc/8x9test_HierarchicalAugmentedTree_Block3.dat" };
+  vtkm::Id3 globalSize{ 9, 8, 1 };
+  vtkm::Id3 blocksPerDim{ 2, 2, 1 };
+  vtkm::Id3 sizes[numBlocks] = { { 5, 4, 1 }, { 5, 5, 1 }, { 5, 4, 1 }, { 5, 5, 1 } };
+  vtkm::Id3 origins[numBlocks] = { { 0, 0, 0 }, { 0, 3, 0 }, { 4, 0, 0 }, { 4, 3, 0 } };
+
+  auto blockIndicesAH = vtkm::cont::make_ArrayHandle(
+    { vtkm::Id3{ 0, 0, 0 }, vtkm::Id3{ 0, 1, 0 }, vtkm::Id3{ 1, 0, 0 }, vtkm::Id3{ 1, 1, 0 } });
+  auto originsAH = vtkm::cont::make_ArrayHandle(
+    { vtkm::Id3{ 0, 0, 0 }, vtkm::Id3{ 0, 3, 0 }, vtkm::Id3{ 4, 0, 0 }, vtkm::Id3{ 4, 3, 0 } });
+  auto sizesAH = vtkm::cont::make_ArrayHandle(
+    { vtkm::Id3{ 5, 4, 1 }, vtkm::Id3{ 5, 5, 1 }, vtkm::Id3{ 5, 4, 1 }, vtkm::Id3{ 5, 5, 1 } });
+
+  vtkm::worklet::contourtree_distributed::SpatialDecomposition spatialDecomp(
+    blocksPerDim, globalSize, blockIndicesAH, originsAH, sizesAH);
+
+
+  // Load trees
+  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<vtkm::FloatDefault>
+    hct[numBlocks];
+  for (vtkm::Id blockNo = 0; blockNo < numBlocks; ++blockNo)
+  {
+    hct[blockNo].Load(Testing::DataPath(filenames[blockNo]).c_str());
+    std::cout << hct[blockNo].DebugPrint("AfterLoad", __FILE__, __LINE__);
+  }
+
+  // Create and add DIY blocks
+  auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkm::Id rank = comm.rank();
+
+  vtkmdiy::Master master(comm,
+                         1, // Use 1 thread, VTK-M will do the treading
+                         -1 // All block in memory
+  );
+
+  // Set up connectivity
+  using RegularDecomposer = vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds>;
+  RegularDecomposer::BoolVector shareFace(3, true);
+  RegularDecomposer::BoolVector wrap(3, false);
+  RegularDecomposer::CoordinateVector ghosts(3, 1);
+  RegularDecomposer::DivisionsVector diyDivisions{ 2, 2, 1 }; // HARDCODED FOR TEST
+
+  int numDims = static_cast<int>(globalSize[2] > 1 ? 3 : 2);
+  RegularDecomposer decomposer(numDims,
+                               spatialDecomp.GetVTKmDIYBounds(),
+                               static_cast<int>(spatialDecomp.GetGlobalNumberOfBlocks()),
+                               shareFace,
+                               wrap,
+                               ghosts,
+                               diyDivisions);
+
+  // ... coordinates of local blocks
+  auto localBlockIndicesPortal = spatialDecomp.LocalBlockIndices.ReadPortal();
+  std::vector<int> vtkmdiyLocalBlockGids(numBlocks);
+  for (vtkm::Id bi = 0; bi < numBlocks; bi++)
+  {
+    RegularDecomposer::DivisionsVector diyCoords(static_cast<size_t>(numDims));
+    auto currentCoords = localBlockIndicesPortal.Get(bi);
+    for (vtkm::IdComponent d = 0; d < numDims; ++d)
+    {
+      diyCoords[d] = static_cast<int>(currentCoords[d]);
+    }
+    vtkmdiyLocalBlockGids[static_cast<size_t>(bi)] =
+      RegularDecomposer::coords_to_gid(diyCoords, diyDivisions);
+  }
+
+  // Define which blocks live on which rank so that vtkmdiy can manage them
+  vtkmdiy::DynamicAssigner assigner(
+    comm, comm.size(), static_cast<int>(spatialDecomp.GetGlobalNumberOfBlocks()));
+  for (vtkm::Id bi = 0; bi < numBlocks; bi++)
+  {
+    assigner.set_rank(static_cast<int>(rank),
+                      static_cast<int>(vtkmdiyLocalBlockGids[static_cast<size_t>(bi)]));
+  }
+  vtkmdiy::fix_links(master, assigner);
+
+  HyperSweepBlock<ContourTreeDataFieldType>* localHyperSweeperBlocks[numBlocks];
+  for (vtkm::Id blockNo = 0; blockNo < numBlocks; ++blockNo)
+  {
+    localHyperSweeperBlocks[blockNo] = new HyperSweepBlock<ContourTreeDataFieldType>(
+      blockNo, origins[blockNo], sizes[blockNo], globalSize, hct[blockNo]);
+    std::cout << blockNo << " -> " << vtkmdiyLocalBlockGids[blockNo] << std::endl;
+    master.add(
+      vtkmdiyLocalBlockGids[blockNo], localHyperSweeperBlocks[blockNo], new vtkmdiy::Link());
+  }
+
+  master.foreach ([](HyperSweepBlock<ContourTreeDataFieldType>* b,
+                     const vtkmdiy::Master::ProxyWithLink&) {
+    // Create HyperSweeper
+    std::cout << "Block " << b->BlockNo << std::endl;
+    std::cout << b->HierarchicalContourTree.DebugPrint(
+      "Before initializing HyperSweeper", __FILE__, __LINE__);
+    vtkm::worklet::contourtree_distributed::HierarchicalHyperSweeper<vtkm::Id,
+                                                                     ContourTreeDataFieldType>
+      hyperSweeper(b->BlockNo, b->HierarchicalContourTree, b->IntrinsicVolume, b->DependentVolume);
+
+    std::cout << "Block " << b->BlockNo << std::endl;
+    std::cout << b->HierarchicalContourTree.DebugPrint(
+      "After initializing HyperSweeper", __FILE__, __LINE__);
+    // Create mesh and initialize vertex counts
+    vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler idRelabeler{ b->Origin,
+                                                                             b->Size,
+                                                                             b->GlobalSize };
+
+    if (b->GlobalSize[2] <= 1)
+    {
+      vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation2DFreudenthal mesh(
+        vtkm::Id2{ b->Size[0], b->Size[1] });
+      hyperSweeper.InitializeIntrinsicVertexCount(
+        b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
+    }
+    else
+    {
+      // TODO/FIXME: For getting owned vertices, it should not make a difference if marching
+      // cubes or not. Verify.
+      vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation3DFreudenthal mesh(b->Size);
+      hyperSweeper.InitializeIntrinsicVertexCount(
+        b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
+    }
+
+    std::cout << "Block " << b->BlockNo << std::endl;
+    std::cout << b->HierarchicalContourTree.DebugPrint(
+      "After initializing intrinsic vertex count", __FILE__, __LINE__);
+    // Initialize dependentVolume by copy from intrinsicVolume
+    vtkm::cont::Algorithm::Copy(b->IntrinsicVolume, b->DependentVolume);
+
+    // Perform the local hypersweep
+    hyperSweeper.LocalHyperSweep();
+    std::cout << "Block " << b->BlockNo << std::endl;
+    std::cout << b->HierarchicalContourTree.DebugPrint(
+      "After local hypersweep", __FILE__, __LINE__);
+  });
+
+  // Reduce
+  // partners for merge over regular block grid
+  vtkmdiy::RegularSwapPartners partners(
+    decomposer, // domain decomposition
+    2,          // radix of k-ary reduction.
+    true        // contiguous: true=distance doubling, false=distance halving
+  );
+  vtkmdiy::reduce(
+    master, assigner, partners, CobmineHyperSweepBlockFunctor<ContourTreeDataFieldType>{});
+
+
+
+  // Print
+  vtkm::Id totalVolume = globalSize[0] * globalSize[1] * globalSize[2];
+  master.foreach ([&totalVolume](HyperSweepBlock<ContourTreeDataFieldType>* b,
+                                 const vtkmdiy::Master::ProxyWithLink&) {
+    std::cout << "Block " << b->BlockNo << std::endl;
+    std::cout << "=========" << std::endl;
+    vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
+                                                      std::cout);
+    vtkm::worklet::contourtree_augmented::PrintIndices(
+      "Intrinsic Volume", b->IntrinsicVolume, -1, std::cout);
+    vtkm::worklet::contourtree_augmented::PrintIndices(
+      "Dependent Volume", b->DependentVolume, -1, std::cout);
+
+    std::cout << b->HierarchicalContourTree.DebugPrint(
+      "Called from DumpVolumes", __FILE__, __LINE__);
+    std::cout << b->HierarchicalContourTree.DumpVolumes(
+      totalVolume, b->IntrinsicVolume, b->DependentVolume);
+  });
+
+  // Clean-up
+  for (auto b : localHyperSweeperBlocks)
+  {
+    delete b;
+  }
+}
+
 void TestContourTreeUniformDistributed()
 {
+  /*
   using vtkm::cont::testing::Testing;
   TestContourTreeMeshCombine<vtkm::FloatDefault>(
     Testing::DataPath("misc/5x6_7_MC_Rank0_Block0_Round1_BeforeCombineMesh1.ctm"),
     Testing::DataPath("misc/5x6_7_MC_Rank0_Block0_Round1_BeforeCombineMesh2.ctm"),
     Testing::RegressionImagePath("5x6_7_MC_Rank0_Block0_Round1_CombinedMesh.ctm"));
+    */
+  TestHierarchicalHyperSweeper();
 }
 
 } // anonymous namespace

@@ -71,18 +71,11 @@ namespace hierarchical_hyper_sweeper
 class TransferWeightsUpdateRHEWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(
-    FieldIn supernodeIndex, // input counting array [firstSupernode, lastSupernode)
-    FieldIn
-      sortedTransferTargetView, // input view of sortedTransferTarget[firstSupernode, lastSupernode)
-    FieldIn
-      sortedTransferTargetShiftedView, // input view of sortedTransferTarget[firstSupernode+1, lastSupernode+1)
-    FieldIn valuePrefixSumView, // input view of valuePrefixSum[firstSupernode, lastSupernode)
-    FieldInOut
-      dependentValuePermuted // output view of dependentValues permuted by sortedTransferTarget[firstSupernode, lastSupernode). Use FieldInOut since we don't overwrite all values.
-  );
-  using ExecutionSignature = void(_1, _2, _3, _4, _5);
-  using InputDomain = _1;
+  using ControlSignature =
+    void(FieldIn supernodeIndex, // input counting array [firstSupernode, lastSupernode)
+         WholeArrayIn sortedTransferTarget,
+         FieldIn valuePrefixSumView, // input view of valuePrefixSum[firstSupernode, lastSupernode)
+         WholeArrayInOut dependentValuesPortal);
 
   // Default Constructor
   VTKM_EXEC_CONT
@@ -91,26 +84,25 @@ public:
   {
   }
 
-  VTKM_EXEC void operator()(
-    const vtkm::Id& supernode,
-    const vtkm::Id& sortedTransferTargetValue,     // same as sortedTransferTarget[supernode]
-    const vtkm::Id& sortedTransferTargetNextValue, // same as sortedTransferTarget[supernode+1]
-    const vtkm::Id& valuePrefixSum,                // same as valuePrefixSum[supernode]
-    vtkm::Id& dependentValue // same as dependentValues[sortedTransferTarget[supernode]]
-  ) const
+  template <typename InPortalType, typename OutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& supernode,
+                            const InPortalType& sortedTransferTargetPortal,
+                            const vtkm::Id& valuePrefixSum, // same as valuePrefixSum[supernode]
+                            OutPortalType& dependentValuesPortal) const
   {
     // per supernode
     // ignore any that point at NO_SUCH_ELEMENT
-    if (vtkm::worklet::contourtree_augmented::NoSuchElement(sortedTransferTargetValue))
+    vtkm::Id transferTarget = sortedTransferTargetPortal.Get(supernode);
+    if (!vtkm::worklet::contourtree_augmented::NoSuchElement(transferTarget))
     {
-      return;
+      // the RHE of each segment transfers its weight (including all irrelevant prefixes)
+      if ((supernode == this->LastSupernode - 1) ||
+          (transferTarget != sortedTransferTargetPortal.Get(supernode + 1)))
+      { // RHE of segment
+        auto originalValue = dependentValuesPortal.Get(transferTarget);
+        dependentValuesPortal.Set(transferTarget, originalValue + valuePrefixSum);
+      } // RHE of segment
     }
-    // the RHE of each segment transfers its weight (including all irrelevant prefixes)
-    if ((supernode == this->LastSupernode - 1) ||
-        (sortedTransferTargetValue != sortedTransferTargetNextValue))
-    { // RHE of segment
-      dependentValue += valuePrefixSum;
-    } // RHE of segment
 
     // In serial this worklet implements the following operation
     /*
