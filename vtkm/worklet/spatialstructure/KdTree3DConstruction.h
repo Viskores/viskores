@@ -11,6 +11,7 @@
 #ifndef vtk_m_worklet_KdTree3DConstruction_h
 #define vtk_m_worklet_KdTree3DConstruction_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -32,7 +33,8 @@ namespace worklet
 namespace spatialstructure
 {
 
-class KdTree3DConstruction
+class VTKM_DEPRECATED(1.7, "K-D tree recursive searches are not well supported on GPU devices.")
+  KdTree3DConstruction
 {
 public:
   ////////// General WORKLET for Kd-tree  //////

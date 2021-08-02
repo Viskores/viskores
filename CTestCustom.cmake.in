@@ -36,26 +36,14 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # disable static/dynamic weak symbol warnings
   ".*ld: warning: direct access in function.*"
 
-
-  # disable PTX warning about recursive functions. These look like they can't be silenced
-  # without disabling all PTX warnings, show hide them on the dashboard.
-  # We explicitly only suppress specific worklets so we can see when new recursive
-  # worklets are added
-  "ptxas warning : Stack size for entry function.*NearestNeighborSearch3DWorklet.*"
-  "ptxas warning : Stack size for entry function.*CoordinatesPortal.*"
-  "ptxas warning : Stack size for entry function.*CellRangesExtracter.*"
-
-  # disable nvlink warnings about virtual functions. The Stack size warnings can only
-  # be silenced in CUDA >=9, without disabling all nvlink warnings.
-  "nvlink warning : Stack size for entry function.*NearestNeighborSearch.*"
-  "nvlink warning : Stack size for entry function.*BoundingIntervalHierarchyTester.*"
-  "nvlink warning : Stack size for entry function.*ArrayPortalRef.*"
-  "nvlink warning : Stack size for entry function.*ArrayPortalWrapper.*"
-  "nvlink warning : .*ArrayPortalWrapper.* has address taken but no possible call to it"
-  "nvlink warning : .*ArrayPortalVirtual.* has address taken but no possible call to it"
-  "nvlink warning : .*CellLocatorBoundingIntervalHierarchyExec.* has address taken but no possible call to it"
-  "nvlink warning : .*CellLocatorRectilinearGrid.* has address taken but no possible call to it"
-  "nvlink warning : .*CellLocatorTwoLevel.* has address taken but no possible call to it"
-  "nvlink warning : .*CellLocatorUniformGrid.* has address taken but no possible call to it"
-
+  # disable nvlink warnings about arch not found
+  # These indicate that a flag like -arch is missing from the link command.
+  # I am seeing these for the Kokkos builds, and I don't want to fight the
+  # compiler flags there, so I'm just going to suppress those.
+  ".*nvlink warning.*SM Arch.*not found in.*"
 )
+
+list(APPEND CTEST_CUSTOM_WARNING_MATCH
+  # Let CUDA compiler warn us about recursive functions we should avoid.
+  ".*nvlink warning.*"
+  )

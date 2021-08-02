@@ -1199,7 +1199,55 @@ inline VTKM_EXEC_CONT vtkm::Float64 Ldexp(vtkm::Float64 x, vtkm::Int32 exponent)
 #endif
 }
 
+///////////////
+// Float distance.
 // See: https://randomascii.wordpress.com/2012/01/23/stupid-float-tricks-2/ for why this works.
+
+namespace detail
+{
+
+inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistancePositive(vtkm::Float64 x, vtkm::Float64 y)
+{
+  VTKM_ASSERT(x >= 0);
+  VTKM_ASSERT(y >= 0);
+
+  // Note that:
+  // int64_t xi = *reinterpret_cast<int64_t*>(&x);
+  // int64_t yi = *reinterpret_cast<int64_t*>(&y);
+  // also works (usually), but generates warnings because it is technically undefined behavior
+  // according to the C++ standard.
+  // Good option to have if we get compile errors off memcpy or don't want to #include <cstring> though.
+  // At least on gcc, both versions generate the same assembly.
+  vtkm::UInt64 xi;
+  vtkm::UInt64 yi;
+  memcpy(&xi, &x, sizeof(vtkm::UInt64));
+  memcpy(&yi, &y, sizeof(vtkm::UInt64));
+  if (yi > xi) {
+    return yi - xi;
+  }
+  return xi - yi;
+}
+
+
+inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistancePositive(vtkm::Float32 x, vtkm::Float32 y)
+{
+  VTKM_ASSERT(x >= 0);
+  VTKM_ASSERT(y >= 0);
+
+  vtkm::UInt32 xi_32;
+  vtkm::UInt32 yi_32;
+  memcpy(&xi_32, &x, sizeof(vtkm::UInt32));
+  memcpy(&yi_32, &y, sizeof(vtkm::UInt32));
+  vtkm::UInt64 xi = xi_32;
+  vtkm::UInt64 yi = yi_32;
+  if (yi > xi) {
+    return yi - xi;
+  }
+  return xi - yi;
+}
+
+} // namespace detail
+
 inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float64 x, vtkm::Float64 y)
 {
   static_assert(sizeof(vtkm::Float64) == sizeof(vtkm::UInt64), "vtkm::Float64 is incorrect size.");
@@ -1221,35 +1269,22 @@ inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float64 x, vtkm::Float64 
   {
     vtkm::UInt64 dx, dy;
     if (x < 0) {
-      dy = FloatDistance(0.0, y);
-      dx = FloatDistance(0.0, -x);
+      dy = detail::FloatDistancePositive(0.0, y);
+      dx = detail::FloatDistancePositive(0.0, -x);
     }
     else {
-      dy = FloatDistance(0.0, -y);
-      dx = FloatDistance(0.0, x);
+      dy = detail::FloatDistancePositive(0.0, -y);
+      dx = detail::FloatDistancePositive(0.0, x);
     }
 
     return dx + dy;
   }
 
   if (x < 0 && y < 0) {
-    return FloatDistance(-x, -y);
+    return detail::FloatDistancePositive(-x, -y);
   }
 
-  // Note that:
-  // int64_t xi = *reinterpret_cast<int64_t*>(&x);
-  // int64_t yi = *reinterpret_cast<int64_t*>(&y);
-  // also works, but generates warnings.
-  // Good option to have if we get compile errors off memcpy or don't want to #include <cstring> though.
-  // At least on gcc, both versions generate the same assembly.
-  vtkm::UInt64 xi;
-  vtkm::UInt64 yi;
-  memcpy(&xi, &x, sizeof(vtkm::UInt64));
-  memcpy(&yi, &y, sizeof(vtkm::UInt64));
-  if (yi > xi) {
-    return yi - xi;
-  }
-  return xi - yi;
+  return detail::FloatDistancePositive(x, y);
 }
 
 inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float32 x, vtkm::Float32 y)
@@ -1272,30 +1307,21 @@ inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float32 x, vtkm::Float32 
   {
     vtkm::UInt64 dx, dy;
     if (x < 0) {
-      dy = FloatDistance(0.0f, y);
-      dx = FloatDistance(0.0f, -x);
+      dy = detail::FloatDistancePositive(0.0f, y);
+      dx = detail::FloatDistancePositive(0.0f, -x);
     }
     else {
-      dy = FloatDistance(0.0f, -y);
-      dx = FloatDistance(0.0f, x);
+      dy = detail::FloatDistancePositive(0.0f, -y);
+      dx = detail::FloatDistancePositive(0.0f, x);
     }
     return dx + dy;
   }
 
   if (x < 0 && y < 0) {
-    return FloatDistance(-x, -y);
+    return detail::FloatDistancePositive(-x, -y);
   }
 
-  vtkm::UInt32 xi_32;
-  vtkm::UInt32 yi_32;
-  memcpy(&xi_32, &x, sizeof(vtkm::UInt32));
-  memcpy(&yi_32, &y, sizeof(vtkm::UInt32));
-  vtkm::UInt64 xi = xi_32;
-  vtkm::UInt64 yi = yi_32;
-  if (yi > xi) {
-    return yi - xi;
-  }
-  return xi - yi;
+  return detail::FloatDistancePositive(x, y);
 }
 
 // Computes ab - cd.

@@ -18,7 +18,8 @@ namespace vtkm
 namespace worklet
 {
 
-class KdTree3D
+class VTKM_DEPRECATED(1.7,
+                      "K-D tree recursive searches are not well supported on GPU devices.") KdTree3D
 {
 public:
   KdTree3D() = default;

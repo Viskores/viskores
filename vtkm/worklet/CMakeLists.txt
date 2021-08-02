@@ -36,7 +36,7 @@ set(headers
   FieldStatistics.h
   Gradient.h
   ImageDifference.h
-  KdTree3D.h
+  KdTree3D.h            # Deprecated
   KernelSplatter.h
   Keys.h
   LagrangianStructures.h

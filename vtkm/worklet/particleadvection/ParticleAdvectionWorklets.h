@@ -118,6 +118,11 @@ public:
     vtkm::cont::ArrayHandleConstant<vtkm::Id> maxSteps(MaxSteps, numSeeds);
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
 
+    // TODO: The particle advection sometimes behaves incorrectly on CUDA if the stack size
+    // is not changed thusly. This is concerning as the compiler should be able to determine
+    // staticly the required stack depth. What is even more concerning is that the runtime
+    // does not report a stack overflow. Rather, the worklet just silently reports the wrong
+    // value. Until we determine the root cause, other problems may pop up.
 #ifdef VTKM_CUDA
     // This worklet needs some extra space on CUDA.
     vtkm::cont::cuda::internal::ScopedCudaStackSize stack(16 * 1024);
@@ -193,10 +198,13 @@ public:
     vtkm::worklet::DispatcherMapField<detail::GetSteps> getStepDispatcher{ (detail::GetSteps{}) };
     getStepDispatcher.Invoke(particles, initialStepsTaken);
 
+    // This method uses the same workklet as ParticleAdvectionWorklet::Run (and more). Yet for
+    // some reason ParticleAdvectionWorklet::Run needs this adjustment while this method does
+    // not.
 #ifdef VTKM_CUDA
-    // This worklet needs some extra space on CUDA.
-    vtkm::cont::cuda::internal::ScopedCudaStackSize stack(16 * 1024);
-    (void)stack;
+    // // This worklet needs some extra space on CUDA.
+    // vtkm::cont::cuda::internal::ScopedCudaStackSize stack(16 * 1024);
+    // (void)stack;
 #endif // VTKM_CUDA
 
     //Run streamline worklet
