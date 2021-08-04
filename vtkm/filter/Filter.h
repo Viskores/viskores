@@ -14,6 +14,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Invoker.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 
 #include <vtkm/filter/CreateResult.h>
@@ -178,7 +179,35 @@ public:
   Filter();
 
   VTKM_CONT
-  ~Filter();
+  virtual ~Filter();
+
+  VTKM_CONT
+  virtual bool CanThread() const { return false; }
+
+  VTKM_CONT
+  bool GetRunMultiThreadedFilter() const
+  {
+    return this->CanThread() && this->RunFilterWithMultipleThreads;
+  }
+
+  VTKM_CONT
+  void SetRunMultiThreadedFilter(bool val)
+  {
+    if (this->CanThread())
+      this->RunFilterWithMultipleThreads = val;
+    else
+    {
+      std::string msg =
+        "Multi threaded filter not supported for " + std::string(typeid(Derived).name());
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info, msg);
+    }
+  }
+
+  VTKM_CONT
+  virtual Filter* Clone() const
+  {
+    throw vtkm::cont::ErrorExecution("You must implement Clone in the derived class.");
+  }
 
   /// \brief Specify which subset of types a filter supports.
   ///
@@ -274,6 +303,10 @@ public:
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
   VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input);
 
+  VTKM_CONT vtkm::cont::PartitionedDataSet ExecuteThreaded(
+    const vtkm::cont::PartitionedDataSet& input,
+    vtkm::Id numThreads);
+
   template <typename DerivedPolicy>
   VTKM_DEPRECATED(1.6,
                   "Filter::Execute no longer guarantees policy modifications. "
@@ -295,11 +328,20 @@ public:
   /// which device adapters a filter uses.
   void SetInvoker(vtkm::cont::Invoker inv) { this->Invoke = inv; }
 
+  VTKM_CONT
+  virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
+
 protected:
   vtkm::cont::Invoker Invoke;
 
+  vtkm::filter::Filter<Derived>& operator=(const vtkm::filter::Filter<Derived>&) = default;
+
+  VTKM_CONT
+  void CopyStateFrom(const Filter<Derived>* filter) { *this = *filter; }
+
 private:
   vtkm::filter::FieldSelection FieldsToPass;
+  bool RunFilterWithMultipleThreads = false;
 };
 }
 } // namespace vtkm::filter

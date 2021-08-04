@@ -98,6 +98,11 @@ public:
   //@}
 
 protected:
+  vtkm::filter::FilterField<Derived>& operator=(const vtkm::filter::FilterField<Derived>&) =
+    default;
+  VTKM_CONT
+  void CopyStateFrom(const FilterField<Derived>* filter) { *this = *filter; }
+
 private:
   std::string OutputFieldName;
   vtkm::Id CoordinateSystemIndex;

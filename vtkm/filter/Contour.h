@@ -34,6 +34,17 @@ class VTKM_FILTER_CONTOUR_EXPORT Contour : public vtkm::filter::FilterDataSetWit
 public:
   using SupportedTypes = vtkm::List<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>;
 
+  VTKM_CONT
+  Filter* Clone() const override
+  {
+    Contour* clone = new Contour();
+    clone->CopyStateFrom(this);
+    return clone;
+  }
+
+  VTKM_CONT
+  bool CanThread() const override { return true; }
+
   Contour();
 
   void SetNumberOfIsoValues(vtkm::Id num);
@@ -153,6 +164,21 @@ public:
     //use the same meta data as the input so we get the same field name, etc.
     result.AddField(fieldMeta.AsField(fieldArray));
     return true;
+  }
+
+protected:
+  VTKM_CONT
+  void CopyStateFrom(const Contour* contour)
+  {
+    this->FilterDataSetWithField<Contour>::CopyStateFrom(contour);
+
+    this->IsoValues = contour->IsoValues;
+    this->GenerateNormals = contour->GenerateNormals;
+    this->AddInterpolationEdgeIds = contour->AddInterpolationEdgeIds;
+    this->ComputeFastNormalsForStructured = contour->ComputeFastNormalsForStructured;
+    this->ComputeFastNormalsForUnstructured = contour->ComputeFastNormalsForUnstructured;
+    this->NormalArrayName = contour->NormalArrayName;
+    this->InterpolationEdgeIdsArrayName = contour->InterpolationEdgeIdsArrayName;
   }
 
 private:
