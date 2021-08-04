@@ -39,6 +39,7 @@
 #endif // VTKM_ENABLE_LOGGING
 
 #include <string>
+#include <typeindex>
 #include <typeinfo>
 
 /// \file Logging.h
@@ -472,14 +473,8 @@ VTKM_CONT inline std::string GetSizeString(T&& bytes, int prec = 2)
  * enabled and the platform supports it, the type name will also be demangled.
  * @{
  */
-inline VTKM_CONT std::string TypeToString(const std::type_info& t)
-{
-#ifdef VTKM_ENABLE_LOGGING
-  return loguru::demangle(t.name()).c_str();
-#else  // VTKM_ENABLE_LOGGING
-  return t.name();
-#endif // VTKM_ENABLE_LOGGING
-}
+VTKM_CONT_EXPORT VTKM_CONT std::string TypeToString(const std::type_info& t);
+VTKM_CONT_EXPORT VTKM_CONT std::string TypeToString(const std::type_index& t);
 template <typename T>
 inline VTKM_CONT std::string TypeToString()
 {

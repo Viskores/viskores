@@ -447,6 +447,13 @@ public:
   /// Returns an empty string if no array is stored.
   VTKM_CONT std::string GetStorageTypeName() const;
 
+  /// \brief Returns a string representation of the underlying data type.
+  ///
+  /// The returned string will be of the form `vtkm::cont::ArrayHandle<T, S>` rather than the name
+  /// of an actual subclass. If no array is stored, an empty string is returned.
+  ///
+  VTKM_CONT std::string GetArrayTypeName() const;
+
   /// Returns true if this array matches the ValueType template argument.
   ///
   template <typename ValueType>
@@ -580,7 +587,7 @@ public:
     if (!this->IsType<ArrayType>())
     {
       VTKM_LOG_CAST_FAIL(*this, decltype(array));
-      throwFailedDynamicCast(vtkm::cont::TypeToString(*this), vtkm::cont::TypeToString(array));
+      throwFailedDynamicCast(this->GetArrayTypeName(), vtkm::cont::TypeToString(array));
     }
 
     array = *reinterpret_cast<ArrayType*>(this->Container->ArrayHandlePointer);

@@ -237,7 +237,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(const vtkm::cont::Unknown
       return ArrayRangeCompute(array.AsArrayHandle<vtkm::cont::ArrayHandleIndex>(), device);
     }
   }
-  catch (vtkm::cont::ErrorBadValue&)
+  catch (vtkm::cont::ErrorBadType&)
   {
     // If a cast/call failed, try falling back to a more general implementation.
   }
