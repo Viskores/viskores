@@ -457,7 +457,7 @@ void TryUnusualType()
     CheckArrayVariant(array, 1, true);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type.");
   }
-  catch (vtkm::cont::ErrorBadValue&)
+  catch (vtkm::cont::ErrorBadType&)
   {
     std::cout << "  Caught exception for unrecognized type." << std::endl;
   }
