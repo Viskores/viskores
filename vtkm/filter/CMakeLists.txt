@@ -86,6 +86,7 @@ set(extra_headers
   Mask.h
   MaskPoints.h
   MeshQuality.h
+  MIRFilter.h
   NDEntropy.h
   NDHistogram.h
   ParticleDensityBase.h
@@ -141,6 +142,7 @@ set(extra_header_template_sources
   Mask.hxx
   MaskPoints.hxx
   MeshQuality.hxx
+  MIRFilter.hxx
   NDEntropy.hxx
   NDHistogram.hxx
   ParticleDensityCloudInCell.hxx
