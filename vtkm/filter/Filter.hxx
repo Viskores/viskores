@@ -353,25 +353,22 @@ inline VTKM_CONT vtkm::Id Filter<Derived>::DetermineNumberOfThreads(
   vtkm::Id availThreads = 1;
 
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  const bool runOnSerial = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagSerial{});
-  const bool runOnCuda = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{});
-  const bool runOnKokkos = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagKokkos{});
-  const bool runOnOpenMP = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagOpenMP{});
 
-  if (runOnSerial)
-    availThreads = 1;
-  else if (runOnCuda)
+  if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{}))
     availThreads = threadsPerGPU;
-  else if (runOnOpenMP)
-    availThreads = threadsPerCPU;
-  else if (runOnKokkos)
+  else if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagKokkos{}))
   {
+    //Kokkos doesn't support threading on the CPU.
 #ifdef VTKM_KOKKOS_CUDA
     availThreads = threadsPerGPU;
 #else
     availThreads = 1;
 #endif
   }
+  else if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagSerial{}))
+    availThreads = 1;
+  else
+    availThreads = threadsPerCPU;
 
   vtkm::Id numThreads = std::min<vtkm::Id>(numDS, availThreads);
   return numThreads;
