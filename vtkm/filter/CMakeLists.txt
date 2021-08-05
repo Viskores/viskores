@@ -28,6 +28,7 @@ set(common_headers
   MapFieldPermutation.h
   PolicyBase.h
   PolicyDefault.h
+  TaskQueue.h
   Threshold.h
   ThresholdPoints.h
   )
