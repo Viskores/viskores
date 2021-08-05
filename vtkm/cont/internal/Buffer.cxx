@@ -716,7 +716,15 @@ void* Buffer::GetMetaData(const std::string& type) const
 bool Buffer::IsAllocatedOnHost() const
 {
   LockType lock = this->Internals->GetLock();
-  return this->Internals->GetHostBuffer(lock).UpToDate;
+  if (this->Internals->GetNumberOfBytes(lock) > 0)
+  {
+    return this->Internals->GetHostBuffer(lock).UpToDate;
+  }
+  else
+  {
+    // Nothing allocated. Say the data exists everywhere.
+    return true;
+  }
 }
 
 bool Buffer::IsAllocatedOnDevice(vtkm::cont::DeviceAdapterId device) const
@@ -724,7 +732,15 @@ bool Buffer::IsAllocatedOnDevice(vtkm::cont::DeviceAdapterId device) const
   if (device.IsValueValid())
   {
     LockType lock = this->Internals->GetLock();
-    return this->Internals->GetDeviceBuffers(lock)[device].UpToDate;
+    if (this->Internals->GetNumberOfBytes(lock) > 0)
+    {
+      return this->Internals->GetDeviceBuffers(lock)[device].UpToDate;
+    }
+    else
+    {
+      // Nothing allocated. Say the data exists everywhere.
+      return true;
+    }
   }
   else if (device == vtkm::cont::DeviceAdapterTagUndefined{})
   {
@@ -735,6 +751,11 @@ bool Buffer::IsAllocatedOnDevice(vtkm::cont::DeviceAdapterId device) const
   {
     // Return if allocated on any device.
     LockType lock = this->Internals->GetLock();
+    if (this->Internals->GetNumberOfBytes(lock) <= 0)
+    {
+      // Nothing allocated. Say the data exists everywhere.
+      return true;
+    }
     for (auto&& deviceBuffer : this->Internals->GetDeviceBuffers(lock))
     {
       if (deviceBuffer.second.UpToDate)
