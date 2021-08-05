@@ -682,7 +682,7 @@ public:
     if (!this->IsBaseComponentType<BaseComponentType>())
     {
       VTKM_LOG_CAST_FAIL(*this, ComponentArrayType);
-      throwFailedDynamicCast(vtkm::cont::TypeToString(*this),
+      throwFailedDynamicCast("UnknownArrayHandle with " + this->GetArrayTypeName(),
                              "component array of " + vtkm::cont::TypeToString<BaseComponentType>());
     }
 
