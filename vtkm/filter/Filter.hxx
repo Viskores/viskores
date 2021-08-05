@@ -216,27 +216,7 @@ vtkm::cont::PartitionedDataSet CallPrepareForExecutionInternal(
     vtkm::filter::DataSetQueue outputQueue;
 
     vtkm::Id numThreads = self->DetermineNumberOfThreads(input);
-    std::cout << "nThreads= " << numThreads << std::endl;
 
-#if 0
-    std::vector<std::thread> threads;
-    for (vtkm::Id i = 0; i < numThreads; i++)
-    {
-      //auto clone = self->Clone();
-      //auto filterClone = static_cast<Derived*>(clone.get());
-      std::thread t(RunFilter<Derived, DerivedPolicy>,
-                    self,
-                    policy,
-                    std::ref(inputQueue),
-                    std::ref(outputQueue));
-      threads.push_back(std::move(t));
-    }
-
-    for (auto& t : threads)
-      t.join();
-    output = outputQueue.Get();
-#endif
-#if 1
     //Run 'numThreads' filters.
     std::vector<std::future<void>> futures(static_cast<std::size_t>(numThreads));
     for (std::size_t i = 0; i < static_cast<std::size_t>(numThreads); i++)
@@ -255,7 +235,6 @@ vtkm::cont::PartitionedDataSet CallPrepareForExecutionInternal(
 
     //Get results from the outputQueue.
     output = outputQueue.Get();
-#endif
   }
   else
   {
@@ -378,9 +357,6 @@ inline VTKM_CONT vtkm::Id Filter<Derived>::DetermineNumberOfThreads(
   const bool runOnCuda = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{});
   const bool runOnKokkos = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagKokkos{});
   const bool runOnOpenMP = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagOpenMP{});
-
-  std::cout << "****************Run: " << runOnSerial << " " << runOnCuda << " " << runOnKokkos
-            << " " << runOnOpenMP << std::endl;
 
   if (runOnSerial)
     availThreads = 1;

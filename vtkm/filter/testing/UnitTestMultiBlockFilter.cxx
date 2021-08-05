@@ -45,14 +45,8 @@ void ValidateField(const ArrayType& truthField, const ArrayType& resultField)
   const auto truthPortal = truthField.ReadPortal();
   const auto resultPortal = resultField.ReadPortal();
   for (vtkm::Id j = 0; j < numPts; j++)
-  {
-    auto diff = ValueDifference(truthPortal.Get(j), resultPortal.Get(j));
-    if (diff > tol)
-      std::cout << "****** error at j= " << j << " diff= " << diff << " nPts= " << numPts
-                << std::endl;
     VTKM_TEST_ASSERT(ValueDifference(truthPortal.Get(j), resultPortal.Get(j)) < tol,
                      "Wrong value in field");
-  }
 }
 
 void ValidateResults(const vtkm::cont::PartitionedDataSet& truth,
@@ -66,9 +60,6 @@ void ValidateResults(const vtkm::cont::PartitionedDataSet& truth,
   {
     auto truthDS = truth.GetPartition(i);
     auto resultDS = result.GetPartition(i);
-
-    std::cout << "Validate: " << truthDS.GetNumberOfPoints()
-              << " :: " << resultDS.GetNumberOfPoints() << std::endl;
 
     VTKM_TEST_ASSERT(truthDS.GetNumberOfPoints() == resultDS.GetNumberOfPoints(),
                      "Wrong number of points");
