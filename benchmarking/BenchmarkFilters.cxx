@@ -14,7 +14,6 @@
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>
 
-#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellSetExplicit.h>
@@ -193,7 +192,7 @@ void BenchThreshold(::benchmark::State& state)
   const auto range = []() -> vtkm::Range {
     auto ptScalarField =
       InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-    return vtkm::cont::ArrayGetValue(0, ptScalarField.GetRange());
+    return ptScalarField.GetRange().ReadPortal().Get(0);
   }();
 
   // Extract points with values between 25-75% of the range
@@ -228,7 +227,7 @@ void BenchThresholdPoints(::benchmark::State& state)
   const auto range = []() -> vtkm::Range {
     auto ptScalarField =
       InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-    return vtkm::cont::ArrayGetValue(0, ptScalarField.GetRange());
+    return ptScalarField.GetRange().ReadPortal().Get(0);
   }();
 
   // Extract points with values between 25-75% of the range
@@ -359,7 +358,7 @@ void BenchContour(::benchmark::State& state)
   // scalar range:
   const vtkm::Range scalarRange = []() -> vtkm::Range {
     auto field = InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-    return vtkm::cont::ArrayGetValue(0, field.GetRange());
+    return field.GetRange().ReadPortal().Get(0);
   }();
   const auto step = scalarRange.Length() / static_cast<vtkm::Float64>(numIsoVals + 1);
   const auto minIsoVal = scalarRange.Min + (step / 2.);
