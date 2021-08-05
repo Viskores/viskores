@@ -18,8 +18,9 @@
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandleRecombineVec.h>
 #include <vtkm/cont/ArrayHandleStride.h>
-#include <vtkm/cont/CastAndCall.h>
-#include <vtkm/cont/DefaultTypes.h>
+#include <vtkm/cont/StorageList.h>
+
+#include <vtkm/TypeList.h>
 
 #include <memory>
 #include <typeindex>
@@ -513,10 +514,10 @@ public:
   template <typename NewValueTypeList>
   VTKM_DEPRECATED(1.6, "Specify both value types and storage types.")
   VTKM_CONT
-    vtkm::cont::UncertainArrayHandle<NewValueTypeList, VTKM_DEFAULT_STORAGE_LIST> ResetTypes(
+    vtkm::cont::UncertainArrayHandle<NewValueTypeList, vtkm::cont::StorageListCommon> ResetTypes(
       NewValueTypeList = NewValueTypeList{}) const
   {
-    return this->ResetTypes<NewValueTypeList, VTKM_DEFAULT_STORAGE_LIST>();
+    return this->ResetTypes<NewValueTypeList, vtkm::cont::StorageListCommon>();
   }
 
   /// \brief Returns the number of values in the array.
@@ -806,13 +807,13 @@ private:
   template <typename... Args>
   VTKM_CONT void CastAndCallImpl(std::false_type, Args&&... args) const
   {
-    this->CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
+    this->CastAndCallForTypes<vtkm::TypeListCommon, vtkm::cont::StorageListCommon>(
       std::forward<Args>(args)...);
   }
   template <typename StorageList, typename... Args>
   VTKM_CONT void CastAndCallImpl(std::true_type, StorageList, Args&&... args) const
   {
-    this->CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, StorageList>(std::forward<Args>(args)...);
+    this->CastAndCallForTypes<vtkm::TypeListCommon, StorageList>(std::forward<Args>(args)...);
   }
 };
 
@@ -1014,13 +1015,6 @@ VTKM_CONT inline ArrayHandleType Cast(const vtkm::cont::UnknownArrayHandle& arra
   return array.template AsArrayHandle<ArrayHandleType>();
 }
 
-template <typename Functor, typename... Args>
-void CastAndCall(const UnknownArrayHandle& handle, Functor&& f, Args&&... args)
-{
-  handle.CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
-    std::forward<Functor>(f), std::forward<Args>(args)...);
-}
-
 namespace detail
 {
 
@@ -1073,17 +1067,6 @@ inline void UnknownArrayHandle::CastAndCallWithExtractedArray(Functor&& functor,
     detail::ThrowCastAndCallException(*this, typeid(vtkm::TypeListScalarAll));
   }
 }
-
-namespace internal
-{
-
-template <>
-struct DynamicTransformTraits<vtkm::cont::UnknownArrayHandle>
-{
-  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
-};
-
-} // namespace internal
 
 }
 } // namespace vtkm::cont
