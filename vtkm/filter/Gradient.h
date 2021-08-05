@@ -96,6 +96,30 @@ public:
                                 const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                 const vtkm::filter::FieldMetadata& fieldMeta,
                                 vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  VTKM_CONT
+  Filter* Clone() const override
+  {
+    Gradient* clone = new Gradient();
+    clone->CopyStateFrom(this);
+    return clone;
+  }
+
+  VTKM_CONT
+  bool CanThread() const override { return true; }
+
+protected:
+  VTKM_CONT
+  void CopyStateFrom(const Gradient* gradient)
+  {
+    this->FilterField<Gradient>::CopyStateFrom(gradient);
+
+    this->ComputePointGradient = gradient->ComputePointGradient;
+    this->ComputeDivergence = gradient->ComputeDivergence;
+    this->ComputeVorticity = gradient->ComputeVorticity;
+    this->ComputeQCriterion = gradient->ComputeQCriterion;
+    this->StoreGradient = gradient->StoreGradient;
+    this->RowOrdering = gradient->RowOrdering;
+  }
 
 private:
   bool ComputePointGradient = false;
