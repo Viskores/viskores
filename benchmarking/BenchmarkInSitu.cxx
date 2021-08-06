@@ -49,11 +49,14 @@ namespace
 const uint32_t DEFAULT_NUM_CYCLES = 20;
 const vtkm::Id DEFAULT_DATASET_DIM = 128;
 const vtkm::FloatDefault DEFAULT_SPACING = 0.1f;
+const vtkm::Id DEFAULT_IMAGE_SIZE = 1024;
 
 // Hold configuration state (e.g. active device):
 vtkm::cont::InitializeResult Config;
 // Input dataset dimensions:
-static vtkm::Id DataSetDim;
+vtkm::Id DataSetDim;
+// Image size:
+vtkm::Id ImageSize;
 // The input datasets we'll use on the filters:
 static vtkm::cont::DataSet InputDataSet;
 static vtkm::cont::PartitionedDataSet PartitionedInputDataSet;
@@ -376,7 +379,7 @@ vtkm::rendering::Canvas* RenderDataSets(const std::vector<vtkm::cont::DataSet>& 
   camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
   camera.SetPosition(totalExtent * (mag * 1.5f));
 
-  vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
+  vtkm::rendering::CanvasRayTracer canvas(ImageSize, ImageSize);
 
   auto mapper = [=]() -> std::unique_ptr<vtkm::rendering::Mapper> {
     switch (mode)
@@ -1003,6 +1006,7 @@ enum OptionIndex
   UNKNOWN,
   HELP,
   DATASET_DIM,
+  IMAGE_SIZE,
 };
 
 void ParseBenchmarkOptions(int& argc, char** argv)
@@ -1025,6 +1029,14 @@ void ParseBenchmarkOptions(int& argc, char** argv)
                     "  -s, --size <N> \tSpecify dataset dimension and "
                     "dataset with NxNxN dimensions and 0.1 spacing is created. "
                     "If not specified, N=128" });
+  usage.push_back({ IMAGE_SIZE,
+                    0,
+                    "i",
+                    "image-size",
+                    Arg::Number,
+                    "  -i, --image-size <N> \tSpecify size of the rendered image."
+                    " The image is rendered as a square of size NxN. "
+                    "If not specified, N=1024" });
   usage.push_back({ 0, 0, nullptr, nullptr, nullptr, nullptr });
 
   option::Stats stats(usage.data(), argc - 1, argv + 1);
@@ -1049,10 +1061,20 @@ void ParseBenchmarkOptions(int& argc, char** argv)
   }
   else
   {
-    DataSetDim = 128;
+    DataSetDim = DEFAULT_DATASET_DIM;
+  }
+  if (options[IMAGE_SIZE])
+  {
+    std::istringstream parse(options[IMAGE_SIZE].arg);
+    parse >> ImageSize;
+  }
+  else
+  {
+    ImageSize = DEFAULT_IMAGE_SIZE;
   }
 
-  std::cerr << "Using data set dimensions(N) = " << DataSetDim << std::endl;
+  std::cerr << "Using data set dimensions = " << DataSetDim << std::endl;
+  std::cerr << "Using image size = " << ImageSize << "x" << ImageSize << std::endl;
 
   // Now go back through the arg list and remove anything that is not in the list of
   // unknown options or non-option arguments.
