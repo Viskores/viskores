@@ -338,12 +338,9 @@ void BuildInputDataSet(uint32_t cycle,
   InputDataSet = inputDataSet;
 }
 
-void RenderDataSets(const std::vector<vtkm::cont::DataSet>& dataSets,
-                    RenderingMode mode,
-                    std::string fieldName,
-                    std::string bench,
-                    bool isStructured,
-                    uint32_t cycle)
+vtkm::rendering::Canvas* RenderDataSets(const std::vector<vtkm::cont::DataSet>& dataSets,
+                                        RenderingMode mode,
+                                        std::string fieldName)
 {
   vtkm::rendering::Scene scene;
   vtkm::cont::ColorTable colorTable("inferno");
@@ -412,20 +409,26 @@ void RenderDataSets(const std::vector<vtkm::cont::DataSet>& dataSets,
                                vtkm::rendering::Color(0.2f, 0.4f, 0.2f));
   view.Paint();
 
-  // TODO: Remove this later, once the various benchmark quirks are fixed
-  (void)cycle;
-  (void)isStructured;
-  (void)bench;
-  /*
-  std::ostringstream p;
-  p << "output_"
-    << "c" << cycle << "_" << (isStructured ? "structured" : "unstructured") << "_"
-    << (dataSets.size() == 1 ? "single_" : "multi_") << bench << "_"
-    << (mode == RenderingMode::Mesh ? "mesh" : (mode == RenderingMode::Volume ? "volume" : "ray"))
-    << ".png";
-  view.SaveAs(p.str());
-  */
+  return view.GetCanvas().NewCopy();
 }
+
+void WriteToDisk(const vtkm::rendering::Canvas& canvas,
+                 RenderingMode mode,
+                 std::string bench,
+                 bool isStructured,
+                 bool isMultiBlock,
+                 uint32_t cycle)
+{
+  std::ostringstream nameBuilder;
+  nameBuilder << "insitu_" << bench << "_"
+              << "cycle_" << cycle << "_" << (isStructured ? "structured_" : "unstructured_")
+              << (isMultiBlock ? "multi_" : "single_")
+              << (mode == RenderingMode::Mesh ? "mesh"
+                                              : (mode == RenderingMode::Volume ? "volume" : "ray"))
+              << ".png";
+  canvas.SaveAs(nameBuilder.str());
+}
+
 
 template <typename DataSetType>
 DataSetType RunContourHelper(vtkm::filter::Contour& filter,
@@ -472,6 +475,7 @@ void BenchContour(::benchmark::State& state)
   vtkm::cont::Timer totalTimer{ device };
   vtkm::cont::Timer filterTimer{ device };
   vtkm::cont::Timer renderTimer{ device };
+  vtkm::cont::Timer writeTimer{ device };
 
   for (auto _ : state)
   {
@@ -494,8 +498,12 @@ void BenchContour(::benchmark::State& state)
     filterTimer.Stop();
 
     renderTimer.Start();
-    RenderDataSets(dataSets, renderAlgo, PointScalarsName, "contour", isStructured, cycle);
+    auto canvas = RenderDataSets(dataSets, renderAlgo, PointScalarsName);
     renderTimer.Stop();
+
+    writeTimer.Start();
+    WriteToDisk(*canvas, renderAlgo, "contour", isStructured, isMultiBlock, cycle);
+    writeTimer.Stop();
 
     totalTimer.Stop();
 
@@ -503,7 +511,8 @@ void BenchContour(::benchmark::State& state)
     state.counters.insert(
       { { "InputGenTime", static_cast<uint32_t>(inputGenTimer.GetElapsedTime() * 1000) },
         { "FilterTime", static_cast<uint32_t>(filterTimer.GetElapsedTime() * 1000) },
-        { "RenderTime", static_cast<uint32_t>(renderTimer.GetElapsedTime() * 1000) } });
+        { "RenderTime", static_cast<uint32_t>(renderTimer.GetElapsedTime() * 1000) },
+        { "WriteTime", static_cast<uint32_t>(writeTimer.GetElapsedTime() * 1000) } });
   }
 }
 
@@ -628,6 +637,7 @@ void BenchStreamlines(::benchmark::State& state)
   vtkm::cont::Timer totalTimer{ device };
   vtkm::cont::Timer filterTimer{ device };
   vtkm::cont::Timer renderTimer{ device };
+  vtkm::cont::Timer writeTimer{ device };
 
   for (auto _ : state)
   {
@@ -651,8 +661,12 @@ void BenchStreamlines(::benchmark::State& state)
     filterTimer.Stop();
 
     renderTimer.Start();
-    RenderDataSets(dataSets, renderAlgo, "pointvar", "streamlines", isStructured, cycle);
+    auto canvas = RenderDataSets(dataSets, renderAlgo, "pointvar");
     renderTimer.Stop();
+
+    writeTimer.Start();
+    WriteToDisk(*canvas, renderAlgo, "streamlines", isStructured, isMultiBlock, cycle);
+    writeTimer.Stop();
 
     totalTimer.Stop();
 
@@ -660,7 +674,8 @@ void BenchStreamlines(::benchmark::State& state)
     state.counters.insert(
       { { "InputGenTime", static_cast<uint32_t>(inputGenTimer.GetElapsedTime() * 1000) },
         { "FilterTime", static_cast<uint32_t>(filterTimer.GetElapsedTime() * 1000) },
-        { "RenderTime", static_cast<uint32_t>(renderTimer.GetElapsedTime() * 1000) } });
+        { "RenderTime", static_cast<uint32_t>(renderTimer.GetElapsedTime() * 1000) },
+        { "WriteTime", static_cast<uint32_t>(writeTimer.GetElapsedTime() * 1000) } });
   }
 }
 
@@ -739,6 +754,7 @@ void BenchSlice(::benchmark::State& state)
   vtkm::cont::Timer totalTimer{ device };
   vtkm::cont::Timer filterTimer{ device };
   vtkm::cont::Timer renderTimer{ device };
+  vtkm::cont::Timer writeTimer{ device };
 
   for (auto _ : state)
   {
@@ -769,8 +785,12 @@ void BenchSlice(::benchmark::State& state)
     filterTimer.Stop();
 
     renderTimer.Start();
-    RenderDataSets(dataSets, renderAlgo, PointScalarsName, "slice", isStructured, cycle);
+    auto canvas = RenderDataSets(dataSets, renderAlgo, PointScalarsName);
     renderTimer.Stop();
+
+    writeTimer.Start();
+    WriteToDisk(*canvas, renderAlgo, "slice", isStructured, isMultiBlock, cycle);
+    writeTimer.Stop();
 
     totalTimer.Stop();
 
@@ -778,7 +798,8 @@ void BenchSlice(::benchmark::State& state)
     state.counters.insert(
       { { "InputGenTime", static_cast<uint32_t>(inputGenTimer.GetElapsedTime() * 1000) },
         { "FilterTime", static_cast<uint32_t>(filterTimer.GetElapsedTime() * 1000) },
-        { "RenderTime", static_cast<uint32_t>(renderTimer.GetElapsedTime() * 1000) } });
+        { "RenderTime", static_cast<uint32_t>(renderTimer.GetElapsedTime() * 1000) },
+        { "WriteTime", static_cast<uint32_t>(writeTimer.GetElapsedTime() * 1000) } });
   }
 }
 
@@ -815,6 +836,9 @@ void BenchMeshRendering(::benchmark::State& state)
   const bool isMultiBlock = static_cast<bool>(state.range(2));
 
   vtkm::cont::Timer inputGenTimer{ device };
+  vtkm::cont::Timer renderTimer{ device };
+  vtkm::cont::Timer writeTimer{ device };
+
   inputGenTimer.Start();
   BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim, DEFAULT_SPACING);
   inputGenTimer.Stop();
@@ -826,14 +850,25 @@ void BenchMeshRendering(::benchmark::State& state)
     (void)_;
 
     totalTimer.Start();
+
     std::vector<vtkm::cont::DataSet> dataSets =
       isMultiBlock ? ExtractDataSets(PartitionedInputDataSet) : ExtractDataSets(InputDataSet);
-    RenderDataSets(dataSets, RenderingMode::Mesh, PointScalarsName, "mesh", isStructured, cycle);
+
+    renderTimer.Start();
+    auto canvas = RenderDataSets(dataSets, RenderingMode::Mesh, PointScalarsName);
+    renderTimer.Stop();
+
+    writeTimer.Start();
+    WriteToDisk(*canvas, RenderingMode::Mesh, "mesh", isStructured, isMultiBlock, cycle);
+    writeTimer.Stop();
+
     totalTimer.Stop();
 
     state.SetIterationTime(totalTimer.GetElapsedTime());
     state.counters.insert(
-      { { "InputGenTime", static_cast<uint32_t>(inputGenTimer.GetElapsedTime() * 1000) } });
+      { { "InputGenTime", static_cast<uint32_t>(inputGenTimer.GetElapsedTime() * 1000) },
+        { "RenderTime", static_cast<uint32_t>(renderTimer.GetElapsedTime() * 1000) },
+        { "WriteTime", static_cast<uint32_t>(writeTimer.GetElapsedTime() * 1000) } });
   }
 }
 
@@ -871,22 +906,31 @@ void BenchVolumeRendering(::benchmark::State& state)
   inputGenTimer.Stop();
 
   vtkm::cont::Timer totalTimer{ device };
+  vtkm::cont::Timer renderTimer{ device };
+  vtkm::cont::Timer writeTimer{ device };
 
   for (auto _ : state)
   {
     (void)_;
-    vtkm::rendering::Scene scene;
-
     totalTimer.Start();
+
+    renderTimer.Start();
     std::vector<vtkm::cont::DataSet> dataSets =
       isMultiBlock ? ExtractDataSets(PartitionedInputDataSet) : ExtractDataSets(InputDataSet);
-    RenderDataSets(
-      dataSets, RenderingMode::Volume, PointScalarsName, "volume", isStructured, cycle);
+    auto canvas = RenderDataSets(dataSets, RenderingMode::Volume, PointScalarsName);
+    renderTimer.Stop();
+
+    writeTimer.Start();
+    WriteToDisk(*canvas, RenderingMode::Volume, "volume", isStructured, isMultiBlock, cycle);
+    writeTimer.Stop();
+
     totalTimer.Stop();
 
     state.SetIterationTime(totalTimer.GetElapsedTime());
     state.counters.insert(
-      { { "InputGenTime", static_cast<uint32_t>(inputGenTimer.GetElapsedTime() * 1000) } });
+      { { "InputGenTime", static_cast<uint32_t>(inputGenTimer.GetElapsedTime() * 1000) },
+        { "RenderTime", static_cast<uint32_t>(renderTimer.GetElapsedTime() * 1000) },
+        { "WriteTime", static_cast<uint32_t>(writeTimer.GetElapsedTime() * 1000) } });
   }
 }
 
