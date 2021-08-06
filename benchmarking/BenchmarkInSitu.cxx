@@ -18,7 +18,6 @@
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/BoundsCompute.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/FieldRangeCompute.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Logging.h>
@@ -28,7 +27,6 @@
 #include <vtkm/cont/internal/OptionParser.h>
 
 #include <vtkm/filter/Contour.h>
-#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/Gradient.h>
 #include <vtkm/filter/Slice.h>
 #include <vtkm/filter/Streamline.h>
@@ -43,6 +41,7 @@
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
 
+#include <vtkm/source/PerlinNoise.h>
 namespace
 {
 
@@ -73,163 +72,6 @@ enum class RenderingMode
   Volume = 3,
 };
 
-struct PerlinNoise3DWorklet : public vtkm::worklet::WorkletVisitPointsWithCells
-{
-  using ControlSignature = void(CellSetIn, FieldInPoint, WholeArrayIn, FieldOut noise);
-  using ExecutionSignature = void(_2, _3, _4);
-
-  VTKM_CONT PerlinNoise3DWorklet(vtkm::Id repeat)
-    : Repeat(repeat)
-  {
-  }
-
-  // Adapted from https://adrianb.io/2014/08/09/perlinnoise.html
-  // Archive link: https://web.archive.org/web/20210329174559/https://adrianb.io/2014/08/09/perlinnoise.html
-  template <typename PointVecType, typename PermsPortal, typename OutType>
-  VTKM_EXEC void operator()(const PointVecType& pos, const PermsPortal& perms, OutType& noise) const
-  {
-    vtkm::Id xi = static_cast<vtkm::Id>(pos[0]) % this->Repeat;
-    vtkm::Id yi = static_cast<vtkm::Id>(pos[1]) % this->Repeat;
-    vtkm::Id zi = static_cast<vtkm::Id>(pos[2]) % this->Repeat;
-    vtkm::FloatDefault xf = pos[0] - xi;
-    vtkm::FloatDefault yf = pos[1] - yi;
-    vtkm::FloatDefault zf = pos[2] - zi;
-    vtkm::FloatDefault u = this->Fade(xf);
-    vtkm::FloatDefault v = this->Fade(yf);
-    vtkm::FloatDefault w = this->Fade(zf);
-
-    vtkm::Id aaa, aba, aab, abb, baa, bba, bab, bbb;
-    aaa = perms[perms[perms[xi] + yi] + zi];
-    aba = perms[perms[perms[xi] + this->Increment(yi)] + zi];
-    aab = perms[perms[perms[xi] + yi] + this->Increment(zi)];
-    abb = perms[perms[perms[xi] + this->Increment(yi)] + this->Increment(zi)];
-    baa = perms[perms[perms[this->Increment(xi)] + yi] + zi];
-    bba = perms[perms[perms[this->Increment(xi)] + this->Increment(yi)] + zi];
-    bab = perms[perms[perms[this->Increment(xi)] + yi] + this->Increment(zi)];
-    bbb = perms[perms[perms[this->Increment(xi)] + this->Increment(yi)] + this->Increment(zi)];
-
-    vtkm::FloatDefault x1, x2, y1, y2;
-    x1 = vtkm::Lerp(this->Gradient(aaa, xf, yf, zf), this->Gradient(baa, xf - 1, yf, zf), u);
-    x2 =
-      vtkm::Lerp(this->Gradient(aba, xf, yf - 1, zf), this->Gradient(bba, xf - 1, yf - 1, zf), u);
-    y1 = vtkm::Lerp(x1, x2, v);
-
-    x1 =
-      vtkm::Lerp(this->Gradient(aab, xf, yf, zf - 1), this->Gradient(bab, xf - 1, yf, zf - 1), u);
-    x2 = vtkm::Lerp(
-      this->Gradient(abb, xf, yf - 1, zf - 1), this->Gradient(bbb, xf - 1, yf - 1, zf - 1), u);
-    y2 = vtkm::Lerp(x1, x2, v);
-
-    noise = (vtkm::Lerp(y1, y2, w) + OutType(1.0f)) * OutType(0.5f);
-  }
-
-  VTKM_EXEC vtkm::FloatDefault Fade(vtkm::FloatDefault t) const
-  {
-    return t * t * t * (t * (t * 6 - 15) + 10);
-  }
-
-  VTKM_EXEC vtkm::Id Increment(vtkm::Id n) const { return (n + 1) % this->Repeat; }
-
-  VTKM_EXEC vtkm::FloatDefault Gradient(vtkm::Id hash,
-                                        vtkm::FloatDefault x,
-                                        vtkm::FloatDefault y,
-                                        vtkm::FloatDefault z) const
-  {
-    switch (hash & 0xF)
-    {
-      case 0x0:
-        return x + y;
-      case 0x1:
-        return -x + y;
-      case 0x2:
-        return x - y;
-      case 0x3:
-        return -x - y;
-      case 0x4:
-        return x + z;
-      case 0x5:
-        return -x + z;
-      case 0x6:
-        return x - z;
-      case 0x7:
-        return -x - z;
-      case 0x8:
-        return y + z;
-      case 0x9:
-        return -y + z;
-      case 0xA:
-        return y - z;
-      case 0xB:
-        return -y - z;
-      case 0xC:
-        return y + x;
-      case 0xD:
-        return -y + z;
-      case 0xE:
-        return y - x;
-      case 0xF:
-        return -y - z;
-      default:
-        return 0; // never happens
-    }
-  }
-
-  vtkm::Id Repeat;
-};
-
-class PerlinNoise3DGenerator : public vtkm::filter::FilterField<PerlinNoise3DGenerator>
-{
-public:
-  VTKM_CONT PerlinNoise3DGenerator(vtkm::IdComponent tableSize, vtkm::Id seed)
-    : TableSize(tableSize)
-    , Seed(seed)
-  {
-    this->GeneratePermutations();
-    this->SetUseCoordinateSystemAsField(true);
-  }
-
-  template <typename FieldType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          const FieldType&,
-                                          const vtkm::filter::FieldMetadata& fieldMetadata,
-                                          vtkm::filter::PolicyBase<DerivedPolicy>)
-  {
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> noiseArray;
-    PerlinNoise3DWorklet worklet{ this->TableSize };
-    this->Invoke(worklet, input.GetCellSet(), input.GetCoordinateSystem(), this->P, noiseArray);
-
-    return vtkm::filter::CreateResult(input, noiseArray, "PerlinNoise3D", fieldMetadata);
-  }
-
-protected:
-  VTKM_CONT void GeneratePermutations()
-  {
-    std::mt19937_64 rng;
-    rng.seed(this->Seed);
-    std::uniform_int_distribution<vtkm::Id> distribution(0, this->TableSize - 1);
-
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> perms;
-    perms.Allocate(this->TableSize);
-    auto permsPortal = perms.WritePortal();
-    for (auto i = 0; i < permsPortal.GetNumberOfValues(); ++i)
-    {
-      permsPortal.Set(i, distribution(rng));
-    }
-    this->P.Allocate(2 * this->TableSize);
-    auto pPortal = this->P.WritePortal();
-    for (auto i = 0; i < pPortal.GetNumberOfValues(); ++i)
-    {
-      pPortal.Set(i, permsPortal.Get(i % this->TableSize));
-    }
-  }
-
-
-private:
-  vtkm::IdComponent TableSize;
-  vtkm::Id Seed;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> P;
-};
-
 std::vector<vtkm::cont::DataSet> ExtractDataSets(const vtkm::cont::PartitionedDataSet& partitions)
 {
   return partitions.GetPartitions();
@@ -241,21 +83,16 @@ std::vector<vtkm::cont::DataSet> ExtractDataSets(vtkm::cont::DataSet& dataSet)
   return std::vector<vtkm::cont::DataSet>{ dataSet };
 }
 
-void BuildInputDataSet(uint32_t cycle,
-                       bool isStructured,
-                       bool isMultiBlock,
-                       vtkm::Id dims,
-                       vtkm::FloatDefault spacing = 0.1f)
+void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtkm::Id dim)
 {
   vtkm::cont::PartitionedDataSet partitionedInputDataSet;
   vtkm::cont::DataSet inputDataSet;
 
-  PointScalarsName = "PerlinNoise3D";
-  PointVectorsName = "PerlinNoise3DGradient";
+  PointScalarsName = "perlinnoise";
+  PointVectorsName = "perlinnoisegrad";
 
   // Generate uniform dataset(s)
-  const vtkm::Id3 dataSetDims{ dims, dims, dims };
-  const vtkm::Vec3f dataSetSpacing{ spacing, spacing, spacing };
+  const vtkm::Id3 dims{ dim, dim, dim };
   if (isMultiBlock)
   {
     for (auto i = 0; i < 2; ++i)
@@ -264,33 +101,22 @@ void BuildInputDataSet(uint32_t cycle,
       {
         for (auto k = 0; k < 2; ++k)
         {
-          const vtkm::Vec3f dataSetOrigin{ (dims - 1) * spacing * i,
-                                           (dims - 1) * spacing * j,
-                                           (dims - 1) * spacing * k };
-          vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-          vtkm::cont::DataSet uniformDataSet =
-            dataSetBuilder.Create(dataSetDims, dataSetOrigin, dataSetSpacing);
-          partitionedInputDataSet.AppendPartition(uniformDataSet);
+          const vtkm::Vec3f origin{ static_cast<vtkm::FloatDefault>(i),
+                                    static_cast<vtkm::FloatDefault>(j),
+                                    static_cast<vtkm::FloatDefault>(k) };
+          const vtkm::source::PerlinNoise noise{ dims,
+                                                 origin,
+                                                 static_cast<vtkm::IdComponent>(cycle) };
+          const auto dataset = noise.Execute();
+          partitionedInputDataSet.AppendPartition(dataset);
         }
       }
     }
   }
   else
   {
-    const vtkm::Vec3f dataSetOrigin{ 0.0f, 0.0f, 0.0f };
-    vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-    inputDataSet = dataSetBuilder.Create(dataSetDims, dataSetOrigin, dataSetSpacing);
-  }
-
-  // Generate Perlin Noise point scalar field
-  PerlinNoise3DGenerator fieldGenerator(dims, cycle);
-  if (isMultiBlock)
-  {
-    partitionedInputDataSet = fieldGenerator.Execute(partitionedInputDataSet);
-  }
-  else
-  {
-    inputDataSet = fieldGenerator.Execute(inputDataSet);
+    const vtkm::source::PerlinNoise noise{ dims, static_cast<vtkm::IdComponent>(cycle) };
+    inputDataSet = noise.Execute();
   }
 
   // Generate Perln Noise Gradient point vector field
@@ -465,7 +291,7 @@ void BenchContour(::benchmark::State& state)
 
   vtkm::cont::Timer inputGenTimer{ device };
   inputGenTimer.Start();
-  BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim, DEFAULT_SPACING);
+  BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim);
   inputGenTimer.Stop();
 
   vtkm::filter::Contour filter;
@@ -629,7 +455,7 @@ void BenchStreamlines(::benchmark::State& state)
 
   vtkm::cont::Timer inputGenTimer{ device };
   inputGenTimer.Start();
-  BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim, DEFAULT_SPACING);
+  BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim);
   inputGenTimer.Stop();
 
   vtkm::filter::Streamline streamline;
@@ -749,7 +575,7 @@ void BenchSlice(::benchmark::State& state)
 
   vtkm::cont::Timer inputGenTimer{ device };
   inputGenTimer.Start();
-  BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim, DEFAULT_SPACING);
+  BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim);
   inputGenTimer.Stop();
 
   vtkm::filter::Slice filter;
@@ -843,7 +669,7 @@ void BenchMeshRendering(::benchmark::State& state)
   vtkm::cont::Timer writeTimer{ device };
 
   inputGenTimer.Start();
-  BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim, DEFAULT_SPACING);
+  BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim);
   inputGenTimer.Stop();
 
   vtkm::cont::Timer totalTimer{ device };
@@ -905,7 +731,7 @@ void BenchVolumeRendering(::benchmark::State& state)
 
   vtkm::cont::Timer inputGenTimer{ device };
   inputGenTimer.Start();
-  BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim, DEFAULT_SPACING);
+  BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim);
   inputGenTimer.Stop();
 
   vtkm::cont::Timer totalTimer{ device };
@@ -941,7 +767,7 @@ void BenchVolumeRenderingGenerator(::benchmark::internal::Benchmark* bm)
 {
   bm->ArgNames({ "Cycle", "IsMultiBlock" });
 
-  std::vector<uint32_t> isMultiBlocks{ false, /*true*/ };
+  std::vector<uint32_t> isMultiBlocks{ false };
   for (uint32_t cycle = 1; cycle <= DEFAULT_NUM_CYCLES; ++cycle)
   {
     for (auto& isMultiBlock : isMultiBlocks)
@@ -1027,7 +853,7 @@ void ParseBenchmarkOptions(int& argc, char** argv)
                     "size",
                     Arg::Number,
                     "  -s, --size <N> \tSpecify dataset dimension and "
-                    "dataset with NxNxN dimensions and 0.1 spacing is created. "
+                    "dataset with NxNxN dimensions is created. "
                     "If not specified, N=128" });
   usage.push_back({ IMAGE_SIZE,
                     0,
