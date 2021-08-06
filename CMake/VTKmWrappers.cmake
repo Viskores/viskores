@@ -378,6 +378,7 @@ function(vtkm_add_target_information uses_vtkm_target)
     set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
   elseif(TARGET vtkm::kokkos_hip)
     set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "HIP")
+    kokkos_compilation(SOURCE ${VTKm_TI_DEVICE_SOURCES})
   endif()
 
   # Validate that following:

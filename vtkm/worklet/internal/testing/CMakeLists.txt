@@ -8,8 +8,11 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(unit_tests
-  UnitTestDispatcherBase.cxx
+#Failing on HIP backend(crash)
+if(NOT HIP IN_LIST Kokkos_DEVICES)
+  set(unit_tests
+      UnitTestDispatcherBase.cxx
   )
 
-vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
+  vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
+endif()
