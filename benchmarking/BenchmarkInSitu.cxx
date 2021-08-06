@@ -696,6 +696,7 @@ void BenchMeshRendering(::benchmark::State& state)
     state.SetIterationTime(totalTimer.GetElapsedTime());
     state.counters.insert(
       { { "InputGenTime", static_cast<uint32_t>(inputGenTimer.GetElapsedTime() * 1000) },
+        { "FilterTime", 0 },
         { "RenderTime", static_cast<uint32_t>(renderTimer.GetElapsedTime() * 1000) },
         { "WriteTime", static_cast<uint32_t>(writeTimer.GetElapsedTime() * 1000) } });
   }
@@ -758,6 +759,7 @@ void BenchVolumeRendering(::benchmark::State& state)
     state.SetIterationTime(totalTimer.GetElapsedTime());
     state.counters.insert(
       { { "InputGenTime", static_cast<uint32_t>(inputGenTimer.GetElapsedTime() * 1000) },
+        { "FilterTime", 0 },
         { "RenderTime", static_cast<uint32_t>(renderTimer.GetElapsedTime() * 1000) },
         { "WriteTime", static_cast<uint32_t>(writeTimer.GetElapsedTime() * 1000) } });
   }
