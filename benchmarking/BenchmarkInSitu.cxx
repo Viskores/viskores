@@ -58,12 +58,12 @@ vtkm::Id DataSetDim;
 // Image size:
 vtkm::Id ImageSize;
 // The input datasets we'll use on the filters:
-static vtkm::cont::DataSet InputDataSet;
-static vtkm::cont::PartitionedDataSet PartitionedInputDataSet;
+vtkm::cont::DataSet InputDataSet;
+vtkm::cont::PartitionedDataSet PartitionedInputDataSet;
 // The point scalars to use:
-static std::string PointScalarsName;
+std::string PointScalarsName;
 // The point vectors to use:
-static std::string PointVectorsName;
+std::string PointVectorsName;
 
 enum class RenderingMode
 {
