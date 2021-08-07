@@ -42,12 +42,12 @@
 #include <vtkm/rendering/View3D.h>
 
 #include <vtkm/source/PerlinNoise.h>
+
 namespace
 {
 
 const uint32_t DEFAULT_NUM_CYCLES = 20;
 const vtkm::Id DEFAULT_DATASET_DIM = 128;
-const vtkm::FloatDefault DEFAULT_SPACING = 0.1f;
 const vtkm::Id DEFAULT_IMAGE_SIZE = 1024;
 
 // Hold configuration state (e.g. active device):
