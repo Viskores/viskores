@@ -27,7 +27,6 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 
