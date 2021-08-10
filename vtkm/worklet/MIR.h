@@ -15,6 +15,7 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
+#include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
