@@ -25,7 +25,6 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -54,11 +53,10 @@ namespace filter
 {
 
 template <typename T, typename StorageType, typename StorageType2>
-inline VTKM_CONT void MIRFilter::ProcessPointField1(
+inline VTKM_CONT void MIRFilter::ProcessPointField(
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   vtkm::cont::ArrayHandle<T, StorageType2>& output)
 {
-  //VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "HERE");
   vtkm::worklet::DestructPointWeightList destructWeightList;
   this->Invoke(destructWeightList, this->MIRIDs, this->MIRWeights, input, output);
 }
@@ -151,12 +149,9 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
   do
   {
     saved = vtkm::cont::DataSet();
-    //auto cs = vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this);
-    //saved.SetCellSet(cs);
+    saved.AddCoordinateSystem(inputCoords);
     saved.SetCellSet(input.GetCellSet());
-    vtkm::cont::CoordinateSystem outCo(inputCoords.GetName(), inputCoords.GetData());
-    saved.AddCoordinateSystem(outCo);
-    //{
+
     vtkm::cont::ArrayHandle<vtkm::Id> currentcellIDs;
     vtkm::cont::ArrayHandle<vtkm::Id> pointlen, pointpos, pointid;
     vtkm::cont::ArrayHandle<vtkm::Float64> pointvf;
@@ -178,20 +173,16 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
                  pointid,
                  pointvf);
 
-
-    //}
     vtkm::worklet::MIRObject<vtkm::Id, vtkm::Float64> mirobj(
       pointlen, pointpos, pointid, pointvf); // This is point VF data...
-    auto tmp2 = std::vector<vtkm::Id>(saved.GetCellSet().GetNumberOfCells(), -1);
-    vtkm::cont::ArrayHandle<vtkm::Id> prevMat =
-      vtkm::cont::make_ArrayHandle(tmp2, vtkm::CopyFlag::On);
+    vtkm::cont::ArrayHandle<vtkm::Id> prevMat;
+    vtkm::cont::ArrayCopy(
+      vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(-1, saved.GetCellSet().GetNumberOfCells()),
+      prevMat);
     vtkm::cont::ArrayHandle<vtkm::Id> cellLookback;
     vtkm::cont::ArrayHandleIndex tmp_ind(saved.GetCellSet().GetNumberOfCells());
     vtkm::cont::ArrayCopy(tmp_ind, cellLookback);
     vtkm::IdComponent currentMatLoc = 0;
-
-
-
 
     while (currentMatLoc < numIDs)
     {

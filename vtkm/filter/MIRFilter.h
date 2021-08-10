@@ -67,6 +67,7 @@ public:
   VTKM_CONT std::string GetOutputFieldName() { return this->OutputFieldName; }
   /// @brief Sets the output cell-set field name for the filter
   VTKM_CONT void SetOutputFieldName(std::string name) { this->OutputFieldName = name; }
+
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           vtkm::filter::PolicyBase<DerivedPolicy>);
@@ -90,10 +91,10 @@ public:
       // Technically, this will be for all of them...thus ignore it
       return false;
     }
-    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> output;
+    vtkm::cont::ArrayHandle<T> output;
     if (fieldMeta.IsPointField())
     {
-      this->ProcessPointField1(input1, output);
+      this->ProcessPointField(input1, output);
     }
     else if (fieldMeta.IsCellField())
     {
@@ -110,8 +111,8 @@ public:
 private:
   // Linear storage requirement, scales with size of point output
   template <typename T, typename StorageType, typename StorageType2>
-  VTKM_CONT void ProcessPointField1(const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                    vtkm::cont::ArrayHandle<T, StorageType2>& output);
+  VTKM_CONT void ProcessPointField(const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                                   vtkm::cont::ArrayHandle<T, StorageType2>& output);
 
   // NOTE: The below assumes that MIR will not change the cell values when subdividing.
   template <typename T, typename StorageType, typename StorageType2>

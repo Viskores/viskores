@@ -118,7 +118,7 @@ VTKM_EXEC_CONT vtkm::Vec<T, NumComponents> Scale(const vtkm::Vec<T, NumComponent
   return val * scale;
 }
 }
-template <typename Device>
+
 class ExecutionConnectivityExplicit
 {
 private:
@@ -129,17 +129,19 @@ private:
 public:
   VTKM_CONT
   ExecutionConnectivityExplicit() = default;
+
   VTKM_CONT
   ExecutionConnectivityExplicit(vtkm::cont::ArrayHandle<vtkm::UInt8> shapes,
                                 vtkm::cont::ArrayHandle<vtkm::IdComponent> numberOfIndices,
                                 vtkm::cont::ArrayHandle<vtkm::Id> connectivity,
                                 vtkm::cont::ArrayHandle<vtkm::Id> offsets,
                                 MIRStats stats,
+                                vtkm::cont::DeviceAdapterId device,
                                 vtkm::cont::Token& token)
-    : Shapes(shapes.PrepareForOutput(stats.NumberOfCells, Device(), token))
-    , NumberOfIndices(numberOfIndices.PrepareForOutput(stats.NumberOfCells, Device(), token))
-    , Connectivity(connectivity.PrepareForOutput(stats.NumberOfIndices, Device(), token))
-    , Offsets(offsets.PrepareForOutput(stats.NumberOfCells, Device(), token))
+    : Shapes(shapes.PrepareForOutput(stats.NumberOfCells, device, token))
+    , NumberOfIndices(numberOfIndices.PrepareForOutput(stats.NumberOfCells, device, token))
+    , Connectivity(connectivity.PrepareForOutput(stats.NumberOfIndices, device, token))
+    , Offsets(offsets.PrepareForOutput(stats.NumberOfCells, device, token))
   {
   }
 
@@ -170,6 +172,7 @@ private:
   IdPortal Connectivity;
   IdPortal Offsets;
 };
+
 class ConnectivityExplicit : vtkm::cont::ExecutionObjectBase
 {
 public:
@@ -190,13 +193,16 @@ public:
   {
   }
 
-  template <typename Device>
-  VTKM_CONT ExecutionConnectivityExplicit<Device> PrepareForExecution(
-    Device,
-    vtkm::cont::Token& token) const
+  VTKM_CONT ExecutionConnectivityExplicit PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                              vtkm::cont::Token& token) const
   {
-    ExecutionConnectivityExplicit<Device> execConnectivity(
-      this->Shapes, this->NumberOfIndices, this->Connectivity, this->Offsets, this->Stats, token);
+    ExecutionConnectivityExplicit execConnectivity(this->Shapes,
+                                                   this->NumberOfIndices,
+                                                   this->Connectivity,
+                                                   this->Offsets,
+                                                   this->Stats,
+                                                   device,
+                                                   token);
     return execConnectivity;
   }
 
@@ -207,6 +213,7 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> Offsets;
   vtkm::worklet::MIRStats Stats;
 };
+
 class ComputeStats : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
@@ -225,8 +232,7 @@ public:
                                 FieldInCell prevCol,
                                 FieldOutCell stats,
                                 FieldOutCell caseID);
-  using ExecutionSignature =
-    void(CellShape, InputIndex, PointCount, _3, _2, _4, _5, _6, _7, _8, _9);
+  using ExecutionSignature = void(CellShape, PointCount, _3, _2, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 
   template <typename CellShapeTag,
@@ -238,7 +244,6 @@ public:
             typename PreCol>
   VTKM_EXEC void operator()(
     const CellShapeTag shape,
-    const vtkm::IdComponent,
     const vtkm::IdComponent pointCount,
     const ScalarFieldVec& prevVals,
     const ScalarFieldVec1& newVals,
@@ -355,7 +360,6 @@ public:
     , cellLookback(celllook)
     , cellColors(cellCol){};
 
-  template <typename DeviceAdapter>
   class MIRParentPortal
   {
   public:
@@ -371,26 +375,21 @@ public:
     VTKM_EXEC vtkm::Id GetParentCellColor(vtkm::Id index) { return this->CellColors.Get(index); }
 
   private:
-    typename vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>::ReadPortalType
-      CellLookback;
-    typename vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>::ReadPortalType
-      CellColors;
-    typename vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>::WritePortalType
-      NewCellColors;
-    typename vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>::WritePortalType
-      NewCellLookback;
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType CellLookback;
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType CellColors;
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::WritePortalType NewCellColors;
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::WritePortalType NewCellLookback;
     friend class MIRParentObject;
   };
 
-  template <typename Device>
-  VTKM_CONT MIRParentPortal<Device> PrepareForExecution(Device, vtkm::cont::Token& token)
+  VTKM_CONT MIRParentPortal PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                vtkm::cont::Token& token)
   {
-    MIRParentPortal<Device> dev;
-    dev.CellLookback = this->cellLookback.PrepareForInput(Device(), token);
-    dev.CellColors = this->cellColors.PrepareForInput(Device(), token);
-    dev.NewCellColors = this->newCellColors.PrepareForOutput(this->numberOfInd, Device(), token);
-    dev.NewCellLookback =
-      this->newCellLookback.PrepareForOutput(this->numberOfInd, Device(), token);
+    MIRParentPortal dev;
+    dev.CellLookback = this->cellLookback.PrepareForInput(device, token);
+    dev.CellColors = this->cellColors.PrepareForInput(device, token);
+    dev.NewCellColors = this->newCellColors.PrepareForOutput(this->numberOfInd, device, token);
+    dev.NewCellLookback = this->newCellLookback.PrepareForOutput(this->numberOfInd, device, token);
     return dev;
   }
   vtkm::cont::ArrayHandle<vtkm::Id> newCellColors;
@@ -478,7 +477,7 @@ public:
     EdgeInterpolationPortalType& inCellEdgeInterpolation,
     IdArrayType& inCellInterpolationKeys,
     IdArrayType& inCellInterpolationInfo,
-    worklet::MIRParentObject::MIRParentPortal<DeviceAdapter>& parentObj,
+    worklet::MIRParentObject::MIRParentPortal& parentObj,
     CellLookbackArr& cellLookbackArray) const
   {
 
@@ -1778,7 +1777,6 @@ template <typename IDType, typename FloatType>
 struct MIRObject : public vtkm::cont::ExecutionAndControlObjectBase
 {
 public:
-  template <typename DeviceAdapter>
   class MIRObjectPortal
   {
   public:
@@ -1835,10 +1833,12 @@ public:
     typename vtkm::cont::ArrayHandle<FloatType, vtkm::cont::StorageTagBasic>::ReadPortalType PVFs;
     friend struct MIRObject;
   };
+
   VTKM_CONT vtkm::cont::ArrayHandle<IDType> getPointLenArr() { return this->pointLen; }
   VTKM_CONT vtkm::cont::ArrayHandle<IDType> getPointPosArr() { return this->pointPos; }
   VTKM_CONT vtkm::cont::ArrayHandle<IDType> getPointIDArr() { return this->pointIDs; }
   VTKM_CONT vtkm::cont::ArrayHandle<FloatType> getPointVFArr() { return this->pointVFs; }
+
   template <typename IDInput, typename FloatInput>
   MIRObject(const IDInput len, const IDInput pos, const IDInput ids, const FloatInput floats)
   {
@@ -1847,14 +1847,14 @@ public:
     vtkm::cont::ArrayCopy(ids, pointIDs);
     vtkm::cont::ArrayCopy(floats, pointVFs);
   }
-  template <typename DeviceAdapter>
-  MIRObjectPortal<DeviceAdapter> PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
+
+  MIRObjectPortal PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token)
   {
-    MIRObjectPortal<DeviceAdapter> portal;
-    portal.PLens = this->pointLen.PrepareForInput(DeviceAdapter(), token);
-    portal.PPos = this->pointPos.PrepareForInput(DeviceAdapter(), token);
-    portal.PIDs = this->pointIDs.PrepareForInput(DeviceAdapter(), token);
-    portal.PVFs = this->pointVFs.PrepareForInput(DeviceAdapter(), token);
+    MIRObjectPortal portal;
+    portal.PLens = this->pointLen.PrepareForInput(device, token);
+    portal.PPos = this->pointPos.PrepareForInput(device, token);
+    portal.PIDs = this->pointIDs.PrepareForInput(device, token);
+    portal.PVFs = this->pointVFs.PrepareForInput(device, token);
     return portal;
   }
 
@@ -1862,6 +1862,7 @@ private:
   vtkm::cont::ArrayHandle<IDType> pointLen, pointPos, pointIDs;
   vtkm::cont::ArrayHandle<FloatType> pointVFs;
 };
+
 struct CombineVFsForPoints_C : public vtkm::worklet::WorkletVisitPointsWithCells
 {
 public:
