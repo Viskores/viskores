@@ -306,6 +306,22 @@ static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
 }
 
 template <typename T, typename S>
+#ifdef VTKM_GCC
+// On rare occasion, we have seen errors like this:
+//   `_ZN4vtkm4cont6detailL27UnknownAHNumberOfComponentsIxEEiv' referenced in section
+//   `.data.rel.ro.local' of CMakeFiles/UnitTests_vtkm_cont_testing.dir/UnitTestCellSet.cxx.o:
+//   defined in discarded section
+//   `.text._ZN4vtkm4cont6detailL27UnknownAHNumberOfComponentsIxEEiv[_ZN4vtkm4cont14ArrayGetValuesINS0_15StorageTagBasicExNS0_18StorageTagCountingES2_EEvRKNS0_11ArrayHandleIxT_EERKNS4_IT0_T1_EERNS4_IS9_T2_EE]'
+//   of CMakeFiles/UnitTests_vtkm_cont_testing.dir/UnitTestCellSet.cxx.o
+// I don't know what circumstances exactly lead up to this, but it appears that the compiler
+// is being overly aggressive with removing unused symbols. In this instance, it seems to have
+// removed a function actually being used. This might be a bug in the compiler (I happen to have
+// seen it in gcc 8.3), or it could be caused by a link-time optimizer. The problem should be
+// able to be solved by explictly saying that this templated method is being used. (I can't think
+// of any circumstances where this template would be instantiated but not used.) If the compiler
+// knows this is being used, it should know all the templated methods internal are also used.
+__attribute__((used))
+#endif
 inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array)
   : ArrayHandlePointer(new vtkm::cont::ArrayHandle<T, S>(array))
   , ValueType(typeid(T))
