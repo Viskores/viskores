@@ -11410,14 +11410,6 @@ public:
     typename vtkm::cont::ArrayHandle<vtkm::UInt16>::ReadPortalType MIRTablesIndicesPortal;
     typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType CellEdgesPortal;
     typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType MIRTableSizesPortal;
-    /*typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ExecutionTypes<DeviceAdapter>::PortalConst
-      MIRTablesDataPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::UInt16>::ExecutionTypes<DeviceAdapter>::PortalConst
-      MIRTablesIndicesPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ExecutionTypes<DeviceAdapter>::PortalConst
-      CellEdgesPortal;
-    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ExecutionTypes<DeviceAdapter>::PortalConst
-      MIRTableSizesPortal;*/
     friend class MIRTables;
   };
   MIRTables()

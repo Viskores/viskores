@@ -1829,14 +1829,10 @@ public:
       }
     }
 
-    typename vtkm::cont::ArrayHandle<IDType, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
-      DeviceAdapter>::PortalConst PLens;
-    typename vtkm::cont::ArrayHandle<IDType, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
-      DeviceAdapter>::PortalConst PPos;
-    typename vtkm::cont::ArrayHandle<IDType, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
-      DeviceAdapter>::PortalConst PIDs;
-    typename vtkm::cont::ArrayHandle<FloatType, vtkm::cont::StorageTagBasic>::
-      template ExecutionTypes<DeviceAdapter>::PortalConst PVFs;
+    typename vtkm::cont::ArrayHandle<IDType, vtkm::cont::StorageTagBasic>::ReadPortalType PLens;
+    typename vtkm::cont::ArrayHandle<IDType, vtkm::cont::StorageTagBasic>::ReadPortalType PPos;
+    typename vtkm::cont::ArrayHandle<IDType, vtkm::cont::StorageTagBasic>::ReadPortalType PIDs;
+    typename vtkm::cont::ArrayHandle<FloatType, vtkm::cont::StorageTagBasic>::ReadPortalType PVFs;
     friend struct MIRObject;
   };
   VTKM_CONT vtkm::cont::ArrayHandle<IDType> getPointLenArr() { return this->pointLen; }
