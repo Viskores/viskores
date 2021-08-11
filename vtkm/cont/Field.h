@@ -16,6 +16,7 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
 namespace vtkm

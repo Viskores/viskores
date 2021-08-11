@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_UncertainArrayHandle_h
 #define vtk_m_cont_UncertainArrayHandle_h
 
+#include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
 namespace vtkm
