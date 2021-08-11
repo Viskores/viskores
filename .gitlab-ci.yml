@@ -148,6 +148,7 @@ stages:
       - build/include/
       - build/vtkm/thirdparty/diy/vtkmdiy/
       - build/lib/
+      - build/config/
 
       # CTest and CMake install files.
       # XXX(globbing): Can be simplified with support from

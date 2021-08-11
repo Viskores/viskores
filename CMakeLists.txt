@@ -214,7 +214,7 @@ if (VTKm_ENABLE_TESTING)
   endif()
 
 
-  configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
+  configure_file(CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
 
   #-----------------------------------------------------------------------------
@@ -269,6 +269,17 @@ write_basic_package_version_file(
   ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
+
+configure_file(${VTKm_SOURCE_DIR}/config/vtkm_config.mk.in
+  ${VTKm_BINARY_DIR}/config/vtkm_config.mk @ONLY)
+install(FILES ${VTKm_BINARY_DIR}/config/vtkm_config.mk
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
+  )
+configure_file(${VTKm_SOURCE_DIR}/config/vtkm.pc.in
+  ${VTKm_BINARY_DIR}/config/vtkm.pc @ONLY)
+install(FILES ${VTKm_BINARY_DIR}/config/vtkm.pc
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
+  )
 
 include(VTKmInstallCMakePackage)
 
