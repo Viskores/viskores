@@ -313,10 +313,10 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
         vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this).GetNumberOfCells());
     this->error_scaling *= this->scaling_decay;
 
-
     VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                "Mir iteration " << currentIterationNum + 1 << "/" << this->max_iter
                                 << "\t Total error: " << totalError);
+
     saved.AddField(vtkm::cont::Field(
       this->GetOutputFieldName(), vtkm::cont::Field::Association::CELL_SET, prevMat));
 

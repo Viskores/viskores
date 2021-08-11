@@ -49,9 +49,9 @@ vtkm::cont::DataSet GetTestDataSet()
     }
   }
 
-  std::vector<vtkm::Id> idAR{ 1, 2, 2, 1, 2, 1, 1, 2 };
-  std::vector<vtkm::Id> lnAR{ 1, 1, 1, 1, 1, 1, 1, 1 };
-  std::vector<vtkm::Id> ofAR{ 0, 1, 2, 3, 4, 5, 6, 7 };
+  std::vector<vtkm::Int64> idAR{ 1, 2, 2, 1, 2, 1, 1, 2 };
+  std::vector<vtkm::Int64> lnAR{ 1, 1, 1, 1, 1, 1, 1, 1 };
+  std::vector<vtkm::Int64> ofAR{ 0, 1, 2, 3, 4, 5, 6, 7 };
   vtkm::cont::ArrayHandle<vtkm::Id> offsets =
     vtkm::cont::make_ArrayHandle(ofAR, vtkm::CopyFlag::On);
   vtkm::cont::ArrayHandle<vtkm::Id> lengths =
@@ -83,11 +83,8 @@ vtkm::cont::DataSet GetTestDataSet()
       }
     }
   }
-  VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "A");
   vtkm::cont::DataSet ds = dsb.Create(points, shapes, numberofInd, connections);
-  VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "B");
   ds.AddField(vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::CELL_SET, offsets));
-  VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "C");
   ds.AddField(vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::CELL_SET, lengths));
   ds.AddField(vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WHOLE_MESH, ids));
   ds.AddField(vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WHOLE_MESH, vfs));
@@ -111,7 +108,11 @@ void TestMIR()
   mir.SetMaxPercentError(vtkm::Float64(
     0.00001)); // Only useful for iterations >= 1, will stop iterating if total % error for entire mesh is less than this value
   // Note it is mathematically impossible to obtain 0% error outside of VERY special cases (neglecting float error)
+  VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Before executing filter");
+
   vtkm::cont::DataSet ds_from_mir = mir.Execute(ds);
+
+  VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "After executing filter");
 
   // Test if ds_from_mir has 40 cells
   VTKM_TEST_ASSERT(ds_from_mir.GetNumberOfCells() == 40, "Wrong number of output cells");
