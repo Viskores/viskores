@@ -6,6 +6,11 @@
     # Even if we could, it could change if other runners on the machine
     # could run at the same time, so we drop it.
     GIT_CLONE_PATH: "$CI_BUILDS_DIR\\vtkm ci"
+  artifacts:
+    reports:
+      junit:
+        - build/junit.xml
+
 
 .windows_vs2019:
   variables:

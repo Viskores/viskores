@@ -202,6 +202,9 @@ stages:
       - build/*/*/*/*.png
       - build/*/*/*/*.pnm
       - build/*/*/*/*.pmm
+    reports:
+      junit:
+        - build/junit.xml
 
 .cmake_memcheck_linux: &cmake_memcheck_linux
   stage: test
@@ -219,6 +222,9 @@ stages:
       - build/*.png
       - build/*.pnm
       - build/*.pmm
+    reports:
+      junit:
+        - build/junit.xml
 
 include:
   - local: '/.gitlab/ci/centos7.yml'
