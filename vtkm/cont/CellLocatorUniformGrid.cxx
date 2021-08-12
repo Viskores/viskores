@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>

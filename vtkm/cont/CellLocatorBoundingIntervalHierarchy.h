@@ -22,8 +22,6 @@
 #include <vtkm/exec/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/exec/CellLocatorMultiplexer.h>
 
-#include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchy.h>
-
 namespace vtkm
 {
 namespace cont
