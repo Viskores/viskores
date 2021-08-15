@@ -15,7 +15,6 @@
 
 #include <vtkm/ImplicitFunction.h>
 
-#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/BoundsCompute.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/FieldRangeCompute.h>
@@ -267,7 +266,7 @@ DataSetType RunContourHelper(vtkm::filter::Contour& filter,
   // Set up some equally spaced contours, with the min/max slightly inside the
   // scalar range:
   const vtkm::Range scalarRange =
-    vtkm::cont::ArrayGetValue(0, vtkm::cont::FieldRangeCompute(input, PointScalarsName));
+    vtkm::cont::FieldRangeCompute(input, PointScalarsName).ReadPortal().Get(0);
   const auto step = scalarRange.Length() / static_cast<vtkm::Float64>(numIsoVals + 1);
   const auto minIsoVal = scalarRange.Min + (step * 0.5f);
   filter.SetNumberOfIsoValues(numIsoVals);
@@ -806,24 +805,6 @@ struct Arg : vtkm::cont::internal::option::Arg
         std::cerr << "Option " << option.name << " requires a numeric argument." << std::endl;
       }
 
-      return vtkm::cont::internal::option::ARG_ILLEGAL;
-    }
-  }
-
-  static vtkm::cont::internal::option::ArgStatus Required(
-    const vtkm::cont::internal::option::Option& option,
-    bool msg)
-  {
-    if ((option.arg != nullptr) && (option.arg[0] != '\0'))
-    {
-      return vtkm::cont::internal::option::ARG_OK;
-    }
-    else
-    {
-      if (msg)
-      {
-        std::cerr << "Option " << option.name << " requires an argument." << std::endl;
-      }
       return vtkm::cont::internal::option::ARG_ILLEGAL;
     }
   }

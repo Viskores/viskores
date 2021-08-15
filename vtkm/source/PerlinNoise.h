@@ -58,4 +58,4 @@ private:
 } //namespace source
 } //namespace vtkm
 
-#endif //vtk_m_source_Tangle_h
+#endif //vtk_m_source_PerlinNoise_h
