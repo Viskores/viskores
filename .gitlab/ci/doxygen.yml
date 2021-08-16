@@ -27,7 +27,9 @@ doxygen:
   script:
     - doxygen build/docs/doxyfile
     - chmod 400 $DOC_KEY_FILE
-    - rsync -tv --recursive --delete -e "ssh -i $DOC_KEY_FILE -o StrictHostKeyChecking=no" build/docs/doxygen/html/ kitware@web.kitware.com:vtkm_documentation/
+    - test -n "$GIT_COMMIT_TAG" && DOXYGEN_UPLOAD_REMOTE_PATH=latest
+    - rsync -tv --recursive --delete -e "ssh -i $DOC_KEY_FILE -o StrictHostKeyChecking=no" build/docs/doxygen/html/ "kitware@web.kitware.com:vtkm_documentation/$DOXYGEN_UPLOAD_REMOTE_PATH"
   variables:
     CMAKE_BUILD_TYPE: Release
     VTKM_SETTINGS: "tbb+openmp+mpi+shared+docs"
+    DOXYGEN_UPLOAD_REMOTE_PATH: "nightly"
