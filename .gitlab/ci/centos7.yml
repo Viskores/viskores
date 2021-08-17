@@ -13,6 +13,7 @@ build:centos7_gcc73:
     - .centos7
     - .cmake_build_linux
     - .only-default
+    - .use_minimum_supported_cmake
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"

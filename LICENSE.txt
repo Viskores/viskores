@@ -56,3 +56,4 @@ vtkm/cont/tbb/internal/kxsort.h
 vtkm/thirdparty
 vtkm/internal/brigand.hpp
 version.txt
+.gitlab/cmake

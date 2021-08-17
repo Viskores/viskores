@@ -6,6 +6,11 @@
     # Even if we could, it could change if other runners on the machine
     # could run at the same time, so we drop it.
     GIT_CLONE_PATH: "$CI_BUILDS_DIR\\vtkm ci"
+  artifacts:
+    reports:
+      junit:
+        - build/junit.xml
+
 
 .windows_vs2019:
   variables:
@@ -21,7 +26,10 @@
   timeout:  2 hours
   interruptible: true
   before_script:
+    - Invoke-Expression -Command .gitlab/ci/config/cmake.ps1
     - Invoke-Expression -Command .gitlab/ci/config/vcvarsall.ps1
+    - $pwdpath = $pwd.Path
+    - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab;$pwdpath\.gitlab\cmake\bin;$env:PATH"
     - "cmake --version"
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
@@ -64,13 +72,12 @@
   timeout:  50 minutes
   interruptible: true
   before_script:
+    - Invoke-Expression -Command .gitlab/ci/config/cmake.ps1
     - Invoke-Expression -Command .gitlab/ci/config/vcvarsall.ps1
+    - $pwdpath = $pwd.Path
+    - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab;$pwdpath\.gitlab\cmake\bin;$env:PATH"
   script:
-    #Need to use our custom ctest-latest symlink
-    #This will allow us to use 3.17+ which has support
-    #for running failed tests multiple times so failures
-    #due to system load are not reported
-    - "ctest-latest -VV -S .gitlab/ci/ctest_test.cmake"
+    - "ctest -VV -S .gitlab/ci/ctest_test.cmake"
 
 # Build on windows10 with Visual Studio
 # Will have CUDA 10.2 once build issues are resolved
