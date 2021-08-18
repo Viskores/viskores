@@ -23,6 +23,7 @@ set(unit_tests
   UnitTestKokkosDeviceAdapter.cxx
   UnitTestKokkosImplicitFunction.cxx
   UnitTestKokkosPointLocatorSparseGrid.cxx
+  UnitTestKokkosRuntimeDeviceConfiguration.cxx
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)

@@ -29,7 +29,8 @@ enum class RuntimeDeviceConfigReturnCode
   SUCCESS,
   OUT_OF_BOUNDS,
   INVALID_FOR_DEVICE,
-  INVALID_VALUE
+  INVALID_VALUE,
+  NOT_APPLIED
 };
 
 class VTKM_CONT_EXPORT RuntimeDeviceConfigurationBase
@@ -44,38 +45,42 @@ public:
   /// Each `Set*` method is called only if the corresponding vtk-m option is set, and a
   /// warning is logged based on the value of the `RuntimeDeviceConfigReturnCode` returned
   /// via the `Set*` method.
-  VTKM_CONT void Initialize(const RuntimeDeviceConfigurationOptions& configOptions) const;
+  VTKM_CONT void Initialize(const RuntimeDeviceConfigurationOptions& configOptions);
   VTKM_CONT void Initialize(const RuntimeDeviceConfigurationOptions& configOptions,
                             int& argc,
-                            char* argv[]) const;
+                            char* argv[]);
 
   /// The following public methods should be overriden in each individual device.
   /// A method should return INVALID_FOR_DEVICE if the overriden device does not
   /// support the particular set method.
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id&) const;
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetNumaRegions(const vtkm::Id&) const;
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(const vtkm::Id&) const;
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id& value);
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetNumaRegions(const vtkm::Id& value);
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(const vtkm::Id& value);
 
+  /// The following public methods are overriden in each individual device and store the
+  /// values that were set via the above Set* methods for the given device.
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id& value) const;
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetNumaRegions(vtkm::Id& value) const;
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(vtkm::Id& value) const;
+
+  /// The following public methods should be overriden as needed for each individual device
+  /// as they describe various device parameters.
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetMaxThreads(vtkm::Id& value) const;
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetMaxDevices(vtkm::Id& value) const;
 
 protected:
   /// An overriden method that can be used to perform extra command line argument parsing
   /// for cases where a specific device may use additional command line arguments. At the
   /// moment Kokkos is the only device that overrides this method.
-  VTKM_CONT virtual void ParseExtraArguments(int&, char*[]) const;
+  /// Note: This method assumes that vtk-m arguments have already been parsed and removed
+  ///       from argv.
+  VTKM_CONT virtual void ParseExtraArguments(int& argc, char* argv[]);
 
-  /// Used during Initialize to log a warning message dependent on the return code when
-  /// calling a specific `Set*` method.
-  ///
-  /// params:
-  ///   code - The code to log a message for
-  ///   function - The name of the `Set*` function the code was returned from
-  ///   value - The value used as the argument to the `Set*` call.
-  VTKM_CONT virtual void LogReturnCode(const RuntimeDeviceConfigReturnCode& code,
-                                       const std::string& function,
-                                       const vtkm::Id& value) const;
+  /// An overriden method that can be used to perform extra initialization after Extra
+  /// Arguments are parsed and the Initialized ConfigOptions are used to call the various
+  /// Set* methods at the end of Initialize. Particuarly useful when initializing
+  /// additional subystems (like Kokkos).
+  VTKM_CONT virtual void InitializeSubsystem();
 };
 
 template <typename DeviceAdapterTag>

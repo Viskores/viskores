@@ -15,10 +15,6 @@
 #include <vtkm/cont/internal/OptionParser.h>
 #include <vtkm/cont/internal/OptionParserArguments.h>
 
-#if defined(VTKM_ENABLE_KOKKOS)
-#include <vtkm/cont/kokkos/internal/Initialize.h>
-#endif
-
 #include <memory>
 #include <sstream>
 
@@ -127,12 +123,6 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
   {
     vtkm::cont::InitLogging(argc, argv, loggingFlag);
   }
-
-
-#ifdef VTKM_ENABLE_KOKKOS
-  // TODO: remove this once runtime config updates are completely implemented
-  vtkm::cont::kokkos::internal::Initialize(argc, argv);
-#endif
 
   { // Parse VTKm options
     std::vector<opt::Descriptor> usage;

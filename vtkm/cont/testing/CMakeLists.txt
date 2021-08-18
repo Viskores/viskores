@@ -25,6 +25,7 @@ set(headers
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
   TestingPointLocatorSparseGrid.h
+  TestingRuntimeDeviceConfiguration.h
   TestingSerialization.h
   TestingVirtualObjectHandle.h
   )
