@@ -11,6 +11,7 @@
 #define vtk_m_cont_CellSetExplicit_h
 
 #include <vtkm/CellShape.h>
+#include <vtkm/Deprecated.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandleCast.h>
@@ -18,6 +19,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleOffsetsToNumComponents.h>
 #include <vtkm/cont/CellSet.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 #include <vtkm/cont/internal/ConnectivityExplicitInternals.h>
 #include <vtkm/exec/ConnectivityExplicit.h>
 
@@ -36,6 +38,20 @@ struct CellSetExplicitConnectivityChooser
 {
   using ConnectivityType = vtkm::cont::internal::ConnectivityExplicitInternals<>;
 };
+
+// The connectivity generally used for the visit-points-with-cells connectivity.
+// This type of connectivity does not have variable shape types, and since it is
+// never really provided externally we can use the defaults for the other arrays.
+using DefaultVisitPointsWithCellsConnectivityExplicit =
+  vtkm::cont::internal::ConnectivityExplicitInternals<
+    typename ArrayHandleConstant<vtkm::UInt8>::StorageTag>;
+
+VTKM_CONT_EXPORT void BuildReverseConnectivity(
+  const vtkm::cont::UnknownArrayHandle& connections,
+  const vtkm::cont::UnknownArrayHandle& offsets,
+  vtkm::Id numberOfPoints,
+  vtkm::cont::detail::DefaultVisitPointsWithCellsConnectivityExplicit& visitPointsWithCells,
+  vtkm::cont::DeviceAdapterId device);
 
 } // namespace detail
 
@@ -229,11 +245,22 @@ public:
 protected:
   VTKM_CONT void BuildConnectivity(vtkm::cont::DeviceAdapterId,
                                    vtkm::TopologyElementTagCell,
-                                   vtkm::TopologyElementTagPoint) const;
+                                   vtkm::TopologyElementTagPoint) const
+  {
+    VTKM_ASSERT(this->Data->CellPointIds.ElementsValid);
+    // no-op
+  }
 
-  VTKM_CONT void BuildConnectivity(vtkm::cont::DeviceAdapterId,
+  VTKM_CONT void BuildConnectivity(vtkm::cont::DeviceAdapterId device,
                                    vtkm::TopologyElementTagPoint,
-                                   vtkm::TopologyElementTagCell) const;
+                                   vtkm::TopologyElementTagCell) const
+  {
+    detail::BuildReverseConnectivity(this->Data->CellPointIds.Connectivity,
+                                     this->Data->CellPointIds.Offsets,
+                                     this->Data->NumberOfPoints,
+                                     this->Data->PointCellIds,
+                                     device);
+  }
 
   VTKM_CONT bool HasConnectivityImpl(vtkm::TopologyElementTagCell,
                                      vtkm::TopologyElementTagPoint) const
@@ -336,8 +363,7 @@ struct CellSetExplicitConnectivityChooser<CellSetType,
 {
   //only specify the shape type as it will be constant as everything
   //is a vertex. otherwise use the defaults.
-  using ConnectivityType = vtkm::cont::internal::ConnectivityExplicitInternals<
-    typename ArrayHandleConstant<vtkm::UInt8>::StorageTag>;
+  using ConnectivityType = vtkm::cont::detail::DefaultVisitPointsWithCellsConnectivityExplicit;
 };
 
 } // namespace detail

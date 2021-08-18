@@ -11,14 +11,10 @@
 #define vtk_m_cont_internal_ConnectivityExplicitInternals_h
 
 #include <vtkm/CellShape.h>
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/internal/ReverseConnectivityBuilder.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
 
 namespace vtkm
 {
@@ -82,151 +78,6 @@ struct ConnectivityExplicitInternals
     }
   }
 };
-
-// Pass through (needed for ReverseConnectivityBuilder)
-struct PassThrough
-{
-  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& val) const { return val; }
-};
-
-// Compute cell id from input connectivity:
-// Find the upper bound of the conn idx in the offsets table and subtract 1
-//
-// Example:
-// Offsets: |  0        |  3        |  6           |  10       |
-// Conn:    |  0  1  2  |  0  1  3  |  2  4  5  6  |  1  3  5  |
-// ConnIdx: |  0  1  2  |  3  4  5  |  6  7  8  9  |  10 11 12 |
-// UpprBnd: |  1  1  1  |  2  2  2  |  3  3  3  3  |  4  4  4  |
-// CellIdx: |  0  0  0  |  1  1  1  |  2  2  2  2  |  3  3  3  |
-template <typename OffsetsPortalType>
-struct ConnIdxToCellIdCalc
-{
-  OffsetsPortalType Offsets;
-
-  VTKM_CONT
-  ConnIdxToCellIdCalc(const OffsetsPortalType& offsets)
-    : Offsets(offsets)
-  {
-  }
-
-  VTKM_EXEC
-  vtkm::Id operator()(vtkm::Id inIdx) const
-  {
-    // Compute the upper bound index:
-    vtkm::Id upperBoundIdx;
-    {
-      vtkm::Id first = 0;
-      vtkm::Id length = this->Offsets.GetNumberOfValues();
-
-      while (length > 0)
-      {
-        vtkm::Id halfway = length / 2;
-        vtkm::Id pos = first + halfway;
-        vtkm::Id val = this->Offsets.Get(pos);
-        if (val <= inIdx)
-        {
-          first = pos + 1;
-          length -= halfway + 1;
-        }
-        else
-        {
-          length = halfway;
-        }
-      }
-
-      upperBoundIdx = first;
-    }
-
-    return upperBoundIdx - 1;
-  }
-};
-
-// Much easier for CellSetSingleType:
-struct ConnIdxToCellIdCalcSingleType
-{
-  vtkm::IdComponent CellSize;
-
-  VTKM_CONT
-  ConnIdxToCellIdCalcSingleType(vtkm::IdComponent cellSize)
-    : CellSize(cellSize)
-  {
-  }
-
-  VTKM_EXEC
-  vtkm::Id operator()(vtkm::Id inIdx) const { return inIdx / this->CellSize; }
-};
-
-template <typename ConnTableT, typename RConnTableT>
-void ComputeRConnTable(RConnTableT& rConnTable,
-                       const ConnTableT& connTable,
-                       vtkm::Id numberOfPoints,
-                       vtkm::cont::DeviceAdapterId device)
-{
-  if (rConnTable.ElementsValid)
-  {
-    return;
-  }
-
-  const auto& conn = connTable.Connectivity;
-  auto& rConn = rConnTable.Connectivity;
-  auto& rOffsets = rConnTable.Offsets;
-  const vtkm::Id rConnSize = conn.GetNumberOfValues();
-
-  {
-    vtkm::cont::Token token;
-    const auto offInPortal = connTable.Offsets.PrepareForInput(device, token);
-
-    PassThrough idxCalc{};
-    ConnIdxToCellIdCalc<decltype(offInPortal)> cellIdCalc{ offInPortal };
-
-    vtkm::cont::internal::ReverseConnectivityBuilder builder;
-    builder.Run(conn, rConn, rOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize, device);
-  }
-
-  rConnTable.Shapes = vtkm::cont::make_ArrayHandleConstant(
-    static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
-  rConnTable.ElementsValid = true;
-}
-
-// Specialize for CellSetSingleType:
-template <typename RConnTableT, typename ConnectivityStorageTag>
-void ComputeRConnTable(RConnTableT& rConnTable,
-                       const ConnectivityExplicitInternals< // SingleType specialization types:
-                         typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
-                         ConnectivityStorageTag,
-                         typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>& connTable,
-                       vtkm::Id numberOfPoints,
-                       vtkm::cont::DeviceAdapterId device)
-{
-  if (rConnTable.ElementsValid)
-  {
-    return;
-  }
-
-  const auto& conn = connTable.Connectivity;
-  auto& rConn = rConnTable.Connectivity;
-  auto& rOffsets = rConnTable.Offsets;
-  const vtkm::Id rConnSize = conn.GetNumberOfValues();
-
-  const vtkm::IdComponent cellSize = [&]() -> vtkm::IdComponent {
-    if (connTable.Offsets.GetNumberOfValues() >= 2)
-    {
-      const auto firstTwo = vtkm::cont::ArrayGetValues({ 0, 1 }, connTable.Offsets);
-      return static_cast<vtkm::IdComponent>(firstTwo[1] - firstTwo[0]);
-    }
-    return 0;
-  }();
-
-  PassThrough idxCalc{};
-  ConnIdxToCellIdCalcSingleType cellIdCalc{ cellSize };
-
-  vtkm::cont::internal::ReverseConnectivityBuilder builder;
-  builder.Run(conn, rConn, rOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize, device);
-
-  rConnTable.Shapes = vtkm::cont::make_ArrayHandleConstant(
-    static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
-  rConnTable.ElementsValid = true;
-}
 }
 }
 } // namespace vtkm::cont::internal
