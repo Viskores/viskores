@@ -30,6 +30,7 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 
 // MSVC is giving deprecation warnings in stupid places, so just disable the deprecated tests
 // for that compiler

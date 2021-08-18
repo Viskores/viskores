@@ -14,6 +14,8 @@
 #include <vtkm/worklet/CellDeepCopy.h>
 #include <vtkm/worklet/RemoveUnusedPoints.h>
 
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
+
 #include <vector>
 
 namespace vtkm
@@ -45,7 +47,7 @@ vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
     vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
     vtkm::cont::ArrayHandle<vtkm::Id> offsets;
     vtkm::Id connectivitySize;
-    vtkm::cont::ConvertNumIndicesToOffsets(numIndices, offsets, connectivitySize);
+    vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connectivitySize);
     numIndices.ReleaseResourcesExecution();
 
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;

@@ -10,6 +10,7 @@
 #ifndef vtk_m_worklet_connectivity_CellSetDualGraph_h
 #define vtk_m_worklet_connectivity_CellSetDualGraph_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/exec/CellEdge.h>
 #include <vtkm/worklet/DispatcherMapField.h>

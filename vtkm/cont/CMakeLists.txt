@@ -73,6 +73,7 @@ set(headers
   ColorTable.h
   ColorTableMap.h
   ColorTableSamples.h
+  ConvertNumComponentsToOffsets.h
   CoordinateSystem.h
   DataSet.h
   DataSetBuilderCurvilinear.h

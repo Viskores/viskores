@@ -12,6 +12,8 @@
 
 #include <vtkm/io/internal/VTKDataSetCells.h>
 
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
+
 namespace vtkm
 {
 namespace io
@@ -74,7 +76,7 @@ void VTKUnstructuredGridReader::Read()
   }
   else
   {
-    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+    auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(numIndices);
     vtkm::cont::CellSetExplicit<> cellSet;
     cellSet.Fill(numPoints, shapes, connectivity, offsets);
     this->DataSet.SetCellSet(cellSet);

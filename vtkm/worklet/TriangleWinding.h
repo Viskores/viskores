@@ -32,6 +32,7 @@
 #include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetSingleType.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Invoker.h>
 
@@ -232,7 +233,7 @@ public:
       { // Multiple cell types:
         vtkm::cont::ArrayHandle<vtkm::Id> offsets;
         vtkm::Id connSize;
-        vtkm::cont::ConvertNumIndicesToOffsets(numIndices, offsets, connSize);
+        vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connSize);
         numIndices.ReleaseResourcesExecution();
 
         vtkm::cont::ArrayHandle<vtkm::Id> conn;

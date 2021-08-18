@@ -24,6 +24,7 @@
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetPermutation.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
@@ -839,7 +840,7 @@ public:
     vtkm::Id numberOfPoints = cellSet.GetNumberOfPoints() +
       this->EdgePointsInterpolation.GetNumberOfValues() + total.NumberOfInCellPoints;
 
-    vtkm::cont::ConvertNumIndicesToOffsets(numberOfIndices, offset);
+    vtkm::cont::ConvertNumComponentsToOffsets(numberOfIndices, offset);
     // Create explicit cell set output
     output.Fill(numberOfPoints, shapes, connectivity, offset);
     //}

@@ -14,6 +14,7 @@
 #include <vtkm/filter/internal/ResolveFieldTypeAndExecute.h>
 #include <vtkm/filter/internal/ResolveFieldTypeAndMap.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Logging.h>

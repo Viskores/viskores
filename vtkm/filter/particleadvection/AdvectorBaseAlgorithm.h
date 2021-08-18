@@ -13,6 +13,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
@@ -189,7 +190,7 @@ public:
         auto polyLineShape = vtkm::cont::make_ArrayHandleConstant<vtkm::UInt8>(
           vtkm::CELL_SHAPE_POLY_LINE, totalNumCells);
         vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
-        auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numPointsPerCellArray);
+        auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(numPointsPerCellArray);
 
         vtkm::cont::CellSetExplicit<> polyLines;
         polyLines.Fill(totalNumPts, cellTypes, connectivity, offsets);

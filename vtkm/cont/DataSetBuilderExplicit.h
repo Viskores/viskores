@@ -14,6 +14,7 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 
@@ -84,7 +85,7 @@ public:
     VTKM_ASSERT(xVals.GetNumberOfValues() == yVals.GetNumberOfValues());
     VTKM_ASSERT(xVals.GetNumberOfValues() == zVals.GetNumberOfValues());
 
-    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+    auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(numIndices);
 
     return DataSetBuilderExplicit::BuildDataSet(
       vtkm::cont::make_ArrayHandleCompositeVector(xVals, yVals, zVals),
@@ -109,7 +110,7 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
     const std::string& coordsNm = "coords")
   {
-    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+    auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(numIndices);
     return DataSetBuilderExplicit::BuildDataSet(coords, shapes, offsets, connectivity, coordsNm);
   }
 
@@ -176,7 +177,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::Create(
   auto shapesArray = vtkm::cont::make_ArrayHandle(shapes, vtkm::CopyFlag::On);
   auto connArray = vtkm::cont::make_ArrayHandle(connectivity, vtkm::CopyFlag::On);
 
-  auto offsetsArray = vtkm::cont::ConvertNumIndicesToOffsets(
+  auto offsetsArray = vtkm::cont::ConvertNumComponentsToOffsets(
     vtkm::cont::make_ArrayHandle(numIndices, vtkm::CopyFlag::Off));
 
   return DataSetBuilderExplicit::BuildDataSet(
@@ -195,7 +196,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::Create(
   auto shapesArray = vtkm::cont::make_ArrayHandle(shapes, vtkm::CopyFlag::On);
   auto connArray = vtkm::cont::make_ArrayHandle(connectivity, vtkm::CopyFlag::On);
 
-  auto offsetsArray = vtkm::cont::ConvertNumIndicesToOffsets(
+  auto offsetsArray = vtkm::cont::ConvertNumComponentsToOffsets(
     vtkm::cont::make_ArrayHandle(numIndices, vtkm::CopyFlag::Off));
 
   return DataSetBuilderExplicit::BuildDataSet(
