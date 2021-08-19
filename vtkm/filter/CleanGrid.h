@@ -42,6 +42,17 @@ class VTKM_FILTER_COMMON_EXPORT CleanGrid : public vtkm::filter::FilterDataSet<C
 public:
   CleanGrid();
 
+  VTKM_CONT
+  Filter* Clone() const override
+  {
+    CleanGrid* clone = new CleanGrid();
+    clone->CopyStateFrom(this);
+    return clone;
+  }
+
+  VTKM_CONT
+  bool CanThread() const override { return true; }
+
   /// When the CompactPointFields flag is true, the filter will identify any
   /// points that are not used by the topology. This is on by default.
   ///
@@ -94,6 +105,19 @@ public:
                                     vtkm::filter::PolicyBase<DerivedPolicy>)
   {
     return this->MapFieldOntoOutput(result, field);
+  }
+
+  VTKM_CONT
+  void CopyStateFrom(const CleanGrid* cleanGrid)
+  {
+    this->FilterDataSet<CleanGrid>::CopyStateFrom(cleanGrid);
+
+    this->CompactPointFields = cleanGrid->CompactPointFields;
+    this->MergePoints = cleanGrid->MergePoints;
+    this->Tolerance = cleanGrid->Tolerance;
+    this->ToleranceIsAbsolute = cleanGrid->ToleranceIsAbsolute;
+    this->RemoveDegenerateCells = cleanGrid->RemoveDegenerateCells;
+    this->FastMerge = cleanGrid->FastMerge;
   }
 
 private:

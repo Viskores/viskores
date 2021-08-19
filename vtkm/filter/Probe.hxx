@@ -69,8 +69,17 @@ VTKM_CONT inline bool Probe::MapFieldOntoOutput(vtkm::cont::DataSet& result,
   }
   else if (field.IsFieldCell())
   {
-    return vtkm::filter::MapFieldPermutation(
-      field, this->Worklet.GetCellIds(), result, this->InvalidValue);
+    vtkm::cont::Field outField;
+    if (vtkm::filter::MapFieldPermutation(
+          field, this->Worklet.GetCellIds(), outField, this->InvalidValue))
+    {
+      // output field should be associated with points
+      outField = vtkm::cont::Field(
+        field.GetName(), vtkm::cont::Field::Association::POINTS, outField.GetData());
+      result.AddField(outField);
+      return true;
+    }
+    return false;
   }
   else if (field.IsFieldGlobal())
   {

@@ -7,22 +7,13 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_cont_kokkos_internal_Initialize_h
-#define vtk_m_cont_kokkos_internal_Initialize_h
+#include <vtkm/cont/RuntimeDeviceTracker.h>
+#include <vtkm/cont/kokkos/DeviceAdapterKokkos.h>
+#include <vtkm/cont/testing/TestingRuntimeDeviceConfiguration.h>
 
-namespace vtkm
+int UnitTestKokkosRuntimeDeviceConfiguration(int argc, char* argv[])
 {
-namespace cont
-{
-namespace kokkos
-{
-namespace internal
-{
-
-void Initialize(int& argc, char* argv[]);
+  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagKokkos{});
+  return vtkm::cont::testing::TestingRuntimeDeviceConfiguration<
+    vtkm::cont::DeviceAdapterTagKokkos>::Run(argc, argv);
 }
-}
-}
-} // vtkm::cont::kokkos::internal
-
-#endif // vtk_m_cont_kokkos_internal_Initialize_h

@@ -122,11 +122,21 @@ stages:
   - build
   - test
 
+.use_minimum_supported_cmake:
+  variables:
+    CMAKE_VERSION: "3.13.5"
+
+.install_cmake: &install_cmake |
+  export PATH=$PWD/.gitlab/cmake/bin:$PATH
+  .gitlab/ci/config/cmake.sh "$CMAKE_VERSION"
+  cmake --version
+
 .cmake_build_linux: &cmake_build_linux
   stage: build
   timeout:  2 hours
   interruptible: true
   before_script:
+    - *install_cmake
     - .gitlab/ci/config/sccache.sh
     - export PATH=$PWD/.gitlab:$PATH
     - SCCACHE_IDLE_TIMEOUT=0 sccache --start-server
@@ -148,6 +158,7 @@ stages:
       - build/include/
       - build/vtkm/thirdparty/diy/vtkmdiy/
       - build/lib/
+      - build/config/
 
       # CTest and CMake install files.
       # XXX(globbing): Can be simplified with support from
@@ -170,12 +181,10 @@ stages:
   stage: test
   timeout:  50 minutes
   interruptible: true
+  before_script:
+    - *install_cmake
   script:
-    #Need to use our custom ctest-latest symlink
-    #This will allow us to use 3.17+ which has support
-    #for running failed tests multiple times so failures
-    #due to system load are not reported
-    - "ctest-latest -VV -S .gitlab/ci/ctest_test.cmake"
+    - "ctest -VV -S .gitlab/ci/ctest_test.cmake"
   artifacts:
     expire_in: 24 hours
     when: always
@@ -193,13 +202,18 @@ stages:
       - build/*/*/*/*.png
       - build/*/*/*/*.pnm
       - build/*/*/*/*.pmm
+    reports:
+      junit:
+        - build/junit.xml
 
 .cmake_memcheck_linux: &cmake_memcheck_linux
   stage: test
   timeout:  2 hours
   interruptible: true
+  before_script:
+    - *install_cmake
   script:
-    - "ctest-latest -VV -S .gitlab/ci/ctest_memcheck.cmake"
+    - "ctest -VV -S .gitlab/ci/ctest_memcheck.cmake"
   artifacts:
     expire_in: 24 hours
     when: always
@@ -208,6 +222,9 @@ stages:
       - build/*.png
       - build/*.pnm
       - build/*.pmm
+    reports:
+      junit:
+        - build/junit.xml
 
 include:
   - local: '/.gitlab/ci/centos7.yml'

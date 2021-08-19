@@ -60,6 +60,22 @@ void SetFilter(FilterType& filter,
 
 void TestAMRStreamline(FilterType fType, bool useThreaded)
 {
+  switch (fType)
+  {
+    case PARTICLE_ADVECTION:
+      std::cout << "Particle advection";
+      break;
+    case STREAMLINE:
+      std::cout << "Streamline";
+      break;
+    case PATHLINE:
+      std::cout << "Pathline";
+      break;
+  }
+  if (useThreaded)
+    std::cout << " - using threaded";
+  std::cout << " - on an AMR data set" << std::endl;
+
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   if (comm.size() < 2)
     return;
@@ -296,6 +312,24 @@ void ValidateOutput(const vtkm::cont::DataSet& out,
 
 void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, bool useThreaded)
 {
+  switch (fType)
+  {
+    case PARTICLE_ADVECTION:
+      std::cout << "Particle advection";
+      break;
+    case STREAMLINE:
+      std::cout << "Streamline";
+      break;
+    case PATHLINE:
+      std::cout << "Pathline";
+      break;
+  }
+  if (useGhost)
+    std::cout << " - using ghost cells";
+  if (useThreaded)
+    std::cout << " - using threaded";
+  std::cout << " - on a partitioned data set" << std::endl;
+
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
 
   vtkm::Id numDims = 5;

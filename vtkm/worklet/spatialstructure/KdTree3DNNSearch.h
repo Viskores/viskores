@@ -35,7 +35,8 @@ namespace worklet
 namespace spatialstructure
 {
 
-class KdTree3DNNSearch
+class VTKM_DEPRECATED(1.7, "K-D tree recursive searches are not well supported on GPU devices.")
+  KdTree3DNNSearch
 {
 public:
   class NearestNeighborSearch3DWorklet : public vtkm::worklet::WorkletMapField

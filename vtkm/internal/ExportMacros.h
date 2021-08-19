@@ -85,7 +85,7 @@
 //    resolve to a single type instance
 //  - Be a type ( or component of a types signature ) that can be passed between
 //    dynamic libraries and requires RTTI support ( dynamic_cast ).
-#if defined(VTKM_MSVC)
+#if defined(VTKM_MSVC) || defined(VTKM_CUDA)
 #define VTKM_ALWAYS_EXPORT
 #define VTKM_NEVER_EXPORT
 #else

@@ -298,5 +298,24 @@ std::string GetLogLevelName(LogLevel level)
   using T = std::underlying_type<LogLevel>::type;
   return std::to_string(static_cast<T>(level));
 }
+
+VTKM_CONT std::string TypeToString(const std::type_info& t)
+{
+#ifdef VTKM_ENABLE_LOGGING
+  return loguru::demangle(t.name()).c_str();
+#else  // VTKM_ENABLE_LOGGING
+  return t.name();
+#endif // VTKM_ENABLE_LOGGING
+}
+
+VTKM_CONT std::string TypeToString(const std::type_index& t)
+{
+#ifdef VTKM_ENABLE_LOGGING
+  return loguru::demangle(t.name()).c_str();
+#else  // VTKM_ENABLE_LOGGING
+  return t.name();
+#endif // VTKM_ENABLE_LOGGING
+}
+
 }
 } // end namespace vtkm::cont

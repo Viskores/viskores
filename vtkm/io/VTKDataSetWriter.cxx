@@ -96,7 +96,15 @@ struct OutputArrayDataFunctor
       auto value = portal.Get(valueIndex);
       for (vtkm::IdComponent cIndex = 0; cIndex < value.GetNumberOfComponents(); ++cIndex)
       {
-        out << ((cIndex == 0) ? "" : " ") << value[cIndex];
+        out << ((cIndex == 0) ? "" : " ");
+        if (std::numeric_limits<T>::is_integer && sizeof(T) == 1)
+        {
+          out << static_cast<int>(value[cIndex]);
+        }
+        else
+        {
+          out << value[cIndex];
+        }
       }
       out << "\n";
     }

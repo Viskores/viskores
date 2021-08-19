@@ -16,6 +16,7 @@
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/filter/MapFieldPermutation.h>
 
+#include <vtkm/filter/Instantiations.h>
 #include <vtkm/worklet/Contour.h>
 
 namespace vtkm
@@ -33,6 +34,17 @@ class VTKM_FILTER_CONTOUR_EXPORT Contour : public vtkm::filter::FilterDataSetWit
 {
 public:
   using SupportedTypes = vtkm::List<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>;
+
+  VTKM_CONT
+  Filter* Clone() const override
+  {
+    Contour* clone = new Contour();
+    clone->CopyStateFrom(this);
+    return clone;
+  }
+
+  VTKM_CONT
+  bool CanThread() const override { return true; }
 
   Contour();
 
@@ -155,6 +167,21 @@ public:
     return true;
   }
 
+protected:
+  VTKM_CONT
+  void CopyStateFrom(const Contour* contour)
+  {
+    this->FilterDataSetWithField<Contour>::CopyStateFrom(contour);
+
+    this->IsoValues = contour->IsoValues;
+    this->GenerateNormals = contour->GenerateNormals;
+    this->AddInterpolationEdgeIds = contour->AddInterpolationEdgeIds;
+    this->ComputeFastNormalsForStructured = contour->ComputeFastNormalsForStructured;
+    this->ComputeFastNormalsForUnstructured = contour->ComputeFastNormalsForUnstructured;
+    this->NormalArrayName = contour->NormalArrayName;
+    this->InterpolationEdgeIdsArrayName = contour->InterpolationEdgeIdsArrayName;
+  }
+
 private:
   std::vector<vtkm::Float64> IsoValues;
   bool GenerateNormals;
@@ -166,77 +193,38 @@ private:
   vtkm::worklet::Contour Worklet;
 };
 
-#ifndef vtk_m_filter_ContourExecuteInteger_cxx
-
+VTKM_INSTANTIATION_BEGIN
 extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::UInt8>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_INSTANTIATION_END
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
-  const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::UInt8, vtkm::cont::StorageTagVirtual>&,
-  const vtkm::filter::FieldMetadata&,
-  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
-VTKM_DEPRECATED_SUPPRESS_END
-#endif
-
+VTKM_INSTANTIATION_BEGIN
 extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Int8>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_INSTANTIATION_END
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
-  const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::Int8, vtkm::cont::StorageTagVirtual>&,
-  const vtkm::filter::FieldMetadata&,
-  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
-VTKM_DEPRECATED_SUPPRESS_END
-#endif
-
-#endif //!vtk_m_filter_ContourExecuteInteger_cxx
-
-#ifndef vtk_m_filter_ContourExecuteScalar_cxx
-
+VTKM_INSTANTIATION_BEGIN
 extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float32>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_INSTANTIATION_END
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
-  const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagVirtual>&,
-  const vtkm::filter::FieldMetadata&,
-  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
-VTKM_DEPRECATED_SUPPRESS_END
-#endif
-
+VTKM_INSTANTIATION_BEGIN
 extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float64>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_INSTANTIATION_END
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
-  const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagVirtual>&,
-  const vtkm::filter::FieldMetadata&,
-  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
-VTKM_DEPRECATED_SUPPRESS_END
-#endif
-
-#endif //!vtk_m_filter_ContourExecuteScalar_cxx
 }
 } // namespace vtkm::filter
 

@@ -647,10 +647,8 @@ public:
   /// Note that in a multithreaded environment the validity of this result can
   /// change.
   ///
-  /// TODO: Deprecate this method in favor of IsOnDevice since the data can be on multiple
-  /// devices at once.
   VTKM_CONT
-  DeviceAdapterId GetDeviceAdapterId() const
+  VTKM_DEPRECATED(1.7, "Use ArrayHandle::IsOnDevice.") DeviceAdapterId GetDeviceAdapterId() const
   {
     return detail::ArrayHandleGetDeviceAdapterId(this->Buffers);
   }

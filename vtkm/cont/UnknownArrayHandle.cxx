@@ -201,6 +201,19 @@ VTKM_CONT std::string UnknownArrayHandle::GetStorageTypeName() const
   }
 }
 
+VTKM_CONT std::string UnknownArrayHandle::GetArrayTypeName() const
+{
+  if (this->Container)
+  {
+    return "vtkm::cont::ArrayHandle<" + this->GetValueTypeName() + ", " +
+      this->GetStorageTypeName() + ">";
+  }
+  else
+  {
+    return "";
+  }
+}
+
 VTKM_CONT vtkm::Id UnknownArrayHandle::GetNumberOfValues() const
 {
   if (this->Container)
@@ -297,7 +310,7 @@ VTKM_CONT_EXPORT void ThrowCastAndCallException(const vtkm::cont::UnknownArrayHa
          "Array: ";
   ref.PrintSummary(out);
   out << "TypeList: " << vtkm::cont::TypeToString(type) << "\n";
-  throw vtkm::cont::ErrorBadValue(out.str());
+  throw vtkm::cont::ErrorBadType(out.str());
 }
 
 } // namespace detail

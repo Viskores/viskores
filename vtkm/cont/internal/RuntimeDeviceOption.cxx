@@ -10,6 +10,7 @@
 #include <vtkm/cont/internal/RuntimeDeviceOption.h>
 
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/Logging.h>
 
 #include <string>
 
@@ -92,6 +93,11 @@ void RuntimeDeviceOption::SetOption(const vtkm::Id& value)
 
 vtkm::Id RuntimeDeviceOption::GetValue() const
 {
+  if (!this->IsSet())
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "GetValue() called on Argument '" << this->EnvName << "' when it was not set.");
+  }
   return this->Value;
 }
 

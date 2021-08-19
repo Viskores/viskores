@@ -33,34 +33,12 @@ namespace detail
 {
 
 // Element-wise copy.
-// TODO: Remove last argument once ArryHandleNewStyle becomes ArrayHandle
 template <typename InArrayType, typename OutArrayType>
 void ArrayCopyWithAlgorithm(const InArrayType& source, OutArrayType& destination)
 {
-  // Find the device that already has a copy of the data:
-  vtkm::cont::DeviceAdapterId devId = source.GetDeviceAdapterId();
-
-  // If the data is not on any device, let the runtime tracker pick an available
-  // parallel copy algorithm.
-  if (devId.GetValue() == VTKM_DEVICE_ADAPTER_UNDEFINED)
-  {
-    devId = vtkm::cont::make_DeviceAdapterId(VTKM_DEVICE_ADAPTER_ANY);
-  }
-
-  bool success = vtkm::cont::Algorithm::Copy(devId, source, destination);
-
-  if (!success && devId.GetValue() != VTKM_DEVICE_ADAPTER_ANY)
-  { // Retry on any device if the first attempt failed.
-    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "Failed to run ArrayCopy on device '" << devId.GetName()
-                                                     << "'. Retrying on any device.");
-    success = vtkm::cont::Algorithm::Copy(vtkm::cont::DeviceAdapterTagAny{}, source, destination);
-  }
-
-  if (!success)
-  {
-    throw vtkm::cont::ErrorExecution("Failed to run ArrayCopy on any device.");
-  }
+  // Current implementation of Algorithm::Copy will first try to copy on devices where the
+  // data is already available.
+  vtkm::cont::Algorithm::Copy(source, destination);
 }
 
 // TODO: Remove last argument once ArryHandleNewStyle becomes ArrayHandle

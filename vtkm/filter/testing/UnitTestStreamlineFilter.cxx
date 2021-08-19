@@ -583,7 +583,6 @@ void TestStreamlineFilters()
                                      FilterType::STREAMLINE,
                                      FilterType::PATHLINE,
                                      FilterType::PATH_PARTICLE };
-
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)
@@ -628,6 +627,19 @@ void TestStreamlineFilters()
 
   for (auto useSL : flags)
     TestStreamlineFile(fishFile, fishPts, fishStep, 100, fishEndPts, useSL);
+
+  //ARMWind corner case of particle near boundary.
+  std::string amrWindFile =
+    vtkm::cont::testing::Testing::DataPath("rectilinear/amr_wind_flowfield.vtk");
+  vtkm::FloatDefault amrWindStep = 0.001f;
+  std::vector<vtkm::Vec3f> amrWindPts, amrWindEndPts;
+
+  amrWindPts.push_back(
+    vtkm::Vec3f(0.053217993470017745f, 0.034506499099396459f, 0.057097713925011492f));
+  amrWindEndPts.push_back(vtkm::Vec3f(0.05712112784f, 0.03450008854f, 0.02076501213f));
+
+  for (auto useSL : flags)
+    TestStreamlineFile(amrWindFile, amrWindPts, amrWindStep, 10000, amrWindEndPts, useSL);
 }
 }
 
