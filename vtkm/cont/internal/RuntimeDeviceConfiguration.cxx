@@ -50,8 +50,8 @@ void LogReturnCode(const RuntimeDeviceConfigReturnCode& code,
   // `Initialize` regardless of whether it is used. The user does not need a lot of
   // useless warnings about (for example) the serial device not supporting parameters
   // intended for a real parallel device.
-  if (code != RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE ||
-      code != RuntimeDeviceConfigReturnCode::SUCCESS)
+  if ((code != RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE) &&
+      (code != RuntimeDeviceConfigReturnCode::SUCCESS))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
                function << " for device: " << deviceName << " had code: "
