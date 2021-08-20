@@ -361,8 +361,10 @@ function(vtkm_add_target_information uses_vtkm_target)
   endforeach()
 
   # set the required target properties
-  set_target_properties(${targets} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(${targets} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  if(NOT VTKm_NO_DEPRECATED_VIRTUAL)
+    set_target_properties(${targets} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(${targets} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  endif()
   # CUDA_ARCHITECTURES added in CMake 3.18
   set_target_properties(${targets} PROPERTIES CUDA_ARCHITECTURES OFF)
 
@@ -385,7 +387,7 @@ function(vtkm_add_target_information uses_vtkm_target)
   #
   # This is required as CUDA currently doesn't support device side calls across
   # dynamic library boundaries.
-  if((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
+  if((NOT VTKm_NO_DEPRECATED_VIRTUAL) AND ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda)))
     foreach(target IN LISTS targets)
       get_target_property(lib_type ${target} TYPE)
       if (TARGET vtkm::cuda)
@@ -403,12 +405,14 @@ function(vtkm_add_target_information uses_vtkm_target)
         if(PROJECT_NAME STREQUAL "VTKm")
           message(SEND_ERROR "${target} needs to be built STATIC as CUDA doesn't"
                 " support virtual methods across dynamic library boundaries. You"
-                " need to set the CMake option BUILD_SHARED_LIBS to `OFF`.")
+                " need to set the CMake option BUILD_SHARED_LIBS to `OFF` or"
+                " (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.")
         else()
           message(SEND_ERROR "${target} needs to be built STATIC as CUDA doesn't"
                   " support virtual methods across dynamic library boundaries. You"
                   " should either explicitly call add_library with the `STATIC` keyword"
-                  " or set the CMake option BUILD_SHARED_LIBS to `OFF`.")
+                  " or set the CMake option BUILD_SHARED_LIBS to `OFF` or"
+                  " (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.")
         endif()
       endif()
     endforeach()

@@ -31,6 +31,7 @@ struct vtkm_cuda_policy : thrust::device_execution_policy<vtkm_cuda_policy>
 //The purpose of this is that for 32bit types (UInt32,Int32,Float32) thrust
 //will call a super fast radix sort only if the operator is thrust::less
 //or thrust::greater.
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename T>
 __host__ __device__ void sort(
   const vtkm_cuda_policy& exec,
@@ -42,6 +43,7 @@ __host__ __device__ void sort(
   return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::less<T>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename T, typename RandomAccessIterator>
 __host__ __device__ void sort_by_key(
   const vtkm_cuda_policy& exec,
@@ -55,6 +57,7 @@ __host__ __device__ void sort_by_key(
     ThrustCudaPolicyPerThread, first, last, values_first, thrust::less<T>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename T>
 __host__ __device__ void sort(
   const vtkm_cuda_policy& exec,
@@ -66,6 +69,7 @@ __host__ __device__ void sort(
   return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::less<T>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename T, typename RandomAccessIterator>
 __host__ __device__ void sort_by_key(
   const vtkm_cuda_policy& exec,
@@ -79,6 +83,7 @@ __host__ __device__ void sort_by_key(
     ThrustCudaPolicyPerThread, first, last, values_first, thrust::less<T>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename T>
 __host__ __device__ void sort(
   const vtkm_cuda_policy& exec,
@@ -90,6 +95,7 @@ __host__ __device__ void sort(
   return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::greater<T>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename T, typename RandomAccessIterator>
 __host__ __device__ void sort_by_key(
   const vtkm_cuda_policy& exec,
@@ -103,6 +109,7 @@ __host__ __device__ void sort_by_key(
     ThrustCudaPolicyPerThread, first, last, values_first, thrust::greater<T>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename T>
 __host__ __device__ void sort(
   const vtkm_cuda_policy& exec,
@@ -114,6 +121,7 @@ __host__ __device__ void sort(
   return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::greater<T>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename T, typename RandomAccessIterator>
 __host__ __device__ void sort_by_key(
   const vtkm_cuda_policy& exec,
@@ -127,6 +135,7 @@ __host__ __device__ void sort_by_key(
     ThrustCudaPolicyPerThread, first, last, values_first, thrust::greater<T>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename RandomAccessIterator, typename StrictWeakOrdering>
 __host__ __device__ void sort(const vtkm_cuda_policy& exec,
                               RandomAccessIterator first,
@@ -140,6 +149,7 @@ __host__ __device__ void sort(const vtkm_cuda_policy& exec,
   return thrust::sort(ThrustCudaPolicyPerThread, first, last, comp);
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename RandomAccessIteratorKeys,
           typename RandomAccessIteratorValues,
           typename StrictWeakOrdering>
@@ -156,6 +166,7 @@ __host__ __device__ void sort_by_key(const vtkm_cuda_policy& exec,
   return thrust::sort_by_key(ThrustCudaPolicyPerThread, first, last, values_first, comp);
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename T,
           typename InputIterator2,
           typename OutputIterator1,

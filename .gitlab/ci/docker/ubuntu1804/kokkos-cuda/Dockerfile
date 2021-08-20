@@ -43,7 +43,7 @@ RUN mkdir -p /opt/kokkos/build && \
           -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
           -DKokkos_ENABLE_CUDA_LAMBDA=ON \
           -DKokkos_ENABLE_CUDA_LDG_INTRINSIC=ON \
-          -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
+          -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=OFF \
           -DKokkos_ENABLE_CUDA_UVM=ON \
           -DKokkos_ARCH_TURING75=ON && \
     cmake --build . -j 8 && \

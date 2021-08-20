@@ -86,7 +86,7 @@
     - .docker_image
 
 .ubuntu1804_cuda_kokkos: &ubuntu1804_cuda_kokkos
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20201016"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20210819"
   extends:
     - .docker_image
 
