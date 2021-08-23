@@ -39,6 +39,7 @@ git commit -m 'Add release notes for @VERSION@@RC@'
 ```
 -->
 
+  - [ ] Update the version and date in the LICENSE.md file.
   - [ ] Create update version commit:
 
 ```
