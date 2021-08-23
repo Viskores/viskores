@@ -61,20 +61,24 @@ public:
   VTKM_CONT Field& operator=(const vtkm::cont::Field& src);
   VTKM_CONT Field& operator=(vtkm::cont::Field&& src) noexcept;
 
+  VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::CELL_SET; }
+  VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::POINTS; }
+  VTKM_CONT bool IsFieldGlobal() const { return this->FieldAssociation == Association::WHOLE_MESH; }
+
+  /// Returns true if the array of the field has a value type that matches something in
+  /// `VTKM_FIELD_TYPE_LIST` and a storage that matches something in `VTKM_FIELD_STORAGE_LIST`.
+  VTKM_CONT bool IsSupportedType() const;
+
+  VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfValues(); }
+
   VTKM_CONT const std::string& GetName() const { return this->Name; }
   VTKM_CONT Association GetAssociation() const { return this->FieldAssociation; }
   const vtkm::cont::UnknownArrayHandle& GetData() const;
   vtkm::cont::UnknownArrayHandle& GetData();
 
-  VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::CELL_SET; }
-  VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::POINTS; }
-  VTKM_CONT bool IsFieldGlobal() const { return this->FieldAssociation == Association::WHOLE_MESH; }
+  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
 
-  VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfValues(); }
-
-  /// Returns true if the array of the field has a value type that matches something in
-  /// `VTKM_FIELD_TYPE_LIST` and a storage that matches something in `VTKM_FIELD_STORAGE_LIST`.
-  VTKM_CONT bool IsSupportedType() const;
+  VTKM_CONT void GetRange(vtkm::Range* range) const;
 
   /// \brief Get the data as an array with `vtkm::FloatDefault` components.
   ///
@@ -139,10 +143,6 @@ public:
   {
     return this->GetRange();
   }
-
-  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
-
-  VTKM_CONT void GetRange(vtkm::Range* range) const;
 
   VTKM_CONT void SetData(const vtkm::cont::UnknownArrayHandle& newdata);
 
