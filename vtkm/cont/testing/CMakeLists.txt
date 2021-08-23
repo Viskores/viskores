@@ -69,6 +69,7 @@ set(unit_tests
   UnitTestDataSetBuilderExplicit.cxx
   UnitTestDataSetBuilderRectilinear.cxx
   UnitTestDataSetBuilderUniform.cxx
+  UnitTestDataSetConvertToExpected.cxx
   UnitTestDataSetPermutation.cxx
   UnitTestDataSetRectilinear.cxx
   UnitTestDataSetUniform.cxx

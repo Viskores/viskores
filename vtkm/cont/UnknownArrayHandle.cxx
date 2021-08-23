@@ -299,7 +299,7 @@ VTKM_CONT void UnknownArrayHandle::PrintSummary(std::ostream& out, bool full) co
   }
 }
 
-namespace detail
+namespace internal
 {
 
 VTKM_CONT_EXPORT void ThrowCastAndCallException(const vtkm::cont::UnknownArrayHandle& ref,
@@ -313,7 +313,7 @@ VTKM_CONT_EXPORT void ThrowCastAndCallException(const vtkm::cont::UnknownArrayHa
   throw vtkm::cont::ErrorBadType(out.str());
 }
 
-} // namespace detail
+} // namespace internal
 }
 } // namespace vtkm::cont
 

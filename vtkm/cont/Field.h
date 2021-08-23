@@ -61,16 +61,74 @@ public:
   VTKM_CONT Field& operator=(const vtkm::cont::Field& src);
   VTKM_CONT Field& operator=(vtkm::cont::Field&& src) noexcept;
 
+  VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::CELL_SET; }
+  VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::POINTS; }
+  VTKM_CONT bool IsFieldGlobal() const { return this->FieldAssociation == Association::WHOLE_MESH; }
+
+  /// Returns true if the array of the field has a value type that matches something in
+  /// `VTKM_FIELD_TYPE_LIST` and a storage that matches something in `VTKM_FIELD_STORAGE_LIST`.
+  VTKM_CONT bool IsSupportedType() const;
+
+  VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfValues(); }
+
   VTKM_CONT const std::string& GetName() const { return this->Name; }
   VTKM_CONT Association GetAssociation() const { return this->FieldAssociation; }
   const vtkm::cont::UnknownArrayHandle& GetData() const;
   vtkm::cont::UnknownArrayHandle& GetData();
 
-  VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::CELL_SET; }
-  VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::POINTS; }
-  VTKM_CONT bool IsFieldGlobal() const { return this->FieldAssociation == Association::WHOLE_MESH; }
+  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
 
-  VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfValues(); }
+  VTKM_CONT void GetRange(vtkm::Range* range) const;
+
+  /// \brief Get the data as an array with `vtkm::FloatDefault` components.
+  ///
+  /// Returns a `vtkm::cont::UnknownArrayHandle` that contains an array that either contains
+  /// values of type `vtkm::FloatDefault` or contains `Vec`s with components of type
+  /// `vtkm::FloatDefault`. If the array has value types that do not match this type, then
+  /// it will be copied into an array that does.
+  ///
+  /// Additionally, the returned array will have a storage that is compatible with
+  /// something in `VTKM_FIELD_STORAGE_LIST`. If this condition is not met, then the
+  /// array will be copied.
+  ///
+  /// If the array contained in the field already matches the required criteria, the array
+  /// will be returned without copying.
+  ///
+  VTKM_CONT vtkm::cont::UnknownArrayHandle GetDataAsDefaultFloat() const;
+
+  /// \brief Get the data as an array of an expected type.
+  ///
+  /// Returns a `vtkm::cont::UnknownArrayHandle` that contains an array that (probably) has
+  /// a value type that matches something in `VTKM_FIELD_TYPE_LIST` and a storage that matches
+  /// something in `VTKM_FIELD_STORAGE_LIST`. If the array has a value type and storage that
+  /// match `VTKM_FIELD_TYPE_LIST` and `VTKM_FIELD_STORAGE_LIST` respectively, then the same
+  /// array is returned. If something does not match, then the data are copied to a
+  /// `vtkm::cont::ArrayHandleBasic` with a value type component of `vtkm::FloatDefault`.
+  ///
+  /// Note that the returned array is likely to be compatible with `VTKM_FIELD_TYPE_LIST`, but
+  /// not guaranteed. In particular, if this field contains `Vec`s, the returned array will also
+  /// contain `Vec`s of the same size. For example, if the field contains `vtkm::Vec2i_16` values,
+  /// they will (likely) be converted to `vtkm::Vec2f`. Howver, `vtkm::Vec2f` may still not be
+  /// in `VTKM_FIELD_TYPE_LIST`.
+  ///
+  VTKM_CONT vtkm::cont::UnknownArrayHandle GetDataWithExpectedTypes() const;
+
+  /// \brief Convert this field to use an array of an expected type.
+  ///
+  /// Copies the internal data, as necessary, to an array that (probably) has a value type
+  /// that matches something in `VTKM_FIELD_TYPE_LIST` and a storage that matches something
+  /// in `VTKM_FIELD_STORAGE_LIST`. If the field already has a value type and storage that
+  /// match `VTKM_FIELD_TYPE_LIST` and `VTKM_FIELD_STORAGE_LIST` respectively, then nothing
+  /// in the field is changed. If something does not match, then the data are copied to a
+  /// `vtkm::cont::ArrayHandleBasic` with a value type component of `vtkm::FloatDefault`.
+  ///
+  /// Note that the returned array is likely to be compatible with `VTKM_FIELD_TYPE_LIST`, but
+  /// not guaranteed. In particular, if this field contains `Vec`s, the returned array will also
+  /// contain `Vec`s of the same size. For example, if the field contains `vtkm::Vec2i_16` values,
+  /// they will (likely) be converted to `vtkm::Vec2f`. Howver, `vtkm::Vec2f` may still not be
+  /// in `VTKM_FIELD_TYPE_LIST`.
+  ///
+  VTKM_CONT void ConvertToExpected();
 
   template <typename TypeList>
   VTKM_DEPRECATED(1.6, "TypeList no longer supported in Field::GetRange.")
@@ -85,10 +143,6 @@ public:
   {
     return this->GetRange();
   }
-
-  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
-
-  VTKM_CONT void GetRange(vtkm::Range* range) const;
 
   VTKM_CONT void SetData(const vtkm::cont::UnknownArrayHandle& newdata);
 

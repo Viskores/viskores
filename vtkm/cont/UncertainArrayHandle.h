@@ -209,7 +209,7 @@ public:
 
     bool success = false;
     vtkm::ListForEach(internal::UncertainArrayHandleDeserializeFunctor{},
-                      vtkm::cont::detail::ListAllArrayTypes<ValueTypeList, StorageTypeList>{},
+                      vtkm::cont::internal::ListAllArrayTypes<ValueTypeList, StorageTypeList>{},
                       obj,
                       typeString,
                       success,
