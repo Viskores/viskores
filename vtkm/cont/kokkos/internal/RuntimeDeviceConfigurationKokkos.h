@@ -11,6 +11,7 @@
 #define vtk_m_cont_kokkos_internal_RuntimeDeviceConfigurationKokkos_h
 
 #include <vtkm/cont/ErrorInternal.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/RuntimeDeviceConfiguration.h>
 #include <vtkm/cont/kokkos/internal/DeviceAdapterTagKokkos.h>
 

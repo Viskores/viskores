@@ -26,6 +26,7 @@ set(unit_tests
   UnitTestCudaMathEdgeCases.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
   UnitTestCudaPointLocatorSparseGrid.cu
+  UnitTestCudaRuntimeDeviceConfiguration.cu
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
