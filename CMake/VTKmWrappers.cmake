@@ -431,9 +431,11 @@ function(vtkm_library)
     set_property(TARGET ${lib_name} PROPERTY BUILD_RPATH ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
   endif()
 
-  # Setup the SOVERSION and VERSION information for this vtkm library
-  set_property(TARGET ${lib_name} PROPERTY VERSION 1)
-  set_property(TARGET ${lib_name} PROPERTY SOVERSION 1)
+  if (NOT VTKm_SKIP_LIBRARY_VERSIONS)
+    # Setup the SOVERSION and VERSION information for this vtkm library
+    set_property(TARGET ${lib_name} PROPERTY VERSION 1)
+    set_property(TARGET ${lib_name} PROPERTY SOVERSION 1)
+  endif ()
 
   # Support custom library suffix names, for other projects wanting to inject
   # their own version numbers etc.

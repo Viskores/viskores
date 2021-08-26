@@ -157,6 +157,10 @@ vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README a
 # and this option will be removed.
 vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" OFF)
 
+# In Python wheels, having SONAME suffixes just ends up duplicating files.
+# Allow VTK to turn off these symlinks for its wheel distribution.
+vtkm_option(VTKm_SKIP_LIBRARY_VERSIONS "Skip versioning VTK-m libraries" OFF)
+
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
@@ -167,6 +171,7 @@ mark_as_advanced(
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
   VTKm_NO_DEPRECATED_VIRTUAL
+  VTKm_SKIP_LIBRARY_VERSIONS
   )
 
 #-----------------------------------------------------------------------------
