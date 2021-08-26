@@ -25,6 +25,11 @@ static int archVersion = 0;
 
 void queryNumberOfDevicesandHighestArchSupported(vtkm::Int32& nod, vtkm::Int32& has)
 {
+  // We currently cannot use RuntimeDeviceInformation{}.GetRuntimeConfiguration(
+  // vtkm::cont::DeviceAdapterTagCuda()) in this function due to constraints in
+  // initialize that query device Existence before we initialize the Runtime
+  // Configuration. Once those constraints are removed/fixed this file can be
+  // updated to use that call instead of directly querying the cuda device
   std::call_once(deviceQueryFlag, []() {
     //first query for the number of devices
     auto res = cudaGetDeviceCount(&numDevices);

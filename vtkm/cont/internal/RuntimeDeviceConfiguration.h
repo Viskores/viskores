@@ -24,14 +24,13 @@ namespace cont
 namespace internal
 {
 
-enum class RuntimeDeviceConfigReturnCode : vtkm::Id
+enum class RuntimeDeviceConfigReturnCode
 {
   SUCCESS,
   OUT_OF_BOUNDS,
   INVALID_FOR_DEVICE,
   INVALID_VALUE,
-  NOT_APPLIED,
-  INTERNAL_ERROR
+  NOT_APPLIED
 };
 
 class VTKM_CONT_EXPORT RuntimeDeviceConfigurationBase

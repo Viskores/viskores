@@ -62,17 +62,8 @@ public:
           << value << " >= " << this->CudaDeviceCount);
       return RuntimeDeviceConfigReturnCode::INVALID_VALUE;
     }
-    try
-    {
-      VTKM_CUDA_CALL(cudaSetDevice(value));
-      return RuntimeDeviceConfigReturnCode::SUCCESS;
-    }
-    catch (const vtkm::cont::cuda::ErrorCuda& err)
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "Failed to set CudaDeviceInstance: " << err.GetMessage());
-      return RuntimeDeviceConfigReturnCode::INTERNAL_ERROR;
-    }
+    VTKM_CUDA_CALL(cudaSetDevice(value));
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(

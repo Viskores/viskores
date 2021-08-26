@@ -239,8 +239,10 @@ void CudaAllocator::PrepareForInput(const void* ptr, std::size_t numBytes)
   if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
 #if CUDART_VERSION >= 8000
-    int dev;
-    VTKM_CUDA_CALL(cudaGetDevice(&dev));
+    vtkm::Id dev;
+    vtkm::cont::RuntimeDeviceInformation()
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
+      .GetDeviceInstance(dev);
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
@@ -254,8 +256,10 @@ void CudaAllocator::PrepareForOutput(const void* ptr, std::size_t numBytes)
   if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
 #if CUDART_VERSION >= 8000
-    int dev;
-    VTKM_CUDA_CALL(cudaGetDevice(&dev));
+    vtkm::Id dev;
+    vtkm::cont::RuntimeDeviceInformation()
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
+      .GetDeviceInstance(dev);
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
