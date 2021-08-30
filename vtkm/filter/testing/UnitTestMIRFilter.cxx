@@ -49,14 +49,14 @@ vtkm::cont::DataSet GetTestDataSet()
     }
   }
 
-  std::vector<vtkm::Int64> idAR{ 1, 2, 2, 1, 2, 1, 1, 2 };
-  std::vector<vtkm::Int64> lnAR{ 1, 1, 1, 1, 1, 1, 1, 1 };
-  std::vector<vtkm::Int64> ofAR{ 0, 1, 2, 3, 4, 5, 6, 7 };
-  vtkm::cont::ArrayHandle<vtkm::Int64> offsets =
+  std::vector<vtkm::Id> idAR{ 1, 2, 2, 1, 2, 1, 1, 2 };
+  std::vector<vtkm::Id> lnAR{ 1, 1, 1, 1, 1, 1, 1, 1 };
+  std::vector<vtkm::Id> ofAR{ 0, 1, 2, 3, 4, 5, 6, 7 };
+  vtkm::cont::ArrayHandle<vtkm::Id> offsets =
     vtkm::cont::make_ArrayHandle(ofAR, vtkm::CopyFlag::On);
-  vtkm::cont::ArrayHandle<vtkm::Int64> lengths =
+  vtkm::cont::ArrayHandle<vtkm::Id> lengths =
     vtkm::cont::make_ArrayHandle(lnAR, vtkm::CopyFlag::On);
-  vtkm::cont::ArrayHandle<vtkm::Int64> ids = vtkm::cont::make_ArrayHandle(idAR, vtkm::CopyFlag::On);
+  vtkm::cont::ArrayHandle<vtkm::Id> ids = vtkm::cont::make_ArrayHandle(idAR, vtkm::CopyFlag::On);
   std::vector<vtkm::Float32> vfAR{ 1, 1, 1, 1, 1, 1, 1, 1 };
   vtkm::cont::ArrayHandle<vtkm::Float32> vfs =
     vtkm::cont::make_ArrayHandle(vfAR, vtkm::CopyFlag::On);
