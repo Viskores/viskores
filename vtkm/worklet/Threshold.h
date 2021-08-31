@@ -48,28 +48,41 @@ public:
     VTKM_CONT
     ThresholdByPointField()
       : Predicate()
+      , ReturnAllInRange()
     {
     }
 
     VTKM_CONT
-    explicit ThresholdByPointField(const UnaryPredicate& predicate)
+    explicit ThresholdByPointField(const UnaryPredicate& predicate, const bool& returnAllInRange)
       : Predicate(predicate)
+      , ReturnAllInRange(returnAllInRange)
     {
     }
 
     template <typename ScalarsVecType>
     VTKM_EXEC bool operator()(const ScalarsVecType& scalars, vtkm::Id count) const
     {
-      bool pass = false;
+      bool pass;
+      if (this->ReturnAllInRange)
+        pass = true;
+      else
+        pass = false;
+
       for (vtkm::IdComponent i = 0; i < count; ++i)
       {
-        pass |= this->Predicate(scalars[i]);
+        //Only pass a cell if it meets the validity requirement
+        //"all in range" or "part on range"
+        if (this->ReturnAllInRange)
+          pass &= this->Predicate(scalars[i]);
+        else
+          pass |= this->Predicate(scalars[i]);
       }
       return pass;
     }
 
   private:
     UnaryPredicate Predicate;
+    bool ReturnAllInRange;
   };
 
   struct ThresholdCopy : public vtkm::worklet::WorkletMapField
@@ -91,7 +104,8 @@ public:
     const CellSetType& cellSet,
     const vtkm::cont::ArrayHandle<ValueType, StorageType>& field,
     const vtkm::cont::Field::Association fieldType,
-    const UnaryPredicate& predicate)
+    const UnaryPredicate& predicate,
+    const bool returnAllInRange = false)
   {
     using OutputType = vtkm::cont::CellSetPermutation<CellSetType>;
 
@@ -102,7 +116,7 @@ public:
         using ThresholdWorklet = ThresholdByPointField<UnaryPredicate>;
         vtkm::cont::ArrayHandle<bool> passFlags;
 
-        ThresholdWorklet worklet(predicate);
+        ThresholdWorklet worklet(predicate, returnAllInRange);
         DispatcherMapTopology<ThresholdWorklet> dispatcher(worklet);
         dispatcher.Invoke(cellSet, field, passFlags);
 
@@ -136,17 +150,20 @@ public:
     const FieldArrayType& Field;
     const vtkm::cont::Field::Association FieldType;
     const UnaryPredicate& Predicate;
+    const bool ReturnAllInRange;
 
     CallWorklet(vtkm::cont::DynamicCellSet& output,
                 vtkm::worklet::Threshold& worklet,
                 const FieldArrayType& field,
                 const vtkm::cont::Field::Association fieldType,
-                const UnaryPredicate& predicate)
+                const UnaryPredicate& predicate,
+                const bool returnAllInRange)
       : Output(output)
       , Worklet(worklet)
       , Field(field)
       , FieldType(fieldType)
       , Predicate(predicate)
+      , ReturnAllInRange(returnAllInRange)
     {
     }
 
@@ -154,8 +171,8 @@ public:
     void operator()(const CellSetType& cellSet) const
     {
       // Copy output to an explicit grid so that other units can guess what this is.
-      this->Output = vtkm::worklet::CellDeepCopy::Run(
-        this->Worklet.Run(cellSet, this->Field, this->FieldType, this->Predicate));
+      this->Output = vtkm::worklet::CellDeepCopy::Run(this->Worklet.Run(
+        cellSet, this->Field, this->FieldType, this->Predicate, this->ReturnAllInRange));
     }
   };
 
@@ -163,12 +180,13 @@ public:
   vtkm::cont::DynamicCellSet Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
                                  const vtkm::cont::ArrayHandle<ValueType, StorageType>& field,
                                  const vtkm::cont::Field::Association fieldType,
-                                 const UnaryPredicate& predicate)
+                                 const UnaryPredicate& predicate,
+                                 const bool returnAllInRange = false)
   {
     using Worker = CallWorklet<vtkm::cont::ArrayHandle<ValueType, StorageType>, UnaryPredicate>;
 
     vtkm::cont::DynamicCellSet output;
-    Worker worker(output, *this, field, fieldType, predicate);
+    Worker worker(output, *this, field, fieldType, predicate, returnAllInRange);
     cellSet.CastAndCall(worker);
 
     return output;
