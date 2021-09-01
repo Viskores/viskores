@@ -12,6 +12,7 @@
 #define vtkm_m_filter_MIRFilter_h
 
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
 
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/FilterDataSetWithField.h>
