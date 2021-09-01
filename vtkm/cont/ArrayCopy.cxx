@@ -77,7 +77,7 @@ struct UnknownCopyFunctor1
 {
   template <typename InType>
   void operator()(const vtkm::cont::ArrayHandleRecombineVec<InType>& in,
-                  vtkm::cont::UnknownArrayHandle& out) const
+                  const vtkm::cont::UnknownArrayHandle& out) const
   {
     out.Allocate(in.GetNumberOfValues());
 
@@ -86,7 +86,7 @@ struct UnknownCopyFunctor1
 
   template <typename InType>
   void DoIt(const vtkm::cont::ArrayHandleRecombineVec<InType>& in,
-            vtkm::cont::UnknownArrayHandle& out,
+            const vtkm::cont::UnknownArrayHandle& out,
             std::false_type) const
   {
     // Source is not float.
@@ -112,13 +112,26 @@ struct UnknownCopyFunctor1
 
   template <typename InType>
   void DoIt(const vtkm::cont::ArrayHandleRecombineVec<InType>& in,
-            vtkm::cont::UnknownArrayHandle& out,
+            const vtkm::cont::UnknownArrayHandle& out,
             std::true_type) const
   {
     // Source array is FloatDefault. That should be copiable to anything.
     out.CastAndCallWithExtractedArray(UnknownCopyFunctor2{}, in);
   }
 };
+
+void DoUnknownArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
+                        const vtkm::cont::UnknownArrayHandle& destination)
+{
+  if (source.GetNumberOfValues() > 0)
+  {
+    source.CastAndCallWithExtractedArray(UnknownCopyFunctor1{}, destination);
+  }
+  else
+  {
+    destination.ReleaseResources();
+  }
+}
 
 } // anonymous namespace
 
@@ -135,14 +148,19 @@ void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
     destination = source.NewInstanceBasic();
   }
 
-  if (source.GetNumberOfValues() > 0)
+  DoUnknownArrayCopy(source, destination);
+}
+
+void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
+               const vtkm::cont::UnknownArrayHandle& destination)
+{
+  if (!destination.IsValid())
   {
-    source.CastAndCallWithExtractedArray(UnknownCopyFunctor1{}, destination);
+    throw vtkm::cont::ErrorBadValue(
+      "Attempty to copy to a constant UnknownArrayHandle with no valid array.");
   }
-  else
-  {
-    destination.ReleaseResources();
-  }
+
+  DoUnknownArrayCopy(source, destination);
 }
 
 }
