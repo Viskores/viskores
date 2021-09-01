@@ -206,6 +206,18 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
       exit(0);
     }
 
+    // The RuntimeDeviceConfiguration must be completed before calling GetRuntimeDeviceTracker()
+    // for all the devices. This is because GetRuntimeDeviceTracker will construct a given
+    // device's DeviceAdapterRuntimeDetector to determine if it exists and this constructor may
+    // call `GetRuntimeConfiguration` for the specific device in order to query things such as
+    // available threads/devices.
+    {
+      runtimeDeviceOptions.Initialize(options.get());
+      vtkm::cont::RuntimeDeviceInformation runtimeDevice;
+      runtimeDevice.GetRuntimeConfiguration(
+        vtkm::cont::DeviceAdapterTagAny{}, runtimeDeviceOptions, argc, argv);
+    }
+
     if (options[opt::OptionIndex::DEPRECATED_LOGLEVEL])
     {
       VTKM_LOG_S(vtkm::cont::LogLevel::Error,
@@ -340,12 +352,6 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
       }
     }
     argc = destArg;
-
-    {
-      runtimeDeviceOptions.Initialize(options.get());
-      vtkm::cont::RuntimeDeviceInformation runtimeDevice;
-      runtimeDevice.GetRuntimeConfiguration(config.Device, runtimeDeviceOptions, argc, argv);
-    }
   }
 
   return config;
