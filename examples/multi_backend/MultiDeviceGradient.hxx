@@ -8,6 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
@@ -18,19 +20,6 @@
 
 namespace
 {
-int determine_cuda_gpu_count()
-{
-  int count = 0;
-#if defined(VTKM_ENABLE_CUDA)
-  int numberOfDevices = 0;
-  auto res = cudaGetDeviceCount(&numberOfDevices);
-  if (res == cudaSuccess)
-  {
-    count = numberOfDevices;
-  }
-#endif
-  return count;
-}
 
 void process_partition_tbb(RuntimeTaskQueue& queue)
 {
@@ -144,16 +133,27 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
   if (runOnCuda)
   {
     std::cout << "adding cuda workers" << std::endl;
-    const int gpu_count = determine_cuda_gpu_count();
-    for (int i = 0; i < gpu_count; ++i)
+    try
     {
-      //The number of workers per GPU is purely arbitrary currently,
-      //but in general we want multiple of them so we can overlap compute
-      //and transfer
-      this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
-      this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
-      this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
-      this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
+      vtkm::Id gpu_count = 0;
+      vtkm::cont::RuntimeDeviceInformation{}
+        .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda{})
+        .GetMaxDevices(gpu_count);
+      for (int i = 0; i < gpu_count; ++i)
+      {
+        //The number of workers per GPU is purely arbitrary currently,
+        //but in general we want multiple of them so we can overlap compute
+        //and transfer
+        this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
+        this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
+        this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
+        this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
+      }
+    }
+    catch (const vtkm::cont::ErrorBadDevice& err)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "Error getting CudaDeviceCount: " << err.GetMessage());
     }
   }
   //Step 3. Launch a worker that will use openMP (if enabled).
