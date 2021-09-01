@@ -36,12 +36,19 @@ struct UnknownCopyOnDevice
 {
   bool Called = false;
 
-  template <typename InArrayType, typename OutArrayType>
+  template <typename InType, typename OutType>
   void operator()(vtkm::cont::DeviceAdapterId device,
-                  const InArrayType& in,
-                  const OutArrayType& out)
+                  const vtkm::cont::ArrayHandleRecombineVec<InType>& in,
+                  const vtkm::cont::ArrayHandleRecombineVec<OutType>& out)
   {
-    if (!this->Called && ((device == vtkm::cont::DeviceAdapterTagAny{}) || (in.IsOnDevice(device))))
+    // Note: ArrayHandleRecombineVec returns the wrong value for IsOnDevice (always true).
+    // This is one of the consequences of ArrayHandleRecombineVec breaking assumptions of
+    // ArrayHandle. It does this by stuffing Buffer objects in another Buffer's meta data
+    // rather than listing them explicitly (where they can be queried). We get around this
+    // by pulling out one of the component arrays and querying that.
+    if (!this->Called &&
+        ((device == vtkm::cont::DeviceAdapterTagAny{}) ||
+         (in.GetComponentArray(0).IsOnDevice(device))))
     {
       vtkm::cont::Invoker invoke(device);
       invoke(CopyWorklet{}, in, out);
@@ -52,8 +59,9 @@ struct UnknownCopyOnDevice
 
 struct UnknownCopyFunctor2
 {
-  template <typename OutArrayType, typename InArrayType>
-  void operator()(const OutArrayType& out, const InArrayType& in) const
+  template <typename OutType, typename InType>
+  void operator()(const vtkm::cont::ArrayHandleRecombineVec<OutType>& out,
+                  const vtkm::cont::ArrayHandleRecombineVec<InType>& in) const
   {
     UnknownCopyOnDevice doCopy;
 
@@ -67,26 +75,25 @@ struct UnknownCopyFunctor2
 
 struct UnknownCopyFunctor1
 {
-  template <typename InArrayType>
-  void operator()(const InArrayType& in, vtkm::cont::UnknownArrayHandle& out) const
+  template <typename InType>
+  void operator()(const vtkm::cont::ArrayHandleRecombineVec<InType>& in,
+                  vtkm::cont::UnknownArrayHandle& out) const
   {
     out.Allocate(in.GetNumberOfValues());
 
-    this->DoIt(in,
-               out,
-               typename std::is_same<vtkm::FloatDefault,
-                                     typename InArrayType::ValueType::ComponentType>::type{});
+    this->DoIt(in, out, typename std::is_same<vtkm::FloatDefault, InType>::type{});
   }
 
-  template <typename InArrayType>
-  void DoIt(const InArrayType& in, vtkm::cont::UnknownArrayHandle& out, std::false_type) const
+  template <typename InType>
+  void DoIt(const vtkm::cont::ArrayHandleRecombineVec<InType>& in,
+            vtkm::cont::UnknownArrayHandle& out,
+            std::false_type) const
   {
     // Source is not float.
-    using BaseComponentType = typename InArrayType::ValueType::ComponentType;
-    if (out.IsBaseComponentType<BaseComponentType>())
+    if (out.IsBaseComponentType<InType>())
     {
       // Arrays have the same base component type. Copy directly.
-      UnknownCopyFunctor2{}(out.ExtractArrayFromComponents<BaseComponentType>(), in);
+      UnknownCopyFunctor2{}(out.ExtractArrayFromComponents<InType>(), in);
     }
     else if (out.IsBaseComponentType<vtkm::FloatDefault>())
     {
@@ -103,8 +110,10 @@ struct UnknownCopyFunctor1
     }
   }
 
-  template <typename InArrayType>
-  void DoIt(const InArrayType& in, vtkm::cont::UnknownArrayHandle& out, std::true_type) const
+  template <typename InType>
+  void DoIt(const vtkm::cont::ArrayHandleRecombineVec<InType>& in,
+            vtkm::cont::UnknownArrayHandle& out,
+            std::true_type) const
   {
     // Source array is FloatDefault. That should be copiable to anything.
     out.CastAndCallWithExtractedArray(UnknownCopyFunctor2{}, in);
@@ -126,7 +135,14 @@ void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
     destination = source.NewInstanceBasic();
   }
 
-  source.CastAndCallWithExtractedArray(UnknownCopyFunctor1{}, destination);
+  if (source.GetNumberOfValues() > 0)
+  {
+    source.CastAndCallWithExtractedArray(UnknownCopyFunctor1{}, destination);
+  }
+  else
+  {
+    destination.ReleaseResources();
+  }
 }
 
 }

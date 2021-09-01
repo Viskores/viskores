@@ -10,13 +10,10 @@
 #ifndef vtk_m_cont_ArrayGetValues_h
 #define vtk_m_cont_ArrayGetValues_h
 
-#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/DeviceAdapterTag.h>
-#include <vtkm/cont/ErrorExecution.h>
-#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <initializer_list>
 #include <vector>
@@ -26,32 +23,17 @@ namespace vtkm
 namespace cont
 {
 
-namespace detail
+// Work around circular dependancy with UnknownArrayHandle.
+class UnknownArrayHandle;
+
+namespace internal
 {
 
-struct ArrayGetValuesFunctor
-{
-  template <typename Device, typename IdsArray, typename DataArray, typename OutputArray>
-  VTKM_CONT bool operator()(Device,
-                            const IdsArray& ids,
-                            const DataArray& data,
-                            OutputArray& output) const
-  {
-    // Only get data on a device the data are already on.
-    if (data.IsOnDevice(Device{}))
-    {
-      const auto input = vtkm::cont::make_ArrayHandlePermutation(ids, data);
-      vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(input, output);
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
-};
+VTKM_CONT_EXPORT void ArrayGetValuesImpl(const vtkm::cont::UnknownArrayHandle& ids,
+                                         const vtkm::cont::UnknownArrayHandle& data,
+                                         const vtkm::cont::UnknownArrayHandle& output);
 
-} // namespace detail
+} // namespace internal
 
 /// \brief Obtain a small set of values from an ArrayHandle with minimal device
 /// transfers.
@@ -115,29 +97,10 @@ VTKM_CONT void ArrayGetValues(const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids
                               const vtkm::cont::ArrayHandle<T, SData>& data,
                               vtkm::cont::ArrayHandle<T, SOut>& output)
 {
-  bool copyComplete = false;
-
-  // If the data are not already on the host, attempt to copy on the device.
-  if (!data.IsOnHost())
-  {
-    copyComplete = vtkm::cont::TryExecute(detail::ArrayGetValuesFunctor{}, ids, data, output);
-  }
-
-  if (!copyComplete)
-  { // Fallback to a control-side copy if the device copy fails or if the device
-    // is undefined or if the data were already on the host. In this case, the
-    // best we can do is grab the portals and copy one at a time on the host with
-    // a for loop.
-    const vtkm::Id numVals = ids.GetNumberOfValues();
-    auto idPortal = ids.ReadPortal();
-    auto dataPortal = data.ReadPortal();
-    output.Allocate(numVals);
-    auto outPortal = output.WritePortal();
-    for (vtkm::Id i = 0; i < numVals; ++i)
-    {
-      outPortal.Set(i, dataPortal.Get(idPortal.Get(i)));
-    }
-  }
+  VTKM_STATIC_ASSERT_MSG(
+    vtkm::HasVecTraits<T>::value,
+    "ArrayGetValues can only be used with arrays containing value types with VecTraits defined.");
+  internal::ArrayGetValuesImpl(ids, data, output);
 }
 
 template <typename SIds, typename T, typename SData, typename Alloc>
