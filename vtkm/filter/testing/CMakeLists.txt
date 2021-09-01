@@ -50,6 +50,7 @@ set(unit_tests
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMeshQualityFilter.cxx
+  UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestNDEntropyFilter.cxx
   UnitTestNDHistogramFilter.cxx

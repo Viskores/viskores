@@ -48,6 +48,7 @@ set(headers
   MaskPoints.h
   MaskSelect.h
   MeshQuality.h
+  MIR.h
   NDimsEntropy.h
   NDimsHistMarginalization.h
   NDimsHistogram.h
@@ -136,6 +137,7 @@ add_subdirectory(cosmotools)
 add_subdirectory(gradient)
 add_subdirectory(histogram)
 add_subdirectory(lcs)
+add_subdirectory(mir)
 add_subdirectory(moments)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
