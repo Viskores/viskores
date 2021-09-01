@@ -25,6 +25,7 @@ set(headers
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
   TestingPointLocatorSparseGrid.h
+  TestingRuntimeDeviceConfiguration.h
   TestingSerialization.h
   TestingVirtualObjectHandle.h
   )
@@ -68,11 +69,13 @@ set(unit_tests
   UnitTestDataSetBuilderExplicit.cxx
   UnitTestDataSetBuilderRectilinear.cxx
   UnitTestDataSetBuilderUniform.cxx
+  UnitTestDataSetConvertToExpected.cxx
   UnitTestDataSetPermutation.cxx
   UnitTestDataSetRectilinear.cxx
   UnitTestDataSetUniform.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
+  UnitTestDeviceSelectOnThreads.cxx
   UnitTestDynamicCellSet.cxx
   UnitTestError.cxx
   UnitTestFieldRangeCompute.cxx

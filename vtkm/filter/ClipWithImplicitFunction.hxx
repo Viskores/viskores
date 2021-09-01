@@ -20,7 +20,7 @@
 // Do not instantiation common concrete types unless we are compiling the
 // corresponding TU.
 #ifndef vtkm_filter_ClipWithImplicitFunction_cxx
-#include <vtkm/filter/ClipWithImplicitFunctionSkipInstantiations.hxx>
+#include <vtkm/filter/ClipWithImplicitFunctionExternInstantiations.h>
 #endif
 
 namespace vtkm

@@ -139,7 +139,7 @@ vtkm_option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no hea
 # VTK does.
 vtkm_option(VTKm_HIDE_PRIVATE_SYMBOLS "Hide symbols from libraries." ON)
 
-vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" OFF)
+vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
 # This flag can be used to prevent VTK-m from exporting its warning flags in its
@@ -157,6 +157,10 @@ vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README a
 # and this option will be removed.
 vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" OFF)
 
+# In Python wheels, having SONAME suffixes just ends up duplicating files.
+# Allow VTK to turn off these symlinks for its wheel distribution.
+vtkm_option(VTKm_SKIP_LIBRARY_VERSIONS "Skip versioning VTK-m libraries" OFF)
+
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
@@ -167,6 +171,7 @@ mark_as_advanced(
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
   VTKm_NO_DEPRECATED_VIRTUAL
+  VTKm_SKIP_LIBRARY_VERSIONS
   )
 
 #-----------------------------------------------------------------------------
@@ -214,7 +219,7 @@ if (VTKm_ENABLE_TESTING)
   endif()
 
 
-  configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
+  configure_file(CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
 
   #-----------------------------------------------------------------------------
@@ -269,6 +274,17 @@ write_basic_package_version_file(
   ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
+
+configure_file(${VTKm_SOURCE_DIR}/config/vtkm_config.mk.in
+  ${VTKm_BINARY_DIR}/config/vtkm_config.mk @ONLY)
+install(FILES ${VTKm_BINARY_DIR}/config/vtkm_config.mk
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
+  )
+configure_file(${VTKm_SOURCE_DIR}/config/vtkm.pc.in
+  ${VTKm_BINARY_DIR}/config/vtkm.pc @ONLY)
+install(FILES ${VTKm_BINARY_DIR}/config/vtkm.pc
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
+  )
 
 include(VTKmInstallCMakePackage)
 

@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
   vtkm::cont::PartitionedDataSet result = histogram.Execute(pds);
 
   vtkm::cont::ArrayHandle<vtkm::Id> bins;
-  result.GetPartition(0).GetField("histogram").GetData().CopyTo(bins);
+  result.GetPartition(0).GetField("histogram").GetData().AsArrayHandle(bins);
   auto binPortal = bins.ReadPortal();
   if (rank == 0)
   {

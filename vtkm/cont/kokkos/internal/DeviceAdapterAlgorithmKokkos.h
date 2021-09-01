@@ -688,9 +688,17 @@ public:
              { 0, 0, 0 },
              { rangeMax[0], rangeMax[1], rangeMax[2] });
 
+    // Calling rangeMax[X] inside KOKKOS_LAMBDA confuses some compilers since
+    // at first it tries to use the non-const inline vec_base::operator[0]
+    // method, however, KOKKOS_LAMBDA DOES converts rangeMax to a const
+    // vec_base. This convertion is somehow catched by the compiler making it
+    // complain that we are using a non-const method for a const object.
+    const auto rMax_0 = rangeMax[0];
+    const auto rMax_1 = rangeMax[1];
+
     Kokkos::parallel_for(
       policy, KOKKOS_LAMBDA(vtkm::Id i, vtkm::Id j, vtkm::Id k) {
-        auto flatIdx = i + (j * rangeMax[0]) + (k * rangeMax[0] * rangeMax[1]);
+        auto flatIdx = i + (j * rMax_0) + (k * rMax_0 * rMax_1);
         functor(vtkm::Id3(i, j, k), flatIdx);
       });
     CheckForErrors(); // synchronizes

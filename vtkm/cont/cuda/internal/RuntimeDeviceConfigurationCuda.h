@@ -29,8 +29,7 @@ class RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagCuda>
     return vtkm::cont::DeviceAdapterTagCuda{};
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(
-    const vtkm::Id&) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(const vtkm::Id&) override final
   {
     // TODO: set the cuda device instance
     return RuntimeDeviceConfigReturnCode::SUCCESS;
@@ -39,6 +38,11 @@ class RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagCuda>
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(vtkm::Id&) const override final
   {
     // TODO: Get the cuda device instance (also maybe a list of available devices?)
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
+  }
+
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetMaxDevices(vtkm::Id&) const override final
+  {
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 };

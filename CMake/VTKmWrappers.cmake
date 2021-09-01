@@ -59,6 +59,51 @@ function(vtkm_pyexpander_generated_file generated_file_name)
 endfunction(vtkm_pyexpander_generated_file)
 
 #-----------------------------------------------------------------------------
+# Internal function that parses a C++ header file and extract explicit
+# template instantiations.
+#
+# USAGE:
+#
+# _vtkm_extract_instantiations(
+#   instantiations   # Out: List of instantiations (; are escaped to $)
+#   filter_header    # In:  The path of the header file to parse.
+#   )
+#
+function(_vtkm_extract_instantiations instantiations filter_header)
+  file(STRINGS "${filter_header}" read_file)
+
+  foreach(line ${read_file})
+    if("${line}" MATCHES "VTKM_INSTANTIATION_BEGIN")
+      set(buf "")
+    endif()
+
+    # Escape semicolon to zip line in list
+    string(REPLACE ";" "$" line "${line}")
+    list(APPEND buf ${line})
+
+    if("${line}" MATCHES "VTKM_INSTANTIATION_END")
+      list(JOIN buf "\n" buf)
+
+      # Extract, prepare, and store the instantiation
+      if(${buf} MATCHES
+          "VTKM_INSTANTIATION_BEGIN(.*)VTKM_INSTANTIATION_END")
+
+        set(buf ${CMAKE_MATCH_1})
+
+        # Remove heading and trailing spaces and newlines
+        string(REGEX REPLACE "(^[ \n]+)|([ \n]+$)|([ ]*extern[ ]*)" "" buf ${buf})
+        string(REPLACE "_TEMPLATE_EXPORT" "_EXPORT" buf ${buf})
+
+        list(APPEND _instantiations ${buf})
+      endif()
+    endif()
+
+  endforeach(line)
+
+  set(${instantiations} "${_instantiations}" PARENT_SCOPE)
+endfunction(_vtkm_extract_instantiations)
+
+#-----------------------------------------------------------------------------
 function(vtkm_generate_export_header lib_name)
   # Get the location of this library in the directory structure
   # export headers work on the directory structure more than the lib_name
@@ -316,8 +361,10 @@ function(vtkm_add_target_information uses_vtkm_target)
   endforeach()
 
   # set the required target properties
-  set_target_properties(${targets} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(${targets} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  if(NOT VTKm_NO_DEPRECATED_VIRTUAL)
+    set_target_properties(${targets} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(${targets} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  endif()
   # CUDA_ARCHITECTURES added in CMake 3.18
   set_target_properties(${targets} PROPERTIES CUDA_ARCHITECTURES OFF)
 
@@ -340,7 +387,7 @@ function(vtkm_add_target_information uses_vtkm_target)
   #
   # This is required as CUDA currently doesn't support device side calls across
   # dynamic library boundaries.
-  if((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
+  if((NOT VTKm_NO_DEPRECATED_VIRTUAL) AND ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda)))
     foreach(target IN LISTS targets)
       get_target_property(lib_type ${target} TYPE)
       if (TARGET vtkm::cuda)
@@ -358,12 +405,14 @@ function(vtkm_add_target_information uses_vtkm_target)
         if(PROJECT_NAME STREQUAL "VTKm")
           message(SEND_ERROR "${target} needs to be built STATIC as CUDA doesn't"
                 " support virtual methods across dynamic library boundaries. You"
-                " need to set the CMake option BUILD_SHARED_LIBS to `OFF`.")
+                " need to set the CMake option BUILD_SHARED_LIBS to `OFF` or"
+                " (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.")
         else()
           message(SEND_ERROR "${target} needs to be built STATIC as CUDA doesn't"
                   " support virtual methods across dynamic library boundaries. You"
                   " should either explicitly call add_library with the `STATIC` keyword"
-                  " or set the CMake option BUILD_SHARED_LIBS to `OFF`.")
+                  " or set the CMake option BUILD_SHARED_LIBS to `OFF` or"
+                  " (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.")
         endif()
       endif()
     endforeach()
@@ -431,9 +480,11 @@ function(vtkm_library)
     set_property(TARGET ${lib_name} PROPERTY BUILD_RPATH ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
   endif()
 
-  # Setup the SOVERSION and VERSION information for this vtkm library
-  set_property(TARGET ${lib_name} PROPERTY VERSION 1)
-  set_property(TARGET ${lib_name} PROPERTY SOVERSION 1)
+  if (NOT VTKm_SKIP_LIBRARY_VERSIONS)
+    # Setup the SOVERSION and VERSION information for this vtkm library
+    set_property(TARGET ${lib_name} PROPERTY VERSION 1)
+    set_property(TARGET ${lib_name} PROPERTY SOVERSION 1)
+  endif ()
 
   # Support custom library suffix names, for other projects wanting to inject
   # their own version numbers etc.
@@ -476,3 +527,87 @@ function(vtkm_library)
   endif()
 
 endfunction(vtkm_library)
+
+#-----------------------------------------------------------------------------
+# Produce _instantiation-files_ given a filter.
+#
+# This function will parse the header file of a given filter and for each of
+# the extern template found on it, it will produce its corresponding
+# _instantiation-files_.  Those produced `instantiation-files` are stored in
+# the build directory and are not versioned.
+#
+# Usage:
+#   vtkm_add_instantiations(
+#     instantiations_list
+#     FILTER <name>
+#     [ INSTANTIATIONS_FILE <path> ]
+#     )
+#
+# instantiations_list: Output variable which contain the path of the newly
+# produced _instantiation-files_.
+#
+# FILTER: The name of the filter of which we wish to produce those
+# instantiations from.
+#
+# INSTANTIATIONS_FILE: _Optional_ parameter with the relative path of the file
+# which contains the extern template instantiations.  When omitted,
+# `vtkm_add_instantiations` will default to `${FILTER}.h`.
+#
+function(vtkm_add_instantiations instantiations_list)
+  # Parse and validate parameters
+  set(oneValueArgs FILTER INSTANTIATIONS_FILE)
+  cmake_parse_arguments(VTKm_instantiations "" "${oneValueArgs}" "" ${ARGN})
+
+  if(NOT VTKm_instantiations_FILTER)
+    message(FATAL_ERROR "vtkm_add_instantiations needs a valid FILTER parameter")
+  endif()
+
+  set(filter ${VTKm_instantiations_FILTER})
+  set(file_header "${filter}.h")
+
+  set(file_template_source "${filter}.h")
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${filter}.hxx")
+    set(file_template_source "${filter}.hxx")
+  endif()
+
+  # Extract explicit instantiations
+  set(instantiations_file ${file_header})
+  if(VTKm_instantiations_INSTANTIATIONS_FILE)
+    set(instantiations_file ${VTKm_instantiations_INSTANTIATIONS_FILE})
+  endif()
+  _vtkm_extract_instantiations(instantiations ${instantiations_file})
+
+  # Compute relative path of header files
+  file(RELATIVE_PATH INSTANTIATION_FILTER_HEADER
+    ${CMAKE_SOURCE_DIR}
+    "${CMAKE_CURRENT_SOURCE_DIR}/${file_header}"
+    )
+
+  file(RELATIVE_PATH INSTANTIATION_FILTER_TEMPLATE_SOURCE
+    ${CMAKE_SOURCE_DIR}
+    "${CMAKE_CURRENT_SOURCE_DIR}/${file_template_source}"
+    )
+
+  # Generate instatiation file in the build directory
+  set(counter 0)
+  foreach(instantiation IN LISTS instantiations)
+    string(REPLACE "$" ";" instantiation ${instantiation})
+    set(INSTANTIATION_FILTER_METHOD    "${instantiation}")
+    set(INSTANTIATION_FILTER_INC_GUARD "vtkm_filter_${filter}Instantiation${counter}_cxx")
+
+    # Create instantiation in build directory
+    set(instantiation_path "${CMAKE_CURRENT_BINARY_DIR}/${filter}Instantiation${counter}.cxx")
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/InstantiationTemplate.cxx.in"
+      ${instantiation_path}
+      @ONLY)
+
+    # Return value
+    list(APPEND _instantiations_list ${instantiation_path})
+    math(EXPR counter "${counter} + 1")
+  endforeach(instantiation)
+
+  set_source_files_properties(${_instantiations_list}
+    PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON
+    )
+  set(${instantiations_list} ${_instantiations_list} PARENT_SCOPE)
+endfunction(vtkm_add_instantiations)

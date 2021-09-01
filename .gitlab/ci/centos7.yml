@@ -13,10 +13,11 @@ build:centos7_gcc73:
     - .centos7
     - .cmake_build_linux
     - .only-default
+    - .use_minimum_supported_cmake
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"
-    VTKM_SETTINGS: "cuda+turing+32bit_ids+no_rendering"
+    VTKM_SETTINGS: "cuda+turing+32bit_ids+no_rendering+no_virtual+shared"
 
 test:centos7_gcc73:
   tags:

@@ -18,8 +18,9 @@
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandleRecombineVec.h>
 #include <vtkm/cont/ArrayHandleStride.h>
-#include <vtkm/cont/CastAndCall.h>
-#include <vtkm/cont/DefaultTypes.h>
+#include <vtkm/cont/StorageList.h>
+
+#include <vtkm/TypeList.h>
 
 #include <memory>
 #include <typeindex>
@@ -305,6 +306,22 @@ static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
 }
 
 template <typename T, typename S>
+#ifdef VTKM_GCC
+// On rare occasion, we have seen errors like this:
+//   `_ZN4vtkm4cont6detailL27UnknownAHNumberOfComponentsIxEEiv' referenced in section
+//   `.data.rel.ro.local' of CMakeFiles/UnitTests_vtkm_cont_testing.dir/UnitTestCellSet.cxx.o:
+//   defined in discarded section
+//   `.text._ZN4vtkm4cont6detailL27UnknownAHNumberOfComponentsIxEEiv[_ZN4vtkm4cont14ArrayGetValuesINS0_15StorageTagBasicExNS0_18StorageTagCountingES2_EEvRKNS0_11ArrayHandleIxT_EERKNS4_IT0_T1_EERNS4_IS9_T2_EE]'
+//   of CMakeFiles/UnitTests_vtkm_cont_testing.dir/UnitTestCellSet.cxx.o
+// I don't know what circumstances exactly lead up to this, but it appears that the compiler
+// is being overly aggressive with removing unused symbols. In this instance, it seems to have
+// removed a function actually being used. This might be a bug in the compiler (I happen to have
+// seen it in gcc 8.3), or it could be caused by a link-time optimizer. The problem should be
+// able to be solved by explictly saying that this templated method is being used. (I can't think
+// of any circumstances where this template would be instantiated but not used.) If the compiler
+// knows this is being used, it should know all the templated methods internal are also used.
+__attribute__((used))
+#endif
 inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array)
   : ArrayHandlePointer(new vtkm::cont::ArrayHandle<T, S>(array))
   , ValueType(typeid(T))
@@ -513,10 +530,10 @@ public:
   template <typename NewValueTypeList>
   VTKM_DEPRECATED(1.6, "Specify both value types and storage types.")
   VTKM_CONT
-    vtkm::cont::UncertainArrayHandle<NewValueTypeList, VTKM_DEFAULT_STORAGE_LIST> ResetTypes(
+    vtkm::cont::UncertainArrayHandle<NewValueTypeList, vtkm::cont::StorageListCommon> ResetTypes(
       NewValueTypeList = NewValueTypeList{}) const
   {
-    return this->ResetTypes<NewValueTypeList, VTKM_DEFAULT_STORAGE_LIST>();
+    return this->ResetTypes<NewValueTypeList, vtkm::cont::StorageListCommon>();
   }
 
   /// \brief Returns the number of values in the array.
@@ -681,7 +698,7 @@ public:
     if (!this->IsBaseComponentType<BaseComponentType>())
     {
       VTKM_LOG_CAST_FAIL(*this, ComponentArrayType);
-      throwFailedDynamicCast(vtkm::cont::TypeToString(*this),
+      throwFailedDynamicCast("UnknownArrayHandle with " + this->GetArrayTypeName(),
                              "component array of " + vtkm::cont::TypeToString<BaseComponentType>());
     }
 
@@ -806,13 +823,13 @@ private:
   template <typename... Args>
   VTKM_CONT void CastAndCallImpl(std::false_type, Args&&... args) const
   {
-    this->CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
+    this->CastAndCallForTypes<vtkm::TypeListCommon, vtkm::cont::StorageListCommon>(
       std::forward<Args>(args)...);
   }
   template <typename StorageList, typename... Args>
   VTKM_CONT void CastAndCallImpl(std::true_type, StorageList, Args&&... args) const
   {
-    this->CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, StorageList>(std::forward<Args>(args)...);
+    this->CastAndCallForTypes<vtkm::TypeListCommon, StorageList>(std::forward<Args>(args)...);
   }
 };
 
@@ -953,6 +970,14 @@ struct UnknownArrayHandleTry
   }
 };
 
+} // namespace detail
+
+namespace internal
+{
+
+namespace detail
+{
+
 template <typename T>
 struct IsUndefinedArrayType
 {
@@ -962,20 +987,21 @@ struct IsUndefinedArrayType<vtkm::List<T, S>> : vtkm::cont::internal::IsInvalidA
 {
 };
 
+} // namespace detail
+
 template <typename ValueTypeList, typename StorageTypeList>
 using ListAllArrayTypes =
-  vtkm::ListRemoveIf<vtkm::ListCross<ValueTypeList, StorageTypeList>, IsUndefinedArrayType>;
-
+  vtkm::ListRemoveIf<vtkm::ListCross<ValueTypeList, StorageTypeList>, detail::IsUndefinedArrayType>;
 
 VTKM_CONT_EXPORT void ThrowCastAndCallException(const vtkm::cont::UnknownArrayHandle&,
                                                 const std::type_info&);
 
-} // namespace detail
+} // namespace internal
 
 template <typename TypeList, typename StorageTagList, typename Functor, typename... Args>
 inline void UnknownArrayHandle::CastAndCallForTypes(Functor&& f, Args&&... args) const
 {
-  using crossProduct = detail::ListAllArrayTypes<TypeList, StorageTagList>;
+  using crossProduct = internal::ListAllArrayTypes<TypeList, StorageTagList>;
 
   bool called = false;
   vtkm::ListForEach(detail::UnknownArrayHandleTry{},
@@ -988,7 +1014,7 @@ inline void UnknownArrayHandle::CastAndCallForTypes(Functor&& f, Args&&... args)
   {
     // throw an exception
     VTKM_LOG_CAST_FAIL(*this, TypeList);
-    detail::ThrowCastAndCallException(*this, typeid(TypeList));
+    internal::ThrowCastAndCallException(*this, typeid(TypeList));
   }
 }
 
@@ -1012,13 +1038,6 @@ template <typename ArrayHandleType>
 VTKM_CONT inline ArrayHandleType Cast(const vtkm::cont::UnknownArrayHandle& array)
 {
   return array.template AsArrayHandle<ArrayHandleType>();
-}
-
-template <typename Functor, typename... Args>
-void CastAndCall(const UnknownArrayHandle& handle, Functor&& f, Args&&... args)
-{
-  handle.CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
-    std::forward<Functor>(f), std::forward<Args>(args)...);
 }
 
 namespace detail
@@ -1070,20 +1089,9 @@ inline void UnknownArrayHandle::CastAndCallWithExtractedArray(Functor&& functor,
     // The message will be a little wonky because the types are just the value types, not the
     // full type to cast to.
     VTKM_LOG_CAST_FAIL(*this, vtkm::TypeListScalarAll);
-    detail::ThrowCastAndCallException(*this, typeid(vtkm::TypeListScalarAll));
+    internal::ThrowCastAndCallException(*this, typeid(vtkm::TypeListScalarAll));
   }
 }
-
-namespace internal
-{
-
-template <>
-struct DynamicTransformTraits<vtkm::cont::UnknownArrayHandle>
-{
-  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
-};
-
-} // namespace internal
 
 }
 } // namespace vtkm::cont

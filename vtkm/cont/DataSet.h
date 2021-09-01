@@ -255,6 +255,21 @@ public:
   VTKM_CONT
   void CopyStructure(const vtkm::cont::DataSet& source);
 
+  /// \brief Convert the structures in this data set to expected types.
+  ///
+  /// A `DataSet` object can contain data structures of unknown types. Using the data
+  /// requires casting these data structures to concrete types. It is only possible to
+  /// check a finite number of data structures.
+  ///
+  /// The types checked by default are listed in `vtkm/cont/DefaultTypes.h`, which can
+  /// be configured at compile time. If a `DataSet` contains data not listed there, then
+  /// it is likely going to cause problems pulling the data back out. To get around this
+  /// problem, you can call this method to convert the data to a form that is likely to
+  /// be recognized. This conversion is likely but not guaranteed because not all types
+  /// are convertable to something recognizable.
+  ///
+  VTKM_CONT void ConvertToExpected();
+
   VTKM_CONT
   void PrintSummary(std::ostream& out) const;
 

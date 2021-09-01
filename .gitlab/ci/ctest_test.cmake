@@ -10,6 +10,9 @@
 ##
 ##=============================================================================
 
+# We need this CMake versions for tests
+cmake_minimum_required(VERSION 3.21)
+
 # Read the files from the build directory that contain
 # host information ( name, parallel level, etc )
 include("$ENV{CI_PROJECT_DIR}/build/CIState.cmake")
@@ -33,6 +36,7 @@ ctest_test(APPEND
   RETURN_VALUE test_result
   EXCLUDE "${test_exclusions}"
   REPEAT "UNTIL_PASS:3"
+  OUTPUT_JUNIT "${CTEST_BINARY_DIRECTORY}/junit.xml"
   )
   message(STATUS "ctest_test RETURN_VALUE: ${test_result}")
 

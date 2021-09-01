@@ -10,6 +10,11 @@
 
 #include <vtkm/cont/Field.h>
 
+#include <vtkm/cont/Invoker.h>
+#include <vtkm/cont/Logging.h>
+
+#include <vtkm/worklet/WorkletMapField.h>
+
 #include <vtkm/TypeList.h>
 
 #include <vtkm/cont/ArrayRangeCompute.h>
@@ -142,6 +147,120 @@ VTKM_CONT void Field::SetData(const vtkm::cont::UnknownArrayHandle& newdata)
   this->Data = newdata;
   this->ModifiedFlag = true;
 }
+
+namespace
+{
+
+struct CheckArrayType
+{
+  template <typename T, typename S>
+  void operator()(vtkm::List<T, S>, const vtkm::cont::UnknownArrayHandle& data, bool& found) const
+  {
+    if (data.CanConvert<vtkm::cont::ArrayHandle<T, S>>())
+    {
+      found = true;
+    }
+  }
+};
+
+} // anonymous namespace
+
+bool Field::IsSupportedType() const
+{
+  bool found = false;
+  vtkm::ListForEach(
+    CheckArrayType{},
+    vtkm::cont::internal::ListAllArrayTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>{},
+    this->Data,
+    found);
+  return found;
+}
+
+namespace
+{
+
+struct CheckStorageType
+{
+  template <typename S>
+  void operator()(S, const vtkm::cont::UnknownArrayHandle& data, bool& found) const
+  {
+    if (data.IsStorageType<S>())
+    {
+      found = true;
+    }
+  }
+};
+
+// This worklet is used in lieu of ArrayCopy because the use of ArrayHandleRecombineVec
+// can throw off the casting in implementations of ArrayCopy.
+struct CopyWorklet : vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2);
+
+  template <typename InType, typename OutType>
+  VTKM_EXEC_CONT void operator()(const InType& in, OutType& out) const
+  {
+    VTKM_ASSERT(in.GetNumberOfComponents() == out.GetNumberOfComponents());
+    for (vtkm::IdComponent cIndex = 0; cIndex < in.GetNumberOfComponents(); ++cIndex)
+    {
+      out[cIndex] = static_cast<vtkm::FloatDefault>(in[cIndex]);
+    }
+  }
+};
+
+struct CopyToFloatArray
+{
+  template <typename ArrayType>
+  void operator()(const ArrayType& inArray, vtkm::cont::UnknownArrayHandle& outArray) const
+  {
+    vtkm::cont::Invoker invoke;
+    invoke(CopyWorklet{}, inArray, outArray.ExtractArrayFromComponents<vtkm::FloatDefault>());
+  }
+};
+
+} // anonymous namespace
+
+vtkm::cont::UnknownArrayHandle Field::GetDataAsDefaultFloat() const
+{
+  if (this->Data.IsBaseComponentType<vtkm::FloatDefault>())
+  {
+    bool supportedStorage = false;
+    vtkm::ListForEach(
+      CheckStorageType{}, VTKM_DEFAULT_STORAGE_LIST{}, this->Data, supportedStorage);
+    if (supportedStorage)
+    {
+      // Array is already float default and supported storage. No better conversion can be done.
+      return this->Data;
+    }
+  }
+
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Info,
+                 "Converting field '%s' to default floating point.",
+                 this->GetName().c_str());
+  vtkm::cont::UnknownArrayHandle outArray = this->Data.NewInstanceFloatBasic();
+  outArray.Allocate(this->Data.GetNumberOfValues());
+  this->Data.CastAndCallWithExtractedArray(CopyToFloatArray{}, outArray);
+  return outArray;
+}
+
+vtkm::cont::UnknownArrayHandle Field::GetDataWithExpectedTypes() const
+{
+  if (this->IsSupportedType())
+  {
+    return this->Data;
+  }
+  else
+  {
+    return this->GetDataAsDefaultFloat();
+  }
+}
+
+void Field::ConvertToExpected()
+{
+  this->SetData(this->GetDataWithExpectedTypes());
+}
+
 }
 } // namespace vtkm::cont
 

@@ -109,4 +109,8 @@ VTKM_FILTER_EXTRA_EXPORT_EXECUTE_METHOD(ClipWithField);
 }
 } // namespace vtkm::filter
 
+#ifndef vtk_m_filter_ClipWithFieldExternInstantiations_h
+#include <vtkm/filter/ClipWithFieldExternInstantiations.h>
+#endif
+
 #endif // vtk_m_filter_ClipWithField_h

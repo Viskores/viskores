@@ -1,7 +1,7 @@
-VTKm License Version 1.4
+VTKm License Version 1.6
 ========================================================================
 
-Copyright (c) 2014-2019
+Copyright (c) 2014-2021
 Kitware Inc.,
 National Technology & Engineering Solutions of Sandia, LLC (NTESS),
 UT-Battelle, LLC.,
@@ -56,3 +56,4 @@ vtkm/cont/tbb/internal/kxsort.h
 vtkm/thirdparty
 vtkm/internal/brigand.hpp
 version.txt
+.gitlab/cmake
