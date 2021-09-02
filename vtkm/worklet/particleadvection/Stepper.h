@@ -74,7 +74,7 @@ public:
   }
 
   template <typename Particle>
-  VTKM_EXEC IntegratorStatus SmallStep(Particle particle,
+  VTKM_EXEC IntegratorStatus SmallStep(Particle& particle,
                                        vtkm::FloatDefault& time,
                                        vtkm::Vec3f& outpos) const
   {
@@ -88,7 +88,7 @@ public:
     //The binary search will be between {0, this->DeltaT}
     vtkm::FloatDefault stepRange[2] = { 0, this->DeltaT };
 
-    vtkm::Vec3f currPos(particle.Pos);
+    vtkm::Vec3f currPos(particle.GetEvaluationPosition(this->DeltaT));
     vtkm::Vec3f currVelocity(0, 0, 0);
     vtkm::VecVariable<vtkm::Vec3f, 2> currValue, tmp;
     auto evalStatus = this->Evaluator.Evaluate(currPos, particle.Time, currValue);

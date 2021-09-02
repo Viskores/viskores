@@ -62,9 +62,9 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC bool IsWithinSpatialBoundary(const Point point) const
+  VTKM_EXEC bool IsWithinSpatialBoundary(const Point& point) const
   {
-    vtkm::Id cellId;
+    vtkm::Id cellId = -1;
     Point parametric;
 
     this->Locator.FindCell(point, cellId, parametric);
