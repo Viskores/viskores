@@ -144,6 +144,9 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
 VTKM_CONT_EXPORT void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
                                 vtkm::cont::UnknownArrayHandle& destination);
 
+VTKM_CONT_EXPORT void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
+                                const vtkm::cont::UnknownArrayHandle& destination);
+
 template <typename T, typename S>
 VTKM_CONT void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
                          vtkm::cont::ArrayHandle<T, S>& destination)
