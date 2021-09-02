@@ -172,7 +172,7 @@ public:
   {
   }
 
-
+  VTKM_EXEC_CONT
   vtkm::FloatDefault Gamma(vtkm::Vec3f momentum, bool reciprocal = false) const
   {
     constexpr vtkm::FloatDefault c2 = SPEED_OF_LIGHT * SPEED_OF_LIGHT;
