@@ -391,7 +391,7 @@ private:
   }
 
   RuntimeDeviceConfigurations(
-    const vtkm::cont::internal::RuntimeDeviceConfigurationOptions configOptions,
+    const vtkm::cont::internal::RuntimeDeviceConfigurationOptions& configOptions,
     int& argc,
     char* argv[])
   {

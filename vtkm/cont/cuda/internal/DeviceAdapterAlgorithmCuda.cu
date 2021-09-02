@@ -10,6 +10,10 @@
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
 
+#include <vtkm/cont/RuntimeDeviceInformation.h>
+#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
+#include <vtkm/cont/cuda/internal/RuntimeDeviceConfigurationCuda.h>
+
 #include <atomic>
 #include <cstring>
 #include <functional>
@@ -133,14 +137,14 @@ VTKM_CONT_EXPORT void SetupKernelSchedulingParameters()
 
   std::call_once(lookupBuiltFlag, []() {
     ScheduleParameterBuilder builder;
-    //iterate over all devices
-    int count = 0;
-    VTKM_CUDA_CALL(cudaGetDeviceCount(&count));
-    for (int deviceId = 0; deviceId < count; ++deviceId)
+    auto cudaDeviceConfig = dynamic_cast<
+      vtkm::cont::internal::RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagCuda>&>(
+      vtkm::cont::RuntimeDeviceInformation{}.GetRuntimeConfiguration(
+        vtkm::cont::DeviceAdapterTagCuda()));
+    std::vector<cudaDeviceProp> cudaDevices;
+    cudaDeviceConfig.GetCudaDeviceProp(cudaDevices);
+    for (const auto& deviceProp : cudaDevices)
     {
-      cudaDeviceProp deviceProp;
-      cudaGetDeviceProperties(&deviceProp, deviceId);
-
       ScheduleParameters params = builder.Compute(deviceProp.name,
                                                   deviceProp.major,
                                                   deviceProp.minor,
@@ -204,8 +208,10 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThrea
   (void)size;
   vtkm::cont::cuda::internal::SetupKernelSchedulingParameters();
 
-  int deviceId;
-  VTKM_CUDA_CALL(cudaGetDevice(&deviceId)); //get deviceid from cuda
+  vtkm::Id deviceId;
+  vtkm::cont::RuntimeDeviceInformation()
+    .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
+    .GetDeviceInstance(deviceId);
   const auto& params = cuda::internal::scheduling_1d_parameters[static_cast<size_t>(deviceId)];
   blocks = static_cast<vtkm::UInt32>(params.first);
   threadsPerBlock = static_cast<vtkm::UInt32>(params.second);
@@ -218,8 +224,10 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThrea
 {
   vtkm::cont::cuda::internal::SetupKernelSchedulingParameters();
 
-  int deviceId;
-  VTKM_CUDA_CALL(cudaGetDevice(&deviceId)); //get deviceid from cuda
+  vtkm::Id deviceId;
+  vtkm::cont::RuntimeDeviceInformation()
+    .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
+    .GetDeviceInstance(deviceId);
   if (size.z <= 1)
   { //2d images
     const auto& params = cuda::internal::scheduling_2d_parameters[static_cast<size_t>(deviceId)];
