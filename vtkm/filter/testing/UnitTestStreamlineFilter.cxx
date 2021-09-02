@@ -131,7 +131,7 @@ void TestPathline()
         filt.SetNextTime(t1);
         filt.SetNextDataSet(ds2);
         output = filt.Execute(ds1);
-        numExpectedPoints = 63;
+        numExpectedPoints = 33;
       }
       else
       {
@@ -149,6 +149,7 @@ void TestPathline()
 
       //Validate the result is correct.
       vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
+
       VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == numExpectedPoints,
                        "Wrong number of coordinates");
 

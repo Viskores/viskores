@@ -53,7 +53,6 @@ public:
                             const vtkm::Id& maxSteps) const
   {
     auto particle = integralCurve.GetParticle(idx);
-
     vtkm::FloatDefault time = particle.Time;
     bool tookAnySteps = false;
 
@@ -61,16 +60,15 @@ public:
     // 1. you could have success AND at temporal boundary.
     // 2. could you have success AND at spatial?
     // 3. all three?
-
     integralCurve.PreStepUpdate(idx);
     do
     {
+      particle = integralCurve.GetParticle(idx);
       vtkm::Vec3f outpos;
       auto status = integrator.Step(particle, time, outpos);
       if (status.CheckOk())
       {
-        integralCurve.StepUpdate(idx, time, outpos);
-        particle.Pos = outpos;
+        integralCurve.StepUpdate(idx, particle, time, outpos);
         tookAnySteps = true;
       }
 
@@ -81,8 +79,7 @@ public:
         status = integrator.SmallStep(particle, time, outpos);
         if (status.CheckOk())
         {
-          integralCurve.StepUpdate(idx, time, outpos);
-          particle.Pos = outpos;
+          integralCurve.StepUpdate(idx, particle, time, outpos);
           tookAnySteps = true;
         }
       }
