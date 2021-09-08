@@ -95,15 +95,8 @@ public:
     }
   };
 
-  template <typename CellSetType>
-  vtkm::cont::CellSetSingleType<> Run(
-    const CellSetType& vtkmNotUsed(cellSet),
-    vtkm::cont::ArrayHandle<vtkm::IdComponent>& vtkmNotUsed(outCellsPerCell))
-  {
-    return vtkm::cont::CellSetSingleType<>();
-  }
-
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<>& cellSet,
+  template <typename SS, typename CS, typename OS>
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<SS, CS, OS>& cellSet,
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
     vtkm::cont::CellSetSingleType<> outCellSet;

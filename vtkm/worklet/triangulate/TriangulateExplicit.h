@@ -97,47 +97,40 @@ public:
       connectivityOut[2] = connectivityIn[triIndices[2]];
     }
   };
-  template <typename CellSetType>
-  vtkm::cont::CellSetSingleType<> Run(
-    const CellSetType& vtkmNotUsed(cellSet),
-    vtkm::cont::ArrayHandle<vtkm::IdComponent>& vtkmNotUsed(outCellsPerCell))
+  template <typename SS, typename CS, typename OS>
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<SS, CS, OS>& cellSet,
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
     vtkm::cont::CellSetSingleType<> outCellSet;
+
+    // Input topology
+    auto inShapes =
+      cellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+    auto inNumIndices =
+      cellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+
+    // Output topology
+    vtkm::cont::ArrayHandle<vtkm::Id> outConnectivity;
+
+    vtkm::worklet::internal::TriangulateTables tables;
+
+    // Determine the number of output cells each input cell will generate
+    vtkm::worklet::DispatcherMapField<TrianglesPerCell> triPerCellDispatcher;
+    triPerCellDispatcher.Invoke(inShapes, inNumIndices, tables.PrepareForInput(), outCellsPerCell);
+
+    // Build new cells
+    vtkm::worklet::DispatcherMapTopology<TriangulateCell> triangulateDispatcher(
+      TriangulateCell::MakeScatter(outCellsPerCell));
+    triangulateDispatcher.Invoke(
+      cellSet, tables.PrepareForInput(), vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
+
+    // Add cells to output cellset
+    outCellSet.Fill(
+      cellSet.GetNumberOfPoints(), vtkm::CellShapeTagTriangle::Id, 3, outConnectivity);
     return outCellSet;
   }
 };
-template <>
-vtkm::cont::CellSetSingleType<> TriangulateExplicit::Run(
-  const vtkm::cont::CellSetExplicit<>& cellSet,
-  vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
-{
-  vtkm::cont::CellSetSingleType<> outCellSet;
 
-  // Input topology
-  auto inShapes =
-    cellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-  auto inNumIndices =
-    cellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-
-  // Output topology
-  vtkm::cont::ArrayHandle<vtkm::Id> outConnectivity;
-
-  vtkm::worklet::internal::TriangulateTables tables;
-
-  // Determine the number of output cells each input cell will generate
-  vtkm::worklet::DispatcherMapField<TrianglesPerCell> triPerCellDispatcher;
-  triPerCellDispatcher.Invoke(inShapes, inNumIndices, tables.PrepareForInput(), outCellsPerCell);
-
-  // Build new cells
-  vtkm::worklet::DispatcherMapTopology<TriangulateCell> triangulateDispatcher(
-    TriangulateCell::MakeScatter(outCellsPerCell));
-  triangulateDispatcher.Invoke(
-    cellSet, tables.PrepareForInput(), vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
-
-  // Add cells to output cellset
-  outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagTriangle::Id, 3, outConnectivity);
-  return outCellSet;
-}
 }
 } // namespace vtkm::worklet
 
