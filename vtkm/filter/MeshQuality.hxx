@@ -54,11 +54,11 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  VTKM_ASSERT(fieldMeta.IsPointField());
-
-  //TODO: Should other cellset types be supported?
-  vtkm::cont::CellSetExplicit<> cellSet;
-  input.GetCellSet().CopyTo(cellSet);
+  if (!fieldMeta.IsPointField())
+  {
+    throw vtkm::cont::ErrorBadValue("Active field for MeshQuality must be point coordinates. "
+                                    "But the active field is not a point field.");
+  }
 
   vtkm::worklet::MeshQuality<CellMetric> qualityWorklet;
 
@@ -69,15 +69,19 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
     vtkm::worklet::MeshQuality<CellMetric> subWorklet;
     vtkm::cont::ArrayHandle<T> array;
     subWorklet.SetMetric(vtkm::filter::CellMetric::AREA);
-    this->Invoke(
-      subWorklet, vtkm::filter::ApplyPolicyCellSet(cellSet, policy, *this), points, array);
+    this->Invoke(subWorklet,
+                 vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this),
+                 points,
+                 array);
     T zero = 0.0;
     vtkm::FloatDefault totalArea = (vtkm::FloatDefault)vtkm::cont::Algorithm::Reduce(array, zero);
 
     vtkm::FloatDefault averageVolume = 1.;
     subWorklet.SetMetric(vtkm::filter::CellMetric::VOLUME);
-    this->Invoke(
-      subWorklet, vtkm::filter::ApplyPolicyCellSet(cellSet, policy, *this), points, array);
+    this->Invoke(subWorklet,
+                 vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this),
+                 points,
+                 array);
     vtkm::FloatDefault totalVolume = (vtkm::FloatDefault)vtkm::cont::Algorithm::Reduce(array, zero);
 
     vtkm::Id numVals = array.GetNumberOfValues();
@@ -93,8 +97,10 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
   //Invoke the MeshQuality worklet
   vtkm::cont::ArrayHandle<T> outArray;
   qualityWorklet.SetMetric(this->MyMetric);
-  this->Invoke(
-    qualityWorklet, vtkm::filter::ApplyPolicyCellSet(cellSet, policy, *this), points, outArray);
+  this->Invoke(qualityWorklet,
+               vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this),
+               points,
+               outArray);
 
   vtkm::cont::DataSet result;
   result.CopyStructure(input); //clone of the input dataset
