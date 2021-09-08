@@ -10,6 +10,9 @@
 
 #include <vtkm/cont/internal/ParallelRadixSort.h>
 
+#include <vtkm/cont/RuntimeDeviceInformation.h>
+#include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
+
 #include <omp.h>
 
 namespace vtkm
@@ -27,20 +30,11 @@ struct RadixThreaderOpenMP
 {
   size_t GetAvailableCores() const
   {
-    size_t result;
-    if (omp_in_parallel())
-    {
-      result = static_cast<size_t>(omp_get_num_threads());
-    }
-    else
-    {
-#pragma omp parallel
-      {
-        result = static_cast<size_t>(omp_get_num_threads());
-      }
-    }
-
-    return result;
+    vtkm::Id result;
+    vtkm::cont::RuntimeDeviceInformation{}
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
+      .GetThreads(result);
+    return static_cast<size_t>(result);
   }
 
   template <typename TaskType>

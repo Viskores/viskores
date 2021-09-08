@@ -97,16 +97,10 @@ public:
     auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(outputPortal);
 
     CopyIfHelper helper;
+    helper.Initialize(inSize, sizeof(T));
 
     VTKM_OPENMP_DIRECTIVE(parallel default(shared))
     {
-
-      VTKM_OPENMP_DIRECTIVE(single)
-      {
-        // Calls omp_get_num_threads, thus must be used inside a parallel section.
-        helper.Initialize(inSize, sizeof(T));
-      }
-
       VTKM_OPENMP_DIRECTIVE(for schedule(static))
       for (vtkm::Id i = 0; i < helper.NumChunks; ++i)
       {
