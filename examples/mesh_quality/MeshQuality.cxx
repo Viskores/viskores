@@ -22,7 +22,6 @@
 #include <vector>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/MeshQuality.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
