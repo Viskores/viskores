@@ -36,9 +36,12 @@ public:
     :
 #if TBB_VERSION_MAJOR >= 2020
     HardwareMaxThreads(::tbb::task_arena{}.max_concurrency())
+    ,
 #else
     HardwareMaxThreads(::tbb::task_scheduler_init::default_num_threads())
+    ,
 #endif
+    CurrentNumThreads(this->HardwareMaxThreads)
   {
   }
 
@@ -49,12 +52,13 @@ public:
 
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id& value) override final
   {
+    this->CurrentNumThreads = value > 0 ? value : this->HardwareMaxThreads;
 #if TBB_VERSION_MAJOR >= 2020
     GlobalControl.reset(new ::tbb::global_control(::tbb::global_control::max_allowed_parallelism,
-                                                  value > 0 ? value : this->HardwareMaxThreads));
+                                                  this->CurrentNumThreads));
 #else
-    TaskSchedulerInit.reset(new ::tbb::task_scheduler_init(
-      value > 0 ? static_cast<int>(value) : static_cast<int>(this->HardwareMaxThreads)));
+    TaskSchedulerInit.reset(
+      new ::tbb::task_scheduler_init(static_cast<int>(this->CurrentNumThreads)));
 #endif
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
@@ -64,7 +68,7 @@ public:
 #if TBB_VERSION_MAJOR >= 2020
     value = ::tbb::global_control::active_value(::tbb::global_control::max_allowed_parallelism);
 #else
-    value = ::tbb::task_scheduler_init::default_num_threads();
+    value = this->CurrentNumThreads;
 #endif
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
@@ -83,6 +87,7 @@ private:
   std::unique_ptr<::tbb::task_scheduler_init> TaskSchedulerInit;
 #endif
   vtkm::Id HardwareMaxThreads;
+  vtkm::Id CurrentNumThreads;
 };
 } // namespace vktm::cont::internal
 } // namespace vtkm::cont

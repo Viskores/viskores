@@ -23,6 +23,7 @@ set(unit_tests
   UnitTestTBBDeviceAdapter.cxx
   UnitTestTBBImplicitFunction.cxx
   UnitTestTBBPointLocatorSparseGrid.cxx
+  UnitTestTBBRuntimeDeviceConfiguration.cxx
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
