@@ -13,6 +13,12 @@
 #include <vtkm/cont/internal/RuntimeDeviceConfiguration.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <tbb/tbb.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+
+#include <memory>
+
 namespace vtkm
 {
 namespace cont
@@ -24,27 +30,59 @@ template <>
 class RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagTBB>
   : public vtkm::cont::internal::RuntimeDeviceConfigurationBase
 {
+public:
+  VTKM_CONT
+  RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagTBB>()
+    :
+#if TBB_VERSION_MAJOR >= 2020
+    HardwareMaxThreads(::tbb::task_arena{}.max_concurrency())
+#else
+    HardwareMaxThreads(::tbb::task_scheduler_init::default_num_threads())
+#endif
+  {
+  }
+
   VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const override final
   {
     return vtkm::cont::DeviceAdapterTagTBB{};
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id&) override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id& value) override final
   {
-    // TODO: vtk-m set the number of global threads
+#if TBB_VERSION_MAJOR >= 2020
+    GlobalControl.reset(new ::tbb::global_control(::tbb::global_control::max_allowed_parallelism,
+                                                  value > 0 ? value : this->HardwareMaxThreads));
+#else
+    TaskSchedulerInit.reset(new ::tbb::task_scheduler_init(
+      value > 0 ? static_cast<int>(value) : static_cast<int>(this->HardwareMaxThreads)));
+#endif
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id&) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id& value) const override final
   {
-    // TODO: Get number of TBB threads here (essentially just threads supported by architecture)
+#if TBB_VERSION_MAJOR >= 2020
+    value = ::tbb::global_control::active_value(::tbb::global_control::max_allowed_parallelism);
+#else
+    value = ::tbb::task_scheduler_init::default_num_threads();
+#endif
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetMaxThreads(vtkm::Id&) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetMaxThreads(
+    vtkm::Id& value) const override final
   {
+    value = this->HardwareMaxThreads;
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
+
+private:
+#if TBB_VERSION_MAJOR >= 2020
+  std::unique_ptr<::tbb::global_control> GlobalControl;
+#else
+  std::unique_ptr<::tbb::task_scheduler_init> TaskSchedulerInit;
+#endif
+  vtkm::Id HardwareMaxThreads;
 };
 } // namespace vktm::cont::internal
 } // namespace vtkm::cont
