@@ -71,7 +71,8 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input,
     this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                       field,
                       fieldMeta.GetAssociation(),
-                      predicate);
+                      predicate,
+                      this->GetAllInRange());
 
   vtkm::cont::DataSet output;
   output.SetCellSet(cellOut);

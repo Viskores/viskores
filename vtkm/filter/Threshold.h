@@ -45,6 +45,15 @@ public:
   VTKM_CONT
   vtkm::Float64 GetUpperThreshold() const { return this->UpperValue; }
 
+  //If using scalars from point data, all scalars for all points in a cell must
+  //satisfy the threshold criterion if AllScalars is set. Otherwise, just a
+  //single scalar value satisfying the threshold criterion will extract the cell.
+  VTKM_CONT
+  void SetAllInRange(bool value) { this->ReturnAllInRange = value; }
+
+  VTKM_CONT
+  bool GetAllInRange() const { return this->ReturnAllInRange; }
+
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
@@ -66,6 +75,7 @@ public:
 private:
   double LowerValue = 0;
   double UpperValue = 0;
+  bool ReturnAllInRange = false;
   vtkm::worklet::Threshold Worklet;
 };
 
