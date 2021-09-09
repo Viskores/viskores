@@ -81,9 +81,6 @@ class TriangulateTablesExecutionObject
 {
 public:
   using PortalType = TriangulateArrayHandle::ReadPortalType;
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  TriangulateTablesExecutionObject() {}
 
   VTKM_CONT
   TriangulateTablesExecutionObject(const TriangulateArrayHandle& counts,
@@ -136,46 +133,16 @@ private:
   PortalType Indices;
 };
 
-class TriangulateTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
+class TriangulateTables : public vtkm::cont::ExecutionObjectBase
 {
 public:
   VTKM_CONT TriangulateTablesExecutionObject PrepareForExecution(vtkm::cont::DeviceAdapterId device,
                                                                  vtkm::cont::Token& token) const
   {
-    if (BasicImpl)
-    {
-      return TriangulateTablesExecutionObject();
-    }
     return TriangulateTablesExecutionObject(
       this->Counts, this->Offsets, this->Indices, device, token);
   }
-  VTKM_CONT
-  TriangulateTablesExecutionObjectFactory()
-    : BasicImpl(true)
-  {
-  }
 
-  VTKM_CONT
-  TriangulateTablesExecutionObjectFactory(const TriangulateArrayHandle& counts,
-                                          const TriangulateArrayHandle& offsets,
-                                          const TriangulateArrayHandle& indices)
-    : BasicImpl(false)
-    , Counts(counts)
-    , Offsets(offsets)
-    , Indices(indices)
-  {
-  }
-
-private:
-  bool BasicImpl;
-  TriangulateArrayHandle Counts;
-  TriangulateArrayHandle Offsets;
-  TriangulateArrayHandle Indices;
-};
-
-class TriangulateTables
-{
-public:
   VTKM_CONT
   TriangulateTables()
     : Counts(vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::TriangleCountData,
@@ -188,12 +155,6 @@ public:
                                            vtkm::Id(9),
                                            vtkm::CopyFlag::Off))
   {
-  }
-
-  vtkm::worklet::internal::TriangulateTablesExecutionObjectFactory PrepareForInput() const
-  {
-    return vtkm::worklet::internal::TriangulateTablesExecutionObjectFactory(
-      this->Counts, this->Offsets, this->Indices);
   }
 
 private:
@@ -298,9 +259,6 @@ public:
   {
     return *this;
   }
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  TetrahedralizeTablesExecutionObject() {}
 
   VTKM_CONT
   TetrahedralizeTablesExecutionObject(const TriangulateArrayHandle& counts,
@@ -338,45 +296,7 @@ private:
   PortalType Indices;
 };
 
-class TetrahedralizeTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
-{
-public:
-  VTKM_CONT TetrahedralizeTablesExecutionObject
-  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
-  {
-    if (BasicImpl)
-    {
-      return TetrahedralizeTablesExecutionObject();
-    }
-    return TetrahedralizeTablesExecutionObject(
-      this->Counts, this->Offsets, this->Indices, device, token);
-  }
-
-  VTKM_CONT
-  TetrahedralizeTablesExecutionObjectFactory()
-    : BasicImpl(true)
-  {
-  }
-
-  VTKM_CONT
-  TetrahedralizeTablesExecutionObjectFactory(const TriangulateArrayHandle& counts,
-                                             const TriangulateArrayHandle& offsets,
-                                             const TriangulateArrayHandle& indices)
-    : BasicImpl(false)
-    , Counts(counts)
-    , Offsets(offsets)
-    , Indices(indices)
-  {
-  }
-
-private:
-  bool BasicImpl;
-  TriangulateArrayHandle Counts;
-  TriangulateArrayHandle Offsets;
-  TriangulateArrayHandle Indices;
-};
-
-class TetrahedralizeTables
+class TetrahedralizeTables : public vtkm::cont::ExecutionObjectBase
 {
 public:
   VTKM_CONT
@@ -393,10 +313,11 @@ public:
   {
   }
 
-  vtkm::worklet::internal::TetrahedralizeTablesExecutionObjectFactory PrepareForInput() const
+  VTKM_CONT TetrahedralizeTablesExecutionObject
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
   {
-    return vtkm::worklet::internal::TetrahedralizeTablesExecutionObjectFactory(
-      this->Counts, this->Offsets, this->Indices);
+    return TetrahedralizeTablesExecutionObject(
+      this->Counts, this->Offsets, this->Indices, device, token);
   }
 
 private:
@@ -404,6 +325,7 @@ private:
   TriangulateArrayHandle Offsets;
   TriangulateArrayHandle Indices;
 };
+
 }
 }
 }
