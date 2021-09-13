@@ -1426,7 +1426,6 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
   vtkm::Id nOldHypernodes = nTotalHypernodes - nNewHypernodes;
 
 #ifdef DEBUG_PRINT
-  // TODO: Hamish why do we need this debug print. It looks like the hierarchical tree does not change
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              hierarchicalTree.DebugPrint("Node Counts Retrieved", __FILE__, __LINE__));
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -1449,6 +1448,13 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
       newSupernodeIndex,               // input fancy iteration index
       hierarchicalTree.WhichIteration, // input
       hierarchicalTree.FirstSupernodePerIteration[static_cast<std::size_t>(theRound)] // output.
+    );
+
+    // force the extra one to be one-off-the end for safety
+    vtkm::worklet::contourtree_augmented::IdArraySetValue(
+      this->NumTransferIterations,                          // index to set
+      hierarchicalTree.Supernodes.GetNumberOfValues(),      // value to set
+      hierarchicalTree.FirstSupernodePerIteration[theRound] // array to modify
     );
   }
 
