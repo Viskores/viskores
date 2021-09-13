@@ -1001,6 +1001,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   }
 
   // 4. Create output data set
+  // TODO: This should use the augmented tree if the tree was augmented not the unaugmented tree
   std::vector<vtkm::cont::DataSet> hierarchicalTreeOutputDataSet(localDataBlocks.size());
   master.foreach (
     [&](
@@ -1097,7 +1098,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         currInBlock->BlockOrigin,
         currInBlock->BlockSize,
         spatialDecomp.GlobalSize,
-        currInBlock->HierarchicalTree);
+        *currInBlock->HierarchicalAugmenter.AugmentedTree); // currInBlock->HierarchicalTree);
     hierarchical_hyper_sweep_master.add(
       vtkmdiyLocalBlockGids[blockNo], localHyperSweeperBlocks[blockNo], new vtkmdiy::Link());
   }
@@ -1187,7 +1188,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     delete b;
   }
   // END: THIS SHOULD GO INTO A SEPARATE FILTER
-
   // Clean-up hierarchical contour tree blocks
   for (auto block : localDataBlocks)
     delete block;
