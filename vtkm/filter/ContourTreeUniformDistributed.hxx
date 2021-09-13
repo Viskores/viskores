@@ -1011,26 +1011,28 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       vtkm::cont::Timer iterationTimer;
       iterationTimer.Start();
 
+      // Use the augmented tree if available or otherwise use the unaugmented hierarchical tree from the current block
+      auto blockHierarchcialTree = this->AugmentHierarchicalTree
+        ? (*blockData->HierarchicalAugmenter.AugmentedTree)
+        : blockData->HierarchicalTree;
+
       // Create data set from output
-      vtkm::cont::Field dataValuesField("DataValues",
-                                        vtkm::cont::Field::Association::WHOLE_MESH,
-                                        blockData->HierarchicalTree.DataValues);
+      vtkm::cont::Field dataValuesField(
+        "DataValues", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.DataValues);
       hierarchicalTreeOutputDataSet[blockData->BlockIndex].AddField(dataValuesField);
       vtkm::cont::Field regularNodeGlobalIdsField("RegularNodeGlobalIds",
                                                   vtkm::cont::Field::Association::WHOLE_MESH,
-                                                  blockData->HierarchicalTree.RegularNodeGlobalIds);
+                                                  blockHierarchcialTree.RegularNodeGlobalIds);
       hierarchicalTreeOutputDataSet[blockData->BlockIndex].AddField(regularNodeGlobalIdsField);
-      vtkm::cont::Field superarcsField("Superarcs",
-                                       vtkm::cont::Field::Association::WHOLE_MESH,
-                                       blockData->HierarchicalTree.Superarcs);
+      vtkm::cont::Field superarcsField(
+        "Superarcs", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.Superarcs);
       hierarchicalTreeOutputDataSet[blockData->BlockIndex].AddField(superarcsField);
-      vtkm::cont::Field supernodesField("Supernodes",
-                                        vtkm::cont::Field::Association::WHOLE_MESH,
-                                        blockData->HierarchicalTree.Supernodes);
+      vtkm::cont::Field supernodesField(
+        "Supernodes", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.Supernodes);
       hierarchicalTreeOutputDataSet[blockData->BlockIndex].AddField(supernodesField);
       vtkm::cont::Field superparentsField("Superparents",
                                           vtkm::cont::Field::Association::WHOLE_MESH,
-                                          blockData->HierarchicalTree.Superparents);
+                                          blockHierarchcialTree.Superparents);
       hierarchicalTreeOutputDataSet[blockData->BlockIndex].AddField(superparentsField);
 
       // Copy cell set from input data set. This is mainly to ensure that the output data set
