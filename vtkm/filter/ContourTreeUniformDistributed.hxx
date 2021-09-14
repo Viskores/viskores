@@ -657,6 +657,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(
         static_cast<vtkm::Id>(bi));
 
+    std::cout << "LOCAL BLOCK SIZE: " << localDataBlocks[bi]->BlockSize << std::endl;
     // Save local tree information for fan out FIXME: Try to avoid copy
     localDataBlocks[bi]->ContourTrees.push_back(this->LocalContourTrees[bi]);
     localDataBlocks[bi]->InteriorForests.push_back(this->LocalInteriorForests[bi]);
@@ -1096,6 +1097,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     for (size_t blockNo = 0; blockNo < localDataBlocks.size(); ++blockNo)
     {
       auto currInBlock = localDataBlocks[blockNo];
+      std::cout << "currInBlock->BlockSize: " << currInBlock->BlockSize << std::endl;
       localHyperSweeperBlocks[blockNo] =
         new vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>(
           currInBlock->GlobalBlockId, // TODO/FIXME: Check what block ID this should be
@@ -1123,7 +1125,11 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           hyperSweeper(
             b->BlockNo, b->HierarchicalContourTree, b->IntrinsicVolume, b->DependentVolume);
 
-        // Create mesh and initialize vertex counts
+      // Create mesh and initialize vertex counts
+#ifdef DEBUG_PRINT
+        std::cout << "idRelabeler parameters: origin: " << b->Origin << " size: " << b->Size
+                  << " global size: " << b->GlobalSize;
+#endif
         vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler idRelabeler{ b->Origin,
                                                                                  b->Size,
                                                                                  b->GlobalSize };
@@ -1143,6 +1149,15 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           hyperSweeper.InitializeIntrinsicVertexCount(
             b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
         }
+
+        std::cout << "Block " << b->BlockNo << std::endl;
+        std::cout << "=========" << std::endl;
+        vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
+                                                          std::cout);
+        vtkm::worklet::contourtree_augmented::PrintIndices(
+          "Intrinsic Volume", b->IntrinsicVolume, -1, std::cout);
+        vtkm::worklet::contourtree_augmented::PrintIndices(
+          "Dependent Volume", b->DependentVolume, -1, std::cout);
 
 #ifdef DEBUG_PRINT
         VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->BlockNo);
@@ -1186,7 +1201,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           "Intrinsic Volume", b->IntrinsicVolume, -1, std::cout);
         vtkm::worklet::contourtree_augmented::PrintIndices(
           "Dependent Volume", b->DependentVolume, -1, std::cout);
-
 
         VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->BlockNo);
 #ifdef DEBUG_PRINT
