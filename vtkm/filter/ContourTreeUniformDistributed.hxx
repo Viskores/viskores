@@ -850,7 +850,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   timingsStream << "    " << std::setw(38) << std::left << "Create DIY Swap Partners"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
-
   // 1.3 execute the fan in reduction
   const vtkm::worklet::contourtree_distributed::ComputeDistributedContourTreeFunctor<FieldType>
     computeDistributedContourTreeFunctor(this->MultiBlockSpatialDecomposition.GlobalSize,
@@ -858,7 +857,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                                          this->TimingsLogLevel,
                                          this->TreeLogLevel);
   vtkmdiy::reduce(master, assigner, partners, computeDistributedContourTreeFunctor);
-
   // Record timing for the actual reduction
   timingsStream << "    " << std::setw(38) << std::left << "Fan In Reduction"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
@@ -870,7 +868,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   timingsStream << "    " << std::setw(38) << std::left << "Post Fan In Barrier"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
-
   // 2. Fan out to update all the tree
   master.foreach (
     [&](
@@ -1097,12 +1094,18 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     for (size_t blockNo = 0; blockNo < localDataBlocks.size(); ++blockNo)
     {
       auto currInBlock = localDataBlocks[blockNo];
-      std::cout << "currInBlock->BlockSize: " << currInBlock->BlockSize << std::endl;
+      // The block size and origin may be modified during the FanIn so we need to use the
+      // size and origin from the original decomposition instead of looking it up in the currInBlock
+      auto currBlockSize = this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(
+        static_cast<vtkm::Id>(blockNo));
+      auto currBlockOrigin =
+        this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(
+          static_cast<vtkm::Id>(blockNo));
       localHyperSweeperBlocks[blockNo] =
         new vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>(
           currInBlock->GlobalBlockId, // TODO/FIXME: Check what block ID this should be
-          currInBlock->BlockOrigin,
-          currInBlock->BlockSize,
+          currBlockOrigin,            //currInBlock->BlockOrigin,
+          currBlockSize,              // currInBlock->BlockSize,
           spatialDecomp.GlobalSize,
           *currInBlock->HierarchicalAugmenter.AugmentedTree); // currInBlock->HierarchicalTree);
       hierarchical_hyper_sweep_master.add(
