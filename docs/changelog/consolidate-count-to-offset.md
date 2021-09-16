@@ -16,6 +16,13 @@ device-specific code (e.g. `vtkm::cont::Algorithm`) from core classes like
 `CellSetExplicit` so that less code needs to use the device compiler
 (especially downstream code).
 
+`ConvertNumComponentsToOffsets` has also been changed to provide a
+pre-compiled version for common arrays. This helps with the dual goals of
+compiling less device code and allowing data set builders to not have to
+use the device compiler. For cases where you need to compile
+`ConvertNumComponentsToOffsets` for a different kind of array, you can use
+the internal `ConvertNumComponentsToOffsetsTemplate`.
+
 Part of this change removed unnecessary includes of `Algorithm.h` in
 `ArrayHandleGroupVecVariable.h` and `CellSetExplicit.h`. This header had to
 be added to some classes that were not including it themselves.
