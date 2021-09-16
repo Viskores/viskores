@@ -938,9 +938,6 @@ void InitDataSet(int& argc, char** argv)
                                                  : tbb::task_scheduler_init::automatic);
 #endif
 #endif
-#ifdef VTKM_ENABLE_OPENMP
-  omp_set_num_threads((numThreads > 0) ? numThreads : omp_get_max_threads());
-#endif
 
   // Now go back through the arg list and remove anything that is not in the list of
   // unknown options or non-option arguments.

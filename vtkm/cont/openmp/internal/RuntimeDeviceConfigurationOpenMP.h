@@ -13,6 +13,12 @@
 #include <vtkm/cont/internal/RuntimeDeviceConfiguration.h>
 #include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
 
+#include <vtkm/cont/Logging.h>
+
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <omp.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+
 namespace vtkm
 {
 namespace cont
@@ -24,39 +30,72 @@ template <>
 class RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagOpenMP>
   : public vtkm::cont::internal::RuntimeDeviceConfigurationBase
 {
+public:
+  RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagOpenMP>()
+    : HardwareMaxThreads(InitializeHardwareMaxThreads())
+    , CurrentNumThreads(this->HardwareMaxThreads)
+  {
+  }
+
   VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const override final
   {
     return vtkm::cont::DeviceAdapterTagOpenMP{};
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id&) override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id& value) override final
   {
-    // TODO: Set the threads in OpenMP
+    if (omp_in_parallel())
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error, "OpenMP SetThreads: Error, currently in parallel");
+      return RuntimeDeviceConfigReturnCode::NOT_APPLIED;
+    }
+    if (value > 0)
+    {
+      if (value > this->HardwareMaxThreads)
+      {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                   "OpenMP: You may be oversubscribing your CPU cores: "
+                     << "process threads available: " << this->HardwareMaxThreads
+                     << ", requested threads: " << value);
+      }
+      this->CurrentNumThreads = value;
+      omp_set_num_threads(this->CurrentNumThreads);
+    }
+    else
+    {
+      this->CurrentNumThreads = this->HardwareMaxThreads;
+      omp_set_num_threads(this->CurrentNumThreads);
+    }
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetNumaRegions(const vtkm::Id&) override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id& value) const override final
   {
-    // TODO: Set the numa regions in OpenMP
+    value = this->CurrentNumThreads;
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id&) const override final
+  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetMaxThreads(
+    vtkm::Id& value) const override final
   {
-    // TODO: Get the number of OpenMP threads
+    value = this->HardwareMaxThreads;
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetNumaRegions(vtkm::Id&) const override final
+private:
+  VTKM_CONT vtkm::Id InitializeHardwareMaxThreads() const
   {
-    // TODO: Get the number of OpenMP NumaRegions
-    return RuntimeDeviceConfigReturnCode::SUCCESS;
+    vtkm::Id count = 0;
+    VTKM_OPENMP_DIRECTIVE(parallel)
+    {
+      VTKM_OPENMP_DIRECTIVE(atomic)
+      ++count;
+    }
+    return count;
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetMaxThreads(vtkm::Id&) const override final
-  {
-    return RuntimeDeviceConfigReturnCode::SUCCESS;
-  }
+  vtkm::Id HardwareMaxThreads;
+  vtkm::Id CurrentNumThreads;
 };
 } // namespace vtkm::cont::internal
 } // namespace vtkm::cont

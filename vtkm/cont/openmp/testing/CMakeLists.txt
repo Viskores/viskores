@@ -23,6 +23,7 @@ set(unit_tests
   UnitTestOpenMPDeviceAdapter.cxx
   UnitTestOpenMPImplicitFunction.cxx
   UnitTestOpenMPPointLocatorSparseGrid.cxx
+  UnitTestOpenMPRuntimeDeviceConfiguration.cxx
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)

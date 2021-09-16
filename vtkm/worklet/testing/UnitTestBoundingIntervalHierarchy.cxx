@@ -13,7 +13,9 @@
 #include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Invoker.h>
+#include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/ParametricCoordinates.h>
@@ -93,7 +95,11 @@ void RunTest()
 //cpu usage it will fail, so we limit the number of threads
 //to avoid the test timing out
 #ifdef VTKM_ENABLE_OPENMP
-  omp_set_num_threads(std::min(4, omp_get_max_threads()));
+  auto& runtimeConfig = vtkm::cont::RuntimeDeviceInformation{}.GetRuntimeConfiguration(
+    vtkm::cont::DeviceAdapterTagOpenMP());
+  vtkm::Id maxThreads = 0;
+  runtimeConfig.GetMaxThreads(maxThreads);
+  runtimeConfig.SetThreads(std::min(static_cast<vtkm::Id>(4), maxThreads));
 #endif
 
   TestBoundingIntervalHierarchy(ConstructDataSet(8), 3);
