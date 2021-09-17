@@ -70,6 +70,7 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
                "Failed to map field " << field.GetName()
                                       << " because it is an unknown type. Cast error:\n"
                                       << error.GetMessage());
+    (void)error; // Suppress unused error message if logging is turned off.
   }
 
   //the bool valid will be modified by the map algorithm to hold if the
