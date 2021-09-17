@@ -328,7 +328,6 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::InitializeI
 template <typename SweepValueType, typename ContourTreeFieldType>
 void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::LocalHyperSweep()
 { // LocalHyperSweep()
-// TODO: Implement this function
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
@@ -628,6 +627,7 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::TransferWei
                  valuePrefixSumView, // input view of valuePrefixSum[firstSupernode, lastSupernode)
                  this->DependentValues);
   }
+
   {
     VTKM_ASSERT(firstSupernode + 1 + numSupernodesToProcess - 1 <=
                 this->SortedTransferTarget.GetNumberOfValues());
@@ -636,13 +636,14 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::TransferWei
     VTKM_ASSERT(firstSupernode + 1 + numSupernodesToProcess - 1 <=
                 this->SortedTransferTarget.GetNumberOfValues());
     auto sortedTransferTargetShiftedView = vtkm::cont::make_ArrayHandleView(
-      this->SortedTransferTarget, firstSupernode + 1, numSupernodesToProcess - 1);
+      this->SortedTransferTarget, firstSupernode, numSupernodesToProcess - 1);
     auto valuePrefixSumPreviousValueView = vtkm::cont::make_ArrayHandleView(
       this->ValuePrefixSum, firstSupernode, numSupernodesToProcess - 1);
 
     // 7b. Now find the LHE of each group and subtract out the prior weight
-    this->Invoke(vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
-                   TransferWeightsUpdateLHEWorklet{},
+    vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::
+      TransferWeightsUpdateLHEWorklet transferWeightsUpdateLHEWorklet;
+    this->Invoke(transferWeightsUpdateLHEWorklet,
                  sortedTransferTargetView,
                  sortedTransferTargetShiftedView,
                  valuePrefixSumPreviousValueView,

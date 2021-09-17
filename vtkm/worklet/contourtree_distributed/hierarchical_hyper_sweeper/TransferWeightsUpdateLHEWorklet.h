@@ -77,21 +77,23 @@ public:
 
   template <typename InOutPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& sortedTransferTargetValue,
-                            const vtkm::Id& sortedTransferTargetPreviusValue,
+                            const vtkm::Id& sortedTransferTargetPreviousValue,
                             const vtkm::Id& valuePrefixSumPreviousValue,
                             InOutPortalType& dependentValuesPortal) const
   {
     // per supernode
     // ignore any that point at NO_SUCH_ELEMENT
-    if (!vtkm::worklet::contourtree_augmented::NoSuchElement(sortedTransferTargetValue))
+    if (vtkm::worklet::contourtree_augmented::NoSuchElement(sortedTransferTargetValue))
     {
-      if (sortedTransferTargetValue != sortedTransferTargetPreviusValue)
-      {
-        auto originalValue = dependentValuesPortal.Get(sortedTransferTargetValue);
-        dependentValuesPortal.Set(sortedTransferTargetValue,
-                                  originalValue - valuePrefixSumPreviousValue);
-      }
+      return;
     }
+    if (sortedTransferTargetValue != sortedTransferTargetPreviousValue)
+    {
+      auto originalValue = dependentValuesPortal.Get(sortedTransferTargetValue);
+      dependentValuesPortal.Set(sortedTransferTargetValue,
+                                originalValue - valuePrefixSumPreviousValue);
+    }
+
 
     // In serial this worklet implements the following operation
     /*
