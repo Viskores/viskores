@@ -29,6 +29,7 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Timer.h>
@@ -770,7 +771,7 @@ public:
       vtkm::cont::make_ArrayHandleGroupVec<4>(faceConnectivity),
       coordData);
 
-    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(facePointCount);
+    auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(facePointCount);
 
     outCellSet.Fill(inCellSet.GetNumberOfPoints(), faceShapes, faceConnectivity, offsets);
   }
@@ -823,7 +824,7 @@ public:
 
         countPolyDataCellPointsDispatcher.Invoke(inCellSet, polyDataPointCount);
 
-        vtkm::cont::ConvertNumIndicesToOffsets(
+        vtkm::cont::ConvertNumComponentsToOffsets(
           polyDataPointCount, polyDataOffsets, polyDataConnectivitySize);
 
         vtkm::worklet::DispatcherMapTopology<PassPolyDataCells> passPolyDataCellsDispatcher(
@@ -884,7 +885,7 @@ public:
 
     OffsetsArrayType faceOffsets;
     vtkm::Id connectivitySize;
-    vtkm::cont::ConvertNumIndicesToOffsets(facePointCount, faceOffsets, connectivitySize);
+    vtkm::cont::ConvertNumComponentsToOffsets(facePointCount, faceOffsets, connectivitySize);
 
     ConnectivityArrayType faceConnectivity;
     // Must pre allocate because worklet invocation will not have enough

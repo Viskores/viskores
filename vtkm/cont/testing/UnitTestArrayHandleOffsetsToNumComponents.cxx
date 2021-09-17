@@ -13,6 +13,7 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -46,7 +47,7 @@ void TryNormalOffsets()
     numComponentsPortal.Set(i, i % 5);
   }
 
-  auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numComponents);
+  auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(numComponents);
   TestOffsetsToNumComponents(offsets, numComponents);
 }
 

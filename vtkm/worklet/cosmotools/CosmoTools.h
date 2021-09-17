@@ -70,6 +70,7 @@
 #include <vtkm/worklet/cosmotools/EqualsMinimumPotential.h>
 #include <vtkm/worklet/cosmotools/SetCandidateParticles.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>

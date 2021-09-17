@@ -51,51 +51,6 @@ struct CellSetExplicitConnectivityChooser
 #define VTKM_DEFAULT_OFFSETS_STORAGE_TAG VTKM_DEFAULT_STORAGE_TAG
 #endif
 
-template <typename S1, typename S2>
-void ConvertNumIndicesToOffsets(const vtkm::cont::ArrayHandle<vtkm::Id, S1>& numIndices,
-                                vtkm::cont::ArrayHandle<vtkm::Id, S2>& offsets)
-{
-  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-  vtkm::cont::Algorithm::ScanExtended(numIndices, offsets);
-}
-
-template <typename T, typename S1, typename S2>
-void ConvertNumIndicesToOffsets(const vtkm::cont::ArrayHandle<T, S1>& numIndices,
-                                vtkm::cont::ArrayHandle<vtkm::Id, S2>& offsets)
-{
-  const auto castCounts = vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numIndices);
-  ConvertNumIndicesToOffsets(castCounts, offsets);
-}
-
-template <typename T, typename S1, typename S2>
-void ConvertNumIndicesToOffsets(const vtkm::cont::ArrayHandle<T, S1>& numIndices,
-                                vtkm::cont::ArrayHandle<vtkm::Id, S2>& offsets,
-                                vtkm::Id& connectivitySize /* outparam */)
-{
-  ConvertNumIndicesToOffsets(numIndices, offsets);
-  connectivitySize = vtkm::cont::ArrayGetValue(offsets.GetNumberOfValues() - 1, offsets);
-}
-
-template <typename T, typename S>
-vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumIndicesToOffsets(
-  const vtkm::cont::ArrayHandle<T, S>& numIndices)
-{
-  vtkm::cont::ArrayHandle<vtkm::Id> offsets;
-  ConvertNumIndicesToOffsets(numIndices, offsets);
-  return offsets;
-}
-
-template <typename T, typename S>
-vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumIndicesToOffsets(
-  const vtkm::cont::ArrayHandle<T, S>& numIndices,
-  vtkm::Id& connectivityLength /* outparam */)
-{
-  vtkm::cont::ArrayHandle<vtkm::Id> offsets;
-  ConvertNumIndicesToOffsets(numIndices, offsets, connectivityLength);
-  return offsets;
-}
-
 template <typename ShapesStorageTag = VTKM_DEFAULT_SHAPES_STORAGE_TAG,
           typename ConnectivityStorageTag = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
           typename OffsetsStorageTag = VTKM_DEFAULT_OFFSETS_STORAGE_TAG>

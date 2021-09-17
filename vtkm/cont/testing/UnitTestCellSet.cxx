@@ -17,6 +17,7 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/testing/Testing.h>
 
 // Make sure deprecated types still work (while applicable)
@@ -153,7 +154,7 @@ vtkm::cont::CellSetExplicit<> MakeCellSetExplicit()
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   vtkm::cont::ArrayCopy(BaseLineConnectivity, connectivity);
 
-  auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+  auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(numIndices);
 
   vtkm::cont::CellSetExplicit<> cellset;
   cellset.Fill(BaseLineNumberOfPoints, shapes, connectivity, offsets);

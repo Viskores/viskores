@@ -19,6 +19,7 @@ set(headers
   CastInvalidValue.h
   CellLocatorBase.h
   ConnectivityExplicitInternals.h
+  ConvertNumComponentsToOffsetsTemplate.h
   DeviceAdapterAlgorithmGeneral.h
   DeviceAdapterMemoryManager.h
   DeviceAdapterMemoryManagerShared.h

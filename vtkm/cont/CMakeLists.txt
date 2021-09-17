@@ -73,6 +73,7 @@ set(headers
   ColorTable.h
   ColorTableMap.h
   ColorTableSamples.h
+  ConvertNumComponentsToOffsets.h
   CoordinateSystem.h
   DataSet.h
   DataSetBuilderCurvilinear.h
@@ -176,6 +177,7 @@ set(device_sources
   CellSetExtrude.cxx
   CellSetStructured.cxx
   ColorTable.cxx
+  ConvertNumComponentsToOffsets.cxx
   CoordinateSystem.cxx
   DataSet.cxx
   DataSetBuilderCurvilinear.cxx

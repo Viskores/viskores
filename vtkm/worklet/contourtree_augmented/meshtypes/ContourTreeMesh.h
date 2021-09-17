@@ -75,6 +75,7 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/ArrayRangeComputeTemplate.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/io/ErrorIO.h>

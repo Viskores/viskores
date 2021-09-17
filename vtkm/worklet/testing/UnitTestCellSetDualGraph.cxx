@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/Contour.h>
 
