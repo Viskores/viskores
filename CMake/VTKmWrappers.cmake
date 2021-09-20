@@ -579,12 +579,12 @@ function(vtkm_add_instantiations instantiations_list)
 
   # Compute relative path of header files
   file(RELATIVE_PATH INSTANTIATION_FILTER_HEADER
-    ${CMAKE_SOURCE_DIR}
+    ${VTKm_SOURCE_DIR}
     "${CMAKE_CURRENT_SOURCE_DIR}/${file_header}"
     )
 
   file(RELATIVE_PATH INSTANTIATION_FILTER_TEMPLATE_SOURCE
-    ${CMAKE_SOURCE_DIR}
+    ${VTKm_SOURCE_DIR}
     "${CMAKE_CURRENT_SOURCE_DIR}/${file_template_source}"
     )
 
