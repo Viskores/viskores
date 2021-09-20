@@ -80,9 +80,6 @@
 // If the fields are not specified, the first field with the correct association
 // is used. If no such field exists, one will be generated from the data.
 
-// For the TBB/OpenMP implementations, the number of threads can be customized
-// using a "NumThreads [numThreads]" argument.
-
 namespace
 {
 
@@ -791,7 +788,6 @@ enum optionIndex
 {
   UNKNOWN,
   HELP,
-  NUM_THREADS,
   FILENAME,
   POINT_SCALARS,
   CELL_SCALARS,
@@ -802,7 +798,6 @@ enum optionIndex
 
 void InitDataSet(int& argc, char** argv)
 {
-  int numThreads = 0;
   std::string filename;
   vtkm::Id waveletDim = 256;
   bool tetra = false;
@@ -817,12 +812,6 @@ void InitDataSet(int& argc, char** argv)
   usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Input data options are:" });
   usage.push_back({ HELP, 0, "h", "help", Arg::None, "  -h, --help\tDisplay this help." });
   usage.push_back({ UNKNOWN, 0, "", "", Arg::None, Config.Usage.c_str() });
-  usage.push_back({ NUM_THREADS,
-                    0,
-                    "",
-                    "num-threads",
-                    Arg::Number,
-                    "  --num-threads <N> \tSpecify the number of threads to use." });
   usage.push_back({ FILENAME,
                     0,
                     "",
@@ -880,22 +869,6 @@ void InitDataSet(int& argc, char** argv)
     exit(0);
   }
 
-  if (options[NUM_THREADS])
-  {
-    std::istringstream parse(options[NUM_THREADS].arg);
-    parse >> numThreads;
-    if (Config.Device == vtkm::cont::DeviceAdapterTagTBB() ||
-        Config.Device == vtkm::cont::DeviceAdapterTagOpenMP())
-    {
-      std::cout << "Selected " << numThreads << " " << Config.Device.GetName() << " threads."
-                << std::endl;
-    }
-    else
-    {
-      std::cerr << options[NUM_THREADS].name << " not valid on this device. Ignoring." << std::endl;
-    }
-  }
-
   if (options[FILENAME])
   {
     filename = options[FILENAME].arg;
@@ -921,23 +894,6 @@ void InitDataSet(int& argc, char** argv)
   }
 
   tetra = (options[TETRA] != nullptr);
-
-  // TODO: Use the VTK-m library to set the number of threads (when that becomes available).
-#ifdef VTKM_ENABLE_TBB
-#if TBB_VERSION_MAJOR >= 2020
-  if (numThreads < 1)
-  {
-    // Ask TBB how many threads are available.
-    numThreads = tbb::task_arena{}.max_concurrency();
-  }
-  // Must not be destroyed as long as benchmarks are running:
-  tbb::global_control tbbControl(tbb::global_control::max_allowed_parallelism, numThreads);
-#else // TBB_VERSION_MAJOR < 2020
-  // Must not be destroyed as long as benchmarks are running:
-  tbb::task_scheduler_init init((numThreads > 0) ? numThreads
-                                                 : tbb::task_scheduler_init::automatic);
-#endif
-#endif
 
   // Now go back through the arg list and remove anything that is not in the list of
   // unknown options or non-option arguments.

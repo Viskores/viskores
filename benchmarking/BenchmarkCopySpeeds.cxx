@@ -21,13 +21,6 @@
 
 #include <sstream>
 
-#ifdef VTKM_ENABLE_TBB
-#include <tbb/tbb.h>
-#endif // TBB
-
-// For the TBB implementation, the number of threads can be customized using a
-// "NumThreads [numThreads]" argument.
-
 namespace
 {
 
@@ -110,41 +103,6 @@ int main(int argc, char* argv[])
   {
     vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
-
-// Handle NumThreads command-line arg:
-// TODO: Use the VTK-m library to set the number of threads (when that becomes available).
-#ifdef VTKM_ENABLE_TBB
-#if TBB_VERSION_MAJOR >= 2020
-  int numThreads = tbb::task_arena{}.max_concurrency();
-#else
-  int numThreads = tbb::task_scheduler_init::automatic;
-#endif
-#endif // TBB
-
-  if (argc == 3)
-  {
-    if (std::string(argv[1]) == "NumThreads")
-    {
-#ifdef VTKM_ENABLE_TBB
-      std::istringstream parse(argv[2]);
-      parse >> numThreads;
-      std::cout << "Selected " << numThreads << " TBB threads." << std::endl;
-#else
-      std::cerr << "NumThreads valid only on TBB. Ignoring." << std::endl;
-#endif // TBB
-    }
-  }
-
-  // TODO: Use the VTK-m library to set the number of threads (when that becomes available).
-#ifdef VTKM_ENABLE_TBB
-#if TBB_VERSION_MAJOR >= 2020
-  // Must not be destroyed as long as benchmarks are running:
-  tbb::global_control tbbControl(tbb::global_control::max_allowed_parallelism, numThreads);
-#else
-  // Must not be destroyed as long as benchmarks are running:
-  tbb::task_scheduler_init init(numThreads);
-#endif
-#endif // TBB
 
   // handle benchmarking related args and run benchmarks:
   VTKM_EXECUTE_BENCHMARKS(argc, args.data());
