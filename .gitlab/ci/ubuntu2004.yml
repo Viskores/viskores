@@ -1,3 +1,36 @@
+build:ubuntu2004_gcc9:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu2004
+    - .cmake_build_linux
+    - .only-default
+  variables:
+    CMAKE_BUILD_TYPE: Debug
+    VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5"
+
+test:ubuntu2004_gcc9:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu2004
+    - .cmake_test_linux
+    - .only-default
+  variables:
+    #Restrict OpenMP number of threads since multiple test stages
+    #execute on the same hardware concurrently
+    OMP_NUM_THREADS: 4
+  dependencies:
+    - build:ubuntu2004_gcc9
+  needs:
+    - build:ubuntu2004_gcc9
+
 build:ubuntu2004_kokkos:
   tags:
     - build

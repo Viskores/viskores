@@ -53,7 +53,13 @@
 // correct settings so that we don't clobber any existing function
 #include <vtkm/internal/Windows.h>
 
+#if TBB_VERSION_MAJOR >= 2020
+#include <tbb/task.h>
+#include <tbb/task_group.h>
+#else
 #include <tbb/tbb.h>
+#endif
+
 #include <thread>
 
 #if defined(VTKM_MSVC)

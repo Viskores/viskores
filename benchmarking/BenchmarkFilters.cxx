@@ -53,9 +53,6 @@
 #include <sstream>
 #include <type_traits>
 
-#ifdef VTKM_ENABLE_TBB
-#include <tbb/tbb.h>
-#endif
 #ifdef VTKM_ENABLE_OPENMP
 #include <omp.h>
 #endif
