@@ -1194,8 +1194,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     vtkm::Id totalVolume =
       spatialDecomp.GlobalSize[0] * spatialDecomp.GlobalSize[1] * spatialDecomp.GlobalSize[2];
     hierarchical_hyper_sweep_master.foreach (
-      [&totalVolume](vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>* b,
-                     const vtkmdiy::Master::ProxyWithLink&) {
+      [&totalVolume, &rank](vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>* b,
+                            const vtkmdiy::Master::ProxyWithLink&) {
         std::cout << "Block " << b->BlockNo << std::endl;
         std::cout << "=========" << std::endl;
         vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
@@ -1211,9 +1211,14 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           vtkm::cont::LogLevel::Info,
           b->HierarchicalContourTree.DebugPrint("Called from DumpVolumes", __FILE__, __LINE__));
 #endif
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                   b->HierarchicalContourTree.DumpVolumes(
-                     totalVolume, b->IntrinsicVolume, b->DependentVolume));
+        std::string dumpVolumesString = b->HierarchicalContourTree.DumpVolumes(
+          totalVolume, b->IntrinsicVolume, b->DependentVolume);
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info, dumpVolumesString);
+        std::string volumesFileName = std::string("TreeWithVolumes_Rank_") +
+          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+          std::to_string(static_cast<int>(b->BlockNo)) + std::string(".txt");
+        std::ofstream treeStream(volumesFileName.c_str());
+        treeStream << dumpVolumesString;
       });
 
     // Clean-up
