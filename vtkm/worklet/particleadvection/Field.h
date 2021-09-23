@@ -96,8 +96,6 @@ public:
 
   VTKM_EXEC void GetValue(const vtkm::Id cellId, vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
   {
-    printf("Getting cell velocity");
-
     VTKM_ASSERT(this->Assoc == Association::CELL_SET);
 
     auto electric = this->ElectricValues.Get(cellId);
@@ -111,8 +109,6 @@ public:
                           const vtkm::UInt8 cellShape,
                           vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
   {
-    printf("Getting point velocity");
-
     VTKM_ASSERT(this->Assoc == Association::POINTS);
 
     vtkm::Vec3f electricInterp, magneticInterp;
@@ -149,7 +145,6 @@ public:
     : FieldValues(fieldValues)
     , Assoc(vtkm::cont::Field::Association::POINTS)
   {
-    std::cout << "Here here 1" << std::endl;
   }
 
   VTKM_CONT
@@ -157,7 +152,6 @@ public:
     : FieldValues(fieldValues)
     , Assoc(assoc)
   {
-    std::cout << "Here here 2" << std::endl;
     if (assoc == Association::ANY || assoc == Association::WHOLE_MESH)
       throw("Unsupported field association");
   }
