@@ -54,6 +54,7 @@
 #define vtk_m_worklet_contourtree_augmented_mesh_dem_get_owned_vertices_by_global_id_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
 
 namespace vtkm
 {
