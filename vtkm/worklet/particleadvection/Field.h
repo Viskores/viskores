@@ -161,7 +161,7 @@ public:
   const ExecutionType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
                                           vtkm::cont::Token& token) const
   {
-    return ExecutionType(this->FieldValues, device, token);
+    return ExecutionType(this->FieldValues, this->Assoc, device, token);
   }
 
 private:
@@ -201,7 +201,7 @@ public:
   const ExecutionType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
                                           vtkm::cont::Token& token) const
   {
-    return ExecutionType(this->ElectricField, this->MagneticField, device, token);
+    return ExecutionType(this->ElectricField, this->MagneticField, this->Assoc, device, token);
   }
 
 private:
