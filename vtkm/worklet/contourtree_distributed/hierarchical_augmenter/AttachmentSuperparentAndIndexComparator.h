@@ -99,6 +99,11 @@ public:
   VTKM_EXEC
   bool operator()(const vtkm::Id& left, const vtkm::Id& right) const
   { // operator()
+    if (left == right)
+    {
+      return false;
+    }
+
     // first comparison is on superparent WITHOUT ascending descending flag
     if (vtkm::worklet::contourtree_augmented::MaskedIndex(this->SuperparentsPortal.Get(left)) <
         vtkm::worklet::contourtree_augmented::MaskedIndex(this->SuperparentsPortal.Get(right)))
@@ -110,6 +115,7 @@ public:
     {
       return false;
     }
+
     // second comparison is on global regular Id
     if (this->GlobalRegularIdsPortal.Get(left) < this->GlobalRegularIdsPortal.Get(right))
     {
@@ -120,31 +126,19 @@ public:
       return !vtkm::worklet::contourtree_augmented::IsAscending(this->SuperparentsPortal.Get(left));
     }
 
-    // third comparison is on supernode IDs
-    if (vtkm::worklet::contourtree_augmented::MaskedIndex(this->SuperparentsPortal.Get(left)) <
-        vtkm::worklet::contourtree_augmented::MaskedIndex(this->SuperparentsPortal.Get(right)))
-    {
-      return true;
-    }
-    if (vtkm::worklet::contourtree_augmented::MaskedIndex(this->SuperparentsPortal.Get(left)) >
-        vtkm::worklet::contourtree_augmented::MaskedIndex(this->SuperparentsPortal.Get(right)))
-    {
-      return false;
-    }
-    /*
     // third comparison is on supernode Ids
     if (!vtkm::worklet::contourtree_augmented::NoSuchElement(this->SupernodeIdsPortal.Get(left)))
     {
       return true;
     }
-    else if (!vtkm::worklet::contourtree_augmented::NoSuchElement(this->SupernodeIdsPortal.Get(right)))
+    else if (!vtkm::worklet::contourtree_augmented::NoSuchElement(
+               this->SupernodeIdsPortal.Get(right)))
     {
       return false;
     }
-    */
+
     // in this case, both were NSE, so sort on the index values
     return (left < right);
-
   } // operator()
 
 private:
