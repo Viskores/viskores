@@ -125,8 +125,17 @@ public:
       vtkm::IdComponent nVerts;
       vtkm::VecVariable<vtkm::Id, 8> ptIndices;
       vtkm::VecVariable<vtkm::Vec3f, 8> fieldValues;
-      this->InterpolationHelper.GetCellInfo(cellId, cellShape, nVerts, ptIndices);
-      this->Field.GetValue(ptIndices, nVerts, parametric, cellShape, out);
+
+      if (this->Field.GetAssociation() == vtkm::cont::Field::Association::POINTS)
+      {
+        this->InterpolationHelper.GetCellInfo(cellId, cellShape, nVerts, ptIndices);
+        this->Field.GetValue(ptIndices, nVerts, parametric, cellShape, out);
+      }
+      else if (this->Field.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
+      {
+        this->Field.GetValue(cellId, out);
+      }
+
       status.SetOk();
     }
 

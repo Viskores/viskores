@@ -30,13 +30,25 @@ class ExecutionVelocityField
 {
 public:
   using FieldPortalType = typename FieldArrayType::ReadPortalType;
+  using Association = vtkm::cont::Field::Association;
 
   VTKM_CONT
-  ExecutionVelocityField(FieldArrayType velocityValues,
+  ExecutionVelocityField(const FieldArrayType& velocityValues,
+                         const Association assoc,
                          vtkm::cont::DeviceAdapterId device,
                          vtkm::cont::Token& token)
     : VelocityValues(velocityValues.PrepareForInput(device, token))
+    , Assoc(assoc)
   {
+  }
+
+  VTKM_EXEC Association GetAssociation() const { return this->Assoc; }
+
+  VTKM_EXEC void GetValue(const vtkm::Id cellId, ValueType& value) const
+  {
+    VTKM_ASSERT(this->Assoc == Association::CELL_SET);
+
+    value = VelocityValues.Get(cellId);
   }
 
   VTKM_EXEC void GetValue(const vtkm::VecVariable<vtkm::Id, 8>& indices,
@@ -62,15 +74,29 @@ class ExecutionElectroMagneticField
 {
 public:
   using FieldPortalType = typename FieldArrayType::ReadPortalType;
+  using Association = vtkm::cont::Field::Association;
 
   VTKM_CONT
-  ExecutionElectroMagneticField(FieldArrayType electricValues,
-                                FieldArrayType magneticValues,
+  ExecutionElectroMagneticField(const FieldArrayType& electricValues,
+                                const FieldArrayType& magneticValues,
+                                const Association assoc,
                                 vtkm::cont::DeviceAdapterId device,
                                 vtkm::cont::Token& token)
     : ElectricValues(electricValues.PrepareForInput(device, token))
     , MagneticValues(magneticValues.PrepareForInput(device, token))
+    , Assoc(assoc)
   {
+  }
+
+  VTKM_EXEC Association GetAssociation() const { return this->Assoc; }
+
+  VTKM_EXEC void GetValue(const vtkm::Id cellId, ValueType& value) const
+  {
+    VTKM_ASSERT(this->Assoc == Association::CELL_SET);
+
+    auto electric = this->ElectricValues.Get(cellId);
+    auto magnetic = this->MagneticValues.Get(cellId);
+    value = vtkm::make_Vec(electric, magnetic);
   }
 
   VTKM_EXEC void GetValue(const vtkm::VecVariable<vtkm::Id, 8>& indices,
@@ -79,6 +105,8 @@ public:
                           const vtkm::UInt8 cellShape,
                           vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
   {
+    VTKM_ASSERT(this->Assoc == Association::POINTS);
+
     vtkm::Vec3f electricInterp, magneticInterp;
     vtkm::VecVariable<vtkm::Vec3f, 8> electric;
     vtkm::VecVariable<vtkm::Vec3f, 8> magnetic;
@@ -110,6 +138,17 @@ public:
   VelocityField(const FieldArrayType& fieldValues)
     : FieldValues(fieldValues)
   {
+    std::cout << "Here here 1" << std::endl;
+  }
+
+  VTKM_CONT
+  VelocityField(const FieldArrayType& fieldValues, const Association assoc)
+    : FieldValues(fieldValues)
+    , Assoc(assoc)
+  {
+    std::cout << "Here here 2" << std::endl;
+    if (assoc == Association::ANY || assoc == Association::WHOLE_MESH)
+      throw("Unsupported field association");
   }
 
   VTKM_CONT
@@ -136,6 +175,17 @@ public:
   ElectroMagneticField(const FieldArrayType& electricField, const FieldArrayType& magneticField)
     : ElectricField(electricField)
     , MagneticField(magneticField)
+    , Assoc(vtkm::cont::Field::Association::POINTS)
+  {
+  }
+
+  VTKM_CONT
+  ElectroMagneticField(const FieldArrayType& electricField,
+                       const FieldArrayType& magneticField,
+                       const Association assoc)
+    : ElectricField(electricField)
+    , MagneticField(magneticField)
+    , Assoc(assoc)
   {
   }
 
