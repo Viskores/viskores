@@ -9,7 +9,7 @@
 ##============================================================================
 
 set(headers
-  InitializeIntrinsicVertexCountComputeSuperparentIds.h
+  InitializeIntrinsicVertexCountComputeSuperparentIdsWorklet.h
   InitializeIntrinsicVertexCountInitalizeCountsWorklet.h
   InitializeIntrinsicVertexCountSubtractLowEndWorklet.h
   ComputeSuperarcDependentWeightsWorklet.h
