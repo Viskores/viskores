@@ -1089,8 +1089,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                                                     -1 // All block in memory
     );
 
-    vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>*
-      localHyperSweeperBlocks[localDataBlocks.size()];
+    std::vector<vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>*>
+      localHyperSweeperBlocks(localDataBlocks.size(), nullptr);
     for (size_t blockNo = 0; blockNo < localDataBlocks.size(); ++blockNo)
     {
       auto currInBlock = localDataBlocks[blockNo];
