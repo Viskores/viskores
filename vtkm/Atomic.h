@@ -284,6 +284,11 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 
 #if defined(KOKKOS_ENABLE_CUDA) && !defined(VTKM_CUDA)
 #undef KOKKOS_ENABLE_CUDA
+
+// In later versions we need to directly deactivate Kokkos_Setup_Cuda.hpp
+#if KOKKOS_VERSION >= 30401
+#define KOKKOS_CUDA_SETUP_HPP_
+#endif
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP) && !defined(VTKM_HIP)
