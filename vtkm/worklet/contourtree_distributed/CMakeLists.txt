@@ -11,13 +11,17 @@
 set(headers
   BoundaryTree.h
   BoundaryTreeMaker.h
+  CombineHyperSweepBlockFunctor.h
   ComputeDistributedContourTreeFunctor.h
   ContourTreeBlockData.h
   DistributedContourTreeBlockData.h
+  HierarchicalAugmenter.h
+  HierarchicalAugmenterFunctor.h
   HierarchicalContourTree.h
   HierarchicalHyperSweeper.h
-  HierarchicalAugmenter.h
+  HyperSweepBlock.h
   InteriorForest.h
+  LoadArrays.h
   MergeBlockFunctor.h
   MultiBlockContourTreeHelper.h
   PrintGraph.h
