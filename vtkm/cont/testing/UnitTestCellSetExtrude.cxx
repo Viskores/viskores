@@ -24,8 +24,8 @@ namespace
 {
 std::vector<float> points_rz = { 1.72485139f, 0.020562f,   1.73493571f,
                                  0.02052826f, 1.73478011f, 0.02299051f }; //really a vec<float,2>
-std::vector<int> topology = { 0, 2, 1 };
-std::vector<int> nextNode = { 0, 1, 2 };
+std::vector<vtkm::Int32> topology = { 0, 2, 1 };
+std::vector<vtkm::Int32> nextNode = { 0, 1, 2 };
 
 
 struct CopyTopo : public vtkm::worklet::WorkletVisitCellsWithPoints
@@ -56,22 +56,24 @@ struct CopyTopoScatter : public vtkm::worklet::WorkletVisitCellsWithPoints
 
 struct CopyReverseCellCount : public vtkm::worklet::WorkletVisitPointsWithCells
 {
-  typedef void ControlSignature(CellSetIn, FieldOutPoint);
-  typedef _2 ExecutionSignature(CellShape, CellCount, CellIndices);
+  typedef void ControlSignature(CellSetIn, FieldOutPoint, FieldOutPoint);
+  typedef _2 ExecutionSignature(CellShape, CellCount, CellIndices, _3);
 
-  template <typename T>
+  template <typename CellIndicesType, typename OutVec>
   VTKM_EXEC vtkm::Int32 operator()(vtkm::CellShapeTagVertex shape,
                                    vtkm::IdComponent count,
-                                   T&& t) const
+                                   CellIndicesType&& cellIndices,
+                                   OutVec& outIndices) const
   {
+    cellIndices.CopyInto(outIndices);
     if (shape.Id == vtkm::CELL_SHAPE_VERTEX)
     {
       bool valid = true;
       for (vtkm::IdComponent i = 0; i < count; ++i)
       {
-        valid = valid && t[i] >= 0;
+        valid = valid && cellIndices[i] >= 0;
       }
-      return (valid && count == t.GetNumberOfComponents()) ? count : -1;
+      return (valid && count == cellIndices.GetNumberOfComponents()) ? count : -1;
     }
     return -1;
   }
@@ -79,24 +81,26 @@ struct CopyReverseCellCount : public vtkm::worklet::WorkletVisitPointsWithCells
 
 struct CopyReverseCellCountScatter : public vtkm::worklet::WorkletVisitPointsWithCells
 {
-  typedef void ControlSignature(CellSetIn, FieldOutPoint);
-  typedef _2 ExecutionSignature(CellShape, CellCount, CellIndices);
+  typedef void ControlSignature(CellSetIn, FieldOutPoint, FieldOutPoint);
+  typedef _2 ExecutionSignature(CellShape, CellCount, CellIndices, _3);
 
   using ScatterType = vtkm::worklet::ScatterPermutation<vtkm::cont::StorageTagCounting>;
 
-  template <typename T>
+  template <typename CellIndicesType, typename OutVec>
   VTKM_EXEC vtkm::Int32 operator()(vtkm::CellShapeTagVertex shape,
                                    vtkm::IdComponent count,
-                                   T&& t) const
+                                   CellIndicesType&& cellIndices,
+                                   OutVec& outIndices) const
   {
+    cellIndices.CopyInto(outIndices);
     if (shape.Id == vtkm::CELL_SHAPE_VERTEX)
     {
       bool valid = true;
       for (vtkm::IdComponent i = 0; i < count; ++i)
       {
-        valid = valid && t[i] >= 0;
+        valid = valid && cellIndices[i] >= 0;
       }
-      return (valid && count == t.GetNumberOfComponents()) ? count : -1;
+      return (valid && count == cellIndices.GetNumberOfComponents()) ? count : -1;
     }
     return -1;
   }
@@ -129,19 +133,29 @@ void verify_topo(vtkm::cont::ArrayHandle<vtkm::Vec<T, 6>, S> const& handle,
   }
 }
 
-template <typename T, typename S>
-void verify_reverse_topo(vtkm::cont::ArrayHandle<T, S> const& handle,
+void verify_reverse_topo(const vtkm::cont::ArrayHandle<vtkm::Int32>& counts,
+                         const vtkm::cont::ArrayHandle<vtkm::Id2>& indices,
                          vtkm::Id expectedLen,
                          vtkm::Id skip)
 {
-  auto portal = handle.ReadPortal();
-  VTKM_TEST_ASSERT((portal.GetNumberOfValues() * skip) == expectedLen,
+  auto countsPortal = counts.ReadPortal();
+  VTKM_TEST_ASSERT((countsPortal.GetNumberOfValues() * skip) == expectedLen,
                    "topology portal size is incorrect");
+  auto indicesPortal = indices.ReadPortal();
+  VTKM_TEST_ASSERT((indicesPortal.GetNumberOfValues() * skip) == expectedLen);
   for (vtkm::Id i = 0; i < expectedLen - 1; i += skip)
   {
-    auto v = portal.Get(i / skip);
-    std::cout << v << " ";
-    VTKM_TEST_ASSERT((v == 2), "incorrect conversion to reverse topology");
+    auto vCount = countsPortal.Get(i / skip);
+    auto vIndices = indicesPortal.Get(i / skip);
+    std::cout << vCount << ":" << vIndices << " ";
+    vtkm::Int32 eCount = 2;
+    vtkm::Id2 eIndices((i / 3) - 1, i / 3);
+    if (eIndices[0] < 0)
+    {
+      eIndices[0] = (expectedLen / 3) - 1;
+    }
+    VTKM_TEST_ASSERT(vCount == eCount);
+    VTKM_TEST_ASSERT(vIndices == eIndices);
   }
   std::cout << "\n";
 }
@@ -178,21 +192,24 @@ int TestCellSetExtrude()
   std::cout << "Verify the reverse topology by copying the number of cells each point is "
             << "used by it into another array.\n";
   {
-    vtkm::cont::ArrayHandle<int> output;
-    invoke(CopyReverseCellCount{}, cells, output);
-    verify_reverse_topo(output, 3 * numPlanes, 1);
+    vtkm::cont::ArrayHandle<vtkm::Int32> incidentCount;
+    vtkm::cont::ArrayHandle<vtkm::Id2> incidentIndices;
+    invoke(CopyReverseCellCount{}, cells, incidentCount, incidentIndices);
+    verify_reverse_topo(incidentCount, incidentIndices, 3 * numPlanes, 1);
   }
 
   std::cout << "Verify reverse topology map with scatter\n";
   {
     constexpr vtkm::Id skip = 2;
-    vtkm::cont::ArrayHandle<int> output;
+    vtkm::cont::ArrayHandle<vtkm::Int32> incidentCount;
+    vtkm::cont::ArrayHandle<vtkm::Id2> incidentIndices;
     invoke(CopyReverseCellCountScatter{},
            CopyTopoScatter::ScatterType(
              vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, skip, (3 * numPlanes) / skip)),
            cells,
-           output);
-    verify_reverse_topo(output, 3 * numPlanes, skip);
+           incidentCount,
+           incidentIndices);
+    verify_reverse_topo(incidentCount, incidentIndices, 3 * numPlanes, skip);
   }
 
   return 0;
