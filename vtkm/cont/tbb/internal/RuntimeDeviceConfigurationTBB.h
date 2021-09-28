@@ -14,7 +14,13 @@
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
+#if TBB_VERSION_MAJOR >= 2020
+#define TBB_PREVIEW_GLOBAL_CONTROL
+#include <tbb/global_control.h>
+#include <tbb/task_arena.h>
+#else
 #include <tbb/tbb.h>
+#endif
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <memory>
