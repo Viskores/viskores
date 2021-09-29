@@ -112,13 +112,15 @@ vtkm_library(
   )
 target_link_libraries(vtkm_cont_testing PUBLIC vtkm_cont)
 
-vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
+if(VTKm_ENABLE_TESTING)
+  vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
 
-# add distributed tests i.e. test to run with MPI
-# if MPI is enabled.
-set(mpi_unit_tests
-  UnitTestFieldRangeGlobalCompute.cxx
-  UnitTestSerializationArrayHandle.cxx
-  UnitTestSerializationDataSet.cxx
-  )
-vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
+  # add distributed tests i.e. test to run with MPI
+  # if MPI is enabled.
+  set(mpi_unit_tests
+    UnitTestFieldRangeGlobalCompute.cxx
+    UnitTestSerializationArrayHandle.cxx
+    UnitTestSerializationDataSet.cxx
+    )
+  vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
+endif()
