@@ -106,15 +106,15 @@ void TestContourFilterTangle()
   vtkm::filter::Contour contour;
   contour.SetGenerateNormals(true);
   contour.SetIsoValue(0, 1);
-  contour.SetActiveField("nodevar");
-  contour.SetFieldsToPass("nodevar");
+  contour.SetActiveField("tangle");
+  contour.SetFieldsToPass("tangle");
   auto result = contour.Execute(dataSet);
 
   result.PrintSummary(std::cout);
 
   //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "nodevar", colorTable, "filter/contour-tangle.png", false);
+    result, "tangle", colorTable, "filter/contour-tangle.png", false);
 }
 
 void TestContourFilter()

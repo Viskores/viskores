@@ -26,9 +26,9 @@ void TestEntropy()
 
   vtkm::filter::Entropy entropyFilter;
 
-  ///// calculate entropy of "nodevar" field of the data set /////
+  ///// calculate entropy of "tangle" field of the data set /////
   entropyFilter.SetNumberOfBins(50); //set number of bins
-  entropyFilter.SetActiveField("nodevar");
+  entropyFilter.SetActiveField("tangle");
   vtkm::cont::DataSet resultEntropy = entropyFilter.Execute(dataSet);
 
   ///// get entropy from resultEntropy /////

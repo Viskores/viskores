@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 
   auto tangle = vtkm::source::Tangle(vtkm::Id3{ 50, 50, 50 });
   vtkm::cont::DataSet tangleData = tangle.Execute();
-  std::string fieldName = "nodevar";
+  std::string fieldName = "tangle";
 
   // Set up a camera for rendering the input data
   vtkm::rendering::Camera camera;
