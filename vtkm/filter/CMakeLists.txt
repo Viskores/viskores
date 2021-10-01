@@ -89,6 +89,7 @@ set(extra_headers
   ExternalFaces.h
   FieldSelection.h
   FieldToColors.h
+  GenerateIds.h
   GhostCellClassify.h
   GhostCellRemove.h
   Histogram.h
@@ -190,6 +191,7 @@ set(extra_sources_device
   ${ClipWithFieldInstantiations}
   ${ClipWithImplicitFunctionInstantiations}
   ExternalFaces.cxx
+  GenerateIds.cxx
   VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
