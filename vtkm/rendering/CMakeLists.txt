@@ -36,6 +36,7 @@ set(headers
   DecodePNG.h # deprecated
   EncodePNG.h # deprecated
   LineRenderer.h
+  LineRendererBatcher.h
   MatrixHelpers.h
   Scene.h
   Mapper.h
@@ -52,6 +53,7 @@ set(headers
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
   TextRenderer.h
+  TextRendererBatcher.h
   Texture2D.h
   Triangulator.h
   View.h
@@ -85,6 +87,7 @@ set(device_sources
   ColorLegendAnnotation.cxx
   ConnectivityProxy.cxx
   LineRenderer.cxx
+  LineRendererBatcher.cxx
   Mapper.cxx
   MapperConnectivity.cxx
   MapperCylinder.cxx
@@ -99,6 +102,7 @@ set(device_sources
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
   TextRenderer.cxx
+  TextRendererBatcher.cxx
   View.cxx
   View1D.cxx
   View2D.cxx

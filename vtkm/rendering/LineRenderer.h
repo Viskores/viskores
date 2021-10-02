@@ -20,12 +20,15 @@ namespace vtkm
 {
 namespace rendering
 {
+class LineRendererBatcher;
 
 class VTKM_RENDERING_EXPORT LineRenderer
 {
 public:
   VTKM_CONT
-  LineRenderer(const vtkm::rendering::Canvas* canvas, vtkm::Matrix<vtkm::Float32, 4, 4> transform);
+  LineRenderer(const vtkm::rendering::Canvas* canvas,
+               vtkm::Matrix<vtkm::Float32, 4, 4> transform,
+               vtkm::rendering::LineRendererBatcher* lineBatcher);
 
   VTKM_CONT
   void RenderLine(const vtkm::Vec2f_64& point0,
@@ -45,6 +48,7 @@ private:
 
   const vtkm::rendering::Canvas* Canvas;
   vtkm::Matrix<vtkm::Float32, 4, 4> Transform;
+  vtkm::rendering::LineRendererBatcher* LineBatcher;
 }; // class LineRenderer
 }
 } // namespace vtkm::rendering

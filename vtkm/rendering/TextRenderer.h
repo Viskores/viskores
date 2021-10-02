@@ -22,6 +22,7 @@ namespace vtkm
 {
 namespace rendering
 {
+class TextRendererBatcher;
 
 class VTKM_RENDERING_EXPORT TextRenderer
 {
@@ -29,7 +30,8 @@ public:
   VTKM_CONT
   TextRenderer(const vtkm::rendering::Canvas* canvas,
                const vtkm::rendering::BitmapFont& font,
-               const vtkm::rendering::Canvas::FontTextureType& fontTexture);
+               const vtkm::rendering::Canvas::FontTextureType& fontTexture,
+               vtkm::rendering::TextRendererBatcher* textBatcher);
 
   VTKM_CONT
   void RenderText(const vtkm::Vec2f_32& position,
@@ -61,6 +63,7 @@ private:
   const vtkm::rendering::Canvas* Canvas;
   vtkm::rendering::BitmapFont Font;
   vtkm::rendering::Canvas::FontTextureType FontTexture;
+  vtkm::rendering::TextRendererBatcher* TextBatcher;
 };
 }
 } // namespace vtkm::rendering

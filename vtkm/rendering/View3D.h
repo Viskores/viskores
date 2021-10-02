@@ -47,6 +47,7 @@ public:
 
 private:
   // 3D-specific annotations
+  vtkm::rendering::LineRendererBatcher LineBatcher;
   vtkm::rendering::BoundingBoxAnnotation BoxAnnotation;
   vtkm::rendering::AxisAnnotation3D XAxisAnnotation;
   vtkm::rendering::AxisAnnotation3D YAxisAnnotation;

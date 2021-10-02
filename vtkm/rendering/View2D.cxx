@@ -56,6 +56,8 @@ void View2D::RenderScreenAnnotations()
                                     viewportRight,
                                     viewportBottom,
                                     viewportTop);
+  this->GetCanvas().BeginTextRenderingBatch();
+  this->GetWorldAnnotator().BeginLineRenderingBatch();
   this->HorizontalAxisAnnotation.SetColor(AxisColor);
   this->HorizontalAxisAnnotation.SetScreenPosition(
     viewportLeft, viewportBottom, viewportRight, viewportBottom);
@@ -91,6 +93,8 @@ void View2D::RenderScreenAnnotations()
     this->ColorBarAnnotation.Render(
       this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
   }
+  this->GetWorldAnnotator().EndLineRenderingBatch();
+  this->GetCanvas().EndTextRenderingBatch();
 }
 
 void View2D::RenderWorldAnnotations()

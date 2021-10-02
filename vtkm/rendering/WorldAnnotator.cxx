@@ -32,8 +32,22 @@ void WorldAnnotator::AddLine(const vtkm::Vec3f_64& point0,
 {
   vtkm::Matrix<vtkm::Float32, 4, 4> transform =
     vtkm::MatrixMultiply(Canvas->GetProjection(), Canvas->GetModelView());
-  LineRenderer renderer(Canvas, transform);
+  vtkm::rendering::WorldAnnotator* self = const_cast<vtkm::rendering::WorldAnnotator*>(this);
+  LineRenderer renderer(Canvas, transform, &(self->LineBatcher));
   renderer.RenderLine(point0, point1, lineWidth, color);
+}
+
+void WorldAnnotator::BeginLineRenderingBatch() const
+{
+  vtkm::rendering::WorldAnnotator* self = const_cast<vtkm::rendering::WorldAnnotator*>(this);
+  self->LineBatcher = vtkm::rendering::LineRendererBatcher();
+}
+
+void WorldAnnotator::EndLineRenderingBatch() const
+{
+  vtkm::rendering::WorldAnnotator* self = const_cast<vtkm::rendering::WorldAnnotator*>(this);
+  vtkm::rendering::Canvas* canvas = const_cast<vtkm::rendering::Canvas*>(this->Canvas);
+  self->LineBatcher.Render(canvas);
 }
 
 void WorldAnnotator::AddText(const vtkm::Vec3f_32& origin,
