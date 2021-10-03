@@ -16,9 +16,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-// TODO: mmathai - Remove this
-#include <vtkm/AnnDebug.h>
-
 namespace vtkm
 {
 namespace rendering
