@@ -230,6 +230,11 @@ void TestIndexing()
   VTKM_STATIC_ASSERT((std::is_same<VariantType::TypeAt<27>, TypePlaceholder<27>>::value));
   VTKM_STATIC_ASSERT((std::is_same<VariantType::TypeAt<28>, TypePlaceholder<28>>::value));
   VTKM_STATIC_ASSERT((std::is_same<VariantType::TypeAt<29>, TypePlaceholder<29>>::value));
+
+  VTKM_TEST_ASSERT(VariantType::CanStore<TypePlaceholder<2>>::value);
+  VTKM_TEST_ASSERT(!VariantType::CanStore<TypePlaceholder<100>>::value);
+  VTKM_TEST_ASSERT(variant.GetCanStore<TypePlaceholder<3>>());
+  VTKM_TEST_ASSERT(!variant.GetCanStore<TypePlaceholder<101>>());
 }
 
 void TestTriviallyCopyable()
@@ -352,6 +357,9 @@ void TestGet()
     VTKM_TEST_ASSERT(variant.Get<2>() == expectedValue);
 
     VTKM_TEST_ASSERT(variant.Get<vtkm::Id>() == expectedValue);
+
+    // This line should compile, but will assert if you actually try to run it.
+    //variant.Get<TypePlaceholder<100>>();
   }
 
   {
