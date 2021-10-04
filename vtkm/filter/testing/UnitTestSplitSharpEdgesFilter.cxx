@@ -226,7 +226,7 @@ void TestWithStructuredData()
 
   // Cut a contour:
   vtkm::filter::Contour contour;
-  contour.SetActiveField("scalars", vtkm::cont::Field::Association::POINTS);
+  contour.SetActiveField("RTData", vtkm::cont::Field::Association::POINTS);
   contour.SetNumberOfIsoValues(1);
   contour.SetIsoValue(192);
   contour.SetMergeDuplicatePoints(true);

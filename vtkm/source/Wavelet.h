@@ -24,10 +24,10 @@ namespace source
  * This class generates a predictable structured dataset with a smooth yet
  * interesting set of scalars, which is useful for testing and benchmarking.
  *
- * The Execute method creates a complete structured dataset that have a
- * point field names 'scalars'
+ * The Execute method creates a complete structured dataset that has a
+ * point field named `RTData`
  *
- * The scalars are computed as:
+ * The RTData scalars are computed as:
  *
  * ```
  * MaxVal * Gauss + MagX * sin(FrqX*x) + MagY * sin(FrqY*y) + MagZ * cos(FrqZ*z)

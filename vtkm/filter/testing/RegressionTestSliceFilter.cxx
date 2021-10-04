@@ -44,7 +44,7 @@ void TestSliceStructuredPointsPlane()
 
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
     result,
-    "scalars",
+    "RTData",
     colorTable,
     "filter/slice-structured-points-plane.png",
     false,
@@ -72,7 +72,7 @@ void TestSliceStructuredPointsSphere()
 
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
     result,
-    "scalars",
+    "RTData",
     colorTable,
     "filter/slice-structured-points-sphere.png",
     false,
@@ -102,7 +102,7 @@ void TestSliceUnstructuredGridPlane()
 
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
     result,
-    "scalars",
+    "RTData",
     colorTable,
     "filter/slice-unstructured-grid-plane.png",
     false,
@@ -132,7 +132,7 @@ void TestSliceUnstructuredGridCylinder()
 
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
     result,
-    "scalars",
+    "RTData",
     colorTable,
     "filter/slice-unstructured-grid-cylinder.png",
     false,
