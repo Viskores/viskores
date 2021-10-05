@@ -214,8 +214,8 @@ ENV GITLAB_CI=1 \
 COPY . /src
 ENV $gitlab_env
 WORKDIR /src
-RUN echo "$before_script || true" >> /setup-gitlab-env.sh && \
-    echo "$script || true" >> /run-gitlab-stage.sh && \
+RUN echo "$before_script" >> /setup-gitlab-env.sh && \
+    echo "$script" >> /run-gitlab-stage.sh && \
     bash /setup-gitlab-env.sh
 ''')
 
@@ -223,8 +223,11 @@ RUN echo "$before_script || true" >> /setup-gitlab-env.sh && \
                     job_name='local-build'+runner_name,
                     src_dir=src_dir,
                     gitlab_env= " ".join(gitlab_env),
-                    before_script=" && ".join(before_script),
-                    script=" && ".join(script))
+                    before_script="\n".join(before_script)
+                                              .replace('\n', '\\n\\\n')
+                                              .replace('"', '\\"'),
+                    script="\n".join(script).replace('\n', '\\n\\\n')
+                                              .replace('"', '\\"'))
 
   # Write out the file
   docker_file = tempfile.NamedTemporaryFile(delete=False)
