@@ -104,7 +104,9 @@ inline void ReadDataArray(std::ifstream& is, vtkm::cont::ArrayHandle<FieldType>&
     FileDataType x;
     is.read(reinterpret_cast<char*>(&x), sizeof(x));
     //std::cout << "Read " << x << std::endl;
-    writePortal.Set(i, x);
+    writePortal.Set(
+      i,
+      FieldType(x)); // Test data is stored as double but generally is also ok to be cast to float.
   }
 }
 
