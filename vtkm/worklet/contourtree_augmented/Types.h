@@ -136,7 +136,7 @@ inline bool IsThis(vtkm::Id flaggedIndex)
 } // IsThis
 
 /// Helper function to set a single array valye with CopySubRange to avoid pulling the array to the control environment
-VTKM_EXEC_CONT
+VTKM_CONT
 inline void IdArraySetValue(vtkm::Id index, vtkm::Id value, IdArrayType& arr)
 { // IdArraySetValue
   vtkm::cont::Algorithm::CopySubRange(
@@ -151,9 +151,9 @@ inline void IdArraySetValue(vtkm::Id index, vtkm::Id value, IdArrayType& arr)
 /// @param[in] newSize The new size the array should be changed to
 /// @param[in] fillValue The value to be used to fill the array
 template <typename ValueType>
-static void ResizeVector(vtkm::cont::ArrayHandle<ValueType>& thearray,
-                         vtkm::Id newSize,
-                         ValueType fillValue)
+void ResizeVector(vtkm::cont::ArrayHandle<ValueType>& thearray,
+                  vtkm::Id newSize,
+                  ValueType fillValue)
 {
   vtkm::Id oldSize = thearray.GetNumberOfValues();
   // Simply return if the size of the array does not change
@@ -182,7 +182,6 @@ template <typename T>
 struct MaskedIndexFunctor
 {
   VTKM_EXEC_CONT
-
   MaskedIndexFunctor() {}
 
   VTKM_EXEC_CONT
