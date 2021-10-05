@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(headers
+  ArrayCopyUnknown.h
   ArrayHandleDeprecated.h
   ArrayHandleExecutionManager.h
   ArrayPortalFromIterators.h

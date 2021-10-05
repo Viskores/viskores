@@ -105,6 +105,15 @@ static void UnknownAHAllocate(void* mem,
 }
 
 template <typename T, typename S>
+static void UnknownAHShallowCopy(const void* sourceMem, void* destinationMem)
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  const AH* source = reinterpret_cast<const AH*>(sourceMem);
+  AH* destination = reinterpret_cast<AH*>(destinationMem);
+  *destination = *source;
+}
+
+template <typename T, typename S>
 static std::vector<vtkm::cont::internal::Buffer>
 UnknownAHExtractComponent(void* mem, vtkm::IdComponent componentIndex, vtkm::CopyFlag allowCopy)
 {
@@ -211,6 +220,9 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
 
   using AllocateType = void(void*, vtkm::Id, vtkm::CopyFlag, vtkm::cont::Token&);
   AllocateType* Allocate;
+
+  using ShallowCopyType = void(const void*, void*);
+  ShallowCopyType* ShallowCopy;
 
   using ExtractComponentType = std::vector<vtkm::cont::internal::Buffer>(void*,
                                                                          vtkm::IdComponent,
@@ -336,6 +348,7 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   , NumberOfComponents(detail::UnknownAHNumberOfComponents<T>)
   , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T>)
   , Allocate(detail::UnknownAHAllocate<T, S>)
+  , ShallowCopy(detail::UnknownAHShallowCopy<T, S>)
   , ExtractComponent(detail::UnknownAHExtractComponent<T, S>)
   , ReleaseResources(detail::UnknownAHReleaseResources<T, S>)
   , ReleaseResourcesExecution(detail::UnknownAHReleaseResourcesExecution<T, S>)
@@ -661,6 +674,54 @@ public:
   {
     result = this->AsArrayHandle<MultiplexerType>();
   }
+
+  /// \brief Deep copies data from another `UnknownArrayHandle`.
+  ///
+  /// This method takes an `UnknownArrayHandle` and deep copies data from it.
+  ///
+  /// If this object does not point to an existing `ArrayHandle`, a new `ArrayHandleBasic`
+  /// with the same value type of the `source` is created.
+  ///
+  void DeepCopyFrom(const vtkm::cont::UnknownArrayHandle& source);
+
+  /// \brief Deep copies data from another `UnknownArrayHandle`.
+  ///
+  /// This method takes an `UnknownArrayHandle` and deep copies data from it.
+  ///
+  /// If this object does not point to an existing `ArrayHandle`, this const version
+  /// of `DeepCopyFrom` throws an exception.
+  ///
+  void DeepCopyFrom(const vtkm::cont::UnknownArrayHandle& source) const;
+
+  /// \brief Attempts a shallow copy of an array or a deep copy if that is not possible.
+  ///
+  /// This method takes an `UnknownArrayHandle` and attempts to perform a shallow copy.
+  /// This shallow copy occurs if this object points to an `ArrayHandle` of the same type
+  /// or does not point to any `ArrayHandle` at all. If this is not possible, then
+  /// the array is deep copied.
+  ///
+  /// This method is roughly equivalent to the `ArrayCopyShallowIfPossible` function
+  /// (defined in `vtkm/cont/ArrayCopy.h`). However, this method can be used without
+  /// having to use a device compiler (whereas `ArrayCopyShallowIfPossible` does require
+  /// a device device compiler).
+  ///
+  void CopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle& source);
+
+  /// \brief Attempts a shallow copy of an array or a deep copy if that is not possible.
+  ///
+  /// This method takes an `UnknownArrayHandle` and attempts to perform a shallow copy.
+  /// This shallow copy occurs if this object points to an `ArrayHandle` of the same type.
+  /// If the types are incompatible, then the array is deep copied.
+  ///
+  /// If this object does not point to an existing `ArrayHandle`, this const version
+  /// of `CopyShallowIfPossible` throws an exception.
+  ///
+  /// This method is roughly equivalent to the `ArrayCopyShallowIfPossible` function
+  /// (defined in `vtkm/cont/ArrayCopy.h`). However, this method can be used without
+  /// having to use a device compiler (whereas `ArrayCopyShallowIfPossible` does require
+  /// a device device compiler).
+  ///
+  void CopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle& source) const;
 
   /// \brief Extract a component of the array.
   ///
