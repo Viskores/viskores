@@ -57,40 +57,63 @@ void DoBuildReverseConnectivity(
 struct BuildReverseConnectivityForCellSetType
 {
   template <typename ShapeStorage, typename ConnectStorage, typename OffsetStorage>
-  void operator()(
-    const vtkm::cont::CellSetExplicit<ShapeStorage, ConnectStorage, OffsetStorage>&,
-    const vtkm::cont::UnknownArrayHandle& connections,
-    const vtkm::cont::UnknownArrayHandle& offsets,
+  void BuildExplicit(
+    const vtkm::cont::CellSetExplicit<ShapeStorage, ConnectStorage, OffsetStorage>*,
+    const vtkm::cont::UnknownArrayHandle* connections,
+    const vtkm::cont::UnknownArrayHandle* offsets,
     vtkm::Id numberOfPoints,
-    vtkm::cont::detail::DefaultVisitPointsWithCellsConnectivityExplicit& visitPointsWithCells,
-    vtkm::cont::DeviceAdapterId device)
+    vtkm::cont::detail::DefaultVisitPointsWithCellsConnectivityExplicit* visitPointsWithCells,
+    vtkm::cont::DeviceAdapterId* device) const
   {
-    if (visitPointsWithCells.ElementsValid)
+    if (visitPointsWithCells->ElementsValid)
     {
       return; // Already computed reverse
     }
 
     using ConnectArrayType = vtkm::cont::ArrayHandle<vtkm::Id, ConnectStorage>;
     using OffsetArrayType = vtkm::cont::ArrayHandle<vtkm::Id, OffsetStorage>;
-    if (connections.CanConvert<ConnectArrayType>() && offsets.CanConvert<OffsetArrayType>())
+    if (connections->CanConvert<ConnectArrayType>() && offsets->CanConvert<OffsetArrayType>())
     {
-      DoBuildReverseConnectivity(connections.AsArrayHandle<ConnectArrayType>(),
-                                 offsets.AsArrayHandle<OffsetArrayType>(),
+      DoBuildReverseConnectivity(connections->AsArrayHandle<ConnectArrayType>(),
+                                 offsets->AsArrayHandle<OffsetArrayType>(),
                                  numberOfPoints,
-                                 visitPointsWithCells,
-                                 device);
+                                 *visitPointsWithCells,
+                                 *device);
     }
   }
 
-  template <typename CellSetType>
-  void operator()(const CellSetType&,
-                  const vtkm::cont::UnknownArrayHandle&,
-                  const vtkm::cont::UnknownArrayHandle&,
-                  vtkm::Id,
-                  vtkm::cont::detail::DefaultVisitPointsWithCellsConnectivityExplicit&,
-                  vtkm::cont::DeviceAdapterId)
+  void BuildExplicit(...) const
   {
     // Not an explicit cell set, so skip.
+  }
+
+  // Note that we are doing something a little weird here. We are taking a method templated
+  // on the cell set type, getting pointers of many of the arguments, and then calling
+  // a different overloaded method to do the actual work. Here is why.
+  //
+  // Our ultimate goal is to call one method if operating on `CellSetExplict` or
+  // _any subclass_. We also want to ignore any cell type that is not a `CellSetExplicit`
+  // or one of its sublcasses. So we want one templated method that specializes on a
+  // `CellSetExplicit` with its three template arguments and another that is templated on
+  // any `CellSet`. That works for a class of `CellSetExplicit`, but not of a subclass.
+  // A subclass will match the more generic class.
+  //
+  // We can get around that by use variadic arguments (e.g. `...` for the arguments), which
+  // we can easily do since we just want to ignore the arguments. C++ will match the arguments
+  // with templates before matching the C variadic arguments. However, these variadic
+  // arguments only work for POD types. To convert to POD types, we make a new overloaded
+  // method that accepts pointers instead. (Not sure why pointers work but references do not.)
+  template <typename CellSetType>
+  void operator()(
+    const CellSetType& cellset,
+    const vtkm::cont::UnknownArrayHandle& connections,
+    const vtkm::cont::UnknownArrayHandle& offsets,
+    vtkm::Id numberOfPoints,
+    vtkm::cont::detail::DefaultVisitPointsWithCellsConnectivityExplicit& visitPointsWithCells,
+    vtkm::cont::DeviceAdapterId device) const
+  {
+    this->BuildExplicit(
+      &cellset, &connections, &offsets, numberOfPoints, &visitPointsWithCells, &device);
   }
 };
 
