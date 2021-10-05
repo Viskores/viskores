@@ -37,6 +37,7 @@ set(unit_tests
   UnitTestFieldToColors.cxx
   UnitTestGradientExplicit.cxx
   UnitTestGradientUniform.cxx
+  UnitTestGenerateIds.cxx
   UnitTestGhostCellClassify.cxx
   UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx

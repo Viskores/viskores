@@ -127,7 +127,7 @@ vtkm::cont::DataSet Wavelet::Execute() const
   dataSet.SetCellSet(cellSet);
 
   // Scalars, too
-  vtkm::cont::Field field = this->GeneratePointField(cellSet, "scalars");
+  vtkm::cont::Field field = this->GeneratePointField(cellSet, "RTData");
   dataSet.AddField(field);
 
   return dataSet;

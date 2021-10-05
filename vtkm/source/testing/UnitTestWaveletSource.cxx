@@ -33,7 +33,7 @@ void WaveletSourceTest()
   {
     using ScalarHandleType = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
 
-    auto field = ds.GetPointField("scalars");
+    auto field = ds.GetPointField("RTData");
     auto dynData = field.GetData();
     VTKM_TEST_ASSERT(dynData.IsType<ScalarHandleType>(), "Invalid scalar handle type.");
     ScalarHandleType handle = dynData.AsArrayHandle<ScalarHandleType>();

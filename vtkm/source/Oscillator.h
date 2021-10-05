@@ -21,7 +21,7 @@ namespace source
 /**\brief An analytical, time-varying uniform dataset with a point based array
  *
  * The Execute method creates a complete structured dataset that have a
- * point field names 'scalars'
+ * point field names 'oscillating'
  *
  * This array is based on the coordinates and evaluates to a sum of time-varying
  * Gaussian exponentials specified in its configuration.

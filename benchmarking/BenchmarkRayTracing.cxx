@@ -69,7 +69,7 @@ void BenchRayTracing(::benchmark::State& state)
 
   rays.Buffers.at(0).InitConst(0.f);
 
-  vtkm::cont::Field field = dataset.GetField("nodevar");
+  vtkm::cont::Field field = dataset.GetField("tangle");
   vtkm::Range range = field.GetRange().ReadPortal().Get(0);
 
   tracer.SetField(field, range);

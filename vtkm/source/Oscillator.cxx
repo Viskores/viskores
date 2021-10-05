@@ -86,7 +86,7 @@ vtkm::cont::DataSet Oscillator::Execute() const
   //todo, we need to use the policy to determine the valid conversions
   //that the dispatcher should do
   this->Invoke(this->Worklet, coordinates, outArray);
-  dataSet.AddField(vtkm::cont::make_FieldPoint("scalars", outArray));
+  dataSet.AddField(vtkm::cont::make_FieldPoint("oscillating", outArray));
 
   return dataSet;
 }
