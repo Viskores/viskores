@@ -657,7 +657,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(
         static_cast<vtkm::Id>(bi));
 
-    std::cout << "LOCAL BLOCK SIZE: " << localDataBlocks[bi]->BlockSize << std::endl;
     // Save local tree information for fan out FIXME: Try to avoid copy
     localDataBlocks[bi]->ContourTrees.push_back(this->LocalContourTrees[bi]);
     localDataBlocks[bi]->InteriorForests.push_back(this->LocalInteriorForests[bi]);
@@ -1153,6 +1152,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
             b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
         }
 
+#ifdef DEBUG_PRINT
         std::cout << "Block " << b->BlockNo << std::endl;
         std::cout << "=========" << std::endl;
         vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
@@ -1162,7 +1162,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         vtkm::worklet::contourtree_augmented::PrintIndices(
           "Dependent Volume", b->DependentVolume, -1, std::cout);
 
-#ifdef DEBUG_PRINT
         VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->BlockNo);
         VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                    b->HierarchicalContourTree.DebugPrint(
@@ -1196,6 +1195,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     hierarchical_hyper_sweep_master.foreach (
       [&totalVolume, &rank](vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>* b,
                             const vtkmdiy::Master::ProxyWithLink&) {
+#ifdef DEBUG_PRINT
         std::cout << "Block " << b->BlockNo << std::endl;
         std::cout << "=========" << std::endl;
         vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
@@ -1206,7 +1206,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           "Dependent Volume", b->DependentVolume, -1, std::cout);
 
         VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->BlockNo);
-#ifdef DEBUG_PRINT
         VTKM_LOG_S(
           vtkm::cont::LogLevel::Info,
           b->HierarchicalContourTree.DebugPrint("Called from DumpVolumes", __FILE__, __LINE__));
