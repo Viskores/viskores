@@ -843,7 +843,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestDifferenceOfProducts() const
   {
-#ifdef FP_FAST_FMA
+#if defined FP_FAST_FMA && !defined __HIP__
     // Example taken from:
     // https://pharr.org/matt/blog/2019/11/03/difference-of-floats.html
     vtkm::Float32 a = 33962.035f;
@@ -857,10 +857,9 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     vtkm::UInt64 dist = vtkm::FloatDistance(expected, computed);
     VTKM_MATH_ASSERT(
       dist < 2,
-      "Float distance for difference of products is " + std::to_string(dist) +
-        " which exceeds 1.5; this is in violation of a theorem "
-        "proved by Jeannerod in doi.org/10.1090/S0025-5718-2013-02679-8. Is your build compiled "
-        "with FMAs enabled?");
+      "Float distance for difference of products exceeds 1.5; this is in violation of a theorem "
+      "proved by Jeannerod in doi.org/10.1090/S0025-5718-2013-02679-8. Is your build compiled "
+      "with FMAs enabled?");
 #endif
   }
 
@@ -883,7 +882,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(vtkm::IsNan(roots[1]),
                      "Roots should be Nan for a quadratic with complex roots.");
 
-#ifdef FP_FAST_FMA
+#if defined FP_FAST_FMA && !defined __HIP__
     // Wikipedia example:
     // x² + 200x - 0.000015 = 0 has roots
     // -200.000000075, 7.5e-8

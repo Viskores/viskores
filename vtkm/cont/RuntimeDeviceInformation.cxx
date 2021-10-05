@@ -80,7 +80,7 @@ public:
   }
 };
 
-class RuntimeDeviceConfigurationInvalid
+class RuntimeDeviceConfigurationInvalid final
   : public vtkm::cont::internal::RuntimeDeviceConfigurationBase
 {
 public:

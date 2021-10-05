@@ -115,8 +115,8 @@ target_link_libraries(vtkm_cont_testing PUBLIC vtkm_cont)
 if(VTKm_ENABLE_TESTING)
   vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
 
-  # add distributed tests i.e. test to run with MPI
-  # if MPI is enabled.
+#add distributed tests i.e.test to run with MPI
+#if MPI is enabled.
   set(mpi_unit_tests
     UnitTestFieldRangeGlobalCompute.cxx
     UnitTestSerializationArrayHandle.cxx
