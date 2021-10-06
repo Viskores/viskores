@@ -57,6 +57,21 @@ def load_ci_file(ci_file_path):
           ci_state.update(yaml.safe_load(open(include_path)))
   return ci_state
 
+# Recursively updates the target dictionary with the source dictionary.
+# By recursive, I mean that if source contains a sub-dictionary that
+# target also contains, the target sub-dictionary is updated rather than
+# replaced. Likewise for sub-sub-dictionaries and so on. This code is
+# taken from StackOverflow:
+#   https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+def recursive_dictionary_update(target, source):
+  import collections.abc
+  for key, value in source.items():
+    if isinstance(value, collections.abc.Mapping):
+      target[key] = recursive_dictionary_update(target.get(key, {}), value)
+    else:
+      target[key] = value
+  return target
+
 def flattened_entry_copy(ci_state, name):
   import copy
   entry = copy.deepcopy(ci_state[name])
@@ -64,13 +79,11 @@ def flattened_entry_copy(ci_state, name):
   #Flatten 'extends' entries, only presume the first level of inheritance is
   #important
   if 'extends' in entry:
-    to_merge = []
-
     if not isinstance(entry['extends'], list):
       entry['extends'] = [ entry['extends'] ]
 
     for e in entry['extends']:
-      entry.update(ci_state[e])
+      recursive_dictionary_update(entry, ci_state[e])
     del entry['extends']
   return entry
 
@@ -201,8 +214,8 @@ ENV GITLAB_CI=1 \
 COPY . /src
 ENV $gitlab_env
 WORKDIR /src
-RUN echo "$before_script || true" >> /setup-gitlab-env.sh && \
-    echo "$script || true" >> /run-gitlab-stage.sh && \
+RUN echo "$before_script" >> /setup-gitlab-env.sh && \
+    echo "$script" >> /run-gitlab-stage.sh && \
     bash /setup-gitlab-env.sh
 ''')
 
@@ -210,8 +223,11 @@ RUN echo "$before_script || true" >> /setup-gitlab-env.sh && \
                     job_name='local-build'+runner_name,
                     src_dir=src_dir,
                     gitlab_env= " ".join(gitlab_env),
-                    before_script=" && ".join(before_script),
-                    script=" && ".join(script))
+                    before_script="\n".join(before_script)
+                                              .replace('\n', '\\n\\\n')
+                                              .replace('"', '\\"'),
+                    script="\n".join(script).replace('\n', '\\n\\\n')
+                                              .replace('"', '\\"'))
 
   # Write out the file
   docker_file = tempfile.NamedTemporaryFile(delete=False)
