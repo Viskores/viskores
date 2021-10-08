@@ -1087,8 +1087,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                                                     -1 // All block in memory
     );
 
-    std::vector<vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>*>
-      localHyperSweeperBlocks(localDataBlocks.size(), nullptr);
+    using HyperSweepBlock = vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>;
+    std::vector<HyperSweepBlock*> localHyperSweeperBlocks(localDataBlocks.size(), nullptr);
     for (size_t blockNo = 0; blockNo < localDataBlocks.size(); ++blockNo)
     {
       auto currInBlock = localDataBlocks[blockNo];
@@ -1100,13 +1100,12 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(
           static_cast<vtkm::Id>(blockNo));
       localHyperSweeperBlocks[blockNo] =
-        new vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>(
-          blockNo,
-          currInBlock->GlobalBlockId,
-          currBlockOrigin,
-          currBlockSize,
-          spatialDecomp.GlobalSize,
-          *currInBlock->HierarchicalAugmenter.AugmentedTree);
+        new HyperSweepBlock(blockNo,
+                            currInBlock->GlobalBlockId,
+                            currBlockOrigin,
+                            currBlockSize,
+                            spatialDecomp.GlobalSize,
+                            *currInBlock->HierarchicalAugmenter.AugmentedTree);
       hierarchical_hyper_sweep_master.add(
         vtkmdiyLocalBlockGids[blockNo], localHyperSweeperBlocks[blockNo], new vtkmdiy::Link());
     }
@@ -1114,8 +1113,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     vtkmdiy::fix_links(hierarchical_hyper_sweep_master, assigner);
 
     hierarchical_hyper_sweep_master.foreach (
-      [](vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>* b,
-         const vtkmdiy::Master::ProxyWithLink&) {
+      [](HyperSweepBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
     // Create HyperSweeper
 #ifdef DEBUG_PRINT
         VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->GlobalBlockId);
@@ -1188,8 +1186,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     // Print & add to output data set
     //std::vector<vtkm::cont::DataSet> hierarchicalTreeAndVolumeOutputDataSet(localDataBlocks.size());
     hierarchical_hyper_sweep_master.foreach (
-      [&](vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>* b,
-          const vtkmdiy::Master::ProxyWithLink&) {
+      [&](HyperSweepBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
         vtkm::cont::Field intrinsicVolumeField(
           "IntrinsicVolume", vtkm::cont::Field::Association::WHOLE_MESH, b->IntrinsicVolume);
         hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(intrinsicVolumeField);
