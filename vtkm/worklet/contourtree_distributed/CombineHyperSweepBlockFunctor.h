@@ -54,6 +54,7 @@
 #define vtk_m_worklet_contourtree_distributed_combinehypersweepblockfunctor_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_distributed/HyperSweepBlock.h>
 
@@ -63,6 +64,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
+#define DEBUG_PRINT_COMBINED_BLOCK_IDS
 
 namespace vtkm
 {
@@ -89,7 +91,6 @@ struct CobmineHyperSweepBlockFunctor
 
     for (const int ingid : incoming)
     {
-      std::cout << rp.round() << std::endl;
       auto roundNo = rp.round() - 1;
       // NOTE/IMPORTANT: In each round we should have only one swap partner (despite for-loop here).
       // If that assumption does not hold, it will break things.
@@ -97,26 +98,21 @@ struct CobmineHyperSweepBlockFunctor
       // Otherwise, we may need to process more than one incoming block
       if (ingid != selfid)
       {
-        vtkm::Id incomingBlockNo;
-        rp.dequeue(ingid, incomingBlockNo);
-        // std::cout << "Combining block " << b->BlockNo << " with " << incomingBlockNo << std::endl;
+#ifdef DEBUG_PRINT_COMBINED_BLOCK_IDS
+        vtkm::Id incomingGlobalBlockId;
+        rp.dequeue(ingid, incomingGlobalBlockId);
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                   "Combining local block " << b->GlobalBlockId << " with incomoing block "
+                                            << incomingGlobalBlockId);
+#endif
         vtkm::cont::ArrayHandle<vtkm::Id> incomingIntrinsicVolume;
         rp.dequeue(ingid, incomingIntrinsicVolume);
         vtkm::cont::ArrayHandle<vtkm::Id> incomingDependentVolume;
         rp.dequeue(ingid, incomingDependentVolume);
 
-        // TODO/FIXME: Replace with something more efficient
-        vtkm::Id numSupernodesToProcess =
-          b->HierarchicalContourTree.FirstSupernodePerIteration[roundNo].ReadPortal().Get(0);
+        vtkm::Id numSupernodesToProcess = vtkm::cont::ArrayGetValue(
+          vtkm::Id{ 0 }, b->HierarchicalContourTree.FirstSupernodePerIteration[roundNo]);
 
-        /*
-        std::cout << "Block " << b->BlockNo << " Round " << roundNo << ": " << numSupernodesToProcess << " entries to process" << std::endl;
-
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-            "Intrinsic Volume (B)", b->IntrinsicVolume, -1, std::cout);
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-            "Dependent Volume (B)", b->DependentVolume, -1, std::cout);
-        */
         auto intrinsicVolumeView =
           make_ArrayHandleView(b->IntrinsicVolume, 0, numSupernodesToProcess);
         auto incomingIntrinsicVolumeView =
@@ -133,13 +129,6 @@ struct CobmineHyperSweepBlockFunctor
         vtkm::cont::Algorithm::Transform(
           dependentVolumeView, incomingDependentVolumeView, tempSum, vtkm::Sum());
         vtkm::cont::Algorithm::Copy(tempSum, dependentVolumeView);
-
-        /*
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-          "Intrinsic Volume (A)", b->IntrinsicVolume, -1, std::cout);
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-          "Dependent Volume (A)", b->DependentVolume, -1, std::cout);
-        */
       }
     }
 
@@ -148,7 +137,9 @@ struct CobmineHyperSweepBlockFunctor
       auto target = rp.out_link().target(cc);
       if (target.gid != selfid)
       {
-        rp.enqueue(target, b->BlockNo);
+#ifdef DEBUG_PRINT_COMBINED_BLOCK_IDS
+        rp.enqueue(target, b->GlobalBlockId);
+#endif
         rp.enqueue(target, b->IntrinsicVolume);
         rp.enqueue(target, b->DependentVolume);
       }

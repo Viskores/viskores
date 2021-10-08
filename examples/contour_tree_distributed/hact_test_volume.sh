@@ -24,7 +24,7 @@ rm ${filename}
 
 echo "Running HACT"
 n_parts=$(($2*$2))
-mpirun -np 4  ./ContourTree_Distributed --vtkm-device Any --preSplitFiles --saveTreeCompilerData --augmentHierarchicalTree --numBlocks=${n_parts} ${fileroot}_part_%d_of_${n_parts}.txt
+mpirun -np 4  ./ContourTree_Distributed --vtkm-device Any --preSplitFiles --saveOutputData --augmentHierarchicalTree --numBlocks=${n_parts} ${fileroot}_part_%d_of_${n_parts}.txt
 rm ${fileroot}_part_*_of_${n_parts}.txt
 
 echo "Compiling Outputs"

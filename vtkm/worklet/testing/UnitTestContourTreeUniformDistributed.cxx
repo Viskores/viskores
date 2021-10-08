@@ -212,8 +212,12 @@ void TestHierarchicalHyperSweeper()
   {
     localHyperSweeperBlocks[blockNo] =
       new vtkm::worklet::contourtree_distributed::HyperSweepBlock<ContourTreeDataFieldType>(
-        blockNo, origins[blockNo], sizes[blockNo], globalSize, hct[blockNo]);
-    std::cout << blockNo << " -> " << vtkmdiyLocalBlockGids[blockNo] << std::endl;
+        blockNo,
+        vtkmdiyLocalBlockGids[blockNo],
+        origins[blockNo],
+        sizes[blockNo],
+        globalSize,
+        hct[blockNo]);
     master.add(
       vtkmdiyLocalBlockGids[blockNo], localHyperSweeperBlocks[blockNo], new vtkmdiy::Link());
   }
@@ -222,15 +226,15 @@ void TestHierarchicalHyperSweeper()
     [](vtkm::worklet::contourtree_distributed::HyperSweepBlock<ContourTreeDataFieldType>* b,
        const vtkmdiy::Master::ProxyWithLink&) {
       // Create HyperSweeper
-      std::cout << "Block " << b->BlockNo << std::endl;
+      std::cout << "Block " << b->GlobalBlockId << std::endl;
       std::cout << b->HierarchicalContourTree.DebugPrint(
         "Before initializing HyperSweeper", __FILE__, __LINE__);
       vtkm::worklet::contourtree_distributed::HierarchicalHyperSweeper<vtkm::Id,
                                                                        ContourTreeDataFieldType>
         hyperSweeper(
-          b->BlockNo, b->HierarchicalContourTree, b->IntrinsicVolume, b->DependentVolume);
+          b->GlobalBlockId, b->HierarchicalContourTree, b->IntrinsicVolume, b->DependentVolume);
 
-      std::cout << "Block " << b->BlockNo << std::endl;
+      std::cout << "Block " << b->GlobalBlockId << std::endl;
       std::cout << b->HierarchicalContourTree.DebugPrint(
         "After initializing HyperSweeper", __FILE__, __LINE__);
       // Create mesh and initialize vertex counts
@@ -254,7 +258,7 @@ void TestHierarchicalHyperSweeper()
           b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
       }
 
-      std::cout << "Block " << b->BlockNo << std::endl;
+      std::cout << "Block " << b->GlobalBlockId << std::endl;
       std::cout << b->HierarchicalContourTree.DebugPrint(
         "After initializing intrinsic vertex count", __FILE__, __LINE__);
       // Initialize dependentVolume by copy from intrinsicVolume
@@ -262,7 +266,7 @@ void TestHierarchicalHyperSweeper()
 
       // Perform the local hypersweep
       hyperSweeper.LocalHyperSweep();
-      std::cout << "Block " << b->BlockNo << std::endl;
+      std::cout << "Block " << b->GlobalBlockId << std::endl;
       std::cout << b->HierarchicalContourTree.DebugPrint(
         "After local hypersweep", __FILE__, __LINE__);
     });
@@ -286,7 +290,7 @@ void TestHierarchicalHyperSweeper()
     [&totalVolume](
       vtkm::worklet::contourtree_distributed::HyperSweepBlock<ContourTreeDataFieldType>* b,
       const vtkmdiy::Master::ProxyWithLink&) {
-      std::cout << "Block " << b->BlockNo << std::endl;
+      std::cout << "Block " << b->GlobalBlockId << std::endl;
       std::cout << "=========" << std::endl;
       vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
                                                         std::cout);
@@ -297,8 +301,13 @@ void TestHierarchicalHyperSweeper()
 
       std::cout << b->HierarchicalContourTree.DebugPrint(
         "Called from DumpVolumes", __FILE__, __LINE__);
-      std::cout << b->HierarchicalContourTree.DumpVolumes(
-        totalVolume, b->IntrinsicVolume, b->DependentVolume);
+      std::cout << vtkm::worklet::contourtree_distributed::HierarchicalContourTree<
+        ContourTreeDataFieldType>::DumpVolumes(b->HierarchicalContourTree.Supernodes,
+                                               b->HierarchicalContourTree.Superarcs,
+                                               b->HierarchicalContourTree.RegularNodeGlobalIds,
+                                               totalVolume,
+                                               b->IntrinsicVolume,
+                                               b->DependentVolume);
     });
 
   // Clean-up

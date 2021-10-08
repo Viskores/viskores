@@ -231,10 +231,13 @@ public:
 
   // modified version of dumpSuper() that also gives volume counts
   VTKM_CONT
-  std::string DumpVolumes(
+  static std::string DumpVolumes(
+    const vtkm::worklet::contourtree_augmented::IdArrayType& supernodes,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& superarcs,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& regularNodeGlobalIds,
     vtkm::Id totalVolume,
     const vtkm::worklet::contourtree_augmented::IdArrayType& intrinsicVolume,
-    const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume) const;
+    const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume);
 
 private:
   /// Used internally to Invoke worklets
@@ -898,9 +901,12 @@ std::string HierarchicalContourTree<FieldType>::PrintTreeStats() const
 // modified version of dumpSuper() that also gives volume counts
 template <typename FieldType>
 std::string HierarchicalContourTree<FieldType>::DumpVolumes(
+  const vtkm::worklet::contourtree_augmented::IdArrayType& supernodes,
+  const vtkm::worklet::contourtree_augmented::IdArrayType& superarcs,
+  const vtkm::worklet::contourtree_augmented::IdArrayType& regularNodeGlobalIds,
   vtkm::Id totalVolume,
   const vtkm::worklet::contourtree_augmented::IdArrayType& intrinsicVolume,
-  const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume) const
+  const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume)
 { // DumpVolumes()
   // a local string stream to build the output
   std::stringstream outStream;
@@ -911,12 +917,12 @@ std::string HierarchicalContourTree<FieldType>::DumpVolumes(
 
   // loop through all superarcs.
   // We use regular ReadPortals here since this requires access to many values anyways
-  auto supernodesPortal = this->Supernodes.ReadPortal();
-  auto regularNodeGlobalIdsPortal = this->RegularNodeGlobalIds.ReadPortal();
-  auto superarcsPortal = this->Superarcs.ReadPortal();
+  auto supernodesPortal = supernodes.ReadPortal();
+  auto regularNodeGlobalIdsPortal = regularNodeGlobalIds.ReadPortal();
+  auto superarcsPortal = superarcs.ReadPortal();
   auto intrinsicVolumePortal = intrinsicVolume.ReadPortal();
   auto dependentVolumePortal = dependentVolume.ReadPortal();
-  for (vtkm::Id supernode = 0; supernode < this->Supernodes.GetNumberOfValues(); supernode++)
+  for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
   { // per supernode
     // convert all the way down to global regular IDs
     vtkm::Id fromRegular = supernodesPortal.Get(supernode);

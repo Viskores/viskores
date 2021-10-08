@@ -265,7 +265,6 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::InitializeI
     auto findRegularByGlobal = hierarchicalTree.GetFindRegularByGlobal();
     auto computeSuperparentIdsWorklet = vtkm::worklet::contourtree_distributed::
       hierarchical_hyper_sweeper::InitializeIntrinsicVertexCountComputeSuperparentIdsWorklet();
-    std::cout << "Invoking computeSuperparentIdsWorklet" << std::endl;
     Invoke(computeSuperparentIdsWorklet,       // worklet to run
            globalIds,                          // input
            findRegularByGlobal,                // input

@@ -998,7 +998,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   }
 
   // 4. Create output data set
-  // TODO: This should use the augmented tree if the tree was augmented not the unaugmented tree
   std::vector<vtkm::cont::DataSet> hierarchicalTreeOutputDataSet(localDataBlocks.size());
   master.foreach (
     [&](
@@ -1102,11 +1101,12 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           static_cast<vtkm::Id>(blockNo));
       localHyperSweeperBlocks[blockNo] =
         new vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>(
-          currInBlock->GlobalBlockId, // TODO/FIXME: Check what block ID this should be
-          currBlockOrigin,            //currInBlock->BlockOrigin,
-          currBlockSize,              // currInBlock->BlockSize,
+          blockNo,
+          currInBlock->GlobalBlockId,
+          currBlockOrigin,
+          currBlockSize,
           spatialDecomp.GlobalSize,
-          *currInBlock->HierarchicalAugmenter.AugmentedTree); // currInBlock->HierarchicalTree);
+          *currInBlock->HierarchicalAugmenter.AugmentedTree);
       hierarchical_hyper_sweep_master.add(
         vtkmdiyLocalBlockGids[blockNo], localHyperSweeperBlocks[blockNo], new vtkmdiy::Link());
     }
@@ -1118,20 +1118,16 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
          const vtkmdiy::Master::ProxyWithLink&) {
     // Create HyperSweeper
 #ifdef DEBUG_PRINT
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->BlockNo);
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->GlobalBlockId);
         VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                    b->HierarchicalContourTree.DebugPrint(
                      "Before initializing HierarchicalHyperSweeper", __FILE__, __LINE__));
 #endif
         vtkm::worklet::contourtree_distributed::HierarchicalHyperSweeper<vtkm::Id, FieldType>
           hyperSweeper(
-            b->BlockNo, b->HierarchicalContourTree, b->IntrinsicVolume, b->DependentVolume);
+            b->GlobalBlockId, b->HierarchicalContourTree, b->IntrinsicVolume, b->DependentVolume);
 
-      // Create mesh and initialize vertex counts
-#ifdef DEBUG_PRINT
-        std::cout << "idRelabeler parameters: origin: " << b->Origin << " size: " << b->Size
-                  << " global size: " << b->GlobalSize;
-#endif
+        // Create mesh and initialize vertex counts
         vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler idRelabeler{ b->Origin,
                                                                                  b->Size,
                                                                                  b->GlobalSize };
@@ -1153,19 +1149,19 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         }
 
 #ifdef DEBUG_PRINT
-        std::cout << "Block " << b->BlockNo << std::endl;
-        std::cout << "=========" << std::endl;
-        vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
-                                                          std::cout);
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-          "Intrinsic Volume", b->IntrinsicVolume, -1, std::cout);
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-          "Dependent Volume", b->DependentVolume, -1, std::cout);
-
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->BlockNo);
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->GlobalBlockId);
         VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                    b->HierarchicalContourTree.DebugPrint(
                      "After initializing intrinsic vertex count", __FILE__, __LINE__));
+        std::ostringstream volumeStream;
+        vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
+                                                          volumeStream);
+        vtkm::worklet::contourtree_augmented::PrintIndices(
+          "Intrinsic Volume", b->IntrinsicVolume, -1, volumeStream);
+        vtkm::worklet::contourtree_augmented::PrintIndices(
+          "Dependent Volume", b->DependentVolume, -1, volumeStream);
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info, volumeStream.str());
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "FLUSH" << std::endl << std::flush);
 #endif
         // Initialize dependentVolume by copy from intrinsicVolume
         vtkm::cont::Algorithm::Copy(b->IntrinsicVolume, b->DependentVolume);
@@ -1174,7 +1170,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         hyperSweeper.LocalHyperSweep();
 
 #ifdef DEBUG_PRINT
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->BlockNo);
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->GlobalBlockId);
         VTKM_LOG_S(
           vtkm::cont::LogLevel::Info,
           b->HierarchicalContourTree.DebugPrint("After local hypersweep", __FILE__, __LINE__));
@@ -1189,35 +1185,31 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       partners,
       vtkm::worklet::contourtree_distributed::CobmineHyperSweepBlockFunctor<FieldType>{});
 
-    // Print
-    vtkm::Id totalVolume =
-      spatialDecomp.GlobalSize[0] * spatialDecomp.GlobalSize[1] * spatialDecomp.GlobalSize[2];
+    // Print & add to output data set
+    //std::vector<vtkm::cont::DataSet> hierarchicalTreeAndVolumeOutputDataSet(localDataBlocks.size());
     hierarchical_hyper_sweep_master.foreach (
-      [&totalVolume, &rank](vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>* b,
-                            const vtkmdiy::Master::ProxyWithLink&) {
+      [&](vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>* b,
+          const vtkmdiy::Master::ProxyWithLink&) {
+        vtkm::cont::Field intrinsicVolumeField(
+          "IntrinsicVolume", vtkm::cont::Field::Association::WHOLE_MESH, b->IntrinsicVolume);
+        hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(intrinsicVolumeField);
+        vtkm::cont::Field dependentVolumeField(
+          "DependentVolume", vtkm::cont::Field::Association::WHOLE_MESH, b->DependentVolume);
+        hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(dependentVolumeField);
 #ifdef DEBUG_PRINT
-        std::cout << "Block " << b->BlockNo << std::endl;
-        std::cout << "=========" << std::endl;
-        vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
-                                                          std::cout);
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-          "Intrinsic Volume", b->IntrinsicVolume, -1, std::cout);
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-          "Dependent Volume", b->DependentVolume, -1, std::cout);
-
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->BlockNo);
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->GlobalBlockId);
         VTKM_LOG_S(
           vtkm::cont::LogLevel::Info,
           b->HierarchicalContourTree.DebugPrint("Called from DumpVolumes", __FILE__, __LINE__));
+        std::ostringstream volumeStream;
+        vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
+                                                          volumeStream);
+        vtkm::worklet::contourtree_augmented::PrintIndices(
+          "Intrinsic Volume", b->IntrinsicVolume, -1, volumeStream);
+        vtkm::worklet::contourtree_augmented::PrintIndices(
+          "Dependent Volume", b->DependentVolume, -1, volumeStream);
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info, volumeStream.str());
 #endif
-        std::string dumpVolumesString = b->HierarchicalContourTree.DumpVolumes(
-          totalVolume, b->IntrinsicVolume, b->DependentVolume);
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, dumpVolumesString);
-        std::string volumesFileName = std::string("TreeWithVolumes_Rank_") +
-          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-          std::to_string(static_cast<int>(b->BlockNo)) + std::string(".txt");
-        std::ofstream treeStream(volumesFileName.c_str());
-        treeStream << dumpVolumesString;
       });
 
     // Clean-up
