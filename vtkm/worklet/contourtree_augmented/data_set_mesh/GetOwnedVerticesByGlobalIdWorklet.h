@@ -94,7 +94,7 @@ public:
   }
 
 private:
-  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& LocalToGlobalIdRelabeler;
+  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler LocalToGlobalIdRelabeler;
 }; // Mesh2D_DEM_VertexStarter
 
 } // namespace data_set_mesh
