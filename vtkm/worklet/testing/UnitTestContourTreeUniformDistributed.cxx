@@ -319,13 +319,12 @@ void TestHierarchicalHyperSweeper()
 
 void TestContourTreeUniformDistributed()
 {
-  /*
   using vtkm::cont::testing::Testing;
   TestContourTreeMeshCombine<vtkm::FloatDefault>(
     Testing::DataPath("misc/5x6_7_MC_Rank0_Block0_Round1_BeforeCombineMesh1.ctm"),
     Testing::DataPath("misc/5x6_7_MC_Rank0_Block0_Round1_BeforeCombineMesh2.ctm"),
     Testing::RegressionImagePath("5x6_7_MC_Rank0_Block0_Round1_CombinedMesh.ctm"));
-    */
+
   TestHierarchicalHyperSweeper();
 }
 
