@@ -763,7 +763,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   // ... coordinates of local blocks
   auto localBlockIndicesPortal = spatialDecomp.LocalBlockIndices.ReadPortal();
-  std::vector<vtkm::Id> vtkmdiyLocalBlockGids(static_cast<size_t>(input.GetNumberOfPartitions()));
+  std::vector<int> vtkmdiyLocalBlockGids(static_cast<size_t>(input.GetNumberOfPartitions()));
   for (vtkm::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
   {
     RegularDecomposer::DivisionsVector diyCoords(static_cast<size_t>(numDims));
@@ -779,7 +779,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   // copy global block ids into the local data blocks so we can use them in the hierarchical augmentation
   for (vtkm::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
   {
-    localDataBlocks[bi]->GlobalBlockId = vtkmdiyLocalBlockGids[bi];
+    localDataBlocks[bi]->GlobalBlockId = vtkm::Id{ vtkmdiyLocalBlockGids[bi] };
   }
 
   // Record time to compute the local block ids
@@ -790,13 +790,11 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   // 1.2.2 Add my local blocks to the vtkmdiy master.
   for (std::size_t bi = 0; bi < static_cast<std::size_t>(input.GetNumberOfPartitions()); bi++)
   {
-    master.add(static_cast<int>(vtkmdiyLocalBlockGids[bi]), // block id
-               localDataBlocks[bi],
-               new vtkmdiy::Link); // Use dummy link to make DIY happy.
-    // NOTE: The dummy link is never used, since all communication is via RegularDecomposer,
-    //       which sets up its own links
+    master.add(vtkmdiyLocalBlockGids[bi], localDataBlocks[bi], new vtkmdiy::Link);
+    // NOTE: Use dummy link to make DIY happy. The dummy link is never used, since all
+    //       communication is via RegularDecomposer, which sets up its own links.
     // NOTE: No need to keep the pointer, as DIY will "own" it and delete it when no longer
-    //       needed TODO/FIXME: Confirm that last statement
+    //       needed TODO/FIXME: Confirm that last statement.
   }
 
   // Record time for dding data blocks to the master
@@ -821,8 +819,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     comm, static_cast<int>(size), static_cast<int>(spatialDecomp.GetGlobalNumberOfBlocks()));
   for (vtkm::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
   {
-    assigner.set_rank(static_cast<int>(rank),
-                      static_cast<int>(vtkmdiyLocalBlockGids[static_cast<size_t>(bi)]));
+    assigner.set_rank(static_cast<int>(rank), vtkmdiyLocalBlockGids[static_cast<size_t>(bi)]);
   }
 
   // Record time for creating the decomposer and assigner
