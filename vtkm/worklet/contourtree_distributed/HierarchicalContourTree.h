@@ -762,7 +762,7 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
 template <typename FieldType>
 void HierarchicalContourTree<FieldType>::Load(const char* filename)
 {
-  std::ifstream is(filename);
+  std::ifstream is(filename, std::ios_base::binary);
   ReadIndexArray(is, this->RegularNodeGlobalIds);
   ReadDataArray<FieldType>(is, this->DataValues);
   ReadIndexArray(is, this->RegularNodeSortOrder);
