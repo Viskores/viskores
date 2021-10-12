@@ -24,7 +24,7 @@ Oscillator::Oscillator(vtkm::Id3 dims)
 //-----------------------------------------------------------------------------
 void Oscillator::SetTime(vtkm::Float64 time)
 {
-  this->Worklet.SetTime(time);
+  this->Worklet->SetTime(time);
 }
 
 //-----------------------------------------------------------------------------
@@ -35,7 +35,7 @@ void Oscillator::AddPeriodic(vtkm::Float64 x,
                              vtkm::Float64 omega,
                              vtkm::Float64 zeta)
 {
-  this->Worklet.AddPeriodic(x, y, z, radius, omega, zeta);
+  this->Worklet->AddPeriodic(x, y, z, radius, omega, zeta);
 }
 
 //-----------------------------------------------------------------------------
@@ -46,7 +46,7 @@ void Oscillator::AddDamped(vtkm::Float64 x,
                            vtkm::Float64 omega,
                            vtkm::Float64 zeta)
 {
-  this->Worklet.AddDamped(x, y, z, radius, omega, zeta);
+  this->Worklet->AddDamped(x, y, z, radius, omega, zeta);
 }
 
 //-----------------------------------------------------------------------------
@@ -57,7 +57,7 @@ void Oscillator::AddDecaying(vtkm::Float64 x,
                              vtkm::Float64 omega,
                              vtkm::Float64 zeta)
 {
-  this->Worklet.AddDecaying(x, y, z, radius, omega, zeta);
+  this->Worklet->AddDecaying(x, y, z, radius, omega, zeta);
 }
 
 
@@ -85,7 +85,7 @@ vtkm::cont::DataSet Oscillator::Execute() const
   vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
   //todo, we need to use the policy to determine the valid conversions
   //that the dispatcher should do
-  this->Invoke(this->Worklet, coordinates, outArray);
+  this->Invoke(*(this->Worklet), coordinates, outArray);
   dataSet.AddField(vtkm::cont::make_FieldPoint("oscillating", outArray));
 
   return dataSet;

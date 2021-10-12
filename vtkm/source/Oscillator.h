@@ -64,7 +64,8 @@ public:
 
 private:
   vtkm::Id3 Dims;
-  vtkm::worklet::OscillatorSource Worklet;
+  //vtkm::worklet::OscillatorSource Worklet;
+  std::unique_ptr<vtkm::worklet::OscillatorSource> Worklet;
 };
 }
 }
