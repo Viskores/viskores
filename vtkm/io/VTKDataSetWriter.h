@@ -19,6 +19,13 @@ namespace vtkm
 namespace io
 {
 
+// Might want to place this somewhere else.
+enum struct FileType
+{
+  ASCII,
+  BINARY
+};
+
 struct VTKM_IO_EXPORT VTKDataSetWriter
 {
 public:
@@ -27,8 +34,20 @@ public:
 
   VTKM_CONT void WriteDataSet(const vtkm::cont::DataSet& dataSet) const;
 
+  /// \brief Get whether the file will be written in ASCII or binary format.
+  ///
+  VTKM_CONT vtkm::io::FileType GetFileType() const;
+
+  /// \{
+  /// \brief Set whether the file will be written in ASCII or binary format.
+  VTKM_CONT void SetFileType(vtkm::io::FileType type);
+  VTKM_CONT void SetFileTypeToAscii() { this->SetFileType(vtkm::io::FileType::ASCII); }
+  VTKM_CONT void SetFileTypeToBinary() { this->SetFileType(vtkm::io::FileType::BINARY); }
+  /// \}
+
 private:
   std::string FileName;
+  vtkm::io::FileType FileType = vtkm::io::FileType::ASCII;
 
 }; //struct VTKDataSetWriter
 }
