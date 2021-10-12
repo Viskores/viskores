@@ -43,7 +43,7 @@ void OscillatorSourceTest()
 
   // Spot check some node scalars
   {
-    using ScalarHandleType = vtkm::cont::ArrayHandle<vtkm::Float64>;
+    using ScalarHandleType = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
 
     auto field = ds.GetPointField("oscillating");
     auto dynData = field.GetData();

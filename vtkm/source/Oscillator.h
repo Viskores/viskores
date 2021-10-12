@@ -36,37 +36,38 @@ public:
   VTKM_CONT
   Oscillator(vtkm::Id3 dims);
 
-  // We need a non-default destructor since compiler does not know how
-  // to create a default one for the Worklet.
+  // We can not declare default destructor here since compiler does not know how
+  // to create one for the Worklet at this point yet. However, the implementation
+  // in Oscillator.cxx does have ~Oscillator() = default;
   VTKM_CONT
   ~Oscillator();
 
   VTKM_CONT
-  void SetTime(vtkm::Float64 time);
+  void SetTime(vtkm::FloatDefault time);
 
   VTKM_CONT
-  void AddPeriodic(vtkm::Float64 x,
-                   vtkm::Float64 y,
-                   vtkm::Float64 z,
-                   vtkm::Float64 radius,
-                   vtkm::Float64 omega,
-                   vtkm::Float64 zeta);
+  void AddPeriodic(vtkm::FloatDefault x,
+                   vtkm::FloatDefault y,
+                   vtkm::FloatDefault z,
+                   vtkm::FloatDefault radius,
+                   vtkm::FloatDefault omega,
+                   vtkm::FloatDefault zeta);
 
   VTKM_CONT
-  void AddDamped(vtkm::Float64 x,
-                 vtkm::Float64 y,
-                 vtkm::Float64 z,
-                 vtkm::Float64 radius,
-                 vtkm::Float64 omega,
-                 vtkm::Float64 zeta);
+  void AddDamped(vtkm::FloatDefault x,
+                 vtkm::FloatDefault y,
+                 vtkm::FloatDefault z,
+                 vtkm::FloatDefault radius,
+                 vtkm::FloatDefault omega,
+                 vtkm::FloatDefault zeta);
 
   VTKM_CONT
-  void AddDecaying(vtkm::Float64 x,
-                   vtkm::Float64 y,
-                   vtkm::Float64 z,
-                   vtkm::Float64 radius,
-                   vtkm::Float64 omega,
-                   vtkm::Float64 zeta);
+  void AddDecaying(vtkm::FloatDefault x,
+                   vtkm::FloatDefault y,
+                   vtkm::FloatDefault z,
+                   vtkm::FloatDefault radius,
+                   vtkm::FloatDefault omega,
+                   vtkm::FloatDefault zeta);
 
   VTKM_CONT vtkm::cont::DataSet Execute() const;
 

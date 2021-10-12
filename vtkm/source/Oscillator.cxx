@@ -18,25 +18,10 @@ namespace internal
 {
 struct Oscillator
 {
-  void Set(vtkm::Float64 x,
-           vtkm::Float64 y,
-           vtkm::Float64 z,
-           vtkm::Float64 radius,
-           vtkm::Float64 omega,
-           vtkm::Float64 zeta)
-  {
-    this->Center[0] = x;
-    this->Center[1] = y;
-    this->Center[2] = z;
-    this->Radius = radius;
-    this->Omega = omega;
-    this->Zeta = zeta;
-  }
-
-  vtkm::Vec3f_64 Center;
-  vtkm::Float64 Radius;
-  vtkm::Float64 Omega;
-  vtkm::Float64 Zeta;
+  vtkm::Vec3f Center;
+  vtkm::FloatDefault Radius;
+  vtkm::FloatDefault Omega;
+  vtkm::FloatDefault Zeta;
 };
 
 class OscillatorSource : public vtkm::worklet::WorkletMapField
@@ -46,81 +31,71 @@ public:
   typedef _2 ExecutionSignature(_1);
 
   VTKM_CONT
-  OscillatorSource()
-    : NumberOfPeriodics(0)
-    , NumberOfDamped(0)
-    , NumberOfDecaying(0)
+  void AddPeriodic(vtkm::FloatDefault x,
+                   vtkm::FloatDefault y,
+                   vtkm::FloatDefault z,
+                   vtkm::FloatDefault radius,
+                   vtkm::FloatDefault omega,
+                   vtkm::FloatDefault zeta)
   {
-  }
-
-  VTKM_CONT
-  void AddPeriodic(vtkm::Float64 x,
-                   vtkm::Float64 y,
-                   vtkm::Float64 z,
-                   vtkm::Float64 radius,
-                   vtkm::Float64 omega,
-                   vtkm::Float64 zeta)
-  {
-    if (this->NumberOfPeriodics < MAX_OSCILLATORS)
+    if (this->PeriodicOscillators.GetNumberOfComponents() < MAX_OSCILLATORS)
     {
-      this->PeriodicOscillators[this->NumberOfPeriodics].Set(x, y, z, radius, omega, zeta);
-      this->NumberOfPeriodics++;
+      this->PeriodicOscillators.Append(Oscillator{ { x, y, z }, radius, omega, zeta });
     }
   }
 
   VTKM_CONT
-  void AddDamped(vtkm::Float64 x,
-                 vtkm::Float64 y,
-                 vtkm::Float64 z,
-                 vtkm::Float64 radius,
-                 vtkm::Float64 omega,
-                 vtkm::Float64 zeta)
+  void AddDamped(vtkm::FloatDefault x,
+                 vtkm::FloatDefault y,
+                 vtkm::FloatDefault z,
+                 vtkm::FloatDefault radius,
+                 vtkm::FloatDefault omega,
+                 vtkm::FloatDefault zeta)
   {
-    if (this->NumberOfDamped < MAX_OSCILLATORS)
+    if (this->DampedOscillators.GetNumberOfComponents() < MAX_OSCILLATORS)
     {
-      this->DampedOscillators[this->NumberOfDamped * 6].Set(x, y, z, radius, omega, zeta);
-      this->NumberOfDamped++;
+      this->DampedOscillators.Append(Oscillator{ { x, y, z }, radius, omega, zeta });
     }
   }
 
   VTKM_CONT
-  void AddDecaying(vtkm::Float64 x,
-                   vtkm::Float64 y,
-                   vtkm::Float64 z,
-                   vtkm::Float64 radius,
-                   vtkm::Float64 omega,
-                   vtkm::Float64 zeta)
+  void AddDecaying(vtkm::FloatDefault x,
+                   vtkm::FloatDefault y,
+                   vtkm::FloatDefault z,
+                   vtkm::FloatDefault radius,
+                   vtkm::FloatDefault omega,
+                   vtkm::FloatDefault zeta)
   {
-    if (this->NumberOfDecaying < MAX_OSCILLATORS)
+    if (this->DecayingOscillators.GetNumberOfComponents() < MAX_OSCILLATORS)
     {
-      this->DecayingOscillators[this->NumberOfDecaying * 6].Set(x, y, z, radius, omega, zeta);
-      this->NumberOfDecaying++;
+      this->DecayingOscillators.Append(Oscillator{ { x, y, z }, radius, omega, zeta });
     }
   }
 
   VTKM_CONT
-  void SetTime(vtkm::Float64 time) { this->Time = time; }
+  void SetTime(vtkm::FloatDefault time) { this->Time = time; }
 
   VTKM_EXEC
-  vtkm::Float64 operator()(const vtkm::Vec3f_64& vec) const
+  vtkm::FloatDefault operator()(const vtkm::Vec3f& vec) const
   {
     vtkm::UInt8 oIdx;
-    vtkm::Float64 t0, t, result = 0;
+    vtkm::FloatDefault t0, t, result = 0;
     const internal::Oscillator* oscillator;
 
     t0 = 0.0;
     t = this->Time * 2 * 3.14159265358979323846;
 
     // Compute damped
-    for (oIdx = 0; oIdx < this->NumberOfDamped; oIdx++)
+    for (oIdx = 0; oIdx < this->DampedOscillators.GetNumberOfComponents(); oIdx++)
     {
       oscillator = &this->DampedOscillators[oIdx];
 
-      vtkm::Vec3f_64 delta = oscillator->Center - vec;
-      vtkm::Float64 dist2 = dot(delta, delta);
-      vtkm::Float64 dist_damp = vtkm::Exp(-dist2 / (2 * oscillator->Radius * oscillator->Radius));
-      vtkm::Float64 phi = vtkm::ACos(oscillator->Zeta);
-      vtkm::Float64 val = 1. -
+      vtkm::Vec3f delta = oscillator->Center - vec;
+      vtkm::FloatDefault dist2 = dot(delta, delta);
+      vtkm::FloatDefault dist_damp =
+        vtkm::Exp(-dist2 / (2 * oscillator->Radius * oscillator->Radius));
+      vtkm::FloatDefault phi = vtkm::ACos(oscillator->Zeta);
+      vtkm::FloatDefault val = 1. -
         vtkm::Exp(-oscillator->Zeta * oscillator->Omega * t0) *
           (vtkm::Sin(vtkm::Sqrt(1 - oscillator->Zeta * oscillator->Zeta) * oscillator->Omega * t +
                      phi) /
@@ -129,26 +104,28 @@ public:
     }
 
     // Compute decaying
-    for (oIdx = 0; oIdx < this->NumberOfDecaying; oIdx++)
+    for (oIdx = 0; oIdx < this->DecayingOscillators.GetNumberOfComponents(); oIdx++)
     {
       oscillator = &this->DecayingOscillators[oIdx];
       t = t0 + 1 / oscillator->Omega;
-      vtkm::Vec3f_64 delta = oscillator->Center - vec;
-      vtkm::Float64 dist2 = dot(delta, delta);
-      vtkm::Float64 dist_damp = vtkm::Exp(-dist2 / (2 * oscillator->Radius * oscillator->Radius));
-      vtkm::Float64 val = vtkm::Sin(t / oscillator->Omega) / (oscillator->Omega * t);
+      vtkm::Vec3f delta = oscillator->Center - vec;
+      vtkm::FloatDefault dist2 = dot(delta, delta);
+      vtkm::FloatDefault dist_damp =
+        vtkm::Exp(-dist2 / (2 * oscillator->Radius * oscillator->Radius));
+      vtkm::FloatDefault val = vtkm::Sin(t / oscillator->Omega) / (oscillator->Omega * t);
       result += val * dist_damp;
     }
 
     // Compute periodic
-    for (oIdx = 0; oIdx < this->NumberOfPeriodics; oIdx++)
+    for (oIdx = 0; oIdx < this->PeriodicOscillators.GetNumberOfComponents(); oIdx++)
     {
       oscillator = &this->PeriodicOscillators[oIdx];
       t = t0 + 1 / oscillator->Omega;
-      vtkm::Vec3f_64 delta = oscillator->Center - vec;
-      vtkm::Float64 dist2 = dot(delta, delta);
-      vtkm::Float64 dist_damp = vtkm::Exp(-dist2 / (2 * oscillator->Radius * oscillator->Radius));
-      vtkm::Float64 val = vtkm::Sin(t / oscillator->Omega);
+      vtkm::Vec3f delta = oscillator->Center - vec;
+      vtkm::FloatDefault dist2 = dot(delta, delta);
+      vtkm::FloatDefault dist_damp =
+        vtkm::Exp(-dist2 / (2 * oscillator->Radius * oscillator->Radius));
+      vtkm::FloatDefault val = vtkm::Sin(t / oscillator->Omega);
       result += val * dist_damp;
     }
 
@@ -156,23 +133,12 @@ public:
     return result;
   }
 
-  template <typename T>
-  VTKM_EXEC vtkm::Float64 operator()(const vtkm::Vec<T, 3>& vec) const
-  {
-    return (*this)(vtkm::make_Vec(static_cast<vtkm::Float64>(vec[0]),
-                                  static_cast<vtkm::Float64>(vec[1]),
-                                  static_cast<vtkm::Float64>(vec[2])));
-  }
-
 private:
-  static const vtkm::IdComponent MAX_OSCILLATORS = 10;
-  vtkm::Vec<internal::Oscillator, MAX_OSCILLATORS> PeriodicOscillators;
-  vtkm::Vec<internal::Oscillator, MAX_OSCILLATORS> DampedOscillators;
-  vtkm::Vec<internal::Oscillator, MAX_OSCILLATORS> DecayingOscillators;
-  vtkm::UInt8 NumberOfPeriodics;
-  vtkm::UInt8 NumberOfDamped;
-  vtkm::UInt8 NumberOfDecaying;
-  vtkm::Float64 Time;
+  static constexpr vtkm::IdComponent MAX_OSCILLATORS = 10;
+  vtkm::VecVariable<internal::Oscillator, MAX_OSCILLATORS> PeriodicOscillators;
+  vtkm::VecVariable<internal::Oscillator, MAX_OSCILLATORS> DampedOscillators;
+  vtkm::VecVariable<internal::Oscillator, MAX_OSCILLATORS> DecayingOscillators;
+  vtkm::FloatDefault Time;
 }; // OscillatorSource
 
 } // internal
@@ -184,46 +150,43 @@ Oscillator::Oscillator(vtkm::Id3 dims)
 {
 }
 
-Oscillator::~Oscillator()
-{
-  Worklet.reset();
-}
+Oscillator::~Oscillator() = default;
 
 //-----------------------------------------------------------------------------
-void Oscillator::SetTime(vtkm::Float64 time)
+void Oscillator::SetTime(vtkm::FloatDefault time)
 {
   this->Worklet->SetTime(time);
 }
 
 //-----------------------------------------------------------------------------
-void Oscillator::AddPeriodic(vtkm::Float64 x,
-                             vtkm::Float64 y,
-                             vtkm::Float64 z,
-                             vtkm::Float64 radius,
-                             vtkm::Float64 omega,
-                             vtkm::Float64 zeta)
+void Oscillator::AddPeriodic(vtkm::FloatDefault x,
+                             vtkm::FloatDefault y,
+                             vtkm::FloatDefault z,
+                             vtkm::FloatDefault radius,
+                             vtkm::FloatDefault omega,
+                             vtkm::FloatDefault zeta)
 {
   this->Worklet->AddPeriodic(x, y, z, radius, omega, zeta);
 }
 
 //-----------------------------------------------------------------------------
-void Oscillator::AddDamped(vtkm::Float64 x,
-                           vtkm::Float64 y,
-                           vtkm::Float64 z,
-                           vtkm::Float64 radius,
-                           vtkm::Float64 omega,
-                           vtkm::Float64 zeta)
+void Oscillator::AddDamped(vtkm::FloatDefault x,
+                           vtkm::FloatDefault y,
+                           vtkm::FloatDefault z,
+                           vtkm::FloatDefault radius,
+                           vtkm::FloatDefault omega,
+                           vtkm::FloatDefault zeta)
 {
   this->Worklet->AddDamped(x, y, z, radius, omega, zeta);
 }
 
 //-----------------------------------------------------------------------------
-void Oscillator::AddDecaying(vtkm::Float64 x,
-                             vtkm::Float64 y,
-                             vtkm::Float64 z,
-                             vtkm::Float64 radius,
-                             vtkm::Float64 omega,
-                             vtkm::Float64 zeta)
+void Oscillator::AddDecaying(vtkm::FloatDefault x,
+                             vtkm::FloatDefault y,
+                             vtkm::FloatDefault z,
+                             vtkm::FloatDefault radius,
+                             vtkm::FloatDefault omega,
+                             vtkm::FloatDefault zeta)
 {
   this->Worklet->AddDecaying(x, y, z, radius, omega, zeta);
 }
@@ -250,7 +213,7 @@ vtkm::cont::DataSet Oscillator::Execute() const
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
   this->Invoke(*(this->Worklet), coordinates, outArray);
   dataSet.AddField(vtkm::cont::make_FieldPoint("oscillating", outArray));
 
