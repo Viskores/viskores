@@ -16,6 +16,10 @@ namespace vtkm
 {
 namespace source
 {
+namespace internal
+{
+class OscillatorSource;
+}
 
 /**\brief An analytical, time-varying uniform dataset with a point based array
  *
@@ -63,8 +67,7 @@ public:
 
 private:
   vtkm::Id3 Dims;
-  class OscillatorSource;
-  std::unique_ptr<OscillatorSource> Worklet;
+  std::unique_ptr<internal::OscillatorSource> Worklet;
 };
 }
 }

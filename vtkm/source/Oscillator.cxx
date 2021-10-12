@@ -38,9 +38,8 @@ struct Oscillator
   vtkm::Float64 Omega;
   vtkm::Float64 Zeta;
 };
-} // internal
 
-class Oscillator::OscillatorSource : public vtkm::worklet::WorkletMapField
+class OscillatorSource : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn, FieldOut);
@@ -176,10 +175,12 @@ private:
   vtkm::Float64 Time;
 }; // OscillatorSource
 
+} // internal
+
 //-----------------------------------------------------------------------------
 Oscillator::Oscillator(vtkm::Id3 dims)
   : Dims(dims)
-  , Worklet(std::make_unique<OscillatorSource>())
+  , Worklet(std::make_unique<internal::OscillatorSource>())
 {
 }
 
