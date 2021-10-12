@@ -186,7 +186,7 @@ Oscillator::Oscillator(vtkm::Id3 dims)
 
 Oscillator::~Oscillator()
 {
-  Worklet.release();
+  Worklet.reset();
 }
 
 //-----------------------------------------------------------------------------
