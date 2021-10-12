@@ -36,6 +36,11 @@ public:
   VTKM_CONT
   Oscillator(vtkm::Id3 dims);
 
+  // We need a non-default destructor since compiler does not know how
+  // to create a default one for the Worklet.
+  VTKM_CONT
+  ~Oscillator();
+
   VTKM_CONT
   void SetTime(vtkm::Float64 time);
 
