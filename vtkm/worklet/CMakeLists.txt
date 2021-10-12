@@ -57,7 +57,6 @@ set(headers
   OrientNormals.h
   OrientPointNormals.h
   OrientPointAndCellNormals.h
-  OscillatorSource.h
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h

@@ -11,7 +11,6 @@
 #define vtk_m_source_OscillatorSource_h
 
 #include <vtkm/source/Source.h>
-#include <vtkm/worklet/OscillatorSource.h>
 
 namespace vtkm
 {
@@ -64,8 +63,8 @@ public:
 
 private:
   vtkm::Id3 Dims;
-  //vtkm::worklet::OscillatorSource Worklet;
-  std::unique_ptr<vtkm::worklet::OscillatorSource> Worklet;
+  class OscillatorSource;
+  std::unique_ptr<OscillatorSource> Worklet;
 };
 }
 }
