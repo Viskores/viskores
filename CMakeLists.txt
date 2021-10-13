@@ -160,7 +160,7 @@ vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README a
 # are not well supported on many accelerators. Turn this option on to remove
 # the code entirely. In VTK-m 2.0 virtual methods should be removed entirely
 # and this option will be removed.
-vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" OFF)
+vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" ON)
 
 # In Python wheels, having SONAME suffixes just ends up duplicating files.
 # Allow VTK to turn off these symlinks for its wheel distribution.
