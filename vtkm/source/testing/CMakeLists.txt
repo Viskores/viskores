@@ -17,5 +17,4 @@ set(unit_tests
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES vtkm_source
-  ALL_BACKENDS
 )

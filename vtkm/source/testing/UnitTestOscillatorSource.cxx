@@ -10,13 +10,13 @@
 
 #include <vtkm/source/Oscillator.h>
 
-#include <vtkm/cont/Timer.h>
+//#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
 
 void OscillatorSourceTest()
 {
-  vtkm::cont::Timer timer;
-  timer.Start();
+  // vtkm::cont::Timer timer;
+  // timer.Start();
 
   vtkm::source::Oscillator source(vtkm::Id3{ 20, 20, 20 });
   source.SetTime(0.5);
@@ -26,9 +26,9 @@ void OscillatorSourceTest()
 
   vtkm::cont::DataSet ds = source.Execute();
 
-  double time = timer.GetElapsedTime();
+  //double time = timer.GetElapsedTime();
 
-  std::cout << "Default oscillator took " << time << "s.\n";
+  //std::cout << "Default oscillator took " << time << "s.\n";
 
   {
     auto coords = ds.GetCoordinateSystem("coordinates");
