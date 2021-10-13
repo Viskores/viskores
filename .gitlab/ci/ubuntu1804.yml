@@ -56,7 +56,7 @@ build:ubuntu1804_gcc7:
     CC: "gcc-7"
     CXX: "g++-7"
     CUDAHOSTCXX: "g++-7"
-    VTKM_SETTINGS: "benchmarks+cuda+turing+mpi+64bit_floats+no_virtual+shared"
+    VTKM_SETTINGS: "benchmarks+cuda+turing+mpi+64bit_floats+shared"
 
 test:ubuntu1804_gcc7:
   tags:
@@ -96,7 +96,7 @@ build:ubuntu1804_clang_cuda:
     CC: "clang-8"
     CXX: "clang++-8"
     CUDAHOSTCXX: "clang++-8"
-    VTKM_SETTINGS: "cuda+pascal+tbb+examples+no_virtual+shared"
+    VTKM_SETTINGS: "cuda+pascal+tbb+examples+shared"
 
 test:ubuntu1804_clang_cuda:
   tags:
@@ -202,7 +202,7 @@ build:ubuntu1804_kokkos:
   variables:
     CMAKE_GENERATOR: "Ninja"
     CMAKE_BUILD_TYPE: Release
-    VTKM_SETTINGS: "benchmarks+kokkos+turing+64bit_floats+no_virtual+shared"
+    VTKM_SETTINGS: "benchmarks+kokkos+turing+64bit_floats+shared"
 
 test:ubuntu1804_kokkos:
   tags:

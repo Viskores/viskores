@@ -18,7 +18,7 @@ build:ubuntu1604_gcc5:
     CC: "gcc-5"
     CXX: "g++-5"
     CMAKE_BUILD_TYPE: RelWithDebInfo
-    VTKM_SETTINGS: "cuda+pascal+no_virtual+shared+ascent_types+32bit_ids+64bit_floats"
+    VTKM_SETTINGS: "cuda+pascal+shared+ascent_types+32bit_ids+64bit_floats"
 
 test:ubuntu1604_gcc5:
   tags:
@@ -56,7 +56,7 @@ build:ubuntu1604_gcc5_2:
     CC: "gcc-5"
     CXX: "g++-5"
     CMAKE_BUILD_TYPE: Release
-    VTKM_SETTINGS: "openmp+cuda+pascal+examples+static"
+    VTKM_SETTINGS: "openmp+cuda+pascal+examples+static+use_virtuals"
 
 test:ubuntu1804_test_ubuntu1604_gcc5_2:
   tags:
