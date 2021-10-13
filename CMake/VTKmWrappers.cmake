@@ -312,7 +312,15 @@ endfunction()
 #
 #  DEVICE_SOURCES: The collection of source files that are used by `target(s)` that
 #  need to be marked as going to a special compiler for certain device adapters
-#  such as CUDA.
+#  such as CUDA. A source file generally needs to be in DEVICE_SOURCES if (and
+#  usually only if) it includes vtkm/cont/DeviceAdapterAlgorithm.h (either directly
+#  or indirectly). The most common code to include DeviceAdapterAlgorithm.h are
+#  those that use vtkm::cont::Algorithm or those that define worklets. Templated
+#  code that does computation often links to device adapter algorithms. Some
+#  device adapters that require a special compiler for device code will check in
+#  their headers that a device compiler is being used when it is needed. Such
+#  errors can be corrected by adding the source code to `DEVICE_SOURCES` (or
+#  removing the dependence on device algorithm when possible).
 #
 #  EXTENDS_VTKM: Some programming models have restrictions on how types can be used,
 #  passed across library boundaries, and derived from.
