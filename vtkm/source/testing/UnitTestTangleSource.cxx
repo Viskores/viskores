@@ -10,21 +10,21 @@
 
 #include <vtkm/source/Tangle.h>
 
-//#include <vtkm/cont/Timer.h>
+#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
 
 void TangleSourceTest()
 {
-  // vtkm::cont::Timer timer;
-  // timer.Start();
+  vtkm::cont::Timer timer;
+  timer.Start();
 
   vtkm::source::Tangle source(vtkm::Id3{ 20, 20, 20 });
   vtkm::cont::DataSet ds = source.Execute();
 
 
-  // double time = timer.GetElapsedTime();
+  double time = timer.GetElapsedTime();
 
-  // std::cout << "Default tangle took " << time << "s.\n";
+  std::cout << "Default tangle took " << time << "s.\n";
 
   {
     auto coords = ds.GetCoordinateSystem("coordinates");

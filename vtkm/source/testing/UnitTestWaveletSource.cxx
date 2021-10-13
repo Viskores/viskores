@@ -10,7 +10,6 @@
 
 #include <vtkm/source/Wavelet.h>
 
-//#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
 
 void WaveletSourceTest()
