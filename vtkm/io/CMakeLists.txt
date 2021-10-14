@@ -68,7 +68,7 @@ if (VTKm_ENABLE_HDF5_IO)
     ImageReaderHDF5.h
     ImageWriterHDF5.h)
   set(sources
-    ${device_sources}
+    ${sources}
     ImageReaderHDF5.cxx
     ImageWriterHDF5.cxx)
 endif ()
