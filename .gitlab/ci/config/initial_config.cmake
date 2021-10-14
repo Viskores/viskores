@@ -56,6 +56,9 @@ foreach(option IN LISTS options)
   elseif(no_virtual STREQUAL option)
     set(VTKm_NO_DEPRECATED_VIRTUAL "ON" CACHE STRING "")
 
+  elseif(no_testing STREQUAL option)
+    set(VTKm_ENABLE_TESTING OFF CACHE BOOL "")
+
   elseif(examples STREQUAL option)
     set(VTKm_ENABLE_EXAMPLES "ON" CACHE STRING "")
 
@@ -64,7 +67,7 @@ foreach(option IN LISTS options)
 
   elseif(benchmarks STREQUAL option)
     set(VTKm_ENABLE_BENCHMARKS "ON" CACHE STRING "")
-    set(ENV{CMAKE_PREFIX_PATH} "$ENV{HOME}/gbench")
+    set(ENV{CMAKE_PREFIX_PATH} "$ENV{CMAKE_PREFIX_PATH}:$ENV{HOME}/gbench")
 
   elseif(mpi STREQUAL option)
     set(VTKm_ENABLE_MPI "ON" CACHE STRING "")
@@ -95,6 +98,16 @@ foreach(option IN LISTS options)
 
   elseif(turing STREQUAL option)
     set(VTKm_CUDA_Architecture "turing" CACHE STRING "")
+
+  elseif(hip STREQUAL option)
+    if(CMAKE_VERSION VERSION_LESS_EQUAL 3.20)
+      message(FATAL_ERROR "VTK-m requires cmake > 3.20 to enable HIP support")
+    endif()
+
+    set(CMAKE_C_COMPILER   "/opt/rocm/llvm/bin/clang" CACHE FILEPATH "")
+    set(CMAKE_CXX_COMPILER "/opt/rocm/llvm/bin/clang++" CACHE FILEPATH "")
+    set(VTKm_ENABLE_KOKKOS_HIP ON CACHE STRING "")
+    set(CMAKE_HIP_ARCHITECTURES "gfx900" CACHE STRING "")
   endif()
 
 endforeach()
@@ -108,6 +121,10 @@ find_program(SCCACHE_COMMAND NAMES sccache)
 if(SCCACHE_COMMAND)
   set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
   set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
+
+  if(DEFINED VTKm_ENABLE_KOKKOS_HIP)
+    set(CMAKE_HIP_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
+  endif()
 
   # Use VTKm_CUDA_Architecture to determine if we need CUDA sccache setup
   # since this will also capture when kokkos is being used with CUDA backing

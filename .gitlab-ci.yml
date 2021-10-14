@@ -105,11 +105,26 @@
   extends:
     - .docker_image
 
+.ubuntu2004_hip_kokkos: &ubuntu2004_hip_kokkos
+  image: "kitware/vtkm:ci-ubuntu2004_hip_kokkos-20210827"
+  extends:
+    - .docker_image
+
 .only-default: &only-default
   only:
     - master@vtk/vtk-m
     - tags@vtk/vtk-m
     - merge_requests
+
+.only-scheduled: &only-scheduled
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: always
+      allow_failure: true
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: manual
+      allow_failure: true
+    - when: never
 
 .only-master: &only-master
   only:
@@ -189,7 +204,7 @@ stages:
   before_script:
     - *install_cmake
   script:
-    - "ctest -VV -S .gitlab/ci/ctest_test.cmake"
+    - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
   artifacts:
     expire_in: 24 hours
     when: always

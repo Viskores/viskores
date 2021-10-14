@@ -59,3 +59,38 @@ test:ubuntu2004_kokkos:
     - build:ubuntu2004_kokkos
   needs:
     - build:ubuntu2004_kokkos
+
+build:ubuntu2004_hip_kokkos:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - radeon
+  extends:
+    - .ubuntu2004_hip_kokkos
+    - .cmake_build_linux
+    - .only-scheduled
+  variables:
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    VTKM_SETTINGS: "benchmarks+kokkos+hip+no_virtual+no_rendering"
+    CMAKE_PREFIX_PATH: "/opt/rocm/lib/cmake"
+    CTEST_MAX_PARALLELISM: "3"
+  timeout: 12 hours
+
+test:ubuntu2004_hip_kokkos:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - radeon
+  extends:
+    - .ubuntu2004_hip_kokkos
+    - .cmake_test_linux
+    - .only-default
+  variables:
+    CTEST_TIMEOUT: "30"
+  dependencies:
+    - build:ubuntu2004_hip_kokkos
+  needs:
+    - build:ubuntu2004_hip_kokkos
+  timeout: 2 hours
