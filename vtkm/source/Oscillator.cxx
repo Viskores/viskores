@@ -83,7 +83,7 @@ public:
     const internal::Oscillator* oscillator;
 
     t0 = 0.0;
-    t = this->Time * 2 * 3.14159265358979323846;
+    t = vtkm::FloatDefault(this->Time * 2 * 3.14159265358979323846);
 
     // Compute damped
     for (oIdx = 0; oIdx < this->DampedOscillators.GetNumberOfComponents(); oIdx++)
@@ -95,11 +95,12 @@ public:
       vtkm::FloatDefault dist_damp =
         vtkm::Exp(-dist2 / (2 * oscillator->Radius * oscillator->Radius));
       vtkm::FloatDefault phi = vtkm::ACos(oscillator->Zeta);
-      vtkm::FloatDefault val = 1. -
+      vtkm::FloatDefault val = vtkm::FloatDefault(
+        1. -
         vtkm::Exp(-oscillator->Zeta * oscillator->Omega * t0) *
           (vtkm::Sin(vtkm::Sqrt(1 - oscillator->Zeta * oscillator->Zeta) * oscillator->Omega * t +
                      phi) /
-           vtkm::Sin(phi));
+           vtkm::Sin(phi)));
       result += val * dist_damp;
     }
 

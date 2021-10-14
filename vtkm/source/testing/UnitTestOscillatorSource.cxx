@@ -20,9 +20,9 @@ void OscillatorSourceTest()
 
   vtkm::source::Oscillator source(vtkm::Id3{ 20, 20, 20 });
   source.SetTime(0.5);
-  source.AddDamped(0.25, 0.25, 0.25, 0.5, 0.1, 0.2);
-  source.AddDecaying(0.5, 0.5, 0.5, 0.35, 0.2, 0.1);
-  source.AddPeriodic(0.6, 0.2, 0.7, 0.15, 0.1, 0.2);
+  source.AddDamped(0.25f, 0.25f, 0.25f, 0.5f, 0.1f, 0.2f);
+  source.AddDecaying(0.5f, 0.5f, 0.5f, 0.35f, 0.2f, 0.1f);
+  source.AddPeriodic(0.6f, 0.2f, 0.7f, 0.15f, 0.1f, 0.2f);
 
   vtkm::cont::DataSet ds = source.Execute();
 
