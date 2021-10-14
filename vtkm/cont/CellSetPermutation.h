@@ -21,6 +21,7 @@
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/internal/ConnectivityExplicitInternals.h>
 #include <vtkm/cont/internal/ConvertNumComponentsToOffsetsTemplate.h>
+#include <vtkm/cont/internal/ReverseConnectivityBuilder.h>
 #include <vtkm/internal/ConnectivityStructuredInternals.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 

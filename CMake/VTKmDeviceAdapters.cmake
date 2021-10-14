@@ -46,10 +46,10 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   add_library(vtkmTBB INTERFACE)
   add_library(vtkm::tbb ALIAS vtkmTBB)
   target_link_libraries(vtkmTBB INTERFACE TBB::tbb)
+  target_compile_definitions(vtkmTBB INTERFACE "TBB_VERSION_MAJOR=${TBB_VERSION_MAJOR}")
   set_target_properties(vtkmTBB PROPERTIES EXPORT_NAME vtkm::tbb)
   install(TARGETS vtkmTBB EXPORT ${VTKm_EXPORT_NAME})
 endif()
-
 
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)

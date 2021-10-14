@@ -11,17 +11,20 @@
 #define vtk_m_source_OscillatorSource_h
 
 #include <vtkm/source/Source.h>
-#include <vtkm/worklet/OscillatorSource.h>
 
 namespace vtkm
 {
 namespace source
 {
+namespace internal
+{
+class OscillatorSource;
+}
 
 /**\brief An analytical, time-varying uniform dataset with a point based array
  *
  * The Execute method creates a complete structured dataset that have a
- * point field names 'scalars'
+ * point field names 'oscillating'
  *
  * This array is based on the coordinates and evaluates to a sum of time-varying
  * Gaussian exponentials specified in its configuration.
@@ -33,38 +36,44 @@ public:
   VTKM_CONT
   Oscillator(vtkm::Id3 dims);
 
+  // We can not declare default destructor here since compiler does not know how
+  // to create one for the Worklet at this point yet. However, the implementation
+  // in Oscillator.cxx does have ~Oscillator() = default;
   VTKM_CONT
-  void SetTime(vtkm::Float64 time);
+  ~Oscillator();
 
   VTKM_CONT
-  void AddPeriodic(vtkm::Float64 x,
-                   vtkm::Float64 y,
-                   vtkm::Float64 z,
-                   vtkm::Float64 radius,
-                   vtkm::Float64 omega,
-                   vtkm::Float64 zeta);
+  void SetTime(vtkm::FloatDefault time);
 
   VTKM_CONT
-  void AddDamped(vtkm::Float64 x,
-                 vtkm::Float64 y,
-                 vtkm::Float64 z,
-                 vtkm::Float64 radius,
-                 vtkm::Float64 omega,
-                 vtkm::Float64 zeta);
+  void AddPeriodic(vtkm::FloatDefault x,
+                   vtkm::FloatDefault y,
+                   vtkm::FloatDefault z,
+                   vtkm::FloatDefault radius,
+                   vtkm::FloatDefault omega,
+                   vtkm::FloatDefault zeta);
 
   VTKM_CONT
-  void AddDecaying(vtkm::Float64 x,
-                   vtkm::Float64 y,
-                   vtkm::Float64 z,
-                   vtkm::Float64 radius,
-                   vtkm::Float64 omega,
-                   vtkm::Float64 zeta);
+  void AddDamped(vtkm::FloatDefault x,
+                 vtkm::FloatDefault y,
+                 vtkm::FloatDefault z,
+                 vtkm::FloatDefault radius,
+                 vtkm::FloatDefault omega,
+                 vtkm::FloatDefault zeta);
+
+  VTKM_CONT
+  void AddDecaying(vtkm::FloatDefault x,
+                   vtkm::FloatDefault y,
+                   vtkm::FloatDefault z,
+                   vtkm::FloatDefault radius,
+                   vtkm::FloatDefault omega,
+                   vtkm::FloatDefault zeta);
 
   VTKM_CONT vtkm::cont::DataSet Execute() const;
 
 private:
   vtkm::Id3 Dims;
-  vtkm::worklet::OscillatorSource Worklet;
+  std::unique_ptr<internal::OscillatorSource> Worklet;
 };
 }
 }

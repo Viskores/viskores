@@ -31,7 +31,7 @@ public:
     filter.SetGenerateNormals(true);
     filter.SetMergeDuplicatePoints(true);
     filter.SetIsoValue(0, 0.1);
-    filter.SetActiveField("nodevar");
+    filter.SetActiveField("tangle");
     vtkm::cont::DataSet iso = filter.Execute(dataSet);
 
     vtkm::filter::CellSetConnectivity connectivity;

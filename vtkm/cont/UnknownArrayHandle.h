@@ -33,8 +33,27 @@ namespace cont
 namespace detail
 {
 
+#ifdef VTKM_GCC
+// On rare occasion, we have seen errors like this:
+//   `_ZN4vtkm4cont6detailL27UnknownAHNumberOfComponentsIxEEiv' referenced in section
+//   `.data.rel.ro.local' of CMakeFiles/UnitTests_vtkm_cont_testing.dir/UnitTestCellSet.cxx.o:
+//   defined in discarded section
+//   `.text._ZN4vtkm4cont6detailL27UnknownAHNumberOfComponentsIxEEiv[_ZN4vtkm4cont14ArrayGetValuesINS0_15StorageTagBasicExNS0_18StorageTagCountingES2_EEvRKNS0_11ArrayHandleIxT_EERKNS4_IT0_T1_EERNS4_IS9_T2_EE]'
+//   of CMakeFiles/UnitTests_vtkm_cont_testing.dir/UnitTestCellSet.cxx.o
+// I don't know what circumstances exactly lead up to this, but it appears that the compiler is
+// being overly aggressive with removing unused symbols. In this instance, it seems to have removed
+// a function actually being used. This might be a bug in the compiler (I happen to have seen it in
+// gcc 8.3, 9.4, and 11.0), or it could be caused by a link-time optimizer. The problem should be
+// able to be solved by explictly saying that this templated method is being used. (I can't think
+// of any circumstances where this template would be instantiated but not used.) If the compiler
+// knows this is being used, it should know all the templated methods internal are also used.
+#define VTKM_FORCE_USED __attribute__((used))
+#else
+#define VTKM_FORCE_USED
+#endif
+
 template <typename T, typename S>
-static void UnknownAHDelete(void* mem)
+VTKM_FORCE_USED static void UnknownAHDelete(void* mem)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -42,13 +61,13 @@ static void UnknownAHDelete(void* mem)
 }
 
 template <typename T, typename S>
-static void* UnknownAHNewInstance()
+VTKM_FORCE_USED static void* UnknownAHNewInstance()
 {
   return new vtkm::cont::ArrayHandle<T, S>;
 }
 
 template <typename T, typename S>
-static vtkm::Id UnknownAHNumberOfValues(void* mem)
+VTKM_FORCE_USED static vtkm::Id UnknownAHNumberOfValues(void* mem)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -69,7 +88,7 @@ struct UnknownAHNumberOfComponentsImpl<T, vtkm::VecTraitsTagSizeVariable>
 };
 
 template <typename T>
-static vtkm::IdComponent UnknownAHNumberOfComponents()
+VTKM_FORCE_USED static vtkm::IdComponent UnknownAHNumberOfComponents()
 {
   return UnknownAHNumberOfComponentsImpl<T>::Value;
 }
@@ -88,16 +107,16 @@ struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeVariable>
 };
 
 template <typename T>
-static vtkm::IdComponent UnknownAHNumberOfComponentsFlat()
+VTKM_FORCE_USED static vtkm::IdComponent UnknownAHNumberOfComponentsFlat()
 {
   return UnknownAHNumberOfComponentsFlatImpl<T>::Value;
 }
 
 template <typename T, typename S>
-static void UnknownAHAllocate(void* mem,
-                              vtkm::Id numValues,
-                              vtkm::CopyFlag preserve,
-                              vtkm::cont::Token& token)
+VTKM_FORCE_USED static void UnknownAHAllocate(void* mem,
+                                              vtkm::Id numValues,
+                                              vtkm::CopyFlag preserve,
+                                              vtkm::cont::Token& token)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -105,7 +124,16 @@ static void UnknownAHAllocate(void* mem,
 }
 
 template <typename T, typename S>
-static std::vector<vtkm::cont::internal::Buffer>
+VTKM_FORCE_USED static void UnknownAHShallowCopy(const void* sourceMem, void* destinationMem)
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  const AH* source = reinterpret_cast<const AH*>(sourceMem);
+  AH* destination = reinterpret_cast<AH*>(destinationMem);
+  *destination = *source;
+}
+
+template <typename T, typename S>
+VTKM_FORCE_USED static std::vector<vtkm::cont::internal::Buffer>
 UnknownAHExtractComponent(void* mem, vtkm::IdComponent componentIndex, vtkm::CopyFlag allowCopy)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
@@ -116,7 +144,7 @@ UnknownAHExtractComponent(void* mem, vtkm::IdComponent componentIndex, vtkm::Cop
 }
 
 template <typename T, typename S>
-static void UnknownAHReleaseResources(void* mem)
+VTKM_FORCE_USED static void UnknownAHReleaseResources(void* mem)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -124,7 +152,7 @@ static void UnknownAHReleaseResources(void* mem)
 }
 
 template <typename T, typename S>
-static void UnknownAHReleaseResourcesExecution(void* mem)
+VTKM_FORCE_USED static void UnknownAHReleaseResourcesExecution(void* mem)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -132,7 +160,7 @@ static void UnknownAHReleaseResourcesExecution(void* mem)
 }
 
 template <typename T, typename S>
-static void UnknownAHPrintSummary(void* mem, std::ostream& out, bool full)
+VTKM_FORCE_USED static void UnknownAHPrintSummary(void* mem, std::ostream& out, bool full)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -212,6 +240,9 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   using AllocateType = void(void*, vtkm::Id, vtkm::CopyFlag, vtkm::cont::Token&);
   AllocateType* Allocate;
 
+  using ShallowCopyType = void(const void*, void*);
+  ShallowCopyType* ShallowCopy;
+
   using ExtractComponentType = std::vector<vtkm::cont::internal::Buffer>(void*,
                                                                          vtkm::IdComponent,
                                                                          vtkm::CopyFlag);
@@ -269,60 +300,47 @@ private:
 };
 
 template <typename T>
-static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTagSizeStatic)
+VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(
+  vtkm::VecTraitsTagSizeStatic)
 {
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<T>{});
 }
 template <typename T>
-static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTagSizeVariable)
-{
-  throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
-                                 vtkm::cont::TypeToString<T>());
-}
-template <typename T>
-static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic()
-{
-  return UnknownAHNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
-}
-
-template <typename T>
-static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(
-  vtkm::VecTraitsTagSizeStatic)
-{
-  using FloatT = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>;
-  return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<FloatT>{});
-}
-template <typename T>
-static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(
+VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(
   vtkm::VecTraitsTagSizeVariable)
 {
   throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
                                  vtkm::cont::TypeToString<T>());
 }
 template <typename T>
-static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
+VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic()
+{
+  return UnknownAHNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+}
+
+template <typename T>
+VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(
+  vtkm::VecTraitsTagSizeStatic)
+{
+  using FloatT = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>;
+  return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<FloatT>{});
+}
+template <typename T>
+VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(
+  vtkm::VecTraitsTagSizeVariable)
+{
+  throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
+                                 vtkm::cont::TypeToString<T>());
+}
+template <typename T>
+VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
 {
   return UnknownAHNewInstanceFloatBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T, typename S>
-#ifdef VTKM_GCC
-// On rare occasion, we have seen errors like this:
-//   `_ZN4vtkm4cont6detailL27UnknownAHNumberOfComponentsIxEEiv' referenced in section
-//   `.data.rel.ro.local' of CMakeFiles/UnitTests_vtkm_cont_testing.dir/UnitTestCellSet.cxx.o:
-//   defined in discarded section
-//   `.text._ZN4vtkm4cont6detailL27UnknownAHNumberOfComponentsIxEEiv[_ZN4vtkm4cont14ArrayGetValuesINS0_15StorageTagBasicExNS0_18StorageTagCountingES2_EEvRKNS0_11ArrayHandleIxT_EERKNS4_IT0_T1_EERNS4_IS9_T2_EE]'
-//   of CMakeFiles/UnitTests_vtkm_cont_testing.dir/UnitTestCellSet.cxx.o
-// I don't know what circumstances exactly lead up to this, but it appears that the compiler
-// is being overly aggressive with removing unused symbols. In this instance, it seems to have
-// removed a function actually being used. This might be a bug in the compiler (I happen to have
-// seen it in gcc 8.3), or it could be caused by a link-time optimizer. The problem should be
-// able to be solved by explictly saying that this templated method is being used. (I can't think
-// of any circumstances where this template would be instantiated but not used.) If the compiler
-// knows this is being used, it should know all the templated methods internal are also used.
-__attribute__((used))
-#endif
-inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array)
+VTKM_FORCE_USED inline UnknownAHContainer::UnknownAHContainer(
+  const vtkm::cont::ArrayHandle<T, S>& array)
   : ArrayHandlePointer(new vtkm::cont::ArrayHandle<T, S>(array))
   , ValueType(typeid(T))
   , StorageType(typeid(S))
@@ -336,6 +354,7 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   , NumberOfComponents(detail::UnknownAHNumberOfComponents<T>)
   , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T>)
   , Allocate(detail::UnknownAHAllocate<T, S>)
+  , ShallowCopy(detail::UnknownAHShallowCopy<T, S>)
   , ExtractComponent(detail::UnknownAHExtractComponent<T, S>)
   , ReleaseResources(detail::UnknownAHReleaseResources<T, S>)
   , ReleaseResourcesExecution(detail::UnknownAHReleaseResourcesExecution<T, S>)
@@ -661,6 +680,54 @@ public:
   {
     result = this->AsArrayHandle<MultiplexerType>();
   }
+
+  /// \brief Deep copies data from another `UnknownArrayHandle`.
+  ///
+  /// This method takes an `UnknownArrayHandle` and deep copies data from it.
+  ///
+  /// If this object does not point to an existing `ArrayHandle`, a new `ArrayHandleBasic`
+  /// with the same value type of the `source` is created.
+  ///
+  void DeepCopyFrom(const vtkm::cont::UnknownArrayHandle& source);
+
+  /// \brief Deep copies data from another `UnknownArrayHandle`.
+  ///
+  /// This method takes an `UnknownArrayHandle` and deep copies data from it.
+  ///
+  /// If this object does not point to an existing `ArrayHandle`, this const version
+  /// of `DeepCopyFrom` throws an exception.
+  ///
+  void DeepCopyFrom(const vtkm::cont::UnknownArrayHandle& source) const;
+
+  /// \brief Attempts a shallow copy of an array or a deep copy if that is not possible.
+  ///
+  /// This method takes an `UnknownArrayHandle` and attempts to perform a shallow copy.
+  /// This shallow copy occurs if this object points to an `ArrayHandle` of the same type
+  /// or does not point to any `ArrayHandle` at all. If this is not possible, then
+  /// the array is deep copied.
+  ///
+  /// This method is roughly equivalent to the `ArrayCopyShallowIfPossible` function
+  /// (defined in `vtkm/cont/ArrayCopy.h`). However, this method can be used without
+  /// having to use a device compiler (whereas `ArrayCopyShallowIfPossible` does require
+  /// a device device compiler).
+  ///
+  void CopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle& source);
+
+  /// \brief Attempts a shallow copy of an array or a deep copy if that is not possible.
+  ///
+  /// This method takes an `UnknownArrayHandle` and attempts to perform a shallow copy.
+  /// This shallow copy occurs if this object points to an `ArrayHandle` of the same type.
+  /// If the types are incompatible, then the array is deep copied.
+  ///
+  /// If this object does not point to an existing `ArrayHandle`, this const version
+  /// of `CopyShallowIfPossible` throws an exception.
+  ///
+  /// This method is roughly equivalent to the `ArrayCopyShallowIfPossible` function
+  /// (defined in `vtkm/cont/ArrayCopy.h`). However, this method can be used without
+  /// having to use a device compiler (whereas `ArrayCopyShallowIfPossible` does require
+  /// a device device compiler).
+  ///
+  void CopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle& source) const;
 
   /// \brief Extract a component of the array.
   ///

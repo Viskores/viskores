@@ -94,6 +94,7 @@ static const std::pair<int64_t, int64_t> SmallRange{ SHORT_RANGE_LOWER_BOUNDARY,
                                                      SHORT_RANGE_UPPER_BOUNDARY };
 static constexpr int SmallRangeMultiplier = 1 << 21; // Ensure a sample at 2MiB
 
+#ifndef VTKM_ENABLE_KOKKOS
 using TypeList = vtkm::List<vtkm::UInt8,
                             vtkm::Float32,
                             vtkm::Int64,
@@ -102,6 +103,17 @@ using TypeList = vtkm::List<vtkm::UInt8,
                             vtkm::Pair<vtkm::Int32, vtkm::Float64>>;
 
 using SmallTypeList = vtkm::List<vtkm::UInt8, vtkm::Float32, vtkm::Int64>;
+#else
+// Kokkos requires 0 == (sizeof(Kokkos::MinMaxScalar<ValueType>) % sizeof(int)
+// so removing vtkm::UInt8
+using TypeList = vtkm::List<vtkm::Float32,
+                            vtkm::Int64,
+                            vtkm::Float64,
+                            vtkm::Vec3f_32,
+                            vtkm::Pair<vtkm::Int32, vtkm::Float64>>;
+
+using SmallTypeList = vtkm::List<vtkm::Float32, vtkm::Int64>;
+#endif
 
 // Only 32-bit words are currently supported atomically across devices:
 using AtomicWordTypes = vtkm::List<vtkm::UInt32>;

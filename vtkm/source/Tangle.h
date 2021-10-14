@@ -21,11 +21,15 @@ namespace source
  * @brief The Tangle source creates a uniform dataset.
  *
  * This class generates a predictable uniform grid dataset with an
- * interesting set of point and cell scalar arrays, which is useful
- * for testing and benchmarking.
+ * interesting point field, which is useful for testing and
+ * benchmarking.
  *
- * The Execute method creates a complete structured dataset that have a
- * point field named 'nodevar', and a cell field named 'cellvar'.
+ * The Execute method creates a complete structured dataset of a
+ * resolution specified in the constructor that is bounded by the
+ * cube in the range [0,1] in each dimension. The dataset has a
+ * point field named 'tangle' computed with the following formula
+ *
+ * x^4 - 5x^2 + y^4 - 5y^2 + z^4 - 5z^2
  *
 **/
 class VTKM_SOURCE_EXPORT Tangle final : public vtkm::source::Source

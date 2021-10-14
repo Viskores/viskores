@@ -22,6 +22,8 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
 
+#include <vtkm/cont/internal/ArrayCopyUnknown.h>
+
 #include <sstream>
 
 namespace
@@ -269,6 +271,48 @@ VTKM_CONT void UnknownArrayHandle::Allocate(vtkm::Id numValues, vtkm::CopyFlag p
 {
   vtkm::cont::Token token;
   this->Allocate(numValues, preserve, token);
+}
+
+VTKM_CONT void UnknownArrayHandle::DeepCopyFrom(const vtkm::cont::UnknownArrayHandle& source)
+{
+  vtkm::cont::internal::ArrayCopyUnknown(source, *this);
+}
+
+VTKM_CONT void UnknownArrayHandle::DeepCopyFrom(const vtkm::cont::UnknownArrayHandle& source) const
+{
+  vtkm::cont::internal::ArrayCopyUnknown(source, *this);
+}
+
+VTKM_CONT
+void UnknownArrayHandle::CopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle& source)
+{
+  if (!this->IsValid())
+  {
+    *this = source;
+  }
+
+  const_cast<const UnknownArrayHandle*>(this)->CopyShallowIfPossible(source);
+}
+
+VTKM_CONT
+void UnknownArrayHandle::CopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle& source) const
+{
+  if (!this->IsValid())
+  {
+    throw vtkm::cont::ErrorBadValue(
+      "Attempty to copy to a constant UnknownArrayHandle with no valid array.");
+  }
+
+  if (source.IsValueTypeImpl(this->Container->ValueType) &&
+      source.IsStorageTypeImpl(this->Container->StorageType))
+  {
+    this->Container->ShallowCopy(source.Container->ArrayHandlePointer,
+                                 this->Container->ArrayHandlePointer);
+  }
+  else
+  {
+    this->DeepCopyFrom(source);
+  }
 }
 
 VTKM_CONT void UnknownArrayHandle::ReleaseResourcesExecution() const

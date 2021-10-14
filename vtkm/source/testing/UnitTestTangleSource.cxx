@@ -24,7 +24,7 @@ void TangleSourceTest()
 
   double time = timer.GetElapsedTime();
 
-  std::cout << "Default wavelet took " << time << "s.\n";
+  std::cout << "Default tangle took " << time << "s.\n";
 
   {
     auto coords = ds.GetCoordinateSystem("coordinates");
@@ -37,29 +37,11 @@ void TangleSourceTest()
     VTKM_TEST_ASSERT(test_equal(cells.GetNumberOfCells(), 8000), "Incorrect number of cells.");
   }
 
-  // check the cell scalars
-  {
-    using ScalarHandleType = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-
-    auto field = ds.GetCellField("cellvar");
-    auto dynData = field.GetData();
-    VTKM_TEST_ASSERT(dynData.IsType<ScalarHandleType>(), "Invalid scalar handle type.");
-    ScalarHandleType handle = dynData.AsArrayHandle<ScalarHandleType>();
-    auto data = handle.ReadPortal();
-
-    VTKM_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 8000), "Incorrect number of elements.");
-
-    for (vtkm::Id i = 0; i < 8000; ++i)
-    {
-      VTKM_TEST_ASSERT(test_equal(data.Get(i), i), "Incorrect scalar value.");
-    }
-  }
-
   // Spot check some node scalars
   {
     using ScalarHandleType = vtkm::cont::ArrayHandle<vtkm::Float32>;
 
-    auto field = ds.GetPointField("nodevar");
+    auto field = ds.GetPointField("tangle");
     auto dynData = field.GetData();
     VTKM_TEST_ASSERT(dynData.IsType<ScalarHandleType>(), "Invalid scalar handle type.");
     ScalarHandleType handle = dynData.AsArrayHandle<ScalarHandleType>();

@@ -7,12 +7,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/io/ImageUtils.h>
+
+#include <vtkm/cont/ErrorExecution.h>
 
 #include <vtkm/io/FileUtils.h>
 #include <vtkm/io/ImageReaderBase.h>
 #include <vtkm/io/ImageReaderPNG.h>
 #include <vtkm/io/ImageReaderPNM.h>
+#include <vtkm/io/ImageUtils.h>
 #include <vtkm/io/ImageWriterBase.h>
 #include <vtkm/io/ImageWriterPNG.h>
 #include <vtkm/io/ImageWriterPNM.h>

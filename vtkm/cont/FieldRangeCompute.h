@@ -14,6 +14,8 @@
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 
+#include <numeric>
+
 namespace vtkm
 {
 namespace cont

@@ -105,13 +105,13 @@ void TestMultiBlockFilter()
     vtkm::filter::ClipWithField clip;
     clip.SetRunMultiThreadedFilter(doThreading);
     clip.SetClipValue(0.0);
-    clip.SetActiveField("nodevar");
-    clip.SetFieldsToPass("nodevar", vtkm::cont::Field::Association::POINTS);
+    clip.SetActiveField("tangle");
+    clip.SetFieldsToPass("tangle", vtkm::cont::Field::Association::POINTS);
     auto result = clip.Execute(pds);
     VTKM_TEST_ASSERT(result.GetNumberOfPartitions() == pds.GetNumberOfPartitions());
     results.push_back(result);
   }
-  ValidateResults(results[0], results[1], "nodevar");
+  ValidateResults(results[0], results[1], "tangle");
 
   std::cout << "Contour" << std::endl;
   results.clear();
@@ -121,13 +121,13 @@ void TestMultiBlockFilter()
     mc.SetRunMultiThreadedFilter(doThreading);
     mc.SetGenerateNormals(true);
     mc.SetIsoValue(0, 0.5);
-    mc.SetActiveField("nodevar");
-    mc.SetFieldsToPass("nodevar", vtkm::cont::Field::Association::POINTS);
+    mc.SetActiveField("tangle");
+    mc.SetFieldsToPass("tangle", vtkm::cont::Field::Association::POINTS);
     auto result = mc.Execute(pds);
     VTKM_TEST_ASSERT(result.GetNumberOfPartitions() == pds.GetNumberOfPartitions());
     results.push_back(result);
   }
-  ValidateResults(results[0], results[1], "nodevar");
+  ValidateResults(results[0], results[1], "tangle");
 
   std::cout << "CleanGrid" << std::endl;
   results.clear();
@@ -141,7 +141,7 @@ void TestMultiBlockFilter()
     VTKM_TEST_ASSERT(result.GetNumberOfPartitions() == pds.GetNumberOfPartitions());
     results.push_back(result);
   }
-  ValidateResults(results[0], results[1], "nodevar");
+  ValidateResults(results[0], results[1], "tangle");
 
   std::cout << "Gradient" << std::endl;
   results.clear();
@@ -150,7 +150,7 @@ void TestMultiBlockFilter()
     vtkm::filter::Gradient grad;
     grad.SetRunMultiThreadedFilter(doThreading);
     grad.SetComputePointGradient(true);
-    grad.SetActiveField("nodevar");
+    grad.SetActiveField("tangle");
     grad.SetOutputFieldName("gradient");
     auto result = grad.Execute(pds);
     VTKM_TEST_ASSERT(result.GetNumberOfPartitions() == pds.GetNumberOfPartitions());

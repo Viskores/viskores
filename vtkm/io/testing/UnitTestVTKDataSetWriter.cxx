@@ -143,6 +143,24 @@ void TestVTKWriteTestData(const std::string& methodName, const vtkm::cont::DataS
   // Read back and check.
   vtkm::io::VTKDataSetReader reader(methodName + ".vtk");
   CheckWrittenReadData(data, reader.ReadDataSet());
+
+  std::cout << "Writing " << methodName << " ascii" << std::endl;
+  vtkm::io::VTKDataSetWriter writerAscii(methodName + "-ascii.vtk");
+  writerAscii.SetFileTypeToAscii();
+  writerAscii.WriteDataSet(data);
+
+  // Read back and check.
+  vtkm::io::VTKDataSetReader readerAscii(methodName + "-ascii.vtk");
+  CheckWrittenReadData(data, readerAscii.ReadDataSet());
+
+  std::cout << "Writing " << methodName << " binary" << std::endl;
+  vtkm::io::VTKDataSetWriter writerBinary(methodName + "-binary.vtk");
+  writerBinary.SetFileTypeToBinary();
+  writerBinary.WriteDataSet(data);
+
+  // Read back and check.
+  vtkm::io::VTKDataSetReader readerBinary(methodName + "-binary.vtk");
+  CheckWrittenReadData(data, readerBinary.ReadDataSet());
 }
 
 void TestVTKExplicitWrite()

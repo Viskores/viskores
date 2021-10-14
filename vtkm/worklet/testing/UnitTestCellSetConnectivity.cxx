@@ -30,7 +30,7 @@ public:
     filter.SetGenerateNormals(true);
     filter.SetMergeDuplicatePoints(true);
     filter.SetIsoValue(0, 0.1);
-    filter.SetActiveField("nodevar");
+    filter.SetActiveField("tangle");
     vtkm::cont::DataSet outputData = filter.Execute(dataSet);
 
     auto cellSet = outputData.GetCellSet().Cast<vtkm::cont::CellSetSingleType<>>();

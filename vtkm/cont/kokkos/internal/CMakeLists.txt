@@ -39,6 +39,7 @@ if (TARGET vtkm::kokkos)
     set_source_files_properties(${sources} TARGET_DIRECTORY vtkm_cont PROPERTIES LANGUAGE CUDA)
   elseif(TARGET vtkm::kokkos_hip)
     set_source_files_properties(${sources} TARGET_DIRECTORY vtkm_cont PROPERTIES LANGUAGE HIP)
+    kokkos_compilation(SOURCE ${sources})
   endif()
 
 else()

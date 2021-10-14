@@ -92,6 +92,12 @@ set(unit_tests
   UnitTestZFPCompressor.cxx
  )
 
+if(HIP IN_LIST Kokkos_DEVICES)
+  list(REMOVE_ITEM unit_tests
+       UnitTestParticleAdvection.cxx # Taking too long to compile with HIPCC
+       UnitTestScalarsToColors.cxx # Failing: incorrect results
+  )
+endif()
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}

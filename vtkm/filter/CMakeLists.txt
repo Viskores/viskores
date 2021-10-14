@@ -89,6 +89,7 @@ set(extra_headers
   ExternalFaces.h
   FieldSelection.h
   FieldToColors.h
+  GenerateIds.h
   GhostCellClassify.h
   GhostCellRemove.h
   Histogram.h
@@ -190,6 +191,7 @@ set(extra_sources_device
   ${ClipWithFieldInstantiations}
   ${ClipWithImplicitFunctionInstantiations}
   ExternalFaces.cxx
+  GenerateIds.cxx
   VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
@@ -299,7 +301,7 @@ install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 add_subdirectory(internal)
 add_subdirectory(particleadvection)
 
-#-----------------------------------------------------------------------------
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 if (VTKm_ENABLE_TESTING)
   add_subdirectory(testing)
 endif ()

@@ -15,6 +15,7 @@
 
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
+#include <vtkm/filter/GenerateIds.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/source/Tangle.h>
@@ -31,13 +32,17 @@ public:
 
     vtkm::Id3 dims(4, 4, 4);
     vtkm::source::Tangle tangle(dims);
-    vtkm::cont::DataSet dataSet = tangle.Execute();
+    vtkm::filter::GenerateIds genIds;
+    genIds.SetUseFloat(true);
+    genIds.SetGeneratePointIds(false);
+    genIds.SetCellFieldName("cellvar");
+    vtkm::cont::DataSet dataSet = genIds.Execute(tangle.Execute());
 
     vtkm::filter::Contour mc;
 
     mc.SetGenerateNormals(true);
     mc.SetIsoValue(0, 0.5);
-    mc.SetActiveField("nodevar");
+    mc.SetActiveField("tangle");
     mc.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
 
     auto result = mc.Execute(dataSet);
@@ -50,10 +55,10 @@ public:
     }
 
     // let's execute with mapping fields.
-    mc.SetFieldsToPass({ "nodevar", "cellvar" });
+    mc.SetFieldsToPass({ "tangle", "cellvar" });
     result = mc.Execute(dataSet);
     {
-      const bool isMapped = result.HasField("nodevar");
+      const bool isMapped = result.HasField("tangle");
       VTKM_TEST_ASSERT(isMapped, "mapping should pass");
 
       VTKM_TEST_ASSERT(result.GetNumberOfFields() == 3,

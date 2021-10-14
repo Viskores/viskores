@@ -12,6 +12,8 @@
 #include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/Invoker.h>
 
+#include <vtkm/cont/internal/ArrayCopyUnknown.h>
+
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace
@@ -163,5 +165,22 @@ void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
   DoUnknownArrayCopy(source, destination);
 }
 
+namespace internal
+{
+
+void ArrayCopyUnknown(const vtkm::cont::UnknownArrayHandle& source,
+                      vtkm::cont::UnknownArrayHandle& destination)
+{
+  vtkm::cont::ArrayCopy(source, destination);
 }
+
+void ArrayCopyUnknown(const vtkm::cont::UnknownArrayHandle& source,
+                      const vtkm::cont::UnknownArrayHandle& destination)
+{
+  vtkm::cont::ArrayCopy(source, destination);
+}
+
+} // namespace vtkm::cont::internal
+
 } // namespace vtkm::cont
+} // namespace vtkm

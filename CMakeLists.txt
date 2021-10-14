@@ -97,6 +97,11 @@ if (NOT DEFINED VTKm_ENABLE_TESTING)
     endif()
 endif()
 
+# By default: VTKm_ENABLE_TESTING -> VTKm_ENABLE_TESTING_LIB
+include(CMakeDependentOption)
+cmake_dependent_option(VTKm_ENABLE_TESTING_LIBRARY "Enable VTKm Testing Library" OFF "NOT VTKm_ENABLE_TESTING" ON)
+mark_as_advanced(VTKm_ENABLE_TESTING_LIB)
+
 vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 

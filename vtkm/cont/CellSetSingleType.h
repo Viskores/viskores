@@ -210,11 +210,13 @@ public:
   VTKM_CONT
   vtkm::Id GetCellShapeAsId() const { return this->CellShapeAsId; }
 
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_CONT
   vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex)) const override
   {
     return static_cast<vtkm::UInt8>(this->CellShapeAsId);
   }
+  VTKM_DEPRECATED_SUPPRESS_END
 
   VTKM_CONT
   std::shared_ptr<CellSet> NewInstance() const override
