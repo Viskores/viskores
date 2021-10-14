@@ -19,7 +19,6 @@
 #include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
 
 #include <memory>
-#include <typeinfo>
 #include <vector>
 
 namespace vtkm
