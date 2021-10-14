@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Logging.h>

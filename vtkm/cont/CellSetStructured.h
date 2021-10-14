@@ -14,7 +14,6 @@
 
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/CellSet.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/exec/ConnectivityStructured.h>
 #include <vtkm/internal/ConnectivityStructuredInternals.h>

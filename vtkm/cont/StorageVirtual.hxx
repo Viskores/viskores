@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_StorageVirtual_hxx
 #define vtk_m_cont_StorageVirtual_hxx
 
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/StorageVirtual.h>
 #include <vtkm/cont/TryExecute.h>
 

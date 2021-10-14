@@ -10,8 +10,6 @@
 #define vtk_m_cont_StorageVirtual_cxx
 #include <vtkm/cont/StorageVirtual.h>
 
-#include <vtkm/cont/DeviceAdapter.h>
-
 namespace vtkm
 {
 namespace cont
