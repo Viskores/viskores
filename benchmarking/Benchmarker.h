@@ -10,7 +10,7 @@
 
 #ifndef vtk_m_benchmarking_Benchmarker_h
 #define vtk_m_benchmarking_Benchmarker_h
-
+#include <sstream>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
