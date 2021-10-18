@@ -12,7 +12,7 @@ build:centos7_gcc73:
   extends:
     - .centos7
     - .cmake_build_linux
-    - .only-default
+    - .run_automatically
     - .use_minimum_supported_cmake
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
@@ -30,7 +30,7 @@ test:centos7_gcc73:
   extends:
     - .centos7
     - .cmake_test_linux
-    - .only-default
+    - .run_automatically
   dependencies:
     - build:centos7_gcc73
   needs:
@@ -47,7 +47,7 @@ test:rhel8_test_centos7:
   extends:
     - .rhel8
     - .cmake_test_linux
-    - .only-default
+    - .run_automatically
   variables:
       CTEST_EXCLUSIONS: "built_against_test_install"
   dependencies:
