@@ -51,9 +51,6 @@ inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  if (!fieldMeta.IsPointField())
-    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
-
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
   using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
@@ -61,7 +58,7 @@ inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(
   using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
 
   //compute streamlines
-  FieldType velocities(field);
+  FieldType velocities(field, fieldMeta.GetAssociation());
   GridEvalType eval(coords, cells, velocities);
   Stepper rk4(eval, this->StepSize);
 

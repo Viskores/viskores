@@ -75,11 +75,6 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  if (!fieldMeta.IsPointField())
-  {
-    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
-  }
-
   using Structured2DType = vtkm::cont::CellSetStructured<2>;
   using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
@@ -137,7 +132,7 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   {
     vtkm::cont::Invoker invoke;
 
-    FieldType velocities(field);
+    FieldType velocities(field, fieldMeta.GetAssociation());
     GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), velocities);
     Stepper integrator(evaluator, stepSize);
     vtkm::worklet::ParticleAdvection particles;
