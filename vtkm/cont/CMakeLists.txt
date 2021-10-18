@@ -105,6 +105,7 @@ set(headers
   Initialize.h
   Invoker.h
   Logging.h
+  MergePartitionedDataSet.h
   ParticleArrayCopy.h
   PartitionedDataSet.h
   PointLocatorUniformGrid.h
@@ -152,6 +153,7 @@ set(sources
   internal/RuntimeDeviceOption.cxx
   Initialize.cxx
   Logging.cxx
+  MergePartitionedDataSet.cxx
   RuntimeDeviceTracker.cxx
   Storage.cxx
   Token.cxx
