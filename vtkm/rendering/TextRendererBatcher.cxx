@@ -10,10 +10,6 @@
 
 #include <vtkm/rendering/TextRendererBatcher.h>
 
-#include <vtkm/Transform3D.h>
-#include <vtkm/cont/Timer.h>
-#include <vtkm/cont/TryExecute.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -120,67 +116,7 @@ struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
   vtkm::Id Width;
   vtkm::Id Height;
 }; // struct RenderBitmapFont
-
-struct RenderBitmapFontExecutor
-{
-  using ColorBufferType = vtkm::rendering::Canvas::ColorBufferType;
-  using DepthBufferType = vtkm::rendering::Canvas::DepthBufferType;
-  using FontTextureType = vtkm::rendering::TextRendererBatcher::FontTextureType;
-  using ScreenCoordsArrayHandle = vtkm::rendering::TextRendererBatcher::ScreenCoordsArrayHandle;
-  using TextureCoordsArrayHandle = vtkm::rendering::TextRendererBatcher::TextureCoordsArrayHandle;
-  using ColorsArrayHandle = vtkm::rendering::TextRendererBatcher::ColorsArrayHandle;
-  using DepthsArrayHandle = vtkm::rendering::TextRendererBatcher::DepthsArrayHandle;
-
-  VTKM_CONT
-  RenderBitmapFontExecutor(const ScreenCoordsArrayHandle& screenCoords,
-                           const TextureCoordsArrayHandle& textureCoords,
-                           const FontTextureType& fontTexture,
-                           const ColorsArrayHandle& colors,
-                           const ColorBufferType& colorBuffer,
-                           const DepthBufferType& depthBuffer,
-                           vtkm::Id width,
-                           vtkm::Id height,
-                           const DepthsArrayHandle& depths)
-    : ScreenCoords(screenCoords)
-    , TextureCoords(textureCoords)
-    , FontTexture(fontTexture)
-    , Colors(colors)
-    , ColorBuffer(colorBuffer)
-    , DepthBuffer(depthBuffer)
-    , Worklet(width, height)
-    , Depths(depths)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::worklet::DispatcherMapField<RenderBitmapFont> dispatcher(Worklet);
-    dispatcher.SetDevice(Device());
-    dispatcher.Invoke(ScreenCoords,
-                      TextureCoords,
-                      Colors,
-                      Depths,
-                      FontTexture.GetExecObjectFactory(),
-                      ColorBuffer,
-                      DepthBuffer);
-    return true;
-  }
-
-  ScreenCoordsArrayHandle ScreenCoords;
-  TextureCoordsArrayHandle TextureCoords;
-  FontTextureType FontTexture;
-  ColorsArrayHandle Colors;
-  ColorBufferType ColorBuffer;
-  DepthBufferType DepthBuffer;
-  RenderBitmapFont Worklet;
-  DepthsArrayHandle Depths;
-}; // struct RenderBitmapFontExecutor
 } // namespace
-
-// TextRendererBatcher::TextRendererBatcher() {}
 
 TextRendererBatcher::TextRendererBatcher(
   const vtkm::rendering::Canvas::FontTextureType& fontTexture)
@@ -207,20 +143,24 @@ void TextRendererBatcher::BatchText(const ScreenCoordsArrayHandle& screenCoords,
 
 void TextRendererBatcher::Render(const vtkm::rendering::Canvas* canvas) const
 {
-  ScreenCoordsArrayHandle screenCoords = vtkm::cont::make_ArrayHandle(this->ScreenCoords);
-  TextureCoordsArrayHandle textureCoords = vtkm::cont::make_ArrayHandle(this->TextureCoords);
-  vtkm::cont::ArrayHandle<ColorType> colors = vtkm::cont::make_ArrayHandle(this->Colors);
-  vtkm::cont::ArrayHandle<vtkm::Float32> depths = vtkm::cont::make_ArrayHandle(this->Depths);
+  ScreenCoordsArrayHandle screenCoords =
+    vtkm::cont::make_ArrayHandle(this->ScreenCoords, vtkm::CopyFlag::Off);
+  TextureCoordsArrayHandle textureCoords =
+    vtkm::cont::make_ArrayHandle(this->TextureCoords, vtkm::CopyFlag::Off);
+  vtkm::cont::ArrayHandle<ColorType> colors =
+    vtkm::cont::make_ArrayHandle(this->Colors, vtkm::CopyFlag::Off);
+  vtkm::cont::ArrayHandle<vtkm::Float32> depths =
+    vtkm::cont::make_ArrayHandle(this->Depths, vtkm::CopyFlag::Off);
 
-  vtkm::cont::TryExecute(RenderBitmapFontExecutor(screenCoords,
-                                                  textureCoords,
-                                                  this->FontTexture,
-                                                  colors,
-                                                  canvas->GetColorBuffer(),
-                                                  canvas->GetDepthBuffer(),
-                                                  canvas->GetWidth(),
-                                                  canvas->GetHeight(),
-                                                  depths));
+  vtkm::cont::Invoker invoker;
+  invoker(RenderBitmapFont(canvas->GetWidth(), canvas->GetHeight()),
+          screenCoords,
+          textureCoords,
+          colors,
+          depths,
+          this->FontTexture.GetExecObjectFactory(),
+          canvas->GetColorBuffer(),
+          canvas->GetDepthBuffer());
 }
 }
 } // namespace vtkm::rendering

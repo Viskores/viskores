@@ -10,7 +10,6 @@
 
 #include <vtkm/rendering/LineRendererBatcher.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -125,47 +124,6 @@ struct RenderLine : public vtkm::worklet::WorkletMapField
   vtkm::Id Width;
   vtkm::Id Height;
 }; // struct RenderLine
-
-struct RenderLineExecutor
-{
-  using ColorBufferType = vtkm::rendering::Canvas::ColorBufferType;
-  using DepthBufferType = vtkm::rendering::Canvas::DepthBufferType;
-
-  VTKM_CONT
-  RenderLineExecutor(const PointsArrayHandle& starts,
-                     const PointsArrayHandle& ends,
-                     const ColorsArrayHandle& colors,
-                     vtkm::Id width,
-                     vtkm::Id height,
-                     const ColorBufferType& colorBuffer,
-                     const DepthBufferType& depthBuffer)
-    : Starts(starts)
-    , Ends(ends)
-    , Colors(colors)
-    , Worklet(width, height)
-    , ColorBuffer(colorBuffer)
-    , DepthBuffer(depthBuffer)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::worklet::DispatcherMapField<RenderLine> dispatcher(Worklet);
-    dispatcher.SetDevice(Device());
-    dispatcher.Invoke(Starts, Ends, Colors, ColorBuffer, DepthBuffer);
-    return true;
-  }
-
-  PointsArrayHandle Starts;
-  PointsArrayHandle Ends;
-  ColorsArrayHandle Colors;
-  RenderLine Worklet;
-  ColorBufferType ColorBuffer;
-  DepthBufferType DepthBuffer;
-}; // struct RenderLineExecutor
 } // namespace
 
 LineRendererBatcher::LineRendererBatcher() {}
@@ -194,17 +152,17 @@ void LineRendererBatcher::BatchLine(const vtkm::Vec3f_32& start,
 
 void LineRendererBatcher::Render(const vtkm::rendering::Canvas* canvas) const
 {
-  PointsArrayHandle starts = vtkm::cont::make_ArrayHandle(this->Starts);
-  PointsArrayHandle ends = vtkm::cont::make_ArrayHandle(this->Ends);
-  ColorsArrayHandle colors = vtkm::cont::make_ArrayHandle(this->Colors);
+  PointsArrayHandle starts = vtkm::cont::make_ArrayHandle(this->Starts, vtkm::CopyFlag::Off);
+  PointsArrayHandle ends = vtkm::cont::make_ArrayHandle(this->Ends, vtkm::CopyFlag::Off);
+  ColorsArrayHandle colors = vtkm::cont::make_ArrayHandle(this->Colors, vtkm::CopyFlag::Off);
 
-  vtkm::cont::TryExecute(RenderLineExecutor(starts,
-                                            ends,
-                                            colors,
-                                            canvas->GetWidth(),
-                                            canvas->GetHeight(),
-                                            canvas->GetColorBuffer(),
-                                            canvas->GetDepthBuffer()));
+  vtkm::cont::Invoker invoker;
+  invoker(RenderLine(canvas->GetWidth(), canvas->GetHeight()),
+          starts,
+          ends,
+          colors,
+          canvas->GetColorBuffer(),
+          canvas->GetDepthBuffer());
 }
 }
 } // namespace vtkm::rendering

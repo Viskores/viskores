@@ -487,7 +487,7 @@ void Canvas::AddText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
   }
 
   vtkm::rendering::Canvas* self = const_cast<vtkm::rendering::Canvas*>(this);
-  TextRenderer fontRenderer(
+  vtkm::rendering::TextRenderer fontRenderer(
     self, Internals->Font, Internals->FontTexture, this->Internals->TextBatcher.get());
   fontRenderer.RenderText(transform, scale, anchor, color, text, depth);
 }
