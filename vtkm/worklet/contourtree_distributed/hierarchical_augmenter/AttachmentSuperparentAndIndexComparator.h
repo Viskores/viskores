@@ -99,11 +99,12 @@ public:
   VTKM_EXEC
   bool operator()(const vtkm::Id& left, const vtkm::Id& right) const
   { // operator()
+    // optimisation for sorts which compare an element with itself
+    // if the element compares with itself, always return false (it's not less than itself)
     if (left == right)
     {
       return false;
     }
-
     // first comparison is on superparent WITHOUT ascending descending flag
     if (vtkm::worklet::contourtree_augmented::MaskedIndex(this->SuperparentsPortal.Get(left)) <
         vtkm::worklet::contourtree_augmented::MaskedIndex(this->SuperparentsPortal.Get(right)))
@@ -126,20 +127,34 @@ public:
       return !vtkm::worklet::contourtree_augmented::IsAscending(this->SuperparentsPortal.Get(left));
     }
 
-    // third comparison is on supernode Ids
-    if (!vtkm::worklet::contourtree_augmented::NoSuchElement(this->SupernodeIdsPortal.Get(left)))
-    {
-      return true;
-    }
-    else if (!vtkm::worklet::contourtree_augmented::NoSuchElement(
-               this->SupernodeIdsPortal.Get(right)))
-    {
-      return false;
-    }
-
-    // in this case, both were NSE, so sort on the index values
-    return (left < right);
-  } // operator()
+    // it now depends on whether they have actual IDs (ie they are on this block anyway)
+    if (vtkm::worklet::contourtree_augmented::NoSuchElement(this->SupernodeIdsPortal.Get(left)))
+    { // left does not exist
+      if (vtkm::worklet::contourtree_augmented::NoSuchElement(this->SupernodeIdsPortal.Get(right)))
+      { // right does not exist
+        // neither exists: sort on input indices instead
+        return (left < right);
+      } // right does not exist
+      else
+      { // right does exist
+        // right exists but left doesn't - sort right lower
+        return false;
+      } // right does exist
+    }   // left does not exist
+    else
+    { // left does exist
+      if (vtkm::worklet::contourtree_augmented::NoSuchElement(this->SupernodeIdsPortal.Get(right)))
+      { // right does not exist
+        // left exists but right doesn't - sort left lower
+        return true;
+      } // right does not exist
+      else
+      { // right does exist
+        // both exist
+        return (this->SupernodeIdsPortal.Get(left) < this->SupernodeIdsPortal.Get(right));
+      } // right does exist
+    }   // left does exist
+  }     // operator()
 
 private:
   IdArrayPortalType SuperparentsPortal;
