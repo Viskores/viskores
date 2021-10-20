@@ -977,6 +977,13 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       assigner,
       partners,
       vtkm::worklet::contourtree_distributed::HierarchicalAugmenterFunctor<FieldType>{});
+    // Clear all swap data as it is no longer needed
+    master.foreach (
+      [](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
+           blockData,
+         const vtkmdiy::Master::ProxyWithLink&) {
+        blockData->HierarchicalAugmenter.ReleaseSwapArrays();
+      });
 
     timingsStream << "    " << std::setw(38) << std::left << "Retrieve In Attachment Points"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
