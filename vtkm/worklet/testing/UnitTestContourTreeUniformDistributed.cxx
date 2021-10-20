@@ -50,7 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#define DEBUG_PRINT
+// #define DEBUG_PRINT
+// #define PRINT_RESULT
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -77,6 +78,9 @@ void TestContourTreeMeshCombine(const std::string& mesh1_filename,
                                 const std::string& mesh2_filename,
                                 const std::string& combined_filename)
 {
+  std::cout << "Testing combining meshes " << mesh1_filename << " " << mesh2_filename
+            << " with expected result " << combined_filename << std::endl;
+
   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMesh1;
   contourTreeMesh1.Load(mesh1_filename.c_str());
   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMesh2;
@@ -99,33 +103,13 @@ void TestContourTreeMeshCombine(const std::string& mesh1_filename,
   VTKM_TEST_ASSERT(contourTreeMesh2.MaxNeighbors == combinedContourTreeMesh.MaxNeighbors);
 }
 
-/*
-template <typename PortalType, typename T>
-static inline VTKM_CONT bool test_equal_portal_stl_vector(const PortalType1& portal,
-                                                          const T[] array,
-{
-  if (portal.GetNumberOfValues() != size)
-  {
-    return false;
-  }
-
-  for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
-  {
-    if (!test_equal(portal.Get(index), array[index]))
-    {
-      return false;
-    }
-  }
-
-  return true;
-}
-*/
-
 void TestHierarchicalHyperSweeper()
 {
+  std::cout << "Testing HierarchicalHyperSweeper" << std::endl;
   using vtkm::cont::testing::Testing;
   using ContourTreeDataFieldType = vtkm::FloatDefault;
 
+  // Test input
   const int numBlocks = 4;
   const char* filenames[numBlocks] = { "misc/8x9test_HierarchicalAugmentedTree_Block0.dat",
                                        "misc/8x9test_HierarchicalAugmentedTree_Block1.dat",
@@ -135,17 +119,30 @@ void TestHierarchicalHyperSweeper()
   vtkm::Id3 blocksPerDim{ 2, 2, 1 };
   vtkm::Id3 sizes[numBlocks] = { { 5, 4, 1 }, { 5, 5, 1 }, { 5, 4, 1 }, { 5, 5, 1 } };
   vtkm::Id3 origins[numBlocks] = { { 0, 0, 0 }, { 0, 3, 0 }, { 4, 0, 0 }, { 4, 3, 0 } };
+  vtkm::Id3 blockIndices[numBlocks] = { { 0, 0, 0 }, { 0, 1, 0 }, { 1, 0, 0 }, { 1, 1, 0 } };
 
-  auto blockIndicesAH = vtkm::cont::make_ArrayHandle(
-    { vtkm::Id3{ 0, 0, 0 }, vtkm::Id3{ 0, 1, 0 }, vtkm::Id3{ 1, 0, 0 }, vtkm::Id3{ 1, 1, 0 } });
-  auto originsAH = vtkm::cont::make_ArrayHandle(
-    { vtkm::Id3{ 0, 0, 0 }, vtkm::Id3{ 0, 3, 0 }, vtkm::Id3{ 4, 0, 0 }, vtkm::Id3{ 4, 3, 0 } });
-  auto sizesAH = vtkm::cont::make_ArrayHandle(
-    { vtkm::Id3{ 5, 4, 1 }, vtkm::Id3{ 5, 5, 1 }, vtkm::Id3{ 5, 4, 1 }, vtkm::Id3{ 5, 5, 1 } });
+  // Expected output
+  vtkm::cont::ArrayHandle<vtkm::Id> expectedIntrinsicVolume[numBlocks] = {
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 6, 9, 8, 24, 20, 1, 1 }),
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 6, 9, 8, 24, 20, 1, 1 }),
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 6, 9, 8, 24, 20, 1 }),
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 6, 9, 8, 24, 20, 1, 2 })
+  };
 
+  vtkm::cont::ArrayHandle<vtkm::Id> expectedDependentVolume[numBlocks] = {
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 6, 9, 18, 24, 46, 72, 1 }),
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 6, 9, 18, 24, 46, 72, 1 }),
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 6, 9, 18, 24, 46, 72 }),
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 6, 9, 18, 24, 46, 72, 2 })
+  };
+
+  // Create spatial decomposition
   vtkm::worklet::contourtree_distributed::SpatialDecomposition spatialDecomp(
-    blocksPerDim, globalSize, blockIndicesAH, originsAH, sizesAH);
-
+    blocksPerDim,
+    globalSize,
+    vtkm::cont::make_ArrayHandle(blockIndices, numBlocks, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(origins, numBlocks, vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(sizes, numBlocks, vtkm::CopyFlag::Off));
 
   // Load trees
   vtkm::worklet::contourtree_distributed::HierarchicalContourTree<vtkm::FloatDefault>
@@ -153,7 +150,9 @@ void TestHierarchicalHyperSweeper()
   for (vtkm::Id blockNo = 0; blockNo < numBlocks; ++blockNo)
   {
     hct[blockNo].Load(Testing::DataPath(filenames[blockNo]).c_str());
+#ifdef DEBUG_PRINT
     std::cout << hct[blockNo].DebugPrint("AfterLoad", __FILE__, __LINE__);
+#endif
   }
 
   // Create and add DIY blocks
@@ -225,18 +224,23 @@ void TestHierarchicalHyperSweeper()
   master.foreach (
     [](vtkm::worklet::contourtree_distributed::HyperSweepBlock<ContourTreeDataFieldType>* b,
        const vtkmdiy::Master::ProxyWithLink&) {
-      // Create HyperSweeper
+#ifdef DEBUG_PRINT
       std::cout << "Block " << b->GlobalBlockId << std::endl;
       std::cout << b->HierarchicalContourTree.DebugPrint(
         "Before initializing HyperSweeper", __FILE__, __LINE__);
+#endif
+      // Create HyperSweeper
       vtkm::worklet::contourtree_distributed::HierarchicalHyperSweeper<vtkm::Id,
                                                                        ContourTreeDataFieldType>
         hyperSweeper(
           b->GlobalBlockId, b->HierarchicalContourTree, b->IntrinsicVolume, b->DependentVolume);
 
+#ifdef DEBUG_PRINT
       std::cout << "Block " << b->GlobalBlockId << std::endl;
       std::cout << b->HierarchicalContourTree.DebugPrint(
         "After initializing HyperSweeper", __FILE__, __LINE__);
+#endif
+
       // Create mesh and initialize vertex counts
       vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler idRelabeler{ b->Origin,
                                                                                b->Size,
@@ -258,17 +262,23 @@ void TestHierarchicalHyperSweeper()
           b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
       }
 
+#ifdef DEBUG_PRINT
       std::cout << "Block " << b->GlobalBlockId << std::endl;
       std::cout << b->HierarchicalContourTree.DebugPrint(
         "After initializing intrinsic vertex count", __FILE__, __LINE__);
+#endif
+
       // Initialize dependentVolume by copy from intrinsicVolume
       vtkm::cont::Algorithm::Copy(b->IntrinsicVolume, b->DependentVolume);
 
       // Perform the local hypersweep
       hyperSweeper.LocalHyperSweep();
+
+#ifdef DEBUG_PRINT
       std::cout << "Block " << b->GlobalBlockId << std::endl;
       std::cout << b->HierarchicalContourTree.DebugPrint(
         "After local hypersweep", __FILE__, __LINE__);
+#endif
     });
 
   // Reduce
@@ -284,6 +294,7 @@ void TestHierarchicalHyperSweeper()
                   vtkm::worklet::contourtree_distributed::CobmineHyperSweepBlockFunctor<
                     ContourTreeDataFieldType>{});
 
+#ifdef PRINT_RESULT
   // Print
   vtkm::Id totalVolume = globalSize[0] * globalSize[1] * globalSize[2];
   master.foreach (
@@ -308,6 +319,28 @@ void TestHierarchicalHyperSweeper()
                                                totalVolume,
                                                b->IntrinsicVolume,
                                                b->DependentVolume);
+    });
+#endif
+
+  // Compare to expected results
+  master.foreach (
+    [&expectedIntrinsicVolume, &expectedDependentVolume](
+      vtkm::worklet::contourtree_distributed::HyperSweepBlock<ContourTreeDataFieldType>* b,
+      const vtkmdiy::Master::ProxyWithLink&) {
+#ifdef DEBUG_PRINT
+      vtkm::worklet::contourtree_augmented::PrintIndices(
+        "Intrinsic Volume", b->IntrinsicVolume, -1, std::cout);
+      vtkm::worklet::contourtree_augmented::PrintIndices(
+        "Expected Intrinsic Volume", expectedIntrinsicVolume[b->GlobalBlockId], -1, std::cout);
+      vtkm::worklet::contourtree_augmented::PrintIndices(
+        "Dependent Volume", b->DependentVolume, -1, std::cout);
+      vtkm::worklet::contourtree_augmented::PrintIndices(
+        "Expected Dependent Volume", expectedDependentVolume[b->GlobalBlockId], -1, std::cout);
+#endif
+      VTKM_TEST_ASSERT(test_equal_portals(expectedIntrinsicVolume[b->GlobalBlockId].ReadPortal(),
+                                          b->IntrinsicVolume.ReadPortal()));
+      VTKM_TEST_ASSERT(test_equal_portals(expectedDependentVolume[b->GlobalBlockId].ReadPortal(),
+                                          b->DependentVolume.ReadPortal()));
     });
 
   // Clean-up
