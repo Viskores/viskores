@@ -97,6 +97,7 @@
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/AttachmentAndSupernodeComparator.h>
+#include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/AttachmentIdsEqualComparator.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/AttachmentSuperparentAndIndexComparator.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/CopyBaseRegularStructureWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/CreateSuperarcsWorklet.h>
@@ -233,6 +234,7 @@ public:
 
   /// debug routine
   std::string DebugPrint(std::string message, const char* fileName, long lineNum);
+  void DebugSave(std::string filename);
 
 private:
   /// Used internally to Invoke worklets
@@ -501,7 +503,6 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   //    We add a tertiary sort on supernode ID so that on each block, it gets the correct "home" supernode ID for reconciliation
   //: note that we use a standard comparator that tie breaks with index. This separates into
   //    segments with identical superparent round, which is all we need for now
-  std::cout << this->DebugPrint("PrepareAugmentedTree 1", __FILE__, __LINE__) << std::endl;
   vtkm::cont::Algorithm::Copy(
     vtkm::cont::ArrayHandleIndex(this->GlobalRegularIds.GetNumberOfValues()), this->AttachmentIds);
   // 1a.  We now need to suppress duplicates,
@@ -511,11 +512,11 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
       AttachmentSuperparentAndIndexComparator attachmentSuperparentAndIndexComparator(
         this->SuperparentRounds, this->GlobalRegularIds, this->SupernodeIds);
     vtkm::cont::Algorithm::Sort(this->AttachmentIds, attachmentSuperparentAndIndexComparator);
-    // Remove the duplicate values
-    vtkm::cont::Algorithm::Unique(this->AttachmentIds);
+    // Remove the duplicate values using GlobalRegularIds[AttachmentIds] for checking for equality
+    vtkm::worklet::contourtree_distributed::hierarchical_augmenter::AttachmentIdsEqualComparator
+      attachmentIdsEqualComparator(this->GlobalRegularIds);
+    vtkm::cont::Algorithm::Unique(this->AttachmentIds, attachmentIdsEqualComparator);
   }
-
-  std::cout << this->DebugPrint("PrepareAugmentedTree 2", __FILE__, __LINE__) << std::endl;
 
   //  2.  Set up array with bounds for subsegments
   //    We do +2 because the top level is extra, and we need an extra sentinel value at the end
@@ -542,8 +543,6 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   firstAttachmentPointInRoundPortal.Set(this->BaseTree->NumRounds + 1,
                                         this->AttachmentIds.GetNumberOfValues());
 
-  std::cout << this->DebugPrint("PrepareAugmentedTree 3", __FILE__, __LINE__) << std::endl;
-
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              this->DebugPrint("First Attachment Point Set Where Possible", __FILE__, __LINE__));
@@ -562,8 +561,6 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
     }
   } // per round
 
-  std::cout << this->DebugPrint("PrepareAugmentedTree 4", __FILE__, __LINE__) << std::endl;
-
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info, DebugPrint("Subsegments Identified", __FILE__, __LINE__));
 #endif
@@ -578,9 +575,6 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
              this->DebugPrint("Augmented Tree Prepared", __FILE__, __LINE__));
 
 #endif
-
-  std::cout << this->DebugPrint("PrepareAugmentedTree 5", __FILE__, __LINE__) << std::endl;
-
 } // PrepareAugmentedTree()
 
 
@@ -1477,6 +1471,108 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
   //                             );
   return resultStream.str();
 } // DebugPrint()
+
+
+// debug routine
+template <typename FieldType>
+void HierarchicalAugmenter<FieldType>::DebugSave(std::string filename)
+{ // DebugSave
+  std::ofstream outstream(filename);
+  outstream << "Augmented Tree:" << std::endl;
+  vtkm::worklet::contourtree_augmented::IdArrayType temp;
+  vtkm::cont::Algorithm::Copy(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(
+                                0, this->AugmentedTree->Supernodes.GetNumberOfValues()),
+                              temp);
+  std::string dumpVolumesString =
+    vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>::DumpVolumes(
+      this->AugmentedTree->Supernodes,
+      this->AugmentedTree->Superarcs,
+      this->AugmentedTree->RegularNodeGlobalIds,
+      0,
+      temp,
+      temp);
+  outstream << dumpVolumesString;
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Global Regular IDs", this->GlobalRegularIds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintValues("Data Values", this->DataValues, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Supernode IDs", this->SupernodeIds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Superparents", this->Superparents, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Superparent Rounds", this->SuperparentRounds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "WhichRounds", this->WhichRounds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Out Global Regular IDs", this->OutData.GlobalRegularIds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintValues(
+    "Out Data Values", this->OutData.DataValues, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Out Supernode IDs", this->OutData.SupernodeIds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Out Superparents", this->OutData.Superparents, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Out Superparent Rounds", this->OutData.SuperparentRounds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Out WhichRounds", this->OutData.WhichRounds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "In Global Regular IDs", this->InData.GlobalRegularIds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintValues(
+    "In Data Values", this->InData.DataValues, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "In Supernode IDs", this->InData.SupernodeIds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "In Superparents", this->InData.Superparents, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "In Superparent Rounds", this->InData.SuperparentRounds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "In WhichRounds", this->InData.WhichRounds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "First Attach / Rd", this->FirstAttachmentPointInRound, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "AttachmentIDs", this->AttachmentIds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "New Supernode IDs", this->NewSupernodeIds, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Kept Supernodes", this->KeptSupernodes, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Supernode Sorter", this->SupernodeSorter, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Global Regular ID", this->GlobalRegularIdSet, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintValues(
+    "Data Values", this->DataValueSet, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Superparents", this->SuperparentSet, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "SupernodeIDs", this->SupernodeIdSet, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "Supernode ID", this->SupernodeSorter, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintArrayHandle(
+    "Permuted Superparent",
+    vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->SuperparentSet),
+    -1,
+    outstream);
+  vtkm::worklet::contourtree_augmented::PrintArrayHandle(
+    "Permuted Value",
+    vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->DataValueSet),
+    -1,
+    outstream);
+  vtkm::worklet::contourtree_augmented::PrintArrayHandle(
+    "Permuted Global ID",
+    vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->GlobalRegularIdSet),
+    -1,
+    outstream);
+  vtkm::worklet::contourtree_augmented::PrintArrayHandle(
+    "Permuted Supernode ID",
+    vtkm::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->SupernodeIdSet),
+    -1,
+    outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "RegularNodesNeeded", this->RegularNodesNeeded, -1, outstream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "RegularSuperparents", this->RegularSuperparents, -1, outstream);
+} // DebugSave
+
 
 
 } // namespace contourtree_distributed

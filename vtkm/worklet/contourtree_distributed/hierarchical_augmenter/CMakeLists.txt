@@ -13,6 +13,7 @@ set(headers
   IsAscendingDecorator.h
   IsAttachementPointNeededPredicate.h
   AttachmentSuperparentAndIndexComparator.h
+  AttachmentIdsEqualComparator.h
   SetFirstAttachmentPointInRoundWorklet.h
   UpdateHyperstructureSetHyperarcsAndNodesWorklet.h
   UpdateHyperstructureSetSuperchildrenWorklet.h
