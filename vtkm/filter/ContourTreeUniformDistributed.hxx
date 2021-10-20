@@ -598,7 +598,9 @@ inline VTKM_CONT void ContourTreeUniformDistributed::PostExecute(
   vtkm::cont::Timer timer;
   timer.Start();
   // We are running in parallel and need to merge the contour tree in PostExecute
-  // TODO/FIXME: Make sure this still makes sense
+  // TODO/FIXME: This filter should only be used in a parallel setting with more
+  // than one block. Is there a better way to enforce this? thrown an exception
+  // instead of an empty return? What is the appropriate exception?
   if (this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks() == 1)
   {
     return;
@@ -1143,8 +1145,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         }
         else
         {
-          // TODO/FIXME: For getting owned vertices, it should not make a difference if marching
-          // cubes or not. Verify.
+          // For getting owned vertices, it does not make a difference if we are using marching cubes or not.
           vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation3DFreudenthal mesh(b->Size);
           hyperSweeper.InitializeIntrinsicVertexCount(
             b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
