@@ -17,18 +17,9 @@
 
 #include <vtkm/internal/Configure.h>
 
-#include <vtkm/testing/Testing.h>
-
 #include <vtkm/List.h>
 
 #include <sstream>
-
-#ifdef VTKM_ENABLE_TBB
-#include <tbb/task_scheduler_init.h>
-#endif // TBB
-
-// For the TBB implementation, the number of threads can be customized using a
-// "NumThreads [numThreads]" argument.
 
 namespace
 {
@@ -112,30 +103,6 @@ int main(int argc, char* argv[])
   {
     vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
-
-// Handle NumThreads command-line arg:
-#ifdef VTKM_ENABLE_TBB
-  int numThreads = tbb::task_scheduler_init::automatic;
-#endif // TBB
-
-  if (argc == 3)
-  {
-    if (std::string(argv[1]) == "NumThreads")
-    {
-#ifdef VTKM_ENABLE_TBB
-      std::istringstream parse(argv[2]);
-      parse >> numThreads;
-      std::cout << "Selected " << numThreads << " TBB threads." << std::endl;
-#else
-      std::cerr << "NumThreads valid only on TBB. Ignoring." << std::endl;
-#endif // TBB
-    }
-  }
-
-#ifdef VTKM_ENABLE_TBB
-  // Must not be destroyed as long as benchmarks are running:
-  tbb::task_scheduler_init init(numThreads);
-#endif // TBB
 
   // handle benchmarking related args and run benchmarks:
   VTKM_EXECUTE_BENCHMARKS(argc, args.data());

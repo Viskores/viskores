@@ -85,10 +85,16 @@ void PrintValues(std::string label,
                  const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                  vtkm::Id nValues = -1,
                  std::ostream& outStream = std::cout);
+template <typename T>
 void PrintIndices(std::string label,
-                  const vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
+                  const vtkm::cont::ArrayHandle<T>& iVec,
                   vtkm::Id nIndices = -1,
                   std::ostream& outStream = std::cout);
+template <typename T>
+void PrintArray(std::string label,
+                const T& iVec,
+                vtkm::Id nIndices = -1,
+                std::ostream& outStream = std::cout);
 template <typename T, typename StorageType>
 void PrintSortedValues(std::string label,
                        const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
@@ -213,8 +219,9 @@ inline void PrintSortedValues(std::string label,
 
 
 // routine for printing index arrays
+template <typename T>
 inline void PrintIndices(std::string label,
-                         const vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
+                         const vtkm::cont::ArrayHandle<T>& iVec,
                          vtkm::Id nIndices,
                          std::ostream& outStream)
 { // PrintIndices()
@@ -235,6 +242,26 @@ inline void PrintIndices(std::string label,
   outStream << std::endl;
 } // PrintIndices()
 
+// routine for printing index arrays
+template <typename T>
+inline void PrintArray(std::string label, const T& iVec, vtkm::Id nArray, std::ostream& outStream)
+{ // PrintArray()
+  // -1 means full size
+  if (nArray == -1)
+  {
+    nArray = iVec.GetNumberOfValues();
+  }
+
+  // print the label
+  PrintLabel(label, outStream);
+
+  auto portal = iVec.ReadPortal();
+  for (vtkm::Id entry = 0; entry < nArray; entry++)
+    PrintIndexType(portal.Get(entry), outStream);
+
+  // and the std::endl
+  outStream << std::endl;
+} // PrintArray()
 
 template <typename T, typename StorageType>
 inline void PrintLabelledDataBlock(std::string label,

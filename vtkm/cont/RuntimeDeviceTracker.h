@@ -85,14 +85,14 @@ public:
   VTKM_CONT
   void Reset();
 
-  /// \brief Disable the given device
+  /// \brief Disable the given device.
   ///
   /// The main intention of \c RuntimeDeviceTracker is to keep track of what
   /// devices are working for VTK-m. However, it can also be used to turn
   /// devices on and off. Use this method to disable (turn off) a given device.
   /// Use \c ResetDevice to turn the device back on (if it is supported).
   ///
-  /// Passing DeviceAdapterTagAny to this will disable all devices
+  /// Passing DeviceAdapterTagAny to this will disable all devices.
   ///
   VTKM_CONT void DisableDevice(DeviceAdapterId deviceId);
 
@@ -109,6 +109,13 @@ public:
   /// exist on the system.
   ///
   VTKM_CONT void ForceDevice(DeviceAdapterId deviceId);
+
+  /// \brief Copyies the state from the given device.
+  ///
+  /// This is a convenient way to allow the `RuntimeDeviceTracker` on one thread
+  /// copy the behavior from another thread.
+  ///
+  VTKM_CONT void CopyStateFrom(const vtkm::cont::RuntimeDeviceTracker& tracker);
 
   VTKM_CONT void PrintSummary(std::ostream& out) const;
 
@@ -226,4 +233,4 @@ vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker();
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_filter_RuntimeDeviceTracker_h
+#endif //vtk_m_cont_RuntimeDeviceTracker_h

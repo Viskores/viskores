@@ -11,6 +11,7 @@
 #define vtk_m_cont_CellSetExplicit_h
 
 #include <vtkm/CellShape.h>
+#include <vtkm/Deprecated.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandleCast.h>
@@ -18,6 +19,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleOffsetsToNumComponents.h>
 #include <vtkm/cont/CellSet.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 #include <vtkm/cont/internal/ConnectivityExplicitInternals.h>
 #include <vtkm/exec/ConnectivityExplicit.h>
 
@@ -37,6 +39,20 @@ struct CellSetExplicitConnectivityChooser
   using ConnectivityType = vtkm::cont::internal::ConnectivityExplicitInternals<>;
 };
 
+// The connectivity generally used for the visit-points-with-cells connectivity.
+// This type of connectivity does not have variable shape types, and since it is
+// never really provided externally we can use the defaults for the other arrays.
+using DefaultVisitPointsWithCellsConnectivityExplicit =
+  vtkm::cont::internal::ConnectivityExplicitInternals<
+    typename ArrayHandleConstant<vtkm::UInt8>::StorageTag>;
+
+VTKM_CONT_EXPORT void BuildReverseConnectivity(
+  const vtkm::cont::UnknownArrayHandle& connections,
+  const vtkm::cont::UnknownArrayHandle& offsets,
+  vtkm::Id numberOfPoints,
+  vtkm::cont::detail::DefaultVisitPointsWithCellsConnectivityExplicit& visitPointsWithCells,
+  vtkm::cont::DeviceAdapterId device);
+
 } // namespace detail
 
 #ifndef VTKM_DEFAULT_SHAPES_STORAGE_TAG
@@ -50,51 +66,6 @@ struct CellSetExplicitConnectivityChooser
 #ifndef VTKM_DEFAULT_OFFSETS_STORAGE_TAG
 #define VTKM_DEFAULT_OFFSETS_STORAGE_TAG VTKM_DEFAULT_STORAGE_TAG
 #endif
-
-template <typename S1, typename S2>
-void ConvertNumIndicesToOffsets(const vtkm::cont::ArrayHandle<vtkm::Id, S1>& numIndices,
-                                vtkm::cont::ArrayHandle<vtkm::Id, S2>& offsets)
-{
-  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-  vtkm::cont::Algorithm::ScanExtended(numIndices, offsets);
-}
-
-template <typename T, typename S1, typename S2>
-void ConvertNumIndicesToOffsets(const vtkm::cont::ArrayHandle<T, S1>& numIndices,
-                                vtkm::cont::ArrayHandle<vtkm::Id, S2>& offsets)
-{
-  const auto castCounts = vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numIndices);
-  ConvertNumIndicesToOffsets(castCounts, offsets);
-}
-
-template <typename T, typename S1, typename S2>
-void ConvertNumIndicesToOffsets(const vtkm::cont::ArrayHandle<T, S1>& numIndices,
-                                vtkm::cont::ArrayHandle<vtkm::Id, S2>& offsets,
-                                vtkm::Id& connectivitySize /* outparam */)
-{
-  ConvertNumIndicesToOffsets(numIndices, offsets);
-  connectivitySize = vtkm::cont::ArrayGetValue(offsets.GetNumberOfValues() - 1, offsets);
-}
-
-template <typename T, typename S>
-vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumIndicesToOffsets(
-  const vtkm::cont::ArrayHandle<T, S>& numIndices)
-{
-  vtkm::cont::ArrayHandle<vtkm::Id> offsets;
-  ConvertNumIndicesToOffsets(numIndices, offsets);
-  return offsets;
-}
-
-template <typename T, typename S>
-vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumIndicesToOffsets(
-  const vtkm::cont::ArrayHandle<T, S>& numIndices,
-  vtkm::Id& connectivityLength /* outparam */)
-{
-  vtkm::cont::ArrayHandle<vtkm::Id> offsets;
-  ConvertNumIndicesToOffsets(numIndices, offsets, connectivityLength);
-  return offsets;
-}
 
 template <typename ShapesStorageTag = VTKM_DEFAULT_SHAPES_STORAGE_TAG,
           typename ConnectivityStorageTag = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
@@ -274,11 +245,22 @@ public:
 protected:
   VTKM_CONT void BuildConnectivity(vtkm::cont::DeviceAdapterId,
                                    vtkm::TopologyElementTagCell,
-                                   vtkm::TopologyElementTagPoint) const;
+                                   vtkm::TopologyElementTagPoint) const
+  {
+    VTKM_ASSERT(this->Data->CellPointIds.ElementsValid);
+    // no-op
+  }
 
-  VTKM_CONT void BuildConnectivity(vtkm::cont::DeviceAdapterId,
+  VTKM_CONT void BuildConnectivity(vtkm::cont::DeviceAdapterId device,
                                    vtkm::TopologyElementTagPoint,
-                                   vtkm::TopologyElementTagCell) const;
+                                   vtkm::TopologyElementTagCell) const
+  {
+    detail::BuildReverseConnectivity(this->Data->CellPointIds.Connectivity,
+                                     this->Data->CellPointIds.Offsets,
+                                     this->Data->NumberOfPoints,
+                                     this->Data->PointCellIds,
+                                     device);
+  }
 
   VTKM_CONT bool HasConnectivityImpl(vtkm::TopologyElementTagCell,
                                      vtkm::TopologyElementTagPoint) const
@@ -381,8 +363,7 @@ struct CellSetExplicitConnectivityChooser<CellSetType,
 {
   //only specify the shape type as it will be constant as everything
   //is a vertex. otherwise use the defaults.
-  using ConnectivityType = vtkm::cont::internal::ConnectivityExplicitInternals<
-    typename ArrayHandleConstant<vtkm::UInt8>::StorageTag>;
+  using ConnectivityType = vtkm::cont::detail::DefaultVisitPointsWithCellsConnectivityExplicit;
 };
 
 } // namespace detail

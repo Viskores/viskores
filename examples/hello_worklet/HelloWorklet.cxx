@@ -13,13 +13,15 @@
 #include <vtkm/filter/CreateResult.h>
 #include <vtkm/filter/FilterField.h>
 
+#include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/cont/Initialize.h>
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-
 #include <vtkm/VectorAnalysis.h>
+
+#include <cstdlib>
+#include <iostream>
 
 namespace vtkm
 {
@@ -81,16 +83,34 @@ public:
 
 int main(int argc, char** argv)
 {
-  vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::Strict);
+  vtkm::cont::Initialize(argc, argv);
 
-  vtkm::cont::testing::MakeTestDataSet testDataMaker;
-  vtkm::cont::DataSet inputData = testDataMaker.Make3DExplicitDataSetCowNose();
+  if ((argc < 3) || (argc > 4))
+  {
+    std::cerr << "Usage: " << argv[0] << " in_data.vtk field_name [out_data.vtk]\n\n";
+    std::cerr << "For example, you could use the simple_unstructured_bin.vtk that comes with the "
+                 "VTK-m source:\n\n";
+    std::cerr
+      << "  " << argv[0]
+      << " <path-to-vtkm-source>/data/data/unstructured/simple_unstructured_bin.vtk vectors\n";
+    return 1;
+  }
+  std::string infilename = argv[1];
+  std::string infield = argv[2];
+  std::string outfilename = "out_data.vtk";
+  if (argc == 4)
+  {
+    outfilename = argv[3];
+  }
+
+  vtkm::io::VTKDataSetReader reader(infilename);
+  vtkm::cont::DataSet inputData = reader.ReadDataSet();
 
   vtkm::filter::HelloField helloField;
-  helloField.SetActiveField("point_vectors");
+  helloField.SetActiveField(infield);
   vtkm::cont::DataSet outputData = helloField.Execute(inputData);
 
-  vtkm::io::VTKDataSetWriter writer("out_data.vtk");
+  vtkm::io::VTKDataSetWriter writer(outfilename);
   writer.WriteDataSet(outputData);
 
   return 0;

@@ -97,6 +97,11 @@ if (NOT DEFINED VTKm_ENABLE_TESTING)
     endif()
 endif()
 
+# By default: VTKm_ENABLE_TESTING -> VTKm_ENABLE_TESTING_LIB
+include(CMakeDependentOption)
+cmake_dependent_option(VTKm_ENABLE_TESTING_LIBRARY "Enable VTKm Testing Library" OFF "NOT VTKm_ENABLE_TESTING" ON)
+mark_as_advanced(VTKm_ENABLE_TESTING_LIB)
+
 vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
@@ -139,7 +144,7 @@ vtkm_option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no hea
 # VTK does.
 vtkm_option(VTKm_HIDE_PRIVATE_SYMBOLS "Hide symbols from libraries." ON)
 
-vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" OFF)
+vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
 # This flag can be used to prevent VTK-m from exporting its warning flags in its
@@ -153,10 +158,13 @@ vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README a
 
 # We are in the process of deprecating the use of virtual methods because they
 # are not well supported on many accelerators. Turn this option on to remove
-# the code entirely. Note that the deprecation of virtual methods is work in
-# progress, so not all use of virtual methods may be done. In VTK-m 2.0
-# virtual methods should be removed entirely and this option will be removed.
+# the code entirely. In VTK-m 2.0 virtual methods should be removed entirely
+# and this option will be removed.
 vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" OFF)
+
+# In Python wheels, having SONAME suffixes just ends up duplicating files.
+# Allow VTK to turn off these symlinks for its wheel distribution.
+vtkm_option(VTKm_SKIP_LIBRARY_VERSIONS "Skip versioning VTK-m libraries" OFF)
 
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
@@ -168,6 +176,7 @@ mark_as_advanced(
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
   VTKm_NO_DEPRECATED_VIRTUAL
+  VTKm_SKIP_LIBRARY_VERSIONS
   )
 
 #-----------------------------------------------------------------------------
@@ -215,7 +224,7 @@ if (VTKm_ENABLE_TESTING)
   endif()
 
 
-  configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
+  configure_file(CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
 
   #-----------------------------------------------------------------------------
@@ -270,6 +279,19 @@ write_basic_package_version_file(
   ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
+
+configure_file(${VTKm_SOURCE_DIR}/config/vtkm_config.mk.in
+  ${VTKm_BINARY_DIR}/config/vtkm_config.mk @ONLY)
+install(FILES ${VTKm_BINARY_DIR}/config/vtkm_config.mk
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
+  )
+configure_file(${VTKm_SOURCE_DIR}/config/vtkm.pc.in
+  ${VTKm_BINARY_DIR}/config/vtkm.pc @ONLY)
+install(FILES ${VTKm_BINARY_DIR}/config/vtkm.pc
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
+  )
+
+include(VTKmInstallCMakePackage)
 
 # Install the readme and license files.
 if (NOT VTKm_NO_INSTALL_README_LICENSE)

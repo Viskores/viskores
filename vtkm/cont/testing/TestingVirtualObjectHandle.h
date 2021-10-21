@@ -17,6 +17,12 @@
 #include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This test should be disabled if the VTKm_NO_DEPRECATED_VIRTUAL is true."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 #define ARRAY_LEN 8
 
 namespace vtkm
@@ -220,5 +226,7 @@ public:
 }
 }
 } // vtkm::cont::testing
+
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif

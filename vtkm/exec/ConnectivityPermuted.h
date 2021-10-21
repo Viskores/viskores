@@ -27,13 +27,7 @@ class ConnectivityPermutedVisitCellsWithPoints
 public:
   using SchedulingRangeType = typename OriginalConnectivity::SchedulingRangeType;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  ConnectivityPermutedVisitCellsWithPoints()
-    : Portal()
-    , Connectivity()
-  {
-  }
+  ConnectivityPermutedVisitCellsWithPoints() = default;
 
   VTKM_EXEC_CONT
   ConnectivityPermutedVisitCellsWithPoints(const PermutationPortal& portal,
@@ -43,12 +37,8 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
-  ConnectivityPermutedVisitCellsWithPoints(const ConnectivityPermutedVisitCellsWithPoints& src)
-    : Portal(src.Portal)
-    , Connectivity(src.Connectivity)
-  {
-  }
+  ConnectivityPermutedVisitCellsWithPoints(const ConnectivityPermutedVisitCellsWithPoints& src) =
+    default;
 
   ConnectivityPermutedVisitCellsWithPoints& operator=(
     const ConnectivityPermutedVisitCellsWithPoints& src) = default;

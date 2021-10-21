@@ -36,6 +36,10 @@
 
 #include <math.h>
 
+#ifdef VTKM_GCC
+#include <fenv.h>
+#endif
+
 // Try to enforce using the correct testing version. (Those that include the
 // control environment have more possible exceptions.) This is not guaranteed
 // to work. To make it more likely, place the Testing.h include last.
@@ -66,13 +70,14 @@
 
 #define VTKM_TEST_ASSERT(...)       \
   ::vtkm::testing::Testing::Assert( \
-    VTKM_STRINGIFY_FIRST(__VA_ARGS__), __FILE__, __LINE__, __VA_ARGS__)
+    VTKM_STRINGIFY_FIRST(__VA_ARGS__), __FILE__, __LINE__, __func__, __VA_ARGS__)
 
 /// \def VTKM_TEST_FAIL(messages..)
 ///
 /// Causes a test to fail with the given \a messages. At least one argument must be given.
 
-#define VTKM_TEST_FAIL(...) ::vtkm::testing::Testing::TestFail(__FILE__, __LINE__, __VA_ARGS__)
+#define VTKM_TEST_FAIL(...) \
+  ::vtkm::testing::Testing::TestFail(__FILE__, __LINE__, __func__, __VA_ARGS__)
 
 class TestEqualResult
 {
@@ -102,6 +107,29 @@ namespace vtkm
 {
 namespace testing
 {
+
+// TODO: Move these 2 functions to the testing library.
+
+// Note: We are explicitly not trapping FE_INEXACT and FE_UNDERFLOW. Inexact numbers are too common
+// to completely remove (that is the nature of floating point, especially when converting from
+// integers), and underflows are considered normal in rendering (for example, the specular
+// highlight essentially goes to zero most places).
+
+inline void FloatingPointExceptionTrapEnable()
+{
+  // Turn on floating point exception trapping where available
+#ifdef VTKM_GCC
+  feenableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
+#endif
+}
+
+inline void FloatingPointExceptionTrapDisable()
+{
+  // Turn on floating point exception trapping where available
+#ifdef VTKM_GCC
+  fedisableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
+#endif
+}
 
 // If you get an error about this class definition being incomplete, it means
 // that you tried to get the name of a type that is not specified. You can
@@ -295,9 +323,13 @@ public:
   {
   public:
     template <typename... Ts>
-    VTKM_CONT TestFailure(const std::string& file, vtkm::Id line, Ts&&... messages)
+    VTKM_CONT TestFailure(const std::string& file,
+                          vtkm::Id line,
+                          const char* func,
+                          Ts&&... messages)
       : File(file)
       , Line(line)
+      , Func(func)
     {
       std::stringstream messageStream;
       this->AppendMessages(messageStream, std::forward<Ts>(messages)...);
@@ -306,6 +338,7 @@ public:
 
     VTKM_CONT const std::string& GetFile() const { return this->File; }
     VTKM_CONT vtkm::Id GetLine() const { return this->Line; }
+    VTKM_CONT const char* GetFunction() const { return this->Func; }
     VTKM_CONT const std::string& GetMessage() const { return this->Message; }
 
   private:
@@ -347,6 +380,7 @@ public:
 
     std::string File;
     vtkm::Id Line;
+    const char* Func;
     std::string Message;
   };
 
@@ -354,6 +388,7 @@ public:
   static VTKM_CONT void Assert(const std::string& conditionString,
                                const std::string& file,
                                vtkm::Id line,
+                               const char* func,
                                bool condition,
                                Ts&&... messages)
   {
@@ -363,30 +398,36 @@ public:
     }
     else
     {
-      throw TestFailure(file, line, std::forward<Ts>(messages)..., " (", conditionString, ")");
+      throw TestFailure(
+        file, line, func, std::forward<Ts>(messages)..., " (", conditionString, ")");
     }
   }
 
   static VTKM_CONT void Assert(const std::string& conditionString,
                                const std::string& file,
                                vtkm::Id line,
+                               const char* func,
                                bool condition)
   {
-    Assert(conditionString, file, line, condition, "Test assertion failed");
+    Assert(conditionString, file, line, func, condition, "Test assertion failed");
   }
 
   static VTKM_CONT void Assert(const std::string& conditionString,
                                const std::string& file,
                                vtkm::Id line,
+                               const char* func,
                                const TestEqualResult& result)
   {
-    Assert(conditionString, file, line, static_cast<bool>(result), result.GetMergedMessage());
+    Assert(conditionString, file, line, func, static_cast<bool>(result), result.GetMergedMessage());
   }
 
   template <typename... Ts>
-  static VTKM_CONT void TestFail(const std::string& file, vtkm::Id line, Ts&&... messages)
+  static VTKM_CONT void TestFail(const std::string& file,
+                                 vtkm::Id line,
+                                 const char* func,
+                                 Ts&&... messages)
   {
-    throw TestFailure(file, line, std::forward<Ts>(messages)...);
+    throw TestFailure(file, line, func, std::forward<Ts>(messages)...);
   }
 
 #ifndef VTKM_TESTING_IN_CONT
@@ -429,24 +470,28 @@ public:
       vtkm::cont::InitLogging(argc, argv);
     }
 
+    // Some simulations trap floating point exceptions, and we want to be able to run in them
+    vtkm::testing::FloatingPointExceptionTrapEnable();
+
     try
     {
       function();
     }
-    catch (TestFailure& error)
+    catch (TestFailure const& error)
     {
-      std::cout << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << std::endl
-                << error.GetMessage() << std::endl;
+      std::cerr << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << ":"
+                << error.GetFunction() << "\n"
+                << error.GetMessage() << "\n";
       return 1;
     }
-    catch (std::exception& error)
+    catch (std::exception const& error)
     {
-      std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      std::cerr << "***** STL exception throw.\n" << error.what() << "\n";
       return 1;
     }
     catch (...)
     {
-      std::cout << "***** Unidentified exception thrown." << std::endl;
+      std::cerr << "***** Unidentified exception thrown.\n";
       return 1;
     }
     return 0;
@@ -860,8 +905,8 @@ static inline VTKM_CONT void CheckPortal(const PortalType& portal)
     if (!test_equal(expectedValue, foundValue))
     {
       std::stringstream message;
-      message << "Got unexpected value in array." << std::endl
-              << "Expected: " << expectedValue << ", Found: " << foundValue << std::endl;
+      message << "Got unexpected value in array. Expected: " << expectedValue
+              << ", Found: " << foundValue << "\n";
       VTKM_TEST_FAIL(message.str().c_str());
     }
   }

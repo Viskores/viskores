@@ -73,8 +73,10 @@ set(headers
   ColorTable.h
   ColorTableMap.h
   ColorTableSamples.h
+  ConvertNumComponentsToOffsets.h
   CoordinateSystem.h
   DataSet.h
+  DataSetBuilderCurvilinear.h
   DataSetBuilderExplicit.h
   DataSetBuilderRectilinear.h
   DataSetBuilderUniform.h
@@ -121,7 +123,6 @@ set(headers
   UncertainArrayHandle.h
   UnknownArrayHandle.h
   VariantArrayHandle.h
-  VirtualObjectHandle.h
   )
 
 set(template_sources
@@ -146,8 +147,9 @@ set(sources
   internal/Buffer.cxx
   internal/DeviceAdapterMemoryManager.cxx
   internal/DeviceAdapterMemoryManagerShared.cxx
-  internal/TransferInfo.cxx
-  internal/VirtualObjectTransfer.cxx
+  internal/RuntimeDeviceConfiguration.cxx
+  internal/RuntimeDeviceConfigurationOptions.cxx
+  internal/RuntimeDeviceOption.cxx
   Initialize.cxx
   Logging.cxx
   RuntimeDeviceTracker.cxx
@@ -160,6 +162,7 @@ set(sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   ArrayCopy.cxx
+  ArrayGetValues.cxx
   ArrayRangeCompute.cxx
   AssignerPartitionedDataSet.cxx
   BoundsCompute.cxx
@@ -174,8 +177,10 @@ set(device_sources
   CellSetExtrude.cxx
   CellSetStructured.cxx
   ColorTable.cxx
+  ConvertNumComponentsToOffsets.cxx
   CoordinateSystem.cxx
   DataSet.cxx
+  DataSetBuilderCurvilinear.cxx
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
@@ -196,6 +201,7 @@ if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
     CellLocator.h
     PointLocator.h
     StorageVirtual.h
+    VirtualObjectHandle.h
     )
 
   set(template_sources ${template_sources}
@@ -206,6 +212,8 @@ if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
   set(device_sources ${device_sources}
     ArrayHandleVirtual.cxx
     CellLocator.cxx
+    internal/TransferInfo.cxx
+    internal/VirtualObjectTransfer.cxx
     PointLocator.cxx
     StorageVirtual.cxx
     )
@@ -311,4 +319,6 @@ if(TARGET vtkm_loguru)
 endif()
 
 #-----------------------------------------------------------------------------
-add_subdirectory(testing)
+if(VTKm_ENABLE_TESTING_LIBRARY)
+  add_subdirectory(testing)
+endif()

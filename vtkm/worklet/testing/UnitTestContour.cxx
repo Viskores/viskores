@@ -16,6 +16,7 @@
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/ClipWithImplicitFunction.h>
+#include <vtkm/filter/GenerateIds.h>
 #include <vtkm/source/Tangle.h>
 #include <vtkm/worklet/Contour.h>
 
@@ -163,9 +164,8 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   //Set point scalar
   dataSet.AddField(vtkm::cont::Field(
     "distanceToOrigin", vtkm::cont::Field::Association::POINTS, distanceToOrigin));
-  dataSet.AddField(vtkm::cont::Field("distanceToOther",
-                                     vtkm::cont::Field::Association::POINTS,
-                                     vtkm::cont::VariantArrayHandle(distanceToOther)));
+  dataSet.AddField(
+    vtkm::cont::Field("distanceToOther", vtkm::cont::Field::Association::POINTS, distanceToOther));
 
   CellSet cellSet;
   cellSet.Fill((dim + 1) * (dim + 1) * (dim + 1), HexTag::Id, HexTraits::NUM_POINTS, connectivity);
@@ -186,12 +186,16 @@ void TestContourUniformGrid()
 
   vtkm::Id3 dims(4, 4, 4);
   vtkm::source::Tangle tangle(dims);
-  vtkm::cont::DataSet dataSet = tangle.Execute();
+  vtkm::filter::GenerateIds genIds;
+  genIds.SetUseFloat(true);
+  genIds.SetGeneratePointIds(false);
+  genIds.SetCellFieldName("cellvar");
+  vtkm::cont::DataSet dataSet = genIds.Execute(tangle.Execute());
 
   vtkm::cont::CellSetStructured<3> cellSet;
   dataSet.GetCellSet().CopyTo(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-  dataSet.GetField("nodevar").GetData().AsArrayHandle(pointFieldArray);
+  dataSet.GetField("tangle").GetData().AsArrayHandle(pointFieldArray);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
   dataSet.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
@@ -361,7 +365,11 @@ void TestContourClipped()
 
   vtkm::Id3 dims(4, 4, 4);
   vtkm::source::Tangle tangle(dims);
-  vtkm::cont::DataSet dataSet = tangle.Execute();
+  vtkm::filter::GenerateIds genIds;
+  genIds.SetUseFloat(true);
+  genIds.SetGeneratePointIds(false);
+  genIds.SetCellFieldName("cellvar");
+  vtkm::cont::DataSet dataSet = genIds.Execute(tangle.Execute());
 
   vtkm::Plane plane(vtkm::make_Vec(0.51, 0.51, 0.51), vtkm::make_Vec(1, 1, 1));
   vtkm::filter::ClipWithImplicitFunction clip;
@@ -371,7 +379,7 @@ void TestContourClipped()
   vtkm::cont::CellSetExplicit<> cellSet;
   clipped.GetCellSet().CopyTo(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-  clipped.GetField("nodevar").GetData().AsArrayHandle(pointFieldArray);
+  clipped.GetField("tangle").GetData().AsArrayHandle(pointFieldArray);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
   clipped.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 

@@ -77,10 +77,6 @@
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/TreeCompiler.h>
 
-#ifdef ENABLE_SET_NUM_THREADS
-#include "tbb/task_scheduler_init.h"
-#endif
-
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <vtkm/thirdparty/diy/Configure.h>
@@ -237,28 +233,6 @@ int main(int argc, char* argv[])
     forwardSummary = true;
   }
 
-#ifdef ENABLE_SET_NUM_THREADS
-  int numThreads = tbb::task_scheduler_init::default_num_threads();
-  if (parser.hasOption("--numThreads"))
-  {
-    bool deviceIsTBB = (device.GetName() == "TBB");
-    // Set the number of threads to be used for TBB
-    if (deviceIsTBB)
-    {
-      numThreads = std::stoi(parser.getOption("--numThreads"));
-      tbb::task_scheduler_init schedulerInit(numThreads);
-    }
-    // Print warning about mismatch between the --numThreads and -d/--device option
-    else
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-                 "WARNING: Mismatch between --numThreads and -d/--device option."
-                 "numThreads option requires the use of TBB as device. "
-                 "Ignoring the numThread option.");
-    }
-  }
-#endif
-
   int numBlocks = size;
   int blocksPerRank = 1;
   if (parser.hasOption("--numBlocks"))
@@ -305,10 +279,6 @@ int main(int argc, char* argv[])
                 << "computation (Default=False). " << std::endl;
       std::cout << "--saveTreeCompilerData  Save data files needed for the tree compiler"
                 << std::endl;
-#ifdef ENABLE_SET_NUM_THREADS
-      std::cout << "--numThreads     Specifiy the number of threads to use. "
-                << "Available only with TBB." << std::endl;
-#endif
       std::cout << "--numBlocks      Number of blocks to use during computation "
                 << "(Default=number of MPI ranks.)" << std::endl;
       std::cout << "--forwardSummary Forward the summary timings also to the per-rank "
@@ -332,9 +302,6 @@ int main(int argc, char* argv[])
                  << "    saveDot=" << saveDotFiles << std::endl
                  << "    saveTreeCompilerData=" << saveTreeCompilerData << std::endl
                  << "    forwardSummary=" << forwardSummary << std::endl
-#ifdef ENABLE_SET_NUM_THREADS
-                 << "    numThreads=" << numThreads << std::endl
-#endif
                  << "    nblocks=" << numBlocks << std::endl);
   }
 
@@ -628,36 +595,11 @@ int main(int argc, char* argv[])
                                            static_cast<vtkm::Id>(dims[1]),
                                            static_cast<vtkm::Id>(nDims == 3 ? dims[2] : 0) });
 
-#ifdef DEBUG_PRINT_CTUD
-      std::cout << "blockIndex: "
-                << vtkm::Id3{ static_cast<vtkm::Id>(std::ceil(static_cast<float>(offset[0]) /
-                                                              static_cast<float>(dims[0]))),
-                              static_cast<vtkm::Id>(std::ceil(static_cast<float>(offset[1]) /
-                                                              static_cast<float>(dims[1]))),
-                              static_cast<vtkm::Id>(nDims == 3
-                                                      ? std::ceil(static_cast<float>(offset[2]) /
-                                                                  static_cast<float>(dims[2]))
-                                                      : 0) }
-                << std::endl;
-      std::cout << "blockOrigin: "
-                << vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
-                              static_cast<vtkm::Id>(offset[1]),
-                              static_cast<vtkm::Id>(nDims == 3 ? offset[2] : 0) }
-                << std::endl;
-      std::cout << "blockSize: "
-                << vtkm::Id3{ static_cast<vtkm::Id>(dims[0]),
-                              static_cast<vtkm::Id>(dims[1]),
-                              static_cast<vtkm::Id>(nDims == 3 ? dims[2] : 0) };
-#endif
-
       if (blockNo == 0)
       {
         blocksPerDim = vtkm::Id3{ static_cast<vtkm::Id>(bpd[0]),
                                   static_cast<vtkm::Id>(bpd[1]),
                                   static_cast<vtkm::Id>(nDims == 3 ? bpd[2] : 1) };
-#ifdef DEBUG_PRINT_CTUD
-        std::cout << "blocksPerDim: " << blocksPerDim << std::endl;
-#endif
       }
     }
 

@@ -35,18 +35,17 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                                     vtkm::Id vtkmNotUsed(inputIndex),
-                                     vtkm::IdComponent vtkmNotUsed(visitIndex),
-                                     vtkm::Id vtkmNotUsed(outputIndex),
+                                     vtkm::Id inputIndex,
+                                     vtkm::IdComponent visitIndex,
+                                     vtkm::Id outputIndex,
                                      const ConnectivityType& connectivity)
   {
-    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
-    const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
+    const LogicalIndexType logicalIndex = connectivity.FlatToLogicalToIndex(inputIndex);
 
-    this->ThreadIndex = index;
-    this->InputIndex = index;
-    this->OutputIndex = index;
-    this->VisitIndex = 0;
+    this->ThreadIndex = threadIndex;
+    this->InputIndex = inputIndex;
+    this->OutputIndex = outputIndex;
+    this->VisitIndex = visitIndex;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     //this->CellShape = connectivity.GetCellShape(index);
@@ -198,18 +197,17 @@ public:
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   ThreadIndicesTopologyMap(vtkm::Id& threadIndex,
-                           vtkm::Id vtkmNotUsed(inputIndex),
-                           vtkm::IdComponent vtkmNotUsed(visitIndex),
-                           vtkm::Id vtkmNotUsed(outputIndex),
+                           vtkm::Id inputIndex,
+                           vtkm::IdComponent visitIndex,
+                           vtkm::Id outputIndex,
                            const ConnectivityType& connectivity)
   {
-    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
-    const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
+    const LogicalIndexType logicalIndex = connectivity.FlatToLogicalToIndex(inputIndex);
 
-    this->ThreadIndex = index;
-    this->InputIndex = index;
-    this->OutputIndex = index;
-    this->VisitIndex = 0;
+    this->ThreadIndex = threadIndex;
+    this->InputIndex = inputIndex;
+    this->OutputIndex = outputIndex;
+    this->VisitIndex = visitIndex;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
   }

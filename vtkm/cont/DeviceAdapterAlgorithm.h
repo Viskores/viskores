@@ -370,11 +370,14 @@ struct DeviceAdapterAlgorithm
   /// \brief Compute an extended prefix sum operation on the input ArrayHandle.
   ///
   /// Computes an extended prefix sum operation on the \c input ArrayHandle,
-  /// storing the results in the \c output ArrayHandle. This produces an output
-  /// array that contains both an inclusive scan (in elements [1, size)) and an
-  /// exclusive scan (in elements [0, size-1)). By using ArrayHandleView,
-  /// arrays containing both inclusive and exclusive scans can be generated
-  /// from an extended scan with minimal memory usage.
+  /// storing the results in the \c output ArrayHandle. The output array is one
+  /// element longer than the input array. This produces an output array that
+  /// contains both an inclusive scan (in elements [1, size]) and an exclusive
+  /// scan (in elements [0, size-1]). As such, the first element of the output
+  /// array always has the initial value and the last element of the output
+  /// array always has the total sum. By using ArrayHandleView, arrays
+  /// containing both inclusive and exclusive scans can be generated from an
+  /// extended scan with minimal memory usage.
   ///
   /// This algorithm may also be more efficient than ScanInclusive and
   /// ScanExclusive on some devices, since it may be able to avoid copying the
@@ -395,11 +398,14 @@ struct DeviceAdapterAlgorithm
   /// \brief Compute an extended prefix sum operation on the input ArrayHandle.
   ///
   /// Computes an extended prefix sum operation on the \c input ArrayHandle,
-  /// storing the results in the \c output ArrayHandle. This produces an output
-  /// array that contains both an inclusive scan (in elements [1, size)) and an
-  /// exclusive scan (in elements [0, size-1)). By using ArrayHandleView,
-  /// arrays containing both inclusive and exclusive scans can be generated
-  /// from an extended scan with minimal memory usage.
+  /// storing the results in the \c output ArrayHandle. The output array is one
+  /// element longer than the input array. This produces an output array that
+  /// contains both an inclusive scan (in elements [1, size]) and an exclusive
+  /// scan (in elements [0, size-1]). As such, the first element of the output
+  /// array always has the initial value and the last element of the output
+  /// array always has the total sum. By using ArrayHandleView, arrays
+  /// containing both inclusive and exclusive scans can be generated from an
+  /// extended scan with minimal memory usage.
   ///
   /// This algorithm may also be more efficient than ScanInclusive and
   /// ScanExclusive on some devices, since it may be able to avoid copying the

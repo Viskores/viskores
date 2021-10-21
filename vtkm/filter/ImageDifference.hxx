@@ -13,6 +13,7 @@
 #include <vtkm/filter/ImageDifference.h>
 
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Logging.h>
 
@@ -41,7 +42,7 @@ inline VTKM_CONT ImageDifference::ImageDifference()
   : vtkm::filter::FilterField<ImageDifference>()
   , AverageRadius(0)
   , PixelShiftRadius(0)
-  , AllowedPixelErrorRatio(0.0001f)
+  , AllowedPixelErrorRatio(0.00025f)
   , PixelDiffThreshold(0.05f)
   , ImageDiffWithinThreshold(true)
   , SecondaryFieldName("image-2")
@@ -89,7 +90,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Not performing average");
     primaryOutput = primary;
-    secondaryField.GetData().AsArrayHandle(secondaryOutput);
+    vtkm::cont::ArrayCopyShallowIfPossible(secondaryField.GetData(), secondaryOutput);
   }
 
   if (this->PixelShiftRadius > 0)
@@ -122,9 +123,9 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
              "Difference within threshold: "
                << this->ImageDiffWithinThreshold
                << ", for pixels outside threshold: " << errorPixels.GetNumberOfValues()
-               << ", with total number of pixels: " << thresholdOutput.GetNumberOfValues()
-               << ", and an allowable percentage of errored pixels: "
-               << this->AllowedPixelErrorRatio << ", with a total summed threshold error: "
+               << ", with a total number of pixesl: " << thresholdOutput.GetNumberOfValues()
+               << ", and an allowable pixel error ratio: " << this->AllowedPixelErrorRatio
+               << ", with a total summed threshold error: "
                << vtkm::cont::Algorithm::Reduce(errorPixels, static_cast<FloatDefault>(0)));
 
   vtkm::cont::DataSet clone;

@@ -56,7 +56,12 @@ public:
   bool GetIsDeviceIndependent() const { return this->IsDeviceIndependent; }
 
 protected:
-  Error() {}
+  Error()
+    : StackTrace(vtkm::cont::GetStackTrace(1))
+    , What("Undescribed error\n" + StackTrace)
+    , IsDeviceIndependent(false)
+  {
+  }
   Error(const std::string& message, bool is_device_independent = false)
     : Message(message)
     , StackTrace(vtkm::cont::GetStackTrace(1))
@@ -65,7 +70,11 @@ protected:
   {
   }
 
-  void SetMessage(const std::string& message) { this->Message = message; }
+  void SetMessage(const std::string& message)
+  {
+    this->Message = message;
+    this->What = this->Message + "\n" + this->StackTrace;
+  }
 
 private:
   std::string Message;

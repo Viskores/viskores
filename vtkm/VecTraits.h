@@ -134,7 +134,7 @@ struct VTKM_NEVER_EXPORT VecTraits
   ///
   /// This type resolves to another vector with a different base component type. The replacement
   /// is recursive for nested types. For example,
-  /// @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode is Vec<Vec<T2, M>, N>.
+  /// @code VecTraits<Vec<Vec<T, M>, N>::ReplaceBaseComponentType<T2> @endcode is Vec<Vec<T2, M>, N>.
   ///
   template <typename NewComponentType>
   using ReplaceBaseComponentType = VecTemplate<

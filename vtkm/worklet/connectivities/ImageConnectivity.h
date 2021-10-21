@@ -12,6 +12,7 @@
 #define vtk_m_worklet_connectivity_ImageConnectivity_h
 
 #include <vtkm/cont/Invoker.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
@@ -124,13 +125,14 @@ public:
     }
   };
 
-  template <int Dimension, typename T, typename OutputPortalType>
+  template <int Dimension, typename OutputPortalType>
   void Run(const vtkm::cont::CellSetStructured<Dimension>& input,
-           const vtkm::cont::VariantArrayHandleBase<T>& pixels,
+           const vtkm::cont::UnknownArrayHandle& pixels,
            OutputPortalType& componentsOut) const
   {
     using Types = vtkm::TypeListScalarAll;
-    vtkm::cont::CastAndCall(pixels.ResetTypes(Types{}), RunImpl(), input, componentsOut);
+    using Storages = VTKM_DEFAULT_STORAGE_LIST;
+    vtkm::cont::CastAndCall(pixels.ResetTypes<Types, Storages>(), RunImpl(), input, componentsOut);
   }
 
   template <int Dimension, typename T, typename S, typename OutputPortalType>

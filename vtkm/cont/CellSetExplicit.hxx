@@ -9,14 +9,10 @@
 //============================================================================
 #ifndef vtk_m_cont_CellSetExplicit_hxx
 #define vtk_m_cont_CellSetExplicit_hxx
-#include <vtkm/Deprecated.h>
 #include <vtkm/cont/CellSetExplicit.h>
 
-#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/Logging.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/TryExecute.h>
 
 // This file uses a lot of very verbose identifiers and the clang formatted
 // code quickly becomes unreadable. Stick with manual formatting for now.
@@ -478,74 +474,6 @@ void CellSetExplicit<SST, CST, OST>::DeepCopy(const CellSet* src)
   this->Fill(other->GetNumberOfPoints(), shapes, conn, offsets);
 }
 
-//----------------------------------------------------------------------------
-
-namespace detail
-{
-
-template <typename CellPointIdsT, typename PointCellIdsT>
-struct BuildPointCellIdsFunctor
-{
-  BuildPointCellIdsFunctor(CellPointIdsT &cellPointIds,
-                           PointCellIdsT &pointCellIds,
-                           vtkm::Id numberOfPoints)
-    : CellPointIds(cellPointIds)
-    , PointCellIds(pointCellIds)
-    , NumberOfPoints(numberOfPoints)
-  {
-  }
-
-  template <typename Device>
-  bool operator()(Device) const
-  {
-    internal::ComputeRConnTable(this->PointCellIds,
-                                this->CellPointIds,
-                                this->NumberOfPoints,
-                                Device{});
-    return true;
-  }
-
-  CellPointIdsT &CellPointIds;
-  PointCellIdsT &PointCellIds;
-  vtkm::Id NumberOfPoints;
-};
-
-} // detail
-
-template <typename SST, typename CST, typename OST>
-VTKM_CONT
-void CellSetExplicit<SST, CST, OST>
-::BuildConnectivity(vtkm::cont::DeviceAdapterId,
-                    vtkm::TopologyElementTagCell,
-                    vtkm::TopologyElementTagPoint) const
-{
-  VTKM_ASSERT(this->Data->CellPointIds.ElementsValid);
-  // no-op
-}
-
-template <typename SST, typename CST, typename OST>
-VTKM_CONT
-void CellSetExplicit<SST, CST, OST>
-::BuildConnectivity(vtkm::cont::DeviceAdapterId device,
-                    vtkm::TopologyElementTagPoint,
-                    vtkm::TopologyElementTagCell) const
-{
-  if (!this->Data->PointCellIds.ElementsValid)
-  {
-    auto self = const_cast<Thisclass*>(this);
-    using Func = detail::BuildPointCellIdsFunctor<CellPointIdsType, PointCellIdsType>;
-
-    auto functor = Func(self->Data->CellPointIds,
-                        self->Data->PointCellIds,
-                        self->Data->NumberOfPoints);
-
-    if (!vtkm::cont::TryExecuteOnDevice(device, functor))
-    {
-      throw vtkm::cont::ErrorExecution("Failed to run CellSetExplicit reverse "
-                                       "connectivity builder.");
-    }
-  }
-}
 }
 } // vtkm::cont
 

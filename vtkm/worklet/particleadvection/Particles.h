@@ -52,13 +52,16 @@ public:
   void PreStepUpdate(const vtkm::Id& vtkmNotUsed(idx)) {}
 
   VTKM_EXEC
-  void StepUpdate(const vtkm::Id& idx, vtkm::FloatDefault time, const vtkm::Vec3f& pt)
+  void StepUpdate(const vtkm::Id& idx,
+                  const ParticleType& particle,
+                  vtkm::FloatDefault time,
+                  const vtkm::Vec3f& pt)
   {
-    ParticleType p = this->GetParticle(idx);
-    p.Pos = pt;
-    p.Time = time;
-    p.NumSteps++;
-    this->Particles.Set(idx, p);
+    ParticleType newParticle(particle);
+    newParticle.Pos = pt;
+    newParticle.Time = time;
+    newParticle.NumSteps++;
+    this->Particles.Set(idx, newParticle);
   }
 
   VTKM_EXEC
@@ -66,7 +69,7 @@ public:
                     const vtkm::worklet::particleadvection::IntegratorStatus& status,
                     vtkm::Id maxSteps)
   {
-    ParticleType p = this->GetParticle(idx);
+    ParticleType p(this->GetParticle(idx));
 
     if (p.NumSteps == maxSteps)
       p.Status.SetTerminate();
@@ -85,7 +88,7 @@ public:
   VTKM_EXEC
   bool CanContinue(const vtkm::Id& idx)
   {
-    ParticleType p = this->GetParticle(idx);
+    ParticleType p(this->GetParticle(idx));
 
     return (p.Status.CheckOk() && !p.Status.CheckTerminate() && !p.Status.CheckSpatialBounds() &&
             !p.Status.CheckTemporalBounds() && !p.Status.CheckInGhostCell());
@@ -94,7 +97,7 @@ public:
   VTKM_EXEC
   void UpdateTookSteps(const vtkm::Id& idx, bool val)
   {
-    ParticleType p = this->GetParticle(idx);
+    ParticleType p(this->GetParticle(idx));
     if (val)
       p.Status.SetTookAnySteps();
     else
@@ -179,13 +182,14 @@ public:
   }
 
   VTKM_EXEC
-  void StepUpdate(const vtkm::Id& idx, vtkm::FloatDefault time, const vtkm::Vec3f& pt)
+  void StepUpdate(const vtkm::Id& idx,
+                  const ParticleType& particle,
+                  vtkm::FloatDefault time,
+                  const vtkm::Vec3f& pt)
   {
-    this->ParticleExecutionObject<ParticleType>::StepUpdate(idx, time, pt);
-
+    this->ParticleExecutionObject<ParticleType>::StepUpdate(idx, particle, time, pt);
     //local step count.
     vtkm::Id stepCount = this->StepCount.Get(idx);
-
     vtkm::Id loc = idx * Length + stepCount;
     this->History.Set(loc, pt);
     this->ValidPoint.Set(loc, 1);

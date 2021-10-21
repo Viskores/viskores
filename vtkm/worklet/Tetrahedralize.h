@@ -75,6 +75,11 @@ public:
     throw vtkm::cont::ErrorBadType("CellSetStructured<2> can't be tetrahedralized");
   }
 
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<1>&)
+  {
+    throw vtkm::cont::ErrorBadType("CellSetStructured<1> can't be tetrahedralized");
+  }
+
   // Using the saved input to output cells, expand cell data
   template <typename T, typename StorageType>
   vtkm::cont::ArrayHandle<T> ProcessCellField(

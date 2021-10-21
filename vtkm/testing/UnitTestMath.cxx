@@ -20,11 +20,6 @@
 
 #include <limits>
 
-#define VTKM_MATH_ASSERT(condition, message) \
-  if (!(condition))                          \
-  {                                          \
-    this->RaiseError(message);               \
-  }
 
 //-----------------------------------------------------------------------------
 namespace UnitTestMathNamespace
@@ -135,8 +130,6 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestArcTan2() const
   {
-    //    std::cout << "Testing arc tan 2" << std::endl;
-
     VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(0.0), T(1.0)), T(0.0)), "ATan2 x+ axis.");
     VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(1.0), T(0.0)), T(0.5 * vtkm::Pi())),
                      "ATan2 y+ axis.");
@@ -156,7 +149,6 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestPow() const
   {
-    //    std::cout << "Running power tests." << std::endl;
     for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS; index++)
     {
       T x = static_cast<T>(Lists{}.NumberList(index));
@@ -169,7 +161,6 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestLog2() const
   {
-    //    std::cout << "Testing Log2" << std::endl;
     VTKM_MATH_ASSERT(test_equal(vtkm::Log2(T(0.25)), T(-2.0)), "Bad value from Log2");
     VTKM_MATH_ASSERT(test_equal(vtkm::Log2(vtkm::Vec<T, 4>(0.5, 1.0, 2.0, 4.0)),
                                 vtkm::Vec<T, 4>(-1.0, 0.0, 1.0, 2.0)),
@@ -179,8 +170,6 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestNonFinites() const
   {
-    //    std::cout << "Testing non-finites." << std::endl;
-
     T zero = 0.0;
     T finite = 1.0;
     T nan = vtkm::Nan<T>();
@@ -190,10 +179,11 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
 
     // General behavior.
     VTKM_MATH_ASSERT(nan != vtkm::Nan<T>(), "Nan not equal itself.");
-    VTKM_MATH_ASSERT(!(nan >= zero), "Nan not greater or less.");
-    VTKM_MATH_ASSERT(!(nan <= zero), "Nan not greater or less.");
-    VTKM_MATH_ASSERT(!(nan >= finite), "Nan not greater or less.");
-    VTKM_MATH_ASSERT(!(nan <= finite), "Nan not greater or less.");
+    // Disabled because they can cause floating point exceptions
+    //VTKM_MATH_ASSERT(!(nan >= zero), "Nan not greater or less.");
+    //VTKM_MATH_ASSERT(!(nan <= zero), "Nan not greater or less.");
+    //VTKM_MATH_ASSERT(!(nan >= finite), "Nan not greater or less.");
+    //VTKM_MATH_ASSERT(!(nan <= finite), "Nan not greater or less.");
 
     VTKM_MATH_ASSERT(neginf < inf, "Infinity big");
     VTKM_MATH_ASSERT(zero < inf, "Infinity big");
@@ -232,7 +222,6 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestRemainders() const
   {
-    //    std::cout << "Testing remainders." << std::endl;
     Lists table;
     for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS; index++)
     {
@@ -256,7 +245,6 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestRound() const
   {
-    //    std::cout << "Testing round." << std::endl;
     Lists table;
     for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS; index++)
     {
@@ -279,7 +267,6 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestIsNegative() const
   {
-    //    std::cout << "Testing SignBit and IsNegative." << std::endl;
     T x = 0;
     VTKM_MATH_ASSERT(vtkm::SignBit(x) == 0, "SignBit wrong for 0.");
     VTKM_MATH_ASSERT(!vtkm::IsNegative(x), "IsNegative wrong for 0.");
@@ -338,7 +325,6 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestTriangleTrig() const
   {
-    //    std::cout << "Testing normal trig functions." << std::endl;
     Lists table;
     for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
@@ -391,8 +377,6 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestHyperbolicTrig() const
   {
-    //    std::cout << "Testing hyperbolic trig functions." << std::endl;
-
     const VectorType zero(0);
     Lists table;
     for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
@@ -446,11 +430,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::Sqrt(x); }
   };
   VTKM_EXEC
-  void TestSqrt() const
-  {
-    //    std::cout << "  Testing Sqrt" << std::endl;
-    RaiseToTest(SqrtFunctor(), 0.5);
-  }
+  void TestSqrt() const { RaiseToTest(SqrtFunctor(), 0.5); }
 
   struct RSqrtFunctor
   {
@@ -458,11 +438,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::RSqrt(x); }
   };
   VTKM_EXEC
-  void TestRSqrt() const
-  {
-    //    std::cout << "  Testing RSqrt"<< std::endl;
-    RaiseToTest(RSqrtFunctor(), -0.5);
-  }
+  void TestRSqrt() const { RaiseToTest(RSqrtFunctor(), -0.5); }
 
   struct CbrtFunctor
   {
@@ -470,11 +446,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::Cbrt(x); }
   };
   VTKM_EXEC
-  void TestCbrt() const
-  {
-    //    std::cout << "  Testing Cbrt" << std::endl;
-    RaiseToTest(CbrtFunctor(), vtkm::Float32(1.0 / 3.0));
-  }
+  void TestCbrt() const { RaiseToTest(CbrtFunctor(), vtkm::Float32(1.0 / 3.0)); }
 
   struct RCbrtFunctor
   {
@@ -482,11 +454,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::RCbrt(x); }
   };
   VTKM_EXEC
-  void TestRCbrt() const
-  {
-    //    std::cout << "  Testing RCbrt" << std::endl;
-    RaiseToTest(RCbrtFunctor(), vtkm::Float32(-1.0 / 3.0));
-  }
+  void TestRCbrt() const { RaiseToTest(RCbrtFunctor(), vtkm::Float32(-1.0 / 3.0)); }
 
   template <typename FunctionType>
   VTKM_EXEC void RaiseByTest(FunctionType function,
@@ -519,11 +487,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::Exp(x); }
   };
   VTKM_EXEC
-  void TestExp() const
-  {
-    //    std::cout << "  Testing Exp" << std::endl;
-    RaiseByTest(ExpFunctor(), vtkm::Float32(2.71828183));
-  }
+  void TestExp() const { RaiseByTest(ExpFunctor(), vtkm::Float32(2.71828183)); }
 
   struct Exp2Functor
   {
@@ -531,11 +495,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::Exp2(x); }
   };
   VTKM_EXEC
-  void TestExp2() const
-  {
-    //    std::cout << "  Testing Exp2" << std::endl;
-    RaiseByTest(Exp2Functor(), 2.0);
-  }
+  void TestExp2() const { RaiseByTest(Exp2Functor(), 2.0); }
 
   struct ExpM1Functor
   {
@@ -543,11 +503,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::ExpM1(x); }
   };
   VTKM_EXEC
-  void TestExpM1() const
-  {
-    //    std::cout << "  Testing ExpM1" << std::endl;
-    RaiseByTest(ExpM1Functor(), ComponentType(2.71828183), 0.0, -1.0);
-  }
+  void TestExpM1() const { RaiseByTest(ExpM1Functor(), ComponentType(2.71828183), 0.0, -1.0); }
 
   struct Exp10Functor
   {
@@ -555,11 +511,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::Exp10(x); }
   };
   VTKM_EXEC
-  void TestExp10() const
-  {
-    //    std::cout << "  Testing Exp10" << std::endl;
-    RaiseByTest(Exp10Functor(), 10.0);
-  }
+  void TestExp10() const { RaiseByTest(Exp10Functor(), 10.0); }
 
   template <typename FunctionType>
   VTKM_EXEC void LogBaseTest(FunctionType function,
@@ -593,11 +545,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::Log(x); }
   };
   VTKM_EXEC
-  void TestLog() const
-  {
-    //    std::cout << "  Testing Log" << std::endl;
-    LogBaseTest(LogFunctor(), vtkm::Float32(2.71828183));
-  }
+  void TestLog() const { LogBaseTest(LogFunctor(), vtkm::Float32(2.71828183)); }
 
   struct Log10Functor
   {
@@ -605,11 +553,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::Log10(x); }
   };
   VTKM_EXEC
-  void TestLog10() const
-  {
-    //    std::cout << "  Testing Log10" << std::endl;
-    LogBaseTest(Log10Functor(), 10.0);
-  }
+  void TestLog10() const { LogBaseTest(Log10Functor(), 10.0); }
 
   struct Log1PFunctor
   {
@@ -617,16 +561,11 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VectorType operator()(VectorType x) const { return vtkm::Log1P(x); }
   };
   VTKM_EXEC
-  void TestLog1P() const
-  {
-    //    std::cout << "  Testing Log1P" << std::endl;
-    LogBaseTest(Log1PFunctor(), ComponentType(2.71828183), 1.0);
-  }
+  void TestLog1P() const { LogBaseTest(Log1PFunctor(), ComponentType(2.71828183), 1.0); }
 
   VTKM_EXEC
   void TestCopySign() const
   {
-    //    std::cout << "Testing CopySign." << std::endl;
     // Assuming all TestValues positive.
     VectorType positive1 = TestValue(1, VectorType());
     VectorType positive2 = TestValue(2, VectorType());
@@ -718,7 +657,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
 
       // Now test x = y:
       vtkm::Float64 x = -1;
-      for (int i = 0; i < 500; ++i)
+      for (int i = 0; i < 50; ++i)
       {
         dist = vtkm::FloatDistance(x, x);
         VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
@@ -845,7 +784,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
 
       // Now test x = y:
       vtkm::Float32 x = -1;
-      for (int i = 0; i < 500; ++i)
+      for (int i = 0; i < 50; ++i)
       {
         dist = vtkm::FloatDistance(x, x);
         VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
@@ -902,6 +841,69 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   VTKM_EXEC
+  void TestDifferenceOfProducts() const
+  {
+#if defined FP_FAST_FMA && !defined __HIP__
+    // Example taken from:
+    // https://pharr.org/matt/blog/2019/11/03/difference-of-floats.html
+    vtkm::Float32 a = 33962.035f;
+    vtkm::Float32 b = -30438.8f;
+    vtkm::Float32 c = 41563.4f;
+    vtkm::Float32 d = -24871.969f;
+    vtkm::Float32 computed = vtkm::DifferenceOfProducts(a, b, c, d);
+    // Expected result, computed in double precision and cast back to float:
+    vtkm::Float32 expected = 5.376600027084351f;
+
+    vtkm::UInt64 dist = vtkm::FloatDistance(expected, computed);
+    VTKM_MATH_ASSERT(
+      dist < 2,
+      "Float distance for difference of products exceeds 1.5; this is in violation of a theorem "
+      "proved by Jeannerod in doi.org/10.1090/S0025-5718-2013-02679-8. Is your build compiled "
+      "with FMAs enabled?");
+#endif
+  }
+
+  VTKM_EXEC
+  void TestQuadraticRoots() const
+  {
+    // (x-1)(x+1) = x² - 1:
+    auto roots = vtkm::QuadraticRoots(1.0f, 0.0f, -1.0f);
+
+    vtkm::UInt64 dist = vtkm::FloatDistance(-1.0f, roots[0]);
+    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+
+    dist = vtkm::FloatDistance(1.0f, roots[1]);
+    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+
+    // No real roots:
+    roots = vtkm::QuadraticRoots(1.0f, 0.0f, 1.0f);
+    VTKM_MATH_ASSERT(vtkm::IsNan(roots[0]),
+                     "Roots should be Nan for a quadratic with complex roots.");
+    VTKM_MATH_ASSERT(vtkm::IsNan(roots[1]),
+                     "Roots should be Nan for a quadratic with complex roots.");
+
+#if defined FP_FAST_FMA && !defined __HIP__
+    // Wikipedia example:
+    // x² + 200x - 0.000015 = 0 has roots
+    // -200.000000075, 7.5e-8
+    roots = vtkm::QuadraticRoots(1.0f, 200.0f, -0.000015f);
+    dist = vtkm::FloatDistance(-200.000000075f, roots[0]);
+    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+
+    dist = vtkm::FloatDistance(7.5e-8f, roots[1]);
+    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+
+    // Kahan's example:
+    auto roots64 = vtkm::QuadraticRoots(94906265.625, 94906267.000, 94906268.375);
+    dist = vtkm::FloatDistance(1.0, roots64[0]);
+    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+
+    dist = vtkm::FloatDistance(1.000000028975958, roots64[1]);
+    VTKM_MATH_ASSERT(dist < 3, "Float distance for quadratic roots exceeds 3 ulps.");
+#endif
+  }
+
+  VTKM_EXEC
   void operator()(vtkm::Id) const
   {
     this->TestTriangleTrig();
@@ -919,6 +921,8 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     this->TestLog1P();
     this->TestCopySign();
     this->TestFloatDistance();
+    this->TestDifferenceOfProducts();
+    this->TestQuadraticRoots();
   }
 };
 
@@ -940,7 +944,6 @@ struct AllTypesTests : public vtkm::exec::FunctorBase
   {
     T low = TestValue(2, T());
     T high = TestValue(10, T());
-    //    std::cout << "Testing min/max " << low << " " << high << std::endl;
     VTKM_MATH_ASSERT(test_equal(vtkm::Min(low, high), low), "Wrong min.");
     VTKM_MATH_ASSERT(test_equal(vtkm::Min(high, low), low), "Wrong min.");
     VTKM_MATH_ASSERT(test_equal(vtkm::Max(low, high), high), "Wrong max.");
@@ -977,7 +980,6 @@ struct AbsTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    //    std::cout << "Testing Abs." << std::endl;
     T positive = TestValue(index, T()); // Assuming all TestValues positive.
     T negative = -positive;
 
@@ -999,7 +1001,7 @@ using TypeListAbs =
   vtkm::ListAppend<vtkm::List<vtkm::Int32, vtkm::Int64>, vtkm::TypeListIndex, vtkm::TypeListField>;
 
 //-----------------------------------------------------------------------------
-static constexpr vtkm::Id BitOpSamples = 1024 * 1024;
+static constexpr vtkm::Id BitOpSamples = 128 * 128;
 
 template <typename T>
 struct BitOpTests : public vtkm::exec::FunctorBase
@@ -1022,7 +1024,7 @@ struct BitOpTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(test_equal(vtkm::CountSetBits(word), this->DumbCountBits(word)),
                      "CountBits returned wrong value.");
     VTKM_MATH_ASSERT(test_equal(vtkm::FindFirstSetBit(word), this->DumbFindFirstSetBit(word)),
-                     "FindFirstSetBit returned wrong value.")
+                     "FindFirstSetBit returned wrong value.");
   }
 
   VTKM_EXEC vtkm::Int32 DumbCountBits(T word) const
@@ -1070,15 +1072,10 @@ using TypeListBitOp = vtkm::List<vtkm::UInt32, vtkm::UInt64>;
 //-----------------------------------------------------------------------------
 void RunMathTests()
 {
-  std::cout << "Tests for scalar types." << std::endl;
   vtkm::testing::Testing::TryTypes(TryScalarFieldTests(), vtkm::TypeListFieldScalar());
-  std::cout << "Test for scalar and vector types." << std::endl;
   vtkm::testing::Testing::TryTypes(TryScalarVectorFieldTests(), vtkm::TypeListField());
-  std::cout << "Test for exemplar types." << std::endl;
   vtkm::testing::Testing::TryTypes(TryAllTypesTests());
-  std::cout << "Test all Abs types" << std::endl;
   vtkm::testing::Testing::TryTypes(TryAbsTests(), TypeListAbs());
-  std::cout << "Test all bit operations" << std::endl;
   vtkm::testing::Testing::TryTypes(TryBitOpTests(), TypeListBitOp());
 }
 

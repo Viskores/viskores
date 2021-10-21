@@ -23,7 +23,10 @@ using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<
 using TemporalGridEvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<
   vtkm::worklet::particleadvection::VelocityField<vtkm::cont::ArrayHandle<vtkm::Vec3f>>>;
 using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
 using TemporalRK4Type = vtkm::worklet::particleadvection::RK4Integrator<TemporalGridEvalType>;
+using TemporalStepper =
+  vtkm::worklet::particleadvection::Stepper<TemporalRK4Type, TemporalGridEvalType>;
 
 //-----
 // Specialization for ParticleAdvection worklet
@@ -31,12 +34,12 @@ template <>
 template <>
 inline void DataSetIntegratorBase<GridEvalType>::DoAdvect(
   vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
-  const RK4Type& rk4,
+  const Stepper& stepper,
   vtkm::Id maxSteps,
   vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>& result) const
 {
   vtkm::worklet::ParticleAdvection Worklet;
-  result = Worklet.Run(rk4, seeds, maxSteps);
+  result = Worklet.Run(stepper, seeds, maxSteps);
 }
 
 //-----
@@ -45,12 +48,26 @@ template <>
 template <>
 inline void DataSetIntegratorBase<GridEvalType>::DoAdvect(
   vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
-  const RK4Type& rk4,
+  const Stepper& stepper,
   vtkm::Id maxSteps,
   vtkm::worklet::StreamlineResult<vtkm::Particle>& result) const
 {
   vtkm::worklet::Streamline Worklet;
-  result = Worklet.Run(rk4, seeds, maxSteps);
+  result = Worklet.Run(stepper, seeds, maxSteps);
+}
+
+//-----
+// Specialization for PathParticle worklet
+template <>
+template <>
+inline void DataSetIntegratorBase<TemporalGridEvalType>::DoAdvect(
+  vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
+  const TemporalStepper& stepper,
+  vtkm::Id maxSteps,
+  vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>& result) const
+{
+  vtkm::worklet::ParticleAdvection Worklet;
+  result = Worklet.Run(stepper, seeds, maxSteps);
 }
 
 //-----
@@ -59,12 +76,12 @@ template <>
 template <>
 inline void DataSetIntegratorBase<TemporalGridEvalType>::DoAdvect(
   vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
-  const TemporalRK4Type& rk4,
+  const TemporalStepper& stepper,
   vtkm::Id maxSteps,
   vtkm::worklet::StreamlineResult<vtkm::Particle>& result) const
 {
   vtkm::worklet::Streamline Worklet;
-  result = Worklet.Run(rk4, seeds, maxSteps);
+  result = Worklet.Run(stepper, seeds, maxSteps);
 }
 
 }

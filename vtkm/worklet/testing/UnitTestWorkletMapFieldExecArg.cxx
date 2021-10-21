@@ -10,7 +10,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -95,7 +95,8 @@ struct DoTestWorklet
     outputHandle = vtkm::cont::ArrayHandle<T>();
     outputHandle.Allocate(ARRAY_SIZE);
 
-    vtkm::cont::VariantArrayHandleBase<vtkm::List<T>> outputFieldDynamic(outputFieldArray);
+    vtkm::cont::UncertainArrayHandle<vtkm::List<T>, vtkm::List<vtkm::cont::StorageTagBasic>>
+      outputFieldDynamic(outputFieldArray);
     dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldDynamic, SimpleExecObject());
 
     std::cout << "Check dynamic array result." << std::endl;

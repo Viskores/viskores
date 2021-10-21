@@ -13,10 +13,16 @@ set(headers
   DeviceAdapterMemoryManagerKokkos.h
   DeviceAdapterRuntimeDetectorKokkos.h
   DeviceAdapterTagKokkos.h
-  Initialize.h
   KokkosAlloc.h
   KokkosTypes.h
-  VirtualObjectTransferKokkos.h)
+  RuntimeDeviceConfigurationKokkos.h
+  )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    VirtualObjectTransferKokkos.h
+    )
+endif()
 
 vtkm_declare_headers(${headers})
 
@@ -25,7 +31,6 @@ if (TARGET vtkm::kokkos)
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmKokkos.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterMemoryManagerKokkos.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorKokkos.cxx
-    ${CMAKE_CURRENT_SOURCE_DIR}/Initialize.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/KokkosAlloc.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/KokkosTypes.cxx)
   target_sources(vtkm_cont PRIVATE ${sources})
@@ -34,6 +39,7 @@ if (TARGET vtkm::kokkos)
     set_source_files_properties(${sources} TARGET_DIRECTORY vtkm_cont PROPERTIES LANGUAGE CUDA)
   elseif(TARGET vtkm::kokkos_hip)
     set_source_files_properties(${sources} TARGET_DIRECTORY vtkm_cont PROPERTIES LANGUAGE HIP)
+    kokkos_compilation(SOURCE ${sources})
   endif()
 
 else()

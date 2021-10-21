@@ -90,8 +90,8 @@ struct CheckFunctor
   void operator()(const vtkm::cont::ArrayHandle<T, S>& array, bool& called) const
   {
     called = true;
-    std::cout << "  Checking for array type " << typeid(T).name() << " with storage "
-              << typeid(S).name() << std::endl;
+    std::cout << "  Checking for array type " << vtkm::cont::TypeToString<T>() << " with storage "
+              << vtkm::cont::TypeToString<S>() << std::endl;
 
     CheckArray(array);
   }
@@ -100,6 +100,8 @@ struct CheckFunctor
 void BasicUnknownArrayChecks(const vtkm::cont::UnknownArrayHandle& array,
                              vtkm::IdComponent numComponents)
 {
+  std::cout << "  Checking an UnknownArrayHandle containing " << array.GetArrayTypeName()
+            << std::endl;
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
                    "Dynamic array reports unexpected size.");
   VTKM_TEST_ASSERT(array.GetNumberOfComponentsFlat() == numComponents,
@@ -388,6 +390,10 @@ struct TryBasicVTKmType
   {
     vtkm::cont::UnknownArrayHandle array = CreateArrayUnknown(T());
 
+    VTKM_TEST_ASSERT(array.GetValueTypeName() == vtkm::cont::TypeToString<T>());
+    VTKM_TEST_ASSERT(array.GetStorageTypeName() ==
+                     vtkm::cont::TypeToString<vtkm::cont::StorageTagBasic>());
+
     CheckUnknownArray<vtkm::TypeListAll, VTKM_DEFAULT_STORAGE_LIST>(
       array, vtkm::VecTraits<T>::NUM_COMPONENTS);
 
@@ -405,7 +411,7 @@ void TryUnusualType()
     CheckUnknownArray<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(array, 1);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type.");
   }
-  catch (vtkm::cont::ErrorBadValue&)
+  catch (vtkm::cont::ErrorBadType&)
   {
     std::cout << "  Caught exception for unrecognized type." << std::endl;
   }

@@ -154,11 +154,11 @@ void TestThreadWake()
   std::cout << "  Launching coordinated thread" << std::endl;
   auto future = std::async(std::launch::async, WaitForDetachment, &object);
 
-  std::cout << "  Sleep 2 seconds for thread to lock" << std::endl;
-  // 2 seconds should be ample time for the spawned thread to launch. If the systems busy then
+  std::cout << "  Sleep 500 milliseconds for thread to lock" << std::endl;
+  // 500 milliseconds should be ample time for the spawned thread to launch. If the systems busy then
   // we might actually unlock the object before the thread gets there, but hopefully on some
   // systems it will test correctly.
-  std::this_thread::sleep_for(std::chrono::seconds(2));
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   std::cout << "  Main thread woke up. Detach token." << std::endl;
   token.DetachFromAll();

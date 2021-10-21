@@ -22,7 +22,10 @@
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterMemoryManagerCuda.h>
+#include <vtkm/cont/cuda/internal/RuntimeDeviceConfigurationCuda.h>
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/cuda/internal/VirtualObjectTransferCuda.h>
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 #else // !VTKM_CUDA
 

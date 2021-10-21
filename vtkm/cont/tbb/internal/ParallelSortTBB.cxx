@@ -53,7 +53,13 @@
 // correct settings so that we don't clobber any existing function
 #include <vtkm/internal/Windows.h>
 
+#if TBB_VERSION_MAJOR >= 2020
 #include <tbb/task.h>
+#include <tbb/task_group.h>
+#else
+#include <tbb/tbb.h>
+#endif
+
 #include <thread>
 
 #if defined(VTKM_MSVC)
@@ -71,6 +77,7 @@ namespace sort
 
 const size_t MAX_CORES = std::thread::hardware_concurrency();
 
+#if TBB_VERSION_MAJOR < 2020
 // Simple TBB task wrapper around a generic functor.
 template <typename FunctorType>
 struct TaskWrapper : public ::tbb::task
@@ -94,7 +101,7 @@ struct RadixThreaderTBB
   size_t GetAvailableCores() const { return MAX_CORES; }
 
   template <typename TaskType>
-  void RunParentTask(TaskType task)
+  void RunParentTask(TaskType task) const
   {
     using Task = TaskWrapper<TaskType>;
     Task& root = *new (::tbb::task::allocate_root()) Task(task);
@@ -102,7 +109,7 @@ struct RadixThreaderTBB
   }
 
   template <typename TaskType>
-  void RunChildTasks(TaskWrapper<TaskType>* wrapper, TaskType left, TaskType right)
+  void RunChildTasks(TaskWrapper<TaskType>* wrapper, TaskType left, TaskType right) const
   {
     using Task = TaskWrapper<TaskType>;
     ::tbb::empty_task& p = *new (wrapper->allocate_continuation())::tbb::empty_task();
@@ -114,6 +121,34 @@ struct RadixThreaderTBB
     ::tbb::task::spawn(rchild);
   }
 };
+
+#else // TBB_VERSION_MAJOR >= 2020
+
+// In TBB version 2020, the task class was deprecated. Instead, we use the simpler task_group.
+
+struct RadixThreaderTBB
+{
+  std::shared_ptr<::tbb::task_group> TaskGroup =
+    std::shared_ptr<::tbb::task_group>(new ::tbb::task_group);
+
+  size_t GetAvailableCores() const { return MAX_CORES; }
+
+  template <typename TaskType>
+  void RunParentTask(TaskType task) const
+  {
+    this->TaskGroup->run_and_wait(task);
+    // All tasks should be complete at this point.
+  }
+
+  template <typename TaskType>
+  void RunChildTasks(void*, TaskType left, TaskType right) const
+  {
+    this->TaskGroup->run(left);
+    this->TaskGroup->run(right);
+  }
+};
+
+#endif
 
 VTKM_INSTANTIATE_RADIX_SORT_FOR_THREADER(RadixThreaderTBB)
 }

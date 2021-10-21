@@ -11,8 +11,11 @@
 #include <cstdlib>
 #include <mutex>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
+#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
+#include <vtkm/cont/cuda/internal/RuntimeDeviceConfigurationCuda.h>
 #define NO_VTKM_MANAGED_MEMORY "NO_VTKM_MANAGED_MEMORY"
 
 #include <mutex>
@@ -236,8 +239,10 @@ void CudaAllocator::PrepareForInput(const void* ptr, std::size_t numBytes)
   if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
 #if CUDART_VERSION >= 8000
-    int dev;
-    VTKM_CUDA_CALL(cudaGetDevice(&dev));
+    vtkm::Id dev;
+    vtkm::cont::RuntimeDeviceInformation()
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
+      .GetDeviceInstance(dev);
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
@@ -251,8 +256,10 @@ void CudaAllocator::PrepareForOutput(const void* ptr, std::size_t numBytes)
   if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
 #if CUDART_VERSION >= 8000
-    int dev;
-    VTKM_CUDA_CALL(cudaGetDevice(&dev));
+    vtkm::Id dev;
+    vtkm::cont::RuntimeDeviceInformation()
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
+      .GetDeviceInstance(dev);
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
@@ -266,8 +273,10 @@ void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
   if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
 #if CUDART_VERSION >= 8000
-    int dev;
-    VTKM_CUDA_CALL(cudaGetDevice(&dev));
+    vtkm::Id dev;
+    vtkm::cont::RuntimeDeviceInformation()
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
+      .GetDeviceInstance(dev);
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
@@ -280,8 +289,12 @@ void CudaAllocator::Initialize()
 {
 #if CUDART_VERSION >= 8000
   std::call_once(IsInitialized, []() {
-    int numDevices;
-    VTKM_CUDA_CALL(cudaGetDeviceCount(&numDevices));
+    auto cudaDeviceConfig = dynamic_cast<
+      vtkm::cont::internal::RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagCuda>&>(
+      vtkm::cont::RuntimeDeviceInformation{}.GetRuntimeConfiguration(
+        vtkm::cont::DeviceAdapterTagCuda()));
+    vtkm::Id numDevices;
+    cudaDeviceConfig.GetMaxDevices(numDevices);
 
     if (numDevices == 0)
     {
@@ -290,13 +303,13 @@ void CudaAllocator::Initialize()
 
     // Check all devices, use the feature set supported by all
     bool managedMemorySupported = true;
-    cudaDeviceProp prop;
+    std::vector<cudaDeviceProp> cudaProp;
+    cudaDeviceConfig.GetCudaDeviceProp(cudaProp);
     for (int i = 0; i < numDevices && managedMemorySupported; ++i)
     {
-      VTKM_CUDA_CALL(cudaGetDeviceProperties(&prop, i));
       // We check for concurrentManagedAccess, as devices with only the
       // managedAccess property have extra synchronization requirements.
-      managedMemorySupported = managedMemorySupported && prop.concurrentManagedAccess;
+      managedMemorySupported = managedMemorySupported && cudaProp[i].concurrentManagedAccess;
     }
 
     HardwareSupportsManagedMemory = managedMemorySupported;

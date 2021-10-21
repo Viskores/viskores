@@ -1,0 +1,21 @@
+#ifndef @INSTANTIATION_FILTER_INC_GUARD@
+#define @INSTANTIATION_FILTER_INC_GUARD@
+#endif
+
+/* Needed for linking errors when no instantiations */
+int __@INSTANTIATION_FILTER_INC_GUARD@;
+
+#include <@INSTANTIATION_FILTER_HEADER@>
+#include <@INSTANTIATION_FILTER_TEMPLATE_SOURCE@>
+
+namespace vtkm
+{
+namespace filter
+{
+
+@INSTANTIATION_FILTER_METHOD@
+
+}
+}
+
+#undef @INSTANTIATION_FILTER_INC_GUARD@

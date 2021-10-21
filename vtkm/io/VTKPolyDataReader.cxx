@@ -10,6 +10,8 @@
 
 #include <vtkm/io/VTKPolyDataReader.h>
 
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
+
 namespace
 {
 
@@ -139,7 +141,7 @@ void VTKPolyDataReader::Read()
   }
   else
   {
-    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+    auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(numIndices);
     vtkm::cont::CellSetExplicit<> cellSet;
     cellSet.Fill(numPoints, shapes, connectivity, offsets);
     this->DataSet.SetCellSet(cellSet);

@@ -20,12 +20,6 @@
 #include <vtkm/filter/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/EulerIntegrator.h>
 #include <vtkm/worklet/particleadvection/RK4Integrator.h>
-#ifdef VTKM_ENABLE_TBB
-#include <tbb/task_scheduler_init.h>
-#endif
-#ifdef VTKM_ENABLE_OPENMP
-#include <omp.h>
-#endif
 
 
 namespace

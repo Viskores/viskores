@@ -16,7 +16,10 @@
 #ifdef VTKM_ENABLE_TBB
 #include <vtkm/cont/tbb/internal/DeviceAdapterAlgorithmTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterMemoryManagerTBB.h>
+#include <vtkm/cont/tbb/internal/RuntimeDeviceConfigurationTBB.h>
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/tbb/internal/VirtualObjectTransferTBB.h>
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 #endif
 
 #endif //vtk_m_cont_tbb_DeviceAdapterTBB_h

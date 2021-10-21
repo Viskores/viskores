@@ -13,6 +13,7 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -80,7 +81,7 @@ struct CellDeepCopy
 
     vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage> offsets;
     vtkm::Id connectivitySize;
-    vtkm::cont::ConvertNumIndicesToOffsets(numIndices, offsets, connectivitySize);
+    vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connectivitySize);
     connectivity.Allocate(connectivitySize);
 
     vtkm::worklet::DispatcherMapTopology<PassCellStructure> passDispatcher;

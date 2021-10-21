@@ -15,6 +15,14 @@
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
+// This is a deprecated class. Don't warn about deprecation while implementing
+// deprecated functionality.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 #include <array>
 #include <type_traits>
 
@@ -59,7 +67,10 @@ struct CreateTransferInterface
 /// \sa vtkm::VirtualObjectBase
 ///
 template <typename VirtualBaseType>
-class VTKM_ALWAYS_EXPORT VirtualObjectHandle : public vtkm::cont::ExecutionAndControlObjectBase
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
+  1.7,
+  "Virtual methods are no longer supported in the execution environment.") VirtualObjectHandle
+  : public vtkm::cont::ExecutionAndControlObjectBase
 {
   VTKM_STATIC_ASSERT_MSG((std::is_base_of<vtkm::VirtualObjectBase, VirtualBaseType>::value),
                          "All virtual objects must be subclass of vtkm::VirtualObjectBase.");
@@ -165,5 +176,8 @@ private:
 };
 }
 } // vtkm::cont
+
+VTKM_DEPRECATED_SUPPRESS_END
+
 
 #endif // vtk_m_cont_VirtualObjectHandle_h

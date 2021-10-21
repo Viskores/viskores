@@ -24,7 +24,7 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/Invoker.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <vtkm/Bounds.h>
 #include <vtkm/Hash.h>
@@ -428,14 +428,7 @@ public:
   {
     // Get a cast to a concrete set of point coordiantes so that it can be modified in place
     vtkm::cont::ArrayHandle<vtkm::Vec3f> concretePoints;
-    if (points.template IsType<decltype(concretePoints)>())
-    {
-      points.AsArrayHandle(concretePoints);
-    }
-    else
-    {
-      vtkm::cont::ArrayCopy(points, concretePoints);
-    }
+    vtkm::cont::ArrayCopyShallowIfPossible(points, concretePoints);
 
     Run(delta, fastCheck, bounds, concretePoints);
 
@@ -443,23 +436,14 @@ public:
     points = concretePoints;
   }
 
-  template <typename TL>
-  VTKM_CONT void Run(
-    vtkm::Float64 delta,                            // Distance to consider two points coincident
-    bool fastCheck,                                 // If true, approximate distances are used
-    const vtkm::Bounds& bounds,                     // Bounds of points
-    vtkm::cont::VariantArrayHandleBase<TL>& points) // coordinates, modified to merge close
+  VTKM_CONT void Run(vtkm::Float64 delta,        // Distance to consider two points coincident
+                     bool fastCheck,             // If true, approximate distances are used
+                     const vtkm::Bounds& bounds, // Bounds of points
+                     vtkm::cont::UnknownArrayHandle& points) // coordinates, modified to merge close
   {
     // Get a cast to a concrete set of point coordiantes so that it can be modified in place
     vtkm::cont::ArrayHandle<vtkm::Vec3f> concretePoints;
-    if (points.template IsType<decltype(concretePoints)>())
-    {
-      concretePoints = points.template Cast<decltype(concretePoints)>();
-    }
-    else
-    {
-      vtkm::cont::ArrayCopy(points, concretePoints);
-    }
+    vtkm::cont::ArrayCopyShallowIfPossible(points, concretePoints);
 
     Run(delta, fastCheck, bounds, concretePoints);
 

@@ -515,12 +515,13 @@ public:
   ///
   VTKM_CONT void Allocate(vtkm::Id numberOfValues,
                           vtkm::CopyFlag preserve,
-                          vtkm::cont::Token& token)
+                          vtkm::cont::Token& token) const
   {
     StorageType::ResizeBuffers(numberOfValues, this->GetBuffers(), preserve, token);
   }
 
-  VTKM_CONT void Allocate(vtkm::Id numberOfValues, vtkm::CopyFlag preserve = vtkm::CopyFlag::Off)
+  VTKM_CONT void Allocate(vtkm::Id numberOfValues,
+                          vtkm::CopyFlag preserve = vtkm::CopyFlag::Off) const
   {
     vtkm::cont::Token token;
     this->Allocate(numberOfValues, preserve, token);
@@ -543,7 +544,7 @@ public:
 
   /// Releases all resources in both the control and execution environments.
   ///
-  VTKM_CONT void ReleaseResources() { this->Allocate(0); }
+  VTKM_CONT void ReleaseResources() const { this->Allocate(0); }
 
   /// Prepares this array to be used as an input to an operation in the
   /// execution environment. If necessary, copies data to the execution
@@ -599,7 +600,7 @@ public:
   ///
   VTKM_CONT WritePortalType PrepareForOutput(vtkm::Id numberOfValues,
                                              vtkm::cont::DeviceAdapterId device,
-                                             vtkm::cont::Token& token)
+                                             vtkm::cont::Token& token) const
   {
     this->Allocate(numberOfValues, vtkm::CopyFlag::Off, token);
     return StorageType::CreateWritePortal(this->GetBuffers(), device, token);
@@ -647,10 +648,8 @@ public:
   /// Note that in a multithreaded environment the validity of this result can
   /// change.
   ///
-  /// TODO: Deprecate this method in favor of IsOnDevice since the data can be on multiple
-  /// devices at once.
   VTKM_CONT
-  DeviceAdapterId GetDeviceAdapterId() const
+  VTKM_DEPRECATED(1.7, "Use ArrayHandle::IsOnDevice.") DeviceAdapterId GetDeviceAdapterId() const
   {
     return detail::ArrayHandleGetDeviceAdapterId(this->Buffers);
   }

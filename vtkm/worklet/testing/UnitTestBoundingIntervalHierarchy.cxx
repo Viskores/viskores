@@ -13,7 +13,9 @@
 #include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Invoker.h>
+#include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/ParametricCoordinates.h>
@@ -49,7 +51,7 @@ struct BoundingIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
                                          const vtkm::Id expectedId) const
   {
     vtkm::Vec3f parametric;
-    vtkm::Id cellId;
+    vtkm::Id cellId = -1;
     bih.FindCell(point, cellId, parametric);
     return (1 - static_cast<vtkm::IdComponent>(expectedId == cellId));
   }
@@ -62,45 +64,28 @@ vtkm::cont::DataSet ConstructDataSet(vtkm::Id size)
 
 void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponent numPlanes)
 {
-  using Timer = vtkm::cont::Timer;
 
   vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
   auto vertices = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
 
-  std::cout << "Using numPlanes: " << numPlanes << "\n";
-  std::cout << "Building Bounding Interval Hierarchy Tree" << std::endl;
   vtkm::cont::CellLocatorBoundingIntervalHierarchy bih =
     vtkm::cont::CellLocatorBoundingIntervalHierarchy(numPlanes, 5);
   bih.SetCellSet(cellSet);
   bih.SetCoordinates(dataSet.GetCoordinateSystem());
   bih.Update();
-  std::cout << "Built Bounding Interval Hierarchy Tree" << std::endl;
 
-  Timer centroidsTimer;
-  centroidsTimer.Start();
   vtkm::cont::ArrayHandle<vtkm::Vec3f> centroids;
   vtkm::worklet::DispatcherMapTopology<CellCentroidCalculator>().Invoke(
     cellSet, vertices, centroids);
-  centroidsTimer.Stop();
-  std::cout << "Centroids calculation time: " << centroidsTimer.GetElapsedTime() << "\n";
+
 
   vtkm::cont::ArrayHandleCounting<vtkm::Id> expectedCellIds(0, 1, cellSet.GetNumberOfCells());
-
-  Timer interpolationTimer;
-  interpolationTimer.Start();
   vtkm::cont::ArrayHandle<vtkm::IdComponent> results;
 
   vtkm::worklet::DispatcherMapField<BoundingIntervalHierarchyTester>().Invoke(
     centroids, bih, expectedCellIds, results);
 
   vtkm::Id numDiffs = vtkm::cont::Algorithm::Reduce(results, 0, vtkm::Add());
-  interpolationTimer.Stop();
-  vtkm::Float64 timeDiff = interpolationTimer.GetElapsedTime();
-  std::cout << "No of interpolations: " << results.GetNumberOfValues() << "\n";
-  std::cout << "Interpolation time: " << timeDiff << "\n";
-  std::cout << "Average interpolation rate: "
-            << (static_cast<vtkm::Float64>(results.GetNumberOfValues()) / timeDiff) << "\n";
-  std::cout << "No of diffs: " << numDiffs << "\n";
   VTKM_TEST_ASSERT(numDiffs == 0, "Calculated cell Ids not the same as expected cell Ids");
 }
 
@@ -110,13 +95,17 @@ void RunTest()
 //cpu usage it will fail, so we limit the number of threads
 //to avoid the test timing out
 #ifdef VTKM_ENABLE_OPENMP
-  omp_set_num_threads(std::min(4, omp_get_max_threads()));
+  auto& runtimeConfig = vtkm::cont::RuntimeDeviceInformation{}.GetRuntimeConfiguration(
+    vtkm::cont::DeviceAdapterTagOpenMP());
+  vtkm::Id maxThreads = 0;
+  runtimeConfig.GetMaxThreads(maxThreads);
+  runtimeConfig.SetThreads(std::min(static_cast<vtkm::Id>(4), maxThreads));
 #endif
 
-  TestBoundingIntervalHierarchy(ConstructDataSet(16), 3);
-  TestBoundingIntervalHierarchy(ConstructDataSet(16), 4);
-  TestBoundingIntervalHierarchy(ConstructDataSet(16), 6);
-  TestBoundingIntervalHierarchy(ConstructDataSet(16), 9);
+  TestBoundingIntervalHierarchy(ConstructDataSet(8), 3);
+  TestBoundingIntervalHierarchy(ConstructDataSet(8), 4);
+  TestBoundingIntervalHierarchy(ConstructDataSet(8), 6);
+  TestBoundingIntervalHierarchy(ConstructDataSet(8), 9);
 }
 
 } // anonymous namespace

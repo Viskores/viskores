@@ -40,6 +40,10 @@
 // it before gcc.
 #define VTKM_PGI
 
+#elif defined(__ibmxl__)
+//Check for xl before GCC and clang, as xl claims it is many things
+#define VTKM_XL
+
 #elif defined(__clang__)
 //Check for clang before GCC, as clang says it is GNUC since it has ABI
 //compliance

@@ -6,7 +6,7 @@ import sys
 
 # Read a 2D text file from disk into a NumPy array
 def read_file(fn):
-    data = np.fromfile(fn, dtype=np.int, sep=" ")
+    data = np.fromfile(fn, dtype=int, sep=" ")
     data = data[2:].reshape(tuple(data[0:2]))
     return data
 

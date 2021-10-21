@@ -11,8 +11,8 @@
 #ifndef vtk_m_filter_particle_density_ngp_hxx
 #define vtk_m_filter_particle_density_ngp_hxx
 
-#include "ParticleDensityNearestGridPoint.h"
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/filter/PolicyBase.h>
@@ -25,11 +25,15 @@ namespace worklet
 class NGPWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn coords, ExecObject locator, AtomicArrayInOut density);
-  using ExecutionSignature = void(_1, _2, _3);
+  using ControlSignature = void(FieldIn coords,
+                                FieldIn field,
+                                ExecObject locator,
+                                AtomicArrayInOut density);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
-  template <typename Point, typename CellLocatorExecObj, typename AtomicArray>
+  template <typename Point, typename T, typename CellLocatorExecObj, typename AtomicArray>
   VTKM_EXEC void operator()(const Point& point,
+                            const T value,
                             const CellLocatorExecObj& locator,
                             AtomicArray& density) const
   {
@@ -39,17 +43,15 @@ public:
     // Find the cell containing the point
     if (locator.FindCell(point, cellId, parametric) == vtkm::ErrorCode::Success)
     {
-      // increment density
-      density.Add(cellId, 1);
+      // deposit field value to density
+      density.Add(cellId, value);
     }
 
-    // FIXME: what does mean when it is not found?
-    // We simply ignore that particular particle.
+    // We simply ignore that particular particle when it is not in the mesh.
   }
 }; //NGPWorklet
 } //worklet
 } //vtkm
-
 
 namespace vtkm
 {
@@ -59,29 +61,22 @@ inline VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoin
   const vtkm::Id3& dimension,
   const vtkm::Vec3f& origin,
   const vtkm::Vec3f& spacing)
-  : Dimension(dimension)
-  , Origin(origin)
-  , Spacing(spacing)
+  : Superclass(dimension, origin, spacing)
 {
 }
 
-ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(const Id3& dimension,
-                                                                 const vtkm::Bounds& bounds)
-  : Dimension(dimension)
-  , Origin({ static_cast<vtkm::FloatDefault>(bounds.X.Min),
-             static_cast<vtkm::FloatDefault>(bounds.Y.Min),
-             static_cast<vtkm::FloatDefault>(bounds.Z.Min) })
-  , Spacing(vtkm::Vec3f{ static_cast<vtkm::FloatDefault>(bounds.X.Length()),
-                         static_cast<vtkm::FloatDefault>(bounds.Y.Length()),
-                         static_cast<vtkm::FloatDefault>(bounds.Z.Length()) } /
-            Dimension)
+inline VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(
+  const Id3& dimension,
+  const vtkm::Bounds& bounds)
+  : Superclass(dimension, bounds)
 {
 }
 
 template <typename T, typename StorageType, typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
-  const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::cont::DataSet& dataSet,
+  const vtkm::cont::ArrayHandle<T, StorageType>&
+    field, // particles' scala field to be deposited to the mesh, e.g. mass or charge
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<Policy>)
 {
@@ -101,14 +96,21 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   locator.SetCoordinates(uniform.GetCoordinateSystem());
   locator.Update();
 
+  auto coords = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
+
   // We create an ArrayHandle and pass it to the Worklet as AtomicArrayInOut.
   // However the ArrayHandle needs to be allocated and initialized first. The
-  // easily way to do it is to copy from an ArrayHandleConstant
-  vtkm::cont::ArrayHandle<vtkm::Id> density;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, uniform.GetNumberOfCells()),
-                        density);
+  // easiest way to do it is to copy from an ArrayHandleConstant
+  vtkm::cont::ArrayHandle<T> density;
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<T>(0, uniform.GetNumberOfCells()), density);
 
-  this->Invoke(vtkm::worklet::NGPWorklet{}, field, locator, density);
+  this->Invoke(vtkm::worklet::NGPWorklet{}, coords, field, locator, density);
+
+  if (DivideByVolume)
+  {
+    auto volume = this->Spacing[0] * this->Spacing[1] * this->Spacing[2];
+    this->Invoke(DivideByVolumeWorklet{ volume }, density);
+  }
 
   uniform.AddField(vtkm::cont::make_FieldCell("density", density));
 

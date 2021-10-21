@@ -89,6 +89,9 @@ public:
   VTKM_CONT
   void SetWorldAnnotationsEnabled(bool val) { this->WorldAnnotationsEnabled = val; }
 
+  VTKM_CONT void SetRenderAnnotationsEnabled(bool val) { this->RenderAnnotationsEnabled = val; }
+  VTKM_CONT bool GetRenderAnnotationsEnabled() { return this->RenderAnnotationsEnabled; }
+
   VTKM_DEPRECATED(1.6, "Initialize() does nothing.")
   virtual void Initialize();
 
@@ -96,31 +99,45 @@ public:
   virtual void RenderScreenAnnotations() = 0;
   virtual void RenderWorldAnnotations() = 0;
 
+  void RenderAnnotations();
+
   void SaveAs(const std::string& fileName) const;
+
+  VTKM_CONT VTKM_DEPRECATED(1.6, "Use ClearTextAnnotations Instead") void ClearAnnotations();
+
+  VTKM_CONT VTKM_DEPRECATED(1.6, "Use AddTextAnnotation Instead") void AddAnnotation(
+    std::unique_ptr<vtkm::rendering::TextAnnotation> ann);
 
   VTKM_CONT
   void SetAxisColor(vtkm::rendering::Color c);
 
   VTKM_CONT
-  void ClearAnnotations();
+  void ClearTextAnnotations();
 
   VTKM_CONT
-  void AddAnnotation(std::unique_ptr<vtkm::rendering::TextAnnotation> ann);
+  void AddTextAnnotation(std::unique_ptr<vtkm::rendering::TextAnnotation> ann);
+
+  VTKM_CONT
+  void ClearAdditionalAnnotations();
+
+  VTKM_CONT
+  void AddAdditionalAnnotation(std::function<void(void)> ann);
 
 protected:
   void SetupForWorldSpace(bool viewportClip = true);
 
   void SetupForScreenSpace(bool viewportClip = false);
 
-  void RenderAnnotations();
 
   vtkm::rendering::Color AxisColor = vtkm::rendering::Color::white;
   bool WorldAnnotationsEnabled = true;
+  bool RenderAnnotationsEnabled = true;
 
 private:
   std::shared_ptr<InternalData> Internal;
 };
-}
-} //namespace vtkm::rendering
+
+} // namespace vtkm::rendering
+} // namespace vtkm
 
 #endif //vtk_m_rendering_View_h

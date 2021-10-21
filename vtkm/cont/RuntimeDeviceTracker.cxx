@@ -164,6 +164,13 @@ void RuntimeDeviceTracker::ForceDevice(DeviceAdapterId deviceId)
   }
 }
 
+VTKM_CONT void RuntimeDeviceTracker::CopyStateFrom(const vtkm::cont::RuntimeDeviceTracker& tracker)
+{
+  std::copy(std::cbegin(tracker.Internals->RuntimeAllowed),
+            std::cend(tracker.Internals->RuntimeAllowed),
+            std::begin(this->Internals->RuntimeAllowed));
+}
+
 VTKM_CONT
 void RuntimeDeviceTracker::PrintSummary(std::ostream& out) const
 {
@@ -269,32 +276,41 @@ ScopedRuntimeDeviceTracker::~ScopedRuntimeDeviceTracker()
 VTKM_CONT
 vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker()
 {
-#if defined(VTKM_CLANG) && defined(__apple_build_version__) && (__apple_build_version__ < 8000000)
-  static std::mutex mtx;
-  static std::map<std::thread::id, vtkm::cont::RuntimeDeviceTracker*> globalTrackers;
-  static std::map<std::thread::id, vtkm::cont::detail::RuntimeDeviceTrackerInternals*>
-    globalTrackerInternals;
-  std::thread::id this_id = std::this_thread::get_id();
+  using SharedTracker = std::shared_ptr<vtkm::cont::RuntimeDeviceTracker>;
+  static thread_local vtkm::cont::detail::RuntimeDeviceTrackerInternals details;
+  static thread_local SharedTracker runtimeDeviceTracker;
+  static std::weak_ptr<vtkm::cont::RuntimeDeviceTracker> defaultRuntimeDeviceTracker;
 
-  std::unique_lock<std::mutex> lock(mtx);
-  auto iter = globalTrackers.find(this_id);
-  if (iter != globalTrackers.end())
+  if (runtimeDeviceTracker)
   {
-    return *iter->second;
+    return *runtimeDeviceTracker;
+  }
+
+  // The RuntimeDeviceTracker for this thread has not been created. Create a new one.
+  runtimeDeviceTracker = SharedTracker(new vtkm::cont::RuntimeDeviceTracker(&details, true));
+
+  // Get the default details, which are a global variable, with thread safety
+  static std::mutex mutex;
+  std::unique_lock<std::mutex> lock(mutex);
+
+  SharedTracker defaultTracker = defaultRuntimeDeviceTracker.lock();
+
+  if (defaultTracker)
+  {
+    // We already have a default tracker, so copy the state from there. We don't need to
+    // keep our mutex locked because we already have a safe handle to the defaultTracker.
+    lock.unlock();
+    runtimeDeviceTracker->CopyStateFrom(*defaultTracker);
   }
   else
   {
-    auto* details = new vtkm::cont::detail::RuntimeDeviceTrackerInternals();
-    vtkm::cont::RuntimeDeviceTracker* tracker = new vtkm::cont::RuntimeDeviceTracker(details, true);
-    globalTrackers[this_id] = tracker;
-    globalTrackerInternals[this_id] = details;
-    return *tracker;
+    // There is no default tracker yet. It has never been created (or it was on a thread
+    // that got deleted). Use the current thread's details as the default.
+    defaultRuntimeDeviceTracker = runtimeDeviceTracker;
   }
-#else
-  static thread_local vtkm::cont::detail::RuntimeDeviceTrackerInternals details;
-  static thread_local vtkm::cont::RuntimeDeviceTracker runtimeDeviceTracker(&details, true);
-  return runtimeDeviceTracker;
-#endif
+
+  return *runtimeDeviceTracker;
 }
+
 }
 } // namespace vtkm::cont

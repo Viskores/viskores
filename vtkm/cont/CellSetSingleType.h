@@ -159,24 +159,25 @@ public:
   void CompleteAddingCells(vtkm::Id numPoints)
   {
     this->Data->NumberOfPoints = numPoints;
-    this->CellPointIds.Connectivity.Allocate(this->ConnectivityAdded, vtkm::CopyFlag::On);
+    this->Data->CellPointIds.Connectivity.Allocate(this->Data->ConnectivityAdded,
+                                                   vtkm::CopyFlag::On);
 
-    vtkm::Id numCells = this->NumberOfCellsAdded;
+    vtkm::Id numCells = this->Data->NumberOfCellsAdded;
 
-    this->CellPointIds.Shapes =
+    this->Data->CellPointIds.Shapes =
       vtkm::cont::make_ArrayHandleConstant(this->GetCellShape(0), numCells);
-    this->CellPointIds.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
+    this->Data->CellPointIds.Offsets = vtkm::cont::make_ArrayHandleCounting(
       vtkm::Id(0), static_cast<vtkm::Id>(this->NumberOfPointsPerCell), numCells);
 
-    this->CellPointIds.ElementsValid = true;
+    this->Data->CellPointIds.ElementsValid = true;
 
     if (this->ExpectedNumberOfCellsAdded != this->GetNumberOfCells())
     {
       throw vtkm::cont::ErrorBadValue("Did not add the expected number of cells.");
     }
 
-    this->NumberOfCellsAdded = -1;
-    this->ConnectivityAdded = -1;
+    this->Data->NumberOfCellsAdded = -1;
+    this->Data->ConnectivityAdded = -1;
     this->ExpectedNumberOfCellsAdded = -1;
   }
 
@@ -209,11 +210,13 @@ public:
   VTKM_CONT
   vtkm::Id GetCellShapeAsId() const { return this->CellShapeAsId; }
 
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_CONT
   vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex)) const override
   {
     return static_cast<vtkm::UInt8>(this->CellShapeAsId);
   }
+  VTKM_DEPRECATED_SUPPRESS_END
 
   VTKM_CONT
   std::shared_ptr<CellSet> NewInstance() const override

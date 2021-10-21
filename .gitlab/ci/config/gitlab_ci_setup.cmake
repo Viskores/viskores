@@ -63,11 +63,25 @@ if("$ENV{VTKM_CI_NIGHTLY}" STREQUAL "TRUE")
   set(CTEST_TRACK "Nightly")
 endif()
 
-if (CTEST_CMAKE_GENERATOR STREQUAL "Unix Makefiles")
+# In Make, default parallelism to number of cores.
+if(CTEST_CMAKE_GENERATOR STREQUAL "Unix Makefiles")
   include(ProcessorCount)
   ProcessorCount(nproc)
+
+  if(DEFINED ENV{CTEST_MAX_PARALLELISM})
+    if(nproc GREATER $ENV{CTEST_MAX_PARALLELISM})
+      set(nproc $ENV{CTEST_MAX_PARALLELISM})
+    endif()
+  endif()
+
   set(CTEST_BUILD_FLAGS "-j${nproc}")
-endif ()
+endif()
+
+# In Ninja, we do not need to specify parallelism unless we need to restrict
+# the number of threads.
+if(CTEST_CMAKE_GENERATOR STREQUAL "Ninja" AND DEFINED ENV{CTEST_MAX_PARALLELISM})
+  set(CTEST_BUILD_FLAGS "-j$ENV{CTEST_MAX_PARALLELISM}")
+endif()
 
 if(DEFINED ENV{CTEST_MEMORYCHECK_TYPE})
   set(env_value "$ENV{CTEST_MEMORYCHECK_TYPE}")

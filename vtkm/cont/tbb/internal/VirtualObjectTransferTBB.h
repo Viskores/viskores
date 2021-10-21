@@ -14,6 +14,12 @@
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 namespace vtkm
 {
 namespace cont
@@ -28,6 +34,9 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagTBB
   using VirtualObjectTransferShareWithControl<
     VirtualDerivedType>::VirtualObjectTransferShareWithControl;
 };
+
+VTKM_DEPRECATED_SUPPRESS_END
+
 }
 }
 } // vtkm::cont::internal

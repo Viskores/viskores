@@ -23,7 +23,7 @@ set(headers
   Logger.h
   MeshConnectivityBuilder.h
   MeshConnectivityContainers.h
-  MeshConnectivityBase.h
+  MeshConnectivity.h
   MortonCodes.h
   PartialComposite.h
   QuadExtractor.h

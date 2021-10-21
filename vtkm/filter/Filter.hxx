@@ -14,9 +14,17 @@
 #include <vtkm/filter/internal/ResolveFieldTypeAndExecute.h>
 #include <vtkm/filter/internal/ResolveFieldTypeAndMap.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/RuntimeDeviceInformation.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
+#include <vtkm/cont/internal/RuntimeDeviceConfiguration.h>
+
+#include <vtkm/filter/TaskQueue.h>
+
+#include <future>
 
 namespace vtkm
 {
@@ -170,6 +178,26 @@ InputType CallPrepareForExecutionInternal(std::true_type,
   return self->PrepareForExecution(input, policy);
 }
 
+template <typename Derived, typename DerivedPolicy>
+void RunFilter(Derived* self,
+               const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+               vtkm::filter::DataSetQueue& input,
+               vtkm::filter::DataSetQueue& output)
+{
+  auto filterClone = static_cast<Derived*>(self->Clone());
+
+  std::pair<vtkm::Id, vtkm::cont::DataSet> task;
+  while (input.GetTask(task))
+  {
+    auto outDS = CallPrepareForExecution(filterClone, task.second, policy);
+    CallMapFieldOntoOutput(filterClone, task.second, outDS, policy);
+    output.Push(std::make_pair(task.first, std::move(outDS)));
+  }
+
+  vtkm::cont::Algorithm::Synchronize();
+  delete filterClone;
+}
+
 //--------------------------------------------------------------------------------
 // specialization for PartitionedDataSet input when `PrepareForExecution` is not provided
 // by the subclass. we iterate over blocks and execute for each block
@@ -182,12 +210,43 @@ vtkm::cont::PartitionedDataSet CallPrepareForExecutionInternal(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   vtkm::cont::PartitionedDataSet output;
-  for (const auto& inBlock : input)
+
+  if (self->GetRunMultiThreadedFilter())
   {
-    vtkm::cont::DataSet outBlock = CallPrepareForExecution(self, inBlock, policy);
-    CallMapFieldOntoOutput(self, inBlock, outBlock, policy);
-    output.AppendPartition(outBlock);
+    vtkm::filter::DataSetQueue inputQueue(input);
+    vtkm::filter::DataSetQueue outputQueue;
+
+    vtkm::Id numThreads = self->DetermineNumberOfThreads(input);
+
+    //Run 'numThreads' filters.
+    std::vector<std::future<void>> futures(static_cast<std::size_t>(numThreads));
+    for (std::size_t i = 0; i < static_cast<std::size_t>(numThreads); i++)
+    {
+      auto f = std::async(std::launch::async,
+                          RunFilter<Derived, DerivedPolicy>,
+                          self,
+                          policy,
+                          std::ref(inputQueue),
+                          std::ref(outputQueue));
+      futures[i] = std::move(f);
+    }
+
+    for (auto& f : futures)
+      f.get();
+
+    //Get results from the outputQueue.
+    output = outputQueue.Get();
   }
+  else
+  {
+    for (const auto& inBlock : input)
+    {
+      vtkm::cont::DataSet outBlock = CallPrepareForExecution(self, inBlock, policy);
+      CallMapFieldOntoOutput(self, inBlock, outBlock, policy);
+      output.AppendPartition(outBlock);
+    }
+  }
+
   return output;
 }
 
@@ -258,7 +317,6 @@ inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(const vtkm::cont::
   return output.GetNumberOfPartitions() == 1 ? output.GetPartition(0) : vtkm::cont::DataSet();
 }
 
-//----------------------------------------------------------------------------
 template <typename Derived>
 inline VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
   const vtkm::cont::PartitionedDataSet& input)
@@ -282,6 +340,67 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
   internal::CallPostExecute(self, input, output, policy);
   return output;
 }
+
+template <typename Derived>
+inline VTKM_CONT vtkm::Id Filter<Derived>::DetermineNumberOfThreads(
+  const vtkm::cont::PartitionedDataSet& input)
+{
+  vtkm::Id numDS = input.GetNumberOfPartitions();
+
+  //Aribitrary constants.
+  const vtkm::Id threadsPerGPU = 8;
+  const vtkm::Id threadsPerCPU = 4;
+
+  vtkm::Id availThreads = 1;
+
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+
+  if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{}))
+    availThreads = threadsPerGPU;
+  else if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagKokkos{}))
+  {
+    //Kokkos doesn't support threading on the CPU.
+#ifdef VTKM_KOKKOS_CUDA
+    availThreads = threadsPerGPU;
+#else
+    availThreads = 1;
+#endif
+  }
+  else if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagSerial{}))
+    availThreads = 1;
+  else
+    availThreads = threadsPerCPU;
+
+  vtkm::Id numThreads = std::min<vtkm::Id>(numDS, availThreads);
+  return numThreads;
+}
+
+template <typename Derived>
+inline VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::ExecuteThreaded(
+  const vtkm::cont::PartitionedDataSet& input,
+  vtkm::Id vtkmNotUsed(numThreads))
+{
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
+                 "Filter (%d partitions): '%s'",
+                 (int)input.GetNumberOfPartitions(),
+                 vtkm::cont::TypeToString<Derived>().c_str());
+
+  Derived* self = static_cast<Derived*>(this);
+
+  vtkm::filter::PolicyDefault policy;
+
+  // Call `void Derived::PreExecute<DerivedPolicy>(input, policy)`, if defined.
+  internal::CallPreExecute(self, input, policy);
+
+  // Call `PrepareForExecution` (which should probably be renamed at some point)
+  vtkm::cont::PartitionedDataSet output = internal::CallPrepareForExecution(self, input, policy);
+
+  // Call `Derived::PostExecute<DerivedPolicy>(input, output, policy)` if defined.
+  internal::CallPostExecute(self, input, output, policy);
+  return output;
+}
+
+
 
 
 //----------------------------------------------------------------------------

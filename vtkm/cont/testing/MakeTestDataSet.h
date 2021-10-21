@@ -326,7 +326,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet1()
 
 inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet2()
 {
-  constexpr vtkm::Id base_size = 256;
+  constexpr vtkm::Id base_size = 64;
   vtkm::cont::DataSetBuilderUniform dsb;
   vtkm::Id3 dimensions(base_size, base_size, base_size);
   vtkm::cont::DataSet dataSet = dsb.Create(dimensions);

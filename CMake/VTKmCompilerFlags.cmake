@@ -40,8 +40,8 @@ add_library(vtkm_compiler_flags INTERFACE)
 target_link_libraries(vtkm_compiler_flags
   INTERFACE $<BUILD_INTERFACE:vtkm_vectorization_flags>)
 
-# setup that we need C++11 support
-target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_11)
+# setup that we need C++14 support
+target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_14)
 
 # setup our static libraries so that a separate ELF section
 # is generated for each function. This allows for the linker to
@@ -171,13 +171,6 @@ elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
 endif()
 
 function(setup_cuda_flags)
-  if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
-    #nvcc 9 introduced specific controls to disable the stack size warning
-    #otherwise we let the warning occur. We have to set this in CMAKE_CUDA_FLAGS
-    #as it is passed to the device link step, unlike compile_options
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xnvlink=--suppress-stack-size-warning" PARENT_SCOPE)
-  endif()
-
   set(display_error_nums -Xcudafe=--display_error_number)
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${display_error_nums}>)
 endfunction()

@@ -118,6 +118,84 @@ void TryCopy()
     vtkm::cont::ArrayCopy(input, output);
     TestValues(input, output);
   }
+
+  // Test the copy methods in UnknownArrayHandle. Although this would be appropriate in
+  // UnitTestUnknownArrayHandle, it is easier to test copies here.
+  {
+    std::cout << "unknown.DeepCopyFrom(same type)" << std::endl;
+    vtkm::cont::ArrayHandle<ValueType> input = MakeInputArray<ValueType>();
+    vtkm::cont::ArrayHandle<ValueType> outputArray;
+    vtkm::cont::UnknownArrayHandle(outputArray).DeepCopyFrom(input);
+    // Should be different arrays with same content.
+    VTKM_TEST_ASSERT(input != outputArray);
+    TestValues(input, outputArray);
+
+    vtkm::cont::UnknownArrayHandle outputUnknown;
+    outputUnknown.DeepCopyFrom(input);
+    // Should be different arrays with same content.
+    VTKM_TEST_ASSERT(input != outputUnknown.AsArrayHandle<vtkm::cont::ArrayHandle<ValueType>>());
+    TestValues(input, outputUnknown);
+  }
+
+  {
+    std::cout << "unknown.DeepCopyFrom(different type)" << std::endl;
+    vtkm::cont::ArrayHandle<vtkm::UInt8> input = MakeInputArray<vtkm::UInt8>();
+    vtkm::cont::ArrayHandle<ValueType> outputArray;
+    vtkm::cont::UnknownArrayHandle(outputArray).DeepCopyFrom(input);
+    TestValues(input, outputArray);
+
+    outputArray.ReleaseResources();
+    vtkm::cont::UnknownArrayHandle outputUnknown(outputArray);
+    outputUnknown.DeepCopyFrom(input);
+    TestValues(input, outputUnknown);
+  }
+
+  {
+    std::cout << "unknown.CopyShallowIfPossible(same type)" << std::endl;
+    vtkm::cont::ArrayHandle<ValueType> input = MakeInputArray<ValueType>();
+    vtkm::cont::UnknownArrayHandle outputUnknown;
+    outputUnknown.CopyShallowIfPossible(input);
+    VTKM_TEST_ASSERT(input == outputUnknown.AsArrayHandle<vtkm::cont::ArrayHandle<ValueType>>());
+
+    vtkm::cont::ArrayHandle<ValueType> outputArray;
+    outputUnknown = outputArray;
+    outputUnknown.CopyShallowIfPossible(input);
+    outputUnknown.AsArrayHandle(outputArray);
+    VTKM_TEST_ASSERT(input == outputArray);
+  }
+
+  {
+    std::cout << "unknown.CopyShallowIfPossible(different type)" << std::endl;
+    vtkm::cont::ArrayHandle<vtkm::UInt8> input = MakeInputArray<vtkm::UInt8>();
+    vtkm::cont::ArrayHandle<ValueType> outputArray;
+    vtkm::cont::UnknownArrayHandle(outputArray).CopyShallowIfPossible(input);
+    TestValues(input, outputArray);
+
+    outputArray.ReleaseResources();
+    vtkm::cont::UnknownArrayHandle outputUnknown(outputArray);
+    outputUnknown.CopyShallowIfPossible(input);
+    TestValues(input, outputUnknown);
+  }
+}
+
+void TryArrayCopyShallowIfPossible()
+{
+  vtkm::cont::ArrayHandle<vtkm::Float32> input = MakeInputArray<vtkm::Float32>();
+  vtkm::cont::UnknownArrayHandle unknownInput = input;
+
+  {
+    std::cout << "shallow copy" << std::endl;
+    vtkm::cont::ArrayHandle<vtkm::Float32> output;
+    vtkm::cont::ArrayCopyShallowIfPossible(unknownInput, output);
+    VTKM_TEST_ASSERT(input == output, "Copy was not shallow");
+  }
+
+  {
+    std::cout << "cannot shallow copy" << std::endl;
+    vtkm::cont::ArrayHandle<vtkm::Float64> output;
+    vtkm::cont::ArrayCopyShallowIfPossible(unknownInput, output);
+    TestValues(input, output);
+  }
 }
 
 void TestArrayCopy()
@@ -125,6 +203,7 @@ void TestArrayCopy()
   TryCopy<vtkm::Id>();
   TryCopy<vtkm::IdComponent>();
   TryCopy<vtkm::Float32>();
+  TryArrayCopyShallowIfPossible();
 }
 
 } // anonymous namespace

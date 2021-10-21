@@ -143,7 +143,7 @@ function(add_diy_mpi_library use_mpi)
 
     add_library(${lib_name} ${sources})
     set_target_properties(${lib_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    target_compile_features(${lib_name} PRIVATE cxx_std_11)
+    target_compile_features(${lib_name} PRIVATE cxx_std_14)
     target_compile_definitions(${lib_name}
         PRIVATE -DVTKMDIY_HAS_MPI=${has_mpi_val}
         PRIVATE -Ddiy=${diy_prefix}         # mangle diy namespace
@@ -186,7 +186,7 @@ if (build_diy_mpi_lib)
 endif() # build_diy_mpi_lib
 
 add_library(${diy_prefix} INTERFACE)
-target_compile_features(${diy_prefix} INTERFACE cxx_std_11)
+target_compile_features(${diy_prefix} INTERFACE cxx_std_14)
 target_compile_definitions(${diy_prefix} INTERFACE ${diy_definitions})
 target_include_directories(${diy_prefix} SYSTEM INTERFACE
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"

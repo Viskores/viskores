@@ -57,6 +57,12 @@ public:
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
                                                     vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
+protected:
+  vtkm::filter::FilterDataSet<Derived>& operator=(const vtkm::filter::FilterDataSet<Derived>&) =
+    default;
+  VTKM_CONT
+  void CopyStateFrom(const FilterDataSet<Derived>* filter) { *this = *filter; }
+
 private:
   vtkm::Id CoordinateSystemIndex;
 

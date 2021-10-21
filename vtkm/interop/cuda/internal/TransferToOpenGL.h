@@ -79,7 +79,7 @@ public:
   void Map()
   {
     //map the resource into cuda, so we can copy it
-    cudaError_t cError = cudaGraphicsMapResources(1, &this->CudaResource);
+    cudaError_t cError = cudaGraphicsMapResources(1, &this->CudaResource, cudaStreamPerThread);
     if (cError != cudaSuccess)
     {
       throw vtkm::cont::ErrorBadAllocation(
@@ -106,7 +106,7 @@ public:
     return pointer;
   }
 
-  void UnMap() { cudaGraphicsUnmapResources(1, &this->CudaResource); }
+  void UnMap() { cudaGraphicsUnmapResources(1, &this->CudaResource, cudaStreamPerThread); }
 
 private:
   bool Registered;
@@ -182,7 +182,8 @@ public:
     this->Resource->Map();
 
     ValueType* beginPointer = this->Resource->GetMappedPoiner<ValueType>(size);
-    auto deviceMemory = vtkm::cont::make_ArrayHandle(beginPointer, size, vtkm::CopyFlag::Off);
+    vtkm::cont::ArrayHandleBasic<ValueType> deviceMemory(
+      beginPointer, handle.GetNumberOfValues(), DeviceAdapterTag{}, [](void*) {});
 
     //Do a device to device memory copy
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Copy(handle, deviceMemory);

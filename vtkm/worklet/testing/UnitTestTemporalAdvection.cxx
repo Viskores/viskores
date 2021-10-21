@@ -19,8 +19,8 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/Field.h>
-#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/Stepper.h>
 #include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
 
 template <typename ScalarType>

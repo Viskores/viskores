@@ -22,12 +22,27 @@
 #include <typeinfo>
 #include <vector>
 #include <vtkm/cont/ArrayRangeCompute.h>
+#include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/MeshQuality.h>
 #include <vtkm/io/VTKDataSetReader.h>
+
+namespace
+{
+
+//TODO: This should be a general facility.
+const char* GetCellShapeName(vtkm::UInt8 shape)
+{
+  switch (shape)
+  {
+    vtkmGenericCellShapeMacro(return vtkm::GetCellShapeName(CellShapeTag{}));
+    default:
+      return "Unknown";
+  }
+}
 
 //Adapted from vtkm/cont/testing/MakeTestDataSet.h
 //Modified the content of the MakeExplicitDataSetZoo() function
@@ -105,6 +120,25 @@ inline vtkm::cont::DataSet MakeExplicitDataSet()
   return dataSet;
 }
 
+inline vtkm::cont::DataSet MakeSingleTypeDataSet()
+{
+  using CoordType = vtkm::Vec3f_64;
+
+  vtkm::cont::ArrayHandle<CoordType> coords = vtkm::cont::make_ArrayHandle<vtkm::Vec3f_64>(
+    { { 0, 0, 0 }, { 3, 0, 0 }, { 2, 2, 0 }, { 4, 0, 0 } });
+
+  vtkm::cont::CellSetSingleType<> cellSet;
+  cellSet.PrepareToAddCells(2, 3 * 2);
+  cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::Id3(0, 1, 2));
+  cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::Id3(2, 1, 3));
+  cellSet.CompleteAddingCells(coords.GetNumberOfValues());
+
+  vtkm::cont::DataSet dataset;
+  dataset.SetCellSet(cellSet);
+  dataset.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", coords));
+  return dataset;
+}
+
 bool TestMeshQualityFilter(const vtkm::cont::DataSet& input,
                            const std::vector<vtkm::FloatDefault>& expectedVals,
                            const std::string& outputname,
@@ -127,23 +161,20 @@ bool TestMeshQualityFilter(const vtkm::cont::DataSet& input,
   auto portal1 = values.ReadPortal();
   if (portal1.GetNumberOfValues() != (vtkm::Id)expectedVals.size())
   {
-    printf("Number of expected values for %s does not match.\n", outputname.c_str());
+    std::cout << "Number of expected values for " << outputname << " does not match.\n";
     return true;
   }
 
-  std::vector<std::string> cellTypes = { "triangle", "quadrilateral", "tetrahedron",
-                                         "pyramid",  "wedge",         "hexahedron" };
   bool anyFailures = false;
   for (unsigned long i = 0; i < expectedVals.size(); i++)
   {
     vtkm::Id id = (vtkm::Id)i;
     if (!test_equal(portal1.Get(id), expectedVals[i]))
     {
-      printf("Metric \"%s\" for cell type \"%s\" does not match.  Expected %f and got %f\n",
-             outputname.c_str(),
-             cellTypes[i].c_str(),
-             expectedVals[i],
-             portal1.Get(id));
+      std::cout << "Metric `" << outputname << "` for cell " << i << " (type `"
+                << GetCellShapeName(input.GetCellSet().GetCellSetBase()->GetCellShape(i))
+                << "` does not match. Expected " << expectedVals[i] << " and got "
+                << portal1.Get(id) << "\n";
       anyFailures = true;
     }
   }
@@ -155,7 +186,8 @@ int TestMeshQuality()
   using FloatVec = std::vector<vtkm::FloatDefault>;
 
   //Test variables
-  vtkm::cont::DataSet input = MakeExplicitDataSet();
+  vtkm::cont::DataSet explicitInput = MakeExplicitDataSet();
+  vtkm::cont::DataSet singleTypeInput = MakeSingleTypeDataSet();
 
   int numFailures = 0;
   bool testFailed = false;
@@ -163,131 +195,169 @@ int TestMeshQuality()
   std::vector<FloatVec> expectedValues;
   std::vector<vtkm::filter::CellMetric> metrics;
   std::vector<std::string> metricName;
+  std::vector<vtkm::cont::DataSet> inputs;
 
-  FloatVec volumeExpectedValues = { 0, 0, 1, (float)1.333333333, 4, 4 };
-  expectedValues.push_back(volumeExpectedValues);
+  expectedValues.push_back(FloatVec{ 0, 0, 1, 1.333333333f, 4, 4 });
   metrics.push_back(vtkm::filter::CellMetric::VOLUME);
   metricName.push_back("volume");
+  inputs.push_back(explicitInput);
 
-  FloatVec areaExpectedValues = { 3, 4, 0, 0, 0, 0 };
-  expectedValues.push_back(areaExpectedValues);
+  expectedValues.push_back(FloatVec{ 3, 4, 0, 0, 0, 0 });
   metrics.push_back(vtkm::filter::CellMetric::AREA);
   metricName.push_back("area");
+  inputs.push_back(explicitInput);
 
-  FloatVec aspectRatioExpectedValues = { (float)1.164010, (float)1.118034, (float)1.648938, 0, 0,
-                                         (float)1.1547 };
-  expectedValues.push_back(aspectRatioExpectedValues);
+  expectedValues.push_back(FloatVec{ 3, 1 });
+  metrics.push_back(vtkm::filter::CellMetric::AREA);
+  metricName.push_back("area");
+  inputs.push_back(singleTypeInput);
+
+  expectedValues.push_back(FloatVec{ 1.164010f, 1.118034f, 1.648938f, 0, 0, 1.1547f });
   metrics.push_back(vtkm::filter::CellMetric::ASPECT_RATIO);
   metricName.push_back("aspectRatio");
+  inputs.push_back(explicitInput);
 
-  FloatVec aspectGammaExpectedValues = { 0, 0, (float)1.52012, 0, 0, 0 };
-  expectedValues.push_back(aspectGammaExpectedValues);
+  expectedValues.push_back(FloatVec{ 1.164010f, 2.47582f });
+  metrics.push_back(vtkm::filter::CellMetric::ASPECT_RATIO);
+  metricName.push_back("aspectRatio");
+  inputs.push_back(singleTypeInput);
+
+  expectedValues.push_back(FloatVec{ 0, 0, 1.52012f, 0, 0, 0 });
   metrics.push_back(vtkm::filter::CellMetric::ASPECT_GAMMA);
   metricName.push_back("aspectGamma");
+  inputs.push_back(explicitInput);
 
-  FloatVec conditionExpectedValues = {
-    (float)1.058475, 2.25, (float)1.354007, 0, 0, (float)1.563472
-  };
-  expectedValues.push_back(conditionExpectedValues);
+  expectedValues.push_back(FloatVec{ 1.058475f, 2.25f, 1.354007f, 0, 0, 1.563472f });
   metrics.push_back(vtkm::filter::CellMetric::CONDITION);
   metricName.push_back("condition");
+  inputs.push_back(explicitInput);
 
-  FloatVec minAngleExpectedValues = { 45, 45, -1, -1, -1, -1 };
-  expectedValues.push_back(minAngleExpectedValues);
+  expectedValues.push_back(FloatVec{ 1.058475f, 2.02073f });
+  metrics.push_back(vtkm::filter::CellMetric::CONDITION);
+  metricName.push_back("condition");
+  inputs.push_back(singleTypeInput);
+
+  expectedValues.push_back(FloatVec{ 45, 45, -1, -1, -1, -1 });
   metrics.push_back(vtkm::filter::CellMetric::MIN_ANGLE);
   metricName.push_back("minAngle");
+  inputs.push_back(explicitInput);
 
-  FloatVec maxAngleExpectedValues = { (float)71.56505, 135, -1, -1, -1, -1 };
-  expectedValues.push_back(maxAngleExpectedValues);
+  expectedValues.push_back(FloatVec{ 45, 18.4348f });
+  metrics.push_back(vtkm::filter::CellMetric::MIN_ANGLE);
+  metricName.push_back("minAngle");
+  inputs.push_back(singleTypeInput);
+
+  expectedValues.push_back(FloatVec{ 71.56505f, 135, -1, -1, -1, -1 });
   metrics.push_back(vtkm::filter::CellMetric::MAX_ANGLE);
   metricName.push_back("maxAngle");
+  inputs.push_back(explicitInput);
 
-  FloatVec minDiagonalExpectedValues = { -1, -1, -1, -1, -1, (float)1.73205 };
-  expectedValues.push_back(minDiagonalExpectedValues);
+  expectedValues.push_back(FloatVec{ 71.56505f, 116.565f });
+  metrics.push_back(vtkm::filter::CellMetric::MAX_ANGLE);
+  metricName.push_back("maxAngle");
+  inputs.push_back(singleTypeInput);
+
+  expectedValues.push_back(FloatVec{ -1, -1, -1, -1, -1, 1.73205f });
   metrics.push_back(vtkm::filter::CellMetric::MIN_DIAGONAL);
   metricName.push_back("minDiagonal");
+  inputs.push_back(explicitInput);
 
-  FloatVec maxDiagonalExpectedValues = { -1, -1, -1, -1, -1, (float)4.3589 };
-  expectedValues.push_back(maxDiagonalExpectedValues);
+  expectedValues.push_back(FloatVec{ -1, -1, -1, -1, -1, 4.3589f });
   metrics.push_back(vtkm::filter::CellMetric::MAX_DIAGONAL);
   metricName.push_back("maxDiagonal");
+  inputs.push_back(explicitInput);
 
-  FloatVec jacobianExpectedValues = { 0, 2, 6, 0, 0, 4 };
-  expectedValues.push_back(jacobianExpectedValues);
+  expectedValues.push_back(FloatVec{ 0, 2, 6, 0, 0, 4 });
   metrics.push_back(vtkm::filter::CellMetric::JACOBIAN);
   metricName.push_back("jacobian");
+  inputs.push_back(explicitInput);
 
-  FloatVec scaledJacobianExpectedValues = {
-    (float)0.816497, (float)0.707107, (float)0.408248, -2, -2, (float)0.57735
-  };
-  expectedValues.push_back(scaledJacobianExpectedValues);
+  expectedValues.push_back(FloatVec{ 0.816497f, 0.707107f, 0.408248f, -2, -2, 0.57735f });
   metrics.push_back(vtkm::filter::CellMetric::SCALED_JACOBIAN);
   metricName.push_back("scaledJacobian");
+  inputs.push_back(explicitInput);
 
-  FloatVec oddyExpectedValues = { -1, 8.125, -1, -1, -1, (float)2.62484 };
-  expectedValues.push_back(oddyExpectedValues);
+  expectedValues.push_back(FloatVec{ 0.816497f, 0.365148f });
+  metrics.push_back(vtkm::filter::CellMetric::SCALED_JACOBIAN);
+  metricName.push_back("scaledJacobian");
+  inputs.push_back(singleTypeInput);
+
+  expectedValues.push_back(FloatVec{ -1, 8.125f, -1, -1, -1, 2.62484f });
   metrics.push_back(vtkm::filter::CellMetric::ODDY);
   metricName.push_back("oddy");
+  inputs.push_back(explicitInput);
 
-  FloatVec diagonalRatioExpectedValues = { -1, (float)0.620174, -1, -1, -1, (float)0.397360 };
-  expectedValues.push_back(diagonalRatioExpectedValues);
+  expectedValues.push_back(FloatVec{ -1, 0.620174f, -1, -1, -1, 0.397360f });
   metrics.push_back(vtkm::filter::CellMetric::DIAGONAL_RATIO);
   metricName.push_back("diagonalRatio");
+  inputs.push_back(explicitInput);
 
-  FloatVec shapeExpectedValues = { (float)0.944755, (float)0.444444, (float)0.756394, -1, -1,
-                                   (float)0.68723 };
-  expectedValues.push_back(shapeExpectedValues);
+  expectedValues.push_back(FloatVec{ 0.944755f, 0.444444f, 0.756394f, -1, -1, 0.68723f });
   metrics.push_back(vtkm::filter::CellMetric::SHAPE);
   metricName.push_back("shape");
+  inputs.push_back(explicitInput);
 
-  FloatVec shearExpectedValues = { (float)-1, (float).707107, -1, -1, -1, (float)0.57735 };
-  expectedValues.push_back(shearExpectedValues);
+  expectedValues.push_back(FloatVec{ 0.944755f, 0.494872f });
+  metrics.push_back(vtkm::filter::CellMetric::SHAPE);
+  metricName.push_back("shape");
+  inputs.push_back(singleTypeInput);
+
+  expectedValues.push_back(FloatVec{ -1, 0.707107f, -1, -1, -1, 0.57735f });
   metrics.push_back(vtkm::filter::CellMetric::SHEAR);
   metricName.push_back("shear");
+  inputs.push_back(explicitInput);
 
-  FloatVec skewExpectedValues = { (float)-1, (float)0.447214, -1, -1, -1, (float)0.57735 };
-  expectedValues.push_back(skewExpectedValues);
+  expectedValues.push_back(FloatVec{ -1, 0.447214f, -1, -1, -1, 0.57735f });
   metrics.push_back(vtkm::filter::CellMetric::SKEW);
   metricName.push_back("skew");
+  inputs.push_back(explicitInput);
 
-  FloatVec stretchExpectedValues = { -1, (float)0.392232, -1, -1, -1, (float)0.688247 };
-  expectedValues.push_back(stretchExpectedValues);
+  expectedValues.push_back(FloatVec{ -1, (float)0.392232, -1, -1, -1, (float)0.688247 });
   metrics.push_back(vtkm::filter::CellMetric::STRETCH);
   metricName.push_back("stretch");
+  inputs.push_back(explicitInput);
 
-  FloatVec taperExpectedValues = { -1, 0.5, -1, -1, -1, 0 };
-  expectedValues.push_back(taperExpectedValues);
+  expectedValues.push_back(FloatVec{ -1, 0.5, -1, -1, -1, 0 });
   metrics.push_back(vtkm::filter::CellMetric::TAPER);
   metricName.push_back("taper");
+  inputs.push_back(explicitInput);
 
-  FloatVec warpageExpectedValues = { -1, 1, -1, -1, -1, -1 };
-  expectedValues.push_back(warpageExpectedValues);
+  expectedValues.push_back(FloatVec{ -1, 1, -1, -1, -1, -1 });
   metrics.push_back(vtkm::filter::CellMetric::WARPAGE);
   metricName.push_back("warpage");
+  inputs.push_back(explicitInput);
 
-  FloatVec dimensionExpectedValues = { -1, -1, -1, -1, -1, (float)0.707107 };
-  expectedValues.push_back(dimensionExpectedValues);
+  expectedValues.push_back(FloatVec{ -1, -1, -1, -1, -1, 0.707107f });
   metrics.push_back(vtkm::filter::CellMetric::DIMENSION);
   metricName.push_back("dimension");
+  inputs.push_back(explicitInput);
 
-  FloatVec relSizeExpectedValues = { (float)0.151235, (float)0.085069, (float)0.337149, -1, -1,
-                                     (float)0.185378 };
-  expectedValues.push_back(relSizeExpectedValues);
+  expectedValues.push_back(FloatVec{ 0.151235f, 0.085069f, 0.337149f, -1, -1, 0.185378f });
   metrics.push_back(vtkm::filter::CellMetric::RELATIVE_SIZE_SQUARED);
   metricName.push_back("relativeSizeSquared");
+  inputs.push_back(explicitInput);
 
-  FloatVec shapeAndSizeExpectedValues = { (float)0.142880, (float)0.037809, (float)0.255017, -1, -1,
-                                          (float)0.127397 };
-  expectedValues.push_back(shapeAndSizeExpectedValues);
+  expectedValues.push_back(FloatVec{ 0.444444f, 0.25f });
+  metrics.push_back(vtkm::filter::CellMetric::RELATIVE_SIZE_SQUARED);
+  metricName.push_back("relativeSizeSquared");
+  inputs.push_back(singleTypeInput);
+
+  expectedValues.push_back(FloatVec{ 0.142880f, 0.037809f, 0.255017f, -1, -1, 0.127397f });
   metrics.push_back(vtkm::filter::CellMetric::SHAPE_AND_SIZE);
   metricName.push_back("shapeAndSize");
+  inputs.push_back(explicitInput);
+
+  expectedValues.push_back(FloatVec{ 0.419891f, 0.123718f });
+  metrics.push_back(vtkm::filter::CellMetric::SHAPE_AND_SIZE);
+  metricName.push_back("shapeAndSize");
+  inputs.push_back(singleTypeInput);
 
   unsigned long numTests = (unsigned long)metrics.size();
   for (unsigned long i = 0; i < numTests; i++)
   {
     printf("Testing metric %s\n", metricName[i].c_str());
     vtkm::filter::MeshQuality filter(metrics[i]);
-    testFailed = TestMeshQualityFilter(input, expectedValues[i], metricName[i], filter);
+    testFailed = TestMeshQualityFilter(inputs[i], expectedValues[i], metricName[i], filter);
     if (testFailed)
     {
       numFailures++;
@@ -305,6 +375,8 @@ int TestMeshQuality()
   }
   return 0;
 }
+
+} // anonymous namespace
 
 int UnitTestMeshQualityFilter(int argc, char* argv[])
 {

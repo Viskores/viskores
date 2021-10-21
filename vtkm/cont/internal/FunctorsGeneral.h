@@ -10,11 +10,12 @@
 #ifndef vtk_m_cont_internal_FunctorsGeneral_h
 #define vtk_m_cont_internal_FunctorsGeneral_h
 
-#include <vtkm/Algorithms.h>
 #include <vtkm/BinaryOperators.h>
 #include <vtkm/BinaryPredicates.h>
+#include <vtkm/LowerBound.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
+#include <vtkm/UpperBound.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 
 #include <vtkm/exec/FunctorBase.h>

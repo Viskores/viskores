@@ -104,7 +104,7 @@ namespace cont
 {
 
 VTKM_CONT
-void InitLogging(int& argc, char* argv[])
+void InitLogging(int& argc, char* argv[], const std::string& loggingFlag)
 {
   SetLogLevelName(vtkm::cont::LogLevel::Off, "Off");
   SetLogLevelName(vtkm::cont::LogLevel::Fatal, "FATL");
@@ -126,11 +126,12 @@ void InitLogging(int& argc, char* argv[])
 
   // Set the default log level to warning
   SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
-  loguru::init(argc, argv);
+  loguru::init(argc, argv, loggingFlag.c_str());
 
 #else  // VTKM_ENABLE_LOGGING
   (void)argc;
   (void)argv;
+  (void)loggingFlag;
 #endif // VTKM_ENABLE_LOGGING
 
   // Prevent LogLevelNames from being modified (makes thread safety easier)
@@ -297,5 +298,24 @@ std::string GetLogLevelName(LogLevel level)
   using T = std::underlying_type<LogLevel>::type;
   return std::to_string(static_cast<T>(level));
 }
+
+VTKM_CONT std::string TypeToString(const std::type_info& t)
+{
+#ifdef VTKM_ENABLE_LOGGING
+  return loguru::demangle(t.name()).c_str();
+#else  // VTKM_ENABLE_LOGGING
+  return t.name();
+#endif // VTKM_ENABLE_LOGGING
+}
+
+VTKM_CONT std::string TypeToString(const std::type_index& t)
+{
+#ifdef VTKM_ENABLE_LOGGING
+  return loguru::demangle(t.name()).c_str();
+#else  // VTKM_ENABLE_LOGGING
+  return t.name();
+#endif // VTKM_ENABLE_LOGGING
+}
+
 }
 } // end namespace vtkm::cont

@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
 #include <vtkm/cont/openmp/internal/FunctorsOpenMP.h>
 
@@ -153,7 +154,10 @@ private:
   {
     // Figure out how many values each thread should handle:
     vtkm::Id numVals = range[1] - range[0];
-    int numThreads = omp_get_num_threads();
+    vtkm::Id numThreads = 0;
+    vtkm::cont::RuntimeDeviceInformation{}
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
+      .GetThreads(numThreads);
     vtkm::Id chunksPerThread = 8;
     vtkm::Id numChunks;
     ComputeChunkSize(

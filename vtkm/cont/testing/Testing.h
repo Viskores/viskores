@@ -23,11 +23,35 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
-#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/cont/testing/vtkm_cont_testing_export.h>
 
+#include <sstream>
 #include <vtkm/thirdparty/diy/diy.h>
+
+// We could, conceivably, use CUDA or Kokkos specific print statements here.
+// But we cannot use std::stringstream on device, so for now, we'll just accept
+// that on CUDA and Kokkos we print less actionalble information.
+#if defined(VTKM_ENABLE_CUDA) || defined(VTKM_ENABLE_KOKKOS)
+#define VTKM_MATH_ASSERT(condition, message) \
+  {                                          \
+    if (!(condition))                        \
+    {                                        \
+      this->RaiseError(message);             \
+    }                                        \
+  }
+#else
+#define VTKM_MATH_ASSERT(condition, message)                                                       \
+  {                                                                                                \
+    if (!(condition))                                                                              \
+    {                                                                                              \
+      std::stringstream ss;                                                                        \
+      ss << "\n\tError at " << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n\t" << message \
+         << "\n";                                                                                  \
+      this->RaiseError(ss.str().c_str());                                                          \
+    }                                                                                              \
+  }
+#endif
 
 namespace opt = vtkm::cont::internal::option;
 
@@ -41,62 +65,12 @@ namespace testing
 enum TestOptionsIndex
 {
   TEST_UNKNOWN,
-  DATADIR,     // base dir containing test data files
-  BASELINEDIR, // base dir for regression test images
-  WRITEDIR     // base dir for generated regression test images
-};
-
-struct TestVtkmArg : public opt::Arg
-{
-  static opt::ArgStatus Required(const opt::Option& option, bool msg)
-  {
-    if (option.arg == nullptr)
-    {
-      if (msg)
-      {
-        VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
-                          "Missing argument after option '"
-                            << std::string(option.name, static_cast<size_t>(option.namelen))
-                            << "'.\n");
-      }
-      return opt::ARG_ILLEGAL;
-    }
-    else
-    {
-      return opt::ARG_OK;
-    }
-  }
-
-  // Method used for guessing whether an option that do not support (perhaps that calling
-  // program knows about it) has an option attached to it (which should also be ignored).
-  static opt::ArgStatus Unknown(const opt::Option& option, bool msg)
-  {
-    // If we don't have an arg, obviously we don't have an arg.
-    if (option.arg == nullptr)
-    {
-      return opt::ARG_NONE;
-    }
-
-    // The opt::Arg::Optional method will return that the ARG is OK if and only if
-    // the argument is attached to the option (e.g. --foo=bar). If that is the case,
-    // then we definitely want to report that the argument is OK.
-    if (opt::Arg::Optional(option, msg) == opt::ARG_OK)
-    {
-      return opt::ARG_OK;
-    }
-
-    // Now things get tricky. Maybe the next argument is an option or maybe it is an
-    // argument for this option. We will guess that if the next argument does not
-    // look like an option, we will treat it as such.
-    if (option.arg[0] == '-')
-    {
-      return opt::ARG_NONE;
-    }
-    else
-    {
-      return opt::ARG_OK;
-    }
-  }
+  DATADIR,                // base dir containing test data files
+  BASELINEDIR,            // base dir for regression test images
+  WRITEDIR,               // base dir for generated regression test images
+  DEPRECATED_DATADIR,     // base dir containing test data files
+  DEPRECATED_BASELINEDIR, // base dir for regression test images
+  DEPRECATED_WRITEDIR     // base dir for generated regression test images
 };
 
 struct Testing
@@ -127,6 +101,38 @@ public:
   }
 
   template <class Func>
+  static VTKM_CONT int ExecuteFunction(Func function)
+  {
+    try
+    {
+      function();
+    }
+    catch (vtkm::testing::Testing::TestFailure const& error)
+    {
+      std::cerr << "Error at " << error.GetFile() << ":" << error.GetLine() << ":"
+                << error.GetFunction() << "\n\t" << error.GetMessage() << "\n";
+      return 1;
+    }
+    catch (vtkm::cont::Error const& error)
+    {
+      std::cerr << "Uncaught VTKm exception thrown.\n" << error.GetMessage() << "\n";
+      std::cerr << "Stacktrace:\n" << error.GetStackTrace() << "\n";
+      return 1;
+    }
+    catch (std::exception const& error)
+    {
+      std::cerr << "STL exception throw.\n" << error.what() << "\n";
+      return 1;
+    }
+    catch (...)
+    {
+      std::cerr << "Unidentified exception thrown.\n";
+      return 1;
+    }
+    return 0;
+  }
+
+  template <class Func>
   static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
     std::unique_ptr<vtkmdiy::mpi::environment> env_diy = nullptr;
@@ -138,33 +144,9 @@ public:
     vtkm::cont::Initialize(argc, argv);
     ParseAdditionalTestArgs(argc, argv);
 
-    try
-    {
-      function();
-    }
-    catch (vtkm::testing::Testing::TestFailure& error)
-    {
-      std::cout << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << std::endl
-                << error.GetMessage() << std::endl;
-      return 1;
-    }
-    catch (vtkm::cont::Error& error)
-    {
-      std::cout << "***** Uncaught VTKm exception thrown." << std::endl
-                << error.GetMessage() << std::endl;
-      return 1;
-    }
-    catch (std::exception& error)
-    {
-      std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
-      return 1;
-    }
-    catch (...)
-    {
-      std::cout << "***** Unidentified exception thrown." << std::endl;
-      return 1;
-    }
-    return 0;
+    // Turn on floating point exception trapping where available
+    vtkm::testing::FloatingPointExceptionTrapEnable();
+    return ExecuteFunction(function);
   }
 
   template <class Func>
@@ -174,33 +156,66 @@ public:
     auto config = vtkm::cont::Initialize(argc, argv, opts);
     ParseAdditionalTestArgs(argc, argv);
 
-    try
+    return ExecuteFunction([&]() { function(config.Device); });
+  }
+
+  template <typename... T>
+  static VTKM_CONT void MakeArgs(int& argc, char**& argv, T&&... args)
+  {
+    constexpr std::size_t numArgs = sizeof...(args);
+
+    std::array<std::string, numArgs> stringArgs = { { args... } };
+
+    // These static variables are declared as static so that the memory will stick around but won't
+    // be reported as a leak.
+    static std::array<std::vector<char>, numArgs> vecArgs;
+    static std::array<char*, numArgs + 1> finalArgs;
+    std::cout << "  starting args:";
+    for (std::size_t i = 0; i < numArgs; ++i)
     {
-      function(config.Device);
+      std::cout << " " << stringArgs[i];
+      // Safely copying a C-style string is a PITA
+      vecArgs[i].resize(0);
+      vecArgs[i].reserve(stringArgs[i].size() + 1);
+      for (auto&& c : stringArgs[i])
+      {
+        vecArgs[i].push_back(c);
+      }
+      vecArgs[i].push_back('\0');
+
+      finalArgs[i] = vecArgs[i].data();
     }
-    catch (vtkm::testing::Testing::TestFailure& error)
-    {
-      std::cout << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << std::endl
-                << error.GetMessage() << std::endl;
-      return 1;
-    }
-    catch (vtkm::cont::Error& error)
-    {
-      std::cout << "***** Uncaught VTKm exception thrown." << std::endl
-                << error.GetMessage() << std::endl;
-      return 1;
-    }
-    catch (std::exception& error)
-    {
-      std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
-      return 1;
-    }
-    catch (...)
-    {
-      std::cout << "***** Unidentified exception thrown." << std::endl;
-      return 1;
-    }
-    return 0;
+    finalArgs[numArgs] = nullptr;
+    std::cout << std::endl;
+
+    argc = static_cast<int>(numArgs);
+    argv = finalArgs.data();
+  }
+
+  template <typename... T>
+  static VTKM_CONT void MakeArgsAddProgramName(int& argc, char**& argv, T&&... args)
+  {
+    MakeArgs(argc, argv, "program-name", args...);
+  }
+
+  static void SetEnv(const std::string& var, const std::string& value)
+  {
+    static std::vector<std::pair<std::string, std::string>> envVars{};
+#ifdef _MSC_VER
+    auto iter = envVars.emplace(envVars.end(), var, value);
+    _putenv_s(iter->first.c_str(), iter->second.c_str());
+#else
+    setenv(var.c_str(), value.c_str(), 1);
+#endif
+  }
+
+  static void UnsetEnv(const std::string& var)
+  {
+#ifdef _MSC_VER
+    SetEnv(var, "");
+#else
+    unsetenv(var.c_str());
+#endif
   }
 
 private:
@@ -221,7 +236,7 @@ private:
     {
       VTKM_LOG_S(
         vtkm::cont::LogLevel::Error,
-        "TestDataBasePath was never set, was --data-dir set correctly? (hint: ../data/data)");
+        "TestDataBasePath was never set, was --vtkm-data-dir set correctly? (hint: ../data/data)");
     }
 
     return TestDataBasePath;
@@ -243,9 +258,10 @@ private:
 
     if (RegressionTestImageBasePath.empty())
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "RegressionTestImageBasePath was never set, was --baseline-dir set correctly? "
-                 "(hint: ../data/baseline)");
+      VTKM_LOG_S(
+        vtkm::cont::LogLevel::Error,
+        "RegressionTestImageBasePath was never set, was --vtkm-baseline-dir set correctly? "
+        "(hint: ../data/baseline)");
     }
 
     return RegressionTestImageBasePath;
@@ -270,91 +286,141 @@ private:
   // Method to parse the extra arguments given to unit tests
   static VTKM_CONT void ParseAdditionalTestArgs(int& argc, char* argv[])
   {
-    { // Parse test arguments
-      std::vector<opt::Descriptor> usage;
+    std::vector<opt::Descriptor> usage;
 
-      usage.push_back({ DATADIR,
-                        0,
-                        "D",
-                        "data-dir",
-                        TestVtkmArg::Required,
-                        "  --data-dir, -D "
-                        "<data-dir-path> \tPath to the "
-                        "base data directory in the VTK-m "
-                        "src dir." });
-      usage.push_back({ BASELINEDIR,
-                        0,
-                        "B",
-                        "baseline-dir",
-                        TestVtkmArg::Required,
-                        "  --baseline-dir, -B "
-                        "<baseline-dir-path> "
-                        "\tPath to the base dir "
-                        "for regression test "
-                        "images" });
-      usage.push_back({ WRITEDIR,
-                        0,
-                        "",
-                        "write-dir",
-                        TestVtkmArg::Required,
-                        "  --write-dir "
-                        "<write-dir-path> "
-                        "\tPath to the write dir "
-                        "to store generated "
-                        "regression test images" });
-      // Required to collect unknown arguments when help is off.
-      usage.push_back({ TEST_UNKNOWN, 0, "", "", TestVtkmArg::Unknown, "" });
-      usage.push_back({ 0, 0, 0, 0, 0, 0 });
+    usage.push_back({ DATADIR,
+                      0,
+                      "",
+                      "vtkm-data-dir",
+                      opt::VtkmArg::Required,
+                      "  --vtkm-data-dir "
+                      "<data-dir-path> \tPath to the "
+                      "base data directory in the VTK-m "
+                      "src dir." });
+    usage.push_back({ BASELINEDIR,
+                      0,
+                      "",
+                      "vtkm-baseline-dir",
+                      opt::VtkmArg::Required,
+                      "  --vtkm-baseline-dir "
+                      "<baseline-dir-path> "
+                      "\tPath to the base dir "
+                      "for regression test "
+                      "images" });
+    usage.push_back({ WRITEDIR,
+                      0,
+                      "",
+                      "vtkm-write-dir",
+                      opt::VtkmArg::Required,
+                      "  --vtkm-write-dir "
+                      "<write-dir-path> "
+                      "\tPath to the write dir "
+                      "to store generated "
+                      "regression test images" });
+    usage.push_back({ DEPRECATED_DATADIR,
+                      0,
+                      "D",
+                      "data-dir",
+                      opt::VtkmArg::Required,
+                      "  --data-dir "
+                      "<data-dir-path> "
+                      "\tDEPRECATED: use --vtkm-data-dir instead" });
+    usage.push_back({ DEPRECATED_BASELINEDIR,
+                      0,
+                      "B",
+                      "baseline-dir",
+                      opt::VtkmArg::Required,
+                      "  --baseline-dir "
+                      "<baseline-dir-path> "
+                      "\tDEPRECATED: use --vtkm-baseline-dir instead" });
+    usage.push_back({ WRITEDIR,
+                      0,
+                      "",
+                      "write-dir",
+                      opt::VtkmArg::Required,
+                      "  --write-dir "
+                      "<write-dir-path> "
+                      "\tDEPRECATED: use --vtkm-write-dir instead" });
+
+    // Required to collect unknown arguments when help is off.
+    usage.push_back({ TEST_UNKNOWN, 0, "", "", opt::VtkmArg::UnknownOption, "" });
+    usage.push_back({ 0, 0, 0, 0, 0, 0 });
 
 
-      // Remove argv[0] (executable name) if present:
-      int vtkmArgc = argc > 0 ? argc - 1 : 0;
-      char** vtkmArgv = argc > 0 ? argv + 1 : argv;
+    // Remove argv[0] (executable name) if present:
+    int vtkmArgc = argc > 0 ? argc - 1 : 0;
+    char** vtkmArgv = argc > 0 ? argv + 1 : argv;
 
-      opt::Stats stats(usage.data(), vtkmArgc, vtkmArgv);
-      std::unique_ptr<opt::Option[]> options{ new opt::Option[stats.options_max] };
-      std::unique_ptr<opt::Option[]> buffer{ new opt::Option[stats.buffer_max] };
-      opt::Parser parse(usage.data(), vtkmArgc, vtkmArgv, options.get(), buffer.get());
+    opt::Stats stats(usage.data(), vtkmArgc, vtkmArgv);
+    std::unique_ptr<opt::Option[]> options{ new opt::Option[stats.options_max] };
+    std::unique_ptr<opt::Option[]> buffer{ new opt::Option[stats.buffer_max] };
+    opt::Parser parse(usage.data(), vtkmArgc, vtkmArgv, options.get(), buffer.get());
 
-      if (parse.error())
-      {
-        std::cerr << "Internal Initialize parser error" << std::endl;
-        exit(1);
-      }
+    if (parse.error())
+    {
+      std::cerr << "Internal Initialize parser error" << std::endl;
+      exit(1);
+    }
 
-      if (options[DATADIR])
-      {
-        SetAndGetTestDataBasePath(options[DATADIR].arg);
-      }
+    if (options[DEPRECATED_DATADIR])
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "Supplied deprecated datadir flag: "
+                   << std::string{ options[DEPRECATED_DATADIR].name }
+                   << ", use --vtkm-data-dir instead");
+      SetAndGetTestDataBasePath(options[DEPRECATED_DATADIR].arg);
+    }
 
-      if (options[BASELINEDIR])
-      {
-        SetAndGetRegressionImageBasePath(options[BASELINEDIR].arg);
-      }
+    if (options[DEPRECATED_BASELINEDIR])
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "Supplied deprecated baselinedir flag: "
+                   << std::string{ options[DEPRECATED_BASELINEDIR].name }
+                   << ", use --vtkm-baseline-dir instead");
+      SetAndGetRegressionImageBasePath(options[DEPRECATED_BASELINEDIR].arg);
+    }
 
-      if (options[WRITEDIR])
-      {
-        SetAndGetWriteDirBasePath(options[WRITEDIR].arg);
-      }
+    if (options[DEPRECATED_WRITEDIR])
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "Supplied deprecated writedir flag: "
+                   << std::string{ options[DEPRECATED_WRITEDIR].name }
+                   << ", use --vtkm-write-dir instead");
+      SetAndGetWriteDirBasePath(options[DEPRECATED_WRITEDIR].arg);
+    }
 
-      for (const opt::Option* opt = options[TEST_UNKNOWN]; opt != nullptr; opt = opt->next())
-      {
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                   "Unknown option to internal Initialize: " << opt->name << "\n");
-      }
+    if (options[DATADIR])
+    {
+      SetAndGetTestDataBasePath(options[DATADIR].arg);
+    }
 
-      for (int nonOpt = 0; nonOpt < parse.nonOptionsCount(); ++nonOpt)
-      {
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                   "Unknown argument to internal Initialize: " << parse.nonOption(nonOpt) << "\n");
-      }
+    if (options[BASELINEDIR])
+    {
+      SetAndGetRegressionImageBasePath(options[BASELINEDIR].arg);
+    }
+
+    if (options[WRITEDIR])
+    {
+      SetAndGetWriteDirBasePath(options[WRITEDIR].arg);
+    }
+
+    for (const opt::Option* opt = options[TEST_UNKNOWN]; opt != nullptr; opt = opt->next())
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                 "Unknown option to internal Initialize: " << opt->name << "\n");
+    }
+
+    for (int nonOpt = 0; nonOpt < parse.nonOptionsCount(); ++nonOpt)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                 "Unknown argument to internal Initialize: " << parse.nonOption(nonOpt) << "\n");
     }
   }
 };
 
-}
-}
 } // namespace vtkm::cont::testing
+} // namespace vtkm::cont
+} // namespace vtkm
 
 //============================================================================
 template <typename T1, typename T2, typename StorageTag1, typename StorageTag2>

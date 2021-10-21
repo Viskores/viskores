@@ -12,8 +12,17 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/VirtualObjectBase.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
+
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
+// This is a deprecated class. Don't warn about deprecation while implementing
+// deprecated functionality.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 #include <array>
 #include <memory>
@@ -28,7 +37,8 @@ namespace internal
 struct CreateTransferInterface; //forward declare for friendship
 
 template <typename VirtualDerivedType, typename DeviceAdapter>
-struct VirtualObjectTransfer
+struct VTKM_DEPRECATED(1.7, "Virtual methods are no longer supported in the execution environment.")
+  VirtualObjectTransfer
 #ifdef VTKM_DOXYGEN_ONLY
 {
   /// A VirtualObjectTransfer is constructed with a pointer to the derived type that (eventually)
@@ -56,7 +66,9 @@ struct VirtualObjectTransfer
 #endif
 ;
 
-class VTKM_CONT_EXPORT TransferInterface
+class VTKM_CONT_EXPORT VTKM_DEPRECATED(
+  1.7,
+  "Virtual methods are no longer supported in the execution environment.") TransferInterface
 {
 public:
   VTKM_CONT virtual ~TransferInterface();
@@ -92,7 +104,9 @@ private:
 };
 
 
-struct VTKM_CONT_EXPORT TransferState
+struct VTKM_CONT_EXPORT VTKM_DEPRECATED(
+  1.7,
+  "Virtual methods are no longer supported in the execution environment.") TransferState
 {
   TransferState() = default;
 
@@ -160,5 +174,7 @@ private:
 }
 }
 } // vtkm::cont::internal
+
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif // vtkm_cont_internal_VirtualObjectTransfer_h

@@ -79,9 +79,9 @@ struct ContourTreeBlockData
   vtkm::Id NumVertices;
   vtkm::cont::ArrayHandle<FieldType> SortedValue;
   vtkm::worklet::contourtree_augmented::IdArrayType GlobalMeshIndex;
-  vtkm::worklet::contourtree_augmented::IdArrayType Neighbours;
-  vtkm::worklet::contourtree_augmented::IdArrayType FirstNeighbour;
-  vtkm::Id MaxNeighbours;
+  vtkm::worklet::contourtree_augmented::IdArrayType NeighborConnectivity;
+  vtkm::worklet::contourtree_augmented::IdArrayType NeighborOffsets;
+  vtkm::Id MaxNeighbors;
 
   // Block metadata
   vtkm::Id3 BlockOrigin;                // Origin of the data block
@@ -108,9 +108,9 @@ struct Serialization<vtkm::worklet::contourtree_distributed::ContourTreeBlockDat
     vtkmdiy::save(bb, block.NumVertices);
     vtkmdiy::save(bb, block.SortedValue);
     vtkmdiy::save(bb, block.GlobalMeshIndex);
-    vtkmdiy::save(bb, block.Neighbours);
-    vtkmdiy::save(bb, block.FirstNeighbour);
-    vtkmdiy::save(bb, block.MaxNeighbours);
+    vtkmdiy::save(bb, block.NeighborConnectivity);
+    vtkmdiy::save(bb, block.NeighborOffsets);
+    vtkmdiy::save(bb, block.MaxNeighbors);
     vtkmdiy::save(bb, block.BlockOrigin);
     vtkmdiy::save(bb, block.BlockSize);
     vtkmdiy::save(bb, block.GlobalSize);
@@ -123,9 +123,9 @@ struct Serialization<vtkm::worklet::contourtree_distributed::ContourTreeBlockDat
     vtkmdiy::load(bb, block.NumVertices);
     vtkmdiy::load(bb, block.SortedValue);
     vtkmdiy::load(bb, block.GlobalMeshIndex);
-    vtkmdiy::load(bb, block.Neighbours);
-    vtkmdiy::load(bb, block.FirstNeighbour);
-    vtkmdiy::load(bb, block.MaxNeighbours);
+    vtkmdiy::load(bb, block.NeighborConnectivity);
+    vtkmdiy::load(bb, block.NeighborOffsets);
+    vtkmdiy::load(bb, block.MaxNeighbors);
     vtkmdiy::load(bb, block.BlockOrigin);
     vtkmdiy::load(bb, block.BlockSize);
     vtkmdiy::load(bb, block.GlobalSize);

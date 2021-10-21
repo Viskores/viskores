@@ -11,10 +11,12 @@
 #include <vtkm/io/VTKDataSetReaderBase.h>
 
 #include <vtkm/VecTraits.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleOffsetsToNumComponents.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Logging.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <algorithm>
 #include <string>
@@ -33,9 +35,9 @@ inline void PrintVTKDataFileSummary(const vtkm::io::internal::VTKDataSetFile& df
       << std::endl;
 }
 
-// Since Fields and DataSets store data in the default VariantArrayHandle, convert
+// Since Fields and DataSets store data in the default UnknownArrayHandle, convert
 // the data to the closest type supported by default. The following will
-// need to be updated if VariantArrayHandle or TypeListCommon changes.
+// need to be updated if UnknownArrayHandle or TypeListCommon changes.
 template <typename T>
 struct ClosestCommonType
 {
@@ -119,7 +121,7 @@ struct ClosestFloat<vtkm::UInt64>
 };
 
 template <typename T>
-vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& vec)
+vtkm::cont::UnknownArrayHandle CreateUnknownArrayHandle(const std::vector<T>& vec)
 {
   switch (vtkm::VecTraits<T>::NUM_COMPONENTS)
   {
@@ -143,7 +145,7 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
         portal.Set(i, static_cast<CommonType>(vec[static_cast<std::size_t>(i)]));
       }
 
-      return vtkm::cont::VariantArrayHandle(output);
+      return vtkm::cont::UnknownArrayHandle(output);
     }
     case 2:
     case 3:
@@ -179,12 +181,12 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
         portal.Set(i, outval);
       }
 
-      return vtkm::cont::VariantArrayHandle(output);
+      return vtkm::cont::UnknownArrayHandle(output);
     }
     default:
     {
       VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Only 1, 2, 3, or 9 components supported. Skipping.");
-      return vtkm::cont::VariantArrayHandle(vtkm::cont::ArrayHandle<vtkm::Float32>());
+      return vtkm::cont::UnknownArrayHandle(vtkm::cont::ArrayHandle<vtkm::Float32>());
     }
   }
 }
@@ -249,7 +251,7 @@ void VTKDataSetReaderBase::ReadPoints()
   std::size_t numPoints;
   this->DataFile->Stream >> numPoints >> dataType >> std::ws;
 
-  vtkm::cont::VariantArrayHandle points =
+  vtkm::cont::UnknownArrayHandle points =
     this->DoReadArrayVariant(vtkm::cont::Field::Association::POINTS, dataType, numPoints, 3);
 
   this->DataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", points));
@@ -258,26 +260,53 @@ void VTKDataSetReaderBase::ReadPoints()
 void VTKDataSetReaderBase::ReadCells(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices)
 {
-  vtkm::Id numCells, numInts;
-  this->DataFile->Stream >> numCells >> numInts >> std::ws;
-
-  connectivity.Allocate(numInts - numCells);
-  numIndices.Allocate(numCells);
-
-  std::vector<vtkm::Int32> buffer(static_cast<std::size_t>(numInts));
-  this->ReadArray(buffer);
-
-  vtkm::Int32* buffp = buffer.data();
-  auto connectivityPortal = connectivity.WritePortal();
-  auto numIndicesPortal = numIndices.WritePortal();
-  for (vtkm::Id i = 0, connInd = 0; i < numCells; ++i)
+  if (this->DataFile->Version[0] < 5)
   {
-    vtkm::IdComponent numInds = static_cast<vtkm::IdComponent>(*buffp++);
-    numIndicesPortal.Set(i, numInds);
-    for (vtkm::IdComponent j = 0; j < numInds; ++j, ++connInd)
+    vtkm::Id numCells, numInts;
+    this->DataFile->Stream >> numCells >> numInts >> std::ws;
+
+    connectivity.Allocate(numInts - numCells);
+    numIndices.Allocate(numCells);
+
+    std::vector<vtkm::Int32> buffer(static_cast<std::size_t>(numInts));
+    this->ReadArray(buffer);
+
+    vtkm::Int32* buffp = buffer.data();
+    auto connectivityPortal = connectivity.WritePortal();
+    auto numIndicesPortal = numIndices.WritePortal();
+    for (vtkm::Id i = 0, connInd = 0; i < numCells; ++i)
     {
-      connectivityPortal.Set(connInd, static_cast<vtkm::Id>(*buffp++));
+      vtkm::IdComponent numInds = static_cast<vtkm::IdComponent>(*buffp++);
+      numIndicesPortal.Set(i, numInds);
+      for (vtkm::IdComponent j = 0; j < numInds; ++j, ++connInd)
+      {
+        connectivityPortal.Set(connInd, static_cast<vtkm::Id>(*buffp++));
+      }
     }
+  }
+  else
+  {
+    vtkm::Id offsetsSize, connSize;
+    this->DataFile->Stream >> offsetsSize >> connSize >> std::ws;
+
+    std::string tag, dataType;
+    this->DataFile->Stream >> tag >> dataType >> std::ws;
+    internal::parseAssert(tag == "OFFSETS");
+    auto offsets =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, dataType, offsetsSize, 1);
+    offsets.CastAndCallForTypes<vtkm::List<vtkm::Int64, vtkm::Int32>,
+                                vtkm::List<vtkm::cont::StorageTagBasic>>(
+      [&](const auto& offsetsAH) {
+        vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleOffsetsToNumComponents(
+                                vtkm::cont::make_ArrayHandleCast(offsetsAH, vtkm::Id{})),
+                              numIndices);
+      });
+
+    this->DataFile->Stream >> tag >> dataType >> std::ws;
+    internal::parseAssert(tag == "CONNECTIVITY");
+    auto conn =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, dataType, connSize, 1);
+    vtkm::cont::ArrayCopyShallowIfPossible(conn, connectivity);
   }
 }
 
@@ -322,6 +351,12 @@ void VTKDataSetReaderBase::ReadAttributes()
     {
       association = vtkm::cont::Field::Association::CELL_SET;
     }
+    else if (tag == "FIELD") // can see field in this position also
+    {
+      this->ReadGlobalFields(nullptr);
+      this->DataFile->Stream >> tag;
+      continue;
+    }
     else
     {
       internal::parseAssert(false);
@@ -358,6 +393,10 @@ void VTKDataSetReaderBase::ReadAttributes()
       else if (tag == "FIELD")
       {
         this->ReadFields(association, size);
+      }
+      else if (tag == "GLOBAL_IDS" || tag == "PEDIGREE_IDS")
+      {
+        this->ReadGlobalOrPedigreeIds(association, size);
       }
       else
       {
@@ -446,7 +485,7 @@ void VTKDataSetReaderBase::ReadHeader()
 
 void VTKDataSetReaderBase::AddField(const std::string& name,
                                     vtkm::cont::Field::Association association,
-                                    vtkm::cont::VariantArrayHandle& data)
+                                    vtkm::cont::UnknownArrayHandle& data)
 {
   if (data.GetNumberOfValues() > 0)
   {
@@ -491,7 +530,7 @@ void VTKDataSetReaderBase::ReadScalars(vtkm::cont::Field::Association associatio
   internal::parseAssert(tag == "LOOKUP_TABLE");
   this->DataFile->Stream >> lookupTableName >> std::ws;
 
-  vtkm::cont::VariantArrayHandle data =
+  vtkm::cont::UnknownArrayHandle data =
     this->DoReadArrayVariant(association, dataType, numElements, numComponents);
   this->AddField(dataName, association, data);
 }
@@ -505,7 +544,7 @@ void VTKDataSetReaderBase::ReadColorScalars(vtkm::cont::Field::Association assoc
   vtkm::IdComponent numComponents;
   this->DataFile->Stream >> dataName >> numComponents >> std::ws;
   std::string dataType = this->DataFile->IsBinary ? "unsigned_char" : "float";
-  vtkm::cont::VariantArrayHandle data =
+  vtkm::cont::UnknownArrayHandle data =
     this->DoReadArrayVariant(association, dataType, numElements, numComponents);
   this->AddField(dataName, association, data);
 }
@@ -528,7 +567,7 @@ void VTKDataSetReaderBase::ReadTextureCoordinates(vtkm::cont::Field::Association
   std::string dataType;
   this->DataFile->Stream >> dataName >> numComponents >> dataType >> std::ws;
 
-  vtkm::cont::VariantArrayHandle data =
+  vtkm::cont::UnknownArrayHandle data =
     this->DoReadArrayVariant(association, dataType, numElements, numComponents);
   this->AddField(dataName, association, data);
 }
@@ -540,7 +579,7 @@ void VTKDataSetReaderBase::ReadVectors(vtkm::cont::Field::Association associatio
   std::string dataType;
   this->DataFile->Stream >> dataName >> dataType >> std::ws;
 
-  vtkm::cont::VariantArrayHandle data =
+  vtkm::cont::UnknownArrayHandle data =
     this->DoReadArrayVariant(association, dataType, numElements, 3);
   this->AddField(dataName, association, data);
 }
@@ -552,7 +591,7 @@ void VTKDataSetReaderBase::ReadTensors(vtkm::cont::Field::Association associatio
   std::string dataType;
   this->DataFile->Stream >> dataName >> dataType >> std::ws;
 
-  vtkm::cont::VariantArrayHandle data =
+  vtkm::cont::UnknownArrayHandle data =
     this->DoReadArrayVariant(association, dataType, numElements, 9);
   this->AddField(dataName, association, data);
 }
@@ -571,7 +610,7 @@ void VTKDataSetReaderBase::ReadFields(vtkm::cont::Field::Association association
     this->DataFile->Stream >> arrayName >> numComponents >> numTuples >> dataType >> std::ws;
     if (numTuples == expectedNumElements)
     {
-      vtkm::cont::VariantArrayHandle data =
+      vtkm::cont::UnknownArrayHandle data =
         this->DoReadArrayVariant(association, dataType, numTuples, numComponents);
       this->AddField(arrayName, association, data);
     }
@@ -611,6 +650,22 @@ void VTKDataSetReaderBase::ReadGlobalFields(std::vector<vtkm::Float32>* visitBou
   }
 }
 
+void VTKDataSetReaderBase::ReadGlobalOrPedigreeIds(vtkm::cont::Field::Association association,
+                                                   std::size_t numElements)
+{
+  std::string dataName;
+  std::string dataType;
+  this->DataFile->Stream >> dataName >> dataType >> std::ws;
+  internal::parseAssert(dataType == "vtkIdType");
+
+  std::vector<vtkm::Int32> buffer(numElements); // vtk writes vtkIdType as int
+  this->ReadArray(buffer);
+  vtkm::cont::UnknownArrayHandle data(vtkm::cont::make_ArrayHandleMove(std::move(buffer)));
+  this->AddField(dataName, association, data);
+
+  this->SkipArrayMetaData(1);
+}
+
 class VTKDataSetReaderBase::SkipArrayVariant
 {
 public:
@@ -643,7 +698,7 @@ public:
   ReadArrayVariant(VTKDataSetReaderBase* reader,
                    vtkm::cont::Field::Association association,
                    std::size_t numElements,
-                   vtkm::cont::VariantArrayHandle& data)
+                   vtkm::cont::UnknownArrayHandle& data)
     : SkipArrayVariant(reader, numElements)
     , Association(association)
     , Data(&data)
@@ -658,7 +713,7 @@ public:
     if ((this->Association != vtkm::cont::Field::Association::CELL_SET) ||
         (this->Reader->GetCellsPermutation().GetNumberOfValues() < 1))
     {
-      *this->Data = CreateVariantArrayHandle(buffer);
+      *this->Data = CreateUnknownArrayHandle(buffer);
     }
     else
     {
@@ -672,7 +727,7 @@ public:
         std::size_t inIndex = static_cast<std::size_t>(permutation.Get(outIndex));
         permutedBuffer[static_cast<std::size_t>(outIndex)] = buffer[inIndex];
       }
-      *this->Data = CreateVariantArrayHandle(permutedBuffer);
+      *this->Data = CreateUnknownArrayHandle(permutedBuffer);
     }
   }
 
@@ -686,23 +741,18 @@ public:
 
 private:
   vtkm::cont::Field::Association Association;
-  vtkm::cont::VariantArrayHandle* Data;
+  vtkm::cont::UnknownArrayHandle* Data;
 };
 
 void VTKDataSetReaderBase::DoSkipArrayVariant(std::string dataType,
                                               std::size_t numElements,
                                               vtkm::IdComponent numComponents)
 {
-  // string is unsupported for SkipArrayVariant, so it requires some
-  // special handling
-  if (dataType == "string")
+  // string requires some special handling
+  if (dataType == "string" || dataType == "utf8_string")
   {
     const vtkm::Id stringCount = numComponents * static_cast<vtkm::Id>(numElements);
-    for (vtkm::Id i = 0; i < stringCount; ++i)
-    {
-      std::string trash;
-      this->DataFile->Stream >> trash;
-    }
+    this->SkipStringArray(stringCount);
   }
   else
   {
@@ -712,7 +762,7 @@ void VTKDataSetReaderBase::DoSkipArrayVariant(std::string dataType,
   }
 }
 
-vtkm::cont::VariantArrayHandle VTKDataSetReaderBase::DoReadArrayVariant(
+vtkm::cont::UnknownArrayHandle VTKDataSetReaderBase::DoReadArrayVariant(
   vtkm::cont::Field::Association association,
   std::string dataType,
   std::size_t numElements,
@@ -720,11 +770,22 @@ vtkm::cont::VariantArrayHandle VTKDataSetReaderBase::DoReadArrayVariant(
 {
   // Create empty data to start so that the return can check if data were actually read
   vtkm::cont::ArrayHandle<vtkm::Float32> empty;
-  vtkm::cont::VariantArrayHandle data(empty);
+  vtkm::cont::UnknownArrayHandle data(empty);
 
-  vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
-  vtkm::io::internal::SelectTypeAndCall(
-    typeId, numComponents, ReadArrayVariant(this, association, numElements, data));
+  // string requires some special handling
+  if (dataType == "string" || dataType == "utf8_string")
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Support for data type 'string' and 'utf8_string' is not implemented. Skipping.");
+    const vtkm::Id stringCount = numComponents * static_cast<vtkm::Id>(numElements);
+    this->SkipStringArray(stringCount);
+  }
+  else
+  {
+    vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
+    vtkm::io::internal::SelectTypeAndCall(
+      typeId, numComponents, ReadArrayVariant(this, association, numElements, data));
+  }
 
   return data;
 }
@@ -756,6 +817,65 @@ void VTKDataSetReaderBase::SkipArray(std::size_t numElements,
   }
   this->DataFile->Stream >> std::ws;
   this->SkipArrayMetaData(numComponents);
+}
+
+void VTKDataSetReaderBase::SkipStringArray(std::size_t numStrings)
+{
+  if (this->DataFile->IsBinary)
+  {
+    for (std::size_t i = 0; i < numStrings; ++i)
+    {
+      auto firstByte = this->DataFile->Stream.peek();
+      auto type = firstByte >> 6;
+      switch (type)
+      {
+        case 3: // length stored in 1 byte
+        {
+          auto length = this->DataFile->Stream.get();
+          length &= 0x3F;
+          this->DataFile->Stream.seekg(static_cast<std::streamoff>(length), std::ios_base::cur);
+          break;
+        }
+        case 2: // length stored in 2 bytes
+        {
+          vtkm::UInt16 length = 0;
+          auto bytes = reinterpret_cast<char*>(&length);
+          this->DataFile->Stream.read(bytes, 2);
+          std::swap(bytes[0], bytes[1]);
+          length &= 0x3FFF;
+          this->DataFile->Stream.seekg(static_cast<std::streamoff>(length), std::ios_base::cur);
+          break;
+        }
+        case 1: // length stored in 4 bytes
+        {
+          vtkm::UInt32 length = 0;
+          auto bytes = reinterpret_cast<char*>(&length);
+          this->DataFile->Stream.read(bytes, 4);
+          std::reverse(bytes, bytes + 4);
+          length &= 0x3FFFFFFF;
+          this->DataFile->Stream.seekg(static_cast<std::streamoff>(length), std::ios_base::cur);
+          break;
+        }
+        default: // length stored in 8 bytes
+        {
+          vtkm::UInt64 length = 0;
+          auto bytes = reinterpret_cast<char*>(&length);
+          this->DataFile->Stream.read(bytes, 8);
+          std::reverse(bytes, bytes + 8);
+          this->DataFile->Stream.seekg(static_cast<std::streamoff>(length), std::ios_base::cur);
+          break;
+        }
+      }
+    }
+  }
+  else
+  {
+    for (std::size_t i = 0; i < numStrings; ++i)
+    {
+      // ASCII mode stores one string per line
+      this->DataFile->Stream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+  }
 }
 
 void VTKDataSetReaderBase::SkipArrayMetaData(vtkm::IdComponent numComponents)

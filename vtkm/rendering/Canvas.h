@@ -204,6 +204,11 @@ public:
                const std::string& text,
                const vtkm::Float32& depth = 0) const;
 
+  VTKM_CONT
+  void BeginTextRenderingBatch() const;
+
+  VTKM_CONT
+  void EndTextRenderingBatch() const;
 
   friend class AxisAnnotation2D;
   friend class ColorBarAnnotation;
@@ -214,6 +219,8 @@ public:
 
 private:
   bool LoadFont() const;
+
+  bool EnsureFontLoaded() const;
 
   const vtkm::Matrix<vtkm::Float32, 4, 4>& GetModelView() const;
 

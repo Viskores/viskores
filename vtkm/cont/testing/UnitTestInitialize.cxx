@@ -15,47 +15,12 @@
 namespace
 {
 
-constexpr const char* PROGRAM_NAME = "program-name";
-
-template <typename... T>
-void MakeArgs(int& argc, char**& argv, T&&... args)
-{
-  constexpr std::size_t numArgs = sizeof...(args) + 1;
-
-  std::array<std::string, numArgs> stringArgs = { { PROGRAM_NAME, args... } };
-
-  // These static variables are declared as static so that the memory will stick around but won't
-  // be reported as a leak.
-  static std::array<std::vector<char>, numArgs> vecArgs;
-  static std::array<char*, numArgs + 1> finalArgs;
-  std::cout << "  starting args:";
-  for (std::size_t i = 0; i < numArgs; ++i)
-  {
-    std::cout << " " << stringArgs[i];
-    // Safely copying a C-style string is a PITA
-    vecArgs[i].resize(0);
-    vecArgs[i].reserve(stringArgs[i].size() + 1);
-    for (auto&& c : stringArgs[i])
-    {
-      vecArgs[i].push_back(c);
-    }
-    vecArgs[i].push_back('\0');
-
-    finalArgs[i] = vecArgs[i].data();
-  }
-  finalArgs[numArgs] = nullptr;
-  std::cout << std::endl;
-
-  argc = static_cast<int>(numArgs);
-  argv = finalArgs.data();
-}
-
 template <typename... T>
 void CheckArgs(int argc, char* argv[], T&&... args)
 {
   constexpr std::size_t numArgs = sizeof...(args) + 1;
 
-  std::array<std::string, numArgs> expectedArgs = { { PROGRAM_NAME, args... } };
+  std::array<std::string, numArgs> expectedArgs = { { "program-name", args... } };
 
   std::cout << "  expected args:";
   for (std::size_t i = 0; i < numArgs; ++i)
@@ -94,7 +59,7 @@ void InitializeNoOptions()
 
   int argc;
   char** argv;
-  MakeArgs(argc, argv);
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(argc, argv);
   vtkm::cont::InitializeResult result = vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv);
 
@@ -108,7 +73,7 @@ void InitializeStandardOptions()
 
   int argc;
   char** argv;
-  MakeArgs(argc, argv, "--device", "Any");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(argc, argv, "--vtkm-device", "Any");
   vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::Strict);
   CheckArgs(argc, argv);
 }
@@ -119,11 +84,12 @@ void InitializeCustomOptions()
 
   int argc;
   char** argv;
-  MakeArgs(argc, argv, "--foo", "-bar", "baz", "buz");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(argc, argv, "--foo", "-bar", "baz", "buz");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo", "-bar", "baz", "buz");
 
-  MakeArgs(argc, argv, "--foo", "-bar", "--", "baz", "buz");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--foo", "-bar", "--", "baz", "buz");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo", "-bar", "--", "baz", "buz");
 }
@@ -134,15 +100,17 @@ void InitializeMixedOptions()
 
   int argc;
   char** argv;
-  MakeArgs(argc, argv, "--foo", "--device", "Any", "--bar", "baz");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--foo", "--vtkm-device", "Any", "--bar", "baz");
   vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::AddHelp);
   CheckArgs(argc, argv, "--foo", "--bar", "baz");
 
-  MakeArgs(argc, argv, "--foo", "-v", "OFF", "--", "--device", "Any", "--bar", "baz");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--foo", "--vtkm-log-level", "OFF", "--", "--vtkm-device", "Any", "--bar", "baz");
   vtkm::cont::Initialize(argc, argv);
-  CheckArgs(argc, argv, "--foo", "--", "--device", "Any", "--bar", "baz");
+  CheckArgs(argc, argv, "--foo", "--", "--vtkm-device", "Any", "--bar", "baz");
 
-  MakeArgs(argc, argv, "--device", "Any", "foo");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(argc, argv, "--vtkm-device", "Any", "foo");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "foo");
 }
@@ -153,21 +121,75 @@ void InitializeCustomOptionsWithArgs()
 
   int argc;
   char** argv;
-  MakeArgs(argc, argv, "--device", "Any", "--foo=bar", "--baz");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--vtkm-device", "Any", "--foo=bar", "--baz");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo=bar", "--baz");
 
-  MakeArgs(argc, argv, "--foo=bar", "--baz", "--device", "Any");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--foo=bar", "--baz", "--vtkm-device", "Any");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo=bar", "--baz");
 
-  MakeArgs(argc, argv, "--device", "Any", "--foo", "bar", "--baz");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--vtkm-device", "Any", "--foo", "bar", "--baz");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo", "bar", "--baz");
 
-  MakeArgs(argc, argv, "--foo", "bar", "--baz", "--device", "Any");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--foo", "bar", "--baz", "--vtkm-device", "Any");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo", "bar", "--baz");
+}
+
+void InitializeDeprecatedOptionsWithArgs()
+{
+  std::cout << "Calling program has option --foo that takes arg bar." << std::endl;
+
+  int argc;
+  char** argv;
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--device", "Any", "--foo=bar", "--baz");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv, "--foo=bar", "--baz");
+
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--foo=bar", "--baz", "--device", "Any");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv, "--foo=bar", "--baz");
+
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "-d", "Any", "--foo", "bar", "--baz");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv, "--foo", "bar", "--baz");
+
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--foo", "bar", "--baz", "-d", "Any");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv, "--foo", "bar", "--baz");
+
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--foo", "-v", "OFF", "--", "--device", "Any", "--bar", "baz");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv, "--foo", "--", "--device", "Any", "--bar", "baz");
+}
+
+void InitializeRuntimeDeviceConfigurationWithArgs()
+{
+  int argc;
+  char** argv;
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(argc,
+                                                       argv,
+                                                       "--device",
+                                                       "Any",
+                                                       "--vtkm-num-threads",
+                                                       "100",
+                                                       "--vtkm-numa-regions",
+                                                       "4",
+                                                       "--vtkm-device-instance",
+                                                       "2");
+  vtkm::cont::Initialize(argc, argv);
+  CheckArgs(argc, argv);
 }
 
 void InitializeWithHelp()
@@ -176,7 +198,7 @@ void InitializeWithHelp()
 
   int argc;
   char** argv;
-  MakeArgs(argc, argv, "--help");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(argc, argv, "--vtkm-help");
   vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::AddHelp);
 
   VTKM_TEST_FAIL("Help argument did not exit as expected.");
@@ -195,6 +217,8 @@ void DoInitializeTests()
   InitializeCustomOptions();
   InitializeMixedOptions();
   InitializeCustomOptionsWithArgs();
+  InitializeDeprecatedOptionsWithArgs();
+  InitializeRuntimeDeviceConfigurationWithArgs();
 
   // This should be the last function called as it should exit with a zero status.
   InitializeWithHelp();

@@ -16,7 +16,6 @@
 #include <vtkm/VecVariable.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/CellInterpolate.h>
 
 namespace vtkm
@@ -26,32 +25,31 @@ namespace worklet
 namespace particleadvection
 {
 
-class ExecutionField : public vtkm::VirtualObjectBase
-{
-public:
-  VTKM_EXEC_CONT
-  virtual ~ExecutionField() noexcept override {}
-
-  VTKM_EXEC
-  virtual void GetValue(const vtkm::VecVariable<vtkm::Id, 8>& indices,
-                        const vtkm::Id vertices,
-                        const vtkm::Vec3f& parametric,
-                        const vtkm::UInt8 cellShape,
-                        vtkm::VecVariable<vtkm::Vec3f, 2>& value) const = 0;
-};
-
 template <typename FieldArrayType>
-class ExecutionVelocityField : public vtkm::worklet::particleadvection::ExecutionField
+class ExecutionVelocityField
 {
 public:
   using FieldPortalType = typename FieldArrayType::ReadPortalType;
+  using Association = vtkm::cont::Field::Association;
 
   VTKM_CONT
-  ExecutionVelocityField(FieldArrayType velocityValues,
+  ExecutionVelocityField(const FieldArrayType& velocityValues,
+                         const Association assoc,
                          vtkm::cont::DeviceAdapterId device,
                          vtkm::cont::Token& token)
     : VelocityValues(velocityValues.PrepareForInput(device, token))
+    , Assoc(assoc)
   {
+  }
+
+  VTKM_EXEC Association GetAssociation() const { return this->Assoc; }
+
+  VTKM_EXEC void GetValue(const vtkm::Id cellId, vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
+  {
+    VTKM_ASSERT(this->Assoc == Association::CELL_SET);
+
+    vtkm::Vec3f velocity = VelocityValues.Get(cellId);
+    value = vtkm::make_Vec(velocity);
   }
 
   VTKM_EXEC void GetValue(const vtkm::VecVariable<vtkm::Id, 8>& indices,
@@ -60,6 +58,8 @@ public:
                           const vtkm::UInt8 cellShape,
                           vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
   {
+    VTKM_ASSERT(this->Assoc == Association::POINTS);
+
     vtkm::Vec3f velocityInterp;
     vtkm::VecVariable<vtkm::Vec3f, 8> velocities;
     for (vtkm::IdComponent i = 0; i < vertices; i++)
@@ -70,22 +70,37 @@ public:
 
 private:
   FieldPortalType VelocityValues;
+  Association Assoc;
 };
 
 template <typename FieldArrayType>
-class ExecutionElectroMagneticField : public vtkm::worklet::particleadvection::ExecutionField
+class ExecutionElectroMagneticField
 {
 public:
   using FieldPortalType = typename FieldArrayType::ReadPortalType;
+  using Association = vtkm::cont::Field::Association;
 
   VTKM_CONT
-  ExecutionElectroMagneticField(FieldArrayType electricValues,
-                                FieldArrayType magneticValues,
+  ExecutionElectroMagneticField(const FieldArrayType& electricValues,
+                                const FieldArrayType& magneticValues,
+                                const Association assoc,
                                 vtkm::cont::DeviceAdapterId device,
                                 vtkm::cont::Token& token)
     : ElectricValues(electricValues.PrepareForInput(device, token))
     , MagneticValues(magneticValues.PrepareForInput(device, token))
+    , Assoc(assoc)
   {
+  }
+
+  VTKM_EXEC Association GetAssociation() const { return this->Assoc; }
+
+  VTKM_EXEC void GetValue(const vtkm::Id cellId, vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
+  {
+    VTKM_ASSERT(this->Assoc == Association::CELL_SET);
+
+    auto electric = this->ElectricValues.Get(cellId);
+    auto magnetic = this->MagneticValues.Get(cellId);
+    value = vtkm::make_Vec(electric, magnetic);
   }
 
   VTKM_EXEC void GetValue(const vtkm::VecVariable<vtkm::Id, 8>& indices,
@@ -94,6 +109,8 @@ public:
                           const vtkm::UInt8 cellShape,
                           vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
   {
+    VTKM_ASSERT(this->Assoc == Association::POINTS);
+
     vtkm::Vec3f electricInterp, magneticInterp;
     vtkm::VecVariable<vtkm::Vec3f, 8> electric;
     vtkm::VecVariable<vtkm::Vec3f, 8> magnetic;
@@ -110,71 +127,86 @@ public:
 private:
   FieldPortalType ElectricValues;
   FieldPortalType MagneticValues;
-};
-
-class Field : public vtkm::cont::ExecutionObjectBase
-{
-public:
-  using HandleType = vtkm::cont::VirtualObjectHandle<ExecutionField>;
-
-  virtual ~Field() = default;
-
-  VTKM_CONT
-  virtual const ExecutionField* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
-                                                    vtkm::cont::Token& token) const = 0;
+  Association Assoc;
 };
 
 template <typename FieldArrayType>
-class VelocityField : public vtkm::worklet::particleadvection::Field
+class VelocityField : public vtkm::cont::ExecutionObjectBase
 {
 public:
+  using ExecutionType = ExecutionVelocityField<FieldArrayType>;
+  using Association = vtkm::cont::Field::Association;
+
+  VTKM_CONT
+  VelocityField() = default;
+
   VTKM_CONT
   VelocityField(const FieldArrayType& fieldValues)
     : FieldValues(fieldValues)
+    , Assoc(vtkm::cont::Field::Association::POINTS)
   {
   }
 
   VTKM_CONT
-  const ExecutionField* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
-                                            vtkm::cont::Token& token) const override
+  VelocityField(const FieldArrayType& fieldValues, const Association assoc)
+    : FieldValues(fieldValues)
+    , Assoc(assoc)
   {
-    using ExecutionType = ExecutionVelocityField<FieldArrayType>;
-    ExecutionType* execObject = new ExecutionType(this->FieldValues, device, token);
-    this->ExecHandle.Reset(execObject);
-    return this->ExecHandle.PrepareForExecution(device, token);
+    if (assoc == Association::ANY || assoc == Association::WHOLE_MESH)
+      throw("Unsupported field association");
+  }
+
+  VTKM_CONT
+  const ExecutionType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                          vtkm::cont::Token& token) const
+  {
+    return ExecutionType(this->FieldValues, this->Assoc, device, token);
   }
 
 private:
   FieldArrayType FieldValues;
-  mutable HandleType ExecHandle;
+  Association Assoc;
 };
 
 template <typename FieldArrayType>
-class ElectroMagneticField : public vtkm::worklet::particleadvection::Field
+class ElectroMagneticField : public vtkm::cont::ExecutionObjectBase
 {
 public:
+  using ExecutionType = ExecutionElectroMagneticField<FieldArrayType>;
+  using Association = vtkm::cont::Field::Association;
+
+  VTKM_CONT
+  ElectroMagneticField() = default;
+
   VTKM_CONT
   ElectroMagneticField(const FieldArrayType& electricField, const FieldArrayType& magneticField)
     : ElectricField(electricField)
     , MagneticField(magneticField)
+    , Assoc(vtkm::cont::Field::Association::POINTS)
   {
   }
 
   VTKM_CONT
-  const ExecutionField* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
-                                            vtkm::cont::Token& token) const override
+  ElectroMagneticField(const FieldArrayType& electricField,
+                       const FieldArrayType& magneticField,
+                       const Association assoc)
+    : ElectricField(electricField)
+    , MagneticField(magneticField)
+    , Assoc(assoc)
   {
-    using ExecutionType = ExecutionElectroMagneticField<FieldArrayType>;
-    ExecutionType* execObject =
-      new ExecutionType(this->ElectricField, this->MagneticField, device, token);
-    this->ExecHandle.Reset(execObject);
-    return this->ExecHandle.PrepareForExecution(device, token);
+  }
+
+  VTKM_CONT
+  const ExecutionType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                          vtkm::cont::Token& token) const
+  {
+    return ExecutionType(this->ElectricField, this->MagneticField, this->Assoc, device, token);
   }
 
 private:
   FieldArrayType ElectricField;
   FieldArrayType MagneticField;
-  mutable HandleType ExecHandle;
+  Association Assoc;
 };
 
 } // namespace particleadvection

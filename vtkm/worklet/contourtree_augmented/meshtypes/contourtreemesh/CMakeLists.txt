@@ -61,18 +61,20 @@
 ##==============================================================================
 
 set(headers
+  AddToArrayElementsWorklet.h
+  ApplyLookupTableDecorator.h
   ArcComparator.h
-  CombinedVectorDifferentFromNext.h
-  CompressNeighboursWorklet.h
-  ComputeMaxNeighboursWorklet.h
-  FindStartIndexWorklet.h
-  ReplaceArcNumWithToVertexWorklet.h
+  ArcValidDecorator.h
   CombinedSimulatedSimplicityIndexComparator.h
+  CombinedVectorDifferentFromNext.h
+  CopyIntoCombinedArrayWorklet.h
+  CopyIntoCombinedNeighborsWorklet.h
+  CopyNeighborsToPackedArray.h
+  FindDuplicateInOtherWorklet.h
+  GetArcFromDecorator.h
   InitToCombinedSortOrderArraysWorklet.h
-  CombinedOtherStartIndexNNeighboursWorklet.h
-  SubtractAssignWorklet.h
-  UpdateCombinedNeighboursWorklet.h
-  MergeCombinedOtherStartIndexWorklet.h
+  MergeSortedListsWithoutDuplicatesWorklet.h
+  ReplaceArcNumWithToVertexWorklet.h
  )
 
 #-----------------------------------------------------------------------------

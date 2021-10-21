@@ -15,12 +15,17 @@ set(headers
   DeviceAdapterTagTBB.h
   FunctorsTBB.h
   ParallelSortTBB.h
-  VirtualObjectTransferTBB.h
+  RuntimeDeviceConfigurationTBB.h
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    VirtualObjectTransferTBB.h
+    )
+endif()
 
 vtkm_declare_headers(${headers}
    ParallelSortTBB.hxx
-   parallel_sort.h
    )
 
 #These sources need to always be built

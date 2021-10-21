@@ -10,13 +10,10 @@
 #ifndef vtk_m_cont_ArrayGetValues_h
 #define vtk_m_cont_ArrayGetValues_h
 
-#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/DeviceAdapterTag.h>
-#include <vtkm/cont/ErrorExecution.h>
-#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <initializer_list>
 #include <vector>
@@ -25,6 +22,18 @@ namespace vtkm
 {
 namespace cont
 {
+
+// Work around circular dependancy with UnknownArrayHandle.
+class UnknownArrayHandle;
+
+namespace internal
+{
+
+VTKM_CONT_EXPORT void ArrayGetValuesImpl(const vtkm::cont::UnknownArrayHandle& ids,
+                                         const vtkm::cont::UnknownArrayHandle& data,
+                                         const vtkm::cont::UnknownArrayHandle& output);
+
+} // namespace internal
 
 /// \brief Obtain a small set of values from an ArrayHandle with minimal device
 /// transfers.
@@ -88,37 +97,10 @@ VTKM_CONT void ArrayGetValues(const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids
                               const vtkm::cont::ArrayHandle<T, SData>& data,
                               vtkm::cont::ArrayHandle<T, SOut>& output)
 {
-  bool copyComplete = false;
-
-  // Find the device that already has a copy of the data:
-  vtkm::cont::DeviceAdapterId devId = data.GetDeviceAdapterId();
-
-  if (devId.GetValue() != VTKM_DEVICE_ADAPTER_UNDEFINED)
-  { // Data exists on some device -- use it:
-    const auto input = vtkm::cont::make_ArrayHandlePermutation(ids, data);
-    copyComplete = vtkm::cont::Algorithm::Copy(devId, input, output);
-    if (!copyComplete)
-    { // Retry on any device if the first attempt failed.
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "Failed to run ArrayGetValues on device '"
-                   << devId.GetName() << "'. Falling back to control-side copy.");
-      copyComplete = vtkm::cont::Algorithm::Copy(vtkm::cont::DeviceAdapterTagAny{}, input, output);
-    }
-  }
-
-  if (!copyComplete)
-  { // Fallback to a control-side copy if the device copy fails or if the device
-    // is undefined:
-    const vtkm::Id numVals = ids.GetNumberOfValues();
-    auto idPortal = ids.ReadPortal();
-    auto dataPortal = data.ReadPortal();
-    output.Allocate(numVals);
-    auto outPortal = output.WritePortal();
-    for (vtkm::Id i = 0; i < numVals; ++i)
-    {
-      outPortal.Set(i, dataPortal.Get(idPortal.Get(i)));
-    }
-  }
+  VTKM_STATIC_ASSERT_MSG(
+    vtkm::HasVecTraits<T>::value,
+    "ArrayGetValues can only be used with arrays containing value types with VecTraits defined.");
+  internal::ArrayGetValuesImpl(ids, data, output);
 }
 
 template <typename SIds, typename T, typename SData, typename Alloc>

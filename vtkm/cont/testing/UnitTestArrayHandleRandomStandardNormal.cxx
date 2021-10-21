@@ -13,11 +13,11 @@
 
 void TestArrayHandleStandardNormal()
 {
-  auto array = vtkm::cont::ArrayHandleRandomStandardNormal<vtkm::Float32>(1000000, { 0xceed });
+  auto array = vtkm::cont::ArrayHandleRandomStandardNormal<vtkm::Float32>(50000, { 0xceed });
   auto stats = vtkm::worklet::DescriptiveStatistics::Run(array);
 
-  VTKM_TEST_ASSERT(test_equal(stats.Mean(), 0, 0.001));
-  VTKM_TEST_ASSERT(test_equal(stats.PopulationStddev(), 1, 0.001));
+  VTKM_TEST_ASSERT(test_equal(stats.Mean(), 0, 0.01));
+  VTKM_TEST_ASSERT(test_equal(stats.PopulationStddev(), 1, 0.01));
   VTKM_TEST_ASSERT(test_equal(stats.Skewness(), 0.0f, 1.0f / 100));
   VTKM_TEST_ASSERT(test_equal(stats.Kurtosis(), 3.0f, 1.0f / 100));
 }

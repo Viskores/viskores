@@ -83,6 +83,13 @@ public:
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
                                                     vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
+protected:
+  vtkm::filter::FilterDataSetWithField<Derived>& operator=(
+    const vtkm::filter::FilterDataSetWithField<Derived>&) = default;
+
+  VTKM_CONT
+  void CopyStateFrom(const FilterDataSetWithField<Derived>* filter) { *this = *filter; }
+
 private:
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,

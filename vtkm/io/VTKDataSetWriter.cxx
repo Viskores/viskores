@@ -21,6 +21,7 @@
 
 #include <vtkm/io/ErrorIO.h>
 
+#include <vtkm/io/internal/Endian.h>
 #include <vtkm/io/internal/VTKDataSetTypes.h>
 
 #include <algorithm>
@@ -85,10 +86,28 @@ using ArrayHandleRectilinearCoordinates =
 struct OutputArrayDataFunctor
 {
   template <typename T>
-  VTKM_CONT void operator()(T, const vtkm::cont::UnknownArrayHandle& array, std::ostream& out) const
+  VTKM_CONT void operator()(T,
+                            const vtkm::cont::UnknownArrayHandle& array,
+                            std::ostream& out,
+                            vtkm::io::FileType fileType) const
   {
     auto componentArray = array.ExtractArrayFromComponents<T>();
     auto portal = componentArray.ReadPortal();
+    switch (fileType)
+    {
+      case vtkm::io::FileType::ASCII:
+        this->OutputAsciiArray(portal, out);
+        break;
+      case vtkm::io::FileType::BINARY:
+        this->OutputBinaryArray(portal, out);
+        break;
+    }
+  }
+
+  template <typename PortalType>
+  void OutputAsciiArray(const PortalType& portal, std::ostream& out) const
+  {
+    using T = typename PortalType::ValueType::ComponentType;
 
     vtkm::Id numValues = portal.GetNumberOfValues();
     for (vtkm::Id valueIndex = 0; valueIndex < numValues; ++valueIndex)
@@ -96,16 +115,50 @@ struct OutputArrayDataFunctor
       auto value = portal.Get(valueIndex);
       for (vtkm::IdComponent cIndex = 0; cIndex < value.GetNumberOfComponents(); ++cIndex)
       {
-        out << ((cIndex == 0) ? "" : " ") << value[cIndex];
+        out << ((cIndex == 0) ? "" : " ");
+        if (std::numeric_limits<T>::is_integer && sizeof(T) == 1)
+        {
+          out << static_cast<int>(value[cIndex]);
+        }
+        else
+        {
+          out << value[cIndex];
+        }
       }
       out << "\n";
     }
   }
+
+  template <typename PortalType>
+  void OutputBinaryArray(const PortalType& portal, std::ostream& out) const
+  {
+    using T = typename PortalType::ValueType::ComponentType;
+
+    vtkm::Id numValues = portal.GetNumberOfValues();
+    std::vector<T> tuple;
+    for (vtkm::Id valueIndex = 0; valueIndex < numValues; ++valueIndex)
+    {
+      auto value = portal.Get(valueIndex);
+      tuple.resize(static_cast<std::size_t>(value.GetNumberOfComponents()));
+      for (vtkm::IdComponent cIndex = 0; cIndex < value.GetNumberOfComponents(); ++cIndex)
+      {
+        tuple[static_cast<std::size_t>(cIndex)] = value[cIndex];
+      }
+      if (vtkm::io::internal::IsLittleEndian())
+      {
+        vtkm::io::internal::FlipEndianness(tuple);
+      }
+      out.write(reinterpret_cast<const char*>(tuple.data()),
+                static_cast<std::streamsize>(tuple.size() * sizeof(T)));
+    }
+  }
 };
 
-void OutputArrayData(const vtkm::cont::UnknownArrayHandle& array, std::ostream& out)
+void OutputArrayData(const vtkm::cont::UnknownArrayHandle& array,
+                     std::ostream& out,
+                     vtkm::io::FileType fileType)
 {
-  CallForBaseType(OutputArrayDataFunctor{}, array, out);
+  CallForBaseType(OutputArrayDataFunctor{}, array, out, fileType);
 }
 
 struct GetFieldTypeNameFunctor
@@ -139,7 +192,7 @@ void WriteDimensions(std::ostream& out, const vtkm::cont::CellSetStructured<DIM>
   out << (DIM > 2 ? VTraits::GetComponent(pointDimensions, 2) : 1) << "\n";
 }
 
-void WritePoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
+void WritePoints(std::ostream& out, const vtkm::cont::DataSet& dataSet, vtkm::io::FileType fileType)
 {
   ///\todo: support other coordinate systems
   int cindex = 0;
@@ -150,11 +203,11 @@ void WritePoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   vtkm::Id npoints = cdata.GetNumberOfValues();
   out << "POINTS " << npoints << " " << typeName << " " << '\n';
 
-  OutputArrayData(cdata, out);
+  OutputArrayData(cdata, out, fileType);
 }
 
 template <class CellSetType>
-void WriteExplicitCells(std::ostream& out, const CellSetType& cellSet)
+void WriteExplicitCellsAscii(std::ostream& out, const CellSetType& cellSet)
 {
   vtkm::Id nCells = cellSet.GetNumberOfCells();
 
@@ -174,7 +227,9 @@ void WriteExplicitCells(std::ostream& out, const CellSetType& cellSet)
     out << nids;
     auto IdPortal = ids.ReadPortal();
     for (int j = 0; j < nids; ++j)
+    {
       out << " " << IdPortal.Get(j);
+    }
     out << '\n';
   }
 
@@ -186,7 +241,74 @@ void WriteExplicitCells(std::ostream& out, const CellSetType& cellSet)
   }
 }
 
-void WritePointFields(std::ostream& out, const vtkm::cont::DataSet& dataSet)
+template <class CellSetType>
+void WriteExplicitCellsBinary(std::ostream& out, const CellSetType& cellSet)
+{
+  vtkm::Id nCells = cellSet.GetNumberOfCells();
+
+  vtkm::Id conn_length = 0;
+  for (vtkm::Id i = 0; i < nCells; ++i)
+  {
+    conn_length += 1 + cellSet.GetNumberOfPointsInCell(i);
+  }
+
+  out << "CELLS " << nCells << " " << conn_length << '\n';
+
+  std::vector<vtkm::Int32> buffer;
+  buffer.reserve(static_cast<std::size_t>(conn_length));
+  for (vtkm::Id i = 0; i < nCells; ++i)
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> ids;
+    vtkm::Id nids = cellSet.GetNumberOfPointsInCell(i);
+    cellSet.GetIndices(i, ids);
+    buffer.push_back(static_cast<vtkm::Int32>(nids));
+    auto IdPortal = ids.ReadPortal();
+    for (int j = 0; j < nids; ++j)
+    {
+      buffer.push_back(static_cast<vtkm::Int32>(IdPortal.Get(j)));
+    }
+  }
+  if (vtkm::io::internal::IsLittleEndian())
+  {
+    vtkm::io::internal::FlipEndianness(buffer);
+  }
+  VTKM_ASSERT(static_cast<vtkm::Id>(buffer.size()) == conn_length);
+  out.write(reinterpret_cast<const char*>(buffer.data()),
+            static_cast<std::streamsize>(buffer.size() * sizeof(vtkm::Int32)));
+
+  out << "CELL_TYPES " << nCells << '\n';
+  buffer.resize(0);
+  buffer.reserve(static_cast<std::size_t>(nCells));
+  for (vtkm::Id i = 0; i < nCells; ++i)
+  {
+    buffer.push_back(static_cast<vtkm::Int32>(cellSet.GetCellShape(i)));
+  }
+  if (vtkm::io::internal::IsLittleEndian())
+  {
+    vtkm::io::internal::FlipEndianness(buffer);
+  }
+  VTKM_ASSERT(static_cast<vtkm::Id>(buffer.size()) == nCells);
+  out.write(reinterpret_cast<const char*>(buffer.data()),
+            static_cast<std::streamsize>(buffer.size() * sizeof(vtkm::Int32)));
+}
+
+template <class CellSetType>
+void WriteExplicitCells(std::ostream& out, const CellSetType& cellSet, vtkm::io::FileType fileType)
+{
+  switch (fileType)
+  {
+    case vtkm::io::FileType::ASCII:
+      WriteExplicitCellsAscii(out, cellSet);
+      break;
+    case vtkm::io::FileType::BINARY:
+      WriteExplicitCellsBinary(out, cellSet);
+      break;
+  }
+}
+
+void WritePointFields(std::ostream& out,
+                      const vtkm::cont::DataSet& dataSet,
+                      vtkm::io::FileType fileType)
 {
   bool wrote_header = false;
   for (vtkm::Id f = 0; f < dataSet.GetNumberOfFields(); f++)
@@ -219,11 +341,13 @@ void WritePointFields(std::ostream& out, const vtkm::cont::DataSet& dataSet)
     out << "SCALARS " << name << " " << typeName << " " << ncomps << '\n';
     out << "LOOKUP_TABLE default" << '\n';
 
-    OutputArrayData(field.GetData(), out);
+    OutputArrayData(field.GetData(), out, fileType);
   }
 }
 
-void WriteCellFields(std::ostream& out, const vtkm::cont::DataSet& dataSet)
+void WriteCellFields(std::ostream& out,
+                     const vtkm::cont::DataSet& dataSet,
+                     vtkm::io::FileType fileType)
 {
   bool wrote_header = false;
   for (vtkm::Id f = 0; f < dataSet.GetNumberOfFields(); f++)
@@ -258,18 +382,19 @@ void WriteCellFields(std::ostream& out, const vtkm::cont::DataSet& dataSet)
     out << "SCALARS " << name << " " << typeName << " " << ncomps << '\n';
     out << "LOOKUP_TABLE default" << '\n';
 
-    OutputArrayData(field.GetData(), out);
+    OutputArrayData(field.GetData(), out, fileType);
   }
 }
 
 template <class CellSetType>
 void WriteDataSetAsUnstructured(std::ostream& out,
                                 const vtkm::cont::DataSet& dataSet,
-                                const CellSetType& cellSet)
+                                const CellSetType& cellSet,
+                                vtkm::io::FileType fileType)
 {
   out << "DATASET UNSTRUCTURED_GRID" << '\n';
-  WritePoints(out, dataSet);
-  WriteExplicitCells(out, cellSet);
+  WritePoints(out, dataSet, fileType);
+  WriteExplicitCells(out, cellSet, fileType);
 }
 
 template <vtkm::IdComponent DIM>
@@ -291,7 +416,8 @@ void WriteDataSetAsStructuredPoints(std::ostream& out,
 template <typename T, vtkm::IdComponent DIM>
 void WriteDataSetAsRectilinearGrid(std::ostream& out,
                                    const ArrayHandleRectilinearCoordinates<T>& points,
-                                   const vtkm::cont::CellSetStructured<DIM>& cellSet)
+                                   const vtkm::cont::CellSetStructured<DIM>& cellSet,
+                                   vtkm::io::FileType fileType)
 {
   out << "DATASET RECTILINEAR_GRID\n";
 
@@ -302,33 +428,35 @@ void WriteDataSetAsRectilinearGrid(std::ostream& out,
 
   dimArray = points.GetFirstArray();
   out << "X_COORDINATES " << dimArray.GetNumberOfValues() << " " << typeName << "\n";
-  OutputArrayData(dimArray, out);
+  OutputArrayData(dimArray, out, fileType);
 
   dimArray = points.GetSecondArray();
   out << "Y_COORDINATES " << dimArray.GetNumberOfValues() << " " << typeName << "\n";
-  OutputArrayData(dimArray, out);
+  OutputArrayData(dimArray, out, fileType);
 
   dimArray = points.GetThirdArray();
   out << "Z_COORDINATES " << dimArray.GetNumberOfValues() << " " << typeName << "\n";
-  OutputArrayData(dimArray, out);
+  OutputArrayData(dimArray, out, fileType);
 }
 
 template <vtkm::IdComponent DIM>
 void WriteDataSetAsStructuredGrid(std::ostream& out,
                                   const vtkm::cont::DataSet& dataSet,
-                                  const vtkm::cont::CellSetStructured<DIM>& cellSet)
+                                  const vtkm::cont::CellSetStructured<DIM>& cellSet,
+                                  vtkm::io::FileType fileType)
 {
   out << "DATASET STRUCTURED_GRID" << '\n';
 
   WriteDimensions(out, cellSet);
 
-  WritePoints(out, dataSet);
+  WritePoints(out, dataSet, fileType);
 }
 
 template <vtkm::IdComponent DIM>
 void WriteDataSetAsStructured(std::ostream& out,
                               const vtkm::cont::DataSet& dataSet,
-                              const vtkm::cont::CellSetStructured<DIM>& cellSet)
+                              const vtkm::cont::CellSetStructured<DIM>& cellSet,
+                              vtkm::io::FileType fileType)
 {
   ///\todo: support rectilinear
 
@@ -343,21 +471,27 @@ void WriteDataSetAsStructured(std::ostream& out,
   else if (coordSystem.IsType<ArrayHandleRectilinearCoordinates<vtkm::Float32>>())
   {
     WriteDataSetAsRectilinearGrid(
-      out, coordSystem.AsArrayHandle<ArrayHandleRectilinearCoordinates<vtkm::Float32>>(), cellSet);
+      out,
+      coordSystem.AsArrayHandle<ArrayHandleRectilinearCoordinates<vtkm::Float32>>(),
+      cellSet,
+      fileType);
   }
   else if (coordSystem.IsType<ArrayHandleRectilinearCoordinates<vtkm::Float64>>())
   {
     WriteDataSetAsRectilinearGrid(
-      out, coordSystem.AsArrayHandle<ArrayHandleRectilinearCoordinates<vtkm::Float64>>(), cellSet);
+      out,
+      coordSystem.AsArrayHandle<ArrayHandleRectilinearCoordinates<vtkm::Float64>>(),
+      cellSet,
+      fileType);
   }
   else
   {
     // Curvilinear is written as "structured grid"
-    WriteDataSetAsStructuredGrid(out, dataSet, cellSet);
+    WriteDataSetAsStructuredGrid(out, dataSet, cellSet, fileType);
   }
 }
 
-void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet)
+void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet, vtkm::io::FileType fileType)
 {
   // The Paraview parser cannot handle scientific notation:
   out << std::fixed;
@@ -372,37 +506,54 @@ void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet)
 #endif
   out << "# vtk DataFile Version 3.0" << '\n';
   out << "vtk output" << '\n';
-  out << "ASCII" << '\n';
+  switch (fileType)
+  {
+    case vtkm::io::FileType::ASCII:
+      out << "ASCII" << '\n';
+      break;
+    case vtkm::io::FileType::BINARY:
+      out << "BINARY" << '\n';
+      break;
+  }
 
   vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
   if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
   {
-    WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetExplicit<>>());
+    WriteDataSetAsUnstructured(
+      out, dataSet, cellSet.Cast<vtkm::cont::CellSetExplicit<>>(), fileType);
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<1>>())
   {
-    WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<1>>());
+    WriteDataSetAsStructured(
+      out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<1>>(), fileType);
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
   {
-    WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<2>>());
+    WriteDataSetAsStructured(
+      out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<2>>(), fileType);
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
   {
-    WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<3>>());
+    WriteDataSetAsStructured(
+      out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<3>>(), fileType);
   }
   else if (cellSet.IsType<vtkm::cont::CellSetSingleType<>>())
   {
     // these function just like explicit cell sets
-    WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetSingleType<>>());
+    WriteDataSetAsUnstructured(
+      out, dataSet, cellSet.Cast<vtkm::cont::CellSetSingleType<>>(), fileType);
+  }
+  else if (cellSet.IsType<vtkm::cont::CellSetExtrude>())
+  {
+    WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetExtrude>(), fileType);
   }
   else
   {
     throw vtkm::cont::ErrorBadType("Could not determine type to write out.");
   }
 
-  WritePointFields(out, dataSet);
-  WriteCellFields(out, dataSet);
+  WritePointFields(out, dataSet, fileType);
+  WriteCellFields(out, dataSet, fileType);
 }
 
 } // anonymous namespace
@@ -431,8 +582,8 @@ void VTKDataSetWriter::WriteDataSet(const vtkm::cont::DataSet& dataSet) const
   }
   try
   {
-    std::ofstream fileStream(this->FileName.c_str(), std::fstream::trunc);
-    Write(fileStream, dataSet);
+    std::ofstream fileStream(this->FileName.c_str(), std::fstream::trunc | std::fstream::binary);
+    Write(fileStream, dataSet, this->GetFileType());
     fileStream.close();
   }
   catch (std::ofstream::failure& error)
@@ -440,5 +591,16 @@ void VTKDataSetWriter::WriteDataSet(const vtkm::cont::DataSet& dataSet) const
     throw vtkm::io::ErrorIO(error.what());
   }
 }
+
+vtkm::io::FileType VTKDataSetWriter::GetFileType() const
+{
+  return this->FileType;
+}
+
+void VTKDataSetWriter::SetFileType(vtkm::io::FileType type)
+{
+  this->FileType = type;
+}
+
 }
 } // namespace vtkm::io

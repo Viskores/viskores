@@ -45,13 +45,8 @@ void TestSplitSharpEdges()
   auto result = splitSharpEdges.Execute(dataSet);
   result.PrintSummary(std::cout);
 
-  C canvas(512, 512);
-  M mapper;
-  vtkm::rendering::Scene scene;
-  auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
-    result, "pointvar", canvas, mapper, scene, colorTable, static_cast<vtkm::FloatDefault>(0.0));
-
-  VTKM_TEST_ASSERT(test_equal_images(view, "split-sharp-edges.png"));
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
+    result, "pointvar", colorTable, "filter/split-sharp-edges.png", false);
 }
 } // namespace
 

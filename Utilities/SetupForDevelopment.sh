@@ -32,3 +32,23 @@ true
 
 SetupForDevelopment=1
 git config hooks.SetupForDevelopment ${SetupForDevelopment_VERSION}
+
+# Setup VTK-m-specifc LFS config
+#
+
+
+OriginURL=$(git remote get-url origin)
+if [[ "$OriginURL" =~ ^(https://|git@)gitlab\.kitware\.com(/|:)vtk/vtk-m\.git$ ]]
+then
+
+
+
+
+
+
+
+
+
+
+
+fi

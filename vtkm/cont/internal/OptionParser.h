@@ -32,6 +32,7 @@ namespace cont
 namespace internal
 {
 
+
 // Check to make sure that optionparser.h has not been included before. If it has, remove its
 // header guard so we can include it again under our namespace.
 #ifdef OPTIONPARSER_H_
@@ -53,9 +54,10 @@ namespace internal
 // Remove the header guard for other inclusion.
 #undef OPTIONPARSER_H_
 #endif
-}
-}
+
 } // namespace vtkm::cont::internal
+} // namespace vtkm::cont
+} // namespace vtkm
 
 VTKM_THIRDPARTY_POST_INCLUDE
 

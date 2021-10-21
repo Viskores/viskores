@@ -171,5 +171,19 @@ VTKM_CONT void DataSet::AddField(const Field& field)
   this->Fields[{ field.GetName(), field.GetAssociation() }] = field;
 }
 
+void DataSet::ConvertToExpected()
+{
+  for (vtkm::IdComponent coordIndex = 0; coordIndex < this->GetNumberOfCoordinateSystems();
+       ++coordIndex)
+  {
+    this->GetCoordinateSystem(coordIndex).ConvertToExpected();
+  }
+
+  for (vtkm::IdComponent fieldIndex = 0; fieldIndex < this->GetNumberOfFields(); ++fieldIndex)
+  {
+    this->GetField(fieldIndex).ConvertToExpected();
+  }
+}
+
 } // namespace cont
 } // namespace vtkm

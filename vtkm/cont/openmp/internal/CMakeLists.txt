@@ -18,8 +18,14 @@ set(headers
   ParallelRadixSortOpenMP.h
   ParallelScanOpenMP.h
   ParallelSortOpenMP.h
-  VirtualObjectTransferOpenMP.h
+  RuntimeDeviceConfigurationOpenMP.h
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    VirtualObjectTransferOpenMP.h
+    )
+endif()
 
 vtkm_declare_headers(${headers})
 

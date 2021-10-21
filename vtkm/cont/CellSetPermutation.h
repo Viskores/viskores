@@ -20,6 +20,8 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/internal/ConnectivityExplicitInternals.h>
+#include <vtkm/cont/internal/ConvertNumComponentsToOffsetsTemplate.h>
+#include <vtkm/cont/internal/ReverseConnectivityBuilder.h>
 #include <vtkm/internal/ConnectivityStructuredInternals.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -92,7 +94,8 @@ public:
     vtkm::Id& connectivityLength /* outparam */,
     vtkm::cont::DeviceAdapterId)
   {
-    return vtkm::cont::ConvertNumIndicesToOffsets(numIndices, connectivityLength);
+    return vtkm::cont::internal::ConvertNumComponentsToOffsetsTemplate(numIndices,
+                                                                       connectivityLength);
   }
 
   template <typename CellSetPermutationType, typename OffsetsStorageType>

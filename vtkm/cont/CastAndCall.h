@@ -12,6 +12,9 @@
 
 #include <vtkm/internal/IndexTag.h>
 
+#include <vtkm/cont/DefaultTypes.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
+
 #include <utility>
 
 namespace vtkm
@@ -24,8 +27,6 @@ class Field;
 
 template <typename T, typename S>
 class ArrayHandle;
-
-class UnknownArrayHandle;
 
 template <vtkm::IdComponent>
 class CellSetStructured;
@@ -70,9 +71,13 @@ void CastAndCall(const vtkm::cont::ArrayHandle<T, U>& handle, Functor&& f, Args&
 /// A specialization of CastAndCall for UnknownArrayHandle.
 /// Since we have no hints on the types, use VTKM_DEFAULT_TYPE_LIST
 /// and VTKM_DEFAULT_STORAGE_LIST.
-// actually implemented in vtkm/cont/UnknownArrayHandle
+// Implemented here to avoid circular dependencies.
 template <typename Functor, typename... Args>
-void CastAndCall(const UnknownArrayHandle& handle, Functor&& f, Args&&... args);
+void CastAndCall(const UnknownArrayHandle& handle, Functor&& f, Args&&... args)
+{
+  handle.CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
+    std::forward<Functor>(f), std::forward<Args>(args)...);
+}
 
 /// A specialization of CastAndCall for basic CellSetStructured types,
 /// Since the type is already known no deduction is needed.
@@ -172,7 +177,16 @@ struct DynamicTransformTraits
   ///
   using DynamicTag = vtkm::cont::internal::DynamicTransformTagStatic;
 };
-}
+
+// Implemented here to avoid circular dependencies.
+template <>
+struct DynamicTransformTraits<vtkm::cont::UnknownArrayHandle>
+{
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

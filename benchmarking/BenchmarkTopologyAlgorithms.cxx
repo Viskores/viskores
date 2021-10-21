@@ -17,11 +17,10 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
-
-#include <vtkm/cont/testing/Testing.h>
 
 #include <cctype>
 #include <random>
@@ -34,7 +33,8 @@ namespace
 
 using ValueTypes = vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
 
-using ValueVariantHandle = vtkm::cont::VariantArrayHandleBase<ValueTypes>;
+using ValueUncertainHandle =
+  vtkm::cont::UncertainArrayHandle<ValueTypes, vtkm::cont::StorageListBasic>;
 
 // Hold configuration state (e.g. active device)
 vtkm::cont::InitializeResult Config;
@@ -232,7 +232,7 @@ template <typename ValueType>
 void BenchCellToPointAvgDynamic(::benchmark::State& state)
 {
   BenchCellToPointAvgImpl<ValueType> impl{ state };
-  impl.Run(ValueVariantHandle{ impl.Input });
+  impl.Run(ValueUncertainHandle{ impl.Input });
 };
 VTKM_BENCHMARK_TEMPLATES(BenchCellToPointAvgDynamic, ValueTypes);
 
@@ -300,7 +300,7 @@ template <typename ValueType>
 void BenchPointToCellAvgDynamic(::benchmark::State& state)
 {
   BenchPointToCellAvgImpl<ValueType> impl{ state };
-  impl.Run(ValueVariantHandle{ impl.Input });
+  impl.Run(ValueUncertainHandle{ impl.Input });
 };
 VTKM_BENCHMARK_TEMPLATES(BenchPointToCellAvgDynamic, ValueTypes);
 
@@ -371,7 +371,7 @@ template <typename ValueType>
 void BenchClassificationDynamic(::benchmark::State& state)
 {
   BenchClassificationImpl<ValueType> impl{ state };
-  impl.Run(ValueVariantHandle{ impl.Input });
+  impl.Run(ValueUncertainHandle{ impl.Input });
 };
 VTKM_BENCHMARK_TEMPLATES(BenchClassificationDynamic, ValueTypes);
 

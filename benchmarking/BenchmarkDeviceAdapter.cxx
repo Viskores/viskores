@@ -17,6 +17,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Initialize.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/worklet/StableSortIndices.h>
@@ -28,11 +29,10 @@
 #include <string>
 #include <utility>
 
+#include <vtkmstd/integer_sequence.h>
+
 #include <vtkm/internal/Windows.h>
 
-#ifdef VTKM_ENABLE_TBB
-#include <tbb/task_scheduler_init.h>
-#endif
 #ifdef VTKM_ENABLE_OPENMP
 #include <omp.h>
 #endif
@@ -94,6 +94,7 @@ static const std::pair<int64_t, int64_t> SmallRange{ SHORT_RANGE_LOWER_BOUNDARY,
                                                      SHORT_RANGE_UPPER_BOUNDARY };
 static constexpr int SmallRangeMultiplier = 1 << 21; // Ensure a sample at 2MiB
 
+#ifndef VTKM_ENABLE_KOKKOS
 using TypeList = vtkm::List<vtkm::UInt8,
                             vtkm::Float32,
                             vtkm::Int64,
@@ -102,6 +103,17 @@ using TypeList = vtkm::List<vtkm::UInt8,
                             vtkm::Pair<vtkm::Int32, vtkm::Float64>>;
 
 using SmallTypeList = vtkm::List<vtkm::UInt8, vtkm::Float32, vtkm::Int64>;
+#else
+// Kokkos requires 0 == (sizeof(Kokkos::MinMaxScalar<ValueType>) % sizeof(int)
+// so removing vtkm::UInt8
+using TypeList = vtkm::List<vtkm::Float32,
+                            vtkm::Int64,
+                            vtkm::Float64,
+                            vtkm::Vec3f_32,
+                            vtkm::Pair<vtkm::Int32, vtkm::Float64>>;
+
+using SmallTypeList = vtkm::List<vtkm::Float32, vtkm::Int64>;
+#endif
 
 // Only 32-bit words are currently supported atomically across devices:
 using AtomicWordTypes = vtkm::List<vtkm::UInt32>;
@@ -128,7 +140,37 @@ template <typename T>
 struct TestValueFunctor
 {
   VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return TestValue(i, T{}); }
+  T operator()(vtkm::Id i) const { return static_cast<T>(i + 10); }
+};
+
+template <typename T>
+VTKM_EXEC_CONT T TestValue(vtkm::Id index)
+{
+  return TestValueFunctor<T>{}(index);
+}
+
+template <typename T, typename U>
+struct TestValueFunctor<vtkm::Pair<T, U>>
+{
+  VTKM_EXEC_CONT vtkm::Pair<T, U> operator()(vtkm::Id i) const
+  {
+    return vtkm::make_Pair(TestValue<T>(i), TestValue<U>(i + 1));
+  }
+};
+
+template <typename T, vtkm::IdComponent N>
+struct TestValueFunctor<vtkm::Vec<T, N>>
+{
+  template <std::size_t... Ns>
+  VTKM_EXEC_CONT vtkm::Vec<T, N> FillVec(vtkm::Id i, vtkmstd::index_sequence<Ns...>) const
+  {
+    return vtkm::make_Vec(TestValue<T>(i + static_cast<vtkm::Id>(Ns))...);
+  }
+
+  VTKM_EXEC_CONT vtkm::Vec<T, N> operator()(vtkm::Id i) const
+  {
+    return FillVec(i, vtkmstd::make_index_sequence<static_cast<std::size_t>(N)>{});
+  }
 };
 
 template <typename ArrayT>
@@ -140,27 +182,11 @@ VTKM_CONT void FillTestValue(ArrayT& array, vtkm::Id numValues)
 }
 
 template <typename T>
-struct ScaledTestValueFunctor
-{
-  vtkm::Id Scale;
-  VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return TestValue(i * this->Scale, T{}); }
-};
-
-template <typename ArrayT>
-VTKM_CONT void FillScaledTestValue(ArrayT& array, vtkm::Id scale, vtkm::Id numValues)
-{
-  using T = typename ArrayT::ValueType;
-  vtkm::cont::Algorithm::Copy(
-    vtkm::cont::make_ArrayHandleImplicit(ScaledTestValueFunctor<T>{ scale }, numValues), array);
-}
-
-template <typename T>
 struct ModuloTestValueFunctor
 {
   vtkm::Id Mod;
   VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return TestValue(i % this->Mod, T{}); }
+  T operator()(vtkm::Id i) const { return TestValue<T>(i % this->Mod); }
 };
 
 template <typename ArrayT>
@@ -186,7 +212,7 @@ struct BinaryTestValueFunctor
       T retVal;
       do
       {
-        retVal = TestValue(i++, T{});
+        retVal = TestValue<T>(i++);
       } while (retVal == zero);
       return retVal;
     }
@@ -213,7 +239,7 @@ VTKM_CONT void FillRandomTestValue(ArrayT& array, vtkm::Id numValues)
   auto portal = array.WritePortal();
   for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
   {
-    portal.Set(i, TestValue(static_cast<vtkm::Id>(rng()), ValueType{}));
+    portal.Set(i, TestValue<ValueType>(static_cast<vtkm::Id>(rng())));
   }
 }
 
@@ -228,7 +254,7 @@ VTKM_CONT void FillRandomModTestValue(ArrayT& array, vtkm::Id mod, vtkm::Id numV
   auto portal = array.WritePortal();
   for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
   {
-    portal.Set(i, TestValue(static_cast<vtkm::Id>(rng()) % mod, ValueType{}));
+    portal.Set(i, TestValue<ValueType>(static_cast<vtkm::Id>(rng()) % mod));
   }
 }
 
@@ -593,7 +619,7 @@ void BenchFillArrayHandle(benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::Fill(device, array, TestValue(19, ValueType{}), numValues);
+    vtkm::cont::Algorithm::Fill(device, array, TestValue<ValueType>(19), numValues);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -1224,30 +1250,6 @@ int main(int argc, char* argv[])
   {
     vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
-
-// Handle NumThreads command-line arg:
-#ifdef VTKM_ENABLE_TBB
-  int numThreads = tbb::task_scheduler_init::automatic;
-#endif // TBB
-
-  if (argc == 3)
-  {
-    if (std::string(argv[1]) == "NumThreads")
-    {
-#ifdef VTKM_ENABLE_TBB
-      std::istringstream parse(argv[2]);
-      parse >> numThreads;
-      std::cout << "Selected " << numThreads << " TBB threads." << std::endl;
-#else
-      std::cerr << "NumThreads valid only on TBB. Ignoring." << std::endl;
-#endif // TBB
-    }
-  }
-
-#ifdef VTKM_ENABLE_TBB
-  // Must not be destroyed as long as benchmarks are running:
-  tbb::task_scheduler_init init(numThreads);
-#endif // TBB
 
   // handle benchmarking related args and run benchmarks:
   VTKM_EXECUTE_BENCHMARKS(argc, args.data());

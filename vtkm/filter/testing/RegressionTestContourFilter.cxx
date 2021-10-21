@@ -50,13 +50,13 @@ void TestContourFilterWedge()
 
   result.PrintSummary(std::cout);
 
-  C canvas(512, 512);
-  M mapper;
-  vtkm::rendering::Scene scene;
-  auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
-    result, "gyroid", canvas, mapper, scene, colorTable, static_cast<vtkm::FloatDefault>(0.08));
-
-  VTKM_TEST_ASSERT(test_equal_images(view, "contour-wedge.png"));
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
+    result,
+    "gyroid",
+    colorTable,
+    "filter/contour-wedge.png",
+    false,
+    static_cast<vtkm::FloatDefault>(0.08));
 }
 
 void TestContourFilterUniform()
@@ -84,14 +84,9 @@ void TestContourFilterUniform()
 
   result.PrintSummary(std::cout);
 
-  C canvas(512, 512);
-  M mapper;
-  vtkm::rendering::Scene scene;
-  auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
-    result, "pointvar", canvas, mapper, scene, colorTable);
-
   //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
-  VTKM_TEST_ASSERT(test_equal_images(view, "contour-uniform.png"));
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
+    result, "pointvar", colorTable, "filter/contour-uniform.png", false);
 }
 
 void TestContourFilterTangle()
@@ -111,20 +106,15 @@ void TestContourFilterTangle()
   vtkm::filter::Contour contour;
   contour.SetGenerateNormals(true);
   contour.SetIsoValue(0, 1);
-  contour.SetActiveField("nodevar");
-  contour.SetFieldsToPass("nodevar");
+  contour.SetActiveField("tangle");
+  contour.SetFieldsToPass("tangle");
   auto result = contour.Execute(dataSet);
 
   result.PrintSummary(std::cout);
 
-  C canvas(512, 512);
-  M mapper;
-  vtkm::rendering::Scene scene;
-  auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
-    result, "nodevar", canvas, mapper, scene, colorTable);
-
   //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
-  VTKM_TEST_ASSERT(test_equal_images(view, "contour-tangle.png"));
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
+    result, "tangle", colorTable, "filter/contour-tangle.png", false);
 }
 
 void TestContourFilter()

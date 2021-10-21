@@ -24,10 +24,11 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <vtkm/ImplicitFunction.h>
 
@@ -690,7 +691,7 @@ public:
     vtkm::Id numberOfPoints = scalars.GetNumberOfValues() +
       this->EdgePointsInterpolation.GetNumberOfValues() + total.NumberOfInCellPoints;
 
-    vtkm::cont::ConvertNumIndicesToOffsets(numberOfIndices, offsets);
+    vtkm::cont::ConvertNumComponentsToOffsets(numberOfIndices, offsets);
 
     output.Fill(numberOfPoints, shapes, connectivity, offsets);
     return output;

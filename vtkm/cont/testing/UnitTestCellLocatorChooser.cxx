@@ -34,7 +34,7 @@ using PointType = vtkm::Vec3f;
 vtkm::cont::DataSet MakeTestDataSetUniform()
 {
   return vtkm::cont::DataSetBuilderUniform::Create(
-    vtkm::Id3{ 64 }, PointType{ -32.0f }, PointType{ 1.0f / 64.0f });
+    vtkm::Id3{ 32 }, PointType{ -32.0f }, PointType{ 1.0f / 64.0f });
 }
 
 vtkm::cont::DataSet MakeTestDataSetRectilinear()
@@ -44,7 +44,7 @@ vtkm::cont::DataSet MakeTestDataSetRectilinear()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> coords[3];
   for (int i = 0; i < 3; ++i)
   {
-    coords[i].Allocate(64);
+    coords[i].Allocate(16);
     auto portal = coords[i].WritePortal();
 
     vtkm::FloatDefault cur = 0.0f;
@@ -128,14 +128,16 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
   pcoords.Allocate(count);
   wcoords.Allocate(count);
 
+  auto cwp = cellIds.WritePortal();
+  auto pwp = pcoords.WritePortal();
   for (vtkm::Id i = 0; i < count; ++i)
   {
-    cellIds.WritePortal().Set(i, cellIdGen(RandomGenerator));
+    cwp.Set(i, cellIdGen(RandomGenerator));
 
     PointType pc{ pcoordGen(RandomGenerator),
                   pcoordGen(RandomGenerator),
                   pcoordGen(RandomGenerator) };
-    pcoords.WritePortal().Set(i, pc);
+    pwp.Set(i, pc);
   }
 
   vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
@@ -182,7 +184,7 @@ void TestWithDataSet(const vtkm::cont::DataSet& dataset)
   vtkm::cont::ArrayHandle<vtkm::Id> expCellIds;
   vtkm::cont::ArrayHandle<PointType> expPCoords;
   vtkm::cont::ArrayHandle<PointType> points;
-  GenerateRandomInput(dataset, 128, expCellIds, expPCoords, points);
+  GenerateRandomInput(dataset, 32, expCellIds, expPCoords, points);
 
   vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
   vtkm::cont::ArrayHandle<PointType> pcoords;
@@ -194,23 +196,19 @@ void TestWithDataSet(const vtkm::cont::DataSet& dataset)
   auto expCellIdsPortal = expCellIds.ReadPortal();
   auto pcoordsPortal = pcoords.ReadPortal();
   auto expPCoordsPortal = expPCoords.ReadPortal();
-  for (vtkm::Id i = 0; i < 128; ++i)
+  for (vtkm::Id i = 0; i < 32; ++i)
   {
     VTKM_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
     VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
                      "Incorrect parameteric coordinates");
   }
-
-  std::cout << "Passed.\n";
 }
 
 void TestCellLocatorChooser()
 {
-  std::cout << "Test UniformGrid dataset\n";
   TestWithDataSet<vtkm::cont::CellSetStructured<3>, vtkm::cont::ArrayHandleUniformPointCoordinates>(
     MakeTestDataSetUniform());
 
-  std::cout << "Test Rectilinear dataset\n";
   TestWithDataSet<
     vtkm::cont::CellSetStructured<3>,
     vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
@@ -218,7 +216,6 @@ void TestCellLocatorChooser()
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>(
     MakeTestDataSetRectilinear());
 
-  std::cout << "Test Curvilinear dataset\n";
   TestWithDataSet<vtkm::cont::CellSetStructured<3>, vtkm::cont::ArrayHandle<PointType>>(
     MakeTestDataSetCurvilinear());
 }

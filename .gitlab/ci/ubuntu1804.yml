@@ -11,7 +11,7 @@ build:ubuntu1804_gcc9:
   extends:
     - .ubuntu1804
     - .cmake_build_linux
-    - .only-default
+    - .run_automatically
   variables:
     CC: "gcc-9"
     CXX: "g++-9"
@@ -27,7 +27,7 @@ test:ubuntu1804_gcc9:
   extends:
     - .ubuntu1804
     - .cmake_test_linux
-    - .only-default
+    - .run_automatically
   variables:
     #Restrict OpenMP number of threads since multiple test stages
     #execute on the same hardware concurrently
@@ -51,12 +51,12 @@ build:ubuntu1804_gcc7:
   extends:
     - .ubuntu1804_cuda
     - .cmake_build_linux
-    - .only-default
+    - .run_automatically
   variables:
     CC: "gcc-7"
     CXX: "g++-7"
     CUDAHOSTCXX: "g++-7"
-    VTKM_SETTINGS: "benchmarks+cuda+turing+mpi+64bit_floats+no_virtual"
+    VTKM_SETTINGS: "benchmarks+cuda+turing+mpi+64bit_floats+no_virtual+shared"
 
 test:ubuntu1804_gcc7:
   tags:
@@ -69,7 +69,7 @@ test:ubuntu1804_gcc7:
   extends:
     - .ubuntu1804_cuda
     - .cmake_test_linux
-    - .only-default
+    - .run_automatically
   dependencies:
     - build:ubuntu1804_gcc7
   needs:
@@ -90,13 +90,13 @@ build:ubuntu1804_clang_cuda:
   extends:
     - .ubuntu1804_cuda
     - .cmake_build_linux
-    - .only-default
-    # - .only-master
+    - .run_automatically
+    # - .run_master
   variables:
     CC: "clang-8"
     CXX: "clang++-8"
     CUDAHOSTCXX: "clang++-8"
-    VTKM_SETTINGS: "cuda+pascal+tbb+static+examples"
+    VTKM_SETTINGS: "cuda+pascal+tbb+examples+no_virtual+shared"
 
 test:ubuntu1804_clang_cuda:
   tags:
@@ -109,8 +109,8 @@ test:ubuntu1804_clang_cuda:
   extends:
     - .ubuntu1804_cuda
     - .cmake_test_linux
-    - .only-default
-    # - .only-master
+    - .run_automatically
+    # - .run_master
   dependencies:
     - build:ubuntu1804_clang_cuda
   needs:
@@ -127,7 +127,7 @@ build:ubuntu1804_gcc6:
   extends:
     - .ubuntu1804
     - .cmake_build_linux
-    - .only-default
+    - .run_automatically
   variables:
     CC: "gcc-6"
     CXX: "g++-6"
@@ -142,7 +142,7 @@ test:ubuntu1804_gcc6:
   extends:
     - .ubuntu1804
     - .cmake_test_linux
-    - .only-default
+    - .run_automatically
   variables:
     #Restrict OpenMP number of threads since multiple test stages
     #execute on the same hardware concurrently
@@ -163,7 +163,7 @@ build:ubuntu1804_clang8:
   extends:
     - .ubuntu1804
     - .cmake_build_linux
-    - .only-default
+    - .run_automatically
   variables:
     CC: "clang-8"
     CXX: "clang++-8"
@@ -179,7 +179,7 @@ test:ubuntu1804_clang8:
   extends:
     - .ubuntu1804
     - .cmake_test_linux
-    - .only-default
+    - .run_automatically
   dependencies:
     - build:ubuntu1804_clang8
   needs:
@@ -198,11 +198,11 @@ build:ubuntu1804_kokkos:
   extends:
     - .ubuntu1804_cuda_kokkos
     - .cmake_build_linux
-    - .only-default
+    - .run_automatically
   variables:
     CMAKE_GENERATOR: "Ninja"
     CMAKE_BUILD_TYPE: Release
-    VTKM_SETTINGS: "benchmarks+kokkos+turing+static+64bit_floats"
+    VTKM_SETTINGS: "benchmarks+kokkos+turing+64bit_floats+no_virtual+shared"
 
 test:ubuntu1804_kokkos:
   tags:
@@ -215,7 +215,7 @@ test:ubuntu1804_kokkos:
   extends:
     - .ubuntu1804_cuda_kokkos
     - .cmake_test_linux
-    - .only-default
+    - .run_automatically
   dependencies:
     - build:ubuntu1804_kokkos
   needs:

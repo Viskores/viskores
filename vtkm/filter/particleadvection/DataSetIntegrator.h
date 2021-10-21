@@ -15,6 +15,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/RK4Integrator.h>
+#include <vtkm/worklet/particleadvection/Stepper.h>
 #include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
 
 #include <memory>
@@ -51,17 +52,18 @@ public:
   {
     auto copyFlag = (this->CopySeedArray ? vtkm::CopyFlag::On : vtkm::CopyFlag::Off);
     auto seedArray = vtkm::cont::make_ArrayHandle(v, copyFlag);
-    RK4Type rk4(*this->Eval, stepSize);
+    Stepper rk4(*this->Eval, stepSize);
     this->DoAdvect(seedArray, rk4, maxSteps, result);
   }
 
 protected:
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
   using FieldHandleType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
   template <typename ResultType>
   inline void DoAdvect(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
-                       const RK4Type& rk4,
+                       const Stepper& rk4,
                        vtkm::Id maxSteps,
                        ResultType& result) const;
 
@@ -72,11 +74,7 @@ protected:
 
     FieldHandleType fieldArray;
     auto fieldData = ds.GetField(fieldNm).GetData();
-    if (fieldData.IsType<FieldHandleType>())
-      fieldArray = fieldData.AsArrayHandle<FieldHandleType>();
-    else
-      vtkm::cont::ArrayCopy(
-        fieldData.ResetTypes<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>(), fieldArray);
+    vtkm::cont::ArrayCopyShallowIfPossible(fieldData, fieldArray);
 
     return fieldArray;
   }
@@ -95,12 +93,13 @@ public:
     : DataSetIntegratorBase<vtkm::worklet::particleadvection::GridEvaluator<
         vtkm::worklet::particleadvection::VelocityField<FieldHandleType>>>(false, id)
   {
+    using Association = vtkm::cont::Field::Association;
+    using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandleType>;
+    using EvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+    Association association = ds.GetField(fieldNm).GetAssociation();
     auto fieldArray = this->GetFieldHandle(ds, fieldNm);
-
-    using EvalType = vtkm::worklet::particleadvection::GridEvaluator<
-      vtkm::worklet::particleadvection::VelocityField<FieldHandleType>>;
-
-    this->Eval = std::shared_ptr<EvalType>(new EvalType(ds, fieldArray));
+    FieldType field(fieldArray, association);
+    this->Eval = std::shared_ptr<EvalType>(new EvalType(ds, field));
   }
 };
 

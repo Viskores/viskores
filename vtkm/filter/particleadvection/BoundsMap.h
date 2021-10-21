@@ -72,8 +72,8 @@ public:
 
   int FindRank(vtkm::Id blockId) const
   {
-    auto it = BlockToRankMap.find(blockId);
-    if (it == BlockToRankMap.end())
+    auto it = this->BlockToRankMap.find(blockId);
+    if (it == this->BlockToRankMap.end())
       return -1;
     return it->second;
   }
@@ -103,6 +103,9 @@ public:
 
     return blockIDs;
   }
+
+  vtkm::Id GetTotalNumBlocks() const { return this->TotalNumBlocks; }
+  vtkm::Id GetLocalNumBlocks() const { return this->LocalNumBlocks; }
 
 private:
   void Init(const std::vector<vtkm::cont::DataSet>& dataSets)

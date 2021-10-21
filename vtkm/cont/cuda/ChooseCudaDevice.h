@@ -12,9 +12,13 @@
 
 #include <vtkm/cont/ErrorExecution.h>
 
+#include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
+#include <vtkm/cont/cuda/internal/RuntimeDeviceConfigurationCuda.h>
+#include <vtkm/cont/internal/DeviceAdapterTagCuda.h>
 
 #include <algorithm>
+#include <set>
 #include <vector>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -91,35 +95,43 @@ private:
 ///A result of zero means no cuda device has been found
 static int FindFastestDeviceId()
 {
-  //get the number of devices and store information
-  int numberOfDevices = 0;
-  VTKM_CUDA_CALL(cudaGetDeviceCount(&numberOfDevices));
+  auto cudaDeviceConfig = dynamic_cast<
+    vtkm::cont::internal::RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagCuda>&>(
+    vtkm::cont::RuntimeDeviceInformation{}.GetRuntimeConfiguration(
+      vtkm::cont::DeviceAdapterTagCuda()));
+  vtkm::Id numDevices;
+  cudaDeviceConfig.GetMaxDevices(numDevices);
 
-  std::vector<compute_info> devices;
-  for (int i = 0; i < numberOfDevices; ++i)
+  // multiset stores elements in sorted order (allows duplicate values)
+  std::multiset<compute_info> devices;
+  std::vector<cudaDeviceProp> cudaProp;
+  cudaDeviceConfig.GetCudaDeviceProp(cudaProp);
+  for (int i = 0; i < numDevices; ++i)
   {
-    cudaDeviceProp properties;
-    VTKM_CUDA_CALL(cudaGetDeviceProperties(&properties, i));
-    if (properties.computeMode != cudaComputeModeProhibited)
+    if (cudaProp[i].computeMode != cudaComputeModeProhibited)
     {
-      //only add devices that have compute mode allowed
-      devices.push_back(compute_info(properties, i));
+      devices.emplace(cudaProp[i], i);
     }
   }
 
-  //sort from fastest to slowest
-  std::sort(devices.begin(), devices.end());
+  return devices.size() > 0 ? devices.begin()->GetIndex() : 0;
+}
 
-  int device = 0;
-  if (devices.size() > 0)
-  {
-    device = devices.front().GetIndex();
-  }
-  return device;
+/// Sets the current cuda device to the value returned by FindFastestDeviceId
+static void SetFastestDeviceId()
+{
+  auto deviceId = FindFastestDeviceId();
+  vtkm::cont::RuntimeDeviceInformation{}
+    .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
+    .SetDeviceInstance(deviceId);
 }
 
 //choose a cuda compute device. This can't be used if you are setting
 //up open gl interop
+VTKM_DEPRECATED(1.7,
+                "Use "
+                "RuntimeInformation{}.GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda)."
+                "SetDeviceInstance(id) instead")
 static void SetCudaDevice(int id)
 {
   cudaError_t cError = cudaSetDevice(id);

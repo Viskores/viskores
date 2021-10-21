@@ -13,6 +13,10 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/VirtualObjectBase.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "This header should not be included when VTKM_NO_DEPRECATED_VIRTUAL is set."
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
 namespace vtkm
 {
 namespace cont

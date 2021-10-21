@@ -77,10 +77,6 @@
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/Branch.h>
 
-#ifdef ENABLE_SET_NUM_THREADS
-#include "tbb/task_scheduler_init.h"
-#endif
-
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <vtkm/thirdparty/diy/Configure.h>
@@ -227,29 +223,6 @@ int main(int argc, char* argv[])
     computeBranchDecomposition = false;
   }
 
-
-#ifdef ENABLE_SET_NUM_THREADS
-  int numThreads = tbb::task_scheduler_init::default_num_threads();
-  if (parser.hasOption("--numThreads"))
-  {
-    bool deviceIsTBB = (device.GetName() == "TBB");
-    // Set the number of threads to be used for TBB
-    if (deviceIsTBB)
-    {
-      numThreads = std::stoi(parser.getOption("--numThreads"));
-      tbb::task_scheduler_init schedulerInit(numThreads);
-    }
-    // Print warning about mismatch between the --numThreads and -d/--device option
-    else
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-                 "WARNING: Mismatch between --numThreads and -d/--device option."
-                 "numThreads option requires the use of TBB as device. "
-                 "Ignoring the numThread option.");
-    }
-  }
-#endif
-
   // Iso value selection parameters
   // Approach to be used to select contours based on the tree
   vtkm::Id contourType = 0;
@@ -316,10 +289,6 @@ int main(int argc, char* argv[])
                  "Requires --augmentTree (Default=True)"
               << std::endl;
     std::cout << "--printCT         Print the contour tree. (Default=False)" << std::endl;
-#ifdef ENABLE_SET_NUM_THREADS
-    std::cout << "--numThreads      Specifiy the number of threads to use. Available only with TBB."
-              << std::endl;
-#endif
     std::cout << std::endl;
     std::cout << "---------------------- Isovalue Selection Options ----------------------"
               << std::endl;
@@ -359,10 +328,6 @@ int main(int argc, char* argv[])
                <<
 #ifdef WITH_MPI
       "    nblocks=" << numBlocks << std::endl
-               <<
-#endif
-#ifdef ENABLE_SET_NUM_THREADS
-      "    numThreads=" << numThreads << std::endl
                <<
 #endif
       "    computeIsovalues=" << (numLevels > 0);

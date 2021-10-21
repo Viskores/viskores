@@ -11,6 +11,7 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/ParticleAdvection.h>
+#include <vtkm/filter/PathParticle.h>
 #include <vtkm/filter/Pathline.h>
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/io/VTKDataSetReader.h>
@@ -18,6 +19,14 @@
 
 namespace
 {
+
+enum FilterType
+{
+  PARTICLE_ADVECTION,
+  STREAMLINE,
+  PATHLINE,
+  PATH_PARTICLE
+};
 
 vtkm::cont::ArrayHandle<vtkm::Vec3f> CreateConstantVectorField(vtkm::Id num, const vtkm::Vec3f& vec)
 {
@@ -75,89 +84,78 @@ void TestStreamline()
   }
 }
 
-void TestPathlineSimple()
-{
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-  vtkm::cont::DataSet inData1 = dataSetBuilder.Create(vtkm::Id3(5, 5, 5));
-  vtkm::cont::DataSet inData2 = dataSetBuilder.Create(vtkm::Id3(5, 5, 5));
-  vtkm::Id numPoints = inData1.GetCellSet().GetNumberOfPoints();
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> vectorField1;
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleConstant(vtkm::Vec3f(1, 0, 0), numPoints),
-                        vectorField1);
-  inData1.AddPointField("vectorvar", vectorField1);
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> vectorField2;
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleConstant(vtkm::Vec3f(0, 1, 0), numPoints),
-                        vectorField2);
-  inData2.AddPointField("vectorvar", vectorField2);
-
-  vtkm::filter::Pathline pathlines;
-  // Specify the seeds.
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
-  seedArray.Allocate(2);
-  seedArray.WritePortal().Set(0, vtkm::Particle({ 0, 0, 0 }, 0));
-  seedArray.WritePortal().Set(1, vtkm::Particle({ 1, 1, 1 }, 1));
-  pathlines.SetActiveField("vectorvar");
-  pathlines.SetStepSize(0.1f);
-  pathlines.SetNumberOfSteps(100);
-  pathlines.SetSeeds(seedArray);
-  pathlines.SetPreviousTime(0.0f);
-  pathlines.SetNextTime(1.0f);
-  pathlines.SetNextDataSet(inData2);
-  auto output = pathlines.Execute(inData1);
-
-  //Validate the result is correct.
-  vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 77, "Wrong number of coordinates");
-
-  vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
-  VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 2, "Wrong number of cells");
-}
-
 void TestPathline()
 {
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Vec3f vecX(1, 0, 0);
   const vtkm::Vec3f vecY(0, 1, 0);
   const vtkm::Bounds bounds(0, 4, 0, 4, 0, 4);
-  std::string fieldName = "vec";
+  std::string var = "vec";
 
-  auto dataSets1 = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
-  auto dataSets2 = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
-
-  std::size_t numDS = dataSets1.size();
-  for (std::size_t i = 0; i < numDS; i++)
+  //test pathline and pathparticle filters.
+  for (int fType = 0; fType < 2; fType++)
   {
-    auto ds1 = dataSets1[i];
-    auto ds2 = dataSets2[i];
+    auto dataSets1 = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
+    auto dataSets2 = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
 
-    auto vecField1 = CreateConstantVectorField(ds1.GetNumberOfPoints(), vecX);
-    auto vecField2 = CreateConstantVectorField(ds1.GetNumberOfPoints(), vecY);
-    ds1.AddPointField(fieldName, vecField1);
-    ds2.AddPointField(fieldName, vecField2);
+    std::size_t numDS = dataSets1.size();
+    for (std::size_t i = 0; i < numDS; i++)
+    {
+      auto ds1 = dataSets1[i];
+      auto ds2 = dataSets2[i];
 
-    vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
-      vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                     vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                     vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
+      auto vecField1 = CreateConstantVectorField(ds1.GetNumberOfPoints(), vecX);
+      auto vecField2 = CreateConstantVectorField(ds1.GetNumberOfPoints(), vecY);
+      ds1.AddPointField(var, vecField1);
+      ds2.AddPointField(var, vecField2);
 
-    vtkm::filter::Pathline pathline;
+      vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
+        vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                       vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                       vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-    pathline.SetPreviousTime(0.0f);
-    pathline.SetNextTime(1.0f);
-    pathline.SetNextDataSet(ds2);
-    pathline.SetStepSize(static_cast<vtkm::FloatDefault>(0.05f));
-    pathline.SetNumberOfSteps(20);
-    pathline.SetSeeds(seedArray);
+      const vtkm::FloatDefault stepSize = .1f;
+      const vtkm::FloatDefault t0 = 0, t1 = 1;
+      const vtkm::Id numSteps = 20;
 
-    pathline.SetActiveField(fieldName);
-    auto output = pathline.Execute(ds1);
+      vtkm::cont::DataSet output;
+      vtkm::Id numExpectedPoints;
+      if (fType == 0)
+      {
+        vtkm::filter::Pathline filt;
+        filt.SetActiveField(var);
+        filt.SetStepSize(stepSize);
+        filt.SetNumberOfSteps(numSteps);
+        filt.SetSeeds(seedArray);
+        filt.SetPreviousTime(t0);
+        filt.SetNextTime(t1);
+        filt.SetNextDataSet(ds2);
+        output = filt.Execute(ds1);
+        numExpectedPoints = 33;
+      }
+      else
+      {
+        vtkm::filter::PathParticle filt;
+        filt.SetActiveField(var);
+        filt.SetStepSize(stepSize);
+        filt.SetNumberOfSteps(numSteps);
+        filt.SetSeeds(seedArray);
+        filt.SetPreviousTime(t0);
+        filt.SetNextTime(t1);
+        filt.SetNextDataSet(ds2);
+        output = filt.Execute(ds1);
+        numExpectedPoints = 3;
+      }
 
-    //Validate the result is correct.
-    vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
+      //Validate the result is correct.
+      vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
 
-    vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
-    VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
+      VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == numExpectedPoints,
+                       "Wrong number of coordinates");
+
+      vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
+      VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
+    }
   }
 }
 
@@ -325,7 +323,7 @@ void TestAMRStreamline(bool useSL)
   }
 }
 
-void TestPartitionedDataSet(vtkm::Id num, bool useGhost, bool useSL)
+void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
 {
   vtkm::Id numDims = 5;
   vtkm::FloatDefault x0 = 0;
@@ -354,14 +352,17 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, bool useSL)
     x1 += dx;
   }
 
-  std::vector<vtkm::cont::PartitionedDataSet> allPDs;
+  std::vector<vtkm::cont::PartitionedDataSet> allPDs, allPDs2;
   const vtkm::Id3 dims(numDims, numDims, numDims);
   allPDs = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, useGhost);
+  if (fType == FilterType::PATHLINE || fType == FilterType::PATH_PARTICLE)
+    allPDs2 = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, useGhost);
 
   vtkm::Vec3f vecX(1, 0, 0);
   std::string fieldName = "vec";
-  for (auto& pds : allPDs)
+  for (std::size_t idx = 0; idx < allPDs.size(); idx++)
   {
+    auto pds = allPDs[idx];
     AddVectorFields(pds, fieldName, vecX);
 
     vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
@@ -369,20 +370,38 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, bool useSL)
                                                vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
-    if (useSL)
+    if (fType == FilterType::STREAMLINE || fType == FilterType::PATHLINE)
     {
-      vtkm::filter::Streamline streamline;
+      vtkm::cont::PartitionedDataSet out;
+      if (fType == FilterType::STREAMLINE)
+      {
+        vtkm::filter::Streamline streamline;
+        streamline.SetStepSize(0.1f);
+        streamline.SetNumberOfSteps(100000);
+        streamline.SetSeeds(seedArray);
 
-      streamline.SetStepSize(0.1f);
-      streamline.SetNumberOfSteps(100000);
-      streamline.SetSeeds(seedArray);
+        streamline.SetActiveField(fieldName);
+        out = streamline.Execute(pds);
+      }
+      else
+      {
+        auto pds2 = allPDs2[idx];
+        AddVectorFields(pds2, fieldName, vecX);
 
-      streamline.SetActiveField(fieldName);
-      auto out = streamline.Execute(pds);
+        vtkm::filter::Pathline pathline;
+        pathline.SetPreviousTime(0);
+        pathline.SetNextTime(1000);
+        pathline.SetNextDataSet(pds2);
+        pathline.SetStepSize(0.1f);
+        pathline.SetNumberOfSteps(100000);
+        pathline.SetSeeds(seedArray);
+
+        pathline.SetActiveField(fieldName);
+        out = pathline.Execute(pds);
+      }
 
       for (vtkm::Id i = 0; i < num; i++)
       {
-        auto inputDS = pds.GetPartition(i);
         auto outputDS = out.GetPartition(i);
         VTKM_TEST_ASSERT(outputDS.GetNumberOfCoordinateSystems() == 1,
                          "Wrong number of coordinate systems in the output dataset");
@@ -415,16 +434,36 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, bool useSL)
         }
       }
     }
-    else
+    else if (fType == FilterType::PARTICLE_ADVECTION || fType == FilterType::PATH_PARTICLE)
     {
-      vtkm::filter::ParticleAdvection particleAdvection;
+      vtkm::cont::PartitionedDataSet out;
+      if (fType == FilterType::PARTICLE_ADVECTION)
+      {
+        vtkm::filter::ParticleAdvection particleAdvection;
 
-      particleAdvection.SetStepSize(0.1f);
-      particleAdvection.SetNumberOfSteps(100000);
-      particleAdvection.SetSeeds(seedArray);
+        particleAdvection.SetStepSize(0.1f);
+        particleAdvection.SetNumberOfSteps(100000);
+        particleAdvection.SetSeeds(seedArray);
 
-      particleAdvection.SetActiveField(fieldName);
-      auto out = particleAdvection.Execute(pds);
+        particleAdvection.SetActiveField(fieldName);
+        out = particleAdvection.Execute(pds);
+      }
+      else
+      {
+        auto pds2 = allPDs2[idx];
+        AddVectorFields(pds2, fieldName, vecX);
+
+        vtkm::filter::PathParticle pathParticle;
+        pathParticle.SetPreviousTime(0);
+        pathParticle.SetNextTime(1000);
+        pathParticle.SetNextDataSet(pds2);
+        pathParticle.SetStepSize(0.1f);
+        pathParticle.SetNumberOfSteps(100000);
+        pathParticle.SetSeeds(seedArray);
+
+        pathParticle.SetActiveField(fieldName);
+        out = pathParticle.Execute(pds);
+      }
 
       VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
       auto ds = out.GetPartition(0);
@@ -541,18 +580,20 @@ void TestStreamlineFile(const std::string& fname,
 void TestStreamlineFilters()
 {
   std::vector<bool> flags = { true, false };
+  std::vector<FilterType> fTypes = { FilterType::PARTICLE_ADVECTION,
+                                     FilterType::STREAMLINE,
+                                     FilterType::PATHLINE,
+                                     FilterType::PATH_PARTICLE };
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)
-      for (auto useSL : flags)
+      for (auto ft : fTypes)
       {
-        useSL = false;
-        TestPartitionedDataSet(n, useGhost, useSL);
+        TestPartitionedDataSet(n, useGhost, ft);
       }
   }
 
   TestStreamline();
-  TestPathlineSimple();
   TestPathline();
 
   for (auto useSL : flags)
@@ -587,6 +628,19 @@ void TestStreamlineFilters()
 
   for (auto useSL : flags)
     TestStreamlineFile(fishFile, fishPts, fishStep, 100, fishEndPts, useSL);
+
+  //ARMWind corner case of particle near boundary.
+  std::string amrWindFile =
+    vtkm::cont::testing::Testing::DataPath("rectilinear/amr_wind_flowfield.vtk");
+  vtkm::FloatDefault amrWindStep = 0.001f;
+  std::vector<vtkm::Vec3f> amrWindPts, amrWindEndPts;
+
+  amrWindPts.push_back(
+    vtkm::Vec3f(0.053217993470017745f, 0.034506499099396459f, 0.057097713925011492f));
+  amrWindEndPts.push_back(vtkm::Vec3f(0.05712112784f, 0.03450008854f, 0.02076501213f));
+
+  for (auto useSL : flags)
+    TestStreamlineFile(amrWindFile, amrWindPts, amrWindStep, 10000, amrWindEndPts, useSL);
 }
 }
 

@@ -14,7 +14,6 @@
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>
 
-#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellSetExplicit.h>
@@ -25,7 +24,6 @@
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/testing/MakeTestDataSet.h>
 
 #include <vtkm/cont/internal/OptionParser.h>
 
@@ -55,9 +53,6 @@
 #include <sstream>
 #include <type_traits>
 
-#ifdef VTKM_ENABLE_TBB
-#include <tbb/task_scheduler_init.h>
-#endif
 #ifdef VTKM_ENABLE_OPENMP
 #include <omp.h>
 #endif
@@ -81,9 +76,6 @@
 //
 // If the fields are not specified, the first field with the correct association
 // is used. If no such field exists, one will be generated from the data.
-
-// For the TBB/OpenMP implementations, the number of threads can be customized
-// using a "NumThreads [numThreads]" argument.
 
 namespace
 {
@@ -194,7 +186,7 @@ void BenchThreshold(::benchmark::State& state)
   const auto range = []() -> vtkm::Range {
     auto ptScalarField =
       InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-    return vtkm::cont::ArrayGetValue(0, ptScalarField.GetRange());
+    return ptScalarField.GetRange().ReadPortal().Get(0);
   }();
 
   // Extract points with values between 25-75% of the range
@@ -229,7 +221,7 @@ void BenchThresholdPoints(::benchmark::State& state)
   const auto range = []() -> vtkm::Range {
     auto ptScalarField =
       InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-    return vtkm::cont::ArrayGetValue(0, ptScalarField.GetRange());
+    return ptScalarField.GetRange().ReadPortal().Get(0);
   }();
 
   // Extract points with values between 25-75% of the range
@@ -360,7 +352,7 @@ void BenchContour(::benchmark::State& state)
   // scalar range:
   const vtkm::Range scalarRange = []() -> vtkm::Range {
     auto field = InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-    return vtkm::cont::ArrayGetValue(0, field.GetRange());
+    return field.GetRange().ReadPortal().Get(0);
   }();
   const auto step = scalarRange.Length() / static_cast<vtkm::Float64>(numIsoVals + 1);
   const auto minIsoVal = scalarRange.Min + (step / 2.);
@@ -604,7 +596,7 @@ public:
   }
 };
 
-// Get the number of components in a VariantArrayHandle, ArrayHandle, or Field's
+// Get the number of components in a UnknownArrayHandle, ArrayHandle, or Field's
 // ValueType.
 struct NumberOfComponents
 {
@@ -793,7 +785,6 @@ enum optionIndex
 {
   UNKNOWN,
   HELP,
-  NUM_THREADS,
   FILENAME,
   POINT_SCALARS,
   CELL_SCALARS,
@@ -804,7 +795,6 @@ enum optionIndex
 
 void InitDataSet(int& argc, char** argv)
 {
-  int numThreads = 0;
   std::string filename;
   vtkm::Id waveletDim = 256;
   bool tetra = false;
@@ -819,12 +809,6 @@ void InitDataSet(int& argc, char** argv)
   usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Input data options are:" });
   usage.push_back({ HELP, 0, "h", "help", Arg::None, "  -h, --help\tDisplay this help." });
   usage.push_back({ UNKNOWN, 0, "", "", Arg::None, Config.Usage.c_str() });
-  usage.push_back({ NUM_THREADS,
-                    0,
-                    "",
-                    "num-threads",
-                    Arg::Number,
-                    "  --num-threads <N> \tSpecify the number of threads to use." });
   usage.push_back({ FILENAME,
                     0,
                     "",
@@ -882,22 +866,6 @@ void InitDataSet(int& argc, char** argv)
     exit(0);
   }
 
-  if (options[NUM_THREADS])
-  {
-    std::istringstream parse(options[NUM_THREADS].arg);
-    parse >> numThreads;
-    if (Config.Device == vtkm::cont::DeviceAdapterTagTBB() ||
-        Config.Device == vtkm::cont::DeviceAdapterTagOpenMP())
-    {
-      std::cout << "Selected " << numThreads << " " << Config.Device.GetName() << " threads."
-                << std::endl;
-    }
-    else
-    {
-      std::cerr << options[NUM_THREADS].name << " not valid on this device. Ignoring." << std::endl;
-    }
-  }
-
   if (options[FILENAME])
   {
     filename = options[FILENAME].arg;
@@ -923,15 +891,6 @@ void InitDataSet(int& argc, char** argv)
   }
 
   tetra = (options[TETRA] != nullptr);
-
-#ifdef VTKM_ENABLE_TBB
-  // Must not be destroyed as long as benchmarks are running:
-  tbb::task_scheduler_init init((numThreads > 0) ? numThreads
-                                                 : tbb::task_scheduler_init::automatic);
-#endif
-#ifdef VTKM_ENABLE_OPENMP
-  omp_set_num_threads((numThreads > 0) ? numThreads : omp_get_max_threads());
-#endif
 
   // Now go back through the arg list and remove anything that is not in the list of
   // unknown options or non-option arguments.

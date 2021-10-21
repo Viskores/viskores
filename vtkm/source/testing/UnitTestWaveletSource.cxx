@@ -10,21 +10,12 @@
 
 #include <vtkm/source/Wavelet.h>
 
-#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
 
 void WaveletSourceTest()
 {
-  vtkm::cont::Timer timer;
-  timer.Start();
-
   vtkm::source::Wavelet source;
   vtkm::cont::DataSet ds = source.Execute();
-
-
-  double time = timer.GetElapsedTime();
-
-  std::cout << "Default wavelet took " << time << "s.\n";
 
   {
     auto coords = ds.GetCoordinateSystem("coordinates");
@@ -41,7 +32,7 @@ void WaveletSourceTest()
   {
     using ScalarHandleType = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
 
-    auto field = ds.GetPointField("scalars");
+    auto field = ds.GetPointField("RTData");
     auto dynData = field.GetData();
     VTKM_TEST_ASSERT(dynData.IsType<ScalarHandleType>(), "Invalid scalar handle type.");
     ScalarHandleType handle = dynData.AsArrayHandle<ScalarHandleType>();

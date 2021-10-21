@@ -273,6 +273,7 @@ VTKM_EXEC_CONT void MatrixLUPFactorFindPivot(vtkm::Matrix<T, Size, Size>& A,
   if (maxValue < vtkm::Epsilon<T>())
   {
     valid = false;
+    return;
   }
 
   if (maxRowIndex != topCornerIndex)
@@ -295,15 +296,14 @@ VTKM_EXEC_CONT void MatrixLUPFactorFindPivot(vtkm::Matrix<T, Size, Size>& A,
 // Used with MatrixLUPFactor
 template <typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT void MatrixLUPFactorFindUpperTriangleElements(vtkm::Matrix<T, Size, Size>& A,
-                                                             vtkm::IdComponent topCornerIndex)
+                                                             vtkm::IdComponent topCornerIndex,
+                                                             bool& valid)
 {
   // Compute values for upper triangle on row topCornerIndex
   if (A(topCornerIndex, topCornerIndex) == 0)
   {
-    for (vtkm::IdComponent colIndex = topCornerIndex + 1; colIndex < Size; colIndex++)
-    {
-      A(topCornerIndex, colIndex) = std::numeric_limits<T>::quiet_NaN();
-    }
+    valid = false;
+    return;
   }
   else
   {
@@ -374,7 +374,15 @@ VTKM_EXEC_CONT void MatrixLUPFactor(vtkm::Matrix<T, Size, Size>& A,
   for (vtkm::IdComponent rowIndex = 0; rowIndex < Size; rowIndex++)
   {
     MatrixLUPFactorFindPivot(A, permutation, rowIndex, inversionParity, valid);
-    MatrixLUPFactorFindUpperTriangleElements(A, rowIndex);
+    if (!valid)
+    {
+      break;
+    }
+    MatrixLUPFactorFindUpperTriangleElements(A, rowIndex, valid);
+    if (!valid)
+    {
+      break;
+    }
   }
 }
 
@@ -519,7 +527,7 @@ VTKM_EXEC_CONT T MatrixDeterminant(const vtkm::Matrix<T, 1, 1>& A)
 template <typename T>
 VTKM_EXEC_CONT T MatrixDeterminant(const vtkm::Matrix<T, 2, 2>& A)
 {
-  return A(0, 0) * A(1, 1) - A(1, 0) * A(0, 1);
+  return vtkm::DifferenceOfProducts(A(0, 0), A(1, 1), A(1, 0), A(0, 1));
 }
 
 template <typename T>

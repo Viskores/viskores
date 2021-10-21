@@ -38,15 +38,6 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 // correct settings so that we don't clobber any existing function
 #include <vtkm/internal/Windows.h>
 
-#include <tbb/tbb_stddef.h>
-#if (TBB_VERSION_MAJOR == 4) && (TBB_VERSION_MINOR == 2)
-//we provide an patched implementation of tbb parallel_sort
-//that fixes ADL for std::swap. This patch has been submitted to Intel
-//and is fixed in TBB 4.2 update 2.
-#include <vtkm/cont/tbb/internal/parallel_sort.h>
-#else
-#include <tbb/parallel_sort.h>
-#endif
 
 #include <numeric>
 #include <tbb/blocked_range.h>
@@ -54,6 +45,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_reduce.h>
 #include <tbb/parallel_scan.h>
+#include <tbb/parallel_sort.h>
 #include <tbb/partitioner.h>
 #include <tbb/tick_count.h>
 

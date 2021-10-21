@@ -20,12 +20,13 @@
 
 #include <algorithm>
 #include <array>
+#include <thread>
 
 namespace
 {
 
-template <typename DeviceAdapterTag>
-void verify_state(DeviceAdapterTag tag, std::array<bool, VTKM_MAX_DEVICE_ADAPTER_ID>& defaults)
+void verify_state(vtkm::cont::DeviceAdapterId tag,
+                  std::array<bool, VTKM_MAX_DEVICE_ADAPTER_ID>& defaults)
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   // presumable all other devices match the defaults
@@ -40,8 +41,20 @@ void verify_state(DeviceAdapterTag tag, std::array<bool, VTKM_MAX_DEVICE_ADAPTER
   }
 }
 
-template <typename DeviceAdapterTag>
-void verify_srdt_support(DeviceAdapterTag tag,
+void verify_state_thread(vtkm::cont::DeviceAdapterId tag,
+                         std::array<bool, VTKM_MAX_DEVICE_ADAPTER_ID>& defaults,
+                         const vtkm::cont::RuntimeDeviceTracker& tracker)
+{
+  // Each thread has its own RuntimeDeviceTracker (to allow you to control different devices
+  // on different threads). But that means that each thread creates its own tracker. We
+  // want all the threads to respect the runtime set up on the main thread, so copy the state
+  // of that tracker (passed as an argument) to this thread.
+  vtkm::cont::GetRuntimeDeviceTracker().CopyStateFrom(tracker);
+
+  verify_state(tag, defaults);
+}
+
+void verify_srdt_support(vtkm::cont::DeviceAdapterId tag,
                          std::array<bool, VTKM_MAX_DEVICE_ADAPTER_ID>& force,
                          std::array<bool, VTKM_MAX_DEVICE_ADAPTER_ID>& enable,
                          std::array<bool, VTKM_MAX_DEVICE_ADAPTER_ID>& disable)
@@ -54,6 +67,7 @@ void verify_srdt_support(DeviceAdapterTag tag,
                                                    vtkm::cont::RuntimeDeviceTrackerMode::Force);
     VTKM_TEST_ASSERT(tracker.CanRunOn(tag) == haveSupport, "");
     verify_state(tag, force);
+    std::thread(verify_state_thread, tag, std::ref(force), std::ref(tracker)).join();
   }
 
   if (haveSupport)
@@ -62,6 +76,7 @@ void verify_srdt_support(DeviceAdapterTag tag,
                                                    vtkm::cont::RuntimeDeviceTrackerMode::Enable);
     VTKM_TEST_ASSERT(tracker.CanRunOn(tag) == haveSupport);
     verify_state(tag, enable);
+    std::thread(verify_state_thread, tag, std::ref(enable), std::ref(tracker)).join();
   }
 
   {
@@ -69,6 +84,7 @@ void verify_srdt_support(DeviceAdapterTag tag,
                                                    vtkm::cont::RuntimeDeviceTrackerMode::Disable);
     VTKM_TEST_ASSERT(tracker.CanRunOn(tag) == false, "");
     verify_state(tag, disable);
+    std::thread(verify_state_thread, tag, std::ref(disable), std::ref(tracker)).join();
   }
 }
 

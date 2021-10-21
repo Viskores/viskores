@@ -13,7 +13,9 @@
 #include <vtkm/List.h>
 
 #include <vtkm/cont/ArrayHandleBasic.h>
-#include <vtkm/cont/Storage.h>
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
+#include <vtkm/cont/ArrayHandleSOA.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 
 namespace vtkm
 {
@@ -21,6 +23,15 @@ namespace cont
 {
 
 using StorageListBasic = vtkm::List<vtkm::cont::StorageTagBasic>;
+
+using StorageListCommon =
+  vtkm::List<vtkm::cont::StorageTagBasic,
+             vtkm::cont::StorageTagSOA,
+             vtkm::cont::StorageTagUniformPoints,
+             vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                                    vtkm::cont::StorageTagBasic,
+                                                    vtkm::cont::StorageTagBasic>>;
+
 }
 } // namespace vtkm::cont
 

@@ -97,6 +97,8 @@ class MeshQuality : public vtkm::filter::FilterField<MeshQuality>
 {
 public:
   using SupportedTypes = vtkm::TypeListFieldVec3;
+  using SupportedCellSets =
+    vtkm::List<vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>;
 
   VTKM_CONT MeshQuality(CellMetric);
 

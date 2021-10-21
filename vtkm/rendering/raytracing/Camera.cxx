@@ -237,9 +237,7 @@ public:
   vtkm::Int32 Minx;
   vtkm::Int32 Miny;
   vtkm::Int32 SubsetWidth;
-  vtkm::Vec3f_32 nlook; // normalized look
   vtkm::Vec3f_32 PixelDelta;
-  vtkm::Vec3f_32 delta_y;
   vtkm::Vec3f_32 StartOffset;
 
   VTKM_CONT
@@ -279,9 +277,6 @@ public:
     StartOffset[1] = startOffset[1];
     // always push the rays back from the origin
     StartOffset[2] = -1.f;
-
-
-    vtkm::Normalize(nlook);
   }
 
   using ControlSignature =
@@ -776,10 +771,6 @@ VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds b
 
   vtkm::cont::ArrayHandleConstant<Precision> inf(infinity, rays.NumRays);
   vtkm::cont::Algorithm::Copy(inf, rays.MaxDistance);
-
-  vtkm::cont::ArrayHandleConstant<vtkm::UInt8> status_active(RAY_ACTIVE, rays.NumRays);
-  vtkm::cont::Algorithm::Copy(status_active, rays.Status);
-
 
   vtkm::cont::ArrayHandleConstant<Precision> zero(0, rays.NumRays);
   vtkm::cont::Algorithm::Copy(zero, rays.MinDistance);

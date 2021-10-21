@@ -42,13 +42,9 @@ void View1D::Paint()
 {
   this->GetCanvas().Clear();
   this->UpdateCameraProperties();
-  this->SetupForWorldSpace();
-  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
-  this->RenderWorldAnnotations();
-  this->SetupForScreenSpace();
-  this->RenderScreenAnnotations();
-  this->RenderColorLegendAnnotations();
+  this->AddAdditionalAnnotation([&]() { this->RenderColorLegendAnnotations(); });
   this->RenderAnnotations();
+  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
 }
 
 void View1D::RenderScreenAnnotations()
@@ -64,6 +60,8 @@ void View1D::RenderScreenAnnotations()
                                     viewportBottom,
                                     viewportTop);
 
+  this->GetCanvas().BeginTextRenderingBatch();
+  this->GetWorldAnnotator().BeginLineRenderingBatch();
   this->HorizontalAxisAnnotation.SetColor(AxisColor);
   this->HorizontalAxisAnnotation.SetScreenPosition(
     viewportLeft, viewportBottom, viewportRight, viewportBottom);
@@ -92,6 +90,9 @@ void View1D::RenderScreenAnnotations()
                                                  vtkm::rendering::TextAnnotation::VCenter);
   this->VerticalAxisAnnotation.Render(
     this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
+
+  this->GetWorldAnnotator().EndLineRenderingBatch();
+  this->GetCanvas().EndTextRenderingBatch();
 }
 
 void View1D::RenderColorLegendAnnotations()
@@ -99,6 +100,8 @@ void View1D::RenderColorLegendAnnotations()
   if (LegendEnabled)
   {
     this->Legend.Clear();
+    this->GetWorldAnnotator().BeginLineRenderingBatch();
+    this->GetCanvas().BeginTextRenderingBatch();
     for (int i = 0; i < this->GetScene().GetNumberOfActors(); ++i)
     {
       vtkm::rendering::Actor act = this->GetScene().GetActor(i);
@@ -114,6 +117,8 @@ void View1D::RenderColorLegendAnnotations()
     }
     this->Legend.SetLabelColor(this->GetCanvas().GetForegroundColor());
     this->Legend.Render(this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
+    this->GetWorldAnnotator().EndLineRenderingBatch();
+    this->GetCanvas().EndTextRenderingBatch();
   }
 }
 

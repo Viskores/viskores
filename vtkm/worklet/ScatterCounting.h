@@ -13,7 +13,7 @@
 #include <vtkm/worklet/internal/ScatterBase.h>
 #include <vtkm/worklet/vtkm_worklet_export.h>
 
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <sstream>
 
@@ -51,7 +51,6 @@ struct VTKM_WORKLET_EXPORT ScatterCounting : internal::ScatterBase
                                 vtkm::UInt32,
                                 vtkm::UInt16,
                                 vtkm::UInt8>;
-  using VariantArrayHandleCount = vtkm::cont::VariantArrayHandleBase<CountTypes>;
 
   /// Construct a \c ScatterCounting object using an array of counts for the
   /// number of outputs for each input. Part of the construction requires
@@ -60,27 +59,14 @@ struct VTKM_WORKLET_EXPORT ScatterCounting : internal::ScatterBase
   /// other users might make use of it, so you can instruct the constructor
   /// to save the input to output map.
   ///
-  template <typename TypeList>
-  VTKM_CONT ScatterCounting(const vtkm::cont::VariantArrayHandleBase<TypeList>& countArray,
-                            vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny(),
-                            bool saveInputToOutputMap = false)
-  {
-    this->BuildArrays(VariantArrayHandleCount(countArray), device, saveInputToOutputMap);
-  }
-  VTKM_CONT ScatterCounting(const VariantArrayHandleCount& countArray,
+  VTKM_CONT ScatterCounting(const vtkm::cont::UnknownArrayHandle& countArray,
                             vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny(),
                             bool saveInputToOutputMap = false)
   {
     this->BuildArrays(countArray, device, saveInputToOutputMap);
   }
-  template <typename TypeList>
-  VTKM_CONT ScatterCounting(const vtkm::cont::VariantArrayHandleBase<TypeList>& countArray,
+  VTKM_CONT ScatterCounting(const vtkm::cont::UnknownArrayHandle& countArray,
                             bool saveInputToOutputMap)
-  {
-    this->BuildArrays(
-      VariantArrayHandleCount(countArray), vtkm::cont::DeviceAdapterTagAny(), saveInputToOutputMap);
-  }
-  VTKM_CONT ScatterCounting(const VariantArrayHandleCount& countArray, bool saveInputToOutputMap)
   {
     this->BuildArrays(countArray, vtkm::cont::DeviceAdapterTagAny(), saveInputToOutputMap);
   }
@@ -135,7 +121,7 @@ private:
 
   friend struct detail::ScatterCountingBuilder;
 
-  VTKM_CONT void BuildArrays(const VariantArrayHandleCount& countArray,
+  VTKM_CONT void BuildArrays(const vtkm::cont::UnknownArrayHandle& countArray,
                              vtkm::cont::DeviceAdapterId device,
                              bool saveInputToOutputMap);
 };

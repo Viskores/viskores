@@ -14,9 +14,9 @@
 // variable. This CMake variable can be set to a header file that defines one or
 // more of the following macros:
 //
-// VTKM_FIELD_TYPE_LIST - a vtkm::List of value types for fields that filters
+// VTKM_DEFAULT_TYPE_LIST - a vtkm::List of value types for fields that filters
 //     should directly operate on (where applicable).
-// VTKM_FIELD_STORAGE_LIST - a vtkm::List of storage tags for fields that
+// VTKM_DEFAULT_STORAGE_LIST - a vtkm::List of storage tags for fields that
 //     filters should directly operate on.
 // VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED - a vtkm::List of vtkm::cont::CellSet types
 //     that filters should operate on as a strutured cell set.
@@ -46,31 +46,9 @@
 #endif //VTKM_DEFAULT_TYPE_LIST
 
 #ifndef VTKM_DEFAULT_STORAGE_LIST
-#include <vtkm/cont/ArrayHandleCartesianProduct.h>
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/StorageList.h>
-namespace vtkm
-{
-namespace cont
-{
-namespace internal
-{
-
-using StorageListField = vtkm::ListAppend<
-  vtkm::cont::StorageListBasic,
-  vtkm::List<
-    vtkm::cont::StorageTagSOA,
-    vtkm::cont::StorageTagUniformPoints,
-    vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
-                                           vtkm::cont::StorageTagBasic,
-                                           vtkm::cont::StorageTagBasic>>>;
-}
-}
-} // namespace vtkm::cont
-
-#define VTKM_DEFAULT_STORAGE_LIST ::vtkm::cont::internal::StorageListField
-#endif // VTKM_FIELD_STORAGE_LIST
+#define VTKM_DEFAULT_STORAGE_LIST ::vtkm::cont::StorageListCommon
+#endif // VTKM_DEFAULT_STORAGE_LIST
 
 #ifndef VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED
 #include <vtkm/cont/CellSetList.h>

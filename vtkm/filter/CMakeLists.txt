@@ -8,6 +8,19 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
+vtkm_add_instantiations(ContourInstantiations FILTER Contour)
+vtkm_add_instantiations(GradientInstantiations FILTER Gradient)
+
+vtkm_add_instantiations(ClipWithFieldInstantiations
+  FILTER ClipWithField
+  INSTANTIATIONS_FILE ClipWithFieldExternInstantiations.h
+  )
+
+vtkm_add_instantiations(ClipWithImplicitFunctionInstantiations
+  FILTER ClipWithImplicitFunction
+  INSTANTIATIONS_FILE ClipWithImplicitFunctionExternInstantiations.h
+  )
+
 set(common_headers
   CellAverage.h
   CellMeasures.h
@@ -21,13 +34,17 @@ set(common_headers
   FilterDataSetWithField.h
   FilterField.h
   Filter.h
+  FilterParticleAdvection.h
+  FilterTemporalParticleAdvection.h
   FilterTraits.h
   MapFieldMergeAverage.h
   MapFieldPermutation.h
   PolicyBase.h
   PolicyDefault.h
+  TaskQueue.h
   Threshold.h
   ThresholdPoints.h
+  Instantiations.h
   )
 
 set(common_header_template_sources
@@ -41,6 +58,8 @@ set(common_header_template_sources
   FilterDataSetWithField.hxx
   FilterField.hxx
   Filter.hxx
+  FilterParticleAdvection.hxx
+  FilterTemporalParticleAdvection.hxx
   PointAverage.hxx
   Threshold.hxx
   ThresholdPoints.hxx
@@ -70,6 +89,7 @@ set(extra_headers
   ExternalFaces.h
   FieldSelection.h
   FieldToColors.h
+  GenerateIds.h
   GhostCellClassify.h
   GhostCellRemove.h
   Histogram.h
@@ -81,11 +101,15 @@ set(extra_headers
   Mask.h
   MaskPoints.h
   MeshQuality.h
+  MIRFilter.h
   NDEntropy.h
   NDHistogram.h
+  ParticleDensityBase.h
+  ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
   ParticleAdvection.h
   Pathline.h
+  PathParticle.h
   PointAverage.h
   PointElevation.h
   PointTransform.h
@@ -113,8 +137,8 @@ set(extra_header_template_sources
   CellSetConnectivity.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
-  ClipWithFieldSkipInstantiations.hxx
-  ClipWithImplicitFunctionSkipInstantiations.hxx
+  ClipWithFieldExternInstantiations.h
+  ClipWithImplicitFunctionExternInstantiations.h
   ComputeMoments.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
@@ -133,11 +157,14 @@ set(extra_header_template_sources
   Mask.hxx
   MaskPoints.hxx
   MeshQuality.hxx
+  MIRFilter.hxx
   NDEntropy.hxx
   NDHistogram.hxx
+  ParticleDensityCloudInCell.hxx
   ParticleDensityNearestGridPoint.hxx
   ParticleAdvection.hxx
   Pathline.hxx
+  PathParticle.hxx
   PointElevation.hxx
   PointTransform.hxx
   Probe.hxx
@@ -161,11 +188,10 @@ set(extra_header_template_sources
   )
 
 set(extra_sources_device
-  ClipWithFieldScalar.cxx
-  ClipWithFieldSignedInteger.cxx
-  ClipWithFieldUnsignedInteger.cxx
-  ClipWithImplicitFunction.cxx
+  ${ClipWithFieldInstantiations}
+  ${ClipWithImplicitFunctionInstantiations}
   ExternalFaces.cxx
+  GenerateIds.cxx
   VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
@@ -176,6 +202,7 @@ set(contour_headers
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   ContourTreeUniform.h
+  Slice.h
   )
 
 set(contour_header_template_sources
@@ -183,12 +210,13 @@ set(contour_header_template_sources
   ContourTreeUniformAugmented.hxx
   ContourTreeUniformDistributed.hxx
   ContourTreeUniform.hxx
+  Slice.hxx
   )
 
 set(contour_sources_device
   Contour.cxx
-  ContourInteger.cxx
-  ContourScalar.cxx
+  ${ContourInstantiations}
+  Slice.cxx
   )
 
 set(gradient_headers
@@ -200,23 +228,13 @@ set(gradient_header_template_sources
   )
 
 set(gradient_sources_device
-  GradientCartesianPoints.cxx
-  GradientScalar.cxx
-  GradientUniformPoints.cxx
-  GradientVector.cxx
+  ${GradientInstantiations}
   )
 
-if (VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK)
-  list(APPEND gradient_sources_device GradientXGCPoints.cxx)
-endif()
+vtkm_pyexpander_generated_file(ClipWithFieldExternInstantiations.h)
+vtkm_pyexpander_generated_file(ClipWithImplicitFunctionExternInstantiations.h)
 
-vtkm_pyexpander_generated_file(ClipWithFieldSkipInstantiations.hxx)
-vtkm_pyexpander_generated_file(ClipWithImplicitFunctionSkipInstantiations.hxx)
-vtkm_pyexpander_generated_file(ClipWithFieldSignedInteger.cxx)
-vtkm_pyexpander_generated_file(ClipWithFieldUnsignedInteger.cxx)
-vtkm_pyexpander_generated_file(ClipWithImplicitFunction.cxx)
-
-set_source_files_properties(Contour.cxx ExtractStructured.cxx ClipWithField.cxx ClipWithImplicitFunction.cxx PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
+set_source_files_properties(Contour.cxx ExtractStructured.cxx PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 
 add_library(vtkm_filter INTERFACE)
 
@@ -252,6 +270,14 @@ vtkm_library(
   USE_VTKM_JOB_POOL
   )
 
+set_property(TARGET
+  vtkm_filter_common
+  vtkm_filter_extra
+  vtkm_filter_contour
+  vtkm_filter_gradient
+  PROPERTY UNITY_BUILD_MODE GROUP
+  )
+
 target_link_libraries(vtkm_filter_common PUBLIC vtkm_worklet)
 target_link_libraries(vtkm_filter_extra PUBLIC vtkm_filter_common)
 target_link_libraries(vtkm_filter_contour PUBLIC vtkm_filter_common)
@@ -266,7 +292,8 @@ target_link_libraries(vtkm_filter PUBLIC INTERFACE
   vtkm_filter_extra
   vtkm_filter_contour
   vtkm_filter_gradient
-  vtkm_filter_common)
+  vtkm_filter_common
+  )
 
 install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
@@ -274,5 +301,7 @@ install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 add_subdirectory(internal)
 add_subdirectory(particleadvection)
 
-#-----------------------------------------------------------------------------
-add_subdirectory(testing)
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+if (VTKm_ENABLE_TESTING)
+  add_subdirectory(testing)
+endif ()

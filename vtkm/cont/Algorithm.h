@@ -69,14 +69,29 @@ struct BitFieldToUnorderedSetFunctor
 
 struct CopyFunctor
 {
+  template <typename T, typename S, typename... Args>
+  VTKM_CONT bool InputArrayOnDevice(vtkm::cont::DeviceAdapterId device,
+                                    const vtkm::cont::ArrayHandle<T, S>& input,
+                                    Args&&...) const
+  {
+    return input.IsOnDevice(device);
+  }
+
   template <typename Device, typename... Args>
-  VTKM_CONT bool operator()(Device, Args&&... args) const
+  VTKM_CONT bool operator()(Device device, bool useExistingDevice, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::Token token;
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(
-      PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
-    return true;
+    if (!useExistingDevice || this->InputArrayOnDevice(device, std::forward<Args>(args)...))
+    {
+      vtkm::cont::Token token;
+      vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(
+        PrepareArgForExec<Device>(std::forward<Args>(args), token)...);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
 };
 
@@ -399,14 +414,14 @@ struct Algorithm
     // If we can use any device, prefer to use source's already loaded device.
     if (devId == vtkm::cont::DeviceAdapterTagAny())
     {
-      bool isCopied = vtkm::cont::TryExecuteOnDevice(
-        input.GetDeviceAdapterId(), detail::CopyFunctor(), input, output);
+      bool isCopied =
+        vtkm::cont::TryExecuteOnDevice(devId, detail::CopyFunctor(), true, input, output);
       if (isCopied)
       {
         return true;
       }
     }
-    return vtkm::cont::TryExecuteOnDevice(devId, detail::CopyFunctor(), input, output);
+    return vtkm::cont::TryExecuteOnDevice(devId, detail::CopyFunctor(), false, input, output);
   }
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,

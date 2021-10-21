@@ -59,10 +59,10 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(
   return clone;
 }
 
-/// Use this function if you have a VariantArrayHandle that holds the data
+/// Use this function if you have a UnknownArrayHandle that holds the data
 /// for the field.
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
-                                                  const vtkm::cont::VariantArrayHandle& fieldArray,
+                                                  const vtkm::cont::UnknownArrayHandle& fieldArray,
                                                   const std::string& fieldName,
                                                   const vtkm::filter::FieldMetadata& metaData)
 {
@@ -96,11 +96,11 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
   return clone;
 }
 
-/// Use this function if you want to explicit construct a Cell field and have a VariantArrayHandle
+/// Use this function if you want to explicit construct a Cell field and have a UnknownArrayHandle
 /// that holds the data for the field.
 inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
   const vtkm::cont::DataSet& inDataSet,
-  const vtkm::cont::VariantArrayHandle& fieldArray,
+  const vtkm::cont::UnknownArrayHandle& fieldArray,
   const std::string& fieldName)
 {
   VTKM_ASSERT(!fieldName.empty());
@@ -133,11 +133,11 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldPoint(
   return clone;
 }
 
-/// Use this function if you want to explicit construct a Point field and have a VariantArrayHandle
+/// Use this function if you want to explicit construct a Point field and have a UnknownArrayHandle
 /// that holds the data for the field.
 inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldPoint(
   const vtkm::cont::DataSet& inDataSet,
-  const vtkm::cont::VariantArrayHandle& fieldArray,
+  const vtkm::cont::UnknownArrayHandle& fieldArray,
   const std::string& fieldName)
 {
   VTKM_ASSERT(!fieldName.empty());

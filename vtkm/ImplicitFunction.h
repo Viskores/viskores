@@ -29,6 +29,7 @@ namespace vtkm
 
 //============================================================================
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 class VTKM_DEPRECATED(1.6, "ImplicitFunction with virtual methods no longer supported.")
   VTKM_ALWAYS_EXPORT ImplicitFunction : public vtkm::VirtualObjectBase
 {
@@ -39,7 +40,6 @@ public:
   VTKM_EXEC_CONT virtual Scalar Value(const Vector& point) const = 0;
   VTKM_EXEC_CONT virtual Vector Gradient(const Vector& point) const = 0;
 
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_EXEC_CONT Scalar Value(Scalar x, Scalar y, Scalar z) const
   {
     return this->Value(Vector(x, y, z));
@@ -49,8 +49,8 @@ public:
   {
     return this->Gradient(Vector(x, y, z));
   }
-  VTKM_DEPRECATED_SUPPRESS_END
 };
+VTKM_DEPRECATED_SUPPRESS_END
 #endif // VTKM_NO_DEPRECATED_VIRTUAL
 
 //============================================================================

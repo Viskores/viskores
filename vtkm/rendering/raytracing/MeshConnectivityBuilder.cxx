@@ -839,7 +839,7 @@ vtkm::cont::ArrayHandle<vtkm::Id4> MeshConnectivityBuilder::GetTriangles()
 }
 
 VTKM_CONT
-MeshConnContainer* MeshConnectivityBuilder::BuildConnectivity(
+MeshConnectivityContainer* MeshConnectivityBuilder::BuildConnectivity(
   const vtkm::cont::DynamicCellSet& cellset,
   const vtkm::cont::CoordinateSystem& coordinates)
 {
@@ -891,7 +891,7 @@ MeshConnContainer* MeshConnectivityBuilder::BuildConnectivity(
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("mesh_conn_construction");
 
-  MeshConnContainer* meshConn = nullptr;
+  MeshConnectivityContainer* meshConn = nullptr;
   vtkm::cont::Timer timer;
   timer.Start();
 
@@ -899,20 +899,21 @@ MeshConnContainer* MeshConnectivityBuilder::BuildConnectivity(
   {
     vtkm::cont::CellSetExplicit<> cells = cellset.Cast<vtkm::cont::CellSetExplicit<>>();
     this->BuildConnectivity(cells, coordinates.GetDataAsMultiplexer(), coordBounds);
-    meshConn =
-      new UnstructuredContainer(cells, coordinates, FaceConnectivity, FaceOffsets, Triangles);
+    meshConn = new MeshConnectivityContainerUnstructured(
+      cells, coordinates, FaceConnectivity, FaceOffsets, Triangles);
   }
   else if (type == UnstructuredSingle)
   {
     vtkm::cont::CellSetSingleType<> cells = cellset.Cast<vtkm::cont::CellSetSingleType<>>();
     this->BuildConnectivity(cells, coordinates.GetDataAsMultiplexer(), coordBounds);
-    meshConn = new UnstructuredSingleContainer(cells, coordinates, FaceConnectivity, Triangles);
+    meshConn =
+      new MeshConnectivityContainerSingleType(cells, coordinates, FaceConnectivity, Triangles);
   }
   else if (type == Structured)
   {
     vtkm::cont::CellSetStructured<3> cells = cellset.Cast<vtkm::cont::CellSetStructured<3>>();
     Triangles = this->ExternalTrianglesStructured(cells);
-    meshConn = new StructuredContainer(cells, coordinates, Triangles);
+    meshConn = new MeshConnectivityContainerStructured(cells, coordinates, Triangles);
   }
   else
   {

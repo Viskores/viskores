@@ -40,13 +40,8 @@ void View2D::Paint()
 {
   this->GetCanvas().Clear();
   this->UpdateCameraProperties();
-  this->SetupForWorldSpace();
-  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
-  if (this->WorldAnnotationsEnabled)
-    this->RenderWorldAnnotations();
-  this->SetupForScreenSpace();
-  this->RenderScreenAnnotations();
   this->RenderAnnotations();
+  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
 }
 
 void View2D::RenderScreenAnnotations()
@@ -61,6 +56,8 @@ void View2D::RenderScreenAnnotations()
                                     viewportRight,
                                     viewportBottom,
                                     viewportTop);
+  this->GetCanvas().BeginTextRenderingBatch();
+  this->GetWorldAnnotator().BeginLineRenderingBatch();
   this->HorizontalAxisAnnotation.SetColor(AxisColor);
   this->HorizontalAxisAnnotation.SetScreenPosition(
     viewportLeft, viewportBottom, viewportRight, viewportBottom);
@@ -96,6 +93,8 @@ void View2D::RenderScreenAnnotations()
     this->ColorBarAnnotation.Render(
       this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
   }
+  this->GetWorldAnnotator().EndLineRenderingBatch();
+  this->GetCanvas().EndTextRenderingBatch();
 }
 
 void View2D::RenderWorldAnnotations()

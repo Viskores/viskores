@@ -15,6 +15,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
+#include <vtkm/rendering/LineRendererBatcher.h>
 
 namespace vtkm
 {
@@ -50,6 +51,12 @@ public:
     this->AddLine(
       vtkm::make_Vec(x0, y0, z0), vtkm::make_Vec(x1, y1, z1), lineWidth, color, inFront);
   }
+
+  VTKM_CONT
+  void BeginLineRenderingBatch() const;
+
+  VTKM_CONT
+  void EndLineRenderingBatch() const;
 
   virtual void AddText(const vtkm::Vec3f_32& origin,
                        const vtkm::Vec3f_32& right,
@@ -87,6 +94,7 @@ public:
 
 private:
   const vtkm::rendering::Canvas* Canvas;
+  vtkm::rendering::LineRendererBatcher LineBatcher;
 };
 }
 } //namespace vtkm::rendering

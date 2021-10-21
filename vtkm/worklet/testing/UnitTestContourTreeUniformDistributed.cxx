@@ -77,12 +77,12 @@ void TestContourTreeMeshCombine(const std::string& mesh1_filename,
                                            combinedContourTreeMesh.GlobalMeshIndex));
   VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.GlobalMeshIndex,
                                            combinedContourTreeMesh.GlobalMeshIndex));
-  VTKM_TEST_ASSERT(
-    test_equal_ArrayHandles(contourTreeMesh2.Neighbours, combinedContourTreeMesh.Neighbours));
-  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.FirstNeighbour,
-                                           combinedContourTreeMesh.FirstNeighbour));
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.NeighborConnectivity,
+                                           combinedContourTreeMesh.NeighborConnectivity));
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.NeighborOffsets,
+                                           combinedContourTreeMesh.NeighborOffsets));
   VTKM_TEST_ASSERT(contourTreeMesh2.NumVertices == combinedContourTreeMesh.NumVertices);
-  VTKM_TEST_ASSERT(contourTreeMesh2.MaxNeighbours == combinedContourTreeMesh.MaxNeighbours);
+  VTKM_TEST_ASSERT(contourTreeMesh2.MaxNeighbors == combinedContourTreeMesh.MaxNeighbors);
 }
 
 void TestContourTreeUniformDistributed()

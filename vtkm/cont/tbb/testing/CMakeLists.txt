@@ -23,8 +23,14 @@ set(unit_tests
   UnitTestTBBDeviceAdapter.cxx
   UnitTestTBBImplicitFunction.cxx
   UnitTestTBBPointLocatorSparseGrid.cxx
-  UnitTestTBBVirtualObjectHandle.cxx
+  UnitTestTBBRuntimeDeviceConfiguration.cxx
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(unit_tests ${unit_tests}
+    UnitTestTBBVirtualObjectHandle.cxx
+    )
+endif()
 
 vtkm_unit_tests(SOURCES ${unit_tests}
                 LABEL "TBB"

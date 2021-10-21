@@ -43,40 +43,13 @@ endfunction()
 
 if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   find_package(TBB REQUIRED)
-  add_library(vtkm::tbb UNKNOWN IMPORTED GLOBAL)
-
-  set_target_properties(vtkm::tbb PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${TBB_INCLUDE_DIRS}")
-
-  if(EXISTS "${TBB_LIBRARY_RELEASE}")
-    vtkm_extract_real_library("${TBB_LIBRARY_RELEASE}" real_path)
-    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-    set_target_properties(vtkm::tbb PROPERTIES
-      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-      IMPORTED_LOCATION_RELEASE "${real_path}"
-      )
-  elseif(EXISTS "${TBB_LIBRARY}")
-    #When VTK-m is mixed with OSPray we could use the OSPray FindTBB file
-    #which doesn't define TBB_LIBRARY_RELEASE but instead defined only
-    #TBB_LIBRARY
-    vtkm_extract_real_library("${TBB_LIBRARY}" real_path)
-    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-    set_target_properties(vtkm::tbb PROPERTIES
-      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-      IMPORTED_LOCATION_RELEASE "${real_path}"
-      )
-  endif()
-
-  if(EXISTS "${TBB_LIBRARY_DEBUG}")
-    vtkm_extract_real_library("${TBB_LIBRARY_DEBUG}" real_path)
-    set_property(TARGET vtkm::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
-    set_target_properties(vtkm::tbb PROPERTIES
-      IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-      IMPORTED_LOCATION_DEBUG "${real_path}"
-      )
-  endif()
+  add_library(vtkmTBB INTERFACE)
+  add_library(vtkm::tbb ALIAS vtkmTBB)
+  target_link_libraries(vtkmTBB INTERFACE TBB::tbb)
+  target_compile_definitions(vtkmTBB INTERFACE "TBB_VERSION_MAJOR=${TBB_VERSION_MAJOR}")
+  set_target_properties(vtkmTBB PROPERTIES EXPORT_NAME vtkm::tbb)
+  install(TARGETS vtkmTBB EXPORT ${VTKm_EXPORT_NAME})
 endif()
-
 
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
@@ -254,9 +227,12 @@ if(VTKm_ENABLE_CUDA)
     endif()
 
     string(REPLACE ";" " " arch_flags "${arch_flags}")
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
-      #We propagate cuda flags via target* options so that they
-      #export cleanly
+
+    if(POLICY CMP0105)
+      cmake_policy(GET CMP0105 policy_105_enabled)
+    endif()
+
+    if(policy_105_enabled STREQUAL "NEW")
       set(CMAKE_CUDA_ARCHITECTURES OFF)
       target_compile_options(vtkm_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${arch_flags}>)
       target_link_options(vtkm_cuda INTERFACE $<DEVICE_LINK:${arch_flags}>)

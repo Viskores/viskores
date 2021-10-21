@@ -65,11 +65,11 @@ void LoadData(std::string& fname, std::vector<vtkm::cont::DataSet>& dataSets, in
     {
       vtkm::cont::DataSet ds;
       std::string vtkFile = dir + "/" + buff;
-      vtkm::io::reader::VTKDataSetReader reader(vtkFile);
+      vtkm::io::VTKDataSetReader reader(vtkFile);
       ds = reader.ReadDataSet();
       auto f = ds.GetField("grad").GetData();
       vtkm::cont::ArrayHandle<vtkm::Vec<double, 3>> fieldArray;
-      fieldArray = f.Cast<vtkm::cont::ArrayHandle<vtkm::Vec<double, 3>>>();
+      f.AsArrayHandle(fieldArray);
       int n = fieldArray.GetNumberOfValues();
       auto portal = fieldArray.WritePortal();
       for (int ii = 0; ii < n; ii++)
@@ -102,11 +102,9 @@ int main(int argc, char** argv)
   vtkm::filter::ParticleAdvection pa;
 
   vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
-  std::vector<vtkm::Particle> seeds;
-  seeds.push_back(vtkm::Particle(vtkm::Vec3f(.1f, .1f, .9f), 0));
-  seeds.push_back(vtkm::Particle(vtkm::Vec3f(.1f, .6f, .6f), 1));
-  seeds.push_back(vtkm::Particle(vtkm::Vec3f(.1f, .9f, .1f), 2));
-  seedArray = vtkm::cont::make_ArrayHandle(seeds);
+  seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.1f, .1f, .9f), 0),
+                                             vtkm::Particle(vtkm::Vec3f(.1f, .6f, .6f), 1),
+                                             vtkm::Particle(vtkm::Vec3f(.1f, .9f, .1f), 2) });
   pa.SetStepSize(0.001f);
   pa.SetNumberOfSteps(10000);
   pa.SetSeeds(seedArray);

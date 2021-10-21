@@ -14,9 +14,12 @@
 // clang-format off
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
+#include <vtkm/cont/serial/internal/RuntimeDeviceConfigurationSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterMemoryManagerSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/serial/internal/VirtualObjectTransferSerial.h>
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 // clang-format on
 
 #endif //vtk_m_cont_serial_DeviceAdapterSerial_h

@@ -12,6 +12,9 @@
 #include <vtkm/filter/FilterTraits.h>
 #include <vtkm/filter/PolicyDefault.h>
 
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/Logging.h>
+
 #include <vtkm/filter/internal/ResolveFieldTypeAndExecute.h>
 #include <vtkm/filter/internal/ResolveFieldTypeAndMap.h>
 
@@ -57,7 +60,18 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
   using FunctorType = internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy>;
   FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldNotActive(field, policy), functor);
+  try
+  {
+    vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldNotActive(field, policy), functor);
+  }
+  catch (vtkm::cont::ErrorBadType& error)
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Failed to map field " << field.GetName()
+                                      << " because it is an unknown type. Cast error:\n"
+                                      << error.GetMessage());
+    (void)error; // Suppress unused error message if logging is turned off.
+  }
 
   //the bool valid will be modified by the map algorithm to hold if the
   //mapping occurred or not. If the mapping was good a new field has been

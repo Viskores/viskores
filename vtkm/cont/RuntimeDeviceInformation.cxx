@@ -14,6 +14,7 @@
 #include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/ErrorBadDevice.h>
+#include <vtkm/cont/Logging.h>
 
 //Bring in each device adapters runtime class
 #include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
@@ -78,6 +79,69 @@ public:
     throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
 };
+
+class RuntimeDeviceConfigurationInvalid final
+  : public vtkm::cont::internal::RuntimeDeviceConfigurationBase
+{
+public:
+  VTKM_CONT virtual ~RuntimeDeviceConfigurationInvalid() override final {}
+
+  VTKM_CONT virtual vtkm::cont::DeviceAdapterId GetDevice() const override final
+  {
+    return vtkm::cont::DeviceAdapterTagUndefined{};
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode SetThreads(
+    const vtkm::Id&) override final
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to set the number of threads on an invalid device");
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode SetNumaRegions(
+    const vtkm::Id&) override final
+  {
+    throw vtkm::cont::ErrorBadDevice(
+      "Tried to set the number of numa regions on an invalid device");
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode SetDeviceInstance(
+    const vtkm::Id&) override final
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to set the device instance on an invalid device");
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode GetThreads(
+    vtkm::Id&) const override final
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to get the number of threads on an invalid device");
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode GetNumaRegions(
+    vtkm::Id&) const override final
+  {
+    throw vtkm::cont::ErrorBadDevice(
+      "Tried to get the number of numa regions on an invalid device");
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode GetDeviceInstance(
+    vtkm::Id&) const override final
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to get the device instance on an invalid device");
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode GetMaxThreads(
+    vtkm::Id&) const override final
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to get the max number of threads on an invalid device");
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode GetMaxDevices(
+    vtkm::Id&) const override final
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to get the max number of devices on an invalid device");
+  }
+};
+
 
 struct VTKM_NEVER_EXPORT InitializeDeviceNames
 {
@@ -148,6 +212,54 @@ struct VTKM_NEVER_EXPORT InitializeDeviceMemoryManagers
     this->CreateManager(device, std::integral_constant<bool, device.IsEnabled>{});
   }
 };
+
+struct VTKM_NEVER_EXPORT InitializeRuntimeDeviceConfigurations
+{
+  std::unique_ptr<vtkm::cont::internal::RuntimeDeviceConfigurationBase>* RuntimeConfigurations;
+  vtkm::cont::internal::RuntimeDeviceConfigurationOptions RuntimeConfigurationOptions;
+
+  VTKM_CONT
+  InitializeRuntimeDeviceConfigurations(
+    std::unique_ptr<vtkm::cont::internal::RuntimeDeviceConfigurationBase>* runtimeConfigurations,
+    const vtkm::cont::internal::RuntimeDeviceConfigurationOptions& configOptions)
+    : RuntimeConfigurations(runtimeConfigurations)
+    , RuntimeConfigurationOptions(configOptions)
+  {
+    if (!configOptions.IsInitialized())
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "Initializing 'RuntimeDeviceConfigurations' with uninitialized configOptions. Did "
+                 "you call vtkm::cont::Initialize?");
+    }
+  }
+
+  template <typename Device>
+  VTKM_CONT void CreateRuntimeConfiguration(Device device, int& argc, char* argv[], std::true_type)
+  {
+    auto id = device.GetValue();
+
+    if (id > 0 && id < VTKM_MAX_DEVICE_ADAPTER_ID)
+    {
+      this->RuntimeConfigurations[id].reset(
+        new vtkm::cont::internal::RuntimeDeviceConfiguration<Device>);
+      this->RuntimeConfigurations[id]->Initialize(RuntimeConfigurationOptions, argc, argv);
+    }
+  }
+
+  template <typename Device>
+  VTKM_CONT void CreateRuntimeConfiguration(Device, int&, char**, std::false_type)
+  {
+    // No runtime configuration for invalid devices.
+  }
+
+  template <typename Device>
+  VTKM_CONT void operator()(Device device, int& argc, char* argv[])
+  {
+    this->CreateRuntimeConfiguration(
+      device, argc, argv, std::integral_constant<bool, device.IsEnabled>{});
+  }
+};
+
 
 struct VTKM_NEVER_EXPORT RuntimeDeviceInformationFunctor
 {
@@ -239,7 +351,61 @@ private:
     DeviceMemoryManagers[VTKM_MAX_DEVICE_ADAPTER_ID];
   DeviceAdapterMemoryManagerInvalid InvalidManager;
 };
-}
+
+class RuntimeDeviceConfigurations
+{
+public:
+  static vtkm::cont::internal::RuntimeDeviceConfigurationBase& GetRuntimeDeviceConfiguration(
+    vtkm::cont::DeviceAdapterId device,
+    const vtkm::cont::internal::RuntimeDeviceConfigurationOptions& configOptions,
+    int& argc,
+    char* argv[])
+  {
+    const auto id = device.GetValue();
+    if (device.IsValueValid())
+    {
+      auto&& runtimeConfiguration = Instance(configOptions, argc, argv).DeviceConfigurations[id];
+      if (runtimeConfiguration)
+      {
+        return *runtimeConfiguration.get();
+      }
+      else
+      {
+        return Instance(configOptions, argc, argv).InvalidConfiguration;
+      }
+    }
+    else
+    {
+      return Instance(configOptions, argc, argv).InvalidConfiguration;
+    }
+  }
+
+private:
+  static RuntimeDeviceConfigurations& Instance(
+    const vtkm::cont::internal::RuntimeDeviceConfigurationOptions& configOptions,
+    int& argc,
+    char* argv[])
+  {
+    static RuntimeDeviceConfigurations instance{ configOptions, argc, argv };
+    return instance;
+  }
+
+  RuntimeDeviceConfigurations(
+    const vtkm::cont::internal::RuntimeDeviceConfigurationOptions& configOptions,
+    int& argc,
+    char* argv[])
+  {
+    InitializeRuntimeDeviceConfigurations functor(this->DeviceConfigurations, configOptions);
+    vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST(), argc, argv);
+  }
+
+  friend struct InitializeRuntimeDeviceConfigurations;
+
+  std::unique_ptr<vtkm::cont::internal::RuntimeDeviceConfigurationBase>
+    DeviceConfigurations[VTKM_MAX_DEVICE_ADAPTER_ID];
+  RuntimeDeviceConfigurationInvalid InvalidConfiguration;
+};
+} // namespace
 
 namespace vtkm
 {
@@ -326,8 +492,38 @@ RuntimeDeviceInformation::GetMemoryManager(DeviceAdapterId device) const
   else
   {
     throw vtkm::cont::ErrorBadValue(
-      "Attempted to get a DeviceAdapterMemoryManager for an invalid device.");
+      "Attempted to get a DeviceAdapterMemoryManager for an invalid device '" + device.GetName() +
+      "'");
   }
 }
+
+VTKM_CONT vtkm::cont::internal::RuntimeDeviceConfigurationBase&
+RuntimeDeviceInformation::GetRuntimeConfiguration(
+  DeviceAdapterId device,
+  const vtkm::cont::internal::RuntimeDeviceConfigurationOptions& configOptions,
+  int& argc,
+  char* argv[]) const
+{
+  return RuntimeDeviceConfigurations::GetRuntimeDeviceConfiguration(
+    device, configOptions, argc, argv);
 }
+
+VTKM_CONT vtkm::cont::internal::RuntimeDeviceConfigurationBase&
+RuntimeDeviceInformation::GetRuntimeConfiguration(
+  DeviceAdapterId device,
+  const vtkm::cont::internal::RuntimeDeviceConfigurationOptions& configOptions) const
+{
+  int placeholder;
+  return this->GetRuntimeConfiguration(device, configOptions, placeholder, nullptr);
+}
+
+VTKM_CONT vtkm::cont::internal::RuntimeDeviceConfigurationBase&
+RuntimeDeviceInformation::GetRuntimeConfiguration(DeviceAdapterId device) const
+{
+  vtkm::cont::internal::RuntimeDeviceConfigurationOptions placeholder;
+  return this->GetRuntimeConfiguration(device, placeholder);
+}
+
+
 } // namespace vtkm::cont
+} // namespace vtkm

@@ -99,16 +99,34 @@ void RenderTests()
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::ColorTable colorTable("samsel fire");
 
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "wf_reg3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "wf_rect3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "wf_expl3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(
-    Make3DUniformDataSet(), "pointvar", colorTable, "wf_uniform3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V2>(
-    Make2DExplicitDataSet(), "cellVar", colorTable, "wf_lines2D.pnm");
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
+    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "rendering/wireframer/wf_reg3D.png");
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(maker.Make3DRectilinearDataSet0(),
+                                                              "pointvar",
+                                                              colorTable,
+                                                              "rendering/wireframer/wf_rect3D.png");
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V2>(
+    Make2DExplicitDataSet(), "cellVar", colorTable, "rendering/wireframer/wf_lines2D.png");
+
+  // These tests are very fickle on multiple machines and on different devices
+  // Need to boost the maximum number of allowable error pixels manually
+  {
+    C canvas(512, 512);
+    M mapper;
+    vtkm::rendering::Scene scene;
+    auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
+      Make3DUniformDataSet(), "pointvar", canvas, mapper, scene, colorTable);
+    VTKM_TEST_ASSERT(test_equal_images(view, "rendering/wireframer/wf_uniform3D.png", 0, 0, 0.05f));
+  }
+  {
+    C canvas(512, 512);
+    M mapper;
+    vtkm::rendering::Scene scene;
+    auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
+      maker.Make3DExplicitDataSet4(), "pointvar", canvas, mapper, scene, colorTable);
+    VTKM_TEST_ASSERT(test_equal_images(view, "rendering/wireframer/wf_expl3D.png", 0, 0, 0.005f));
+  }
+
   //
   // Test the 1D cell set line plot with multiple lines
   //
@@ -118,12 +136,16 @@ void RenderTests()
   std::vector<vtkm::rendering::Color> colors;
   colors.push_back(vtkm::rendering::Color(1.f, 0.f, 0.f));
   colors.push_back(vtkm::rendering::Color(0.f, 1.f, 0.f));
-  vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DUniformDataSet0(), fields, colors, "wf_lines1D.pnm");
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V1>(
+    maker.Make1DUniformDataSet0(), fields, colors, "rendering/wireframer/wf_lines1D.png");
   //test log y
   vtkm::rendering::Color red = vtkm::rendering::Color::red;
-  vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DUniformDataSet1(), "pointvar", red, "wf_linesLogY1D.pnm", true);
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V1>(
+    maker.Make1DUniformDataSet1(),
+    "pointvar",
+    red,
+    "rendering/wireframer/wf_linesLogY1D.png",
+    true);
 }
 
 } //namespace

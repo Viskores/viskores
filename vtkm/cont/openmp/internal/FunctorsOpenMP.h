@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_openmp_internal_FunctorsOpenMP_h
 #define vtk_m_cont_openmp_internal_FunctorsOpenMP_h
 
+#include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
 
 #include <vtkm/cont/internal/FunctorsGeneral.h>
@@ -165,8 +166,11 @@ static void CopyHelper(InPortalT inPortal,
       // Evenly distribute full pages to all threads. We manually chunk the
       // data here so that we can exploit std::copy's memmove optimizations.
       vtkm::Id numChunks;
-      ComputeChunkSize(
-        numVals, omp_get_num_threads(), 8, sizeof(InValueT), numChunks, valuesPerChunk);
+      vtkm::Id numThreads;
+      vtkm::cont::RuntimeDeviceInformation{}
+        .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
+        .GetThreads(numThreads);
+      ComputeChunkSize(numVals, numThreads, 8, sizeof(InValueT), numChunks, valuesPerChunk);
     }
 
     VTKM_OPENMP_DIRECTIVE(for schedule(static))
@@ -193,7 +197,9 @@ struct CopyIfHelper
   void Initialize(vtkm::Id numValues, vtkm::Id valueSize)
   {
     this->NumValues = numValues;
-    this->NumThreads = static_cast<vtkm::Id>(omp_get_num_threads());
+    vtkm::cont::RuntimeDeviceInformation{}
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
+      .GetThreads(this->NumThreads);
     this->ValueSize = valueSize;
 
     // Evenly distribute pages across the threads. We manually chunk the
@@ -326,18 +332,19 @@ struct ReduceHelper
     auto data = vtkm::cont::ArrayPortalToIteratorBegin(portal);
 
     bool doParallel = false;
-    int numThreads = 0;
+    vtkm::Id numThreads = 0;
     std::unique_ptr<ReturnType[]> threadData;
 
     VTKM_OPENMP_DIRECTIVE(parallel default(none) firstprivate(f) shared(
       data, doParallel, numThreads, threadData) VTKM_OPENMP_SHARED_CONST(numVals))
     {
-
       int tid = omp_get_thread_num();
 
       VTKM_OPENMP_DIRECTIVE(single)
       {
-        numThreads = omp_get_num_threads();
+        vtkm::cont::RuntimeDeviceInformation{}
+          .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
+          .GetThreads(numThreads);
         if (numVals >= numThreads * 2)
         {
           doParallel = true;
@@ -532,7 +539,10 @@ void ReduceByKeyHelper(KeysInArray keysInArray,
                           shared(outIdx) VTKM_OPENMP_SHARED_CONST(numValues))
   {
     int tid = omp_get_thread_num();
-    int numThreads = omp_get_num_threads();
+    vtkm::Id numThreads = 0;
+    vtkm::cont::RuntimeDeviceInformation{}
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
+      .GetThreads(numThreads);
 
     // Determine bounds for this thread's scan operation:
     vtkm::Id chunkSize = (numValues + numThreads - 1) / numThreads;
@@ -677,7 +687,11 @@ private:
   void Prepare()
   {
     // Figure out how many values each thread should handle:
-    int numThreads = omp_get_num_threads();
+    vtkm::Id numThreads = 0;
+    vtkm::cont::RuntimeDeviceInformation{}
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
+      .GetThreads(numThreads);
+
     vtkm::Id chunksPerThread = 8;
     vtkm::Id numChunks;
     ComputeChunkSize(

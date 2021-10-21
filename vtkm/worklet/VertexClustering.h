@@ -23,6 +23,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -73,7 +74,7 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
     template <typename InputPointsArrayType, typename KeyType>
     VTKM_CONT void operator()(const InputPointsArrayType& points,
                               const vtkm::worklet::Keys<KeyType>& keys,
-                              vtkm::cont::VariantArrayHandle& output) const
+                              vtkm::cont::UnknownArrayHandle& output) const
     {
 
       vtkm::cont::ArrayHandle<typename InputPointsArrayType::ValueType> out;
@@ -85,11 +86,11 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
   };
 
   template <typename KeyType, typename InputDynamicPointsArrayType>
-  VTKM_CONT static vtkm::cont::VariantArrayHandle Run(
+  VTKM_CONT static vtkm::cont::UnknownArrayHandle Run(
     const vtkm::worklet::Keys<KeyType>& keys,
     const InputDynamicPointsArrayType& inputPoints)
   {
-    vtkm::cont::VariantArrayHandle output;
+    vtkm::cont::UnknownArrayHandle output;
     RunTrampoline trampoline;
     vtkm::cont::CastAndCall(inputPoints, trampoline, keys, output);
     return output;
@@ -365,7 +366,7 @@ public:
 #endif
 
     /// pass 2 : Choose a representative point from each cluster for the output:
-    vtkm::cont::VariantArrayHandle repPointArray;
+    vtkm::cont::UnknownArrayHandle repPointArray;
     {
       vtkm::worklet::Keys<vtkm::Id> keys;
       keys.BuildArrays(pointCidArray, vtkm::worklet::KeysSortType::Stable);

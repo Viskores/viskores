@@ -37,14 +37,19 @@ enum DataType
   DTYPE_UNSIGNED_LONG,
   DTYPE_LONG,
   DTYPE_FLOAT,
-  DTYPE_DOUBLE
+  DTYPE_DOUBLE,
+  DTYPE_UNSIGNED_LONG_LONG,
+  DTYPE_LONG_LONG,
+
+  DTYPE_COUNT
 };
 
 inline const char* DataTypeString(int id)
 {
   static const char* strings[] = {
-    "",    "bit",           "unsigned_char", "char",  "unsigned_short", "short", "unsigned_int",
-    "int", "unsigned_long", "long",          "float", "double"
+    "",      "bit",          "unsigned_char", "char",          "unsigned_short",
+    "short", "unsigned_int", "int",           "unsigned_long", "long",
+    "float", "double",       "vtktypeuint64", "vtktypeint64"
   };
   return strings[id];
 }
@@ -52,7 +57,7 @@ inline const char* DataTypeString(int id)
 inline DataType DataTypeId(const std::string& str)
 {
   DataType type = DTYPE_UNKNOWN;
-  for (int id = 1; id < 12; ++id)
+  for (int id = 1; id < DTYPE_COUNT; ++id)
   {
     if (str == DataTypeString(id))
     {
@@ -220,9 +225,11 @@ inline void SelectTypeAndCall(DataType dtype,
       SelectVecTypeAndCall(vtkm::Int32(), numComponents, functor);
       break;
     case DTYPE_UNSIGNED_LONG:
+    case DTYPE_UNSIGNED_LONG_LONG:
       SelectVecTypeAndCall(vtkm::UInt64(), numComponents, functor);
       break;
     case DTYPE_LONG:
+    case DTYPE_LONG_LONG:
       SelectVecTypeAndCall(vtkm::Int64(), numComponents, functor);
       break;
     case DTYPE_FLOAT:

@@ -98,6 +98,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/Error.h>
 #include <vtkm/cont/Invoker.h>
 
 
@@ -377,6 +378,7 @@ inline void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema
   DebugPrint("Active Graph Computation Starting", __FILE__, __LINE__);
 
   // loop until we run out of active edges
+  vtkm::Id maxNumIterations = this->EdgeSorter.GetNumberOfValues();
   this->NumIterations = 0;
   while (true)
   { // main loop
@@ -385,7 +387,16 @@ inline void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema
 
     // test whether there are any left (if not, we're on the trunk)
     if (this->EdgeSorter.GetNumberOfValues() <= 0)
+    {
       break;
+    }
+    // test whether we are in a bad infinite loop due to bad input data. Usually
+    // this is not an issue for the merge tree (only for the contour tree), but
+    // we check just to make absolutely sure we won't get stuck in an infinite loop
+    if (this->NumIterations >= maxNumIterations)
+    {
+      throw new vtkm::cont::ErrorInternal("Bad iteration. Merge tree unable to process all edges.");
+    }
 
     // find & label the extrema with their governing saddles
     FindGoverningSaddles();
