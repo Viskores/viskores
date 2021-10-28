@@ -8,14 +8,27 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/source/Wavelet.h>
+#include <vtkm/source/Oscillator.h>
 
+#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
 
-void WaveletSourceTest()
+void OscillatorSourceTest()
 {
-  vtkm::source::Wavelet source;
+  vtkm::cont::Timer timer;
+  timer.Start();
+
+  vtkm::source::Oscillator source(vtkm::Id3{ 20, 20, 20 });
+  source.SetTime(0.5);
+  source.AddDamped(0.25f, 0.25f, 0.25f, 0.5f, 0.1f, 0.2f);
+  source.AddDecaying(0.5f, 0.5f, 0.5f, 0.35f, 0.2f, 0.1f);
+  source.AddPeriodic(0.6f, 0.2f, 0.7f, 0.15f, 0.1f, 0.2f);
+
   vtkm::cont::DataSet ds = source.Execute();
+
+  double time = timer.GetElapsedTime();
+
+  std::cout << "Default oscillator took " << time << "s.\n";
 
   {
     auto coords = ds.GetCoordinateSystem("coordinates");
@@ -28,11 +41,11 @@ void WaveletSourceTest()
     VTKM_TEST_ASSERT(test_equal(cells.GetNumberOfCells(), 8000), "Incorrect number of cells.");
   }
 
-  // Spot check some scalars
+  // Spot check some node scalars
   {
     using ScalarHandleType = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
 
-    auto field = ds.GetPointField("RTData");
+    auto field = ds.GetPointField("oscillating");
     auto dynData = field.GetData();
     VTKM_TEST_ASSERT(dynData.IsType<ScalarHandleType>(), "Invalid scalar handle type.");
     ScalarHandleType handle = dynData.AsArrayHandle<ScalarHandleType>();
@@ -40,21 +53,14 @@ void WaveletSourceTest()
 
     VTKM_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261), "Incorrect number of scalars.");
 
-    VTKM_TEST_ASSERT(test_equal(data.Get(0), 60.7635), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(16), 99.6115), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(21), 69.1968), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(256), 118.620), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(1024), 140.466), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(1987), 203.720), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(2048), 223.010), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(3110), 128.282), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(4097), 153.913), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(6599), 120.068), "Incorrect scalar value.");
-    VTKM_TEST_ASSERT(test_equal(data.Get(7999), 65.6710), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(0), -0.0163996), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(16), -0.0182232), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(21), -0.0181952), "Incorrect scalar value.");
+    VTKM_TEST_ASSERT(test_equal(data.Get(3110), -0.0404135), "Incorrect scalar value.");
   }
 }
 
-int UnitTestWaveletSource(int argc, char* argv[])
+int UnitTestOscillatorSource(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(WaveletSourceTest, argc, argv);
+  return vtkm::cont::testing::Testing::Run(OscillatorSourceTest, argc, argv);
 }

@@ -37,17 +37,10 @@ set(template_sources
   )
 
 set(sources
-  FileUtils.cxx
+  BOVDataSetReader.cxx
   DecodePNG.cxx
   EncodePNG.cxx
-  )
-
-# TODO: None of these codes actually use a device. Rather, they access ArrayHandle, and we
-# currently need to ensure that ArrayHandle is correctly compiled for all devices. This is
-# kind of silly, so hopefully sometime in the future you will no longer need to compile for
-# devices for ArrayHandle, and this requirement will go away.
-set(device_sources
-  BOVDataSetReader.cxx
+  FileUtils.cxx
   ImageReaderBase.cxx
   ImageReaderPNG.cxx
   ImageReaderPNM.cxx
@@ -56,13 +49,17 @@ set(device_sources
   ImageWriterPNG.cxx
   ImageWriterPNM.cxx
   VTKDataSetReader.cxx
-  VTKDataSetReaderBase.cxx
   VTKDataSetWriter.cxx
   VTKPolyDataReader.cxx
-  VTKRectilinearGridReader.cxx
   VTKStructuredGridReader.cxx
   VTKStructuredPointsReader.cxx
   VTKUnstructuredGridReader.cxx
+  )
+
+# These files use ArrayCopy which uses a WorkletMapField thus are required to be device_sources
+set(device_sources
+  VTKDataSetReaderBase.cxx
+  VTKRectilinearGridReader.cxx
   )
 
 if (VTKm_ENABLE_HDF5_IO)
@@ -70,8 +67,8 @@ if (VTKm_ENABLE_HDF5_IO)
     ${headers}
     ImageReaderHDF5.h
     ImageWriterHDF5.h)
-  set(device_sources
-    ${device_sources}
+  set(sources
+    ${sources}
     ImageReaderHDF5.cxx
     ImageWriterHDF5.cxx)
 endif ()

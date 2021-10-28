@@ -10,7 +10,7 @@ build:centos8_sanitizer:
   extends:
     - .centos8
     - .cmake_build_linux
-    - .only-default
+    - .run_automatically
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"
@@ -26,7 +26,7 @@ test:centos8_sanitizer:
   extends:
     - .centos8
     - .cmake_memcheck_linux
-    - .only-default
+    - .run_automatically
   variables:
     OMP_NUM_THREADS: 4
     CTEST_MEMORYCHECK_TYPE: LeakSanitizer

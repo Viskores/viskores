@@ -18,7 +18,6 @@
 #include <unistd.h>
 #endif
 
-#include <random>
 #include <string>
 
 using namespace vtkm::io;

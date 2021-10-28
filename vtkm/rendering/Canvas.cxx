@@ -20,6 +20,7 @@
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/LineRenderer.h>
 #include <vtkm/rendering/TextRenderer.h>
+#include <vtkm/rendering/TextRendererBatcher.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -224,6 +225,7 @@ struct Canvas::CanvasInternals
   FontTextureType FontTexture;
   vtkm::Matrix<vtkm::Float32, 4, 4> ModelView;
   vtkm::Matrix<vtkm::Float32, 4, 4> Projection;
+  std::shared_ptr<vtkm::rendering::TextRendererBatcher> TextBatcher;
 };
 
 Canvas::Canvas(vtkm::Id width, vtkm::Id height)
@@ -394,8 +396,11 @@ void Canvas::AddLine(const vtkm::Vec2f_64& point0,
                      const vtkm::rendering::Color& color) const
 {
   vtkm::rendering::Canvas* self = const_cast<vtkm::rendering::Canvas*>(this);
-  LineRenderer renderer(self, vtkm::MatrixMultiply(Internals->Projection, Internals->ModelView));
+  vtkm::rendering::LineRendererBatcher lineBatcher;
+  LineRenderer renderer(
+    self, vtkm::MatrixMultiply(Internals->Projection, Internals->ModelView), &lineBatcher);
   renderer.RenderLine(point0, point1, linewidth, color);
+  lineBatcher.Render(self);
 }
 
 void Canvas::AddLine(vtkm::Float64 x0,
@@ -476,16 +481,14 @@ void Canvas::AddText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
                      const std::string& text,
                      const vtkm::Float32& depth) const
 {
-  if (!Internals->FontTexture.IsValid())
+  if (!this->EnsureFontLoaded() || !this->Internals->TextBatcher)
   {
-    if (!LoadFont())
-    {
-      return;
-    }
+    return;
   }
 
   vtkm::rendering::Canvas* self = const_cast<vtkm::rendering::Canvas*>(this);
-  TextRenderer fontRenderer(self, Internals->Font, Internals->FontTexture);
+  vtkm::rendering::TextRenderer fontRenderer(
+    self, Internals->Font, Internals->FontTexture, this->Internals->TextBatcher.get());
   fontRenderer.RenderText(transform, scale, anchor, color, text, depth);
 }
 
@@ -525,6 +528,40 @@ void Canvas::AddText(vtkm::Float32 x,
                 vtkm::make_Vec(anchorX, anchorY),
                 color,
                 text);
+}
+
+void Canvas::BeginTextRenderingBatch() const
+{
+  if (!this->EnsureFontLoaded() || this->Internals->TextBatcher)
+  {
+    return;
+  }
+
+  this->Internals->TextBatcher =
+    std::make_shared<vtkm::rendering::TextRendererBatcher>(this->Internals->FontTexture);
+}
+
+void Canvas::EndTextRenderingBatch() const
+{
+  if (!this->Internals->TextBatcher)
+  {
+    return;
+  }
+
+  this->Internals->TextBatcher->Render(this);
+  this->Internals->TextBatcher.reset();
+}
+
+bool Canvas::EnsureFontLoaded() const
+{
+  if (!Internals->FontTexture.IsValid())
+  {
+    if (!LoadFont())
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool Canvas::LoadFont() const

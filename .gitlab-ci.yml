@@ -105,16 +105,36 @@
   extends:
     - .docker_image
 
-.only-default: &only-default
-  only:
-    - master@vtk/vtk-m
-    - tags@vtk/vtk-m
-    - merge_requests
+.ubuntu2004_hip_kokkos: &ubuntu2004_hip_kokkos
+  image: "kitware/vtkm:ci-ubuntu2004_hip_kokkos-20210827"
+  extends:
+    - .docker_image
 
-.only-master: &only-master
-  only:
-    - master@vtk/vtk-m
+.run_automatically: &run_automatically
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: on_success
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m"'
+      when: on_success
+    - when: never
 
+.run_scheduled: &run_scheduled
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: manual
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_TAG'
+      when: on_success
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_PIPELINE_SOURCE == "schedule"'
+      when: on_success
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m"'
+      when: manual
+    - when: never
+
+.run_master: &run_master
+  rules:
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_BRANCH == "master"'
+      when: on_success
+    - when: never
 
 # General Longer Term Tasks:
 # - Setup clang tidy as sub-pipeline
@@ -189,7 +209,7 @@ stages:
   before_script:
     - *install_cmake
   script:
-    - "ctest -VV -S .gitlab/ci/ctest_test.cmake"
+    - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
   artifacts:
     expire_in: 24 hours
     when: always

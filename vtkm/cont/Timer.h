@@ -10,9 +10,7 @@
 #ifndef vtk_m_cont_Timer_h
 #define vtk_m_cont_Timer_h
 
-#include <vtkm/List.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterList.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <vtkm/cont/vtkm_cont_export.h>
 

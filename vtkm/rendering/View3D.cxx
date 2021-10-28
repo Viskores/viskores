@@ -47,17 +47,22 @@ void View3D::RenderScreenAnnotations()
 {
   if (this->GetScene().GetNumberOfActors() > 0)
   {
+    this->GetCanvas().BeginTextRenderingBatch();
+    this->GetWorldAnnotator().BeginLineRenderingBatch();
     //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
     this->ColorBarAnnotation.SetFieldName(this->GetScene().GetActor(0).GetScalarField().GetName());
     this->ColorBarAnnotation.SetRange(this->GetScene().GetActor(0).GetScalarRange(), 5);
     this->ColorBarAnnotation.SetColorTable(this->GetScene().GetActor(0).GetColorTable());
     this->ColorBarAnnotation.Render(
       this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
+    this->GetWorldAnnotator().EndLineRenderingBatch();
+    this->GetCanvas().EndTextRenderingBatch();
   }
 }
 
 void View3D::RenderWorldAnnotations()
 {
+  this->GetCanvas().BeginTextRenderingBatch();
   vtkm::Bounds bounds = this->GetScene().GetSpatialBounds();
   vtkm::Float64 xmin = bounds.X.Min, xmax = bounds.X.Max;
   vtkm::Float64 ymin = bounds.Y.Min, ymax = bounds.Y.Max;
@@ -65,9 +70,11 @@ void View3D::RenderWorldAnnotations()
   vtkm::Float64 dx = xmax - xmin, dy = ymax - ymin, dz = zmax - zmin;
   vtkm::Float64 size = vtkm::Sqrt(dx * dx + dy * dy + dz * dz);
 
+  this->GetWorldAnnotator().BeginLineRenderingBatch();
   this->BoxAnnotation.SetColor(Color(.5f, .5f, .5f));
   this->BoxAnnotation.SetExtents(this->GetScene().GetSpatialBounds());
   this->BoxAnnotation.Render(this->GetCamera(), this->GetWorldAnnotator());
+  this->GetWorldAnnotator().EndLineRenderingBatch();
 
   vtkm::Vec3f_32 lookAt = this->GetCamera().GetLookAt();
   vtkm::Vec3f_32 position = this->GetCamera().GetPosition();
@@ -86,6 +93,7 @@ void View3D::RenderWorldAnnotations()
   vtkm::Float64 yrel = vtkm::Abs(dy) / size;
   vtkm::Float64 zrel = vtkm::Abs(dz) / size;
 
+  this->GetWorldAnnotator().BeginLineRenderingBatch();
   this->XAxisAnnotation.SetAxis(0);
   this->XAxisAnnotation.SetColor(AxisColor);
   this->XAxisAnnotation.SetTickInvert(xtest, ytest, ztest);
@@ -121,6 +129,9 @@ void View3D::RenderWorldAnnotations()
   this->ZAxisAnnotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
   this->ZAxisAnnotation.SetMoreOrLessTickAdjustment(zrel < .3 ? -1 : 0);
   this->ZAxisAnnotation.Render(this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
+  this->GetWorldAnnotator().EndLineRenderingBatch();
+
+  this->GetCanvas().EndTextRenderingBatch();
 }
 }
 } // namespace vtkm::rendering

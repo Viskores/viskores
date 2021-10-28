@@ -7,7 +7,7 @@ build:ubuntu2004_gcc9:
   extends:
     - .ubuntu2004
     - .cmake_build_linux
-    - .only-default
+    - .run_automatically
   variables:
     CMAKE_BUILD_TYPE: Debug
     VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5"
@@ -21,7 +21,7 @@ test:ubuntu2004_gcc9:
   extends:
     - .ubuntu2004
     - .cmake_test_linux
-    - .only-default
+    - .run_automatically
   variables:
     #Restrict OpenMP number of threads since multiple test stages
     #execute on the same hardware concurrently
@@ -40,7 +40,7 @@ build:ubuntu2004_kokkos:
   extends:
     - .ubuntu2004_kokkos
     - .cmake_build_linux
-    - .only-default
+    - .run_automatically
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     VTKM_SETTINGS: "kokkos+shared+64bit_floats"
@@ -54,8 +54,43 @@ test:ubuntu2004_kokkos:
   extends:
     - .ubuntu2004_kokkos
     - .cmake_test_linux
-    - .only-default
+    - .run_automatically
   dependencies:
     - build:ubuntu2004_kokkos
   needs:
     - build:ubuntu2004_kokkos
+
+build:ubuntu2004_hip_kokkos:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - radeon
+  extends:
+    - .ubuntu2004_hip_kokkos
+    - .cmake_build_linux
+    - .run_scheduled
+  variables:
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    VTKM_SETTINGS: "benchmarks+kokkos+hip+no_virtual+no_rendering"
+    CMAKE_PREFIX_PATH: "/opt/rocm/lib/cmake"
+    CTEST_MAX_PARALLELISM: "1"
+  timeout: 12 hours
+
+test:ubuntu2004_hip_kokkos:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - radeon
+  extends:
+    - .ubuntu2004_hip_kokkos
+    - .cmake_test_linux
+    - .run_automatically
+  variables:
+    CTEST_TIMEOUT: "30"
+  dependencies:
+    - build:ubuntu2004_hip_kokkos
+  needs:
+    - build:ubuntu2004_hip_kokkos
+  timeout: 3 hours

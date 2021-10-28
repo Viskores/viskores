@@ -13,7 +13,6 @@
 #include <vtkm/io/ImageReaderPNM.h>
 #include <vtkm/io/ImageWriterPNG.h>
 #include <vtkm/io/ImageWriterPNM.h>
-#include <vtkm/io/PixelTypes.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
 

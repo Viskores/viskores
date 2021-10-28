@@ -197,10 +197,14 @@ void View::RenderAnnotations()
   {
     this->SetupForScreenSpace();
     this->RenderScreenAnnotations();
+
+    this->GetCanvas().BeginTextRenderingBatch();
     for (auto& textAnnotation : this->Internal->TextAnnotations)
     {
       textAnnotation->Render(this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
     }
+    this->GetCanvas().EndTextRenderingBatch();
+
     for (auto& additionalAnnotation : this->Internal->AdditionalAnnotations)
     {
       additionalAnnotation();

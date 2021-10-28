@@ -256,11 +256,6 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     vtkm::cont::ArrayCopy(BasisParticles, BasisParticlesOriginal);
   }
 
-  if (!fieldMeta.IsPointField())
-  {
-    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
-  }
-
   if (this->writeFrequency == 0)
   {
     throw vtkm::cont::ErrorFilterExecution(
@@ -284,7 +279,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::worklet::ParticleAdvection particleadvection;
   vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
 
-  FieldType velocities(field);
+  FieldType velocities(field, fieldMeta.GetAssociation());
   GridEvalType gridEval(coords, cells, velocities);
   Stepper rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
 

@@ -93,12 +93,13 @@ public:
     : DataSetIntegratorBase<vtkm::worklet::particleadvection::GridEvaluator<
         vtkm::worklet::particleadvection::VelocityField<FieldHandleType>>>(false, id)
   {
+    using Association = vtkm::cont::Field::Association;
+    using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandleType>;
+    using EvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+    Association association = ds.GetField(fieldNm).GetAssociation();
     auto fieldArray = this->GetFieldHandle(ds, fieldNm);
-
-    using EvalType = vtkm::worklet::particleadvection::GridEvaluator<
-      vtkm::worklet::particleadvection::VelocityField<FieldHandleType>>;
-
-    this->Eval = std::shared_ptr<EvalType>(new EvalType(ds, fieldArray));
+    FieldType field(fieldArray, association);
+    this->Eval = std::shared_ptr<EvalType>(new EvalType(ds, field));
   }
 };
 
