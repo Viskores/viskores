@@ -935,7 +935,7 @@ VTKM_CONT bool UnknownArrayHandle::CanConvert() const
 namespace detail
 {
 
-struct UnknownArrayHandleMultplexerCastTry
+struct UnknownArrayHandleMultiplexerCastTry
 {
   template <typename T, typename S, typename... Ss>
   VTKM_CONT void operator()(
@@ -971,7 +971,7 @@ void UnknownArrayHandle::AsArrayHandle(
 {
   bool converted = false;
   vtkm::ListForEach(
-    detail::UnknownArrayHandleMultplexerCastTry{}, vtkm::List<Ss...>{}, *this, array, converted);
+    detail::UnknownArrayHandleMultiplexerCastTry{}, vtkm::List<Ss...>{}, *this, array, converted);
 
   if (!converted)
   {
