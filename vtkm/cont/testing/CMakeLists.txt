@@ -81,6 +81,7 @@ set(unit_tests
   UnitTestFieldRangeCompute.cxx
   UnitTestInitialize.cxx
   UnitTestLogging.cxx
+  UnitTestMergePartitionedDataSet.cxx
   UnitTestMoveConstructors.cxx
   UnitTestParticleArrayCopy.cxx
   UnitTestPartitionedDataSet.cxx
