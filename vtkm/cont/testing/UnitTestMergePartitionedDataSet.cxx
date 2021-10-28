@@ -8,24 +8,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/CellShape.h>
-
 #include <vtkm/Bounds.h>
-#include <vtkm/VectorAnalysis.h>
-#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/BoundsCompute.h>
-#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/FieldRangeCompute.h>
 #include <vtkm/cont/MergePartitionedDataSet.h>
 #include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/exec/ConnectivityStructured.h>
-#include <vtkm/thirdparty/diy/Configure.h>
-
-#include <vtkm/thirdparty/diy/diy.h>
 
 static void MergePartitionedDataSetTest()
 {
