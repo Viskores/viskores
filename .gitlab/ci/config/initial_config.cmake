@@ -53,8 +53,8 @@ foreach(option IN LISTS options)
   elseif(no_rendering STREQUAL option)
     set(VTKm_ENABLE_RENDERING "OFF" CACHE STRING "")
 
-  elseif(no_virtual STREQUAL option)
-    set(VTKm_NO_DEPRECATED_VIRTUAL "ON" CACHE STRING "")
+  elseif(use_virtuals STREQUAL option)
+    set(VTKm_NO_DEPRECATED_VIRTUAL "OFF" CACHE STRING "")
 
   elseif(no_testing STREQUAL option)
     set(VTKm_ENABLE_TESTING OFF CACHE BOOL "")

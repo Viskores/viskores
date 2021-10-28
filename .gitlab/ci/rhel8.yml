@@ -13,7 +13,7 @@ build:rhel8:
     - .run_automatically
   variables:
     CMAKE_GENERATOR: "Unix Makefiles"
-    VTKM_SETTINGS: "serial+shared+64bit_floats+32bit_ids"
+    VTKM_SETTINGS: "serial+shared+64bit_floats+32bit_ids+use_virtuals"
 
 test:rhel8:
   tags:
