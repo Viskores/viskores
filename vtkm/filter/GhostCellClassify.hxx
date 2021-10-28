@@ -20,11 +20,12 @@
 
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
-namespace
+namespace vtkm
 {
-struct TypeUInt8 : vtkm::List<vtkm::UInt8>
+namespace filter
 {
-};
+namespace detail
+{
 
 class SetStructuredGhostCells1D : public vtkm::worklet::WorkletPointNeighborhood
 {
@@ -89,12 +90,7 @@ public:
 private:
   vtkm::IdComponent NumLayers;
 };
-};
-
-namespace vtkm
-{
-namespace filter
-{
+} // namespace detail
 
 inline VTKM_CONT GhostCellClassify::GhostCellClassify() {}
 
@@ -118,7 +114,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
     vtkm::cont::CellSetStructured<3> dual;
     const auto dim = cellset1d.GetCellDimensions();
     dual.SetPointDimensions(vtkm::Id3{ dim, 1, 1 });
-    this->Invoke(SetStructuredGhostCells1D{}, dual, ghosts);
+    this->Invoke(vtkm::filter::detail::SetStructuredGhostCells1D{}, dual, ghosts);
   }
   else if (cellset.template IsType<vtkm::cont::CellSetStructured<2>>())
   {
@@ -131,7 +127,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
     vtkm::cont::CellSetStructured<3> dual;
     const auto dims = cellset2d.GetCellDimensions();
     dual.SetPointDimensions(vtkm::Id3{ dims[0], dims[1], 1 });
-    this->Invoke(SetStructuredGhostCells2D{}, dual, ghosts);
+    this->Invoke(vtkm::filter::detail::SetStructuredGhostCells2D{}, dual, ghosts);
   }
   else if (cellset.template IsType<vtkm::cont::CellSetStructured<3>>())
   {
@@ -143,7 +139,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
     //We use the dual of the cellset since we are using the PointNeighborhood worklet
     vtkm::cont::CellSetStructured<3> dual;
     dual.SetPointDimensions(cellset3d.GetCellDimensions());
-    this->Invoke(SetStructuredGhostCells3D{}, dual, ghosts);
+    this->Invoke(vtkm::filter::detail::SetStructuredGhostCells3D{}, dual, ghosts);
   }
   else
   {
