@@ -20,11 +20,12 @@
 
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
+namespace vtkm
+{
+namespace filter
+{
 namespace
 {
-struct TypeUInt8 : vtkm::List<vtkm::UInt8>
-{
-};
 
 class SetStructuredGhostCells1D : public vtkm::worklet::WorkletPointNeighborhood
 {
@@ -89,12 +90,7 @@ public:
 private:
   vtkm::IdComponent NumLayers;
 };
-};
-
-namespace vtkm
-{
-namespace filter
-{
+} // namespace
 
 inline VTKM_CONT GhostCellClassify::GhostCellClassify() {}
 
