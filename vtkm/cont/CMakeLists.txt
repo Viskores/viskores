@@ -153,7 +153,6 @@ set(sources
   internal/RuntimeDeviceOption.cxx
   Initialize.cxx
   Logging.cxx
-  MergePartitionedDataSet.cxx
   RuntimeDeviceTracker.cxx
   Storage.cxx
   Token.cxx
@@ -189,6 +188,7 @@ set(device_sources
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
+  MergePartitionedDataSet.cxx
   PartitionedDataSet.cxx
   PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx

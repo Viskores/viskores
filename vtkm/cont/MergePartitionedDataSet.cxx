@@ -9,19 +9,12 @@
 //============================================================================
 #include <vtkm/cont/MergePartitionedDataSet.h>
 
-#include <numeric> // for std::accumulate
-#include <vtkm/List.h>
-#include <vtkm/TypeList.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/worklet/CellDeepCopy.h>
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
-
 
 namespace vtkm
 {
