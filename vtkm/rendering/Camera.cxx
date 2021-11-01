@@ -252,6 +252,25 @@ void Camera::TrackballRotate(vtkm::Float32 startX,
   this->Camera3D.ViewUp = vtkm::Transform3DVector(fullTransform, this->Camera3D.ViewUp);
 }
 
+namespace
+{
+
+void PadRange(vtkm::Range& range, vtkm::Float64 padding)
+{
+  if (range.IsNonEmpty())
+  {
+    vtkm::Float64 padAmount = padding * range.Length();
+    range.Min -= padAmount;
+    range.Max += padAmount;
+  }
+  else
+  {
+    range.Include(0);
+  }
+}
+
+} // anonymous namespace
+
 void Camera::ResetToBounds(const vtkm::Bounds& dataBounds,
                            const vtkm::Float64 XDataViewPadding,
                            const vtkm::Float64 YDataViewPadding,
@@ -262,23 +281,9 @@ void Camera::ResetToBounds(const vtkm::Bounds& dataBounds,
 
   // Pad view around data extents
   vtkm::Bounds db = dataBounds;
-  vtkm::Float64 viewPadAmount = XDataViewPadding * (db.X.Max - db.X.Min);
-  db.X.Max += viewPadAmount;
-  db.X.Min -= viewPadAmount;
-  viewPadAmount = YDataViewPadding * (db.Y.Max - db.Y.Min);
-  db.Y.Max += viewPadAmount;
-  db.Y.Min -= viewPadAmount;
-  if (db.Z.IsNonEmpty())
-  {
-    viewPadAmount = ZDataViewPadding * (db.Z.Max - db.Z.Min);
-    db.Z.Max += viewPadAmount;
-    db.Z.Min -= viewPadAmount;
-  }
-  else
-  {
-    VTKM_ASSERT(saveMode != MODE_3D);
-    db.Z.Include(0);
-  }
+  PadRange(db.X, XDataViewPadding);
+  PadRange(db.Y, YDataViewPadding);
+  PadRange(db.Z, ZDataViewPadding);
 
   // Reset for 3D camera
   vtkm::Vec3f_32 directionOfProjection = this->GetPosition() - this->GetLookAt();
@@ -292,6 +297,10 @@ void Camera::ResetToBounds(const vtkm::Bounds& dataBounds,
   totalExtent[1] = vtkm::Float32(db.Y.Length());
   totalExtent[2] = vtkm::Float32(db.Z.Length());
   vtkm::Float32 diagonalLength = vtkm::Magnitude(totalExtent);
+  if (diagonalLength < XDataViewPadding)
+  {
+    diagonalLength = static_cast<vtkm::Float32>(XDataViewPadding);
+  }
   this->SetPosition(center + directionOfProjection * diagonalLength * 1.0f);
   this->SetFieldOfView(60.0f);
   this->SetClippingRange(0.1f * diagonalLength, diagonalLength * 10.0f);
