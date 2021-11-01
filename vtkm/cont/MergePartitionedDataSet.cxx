@@ -120,8 +120,8 @@ vtkm::cont::DataSet MergePartitionedDataSet(
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
   vtkm::cont::ArrayHandle<vtkm::Id> numIndices;
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-  int numberOfPointsSoFar = 0;
-  for (unsigned int partitionId = 0; partitionId < partitionedDataSet.GetNumberOfPartitions();
+  vtkm::Id numberOfPointsSoFar = 0;
+  for (vtkm::Id partitionId = 0; partitionId < partitionedDataSet.GetNumberOfPartitions();
        partitionId++)
   {
     auto partition = partitionedDataSet.GetPartition(partitionId);
@@ -161,8 +161,8 @@ vtkm::cont::DataSet MergePartitionedDataSet(
     if (partitionedDataSet.GetPartition(0).GetField(name).IsFieldCell())
     {
       outFieldHandle.Allocate(derivedDataSet.GetNumberOfCells());
-      unsigned int numberOfCellValuesSoFar = 0;
-      for (unsigned int partitionId = 0; partitionId < partitionedDataSet.GetNumberOfPartitions();
+      vtkm::Id numberOfCellValuesSoFar = 0;
+      for (vtkm::Id partitionId = 0; partitionId < partitionedDataSet.GetNumberOfPartitions();
            partitionId++)
       {
         try
@@ -185,8 +185,8 @@ vtkm::cont::DataSet MergePartitionedDataSet(
     else
     {
       outFieldHandle.Allocate(derivedDataSet.GetNumberOfPoints());
-      unsigned int numberOfPointValuesSoFar = 0;
-      for (unsigned int partitionId = 0; partitionId < partitionedDataSet.GetNumberOfPartitions();
+      vtkm::Id numberOfPointValuesSoFar = 0;
+      for (vtkm::Id partitionId = 0; partitionId < partitionedDataSet.GetNumberOfPartitions();
            partitionId++)
       {
         try
