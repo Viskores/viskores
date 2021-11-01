@@ -105,6 +105,7 @@ set(headers
   Initialize.h
   Invoker.h
   Logging.h
+  MergePartitionedDataSet.h
   ParticleArrayCopy.h
   PartitionedDataSet.h
   PointLocatorUniformGrid.h
@@ -187,6 +188,7 @@ set(device_sources
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
+  MergePartitionedDataSet.cxx
   PartitionedDataSet.cxx
   PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
