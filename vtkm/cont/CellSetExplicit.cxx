@@ -156,8 +156,8 @@ void BuildReverseConnectivity(
   if (!visitPointsWithCells.ElementsValid)
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-               "BuildReverseConnectivity failed for all known cell set types. "
-               "Attempting to copy connectivity arrays.");
+               "BuildReverseConnectivity attempted for all known cell set types; "
+               "falling back to copy connectivity arrays.");
     vtkm::cont::ArrayHandle<vtkm::Id> connectionsCopy;
     vtkm::cont::ArrayCopy(connections, connectionsCopy);
     vtkm::cont::ArrayHandle<vtkm::Id> offsetsCopy;
