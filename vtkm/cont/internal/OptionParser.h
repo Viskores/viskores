@@ -42,7 +42,7 @@ namespace internal
 
 // Include from third party.
 // @cond NONE
-#include <vtkmoptionparser/optionparser.h>
+#include <vtkm/thirdparty/optionparser/vtkmoptionparser/optionparser.h>
 // @endcond
 
 // Now restore the header guards as before so that other includes of (possibly different versions
