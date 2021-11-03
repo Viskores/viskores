@@ -12,7 +12,6 @@ set(headers
   IdRelabeler.h
   MeshStructure2D.h
   MeshStructure3D.h
-  NotNoSuchElementPredicate.h
   SimulatedSimplicityComperator.h
   SortIndices.h
   )

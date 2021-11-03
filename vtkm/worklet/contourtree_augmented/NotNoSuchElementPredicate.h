@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_data_set_mesh_not_no_such_element_predicate_h
-#define vtk_m_worklet_contourtree_distributed_data_set_mesh_not_no_such_element_predicate_h
+#ifndef vtk_m_worklet_contourtree_augmented_not_no_such_element_predicate_h
+#define vtk_m_worklet_contourtree_augmented_not_no_such_element_predicate_h
 
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
@@ -61,9 +61,6 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace data_set_mesh
-{
-
 
 //Simple functor to subset a VTKm ArrayHandle
 class NotNoSuchElementPredicate
@@ -73,15 +70,11 @@ public:
   NotNoSuchElementPredicate() {}
 
   VTKM_EXEC_CONT
-  bool operator()(const vtkm::Id& meshVertexId) const
-  {
-    return !vtkm::worklet::contourtree_augmented::NoSuchElement(meshVertexId);
-  }
+  bool operator()(const vtkm::Id& vertexId) const { return !NoSuchElement(vertexId); }
 
 private:
 };
 
-} // namespace data_set_mesh
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

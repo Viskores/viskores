@@ -16,6 +16,7 @@ set(headers
   DataSetMesh.h
   MergeTree.h
   MeshExtrema.h
+  NotNoSuchElementPredicate.h
   PrintVectors.h
   ProcessContourTree.h
   Types.h

@@ -93,6 +93,7 @@
 
 #include <iomanip>
 #include <string>
+#include <vtkm/worklet/contourtree_augmented/NotNoSuchElementPredicate.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
@@ -106,7 +107,6 @@
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/IsAscendingDecorator.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/IsAttachementPointNeededPredicate.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/IsAttachementPointPredicate.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/NotNoSuchElementPredicate.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/ResizeArraysBuildNewSupernodeIdsWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/SetFirstAttachmentPointInRoundWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_augmenter/SetSuperparentSetDecorator.h>
@@ -746,8 +746,7 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
     );
     // We now compress to get the set of nodes to transfer. I.e., remove all
     // NO_SUCH_ELEMENT entires and copy the values to keep to our proper arrays
-    vtkm::worklet::contourtree_distributed::hierarchical_augmenter::NotNoSuchElementPredicate
-      notNoSuchElementPredicate;
+    vtkm::worklet::contourtree_augmented::NotNoSuchElementPredicate notNoSuchElementPredicate;
     vtkm::cont::Algorithm::CopyIf(
       tempRegularNodesNeeded,   // input data
       tempRegularNodesNeeded,   // stencil (same as input)
@@ -872,8 +871,7 @@ void HierarchicalAugmenter<FieldType>::RetrieveOldSupernodes(vtkm::Id roundNumbe
       // target array
       this->KeptSupernodes);
     // Create the predicate for the CopyIf
-    vtkm::worklet::contourtree_distributed::hierarchical_augmenter::NotNoSuchElementPredicate
-      notNoSuchElementPredicate;
+    vtkm::worklet::contourtree_augmented::NotNoSuchElementPredicate notNoSuchElementPredicate;
     // Copy supernodeId to this->KeptSupernodes
     vtkm::cont::Algorithm::CopyIf(
       // first we generate a list of supernodeIds

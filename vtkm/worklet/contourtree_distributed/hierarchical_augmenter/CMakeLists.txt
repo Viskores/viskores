@@ -19,7 +19,6 @@ set(headers
   UpdateHyperstructureSetSuperchildrenWorklet.h
   FindSuperparentForNecessaryNodesWorklet.h
   CopyBaseRegularStructureWorklet.h
-  NotNoSuchElementPredicate.h
   SetSuperparentSetDecorator.h
   AttachmentAndSupernodeComparator.h
   ResizeArraysBuildNewSupernodeIdsWorklet.h

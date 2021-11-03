@@ -78,11 +78,11 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/Invoker.h>
 
+#include <vtkm/worklet/contourtree_augmented/NotNoSuchElementPredicate.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/data_set_mesh/GetOwnedVerticesByGlobalIdWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
-#include <vtkm/worklet/contourtree_augmented/data_set_mesh/NotNoSuchElementPredicate.h>
 #include <vtkm/worklet/contourtree_augmented/data_set_mesh/SimulatedSimplicityComperator.h>
 #include <vtkm/worklet/contourtree_augmented/data_set_mesh/SortIndices.h>
 
@@ -233,8 +233,7 @@ void DataSetMesh::GetOwnedVerticesByGlobalIdImpl(
          tempOwnedVertices     // output
   );
   // now compress out the NO_SUCH_ELEMENT ones
-  auto notNoSuchElementPredicate =
-    vtkm::worklet::contourtree_augmented::data_set_mesh::NotNoSuchElementPredicate();
+  vtkm::worklet::contourtree_augmented::NotNoSuchElementPredicate notNoSuchElementPredicate;
   // compress the array
   vtkm::cont::Algorithm::CopyIf(
     tempOwnedVertices,        // compress the array of owned vertices
