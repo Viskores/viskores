@@ -144,9 +144,10 @@ inline void IdArraySetValue(vtkm::Id index, vtkm::Id value, IdArrayType& arr)
 } // IdArraySetValues
 
 
-/// Helper function used to resize ArrayHandles since VTKm does not provide a
-/// method to grow a vector without loosing the original data values. The input array
-/// is modified or replaced
+/// Helper function used to resize a 1D ArrayHandle and initalize new values with a
+/// given fillValue. For resizing ArrayHandles without initalizing new values VTKm
+/// supports the vtkm::CopyFlag::On setting as part of the ArrayHandle.Allocate
+/// method.
 /// @param[in] thearray The 1D array to be resized
 /// @param[in] newSize The new size the array should be changed to
 /// @param[in] fillValue The value to be used to fill the array
