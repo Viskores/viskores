@@ -361,13 +361,8 @@ void HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints(vtkm::Id round
       isAttachementPointNeededPredicate);
   }
 
-  //  4.  resize the out array
-  this->OutData.GlobalRegularIds.Allocate(this->AttachmentIds.GetNumberOfValues());
-  this->OutData.DataValues.Allocate(this->AttachmentIds.GetNumberOfValues());
-  this->OutData.SupernodeIds.Allocate(this->AttachmentIds.GetNumberOfValues());
-  this->OutData.Superparents.Allocate(this->AttachmentIds.GetNumberOfValues());
-  this->OutData.SuperparentRounds.Allocate(this->AttachmentIds.GetNumberOfValues());
-  this->OutData.WhichRounds.Allocate(this->AttachmentIds.GetNumberOfValues());
+  //  4.  resize the out array. We don't need to allocate here because in step 5. the Copy
+  //      algorithm will do the initalization for us
 
   //  5.  copy the points we want
   {
