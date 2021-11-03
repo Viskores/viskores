@@ -80,6 +80,7 @@ public:
       hierarchicalTreeSuperarcsView, // view of hierarchicalTree.superarcs[firstSupernode, lastSupernode)
     FieldOut transferTargetView      // view of transferTarget[firstSupernode, lastSupernode)
   );
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
   // Default Constructor
   VTKM_EXEC_CONT

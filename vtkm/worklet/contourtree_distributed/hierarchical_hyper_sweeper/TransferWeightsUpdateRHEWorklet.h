@@ -76,6 +76,7 @@ public:
          WholeArrayIn sortedTransferTarget,
          FieldIn valuePrefixSumView, // input view of valuePrefixSum[firstSupernode, lastSupernode)
          WholeArrayInOut dependentValuesPortal);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
   // Default Constructor
   VTKM_EXEC_CONT

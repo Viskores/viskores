@@ -74,6 +74,7 @@ public:
                                 FieldIn sortedTransferTargetShiftedView,
                                 FieldIn valuePrefixSumShiftedView,
                                 WholeArrayInOut dependentValuesPortal);
+  using ExecutionSgnature = void(_1, _2, _3, _4);
 
   template <typename InOutPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& sortedTransferTargetValue,

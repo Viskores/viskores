@@ -75,6 +75,7 @@ public:
     WholeArrayIn valuePrefixSum,             // whole valuePrefixSum array
     FieldInOut dependentValuesView // output view of dependentValues[firstSupernode, lastSupernode)
   );
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
   // Default Constructor
   VTKM_EXEC_CONT
