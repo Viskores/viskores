@@ -796,7 +796,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     // NOTE: Use dummy link to make DIY happy. The dummy link is never used, since all
     //       communication is via RegularDecomposer, which sets up its own links.
     // NOTE: No need to keep the pointer, as DIY will "own" it and delete it when no longer
-    //       needed TODO/FIXME: Confirm that last statement.
+    //       needed.
   }
 
   // Record time for dding data blocks to the master
@@ -1224,7 +1224,9 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   // Clean-up hierarchical contour tree blocks
   for (auto block : localDataBlocks)
+  {
     delete block;
+  }
 
   VTKM_LOG_S(this->TimingsLogLevel,
              std::endl
