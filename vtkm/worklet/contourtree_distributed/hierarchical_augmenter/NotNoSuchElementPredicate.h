@@ -75,7 +75,7 @@ public:
   VTKM_EXEC_CONT
   bool operator()(const vtkm::Id& inId) const
   {
-    return !static_cast<bool>(vtkm::worklet::contourtree_augmented::NoSuchElement(inId));
+    return !vtkm::worklet::contourtree_augmented::NoSuchElement(inId);
   }
 
 private:
