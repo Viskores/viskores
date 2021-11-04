@@ -499,7 +499,17 @@ public:
     return this->IsBaseComponentTypeImpl(detail::UnknownAHComponentInfo::Make<BaseComponentType>());
   }
 
-  /// Returns true if this array matches the ArrayHandleType template argument.
+  /// \brief Returns true if this array matches the ArrayHandleType template argument.
+  ///
+  /// Note that `UnknownArrayHandle` has some special handling for `ArrayHandleCast` and
+  /// `ArrayHandleMultiplexer`. If you stored an array of one of these types into an
+  /// `UnknownArrayHandle`, the type of the underlying array will change and `IsType`
+  /// will fail. However, you can still get the array back out as that type using
+  /// `AsArrayHandle`.
+  ///
+  /// Use the `CanConvert` method instead to determine if the `UnknownArrayHandle`
+  /// contains an array that "matches" the array of a given type. Under most
+  /// circumstances, you should prefer `CanConvert` over `IsType`.
   ///
   template <typename ArrayHandleType>
   VTKM_CONT bool IsType() const
