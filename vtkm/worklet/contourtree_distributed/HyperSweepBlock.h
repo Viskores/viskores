@@ -69,7 +69,7 @@ struct HyperSweepBlock
 {
   HyperSweepBlock(
     const vtkm::Id& localBlockNo,
-    const vtkm::Id& globalBlockId,
+    const int globalBlockId,
     const vtkm::Id3& origin,
     const vtkm::Id3& size,
     const vtkm::Id3& globalSize,
@@ -86,7 +86,7 @@ struct HyperSweepBlock
 
   // Mesh information
   vtkm::Id LocalBlockNo;
-  vtkm::Id GlobalBlockId;
+  int GlobalBlockId;
   vtkm::Id3 Origin;
   vtkm::Id3 Size;
   vtkm::Id3 GlobalSize;

@@ -99,7 +99,7 @@ struct CobmineHyperSweepBlockFunctor
       if (ingid != selfid)
       {
 #ifdef DEBUG_PRINT_COMBINED_BLOCK_IDS
-        vtkm::Id incomingGlobalBlockId;
+        int incomingGlobalBlockId;
         rp.dequeue(ingid, incomingGlobalBlockId);
         VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                    "Combining local block " << b->GlobalBlockId << " with incomoing block "

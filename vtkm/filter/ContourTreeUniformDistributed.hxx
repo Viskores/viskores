@@ -148,7 +148,7 @@ void SaveAfterFanInResults(
                 sizeof(buffer),
                 "AfterFanInResults_Rank%d_Block%d.txt",
                 static_cast<int>(rank),
-                static_cast<int>(blockData->BlockIndex));
+                static_cast<int>(blockData->LocalBlockNo));
   std::ofstream os(buffer);
   os << "Contour Trees" << std::endl;
   os << "=============" << std::endl;
@@ -176,10 +176,10 @@ void SaveHierarchicalTreeDot(
 {
   std::string hierarchicalTreeFileName = std::string("Rank_") +
     std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-    std::to_string(static_cast<int>(blockData->BlockIndex)) + std::string("_Round_") +
+    std::to_string(static_cast<int>(blockData->LocalBlockNo)) + std::string("_Round_") +
     std::to_string(nRounds) + std::string("_Hierarchical_Tree.gv");
   std::string hierarchicalTreeLabel = std::string("Block ") +
-    std::to_string(static_cast<int>(blockData->BlockIndex)) + std::string(" Round ") +
+    std::to_string(static_cast<int>(blockData->LocalBlockNo)) + std::string(" Round ") +
     std::to_string(nRounds) + std::string(" Hierarchical Tree");
   vtkm::Id hierarchicalTreeDotSettings =
     vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE |
@@ -699,8 +699,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     auto newBlock = new DistributedContourTreeBlockData();
 
     // Copy global block id into the local data block for use in the hierarchical augmentation
-    newBlock->GlobalBlockId = vtkm::Id{ vtkmdiyLocalBlockGids[bi] };
-    newBlock->BlockIndex = bi;
+    newBlock->GlobalBlockId = vtkmdiyLocalBlockGids[bi];
+    newBlock->LocalBlockNo = bi;
     newBlock->BlockOrigin = spatialDecomp.LocalBlockOrigins.ReadPortal().Get(bi);
     newBlock->BlockSize = spatialDecomp.LocalBlockSizes.ReadPortal().Get(bi);
 
@@ -766,14 +766,14 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       // save the contour tree mesh
       std::string contourTreeMeshFileName = std::string("Rank_") +
         std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-        std::to_string(static_cast<int>(b->BlockIndex)) +
+        std::to_string(static_cast<int>(b->LocalBlockNo)) +
         std::string("_Initial_Step_3_BRACT_Mesh.txt");
       b->ContourTreeMeshes.back().Save(contourTreeMeshFileName.c_str());
 
       // save the corresponding .gv file
       std::string boundaryTreeMeshFileName = std::string("Rank_") +
         std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-        std::to_string(static_cast<int>(b->BlockIndex)) +
+        std::to_string(static_cast<int>(b->LocalBlockNo)) +
         std::string("_Initial_Step_5_BRACT_Mesh.gv");
       std::ofstream boundaryTreeMeshFile(boundaryTreeMeshFileName);
       boundaryTreeMeshFile
@@ -880,7 +880,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         blockData, rank, nRounds);
     } // if(this->SaveDotFiles)
 
-    fanoutTimingsStream << "    Fan Out Init Hierarchical Tree (block=" << blockData->BlockIndex
+    fanoutTimingsStream << "    Fan Out Init Hierarchical Tree (block=" << blockData->LocalBlockNo
                         << ") : " << iterationTimer.GetElapsedTime() << " seconds" << std::endl;
     iterationTimer.Start();
 
@@ -902,7 +902,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           blockData, rank, nRounds);
       } // if(this->SaveDotFiles)
       // Log the time for each of the iterations of the fan out loop
-      fanoutTimingsStream << "    Fan Out Time (block=" << blockData->BlockIndex
+      fanoutTimingsStream << "    Fan Out Time (block=" << blockData->LocalBlockNo
                           << " , round=" << round << ") : " << iterationTimer.GetElapsedTime()
                           << " seconds" << std::endl;
     } // for
@@ -911,31 +911,32 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     iterationTimer.Start();
     vtkm::worklet::contourtree_distributed::
       TreeGrafter<vtkm::worklet::contourtree_augmented::DataSetMesh, FieldType>
-        grafter(&(this->LocalMeshes[static_cast<std::size_t>(blockData->BlockIndex)]),
+        grafter(&(this->LocalMeshes[static_cast<std::size_t>(blockData->LocalBlockNo)]),
                 blockData->ContourTrees[0],
                 &(blockData->InteriorForests[0]));
-    auto currBlock = input.GetPartition(blockData->BlockIndex);
+    auto currBlock = input.GetPartition(blockData->LocalBlockNo);
     auto currField =
       currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
     vtkm::cont::ArrayHandle<FieldType> fieldData;
     vtkm::cont::ArrayCopy(currField.GetData(), fieldData);
     auto localToGlobalIdRelabeler = vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
       this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(
-        blockData->BlockIndex),
-      this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(blockData->BlockIndex),
+        blockData->LocalBlockNo),
+      this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(
+        blockData->LocalBlockNo),
       this->MultiBlockSpatialDecomposition.GlobalSize);
     grafter.GraftInteriorForests(
       0, blockData->HierarchicalTree, fieldData, &localToGlobalIdRelabeler);
 
     // Log the time for each of the iterations of the fan out loop
-    fanoutTimingsStream << "    Fan Out Time (block=" << blockData->BlockIndex << " , round=" << 0
+    fanoutTimingsStream << "    Fan Out Time (block=" << blockData->LocalBlockNo << " , round=" << 0
                         << ") : " << iterationTimer.GetElapsedTime() << " seconds" << std::endl;
 
     // Log the timing stats we collected
     VTKM_LOG_S(this->TimingsLogLevel,
                std::endl
-                 << "    ------------ Fan Out (block=" << blockData->BlockIndex << ")  ------------"
-                 << std::endl
+                 << "    ------------ Fan Out (block=" << blockData->LocalBlockNo
+                 << ")  ------------" << std::endl
                  << fanoutTimingsStream.str());
   });
 
@@ -984,77 +985,78 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   // ******** 4. Create output data set ********
   std::vector<vtkm::cont::DataSet> hierarchicalTreeOutputDataSet(master.size());
-  master.foreach ([&](DistributedContourTreeBlockData* blockData,
-                      const vtkmdiy::Master::ProxyWithLink&) {
-    std::stringstream createOutdataTimingsStream;
-    vtkm::cont::Timer iterationTimer;
-    iterationTimer.Start();
+  master.foreach (
+    [&](DistributedContourTreeBlockData* blockData, const vtkmdiy::Master::ProxyWithLink&) {
+      std::stringstream createOutdataTimingsStream;
+      vtkm::cont::Timer iterationTimer;
+      iterationTimer.Start();
 
-    // Use the augmented tree if available or otherwise use the unaugmented hierarchical tree from the current block
-    auto blockHierarchcialTree = this->AugmentHierarchicalTree
-      ? (*blockData->HierarchicalAugmenter.AugmentedTree)
-      : blockData->HierarchicalTree;
+      // Use the augmented tree if available or otherwise use the unaugmented hierarchical tree from the current block
+      auto blockHierarchcialTree = this->AugmentHierarchicalTree
+        ? (*blockData->HierarchicalAugmenter.AugmentedTree)
+        : blockData->HierarchicalTree;
 
-    // Create data set from output
-    vtkm::cont::Field dataValuesField(
-      "DataValues", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.DataValues);
-    hierarchicalTreeOutputDataSet[blockData->BlockIndex].AddField(dataValuesField);
-    vtkm::cont::Field regularNodeGlobalIdsField("RegularNodeGlobalIds",
-                                                vtkm::cont::Field::Association::WHOLE_MESH,
-                                                blockHierarchcialTree.RegularNodeGlobalIds);
-    hierarchicalTreeOutputDataSet[blockData->BlockIndex].AddField(regularNodeGlobalIdsField);
-    vtkm::cont::Field superarcsField(
-      "Superarcs", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.Superarcs);
-    hierarchicalTreeOutputDataSet[blockData->BlockIndex].AddField(superarcsField);
-    vtkm::cont::Field supernodesField(
-      "Supernodes", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.Supernodes);
-    hierarchicalTreeOutputDataSet[blockData->BlockIndex].AddField(supernodesField);
-    vtkm::cont::Field superparentsField("Superparents",
-                                        vtkm::cont::Field::Association::WHOLE_MESH,
-                                        blockHierarchcialTree.Superparents);
-    hierarchicalTreeOutputDataSet[blockData->BlockIndex].AddField(superparentsField);
+      // Create data set from output
+      vtkm::cont::Field dataValuesField(
+        "DataValues", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.DataValues);
+      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(dataValuesField);
+      vtkm::cont::Field regularNodeGlobalIdsField("RegularNodeGlobalIds",
+                                                  vtkm::cont::Field::Association::WHOLE_MESH,
+                                                  blockHierarchcialTree.RegularNodeGlobalIds);
+      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(regularNodeGlobalIdsField);
+      vtkm::cont::Field superarcsField(
+        "Superarcs", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.Superarcs);
+      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(superarcsField);
+      vtkm::cont::Field supernodesField(
+        "Supernodes", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.Supernodes);
+      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(supernodesField);
+      vtkm::cont::Field superparentsField("Superparents",
+                                          vtkm::cont::Field::Association::WHOLE_MESH,
+                                          blockHierarchcialTree.Superparents);
+      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(superparentsField);
 
-    // Copy cell set from input data set. This is mainly to ensure that the output data set
-    // has a defined cell set. Without one, serialization for DIY does not work properly.
-    // Having the extents of the input data set may also help in other use cases.
-    hierarchicalTreeOutputDataSet[blockData->BlockIndex].SetCellSet(
-      input.GetPartition(blockData->BlockIndex).GetCellSet());
+      // Copy cell set from input data set. This is mainly to ensure that the output data set
+      // has a defined cell set. Without one, serialization for DIY does not work properly.
+      // Having the extents of the input data set may also help in other use cases.
+      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].SetCellSet(
+        input.GetPartition(blockData->LocalBlockNo).GetCellSet());
 
-    // Log the time for each of the iterations of the fan out loop
-    createOutdataTimingsStream << "    Fan Out Create Output Dataset (block="
-                               << blockData->BlockIndex << ") : " << iterationTimer.GetElapsedTime()
-                               << " seconds" << std::endl;
-    iterationTimer.Start();
-
-    // save the corresponding .gv file
-    if (this->SaveDotFiles)
-    {
-      auto nRounds = blockData->ContourTrees.size() - 1;
-      vtkm::filter::contourtree_distributed_detail::SaveHierarchicalTreeDot(
-        blockData, rank, nRounds);
-
-      createOutdataTimingsStream << "    Fan Out Save Dot (block=" << blockData->BlockIndex
+      // Log the time for each of the iterations of the fan out loop
+      createOutdataTimingsStream << "    Fan Out Create Output Dataset (block="
+                                 << blockData->LocalBlockNo
                                  << ") : " << iterationTimer.GetElapsedTime() << " seconds"
                                  << std::endl;
       iterationTimer.Start();
-    } // if(this->SaveDotFiles)
 
-    // Log the timing stats we collected
-    VTKM_LOG_S(this->TimingsLogLevel,
-               std::endl
-                 << "    ------------ Create Output Data (block=" << blockData->BlockIndex
-                 << ")  ------------" << std::endl
-                 << createOutdataTimingsStream.str());
+      // save the corresponding .gv file
+      if (this->SaveDotFiles)
+      {
+        auto nRounds = blockData->ContourTrees.size() - 1;
+        vtkm::filter::contourtree_distributed_detail::SaveHierarchicalTreeDot(
+          blockData, rank, nRounds);
 
-    // Log the stats from the hierarchical contour tree
-    VTKM_LOG_S(this->TreeLogLevel,
-               std::endl
-                 << "    ------------ Hierarchical Tree Construction Stats ------------"
-                 << std::endl
-                 << std::setw(42) << std::left << "    BlockIndex"
-                 << ": " << blockData->BlockIndex << std::endl
-                 << blockData->HierarchicalTree.PrintTreeStats() << std::endl);
-  }); // master.foreach
+        createOutdataTimingsStream << "    Fan Out Save Dot (block=" << blockData->LocalBlockNo
+                                   << ") : " << iterationTimer.GetElapsedTime() << " seconds"
+                                   << std::endl;
+        iterationTimer.Start();
+      } // if(this->SaveDotFiles)
+
+      // Log the timing stats we collected
+      VTKM_LOG_S(this->TimingsLogLevel,
+                 std::endl
+                   << "    ------------ Create Output Data (block=" << blockData->LocalBlockNo
+                   << ")  ------------" << std::endl
+                   << createOutdataTimingsStream.str());
+
+      // Log the stats from the hierarchical contour tree
+      VTKM_LOG_S(this->TreeLogLevel,
+                 std::endl
+                   << "    ------------ Hierarchical Tree Construction Stats ------------"
+                   << std::endl
+                   << std::setw(42) << std::left << "    LocalBlockNo"
+                   << ": " << blockData->LocalBlockNo << std::endl
+                   << blockData->HierarchicalTree.PrintTreeStats() << std::endl);
+    }); // master.foreach
 
   // 3.1 Log total augmentation time
   timingsStream << "    " << std::setw(38) << std::left << "Create Output Data"
@@ -1075,7 +1077,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     // Copy data from hierarchical tree computation to initialize volume computation
     master.foreach ([&](DistributedContourTreeBlockData* currInBlock,
                         const vtkmdiy::Master::ProxyWithLink&) {
-      vtkm::Id blockNo = currInBlock->BlockIndex;
+      vtkm::Id blockNo = currInBlock->LocalBlockNo;
       // The block size and origin may be modified during the FanIn so we need to use the
       // size and origin from the original decomposition instead of looking it up in the currInBlock
       auto currBlockSize =
