@@ -75,15 +75,6 @@ namespace contourtree_distributed
 template <typename FieldType>
 struct DistributedContourTreeBlockData
 {
-  /// Function required by DIY
-  static void* create() { return new DistributedContourTreeBlockData<FieldType>; }
-
-  /// Function required by DIY
-  static void destroy(void* b)
-  {
-    delete static_cast<DistributedContourTreeBlockData<FieldType>*>(b);
-  }
-
   // Block metadata
   vtkm::Id GlobalBlockId; // Global DIY id of this block
   vtkm::Id BlockIndex;    // Local block id on this rank
@@ -101,6 +92,12 @@ struct DistributedContourTreeBlockData
   // Augmentation phase
   vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType> HierarchicalAugmenter;
   vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> AugmentedTree;
+
+  // Destroy function allowing DIY to own blocks and clean them up after use
+  static void destroy(void* b)
+  {
+    delete static_cast<DistributedContourTreeBlockData<FieldType>*>(b);
+  }
 };
 } // namespace contourtree_distributed
 } // namespace worklet

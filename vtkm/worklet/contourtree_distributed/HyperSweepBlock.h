@@ -98,6 +98,12 @@ struct HyperSweepBlock
   // Computed values
   vtkm::cont::ArrayHandle<vtkm::Id> IntrinsicVolume;
   vtkm::cont::ArrayHandle<vtkm::Id> DependentVolume;
+
+  // Destroy function allowing DIY to own blocks and clean them up after use
+  static void destroy(void* b)
+  {
+    delete static_cast<HyperSweepBlock<ContourTreeDataFieldType>*>(b);
+  }
 };
 
 } // namespace contourtree_distributed
