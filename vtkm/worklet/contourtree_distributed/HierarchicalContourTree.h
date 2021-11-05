@@ -74,7 +74,6 @@
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_distributed/LoadArrays.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcForUnknownNode.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/InitalizeSuperchildrenWorklet.h>
@@ -216,10 +215,6 @@ public:
   /// Outputs the Hierarchical Tree in Dot format for visualization
   VTKM_CONT
   std::string PrintDotSuperStructure(const char* label) const;
-
-  /// Load from file saved by PPP
-  VTKM_CONT
-  void Load(const char* filename);
 
   /// Print hierarchical tree construction stats, usually used for logging
   VTKM_CONT
@@ -758,38 +753,6 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
 
   return std::string("HierarchicalContourTree<FieldType>::PrintDotSuperStructure() Complete");
 } // PrintDotSuperStructure
-
-template <typename FieldType>
-void HierarchicalContourTree<FieldType>::Load(const char* filename)
-{
-  std::ifstream is(filename, std::ios_base::binary);
-  ReadIndexArray(is, this->RegularNodeGlobalIds);
-  ReadDataArray<FieldType>(is, this->DataValues);
-  ReadIndexArray(is, this->RegularNodeSortOrder);
-  ReadIndexArray(is, this->Regular2Supernode);
-  ReadIndexArray(is, this->Superparents);
-  ReadIndexArray(is, this->Supernodes);
-  ReadIndexArray(is, this->Superarcs);
-  ReadIndexArray(is, this->Hyperparents);
-  ReadIndexArray(is, this->Super2Hypernode);
-  ReadIndexArray(is, this->WhichRound);
-  ReadIndexArray(is, this->WhichIteration);
-  ReadIndexArray(is, this->Hypernodes);
-  ReadIndexArray(is, this->Hyperarcs);
-  ReadIndexArray(is, this->Superchildren);
-  int nRounds;
-  is.read(reinterpret_cast<char*>(&nRounds), sizeof(nRounds));
-  //std::cout << "nRounds = " << nRounds << std::endl;
-  this->NumRounds = nRounds;
-  //this->NumOwnedRegularVertices = 0;
-  ReadIndexArray(is, this->NumRegularNodesInRound);
-  ReadIndexArray(is, this->NumSupernodesInRound);
-  ReadIndexArray(is, this->NumHypernodesInRound);
-  ReadIndexArray(is, this->NumIterations);
-  ReadIndexArrayVector(is, this->FirstSupernodePerIteration);
-  ReadIndexArrayVector(is, this->FirstHypernodePerIteration);
-}
-
 
 /// debug routine
 template <typename FieldType>

@@ -37,8 +37,8 @@
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-#ifndef vtk_m_worklet_contourtree_distributed_load_arrays_h
-#define vtk_m_worklet_contourtree_distributed_load_arrays_h
+#ifndef vtk_m_worklet_testing_contourtree_distributed_load_arrays_h
+#define vtk_m_worklet_testing_contourtree_distributed_load_arrays_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -46,6 +46,8 @@
 namespace vtkm
 {
 namespace worklet
+{
+namespace testing
 {
 namespace contourtree_distributed
 {
@@ -111,6 +113,7 @@ inline void ReadDataArray(std::ifstream& is, vtkm::cont::ArrayHandle<FieldType>&
 }
 
 } // namespace contourtree_distributed
+} // namespace testing
 } // namespace worklet
 } // namespace vtkm
 

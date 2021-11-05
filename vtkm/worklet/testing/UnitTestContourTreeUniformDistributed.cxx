@@ -63,6 +63,7 @@
 #include <vtkm/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
 #include <vtkm/worklet/contourtree_distributed/HyperSweepBlock.h>
 #include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
+#include <vtkm/worklet/testing/TestingContourTreeUniformDistributedLoadArrays.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -72,6 +73,43 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace
 {
+template <typename FieldType>
+void LoadHierarchicalContourTree(
+  const char* filename,
+  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& ht)
+{
+  using vtkm::worklet::testing::contourtree_distributed::ReadIndexArray;
+  using vtkm::worklet::testing::contourtree_distributed::ReadIndexArrayVector;
+  //template <typename FieldType>
+  using vtkm::worklet::testing::contourtree_distributed::ReadDataArray; //<FieldType>;
+
+  std::ifstream is(filename, std::ios_base::binary);
+  ReadIndexArray(is, ht.RegularNodeGlobalIds);
+  ReadDataArray<FieldType>(is, ht.DataValues);
+  ReadIndexArray(is, ht.RegularNodeSortOrder);
+  ReadIndexArray(is, ht.Regular2Supernode);
+  ReadIndexArray(is, ht.Superparents);
+  ReadIndexArray(is, ht.Supernodes);
+  ReadIndexArray(is, ht.Superarcs);
+  ReadIndexArray(is, ht.Hyperparents);
+  ReadIndexArray(is, ht.Super2Hypernode);
+  ReadIndexArray(is, ht.WhichRound);
+  ReadIndexArray(is, ht.WhichIteration);
+  ReadIndexArray(is, ht.Hypernodes);
+  ReadIndexArray(is, ht.Hyperarcs);
+  ReadIndexArray(is, ht.Superchildren);
+  int nRounds;
+  is.read(reinterpret_cast<char*>(&nRounds), sizeof(nRounds));
+  //std::cout << "nRounds = " << nRounds << std::endl;
+  ht.NumRounds = nRounds;
+  //ht.NumOwnedRegularVertices = 0;
+  ReadIndexArray(is, ht.NumRegularNodesInRound);
+  ReadIndexArray(is, ht.NumSupernodesInRound);
+  ReadIndexArray(is, ht.NumHypernodesInRound);
+  ReadIndexArray(is, ht.NumIterations);
+  ReadIndexArrayVector(is, ht.FirstSupernodePerIteration);
+  ReadIndexArrayVector(is, ht.FirstHypernodePerIteration);
+}
 
 template <typename FieldType>
 void TestContourTreeMeshCombine(const std::string& mesh1_filename,
@@ -149,7 +187,7 @@ void TestHierarchicalHyperSweeper()
     hct[numBlocks];
   for (vtkm::Id blockNo = 0; blockNo < numBlocks; ++blockNo)
   {
-    hct[blockNo].Load(Testing::DataPath(filenames[blockNo]).c_str());
+    LoadHierarchicalContourTree(Testing::DataPath(filenames[blockNo]).c_str(), hct[blockNo]);
 #ifdef DEBUG_PRINT
     std::cout << hct[blockNo].DebugPrint("AfterLoad", __FILE__, __LINE__);
 #endif
