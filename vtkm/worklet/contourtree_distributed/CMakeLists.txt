@@ -21,7 +21,6 @@ set(headers
   HierarchicalHyperSweeper.h
   HyperSweepBlock.h
   InteriorForest.h
-  LoadArrays.h
   MergeBlockFunctor.h
   MultiBlockContourTreeHelper.h
   PrintGraph.h
