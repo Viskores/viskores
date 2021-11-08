@@ -741,11 +741,10 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                                              sortOrder,
                                              fieldData,
                                              localGlobalMeshIndex);
-    //
+
     // NOTE: Use dummy link to make DIY happy. The dummy link is never used, since all
-    //       communication is via RegularDecomposer, which sets up its own links.
-    // NOTE: No need to keep the pointer, as DIY will "own" it and delete it when no longer
-    //       needed.
+    //       communication is via RegularDecomposer, which sets up its own links. No need
+    //       to keep the pointer, as DIY will "own" it and delete it when no longer needed.
     // NOTE: Since we passed a "destroy" function to DIY master, it will own the local data
     //       blocks and delete them when done.
     master.add(vtkmdiyLocalBlockGids[bi], newBlock, new vtkmdiy::Link);
@@ -1084,6 +1083,12 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(blockNo);
       auto currBlockOrigin =
         this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(blockNo);
+
+      // NOTE: Use dummy link to make DIY happy. The dummy link is never used, since all
+      //       communication is via RegularDecomposer, which sets up its own links. No need
+      //       to keep the pointer, as DIY will "own" it and delete it when no longer needed.
+      // NOTE: Since we passed a "destroy" function to DIY master, it will own the local data
+      //       blocks and delete them when done.
       hierarchical_hyper_sweep_master.add(
         currInBlock->GlobalBlockId,
         new HyperSweepBlock(blockNo,
