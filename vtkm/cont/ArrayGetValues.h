@@ -103,6 +103,30 @@ VTKM_CONT void ArrayGetValues(const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids
   internal::ArrayGetValuesImpl(ids, data, output);
 }
 
+/// We need a specialization for `ArrayHandleCasts` to avoid runtime type missmatch errors inside
+/// `ArrayGetValuesImpl`.
+template <typename SIds, typename TIn, typename SData, typename TOut, typename SOut>
+VTKM_CONT void ArrayGetValues(
+  const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids,
+  const vtkm::cont::ArrayHandle<TOut, vtkm::cont::StorageTagCast<TIn, SData>>& data,
+  vtkm::cont::ArrayHandle<TOut, SOut>& output)
+{
+  // In this specialization, we extract the values from the cast array's source array and
+  // then cast and copy to output.
+  vtkm::cont::ArrayHandleBasic<TIn> tempOutput;
+  vtkm::cont::ArrayHandleCast<TOut, vtkm::cont::ArrayHandle<TIn, SData>> castArray = data;
+  ArrayGetValues(ids, castArray.GetSourceArray(), tempOutput);
+
+  vtkm::Id numExtracted = tempOutput.GetNumberOfValues();
+  output.Allocate(numExtracted);
+  auto inp = tempOutput.ReadPortal();
+  auto outp = output.WritePortal();
+  for (vtkm::Id i = 0; i < numExtracted; ++i)
+  {
+    outp.Set(i, static_cast<TOut>(inp.Get(i)));
+  }
+}
+
 template <typename SIds, typename T, typename SData, typename Alloc>
 VTKM_CONT void ArrayGetValues(const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids,
                               const vtkm::cont::ArrayHandle<T, SData>& data,

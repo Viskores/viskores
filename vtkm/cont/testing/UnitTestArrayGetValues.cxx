@@ -10,6 +10,7 @@
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayGetValues.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -68,6 +69,12 @@ void TryCopy()
       vtkm::cont::ArrayGetValues(ids, data, output);
       TestValues<ValueType>(output, { 3, 8, 7 });
     }
+    { // Test the specialization for ArrayHandleCast
+      auto castedData = vtkm::cont::make_ArrayHandleCast<vtkm::Float64>(data);
+      vtkm::cont::ArrayHandle<vtkm::Float64> output;
+      vtkm::cont::ArrayGetValues(ids, castedData, output);
+      TestValues<vtkm::Float64>(output, { 3.0, 8.0, 7.0 });
+    }
   }
 
   { // vector ids
@@ -124,7 +131,6 @@ void TryCopy()
     TestValues<ValueType>(output, { 8, 6, 7, 5, 3, 0, 9 });
   }
 }
-
 
 { // single values
   {
