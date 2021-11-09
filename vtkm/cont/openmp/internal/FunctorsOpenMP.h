@@ -333,6 +333,11 @@ struct ReduceHelper
 
     bool doParallel = false;
     vtkm::Id numThreads = 0;
+
+    vtkm::cont::RuntimeDeviceInformation{}
+      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
+      .GetThreads(numThreads);
+
     std::unique_ptr<ReturnType[]> threadData;
 
     VTKM_OPENMP_DIRECTIVE(parallel default(none) firstprivate(f) shared(
@@ -342,9 +347,6 @@ struct ReduceHelper
 
       VTKM_OPENMP_DIRECTIVE(single)
       {
-        vtkm::cont::RuntimeDeviceInformation{}
-          .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
-          .GetThreads(numThreads);
         if (numVals >= numThreads * 2)
         {
           doParallel = true;
@@ -534,15 +536,16 @@ void ReduceByKeyHelper(KeysInArray keysInArray,
 
   internal::WrappedBinaryOperator<ValueType, BinaryFunctor> f(functor);
   vtkm::Id outIdx = 0;
+  vtkm::Id numThreads = 0;
+
+  vtkm::cont::RuntimeDeviceInformation{}
+    .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
+    .GetThreads(numThreads);
 
   VTKM_OPENMP_DIRECTIVE(parallel default(none) firstprivate(keysIn, valuesIn, keysOut, valuesOut, f)
-                          shared(outIdx) VTKM_OPENMP_SHARED_CONST(numValues))
+                          shared(numThreads, outIdx) VTKM_OPENMP_SHARED_CONST(numValues))
   {
     int tid = omp_get_thread_num();
-    vtkm::Id numThreads = 0;
-    vtkm::cont::RuntimeDeviceInformation{}
-      .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagOpenMP())
-      .GetThreads(numThreads);
 
     // Determine bounds for this thread's scan operation:
     vtkm::Id chunkSize = (numValues + numThreads - 1) / numThreads;
