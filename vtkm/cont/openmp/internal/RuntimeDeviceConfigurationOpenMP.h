@@ -86,10 +86,18 @@ private:
   VTKM_CONT vtkm::Id InitializeHardwareMaxThreads() const
   {
     vtkm::Id count = 0;
-    VTKM_OPENMP_DIRECTIVE(parallel)
+
+    if (omp_in_parallel())
     {
-      VTKM_OPENMP_DIRECTIVE(atomic)
-      ++count;
+      count = omp_get_num_threads();
+    }
+    else
+    {
+      VTKM_OPENMP_DIRECTIVE(parallel)
+      {
+        VTKM_OPENMP_DIRECTIVE(atomic)
+        ++count;
+      }
     }
     return count;
   }
