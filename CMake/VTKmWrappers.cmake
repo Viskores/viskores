@@ -464,6 +464,16 @@ function(vtkm_library)
     set(VTKm_LIB_type SHARED)
   endif()
 
+  # Skip unity builds unless explicitly asked
+  foreach(source IN LISTS VTKm_LIB_SOURCES VTKm_LIB_DEVICE_SOURCES)
+    get_source_file_property(is_candidate ${source} UNITY_BUILD_CANDIDATE)
+    if (NOT is_candidate)
+      list(APPEND non_unity_sources ${source})
+    endif()
+  endforeach()
+
+  set_source_files_properties(${non_unity_sources} PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
+
   add_library(${lib_name}
               ${VTKm_LIB_type}
               ${VTKm_LIB_SOURCES}
@@ -615,8 +625,10 @@ function(vtkm_add_instantiations instantiations_list)
     math(EXPR counter "${counter} + 1")
   endforeach(instantiation)
 
-  set_source_files_properties(${_instantiations_list}
-    PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON
+  # Force unity builds here
+  set_source_files_properties(${_instantiations_list} PROPERTIES
+    SKIP_UNITY_BUILD_INCLUSION OFF
+    UNITY_BUILD_CANDIDATE ON
     )
   set(${instantiations_list} ${_instantiations_list} PARENT_SCOPE)
 endfunction(vtkm_add_instantiations)

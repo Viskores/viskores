@@ -234,8 +234,6 @@ set(gradient_sources_device
 vtkm_pyexpander_generated_file(ClipWithFieldExternInstantiations.h)
 vtkm_pyexpander_generated_file(ClipWithImplicitFunctionExternInstantiations.h)
 
-set_source_files_properties(Contour.cxx ExtractStructured.cxx PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
-
 add_library(vtkm_filter INTERFACE)
 
 vtkm_library(
@@ -270,12 +268,14 @@ vtkm_library(
   USE_VTKM_JOB_POOL
   )
 
-set_property(TARGET
+set_target_properties(
   vtkm_filter_common
   vtkm_filter_extra
   vtkm_filter_contour
   vtkm_filter_gradient
-  PROPERTY UNITY_BUILD_MODE GROUP
+  PROPERTIES
+  UNITY_BUILD ON
+  UNITY_BUILD_MODE BATCH
   )
 
 target_link_libraries(vtkm_filter_common PUBLIC vtkm_worklet)
