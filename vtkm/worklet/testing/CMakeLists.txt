@@ -10,6 +10,7 @@
 
 set(headers
   GenerateTestDataSets.h
+  TestingContourTreeUniformDistributedLoadArrays.h
   )
 
 set(unit_tests

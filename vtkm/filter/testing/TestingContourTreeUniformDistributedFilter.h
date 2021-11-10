@@ -293,6 +293,7 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
                                                      !useMarchingCubes,
                                                      useMarchingCubes,
                                                      false,
+                                                     false,
                                                      vtkm::cont::LogLevel::UserVerboseLast,
                                                      vtkm::cont::LogLevel::UserVerboseLast);
   filter.SetActiveField(fieldName);

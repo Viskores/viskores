@@ -56,6 +56,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalAugmenter.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -73,24 +75,29 @@ namespace contourtree_distributed
 template <typename FieldType>
 struct DistributedContourTreeBlockData
 {
-  /// Function required by DIY
-  static void* create() { return new DistributedContourTreeBlockData<FieldType>; }
+  // Block metadata
+  int GlobalBlockId;     // Global DIY id of this block
+  vtkm::Id LocalBlockNo; // Local block id on this rank
+  vtkm::Id3 BlockOrigin; // Origin of the data block
+  vtkm::Id3 BlockSize;   // Extends of the data block
 
-  /// Function required by DIY
-  static void destroy(void* b)
-  {
-    delete static_cast<DistributedContourTreeBlockData<FieldType>*>(b);
-  }
-
-  // Block data
-  vtkm::Id BlockIndex;
+  // Fan in data
   std::vector<vtkm::worklet::contourtree_augmented::ContourTree> ContourTrees;
   std::vector<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>> ContourTreeMeshes;
   std::vector<vtkm::worklet::contourtree_distributed::InteriorForest> InteriorForests;
 
-  // Block metadata
-  vtkm::Id3 BlockOrigin; // Origin of the data block
-  vtkm::Id3 BlockSize;   // Extends of the data block
+  // Fan out data
+  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> HierarchicalTree;
+
+  // Augmentation phase
+  vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType> HierarchicalAugmenter;
+  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> AugmentedTree;
+
+  // Destroy function allowing DIY to own blocks and clean them up after use
+  static void destroy(void* b)
+  {
+    delete static_cast<DistributedContourTreeBlockData<FieldType>*>(b);
+  }
 };
 } // namespace contourtree_distributed
 } // namespace worklet

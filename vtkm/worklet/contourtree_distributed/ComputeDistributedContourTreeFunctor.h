@@ -327,6 +327,7 @@ public:
                      << std::endl
                      << "    Rank    : " << rank << std::endl
                      << "    DIY Id  : " << selfid << std::endl
+                     << "    In Id   : " << ingid << std::endl
                      << "    Round   : " << rp.round() << std::endl
                      << worklet.TimingsLogString);
         // Log the contour tree size stats
@@ -336,6 +337,7 @@ public:
                      << std::endl
                      << "    Rank    : " << rank << std::endl
                      << "    DIY Id  : " << selfid << std::endl
+                     << "    In Id   : " << ingid << std::endl
                      << "    Round   : " << rp.round() << std::endl
                      << block->ContourTrees.back().PrintArraySizes());
 
@@ -465,6 +467,11 @@ public:
         rp.enqueue(target, block->BlockOrigin);
         rp.enqueue(target, block->BlockSize);
         rp.enqueue(target, block->ContourTreeMeshes.back());
+        VTKM_LOG_S(this->TreeLogLevel,
+                   std::endl
+                     << "FanInEnqueue: Rank=" << rank << "; Round=" << rp.round()
+                     << "; DIY Send Id=" << selfid << "; DIY Target ID=" << target.gid
+                     << std::endl);
       }
     } // end for
 

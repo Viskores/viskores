@@ -110,9 +110,11 @@ public:
     return (pos[2] * this->GlobalSize[1] + pos[1]) * this->GlobalSize[0] + pos[0];
   }
 
-private:
+  /// Local block origin
   vtkm::Id3 LocalBlockOrigin;
+  /// Local block size
   vtkm::Id3 LocalBlockSize;
+  /// Global mesh size
   vtkm::Id3 GlobalSize;
 };
 

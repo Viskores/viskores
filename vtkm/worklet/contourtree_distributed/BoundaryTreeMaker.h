@@ -454,18 +454,16 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
 #endif
 
   // b.  Iterate, propagating counts inwards
-  auto firstSupernodePerIterationReadPortal =
-    this->ContourTree.FirstSupernodePerIteration.ReadPortal();
-  auto firstHypernodePerIterationReadPortal =
-    this->ContourTree.FirstHypernodePerIteration.ReadPortal();
   for (vtkm::Id iteration = 0; iteration < this->ContourTree.NumIterations; iteration++)
   { // b. per iteration
 #ifdef DEBUG_PRINT
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, this->DebugPrint("Top of Loop:", __FILE__, __LINE__));
 #endif
     // i. Pull the array bounds into register
-    vtkm::Id firstSupernode = firstSupernodePerIterationReadPortal.Get(iteration);
-    vtkm::Id lastSupernode = firstSupernodePerIterationReadPortal.Get(iteration + 1);
+    vtkm::Id firstSupernode =
+      vtkm::cont::ArrayGetValue(iteration, this->ContourTree.FirstSupernodePerIteration);
+    vtkm::Id lastSupernode =
+      vtkm::cont::ArrayGetValue(iteration + 1, this->ContourTree.FirstSupernodePerIteration);
 
     if (lastSupernode == firstSupernode)
     {
@@ -477,8 +475,10 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
       continue;
     }
 
-    vtkm::Id firstHypernode = firstHypernodePerIterationReadPortal.Get(iteration);
-    vtkm::Id lastHypernode = firstHypernodePerIterationReadPortal.Get(iteration + 1);
+    vtkm::Id firstHypernode =
+      vtkm::cont::ArrayGetValue(iteration, this->ContourTree.FirstHypernodePerIteration);
+    vtkm::Id lastHypernode =
+      vtkm::cont::ArrayGetValue(iteration + 1, this->ContourTree.FirstHypernodePerIteration);
 
     //  ii.  Add xfer + int & store in dependent count
     //      Compute the sum of this->SupernodeTransferBoundaryCount and this->SuperarcIntrinsicBoundaryCount
@@ -639,13 +639,15 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
   // when we are done, we need to force the summation for the root node, JUST IN CASE it is a boundary node itself
   // BTW, the value *SHOULD* be the number of boundary nodes, anyway
   vtkm::Id rootSuperId = this->ContourTree.Supernodes.GetNumberOfValues() - 1;
-  this->SuperarcDependentBoundaryCount.WritePortal().Set(
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
     rootSuperId,
-    this->SupernodeTransferBoundaryCount.ReadPortal().Get(rootSuperId) +
-      this->SuperarcIntrinsicBoundaryCount.ReadPortal().Get(rootSuperId));
-  this->HyperarcDependentBoundaryCount.WritePortal().Set(
+    vtkm::cont::ArrayGetValue(rootSuperId, this->SupernodeTransferBoundaryCount) +
+      vtkm::cont::ArrayGetValue(rootSuperId, this->SuperarcIntrinsicBoundaryCount),
+    this->SuperarcDependentBoundaryCount);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
     this->ContourTree.Hypernodes.GetNumberOfValues() - 1,
-    this->SuperarcDependentBoundaryCount.ReadPortal().Get(rootSuperId));
+    vtkm::cont::ArrayGetValue(rootSuperId, this->SuperarcDependentBoundaryCount),
+    this->HyperarcDependentBoundaryCount);
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -1137,7 +1139,8 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
 
   // first create the array: start by observing that the last entry is guaranteed
   // to hold the total number of necessary vertices
-  this->NumKept = keptInBoundaryTree.ReadPortal().Get(keptInBoundaryTree.GetNumberOfValues() - 1);
+  this->NumKept =
+    vtkm::cont::ArrayGetValue(keptInBoundaryTree.GetNumberOfValues() - 1, keptInBoundaryTree);
   // create an array to store the new superarc Ids and initalize it with NO_SUCH_ELEMENT
   vtkm::worklet::contourtree_augmented::IdArrayType newSuperarc;
   vtkm::cont::Algorithm::Copy(

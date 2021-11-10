@@ -37,65 +37,84 @@
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-//=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
-//  The PPP2 algorithm and software were jointly developed by
-//  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
-//  Oliver Ruebel (LBNL)
-//==============================================================================
+#ifndef vtk_m_worklet_testing_contourtree_distributed_load_arrays_h
+#define vtk_m_worklet_testing_contourtree_distributed_load_arrays_h
 
-#ifndef vtk_m_worklet_contourtree_augmented_pointer_doubling_h
-#define vtk_m_worklet_contourtree_augmented_pointer_doubling_h
-
-#include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/Types.h>
+#include <vtkm/cont/ArrayHandle.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_augmented
+namespace testing
+{
+namespace contourtree_distributed
 {
 
-// Functor for doing chain doubling
-// Unary because it takes the index of the element to process, and is not guaranteed to
-// write back moreover, we aren't worried about out-of-sequence writes, since the
-// worst that happens is that an element gets pointer-tripled in the iteration.
-// It will still converge to the same destination.
-class PointerDoubling : public vtkm::worklet::WorkletMapField
+// Types used in binary test files
+typedef size_t FileSizeType;
+typedef unsigned long long FileIndexType;
+const FileIndexType FileIndexMask = 0x07FFFFFFFFFFFFFFLL;
+typedef double FileDataType;
+
+inline void ReadIndexArray(std::ifstream& is, vtkm::cont::ArrayHandle<vtkm::Id>& indexArray)
 {
-public:
-  typedef void ControlSignature(FieldIn vertexID, WholeArrayInOut chains);
-  typedef void ExecutionSignature(_1, _2);
-  using InputDomain = _1;
+  FileSizeType sz;
+  is.read(reinterpret_cast<char*>(&sz), sizeof(sz));
+  //std::cout << "Reading index array of size " << sz << std::endl;
+  indexArray.Allocate(sz);
+  auto writePortal = indexArray.WritePortal();
 
-  // Constructor
-  VTKM_EXEC_CONT
-  PointerDoubling() {}
-
-  template <typename InOutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& vertexID, const InOutFieldPortalType& chains) const
+  for (vtkm::Id i = 0; i < static_cast<vtkm::Id>(sz); ++i)
   {
-    // get the neighbour's ID
-    vtkm::Id neighbour = chains.Get(vertexID);
-    // if this is not a terminal vertex
-    if (!IsTerminalElement(neighbour))
-    {
-      // then double-step
-      chains.Set(vertexID, chains.Get(neighbour));
-    } // else, if the vertex is terminal then do nothing
+    FileIndexType x;
+    is.read(reinterpret_cast<char*>(&x), sizeof(x));
+    // Covert from index type size in file (64 bit) to index type currently used by
+    // shifting the flag portion of the index accordingly
+    vtkm::Id shiftedFlagVal = (x & FileIndexMask) |
+      ((x & ~FileIndexMask) >> ((sizeof(FileIndexType) - sizeof(vtkm::Id)) << 3));
+    writePortal.Set(i, shiftedFlagVal);
   }
-}; // PointerDoubling
+}
 
-} // namespace contourtree_augmented
+inline void ReadIndexArrayVector(std::ifstream& is,
+                                 std::vector<vtkm::cont::ArrayHandle<vtkm::Id>>& indexArrayVector)
+{
+  FileSizeType sz;
+  is.read(reinterpret_cast<char*>(&sz), sizeof(sz));
+  //std::cout << "Reading vector of " << sz << " index arrays" << std::endl;
+  indexArrayVector.resize(sz);
+
+  for (vtkm::Id i = 0; i < static_cast<vtkm::Id>(sz); ++i)
+  {
+    ReadIndexArray(is, indexArrayVector[i]);
+  }
+}
+
+template <class FieldType>
+inline void ReadDataArray(std::ifstream& is, vtkm::cont::ArrayHandle<FieldType>& dataArray)
+{
+  FileSizeType sz;
+  is.read(reinterpret_cast<char*>(&sz), sizeof(sz));
+  //std::cout << "Reading data array of size " << sz << std::endl;
+  dataArray.Allocate(sz);
+  auto writePortal = dataArray.WritePortal();
+
+  for (vtkm::Id i = 0; i < static_cast<vtkm::Id>(sz); ++i)
+  {
+    FileDataType x;
+    is.read(reinterpret_cast<char*>(&x), sizeof(x));
+    //std::cout << "Read " << x << std::endl;
+    writePortal.Set(
+      i,
+      FieldType(x)); // Test data is stored as double but generally is also ok to be cast to float.
+  }
+}
+
+} // namespace contourtree_distributed
+} // namespace testing
 } // namespace worklet
 } // namespace vtkm
 
-#endif // vtkm_worklet_contourtree_augmented_pointer_doubling_h
+#endif
