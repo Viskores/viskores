@@ -25,7 +25,7 @@ namespace filter
 /// Takes as input a vector field and seed locations and advects the seeds
 /// through the flow field.
 
-template <class Derived>
+template <class Derived, typename ParticleType>
 class FilterParticleAdvection : public vtkm::filter::FilterDataSetWithField<Derived>
 {
 public:
@@ -35,20 +35,30 @@ public:
   FilterParticleAdvection();
 
   VTKM_CONT
+  void SetActiveFields(
+    const std::string& name1,
+    const std::string& name2,
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+  {
+    this->FilterDataSetWithField<Derived>::SetActiveField(name1, association);
+    this->ActiveFieldName2 = name2;
+  }
+
+  VTKM_CONT
   void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
 
   VTKM_CONT
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(const std::vector<vtkm::Particle>& seeds,
+  void SetSeeds(const std::vector<ParticleType>& seeds,
                 vtkm::CopyFlag copyFlag = vtkm::CopyFlag::On)
   {
     this->Seeds = vtkm::cont::make_ArrayHandle(seeds, copyFlag);
   }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds) { this->Seeds = seeds; }
+  void SetSeeds(vtkm::cont::ArrayHandle<ParticleType>& seeds) { this->Seeds = seeds; }
 
   VTKM_CONT
   bool GetUseThreadedAlgorithm() { return this->UseThreadedAlgorithm; }
@@ -72,13 +82,16 @@ protected:
   VTKM_CONT virtual void ValidateOptions() const;
 
   using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
+  using DSIType2 = vtkm::filter::particleadvection::DataSetIntegrator2;
+
   VTKM_CONT std::vector<DSIType> CreateDataSetIntegrators(
     const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::particleadvection::BoundsMap& boundsMap) const;
 
+  std::string ActiveFieldName2;
   vtkm::Id NumberOfSteps;
   vtkm::FloatDefault StepSize;
-  vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
+  vtkm::cont::ArrayHandle<ParticleType> Seeds;
   bool UseThreadedAlgorithm;
 
 private:

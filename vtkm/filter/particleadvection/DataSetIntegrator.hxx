@@ -20,6 +20,8 @@ namespace particleadvection
 
 using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<
   vtkm::worklet::particleadvection::VelocityField<vtkm::cont::ArrayHandle<vtkm::Vec3f>>>;
+using GridEvalType2 = vtkm::worklet::particleadvection::GridEvaluator<
+  vtkm::worklet::particleadvection::ElectroMagneticField<vtkm::cont::ArrayHandle<vtkm::Vec3f>>>;
 using TemporalGridEvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<
   vtkm::worklet::particleadvection::VelocityField<vtkm::cont::ArrayHandle<vtkm::Vec3f>>>;
 using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
@@ -33,6 +35,20 @@ using TemporalStepper =
 template <>
 template <>
 inline void DataSetIntegratorBase<GridEvalType>::DoAdvect(
+  vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
+  const Stepper& stepper,
+  vtkm::Id maxSteps,
+  vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>& result) const
+{
+  vtkm::worklet::ParticleAdvection Worklet;
+  result = Worklet.Run(stepper, seeds, maxSteps);
+}
+
+//-----
+// Specialization for ParticleAdvection worklet w/ electromagnetic field
+template <>
+template <>
+inline void DataSetIntegratorBase<GridEvalType2>::DoAdvect(
   vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
   const Stepper& stepper,
   vtkm::Id maxSteps,

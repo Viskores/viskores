@@ -18,19 +18,20 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-template <typename Derived>
-inline VTKM_CONT FilterTemporalParticleAdvection<Derived>::FilterTemporalParticleAdvection()
-  : vtkm::filter::FilterParticleAdvection<Derived>()
+template <class Derived, typename ParticleType>
+inline VTKM_CONT
+FilterTemporalParticleAdvection<Derived, ParticleType>::FilterTemporalParticleAdvection()
+  : vtkm::filter::FilterParticleAdvection<Derived, ParticleType>()
   , PreviousTime(0)
   , NextTime(0)
 {
 }
 
-template <typename Derived>
-void FilterTemporalParticleAdvection<Derived>::ValidateOptions(
+template <typename Derived, typename ParticleType>
+void FilterTemporalParticleAdvection<Derived, ParticleType>::ValidateOptions(
   const vtkm::cont::PartitionedDataSet& input) const
 {
-  this->vtkm::filter::FilterParticleAdvection<Derived>::ValidateOptions();
+  this->vtkm::filter::FilterParticleAdvection<Derived, ParticleType>::ValidateOptions();
 
   if (this->NextDataSet.GetNumberOfPartitions() != input.GetNumberOfPartitions())
     throw vtkm::cont::ErrorFilterExecution("Number of partitions do not match");
@@ -38,9 +39,9 @@ void FilterTemporalParticleAdvection<Derived>::ValidateOptions(
     throw vtkm::cont::ErrorFilterExecution("Previous time must be less than Next time.");
 }
 
-template <typename Derived>
+template <typename Derived, typename ParticleType>
 std::vector<vtkm::filter::particleadvection::TemporalDataSetIntegrator>
-FilterTemporalParticleAdvection<Derived>::CreateDataSetIntegrators(
+FilterTemporalParticleAdvection<Derived, ParticleType>::CreateDataSetIntegrators(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
 {
@@ -65,9 +66,10 @@ FilterTemporalParticleAdvection<Derived>::CreateDataSetIntegrators(
 }
 
 //-----------------------------------------------------------------------------
-template <typename Derived>
+template <typename Derived, typename ParticleType>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet FilterTemporalParticleAdvection<Derived>::PrepareForExecution(
+inline VTKM_CONT vtkm::cont::DataSet
+FilterTemporalParticleAdvection<Derived, ParticleType>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {

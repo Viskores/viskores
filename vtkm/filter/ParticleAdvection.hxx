@@ -23,7 +23,7 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT ParticleAdvection::ParticleAdvection()
-  : vtkm::filter::FilterParticleAdvection<ParticleAdvection>()
+  : vtkm::filter::FilterParticleAdvection<ParticleAdvection, vtkm::Particle>()
 {
 }
 
@@ -34,18 +34,42 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::PrepareForExe
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
+  using AlgorithmType2 = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm2;
   using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;
 
   this->ValidateOptions();
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
-  auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 
-  if (this->GetUseThreadedAlgorithm())
-    return vtkm::filter::particleadvection::RunAlgo<DSIType, ThreadedAlgorithmType>(
-      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+  if (this->ActiveFieldName2.empty())
+  {
+    auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
+
+    if (this->GetUseThreadedAlgorithm())
+      return vtkm::filter::particleadvection::RunAlgo<DSIType, ThreadedAlgorithmType>(
+        boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+    else
+      return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
+        boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+  }
   else
-    return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
+  {
+    std::vector<vtkm::filter::particleadvection::DataSetIntegrator2> dsi;
+    std::string field1 = this->GetActiveFieldName();
+    std::string field2 = this->ActiveFieldName2;
+
+    for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
+    {
+      vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
+      auto ds = input.GetPartition(i);
+      if (!ds.HasPointField(field1) || !ds.HasPointField(field2))
+        throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
+      dsi.push_back(DSIType2(ds, blockId, field1, field2));
+    }
+
+    std::cout << "Electromagnietc RunAlgo" << std::endl;
+    return vtkm::filter::particleadvection::RunAlgo<DSIType2, AlgorithmType2>(
       boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+  }
 }
 
 }

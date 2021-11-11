@@ -25,8 +25,9 @@ namespace filter
 /// Takes as input a vector field and seed locations and advects the seeds
 /// through the flow field.
 
-template <class Derived>
-class FilterTemporalParticleAdvection : public vtkm::filter::FilterParticleAdvection<Derived>
+template <class Derived, typename ParticleType>
+class FilterTemporalParticleAdvection
+  : public vtkm::filter::FilterParticleAdvection<Derived, ParticleType>
 {
 public:
   VTKM_CONT
@@ -52,7 +53,7 @@ public:
 
 protected:
   VTKM_CONT void ValidateOptions(const vtkm::cont::PartitionedDataSet& input) const;
-  using vtkm::filter::FilterParticleAdvection<Derived>::ValidateOptions;
+  using vtkm::filter::FilterParticleAdvection<Derived, ParticleType>::ValidateOptions;
 
   using DSIType = vtkm::filter::particleadvection::TemporalDataSetIntegrator;
   VTKM_CONT std::vector<DSIType> CreateDataSetIntegrators(

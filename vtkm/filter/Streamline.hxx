@@ -23,7 +23,7 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT Streamline::Streamline()
-  : vtkm::filter::FilterParticleAdvection<Streamline>()
+  : vtkm::filter::FilterParticleAdvection<Streamline, vtkm::Particle>()
 {
 }
 
