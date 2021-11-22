@@ -50,7 +50,7 @@ void BenchParticleAdvection(::benchmark::State& state)
                                    vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
                                    vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-  vtkm::filter::ParticleAdvection particleAdvection;
+  vtkm::filter::ParticleAdvection<vtkm::Particle> particleAdvection;
 
   particleAdvection.SetStepSize(vtkm::FloatDefault(1) / state.range(0));
   particleAdvection.SetNumberOfSteps(static_cast<vtkm::Id>(state.range(0)));

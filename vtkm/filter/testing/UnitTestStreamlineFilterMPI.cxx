@@ -149,13 +149,13 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
 
       if (fType == STREAMLINE)
       {
-        vtkm::filter::Streamline streamline;
+        vtkm::filter::Streamline<vtkm::Particle> streamline;
         SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
         out = streamline.Execute(pds);
       }
       else if (fType == PATHLINE)
       {
-        vtkm::filter::Pathline pathline;
+        vtkm::filter::Pathline<vtkm::Particle> pathline;
         SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
         //Create timestep 2
         auto pds2 = vtkm::cont::PartitionedDataSet(pds);
@@ -239,7 +239,7 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
     }
     else if (fType == PARTICLE_ADVECTION)
     {
-      vtkm::filter::ParticleAdvection filter;
+      vtkm::filter::ParticleAdvection<vtkm::Particle> filter;
       filter.SetUseThreadedAlgorithm(useThreaded);
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
@@ -392,7 +392,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
 
     if (fType == STREAMLINE)
     {
-      vtkm::filter::Streamline streamline;
+      vtkm::filter::Streamline<vtkm::Particle> streamline;
       SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
       auto out = streamline.Execute(pds);
 
@@ -401,7 +401,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
     }
     else if (fType == PARTICLE_ADVECTION)
     {
-      vtkm::filter::ParticleAdvection particleAdvection;
+      vtkm::filter::ParticleAdvection<vtkm::Particle> particleAdvection;
       SetFilter(particleAdvection, stepSize, numSteps, fieldName, seedArray, useThreaded);
       auto out = particleAdvection.Execute(pds);
 
@@ -419,7 +419,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
       auto pds2 = allPDS2[n];
       AddVectorFields(pds2, fieldName, vecX);
 
-      vtkm::filter::Pathline pathline;
+      vtkm::filter::Pathline<vtkm::Particle> pathline;
       SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
 
       pathline.SetPreviousTime(time0);
