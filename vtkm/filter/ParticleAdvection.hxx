@@ -22,19 +22,22 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT ParticleAdvection::ParticleAdvection()
-  : vtkm::filter::FilterParticleAdvection<ParticleAdvection>()
+template <typename ParticleType>
+inline VTKM_CONT ParticleAdvection<ParticleType>::ParticleAdvection()
+  : vtkm::filter::FilterParticleAdvection<ParticleAdvection<ParticleType>, ParticleType>()
 {
 }
 
 //-----------------------------------------------------------------------------
+template <typename ParticleType>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::PrepareForExecution(
-  const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+inline VTKM_CONT vtkm::cont::PartitionedDataSet
+ParticleAdvection<ParticleType>::PrepareForExecution(const vtkm::cont::PartitionedDataSet& input,
+                                                     const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
   using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;
+  using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
 
   this->ValidateOptions();
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
