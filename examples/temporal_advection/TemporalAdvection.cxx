@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 
   // Instantiate the filter by providing necessary parameters.
   // Necessary parameters are :
-  vtkm::filter::Pathline pathlineFilter;
+  vtkm::filter::Pathline<vtkm::Particle> pathlineFilter;
   pathlineFilter.SetActiveField(fieldName);
   // 1. The current and next time slice. The current time slice is passed
   //    through the parameter to the Execute method.

@@ -103,7 +103,7 @@ if (VTKm_ENABLE_RENDERING)
     RegressionTestPointTransform.cxx
     RegressionTestSliceFilter.cxx
     RegressionTestSplitSharpEdges.cxx
-#    RegressionTestStreamline.cxx
+    RegressionTestStreamline.cxx
     RegressionTestSurfaceNormals.cxx
   )
 endif()
