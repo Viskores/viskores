@@ -2,10 +2,10 @@
 
 set -xe
 
-readonly version="v1.5.2"
+readonly version="91ed7eea6856f8785139c58fbcc827e82579243c"
 readonly tarball="$version.tar.gz"
 readonly url="https://github.com/google/benchmark/archive/$tarball"
-readonly sha256sum="dccbdab796baa1043f04982147e67bb6e118fe610da2c65f88912d73987e700c"
+readonly sha256sum="039054b7919b0af1082b121df35f4c24fccdd97f308e3dc28f36a0d3a3c64c69"
 readonly install_dir="$HOME/gbench"
 
 if ! [[ "$VTKM_SETTINGS" =~ "benchmarks" ]]; then
