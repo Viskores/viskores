@@ -24,6 +24,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
+# While disabled system-wide, VTK-m uses UNITY builds in some modules
+set(CMAKE_UNITY_BUILD OFF)
+
+# By default effectively disable unity builds
+if (NOT DEFINED CMAKE_UNITY_BUILD_BATCH_SIZE)
+  set(CMAKE_UNITY_BUILD_BATCH_SIZE 1)
+endif()
+
 # Determine VTK-m version
 include(Utilities/Git/Git.cmake)
 include(VTKmDetermineVersion)
