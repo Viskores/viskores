@@ -10,13 +10,17 @@
 
 #include <vtkm/internal/Assume.h>
 
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
+#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/cont/internal/Buffer.h>
 #include <vtkm/cont/internal/DeviceAdapterMemoryManager.h>
+
+#include <vtkm/exec/FunctorBase.h>
 
 #include <condition_variable>
 #include <cstring>
@@ -156,6 +160,75 @@ struct MetaDataManager
     }
   }
 };
+
+template <typename T>
+struct FillFunctor : vtkm::exec::FunctorBase
+{
+  T* TargetArray;
+  const T* SourceValues;
+  vtkm::Id NumSourceValues;
+
+  VTKM_CONT FillFunctor(void* targetArray,
+                        const void* sourceValues,
+                        vtkm::BufferSizeType sourceValuesSize,
+                        vtkm::BufferSizeType start)
+    : TargetArray(reinterpret_cast<T*>(targetArray))
+    , SourceValues(reinterpret_cast<const T*>(sourceValues))
+    , NumSourceValues(sourceValuesSize / sizeof(T))
+  {
+    VTKM_ASSERT((sourceValuesSize % sizeof(T)) == 0);
+    this->TargetArray += start / sizeof(T);
+  }
+
+  VTKM_EXEC void operator()(vtkm::Id index) const
+  {
+    T* target = this->TargetArray + (index * this->NumSourceValues);
+    for (vtkm::Id sourceIndex = 0; sourceIndex < this->NumSourceValues; ++sourceIndex)
+    {
+      *target = this->SourceValues[sourceIndex];
+      ++target;
+    }
+  }
+};
+
+template <typename Device>
+void FillBuffer(const vtkm::cont::internal::Buffer& target,
+                const vtkm::cont::internal::Buffer& source,
+                vtkm::BufferSizeType start,
+                Device device,
+                vtkm::cont::Token& token)
+{
+  void* targetPointer = target.WritePointerDevice(device, token);
+  const void* sourcePointer = source.ReadPointerDevice(device, token);
+
+  // Get after target locked with token.
+  vtkm::BufferSizeType targetSize = target.GetNumberOfBytes();
+  vtkm::BufferSizeType sourceSize = source.GetNumberOfBytes();
+  if (targetSize <= start)
+  {
+    return;
+  }
+  VTKM_ASSERT((targetSize % sourceSize) == 0);
+  VTKM_ASSERT((start % sourceSize) == 0);
+
+  vtkm::Id numSources = (targetSize - start) / sourceSize;
+
+  if ((sourceSize >= 8) && ((sourceSize % 8) == 0))
+  {
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
+      FillFunctor<vtkm::UInt64>{ targetPointer, sourcePointer, sourceSize, start }, numSources);
+  }
+  else if ((sourceSize >= 4) && ((sourceSize % 4) == 0))
+  {
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
+      FillFunctor<vtkm::UInt32>{ targetPointer, sourcePointer, sourceSize, start }, numSources);
+  }
+  else
+  {
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
+      FillFunctor<vtkm::UInt8>{ targetPointer, sourcePointer, sourceSize, start }, numSources);
+  }
+}
 
 } // anonymous namespace
 
@@ -1017,6 +1090,44 @@ vtkm::cont::internal::BufferInfo Buffer::GetDeviceBufferInfo(
     throw vtkm::cont::ErrorBadDevice("Called Buffer::GetDeviceBufferInfo with invalid device");
   }
 }
+
+void Buffer::Fill(const void* source,
+                  vtkm::BufferSizeType sourceSize,
+                  vtkm::BufferSizeType start,
+                  vtkm::cont::Token& token) const
+{
+  vtkm::cont::internal::Buffer sourceBuffer;
+  sourceBuffer.Reset(vtkm::cont::internal::BufferInfo(
+    vtkm::cont::DeviceAdapterTagUndefined{},
+    const_cast<void*>(source),
+    const_cast<void*>(source),
+    sourceSize,
+    [](void*) {},
+    [](void*&, void*&, vtkm::BufferSizeType, vtkm::BufferSizeType) {}));
+
+  // First, try setting on any device that already has the data.
+  bool success = vtkm::cont::TryExecute([&](auto device) {
+    if (this->IsAllocatedOnDevice(device))
+    {
+      FillBuffer(*this, sourceBuffer, start, device, token);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  });
+
+  if (!success)
+  {
+    // Likely the data was not on any device. Fill on any device.
+    vtkm::cont::TryExecute([&](auto device) {
+      FillBuffer(*this, sourceBuffer, start, device, token);
+      return true;
+    });
+  }
+}
+
 }
 }
 } // namespace vtkm::cont::internal

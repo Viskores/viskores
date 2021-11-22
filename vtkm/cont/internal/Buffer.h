@@ -310,6 +310,20 @@ public:
   VTKM_CONT vtkm::cont::internal::TransferredBuffer TakeDeviceBufferOwnership(
     vtkm::cont::DeviceAdapterId device);
 
+  /// \brief Fill up the buffer with particular values.
+  ///
+  /// Given a short `source` C array (defined on the host), sets all values in the buffer
+  /// to that source. The `sourceSize`, in bytes, is also specified. You also specify an
+  /// offset to where the fill should `start`. Values before the `start` are not affected.
+  ///
+  /// Both the size of the buffer (i.e. `GetNumberOfBytes`) and the `start` must be
+  /// divisible by `sourceSize`.
+  ///
+  VTKM_CONT void Fill(const void* source,
+                      vtkm::BufferSizeType sourceSize,
+                      vtkm::BufferSizeType start,
+                      vtkm::cont::Token& token) const;
+
   VTKM_CONT bool operator==(const vtkm::cont::internal::Buffer& rhs) const
   {
     return (this->Internals == rhs.Internals);

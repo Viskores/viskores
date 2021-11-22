@@ -186,6 +186,20 @@ void DoTest()
   VTKM_TEST_ASSERT(buffer.IsAllocatedOnHost());
   VTKM_TEST_ASSERT(!buffer.IsAllocatedOnDevice(device));
 
+  std::cout << "Fill end of buffer" << std::endl;
+  {
+    vtkm::cont::Token token;
+    T fillValue = 1.234f;
+    buffer.Fill(
+      &fillValue, static_cast<vtkm::BufferSizeType>(sizeof(fillValue)), BUFFER_SIZE / 2, token);
+    CheckPortal(MakePortal(buffer.ReadPointerHost(token), ARRAY_SIZE / 2));
+    const T* array = reinterpret_cast<const T*>(buffer.ReadPointerHost(token));
+    for (vtkm::Id index = (ARRAY_SIZE / 2); index < (ARRAY_SIZE * 2); ++index)
+    {
+      VTKM_TEST_ASSERT(array[index] == fillValue);
+    }
+  }
+
   std::cout << "Reset with device data" << std::endl;
   std::vector<T> v(ARRAY_SIZE);
   void* devicePointer = v.data();
