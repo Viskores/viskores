@@ -23,8 +23,7 @@ namespace filter
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
 
-class ParticleAdvection
-  : public vtkm::filter::FilterParticleAdvection<ParticleAdvection, vtkm::Particle>
+class ParticleAdvection : public vtkm::filter::FilterParticleAdvection<ParticleAdvection>
 {
 public:
   VTKM_CONT ParticleAdvection();

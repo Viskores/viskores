@@ -92,7 +92,6 @@ public:
   DataSetIntegrator(const vtkm::cont::DataSet& ds, vtkm::Id id, const std::string& fieldNm)
     : DataSetIntegratorBase<vtkm::worklet::particleadvection::GridEvaluator<
         vtkm::worklet::particleadvection::VelocityField<FieldHandleType>>>(false, id)
-  //    : DataSetIntegratorBase<vtkm::worklet::particleadvection::GridEvaluator<FieldType>>(false, id)
   {
     using Association = vtkm::cont::Field::Association;
     using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandleType>;
@@ -100,30 +99,6 @@ public:
     Association association = ds.GetField(fieldNm).GetAssociation();
     auto fieldArray = this->GetFieldHandle(ds, fieldNm);
     FieldType field(fieldArray, association);
-    this->Eval = std::shared_ptr<EvalType>(new EvalType(ds, field));
-  }
-};
-
-class VTKM_ALWAYS_EXPORT DataSetIntegrator2
-  : public DataSetIntegratorBase<vtkm::worklet::particleadvection::GridEvaluator<
-      vtkm::worklet::particleadvection::ElectroMagneticField<vtkm::cont::ArrayHandle<vtkm::Vec3f>>>>
-{
-public:
-  DataSetIntegrator2(const vtkm::cont::DataSet& ds,
-                     vtkm::Id id,
-                     const std::string& fieldNm1,
-                     const std::string& fieldNm2)
-    : DataSetIntegratorBase<vtkm::worklet::particleadvection::GridEvaluator<
-        vtkm::worklet::particleadvection::ElectroMagneticField<FieldHandleType>>>(false, id)
-  {
-    using Association = vtkm::cont::Field::Association;
-    using FieldType = vtkm::worklet::particleadvection::ElectroMagneticField<FieldHandleType>;
-    using EvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-    Association association = ds.GetField(fieldNm1).GetAssociation();
-    auto fieldArray1 = this->GetFieldHandle(ds, fieldNm1);
-    auto fieldArray2 = this->GetFieldHandle(ds, fieldNm2);
-
-    FieldType field(fieldArray1, fieldArray2, association);
     this->Eval = std::shared_ptr<EvalType>(new EvalType(ds, field));
   }
 };

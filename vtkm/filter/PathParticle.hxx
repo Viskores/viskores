@@ -24,7 +24,7 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT PathParticle::PathParticle()
-  : vtkm::filter::FilterTemporalParticleAdvection<PathParticle, vtkm::Particle>()
+  : vtkm::filter::FilterTemporalParticleAdvection<PathParticle>()
 {
 }
 

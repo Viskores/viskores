@@ -82,44 +82,6 @@ void TestStreamline()
     vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
     VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
   }
-
-  //Test ElectomagneticField advection
-  for (auto& ds : dataSets)
-  {
-    auto vecField = CreateConstantVectorField(ds.GetNumberOfPoints(), vecX);
-    ds.AddPointField(fieldName, vecField);
-    std::vector<vtkm::ChargedParticle> pts;
-    vtkm::FloatDefault mass = 1.0f, charge = 1.0f, weight = 1.0;
-    vtkm::Vec3f momentum(.1, .1, .1);
-    pts.push_back(
-      vtkm::ChargedParticle(vtkm::Vec3f(.2f, 1.0f, .2f), 0, mass, charge, weight, momentum));
-    pts.push_back(
-      vtkm::ChargedParticle(vtkm::Vec3f(.2f, 2.0f, .2f), 0, mass, charge, weight, momentum));
-    pts.push_back(
-      vtkm::ChargedParticle(vtkm::Vec3f(.2f, 3.0f, .2f), 0, mass, charge, weight, momentum));
-    vtkm::cont::ArrayHandle<vtkm::ChargedParticle> seedArray =
-      vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
-
-    /*
-    vtkm::filter::ParticleAdvection filter;
-    filter.SetStepSize(0.1f);
-    filter.SetNumberOfSteps(20);
-    filter.SetSeeds(seedArray);
-
-    filter.SetActiveFields(fieldName, fieldName);
-    auto output = filter.Execute(ds);
-
-    //Validate the result is correct.
-    VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
-                     "Wrong number of coordinate systems in the output dataset");
-
-    vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
-
-    vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
-    VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
-    */
-  }
 }
 
 void TestPathline()

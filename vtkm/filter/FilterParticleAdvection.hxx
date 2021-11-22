@@ -18,8 +18,8 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-template <typename Derived, typename ParticleType>
-inline VTKM_CONT FilterParticleAdvection<Derived, ParticleType>::FilterParticleAdvection()
+template <typename Derived>
+inline VTKM_CONT FilterParticleAdvection<Derived>::FilterParticleAdvection()
   : vtkm::filter::FilterDataSetWithField<Derived>()
   , NumberOfSteps(0)
   , StepSize(0)
@@ -27,8 +27,8 @@ inline VTKM_CONT FilterParticleAdvection<Derived, ParticleType>::FilterParticleA
 {
 }
 
-template <typename Derived, typename ParticleType>
-void FilterParticleAdvection<Derived, ParticleType>::ValidateOptions() const
+template <typename Derived>
+void FilterParticleAdvection<Derived>::ValidateOptions() const
 {
   if (this->GetUseCoordinateSystemAsField())
     throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");
@@ -40,9 +40,9 @@ void FilterParticleAdvection<Derived, ParticleType>::ValidateOptions() const
     throw vtkm::cont::ErrorFilterExecution("Step size not specified.");
 }
 
-template <typename Derived, typename ParticleType>
+template <typename Derived>
 std::vector<vtkm::filter::particleadvection::DataSetIntegrator>
-FilterParticleAdvection<Derived, ParticleType>::CreateDataSetIntegrators(
+FilterParticleAdvection<Derived>::CreateDataSetIntegrators(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
 {
@@ -66,10 +66,9 @@ FilterParticleAdvection<Derived, ParticleType>::CreateDataSetIntegrators(
 }
 
 //-----------------------------------------------------------------------------
-template <typename Derived, typename ParticleType>
+template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet
-FilterParticleAdvection<Derived, ParticleType>::PrepareForExecution(
+inline VTKM_CONT vtkm::cont::DataSet FilterParticleAdvection<Derived>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {

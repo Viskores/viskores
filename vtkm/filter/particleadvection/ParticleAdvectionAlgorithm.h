@@ -23,7 +23,6 @@ namespace particleadvection
 {
 
 using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
-using DSIType2 = vtkm::filter::particleadvection::DataSetIntegrator2;
 using TDSIType = vtkm::filter::particleadvection::TemporalDataSetIntegrator;
 
 //-------------------------------------------------------------------------------------------
@@ -38,20 +37,6 @@ public:
                              const std::vector<DSIType>& blocks)
     : AdvectorBaseAlgorithm<DSIType, vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm,
                                                                                              blocks)
-  {
-  }
-};
-
-//Particle advection
-class VTKM_ALWAYS_EXPORT ParticleAdvectionAlgorithm2
-  : public AdvectorBaseAlgorithm<DSIType2, vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>
-{
-public:
-  ParticleAdvectionAlgorithm2(const vtkm::filter::particleadvection::BoundsMap& bm,
-                              const std::vector<DSIType2>& blocks)
-    : AdvectorBaseAlgorithm<DSIType2, vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(
-        bm,
-        blocks)
   {
   }
 };
