@@ -42,7 +42,7 @@ void TestStreamline()
                                    vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
                                    vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-  vtkm::filter::Streamline<vtkm::Particle> streamline;
+  vtkm::filter::Streamline streamline;
   streamline.SetStepSize(0.1f);
   streamline.SetNumberOfSteps(20);
   streamline.SetSeeds(seedArray);

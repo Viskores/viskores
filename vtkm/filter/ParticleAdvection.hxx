@@ -23,8 +23,8 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 template <typename ParticleType>
-inline VTKM_CONT ParticleAdvection<ParticleType>::ParticleAdvection()
-  : vtkm::filter::FilterParticleAdvection<ParticleAdvection<ParticleType>, ParticleType>()
+inline VTKM_CONT ParticleAdvectionBase<ParticleType>::ParticleAdvectionBase()
+  : vtkm::filter::FilterParticleAdvection<ParticleAdvectionBase<ParticleType>, ParticleType>()
 {
 }
 
@@ -32,8 +32,9 @@ inline VTKM_CONT ParticleAdvection<ParticleType>::ParticleAdvection()
 template <typename ParticleType>
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::PartitionedDataSet
-ParticleAdvection<ParticleType>::PrepareForExecution(const vtkm::cont::PartitionedDataSet& input,
-                                                     const vtkm::filter::PolicyBase<DerivedPolicy>&)
+ParticleAdvectionBase<ParticleType>::PrepareForExecution(
+  const vtkm::cont::PartitionedDataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
   using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;

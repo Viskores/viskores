@@ -64,7 +64,7 @@ void TestStreamline()
                                      vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
                                      vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-    vtkm::filter::Streamline<vtkm::Particle> streamline;
+    vtkm::filter::Streamline streamline;
 
     streamline.SetStepSize(0.1f);
     streamline.SetNumberOfSteps(20);
@@ -123,7 +123,7 @@ void TestPathline()
       vtkm::Id numExpectedPoints;
       if (fType == 0)
       {
-        vtkm::filter::Pathline<vtkm::Particle> filt;
+        vtkm::filter::Pathline filt;
         filt.SetActiveField(var);
         filt.SetStepSize(stepSize);
         filt.SetNumberOfSteps(numSteps);
@@ -136,7 +136,7 @@ void TestPathline()
       }
       else
       {
-        vtkm::filter::PathParticle<vtkm::Particle> filt;
+        vtkm::filter::PathParticle filt;
         filt.SetActiveField(var);
         filt.SetStepSize(stepSize);
         filt.SetNumberOfSteps(numSteps);
@@ -222,7 +222,7 @@ void TestAMRStreamline(bool useSL)
 
     if (useSL)
     {
-      vtkm::filter::Streamline<vtkm::Particle> filter;
+      vtkm::filter::Streamline filter;
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
       filter.SetSeeds(seedArray);
@@ -294,7 +294,7 @@ void TestAMRStreamline(bool useSL)
     }
     else
     {
-      vtkm::filter::ParticleAdvection<vtkm::Particle> filter;
+      vtkm::filter::ParticleAdvection filter;
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
       filter.SetSeeds(seedArray);
@@ -376,7 +376,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
       vtkm::cont::PartitionedDataSet out;
       if (fType == FilterType::STREAMLINE)
       {
-        vtkm::filter::Streamline<vtkm::Particle> streamline;
+        vtkm::filter::Streamline streamline;
         streamline.SetStepSize(0.1f);
         streamline.SetNumberOfSteps(100000);
         streamline.SetSeeds(seedArray);
@@ -389,7 +389,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         auto pds2 = allPDs2[idx];
         AddVectorFields(pds2, fieldName, vecX);
 
-        vtkm::filter::Pathline<vtkm::Particle> pathline;
+        vtkm::filter::Pathline pathline;
         pathline.SetPreviousTime(0);
         pathline.SetNextTime(1000);
         pathline.SetNextDataSet(pds2);
@@ -440,7 +440,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
       vtkm::cont::PartitionedDataSet out;
       if (fType == FilterType::PARTICLE_ADVECTION)
       {
-        vtkm::filter::ParticleAdvection<vtkm::Particle> particleAdvection;
+        vtkm::filter::ParticleAdvection particleAdvection;
 
         particleAdvection.SetStepSize(0.1f);
         particleAdvection.SetNumberOfSteps(100000);
@@ -454,7 +454,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         auto pds2 = allPDs2[idx];
         AddVectorFields(pds2, fieldName, vecX);
 
-        vtkm::filter::PathParticle<vtkm::Particle> pathParticle;
+        vtkm::filter::PathParticle pathParticle;
         pathParticle.SetPreviousTime(0);
         pathParticle.SetNextTime(1000);
         pathParticle.SetNextDataSet(pds2);
@@ -543,7 +543,7 @@ void TestStreamlineFile(const std::string& fname,
   vtkm::cont::DataSet output;
   if (useSL)
   {
-    vtkm::filter::Streamline<vtkm::Particle> streamline;
+    vtkm::filter::Streamline streamline;
     streamline.SetStepSize(stepSize);
     streamline.SetNumberOfSteps(maxSteps);
     streamline.SetSeeds(seedArray);
@@ -552,7 +552,7 @@ void TestStreamlineFile(const std::string& fname,
   }
   else
   {
-    vtkm::filter::ParticleAdvection<vtkm::Particle> particleAdvection;
+    vtkm::filter::ParticleAdvection particleAdvection;
     particleAdvection.SetStepSize(stepSize);
     particleAdvection.SetNumberOfSteps(maxSteps);
     particleAdvection.SetSeeds(seedArray);
@@ -647,14 +647,6 @@ void TestStreamlineFilters()
 
 int UnitTestStreamlineFilter(int argc, char* argv[])
 {
-  /*
-  vtkm::filter::ParticleAdvection<vtkm::Particle> particleAdvection;
-  particleAdvection.SetStepSize(0.01);
-
-  vtkm::filter::Streamline<vtkm::Particle> s;
-  s.SetStepSize(0.01);
-  */
-
   // Setup MPI environment: This test is not intendent to be run in parallel
   // but filter does make MPI calls
   vtkmdiy::mpi::environment env(argc, argv);

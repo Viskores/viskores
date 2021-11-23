@@ -149,7 +149,7 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
 
       if (fType == STREAMLINE)
       {
-        vtkm::filter::Streamline<vtkm::Particle> streamline;
+        vtkm::filter::Streamline streamline;
         SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
         out = streamline.Execute(pds);
       }
@@ -239,7 +239,7 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
     }
     else if (fType == PARTICLE_ADVECTION)
     {
-      vtkm::filter::ParticleAdvection<vtkm::Particle> filter;
+      vtkm::filter::ParticleAdvection filter;
       filter.SetUseThreadedAlgorithm(useThreaded);
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
@@ -392,7 +392,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
 
     if (fType == STREAMLINE)
     {
-      vtkm::filter::Streamline<vtkm::Particle> streamline;
+      vtkm::filter::Streamline streamline;
       SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
       auto out = streamline.Execute(pds);
 
@@ -401,7 +401,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
     }
     else if (fType == PARTICLE_ADVECTION)
     {
-      vtkm::filter::ParticleAdvection<vtkm::Particle> particleAdvection;
+      vtkm::filter::ParticleAdvection particleAdvection;
       SetFilter(particleAdvection, stepSize, numSteps, fieldName, seedArray, useThreaded);
       auto out = particleAdvection.Execute(pds);
 

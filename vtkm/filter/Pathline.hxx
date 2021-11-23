@@ -24,15 +24,15 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 template <typename ParticleType>
-inline VTKM_CONT Pathline<ParticleType>::Pathline()
-  : vtkm::filter::FilterTemporalParticleAdvection<Pathline<ParticleType>, ParticleType>()
+inline VTKM_CONT PathlineBase<ParticleType>::PathlineBase()
+  : vtkm::filter::FilterTemporalParticleAdvection<PathlineBase<ParticleType>, ParticleType>()
 {
 }
 
 //-----------------------------------------------------------------------------
 template <typename ParticleType>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline<ParticleType>::PrepareForExecution(
+inline VTKM_CONT vtkm::cont::PartitionedDataSet PathlineBase<ParticleType>::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {

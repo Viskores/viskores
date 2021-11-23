@@ -74,7 +74,7 @@ int main(int argc, char** argv)
   auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
 
   //compute streamlines
-  vtkm::filter::Streamline<vtkm::Particle> streamline;
+  vtkm::filter::Streamline streamline;
 
   streamline.SetStepSize(stepSize);
   streamline.SetNumberOfSteps(numSteps);
