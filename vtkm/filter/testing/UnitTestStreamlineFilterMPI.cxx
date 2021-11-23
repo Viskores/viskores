@@ -155,7 +155,7 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
       }
       else if (fType == PATHLINE)
       {
-        vtkm::filter::Pathline<vtkm::Particle> pathline;
+        vtkm::filter::Pathline pathline;
         SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
         //Create timestep 2
         auto pds2 = vtkm::cont::PartitionedDataSet(pds);
@@ -419,7 +419,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
       auto pds2 = allPDS2[n];
       AddVectorFields(pds2, fieldName, vecX);
 
-      vtkm::filter::Pathline<vtkm::Particle> pathline;
+      vtkm::filter::Pathline pathline;
       SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
 
       pathline.SetPreviousTime(time0);
