@@ -14,7 +14,6 @@
 #include <vtkm/filter/PathParticle.h>
 #include <vtkm/filter/Pathline.h>
 #include <vtkm/filter/Streamline.h>
-
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
