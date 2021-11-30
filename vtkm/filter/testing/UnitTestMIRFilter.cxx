@@ -36,7 +36,7 @@ vtkm::cont::DataSet GetTestDataSet()
   std::vector<vtkm::UInt8> shapes;
   std::vector<vtkm::Id> connections;
   std::vector<vtkm::IdComponent> numberofInd;
-  std::vector<vtkm::Vec3f_32> points;
+  std::vector<vtkm::Vec3f> points;
 
   for (int z = 0; z < mz - 1; z++)
   {
@@ -57,8 +57,8 @@ vtkm::cont::DataSet GetTestDataSet()
   vtkm::cont::ArrayHandle<vtkm::Id> lengths =
     vtkm::cont::make_ArrayHandle(lnAR, vtkm::CopyFlag::On);
   vtkm::cont::ArrayHandle<vtkm::Id> ids = vtkm::cont::make_ArrayHandle(idAR, vtkm::CopyFlag::On);
-  std::vector<vtkm::Float32> vfAR{ 1, 1, 1, 1, 1, 1, 1, 1 };
-  vtkm::cont::ArrayHandle<vtkm::Float32> vfs =
+  std::vector<vtkm::FloatDefault> vfAR{ 1, 1, 1, 1, 1, 1, 1, 1 };
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> vfs =
     vtkm::cont::make_ArrayHandle(vfAR, vtkm::CopyFlag::On);
 
   shapes.reserve((mx - 1) * (my - 1) * (mz - 1));

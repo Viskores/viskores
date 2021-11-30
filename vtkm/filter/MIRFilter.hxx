@@ -114,7 +114,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
   vtkm::cont::Field or_ids = input.GetField(this->id_name);
   vtkm::cont::Field or_vfs = input.GetField(this->vf_name);
   // TODO: Check all fields for 'IsFieldCell'
-  vtkm::cont::ArrayHandle<vtkm::Float32> vfsdata_or, vfsdata;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> vfsdata_or, vfsdata;
   vtkm::cont::ArrayHandle<vtkm::Id> idsdata_or, idsdata, lendata_or, lendata, posdata_or, posdata,
     allids;
   or_pos.GetData().AsArrayHandle(posdata_or);
