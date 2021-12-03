@@ -7,12 +7,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
-#include <vtkm/filter/GenerateIds.h>
-
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/filter/FieldTransform/GenerateIds.h>
 
 namespace
 {
@@ -42,7 +39,7 @@ namespace vtkm
 namespace filter
 {
 
-vtkm::cont::DataSet GenerateIds::DoExecute(const vtkm::cont::DataSet& input) const
+vtkm::cont::DataSet GenerateIds::Execute(const vtkm::cont::DataSet& input)
 {
   vtkm::cont::DataSet output = input;
 
@@ -56,6 +53,8 @@ vtkm::cont::DataSet GenerateIds::DoExecute(const vtkm::cont::DataSet& input) con
   {
     output.AddCellField(this->GetCellFieldName(), GenerateArray(*this, input.GetNumberOfCells()));
   }
+
+  MapFieldsOntoOutput(input, output);
 
   return output;
 }

@@ -10,9 +10,8 @@
 #ifndef vtk_m_filter_GenerateIds_h
 #define vtk_m_filter_GenerateIds_h
 
-#include <vtkm/filter/Filter.h>
-
-#include <vtkm/filter/vtkm_filter_extra_export.h>
+#include <vtkm/filter/FieldTransform/vtkm_filter_fieldtransform_export.h>
+#include <vtkm/filter/NewFilter.h>
 
 namespace vtkm
 {
@@ -28,7 +27,7 @@ namespace filter
 /// convenient for adding indices to operations designed for fields and generally
 /// creating test data.
 ///
-class VTKM_FILTER_EXTRA_EXPORT GenerateIds : public vtkm::filter::Filter<GenerateIds>
+class VTKM_FILTER_FIELDTRANSFORM_EXPORT GenerateIds : public vtkm::filter::NewFilter
 {
   std::string PointFieldName = "pointids";
   std::string CellFieldName = "cellids";
@@ -37,9 +36,6 @@ class VTKM_FILTER_EXTRA_EXPORT GenerateIds : public vtkm::filter::Filter<Generat
   bool UseFloat = false;
 
 public:
-  GenerateIds() = default;
-  ~GenerateIds() = default;
-
   /// \{
   /// \brief The name given to the generated point field.
   ///
@@ -88,14 +84,7 @@ public:
   bool GetUseFloat() const { return this->UseFloat; }
   void SetUseFloat(bool flag) { this->UseFloat = flag; }
 
-  vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) const;
-
-  template <typename DerivedPolicy>
-  vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
-                                          vtkm::filter::PolicyBase<DerivedPolicy>) const
-  {
-    return this->DoExecute(input);
-  }
+  vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input) override;
 };
 
 } // namespace vtkm::filter

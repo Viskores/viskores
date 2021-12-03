@@ -16,7 +16,7 @@
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/ClipWithImplicitFunction.h>
-#include <vtkm/filter/GenerateIds.h>
+#include <vtkm/filter/FieldTransform/GenerateIds.h>
 #include <vtkm/source/Tangle.h>
 #include <vtkm/worklet/Contour.h>
 

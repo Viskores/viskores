@@ -7,14 +7,10 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
-#include <vtkm/filter/GenerateIds.h>
-
-#include <vtkm/source/Tangle.h>
-
 #include <vtkm/cont/ArrayHandleIndex.h>
-
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/FieldTransform/GenerateIds.h>
+#include <vtkm/source/Tangle.h>
 
 namespace
 {

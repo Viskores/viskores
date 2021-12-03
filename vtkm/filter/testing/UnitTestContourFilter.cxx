@@ -15,7 +15,7 @@
 
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
-#include <vtkm/filter/GenerateIds.h>
+#include <vtkm/filter/FieldTransform/GenerateIds.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/source/Tangle.h>
