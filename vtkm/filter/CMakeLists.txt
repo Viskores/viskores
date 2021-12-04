@@ -313,7 +313,7 @@ install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
 add_subdirectory(internal)
 add_subdirectory(particleadvection)
-add_subdirectory(FieldTransform)
+add_subdirectory(field_transform)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 if (VTKm_ENABLE_TESTING)

@@ -12,7 +12,7 @@ set(unit_tests
   UnitTestGenerateIds.cxx)
 
 set(libraries
-  vtkm_filter_fieldtransform
+  vtkm_filter_field_transform
   vtkm_source)
 
 vtkm_unit_tests(

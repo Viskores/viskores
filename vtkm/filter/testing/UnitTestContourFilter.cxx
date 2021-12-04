@@ -15,7 +15,7 @@
 
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
-#include <vtkm/filter/FieldTransform/GenerateIds.h>
+#include <vtkm/filter/field_transform/GenerateIds.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/source/Tangle.h>
@@ -32,7 +32,7 @@ public:
 
     vtkm::Id3 dims(4, 4, 4);
     vtkm::source::Tangle tangle(dims);
-    vtkm::filter::GenerateIds genIds;
+    vtkm::filter::field_transform::GenerateIds genIds;
     genIds.SetUseFloat(true);
     genIds.SetGeneratePointIds(false);
     genIds.SetCellFieldName("cellvar");
