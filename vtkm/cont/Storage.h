@@ -134,6 +134,13 @@ public:
   /// \brief Returns the number of entries allocated in the array.
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers);
 
+  /// \brief Fills the array with the given value starting at the given index.
+  ///
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const ValueType& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::cont::Token& token);
+
   /// \brief Create a read-only portal on the specified device.
   ///
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
@@ -181,6 +188,16 @@ struct StorageTraits<vtkm::cont::internal::Storage<T, S>>
 #define VTKM_STORAGE_NO_WRITE_PORTAL                                                           \
   using WritePortalType = vtkm::internal::ArrayPortalDummy<                                    \
     typename vtkm::cont::internal::StorageTraits<Storage>::ValueType>;                         \
+  VTKM_CONT static void Fill(                                                                  \
+    vtkm::cont::internal::Buffer*,                                                             \
+    const typename vtkm::cont::internal::StorageTraits<Storage>::ValueType&,                   \
+    vtkm::Id,                                                                                  \
+    vtkm::cont::Token&)                                                                        \
+  {                                                                                            \
+    throw vtkm::cont::ErrorBadAllocation(                                                      \
+      "Cannot write to arrays with storage type of " +                                         \
+      vtkm::cont::TypeToString<typename vtkm::cont::internal::StorageTraits<Storage>::Tag>()); \
+  }                                                                                            \
   VTKM_CONT static WritePortalType CreateWritePortal(                                          \
     vtkm::cont::internal::Buffer*, vtkm::cont::DeviceAdapterId, vtkm::cont::Token&)            \
   {                                                                                            \
