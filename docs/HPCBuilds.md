@@ -7,8 +7,7 @@ Instructions for building VTK-m on various HPC systems is included below.
 Spock is a system at the OLCF that is an early access system for Frontier.
 As the software stack on Spock is frequently updated, these directions may be updated from time to time.
 
-Building VTK-m with HIP support for the AMD GPUs requires specific versions of ROCM and Kokkos.
-The following script can be used to build VTK-m on Spock.
+Building VTK-m with HIP support for the AMD GPUs with the correct versions of Rocm and Kokkos can be done with the following script.
 
 
 ```sh
