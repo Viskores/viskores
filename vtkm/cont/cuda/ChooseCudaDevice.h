@@ -14,8 +14,8 @@
 
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
+#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/RuntimeDeviceConfigurationCuda.h>
-#include <vtkm/cont/internal/DeviceAdapterTagCuda.h>
 
 #include <algorithm>
 #include <set>

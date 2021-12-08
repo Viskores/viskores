@@ -13,6 +13,7 @@ set(headers
   Source.h
   Tangle.h
   Wavelet.h
+  PerlinNoise.h
   )
 
 set(device_sources
@@ -20,6 +21,7 @@ set(device_sources
   Source.cxx
   Tangle.cxx
   Wavelet.cxx
+  PerlinNoise.cxx
   )
 
 vtkm_library(NAME vtkm_source
