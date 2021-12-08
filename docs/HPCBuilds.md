@@ -11,7 +11,6 @@ Building VTK-m with HIP support for the AMD GPUs with the correct versions of Ro
 
 
 ```sh
-
 #!/bin/bash
 
 set -x
