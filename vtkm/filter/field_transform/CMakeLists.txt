@@ -7,7 +7,7 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
-set(fieldt_ransform_headers
+set(field_transform_headers
   GenerateIds.h)
 set(field_transform_sources_device
   GenerateIds.cxx)

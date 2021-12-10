@@ -89,6 +89,7 @@ set(extra_headers
   ExternalFaces.h
   FieldSelection.h
   FieldToColors.h
+  GenerateIds.h
   GhostCellClassify.h
   GhostCellRemove.h
   Histogram.h

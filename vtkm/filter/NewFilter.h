@@ -25,135 +25,116 @@ namespace filter
 {
 /// \brief base class for all filters.
 ///
-/// This is the base class for all filters. To add a new filter, one can
-/// subclass this (or any of the existing subclasses e.g. FilterField,
-/// FilterParticleAdvection, etc.) and implement relevant methods.
+/// This is the base class for all filters. To add a new filter, one can subclass this (or any of
+/// the existing subclasses e.g. FilterField, FilterParticleAdvection, etc.) and implement relevant
+/// methods.
 ///
 /// \section FilterUsage Usage
 ///
-/// To execute a filter, one typically calls the `auto result =
-/// filter.Execute(input)`. Typical usage is as follows:
+/// To execute a filter, one typically calls the `auto result = filter.Execute(input)`. Typical
+/// usage is as follows:
 ///
 /// \code{cpp}
 ///
-/// // create the concrete subclass (e.g. MarchingCubes).
-/// vtkm::filter::MarchingCubes marchingCubes;
+/// // create the concrete subclass (e.g. Contour).
+/// vtkm::filter::contour::Contour contour;
 ///
-/// // select fieds to map to the output, if different from default which is to
-/// // map all input fields.
-/// marchingCubes.SetFieldToPass({"var1", "var2"});
+/// // select fields to map to the output, if different from default which is to map all input
+/// // fields.
+/// contour.SetFieldToPass({"var1", "var2"});
 ///
 /// // execute the filter on vtkm::cont::DataSet.
 /// vtkm::cont::DataSet dsInput = ...
-/// auto outputDS = filter.Execute(dsInput);
+/// auto outputDS = contour.Execute(dsInput);
 ///
 /// // or, execute on a vtkm::cont::PartitionedDataSet
 /// vtkm::cont::PartitionedDataSet mbInput = ...
-/// auto outputMB = filter.Execute(mbInput);
+/// auto outputMB = contour.Execute(mbInput);
 /// \endcode
 ///
-/// `Execute` methods take in the input DataSet or PartitionedDataSet to
-/// process and return the result. The type of the result is same as the input
-/// type, thus `Execute(DataSet&)` returns a DataSet while
-/// `Execute(PartitionedDataSet&)` returns a PartitionedDataSet.
+/// `Execute` methods take in the input DataSet or PartitionedDataSet to process and return the
+/// result. The type of the result is same as the input type, thus `Execute(DataSet&)` returns
+/// a DataSet while `Execute(PartitionedDataSet&)` returns a PartitionedDataSet.
 ///
-/// The pure virtual function `Execute(DataSet&)` is the main extension point of the
-/// Filter interface. Filter developer needs to override `Execute(DataSet)` to implement
-/// the business logic of filtering operations on a single DataSet.
+/// `Execute` simply calls the pure virtual function `DoExecute(DataSet&)` which is the main
+/// extension point of the Filter interface. Filter developer needs to override
+/// `DoExecute(DataSet)` to implement the business logic of filtering operations on a single
+/// DataSet.
 ///
 /// The default implementation of `Execute(PartitionedDataSet&)` is merely provided for
-/// convenience. Internally, it iterates DataSets of a PartitionedDataSet and pass
-/// each individual DataSets to `Execute(DataSet&)`, possibly in a multi-threaded setting.
-/// Developer of `Execute(DataSet&)` needs to indicate the thread-safeness of `Execute(DataSet&)`
-/// by overriding the `CanThread()` virtual method which by default returns `true`.
+/// convenience. Internally, it calls `DoExecute(PartitionedDataSet)` to iterate DataSets
+/// of a PartitionedDataSet and pass each individual DataSets to `DoExecute(DataSet&)`,
+/// possibly in a multi-threaded setting. Developer of `DoExecute(DataSet&)` needs to indicate
+/// the thread-safeness of `DoExecute(DataSet&)` by overriding the `CanThread()` virtual method
+/// which by default returns `true`.
 ///
 /// In the case that filtering on a PartitionedDataSet can not be simply implemented as a
 /// for-each loop on the component DataSets, filter implementor needs to override the
-/// `Execute(PartitionedDataSet&)`. See the implementation of
+/// `DoExecute(PartitionedDataSet&)`. See the implementation of
 /// `FilterParticleAdvection::Execute(PartitionedDataSet&)` for an example.
 ///
 /// \section FilterSubclassing Subclassing
 ///
-/// Typically, one subclasses one of the immediate subclasses of this class such as
-/// FilterField, FilterParticleAdvection, etc. Those may impose
-/// additional constraints on the methods to implement in the subclasses.
-/// Here, we describes the things to consider when directly subclassing
-/// vtkm::filter::Filter.
-///
-/// \subsection FilterPreExecutePostExecute PreExecute and PostExecute
-///
-/// Subclasses may provide implementations for either or both of the following protected
-/// methods.
-///
-/// \code{cpp}
-///
-/// void PreExecute(const vtkm::cont::PartitionedDataSet& input);
-///
-/// void PostExecute(const vtkm::cont::PartitionedDataSet& input,
-///           vtkm::cont::PartitionedDataSet& output);
-///
-/// \endcode
-///
-/// As the name suggests, these are called and the before the beginning and after the end of
-/// iterative `Filter::Execute(DataSet&)` calls. Most filters that don't need to handle
-/// PartitionedDataSet specially, e.g. clip, cut, iso-contour, need not worry
-/// about these methods or provide any implementation. If, however, your filter
-/// needs to do some initialization e.g. allocation buffers to accumulate
-/// results, or finalization e.g. reduce results across all partitions, then
-/// these methods provide convenient hooks for the same.
+/// In many uses cases, one subclasses one of the immediate subclasses of this class such as
+/// FilterField, FilterParticleAdvection, etc. Those may impose additional constraints on the
+/// methods to implement in the subclasses. Here, we describes the things to consider when directly
+/// subclassing vtkm::filter::NewFilter.
 ///
 /// \subsection FilterExecution Execute
 ///
-/// A concrete subclass of Filter must provide `Execute` implementation that provides the meat
-/// for the filter i.e. the implementation for the filter's data processing logic. There are
-/// two signatures available; which one to implement depends on the nature of the filter.
+/// A concrete subclass of Filter must provide `DoExecute` implementation that provides the meat
+/// for the filter i.e. the implementation for the filter's data processing logic. There are two
+/// signatures available; which one to implement depends on the nature of the filter.
 ///
-/// Let's consider simple filters that do not need to do anything special to
-/// handle PartitionedDataSet e.g. clip, contour, etc. These are the filters
-/// where executing the filter on a PartitionedDataSet simply means executing
-/// the filter on one partition at a time and packing the output for each
-/// iteration info the result PartitionedDataSet. For such filters, one must
-/// implement the following signature.
+/// Let's consider simple filters that do not need to do anything special to handle
+/// PartitionedDataSet e.g. clip, contour, etc. These are the filters where executing the filter
+/// on a PartitionedDataSet simply means executing the filter on one partition at a time and
+/// packing the output for each iteration info the result PartitionedDataSet. For such filters,
+/// one must implement the following signature.
 ///
 /// \code{cpp}
 ///
-/// vtkm::cont::DataSet Execution(const vtkm::cont::DataSet& input);
+/// vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input);
 ///
 /// \endcode
 ///
-/// The role of this method is to execute on the input dataset and generate the
-/// result and return it.  If there are any errors, the subclass must throw an
-/// exception (e.g. `vtkm::cont::ErrorFilterExecution`).
+/// The role of this method is to execute on the input dataset and generate the result and return
+/// it.  If there are any errors, the subclass must throw an exception
+/// (e.g. `vtkm::cont::ErrorFilterExecution`).
 ///
-/// In this simple case, the Filter superclass handles iterating over multiple
-/// partitions in the input PartitionedDataSet and calling
-/// `Execute(DataSet&)` iteratively.
+/// In this simple case, the NewFilter superclass handles iterating over multiple partitions in the
+/// input PartitionedDataSet and calling `DoExecute(DataSet&)` iteratively.
 ///
-/// The aforementioned approach is also suitable for filters that need special
-/// handling for PartitionedDataSets which can be modelled as PreExecute and
-/// PostExecute steps (e.g. `vtkm::filter::Histogram`).
-///
-/// For more complex filters, like streamlines, particle tracking, where the
-/// processing of PartitionedDataSets cannot be modelled as a reduction of the
-/// results, one can implement the following signature.
+/// The aforementioned approach is also suitable for filters that need special handling for
+/// PartitionedDataSets that requires certain cross DataSet operations (usually scatter/gather
+/// and reduction on DataSets) before and/or after the per DataSet operation. This can be done by
+/// overriding `DoExecute(PartitionedDataSet&)` while calling to the base class
+/// `DoExecute(PartitionedDataSet&) as helper function for iteration on DataSets.
 ///
 /// \code{cpp}
-/// vtkm::cont::PartitionedDataSet Execute(
-///         const vtkm::cont::PartitionedDataSet& input);
+/// vtkm::cont::PartitionedDataSet FooFilter::DoExecute(
+///   const vtkm::cont::PartitionedDataSet& input)
+/// {
+///   // Do pre execute stuff, e.g. scattering to each DataSet
+///   auto output = this->NewFilter::DoExecute(input);
+///   // Do post execute stuff, e.g gather/reduce from DataSets
+///   return output;
+/// }
 /// \endcode
 ///
-/// The responsibility of this method is the same, except now the subclass is
-/// given full control over the execution, including any mapping of fields to
-/// output (described in next sub-section).
+/// For more complex filters, like streamlines, particle tracking, where the processing of
+/// PartitionedDataSets cannot be modelled as mapping and reduction operation on DataSet, one
+/// needs fully implement `DoExecute(PartitionedDataSet&)`. Now the subclass is given full control
+/// over the execution, including any mapping of fields to output (described in next sub-section).
 ///
 /// \subsection FilterMappingFields MapFieldsOntoOutput
 ///
 /// For subclasses that map input fields into output fields, the implementation of its
-/// `Execute(DataSet&)` should call `Filter::MapFieldsOntoOutput` with a properly defined
+/// `DoExecute(DataSet&)` should call `NewFilter::MapFieldsOntoOutput` with a properly defined
 /// `Mapper`, before returning the output DataSet. For example:
 ///
 /// \code{cpp}
-/// VTKM_CONT DataSet SomeFilter::Execute(const vtkm::cont::DataSet& input)
+/// VTKM_CONT DataSet SomeFilter::DoExecute(const vtkm::cont::DataSet& input)
 /// {
 ///   vtkm::cont::DataSet output;
 ///   output = ... // Generation of the new DataSet
@@ -174,28 +155,28 @@ namespace filter
 /// Mapper to map the input Field to output Field. For simple filters that just pass on input
 /// fields to the output DataSet without any computation, an overload of
 /// `MapFieldsOntoOutput(const vtkm::cont::DataSet& input, vtkm::cont::DataSet& output)` is also
-/// provided as a convenience that uses the default mapper which trivially add input Field to
+/// provided as a convenience that uses the default mapper which trivially adds input Field to
 /// output DaaSet (via a shallow copy).
 ///
 /// \subsection FilterThreadSafety CanThread
 ///
-/// By default, the implementation of `Execute(DataSet&)` should model a *pure function*, i.e. it
+/// By default, the implementation of `DoExecute(DataSet&)` should model a *pure function*, i.e. it
 /// does not have any mutable shared state. This makes it thread-safe by default and allows
-/// the default implementation of `Execute(PartitionedDataSet&)` to be simply a parallel for-each,
+/// the default implementation of `DoExecute(PartitionedDataSet&)` to be simply a parallel for-each,
 /// thus facilitates multi-threaded execution without any lock.
 ///
 /// Many legacy (VTKm 1.x) filter implementations needed to store states between the mesh generation
 /// phase and field mapping phase of filter execution, for example, parameters for field
 /// interpolation. The shared mutable states were mostly stored as mutable data members of the
 /// filter class (either in terms of ArrayHandle or some kind of Worket). The new filter interface,
-/// by combining the two phases into a single call to `Execute(DataSet&)`, we have eliminated most
+/// by combining the two phases into a single call to `DoExecute(DataSet&)`, we have eliminated most
 /// of the cases that require such shared mutable states. New implementations of filters that
 /// require passing information between these two phases can now use local variables within the
-/// `Execute(DataSet&)`. For example:
+/// `DoExecute(DataSet&)`. For example:
 ///
 /// \code{cpp}
 /// struct SharedState; // shared states between mesh generation and field mapping.
-/// VTKM_CONT DataSet ThreadSafeFilter::Execute(const vtkm::cont::DataSet& input)
+/// VTKM_CONT DataSet ThreadSafeFilter::DoExecute(const vtkm::cont::DataSet& input)
 /// {
 ///   // Mutable states that was a data member of the filter is now a local variable.
 ///   // Each invocation of Execute(DataSet) in the multi-threaded execution of
@@ -230,36 +211,6 @@ namespace filter
 /// Implementations of Filter subclass can also override
 /// `DetermineNumberOfThreads()` to provide implementation specific heuristic.
 ///
-/// \subsection FilterNameLookup Overriding Overloaded Functions
-/// Since we have two overloads of `Execute`, we need to work with C++'s rule for name lookup for
-/// inherited, overloaded functions when overriding them. In most uses cases, we intend to only
-/// override the `Execute(DataSet&)` overload in an implementation of a NewFilter subclass, such as
-///
-/// \code{cpp}
-/// class FooFilter : public NewFilter
-/// {
-///   ...
-///   vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input) override;
-///   ...
-/// }
-/// \endcode
-///
-/// However, the compiler will stop the name lookup process once it sees the
-/// `FooFilter::Execute(DataSet)`. When a user calls `FooFilter::Execute(PartitionedDataSet&)`,
-/// the compiler will not find the overload from the base class `NewFilter`, resulting in failed
-/// overload resolution. The solution to such a problem is to use a using-declaration in the
-/// subclass definition to bring the `NewFilter::Execute(PartitionedDataSet&)` into scope for
-/// name lookup. For example:
-///
-/// \code{cpp}
-/// class FooFilter : public NewFilter
-/// {
-///   ...
-///   using vtkm::filter::NewFilter::Execute; // bring overloads of Execute into name lookup
-///   vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input) override;
-///   ...
-/// }
-/// \endcode
 class VTKM_FILTER_CORE_EXPORT NewFilter
 {
 public:
@@ -391,18 +342,7 @@ private:
   VTKM_CONT
   virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
 
-  //@{
-  /// when operating on vtkm::cont::PartitionedDataSet, we
-  /// want to do processing across ranks as well. Just adding pre/post handles
-  /// for the same does the trick.
-  VTKM_CONT virtual void PreExecute(const vtkm::cont::PartitionedDataSet&) {}
-
-  VTKM_CONT virtual void PostExecute(const vtkm::cont::PartitionedDataSet&,
-                                     vtkm::cont::PartitionedDataSet&)
-  {
-  }
-  //@}
-
+  // Note: In C++, subclasses can override private methods of superclass.
   VTKM_CONT virtual vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) = 0;
   VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecute(
     const vtkm::cont::PartitionedDataSet& inData);

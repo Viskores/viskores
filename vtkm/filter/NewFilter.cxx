@@ -82,6 +82,7 @@ vtkm::cont::PartitionedDataSet NewFilter::DoExecute(const vtkm::cont::Partitione
 
   return output;
 }
+
 vtkm::cont::DataSet NewFilter::Execute(const vtkm::cont::DataSet& input)
 {
   return this->DoExecute(input);
@@ -94,12 +95,7 @@ vtkm::cont::PartitionedDataSet NewFilter::Execute(const vtkm::cont::PartitionedD
                  (int)input.GetNumberOfPartitions(),
                  vtkm::cont::TypeToString<decltype(*this)>().c_str());
 
-  this->PreExecute(input);
-
   vtkm::cont::PartitionedDataSet output = this->DoExecute(input);
-
-  this->PostExecute(input, output);
-
   return output;
 }
 
