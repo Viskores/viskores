@@ -163,6 +163,15 @@ public:
                              const vtkm::filter::PolicyBase<DerivedPolicy>&);
 
 
+  template <typename FieldType>
+  VTKM_CONT void ComputeVolumeMetric(
+    vtkmdiy::Master& inputContoourTreeMaster,
+    vtkmdiy::DynamicAssigner& assigner,
+    vtkmdiy::RegularSwapPartners& partners,
+    const FieldType&, // dummy parameter to get the type
+    std::stringstream& timingsStream,
+    std::vector<vtkm::cont::DataSet> hierarchicalTreeOutputDataSet);
+
   ///
   /// Internal helper function that implements the actual functionality of PostExecute
   ///

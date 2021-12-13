@@ -77,6 +77,15 @@ template <typename FieldType>
 class HierarchicalAugmenterFunctor
 {
 public:
+  /// Create the functor
+  /// @param[in] timingsLogLevel Set the vtkm::cont:LogLevel to be used to record timings information
+  ///                            specific to the computation of the hierachical contour tree
+  HierarchicalAugmenterFunctor(vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf)
+    : TimingsLogLevel(timingsLogLevel)
+  {
+  }
+
+
   void operator()(
     vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
       blockData,                        // local Block.
@@ -84,6 +93,14 @@ public:
     const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
   ) const
   {
+    // Track timing of main steps
+    vtkm::cont::Timer totalTimer; // Total time for each call
+    totalTimer.Start();
+    vtkm::cont::Timer timer; // Time individual steps
+    timer.Start();
+    std::stringstream timingsStream;
+
+    const vtkm::Id rank = vtkm::cont::EnvironmentTracker::GetCommunicator().rank();
     auto round = rp.round();
     const auto selfid = rp.gid();
 
@@ -97,6 +114,11 @@ public:
       }
     }
 
+    // log the time for getting the data from DIY
+    timingsStream << "    " << std::setw(38) << std::left << "Retrieve In Attachment Points"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+    timer.Start();
+
     for (int i = 0; i < rp.out_link().size(); ++i)
     {
       auto target = rp.out_link().target(i);
@@ -109,7 +131,28 @@ public:
         blockData->HierarchicalAugmenter.ReleaseSwapArrays();
       }
     }
+
+    // Log the time for enqueue the data for sending via DIY
+    timingsStream << "    " << std::setw(38) << std::left
+                  << "Prepare and Enqueue Out Attachment Points"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+    // Log the total this functor call step took
+    timingsStream << "    " << std::setw(38) << std::left << "Total Time Functor Step"
+                  << ": " << totalTimer.GetElapsedTime() << " seconds" << std::endl;
+    // Record the times we logged
+    VTKM_LOG_S(this->TimingsLogLevel,
+               std::endl
+                 << "    ---------------- Hierarchical Augmenter Functor Step ---------------------"
+                 << std::endl
+                 << "    Rank    : " << rank << std::endl
+                 << "    DIY Id  : " << selfid << std::endl
+                 << "    Round   : " << rp.round() << std::endl
+                 << timingsStream.str());
   }
+
+private:
+  /// Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
+  vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;
 };
 
 } // namespace contourtree_distributed

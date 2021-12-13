@@ -91,7 +91,8 @@ struct CobmineHyperSweepBlockFunctor
 
     for (const int ingid : incoming)
     {
-      auto roundNo = rp.round() - 1;
+      auto roundNo = rp.round() - 1; // We are processing incoming data from the previous round
+
       // NOTE/IMPORTANT: In each round we should have only one swap partner (despite for-loop here).
       // If that assumption does not hold, it will break things.
       // NOTE/IMPORTANT: This assumption only holds if the number of blocks is a power of two.
@@ -115,19 +116,22 @@ struct CobmineHyperSweepBlockFunctor
 
         auto intrinsicVolumeView =
           make_ArrayHandleView(b->IntrinsicVolume, 0, numSupernodesToProcess);
-        auto incomingIntrinsicVolumeView =
-          make_ArrayHandleView(incomingIntrinsicVolume, 0, numSupernodesToProcess);
+        VTKM_ASSERT(incomingIntrinsicVolume.GetNumberOfValues() ==
+                    intrinsicVolumeView.GetNumberOfValues());
+
         vtkm::cont::ArrayHandle<vtkm::Id> tempSum;
+        // TODO/FIXME: Is there a way to do an in-place transform without a temporary array?
         vtkm::cont::Algorithm::Transform(
-          intrinsicVolumeView, incomingIntrinsicVolumeView, tempSum, vtkm::Sum());
+          intrinsicVolumeView, incomingIntrinsicVolume, tempSum, vtkm::Sum());
         vtkm::cont::Algorithm::Copy(tempSum, intrinsicVolumeView);
 
         auto dependentVolumeView =
           make_ArrayHandleView(b->DependentVolume, 0, numSupernodesToProcess);
-        auto incomingDependentVolumeView =
-          make_ArrayHandleView(incomingDependentVolume, 0, numSupernodesToProcess);
+        VTKM_ASSERT(incomingDependentVolume.GetNumberOfValues() ==
+                    dependentVolumeView.GetNumberOfValues());
+        // TODO/FIXME: Is there a way to do an in-place transform without a temporary array?
         vtkm::cont::Algorithm::Transform(
-          dependentVolumeView, incomingDependentVolumeView, tempSum, vtkm::Sum());
+          dependentVolumeView, incomingDependentVolume, tempSum, vtkm::Sum());
         vtkm::cont::Algorithm::Copy(tempSum, dependentVolumeView);
       }
     }
@@ -140,8 +144,25 @@ struct CobmineHyperSweepBlockFunctor
 #ifdef DEBUG_PRINT_COMBINED_BLOCK_IDS
         rp.enqueue(target, b->GlobalBlockId);
 #endif
-        rp.enqueue(target, b->IntrinsicVolume);
-        rp.enqueue(target, b->DependentVolume);
+
+        // Create views for data we need to send
+        vtkm::Id numSupernodesToProcess = vtkm::cont::ArrayGetValue(
+          0, b->HierarchicalContourTree.FirstSupernodePerIteration[rp.round()]);
+        auto intrinsicVolumeView =
+          make_ArrayHandleView(b->IntrinsicVolume, 0, numSupernodesToProcess);
+        auto dependentVolumeView =
+          make_ArrayHandleView(b->DependentVolume, 0, numSupernodesToProcess);
+        // TODO/FIXME: Check if it is possible to send a portion of the arrays
+        // without copy. enqueue does not accept ArrayHandleView as input as it
+        // is not trivially copyable
+        vtkm::cont::ArrayHandle<vtkm::Id> sendIntrinsicVolume;
+        vtkm::cont::Algorithm::Copy(intrinsicVolumeView, sendIntrinsicVolume);
+        vtkm::cont::ArrayHandle<vtkm::Id> sendDependentVolume;
+        vtkm::cont::Algorithm::Copy(dependentVolumeView, sendDependentVolume);
+
+        // Send necessary data portions
+        rp.enqueue(target, sendIntrinsicVolume);
+        rp.enqueue(target, sendDependentVolume);
       }
     }
   }
