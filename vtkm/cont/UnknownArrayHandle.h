@@ -826,6 +826,10 @@ public:
   template <typename TypeList, typename StorageList, typename Functor, typename... Args>
   VTKM_CONT void CastAndCallForTypes(Functor&& functor, Args&&... args) const;
 
+  /// TODO: Doxygen
+  template <typename TypeList, typename StorageList, typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallForTypesWithFloatFallback(Functor&& functor, Args&&... args) const;
+
   /// \brief Call a functor on an array extracted from the components.
   ///
   /// `CastAndCallWithExtractedArray` behaves similarly to `CastAndCallForTypes`.
@@ -1071,6 +1075,23 @@ inline void UnknownArrayHandle::CastAndCallForTypes(Functor&& f, Args&&... args)
   }
 }
 
+template <typename TypeList, typename StorageTagList, typename Functor, typename... Args>
+VTKM_CONT void UnknownArrayHandle::CastAndCallForTypesWithFloatFallback(Functor&& functor,
+                                                                        Args&&... args) const
+{
+  try
+  {
+    this->template CastAndCallForTypes<TypeList, StorageTagList>(std::forward<Functor>(functor),
+                                                                 std::forward<Args>(args)...);
+  }
+  catch (vtkm::cont::ErrorBadType&)
+  {
+    vtkm::cont::UnknownArrayHandle floatArray = this->NewInstanceFloatBasic();
+    floatArray.DeepCopyFrom(*this);
+    floatArray.template CastAndCallForTypes<TypeList, StorageTagList>(
+      std::forward<Functor>(functor), std::forward<Args>(args)...);
+  }
+}
 
 //=============================================================================
 // Free function casting helpers

@@ -108,6 +108,13 @@ public:
     this->CastAndCallForTypes<ValueTypeList, StorageTypeList>(std::forward<Functor>(functor),
                                                               std::forward<Args>(args)...);
   }
+
+  template <typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallWithFloatFallback(Functor&& functor, Args&&... args) const
+  {
+    this->template CastAndCallForTypesWithFloatFallback<ValueTypeList, StorageTypeList>(
+      std::forward<Functor>(functor), std::forward<Args>(args)...);
+  }
 };
 
 // Defined here to avoid circular dependencies between UnknownArrayHandle and UncertainArrayHandle.

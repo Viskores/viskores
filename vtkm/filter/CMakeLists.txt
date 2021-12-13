@@ -142,7 +142,6 @@ set(extra_header_template_sources
   ComputeMoments.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
-  DotProduct.hxx
   Entropy.hxx
   ExternalFaces.hxx
   FieldToColors.hxx
@@ -234,7 +233,9 @@ vtkm_pyexpander_generated_file(ClipWithFieldExternInstantiations.h)
 vtkm_pyexpander_generated_file(ClipWithImplicitFunctionExternInstantiations.h)
 
 set(core_headers
-  NewFilter.h)
+  NewFilter.h
+  NewFilterField.h
+  )
 set(core_sources_device
   NewFilter.cxx)
 
@@ -315,6 +316,7 @@ install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 add_subdirectory(internal)
 add_subdirectory(particleadvection)
 add_subdirectory(field_transform)
+add_subdirectory(vector_calculus)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 if (VTKm_ENABLE_TESTING)
