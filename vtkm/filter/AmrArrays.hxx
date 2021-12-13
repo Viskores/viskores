@@ -18,6 +18,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/BoundsCompute.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 
 namespace vtkm
