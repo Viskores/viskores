@@ -59,7 +59,7 @@ find_package(VTKm REQUIRED QUIET)
 # MPI
 ####################################
 if (VTKm_ENABLE_MPI)
-  add_executable(ContourTree_Distributed ContourTreeApp.cxx)
+  add_executable(ContourTree_Distributed ContourTreeApp.cxx ContourTreeAppDataIO.h)
   target_link_libraries(ContourTree_Distributed vtkm_filter vtkm_io MPI::MPI_CXX)
   vtkm_add_target_information(ContourTree_Distributed
                               MODIFY_CUDA_FLAGS
@@ -76,6 +76,9 @@ if (VTKm_ENABLE_MPI)
   if (TARGET vtkm::tbb)
     target_compile_definitions(ContourTree_Distributed PRIVATE "ENABLE_SET_NUM_THREADS")
   endif()
+  if (VTKm_ENABLE_HDF5_IO)
+    target_compile_definitions(ContourTree_Distributed PRIVATE "ENABLE_HDFIO")
+  endif ()
 
   add_executable(TreeCompiler TreeCompilerApp.cxx)
   target_link_libraries(TreeCompiler vtkm_filter)

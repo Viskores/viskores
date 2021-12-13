@@ -71,6 +71,8 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/io/BOVDataSetReader.h>
 
+#include "ContourTreeAppDataIO.h"
+
 #include <vtkm/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
@@ -272,6 +274,48 @@ int main(int argc, char* argv[])
     }
   }
 
+#ifdef ENABLE_HDFIO
+  std::string dataset_name = "data";
+  if (parser.hasOption("--dataset"))
+  {
+    dataset_name = parser.getOption("--dataset");
+  }
+
+  vtkm::Id3 blocksPerDimIn(1, 1, size);
+  if (parser.hasOption("--blocksPerDim"))
+  {
+    std::string temp = parser.getOption("--blocksPerDim");
+    if (std::count(temp.begin(), temp.end(), ',') != 2)
+    {
+      std::cerr << "Invalid --blocksPerDim option. Expected string of the form 'x,y,z' got" << temp
+                << std::endl;
+      MPI_Finalize();
+      return EXIT_FAILURE;
+    }
+    char* tempC = (char*)temp.c_str();
+    blocksPerDimIn[0] = std::stoi(std::strtok(tempC, ","));
+    blocksPerDimIn[1] = std::stoi(std::strtok(nullptr, ","));
+    blocksPerDimIn[2] = std::stoi(std::strtok(nullptr, ","));
+  }
+
+  vtkm::Id3 selectSize(-1, -1, -1);
+  if (parser.hasOption("--selectSize"))
+  {
+    std::string temp = parser.getOption("--selectSize");
+    if (std::count(temp.begin(), temp.end(), ',') != 2)
+    {
+      std::cerr << "Invalid --selectSize option. Expected string of the form 'x,y,z' got" << temp
+                << std::endl;
+      MPI_Finalize();
+      return EXIT_FAILURE;
+    }
+    char* tempC = (char*)temp.c_str();
+    selectSize[0] = std::stoi(std::strtok(tempC, ","));
+    selectSize[1] = std::stoi(std::strtok(nullptr, ","));
+    selectSize[2] = std::stoi(std::strtok(nullptr, ","));
+  }
+#endif
+
   if (argc < 2 || parser.hasOption("--help") || parser.hasOption("-h"))
   {
     if (rank == 0)
@@ -307,11 +351,24 @@ int main(int argc, char* argv[])
                 << "                 computation (Default=False). " << std::endl;
       std::cout << "--saveOutputData  Save data files with hierarchical tree or volume data"
                 << std::endl;
-      std::cout << "--numBlocks      Number of blocks to use during computation "
+      std::cout << "--numBlocks      Number of blocks to use during computation. (Sngle block "
+                   "ASCII/BOV file reader only)"
                 << "(Default=number of MPI ranks.)" << std::endl;
       std::cout << "--forwardSummary Forward the summary timings also to the per-rank " << std::endl
                 << "                 log files. Default is to round-robin print the " << std::endl
                 << "                 summary instead" << std::endl;
+#ifdef ENABLE_HDFIO
+      std::cout << "--dataset        Name of the dataset to load (HDF5 reader only)(Default=data)"
+                << std::endl;
+      std::cout << "--blocksPerDim   Number of blocks to split the data into. This is a string of "
+                   "the form 'x,y,z'."
+                   "(HDF5 reader only)(Default='1,1,#ranks')"
+                << std::endl;
+      std::cout
+        << "--selectSize   Size of the subblock to read. This is a string of the form 'x,y,z'."
+           "(HDF5 reader only)(Default='-1,-1,-1')"
+        << std::endl;
+#endif
       std::cout << std::endl;
     }
     MPI_Finalize();
@@ -334,7 +391,15 @@ int main(int argc, char* argv[])
                  << computeHierarchicalVolumetricBranchDecomposition << std::endl
                  << "    saveOutputData=" << saveOutputData << std::endl
                  << "    forwardSummary=" << forwardSummary << std::endl
-                 << "    nblocks=" << numBlocks << std::endl);
+                 << "    nblocks=" << numBlocks << std::endl
+#ifdef ENABLE_HDFIO
+                 << "    dataset=" << dataset_name << std::endl
+                 << "    blocksPerDim=" << blocksPerDimIn[0] << "," << blocksPerDimIn[1] << ","
+                 << blocksPerDimIn[2] << std::endl
+                 << "    selectSize=" << selectSize[0] << "," << selectSize[1] << ","
+                 << selectSize[2] << std::endl
+#endif
+    );
   }
 
   // Redirect stdout to file if we are using MPI with Debugging
@@ -411,430 +476,90 @@ int main(int argc, char* argv[])
   auto localBlockSizesPortal = localBlockSizes.WritePortal();
 
   // Read the pre-split data files
+  bool readOk = true;
   if (preSplitFiles)
   {
-    for (int blockNo = 0; blockNo < blocksPerRank; ++blockNo)
-    {
-      // Translate pattern into filename for this block
-      char block_filename[256];
-      snprintf(block_filename,
-               sizeof(block_filename),
-               filename.c_str(),
-               static_cast<int>(rank * blocksPerRank + blockNo));
-      std::cout << "Reading file " << block_filename << std::endl;
-
-      // Open file
-      std::ifstream inFile(block_filename);
-      if (!inFile.is_open() || inFile.bad())
-      {
-        std::cerr << "Error: Couldn't open file " << block_filename << std::endl;
-        MPI_Finalize();
-        return EXIT_FAILURE;
-      }
-
-      // Read header with dimensions
-      std::string line;
-      std::string tag;
-      vtkm::Id dimVertices;
-
-      getline(inFile, line);
-      std::istringstream global_extents_stream(line);
-      global_extents_stream >> tag;
-      if (tag != "#GLOBAL_EXTENTS")
-      {
-        std::cerr << "Error: Expected #GLOBAL_EXTENTS, got " << tag << std::endl;
-        MPI_Finalize();
-        return EXIT_FAILURE;
-      }
-
-      std::vector<vtkm::Id> global_extents;
-      while (global_extents_stream >> dimVertices)
-        global_extents.push_back(dimVertices);
-
-      // Swap dimensions so that they are from fastest to slowest growing
-      // dims[0] -> col; dims[1] -> row, dims[2] ->slice
-      std::swap(global_extents[0], global_extents[1]);
-
-      if (blockNo == 0)
-      { // First block: Set globalSize
-        globalSize =
-          vtkm::Id3{ static_cast<vtkm::Id>(global_extents[0]),
-                     static_cast<vtkm::Id>(global_extents[1]),
-                     static_cast<vtkm::Id>(global_extents.size() > 2 ? global_extents[2] : 1) };
-      }
-      else
-      { // All other blocks: Consistency check of globalSize
-        if (globalSize !=
-            vtkm::Id3{ static_cast<vtkm::Id>(global_extents[0]),
-                       static_cast<vtkm::Id>(global_extents[1]),
-                       static_cast<vtkm::Id>(global_extents.size() > 2 ? global_extents[2] : 1) })
-        {
-          std::cerr << "Error: Global extents mismatch between blocks!" << std::endl;
-          MPI_Finalize();
-          return EXIT_FAILURE;
-        }
-      }
-
-      getline(inFile, line);
-      std::istringstream offset_stream(line);
-      offset_stream >> tag;
-      if (tag != "#OFFSET")
-      {
-        std::cerr << "Error: Expected #OFFSET, got " << tag << std::endl;
-        MPI_Finalize();
-        return EXIT_FAILURE;
-      }
-      std::vector<vtkm::Id> offset;
-      while (offset_stream >> dimVertices)
-        offset.push_back(dimVertices);
-      // Swap dimensions so that they are from fastest to slowest growing
-      // dims[0] -> col; dims[1] -> row, dims[2] ->slice
-      std::swap(offset[0], offset[1]);
-
-      getline(inFile, line);
-      std::istringstream bpd_stream(line);
-      bpd_stream >> tag;
-      if (tag != "#BLOCKS_PER_DIM")
-      {
-        std::cerr << "Error: Expected #BLOCKS_PER_DIM, got " << tag << std::endl;
-        MPI_Finalize();
-        return EXIT_FAILURE;
-      }
-      std::vector<vtkm::Id> bpd;
-      while (bpd_stream >> dimVertices)
-        bpd.push_back(dimVertices);
-      // Swap dimensions so that they are from fastest to slowest growing
-      // dims[0] -> col; dims[1] -> row, dims[2] ->slice
-      std::swap(bpd[0], bpd[1]);
-
-      getline(inFile, line);
-      std::istringstream blockIndex_stream(line);
-      blockIndex_stream >> tag;
-      if (tag != "#BLOCK_INDEX")
-      {
-        std::cerr << "Error: Expected #BLOCK_INDEX, got " << tag << std::endl;
-        MPI_Finalize();
-        return EXIT_FAILURE;
-      }
-      std::vector<vtkm::Id> blockIndex;
-      while (blockIndex_stream >> dimVertices)
-        blockIndex.push_back(dimVertices);
-      // Swap dimensions so that they are from fastest to slowest growing
-      // dims[0] -> col; dims[1] -> row, dims[2] ->slice
-      std::swap(blockIndex[0], blockIndex[1]);
-
-      getline(inFile, line);
-      std::istringstream linestream(line);
-      std::vector<vtkm::Id> dims;
-      while (linestream >> dimVertices)
-      {
-        dims.push_back(dimVertices);
-      }
-
-      if (dims.size() != global_extents.size() || dims.size() != offset.size())
-      {
-        std::cerr << "Error: Dimension mismatch" << std::endl;
-        MPI_Finalize();
-        return EXIT_FAILURE;
-      }
-      // Swap dimensions so that they are from fastest to slowest growing
-      // dims[0] -> col; dims[1] -> row, dims[2] ->slice
-      std::swap(dims[0], dims[1]);
-
-      // Compute the number of vertices, i.e., xdim * ydim * zdim
-      nDims = static_cast<unsigned short>(dims.size());
-      std::size_t numVertices = static_cast<std::size_t>(
-        std::accumulate(dims.begin(), dims.end(), std::size_t(1), std::multiplies<std::size_t>()));
-
-      // Check for fatal input errors
-      // Check that the number of dimensiosn is either 2D or 3D
-      bool invalidNumDimensions = (nDims < 2 || nDims > 3);
-      // Log any errors if found on rank 0
-      VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
-                    invalidNumDimensions && (rank == 0),
-                    "The input mesh is " << nDims
-                                         << "D. "
-                                            "The input data must be either 2D or 3D.");
-
-      // If we found any errors in the setttings than finalize MPI and exit the execution
-      if (invalidNumDimensions)
-      {
-        MPI_Finalize();
-        return EXIT_FAILURE;
-      }
-
-      // Read data
-      std::vector<ValueType> values(numVertices);
-      if (filename.compare(filename.length() - 5, 5, ".bdem") == 0)
-      {
-        inFile.read(reinterpret_cast<char*>(values.data()),
-                    static_cast<std::streamsize>(numVertices * sizeof(ValueType)));
-      }
-      else
-      {
-        for (std::size_t vertex = 0; vertex < numVertices; ++vertex)
-        {
-          inFile >> values[vertex];
-        }
-      }
-
-      currTime = totalTime.GetElapsedTime();
-      dataReadTime = currTime - prevTime;
-      prevTime = currTime;
-
-      // Create vtk-m data set
-      vtkm::cont::DataSetBuilderUniform dsb;
-      vtkm::cont::DataSet ds;
-      if (nDims == 2)
-      {
-        const vtkm::Id2 v_dims{
-          static_cast<vtkm::Id>(dims[0]),
-          static_cast<vtkm::Id>(dims[1]),
-        };
-        const vtkm::Vec<ValueType, 2> v_origin{ static_cast<ValueType>(offset[0]),
-                                                static_cast<ValueType>(offset[1]) };
-        const vtkm::Vec<ValueType, 2> v_spacing{ 1, 1 };
-        ds = dsb.Create(v_dims, v_origin, v_spacing);
-      }
-      else
-      {
-        VTKM_ASSERT(nDims == 3);
-        const vtkm::Id3 v_dims{ static_cast<vtkm::Id>(dims[0]),
-                                static_cast<vtkm::Id>(dims[1]),
-                                static_cast<vtkm::Id>(dims[2]) };
-        const vtkm::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[0]),
-                                                static_cast<ValueType>(offset[1]),
-                                                static_cast<ValueType>(offset[2]) };
-        vtkm::Vec<ValueType, 3> v_spacing(1, 1, 1);
-        ds = dsb.Create(v_dims, v_origin, v_spacing);
-      }
-      ds.AddPointField("values", values);
-      // and add to partition
-      useDataSet.AppendPartition(ds);
-
-      localBlockIndicesPortal.Set(
-        blockNo,
-        vtkm::Id3{ static_cast<vtkm::Id>(blockIndex[0]),
-                   static_cast<vtkm::Id>(blockIndex[1]),
-                   static_cast<vtkm::Id>(nDims == 3 ? blockIndex[2] : 0) });
-      localBlockOriginsPortal.Set(blockNo,
-                                  vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
-                                             static_cast<vtkm::Id>(offset[1]),
-                                             static_cast<vtkm::Id>(nDims == 3 ? offset[2] : 0) });
-      localBlockSizesPortal.Set(blockNo,
-                                vtkm::Id3{ static_cast<vtkm::Id>(dims[0]),
-                                           static_cast<vtkm::Id>(dims[1]),
-                                           static_cast<vtkm::Id>(nDims == 3 ? dims[2] : 0) });
-
-      if (blockNo == 0)
-      {
-        blocksPerDim = vtkm::Id3{ static_cast<vtkm::Id>(bpd[0]),
-                                  static_cast<vtkm::Id>(bpd[1]),
-                                  static_cast<vtkm::Id>(nDims == 3 ? bpd[2] : 1) };
-      }
-    }
-
-    // Print the mesh metadata
-    if (rank == 0)
-    {
-      VTKM_LOG_S(exampleLogLevel,
-                 std::endl
-                   << "    ---------------- Input Mesh Properties --------------" << std::endl
-                   << "    Number of dimensions: " << nDims << std::endl);
-    }
+    readOk = readPreSplitFiles<ValueType>(
+      // inputs
+      rank,
+      filename,
+      blocksPerRank,
+      // outputs
+      nDims,
+      useDataSet,
+      globalSize,
+      blocksPerDim,
+      localBlockIndices,
+      localBlockOrigins,
+      localBlockSizes,
+      // output timers
+      dataReadTime,
+      buildDatasetTime);
   }
   // Read single-block data and split it for the ranks
   else
   {
-    vtkm::cont::DataSet inDataSet;
-    // Currently FloatDefualt would be fine, but it could cause problems if we ever
-    // read binary files here.
-    std::vector<ValueType> values;
-    std::vector<vtkm::Id> dims;
-
-    // Read BOV data file
-    if (filename.compare(filename.length() - 3, 3, "bov") == 0)
+    bool isHDF5 = (0 == filename.compare(filename.length() - 3, 3, ".h5"));
+    if (isHDF5)
     {
-      std::cout << "Reading BOV file" << std::endl;
-      vtkm::io::BOVDataSetReader reader(filename);
-      inDataSet = reader.ReadDataSet();
-      nDims = 3;
-      currTime = totalTime.GetElapsedTime();
-      dataReadTime = currTime - prevTime;
-      prevTime = currTime;
-      // Copy the data into the values array so we can construct a multiblock dataset
-      // TODO All we should need to do to implement BOV support is to copy the values
-      // in the values vector and copy the dimensions in the dims vector
-      vtkm::Id3 pointDimensions;
-      auto cellSet = inDataSet.GetCellSet();
-      vtkm::cont::CastAndCall(
-        cellSet, vtkm::worklet::contourtree_augmented::GetPointDimensions(), pointDimensions);
-      std::cout << "Point dimensions are " << pointDimensions << std::endl;
-      dims.resize(3);
-      dims[0] = pointDimensions[0];
-      dims[1] = pointDimensions[1];
-      dims[2] = pointDimensions[2];
-      auto tempFieldData = inDataSet.GetField(0).GetData();
-      values.resize(static_cast<std::size_t>(tempFieldData.GetNumberOfValues()));
-      auto valuesHandle = vtkm::cont::make_ArrayHandle(values, vtkm::CopyFlag::Off);
-      vtkm::cont::ArrayCopy(tempFieldData, valuesHandle);
-      valuesHandle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
+#ifdef ENABLE_HDFIO
+      blocksPerDim = blocksPerDimIn;
+      readOk = read3DHDF5File<ValueType>(
+        // inputs
+        rank,
+        filename,
+        dataset_name,
+        blocksPerRank,
+        blocksPerDim,
+        selectSize,
+        // outputs
+        nDims,
+        useDataSet,
+        globalSize,
+        localBlockIndices,
+        localBlockOrigins,
+        localBlockSizes,
+        // output timers
+        dataReadTime,
+        buildDatasetTime);
+#else
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "Can't read HDF5 file. HDF5 reader disabled for this build.");
+      readOk = false;
+#endif
     }
-    // Read ASCII data input
-    else
-    {
-      std::cout << "Reading ASCII file" << std::endl;
-      std::ifstream inFile(filename);
-      if (inFile.bad())
-        return 0;
+    readOk = readSingleBlockFile<ValueType>(
+      // inputs
+      rank,
+      size,
+      filename,
+      numBlocks,
+      blocksPerRank,
+      // outputs
+      nDims,
+      useDataSet,
+      globalSize,
+      blocksPerDim,
+      localBlockIndices,
+      localBlockOrigins,
+      localBlockSizes,
+      // output timers
+      dataReadTime,
+      buildDatasetTime);
+  }
+  if (!readOk)
+  {
+    MPI_Finalize();
+    return EXIT_FAILURE;
+  }
 
-      // Read the dimensions of the mesh, i.e,. number of elementes in x, y, and z
-      std::string line;
-      getline(inFile, line);
-      std::istringstream linestream(line);
-      vtkm::Id dimVertices;
-      while (linestream >> dimVertices)
-      {
-        dims.push_back(dimVertices);
-      }
-      // Swap dimensions so that they are from fastest to slowest growing
-      // dims[0] -> col; dims[1] -> row, dims[2] ->slice
-      std::swap(dims[0], dims[1]);
-
-      // Compute the number of vertices, i.e., xdim * ydim * zdim
-      nDims = static_cast<unsigned short>(dims.size());
-      std::size_t numVertices = static_cast<std::size_t>(
-        std::accumulate(dims.begin(), dims.end(), std::size_t(1), std::multiplies<std::size_t>()));
-
-      // Check the the number of dimensiosn is either 2D or 3D
-      bool invalidNumDimensions = (nDims < 2 || nDims > 3);
-      // Log any errors if found on rank 0
-      VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
-                    invalidNumDimensions && (rank == 0),
-                    "The input mesh is " << nDims << "D. The input data must be either 2D or 3D.");
-      // If we found any errors in the setttings than finalize MPI and exit the execution
-      if (invalidNumDimensions)
-      {
-        MPI_Finalize();
-        return EXIT_FAILURE;
-      }
-
-      // Read data
-      values.resize(numVertices);
-      for (std::size_t vertex = 0; vertex < numVertices; ++vertex)
-      {
-        inFile >> values[vertex];
-      }
-
-      // finish reading the data
-      inFile.close();
-
-      currTime = totalTime.GetElapsedTime();
-      dataReadTime = currTime - prevTime;
-      prevTime = currTime;
-
-    } // END ASCII Read
-
-    // Print the mesh metadata
-    if (rank == 0)
-    {
-      VTKM_LOG_S(exampleLogLevel,
-                 std::endl
-                   << "    ---------------- Input Mesh Properties --------------" << std::endl
-                   << "    Number of dimensions: " << nDims);
-    }
-
-    // Create a multi-block dataset for multi-block DIY-paralle processing
-    blocksPerDim = nDims == 3 ? vtkm::Id3(1, 1, numBlocks)
-                              : vtkm::Id3(1, numBlocks, 1); // Decompose the data into
-    globalSize = nDims == 3 ? vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
-                                        static_cast<vtkm::Id>(dims[1]),
-                                        static_cast<vtkm::Id>(dims[2]))
-                            : vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
-                                        static_cast<vtkm::Id>(dims[1]),
-                                        static_cast<vtkm::Id>(1));
-    std::cout << blocksPerDim << " " << globalSize << std::endl;
-    {
-      vtkm::Id lastDimSize =
-        (nDims == 2) ? static_cast<vtkm::Id>(dims[1]) : static_cast<vtkm::Id>(dims[2]);
-      if (size > (lastDimSize / 2.))
-      {
-        VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
-                      rank == 0,
-                      "Number of ranks too large for data. Use " << lastDimSize / 2
-                                                                 << "or fewer ranks");
-        MPI_Finalize();
-        return EXIT_FAILURE;
-      }
-      vtkm::Id standardBlockSize = (vtkm::Id)(lastDimSize / numBlocks);
-      vtkm::Id blockSize = standardBlockSize;
-      vtkm::Id blockSliceSize =
-        nDims == 2 ? static_cast<vtkm::Id>(dims[0]) : static_cast<vtkm::Id>((dims[0] * dims[1]));
-      vtkm::Id blockNumValues = blockSize * blockSliceSize;
-
-      vtkm::Id startBlock = blocksPerRank * rank;
-      vtkm::Id endBlock = startBlock + blocksPerRank;
-      for (vtkm::Id blockIndex = startBlock; blockIndex < endBlock; ++blockIndex)
-      {
-        vtkm::Id localBlockIndex = blockIndex - startBlock;
-        vtkm::Id blockStart = blockIndex * blockNumValues;
-        vtkm::Id blockEnd = blockStart + blockNumValues;
-        if (blockIndex < (numBlocks - 1)) // add overlap between regions
-        {
-          blockEnd += blockSliceSize;
-        }
-        else
-        {
-          blockEnd = lastDimSize * blockSliceSize;
-        }
-        vtkm::Id currBlockSize = (vtkm::Id)((blockEnd - blockStart) / blockSliceSize);
-
-        vtkm::cont::DataSetBuilderUniform dsb;
-        vtkm::cont::DataSet ds;
-
-        // 2D data
-        if (nDims == 2)
-        {
-          vtkm::Id2 vdims;
-          vdims[0] = static_cast<vtkm::Id>(dims[0]);
-          vdims[1] = static_cast<vtkm::Id>(currBlockSize);
-          vtkm::Vec<ValueType, 2> origin(0, blockIndex * blockSize);
-          vtkm::Vec<ValueType, 2> spacing(1, 1);
-          ds = dsb.Create(vdims, origin, spacing);
-
-          localBlockIndicesPortal.Set(localBlockIndex, vtkm::Id3(0, blockIndex, 0));
-          localBlockOriginsPortal.Set(localBlockIndex,
-                                      vtkm::Id3(0, (blockStart / blockSliceSize), 0));
-          localBlockSizesPortal.Set(localBlockIndex,
-                                    vtkm::Id3(static_cast<vtkm::Id>(dims[0]), currBlockSize, 0));
-        }
-        // 3D data
-        else
-        {
-          vtkm::Id3 vdims;
-          vdims[0] = static_cast<vtkm::Id>(dims[0]);
-          vdims[1] = static_cast<vtkm::Id>(dims[1]);
-          vdims[2] = static_cast<vtkm::Id>(currBlockSize);
-          vtkm::Vec<ValueType, 3> origin(0, 0, (blockIndex * blockSize));
-          vtkm::Vec<ValueType, 3> spacing(1, 1, 1);
-          ds = dsb.Create(vdims, origin, spacing);
-
-          localBlockIndicesPortal.Set(localBlockIndex, vtkm::Id3(0, 0, blockIndex));
-          localBlockOriginsPortal.Set(localBlockIndex,
-                                      vtkm::Id3(0, 0, (blockStart / blockSliceSize)));
-          localBlockSizesPortal.Set(localBlockIndex,
-                                    vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
-                                              static_cast<vtkm::Id>(dims[1]),
-                                              currBlockSize));
-        }
-
-        std::vector<vtkm::Float32> subValues((values.begin() + blockStart),
-                                             (values.begin() + blockEnd));
-
-        ds.AddPointField("values", subValues);
-        useDataSet.AppendPartition(ds);
-      }
-    }
+  // Print the mesh metadata
+  if (rank == 0)
+  {
+    VTKM_LOG_S(exampleLogLevel,
+               std::endl
+                 << "    ---------------- Input Mesh Properties --------------" << std::endl
+                 << "    Number of dimensions: " << nDims);
   }
 
   // Check if marching cubes is enabled for non 3D data
@@ -852,9 +577,8 @@ int main(int argc, char* argv[])
     return EXIT_FAILURE;
   }
 
-  currTime = totalTime.GetElapsedTime();
-  buildDatasetTime = currTime - prevTime;
-  prevTime = currTime;
+  // reset timer after read. the dataReadTime and buildDatasetTime are measured by the read functions
+  prevTime = totalTime.GetElapsedTime();
 
   // Make sure that all ranks have started up before we start the data read
   MPI_Barrier(comm);
