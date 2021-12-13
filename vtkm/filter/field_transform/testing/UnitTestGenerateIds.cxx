@@ -7,14 +7,10 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
-#include <vtkm/filter/GenerateIds.h>
-
-#include <vtkm/source/Tangle.h>
-
 #include <vtkm/cont/ArrayHandleIndex.h>
-
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/field_transform/GenerateIds.h>
+#include <vtkm/source/Tangle.h>
 
 namespace
 {
@@ -38,8 +34,9 @@ void CheckField(const vtkm::cont::UnknownArrayHandle& array, vtkm::Id expectedSi
   }
 }
 
-void TryGenerateIds(vtkm::filter::GenerateIds& filter, // Why is Filter::Execute not const?
-                    const vtkm::cont::DataSet& input)
+void TryGenerateIds(
+  vtkm::filter::field_transform::GenerateIds& filter, // Why is Filter::Execute not const?
+  const vtkm::cont::DataSet& input)
 {
   vtkm::cont::DataSet output = filter.Execute(input);
   VTKM_TEST_ASSERT(output.GetNumberOfPoints() == input.GetNumberOfPoints());
@@ -81,7 +78,7 @@ void TryGenerateIds(vtkm::filter::GenerateIds& filter, // Why is Filter::Execute
 void TestGenerateIds()
 {
   vtkm::cont::DataSet input = vtkm::source::Tangle{ vtkm::Id3(8) }.Execute();
-  vtkm::filter::GenerateIds filter;
+  vtkm::filter::field_transform::GenerateIds filter;
 
   TryGenerateIds(filter, input);
 
