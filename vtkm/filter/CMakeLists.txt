@@ -77,6 +77,7 @@ set(common_sources_device
 )
 
 set(extra_headers
+  AmrArrays.h
   CellSetConnectivity.h
   ClipWithField.h
   ClipWithImplicitFunction.h
@@ -134,6 +135,7 @@ set(extra_headers
   )
 
 set(extra_header_template_sources
+  AmrArrays.hxx
   CellSetConnectivity.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx

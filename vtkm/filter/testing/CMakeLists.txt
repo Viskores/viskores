@@ -99,6 +99,7 @@ if (VTKm_ENABLE_RENDERING)
   list(APPEND libraries vtkm_rendering)
 
   list(APPEND unit_tests
+    RegressionTestAmrArrays.cxx
     RegressionTestContourFilter.cxx
     RegressionTestPointTransform.cxx
     RegressionTestSliceFilter.cxx
