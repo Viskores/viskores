@@ -62,7 +62,7 @@ namespace filter
 /// DataSet.
 ///
 /// The default implementation of `Execute(PartitionedDataSet&)` is merely provided for
-/// convenience. Internally, it calls `DoExecute(PartitionedDataSet)` to iterate DataSets
+/// convenience. Internally, it calls `DoExecutePartitions(PartitionedDataSet)` to iterate DataSets
 /// of a PartitionedDataSet and pass each individual DataSets to `DoExecute(DataSet&)`,
 /// possibly in a multi-threaded setting. Developer of `DoExecute(DataSet&)` needs to indicate
 /// the thread-safeness of `DoExecute(DataSet&)` by overriding the `CanThread()` virtual method
@@ -70,7 +70,7 @@ namespace filter
 ///
 /// In the case that filtering on a PartitionedDataSet can not be simply implemented as a
 /// for-each loop on the component DataSets, filter implementor needs to override the
-/// `DoExecute(PartitionedDataSet&)`. See the implementation of
+/// `DoExecutePartitions(PartitionedDataSet&)`. See the implementation of
 /// `FilterParticleAdvection::Execute(PartitionedDataSet&)` for an example.
 ///
 /// \section FilterSubclassing Subclassing
@@ -108,15 +108,15 @@ namespace filter
 /// The aforementioned approach is also suitable for filters that need special handling for
 /// PartitionedDataSets that requires certain cross DataSet operations (usually scatter/gather
 /// and reduction on DataSets) before and/or after the per DataSet operation. This can be done by
-/// overriding `DoExecute(PartitionedDataSet&)` while calling to the base class
-/// `DoExecute(PartitionedDataSet&) as helper function for iteration on DataSets.
+/// overriding `DoExecutePartitions(PartitionedDataSet&)` while calling to the base class
+/// `DoExecutePartitions(PartitionedDataSet&) as helper function for iteration on DataSets.
 ///
 /// \code{cpp}
-/// vtkm::cont::PartitionedDataSet FooFilter::DoExecute(
+/// vtkm::cont::PartitionedDataSet FooFilter::DoExecutePartitions(
 ///   const vtkm::cont::PartitionedDataSet& input)
 /// {
 ///   // Do pre execute stuff, e.g. scattering to each DataSet
-///   auto output = this->NewFilter::DoExecute(input);
+///   auto output = this->NewFilter::DoExecutePartitions(input);
 ///   // Do post execute stuff, e.g gather/reduce from DataSets
 ///   return output;
 /// }
@@ -124,8 +124,9 @@ namespace filter
 ///
 /// For more complex filters, like streamlines, particle tracking, where the processing of
 /// PartitionedDataSets cannot be modelled as mapping and reduction operation on DataSet, one
-/// needs fully implement `DoExecute(PartitionedDataSet&)`. Now the subclass is given full control
-/// over the execution, including any mapping of fields to output (described in next sub-section).
+/// needs fully implement `DoExecutePartitions(PartitionedDataSet&)`. Now the subclass is given
+/// full control over the execution, including any mapping of fields to output (described in next
+/// sub-section).
 ///
 /// \subsection FilterMappingFields MapFieldsOntoOutput
 ///
@@ -162,8 +163,8 @@ namespace filter
 ///
 /// By default, the implementation of `DoExecute(DataSet&)` should model a *pure function*, i.e. it
 /// does not have any mutable shared state. This makes it thread-safe by default and allows
-/// the default implementation of `DoExecute(PartitionedDataSet&)` to be simply a parallel for-each,
-/// thus facilitates multi-threaded execution without any lock.
+/// the default implementation of `DoExecutePartitions(PartitionedDataSet&)` to be simply a parallel
+/// for-each, thus facilitates multi-threaded execution without any lock.
 ///
 /// Many legacy (VTKm 1.x) filter implementations needed to store states between the mesh generation
 /// phase and field mapping phase of filter execution, for example, parameters for field
@@ -205,8 +206,8 @@ namespace filter
 /// \subsection FilterThreadScheduling DoExecute
 /// The default multi-threaded execution of `Execute(PartitionedDataSet&)` uses a simple FIFO queue
 /// of DataSet and pool of *worker* threads. Implementation of Filter subclass can override the
-/// `DoExecute(PartitionedDataSet)` virtual method to provide implementation specific scheduling
-/// policy. The default number of *worker* threads in the pool are determined by the
+/// `DoExecutePartitions(PartitionedDataSet)` virtual method to provide implementation specific
+/// scheduling policy. The default number of *worker* threads in the pool are determined by the
 /// `DetermineNumberOfThreads()` virtual method using several backend dependent heuristic.
 /// Implementations of Filter subclass can also override
 /// `DetermineNumberOfThreads()` to provide implementation specific heuristic.
@@ -344,7 +345,7 @@ private:
 
   // Note: In C++, subclasses can override private methods of superclass.
   VTKM_CONT virtual vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) = 0;
-  VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecute(
+  VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData);
 
   static void defaultMapper(vtkm::cont::DataSet& output, const vtkm::cont::Field& field)

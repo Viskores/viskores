@@ -45,7 +45,8 @@ bool NewFilter::CanThread() const
 }
 
 //----------------------------------------------------------------------------
-vtkm::cont::PartitionedDataSet NewFilter::DoExecute(const vtkm::cont::PartitionedDataSet& input)
+vtkm::cont::PartitionedDataSet NewFilter::DoExecutePartitions(
+  const vtkm::cont::PartitionedDataSet& input)
 {
   vtkm::cont::PartitionedDataSet output;
 
@@ -95,7 +96,7 @@ vtkm::cont::PartitionedDataSet NewFilter::Execute(const vtkm::cont::PartitionedD
                  (int)input.GetNumberOfPartitions(),
                  vtkm::cont::TypeToString<decltype(*this)>().c_str());
 
-  vtkm::cont::PartitionedDataSet output = this->DoExecute(input);
+  vtkm::cont::PartitionedDataSet output = this->DoExecutePartitions(input);
   return output;
 }
 
