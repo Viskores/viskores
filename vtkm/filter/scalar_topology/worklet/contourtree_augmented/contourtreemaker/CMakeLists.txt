@@ -24,6 +24,7 @@ set(headers
   FindDegrees_SubtractLHE.h
   FindDegrees_FindRHE.h
   FindDegrees_ResetUpAndDowndegree.h
+  MoveNoSuchElementToBackComparator.h
   TransferLeafChains_CollapsePastRegular.h
   TransferLeafChains_InitInAndOutbound.h
   TransferLeafChains_TransferToContourTree.h

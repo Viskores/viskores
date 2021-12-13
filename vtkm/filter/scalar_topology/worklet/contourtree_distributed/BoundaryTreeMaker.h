@@ -397,6 +397,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::ComputeDependentBound
     vtkm::cont::make_ArrayHandleConstant(0, this->ContourTree.Superarcs.GetNumberOfValues()),
     this->SuperarcIntrinsicBoundaryCount);
   //   b. sort the superparents
+  vtkm::worklet::contourtree_augmented::AssertArrayHandleNoFlagsSet(this->BoundarySuperparents);
   vtkm::cont::Algorithm::Sort(this->BoundarySuperparents);
 
   // c.  Now compute the number of boundary vertices per superarc

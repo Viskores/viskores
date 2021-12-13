@@ -54,6 +54,9 @@
 #ifndef vtk_m_worklet_contourtree_augmented_types_h
 #define vtk_m_worklet_contourtree_augmented_types_h
 
+#include <type_traits>
+
+#include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -134,6 +137,33 @@ inline bool IsThis(vtkm::Id flaggedIndex)
 { // IsThis
   return ((flaggedIndex & CV_OTHER_FLAG) == 0);
 } // IsThis
+
+// Helper function: Ensure no flags are set
+VTKM_EXEC_CONT
+inline bool NoFlagsSet(vtkm::Id flaggedIndex)
+{ // NoFlagsSet
+  return (flaggedIndex & ~INDEX_MASK) == 0;
+} // NoFlagsSet
+
+
+// Debug helper function: Assert that an index array has no element with any flags set
+VTKM_CONT
+template <typename AH>
+inline void AssertArrayHandleNoFlagsSet(const AH& ah)
+{
+  static_assert(std::is_same<typename AH::ValueType, vtkm::Id>::value,
+                "AssertArrayHandleNoFlagsSet needs index array handle as input");
+#ifndef VTKM_NO_ASSERT
+  auto rp = ah.ReadPortal();
+  for (vtkm::Id i = 0; i < ah.GetNumberOfValues(); ++i)
+  {
+    VTKM_ASSERT(NoFlagsSet(rp.Get(i)));
+  }
+#else
+  (void)ah;
+#endif
+}
+
 
 /// Helper function to set a single array valye with CopySubRange to avoid pulling the array to the control environment
 VTKM_CONT
