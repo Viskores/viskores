@@ -9,7 +9,7 @@ removed.
 
 This new design also made Filter implementations thread-safe by default. Filter
 implementations are encouraged to take advantage of the new design and removing
-shared metatable states from their `DoExecute`, see Docygen documentation in
+shared metatable states from their `DoExecute`, see Doxygen documentation in
 NewFilter.h
 
 Filter implementations are also re-organized into submodules, with each submodule
