@@ -98,11 +98,11 @@ set(unit_tests
   )
 
 set(library_sources
+  MakeTestDataSet.cxx
   TestEqualArrayHandles.cxx
   )
 
 set(library_sources_device
-  MakeTestDataSet.cxx
   TestEqualArrayHandles.cxx # Really doesn't need device, but currently includes device headers
   )
 

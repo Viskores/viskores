@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
@@ -334,9 +333,8 @@ vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(const vtkm::Id3 dims)
   dataSet.AddPointField("pointvar", pointvar);
 
   vtkm::Id numCells = (dims[0] - 1) * (dims[1] - 1) * (dims[2] - 1);
-  vtkm::cont::ArrayHandle<vtkm::Float64> cellvar;
-  vtkm::cont::ArrayCopy(
-    vtkm::cont::make_ArrayHandleCounting(vtkm::Float64(0), vtkm::Float64(1), numCells), cellvar);
+  std::vector<vtkm::Float64> cellvar(numCells);
+  std::iota(cellvar.begin(), cellvar.end(), 0);
   dataSet.AddCellField("cellvar", cellvar);
 
   return dataSet;
