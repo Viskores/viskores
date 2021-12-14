@@ -15,12 +15,11 @@
 #include <vtkm/source/PerlinNoise.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-namespace vtkm
+#include <time.h>
+
+namespace
 {
-namespace source
-{
-namespace perlin
-{
+
 struct PerlinNoiseWorklet : public vtkm::worklet::WorkletVisitPointsWithCells
 {
   using ControlSignature = void(CellSetIn, FieldInPoint, WholeArrayIn, FieldOut noise);
@@ -177,7 +176,35 @@ private:
   vtkm::Id Seed;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> Permutations;
 };
-} // namespace perlin
+
+} // anonymous namespace
+
+namespace vtkm
+{
+namespace source
+{
+
+PerlinNoise::PerlinNoise(vtkm::Id3 dims)
+  : PerlinNoise(dims, vtkm::Vec3f(0), static_cast<vtkm::IdComponent>(time(NULL)))
+{
+}
+
+PerlinNoise::PerlinNoise(vtkm::Id3 dims, vtkm::IdComponent seed)
+  : PerlinNoise(dims, vtkm::Vec3f(0), seed)
+{
+}
+
+PerlinNoise::PerlinNoise(vtkm::Id3 dims, vtkm::Vec3f origin)
+  : PerlinNoise(dims, origin, static_cast<vtkm::IdComponent>(time(NULL)))
+{
+}
+
+PerlinNoise::PerlinNoise(vtkm::Id3 dims, vtkm::Vec3f origin, vtkm::IdComponent seed)
+  : Dims(dims)
+  , Origin(origin)
+  , Seed(seed)
+{
+}
 
 vtkm::cont::DataSet PerlinNoise::Execute() const
 {
@@ -198,7 +225,7 @@ vtkm::cont::DataSet PerlinNoise::Execute() const
 
   auto tableSize = static_cast<vtkm::IdComponent>(
     vtkm::Max(this->Dims[0], vtkm::Max(this->Dims[1], this->Dims[2])));
-  perlin::PerlinNoiseField noiseGenerator(tableSize, this->Seed);
+  PerlinNoiseField noiseGenerator(tableSize, this->Seed);
   noiseGenerator.SetOutputFieldName("perlinnoise");
   dataSet = noiseGenerator.Execute(dataSet);
 
