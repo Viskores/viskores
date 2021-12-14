@@ -49,6 +49,20 @@ class VTKM_CONT_EXPORT UnknownCellSet
 {
   std::shared_ptr<vtkm::cont::CellSet> Container;
 
+  void InitializeKnownOrUnknownCellSet(const UnknownCellSet& cellSet,
+                                       std::true_type vtkmNotUsed(isUnknownCellSet))
+  {
+    *this = cellSet;
+  }
+
+  template <typename CellSetType>
+  void InitializeKnownOrUnknownCellSet(const CellSetType& cellSet,
+                                       std::false_type vtkmNotUsed(isUnknownCellSet))
+  {
+    VTKM_IS_CELL_SET(CellSetType);
+    this->Container = std::shared_ptr<vtkm::cont::CellSet>(new CellSetType(cellSet));
+  }
+
 public:
   VTKM_CONT UnknownCellSet() = default;
   UnknownCellSet(const UnknownCellSet&) = default;
@@ -56,8 +70,8 @@ public:
   template <typename CellSetType>
   VTKM_CONT UnknownCellSet(const CellSetType& cellSet)
   {
-    VTKM_IS_CELL_SET(CellSetType);
-    this->Container = std::shared_ptr<vtkm::cont::CellSet>(new CellSetType(cellSet));
+    this->InitializeKnownOrUnknownCellSet(
+      cellSet, typename std::is_base_of<UnknownCellSet, CellSetType>::type{});
   }
 
   /// \brief Returns whether a cell set is stored in this `UnknownCellSet`.
@@ -165,13 +179,14 @@ public:
   VTKM_CONT void AsCellSet(CellSetType& cellSet) const
   {
     VTKM_IS_CELL_SET(CellSetType);
-    if (!this->IsType<CellSetType>())
+    CellSetType* cellSetPointer = dynamic_cast<CellSetType*>(this->Container.get());
+    if (cellSetPointer == nullptr)
     {
-      VTKM_LOG_CAST_FAIL(*this, decltype(cellSet));
+      VTKM_LOG_CAST_FAIL(*this, CellSetType);
       throwFailedDynamicCast(this->GetCellSetName(), vtkm::cont::TypeToString(cellSet));
     }
-
-    cellSet = *reinterpret_cast<CellSetType*>(this->Container.get());
+    VTKM_LOG_CAST_SUCC(*this, *cellSetPointer);
+    cellSet = *cellSetPointer;
   }
 
   template <typename CellSetType>
@@ -207,7 +222,57 @@ public:
   ///
   template <typename CellSetList, typename Functor, typename... Args>
   VTKM_CONT void CastAndCallForTypes(Functor&& functor, Args&&... args) const;
+
+  // Support for (soon to be) deprecated DynamicCellSet
+  // TODO: Deprecate these methods
+
+  template <typename CellSetType>
+  VTKM_CONT bool IsSameType(const CellSetType&) const
+  {
+    return this->IsType<CellSetType>();
+  }
+
+  template <typename CellSetType>
+  VTKM_CONT CellSetType Cast() const
+  {
+    return this->AsCellSet<CellSetType>();
+  }
+
+  template <typename CellSetType>
+  VTKM_CONT void CopyTo(CellSetType& cellSet) const
+  {
+    return this->AsCellSet(cellSet);
+  }
+
+  //  template <typename Functor, typename... Args>
+  //  VTKM_CONT void CastAndCall(Functor&& f, Args&&... args) const
+  //  {
+  //    this->CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(
+  //      std::forward<Functor>(f), std::forward<Args>(args)...);
+  //  }
 };
+
+//=============================================================================
+// Free function casting helpers
+// (Not sure if these should be deprecated.)
+
+/// Returns true if `unknownCellSet` matches the type of `CellSetType`.
+///
+template <typename CellSetType>
+VTKM_CONT inline bool IsType(const vtkm::cont::UnknownCellSet& unknownCellSet)
+{
+  return unknownCellSet.IsType<CellSetType>();
+}
+
+/// Returns `unknownCellSet` cast to the given `CellSet` type. Throws
+/// `ErrorBadType` if the cast does not work. Use `IsType`
+/// to check if the cast can happen.
+///
+template <typename CellSetType>
+VTKM_CONT inline CellSetType Cast(const vtkm::cont::UnknownCellSet& unknownCellSet)
+{
+  return unknownCellSet.Cast<CellSetType>();
+}
 
 namespace internal
 {
@@ -262,6 +327,23 @@ void CastAndCall(const vtkm::cont::UnknownCellSet& cellSet, Functor&& f, Args&&.
                                                           std::forward<Args>(args)...);
 }
 
+namespace internal
+{
+
+/// Checks to see if the given object is an unknown (or uncertain) cell set. It
+/// resolves to either `std::true_type` or `std::false_type`.
+///
+template <typename T>
+using UnknownCellSetCheck = typename std::is_base_of<vtkm::cont::UnknownCellSet, T>::type;
+
+#define VTKM_IS_UNKNOWN_CELL_SET(T) \
+  VTKM_STATIC_ASSERT(::vtkm::cont::internal::UnknownCellSetCheck<T>::value)
+
+#define VTKM_IS_KNOWN_OR_UNKNOWN_CELL_SET(T)                                 \
+  VTKM_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value || \
+                     ::vtkm::cont::internal::UnknownCellSetCheck<T>::value)
+
+} // namespace internal
 
 } // namespace vtkm::cont
 } // namespace vtkm

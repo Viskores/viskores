@@ -49,7 +49,7 @@ public:
   VTKM_CONT UncertainCellSet() = default;
 
   template <typename CellSetType>
-  explicit VTKM_CONT UncertainCellSet(const CellSetType& cellSet)
+  VTKM_CONT UncertainCellSet(const CellSetType& cellSet)
     : Superclass(cellSet)
   {
   }
