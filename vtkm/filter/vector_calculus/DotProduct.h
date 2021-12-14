@@ -23,8 +23,6 @@ namespace vector_calculus
 class VTKM_FILTER_VECTOR_CALCULUS_EXPORT DotProduct : public vtkm::filter::NewFilterField
 {
 public:
-  using AdditionalFieldStorage = vtkm::ListEmpty;
-
   VTKM_CONT DotProduct();
 
   //@{

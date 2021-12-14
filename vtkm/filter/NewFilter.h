@@ -240,11 +240,6 @@ public:
     }
   }
 
-  /// \brief Specify which subset of types a filter supports.
-  ///
-  /// A filter is able to state what subset of types it supports.
-  using SupportedTypes = VTKM_DEFAULT_TYPE_LIST;
-
   //@{
   /// \brief Specify which fields get passed from input to output.
   ///

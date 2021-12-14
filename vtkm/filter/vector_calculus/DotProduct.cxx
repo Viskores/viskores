@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/PolicyDefault.h>
 #include <vtkm/filter/vector_calculus/DotProduct.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -85,17 +84,12 @@ struct ResolveTypeFunctor
 
 VTKM_CONT_EXPORT vtkm::cont::DataSet DotProduct::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
-  // ApplyPolicyFeildActive turns the UnknownArrayHandle to UncerntainArrayHandle with
-  // certain ValueType and Stroage based on PolicyDefault and Filter::Supported type. We
-  // could just do it ourselves but here we are demonstrating what the "helper" function
-  // looks like.
-  const auto& primary =
-    vtkm::filter::ApplyPolicyFieldActive(this->GetFieldFromDataSet(inDataSet),
-                                         vtkm::filter::PolicyDefault{},
-                                         vtkm::filter::FilterTraits<DotProduct>());
+  const auto& primaryArray = this->GetFieldFromDataSet(inDataSet).GetData();
 
   vtkm::cont::UnknownArrayHandle outArray;
-  primary.CastAndCallWithFloatFallback(ResolveTypeFunctor{}, *this, inDataSet, outArray);
+  primaryArray
+    .CastAndCallForTypesWithFloatFallback<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
+      ResolveTypeFunctor{}, *this, inDataSet, outArray);
 
   vtkm::cont::DataSet outDataSet = inDataSet; // copy
   outDataSet.AddField({ this->GetOutputFieldName(),
