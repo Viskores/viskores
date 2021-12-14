@@ -78,14 +78,13 @@ public:
     const std::string& name,
     vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
   {
-    this->SecondaryFieldName = name;
-    this->SecondaryFieldAssociation = association;
+    this->SetActiveField(1, name, association);
   }
 
-  VTKM_CONT const std::string& GetSecondaryFieldName() const { return this->SecondaryFieldName; }
+  VTKM_CONT const std::string& GetSecondaryFieldName() const { return this->GetActiveFieldName(1); }
   VTKM_CONT vtkm::cont::Field::Association GetSecondaryFieldAssociation() const
   {
-    return this->SecondaryFieldAssociation;
+    return this->GetActiveFieldAssociation(1);
   }
   //@}
 
@@ -95,12 +94,12 @@ public:
   VTKM_CONT
   void SetUseCoordinateSystemAsSecondaryField(bool flag)
   {
-    this->UseCoordinateSystemAsSecondaryField = flag;
+    this->SetUseCoordinateSystemAsField(1, flag);
   }
   VTKM_CONT
   bool GetUseCoordinateSystemAsSecondaryField() const
   {
-    return this->UseCoordinateSystemAsSecondaryField;
+    return this->GetUseCoordinateSystemAsField(1);
   }
   //@}
 
@@ -122,9 +121,6 @@ public:
 private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
-  std::string SecondaryFieldName;
-  vtkm::cont::Field::Association SecondaryFieldAssociation = vtkm::cont::Field::Association::ANY;
-  bool UseCoordinateSystemAsSecondaryField = false;
   vtkm::Id SecondaryCoordinateSystemIndex = 0;
 };
 } // namespace vector_calculus
