@@ -102,6 +102,7 @@ set(library_sources
   )
 
 set(library_sources_device
+  MakeTestDataSet.cxx
   TestEqualArrayHandles.cxx # Really doesn't need device, but currently includes device headers
   )
 

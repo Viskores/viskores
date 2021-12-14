@@ -10,7 +10,7 @@
 #include <vtkm/worklet/SplitSharpEdges.h>
 #include <vtkm/worklet/SurfaceNormals.h>
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 

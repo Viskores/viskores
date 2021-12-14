@@ -245,7 +245,7 @@ vtkm_library(
   USE_VTKM_JOB_POOL
 )
 
-add_library(vtkm_filter INTERFACE)
+add_library(vtkm_filter INTERFACE ../cont/testing/MakeTestDataSet.cxx)
 
 vtkm_library(
   NAME vtkm_filter_common
