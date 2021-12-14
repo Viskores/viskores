@@ -153,6 +153,14 @@ struct Range
     return unionRange;
   }
 
+  /// \b Return the intersection of this and another range.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Range Intersection(const vtkm::Range& otherRange) const
+  {
+    return vtkm::Range(vtkm::Max(this->Min, otherRange.Min), vtkm::Min(this->Max, otherRange.Max));
+  }
+
   /// \b Operator for union
   ///
   VTKM_EXEC_CONT
