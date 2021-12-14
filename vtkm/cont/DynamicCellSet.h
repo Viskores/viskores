@@ -77,13 +77,50 @@ public:
   }
 };
 
-using DynamicCellSet = DynamicCellSetBase<VTKM_DEFAULT_CELL_SET_LIST>;
+struct VTKM_ALWAYS_EXPORT DynamicCellSet : public vtkm::cont::UnknownCellSet
+{
+  using UnknownCellSet::UnknownCellSet;
+
+  DynamicCellSet() = default;
+
+  DynamicCellSet(const vtkm::cont::UnknownCellSet& src)
+    : UnknownCellSet(src)
+  {
+  }
+
+  operator vtkm::cont::DynamicCellSetBase<VTKM_DEFAULT_CELL_SET_LIST>() const
+  {
+    return vtkm::cont::DynamicCellSetBase<VTKM_DEFAULT_CELL_SET_LIST>{ *this };
+  }
+
+  VTKM_CONT vtkm::cont::DynamicCellSet NewInstance() const
+  {
+    return vtkm::cont::DynamicCellSet(this->UnknownCellSet::NewInstance());
+  }
+
+  template <typename NewCellSetList>
+  VTKM_CONT vtkm::cont::DynamicCellSetBase<NewCellSetList> ResetCellSetList(NewCellSetList) const
+  {
+    return vtkm::cont::DynamicCellSetBase<NewCellSetList>(*this);
+  }
+  template <typename NewCellSetList>
+  VTKM_CONT vtkm::cont::DynamicCellSetBase<NewCellSetList> ResetCellSetList() const
+  {
+    return vtkm::cont::DynamicCellSetBase<NewCellSetList>(*this);
+  }
+};
 
 namespace internal
 {
 
 template <typename CellSetList>
 struct DynamicTransformTraits<vtkm::cont::DynamicCellSetBase<CellSetList>>
+{
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
+};
+
+template <>
+struct DynamicTransformTraits<vtkm::cont::DynamicCellSet>
 {
   using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };

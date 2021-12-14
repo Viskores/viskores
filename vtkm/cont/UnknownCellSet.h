@@ -244,12 +244,12 @@ public:
     return this->AsCellSet(cellSet);
   }
 
-  //  template <typename Functor, typename... Args>
-  //  VTKM_CONT void CastAndCall(Functor&& f, Args&&... args) const
-  //  {
-  //    this->CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(
-  //      std::forward<Functor>(f), std::forward<Args>(args)...);
-  //  }
+  template <typename Functor, typename... Args>
+  VTKM_CONT void CastAndCall(Functor&& f, Args&&... args) const
+  {
+    this->CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(std::forward<Functor>(f),
+                                                          std::forward<Args>(args)...);
+  }
 };
 
 //=============================================================================
