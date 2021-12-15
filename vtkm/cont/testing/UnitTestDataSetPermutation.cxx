@@ -11,6 +11,7 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
