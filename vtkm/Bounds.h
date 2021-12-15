@@ -102,6 +102,42 @@ struct Bounds
     return (this->X.Contains(point[0]) && this->Y.Contains(point[1]) && this->Z.Contains(point[2]));
   }
 
+  /// \b Returns the volume of the bounds.
+  ///
+  /// \c Volume computes the product of the lengths of the ranges in each dimension. If the bounds
+  /// are empty, 0 is returned.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Float64 Volume() const
+  {
+    if (this->IsNonEmpty())
+    {
+      return (this->X.Length() * this->Y.Length() * this->Z.Length());
+    }
+    else
+    {
+      return 0.0;
+    }
+  }
+
+  /// \b Returns the area of the bounds in the X-Y-plane.
+  ///
+  /// \c Area computes the product of the lengths of the ranges in dimensions X and Y. If the bounds
+  /// are empty, 0 is returned.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Float64 Area() const
+  {
+    if (this->IsNonEmpty())
+    {
+      return (this->X.Length() * this->Y.Length());
+    }
+    else
+    {
+      return 0.0;
+    }
+  }
+
   /// \b Returns the center of the range.
   ///
   /// \c Center computes the point at the middle of the bounds. If the bounds
@@ -150,6 +186,16 @@ struct Bounds
     vtkm::Bounds unionBounds(*this);
     unionBounds.Include(otherBounds);
     return unionBounds;
+  }
+
+  /// \b Return the intersection of this and another range.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Bounds Intersection(const vtkm::Bounds& otherBounds) const
+  {
+    return vtkm::Bounds(this->X.Intersection(otherBounds.X),
+                        this->Y.Intersection(otherBounds.Y),
+                        this->Z.Intersection(otherBounds.Z));
   }
 
   /// \b Operator for union

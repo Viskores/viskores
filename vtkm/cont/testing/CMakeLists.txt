@@ -98,6 +98,7 @@ set(unit_tests
   )
 
 set(library_sources
+  MakeTestDataSet.cxx
   TestEqualArrayHandles.cxx
   )
 
