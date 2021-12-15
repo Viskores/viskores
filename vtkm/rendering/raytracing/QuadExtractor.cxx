@@ -199,7 +199,7 @@ public:
 
 } //namespace detail
 
-void QuadExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells)
+void QuadExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells)
 {
   vtkm::Id numOfQuads;
   vtkm::rendering::Quadralizer quadrizer;
@@ -209,7 +209,7 @@ void QuadExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells)
 }
 
 
-void QuadExtractor::SetQuadIdsFromCells(const vtkm::cont::DynamicCellSet& cells)
+void QuadExtractor::SetQuadIdsFromCells(const vtkm::cont::UnknownCellSet& cells)
 {
   vtkm::Id numCells = cells.GetNumberOfCells();
   if (numCells == 0)

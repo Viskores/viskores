@@ -22,6 +22,7 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <vtkm/cont/testing/vtkm_cont_testing_export.h>
@@ -459,10 +460,24 @@ namespace detail
 
 struct TestEqualCellSet
 {
+  template <typename CellSetType1, typename CellSetType2>
+  void operator()(const CellSetType1& cs1, const CellSetType2& cs2, TestEqualResult& result) const
+  {
+    // Avoid ambiguous overloads by specifying whether each cell type is known or unknown.
+    this->Run(cs1,
+              typename vtkm::cont::internal::CellSetCheck<CellSetType1>::type{},
+              cs2,
+              typename vtkm::cont::internal::CellSetCheck<CellSetType2>::type{},
+              result);
+  }
+
+private:
   template <typename ShapeST, typename ConnectivityST, typename OffsetST>
-  void operator()(const vtkm::cont::CellSetExplicit<ShapeST, ConnectivityST, OffsetST>& cs1,
-                  const vtkm::cont::CellSetExplicit<ShapeST, ConnectivityST, OffsetST>& cs2,
-                  TestEqualResult& result) const
+  void Run(const vtkm::cont::CellSetExplicit<ShapeST, ConnectivityST, OffsetST>& cs1,
+           std::true_type,
+           const vtkm::cont::CellSetExplicit<ShapeST, ConnectivityST, OffsetST>& cs2,
+           std::true_type,
+           TestEqualResult& result) const
   {
     vtkm::TopologyElementTagCell visitTopo{};
     vtkm::TopologyElementTagPoint incidentTopo{};
@@ -505,9 +520,11 @@ struct TestEqualCellSet
   }
 
   template <vtkm::IdComponent DIMENSION>
-  void operator()(const vtkm::cont::CellSetStructured<DIMENSION>& cs1,
-                  const vtkm::cont::CellSetStructured<DIMENSION>& cs2,
-                  TestEqualResult& result) const
+  void Run(const vtkm::cont::CellSetStructured<DIMENSION>& cs1,
+           std::true_type,
+           const vtkm::cont::CellSetStructured<DIMENSION>& cs2,
+           std::true_type,
+           TestEqualResult& result) const
   {
     if (cs1.GetPointDimensions() != cs2.GetPointDimensions())
     {
@@ -517,26 +534,56 @@ struct TestEqualCellSet
   }
 
   template <typename CellSetTypes1, typename CellSetTypes2>
-  void operator()(const vtkm::cont::DynamicCellSetBase<CellSetTypes1>& cs1,
-                  const vtkm::cont::DynamicCellSetBase<CellSetTypes2>& cs2,
-                  TestEqualResult& result) const
+  void Run(const vtkm::cont::DynamicCellSetBase<CellSetTypes1>& cs1,
+           std::false_type,
+           const vtkm::cont::DynamicCellSetBase<CellSetTypes2>& cs2,
+           std::false_type,
+           TestEqualResult& result) const
   {
     cs1.CastAndCall(*this, cs2, result);
   }
 
-  template <typename CellSet, typename CellSetTypes>
-  void operator()(const CellSet& cs,
-                  const vtkm::cont::DynamicCellSetBase<CellSetTypes>& dcs,
-                  TestEqualResult& result) const
+  template <typename CellSetType>
+  void Run(const CellSetType& cs1,
+           std::true_type,
+           const vtkm::cont::UnknownCellSet& cs2,
+           std::false_type,
+           TestEqualResult& result) const
   {
-    if (!dcs.IsSameType(cs))
+    if (!cs2.CanConvert<CellSetType>())
     {
       result.PushMessage("types don't match");
       return;
     }
-    this->operator()(cs, dcs.template Cast<CellSet>(), result);
+    this->Run(cs1, std::true_type{}, cs2.AsCellSet<CellSetType>(), std::true_type{}, result);
+  }
+
+  template <typename CellSetType>
+  void Run(const vtkm::cont::UnknownCellSet& cs1,
+           std::false_type,
+           const CellSetType& cs2,
+           std::true_type,
+           TestEqualResult& result) const
+  {
+    if (!cs1.CanConvert<CellSetType>())
+    {
+      result.PushMessage("types don't match");
+      return;
+    }
+    this->Run(cs1.AsCellSet<CellSetType>(), std::true_type{}, cs2, std::true_type{}, result);
+  }
+
+  template <typename UnknownCellSetType>
+  void Run(const UnknownCellSetType& cs1,
+           std::false_type,
+           const vtkm::cont::UnknownCellSet& cs2,
+           std::false_type,
+           TestEqualResult& result) const
+  {
+    vtkm::cont::CastAndCall(cs1, *this, cs2, result);
   }
 };
+
 } // detail
 
 template <typename CellSet1, typename CellSet2>

@@ -14,10 +14,10 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace vtkm
 {
@@ -221,21 +221,18 @@ public:
   vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name);
   //@}
 
-  VTKM_CONT
-  void SetCellSet(const vtkm::cont::DynamicCellSet& cellSet) { this->CellSet = cellSet; }
-
   template <typename CellSetType>
   VTKM_CONT void SetCellSet(const CellSetType& cellSet)
   {
-    VTKM_IS_CELL_SET(CellSetType);
-    this->CellSet = vtkm::cont::DynamicCellSet(cellSet);
+    VTKM_IS_KNOWN_OR_UNKNOWN_CELL_SET(CellSetType);
+    this->CellSet = vtkm::cont::UnknownCellSet(cellSet);
   }
 
   VTKM_CONT
-  const vtkm::cont::DynamicCellSet& GetCellSet() const { return this->CellSet; }
+  const vtkm::cont::UnknownCellSet& GetCellSet() const { return this->CellSet; }
 
   VTKM_CONT
-  vtkm::cont::DynamicCellSet& GetCellSet() { return this->CellSet; }
+  vtkm::cont::UnknownCellSet& GetCellSet() { return this->CellSet; }
 
   VTKM_CONT
   vtkm::IdComponent GetNumberOfFields() const
@@ -290,7 +287,7 @@ private:
 
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
   std::map<FieldCompare::Key, vtkm::cont::Field, FieldCompare> Fields;
-  vtkm::cont::DynamicCellSet CellSet;
+  vtkm::cont::UnknownCellSet CellSet;
 
   VTKM_CONT
   vtkm::Id FindFieldIndex(const std::string& name,
@@ -370,9 +367,9 @@ public:
       dataset.AddCoordinateSystem(coords);
     }
 
-    vtkm::cont::DynamicCellSetBase<CellSetTypesList> cells;
+    vtkm::cont::UncertainCellSet<CellSetTypesList> cells;
     vtkmdiy::load(bb, cells);
-    dataset.SetCellSet(vtkm::cont::DynamicCellSet(cells));
+    dataset.SetCellSet(cells);
 
     vtkm::IdComponent numberOfFields = 0;
     vtkmdiy::load(bb, numberOfFields);
