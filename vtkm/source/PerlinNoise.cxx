@@ -38,9 +38,9 @@ struct PerlinNoiseWorklet : public vtkm::worklet::WorkletVisitPointsWithCells
     vtkm::Id xi = static_cast<vtkm::Id>(pos[0]) % this->Repeat;
     vtkm::Id yi = static_cast<vtkm::Id>(pos[1]) % this->Repeat;
     vtkm::Id zi = static_cast<vtkm::Id>(pos[2]) % this->Repeat;
-    vtkm::FloatDefault xf = pos[0] - xi;
-    vtkm::FloatDefault yf = pos[1] - yi;
-    vtkm::FloatDefault zf = pos[2] - zi;
+    vtkm::FloatDefault xf = static_cast<vtkm::FloatDefault>(pos[0] - xi);
+    vtkm::FloatDefault yf = static_cast<vtkm::FloatDefault>(pos[1] - yi);
+    vtkm::FloatDefault zf = static_cast<vtkm::FloatDefault>(pos[2] - zi);
     vtkm::FloatDefault u = this->Fade(xf);
     vtkm::FloatDefault v = this->Fade(yf);
     vtkm::FloatDefault w = this->Fade(zf);
@@ -157,7 +157,7 @@ private:
     rng.seed(this->Seed);
     std::uniform_int_distribution<vtkm::Id> distribution(0, this->TableSize - 1);
 
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> perms;
+    vtkm::cont::ArrayHandle<vtkm::Id> perms;
     perms.Allocate(this->TableSize);
     auto permsPortal = perms.WritePortal();
     for (auto i = 0; i < permsPortal.GetNumberOfValues(); ++i)
@@ -174,7 +174,7 @@ private:
 
   vtkm::IdComponent TableSize;
   vtkm::Id Seed;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> Permutations;
+  vtkm::cont::ArrayHandle<vtkm::Id> Permutations;
 };
 
 } // anonymous namespace
