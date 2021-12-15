@@ -85,6 +85,8 @@ public:
     return this->UseCoordinateSystemAsField[index];
   }
   //@}
+
+protected:
   VTKM_CONT
   const vtkm::cont::Field& GetFieldFromDataSet(const vtkm::cont::DataSet& input) const
   {

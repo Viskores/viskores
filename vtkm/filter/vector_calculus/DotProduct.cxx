@@ -44,7 +44,7 @@ namespace filter
 namespace vector_calculus
 {
 
-VTKM_CONT_EXPORT DotProduct::DotProduct()
+VTKM_CONT DotProduct::DotProduct()
 {
   this->SetOutputFieldName("dotproduct");
 }
@@ -82,7 +82,7 @@ struct ResolveTypeFunctor
   }
 };
 
-VTKM_CONT_EXPORT vtkm::cont::DataSet DotProduct::DoExecute(const vtkm::cont::DataSet& inDataSet)
+VTKM_CONT vtkm::cont::DataSet DotProduct::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
   const auto& primaryArray = this->GetFieldFromDataSet(inDataSet).GetData();
 
