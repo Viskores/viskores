@@ -233,9 +233,17 @@ public:
   }
 
   template <typename CellSetType>
-  VTKM_CONT CellSetType Cast() const
+  VTKM_CONT CellSetType& Cast() const
   {
-    return this->AsCellSet<CellSetType>();
+    VTKM_IS_CELL_SET(CellSetType);
+    CellSetType* cellSetPointer = dynamic_cast<CellSetType*>(this->Container.get());
+    if (cellSetPointer == nullptr)
+    {
+      VTKM_LOG_CAST_FAIL(*this, CellSetType);
+      throwFailedDynamicCast(this->GetCellSetName(), vtkm::cont::TypeToString<CellSetType>());
+    }
+    VTKM_LOG_CAST_SUCC(*this, *cellSetPointer);
+    return *cellSetPointer;
   }
 
   template <typename CellSetType>
