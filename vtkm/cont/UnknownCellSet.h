@@ -95,7 +95,7 @@ public:
   ///
   VTKM_CONT UnknownCellSet NewInstance() const;
 
-  /// \brief Returns the name of the cell set type stored in the array.
+  /// \brief Returns the name of the cell set type stored in this class.
   ///
   /// Returns an empty string if no cell set is stored.
   ///
@@ -305,7 +305,7 @@ VTKM_CONT void UnknownCellSet::CastAndCallForTypes(Functor&& functor, Args&&... 
         // vtkm::cont::UnknownCellSet and the arguments of the functor do not match those
         // being passed. This is often because it is calling the functor with a CellSet
         // type that was not expected. Either add overloads to the functor to accept all
-        // possible array types or constrain the types tried for the CastAndCall.
+        // possible cell set types or constrain the types tried for the CastAndCall.
         functor(cellSet, args...);
       }
     },

@@ -67,7 +67,7 @@ namespace internal
 void ThrowCastAndCallException(const vtkm::cont::UnknownCellSet& ref, const std::type_info& type)
 {
   std::ostringstream out;
-  out << "Could not find appropriate cast for array in CastAndCall.\n"
+  out << "Could not find appropriate cast for cell set in CastAndCall.\n"
          "CellSet: ";
   ref.PrintSummary(out);
   out << "TypeList: " << vtkm::cont::TypeToString(type) << "\n";

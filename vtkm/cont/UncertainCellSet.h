@@ -69,15 +69,15 @@ public:
 
   /// \brief Create a new cell set of the same type as this.
   ///
-  /// This method creates a new array that is the same type as this one and
+  /// This method creates a new cell set that is the same type as this one and
   /// returns a new `UncertainCellSet` for it.
   ///
   VTKM_CONT Thisclass NewInstance() const { return Thisclass(this->Superclass::NewInstance()); }
 
-  /// \brief Call a functor using the underlying array type.
+  /// \brief Call a functor using the underlying cell set type.
   ///
-  /// `CastAndCall` attempts to cast the held array to a specific value type,
-  /// and then calls the given functor with the cast array.
+  /// `CastAndCall` attempts to cast the held cell set to a specific type,
+  /// and then calls the given functor with the cast cell set.
   ///
   template <typename Functor, typename... Args>
   VTKM_CONT void CastAndCall(Functor&& functor, Args&&... args) const
@@ -87,7 +87,7 @@ public:
   }
 };
 
-// Defined here to avoid circular dependencies between UnknownArrayHandle and UncertainArrayHandle.
+// Defined here to avoid circular dependencies between UnknownCellSet and UncertainCellSet.
 template <typename NewCellSetList>
 VTKM_CONT vtkm::cont::UncertainCellSet<NewCellSetList> UnknownCellSet::ResetCellSetList(
   NewCellSetList) const
@@ -154,16 +154,16 @@ struct UncertainCellSetDeserializeFunctor
 {
   template <typename CellSetType>
   void operator()(CellSetType,
-                  vtkm::cont::UnknownCellSet& unknownArray,
+                  vtkm::cont::UnknownCellSet& unknownCellSet,
                   const std::string& typeString,
                   bool& success,
                   BinaryBuffer& bb) const
   {
     if (!success && (typeString == vtkm::cont::SerializableTypeString<CellSetType>::Get()))
     {
-      CellSetType knownArray;
-      vtkmdiy::load(bb, knownArray);
-      unknownArray = knownArray;
+      CellSetType knownCellSet;
+      vtkmdiy::load(bb, knownCellSet);
+      unknownCellSet = knownCellSet;
       success = true;
     }
   }
