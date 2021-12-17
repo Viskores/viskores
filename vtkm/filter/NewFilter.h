@@ -146,7 +146,7 @@ namespace filter
 ///      auto outputField = ... // Business logic for mapping input field to output field
 ///      output.AddField(outputField);
 ///   };
-///   MapFieldsOntoOutput(input, output, mapper);
+///   this->MapFieldsOntoOutput(input, output, mapper);
 ///
 ///   return output;
 /// }
@@ -193,7 +193,7 @@ namespace filter
 ///      auto outputField = ... // Use `states` for mapping input field to output field
 ///      output.AddField(outputField);
 ///   };
-///   MapFieldsOntoOutput(input, output, mapper);
+///   this->MapFieldsOntoOutput(input, output, mapper);
 ///
 ///   return output;
 /// }
@@ -331,7 +331,7 @@ protected:
 
   VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input, vtkm::cont::DataSet& output)
   {
-    MapFieldsOntoOutput(input, output, defaultMapper);
+    this->MapFieldsOntoOutput(input, output, defaultMapper);
   }
 
 private:

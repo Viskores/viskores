@@ -73,7 +73,7 @@ public:
   void SetUseCoordinateSystemAsField(vtkm::IdComponent index, bool val)
   {
     auto index_st = static_cast<std::size_t>(index);
-    ResizeIfNeeded(index_st);
+    this->ResizeIfNeeded(index_st);
     this->UseCoordinateSystemAsField[index] = val;
   }
 
@@ -90,7 +90,7 @@ protected:
   VTKM_CONT
   const vtkm::cont::Field& GetFieldFromDataSet(const vtkm::cont::DataSet& input) const
   {
-    return GetFieldFromDataSet(0, input);
+    return this->GetFieldFromDataSet(0, input);
   }
 
   VTKM_CONT
@@ -111,16 +111,16 @@ protected:
 private:
   void ResizeIfNeeded(size_t index_st)
   {
-    if (ActiveFieldNames.size() <= index_st)
+    if (this->ActiveFieldNames.size() <= index_st)
     {
-      auto oldSize = ActiveFieldNames.size();
-      ActiveFieldNames.resize(index_st + 1);
-      ActiveFieldAssociation.resize(index_st + 1);
-      UseCoordinateSystemAsField.resize(index_st + 1);
+      auto oldSize = this->ActiveFieldNames.size();
+      this->ActiveFieldNames.resize(index_st + 1);
+      this->ActiveFieldAssociation.resize(index_st + 1);
+      this->UseCoordinateSystemAsField.resize(index_st + 1);
       for (std::size_t i = oldSize; i <= index_st; ++i)
       {
-        ActiveFieldAssociation[i] = cont::Field::Association::ANY;
-        UseCoordinateSystemAsField[i] = false;
+        this->ActiveFieldAssociation[i] = cont::Field::Association::ANY;
+        this->UseCoordinateSystemAsField[i] = false;
       }
     }
   }

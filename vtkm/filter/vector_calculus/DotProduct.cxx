@@ -49,54 +49,54 @@ VTKM_CONT DotProduct::DotProduct()
   this->SetOutputFieldName("dotproduct");
 }
 
-struct ResolveTypeFunctor
-{
-  template <typename T, typename Storage>
-  void operator()(const vtkm::cont::ArrayHandle<T, Storage>& primary,
-                  const DotProduct& filter,
-                  const vtkm::cont::DataSet& input,
-                  vtkm::cont::UnknownArrayHandle& output) const
-  {
-    const auto& secondaryField = [&]() -> const vtkm::cont::Field& {
-      if (filter.GetUseCoordinateSystemAsSecondaryField())
-      {
-        return input.GetCoordinateSystem(filter.GetSecondaryCoordinateSystemIndex());
-      }
-      else
-      {
-        return input.GetField(filter.GetSecondaryFieldName(),
-                              filter.GetSecondaryFieldAssociation());
-      }
-    }();
-
-    vtkm::cont::UnknownArrayHandle secondary = vtkm::cont::ArrayHandle<T>{};
-    secondary.CopyShallowIfPossible(secondaryField.GetData());
-
-    vtkm::cont::ArrayHandle<typename vtkm::VecTraits<T>::ComponentType> result;
-    vtkm::cont::Invoker invoker;
-    invoker(::worklet::DotProduct{},
-            primary,
-            secondary.template AsArrayHandle<vtkm::cont::ArrayHandle<T>>(),
-            result);
-    output = result;
-  }
-};
-
 VTKM_CONT vtkm::cont::DataSet DotProduct::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
   const auto& primaryArray = this->GetFieldFromDataSet(inDataSet).GetData();
 
   vtkm::cont::UnknownArrayHandle outArray;
+
+  // We are using a C++14 auto lambda here. The advantage over a Functor is obvious, we don't
+  // need to explicitly pass filter, input/output DataSets etc. thus reduce the impact to
+  // the legacy code. The lambda can also access the private part of the filter thus reducing
+  // filter's public interface profile. CastAndCall tries to cast primaryArray of unknown value
+  // type and storage to a concrete ArrayHandle<T, S> with T from the `TypeList` and S from
+  // `StorageList`. It then passes the concrete array to the lambda as the first argument.
+  // We can later recover the concrete ValueType, T, from the concrete array.
+  auto ResolveType = [&, this](const auto& concrete) {
+    // use std::decay to remove const ref from the decltype of concrete.
+    using T = typename std::decay_t<decltype(concrete)>::ValueType;
+    const auto& secondaryField = [&]() -> const vtkm::cont::Field& {
+      if (this->GetUseCoordinateSystemAsSecondaryField())
+      {
+        return inDataSet.GetCoordinateSystem(this->GetSecondaryCoordinateSystemIndex());
+      }
+      else
+      {
+        return inDataSet.GetField(this->GetSecondaryFieldName(),
+                                  this->GetSecondaryFieldAssociation());
+      }
+    }();
+    vtkm::cont::UnknownArrayHandle secondary = vtkm::cont::ArrayHandle<T>{};
+    secondary.CopyShallowIfPossible(secondaryField.GetData());
+
+    vtkm::cont::ArrayHandle<typename vtkm::VecTraits<T>::ComponentType> result;
+    this->Invoke(::worklet::DotProduct{},
+                 concrete,
+                 secondary.template AsArrayHandle<vtkm::cont::ArrayHandle<T>>(),
+                 result);
+    outArray = result;
+  };
+
   primaryArray
     .CastAndCallForTypesWithFloatFallback<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
-      ResolveTypeFunctor{}, *this, inDataSet, outArray);
+      ResolveType);
 
   vtkm::cont::DataSet outDataSet = inDataSet; // copy
   outDataSet.AddField({ this->GetOutputFieldName(),
                         this->GetFieldFromDataSet(inDataSet).GetAssociation(),
                         outArray });
 
-  MapFieldsOntoOutput(inDataSet, outDataSet);
+  this->MapFieldsOntoOutput(inDataSet, outDataSet);
 
   return outDataSet;
 }

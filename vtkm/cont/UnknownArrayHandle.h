@@ -826,7 +826,19 @@ public:
   template <typename TypeList, typename StorageList, typename Functor, typename... Args>
   VTKM_CONT void CastAndCallForTypes(Functor&& functor, Args&&... args) const;
 
-  /// TODO: Doxygen
+  /// \brief Call a functor using the underlying array type with a float cast fallback.
+  ///
+  /// `CastAndCallForTypesWithFloatFallback` attempts to cast the held array to a specific
+  /// value type, and then calls the given functor with the cast array. You must specify
+  /// the `TypeList` and `StorageList` as template arguments.
+  ///
+  /// After the functor argument you may add any number of arguments that will be
+  /// passed to the functor after the converted `ArrayHandle`.
+  ///
+  /// If the underlying array does not match any of the requested array types, the
+  /// array is copied to a new `ArrayHandleBasic` with `FloatDefault` components
+  /// in its value and attempts to cast to those types.
+  ///
   template <typename TypeList, typename StorageList, typename Functor, typename... Args>
   VTKM_CONT void CastAndCallForTypesWithFloatFallback(Functor&& functor, Args&&... args) const;
 
@@ -1079,17 +1091,32 @@ template <typename TypeList, typename StorageTagList, typename Functor, typename
 VTKM_CONT void UnknownArrayHandle::CastAndCallForTypesWithFloatFallback(Functor&& functor,
                                                                         Args&&... args) const
 {
-  try
+  using crossProduct = internal::ListAllArrayTypes<TypeList, StorageTagList>;
+
+  bool called = false;
+  vtkm::ListForEach(detail::UnknownArrayHandleTry{},
+                    crossProduct{},
+                    std::forward<Functor>(functor),
+                    called,
+                    *this,
+                    std::forward<Args>(args)...);
+  if (!called)
   {
-    this->template CastAndCallForTypes<TypeList, StorageTagList>(std::forward<Functor>(functor),
-                                                                 std::forward<Args>(args)...);
-  }
-  catch (vtkm::cont::ErrorBadType&)
-  {
+    // Copy to a float array and try again
     vtkm::cont::UnknownArrayHandle floatArray = this->NewInstanceFloatBasic();
     floatArray.DeepCopyFrom(*this);
-    floatArray.template CastAndCallForTypes<TypeList, StorageTagList>(
-      std::forward<Functor>(functor), std::forward<Args>(args)...);
+    vtkm::ListForEach(detail::UnknownArrayHandleTry{},
+                      crossProduct{},
+                      std::forward<Functor>(functor),
+                      called,
+                      floatArray,
+                      std::forward<Args>(args)...);
+  }
+  if (!called)
+  {
+    // throw an exception
+    VTKM_LOG_CAST_FAIL(*this, TypeList);
+    internal::ThrowCastAndCallException(*this, typeid(TypeList));
   }
 }
 
