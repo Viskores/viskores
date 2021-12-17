@@ -23,19 +23,22 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT Pathline::Pathline()
-  : vtkm::filter::FilterTemporalParticleAdvection<Pathline>()
+template <typename ParticleType>
+inline VTKM_CONT PathlineBase<ParticleType>::PathlineBase()
+  : vtkm::filter::FilterTemporalParticleAdvection<PathlineBase<ParticleType>, ParticleType>()
 {
 }
 
 //-----------------------------------------------------------------------------
+template <typename ParticleType>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline::PrepareForExecution(
+inline VTKM_CONT vtkm::cont::PartitionedDataSet PathlineBase<ParticleType>::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   using AlgorithmType = vtkm::filter::particleadvection::PathlineAlgorithm;
   using ThreadedAlgorithmType = vtkm::filter::particleadvection::PathlineThreadedAlgorithm;
+  using TDSIType = vtkm::filter::particleadvection::TemporalDataSetIntegrator;
 
   this->ValidateOptions(input);
 
@@ -43,10 +46,10 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline::PrepareForExecution(
   auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 
   if (this->GetUseThreadedAlgorithm())
-    return vtkm::filter::particleadvection::RunAlgo<DSIType, ThreadedAlgorithmType>(
+    return vtkm::filter::particleadvection::RunAlgo<TDSIType, ThreadedAlgorithmType>(
       boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
   else
-    return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
+    return vtkm::filter::particleadvection::RunAlgo<TDSIType, AlgorithmType>(
       boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
 }
 
