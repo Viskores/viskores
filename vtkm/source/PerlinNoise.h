@@ -30,19 +30,10 @@ class VTKM_SOURCE_EXPORT PerlinNoise final : public vtkm::source::Source
 {
 public:
   ///Construct a PerlinNoise with Cell Dimensions
-  VTKM_CONT
-  PerlinNoise(vtkm::Id3 dims, vtkm::IdComponent seed)
-    : PerlinNoise(dims, vtkm::Vec3f(0), seed)
-  {
-  }
-
-  VTKM_CONT
-  PerlinNoise(vtkm::Id3 dims, vtkm::Vec3f origin, vtkm::IdComponent seed)
-    : Dims(dims)
-    , Origin(origin)
-    , Seed(seed)
-  {
-  }
+  VTKM_CONT PerlinNoise(vtkm::Id3 dims);
+  VTKM_CONT PerlinNoise(vtkm::Id3 dims, vtkm::IdComponent seed);
+  VTKM_CONT PerlinNoise(vtkm::Id3 dims, vtkm::Vec3f origin);
+  VTKM_CONT PerlinNoise(vtkm::Id3 dims, vtkm::Vec3f origin, vtkm::IdComponent seed);
 
   vtkm::IdComponent GetSeed() const { return this->Seed; }
 
