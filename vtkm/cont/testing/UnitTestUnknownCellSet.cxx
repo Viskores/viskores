@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UncertainCellSet.h>
 
 #include <vtkm/cont/ArrayHandleConstant.h>
 
@@ -38,108 +38,112 @@ class DummyCellSet : public vtkm::cont::CellSet
 {
 };
 
-void CheckEmptyDynamicCellSet()
+void CheckEmptyUnknownCellSet()
 {
-  vtkm::cont::DynamicCellSet empty;
+  vtkm::cont::UnknownCellSet empty;
 
-  VTKM_TEST_ASSERT(empty.GetNumberOfCells() == 0, "DynamicCellSet should have no cells");
-  VTKM_TEST_ASSERT(empty.GetNumberOfFaces() == 0, "DynamicCellSet should have no faces");
-  VTKM_TEST_ASSERT(empty.GetNumberOfEdges() == 0, "DynamicCellSet should have no edges");
-  VTKM_TEST_ASSERT(empty.GetNumberOfPoints() == 0, "DynamicCellSet should have no points");
+  VTKM_TEST_ASSERT(empty.GetNumberOfCells() == 0, "UnknownCellSet should have no cells");
+  VTKM_TEST_ASSERT(empty.GetNumberOfFaces() == 0, "UnknownCellSet should have no faces");
+  VTKM_TEST_ASSERT(empty.GetNumberOfEdges() == 0, "UnknownCellSet should have no edges");
+  VTKM_TEST_ASSERT(empty.GetNumberOfPoints() == 0, "UnknownCellSet should have no points");
 
   empty.PrintSummary(std::cout);
 
   using CellSet2D = vtkm::cont::CellSetStructured<2>;
   using CellSet3D = vtkm::cont::CellSetStructured<3>;
-  VTKM_TEST_ASSERT(!empty.template IsType<CellSet2D>(), "DynamicCellSet reports wrong type.");
-  VTKM_TEST_ASSERT(!empty.template IsType<CellSet3D>(), "DynamicCellSet reports wrong type.");
-  VTKM_TEST_ASSERT(!empty.template IsType<DummyCellSet>(), "DynamicCellSet reports wrong type.");
+  VTKM_TEST_ASSERT(!empty.IsType<CellSet2D>(), "UnknownCellSet reports wrong type.");
+  VTKM_TEST_ASSERT(!empty.IsType<CellSet3D>(), "UnknownCellSet reports wrong type.");
+  VTKM_TEST_ASSERT(!empty.IsType<DummyCellSet>(), "UnknownCellSet reports wrong type.");
 
-  CellSet2D instance;
-  VTKM_TEST_ASSERT(!empty.IsSameType(instance), "DynamicCellSet reports wrong type.");
+  VTKM_TEST_ASSERT(!empty.CanConvert<CellSet2D>(), "UnknownCellSet reports wrong type.");
+  VTKM_TEST_ASSERT(!empty.CanConvert<CellSet3D>(), "UnknownCellSet reports wrong type.");
+  VTKM_TEST_ASSERT(!empty.CanConvert<DummyCellSet>(), "UnknownCellSet reports wrong type.");
 
   bool gotException = false;
   try
   {
-    instance = empty.Cast<CellSet2D>();
+    CellSet2D instance = empty.AsCellSet<CellSet2D>();
   }
   catch (vtkm::cont::ErrorBadType&)
   {
     gotException = true;
   }
-  VTKM_TEST_ASSERT(gotException, "Empty DynamicCellSet should have thrown on casting");
+  VTKM_TEST_ASSERT(gotException, "Empty UnknownCellSet should have thrown on casting");
 
   auto empty2 = empty.NewInstance();
-  VTKM_TEST_ASSERT(empty.GetCellSetBase() == nullptr, "DynamicCellSet should contain a nullptr");
-  VTKM_TEST_ASSERT(empty2.GetCellSetBase() == nullptr, "DynamicCellSet should contain a nullptr");
+  VTKM_TEST_ASSERT(empty.GetCellSetBase() == nullptr, "UnknownCellSet should contain a nullptr");
+  VTKM_TEST_ASSERT(empty2.GetCellSetBase() == nullptr, "UnknownCellSet should contain a nullptr");
 }
 
 template <typename CellSetType, typename CellSetList>
-void CheckDynamicCellSet(const CellSetType& cellSet,
-                         vtkm::cont::DynamicCellSetBase<CellSetList> dynamicCellSet)
+void CheckUnknownCellSet(vtkm::cont::UnknownCellSet unknownCellSet)
 {
-  VTKM_TEST_ASSERT(dynamicCellSet.template IsType<CellSetType>(),
-                   "DynamicCellSet reports wrong type.");
-  VTKM_TEST_ASSERT(dynamicCellSet.IsSameType(cellSet), "DynamicCellSet reports wrong type.");
-  VTKM_TEST_ASSERT(!dynamicCellSet.template IsType<DummyCellSet>(),
-                   "DynamicCellSet reports wrong type.");
+  VTKM_TEST_ASSERT(unknownCellSet.CanConvert<CellSetType>());
+  VTKM_TEST_ASSERT(!unknownCellSet.CanConvert<DummyCellSet>());
 
-  dynamicCellSet.template Cast<CellSetType>();
+  unknownCellSet.AsCellSet<CellSetType>();
 
   bool called = false;
-  dynamicCellSet.CastAndCall(CheckFunctor<CellSetType>(), called);
+  unknownCellSet.CastAndCallForTypes<CellSetList>(CheckFunctor<CellSetType>(), called);
+  VTKM_TEST_ASSERT(
+    called, "The functor was never called (and apparently a bad value exception not thrown).");
 
+  if (vtkm::ListHas<CellSetList, VTKM_DEFAULT_CELL_SET_LIST>::value)
+  {
+    called = false;
+    CastAndCall(unknownCellSet, CheckFunctor<CellSetType>(), called);
+    VTKM_TEST_ASSERT(
+      called, "The functor was never called (and apparently a bad value exception not thrown).");
+  }
+
+  vtkm::cont::UncertainCellSet<CellSetList> uncertainCellSet(unknownCellSet);
+
+  called = false;
+  uncertainCellSet.CastAndCall(CheckFunctor<CellSetType>(), called);
   VTKM_TEST_ASSERT(
     called, "The functor was never called (and apparently a bad value exception not thrown).");
 
   called = false;
-  CastAndCall(dynamicCellSet, CheckFunctor<CellSetType>(), called);
-
+  CastAndCall(uncertainCellSet, CheckFunctor<CellSetType>(), called);
   VTKM_TEST_ASSERT(
     called, "The functor was never called (and apparently a bad value exception not thrown).");
 }
 
-template <typename CellSetType, typename CellSetList>
-void TryNewInstance(CellSetType, vtkm::cont::DynamicCellSetBase<CellSetList> originalCellSet)
+template <typename CellSetType>
+void TryNewInstance(vtkm::cont::UnknownCellSet& originalCellSet)
 {
-  vtkm::cont::DynamicCellSetBase<CellSetList> newCellSet = originalCellSet.NewInstance();
+  vtkm::cont::UnknownCellSet newCellSet = originalCellSet.NewInstance();
 
-  VTKM_TEST_ASSERT(newCellSet.template IsType<CellSetType>(), "New cell set wrong type.");
+  VTKM_TEST_ASSERT(newCellSet.IsType<CellSetType>(), "New cell set wrong type.");
 
   VTKM_TEST_ASSERT(originalCellSet.GetCellSetBase() != newCellSet.GetCellSetBase(),
                    "NewInstance did not make a copy.");
 }
 
 template <typename CellSetType, typename CellSetList>
-void TryCellSet(CellSetType cellSet, vtkm::cont::DynamicCellSetBase<CellSetList> dynamicCellSet)
+void TryCellSet(vtkm::cont::UnknownCellSet& unknownCellSet)
 {
-  CheckDynamicCellSet(cellSet, dynamicCellSet);
+  CheckUnknownCellSet<CellSetType, CellSetList>(unknownCellSet);
 
-  CheckDynamicCellSet(cellSet, dynamicCellSet.ResetCellSetList(vtkm::List<CellSetType>()));
+  CheckUnknownCellSet<CellSetType, vtkm::List<CellSetType>>(unknownCellSet);
 
-  TryNewInstance(cellSet, dynamicCellSet);
-}
-
-template <typename CellSetType>
-void TryCellSet(CellSetType cellSet, vtkm::cont::DynamicCellSet dynamicCellSet)
-{
-  TryCellSet(cellSet, dynamicCellSet.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>());
+  TryNewInstance<CellSetType>(unknownCellSet);
 }
 
 template <typename CellSetType>
 void TryDefaultCellSet(CellSetType cellSet)
 {
-  vtkm::cont::DynamicCellSet dynamicCellSet(cellSet);
+  vtkm::cont::UnknownCellSet unknownCellSet(cellSet);
 
-  TryCellSet(cellSet, dynamicCellSet);
+  TryCellSet<CellSetType, VTKM_DEFAULT_CELL_SET_LIST>(unknownCellSet);
 }
 
 template <typename CellSetType>
 void TryNonDefaultCellSet(CellSetType cellSet)
 {
-  vtkm::cont::DynamicCellSetBase<NonDefaultCellSetList> dynamicCellSet(cellSet);
+  vtkm::cont::UnknownCellSet unknownCellSet(cellSet);
 
-  TryCellSet(cellSet, dynamicCellSet);
+  TryCellSet<CellSetType, NonDefaultCellSetList>(unknownCellSet);
 }
 
 void TestDynamicCellSet()
@@ -160,12 +164,12 @@ void TestDynamicCellSet()
     vtkm::cont::CellSetExplicit<vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag>());
 
   std::cout << std::endl << "Try empty DynamicCellSet." << std::endl;
-  CheckEmptyDynamicCellSet();
+  CheckEmptyUnknownCellSet();
 }
 
 } // anonymous namespace
 
-int UnitTestDynamicCellSet(int argc, char* argv[])
+int UnitTestUnknownCellSet(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestDynamicCellSet, argc, argv);
 }

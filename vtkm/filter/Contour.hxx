@@ -26,8 +26,7 @@ namespace filter
 namespace
 {
 
-template <typename CellSetList>
-inline bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset)
+inline bool IsCellSetStructured(const vtkm::cont::UnknownCellSet& cellset)
 {
   if (cellset.template IsType<vtkm::cont::CellSetStructured<1>>() ||
       cellset.template IsType<vtkm::cont::CellSetStructured<2>>() ||
