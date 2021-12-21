@@ -1767,9 +1767,6 @@ private:
 }
 }
 
-
-
-
 namespace vtkm
 {
 namespace worklet
@@ -1783,51 +1780,36 @@ public:
   public:
     VTKM_EXEC FloatType GetVFForPoint(IDType point, IDType matID, IDType) const
     {
-      IDType vfPos = BinarySearchForKey(
-        matID, this->PPos.Get(point), this->PPos.Get(point) + this->PLens.Get(point) - 1);
-      if (vfPos == IDType(-1))
+      IDType low = this->PPos.Get(point);
+      IDType high = this->PPos.Get(point) + this->PLens.Get(point) - 1;
+      IDType matIdAt = -1;
+      while (low < high)
       {
-        for (vtkm::IdComponent s = vtkm::IdComponent(this->PPos.Get(point));
-             s < vtkm::IdComponent(this->PPos.Get(point) + this->PLens.Get(point));
-             s++)
+        IDType mid = (low + high) / 2;
+        IDType midMatId = this->PIDs.Get(mid);
+        if (matID == midMatId)
         {
-          if (this->PIDs.Get(s) == matID)
-          {
-            return FloatType(0);
-          }
+          matIdAt = mid;
+          break;
         }
-        return FloatType(0);
+        else if (matID > midMatId)
+        {
+          low = mid + 1;
+        }
+        else if (matID < midMatId)
+        {
+          high = mid - 1;
+        }
+      }
+      if (matIdAt > 0)
+      {
+        return this->PVFs.Get(matIdAt);
       }
       else
-      {
-        return this->PVFs.Get(vfPos);
-      }
+        return FloatType(0);
     }
 
   private:
-    VTKM_EXEC IDType BinarySearchForKey(IDType matID, IDType low, IDType high) const
-    {
-      if (high < low)
-      {
-        return IDType(-1);
-      }
-      IDType mid = (low + high) / 2;
-
-      IDType midpoint = this->PIDs.Get(mid);
-      if (matID == midpoint)
-      {
-        return mid;
-      }
-      if (matID > midpoint)
-      {
-        return BinarySearchForKey(matID, (mid + 1), high);
-      }
-      else
-      {
-        return BinarySearchForKey(matID, low, mid - 1);
-      }
-    }
-
     typename vtkm::cont::ArrayHandle<IDType, vtkm::cont::StorageTagBasic>::ReadPortalType PLens;
     typename vtkm::cont::ArrayHandle<IDType, vtkm::cont::StorageTagBasic>::ReadPortalType PPos;
     typename vtkm::cont::ArrayHandle<IDType, vtkm::cont::StorageTagBasic>::ReadPortalType PIDs;
@@ -1840,13 +1822,14 @@ public:
   VTKM_CONT vtkm::cont::ArrayHandle<IDType> getPointIDArr() { return this->pointIDs; }
   VTKM_CONT vtkm::cont::ArrayHandle<FloatType> getPointVFArr() { return this->pointVFs; }
 
+  // Do we need to copy these arrays?
   template <typename IDInput, typename FloatInput>
-  MIRObject(const IDInput len, const IDInput pos, const IDInput ids, const FloatInput floats)
+  MIRObject(const IDInput& len, const IDInput& pos, const IDInput& ids, const FloatInput& floats)
+    : pointLen(len)
+    , pointPos(pos)
+    , pointIDs(ids)
+    , pointVFs(floats)
   {
-    vtkm::cont::ArrayCopy(len, pointLen);
-    vtkm::cont::ArrayCopy(pos, pointPos);
-    vtkm::cont::ArrayCopy(ids, pointIDs);
-    vtkm::cont::ArrayCopy(floats, pointVFs);
   }
 
   MIRObjectPortal PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token)
@@ -1926,6 +1909,7 @@ public:
     outlength = uniqueMats;
   }
 };
+
 struct CombineVFsForPoints : public vtkm::worklet::WorkletVisitPointsWithCells
 {
 public:
@@ -2013,6 +1997,7 @@ public:
     }
   }
 };
+
 struct ExtractVFsForMIR_C : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
@@ -2025,6 +2010,7 @@ public:
     outlength = numPoints;
   }
 };
+
 struct ExtractVFsForMIR : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
@@ -2073,6 +2059,7 @@ public:
 private:
   vtkm::Id target;
 };
+
 struct CalcVol : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
@@ -2092,7 +2079,7 @@ public:
 
     vtkm::Float64 totVol = vtkm::Float64(0);
     vtkm::IdComponent offset = mirTable.GetFaceOffset(static_cast<vtkm::Id>(cellShape.Id));
-    //VTKM_LOG_S(vtkm::cont::LogLevel::Info, "CELL! " << offset << " " << numFaces);
+
     auto av1 = vertPos[0];
     for (vtkm::IdComponent i = 1; i < pointCount; i++)
     {
@@ -2105,7 +2092,6 @@ public:
       vtkm::UInt8 p1 = mirTable.GetPoint(offset++);
       vtkm::UInt8 p2 = mirTable.GetPoint(offset++);
       vtkm::UInt8 p3 = mirTable.GetPoint(offset++);
-      //VTKM_LOG_S(vtkm::cont::LogLevel::Info, (i+1) << "/" << numFaces << " " << static_cast<vtkm::Id>(p1)<<" " << static_cast<vtkm::Id>(p2)<<" " << static_cast<vtkm::Id>(p3) << " " << offset);
       auto v1 = vertPos[p1];
       auto v2 = vertPos[p2];
       auto v3 = vertPos[p3];
@@ -2118,6 +2104,7 @@ public:
     volumeOut = totVol;
   }
 };
+
 struct CalcError_C : public vtkm::worklet::WorkletReduceByKey
 {
 public:
@@ -2138,7 +2125,8 @@ public:
                             const ORID& orgID,
                             NLO& outputLen) const
   {
-    // Although I don't doubt for a minute that keys is sorted and hence the output would be too, but this ensures I don't deal with a headache if they change that.
+    // Although I don't doubt for a minute that keys is sorted and hence the output would be too,
+    // but this ensures I don't deal with a headache if they change that.
     // The orgLen and orgPos are the true, original cell IDs and VFs
     // Luckily indexing into cellID should be quick compared to orgLen...
     vtkm::Id lowest = orgID.Get(orgPos.Get(0));
@@ -2183,6 +2171,7 @@ public:
     outputLen.Set(cellID, uniqueMats);
   }
 };
+
 struct CalcError : public vtkm::worklet::WorkletReduceByKey
 {
 private:
@@ -2248,7 +2237,8 @@ public:
                             const OVols& orgVols,
                             TEO& totalErrorOut) const
   {
-    // Although I don't doubt for a minute that keys is sorted and hence the output would be too, but this ensures I don't deal with a headache if they change that.
+    // Although I don't doubt for a minute that keys is sorted and hence the output would be too,
+    // but this ensures I don't deal with a headache if they change that.
     // The orgLen and orgPos are the true, original cell IDs and VFs
     // Luckily indexing into cellID should be quick compared to orgLen...
     //{
@@ -2376,6 +2366,7 @@ struct CheckFor2D : public vtkm::worklet::WorkletVisitCellsWithPoints
     }
   }
 };
+
 struct ConstructCellWeightList : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn pointIDs, FieldOut VecLookback, FieldOut VecWeights);
@@ -2393,6 +2384,7 @@ struct ConstructCellWeightList : public vtkm::worklet::WorkletMapField
     weights[0] = vtkm::Float64(1);
   }
 };
+
 struct DestructPointWeightList : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn pointIDs,
@@ -2419,6 +2411,7 @@ struct DestructPointWeightList : public vtkm::worklet::WorkletMapField
     }
   }
 };
+
 }
 
 }
