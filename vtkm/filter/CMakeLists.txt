@@ -77,6 +77,7 @@ set(common_sources_device
 )
 
 set(extra_headers
+  AmrArrays.h
   CellSetConnectivity.h
   ClipWithField.h
   ClipWithImplicitFunction.h
@@ -134,6 +135,7 @@ set(extra_headers
   )
 
 set(extra_header_template_sources
+  AmrArrays.hxx
   CellSetConnectivity.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
@@ -191,7 +193,6 @@ set(extra_sources_device
   ${ClipWithFieldInstantiations}
   ${ClipWithImplicitFunctionInstantiations}
   ExternalFaces.cxx
-  GenerateIds.cxx
   VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
@@ -234,6 +235,18 @@ set(gradient_sources_device
 vtkm_pyexpander_generated_file(ClipWithFieldExternInstantiations.h)
 vtkm_pyexpander_generated_file(ClipWithImplicitFunctionExternInstantiations.h)
 
+set(core_headers
+  NewFilter.h)
+set(core_sources_device
+  NewFilter.cxx)
+
+vtkm_library(
+  NAME vtkm_filter_core
+  HEADERS ${core_headers}
+  DEVICE_SOURCES ${core_sources_device}
+  USE_VTKM_JOB_POOL
+)
+
 add_library(vtkm_filter INTERFACE)
 
 vtkm_library(
@@ -270,6 +283,7 @@ vtkm_library(
 
 set_target_properties(
   vtkm_filter_common
+  vtkm_filter_core
   vtkm_filter_extra
   vtkm_filter_contour
   vtkm_filter_gradient
@@ -279,6 +293,7 @@ set_target_properties(
   )
 
 target_link_libraries(vtkm_filter_common PUBLIC vtkm_worklet)
+target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont)
 target_link_libraries(vtkm_filter_extra PUBLIC vtkm_filter_common)
 target_link_libraries(vtkm_filter_contour PUBLIC vtkm_filter_common)
 target_link_libraries(vtkm_filter_gradient PUBLIC vtkm_filter_common)
@@ -293,6 +308,7 @@ target_link_libraries(vtkm_filter PUBLIC INTERFACE
   vtkm_filter_contour
   vtkm_filter_gradient
   vtkm_filter_common
+  vtkm_filter_core
   )
 
 install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
@@ -300,6 +316,7 @@ install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
 add_subdirectory(internal)
 add_subdirectory(particleadvection)
+add_subdirectory(field_transform)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 if (VTKm_ENABLE_TESTING)

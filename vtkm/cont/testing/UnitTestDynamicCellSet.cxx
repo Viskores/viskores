@@ -100,7 +100,7 @@ void CheckDynamicCellSet(const CellSetType& cellSet,
 }
 
 template <typename CellSetType, typename CellSetList>
-void TryNewInstance(CellSetType, vtkm::cont::DynamicCellSetBase<CellSetList>& originalCellSet)
+void TryNewInstance(CellSetType, vtkm::cont::DynamicCellSetBase<CellSetList> originalCellSet)
 {
   vtkm::cont::DynamicCellSetBase<CellSetList> newCellSet = originalCellSet.NewInstance();
 
@@ -111,13 +111,19 @@ void TryNewInstance(CellSetType, vtkm::cont::DynamicCellSetBase<CellSetList>& or
 }
 
 template <typename CellSetType, typename CellSetList>
-void TryCellSet(CellSetType cellSet, vtkm::cont::DynamicCellSetBase<CellSetList>& dynamicCellSet)
+void TryCellSet(CellSetType cellSet, vtkm::cont::DynamicCellSetBase<CellSetList> dynamicCellSet)
 {
   CheckDynamicCellSet(cellSet, dynamicCellSet);
 
   CheckDynamicCellSet(cellSet, dynamicCellSet.ResetCellSetList(vtkm::List<CellSetType>()));
 
   TryNewInstance(cellSet, dynamicCellSet);
+}
+
+template <typename CellSetType>
+void TryCellSet(CellSetType cellSet, vtkm::cont::DynamicCellSet dynamicCellSet)
+{
+  TryCellSet(cellSet, dynamicCellSet.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>());
 }
 
 template <typename CellSetType>

@@ -37,7 +37,6 @@ set(unit_tests
   UnitTestFieldToColors.cxx
   UnitTestGradientExplicit.cxx
   UnitTestGradientUniform.cxx
-  UnitTestGenerateIds.cxx
   UnitTestGhostCellClassify.cxx
   UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx
@@ -99,6 +98,7 @@ if (VTKm_ENABLE_RENDERING)
   list(APPEND libraries vtkm_rendering)
 
   list(APPEND unit_tests
+    RegressionTestAmrArrays.cxx
     RegressionTestContourFilter.cxx
     RegressionTestPointTransform.cxx
     RegressionTestSliceFilter.cxx

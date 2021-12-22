@@ -94,10 +94,12 @@ set(unit_tests
   UnitTestToken.cxx
   UnitTestTryExecute.cxx
   UnitTestUnknownArrayHandle.cxx
+  UnitTestUnknownCellSet.cxx
   UnitTestVariantArrayHandle.cxx
   )
 
 set(library_sources
+  MakeTestDataSet.cxx
   TestEqualArrayHandles.cxx
   )
 

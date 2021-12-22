@@ -122,7 +122,9 @@ set(headers
   TryExecute.h
   SerializableTypeString.h
   UncertainArrayHandle.h
+  UncertainCellSet.h
   UnknownArrayHandle.h
+  UnknownCellSet.h
   VariantArrayHandle.h
   )
 
@@ -157,6 +159,7 @@ set(sources
   Storage.cxx
   Token.cxx
   TryExecute.cxx
+  UnknownCellSet.cxx
   )
 
 # This list of sources has code that uses devices and so might need to be

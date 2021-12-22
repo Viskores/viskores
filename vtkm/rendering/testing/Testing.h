@@ -63,15 +63,21 @@ inline TestEqualResult test_equal_images(
     vtkm::io::PrefixStringToFilename(fileNames[0], "test-"));
   vtkm::io::WriteImageFile(view->GetCanvas().GetDataSet(), testImageName, "color");
 
+  std::stringstream dartXML;
+
+  dartXML << "<DartMeasurementFile name=\"TestImage\" type=\"image/png\">";
+  dartXML << testImageName;
+  dartXML << "</DartMeasurementFile>\n";
+
   for (const auto& fileName : fileNames)
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "testing image file: " << fileName);
     TestEqualResult imageResult;
     vtkm::cont::DataSet imageDataSet;
+    const std::string testImagePath = vtkm::cont::testing::Testing::RegressionImagePath(fileName);
 
     try
     {
-      const std::string testImagePath = vtkm::cont::testing::Testing::RegressionImagePath(fileName);
       imageDataSet = vtkm::io::ReadImageFile(testImagePath, "baseline-image");
     }
     catch (const vtkm::cont::ErrorExecution& error)
@@ -96,6 +102,10 @@ inline TestEqualResult test_equal_images(
       continue;
     }
 
+    dartXML << "<DartMeasurementFile name=\"BaselineImage\" type=\"image/png\">";
+    dartXML << testImagePath;
+    dartXML << "</DartMeasurementFile>\n";
+
     imageDataSet.AddPointField("generated-image", view->GetCanvas().GetColorBuffer());
     vtkm::filter::ImageDifference filter;
     filter.SetPrimaryField("baseline-image");
@@ -117,6 +127,9 @@ inline TestEqualResult test_equal_images(
       const std::string diffName = vtkm::cont::testing::Testing::WriteDirPath(
         vtkm::io::PrefixStringToFilename(fileName, "diff-"));
       vtkm::io::WriteImageFile(resultDataSet, diffName, "image-diff");
+      dartXML << "<DartMeasurementFile name=\"DifferenceImage\" type=\"image/png\">";
+      dartXML << diffName;
+      dartXML << "</DartMeasurementFile>\n";
     }
 
     if (imageResult && returnOnPass)
@@ -134,6 +147,12 @@ inline TestEqualResult test_equal_images(
   }
 
   VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Test Results: " << testResults.GetMergedMessage());
+
+  if (!testResults)
+  {
+    std::cout << dartXML.str();
+  }
+
   return testResults;
 }
 
@@ -147,36 +166,9 @@ inline TestEqualResult test_equal_images(
   const vtkm::FloatDefault& threshold = 0.05f,
   const bool& writeDiff = true)
 {
-  std::vector<std::string> fileNames{ fileName };
-  return test_equal_images(
-    view, fileNames, averageRadius, pixelShiftRadius, allowedPixelErrorRatio, threshold, writeDiff);
-}
-
-/// \brief Tests multiple images in the format `fileName#.png`
-///
-/// Using the provided fileName, it splits the extension and prefix into two
-/// components and searches through the regression image file path directory
-/// for all matching file names with a number specifier starting at 0 incrementing
-/// by one.
-///
-/// For example, if a file `foo.png` is provied, this function will first look
-/// for a file foo0.png. If it exists, it will then look for foo1.png and so on
-/// until it cannot find a file with a specific number.
-///
-/// test_equal_images will then be called on the vector of valid fileNames
-///
-template <typename ViewType>
-inline TestEqualResult test_equal_images_matching_name(
-  const std::shared_ptr<ViewType> view,
-  const std::string& fileName,
-  const vtkm::IdComponent& averageRadius = 0,
-  const vtkm::IdComponent& pixelShiftRadius = 0,
-  const vtkm::FloatDefault& allowedPixelErrorRatio = 0.00025f,
-  const vtkm::FloatDefault& threshold = 0.05f,
-  const bool& writeDiff = true,
-  const bool& returnOnPass = true)
-{
   std::vector<std::string> fileNames;
+
+  // Check to see if there are multiple versions of the file of the format filenName#.png.
   auto found = fileName.rfind(".");
   auto prefix = fileName.substr(0, found);
   auto suffix = fileName.substr(found, fileName.length());
@@ -185,24 +177,33 @@ inline TestEqualResult test_equal_images_matching_name(
   {
     std::ostringstream fileNameStream;
     fileNameStream << prefix << i << suffix;
-    std::ifstream check(
-      vtkm::cont::testing::Testing::RegressionImagePath(fileNameStream.str()).c_str());
+    std::ifstream check(vtkm::cont::testing::Testing::RegressionImagePath(fileNameStream.str()));
     if (!check.good())
     {
       VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                  "Stopped filename search at: " << fileNameStream.str() << ", beginning testing");
       break;
     }
-    fileNames.emplace_back(fileNameStream.str());
+    fileNames.push_back(fileNameStream.str());
   }
-  return test_equal_images(view,
-                           fileNames,
-                           averageRadius,
-                           pixelShiftRadius,
-                           allowedPixelErrorRatio,
-                           threshold,
-                           writeDiff,
-                           returnOnPass);
+
+  // Check to see the filename without a number exists.
+  {
+    std::ifstream check(vtkm::cont::testing::Testing::RegressionImagePath(fileName));
+    if (check.good())
+    {
+      fileNames.push_back(fileName);
+    }
+  }
+
+  // Make sure at least one file exists
+  if (fileNames.empty())
+  {
+    fileNames.push_back(fileName);
+  }
+
+  return test_equal_images(
+    view, fileNames, averageRadius, pixelShiftRadius, allowedPixelErrorRatio, threshold, writeDiff);
 }
 
 #endif // vtk_m_rendering_testing_Testing_h
