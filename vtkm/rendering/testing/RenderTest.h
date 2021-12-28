@@ -34,6 +34,15 @@ namespace rendering
 namespace testing
 {
 
+struct RenderTestOptions
+{
+  // Options for comparing images (i.e. test_equal_images)
+  vtkm::IdComponent AverageRadius = 0;
+  vtkm::IdComponent PixelShiftRadius = 0;
+  vtkm::FloatDefault AllowedPixelErrorRatio = 0.00025f;
+  vtkm::FloatDefault Threshold = 0.05f;
+};
+
 template <typename ViewType>
 inline void SetCamera(vtkm::rendering::Camera& camera,
                       const vtkm::Bounds& coordBounds,
@@ -141,7 +150,8 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
                              const vtkm::cont::ColorTable& colorTable,
                              const std::string& outputFile,
                              const bool& enableAnnotations = true,
-                             const vtkm::Float64& dataViewPadding = 0)
+                             const vtkm::Float64& dataViewPadding = 0,
+                             const RenderTestOptions& options = RenderTestOptions{})
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
@@ -150,7 +160,12 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
   auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
     ds, fieldNm, canvas, mapper, scene, colorTable, dataViewPadding);
   view->SetRenderAnnotationsEnabled(enableAnnotations);
-  VTKM_TEST_ASSERT(test_equal_images(view, outputFile));
+  VTKM_TEST_ASSERT(test_equal_images(view,
+                                     outputFile,
+                                     options.AverageRadius,
+                                     options.PixelShiftRadius,
+                                     options.AllowedPixelErrorRatio,
+                                     options.Threshold));
 }
 // --------------------------------------------------------------
 
@@ -210,7 +225,8 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
                              const std::vector<vtkm::rendering::Color>& colors,
                              const std::string& outputFile,
                              const bool& enableAnnotations = true,
-                             const vtkm::Float64& dataViewPadding = 0)
+                             const vtkm::Float64& dataViewPadding = 0,
+                             const RenderTestOptions& options = RenderTestOptions{})
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
@@ -220,7 +236,12 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
   auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
     ds, fields, colors, canvas, mapper, scene, dataViewPadding);
   view->SetRenderAnnotationsEnabled(enableAnnotations);
-  VTKM_TEST_ASSERT(test_equal_images(view, outputFile));
+  VTKM_TEST_ASSERT(test_equal_images(view,
+                                     outputFile,
+                                     options.AverageRadius,
+                                     options.PixelShiftRadius,
+                                     options.AllowedPixelErrorRatio,
+                                     options.Threshold));
 }
 // --------------------------------------------------------------
 
@@ -280,7 +301,8 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
                              const std::string& outputFile,
                              const bool logY = false,
                              const bool& enableAnnotations = true,
-                             const vtkm::Float64& dataViewPadding = 0)
+                             const vtkm::Float64& dataViewPadding = 0,
+                             const RenderTestOptions& options = RenderTestOptions{})
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
@@ -289,7 +311,12 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
   auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
     ds, fieldNm, canvas, mapper, scene, color, logY, dataViewPadding);
   view->SetRenderAnnotationsEnabled(enableAnnotations);
-  VTKM_TEST_ASSERT(test_equal_images(view, outputFile));
+  VTKM_TEST_ASSERT(test_equal_images(view,
+                                     outputFile,
+                                     options.AverageRadius,
+                                     options.PixelShiftRadius,
+                                     options.AllowedPixelErrorRatio,
+                                     options.Threshold));
 }
 // --------------------------------------------------------------
 
