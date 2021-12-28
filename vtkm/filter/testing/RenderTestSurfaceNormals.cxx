@@ -52,7 +52,7 @@ void TestSurfaceNormals()
 }
 } // namespace
 
-int RegressionTestSurfaceNormals(int argc, char* argv[])
+int RenderTestSurfaceNormals(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestSurfaceNormals, argc, argv);
 }

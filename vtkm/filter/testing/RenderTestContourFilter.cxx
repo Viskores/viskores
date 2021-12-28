@@ -125,7 +125,7 @@ void TestContourFilter()
 }
 } // namespace
 
-int RegressionTestContourFilter(int argc, char* argv[])
+int RenderTestContourFilter(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestContourFilter, argc, argv);
 }

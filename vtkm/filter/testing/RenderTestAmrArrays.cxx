@@ -72,7 +72,7 @@ void TestAmrArrays()
 }
 } // namespace
 
-int RegressionTestAmrArrays(int argc, char* argv[])
+int RenderTestAmrArrays(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestAmrArrays, argc, argv);
 }

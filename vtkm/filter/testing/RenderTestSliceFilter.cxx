@@ -149,7 +149,7 @@ void TestSliceFilter()
 
 } // namespace
 
-int RegressionTestSliceFilter(int argc, char* argv[])
+int RenderTestSliceFilter(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestSliceFilter, argc, argv);
 }

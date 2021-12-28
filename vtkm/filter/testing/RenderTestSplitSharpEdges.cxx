@@ -13,8 +13,8 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/VTKDataSetReader.h>
 
-#include <vtkm/filter/PointTransform.h>
-#include <vtkm/filter/VectorMagnitude.h>
+#include <vtkm/filter/SplitSharpEdges.h>
+#include <vtkm/filter/SurfaceNormals.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
@@ -24,9 +24,9 @@
 
 namespace
 {
-void TestPointTransform()
+void TestSplitSharpEdges()
 {
-  std::cout << "Generate Image for PointTransform filter with Translation" << std::endl;
+  std::cout << "Generate Image for SplitSharpEdges filter" << std::endl;
 
   vtkm::cont::ColorTable colorTable("inferno");
   using M = vtkm::rendering::MapperRayTracer;
@@ -34,30 +34,23 @@ void TestPointTransform()
   using V3 = vtkm::rendering::View3D;
 
   auto pathname =
-    vtkm::cont::testing::Testing::DataPath("unstructured/PointTransformTestDataSet.vtk");
+    vtkm::cont::testing::Testing::DataPath("unstructured/SplitSharpEdgesTestDataSet.vtk");
   vtkm::io::VTKDataSetReader reader(pathname);
-  vtkm::cont::DataSet dataSet = reader.ReadDataSet();
+  auto dataSet = reader.ReadDataSet();
 
-  vtkm::filter::PointTransform pointTransform;
-  pointTransform.SetOutputFieldName("translation");
-  pointTransform.SetTranslation(vtkm::Vec3f(1, 1, 1));
+  vtkm::filter::SplitSharpEdges splitSharpEdges;
+  splitSharpEdges.SetFeatureAngle(89.0);
+  splitSharpEdges.SetActiveField("Normals", vtkm::cont::Field::Association::CELL_SET);
 
-  auto result = pointTransform.Execute(dataSet);
-
-  // Need to take the magnitude of the "translation" field.
-  // ColorMap only works with scalar fields (1 component)
-  vtkm::filter::VectorMagnitude vectorMagnitude;
-  vectorMagnitude.SetActiveField("translation");
-  vectorMagnitude.SetOutputFieldName("pointvar");
-  result = vectorMagnitude.Execute(result);
+  auto result = splitSharpEdges.Execute(dataSet);
   result.PrintSummary(std::cout);
 
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "filter/point-transform.png", false);
+    result, "pointvar", colorTable, "filter/split-sharp-edges.png", false);
 }
 } // namespace
 
-int RegressionTestPointTransform(int argc, char* argv[])
+int RenderTestSplitSharpEdges(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestPointTransform, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestSplitSharpEdges, argc, argv);
 }

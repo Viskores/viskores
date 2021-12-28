@@ -73,7 +73,7 @@ void TestStreamline()
 }
 } // namespace
 
-int RegressionTestStreamline(int argc, char* argv[])
+int RenderTestStreamline(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestStreamline, argc, argv);
 }
