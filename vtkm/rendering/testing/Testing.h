@@ -39,7 +39,7 @@
 ///
 template <typename ViewType>
 inline TestEqualResult test_equal_images(
-  const std::shared_ptr<ViewType> view,
+  ViewType& view,
   const std::vector<std::string>& fileNames,
   const vtkm::IdComponent& averageRadius = 0,
   const vtkm::IdComponent& pixelShiftRadius = 0,
@@ -57,11 +57,11 @@ inline TestEqualResult test_equal_images(
     return testResults;
   }
 
-  view->Paint();
-  view->GetCanvas().RefreshColorBuffer();
+  view.Paint();
+  view.GetCanvas().RefreshColorBuffer();
   const std::string testImageName = vtkm::cont::testing::Testing::WriteDirPath(
     vtkm::io::PrefixStringToFilename(fileNames[0], "test-"));
-  vtkm::io::WriteImageFile(view->GetCanvas().GetDataSet(), testImageName, "color");
+  vtkm::io::WriteImageFile(view.GetCanvas().GetDataSet(), testImageName, "color");
 
   std::stringstream dartXML;
 
@@ -86,7 +86,7 @@ inline TestEqualResult test_equal_images(
       imageResult.PushMessage(error.GetMessage());
 
       const std::string outputImagePath = vtkm::cont::testing::Testing::WriteDirPath(fileName);
-      vtkm::io::WriteImageFile(view->GetCanvas().GetDataSet(), outputImagePath, "color");
+      vtkm::io::WriteImageFile(view.GetCanvas().GetDataSet(), outputImagePath, "color");
 
       imageResult.PushMessage("File '" + fileName +
                               "' did not exist but has been generated here: " + outputImagePath);
@@ -106,7 +106,7 @@ inline TestEqualResult test_equal_images(
     dartXML << testImagePath;
     dartXML << "</DartMeasurementFile>\n";
 
-    imageDataSet.AddPointField("generated-image", view->GetCanvas().GetColorBuffer());
+    imageDataSet.AddPointField("generated-image", view.GetCanvas().GetColorBuffer());
     vtkm::filter::ImageDifference filter;
     filter.SetPrimaryField("baseline-image");
     filter.SetSecondaryField("generated-image");
@@ -158,7 +158,7 @@ inline TestEqualResult test_equal_images(
 
 template <typename ViewType>
 inline TestEqualResult test_equal_images(
-  const std::shared_ptr<ViewType> view,
+  ViewType& view,
   const std::string& fileName,
   const vtkm::IdComponent& averageRadius = 0,
   const vtkm::IdComponent& pixelShiftRadius = 0,

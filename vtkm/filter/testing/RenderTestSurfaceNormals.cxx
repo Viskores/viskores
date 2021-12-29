@@ -15,9 +15,6 @@
 
 #include <vtkm/filter/SurfaceNormals.h>
 
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 #include <vtkm/rendering/testing/Testing.h>
 
@@ -26,11 +23,6 @@ namespace
 void TestSurfaceNormals()
 {
   std::cout << "Generate Image for SurfaceNormals filter" << std::endl;
-
-  vtkm::cont::ColorTable colorTable("inferno");
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   // NOTE: This dataset stores a shape value of 7 for polygons.  The
   // VTKDataSetReader currently converts all polygons with 4 verticies to
@@ -47,8 +39,11 @@ void TestSurfaceNormals()
   auto result = surfaceNormals.Execute(dataSet);
   result.PrintSummary(std::cout);
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "filter/surface-normals.png", false);
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;
+  testOptions.EnableAnnotations = false;
+  vtkm::rendering::testing::RenderTest(
+    result, "pointvar", "filter/surface-normals.png", testOptions);
 }
 } // namespace
 

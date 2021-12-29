@@ -95,7 +95,7 @@ set(libraries
 )
 
 if (VTKm_ENABLE_RENDERING)
-  list(APPEND libraries vtkm_rendering)
+  list(APPEND libraries vtkm_rendering vtkm_rendering_testing)
 
   list(APPEND unit_tests
     RenderTestAmrArrays.cxx

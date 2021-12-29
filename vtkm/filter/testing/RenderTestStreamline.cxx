@@ -17,9 +17,6 @@
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/filter/Tube.h>
 
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 #include <vtkm/rendering/testing/Testing.h>
 
@@ -28,11 +25,6 @@ namespace
 void TestStreamline()
 {
   std::cout << "Generate Image for Streamline filter" << std::endl;
-
-  vtkm::cont::ColorTable colorTable("inferno");
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   auto pathname = vtkm::cont::testing::Testing::DataPath("uniform/StreamlineTestDataSet.vtk");
   vtkm::io::VTKDataSetReader reader(pathname);
@@ -68,8 +60,10 @@ void TestStreamline()
   result = tube.Execute(result);
   result.PrintSummary(std::cout);
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "filter/streamline.png", false);
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;
+  testOptions.EnableAnnotations = false;
+  vtkm::rendering::testing::RenderTest(result, "pointvar", "filter/streamline.png", testOptions);
 }
 } // namespace
 

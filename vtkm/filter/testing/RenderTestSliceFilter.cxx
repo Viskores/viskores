@@ -14,9 +14,6 @@
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/source/Wavelet.h>
 
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 #include <vtkm/rendering/testing/Testing.h>
 
@@ -26,11 +23,6 @@ namespace
 void TestSliceStructuredPointsPlane()
 {
   std::cout << "Generate Image for Slice by plane on structured points" << std::endl;
-
-  vtkm::cont::ColorTable colorTable;
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   vtkm::source::Wavelet wavelet(vtkm::Id3(-8), vtkm::Id3(8));
   auto ds = wavelet.Execute();
@@ -42,23 +34,16 @@ void TestSliceStructuredPointsPlane()
 
   result.PrintSummary(std::cout);
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result,
-    "RTData",
-    colorTable,
-    "filter/slice-structured-points-plane.png",
-    false,
-    static_cast<vtkm::FloatDefault>(0.08));
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.EnableAnnotations = false;
+  testOptions.DataViewPadding = 0.08;
+  vtkm::rendering::testing::RenderTest(
+    result, "RTData", "filter/slice-structured-points-plane.png", testOptions);
 }
 
 void TestSliceStructuredPointsSphere()
 {
   std::cout << "Generate Image for Slice by sphere on structured points" << std::endl;
-
-  vtkm::cont::ColorTable colorTable;
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   vtkm::source::Wavelet wavelet(vtkm::Id3(-8), vtkm::Id3(8));
   auto ds = wavelet.Execute();
@@ -70,23 +55,16 @@ void TestSliceStructuredPointsSphere()
 
   result.PrintSummary(std::cout);
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result,
-    "RTData",
-    colorTable,
-    "filter/slice-structured-points-sphere.png",
-    false,
-    static_cast<vtkm::FloatDefault>(0.08));
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.EnableAnnotations = false;
+  testOptions.DataViewPadding = 0.08;
+  vtkm::rendering::testing::RenderTest(
+    result, "RTData", "filter/slice-structured-points-sphere.png", testOptions);
 }
 
 void TestSliceUnstructuredGridPlane()
 {
   std::cout << "Generate Image for Slice by plane on unstructured grid" << std::endl;
-
-  vtkm::cont::ColorTable colorTable;
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   vtkm::source::Wavelet wavelet(vtkm::Id3(-8), vtkm::Id3(8));
   auto ds = wavelet.Execute();
@@ -100,23 +78,16 @@ void TestSliceUnstructuredGridPlane()
 
   result.PrintSummary(std::cout);
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result,
-    "RTData",
-    colorTable,
-    "filter/slice-unstructured-grid-plane.png",
-    false,
-    static_cast<vtkm::FloatDefault>(0.08));
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.EnableAnnotations = false;
+  testOptions.DataViewPadding = 0.08;
+  vtkm::rendering::testing::RenderTest(
+    result, "RTData", "filter/slice-unstructured-grid-plane.png", testOptions);
 }
 
 void TestSliceUnstructuredGridCylinder()
 {
   std::cout << "Generate Image for Slice by cylinder on unstructured grid" << std::endl;
-
-  vtkm::cont::ColorTable colorTable;
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   vtkm::source::Wavelet wavelet(vtkm::Id3(-8), vtkm::Id3(8));
   auto ds = wavelet.Execute();
@@ -130,13 +101,11 @@ void TestSliceUnstructuredGridCylinder()
 
   result.PrintSummary(std::cout);
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result,
-    "RTData",
-    colorTable,
-    "filter/slice-unstructured-grid-cylinder.png",
-    false,
-    static_cast<vtkm::FloatDefault>(0.08));
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.EnableAnnotations = false;
+  testOptions.DataViewPadding = 0.08;
+  vtkm::rendering::testing::RenderTest(
+    result, "RTData", "filter/slice-unstructured-grid-cylinder.png", testOptions);
 }
 
 void TestSliceFilter()

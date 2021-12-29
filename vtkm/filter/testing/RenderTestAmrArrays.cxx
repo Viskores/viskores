@@ -13,9 +13,6 @@
 #include <vtkm/filter/Threshold.h>
 #include <vtkm/source/Amr.h>
 
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 #include <vtkm/rendering/testing/Testing.h>
 
@@ -25,10 +22,6 @@ namespace
 void TestAmrArraysExecute(int dim, int numberOfLevels, int cellsPerDimension)
 {
   std::cout << "Generate Image for AMR" << std::endl;
-
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   // Generate AMR
   vtkm::source::Amr source(dim, cellsPerDimension, numberOfLevels);
@@ -55,12 +48,11 @@ void TestAmrArraysExecute(int dim, int numberOfLevels, int cellsPerDimension)
   //  std::cout << "merged " << std::endl;
   //  result.PrintSummary(std::cout);
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(result,
-                                                              "RTDataCells",
-                                                              vtkm::cont::ColorTable("inferno"),
-                                                              "filter/amrArrays" +
-                                                                std::to_string(dim) + "D.png",
-                                                              false);
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.ColorTable = vtkm::cont::ColorTable("inferno");
+  testOptions.EnableAnnotations = false;
+  vtkm::rendering::testing::RenderTest(
+    result, "RTDataCells", "filter/amrArrays" + std::to_string(dim) + "D.png", testOptions);
 }
 
 void TestAmrArrays()

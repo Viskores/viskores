@@ -28,4 +28,17 @@ set(unit_tests
   UnitTestScalarRenderer.cxx
 )
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES vtkm_rendering)
+set(library_sources
+  RenderTest.cxx
+  )
+
+vtkm_library(
+  NAME vtkm_rendering_testing
+  # When rendering code no longer needs a device compiler, this should change to SOURCES
+  DEVICE_SOURCES ${library_sources}
+  HEADERS ${headers}
+  )
+target_link_libraries(vtkm_rendering_testing PUBLIC vtkm_cont_testing)
+target_link_libraries(vtkm_rendering_testing PRIVATE vtkm_io vtkm_rendering)
+
+vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES vtkm_rendering vtkm_rendering_testing)
