@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #include <vtkm/cont/ColorTable.h>
+#include <vtkm/cont/Logging.h>
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
@@ -1442,6 +1443,8 @@ VTKM_CONT_EXPORT bool LoadColorTablePreset(std::string name, vtkm::cont::ColorTa
       return true;
     }
   }
+  VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+             "Attempted to load color table preset '" << name << "' but no such preset exists.");
   return false;
 }
 }
