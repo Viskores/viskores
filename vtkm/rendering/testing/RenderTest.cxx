@@ -12,6 +12,8 @@
 
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
+#include <vtkm/rendering/MapperConnectivity.h>
+#include <vtkm/rendering/MapperCylinder.h>
 #include <vtkm/rendering/MapperPoint.h>
 #include <vtkm/rendering/MapperQuad.h>
 #include <vtkm/rendering/MapperRayTracer.h>
@@ -69,6 +71,37 @@ void SetupView(vtkm::rendering::View1D& view,
   view.SetLogY(options.LogY);
 }
 
+template <typename MapperType>
+void SetupMapper(MapperType&, const vtkm::rendering::testing::RenderTestOptions&)
+{
+}
+
+void SetupMapper(vtkm::rendering::MapperCylinder& mapper,
+                 const vtkm::rendering::testing::RenderTestOptions& options)
+{
+  mapper.UseVariableRadius(options.UseVariableRadius);
+  if (options.Radius >= 0)
+  {
+    mapper.SetRadius(options.Radius);
+  }
+  mapper.SetRadiusDelta(0.5);
+}
+
+void SetupMapper(vtkm::rendering::MapperPoint& mapper,
+                 const vtkm::rendering::testing::RenderTestOptions& options)
+{
+  mapper.UseVariableRadius(options.UseVariableRadius);
+  if (options.Radius >= 0)
+  {
+    mapper.SetRadius(options.Radius);
+  }
+  mapper.SetRadiusDelta(0.5);
+  if (options.RenderCells)
+  {
+    mapper.UseCells();
+  }
+}
+
 template <typename CanvasType, typename ViewType, typename MapperType>
 void RenderTest(const DataSetFieldVector& dataSetsFields,
                 const std::string& outputFile,
@@ -105,6 +138,7 @@ void RenderTest(const DataSetFieldVector& dataSetsFields,
   }
 
   MapperType mapper;
+  SetupMapper(mapper, options);
 
   ViewType view(scene, mapper, canvas, options.Background, options.Foreground);
   SetupView(view, bounds, fieldRange, options);
@@ -135,6 +169,14 @@ void RenderTest(const DataSetFieldVector& dataSetsFields,
       RenderTest<CanvasType, ViewType, vtkm::rendering::MapperRayTracer>(
         dataSetsFields, outputFile, options);
       break;
+    case vtkm::rendering::testing::MapperType::Connectivity:
+      RenderTest<CanvasType, ViewType, vtkm::rendering::MapperConnectivity>(
+        dataSetsFields, outputFile, options);
+      break;
+    case vtkm::rendering::testing::MapperType::Cylinder:
+      RenderTest<CanvasType, ViewType, vtkm::rendering::MapperCylinder>(
+        dataSetsFields, outputFile, options);
+      break;
     case vtkm::rendering::testing::MapperType::Point:
       RenderTest<CanvasType, ViewType, vtkm::rendering::MapperPoint>(
         dataSetsFields, outputFile, options);
@@ -151,8 +193,6 @@ void RenderTest(const DataSetFieldVector& dataSetsFields,
       RenderTest<CanvasType, ViewType, vtkm::rendering::MapperWireframer>(
         dataSetsFields, outputFile, options);
       break;
-    default:
-      VTKM_TEST_FAIL("Invalid mapper type for 3D view.");
   }
 }
 
