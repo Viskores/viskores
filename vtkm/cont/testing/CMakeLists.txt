@@ -101,6 +101,7 @@ set(unit_tests
 set(library_sources
   MakeTestDataSet.cxx
   TestEqualArrayHandles.cxx
+  Testing.cxx
   )
 
 set(library_sources_device
