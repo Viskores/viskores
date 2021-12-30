@@ -71,6 +71,20 @@ void SetupView(vtkm::rendering::View1D& view,
   view.SetLogY(options.LogY);
 }
 
+template <typename ViewType>
+std::unique_ptr<vtkm::rendering::View> MakeView(
+  vtkm::rendering::Canvas& canvas,
+  vtkm::rendering::Mapper& mapper,
+  vtkm::rendering::Scene& scene,
+  const vtkm::Bounds& bounds,
+  const vtkm::Range& fieldRange,
+  const vtkm::rendering::testing::RenderTestOptions& options)
+{
+  ViewType* view = new ViewType(scene, mapper, canvas, options.Background, options.Foreground);
+  SetupView(*view, bounds, fieldRange, options);
+  return std::unique_ptr<vtkm::rendering::View>(view);
+}
+
 template <typename MapperType>
 void SetupMapper(MapperType&, const vtkm::rendering::testing::RenderTestOptions&)
 {
@@ -102,13 +116,21 @@ void SetupMapper(vtkm::rendering::MapperPoint& mapper,
   }
 }
 
-template <typename CanvasType, typename ViewType, typename MapperType>
-void RenderTest(const DataSetFieldVector& dataSetsFields,
-                const std::string& outputFile,
-                const vtkm::rendering::testing::RenderTestOptions& options)
+template <typename MapperType>
+std::unique_ptr<vtkm::rendering::Mapper> MakeMapper(
+  const vtkm::rendering::testing::RenderTestOptions& options)
 {
-  CanvasType canvas(options.CanvasWidth, options.CanvasHeight);
+  MapperType* mapper = new MapperType;
+  SetupMapper(*mapper, options);
+  return std::unique_ptr<vtkm::rendering::Mapper>(mapper);
+}
 
+void DoRenderTest(vtkm::rendering::Canvas& canvas,
+                  vtkm::rendering::Mapper& mapper,
+                  const DataSetFieldVector& dataSetsFields,
+                  const std::string& outputFile,
+                  const vtkm::rendering::testing::RenderTestOptions& options)
+{
   std::size_t numFields = dataSetsFields.size();
   VTKM_TEST_ASSERT(numFields > 0);
 
@@ -137,11 +159,24 @@ void RenderTest(const DataSetFieldVector& dataSetsFields,
     fieldRange.Include(dataSet.GetField(fieldName).GetRange().ReadPortal().Get(0));
   }
 
-  MapperType mapper;
-  SetupMapper(mapper, options);
+  std::unique_ptr<vtkm::rendering::View> viewPointer;
+  switch (options.ViewDimension)
+  {
+    case 1:
+      viewPointer =
+        MakeView<vtkm::rendering::View1D>(canvas, mapper, scene, bounds, fieldRange, options);
+      break;
+    case 2:
+      viewPointer =
+        MakeView<vtkm::rendering::View2D>(canvas, mapper, scene, bounds, fieldRange, options);
+      break;
+    case 3:
+      viewPointer =
+        MakeView<vtkm::rendering::View3D>(canvas, mapper, scene, bounds, fieldRange, options);
+      break;
+  }
+  vtkm::rendering::View& view = *viewPointer;
 
-  ViewType view(scene, mapper, canvas, options.Background, options.Foreground);
-  SetupView(view, bounds, fieldRange, options);
   view.AddTextAnnotation(std::unique_ptr<vtkm::rendering::TextAnnotationScreen>(
     new vtkm::rendering::TextAnnotationScreen(options.Title,
                                               options.Foreground,
@@ -158,63 +193,37 @@ void RenderTest(const DataSetFieldVector& dataSetsFields,
                                      options.Threshold));
 }
 
-template <typename CanvasType, typename ViewType>
-void RenderTest(const DataSetFieldVector& dataSetsFields,
-                const std::string& outputFile,
-                const vtkm::rendering::testing::RenderTestOptions& options)
+void DoRenderTest(vtkm::rendering::CanvasRayTracer& canvas,
+                  const DataSetFieldVector& dataSetsFields,
+                  const std::string& outputFile,
+                  const vtkm::rendering::testing::RenderTestOptions& options)
 {
+  std::unique_ptr<vtkm::rendering::Mapper> mapper;
   switch (options.Mapper)
   {
     case vtkm::rendering::testing::MapperType::RayTracer:
-      RenderTest<CanvasType, ViewType, vtkm::rendering::MapperRayTracer>(
-        dataSetsFields, outputFile, options);
+      mapper = MakeMapper<vtkm::rendering::MapperRayTracer>(options);
       break;
     case vtkm::rendering::testing::MapperType::Connectivity:
-      RenderTest<CanvasType, ViewType, vtkm::rendering::MapperConnectivity>(
-        dataSetsFields, outputFile, options);
+      mapper = MakeMapper<vtkm::rendering::MapperConnectivity>(options);
       break;
     case vtkm::rendering::testing::MapperType::Cylinder:
-      RenderTest<CanvasType, ViewType, vtkm::rendering::MapperCylinder>(
-        dataSetsFields, outputFile, options);
+      mapper = MakeMapper<vtkm::rendering::MapperCylinder>(options);
       break;
     case vtkm::rendering::testing::MapperType::Point:
-      RenderTest<CanvasType, ViewType, vtkm::rendering::MapperPoint>(
-        dataSetsFields, outputFile, options);
+      mapper = MakeMapper<vtkm::rendering::MapperPoint>(options);
       break;
     case vtkm::rendering::testing::MapperType::Quad:
-      RenderTest<CanvasType, ViewType, vtkm::rendering::MapperQuad>(
-        dataSetsFields, outputFile, options);
+      mapper = MakeMapper<vtkm::rendering::MapperQuad>(options);
       break;
     case vtkm::rendering::testing::MapperType::Volume:
-      RenderTest<CanvasType, ViewType, vtkm::rendering::MapperVolume>(
-        dataSetsFields, outputFile, options);
+      mapper = MakeMapper<vtkm::rendering::MapperVolume>(options);
       break;
     case vtkm::rendering::testing::MapperType::Wireframer:
-      RenderTest<CanvasType, ViewType, vtkm::rendering::MapperWireframer>(
-        dataSetsFields, outputFile, options);
+      mapper = MakeMapper<vtkm::rendering::MapperWireframer>(options);
       break;
   }
-}
-
-template <typename CanvasType>
-void RenderTest(const DataSetFieldVector& dataSetsFields,
-                const std::string& outputFile,
-                const vtkm::rendering::testing::RenderTestOptions& options)
-{
-  switch (options.ViewDimension)
-  {
-    case 3:
-      RenderTest<CanvasType, vtkm::rendering::View3D>(dataSetsFields, outputFile, options);
-      break;
-    case 2:
-      RenderTest<CanvasType, vtkm::rendering::View2D>(dataSetsFields, outputFile, options);
-      break;
-    case 1:
-      RenderTest<CanvasType, vtkm::rendering::View1D>(dataSetsFields, outputFile, options);
-      break;
-    default:
-      VTKM_TEST_FAIL("Unsupported dimension for RenderTest.");
-  }
+  DoRenderTest(canvas, *mapper, dataSetsFields, outputFile, options);
 }
 
 } // annonymous namesapce
@@ -245,14 +254,13 @@ void RenderTest(const DataSetFieldVector& dataSetsFields,
       std::make_unique<vtkm::cont::ScopedRuntimeDeviceTracker>(vtkm::cont::DeviceAdapterTagAny{});
   }
 
-  switch (options.Canvas)
+  if (options.Canvas != vtkm::rendering::testing::CanvasType::RayTracer)
   {
-    case vtkm::rendering::testing::CanvasType::RayTracer:
-      ::RenderTest<vtkm::rendering::CanvasRayTracer>(dataSetsFields, outputFile, options);
-      break;
-    default:
-      VTKM_TEST_FAIL("Unknown canvas type specified in RenderTest.");
+    VTKM_TEST_FAIL("Currently only the CanvasRayTracer canvas is supported.");
   }
+
+  vtkm::rendering::CanvasRayTracer canvas(options.CanvasWidth, options.CanvasHeight);
+  DoRenderTest(canvas, dataSetsFields, outputFile, options);
 }
 
 } // namespace vtkm::rendering::testing
