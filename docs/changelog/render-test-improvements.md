@@ -56,3 +56,10 @@ unexpected behavior when multiple versions of a supposed singleton static
 object exist. In particular, this was causing a failure when the static
 objects holding testing directories was created by the test translation
 unit but was then unavailable to `vtkm_rendering_testing`.
+
+## Expand test_equal_images
+
+The `test_equal_images` function has been expanded to supply the generated
+image in a `Canvas` or a `DataSet` in addition to a `View`. Much of the
+templating code has been removed from `test_equal_images` and most of the
+code has moved into the `vtkm_rendering_testing` library.

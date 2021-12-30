@@ -30,6 +30,7 @@ set(unit_tests
 
 set(library_sources
   RenderTest.cxx
+  Testing.cxx
   )
 
 vtkm_library(
