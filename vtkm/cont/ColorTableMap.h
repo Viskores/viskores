@@ -14,7 +14,6 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/ColorTableSamples.h>
-#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/colorconversion/LookupTable.h>

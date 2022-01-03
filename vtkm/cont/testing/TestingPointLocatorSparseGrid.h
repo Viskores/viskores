@@ -17,6 +17,8 @@
 
 #include <vtkm/cont/PointLocatorSparseGrid.h>
 
+#include <vtkm/worklet/WorkletMapField.h>
+
 ////brute force method /////
 template <typename CoordiVecT, typename CoordiPortalT, typename CoordiT>
 VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, CoordiT& dis2)
@@ -91,7 +93,6 @@ template <typename DeviceAdapter>
 class TestingPointLocatorSparseGrid
 {
 public:
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
   void TestTest() const
   {
     vtkm::Int32 nTrainingPoints = 5;

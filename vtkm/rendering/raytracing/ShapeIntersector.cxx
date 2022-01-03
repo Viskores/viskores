@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #include <vtkm/rendering/raytracing/ShapeIntersector.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {

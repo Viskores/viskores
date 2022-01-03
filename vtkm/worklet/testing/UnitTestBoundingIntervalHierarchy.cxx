@@ -20,6 +20,8 @@
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace
 {

@@ -27,6 +27,8 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchy.h>
+
 namespace vtkm
 {
 namespace cont
