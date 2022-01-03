@@ -31,7 +31,30 @@ namespace internal
 
 VTKM_CONT_EXPORT void ArrayGetValuesImpl(const vtkm::cont::UnknownArrayHandle& ids,
                                          const vtkm::cont::UnknownArrayHandle& data,
-                                         const vtkm::cont::UnknownArrayHandle& output);
+                                         const vtkm::cont::UnknownArrayHandle& output,
+                                         std::false_type extractComponentInefficient);
+
+template <typename IdsArrayHandle, typename DataArrayHandle, typename OutputArrayHandle>
+void ArrayGetValuesImpl(const IdsArrayHandle& ids,
+                        const DataArrayHandle& data,
+                        const OutputArrayHandle& output,
+                        std::true_type vtkmNotUsed(extractComponentInefficient))
+{
+  // Fallback implementation. Using UnknownArrayHandle to extract the data would be more
+  // inefficient than simply getting the ReadPortal (which could potentially copy everything
+  // form device to host), so we do that here. The only other alternative would be to write
+  // a custom worklet, but that would require a device compiler, and we are avoiding that for
+  // this header.
+  vtkm::Id outputSize = ids.GetNumberOfValues();
+  output.Allocate(outputSize);
+  auto idsPortal = ids.ReadPortal();
+  auto dataPortal = data.ReadPortal();
+  auto outputPortal = output.WritePortal();
+  for (vtkm::Id index = 0; index < outputSize; ++index)
+  {
+    outputPortal.Set(index, dataPortal.Get(idsPortal.Get(index)));
+  }
+}
 
 } // namespace internal
 
@@ -100,7 +123,10 @@ VTKM_CONT void ArrayGetValues(const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids
   VTKM_STATIC_ASSERT_MSG(
     vtkm::HasVecTraits<T>::value,
     "ArrayGetValues can only be used with arrays containing value types with VecTraits defined.");
-  internal::ArrayGetValuesImpl(ids, data, output);
+  using DataArrayHandle = vtkm::cont::ArrayHandle<T, SData>;
+  using InefficientExtract =
+    vtkm::cont::internal::ArrayExtractComponentIsInefficient<DataArrayHandle>;
+  internal::ArrayGetValuesImpl(ids, data, output, InefficientExtract{});
 }
 
 /// We need a specialization for `ArrayHandleCasts` to avoid runtime type missmatch errors inside
