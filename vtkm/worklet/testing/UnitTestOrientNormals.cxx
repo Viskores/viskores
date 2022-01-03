@@ -222,8 +222,8 @@ private:
 
   void Prepare()
   {
-    vtkm::cont::Algorithm::Fill(this->VisitedPointsField, false, this->Coords.GetNumberOfPoints());
-    vtkm::cont::Algorithm::Fill(this->VisitedCellsField, false, this->Cells.GetNumberOfCells());
+    this->VisitedPointsField.AllocateAndFill(this->Coords.GetNumberOfPoints(), false);
+    this->VisitedCellsField.AllocateAndFill(this->Cells.GetNumberOfCells(), false);
   }
 
   void ValidateImpl(vtkm::Id startPtIdx, const NormalType& startRefNormal)

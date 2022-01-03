@@ -173,7 +173,7 @@ struct launchComputePass1
     vtkm::cont::Invoker invoke(device);
     metaDataMesh2D = make_metaDataMesh2D(SumYAxis{}, worklet.PointDims);
 
-    vtkm::cont::Algorithm::Fill(edgeCases, static_cast<vtkm::UInt8>(FlyingEdges3D::Below));
+    edgeCases.Fill(static_cast<vtkm::UInt8>(FlyingEdges3D::Below));
     invoke(worklet, metaDataMesh2D, std::forward<Args>(args)..., edgeCases, inputField);
     return true;
   }
