@@ -14,3 +14,5 @@ over calling `Allocate` and `Fill` separately is if you call
 `AllocateAndFill` with `vtkm::CopyFlag::On`, it will fill only the extended
 portion of the array.
 
+Also added a similar `Fill` and `AllocateAndFill` methods to `BitField` for
+similar reasons.
