@@ -66,8 +66,14 @@ ArrayExtractComponentFallback(const vtkm::cont::ArrayHandle<T, S>& src,
   return vtkm::cont::ArrayHandleStride<BaseComponentType>(dest, numValues, 1, 0);
 }
 
+// Used as a superclass for ArrayHandleComponentImpls that are inefficient (and should be
+// avoided).
+struct ArrayExtractComponentImplInefficient
+{
+};
+
 template <typename S>
-struct ArrayExtractComponentImpl
+struct ArrayExtractComponentImpl : ArrayExtractComponentImplInefficient
 {
   template <typename T>
   vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(
@@ -130,6 +136,13 @@ struct ArrayExtractComponentImpl<vtkm::cont::StorageTagBasic>
       allowCopy);
   }
 };
+
+/// \brief Resolves to true if ArrayHandleComponent of the array handle would be inefficient.
+///
+template <typename ArrayHandleType>
+using ArrayExtractComponentIsInefficient = typename std::is_base_of<
+  vtkm::cont::internal::ArrayExtractComponentImplInefficient,
+  vtkm::cont::internal::ArrayExtractComponentImpl<typename ArrayHandleType::StorageTag>>::type;
 
 } // namespace internal
 
