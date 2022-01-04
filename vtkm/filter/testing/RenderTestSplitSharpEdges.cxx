@@ -16,9 +16,6 @@
 #include <vtkm/filter/SplitSharpEdges.h>
 #include <vtkm/filter/SurfaceNormals.h>
 
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 #include <vtkm/rendering/testing/Testing.h>
 
@@ -27,11 +24,6 @@ namespace
 void TestSplitSharpEdges()
 {
   std::cout << "Generate Image for SplitSharpEdges filter" << std::endl;
-
-  vtkm::cont::ColorTable colorTable("inferno");
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   auto pathname =
     vtkm::cont::testing::Testing::DataPath("unstructured/SplitSharpEdgesTestDataSet.vtk");
@@ -45,12 +37,15 @@ void TestSplitSharpEdges()
   auto result = splitSharpEdges.Execute(dataSet);
   result.PrintSummary(std::cout);
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "filter/split-sharp-edges.png", false);
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;
+  testOptions.EnableAnnotations = false;
+  vtkm::rendering::testing::RenderTest(
+    result, "pointvar", "filter/split-sharp-edges.png", testOptions);
 }
 } // namespace
 
-int RegressionTestSplitSharpEdges(int argc, char* argv[])
+int RenderTestSplitSharpEdges(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestSplitSharpEdges, argc, argv);
 }
