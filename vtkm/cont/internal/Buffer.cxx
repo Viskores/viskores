@@ -49,6 +49,12 @@ vtkm::BufferSizeType NumberOfValuesToNumberOfBytes(vtkm::Id numValues, std::size
 } // namespace vtkm::internal
 
 namespace
+// nvcc whines about things like conversion operators that are defined but never used.
+// I don't want to delete them because you never know when the code is going to change.
+// So make the namespace technically not anonymous.
+#ifdef VTKM_CUDA
+  vtkm_buffer_ns
+#endif
 {
 
 using LockType = std::unique_lock<std::mutex>;
@@ -231,6 +237,9 @@ void FillBuffer(const vtkm::cont::internal::Buffer& target,
 }
 
 } // anonymous namespace
+#ifdef VTKM_CUDA
+using namespace vtkm_buffer_ns;
+#endif
 
 namespace vtkm
 {
