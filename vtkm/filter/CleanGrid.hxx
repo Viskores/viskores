@@ -35,7 +35,7 @@ vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
   if (inCellSet.IsType<CellSetType>())
   {
     // Is expected type, do a shallow copy
-    outputCellSet = inCellSet.Cast<CellSetType>();
+    outputCellSet = inCellSet.AsCellSet<CellSetType>();
   }
   else
   { // Clean the grid

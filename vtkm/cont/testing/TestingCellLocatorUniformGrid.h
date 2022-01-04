@@ -103,7 +103,7 @@ public:
 
     using StructuredType = vtkm::cont::CellSetStructured<3>;
     vtkm::Id3 cellDims =
-      cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+      cellSet.AsCellSet<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
     std::cout << "Dimensions of dataset : " << cellDims << std::endl;
 
     vtkm::cont::CellLocatorUniformGrid locator;

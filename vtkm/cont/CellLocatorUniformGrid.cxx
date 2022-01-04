@@ -29,17 +29,17 @@ void CellLocatorUniformGrid::Build()
   if (!coords.GetData().IsType<UniformType>())
     throw vtkm::cont::ErrorBadType("Coordinates are not uniform type.");
 
-  if (cellSet.IsSameType(Structured2DType()))
+  if (cellSet.CanConvert<Structured2DType>())
   {
     this->Is3D = false;
-    Structured2DType structuredCellSet = cellSet.Cast<Structured2DType>();
+    Structured2DType structuredCellSet = cellSet.AsCellSet<Structured2DType>();
     vtkm::Id2 pointDims = structuredCellSet.GetSchedulingRange(vtkm::TopologyElementTagPoint());
     this->PointDims = vtkm::Id3(pointDims[0], pointDims[1], 1);
   }
-  else if (cellSet.IsSameType(Structured3DType()))
+  else if (cellSet.CanConvert<Structured3DType>())
   {
     this->Is3D = true;
-    Structured3DType structuredCellSet = cellSet.Cast<Structured3DType>();
+    Structured3DType structuredCellSet = cellSet.AsCellSet<Structured3DType>();
     this->PointDims = structuredCellSet.GetSchedulingRange(vtkm::TopologyElementTagPoint());
   }
   else

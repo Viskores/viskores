@@ -28,9 +28,9 @@ vtkm::cont::DataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& input,
   // external faces worklet
   vtkm::cont::CellSetExplicit<> outCellSet;
 
-  if (cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  if (cells.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {
-    this->Worklet.Run(cells.Cast<vtkm::cont::CellSetStructured<3>>(),
+    this->Worklet.Run(cells.AsCellSet<vtkm::cont::CellSetStructured<3>>(),
                       input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
                       outCellSet);
   }

@@ -305,10 +305,10 @@ public:
   {
     vtkm::cont::Invoker invoke;
 
-    if (cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
+    if (cellset.CanConvert<vtkm::cont::CellSetStructured<3>>())
     {
       vtkm::cont::CellSetStructured<3> cellSetStructured3D =
-        cellset.Cast<vtkm::cont::CellSetStructured<3>>();
+        cellset.AsCellSet<vtkm::cont::CellSetStructured<3>>();
       const vtkm::Id numCells = cellSetStructured3D.GetNumberOfCells();
 
       vtkm::cont::ArrayHandleIndex cellIdxs(numCells);
@@ -317,10 +317,10 @@ public:
 
       output = numCells * QUAD_PER_CSS;
     }
-    else if (cellset.IsSameType(vtkm::cont::CellSetStructured<2>()))
+    else if (cellset.CanConvert<vtkm::cont::CellSetStructured<2>>())
     {
       vtkm::cont::CellSetStructured<2> cellSetStructured2D =
-        cellset.Cast<vtkm::cont::CellSetStructured<2>>();
+        cellset.AsCellSet<vtkm::cont::CellSetStructured<2>>();
       const vtkm::Id numCells = cellSetStructured2D.GetNumberOfCells();
 
       vtkm::cont::ArrayHandleIndex cellIdxs(numCells);

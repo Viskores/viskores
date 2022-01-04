@@ -137,7 +137,7 @@ struct ValidateNormals
                   const vtkm::cont::Field& pointNormalsField,
                   const vtkm::cont::Field& cellNormalsField)
     : Coords{ dataset.GetCoordinateSystem() }
-    , Cells{ dataset.GetCellSet().Cast<CellSetType>() }
+    , Cells{ dataset.GetCellSet().AsCellSet<CellSetType>() }
     , Points{ this->Coords.GetDataAsMultiplexer() }
     , CheckPoints(checkPoints)
     , CheckCells(checkCells)

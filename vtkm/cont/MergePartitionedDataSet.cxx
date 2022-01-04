@@ -79,7 +79,8 @@ void TransferCells(const vtkm::cont::UnknownCellSet& cellSetIn,
                    vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
                    vtkm::Id startIndex)
 {
-  cellSetIn.CastAndCall(TransferCellsFunctor{}, shapes, numIndices, connectivity, startIndex);
+  vtkm::cont::CastAndCall(
+    cellSetIn, TransferCellsFunctor{}, shapes, numIndices, connectivity, startIndex);
 }
 
 struct TransferArrayFunctor

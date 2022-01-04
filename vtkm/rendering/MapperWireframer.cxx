@@ -238,8 +238,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
 {
   vtkm::cont::UnknownCellSet cellSet = inCellSet;
 
-  bool is1D = cellSet.IsSameType(vtkm::cont::CellSetStructured<1>());
-  bool is2D = cellSet.IsSameType(vtkm::cont::CellSetStructured<2>());
+  bool is1D = cellSet.CanConvert<vtkm::cont::CellSetStructured<1>>();
+  bool is2D = cellSet.CanConvert<vtkm::cont::CellSetStructured<2>>();
 
   vtkm::cont::CoordinateSystem actualCoords = coords;
   vtkm::cont::Field actualField = inScalarField;
@@ -285,9 +285,9 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
   // Check for a cell set that is already lines
   // Since there is no need to de external faces or
   // render the depth of the mesh to hide internal zones
-  if (cellSet.IsSameType(vtkm::cont::CellSetSingleType<>()))
+  if (cellSet.CanConvert<vtkm::cont::CellSetSingleType<>>())
   {
-    auto singleType = cellSet.Cast<vtkm::cont::CellSetSingleType<>>();
+    auto singleType = cellSet.AsCellSet<vtkm::cont::CellSetSingleType<>>();
     isLines = singleType.GetCellShape(0) == vtkm::CELL_SHAPE_LINE;
   }
 

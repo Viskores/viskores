@@ -250,27 +250,27 @@ bool CanDoStructuredStrip(const vtkm::cont::UnknownCellSet& cells,
   bool canDo = false;
   vtkm::Id3 cellDims(1, 1, 1);
 
-  if (cells.IsSameType(vtkm::cont::CellSetStructured<1>()))
+  if (cells.CanConvert<vtkm::cont::CellSetStructured<1>>())
   {
-    auto cells1D = cells.Cast<vtkm::cont::CellSetStructured<1>>();
+    auto cells1D = cells.AsCellSet<vtkm::cont::CellSetStructured<1>>();
     vtkm::Id d = cells1D.GetCellDimensions();
     cellDims[0] = d;
     vtkm::Id sz = d;
 
     canDo = CanStrip<1>(ghostField, invoke, removeAllGhost, removeType, range, cellDims, sz);
   }
-  else if (cells.IsSameType(vtkm::cont::CellSetStructured<2>()))
+  else if (cells.CanConvert<vtkm::cont::CellSetStructured<2>>())
   {
-    auto cells2D = cells.Cast<vtkm::cont::CellSetStructured<2>>();
+    auto cells2D = cells.AsCellSet<vtkm::cont::CellSetStructured<2>>();
     vtkm::Id2 d = cells2D.GetCellDimensions();
     cellDims[0] = d[0];
     cellDims[1] = d[1];
     vtkm::Id sz = cellDims[0] * cellDims[1];
     canDo = CanStrip<2>(ghostField, invoke, removeAllGhost, removeType, range, cellDims, sz);
   }
-  else if (cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  else if (cells.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {
-    auto cells3D = cells.Cast<vtkm::cont::CellSetStructured<3>>();
+    auto cells3D = cells.AsCellSet<vtkm::cont::CellSetStructured<3>>();
     cellDims = cells3D.GetCellDimensions();
     vtkm::Id sz = cellDims[0] * cellDims[1] * cellDims[2];
     canDo = CanStrip<3>(ghostField, invoke, removeAllGhost, removeType, range, cellDims, sz);
@@ -310,9 +310,9 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
   vtkm::cont::UnknownCellSet cellOut;
 
   //Preserve structured output where possible.
-  if (cells.IsSameType(vtkm::cont::CellSetStructured<1>()) ||
-      cells.IsSameType(vtkm::cont::CellSetStructured<2>()) ||
-      cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  if (cells.CanConvert<vtkm::cont::CellSetStructured<1>>() ||
+      cells.CanConvert<vtkm::cont::CellSetStructured<2>>() ||
+      cells.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {
     vtkm::RangeId3 range;
     if (CanDoStructuredStrip(

@@ -46,7 +46,7 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor3D::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::CellSetStructured<3> cellSet;
-  input.GetCellSet().CopyTo(cellSet);
+  input.GetCellSet().AsCellSet(cellSet);
   vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
   vtkm::cont::ArrayHandle<vtkm::Float64> decompress;

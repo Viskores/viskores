@@ -223,9 +223,9 @@ void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::UnknownCellSet& cel
   //
   // look for points in the cell set
   //
-  if (cells.IsSameType(vtkm::cont::CellSetExplicit<>()))
+  if (cells.CanConvert<vtkm::cont::CellSetExplicit<>>())
   {
-    auto cellsExplicit = cells.Cast<vtkm::cont::CellSetExplicit<>>();
+    auto cellsExplicit = cells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
     vtkm::cont::ArrayHandle<vtkm::Id> points;
     vtkm::worklet::DispatcherMapTopology<detail::CountPoints>(detail::CountPoints())
@@ -241,9 +241,9 @@ void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::UnknownCellSet& cel
     vtkm::worklet::DispatcherMapTopology<detail::Pointify>(detail::Pointify())
       .Invoke(cellsExplicit, cellOffsets, this->PointIds);
   }
-  else if (cells.IsSameType(SingleType()))
+  else if (cells.CanConvert<SingleType>())
   {
-    SingleType pointCells = cells.Cast<SingleType>();
+    SingleType pointCells = cells.AsCellSet<SingleType>();
     vtkm::UInt8 shape_id = pointCells.GetCellShape(0);
     if (shape_id == vtkm::CELL_SHAPE_VERTEX)
     {

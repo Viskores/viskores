@@ -544,8 +544,8 @@ public:
   {
     using NormalsType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
-    if (!cellset.IsSameType(vtkm::cont::CellSetExplicit<>()) &&
-        !cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
+    if (!cellset.CanConvert<vtkm::cont::CellSetExplicit<>>() &&
+        !cellset.CanConvert<vtkm::cont::CellSetSingleType<>>())
     {
       throw vtkm::cont::ErrorBadValue("Tube filter only supported for polyline data.");
     }

@@ -187,7 +187,7 @@ void TryExplicitGrid()
   std::cout << "Testing explicit grid." << std::endl;
   vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
   vtkm::cont::CellSetExplicit<> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   vtkm::UInt8 expectedCellShapes[] = { vtkm::CELL_SHAPE_HEXAHEDRON,
                                        vtkm::CELL_SHAPE_PYRAMID,
@@ -223,7 +223,7 @@ void TryCellSetPermutation()
   std::cout << "Testing permutation grid." << std::endl;
   vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
   vtkm::cont::CellSetExplicit<> originalCellSet;
-  dataSet.GetCellSet().CopyTo(originalCellSet);
+  dataSet.GetCellSet().AsCellSet(originalCellSet);
 
   vtkm::Id permutationArray[] = { 2, 0, 1 };
 
@@ -255,7 +255,7 @@ void TryStructuredGrid3D()
   std::cout << "Testing 3D structured grid." << std::endl;
   vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet0();
   vtkm::cont::CellSetStructured<3> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   vtkm::Id expectedCellIndexSum[4] = { 40, 48, 88, 96 };
 
@@ -285,7 +285,7 @@ void TryStructuredGrid2D()
   std::cout << "Testing 2D structured grid." << std::endl;
   vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make2DUniformDataSet0();
   vtkm::cont::CellSetStructured<2> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   vtkm::Id expectedCellIndexSum[2] = { 8, 12 };
 
@@ -314,7 +314,7 @@ void TryStructuredGrid1D()
   std::cout << "Testing 1D structured grid." << std::endl;
   vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make1DUniformDataSet0();
   vtkm::cont::CellSetStructured<1> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   vtkm::Id expectedCellIndexSum[5] = { 1, 3, 5, 7, 9 };
 

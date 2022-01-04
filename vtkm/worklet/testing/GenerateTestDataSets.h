@@ -152,14 +152,14 @@ inline vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::Bound
     case ExplicitDataSetOption::SINGLE:
       if (cellSet.IsType<Structured2DType>())
       {
-        Structured2DType cells2D = cellSet.Cast<Structured2DType>();
+        Structured2DType cells2D = cellSet.AsCellSet<Structured2DType>();
         vtkm::Id2 cellDims = cells2D.GetCellDimensions();
         MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
         output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
       }
       else
       {
-        Structured3DType cells3D = cellSet.Cast<Structured3DType>();
+        Structured3DType cells3D = cellSet.AsCellSet<Structured3DType>();
         vtkm::Id3 cellDims = cells3D.GetCellDimensions();
         MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
         output = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
@@ -176,14 +176,14 @@ inline vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::Bound
     case ExplicitDataSetOption::EXPLICIT:
       if (cellSet.IsType<Structured2DType>())
       {
-        Structured2DType cells2D = cellSet.Cast<Structured2DType>();
+        Structured2DType cells2D = cellSet.AsCellSet<Structured2DType>();
         vtkm::Id2 cellDims = cells2D.GetCellDimensions();
         MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
         output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
       }
       else
       {
-        Structured3DType cells3D = cellSet.Cast<Structured3DType>();
+        Structured3DType cells3D = cellSet.AsCellSet<Structured3DType>();
         vtkm::Id3 cellDims = cells3D.GetCellDimensions();
         MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
         output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");

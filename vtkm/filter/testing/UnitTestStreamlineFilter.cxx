@@ -244,7 +244,7 @@ void TestAMRStreamline(bool useSL)
       //The seed that goes through the inner is broken up into two polylines
       //the begining, and then the end.
       VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds + 1, "Wrong number of cells.");
-      auto explicitCells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
+      auto explicitCells = dcells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
       for (vtkm::Id j = 0; j < numSeeds; j++)
       {
         vtkm::cont::ArrayHandle<vtkm::Id> indices;
@@ -277,7 +277,7 @@ void TestAMRStreamline(bool useSL)
 
       VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type.");
       VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 1, "Wrong number of cells.");
-      explicitCells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
+      explicitCells = dcells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
       vtkm::cont::ArrayHandle<vtkm::Id> indices;
       explicitCells.GetIndices(0, indices);
@@ -415,7 +415,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         vtkm::cont::CellSetExplicit<> explicitCells;
 
         VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type.");
-        explicitCells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
+        explicitCells = dcells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
         vtkm::FloatDefault xMax =
           static_cast<vtkm::FloatDefault>(bounds[static_cast<std::size_t>(i)].X.Max);
@@ -566,13 +566,13 @@ void TestStreamlineFile(const std::string& fname,
   if (useSL)
   {
     VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type");
-    auto cells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
+    auto cells = dcells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
     ValidateEndPoints(cells, coords, numPoints, endPts);
   }
   else
   {
     VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetSingleType<>>(), "Wrong cell type");
-    auto cells = dcells.Cast<vtkm::cont::CellSetSingleType<>>();
+    auto cells = dcells.AsCellSet<vtkm::cont::CellSetSingleType<>>();
     ValidateEndPoints(cells, coords, numPoints, endPts);
   }
 }

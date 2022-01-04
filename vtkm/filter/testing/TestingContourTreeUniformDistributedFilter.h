@@ -162,8 +162,8 @@ inline vtkm::cont::DataSet CreateSubDataSet(const vtkm::cont::DataSet& ds,
                                             const std::string& fieldName)
 {
   vtkm::Id3 globalSize;
-  ds.GetCellSet().CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(),
-                              globalSize);
+  vtkm::cont::CastAndCall(
+    ds.GetCellSet(), vtkm::worklet::contourtree_augmented::GetPointDimensions(), globalSize);
   const vtkm::Id nOutValues = blockSize[0] * blockSize[1] * blockSize[2];
 
   const auto inDataArrayHandle = ds.GetPointField(fieldName).GetData();
@@ -237,8 +237,8 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
 {
   // Get dimensions of data set
   vtkm::Id3 globalSize;
-  ds.GetCellSet().CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(),
-                              globalSize);
+  vtkm::cont::CastAndCall(
+    ds.GetCellSet(), vtkm::worklet::contourtree_augmented::GetPointDimensions(), globalSize);
 
   // Determine split
   vtkm::Id3 blocksPerAxis = ComputeNumberOfBlocksPerAxis(globalSize, numberOfBlocks);

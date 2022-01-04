@@ -52,7 +52,7 @@ vtkm::cont::DataSet GenerateDataSet()
 
 void Validate(vtkm::cont::DataSet dataSet)
 {
-  const auto cellSet = dataSet.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
+  const auto cellSet = dataSet.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>();
   const auto coordsArray = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
   const auto conn =
     cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
@@ -109,7 +109,7 @@ void DoTest()
 
   VTKM_TEST_ASSERT(threw, "Test dataset is already wound consistently wrt normals.");
 
-  auto cellSet = ds.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
+  auto cellSet = ds.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>();
   const auto coords = ds.GetCoordinateSystem().GetData();
   const auto cellNormalsVar = ds.GetCellField("normals").GetData();
   const auto cellNormals = cellNormalsVar.AsArrayHandle<vtkm::cont::ArrayHandle<MyNormalT>>();

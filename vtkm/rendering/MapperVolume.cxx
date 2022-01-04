@@ -79,7 +79,7 @@ void MapperVolume::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                                const vtkm::rendering::Camera& camera,
                                const vtkm::Range& scalarRange)
 {
-  if (!cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  if (!cellset.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {
     std::stringstream msg;
     std::string theType = typeid(cellset).name();
@@ -116,7 +116,7 @@ void MapperVolume::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
     }
 
     tracer.SetData(
-      coords, scalarField, cellset.Cast<vtkm::cont::CellSetStructured<3>>(), scalarRange);
+      coords, scalarField, cellset.AsCellSet<vtkm::cont::CellSetStructured<3>>(), scalarRange);
     tracer.SetColorMap(this->ColorMap);
 
     tracer.Render(rays);

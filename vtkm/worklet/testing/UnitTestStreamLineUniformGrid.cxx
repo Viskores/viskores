@@ -144,7 +144,7 @@ void TestStreamLineUniformGrid()
 
   // Check output
   vtkm::cont::CellSetExplicit<> outCellSet;
-  outDataSet.GetCellSet().CopyTo(outCellSet);
+  outDataSet.GetCellSet().AsCellSet(outCellSet);
   auto coordArray = outDataSet.GetCoordinateSystem(0).GetData();
 
   vtkm::Id numberOfCells = outCellSet.GetNumberOfCells();

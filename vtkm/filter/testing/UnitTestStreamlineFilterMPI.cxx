@@ -185,7 +185,7 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
         //The seed that goes through the inner is broken up into two polylines
         //the begining, and then the end.
         VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds + 1, "Wrong number of cells.");
-        auto explicitCells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
+        auto explicitCells = dcells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
         for (vtkm::Id j = 0; j < numSeeds; j++)
         {
           vtkm::cont::ArrayHandle<vtkm::Id> indices;
@@ -222,7 +222,7 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
 
         VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type.");
         VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 1, "Wrong number of cells.");
-        auto explicitCells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
+        auto explicitCells = dcells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
         vtkm::cont::ArrayHandle<vtkm::Id> indices;
         explicitCells.GetIndices(0, indices);
@@ -291,7 +291,7 @@ void ValidateOutput(const vtkm::cont::DataSet& out,
   {
     vtkm::cont::CellSetExplicit<> explicitCells;
     VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type.");
-    explicitCells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
+    explicitCells = dcells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
     for (vtkm::Id j = 0; j < numSeeds; j++)
     {
       vtkm::cont::ArrayHandle<vtkm::Id> indices;

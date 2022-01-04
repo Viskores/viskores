@@ -114,7 +114,7 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(
                coords,
                field,
                locator,
-               uniform.GetCellSet().template Cast<vtkm::cont::CellSetStructured<3>>(),
+               uniform.GetCellSet().template AsCellSet<vtkm::cont::CellSetStructured<3>>(),
                density);
 
   if (DivideByVolume)

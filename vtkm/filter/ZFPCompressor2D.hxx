@@ -50,7 +50,7 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor2D::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::CellSetStructured<2> cellSet;
-  input.GetCellSet().CopyTo(cellSet);
+  input.GetCellSet().AsCellSet(cellSet);
   vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
 
 

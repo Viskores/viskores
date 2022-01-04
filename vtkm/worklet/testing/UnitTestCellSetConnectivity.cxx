@@ -33,7 +33,7 @@ public:
     filter.SetActiveField("tangle");
     vtkm::cont::DataSet outputData = filter.Execute(dataSet);
 
-    auto cellSet = outputData.GetCellSet().Cast<vtkm::cont::CellSetSingleType<>>();
+    auto cellSet = outputData.GetCellSet().AsCellSet<vtkm::cont::CellSetSingleType<>>();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
     vtkm::worklet::connectivity::CellSetConnectivity().Run(cellSet, componentArray);
 
@@ -48,7 +48,7 @@ public:
   {
     vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
 
-    auto cellSet = dataSet.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
+    auto cellSet = dataSet.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
     vtkm::worklet::connectivity::CellSetConnectivity().Run(cellSet, componentArray);
 

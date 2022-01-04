@@ -413,10 +413,10 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Id3>& outputIndices,
            vtkm::Id& output)
   {
-    if (cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
+    if (cellset.CanConvert<vtkm::cont::CellSetStructured<3>>())
     {
       vtkm::cont::CellSetStructured<3> cellSetStructured3D =
-        cellset.Cast<vtkm::cont::CellSetStructured<3>>();
+        cellset.AsCellSet<vtkm::cont::CellSetStructured<3>>();
       const vtkm::Id numCells = cellSetStructured3D.GetNumberOfCells();
 
       vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0, 1, numCells);

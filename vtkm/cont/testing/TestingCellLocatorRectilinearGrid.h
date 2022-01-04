@@ -154,7 +154,7 @@ public:
     vtkm::cont::UnknownCellSet cellSet = dataset.GetCellSet();
     vtkm::Bounds bounds = coords.GetBounds();
     vtkm::Id3 dims =
-      cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
+      cellSet.AsCellSet<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
 
     // Generate some sample points.
     using PointType = vtkm::Vec3f;

@@ -62,21 +62,21 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
   if (dim == 1)
   {
     vtkm::cont::CellSetStructured<1> cellSet;
-    ds.GetCellSet().CopyTo(cellSet);
+    ds.GetCellSet().AsCellSet(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_LINE, "Wrong element type");
   }
   else if (dim == 2)
   {
     vtkm::cont::CellSetStructured<2> cellSet;
-    ds.GetCellSet().CopyTo(cellSet);
+    ds.GetCellSet().AsCellSet(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD, "Wrong element type");
   }
   else if (dim == 3)
   {
     vtkm::cont::CellSetStructured<3> cellSet;
-    ds.GetCellSet().CopyTo(cellSet);
+    ds.GetCellSet().AsCellSet(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_HEXAHEDRON, "Wrong element type");
   }
