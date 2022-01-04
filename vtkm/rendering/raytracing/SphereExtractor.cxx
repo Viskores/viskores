@@ -181,13 +181,13 @@ void SphereExtractor::ExtractCoordinates(const vtkm::cont::CoordinateSystem& coo
   this->SetVaryingRadius(minRadius, maxRadius, field);
 }
 
-void SphereExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells,
+void SphereExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells,
                                    const vtkm::Float32 radius)
 {
   this->SetPointIdsFromCells(cells);
   this->SetUniformRadius(radius);
 }
-void SphereExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells,
+void SphereExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells,
                                    const vtkm::cont::Field& field,
                                    const vtkm::Float32 minRadius,
                                    const vtkm::Float32 maxRadius)
@@ -212,7 +212,7 @@ void SphereExtractor::SetPointIdsFromCoords(const vtkm::cont::CoordinateSystem& 
   vtkm::worklet::DispatcherMapField<detail::Iterator>(detail::Iterator()).Invoke(this->PointIds);
 }
 
-void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::DynamicCellSet& cells)
+void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::UnknownCellSet& cells)
 {
   using SingleType = vtkm::cont::CellSetSingleType<>;
   vtkm::Id numCells = cells.GetNumberOfCells();
