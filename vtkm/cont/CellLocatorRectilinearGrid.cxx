@@ -23,7 +23,7 @@ namespace cont
 void CellLocatorRectilinearGrid::Build()
 {
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
-  vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = this->GetCellSet();
 
   if (!coords.GetData().IsType<RectilinearType>())
     throw vtkm::cont::ErrorBadType("Coordinates are not rectilinear type.");

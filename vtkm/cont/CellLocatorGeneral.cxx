@@ -51,7 +51,7 @@ VTKM_CONT void CellLocatorGeneral::Build()
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
 
-  vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = this->GetCellSet();
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
 
   if (cellSet.IsType<StructuredCellSet>() && coords.GetData().IsType<UniformCoordinates>())

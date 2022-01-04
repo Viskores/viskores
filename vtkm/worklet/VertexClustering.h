@@ -315,8 +315,8 @@ public:
   ///////////////////////////////////////////////////
   /// \brief VertexClustering: Mesh simplification
   ///
-  template <typename DynamicCellSetType, typename DynamicCoordinateHandleType>
-  vtkm::cont::DataSet Run(const DynamicCellSetType& cellSet,
+  template <typename UnknownCellSetType, typename DynamicCoordinateHandleType>
+  vtkm::cont::DataSet Run(const UnknownCellSetType& cellSet,
                           const DynamicCoordinateHandleType& coordinates,
                           const vtkm::Bounds& bounds,
                           const vtkm::Id3& nDivisions)

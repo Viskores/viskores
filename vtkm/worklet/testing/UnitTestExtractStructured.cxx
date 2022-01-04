@@ -55,7 +55,7 @@ public:
     dataSet.GetCellSet().CopyTo(cellSet);
 
     vtkm::worklet::ExtractStructured worklet;
-    vtkm::worklet::ExtractStructured::DynamicCellSetStructured outCellSet;
+    vtkm::worklet::ExtractStructured::UncertainCellSetStructured outCellSet;
 
     // RangeId3 within dataset
     vtkm::RangeId3 range0(1, 4, 1, 4, 1, 4);
@@ -121,7 +121,7 @@ public:
     dataSet.GetCellSet().CopyTo(cellSet);
 
     vtkm::worklet::ExtractStructured worklet;
-    vtkm::worklet::ExtractStructured::DynamicCellSetStructured outCellSet;
+    vtkm::worklet::ExtractStructured::UncertainCellSetStructured outCellSet;
 
     // RangeId3 within data set with sampling
     vtkm::RangeId3 range0(0, 5, 0, 5, 1, 4);

@@ -67,7 +67,7 @@ private:
                const vtkm::cont::CoordinateSystem& coords,
                const vtkm::cont::ArrayHandle<PointsType, PointsStorage>& points)
   {
-    this->InputCellSet = vtkm::cont::DynamicCellSet(cells);
+    this->InputCellSet = vtkm::cont::UnknownCellSet(cells);
 
     vtkm::cont::CastAndCallCellLocatorChooser(cells, coords, RunSelectLocator{}, *this, points);
   }
@@ -147,7 +147,7 @@ private:
                const vtkm::cont::CoordinateSystem& coords,
                const vtkm::cont::ArrayHandleUniformPointCoordinates::Superclass& points)
   {
-    this->InputCellSet = vtkm::cont::DynamicCellSet(cells);
+    this->InputCellSet = vtkm::cont::UnknownCellSet(cells);
     vtkm::cont::ArrayCopy(
       vtkm::cont::make_ArrayHandleConstant(vtkm::Id(-1), points.GetNumberOfValues()),
       this->CellIds);
@@ -342,7 +342,7 @@ private:
 
   vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> ParametricCoordinates;
-  vtkm::cont::DynamicCellSet InputCellSet;
+  vtkm::cont::UnknownCellSet InputCellSet;
 
   vtkm::cont::Invoker Invoke;
 };

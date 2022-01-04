@@ -94,7 +94,7 @@ public:
   {
     vtkm::cont::DataSet dataset = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::cont::CoordinateSystem coords = dataset.GetCoordinateSystem();
-    vtkm::cont::DynamicCellSet cellSet = dataset.GetCellSet();
+    vtkm::cont::UnknownCellSet cellSet = dataset.GetCellSet();
 
     vtkm::Bounds bounds = coords.GetBounds();
     std::cout << "X bounds : " << bounds.X.Min << " to " << bounds.X.Max << std::endl;

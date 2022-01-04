@@ -233,7 +233,7 @@ void CellLocatorBoundingIntervalHierarchy::Build()
 
   vtkm::cont::Invoker invoker;
 
-  vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = this->GetCellSet();
   vtkm::Id numCells = cellSet.GetNumberOfCells();
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
   auto points = coords.GetDataAsMultiplexer();

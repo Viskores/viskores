@@ -15,6 +15,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/rendering/raytracing/MeshConnectivityBuilder.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -408,7 +409,7 @@ public:
   Cylinderizer() {}
 
   VTKM_CONT
-  void Run(const vtkm::cont::DynamicCellSet& cellset,
+  void Run(const vtkm::cont::UnknownCellSet& cellset,
            vtkm::cont::ArrayHandle<vtkm::Id3>& outputIndices,
            vtkm::Id& output)
   {

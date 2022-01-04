@@ -17,8 +17,8 @@
 
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/exec/CellInterpolate.h>
 
 /*
@@ -195,7 +195,7 @@ public:
   CellInterpolationHelper() = default;
 
   VTKM_CONT
-  CellInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
+  CellInterpolationHelper(const vtkm::cont::UnknownCellSet& cellSet)
   {
     if (cellSet.IsSameType(Structured2DType()))
     {

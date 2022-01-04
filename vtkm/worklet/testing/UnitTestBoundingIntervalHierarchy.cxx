@@ -67,7 +67,7 @@ vtkm::cont::DataSet ConstructDataSet(vtkm::Id size)
 void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponent numPlanes)
 {
 
-  vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = dataSet.GetCellSet();
   auto vertices = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
 
   vtkm::cont::CellLocatorBoundingIntervalHierarchy bih =

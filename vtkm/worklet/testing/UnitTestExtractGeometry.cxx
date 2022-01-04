@@ -72,7 +72,7 @@ public:
 
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    vtkm::cont::DynamicCellSet outCellSet =
+    vtkm::cont::UnknownCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coordinates"),
                           vtkm::Box(minPoint, maxPoint),
@@ -180,7 +180,7 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    vtkm::cont::DynamicCellSet outCellSet =
+    vtkm::cont::UnknownCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coords"),
                           vtkm::Box(minPoint, maxPoint),
@@ -220,7 +220,7 @@ public:
 
     // Output data set with cell set containing extracted cells
     vtkm::worklet::ExtractGeometry extractGeometry;
-    vtkm::cont::DynamicCellSet outCellSet =
+    vtkm::cont::UnknownCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coords"),
                           vtkm::Sphere(center, radius),

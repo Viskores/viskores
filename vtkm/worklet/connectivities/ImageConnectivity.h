@@ -13,6 +13,7 @@
 
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
+#include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
@@ -113,7 +114,7 @@ public:
     }
   };
 
-  class ResolveDynamicCellSet
+  class ResolveUnknownCellSet
   {
   public:
     template <int Dimension, typename T, typename StorageT, typename OutputPortalType>
@@ -143,13 +144,13 @@ public:
     vtkm::cont::CastAndCall(pixels, RunImpl(), input, componentsOut);
   }
 
-  template <typename CellSetTag, typename T, typename S, typename OutputPortalType>
-  void Run(const vtkm::cont::DynamicCellSetBase<CellSetTag>& input,
+  template <typename T, typename S, typename OutputPortalType>
+  void Run(const vtkm::cont::UnknownCellSet& input,
            const vtkm::cont::ArrayHandle<T, S>& pixels,
            OutputPortalType& componentsOut) const
   {
     input.ResetCellSetList(vtkm::cont::CellSetListStructured())
-      .CastAndCall(ResolveDynamicCellSet(), pixels, componentsOut);
+      .CastAndCall(ResolveUnknownCellSet(), pixels, componentsOut);
   }
 };
 }

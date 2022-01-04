@@ -151,7 +151,7 @@ public:
       vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
 
     vtkm::cont::CoordinateSystem coords = dataset.GetCoordinateSystem();
-    vtkm::cont::DynamicCellSet cellSet = dataset.GetCellSet();
+    vtkm::cont::UnknownCellSet cellSet = dataset.GetCellSet();
     vtkm::Bounds bounds = coords.GetBounds();
     vtkm::Id3 dims =
       cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());

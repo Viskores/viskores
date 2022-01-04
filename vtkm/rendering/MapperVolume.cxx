@@ -72,7 +72,7 @@ vtkm::rendering::Canvas* MapperVolume::GetCanvas() const
   return this->Internals->Canvas;
 }
 
-void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
+void MapperVolume::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                                const vtkm::cont::CoordinateSystem& coords,
                                const vtkm::cont::Field& scalarField,
                                const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),

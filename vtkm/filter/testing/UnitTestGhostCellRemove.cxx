@@ -182,7 +182,7 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
   for (vtkm::Id i = 0; i < numPts; i++)
     explPortal.Set(i, cp.Get(i));
 
-  vtkm::cont::DynamicCellSet cellSet = dsUniform.GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = dsUniform.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::Id> conn;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;

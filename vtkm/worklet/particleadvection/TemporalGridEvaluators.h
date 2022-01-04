@@ -149,11 +149,11 @@ public:
   }
 
   VTKM_CONT TemporalGridEvaluator(const vtkm::cont::CoordinateSystem& coordinatesOne,
-                                  const vtkm::cont::DynamicCellSet& cellsetOne,
+                                  const vtkm::cont::UnknownCellSet& cellsetOne,
                                   const FieldType& fieldOne,
                                   const vtkm::FloatDefault timeOne,
                                   const vtkm::cont::CoordinateSystem& coordinatesTwo,
-                                  const vtkm::cont::DynamicCellSet& cellsetTwo,
+                                  const vtkm::cont::UnknownCellSet& cellsetTwo,
                                   const FieldType& fieldTwo,
                                   const vtkm::FloatDefault timeTwo)
     : EvaluatorOne(GridEvaluator(coordinatesOne, cellsetOne, fieldOne))

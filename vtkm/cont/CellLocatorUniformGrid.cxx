@@ -24,7 +24,7 @@ using Structured3DType = vtkm::cont::CellSetStructured<3>;
 void CellLocatorUniformGrid::Build()
 {
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
-  vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = this->GetCellSet();
 
   if (!coords.GetData().IsType<UniformType>())
     throw vtkm::cont::ErrorBadType("Coordinates are not uniform type.");

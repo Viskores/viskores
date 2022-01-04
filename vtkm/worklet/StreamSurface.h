@@ -214,7 +214,7 @@ public:
 
   VTKM_CONT
   void Run(const vtkm::cont::CoordinateSystem& coords,
-           const vtkm::cont::DynamicCellSet& cellset,
+           const vtkm::cont::UnknownCellSet& cellset,
            vtkm::cont::ArrayHandle<vtkm::Vec3f>& newPoints,
            vtkm::cont::CellSetSingleType<>& newCells)
   {

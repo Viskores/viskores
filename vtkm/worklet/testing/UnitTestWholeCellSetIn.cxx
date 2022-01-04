@@ -13,7 +13,6 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>

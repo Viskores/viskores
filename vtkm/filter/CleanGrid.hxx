@@ -31,7 +31,7 @@ vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
 
   CellSetType outputCellSet;
   // Do a deep copy of the cells to new CellSetExplicit structures
-  const vtkm::cont::DynamicCellSet& inCellSet = inData.GetCellSet();
+  const vtkm::cont::UnknownCellSet& inCellSet = inData.GetCellSet();
   if (inCellSet.IsType<CellSetType>())
   {
     // Is expected type, do a shallow copy

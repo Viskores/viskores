@@ -229,14 +229,14 @@ void MapperWireframer::SetIsOverlay(bool isOverlay)
   this->Internals->IsOverlay = isOverlay;
 }
 
-void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
+void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
                                    const vtkm::cont::CoordinateSystem& coords,
                                    const vtkm::cont::Field& inScalarField,
                                    const vtkm::cont::ColorTable& colorTable,
                                    const vtkm::rendering::Camera& camera,
                                    const vtkm::Range& scalarRange)
 {
-  vtkm::cont::DynamicCellSet cellSet = inCellSet;
+  vtkm::cont::UnknownCellSet cellSet = inCellSet;
 
   bool is1D = cellSet.IsSameType(vtkm::cont::CellSetStructured<1>());
   bool is2D = cellSet.IsSameType(vtkm::cont::CellSetStructured<2>());
@@ -279,7 +279,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::cont::CellSetSingleType<> newCellSet;
     newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
 
-    cellSet = vtkm::cont::DynamicCellSet(newCellSet);
+    cellSet = vtkm::cont::UnknownCellSet(newCellSet);
   }
   bool isLines = false;
   // Check for a cell set that is already lines

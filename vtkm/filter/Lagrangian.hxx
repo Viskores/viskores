@@ -121,7 +121,7 @@ inline VTKM_CONT Lagrangian::Lagrangian()
 //-----------------------------------------------------------------------------
 inline void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
 {
-  vtkm::cont::DynamicCellSet cell_set = input.GetCellSet();
+  vtkm::cont::UnknownCellSet cell_set = input.GetCellSet();
 
   if (cell_set.IsSameType(vtkm::cont::CellSetStructured<1>()))
   {
@@ -265,7 +265,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::cont::ArrayCopy(BasisParticles, basisParticleArray);
 
   cycle += 1;
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();

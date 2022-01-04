@@ -359,7 +359,7 @@ void Test3DLCS()
     using Structured3DType = vtkm::cont::CellSetStructured<3>;
     using Structured2DType = vtkm::cont::CellSetStructured<2>;
 
-    vtkm::cont::DynamicCellSet cellset = input.GetCellSet();
+    vtkm::cont::UnknownCellSet cellset = input.GetCellSet();
 
     //Only structured supported in filter right now.
     if (!(cellset.IsType<Structured2DType>() || cellset.IsType<Structured3DType>()))

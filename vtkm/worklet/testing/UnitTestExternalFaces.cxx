@@ -25,7 +25,7 @@ namespace
 
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
 {
-  const vtkm::cont::DynamicCellSet& inCellSet = inDataSet.GetCellSet();
+  const vtkm::cont::UnknownCellSet& inCellSet = inDataSet.GetCellSet();
 
   vtkm::cont::CellSetExplicit<> outCellSet;
 

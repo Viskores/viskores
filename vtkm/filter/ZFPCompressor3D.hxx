@@ -11,8 +11,8 @@
 #define vtk_m_filter_ZFPCompressor3D_hxx
 
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace vtkm
 {
@@ -23,7 +23,7 @@ namespace
 {
 
 template <typename CellSetList>
-bool IsCellSet3DStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset)
+bool IsCellSet3DStructured(const vtkm::cont::UnknownCellSet& cellset)
 {
   if (cellset.template IsType<vtkm::cont::CellSetStructured<3>>())
   {

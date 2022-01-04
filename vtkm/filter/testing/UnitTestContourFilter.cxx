@@ -88,7 +88,7 @@ public:
       }
 
       vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
-      vtkm::cont::DynamicCellSet dcells = result.GetCellSet();
+      vtkm::cont::UnknownCellSet dcells = result.GetCellSet();
       using CellSetType = vtkm::cont::CellSetSingleType<>;
       const CellSetType& cells = dcells.Cast<CellSetType>();
 
@@ -112,7 +112,7 @@ public:
                        "Shouldn't have less coordinates than the unmerged version");
 
       //verify that the number of cells is correct (160)
-      vtkm::cont::DynamicCellSet dcells = result.GetCellSet();
+      vtkm::cont::UnknownCellSet dcells = result.GetCellSet();
 
       using CellSetType = vtkm::cont::CellSetSingleType<>;
       const CellSetType& cells = dcells.Cast<CellSetType>();

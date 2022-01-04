@@ -15,7 +15,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
-#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 #include <vtkm/RangeId3.h>
 #include <vtkm/filter/ExtractStructured.h>
@@ -240,7 +240,7 @@ bool CanStrip(const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
 }
 
 template <typename T, typename StorageType>
-bool CanDoStructuredStrip(const vtkm::cont::DynamicCellSet& cells,
+bool CanDoStructuredStrip(const vtkm::cont::UnknownCellSet& cells,
                           const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
                           const vtkm::cont::Invoker& invoke,
                           bool removeAllGhost,
@@ -306,8 +306,8 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
-  vtkm::cont::DynamicCellSet cellOut;
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
+  vtkm::cont::UnknownCellSet cellOut;
 
   //Preserve structured output where possible.
   if (cells.IsSameType(vtkm::cont::CellSetStructured<1>()) ||

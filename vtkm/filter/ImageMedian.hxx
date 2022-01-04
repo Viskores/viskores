@@ -99,7 +99,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageMedian::DoExecute(
     throw vtkm::cont::ErrorBadValue("Active field for ImageMedian must be a point field.");
   }
 
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   vtkm::cont::ArrayHandle<T> result;
   if (this->Neighborhood == 1 || this->Neighborhood == 2)
   {

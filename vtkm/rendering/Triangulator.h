@@ -15,6 +15,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/rendering/raytracing/MeshConnectivityBuilder.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -640,7 +641,7 @@ public:
   }
 
   VTKM_CONT
-  void Run(const vtkm::cont::DynamicCellSet& cellset,
+  void Run(const vtkm::cont::UnknownCellSet& cellset,
            vtkm::cont::ArrayHandle<vtkm::Id4>& outputIndices,
            vtkm::Id& outputTriangles)
   {

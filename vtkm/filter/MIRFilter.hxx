@@ -22,7 +22,6 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/Timer.h>

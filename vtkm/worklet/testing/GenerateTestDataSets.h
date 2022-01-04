@@ -137,7 +137,7 @@ inline vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::Bound
   vtkm::cont::ArrayHandle<CoordType> explCoords;
   vtkm::cont::ArrayCopy(inputCoords, explCoords);
 
-  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = input.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::Id> conn;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;

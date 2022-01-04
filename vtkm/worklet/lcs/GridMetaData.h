@@ -24,7 +24,7 @@ public:
   using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
   VTKM_CONT
-  GridMetaData(const vtkm::cont::DynamicCellSet cellSet)
+  GridMetaData(const vtkm::cont::UnknownCellSet cellSet)
   {
     if (cellSet.IsType<Structured2DType>())
     {

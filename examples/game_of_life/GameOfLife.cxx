@@ -112,7 +112,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
 
     //get the coordinate system we are using for the 2D area
-    const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+    const vtkm::cont::UnknownCellSet cells = input.GetCellSet();
 
     //get the previous state of the game
     input.GetField("state", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(prevstate);

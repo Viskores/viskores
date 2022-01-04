@@ -70,7 +70,7 @@ inline VTKM_CONT vtkm::cont::DataSet Triangulate::DoExecute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
   DeduceCellSetTriangulate triangulate(this->Worklet, outCellSet);

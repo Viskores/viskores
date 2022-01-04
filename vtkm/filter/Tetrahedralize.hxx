@@ -47,7 +47,7 @@ inline VTKM_CONT vtkm::cont::DataSet Tetrahedralize::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),

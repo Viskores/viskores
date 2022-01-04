@@ -79,7 +79,7 @@ void TestStreamline()
     vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
     VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
 
-    vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
+    vtkm::cont::UnknownCellSet dcells = output.GetCellSet();
     VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
   }
 }
@@ -153,7 +153,7 @@ void TestPathline()
       VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == numExpectedPoints,
                        "Wrong number of coordinates");
 
-      vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
+      vtkm::cont::UnknownCellSet dcells = output.GetCellSet();
       VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
     }
   }
@@ -238,7 +238,7 @@ void TestAMRStreamline(bool useSL)
                        "Wrong number of coordinate systems in the output dataset");
       auto coords = ds0.GetCoordinateSystem().GetDataAsMultiplexer();
       auto ptPortal = coords.ReadPortal();
-      vtkm::cont::DynamicCellSet dcells = ds0.GetCellSet();
+      vtkm::cont::UnknownCellSet dcells = ds0.GetCellSet();
 
       VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type.");
       //The seed that goes through the inner is broken up into two polylines
@@ -305,7 +305,7 @@ void TestAMRStreamline(bool useSL)
       auto ds = out.GetPartition(0);
       VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
                        "Wrong number of coordinate systems in the output dataset");
-      vtkm::cont::DynamicCellSet dcells = ds.GetCellSet();
+      vtkm::cont::UnknownCellSet dcells = ds.GetCellSet();
       VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetSingleType<>>(), "Wrong cell type.");
 
       auto coords = ds.GetCoordinateSystem().GetDataAsMultiplexer();
@@ -406,7 +406,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         VTKM_TEST_ASSERT(outputDS.GetNumberOfCoordinateSystems() == 1,
                          "Wrong number of coordinate systems in the output dataset");
 
-        vtkm::cont::DynamicCellSet dcells = outputDS.GetCellSet();
+        vtkm::cont::UnknownCellSet dcells = outputDS.GetCellSet();
         VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
 
         auto coords = outputDS.GetCoordinateSystem().GetDataAsMultiplexer();
@@ -482,7 +482,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
       for (vtkm::Id i = 0; i < numSeeds; i++)
         VTKM_TEST_ASSERT(xMaxRange.Contains(ptPortal.Get(i)[0]), "Wrong end point for seed");
 
-      vtkm::cont::DynamicCellSet dcells = ds.GetCellSet();
+      vtkm::cont::UnknownCellSet dcells = ds.GetCellSet();
       VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
     }
   }
@@ -560,7 +560,7 @@ void TestStreamlineFile(const std::string& fname,
   }
 
   auto coords = output.GetCoordinateSystem().GetDataAsMultiplexer();
-  vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
+  vtkm::cont::UnknownCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numPoints, "Wrong number of cells");
 
   if (useSL)

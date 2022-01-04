@@ -840,7 +840,7 @@ vtkm::cont::ArrayHandle<vtkm::Id4> MeshConnectivityBuilder::GetTriangles()
 
 VTKM_CONT
 MeshConnectivityContainer* MeshConnectivityBuilder::BuildConnectivity(
-  const vtkm::cont::DynamicCellSet& cellset,
+  const vtkm::cont::UnknownCellSet& cellset,
   const vtkm::cont::CoordinateSystem& coordinates)
 {
   enum MeshType

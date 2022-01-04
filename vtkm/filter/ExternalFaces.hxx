@@ -22,7 +22,7 @@ vtkm::cont::DataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& input,
                                              vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //1. extract the cell set
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
 
   //2. using the policy convert the dynamic cell set, and run the
   // external faces worklet

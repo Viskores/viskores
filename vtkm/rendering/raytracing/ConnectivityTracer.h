@@ -95,12 +95,12 @@ public:
 
   void SetVolumeData(const vtkm::cont::Field& scalarField,
                      const vtkm::Range& scalarBounds,
-                     const vtkm::cont::DynamicCellSet& cellSet,
+                     const vtkm::cont::UnknownCellSet& cellSet,
                      const vtkm::cont::CoordinateSystem& coords);
 
   void SetEnergyData(const vtkm::cont::Field& absorption,
                      const vtkm::Int32 numBins,
-                     const vtkm::cont::DynamicCellSet& cellSet,
+                     const vtkm::cont::UnknownCellSet& cellSet,
                      const vtkm::cont::CoordinateSystem& coords,
                      const vtkm::cont::Field& emission);
 
@@ -181,7 +181,7 @@ protected:
   // Data set info
   vtkm::cont::Field ScalarField;
   vtkm::cont::Field EmissionField;
-  vtkm::cont::DynamicCellSet CellSet;
+  vtkm::cont::UnknownCellSet CellSet;
   vtkm::cont::CoordinateSystem Coords;
   vtkm::Range ScalarBounds;
   vtkm::Float32 BoundingBox[6];

@@ -98,7 +98,7 @@ template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::DataSet& input,
                                                                   vtkm::filter::PolicyBase<Policy>)
 {
-  const vtkm::cont::DynamicCellSet& cellset = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cellset = input.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::UInt8> ghosts;
   const vtkm::Id numCells = cellset.GetNumberOfCells();
 
