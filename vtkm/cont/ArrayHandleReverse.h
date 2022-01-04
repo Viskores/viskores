@@ -146,6 +146,21 @@ public:
     return SourceStorage::GetNumberOfValues(buffers);
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const T& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::cont::Token& token)
+  {
+    if (startIndex == 0)
+    {
+      SourceStorage::Fill(buffers, fillValue, 0, token);
+    }
+    else
+    {
+      throw vtkm::cont::ErrorBadValue("ArrayHandleReverse cannot Fill partial array.");
+    }
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)

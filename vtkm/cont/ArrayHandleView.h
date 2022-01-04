@@ -168,6 +168,11 @@ public:
     return ReadPortalType(SourceStorage::CreateReadPortal(buffers + 1, device, token), indices);
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*, const T&, vtkm::Id, vtkm::cont::Token&)
+  {
+    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleView.");
+  }
+
   VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
                                                      vtkm::cont::DeviceAdapterId device,
                                                      vtkm::cont::Token& token)

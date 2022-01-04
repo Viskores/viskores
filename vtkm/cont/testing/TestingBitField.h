@@ -599,13 +599,34 @@ struct TestingBitField
                      " got: ",
                      numBits);
 
-    vtkm::cont::Token token;
-    Algo::Schedule(
-      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), false },
-      numBits);
-    Algo::Schedule(
-      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), true },
-      numBits);
+    {
+      vtkm::cont::Token token;
+      Algo::Schedule(
+        ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), false },
+        numBits);
+      Algo::Schedule(
+        ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), true },
+        numBits);
+    }
+
+    handle.Fill(true);
+    {
+      auto portal = handle.ReadPortal();
+      for (vtkm::Id index = 0; index < NUM_BITS; ++index)
+      {
+        VTKM_TEST_ASSERT(portal.Get(index));
+      }
+    }
+
+    handle.Fill(false, 24);
+    handle.Fill(true, 64);
+    {
+      auto portal = handle.ReadPortal();
+      for (vtkm::Id index = 0; index < NUM_BITS; ++index)
+      {
+        VTKM_TEST_ASSERT(portal.Get(index) == ((index < 24) || (index >= 64)));
+      }
+    }
   }
 
   VTKM_CONT

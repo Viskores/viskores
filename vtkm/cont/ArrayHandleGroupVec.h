@@ -147,6 +147,14 @@ public:
     return componentsSize / NUM_COMPONENTS;
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+                             const ValueType&,
+                             vtkm::Id,
+                             vtkm::cont::Token&)
+  {
+    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleGroupVec.");
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)

@@ -181,6 +181,15 @@ public:
     return numValues;
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const ValueType& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::cont::Token& token)
+  {
+    FirstStorage::Fill(FirstArrayBuffers(buffers), fillValue.first, startIndex, token);
+    SecondStorage::Fill(SecondArrayBuffers(buffers), fillValue.second, startIndex, token);
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)

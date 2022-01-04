@@ -248,6 +248,21 @@ public:
             Storage3::GetNumberOfValues(Buffers3(buffers)));
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const vtkm::Vec<T, 3>& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::cont::Token& token)
+  {
+    if (startIndex != 0)
+    {
+      throw vtkm::cont::ErrorBadValue(
+        "Fill for ArrayHandleCartesianProduct must have startIndex == 0");
+    }
+    Storage1::Fill(Buffers1(buffers), fillValue[0], startIndex, token);
+    Storage2::Fill(Buffers2(buffers), fillValue[1], startIndex, token);
+    Storage3::Fill(Buffers3(buffers), fillValue[2], startIndex, token);
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
