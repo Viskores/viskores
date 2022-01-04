@@ -19,6 +19,7 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/ImplicitFunction.h>
 

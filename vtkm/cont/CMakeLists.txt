@@ -122,7 +122,9 @@ set(headers
   TryExecute.h
   SerializableTypeString.h
   UncertainArrayHandle.h
+  UncertainCellSet.h
   UnknownArrayHandle.h
+  UnknownCellSet.h
   VariantArrayHandle.h
   )
 
@@ -139,12 +141,28 @@ set(sources
   ArrayHandleSOA.cxx
   ArrayHandleStride.cxx
   ArrayHandleUniformPointCoordinates.cxx
+  AssignerPartitionedDataSet.cxx
   BitField.cxx
+  BoundsCompute.cxx
+  BoundsGlobalCompute.cxx
+  CellLocatorGeneral.cxx
+  CellLocatorRectilinearGrid.cxx
+  CellLocatorUniformGrid.cxx
+  CellSet.cxx
+  CellSetStructured.cxx
   ColorTablePresets.cxx
+  CoordinateSystem.cxx
+  DataSet.cxx
+  DataSetBuilderCurvilinear.cxx
+  DataSetBuilderExplicit.cxx
+  DataSetBuilderRectilinear.cxx
+  DataSetBuilderUniform.cxx
   DeviceAdapterTag.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
+  FieldRangeCompute.cxx
+  FieldRangeGlobalCompute.cxx
   internal/Buffer.cxx
   internal/DeviceAdapterMemoryManager.cxx
   internal/DeviceAdapterMemoryManagerShared.cxx
@@ -154,9 +172,12 @@ set(sources
   Initialize.cxx
   Logging.cxx
   RuntimeDeviceTracker.cxx
+  PartitionedDataSet.cxx
   Storage.cxx
   Token.cxx
   TryExecute.cxx
+  UnknownArrayHandle.cxx
+  UnknownCellSet.cxx
   )
 
 # This list of sources has code that uses devices and so might need to be
@@ -165,35 +186,17 @@ set(device_sources
   ArrayCopy.cxx
   ArrayGetValues.cxx
   ArrayRangeCompute.cxx
-  AssignerPartitionedDataSet.cxx
-  BoundsCompute.cxx
-  BoundsGlobalCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
-  CellLocatorGeneral.cxx
-  CellLocatorRectilinearGrid.cxx
   CellLocatorTwoLevel.cxx
-  CellLocatorUniformGrid.cxx
-  CellSet.cxx
   CellSetExplicit.cxx
   CellSetExtrude.cxx
-  CellSetStructured.cxx
   ColorTable.cxx
   ConvertNumComponentsToOffsets.cxx
-  CoordinateSystem.cxx
-  DataSet.cxx
-  DataSetBuilderCurvilinear.cxx
-  DataSetBuilderExplicit.cxx
-  DataSetBuilderRectilinear.cxx
-  DataSetBuilderUniform.cxx
   Field.cxx
-  FieldRangeCompute.cxx
-  FieldRangeGlobalCompute.cxx
   MergePartitionedDataSet.cxx
-  PartitionedDataSet.cxx
   PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
   Timer.cxx
-  UnknownArrayHandle.cxx
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)

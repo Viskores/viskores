@@ -21,11 +21,14 @@ namespace filter
 
 /// Takes as input a vector field and seed locations and generates the
 /// paths taken by the seeds through the vector field.
-class PathParticle : public vtkm::filter::FilterTemporalParticleAdvection<PathParticle>
+template <typename ParticleType>
+class PathParticleBase
+  : public vtkm::filter::FilterTemporalParticleAdvection<PathParticleBase<ParticleType>,
+                                                         ParticleType>
 {
 public:
   VTKM_CONT
-  PathParticle();
+  PathParticleBase();
 
   template <typename DerivedPolicy>
   vtkm::cont::PartitionedDataSet PrepareForExecution(
@@ -35,6 +38,8 @@ public:
 protected:
 private:
 };
+
+using PathParticle = PathParticleBase<vtkm::Particle>;
 
 }
 } // namespace vtkm::filter

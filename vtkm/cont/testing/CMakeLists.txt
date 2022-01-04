@@ -94,6 +94,7 @@ set(unit_tests
   UnitTestToken.cxx
   UnitTestTryExecute.cxx
   UnitTestUnknownArrayHandle.cxx
+  UnitTestUnknownCellSet.cxx
   UnitTestVariantArrayHandle.cxx
   )
 
@@ -103,7 +104,6 @@ set(library_sources
   )
 
 set(library_sources_device
-  TestEqualArrayHandles.cxx # Really doesn't need device, but currently includes device headers
   )
 
 vtkm_library(

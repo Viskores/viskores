@@ -600,7 +600,7 @@ public:
   ///@{
   /// Returns this array cast appropriately and stored in the given `ArrayHandle` type.
   /// Throws an `ErrorBadType` if the stored array cannot be stored in the given array type.
-  /// Use the `IsType` method to determine if the array can be returned with the given type.
+  /// Use the `CanConvert` method to determine if the array can be returned with the given type.
   ///
   template <typename T, typename S>
   VTKM_CONT void AsArrayHandle(vtkm::cont::ArrayHandle<T, S>& array) const

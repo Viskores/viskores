@@ -23,16 +23,20 @@ namespace filter
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
 
-class ParticleAdvection : public vtkm::filter::FilterParticleAdvection<ParticleAdvection>
+template <typename ParticleType = vtkm::Particle>
+class ParticleAdvectionBase
+  : public vtkm::filter::FilterParticleAdvection<ParticleAdvectionBase<ParticleType>, ParticleType>
 {
 public:
-  VTKM_CONT ParticleAdvection();
+  VTKM_CONT ParticleAdvectionBase();
 
   template <typename DerivedPolicy>
   vtkm::cont::PartitionedDataSet PrepareForExecution(
     const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 };
+
+using ParticleAdvection = ParticleAdvectionBase<vtkm::Particle>;
 }
 } // namespace vtkm::filter
 

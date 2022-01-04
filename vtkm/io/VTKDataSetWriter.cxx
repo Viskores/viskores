@@ -516,7 +516,7 @@ void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet, vtkm::io::File
       break;
   }
 
-  vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = dataSet.GetCellSet();
   if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
   {
     WriteDataSetAsUnstructured(
