@@ -18,7 +18,7 @@ namespace vtkm
 namespace filter
 {
 
-class NewFilterField : public vtkm::filter::NewFilter
+class VTKM_FILTER_CORE_EXPORT NewFilterField : public vtkm::filter::NewFilter
 {
 public:
   VTKM_CONT
