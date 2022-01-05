@@ -1,0 +1,32 @@
+# Verify VTK-m tutorial pipeline
+
+schedules:
+- cron: "0 0 * * *"
+  displayName: Nighly build
+  branches:
+    include:
+    - master
+  always: true
+
+# Also run builds each time master changes
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-16.04'
+jobs:
+- job: BuildAndVerify
+  timeoutInMinutes: 100
+  steps:
+  - script: |
+      sudo apt update -qq
+      sudo apt install -y ninja-build
+      sudo apt clean
+      wget https://github.com/Kitware/CMake/releases/download/v3.15.1/cmake-3.15.1-Linux-x86_64.sh
+      chmod +x cmake-3.15.1-Linux-x86_64.sh
+      ./cmake-3.15.1-Linux-x86_64.sh --skip-license --prefix=${PWD}
+    displayName: 'Setup Env with CMake 3.15, and Ninja'
+
+  - script: |
+      ./.azure/build.sh ${PWD}/bin/cmake
+    displayName: 'Build VTK-m and tutorials'
