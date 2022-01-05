@@ -65,17 +65,7 @@ VTKM_CONT vtkm::cont::DataSet DotProduct::DoExecute(const vtkm::cont::DataSet& i
   auto ResolveType = [&, this](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
-    const auto& secondaryField = [&]() -> const vtkm::cont::Field& {
-      if (this->GetUseCoordinateSystemAsSecondaryField())
-      {
-        return inDataSet.GetCoordinateSystem(this->GetSecondaryCoordinateSystemIndex());
-      }
-      else
-      {
-        return inDataSet.GetField(this->GetSecondaryFieldName(),
-                                  this->GetSecondaryFieldAssociation());
-      }
-    }();
+    const auto& secondaryField = this->GetFieldFromDataSet(1, inDataSet);
     vtkm::cont::UnknownArrayHandle secondary = vtkm::cont::ArrayHandle<T>{};
     secondary.CopyShallowIfPossible(secondaryField.GetData());
 

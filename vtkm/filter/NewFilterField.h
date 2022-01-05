@@ -64,6 +64,38 @@ public:
   //@}
 
   //@{
+  /// Select the coordinate system coord_idx to make active to use when processing the input
+  /// DataSet. This is used primarily by the Filter to select the coordinate system
+  /// to use as a field when \c UseCoordinateSystemAsField is true.
+  VTKM_CONT
+  void SetActiveCoordinateSystem(vtkm::Id coord_idx)
+  {
+    this->SetActiveCoordinateSystem(0, coord_idx);
+  }
+
+  VTKM_CONT
+  void SetActiveCoordinateSystem(vtkm::IdComponent index, vtkm::Id coord_idx)
+  {
+    auto index_st = static_cast<std::size_t>(index);
+    ResizeIfNeeded(index_st);
+    this->ActiveCoordinateSystemIndices[index_st] = coord_idx;
+  }
+
+  VTKM_CONT
+  vtkm::Id GetActiveCoordinateSystemIndex() const
+  {
+    return this->GetActiveCoordinateSystemIndex(0);
+  }
+
+  VTKM_CONT
+  vtkm::Id GetActiveCoordinateSystemIndex(vtkm::IdComponent index) const
+  {
+    auto index_st = static_cast<std::size_t>(index);
+    return this->ActiveCoordinateSystemIndices[index_st];
+  }
+  //@}
+
+  //@{
   /// To simply use the active coordinate system as the field to operate on, set
   /// UseCoordinateSystemAsField to true.
   VTKM_CONT
@@ -99,7 +131,7 @@ protected:
   {
     if (this->UseCoordinateSystemAsField[index])
     {
-      return input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+      return input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex(index));
     }
     else
     {
@@ -117,10 +149,12 @@ private:
       this->ActiveFieldNames.resize(index_st + 1);
       this->ActiveFieldAssociation.resize(index_st + 1);
       this->UseCoordinateSystemAsField.resize(index_st + 1);
+      this->ActiveCoordinateSystemIndices.resize(index_st + 1);
       for (std::size_t i = oldSize; i <= index_st; ++i)
       {
         this->ActiveFieldAssociation[i] = cont::Field::Association::ANY;
         this->UseCoordinateSystemAsField[i] = false;
+        this->ActiveCoordinateSystemIndices[i] = -1;
       }
     }
   }
@@ -130,6 +164,7 @@ private:
   std::vector<std::string> ActiveFieldNames;
   std::vector<vtkm::cont::Field::Association> ActiveFieldAssociation;
   std::vector<bool> UseCoordinateSystemAsField;
+  std::vector<vtkm ::Id> ActiveCoordinateSystemIndices;
 };
 } // namespace filter
 } // namespace vtkm

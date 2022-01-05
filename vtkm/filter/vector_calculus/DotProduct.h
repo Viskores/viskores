@@ -26,7 +26,7 @@ public:
   VTKM_CONT DotProduct();
 
   //@{
-  /// Choose the primary field to operate on. In the cross product operation A x B, A is
+  /// Choose the primary field to operate on. In the dot product operation A . B, A is
   /// the primary field.
   VTKM_CONT
   void SetPrimaryField(
@@ -59,10 +59,13 @@ public:
   //@}
 
   //@{
-  /// Select the coordinate system index to use as the primary field. This only has an effect when
+  /// Select the coordinate system coord_idx to use as the primary field. This only has an effect when
   /// UseCoordinateSystemAsPrimaryField is true.
   VTKM_CONT
-  void SetPrimaryCoordinateSystem(vtkm::Id index) { this->SetActiveCoordinateSystem(index); }
+  void SetPrimaryCoordinateSystem(vtkm::Id coord_idx)
+  {
+    this->SetActiveCoordinateSystem(coord_idx);
+  }
   VTKM_CONT
   vtkm::Id GetPrimaryCoordinateSystemIndex() const
   {
@@ -71,7 +74,7 @@ public:
   //@}
 
   //@{
-  /// Choose the secondary field to operate on. In the cross product operation A x B, B is
+  /// Choose the secondary field to operate on. In the dot product operation A . B, B is
   /// the secondary field.
   VTKM_CONT
   void SetSecondaryField(
@@ -89,8 +92,8 @@ public:
   //@}
 
   //@{
-  /// When set to true, uses a coordinate system as the primary field instead of the one selected
-  /// by name. Use SetPrimaryCoordinateSystem to select which coordinate system.
+  /// When set to true, uses a coordinate system as the secondary field instead of the one selected
+  /// by name. Use SetSecondaryCoordinateSystem to select which coordinate system.
   VTKM_CONT
   void SetUseCoordinateSystemAsSecondaryField(bool flag)
   {
@@ -104,24 +107,19 @@ public:
   //@}
 
   //@{
-  /// Select the coordinate system index to use as the primary field. This only has an effect when
-  /// UseCoordinateSystemAsPrimaryField is true.
+  /// Select the coordinate system index to use as the secondary field. This only has an effect when
+  /// UseCoordinateSystemAsSecondaryField is true.
   VTKM_CONT
-  void SetSecondaryCoordinateSystem(vtkm::Id index)
-  {
-    this->SecondaryCoordinateSystemIndex = index;
-  }
+  void SetSecondaryCoordinateSystem(vtkm::Id index) { this->SetActiveCoordinateSystem(1, index); }
   VTKM_CONT
   vtkm::Id GetSecondaryCoordinateSystemIndex() const
   {
-    return this->SecondaryCoordinateSystemIndex;
+    return this->GetActiveCoordinateSystemIndex(1);
   }
   //@}
 
 private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
-
-  vtkm::Id SecondaryCoordinateSystemIndex = 0;
 };
 } // namespace vector_calculus
 } // namespace filter

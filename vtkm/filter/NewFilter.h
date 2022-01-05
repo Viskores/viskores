@@ -280,17 +280,6 @@ public:
   //@}
 
   //@{
-  /// Select the coordinate system index to make active to use when processing the input
-  /// DataSet. This is used primarily by the Filter to select the coordinate system
-  /// to use as a field when \c UseCoordinateSystemAsField is true.
-  VTKM_CONT
-  void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
-
-  VTKM_CONT
-  vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
-  //@}
-
-  //@{
   /// Executes the filter on the input and produces a result dataset.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
@@ -312,7 +301,6 @@ public:
 
 protected:
   vtkm::cont::Invoker Invoke;
-  vtkm::Id CoordinateSystemIndex = 0;
 
   template <typename Mapper>
   VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input,
