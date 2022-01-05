@@ -238,12 +238,16 @@ set(core_headers
   NewFilter.h
   NewFilterField.h
   )
+set(core_sources
+  NewFilterField.cxx
+  )
 set(core_sources_device
   NewFilter.cxx)
 
 vtkm_library(
   NAME vtkm_filter_core
   HEADERS ${core_headers}
+  SOURCES ${core_sources}
   DEVICE_SOURCES ${core_sources_device}
   USE_VTKM_JOB_POOL
 )
