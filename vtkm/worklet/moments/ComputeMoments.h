@@ -16,6 +16,7 @@
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
 
 #include <vtkm/exec/BoundaryState.h>
 
@@ -192,7 +193,7 @@ public:
   {
   }
 
-  class ResolveDynamicCellSet
+  class ResolveUnknownCellSet
   {
   public:
     template <typename T, typename S>
@@ -264,13 +265,13 @@ public:
   };
 
   template <typename T, typename S>
-  void Run(const vtkm::cont::DynamicCellSet& input,
+  void Run(const vtkm::cont::UnknownCellSet& input,
            const vtkm::cont::ArrayHandle<T, S>& pixels,
            int maxOrder,
            vtkm::cont::DataSet& output) const
   {
     input.ResetCellSetList(vtkm::cont::CellSetListStructured())
-      .CastAndCall(ResolveDynamicCellSet(), pixels, this->Spacing, this->Radius, maxOrder, output);
+      .CastAndCall(ResolveUnknownCellSet(), pixels, this->Spacing, this->Radius, maxOrder, output);
   }
 
 private:

@@ -11,7 +11,6 @@
 #define vtk_m_filter_ZFPDecompressor1D_hxx
 
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
 namespace vtkm

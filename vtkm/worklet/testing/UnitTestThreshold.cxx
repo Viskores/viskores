@@ -92,7 +92,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet0();
 
     CellSetType cellset;
-    dataset.GetCellSet().CopyTo(cellset);
+    dataset.GetCellSet().AsCellSet(cellset);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> pointvar;
     dataset.GetField("pointvar").GetData().AsArrayHandle(pointvar);
@@ -152,7 +152,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
 
     CellSetType cellset;
-    dataset.GetCellSet().CopyTo(cellset);
+    dataset.GetCellSet().AsCellSet(cellset);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> pointvar;
     dataset.GetField("pointvar").GetData().AsArrayHandle(pointvar);
@@ -217,7 +217,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet0();
 
     CellSetType cellset;
-    dataset.GetCellSet().CopyTo(cellset);
+    dataset.GetCellSet().AsCellSet(cellset);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
     dataset.GetField("cellvar").GetData().AsArrayHandle(cellvar);

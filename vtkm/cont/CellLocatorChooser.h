@@ -69,7 +69,7 @@ namespace detail
 struct CastAndCallCellLocatorChooserFunctor
 {
   template <typename CellLocatorType, typename Functor, typename... Args>
-  void CallFunctorWithLocator(const vtkm::cont::DynamicCellSet& cellSet,
+  void CallFunctorWithLocator(const vtkm::cont::UnknownCellSet& cellSet,
                               const vtkm::cont::CoordinateSystem& coordinateSystem,
                               Functor&& functor,
                               Args&&... args) const

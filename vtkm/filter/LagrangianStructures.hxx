@@ -88,7 +88,7 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   vtkm::Id numberOfSteps = this->GetNumberOfSteps();
 
   vtkm::cont::CoordinateSystem coordinates = input.GetCoordinateSystem();
-  vtkm::cont::DynamicCellSet cellset = input.GetCellSet();
+  vtkm::cont::UnknownCellSet cellset = input.GetCellSet();
 
   vtkm::cont::DataSet lcsInput;
   if (this->GetUseAuxiliaryGrid())
@@ -146,7 +146,7 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputField;
   vtkm::FloatDefault advectionTime = this->GetAdvectionTime();
 
-  vtkm::cont::DynamicCellSet lcsCellSet = lcsInput.GetCellSet();
+  vtkm::cont::UnknownCellSet lcsCellSet = lcsInput.GetCellSet();
   if (lcsCellSet.IsType<Structured2DType>())
   {
     using AnalysisType = vtkm::worklet::LagrangianStructures<2>;

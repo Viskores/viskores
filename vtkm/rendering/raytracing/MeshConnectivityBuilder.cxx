@@ -840,7 +840,7 @@ vtkm::cont::ArrayHandle<vtkm::Id4> MeshConnectivityBuilder::GetTriangles()
 
 VTKM_CONT
 MeshConnectivityContainer* MeshConnectivityBuilder::BuildConnectivity(
-  const vtkm::cont::DynamicCellSet& cellset,
+  const vtkm::cont::UnknownCellSet& cellset,
   const vtkm::cont::CoordinateSystem& coordinates)
 {
   enum MeshType
@@ -854,14 +854,15 @@ MeshConnectivityContainer* MeshConnectivityBuilder::BuildConnectivity(
   };
 
   MeshType type = Unsupported;
-  if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
+  if (cellset.CanConvert<vtkm::cont::CellSetExplicit<>>())
   {
     type = Unstructured;
   }
 
-  else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
+  else if (cellset.CanConvert<vtkm::cont::CellSetSingleType<>>())
   {
-    vtkm::cont::CellSetSingleType<> singleType = cellset.Cast<vtkm::cont::CellSetSingleType<>>();
+    vtkm::cont::CellSetSingleType<> singleType =
+      cellset.AsCellSet<vtkm::cont::CellSetSingleType<>>();
     //
     // Now we need to determine what type of cells this holds
     //
@@ -877,7 +878,7 @@ MeshConnectivityContainer* MeshConnectivityBuilder::BuildConnectivity(
     if (shapeType == CELL_SHAPE_PYRAMID)
       type = UnstructuredSingle;
   }
-  else if (cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  else if (cellset.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {
     type = Structured;
   }
@@ -897,21 +898,21 @@ MeshConnectivityContainer* MeshConnectivityBuilder::BuildConnectivity(
 
   if (type == Unstructured)
   {
-    vtkm::cont::CellSetExplicit<> cells = cellset.Cast<vtkm::cont::CellSetExplicit<>>();
+    vtkm::cont::CellSetExplicit<> cells = cellset.AsCellSet<vtkm::cont::CellSetExplicit<>>();
     this->BuildConnectivity(cells, coordinates.GetDataAsMultiplexer(), coordBounds);
     meshConn = new MeshConnectivityContainerUnstructured(
       cells, coordinates, FaceConnectivity, FaceOffsets, Triangles);
   }
   else if (type == UnstructuredSingle)
   {
-    vtkm::cont::CellSetSingleType<> cells = cellset.Cast<vtkm::cont::CellSetSingleType<>>();
+    vtkm::cont::CellSetSingleType<> cells = cellset.AsCellSet<vtkm::cont::CellSetSingleType<>>();
     this->BuildConnectivity(cells, coordinates.GetDataAsMultiplexer(), coordBounds);
     meshConn =
       new MeshConnectivityContainerSingleType(cells, coordinates, FaceConnectivity, Triangles);
   }
   else if (type == Structured)
   {
-    vtkm::cont::CellSetStructured<3> cells = cellset.Cast<vtkm::cont::CellSetStructured<3>>();
+    vtkm::cont::CellSetStructured<3> cells = cellset.AsCellSet<vtkm::cont::CellSetStructured<3>>();
     Triangles = this->ExternalTrianglesStructured(cells);
     meshConn = new MeshConnectivityContainerStructured(cells, coordinates, Triangles);
   }

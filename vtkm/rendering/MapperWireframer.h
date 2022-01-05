@@ -14,8 +14,8 @@
 
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Mapper.h>
@@ -42,7 +42,7 @@ public:
   bool GetIsOverlay() const;
   void SetIsOverlay(bool isOverlay);
 
-  virtual void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
+  virtual void RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                            const vtkm::cont::CoordinateSystem& coords,
                            const vtkm::cont::Field& scalarField,
                            const vtkm::cont::ColorTable& colorTable,

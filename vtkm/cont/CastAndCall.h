@@ -38,6 +38,8 @@ template <typename T, typename S>
 class CellSetPermutation;
 class CellSetExtrude;
 
+class UnknownCellSet;
+
 /// A Generic interface to CastAndCall. The default implementation simply calls
 /// DynamicObject's CastAndCall, but specializations of this function exist for
 /// other classes (e.g. Field, CoordinateSystem, ArrayHandle).
@@ -49,15 +51,20 @@ void CastAndCall(const DynamicObject& dynamicObject, Functor&& f, Args&&... args
 
 /// A specialization of CastAndCall for basic CoordinateSystem to make
 /// it be treated just like any other dynamic object
-// actually implemented in vtkm/cont/CoordinateSystem
+// actually implemented in vtkm/cont/CoordinateSystem.h
 template <typename Functor, typename... Args>
 void CastAndCall(const CoordinateSystem& coords, Functor&& f, Args&&... args);
 
 /// A specialization of CastAndCall for basic Field to make
 /// it be treated just like any other dynamic object
-// actually implemented in vtkm/cont/Field
+// actually implemented in vtkm/cont/Field.h
 template <typename Functor, typename... Args>
 void CastAndCall(const vtkm::cont::Field& field, Functor&& f, Args&&... args);
+
+/// A specialization of CastAndCall for unknown cell sets.
+// actually implemented in vtkm/cont/UnknownCellSet.h
+template <typename Functor, typename... Args>
+void CastAndCall(const vtkm::cont::UnknownCellSet& cellSet, Functor&& f, Args&&... args);
 
 /// A specialization of CastAndCall for basic ArrayHandle types,
 /// Since the type is already known no deduction is needed.

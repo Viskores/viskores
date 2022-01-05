@@ -18,10 +18,28 @@
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/UncertainCellSet.h>
 
+#include <vtkm/Deprecated.h>
+
 namespace vtkm
 {
 namespace cont
 {
+
+struct VTKM_DEPRECATED(1.8, "Use UnknownCellSet.h or UncertainCellSet.h.")
+  DynamicCellSet_h_header_is_deprecated
+{
+  int x;
+};
+
+inline void EmitDynamicCellSetHDeprecationWarning()
+{
+  static DynamicCellSet_h_header_is_deprecated x;
+  ++x.x;
+}
+
+// This is a deprecated class. Don't warn about deprecation while implementing
+// deprecated functionality.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 /// \brief Holds a cell set without having to specify concrete type.
 ///
@@ -53,7 +71,9 @@ namespace cont
 /// with the default cell set list.
 ///
 template <typename CellSetList>
-class VTKM_ALWAYS_EXPORT DynamicCellSetBase : public vtkm::cont::UncertainCellSet<CellSetList>
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.8,
+                                         "Use vtkm::cont::UncertainCellSet.") DynamicCellSetBase
+  : public vtkm::cont::UncertainCellSet<CellSetList>
 {
   using Superclass = vtkm::cont::UncertainCellSet<CellSetList>;
 
@@ -77,7 +97,8 @@ public:
   }
 };
 
-struct VTKM_ALWAYS_EXPORT DynamicCellSet : public vtkm::cont::UnknownCellSet
+struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.8, "Use vtkm::cont::UnknownCellSet.") DynamicCellSet
+  : public vtkm::cont::UnknownCellSet
 {
   using UnknownCellSet::UnknownCellSet;
 
@@ -227,5 +248,7 @@ public:
 
 } // diy
 /// @endcond SERIALIZATION
+
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif //vtk_m_cont_DynamicCellSet_h

@@ -86,7 +86,7 @@ set(headers
   DeviceAdapterList.h
   DeviceAdapterListTag.h
   DeviceAdapterTag.h
-  DynamicCellSet.h
+  DynamicCellSet.h # Deprecated, replaced by Unknown/UncertainCellSet.h
   EnvironmentTracker.h
   Error.h
   ErrorBadAllocation.h
@@ -125,7 +125,7 @@ set(headers
   UncertainCellSet.h
   UnknownArrayHandle.h
   UnknownCellSet.h
-  VariantArrayHandle.h
+  VariantArrayHandle.h # Deprecated, replaces with Unknown/UncertainArrayHandle.h
   )
 
 set(template_sources

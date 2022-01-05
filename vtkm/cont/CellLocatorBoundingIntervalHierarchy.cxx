@@ -233,7 +233,7 @@ void CellLocatorBoundingIntervalHierarchy::Build()
 
   vtkm::cont::Invoker invoker;
 
-  vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = this->GetCellSet();
   vtkm::Id numCells = cellSet.GetNumberOfCells();
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
   auto points = coords.GetDataAsMultiplexer();
@@ -470,7 +470,7 @@ CellLocatorBoundingIntervalHierarchy::PrepareForExecution(vtkm::cont::DeviceAdap
                                                           vtkm::cont::Token& token) const
 {
   ExecObjType execObject;
-  this->GetCellSet().CastAndCall(MakeExecObject{}, device, token, *this, execObject);
+  vtkm::cont::CastAndCall(this->GetCellSet(), MakeExecObject{}, device, token, *this, execObject);
   return execObject;
 }
 

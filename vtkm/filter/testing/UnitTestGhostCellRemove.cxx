@@ -182,7 +182,7 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
   for (vtkm::Id i = 0; i < numPts; i++)
     explPortal.Set(i, cp.Get(i));
 
-  vtkm::cont::DynamicCellSet cellSet = dsUniform.GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = dsUniform.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::Id> conn;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
@@ -193,14 +193,14 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
   {
     vtkm::Id2 dims(numI, numJ);
     MakeExplicitCells(
-      cellSet.Cast<vtkm::cont::CellSetStructured<2>>(), dims, numIndices, shapes, conn);
+      cellSet.AsCellSet<vtkm::cont::CellSetStructured<2>>(), dims, numIndices, shapes, conn);
     ds = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
   {
     vtkm::Id3 dims(numI, numJ, numK);
     MakeExplicitCells(
-      cellSet.Cast<vtkm::cont::CellSetStructured<3>>(), dims, numIndices, shapes, conn);
+      cellSet.AsCellSet<vtkm::cont::CellSetStructured<3>>(), dims, numIndices, shapes, conn);
     ds = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
   }
 
@@ -269,12 +269,12 @@ void TestGhostCellRemove()
           {
             if (nz == 0)
             {
-              VTKM_TEST_ASSERT(output.GetCellSet().IsSameType(vtkm::cont::CellSetStructured<2>()),
+              VTKM_TEST_ASSERT(output.GetCellSet().CanConvert<vtkm::cont::CellSetStructured<2>>(),
                                "Wrong cell type for explicit conversion");
             }
             else if (nz > 0)
             {
-              VTKM_TEST_ASSERT(output.GetCellSet().IsSameType(vtkm::cont::CellSetStructured<3>()),
+              VTKM_TEST_ASSERT(output.GetCellSet().CanConvert<vtkm::cont::CellSetStructured<3>>(),
                                "Wrong cell type for explicit conversion");
             }
           }

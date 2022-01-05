@@ -11,8 +11,8 @@
 #ifndef vtk_m_filter_Gradient_hxx
 #define vtk_m_filter_Gradient_hxx
 
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 #include <vtkm/worklet/Gradient.h>
 
@@ -65,7 +65,7 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("scalar gradients can't generate vorticity");
   }
 
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 

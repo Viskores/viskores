@@ -84,7 +84,7 @@ void ScalarRenderer::SetInput(vtkm::cont::DataSet& dataSet)
   this->Internals->ValidDataSet = true;
 
   raytracing::TriangleExtractor triExtractor;
-  vtkm::cont::DynamicCellSet cellSet = this->Internals->DataSet.GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = this->Internals->DataSet.GetCellSet();
   vtkm::cont::CoordinateSystem coords = this->Internals->DataSet.GetCoordinateSystem();
   triExtractor.ExtractCells(cellSet);
 

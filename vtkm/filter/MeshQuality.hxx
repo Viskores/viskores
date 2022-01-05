@@ -21,7 +21,6 @@
 #define vtk_m_filter_MeshQuality_hxx
 
 #include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/filter/CellMeasures.h>

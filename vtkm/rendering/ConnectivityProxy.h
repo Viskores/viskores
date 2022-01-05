@@ -31,7 +31,7 @@ class VTKM_RENDERING_EXPORT ConnectivityProxy
 {
 public:
   ConnectivityProxy(vtkm::cont::DataSet& dataset);
-  ConnectivityProxy(const vtkm::cont::DynamicCellSet& cellset,
+  ConnectivityProxy(const vtkm::cont::UnknownCellSet& cellset,
                     const vtkm::cont::CoordinateSystem& coords,
                     const vtkm::cont::Field& scalarField);
   // Do not allow the default constructor

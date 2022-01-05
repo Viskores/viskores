@@ -193,7 +193,7 @@ public:
 
   VTKM_CONT
   GridEvaluator(const vtkm::cont::CoordinateSystem& coordinates,
-                const vtkm::cont::DynamicCellSet& cellset,
+                const vtkm::cont::UnknownCellSet& cellset,
                 const FieldType& field)
     : Bounds(coordinates.GetBounds())
     , Field(field)
@@ -217,7 +217,7 @@ public:
 
 private:
   VTKM_CONT void InitializeLocator(const vtkm::cont::CoordinateSystem& coordinates,
-                                   const vtkm::cont::DynamicCellSet& cellset)
+                                   const vtkm::cont::UnknownCellSet& cellset)
   {
     this->Locator.SetCoordinates(coordinates);
     this->Locator.SetCellSet(cellset);

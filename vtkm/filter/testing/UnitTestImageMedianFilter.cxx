@@ -31,7 +31,7 @@ void TestImageMedian()
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   result.GetPointField("median").GetData().AsArrayHandle(resultArrayHandle);
 
-  auto cells = result.GetCellSet().Cast<vtkm::cont::CellSetStructured<3>>();
+  auto cells = result.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<3>>();
   auto pdims = cells.GetPointDimensions();
 
   //verified by hand

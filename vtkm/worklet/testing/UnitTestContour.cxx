@@ -193,7 +193,7 @@ void TestContourUniformGrid()
   vtkm::cont::DataSet dataSet = genIds.Execute(tangle.Execute());
 
   vtkm::cont::CellSetStructured<3> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
   dataSet.GetField("tangle").GetData().AsArrayHandle(pointFieldArray);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
@@ -310,7 +310,7 @@ void TestContourExplicit()
   vtkm::cont::DataSet dataSet = dataSetGenerator.Make3DRadiantDataSet(Dimension);
 
   DataSetGenerator::CellSet cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   vtkm::cont::Field contourField = dataSet.GetField("distanceToOrigin");
   DataSetGenerator::DataArrayHandle contourArray;
@@ -377,7 +377,7 @@ void TestContourClipped()
   vtkm::cont::DataSet clipped = clip.Execute(dataSet);
 
   vtkm::cont::CellSetExplicit<> cellSet;
-  clipped.GetCellSet().CopyTo(cellSet);
+  clipped.GetCellSet().AsCellSet(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
   clipped.GetField("tangle").GetData().AsArrayHandle(pointFieldArray);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;

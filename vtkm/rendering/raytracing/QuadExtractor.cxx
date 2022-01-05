@@ -219,9 +219,9 @@ void QuadExtractor::SetQuadIdsFromCells(const vtkm::cont::UnknownCellSet& cells)
   //
   // look for points in the cell set
   //
-  if (cells.IsSameType(vtkm::cont::CellSetExplicit<>()))
+  if (cells.CanConvert<vtkm::cont::CellSetExplicit<>>())
   {
-    auto cellsExplicit = cells.Cast<vtkm::cont::CellSetExplicit<>>();
+    auto cellsExplicit = cells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
     vtkm::cont::ArrayHandle<vtkm::Id> points;
     vtkm::worklet::DispatcherMapTopology<detail::CountQuads>(detail::CountQuads())

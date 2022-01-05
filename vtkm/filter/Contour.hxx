@@ -13,8 +13,8 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 #include <vtkm/worklet/SurfaceNormals.h>
 
@@ -67,7 +67,7 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& input,
   }
 
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
 
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());

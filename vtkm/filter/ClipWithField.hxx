@@ -16,7 +16,6 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
 namespace vtkm
@@ -56,7 +55,7 @@ vtkm::cont::DataSet ClipWithField::DoExecute(const vtkm::cont::DataSet& input,
   }
 
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
 
   vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
     vtkm::filter::ApplyPolicyCellSet(cells, policy, *this), field, this->ClipValue, this->Invert);

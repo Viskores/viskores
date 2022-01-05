@@ -13,7 +13,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
-#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace
 {
@@ -64,10 +64,10 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input,
                                          vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
 
   ThresholdRange predicate(this->GetLowerThreshold(), this->GetUpperThreshold());
-  vtkm::cont::DynamicCellSet cellOut =
+  vtkm::cont::UnknownCellSet cellOut =
     this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                       field,
                       fieldMeta.GetAssociation(),

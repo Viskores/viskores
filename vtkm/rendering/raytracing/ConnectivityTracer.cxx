@@ -195,7 +195,7 @@ void ConnectivityTracer::SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_3
 
 void ConnectivityTracer::SetVolumeData(const vtkm::cont::Field& scalarField,
                                        const vtkm::Range& scalarBounds,
-                                       const vtkm::cont::DynamicCellSet& cellSet,
+                                       const vtkm::cont::UnknownCellSet& cellSet,
                                        const vtkm::cont::CoordinateSystem& coords)
 {
   //TODO: Need a way to tell if we have been updated
@@ -228,7 +228,7 @@ void ConnectivityTracer::SetVolumeData(const vtkm::cont::Field& scalarField,
 
 void ConnectivityTracer::SetEnergyData(const vtkm::cont::Field& absorption,
                                        const vtkm::Int32 numBins,
-                                       const vtkm::cont::DynamicCellSet& cellSet,
+                                       const vtkm::cont::UnknownCellSet& cellSet,
                                        const vtkm::cont::CoordinateSystem& coords,
                                        const vtkm::cont::Field& emission)
 {

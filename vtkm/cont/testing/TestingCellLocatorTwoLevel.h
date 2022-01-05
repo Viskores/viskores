@@ -77,7 +77,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
                                               vtkm::Vec<vtkm::FloatDefault, DIMENSIONS>(1.0f));
 
   auto uniformCs =
-    uniformDs.GetCellSet().template Cast<vtkm::cont::CellSetStructured<DIMENSIONS>>();
+    uniformDs.GetCellSet().template AsCellSet<vtkm::cont::CellSetStructured<DIMENSIONS>>();
 
   // triangulate the cellset
   vtkm::cont::CellSetSingleType<> cellset;

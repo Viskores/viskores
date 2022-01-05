@@ -21,7 +21,6 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
@@ -303,16 +302,6 @@ private:
       result.PushMessage("point dimensions don't match");
       return;
     }
-  }
-
-  template <typename CellSetTypes1, typename CellSetTypes2>
-  void Run(const vtkm::cont::DynamicCellSetBase<CellSetTypes1>& cs1,
-           std::false_type,
-           const vtkm::cont::DynamicCellSetBase<CellSetTypes2>& cs2,
-           std::false_type,
-           TestEqualResult& result) const
-  {
-    cs1.CastAndCall(*this, cs2, result);
   }
 
   template <typename CellSetType>

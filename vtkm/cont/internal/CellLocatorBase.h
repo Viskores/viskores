@@ -14,8 +14,8 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
 // To support deprecated implementation
@@ -136,7 +136,7 @@ VTKM_DEPRECATED_SUPPRESS_END
 template <typename Derived>
 class VTKM_ALWAYS_EXPORT CellLocatorBase : public vtkm::cont::ExecutionObjectBase
 {
-  vtkm::cont::DynamicCellSet CellSet;
+  vtkm::cont::UnknownCellSet CellSet;
   vtkm::cont::CoordinateSystem Coords;
   mutable bool Modified = true;
 
@@ -151,9 +151,9 @@ public:
   VTKM_DEPRECATED_SUPPRESS_END
 #endif //!VTKM_NO_DEPRECATED_VIRTUAL
 
-  const vtkm::cont::DynamicCellSet& GetCellSet() const { return this->CellSet; }
+  const vtkm::cont::UnknownCellSet& GetCellSet() const { return this->CellSet; }
 
-  void SetCellSet(const vtkm::cont::DynamicCellSet& cellSet)
+  void SetCellSet(const vtkm::cont::UnknownCellSet& cellSet)
   {
     this->CellSet = cellSet;
     this->SetModified();

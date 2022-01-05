@@ -11,8 +11,8 @@
 #ifndef vtk_m_filter_PointAverage_hxx
 #define vtk_m_filter_PointAverage_hxx
 
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace vtkm
 {
@@ -31,7 +31,7 @@ vtkm::cont::DataSet PointAverage::DoExecute(const vtkm::cont::DataSet& input,
     throw vtkm::cont::ErrorFilterExecution("Cell field expected.");
   }
 
-  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = input.GetCellSet();
 
   //todo: we need to ask the policy what storage type we should be using
   //If the input is implicit, we should know what to fall back to

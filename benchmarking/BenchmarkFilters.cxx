@@ -545,7 +545,7 @@ void BenchReverseConnectivityGen(::benchmark::State& state)
   for (auto _ : state)
   {
     (void)_;
-    cellset.CastAndCall(functor);
+    vtkm::cont::CastAndCall(cellset, functor);
     state.SetIterationTime(functor.Timer.GetElapsedTime());
   }
 }

@@ -152,7 +152,7 @@ void AmrArrays::ComputeGenerateParentChildInformation()
       vtkm::Id ptids[8];
       this->AmrDataSet.GetPartition(this->PartitionIds.at(l).at(bParent))
         .GetCellSet()
-        .CopyTo(cellset);
+        .AsCellSet(cellset);
       cellset.GetCellPointIds(0, ptids);
       vtkm::Bounds boundsCell = vtkm::Bounds();
       for (vtkm::IdComponent pointId = 0; pointId < cellset.GetNumberOfPointsInCell(0); pointId++)
@@ -221,7 +221,7 @@ void AmrArrays::ComputeGenerateGhostType()
       vtkm::cont::DataSet partition =
         this->AmrDataSet.GetPartition(this->PartitionIds.at(l).at(bParent));
       vtkm::cont::CellSetStructured<Dim> cellset;
-      partition.GetCellSet().CopyTo(cellset);
+      partition.GetCellSet().AsCellSet(cellset);
       vtkm::cont::ArrayHandle<vtkm::UInt8> ghostField;
       if (!partition.HasField("vtkGhostType", vtkm::cont::Field::Association::CELL_SET))
       {

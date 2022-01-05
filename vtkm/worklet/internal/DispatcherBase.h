@@ -38,17 +38,6 @@
 
 namespace vtkm
 {
-namespace cont
-{
-
-// Forward declaration.
-template <typename CellSetList>
-class DynamicCellSetBase;
-}
-}
-
-namespace vtkm
-{
 namespace worklet
 {
 namespace internal

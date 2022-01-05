@@ -8,6 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/Deprecated.h>
+
+// This is testing a deprecated functionality. Remove this test once VariantArrayHandle
+// is completely removed from VTK-m.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 #include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -169,3 +175,5 @@ int UnitTestDynamicCellSet(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestDynamicCellSet, argc, argv);
 }
+
+VTKM_DEPRECATED_SUPPRESS_END

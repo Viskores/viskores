@@ -14,6 +14,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/PartitionedDataSet.h>
+#include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/worklet/CellDeepCopy.h>
 
 namespace vtkm
@@ -72,13 +73,14 @@ struct TransferCellsFunctor
   }
 };
 
-void TransferCells(const vtkm::cont::DynamicCellSet& cellSetIn,
+void TransferCells(const vtkm::cont::UnknownCellSet& cellSetIn,
                    vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
                    vtkm::cont::ArrayHandle<vtkm::Id>& numIndices,
                    vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
                    vtkm::Id startIndex)
 {
-  cellSetIn.CastAndCall(TransferCellsFunctor{}, shapes, numIndices, connectivity, startIndex);
+  vtkm::cont::CastAndCall(
+    cellSetIn, TransferCellsFunctor{}, shapes, numIndices, connectivity, startIndex);
 }
 
 struct TransferArrayFunctor
@@ -132,7 +134,7 @@ vtkm::cont::DataSet MergePartitionedDataSet(
     TransferArray(coordsIn, coordsOut, numberOfPointsSoFar);
 
     // Transfer cells
-    vtkm::cont::DynamicCellSet cellset;
+    vtkm::cont::UnknownCellSet cellset;
     cellset = partition.GetCellSet();
     TransferCells(cellset, shapes, numIndices, connectivity, numberOfPointsSoFar);
 
