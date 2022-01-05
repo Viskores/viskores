@@ -154,7 +154,7 @@ private:
       {
         this->ActiveFieldAssociation[i] = cont::Field::Association::ANY;
         this->UseCoordinateSystemAsField[i] = false;
-        this->ActiveCoordinateSystemIndices[i] = -1;
+        this->ActiveCoordinateSystemIndices[i] = 0;
       }
     }
   }
