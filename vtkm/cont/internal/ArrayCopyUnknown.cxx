@@ -95,12 +95,35 @@ struct UnknownCopyFunctor1
     if (out.IsBaseComponentType<InType>())
     {
       // Arrays have the same base component type. Copy directly.
-      UnknownCopyFunctor2{}(out.ExtractArrayFromComponents<InType>(), in);
+      try
+      {
+        UnknownCopyFunctor2{}(out.ExtractArrayFromComponents<InType>(vtkm::CopyFlag::Off), in);
+      }
+      catch (vtkm::cont::Error& error)
+      {
+        throw vtkm::cont::ErrorBadType(
+          "Unable to copy to an array of type " + out.GetArrayTypeName() +
+          " using anonymous methods. Try using vtkm::cont::ArrayCopyDevice. "
+          "(Original error: `" +
+          error.GetMessage() + "')");
+      }
     }
     else if (out.IsBaseComponentType<vtkm::FloatDefault>())
     {
       // Can copy anything to default float.
-      UnknownCopyFunctor2{}(out.ExtractArrayFromComponents<vtkm::FloatDefault>(), in);
+      try
+      {
+        UnknownCopyFunctor2{}(
+          out.ExtractArrayFromComponents<vtkm::FloatDefault>(vtkm::CopyFlag::Off), in);
+      }
+      catch (vtkm::cont::Error& error)
+      {
+        throw vtkm::cont::ErrorBadType(
+          "Unable to copy to an array of type " + out.GetArrayTypeName() +
+          " using anonymous methods. Try using vtkm::cont::ArrayCopyDevice. "
+          "(Original error: `" +
+          error.GetMessage() + "')");
+      }
     }
     else
     {
@@ -141,9 +164,11 @@ namespace vtkm
 {
 namespace cont
 {
+namespace internal
+{
 
-void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
-               vtkm::cont::UnknownArrayHandle& destination)
+void ArrayCopyUnknown(const vtkm::cont::UnknownArrayHandle& source,
+                      vtkm::cont::UnknownArrayHandle& destination)
 {
   if (!destination.IsValid())
   {
@@ -153,8 +178,8 @@ void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
   DoUnknownArrayCopy(source, destination);
 }
 
-void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
-               const vtkm::cont::UnknownArrayHandle& destination)
+void ArrayCopyUnknown(const vtkm::cont::UnknownArrayHandle& source,
+                      const vtkm::cont::UnknownArrayHandle& destination)
 {
   if (!destination.IsValid())
   {
@@ -165,22 +190,6 @@ void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
   DoUnknownArrayCopy(source, destination);
 }
 
-namespace internal
-{
-
-void ArrayCopyUnknown(const vtkm::cont::UnknownArrayHandle& source,
-                      vtkm::cont::UnknownArrayHandle& destination)
-{
-  vtkm::cont::ArrayCopy(source, destination);
-}
-
-void ArrayCopyUnknown(const vtkm::cont::UnknownArrayHandle& source,
-                      const vtkm::cont::UnknownArrayHandle& destination)
-{
-  vtkm::cont::ArrayCopy(source, destination);
-}
-
 } // namespace vtkm::cont::internal
-
 } // namespace vtkm::cont
 } // namespace vtkm

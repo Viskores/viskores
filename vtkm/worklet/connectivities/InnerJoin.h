@@ -11,6 +11,7 @@
 #ifndef vtk_m_worklet_connectivity_InnerJoin_h
 #define vtk_m_worklet_connectivity_InnerJoin_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ScatterCounting.h>

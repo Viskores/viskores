@@ -11,6 +11,7 @@
 set(headers
   Algorithm.h
   ArrayCopy.h
+  ArrayCopyDevice.h
   ArrayExtractComponent.h
   ArrayGetValues.h
   ArrayHandle.h
@@ -182,7 +183,6 @@ set(sources
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
-  ArrayCopy.cxx
   ArrayGetValues.cxx
   ArrayRangeCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
@@ -192,6 +192,7 @@ set(device_sources
   ColorTable.cxx
   ConvertNumComponentsToOffsets.cxx
   Field.cxx
+  internal/ArrayCopyUnknown.cxx
   internal/Buffer.cxx
   internal/MapArrayPermutation.cxx
   MergePartitionedDataSet.cxx
