@@ -21,6 +21,8 @@ namespace filter
 class VTKM_FILTER_CORE_EXPORT NewFilterField : public vtkm::filter::NewFilter
 {
 public:
+  NewFilterField() { this->SetActiveCoordinateSystem(0); }
+
   VTKM_CONT
   void SetOutputFieldName(const std::string& name) { this->OutputFieldName = name; }
 
@@ -148,7 +150,7 @@ private:
   std::vector<std::string> ActiveFieldNames;
   std::vector<vtkm::cont::Field::Association> ActiveFieldAssociation;
   std::vector<bool> UseCoordinateSystemAsField;
-  std::vector<vtkm ::Id> ActiveCoordinateSystemIndices;
+  std::vector<vtkm::Id> ActiveCoordinateSystemIndices;
 };
 } // namespace filter
 } // namespace vtkm

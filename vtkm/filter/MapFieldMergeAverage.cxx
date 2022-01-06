@@ -8,13 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/MapFieldMergeAverage.h>
-
 #include <vtkm/cont/Logging.h>
-
-#include <vtkm/worklet/AverageByKey.h>
-
+#include <vtkm/filter/MapFieldMergeAverage.h>
 #include <vtkm/filter/PolicyDefault.h>
+#include <vtkm/worklet/AverageByKey.h>
 
 namespace
 {

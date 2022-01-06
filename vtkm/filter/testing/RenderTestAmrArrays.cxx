@@ -9,8 +9,8 @@
 //============================================================================
 
 #include <vtkm/cont/MergePartitionedDataSet.h>
-#include <vtkm/filter/ExternalFaces.h>
 #include <vtkm/filter/Threshold.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/source/Amr.h>
 
 #include <vtkm/rendering/testing/RenderTest.h>
@@ -39,7 +39,7 @@ void TestAmrArraysExecute(int dim, int numberOfLevels, int cellsPerDimension)
   //  derivedDataSet.PrintSummary(std::cout);
 
   // Extract surface for efficient 3D pipeline
-  vtkm::filter::ExternalFaces surface;
+  vtkm::filter::entity_extraction::ExternalFaces surface;
   surface.SetFieldsToPass("RTDataCells");
   derivedDataSet = surface.Execute(derivedDataSet);
 

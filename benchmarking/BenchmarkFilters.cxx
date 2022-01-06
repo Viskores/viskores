@@ -29,19 +29,19 @@
 
 #include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/Contour.h>
-#include <vtkm/filter/ExternalFaces.h>
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/Gradient.h>
 #include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/filter/Threshold.h>
-#include <vtkm/filter/ThresholdPoints.h>
 #include <vtkm/filter/Triangulate.h>
 #include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/filter/VertexClustering.h>
 #include <vtkm/filter/WarpScalar.h>
 #include <vtkm/filter/WarpVector.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
+#include <vtkm/filter/entity_extraction/ThresholdPoints.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 
@@ -228,7 +228,7 @@ void BenchThresholdPoints(::benchmark::State& state)
   vtkm::Float64 quarter = range.Length() / 4.;
   vtkm::Float64 mid = range.Center();
 
-  vtkm::filter::ThresholdPoints filter;
+  vtkm::filter::entity_extraction::ThresholdPoints filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
@@ -412,7 +412,7 @@ void BenchExternalFaces(::benchmark::State& state)
   const vtkm::cont::DeviceAdapterId device = Config.Device;
   const bool compactPoints = static_cast<bool>(state.range(0));
 
-  vtkm::filter::ExternalFaces filter;
+  vtkm::filter::entity_extraction::ExternalFaces filter;
   filter.SetCompactPoints(compactPoints);
 
   vtkm::cont::Timer timer{ device };

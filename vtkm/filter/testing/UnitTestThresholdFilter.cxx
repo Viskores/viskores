@@ -10,8 +10,8 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Threshold.h>
+#include <vtkm/filter/clean_grid/CleanGrid.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 
@@ -73,7 +73,7 @@ public:
 
     // Make sure that the resulting data set can be successfully passed to another
     // simple filter using the cell set.
-    vtkm::filter::CleanGrid clean;
+    vtkm::filter::clean_grid::CleanGrid clean;
     clean.Execute(output);
   }
 
@@ -132,7 +132,7 @@ public:
 
     // Make sure that the resulting data set can be successfully passed to another
     // simple filter using the cell set.
-    vtkm::filter::CleanGrid clean;
+    vtkm::filter::clean_grid::CleanGrid clean;
     clean.Execute(output);
   }
 
@@ -162,7 +162,7 @@ public:
 
     // Make sure that the resulting data set can be successfully passed to another
     // simple filter using the cell set.
-    vtkm::filter::CleanGrid clean;
+    vtkm::filter::clean_grid::CleanGrid clean;
     clean.Execute(output);
   }
 
@@ -189,7 +189,7 @@ public:
 
     // Make sure that the resulting data set can be successfully passed to another
     // simple filter using the cell set.
-    vtkm::filter::CleanGrid clean;
+    vtkm::filter::clean_grid::CleanGrid clean;
     clean.Execute(output);
   }
 

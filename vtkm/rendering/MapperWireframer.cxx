@@ -13,7 +13,7 @@
 
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/exec/CellEdge.h>
-#include <vtkm/filter/ExternalFaces.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/MapperWireframer.h>
@@ -300,7 +300,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
     dataSet.AddCoordinateSystem(actualCoords);
     dataSet.SetCellSet(inCellSet);
     dataSet.AddField(inScalarField);
-    vtkm::filter::ExternalFaces externalFaces;
+    vtkm::filter::entity_extraction::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
     externalFaces.SetPassPolyData(true);
     vtkm::cont::DataSet output = externalFaces.Execute(dataSet);

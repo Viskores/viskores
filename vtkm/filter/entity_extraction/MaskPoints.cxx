@@ -7,28 +7,19 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
-#ifndef vtk_m_filter_MaskPoints_hxx
-#define vtk_m_filter_MaskPoints_hxx
+#include <vtkm/cont/UncertainCellSet.h>
+#include <vtkm/filter/clean_grid/CleanGrid.h>
+#include <vtkm/filter/entity_extraction/MaskPoints.h>
+#include <vtkm/filter/entity_extraction/worklet/MaskPoints.h>
 
 namespace vtkm
 {
 namespace filter
 {
-
-//-----------------------------------------------------------------------------
-inline VTKM_CONT MaskPoints::MaskPoints()
-  : vtkm::filter::FilterDataSet<MaskPoints>()
-  , Stride(1)
-  , CompactPoints(true)
+namespace entity_extraction
 {
-}
-
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
-  const vtkm::cont::DataSet& input,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(const vtkm::cont::DataSet& input)
 {
   // extract the input cell set
   const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
@@ -37,19 +28,23 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::MaskPoints worklet;
 
-  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this), this->Stride);
+  outCellSet = worklet.Run(cells, this->Stride);
 
   // create the output dataset
   vtkm::cont::DataSet output;
   output.SetCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
+  auto mapper = [&, this](auto& result, const auto& f) { this->MapFieldOntoOutput(result, f); };
+  this->MapFieldsOntoOutput(input, output, mapper);
+
   // compact the unused points in the output dataset
   if (this->CompactPoints)
   {
-    this->Compactor.SetCompactPointFields(true);
-    this->Compactor.SetMergePoints(false);
-    return this->Compactor.Execute(output);
+    vtkm::filter::clean_grid::CleanGrid compactor;
+    compactor.SetCompactPointFields(true);
+    compactor.SetMergePoints(false);
+    return compactor.Execute(output);
   }
   else
   {
@@ -58,23 +53,14 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT bool MaskPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                     const vtkm::cont::Field& field,
-                                                     vtkm::filter::PolicyBase<DerivedPolicy> policy)
+VTKM_CONT bool MaskPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                              const vtkm::cont::Field& field)
 {
   // point data is copied as is because it was not collapsed
   if (field.IsFieldPoint())
   {
-    if (this->CompactPoints)
-    {
-      return this->Compactor.MapFieldOntoOutput(result, field, policy);
-    }
-    else
-    {
-      result.AddField(field);
-      return true;
-    }
+    result.AddField(field);
+    return true;
   }
   else if (field.IsFieldGlobal())
   {
@@ -87,6 +73,6 @@ inline VTKM_CONT bool MaskPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result
     return false;
   }
 }
-}
-}
-#endif
+} // namespace entity_extraction
+} // namespace filter
+} // namespace vtkm
