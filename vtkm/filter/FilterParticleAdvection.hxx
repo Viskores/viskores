@@ -57,7 +57,7 @@ FilterParticleAdvection<Derived>::CreateDataSetIntegrators(
   {
     vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
     auto ds = input.GetPartition(i);
-    if (!ds.HasPointField(activeField))
+    if (!ds.HasPointField(activeField) && !ds.HasCellField(activeField))
       throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
     dsi.push_back(DSIType(ds, blockId, activeField));
   }

@@ -55,7 +55,8 @@ FilterTemporalParticleAdvection<Derived>::CreateDataSetIntegrators(
     vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
     auto dsPrev = input.GetPartition(i);
     auto dsNext = this->NextDataSet.GetPartition(i);
-    if (!dsPrev.HasPointField(activeField) || !dsNext.HasPointField(activeField))
+    if (!(dsPrev.HasPointField(activeField) || dsPrev.HasCellField(activeField)) ||
+        !(dsNext.HasPointField(activeField) || dsNext.HasCellField(activeField)))
       throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
     dsi.push_back(
       DSIType(dsPrev, this->PreviousTime, dsNext, this->NextTime, blockId, activeField));
