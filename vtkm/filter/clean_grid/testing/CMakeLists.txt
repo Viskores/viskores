@@ -18,5 +18,6 @@ set(libraries
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
+  ALL_BACKENDS # we still need it because Contour has not been migrated yet.
   USE_VTKM_JOB_POOL
 )
