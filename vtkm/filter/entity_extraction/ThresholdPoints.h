@@ -18,7 +18,8 @@ namespace vtkm
 {
 namespace filter
 {
-
+namespace entity_extraction
+{
 class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ThresholdPoints : public vtkm::filter::NewFilterField
 {
 public:
@@ -62,7 +63,8 @@ private:
 
   bool CompactPoints = false;
 };
-}
-} // namespace vtkm::filter
+} // namespace entity_extraction
+} // namespace filter
+} // namespace vtkm
 
 #endif // vtk_m_filter_entity_extraction_ThresholdPoints_h

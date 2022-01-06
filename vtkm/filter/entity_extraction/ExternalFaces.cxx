@@ -18,6 +18,8 @@ namespace vtkm
 {
 namespace filter
 {
+namespace entity_extraction
+{
 //-----------------------------------------------------------------------------
 ExternalFaces::ExternalFaces()
   : Worklet(std::make_unique<vtkm::worklet::ExternalFaces>())
@@ -95,7 +97,7 @@ vtkm::cont::DataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& input)
   // New Filter Design: then we remove entities if requested.
   if (this->CompactPoints)
   {
-    vtkm::filter::CleanGrid Compactor;
+    vtkm::filter::clean_grid::CleanGrid Compactor;
     Compactor.SetCompactPointFields(true);
     Compactor.SetMergePoints(false);
     return Compactor.Execute(output);
@@ -127,6 +129,6 @@ bool ExternalFaces::MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::
     return false;
   }
 }
-
-}
-}
+} // namespace entity_extraction
+} // namespace filter
+} // namespace vtkm

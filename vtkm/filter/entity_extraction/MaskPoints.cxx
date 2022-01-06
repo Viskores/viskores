@@ -16,7 +16,8 @@ namespace vtkm
 {
 namespace filter
 {
-
+namespace entity_extraction
+{
 //-----------------------------------------------------------------------------
 VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(const vtkm::cont::DataSet& input)
 {
@@ -40,7 +41,7 @@ VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(const vtkm::cont::DataSet& i
   // compact the unused points in the output dataset
   if (this->CompactPoints)
   {
-    vtkm::filter::CleanGrid Compactor;
+    vtkm::filter::clean_grid::CleanGrid Compactor;
     Compactor.SetCompactPointFields(true);
     Compactor.SetMergePoints(false);
     return this->Execute(output);
@@ -72,5 +73,6 @@ VTKM_CONT bool MaskPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result,
     return false;
   }
 }
-}
-}
+} // namespace entity_extraction
+} // namespace filter
+} // namespace vtkm

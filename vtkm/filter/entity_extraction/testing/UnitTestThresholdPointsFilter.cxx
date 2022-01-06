@@ -26,7 +26,7 @@ public:
     std::cout << "Testing threshold points on 2D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
 
-    vtkm::filter::ThresholdPoints thresholdPoints;
+    vtkm::filter::entity_extraction::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdBetween(40.0f, 71.0f);
     thresholdPoints.SetActiveField("pointvar");
     thresholdPoints.SetFieldsToPass("pointvar");
@@ -47,7 +47,7 @@ public:
     std::cout << "Testing threshold points on 3D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
-    vtkm::filter::ThresholdPoints thresholdPoints;
+    vtkm::filter::entity_extraction::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdAbove(1.0f);
     thresholdPoints.SetCompactPoints(true);
     thresholdPoints.SetActiveField("pointvar");
@@ -69,7 +69,7 @@ public:
     std::cout << "Testing threshold points on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
-    vtkm::filter::ThresholdPoints thresholdPoints;
+    vtkm::filter::entity_extraction::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdBelow(50.0);
     thresholdPoints.SetCompactPoints(true);
     thresholdPoints.SetActiveField("pointvar");
@@ -91,7 +91,7 @@ public:
     std::cout << "Testing threshold on 3D explicit dataset with empty results" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
 
-    vtkm::filter::ThresholdPoints thresholdPoints;
+    vtkm::filter::entity_extraction::ThresholdPoints thresholdPoints;
 
     thresholdPoints.SetThresholdBetween(500.0, 600.0);
     thresholdPoints.SetActiveField("pointvar");

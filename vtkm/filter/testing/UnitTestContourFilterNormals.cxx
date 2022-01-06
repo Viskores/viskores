@@ -179,7 +179,7 @@ void TestContourNormals()
   TestNormals(dataset, true);
 
   std::cout << "\tUnstructured dataset\n";
-  vtkm::filter::CleanGrid makeUnstructured;
+  vtkm::filter::clean_grid::CleanGrid makeUnstructured;
   makeUnstructured.SetCompactPointFields(false);
   makeUnstructured.SetMergePoints(false);
   makeUnstructured.SetFieldsToPass("pointvar");

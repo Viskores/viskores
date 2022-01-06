@@ -22,7 +22,6 @@ namespace filter
 namespace clean_grid
 {
 struct SharedStates;
-}
 
 /// \brief Clean a mesh to an unstructured grid
 ///
@@ -96,7 +95,7 @@ private:
   bool RemoveDegenerateCells = true;
   bool FastMerge = true;
 };
-
+} // namespace clean_grid
 } // namespace filter
 } // namespace vtkm
 

@@ -83,7 +83,8 @@ namespace vtkm
 {
 namespace filter
 {
-
+namespace entity_extraction
+{
 //-----------------------------------------------------------------------------
 VTKM_CONT void ThresholdPoints::SetThresholdBelow(const vtkm::Float64 value)
 {
@@ -161,7 +162,7 @@ VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(const vtkm::cont::DataS
   // compact the unused points in the output dataset
   if (this->CompactPoints)
   {
-    vtkm::filter::CleanGrid Compactor;
+    vtkm::filter::clean_grid::CleanGrid Compactor;
     Compactor.SetCompactPointFields(true);
     Compactor.SetMergePoints(true);
     return Compactor.Execute(output);
@@ -193,5 +194,6 @@ VTKM_CONT bool ThresholdPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result,
     return false;
   }
 }
-}
-}
+} // namespace entity_extraction
+} // namespace filter
+} // namespace vtkm

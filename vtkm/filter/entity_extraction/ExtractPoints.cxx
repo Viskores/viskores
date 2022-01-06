@@ -7,7 +7,6 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/filter/clean_grid/CleanGrid.h>
@@ -18,7 +17,8 @@ namespace vtkm
 {
 namespace filter
 {
-
+namespace entity_extraction
+{
 //-----------------------------------------------------------------------------
 VTKM_CONT
 vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& input)
@@ -49,7 +49,7 @@ vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& input)
   // compact the unused points in the output dataset
   if (this->CompactPoints)
   {
-    vtkm::filter::CleanGrid Compactor;
+    vtkm::filter::clean_grid::CleanGrid Compactor;
     Compactor.SetCompactPointFields(true);
     Compactor.SetMergePoints(false);
     return Compactor.Execute(output);
@@ -81,5 +81,6 @@ VTKM_CONT bool ExtractPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result,
     return false;
   }
 }
-}
-}
+} // namespace entity_extraction
+} // namespace filter
+} // namespace vtkm

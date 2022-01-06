@@ -22,7 +22,8 @@ struct ExternalFaces;
 }
 namespace filter
 {
-
+namespace entity_extraction
+{
 /// \brief  Extract external faces of a geometry
 ///
 /// ExternalFaces is a filter that extracts all external faces from a
@@ -74,7 +75,8 @@ private:
   // allocate/free storage for the std::unique_ptr.
   std::unique_ptr<vtkm::worklet::ExternalFaces> Worklet;
 };
-}
-} // namespace vtkm::filter
+} // namespace entity_extraction
+} // namespace filter
+} // namespace vtkm
 
 #endif // vtkm_filter_entity_extraction_ExternalFaces_h

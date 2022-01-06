@@ -18,7 +18,8 @@ namespace vtkm
 {
 namespace filter
 {
-
+namespace entity_extraction
+{
 /// \brief Subselect points using a stride
 ///
 /// Extract only every Nth point where N is equal to a stride value
@@ -46,7 +47,8 @@ private:
   vtkm::Id Stride = 1;
   bool CompactPoints = true;
 };
-}
-} // namespace vtkm::filter
+} // namespace eneity_extraction
+} // namespace filter
+} // namespace vtkm
 
 #endif // vtk_m_filter_entity_extraction_MaskPoints_h

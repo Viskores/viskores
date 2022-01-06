@@ -18,7 +18,7 @@
 namespace
 {
 
-void TestUniformGrid(vtkm::filter::CleanGrid clean)
+void TestUniformGrid(vtkm::filter::clean_grid::CleanGrid clean)
 {
   std::cout << "Testing 'clean' uniform grid." << std::endl;
 
@@ -88,7 +88,7 @@ void TestPointMerging()
   VTKM_TEST_ASSERT(inData.GetCellSet().GetNumberOfPoints() == originalNumPoints);
   VTKM_TEST_ASSERT(inData.GetNumberOfCells() == originalNumCells);
 
-  vtkm::filter::CleanGrid cleanGrid;
+  vtkm::filter::clean_grid::CleanGrid cleanGrid;
 
   std::cout << "Clean grid without any merging" << std::endl;
   cleanGrid.SetCompactPointFields(false);
@@ -158,7 +158,7 @@ void TestPointMerging()
 
 void RunTest()
 {
-  vtkm::filter::CleanGrid clean;
+  vtkm::filter::clean_grid::CleanGrid clean;
 
   std::cout << "*** Test with compact point fields on merge points off" << std::endl;
   clean.SetCompactPointFields(true);

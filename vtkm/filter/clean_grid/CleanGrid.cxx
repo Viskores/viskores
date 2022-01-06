@@ -26,7 +26,6 @@ struct SharedStates
   vtkm::worklet::RemoveDegenerateCells CellCompactor;
   vtkm::worklet::PointMerge PointMerger;
 };
-}
 
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
@@ -236,6 +235,6 @@ vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData)
 
   return outData;
 }
-
-}
-}
+} //namespace clean_grid
+} //namespace filter
+} //namespace vtkm

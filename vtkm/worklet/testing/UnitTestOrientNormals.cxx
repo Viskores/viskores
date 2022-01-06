@@ -56,7 +56,7 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
   wavelet.SetMagnitude({ 5 });
   auto dataSet = wavelet.Execute();
 
-  vtkm::filter::CleanGrid toGrid;
+  vtkm::filter::clean_grid::CleanGrid toGrid;
 
   // unstructured grid contour
   vtkm::filter::Contour contour;

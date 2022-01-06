@@ -32,7 +32,7 @@ public:
     vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
-    vtkm::filter::ExtractPoints extractPoints;
+    vtkm::filter::entity_extraction::ExtractPoints extractPoints;
     extractPoints.SetImplicitFunction(box);
     extractPoints.SetExtractInside(true);
     extractPoints.SetCompactPoints(true);
@@ -62,7 +62,7 @@ public:
     vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
-    vtkm::filter::ExtractPoints extractPoints;
+    vtkm::filter::entity_extraction::ExtractPoints extractPoints;
     extractPoints.SetImplicitFunction(box);
     extractPoints.SetExtractInside(false);
     extractPoints.SetCompactPoints(true);
@@ -94,7 +94,7 @@ public:
     vtkm::Sphere sphere(center, radius);
 
     // Setup and run filter to extract by volume of interest
-    vtkm::filter::ExtractPoints extractPoints;
+    vtkm::filter::entity_extraction::ExtractPoints extractPoints;
     extractPoints.SetImplicitFunction(sphere);
     extractPoints.SetExtractInside(true);
 
@@ -113,7 +113,7 @@ public:
     vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
-    vtkm::filter::ExtractPoints extractPoints;
+    vtkm::filter::entity_extraction::ExtractPoints extractPoints;
     extractPoints.SetImplicitFunction(box);
     extractPoints.SetExtractInside(true);
 
@@ -132,7 +132,7 @@ public:
     vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
-    vtkm::filter::ExtractPoints extractPoints;
+    vtkm::filter::entity_extraction::ExtractPoints extractPoints;
     extractPoints.SetImplicitFunction(box);
     extractPoints.SetExtractInside(false);
 

@@ -24,6 +24,8 @@ namespace vtkm
 {
 namespace filter
 {
+namespace entity_extraction
+{
 /// @brief Extract only points from a geometry using an implicit function
 ///
 ///
@@ -69,7 +71,8 @@ private:
 
   bool CompactPoints = false;
 };
-}
-} // namespace vtkm::filter
+} // namespace entity_extraction
+} // namespace filter
+} // namespace vtkm
 
 #endif // vtkm_filter_entity_extraction_ExtractPoints_h

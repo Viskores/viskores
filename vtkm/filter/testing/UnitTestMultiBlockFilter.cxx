@@ -133,7 +133,7 @@ void TestMultiBlockFilter()
   results.clear();
   for (const auto doThreading : flags)
   {
-    vtkm::filter::CleanGrid clean;
+    vtkm::filter::clean_grid::CleanGrid clean;
     clean.SetRunMultiThreadedFilter(doThreading);
     clean.SetCompactPointFields(true);
     clean.SetMergePoints(true);
