@@ -1,5 +1,4 @@
 //============================================================================
-//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -15,15 +14,6 @@
 #include <vtkm/filter/entity_extraction/ExtractGeometry.h>
 #include <vtkm/filter/entity_extraction/worklet/ExtractGeometry.h>
 
-namespace
-{
-
-} // end anon namespace
-
-namespace vtkm
-{
-namespace filter
-{
 namespace
 {
 struct CallWorker
@@ -67,7 +57,7 @@ struct CallWorker
 
 bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::cont::Field& field,
-                const vtkm::worklet::ExtractGeometry& Worklet)
+                const vtkm::worklet::ExtractGeometry& worklet)
 {
   if (field.IsFieldPoint())
   {
@@ -76,7 +66,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
   }
   else if (field.IsFieldCell())
   {
-    vtkm::cont::ArrayHandle<vtkm::Id> permutation = Worklet.GetValidCellIds();
+    vtkm::cont::ArrayHandle<vtkm::Id> permutation = worklet.GetValidCellIds();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
   else if (field.IsFieldGlobal())
@@ -91,6 +81,10 @@ bool DoMapField(vtkm::cont::DataSet& result,
 }
 } // anonymous namespace
 
+namespace vtkm
+{
+namespace filter
+{
 namespace entity_extraction
 {
 //-----------------------------------------------------------------------------
@@ -101,10 +95,10 @@ vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input)
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  vtkm::worklet::ExtractGeometry Worklet;
+  vtkm::worklet::ExtractGeometry worklet;
   vtkm::cont::UnknownCellSet outCells;
   CallWorker worker(outCells,
-                    Worklet,
+                    worklet,
                     coords,
                     this->Function,
                     this->ExtractInside,
@@ -117,8 +111,8 @@ vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input)
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.SetCellSet(outCells);
 
-  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
-  MapFieldsOntoOutput(input, output, mapper);
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+  this->MapFieldsOntoOutput(input, output, mapper);
 
   return output;
 }

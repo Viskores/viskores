@@ -11,13 +11,8 @@
 #include <vtkm/filter/entity_extraction/Mask.h>
 #include <vtkm/filter/entity_extraction/worklet/Mask.h>
 
-namespace vtkm
-{
-namespace filter
-{
 namespace
 {
-
 struct CallWorklet
 {
   vtkm::Id Stride;
@@ -40,7 +35,7 @@ struct CallWorklet
 
 VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
-                          const vtkm::worklet::Mask& Worklet)
+                          const vtkm::worklet::Mask& worklet)
 {
   if (field.IsFieldPoint() || field.IsFieldGlobal())
   {
@@ -49,7 +44,7 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
   }
   else if (field.IsFieldCell())
   {
-    return vtkm::filter::MapFieldPermutation(field, Worklet.GetValidCellIds(), result);
+    return vtkm::filter::MapFieldPermutation(field, worklet.GetValidCellIds(), result);
   }
   else
   {
@@ -58,6 +53,10 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
 }
 } // end anon namespace
 
+namespace vtkm
+{
+namespace filter
+{
 namespace entity_extraction
 {
 //-----------------------------------------------------------------------------
@@ -65,9 +64,9 @@ VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input)
 {
   const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   vtkm::cont::UnknownCellSet cellOut;
-  vtkm::worklet::Mask Worklet;
+  vtkm::worklet::Mask worklet;
 
-  CallWorklet workletCaller(this->Stride, cellOut, Worklet);
+  CallWorklet workletCaller(this->Stride, cellOut, worklet);
   cells.CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(workletCaller);
 
   // create the output dataset
@@ -75,8 +74,8 @@ VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input)
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.SetCellSet(cellOut);
 
-  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
-  MapFieldsOntoOutput(input, output, mapper);
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+  this->MapFieldsOntoOutput(input, output, mapper);
 
   return output;
 }

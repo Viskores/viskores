@@ -13,10 +13,6 @@
 #include <vtkm/filter/entity_extraction/ExtractStructured.h>
 #include <vtkm/filter/entity_extraction/worklet/ExtractStructured.h>
 
-namespace vtkm
-{
-namespace filter
-{
 namespace
 {
 VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
@@ -42,9 +38,12 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
     return false;
   }
 }
-
 } // anonymous namespace
 
+namespace vtkm
+{
+namespace filter
+{
 namespace entity_extraction
 {
 //-----------------------------------------------------------------------------
@@ -53,14 +52,14 @@ vtkm::cont::DataSet ExtractStructured::DoExecute(const vtkm::cont::DataSet& inpu
   const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coordinates = input.GetCoordinateSystem();
 
-  vtkm::worklet::ExtractStructured Worklet;
-  auto cellset = Worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED>(),
+  vtkm::worklet::ExtractStructured worklet;
+  auto cellset = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED>(),
                              this->VOI,
                              this->SampleRate,
                              this->IncludeBoundary,
                              this->IncludeOffset);
 
-  auto coords = Worklet.MapCoordinates(coordinates);
+  auto coords = worklet.MapCoordinates(coordinates);
   vtkm::cont::CoordinateSystem outputCoordinates(coordinates.GetName(), coords);
 
   vtkm::cont::DataSet output;
@@ -70,14 +69,14 @@ vtkm::cont::DataSet ExtractStructured::DoExecute(const vtkm::cont::DataSet& inpu
   // Create map arrays for mapping fields. Could potentially save some time to first check to see
   // if these arrays would be used.
   auto CellFieldMap =
-    Worklet.ProcessCellField(vtkm::cont::ArrayHandleIndex(input.GetNumberOfCells()));
+    worklet.ProcessCellField(vtkm::cont::ArrayHandleIndex(input.GetNumberOfCells()));
   auto PointFieldMap =
-    Worklet.ProcessPointField(vtkm::cont::ArrayHandleIndex(input.GetNumberOfPoints()));
+    worklet.ProcessPointField(vtkm::cont::ArrayHandleIndex(input.GetNumberOfPoints()));
 
   auto mapper = [&](auto& result, const auto& f) {
     DoMapField(result, f, CellFieldMap, PointFieldMap);
   };
-  MapFieldsOntoOutput(input, output, mapper);
+  this->MapFieldsOntoOutput(input, output, mapper);
 
   return output;
 }

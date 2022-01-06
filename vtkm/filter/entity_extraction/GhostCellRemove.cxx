@@ -19,7 +19,6 @@
 
 namespace
 {
-
 class RemoveAllGhosts
 {
 public:
@@ -274,17 +273,9 @@ bool CanDoStructuredStrip(const vtkm::cont::UnknownCellSet& cells,
   return canDo;
 }
 
-} // end anon namespace
-
-namespace vtkm
-{
-namespace filter
-{
-namespace
-{
 bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::cont::Field& field,
-                const vtkm::worklet::Threshold& Worklet)
+                const vtkm::worklet::Threshold& worklet)
 {
   if (field.IsFieldPoint())
   {
@@ -294,7 +285,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
   }
   else if (field.IsFieldCell())
   {
-    return vtkm::filter::MapFieldPermutation(field, Worklet.GetValidCellIds(), result);
+    return vtkm::filter::MapFieldPermutation(field, worklet.GetValidCellIds(), result);
   }
   else if (field.IsFieldGlobal())
   {
@@ -306,8 +297,12 @@ bool DoMapField(vtkm::cont::DataSet& result,
     return false;
   }
 }
-} // anonymous namespace
+} // end anon namespace
 
+namespace vtkm
+{
+namespace filter
+{
 namespace entity_extraction
 {
 //-----------------------------------------------------------------------------
@@ -323,9 +318,8 @@ VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataS
   const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const auto& field = this->GetFieldFromDataSet(input);
 
-  // We are pretty sure the field array is an array of vtkm::UInt8 since it is the only supported
-  // type.
-  auto fieldArray = field.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>>();
+  vtkm::cont::ArrayHandle<vtkm::UInt8> fieldArray;
+  vtkm::cont::ArrayCopyShallowIfPossible(field.GetData(), fieldArray);
 
   //Preserve structured output where possible.
   if (cells.CanConvert<vtkm::cont::CellSetStructured<1>>() ||
@@ -353,18 +347,18 @@ VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataS
   }
 
   vtkm::cont::UnknownCellSet cellOut;
-  vtkm::worklet::Threshold Worklet;
+  vtkm::worklet::Threshold worklet;
 
   if (this->GetRemoveAllGhost())
   {
-    cellOut = Worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
+    cellOut = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
                           fieldArray,
                           field.GetAssociation(),
                           RemoveAllGhosts());
   }
   else if (this->GetRemoveByType())
   {
-    cellOut = Worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
+    cellOut = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
                           fieldArray,
                           field.GetAssociation(),
                           RemoveGhostByType(this->GetRemoveType()));
@@ -378,8 +372,8 @@ VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataS
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.SetCellSet(cellOut);
 
-  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
-  MapFieldsOntoOutput(input, output, mapper);
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+  this->MapFieldsOntoOutput(input, output, mapper);
 
   return output;
 }

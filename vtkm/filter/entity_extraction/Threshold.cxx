@@ -11,15 +11,8 @@
 #include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/worklet/Threshold.h>
 
-namespace vtkm
-{
-namespace filter
-{
-namespace entity_extraction
-{
 namespace
 {
-
 class ThresholdRange
 {
 public:
@@ -53,7 +46,7 @@ private:
 
 bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::cont::Field& field,
-                const vtkm::worklet::Threshold& Worklet)
+                const vtkm::worklet::Threshold& worklet)
 {
   if (field.IsFieldPoint() || field.IsFieldGlobal())
   {
@@ -63,16 +56,21 @@ bool DoMapField(vtkm::cont::DataSet& result,
   }
   else if (field.IsFieldCell())
   {
-    return vtkm::filter::MapFieldPermutation(field, Worklet.GetValidCellIds(), result);
+    return vtkm::filter::MapFieldPermutation(field, worklet.GetValidCellIds(), result);
   }
   else
   {
     return false;
   }
 }
-
 } // end anon namespace
 
+namespace vtkm
+{
+namespace filter
+{
+namespace entity_extraction
+{
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
 {
@@ -81,12 +79,12 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
   const auto& field = this->GetFieldFromDataSet(input);
 
   ThresholdRange predicate(this->GetLowerThreshold(), this->GetUpperThreshold());
-  vtkm::worklet::Threshold Worklet;
+  vtkm::worklet::Threshold worklet;
   vtkm::cont::UnknownCellSet cellOut;
 
   auto ResolveArrayType = [&, this](const auto& concrete) {
     // TODO: document the reason a .ResetCellSetList is needed here.
-    cellOut = Worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
+    cellOut = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
                           concrete,
                           field.GetAssociation(),
                           predicate,
@@ -101,8 +99,8 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
   output.SetCellSet(cellOut);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
-  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
-  MapFieldsOntoOutput(input, output, mapper);
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+  this->MapFieldsOntoOutput(input, output, mapper);
 
   return output;
 }
