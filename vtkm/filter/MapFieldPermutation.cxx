@@ -8,19 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/MapFieldPermutation.h>
-
-#include <vtkm/TypeList.h>
-#include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
-
 #include <vtkm/cont/Logging.h>
-
 #include <vtkm/cont/internal/CastInvalidValue.h>
-
+#include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/worklet/WorkletMapField.h>
-
-#include <vtkm/filter/PolicyDefault.h>
 
 namespace
 {
@@ -76,7 +68,7 @@ struct DoMapFieldPermutation
 
 } // anonymous namespace
 
-VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
+VTKM_FILTER_CORE_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
   const vtkm::cont::Field& inputField,
   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
   vtkm::cont::Field& outputField,
@@ -100,7 +92,7 @@ VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
   }
 }
 
-VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
+VTKM_FILTER_CORE_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
   const vtkm::cont::Field& inputField,
   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
   vtkm::cont::DataSet& outputData,

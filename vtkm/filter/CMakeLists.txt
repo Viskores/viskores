@@ -230,11 +230,12 @@ set(core_headers
   )
 set(core_sources
   NewFilterField.cxx
-  MapFieldMergeAverage.cxx
-  MapFieldPermutation.cxx
   )
 set(core_sources_device
-  NewFilter.cxx)
+  MapFieldMergeAverage.cxx
+  MapFieldPermutation.cxx
+  NewFilter.cxx
+  )
 
 vtkm_library(
   NAME vtkm_filter_core
