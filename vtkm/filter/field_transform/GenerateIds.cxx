@@ -56,7 +56,7 @@ vtkm::cont::DataSet GenerateIds::DoExecute(const vtkm::cont::DataSet& input)
     output.AddCellField(this->GetCellFieldName(), GenerateArray(*this, input.GetNumberOfCells()));
   }
 
-  MapFieldsOntoOutput(input, output);
+  this->MapFieldsOntoOutput(input, output);
 
   return output;
 }

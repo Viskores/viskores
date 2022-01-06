@@ -146,7 +146,7 @@ namespace filter
 ///      auto outputField = ... // Business logic for mapping input field to output field
 ///      output.AddField(outputField);
 ///   };
-///   MapFieldsOntoOutput(input, output, mapper);
+///   this->MapFieldsOntoOutput(input, output, mapper);
 ///
 ///   return output;
 /// }
@@ -193,7 +193,7 @@ namespace filter
 ///      auto outputField = ... // Use `states` for mapping input field to output field
 ///      output.AddField(outputField);
 ///   };
-///   MapFieldsOntoOutput(input, output, mapper);
+///   this->MapFieldsOntoOutput(input, output, mapper);
 ///
 ///   return output;
 /// }
@@ -240,11 +240,6 @@ public:
     }
   }
 
-  /// \brief Specify which subset of types a filter supports.
-  ///
-  /// A filter is able to state what subset of types it supports.
-  using SupportedTypes = VTKM_DEFAULT_TYPE_LIST;
-
   //@{
   /// \brief Specify which fields get passed from input to output.
   ///
@@ -285,17 +280,6 @@ public:
   //@}
 
   //@{
-  /// Select the coordinate system index to make active to use when processing the input
-  /// DataSet. This is used primarily by the Filter to select the coordinate system
-  /// to use as a field when \c UseCoordinateSystemAsField is true.
-  VTKM_CONT
-  void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
-
-  VTKM_CONT
-  vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
-  //@}
-
-  //@{
   /// Executes the filter on the input and produces a result dataset.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
@@ -317,7 +301,6 @@ public:
 
 protected:
   vtkm::cont::Invoker Invoke;
-  vtkm::Id CoordinateSystemIndex = 0;
 
   template <typename Mapper>
   VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input,
@@ -336,7 +319,7 @@ protected:
 
   VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input, vtkm::cont::DataSet& output)
   {
-    MapFieldsOntoOutput(input, output, defaultMapper);
+    this->MapFieldsOntoOutput(input, output, defaultMapper);
   }
 
 private:
