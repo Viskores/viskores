@@ -32,10 +32,10 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/SurfaceNormals.h>
+#include <vtkm/filter/clean_grid/CleanGrid.h>
 
 #include <vtkm/source/Wavelet.h>
 

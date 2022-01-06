@@ -12,7 +12,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CleanGrid.h>
+#include <vtkm/filter/clean_grid/CleanGrid.h>
 
 #include <vtkm/filter/Contour.h>
 

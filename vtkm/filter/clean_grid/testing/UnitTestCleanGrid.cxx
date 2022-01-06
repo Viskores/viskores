@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/CleanGrid.h>
+#include <vtkm/filter/clean_grid/CleanGrid.h>
 
 #include <vtkm/filter/Contour.h>
 

@@ -10,11 +10,11 @@
 #ifndef vtk_m_worklet_PointMerge_h
 #define vtk_m_worklet_PointMerge_h
 
+#include <vtkm/filter/clean_grid/worklet/RemoveUnusedPoints.h>
 #include <vtkm/worklet/AverageByKey.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/Keys.h>
-#include <vtkm/worklet/RemoveUnusedPoints.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
 

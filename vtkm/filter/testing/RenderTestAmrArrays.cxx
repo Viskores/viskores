@@ -9,8 +9,8 @@
 //============================================================================
 
 #include <vtkm/cont/MergePartitionedDataSet.h>
-#include <vtkm/filter/ExternalFaces.h>
 #include <vtkm/filter/Threshold.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/source/Amr.h>
 
 #include <vtkm/rendering/testing/RenderTest.h>

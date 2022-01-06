@@ -11,8 +11,8 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/CleanGrid.h>
-#include <vtkm/filter/ExternalFaces.h>
+#include <vtkm/filter/clean_grid/CleanGrid.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 

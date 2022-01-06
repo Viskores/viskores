@@ -37,8 +37,6 @@ set(common_headers
   FilterParticleAdvection.h
   FilterTemporalParticleAdvection.h
   FilterTraits.h
-  MapFieldMergeAverage.h
-  MapFieldPermutation.h
   PolicyBase.h
   PolicyDefault.h
   TaskQueue.h
@@ -50,9 +48,7 @@ set(common_headers
 set(common_header_template_sources
   CellAverage.hxx
   CellMeasures.hxx
-  CleanGrid.hxx
   ExtractGeometry.hxx
-  ExtractPoints.hxx
   ExtractStructured.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
@@ -62,16 +58,12 @@ set(common_header_template_sources
   FilterTemporalParticleAdvection.hxx
   PointAverage.hxx
   Threshold.hxx
-  ThresholdPoints.hxx
   )
 
 set(common_sources_device
   CellAverage.cxx
-  CleanGrid.cxx
   ExtractGeometry.cxx
   ExtractStructured.cxx
-  MapFieldMergeAverage.cxx
-  MapFieldPermutation.cxx
   PointAverage.cxx
   Threshold.cxx
 )
@@ -100,7 +92,6 @@ set(extra_headers
   Lagrangian.h
   LagrangianStructures.h
   Mask.h
-  MaskPoints.h
   MeshQuality.h
   MIRFilter.h
   NDEntropy.h
@@ -145,7 +136,6 @@ set(extra_header_template_sources
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
   Entropy.hxx
-  ExternalFaces.hxx
   FieldToColors.hxx
   GhostCellClassify.hxx
   GhostCellRemove.hxx
@@ -156,7 +146,6 @@ set(extra_header_template_sources
   Lagrangian.hxx
   LagrangianStructures.hxx
   Mask.hxx
-  MaskPoints.hxx
   MeshQuality.hxx
   MIRFilter.hxx
   NDEntropy.hxx
@@ -191,7 +180,6 @@ set(extra_header_template_sources
 set(extra_sources_device
   ${ClipWithFieldInstantiations}
   ${ClipWithImplicitFunctionInstantiations}
-  ExternalFaces.cxx
   VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
@@ -237,9 +225,13 @@ vtkm_pyexpander_generated_file(ClipWithImplicitFunctionExternInstantiations.h)
 set(core_headers
   NewFilter.h
   NewFilterField.h
+  MapFieldMergeAverage.h
+  MapFieldPermutation.h
   )
 set(core_sources
   NewFilterField.cxx
+  MapFieldMergeAverage.cxx
+  MapFieldPermutation.cxx
   )
 set(core_sources_device
   NewFilter.cxx)
@@ -318,7 +310,8 @@ target_link_libraries(vtkm_filter PUBLIC INTERFACE
 
 install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
-
+add_subdirectory(clean_grid)
+add_subdirectory(entity_extraction)
 add_subdirectory(internal)
 add_subdirectory(particleadvection)
 add_subdirectory(field_transform)

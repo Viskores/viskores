@@ -11,7 +11,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/ExtractPoints.h>
+#include <vtkm/filter/entity_extraction/ExtractPoints.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 

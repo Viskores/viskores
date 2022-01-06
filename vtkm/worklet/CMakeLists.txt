@@ -27,9 +27,7 @@ set(headers
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   DotProduct.h
-  ExternalFaces.h
   ExtractGeometry.h
-  ExtractPoints.h
   ExtractStructured.h
   FieldEntropy.h
   FieldHistogram.h
@@ -45,7 +43,6 @@ set(headers
   Mask.h
   MaskIndices.h
   MaskNone.h
-  MaskPoints.h
   MaskSelect.h
   MeshQuality.h
   MIR.h
@@ -60,11 +57,8 @@ set(headers
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h
-  PointMerge.h
   PointTransform.h
   Probe.h
-  RemoveDegenerateCells.h
-  RemoveUnusedPoints.h
   ScalarsToColors.h
   ScatterCounting.h
   ScatterIdentity.h
@@ -78,7 +72,6 @@ set(headers
   SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
-  ThresholdPoints.h
   TriangleWinding.h
   Triangulate.h
   Tube.h

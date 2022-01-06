@@ -14,8 +14,8 @@
 #include <vtkm/cont/BoundsGlobalCompute.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Serialization.h>
-#include <vtkm/filter/ExtractPoints.h>
 #include <vtkm/filter/Filter.h>
+#include <vtkm/filter/entity_extraction/ExtractPoints.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
 

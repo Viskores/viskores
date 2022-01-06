@@ -13,7 +13,7 @@
 
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/exec/CellEdge.h>
-#include <vtkm/filter/ExternalFaces.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/MapperWireframer.h>
