@@ -291,7 +291,7 @@ set_target_properties(
   UNITY_BUILD_MODE BATCH
   )
 
-target_link_libraries(vtkm_filter_common PUBLIC vtkm_worklet)
+target_link_libraries(vtkm_filter_common PUBLIC vtkm_filter_core vtkm_worklet) # TODO: deprecate vtkm_filter_common
 target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont vtkm_worklet)
 target_link_libraries(vtkm_filter_extra PUBLIC vtkm_filter_common)
 target_link_libraries(vtkm_filter_contour PUBLIC vtkm_filter_common)
