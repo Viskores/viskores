@@ -292,7 +292,7 @@ set_target_properties(
   )
 
 target_link_libraries(vtkm_filter_common PUBLIC vtkm_worklet)
-target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont)
+target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont vtkm_worklet)
 target_link_libraries(vtkm_filter_extra PUBLIC vtkm_filter_common)
 target_link_libraries(vtkm_filter_contour PUBLIC vtkm_filter_common)
 target_link_libraries(vtkm_filter_gradient PUBLIC vtkm_filter_common)
