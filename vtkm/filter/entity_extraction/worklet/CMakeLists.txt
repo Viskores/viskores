@@ -10,8 +10,9 @@
 
 set(headers
   ExternalFaces.h
-  ExternalFaces.h
+  ExtractPoints.h
   MaskPoints.h
+  ThresholdPoints.h
   )
 
 vtkm_declare_headers(${headers})

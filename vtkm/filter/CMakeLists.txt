@@ -92,6 +92,7 @@ set(extra_headers
   Lagrangian.h
   LagrangianStructures.h
   Mask.h
+  MaskPoints.h
   MeshQuality.h
   MIRFilter.h
   NDEntropy.h
