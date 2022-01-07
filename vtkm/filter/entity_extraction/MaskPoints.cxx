@@ -28,7 +28,7 @@ VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(const vtkm::cont::DataSet& i
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::MaskPoints worklet;
 
-  outCellSet = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(), this->Stride);
+  outCellSet = worklet.Run(cells, this->Stride);
 
   // create the output dataset
   vtkm::cont::DataSet output;
@@ -44,7 +44,7 @@ VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(const vtkm::cont::DataSet& i
     vtkm::filter::clean_grid::CleanGrid Compactor;
     Compactor.SetCompactPointFields(true);
     Compactor.SetMergePoints(false);
-    return this->Execute(output);
+    return Compactor.Execute(output);
   }
   else
   {
