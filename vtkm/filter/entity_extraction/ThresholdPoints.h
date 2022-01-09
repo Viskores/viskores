@@ -51,8 +51,6 @@ private:
   VTKM_CONT
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
-
   constexpr static int THRESHOLD_BELOW = 0;
   constexpr static int THRESHOLD_ABOVE = 1;
   constexpr static int THRESHOLD_BETWEEN = 2;

@@ -27,7 +27,6 @@ set(headers
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   DotProduct.h
-  ExtractStructured.h
   FieldEntropy.h
   FieldHistogram.h
   FieldStatistics.h

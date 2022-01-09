@@ -12,6 +12,7 @@ set(unit_tests
   UnitTestExternalFacesFilter.cxx
   UnitTestExtractGeometryFilter.cxx
   UnitTestExtractPointsFilter.cxx
+  UnitTestExtractStructuredFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestThresholdPointsFilter.cxx
   )

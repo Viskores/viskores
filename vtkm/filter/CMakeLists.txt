@@ -48,7 +48,6 @@ set(common_headers
 set(common_header_template_sources
   CellAverage.hxx
   CellMeasures.hxx
-  ExtractStructured.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
@@ -61,7 +60,6 @@ set(common_header_template_sources
 
 set(common_sources_device
   CellAverage.cxx
-  ExtractStructured.cxx
   PointAverage.cxx
   Threshold.cxx
 )

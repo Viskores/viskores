@@ -18,8 +18,8 @@
 #include <vtkm/cont/UnknownCellSet.h>
 
 #include <vtkm/RangeId3.h>
-#include <vtkm/filter/ExtractStructured.h>
 #include <vtkm/filter/MapFieldPermutation.h>
+#include <vtkm/filter/entity_extraction/ExtractStructured.h>
 #include <vtkm/worklet/CellDeepCopy.h>
 
 namespace
@@ -318,7 +318,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
     if (CanDoStructuredStrip(
           cells, field, this->Invoke, this->GetRemoveAllGhost(), this->GetRemoveType(), range))
     {
-      vtkm::filter::ExtractStructured extract;
+      vtkm::filter::entity_extraction::ExtractStructured extract;
       extract.SetInvoker(this->Invoke);
       vtkm::RangeId3 erange(
         range.X.Min, range.X.Max + 2, range.Y.Min, range.Y.Max + 2, range.Z.Min, range.Z.Max + 2);

@@ -32,7 +32,6 @@ set(unit_tests
   UnitTestCrossProduct.cxx
   UnitTestDescriptiveStatistics.cxx
   UnitTestDotProduct.cxx
-  UnitTestExtractStructured.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestGraphConnectivity.cxx

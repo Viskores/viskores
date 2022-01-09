@@ -81,10 +81,6 @@ private:
   VTKM_CONT
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                    const vtkm::cont::Field& field,
-                                    const vtkm::worklet::ExtractGeometry&);
-
   bool ExtractInside = true;
   bool ExtractBoundaryCells = false;
   bool ExtractOnlyBoundaryCells = false;

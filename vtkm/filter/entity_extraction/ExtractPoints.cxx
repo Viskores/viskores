@@ -17,6 +17,28 @@ namespace vtkm
 {
 namespace filter
 {
+namespace
+{
+bool DoMapField(vtkm::cont::DataSet& result, const vtkm::cont::Field& field)
+{
+  // point data is copied as is because it was not collapsed
+  if (field.IsFieldPoint())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    // cell data does not apply
+    return false;
+  }
+}
+}
 namespace entity_extraction
 {
 //-----------------------------------------------------------------------------
@@ -40,7 +62,7 @@ vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& input)
   output.SetCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
-  auto mapper = [&, this](auto& result, const auto& f) { this->MapFieldOntoOutput(result, f); };
+  auto mapper = [&, this](auto& result, const auto& f) { DoMapField(result, f); };
   this->MapFieldsOntoOutput(input, output, mapper);
 
   // compact the unused points in the output dataset
@@ -57,27 +79,6 @@ vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& input)
   }
 }
 
-//-----------------------------------------------------------------------------
-VTKM_CONT bool ExtractPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                 const vtkm::cont::Field& field)
-{
-  // point data is copied as is because it was not collapsed
-  if (field.IsFieldPoint())
-  {
-    result.AddField(field);
-    return true;
-  }
-  else if (field.IsFieldGlobal())
-  {
-    result.AddField(field);
-    return true;
-  }
-  else
-  {
-    // cell data does not apply
-    return false;
-  }
-}
 } // namespace entity_extraction
 } // namespace filter
 } // namespace vtkm

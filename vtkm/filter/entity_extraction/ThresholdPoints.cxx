@@ -77,12 +77,34 @@ private:
   vtkm::Float64 Lower;
   vtkm::Float64 Upper;
 };
+
+bool DoMapField(vtkm::cont::DataSet& result, const vtkm::cont::Field& field)
+{
+  // point data is copied as is because it was not collapsed
+  if (field.IsFieldPoint())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    // cell data does not apply
+    return false;
+  }
 }
+
+} // anonymous namespace
 
 namespace vtkm
 {
 namespace filter
 {
+
 namespace entity_extraction
 {
 //-----------------------------------------------------------------------------
@@ -156,7 +178,7 @@ VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(const vtkm::cont::DataS
   output.SetCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
-  auto mapper = [&, this](auto& result, const auto& f) { this->MapFieldOntoOutput(result, f); };
+  auto mapper = [&, this](auto& result, const auto& f) { DoMapField(result, f); };
   this->MapFieldsOntoOutput(input, output, mapper);
 
   // compact the unused points in the output dataset
@@ -173,27 +195,6 @@ VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(const vtkm::cont::DataS
   }
 }
 
-//-----------------------------------------------------------------------------
-VTKM_CONT bool ThresholdPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                   const vtkm::cont::Field& field)
-{
-  // point data is copied as is because it was not collapsed
-  if (field.IsFieldPoint())
-  {
-    result.AddField(field);
-    return true;
-  }
-  else if (field.IsFieldGlobal())
-  {
-    result.AddField(field);
-    return true;
-  }
-  else
-  {
-    // cell data does not apply
-    return false;
-  }
-}
 } // namespace entity_extraction
 } // namespace filter
 } // namespace vtkm

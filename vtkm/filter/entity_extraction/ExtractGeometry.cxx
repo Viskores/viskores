@@ -17,6 +17,15 @@
 
 namespace
 {
+
+} // end anon namespace
+
+namespace vtkm
+{
+namespace filter
+{
+namespace
+{
 struct CallWorker
 {
   vtkm::cont::UnknownCellSet& Output;
@@ -55,12 +64,33 @@ struct CallWorker
                                      this->ExtractOnlyBoundaryCells);
   }
 };
-} // end anon namespace
 
-namespace vtkm
+bool DoMapField(vtkm::cont::DataSet& result,
+                const vtkm::cont::Field& field,
+                const vtkm::worklet::ExtractGeometry& Worklet)
 {
-namespace filter
-{
+  if (field.IsFieldPoint())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else if (field.IsFieldCell())
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> permutation = Worklet.GetValidCellIds();
+    return vtkm::filter::MapFieldPermutation(field, permutation, result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+} // anonymous namespace
+
 namespace entity_extraction
 {
 //-----------------------------------------------------------------------------
@@ -87,38 +117,12 @@ vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input)
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.SetCellSet(outCells);
 
-  auto mapper = [&, this](auto& result, const auto& f) {
-    this->MapFieldOntoOutput(result, f, Worklet);
-  };
+  auto mapper = [&, this](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
   MapFieldsOntoOutput(input, output, mapper);
 
   return output;
 }
 
-bool ExtractGeometry::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                         const vtkm::cont::Field& field,
-                                         const vtkm::worklet::ExtractGeometry& Worklet)
-{
-  if (field.IsFieldPoint())
-  {
-    result.AddField(field);
-    return true;
-  }
-  else if (field.IsFieldCell())
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> permutation = Worklet.GetValidCellIds();
-    return vtkm::filter::MapFieldPermutation(field, permutation, result);
-  }
-  else if (field.IsFieldGlobal())
-  {
-    result.AddField(field);
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
 } // namespace entity_extraction
 } // namespace filter
 } // namespace vtkm
