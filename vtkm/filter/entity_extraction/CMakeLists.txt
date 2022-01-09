@@ -9,12 +9,14 @@
 ##============================================================================
 set(entity_extraction_headers
   ExternalFaces.h
+  ExtractGeometry.h
   ExtractPoints.h
   MaskPoints.h
   ThresholdPoints.h
   )
 set(entity_extraction_sources_device
   ExternalFaces.cxx
+  ExtractGeometry.cxx
   ExtractPoints.cxx
   MaskPoints.cxx
   ThresholdPoints.cxx

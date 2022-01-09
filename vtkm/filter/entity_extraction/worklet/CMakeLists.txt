@@ -10,6 +10,7 @@
 
 set(headers
   ExternalFaces.h
+  ExtractGeometry.h
   ExtractPoints.h
   MaskPoints.h
   ThresholdPoints.h

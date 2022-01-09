@@ -26,7 +26,6 @@ set(unit_tests
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCrossProductFilter.cxx
   UnitTestEntropyFilter.cxx
-  UnitTestExtractGeometryFilter.cxx
   UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
