@@ -155,7 +155,7 @@ private:
   {
     std::mt19937_64 rng;
     rng.seed(this->Seed);
-    std::uniform_int_distribution<vtkm::Id> distribution(0, this->TableSize - 1);
+    std::uniform_int_distribution<vtkm::IdComponent> distribution(0, this->TableSize - 1);
 
     vtkm::cont::ArrayHandle<vtkm::Id> perms;
     perms.Allocate(this->TableSize);
