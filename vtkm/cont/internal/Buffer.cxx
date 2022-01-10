@@ -183,6 +183,7 @@ struct FillFunctor : vtkm::exec::FunctorBase
     , NumSourceValues(sourceValuesSize / sizeof(T))
   {
     VTKM_ASSERT((sourceValuesSize % sizeof(T)) == 0);
+    VTKM_ASSERT((start % sizeof(T)) == 0);
     this->TargetArray += start / sizeof(T);
   }
 
@@ -217,22 +218,25 @@ void FillBuffer(const vtkm::cont::internal::Buffer& target,
   VTKM_ASSERT((targetSize % sourceSize) == 0);
   VTKM_ASSERT((start % sourceSize) == 0);
 
-  vtkm::Id numSources = (targetSize - start) / sourceSize;
+  vtkm::Id numSourceRepetitions = (targetSize - start) / sourceSize;
 
   if ((sourceSize >= 8) && ((sourceSize % 8) == 0))
   {
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
-      FillFunctor<vtkm::UInt64>{ targetPointer, sourcePointer, sourceSize, start }, numSources);
+      FillFunctor<vtkm::UInt64>{ targetPointer, sourcePointer, sourceSize, start },
+      numSourceRepetitions);
   }
   else if ((sourceSize >= 4) && ((sourceSize % 4) == 0))
   {
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
-      FillFunctor<vtkm::UInt32>{ targetPointer, sourcePointer, sourceSize, start }, numSources);
+      FillFunctor<vtkm::UInt32>{ targetPointer, sourcePointer, sourceSize, start },
+      numSourceRepetitions);
   }
   else
   {
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
-      FillFunctor<vtkm::UInt8>{ targetPointer, sourcePointer, sourceSize, start }, numSources);
+      FillFunctor<vtkm::UInt8>{ targetPointer, sourcePointer, sourceSize, start },
+      numSourceRepetitions);
   }
 }
 

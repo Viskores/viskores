@@ -16,7 +16,7 @@
 namespace
 {
 
-const vtkm::Id ARRAY_SIZE = 4;
+constexpr vtkm::Id ARRAY_SIZE = 4;
 
 void TestConcatOfConcat()
 {
@@ -40,6 +40,8 @@ void TestConcatOfConcat()
 
   VTKM_TEST_ASSERT(array5.GetNumberOfValues() == 4 * ARRAY_SIZE);
 
+  // Check the values in array5. If array5 is correct, all the `ArrayHandleConcatinate`s
+  // (such as in array3) must be working.
   auto portal = array5.ReadPortal();
   for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
   {
@@ -89,6 +91,8 @@ void TestConcatenateFill()
   const T value0 = TestValue(0, T{});
   const T value1 = TestValue(1, T{});
   const T value2 = TestValue(2, T{});
+
+  VTKM_STATIC_ASSERT_MSG((ARRAY_SIZE % 2) == 0, "ARRAY_SIZE must be even for this test.");
 
   concatArray.Fill(value0);
   concatArray.Fill(value1, ARRAY_SIZE / 2);
