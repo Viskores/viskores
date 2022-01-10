@@ -14,7 +14,7 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/GhostCellRemove.h>
+#include <vtkm/filter/entity_extraction/GhostCellRemove.h>
 
 namespace
 {
@@ -247,7 +247,7 @@ void TestGhostCellRemove()
         std::vector<std::string> removeType = { "all", "byType" };
         for (auto& rt : removeType)
         {
-          vtkm::filter::GhostCellRemove ghostCellRemoval;
+          vtkm::filter::entity_extraction::GhostCellRemove ghostCellRemoval;
           ghostCellRemoval.RemoveGhostField();
 
           if (rt == "all")
@@ -294,7 +294,7 @@ void TestGhostCellRemove()
           else if (dsType == "rectilinear")
             ds = MakeRectilinear(nx, ny, nz, layer, true);
 
-          vtkm::filter::GhostCellRemove ghostCellRemoval;
+          vtkm::filter::entity_extraction::GhostCellRemove ghostCellRemoval;
           ghostCellRemoval.RemoveGhostField();
           auto output = ghostCellRemoval.Execute(ds);
           VTKM_TEST_ASSERT(output.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),

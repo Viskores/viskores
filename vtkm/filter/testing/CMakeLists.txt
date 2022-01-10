@@ -32,7 +32,6 @@ set(unit_tests
   UnitTestGradientExplicit.cxx
   UnitTestGradientUniform.cxx
   UnitTestGhostCellClassify.cxx
-  UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx
   UnitTestImageConnectivityFilter.cxx
   UnitTestImageDifferenceFilter.cxx
@@ -60,7 +59,6 @@ set(unit_tests
   UnitTestStreamSurfaceFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
-  UnitTestThresholdFilter.cxx
   UnitTestTriangulateFilter.cxx
   UnitTestTubeFilter.cxx
   UnitTestVectorMagnitudeFilter.cxx

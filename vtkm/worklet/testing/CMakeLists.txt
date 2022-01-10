@@ -65,7 +65,6 @@ set(unit_tests
   UnitTestSurfaceNormals.cxx
   UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx
-  UnitTestThreshold.cxx
   UnitTestTriangleWinding.cxx
   UnitTestTriangulate.cxx
   UnitTestTube.cxx

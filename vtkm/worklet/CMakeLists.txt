@@ -69,7 +69,6 @@ set(headers
   StreamSurface.h
   SurfaceNormals.h
   Tetrahedralize.h
-  Threshold.h
   TriangleWinding.h
   Triangulate.h
   Tube.h

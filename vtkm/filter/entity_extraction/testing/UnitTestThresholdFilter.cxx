@@ -10,8 +10,8 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/Threshold.h>
 #include <vtkm/filter/clean_grid/CleanGrid.h>
+#include <vtkm/filter/entity_extraction/Threshold.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 
@@ -24,7 +24,7 @@ public:
   void TestRegular2D(bool returnAllInRange) const
   {
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet0();
-    vtkm::filter::Threshold threshold;
+    vtkm::filter::entity_extraction::Threshold threshold;
 
     if (returnAllInRange)
     {
@@ -80,7 +80,7 @@ public:
   void TestRegular3D(bool returnAllInRange) const
   {
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
-    vtkm::filter::Threshold threshold;
+    vtkm::filter::entity_extraction::Threshold threshold;
 
     if (returnAllInRange)
     {
@@ -141,7 +141,7 @@ public:
     std::cout << "Testing threshold on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
 
-    vtkm::filter::Threshold threshold;
+    vtkm::filter::entity_extraction::Threshold threshold;
 
     threshold.SetLowerThreshold(20);
     threshold.SetUpperThreshold(21);
@@ -171,7 +171,7 @@ public:
     std::cout << "Testing threshold on 3D explicit dataset with empty results" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
 
-    vtkm::filter::Threshold threshold;
+    vtkm::filter::entity_extraction::Threshold threshold;
 
     threshold.SetLowerThreshold(500);
     threshold.SetUpperThreshold(500.1);

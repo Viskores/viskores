@@ -8,19 +8,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_GhostCellRemove_hxx
-#define vtk_m_filter_GhostCellRemove_hxx
-#include <vtkm/filter/GhostCellRemove.h>
-
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/CellSetPermutation.h>
+#include <vtkm/RangeId3.h>
 #include <vtkm/cont/UnknownCellSet.h>
 
-#include <vtkm/RangeId3.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/entity_extraction/ExtractStructured.h>
-#include <vtkm/worklet/CellDeepCopy.h>
+#include <vtkm/filter/entity_extraction/GhostCellRemove.h>
+#include <vtkm/filter/entity_extraction/worklet/Threshold.h>
 
 namespace
 {
@@ -285,29 +280,52 @@ namespace vtkm
 {
 namespace filter
 {
+namespace
+{
+bool DoMapField(vtkm::cont::DataSet& result,
+                const vtkm::cont::Field& field,
+                const vtkm::worklet::Threshold& Worklet)
+{
+  if (field.IsFieldPoint())
+  {
+    //we copy the input handle to the result dataset, reusing the metadata
+    result.AddField(field);
+    return true;
+  }
+  else if (field.IsFieldCell())
+  {
+    return vtkm::filter::MapFieldPermutation(field, Worklet.GetValidCellIds(), result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+} // anonymous namespace
 
+namespace entity_extraction
+{
 //-----------------------------------------------------------------------------
-inline VTKM_CONT GhostCellRemove::GhostCellRemove()
-  : vtkm::filter::FilterDataSetWithField<GhostCellRemove>()
-  , RemoveAll(false)
-  , RemoveField(false)
-  , RemoveVals(0)
+VTKM_CONT GhostCellRemove::GhostCellRemove()
 {
   this->SetActiveField("vtkmGhostCells");
   this->SetFieldsToPass("vtkmGhostCells", vtkm::filter::FieldSelection::MODE_EXCLUDE);
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataSet& input)
 {
-  //get the cells and coordinates of the dataset
   const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
-  vtkm::cont::UnknownCellSet cellOut;
+  const auto& field = this->GetFieldFromDataSet(input);
+
+  // We are pretty sure the field array is an array of vtkm::UInt8 since it is the only supported
+  // type.
+  auto fieldArray = field.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>>();
 
   //Preserve structured output where possible.
   if (cells.CanConvert<vtkm::cont::CellSetStructured<1>>() ||
@@ -316,7 +334,7 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
   {
     vtkm::RangeId3 range;
     if (CanDoStructuredStrip(
-          cells, field, this->Invoke, this->GetRemoveAllGhost(), this->GetRemoveType(), range))
+          cells, fieldArray, this->Invoke, this->GetRemoveAllGhost(), this->GetRemoveType(), range))
     {
       vtkm::filter::entity_extraction::ExtractStructured extract;
       extract.SetInvoker(this->Invoke);
@@ -334,19 +352,22 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
     }
   }
 
+  vtkm::cont::UnknownCellSet cellOut;
+  vtkm::worklet::Threshold Worklet;
+
   if (this->GetRemoveAllGhost())
   {
-    cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
-                                field,
-                                fieldMeta.GetAssociation(),
-                                RemoveAllGhosts());
+    cellOut = Worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
+                          fieldArray,
+                          field.GetAssociation(),
+                          RemoveAllGhosts());
   }
   else if (this->GetRemoveByType())
   {
-    cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
-                                field,
-                                fieldMeta.GetAssociation(),
-                                RemoveGhostByType(this->GetRemoveType()));
+    cellOut = Worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
+                          fieldArray,
+                          field.GetAssociation(),
+                          RemoveGhostByType(this->GetRemoveType()));
   }
   else
   {
@@ -357,36 +378,12 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.SetCellSet(cellOut);
 
+  auto mapper = [&, this](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
+  MapFieldsOntoOutput(input, output, mapper);
+
   return output;
 }
 
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-VTKM_CONT bool GhostCellRemove::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                   const vtkm::cont::Field& field,
-                                                   vtkm::filter::PolicyBase<DerivedPolicy>)
-{
-  if (field.IsFieldPoint())
-  {
-    //we copy the input handle to the result dataset, reusing the metadata
-    result.AddField(field);
-    return true;
-  }
-  else if (field.IsFieldCell())
-  {
-    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetValidCellIds(), result);
-  }
-  else if (field.IsFieldGlobal())
-  {
-    result.AddField(field);
-    return true;
-  }
-  else
-  {
-    return false;
-  }
 }
 }
 }
-
-#endif //vtk_m_filter_GhostCellRemove_hxx

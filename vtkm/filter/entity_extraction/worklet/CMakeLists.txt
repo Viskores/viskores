@@ -14,6 +14,7 @@ set(headers
   ExtractStructured.h
   ExtractPoints.h
   MaskPoints.h
+  Threshold.h
   ThresholdPoints.h
   )
 

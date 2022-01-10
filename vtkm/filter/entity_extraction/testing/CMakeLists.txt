@@ -13,7 +13,9 @@ set(unit_tests
   UnitTestExtractGeometryFilter.cxx
   UnitTestExtractPointsFilter.cxx
   UnitTestExtractStructuredFilter.cxx
+  UnitTestGhostCellRemove.cxx
   UnitTestMaskPointsFilter.cxx
+  UnitTestThresholdFilter.cxx
   UnitTestThresholdPointsFilter.cxx
   )
 

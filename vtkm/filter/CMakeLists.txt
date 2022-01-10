@@ -55,13 +55,11 @@ set(common_header_template_sources
   FilterParticleAdvection.hxx
   FilterTemporalParticleAdvection.hxx
   PointAverage.hxx
-  Threshold.hxx
   )
 
 set(common_sources_device
   CellAverage.cxx
   PointAverage.cxx
-  Threshold.cxx
 )
 
 set(extra_headers
@@ -135,7 +133,6 @@ set(extra_header_template_sources
   Entropy.hxx
   FieldToColors.hxx
   GhostCellClassify.hxx
-  GhostCellRemove.hxx
   Histogram.hxx
   ImageConnectivity.hxx
   ImageDifference.hxx

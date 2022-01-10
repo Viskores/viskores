@@ -34,13 +34,13 @@
 #include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Tetrahedralize.h>
-#include <vtkm/filter/Threshold.h>
 #include <vtkm/filter/Triangulate.h>
 #include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/filter/VertexClustering.h>
 #include <vtkm/filter/WarpScalar.h>
 #include <vtkm/filter/WarpVector.h>
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
+#include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
