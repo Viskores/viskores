@@ -101,7 +101,7 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
   output.SetCellSet(cellOut);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
-  auto mapper = [&, this](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
   MapFieldsOntoOutput(input, output, mapper);
 
   return output;

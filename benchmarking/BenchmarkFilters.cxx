@@ -193,7 +193,7 @@ void BenchThreshold(::benchmark::State& state)
   vtkm::Float64 quarter = range.Length() / 4.;
   vtkm::Float64 mid = range.Center();
 
-  vtkm::filter::Threshold filter;
+  vtkm::filter::entity_extraction::Threshold filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);

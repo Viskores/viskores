@@ -117,7 +117,7 @@ vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input)
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.SetCellSet(outCells);
 
-  auto mapper = [&, this](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
   MapFieldsOntoOutput(input, output, mapper);
 
   return output;

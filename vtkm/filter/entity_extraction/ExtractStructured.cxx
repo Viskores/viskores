@@ -11,7 +11,6 @@
 
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/entity_extraction/ExtractStructured.h>
-
 #include <vtkm/filter/entity_extraction/worklet/ExtractStructured.h>
 
 namespace vtkm
@@ -75,7 +74,7 @@ vtkm::cont::DataSet ExtractStructured::DoExecute(const vtkm::cont::DataSet& inpu
   auto PointFieldMap =
     Worklet.ProcessPointField(vtkm::cont::ArrayHandleIndex(input.GetNumberOfPoints()));
 
-  auto mapper = [&, this](auto& result, const auto& f) {
+  auto mapper = [&](auto& result, const auto& f) {
     DoMapField(result, f, CellFieldMap, PointFieldMap);
   };
   MapFieldsOntoOutput(input, output, mapper);

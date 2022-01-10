@@ -19,11 +19,11 @@
 namespace
 {
 
-static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostCellArray(vtkm::Id nx,
-                                                                     vtkm::Id ny,
-                                                                     vtkm::Id nz,
-                                                                     int numLayers,
-                                                                     bool addMidGhost = false)
+vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostCellArray(vtkm::Id nx,
+                                                              vtkm::Id ny,
+                                                              vtkm::Id nz,
+                                                              int numLayers,
+                                                              bool addMidGhost = false)
 {
   vtkm::Id numCells = nx * ny;
   if (nz > 0)
@@ -80,19 +80,18 @@ static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostCellArray(vtkm::Id nx
   return ghosts;
 }
 
-static vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
-                                       vtkm::Id numJ,
-                                       vtkm::Id numK,
-                                       int numLayers,
-                                       bool addMidGhost = false)
+vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
+                                vtkm::Id numJ,
+                                vtkm::Id numK,
+                                int numLayers,
+                                bool addMidGhost = false)
 {
-  vtkm::cont::DataSetBuilderUniform dsb;
   vtkm::cont::DataSet ds;
 
   if (numK == 0)
-    ds = dsb.Create(vtkm::Id2(numI + 1, numJ + 1));
+    ds = vtkm::cont::DataSetBuilderUniform::Create(vtkm::Id2(numI + 1, numJ + 1));
   else
-    ds = dsb.Create(vtkm::Id3(numI + 1, numJ + 1, numK + 1));
+    ds = vtkm::cont::DataSetBuilderUniform::Create(vtkm::Id3(numI + 1, numJ + 1, numK + 1));
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
   ds.AddCellField("vtkmGhostCells", ghosts);
@@ -100,13 +99,12 @@ static vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
   return ds;
 }
 
-static vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
-                                           vtkm::Id numJ,
-                                           vtkm::Id numK,
-                                           int numLayers,
-                                           bool addMidGhost = false)
+vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
+                                    vtkm::Id numJ,
+                                    vtkm::Id numK,
+                                    int numLayers,
+                                    bool addMidGhost = false)
 {
-  vtkm::cont::DataSetBuilderRectilinear dsb;
   vtkm::cont::DataSet ds;
   std::size_t nx(static_cast<std::size_t>(numI + 1));
   std::size_t ny(static_cast<std::size_t>(numJ + 1));
@@ -118,14 +116,14 @@ static vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
     y[i] = static_cast<float>(i);
 
   if (numK == 0)
-    ds = dsb.Create(x, y);
+    ds = vtkm::cont::DataSetBuilderRectilinear::Create(x, y);
   else
   {
     std::size_t nz(static_cast<std::size_t>(numK + 1));
     std::vector<float> z(nz);
     for (std::size_t i = 0; i < nz; i++)
       z[i] = static_cast<float>(i);
-    ds = dsb.Create(x, y, z);
+    ds = vtkm::cont::DataSetBuilderRectilinear::Create(x, y, z);
   }
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
@@ -166,7 +164,7 @@ static void MakeExplicitCells(const CellSetType& cellSet,
   }
 }
 
-static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK, int numLayers)
+vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK, int numLayers)
 {
   using CoordType = vtkm::Vec3f_32;
 
@@ -187,21 +185,22 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
   vtkm::cont::DataSet ds;
-  vtkm::cont::DataSetBuilderExplicit dsb;
 
   if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
   {
     vtkm::Id2 dims(numI, numJ);
     MakeExplicitCells(
       cellSet.AsCellSet<vtkm::cont::CellSetStructured<2>>(), dims, numIndices, shapes, conn);
-    ds = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
+    ds = vtkm::cont::DataSetBuilderExplicit::Create(
+      explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
   {
     vtkm::Id3 dims(numI, numJ, numK);
     MakeExplicitCells(
       cellSet.AsCellSet<vtkm::cont::CellSetStructured<3>>(), dims, numIndices, shapes, conn);
-    ds = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
+    ds = vtkm::cont::DataSetBuilderExplicit::Create(
+      explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
   }
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers);

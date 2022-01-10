@@ -13,6 +13,7 @@ set(entity_extraction_headers
   ExtractPoints.h
   ExtractStructured.h
   GhostCellRemove.h
+  Mask.h
   MaskPoints.h
   Threshold.h
   ThresholdPoints.h
@@ -23,6 +24,7 @@ set(entity_extraction_sources_device
   ExtractPoints.cxx
   ExtractStructured.cxx
   GhostCellRemove.cxx
+  Mask.cxx
   MaskPoints.cxx
   Threshold.cxx
   ThresholdPoints.cxx

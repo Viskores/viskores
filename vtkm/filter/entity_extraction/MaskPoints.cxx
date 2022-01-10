@@ -59,7 +59,7 @@ VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(const vtkm::cont::DataSet& i
   output.SetCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
-  auto mapper = [&, this](auto& result, const auto& f) { DoMapField(result, f); };
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f); };
   this->MapFieldsOntoOutput(input, output, mapper);
 
   // compact the unused points in the output dataset

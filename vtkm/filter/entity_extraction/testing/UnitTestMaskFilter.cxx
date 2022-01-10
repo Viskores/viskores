@@ -11,7 +11,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/Mask.h>
+#include <vtkm/filter/entity_extraction/Mask.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 
@@ -27,7 +27,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
 
     // Setup and run filter to extract by stride
-    vtkm::filter::Mask mask;
+    vtkm::filter::entity_extraction::Mask mask;
     vtkm::Id stride = 2;
     mask.SetStride(stride);
 
@@ -50,7 +50,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
     // Setup and run filter to extract by stride
-    vtkm::filter::Mask mask;
+    vtkm::filter::entity_extraction::Mask mask;
     vtkm::Id stride = 9;
     mask.SetStride(stride);
 
@@ -71,7 +71,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
     // Setup and run filter to extract by stride
-    vtkm::filter::Mask mask;
+    vtkm::filter::entity_extraction::Mask mask;
     vtkm::Id stride = 2;
     mask.SetStride(stride);
 

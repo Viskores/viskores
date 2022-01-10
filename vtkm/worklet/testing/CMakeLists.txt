@@ -39,7 +39,6 @@ set(unit_tests
   UnitTestImageConnectivity.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
-  UnitTestMask.cxx
   UnitTestMaskIndices.cxx
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx

@@ -51,7 +51,7 @@ public:
   const vtkm::ImplicitFunctionGeneral& GetImplicitFunction() const { return this->Function; }
 
   VTKM_CONT
-  bool GetExtractInside() { return this->ExtractInside; }
+  bool GetExtractInside() const { return this->ExtractInside; }
   VTKM_CONT
   void SetExtractInside(bool value) { this->ExtractInside = value; }
   VTKM_CONT
@@ -60,7 +60,7 @@ public:
   void ExtractInsideOff() { this->ExtractInside = false; }
 
   VTKM_CONT
-  bool GetExtractBoundaryCells() { return this->ExtractBoundaryCells; }
+  bool GetExtractBoundaryCells() const { return this->ExtractBoundaryCells; }
   VTKM_CONT
   void SetExtractBoundaryCells(bool value) { this->ExtractBoundaryCells = value; }
   VTKM_CONT
@@ -69,7 +69,7 @@ public:
   void ExtractBoundaryCellsOff() { this->ExtractBoundaryCells = false; }
 
   VTKM_CONT
-  bool GetExtractOnlyBoundaryCells() { return this->ExtractOnlyBoundaryCells; }
+  bool GetExtractOnlyBoundaryCells() const { return this->ExtractOnlyBoundaryCells; }
   VTKM_CONT
   void SetExtractOnlyBoundaryCells(bool value) { this->ExtractOnlyBoundaryCells = value; }
   VTKM_CONT

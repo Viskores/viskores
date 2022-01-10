@@ -19,7 +19,7 @@ class ValuesBelow
 {
 public:
   VTKM_CONT
-  ValuesBelow(const vtkm::Float64& value)
+  explicit ValuesBelow(const vtkm::Float64& value)
     : Value(value)
   {
   }
@@ -39,7 +39,7 @@ class ValuesAbove
 {
 public:
   VTKM_CONT
-  ValuesAbove(const vtkm::Float64& value)
+  explicit ValuesAbove(const vtkm::Float64& value)
     : Value(value)
   {
   }
@@ -178,7 +178,7 @@ VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(const vtkm::cont::DataS
   output.SetCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
-  auto mapper = [&, this](auto& result, const auto& f) { DoMapField(result, f); };
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f); };
   this->MapFieldsOntoOutput(input, output, mapper);
 
   // compact the unused points in the output dataset

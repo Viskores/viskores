@@ -139,7 +139,6 @@ set(extra_header_template_sources
   ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
-  Mask.hxx
   MeshQuality.hxx
   MIRFilter.hxx
   NDEntropy.hxx

@@ -40,7 +40,7 @@ public:
     this->RemoveVals = vals;
   }
   VTKM_CONT
-  bool GetRemoveGhostField() { return this->RemoveField; }
+  bool GetRemoveGhostField() const { return this->RemoveField; }
   VTKM_CONT
   bool GetRemoveAllGhost() const { return this->RemoveAll; }
 

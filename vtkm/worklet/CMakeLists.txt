@@ -38,7 +38,6 @@ set(headers
   LagrangianStructures.h
   Magnitude.h
   Contour.h
-  Mask.h
   MaskIndices.h
   MaskNone.h
   MaskSelect.h

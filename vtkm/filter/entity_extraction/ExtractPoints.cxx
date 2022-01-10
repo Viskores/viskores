@@ -13,10 +13,6 @@
 #include <vtkm/filter/entity_extraction/ExtractPoints.h>
 #include <vtkm/filter/entity_extraction/worklet/ExtractPoints.h>
 
-namespace vtkm
-{
-namespace filter
-{
 namespace
 {
 bool DoMapField(vtkm::cont::DataSet& result, const vtkm::cont::Field& field)
@@ -38,7 +34,12 @@ bool DoMapField(vtkm::cont::DataSet& result, const vtkm::cont::Field& field)
     return false;
   }
 }
-}
+} // anonymous namespace
+
+namespace vtkm
+{
+namespace filter
+{
 namespace entity_extraction
 {
 //-----------------------------------------------------------------------------
@@ -62,7 +63,7 @@ vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& input)
   output.SetCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
-  auto mapper = [&, this](auto& result, const auto& f) { DoMapField(result, f); };
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f); };
   this->MapFieldsOntoOutput(input, output, mapper);
 
   // compact the unused points in the output dataset

@@ -24,7 +24,7 @@ class RemoveAllGhosts
 {
 public:
   VTKM_CONT
-  RemoveAllGhosts() {}
+  RemoveAllGhosts() = default;
 
   VTKM_EXEC bool operator()(const vtkm::UInt8& value) const { return (value == 0); }
 };
@@ -39,7 +39,7 @@ public:
   }
 
   VTKM_CONT
-  RemoveGhostByType(const vtkm::UInt8& val)
+  explicit RemoveGhostByType(const vtkm::UInt8& val)
     : RemoveType(static_cast<vtkm::UInt8>(~val))
   {
   }
@@ -378,7 +378,7 @@ VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataS
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.SetCellSet(cellOut);
 
-  auto mapper = [&, this](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
   MapFieldsOntoOutput(input, output, mapper);
 
   return output;

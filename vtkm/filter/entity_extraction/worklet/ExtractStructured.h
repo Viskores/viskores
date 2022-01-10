@@ -23,6 +23,7 @@
 #include <vtkm/cont/CellSetList.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -73,7 +74,7 @@ struct ExtractCopy : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, FieldOut, WholeArrayIn);
 
-  ExtractCopy(const vtkm::Id3& dim)
+  explicit ExtractCopy(const vtkm::Id3& dim)
     : XDim(dim[0])
     , XYDim(dim[0] * dim[1])
   {
@@ -178,7 +179,7 @@ private:
         return outCs;
       }
       default:
-        return UncertainCellSetStructured();
+        return {};
     }
   }
 
@@ -438,7 +439,7 @@ private:
                      inOrigin[2] + static_cast<ValueType>(this->VOI.Z.Min) * inSpacing[2]);
     CoordType outSpacing = inSpacing * static_cast<CoordType>(this->SampleRate);
 
-    return CoordsArray(this->OutputDimensions, outOrigin, outSpacing);
+    return { this->OutputDimensions, outOrigin, outSpacing };
   }
 
   RectilinearCoordinatesArrayHandle MapCoordinatesRectilinear(
@@ -522,8 +523,8 @@ public:
     result.Allocate(this->ValidPoints.GetNumberOfValues());
 
     ExtractCopy worklet(this->InputDimensions);
-    DispatcherMapField<ExtractCopy> dispatcher(worklet);
-    dispatcher.Invoke(this->ValidPoints, result, field);
+    vtkm::cont::Invoker invoke;
+    invoke(worklet, this->ValidPoints, result, field);
 
     return result;
   }
@@ -538,8 +539,8 @@ public:
 
     auto inputCellDimensions = this->InputDimensions - vtkm::Id3(1);
     ExtractCopy worklet(inputCellDimensions);
-    DispatcherMapField<ExtractCopy> dispatcher(worklet);
-    dispatcher.Invoke(this->ValidCells, result, field);
+    vtkm::cont::Invoker invoke;
+    invoke(worklet, this->ValidCells, result, field);
 
     return result;
   }

@@ -73,7 +73,7 @@ public:
 
   /// Get if we should include the outer boundary on a subsample
   VTKM_CONT
-  bool GetIncludeBoundary() { return this->IncludeBoundary; }
+  bool GetIncludeBoundary() const { return this->IncludeBoundary; }
   /// Set if we should include the outer boundary on a subsample
   VTKM_CONT
   void SetIncludeBoundary(bool value) { this->IncludeBoundary = value; }

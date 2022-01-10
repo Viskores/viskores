@@ -51,7 +51,7 @@ public:
   const vtkm::ImplicitFunctionGeneral& GetImplicitFunction() const { return this->Function; }
 
   VTKM_CONT
-  bool GetExtractInside() { return this->ExtractInside; }
+  bool GetExtractInside() const { return this->ExtractInside; }
   VTKM_CONT
   void SetExtractInside(bool value) { this->ExtractInside = value; }
   VTKM_CONT

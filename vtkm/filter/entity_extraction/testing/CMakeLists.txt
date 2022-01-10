@@ -14,6 +14,7 @@ set(unit_tests
   UnitTestExtractPointsFilter.cxx
   UnitTestExtractStructuredFilter.cxx
   UnitTestGhostCellRemove.cxx
+  UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestThresholdFilter.cxx
   UnitTestThresholdPointsFilter.cxx
