@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
   vtkm::io::VTKDataSetReader reader(infilename);
   vtkm::cont::DataSet input = reader.ReadDataSet();
 
-  vtkm::filter::ClipWithField clipFilter;
+  vtkm::filter::contour::ClipWithField clipFilter;
   clipFilter.SetActiveField(infield);
   clipFilter.SetClipValue(fieldValue);
   vtkm::cont::DataSet output = clipFilter.Execute(input);
