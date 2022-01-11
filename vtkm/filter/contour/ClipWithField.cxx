@@ -47,7 +47,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
       using T = typename decltype(concrete)::ValueType;
       vtkm::cont::ArrayHandle<T> outputArray;
       outputArray = worklet.ProcessPointField(concrete);
-      result.template AddPointField(field.GetName(), outputArray);
+      result.AddPointField(field.GetName(), outputArray);
     };
 
     auto inputArray = field.GetData();
