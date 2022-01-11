@@ -7,9 +7,10 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_contour_ClipWithImplicitFunction_h
+#define vtk_m_filter_contour_ClipWithImplicitFunction_h
 
-#ifndef vtk_m_filter_contour_ClipWithField_h
-#define vtk_m_filter_contour_ClipWithField_h
+#include <vtkm/ImplicitFunction.h>
 
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/contour/vtkm_filter_contour_export.h>
@@ -20,32 +21,28 @@ namespace filter
 {
 namespace contour
 {
-/// \brief Clip a dataset using a field
+/// \brief Clip a dataset using an implicit function
 ///
-/// Clip a dataset using a given field value. All points that are less than that
-/// value are considered outside, and will be discarded. All points that are greater
-/// are kept.
+/// Clip a dataset using a given implicit function value, such as vtkm::Sphere
+/// or vtkm::Frustum.
 /// The resulting geometry will not be water tight.
-class VTKM_FILTER_CONTOUR_EXPORT ClipWithField : public vtkm::filter::NewFilterField
+class VTKM_FILTER_CONTOUR_EXPORT ClipWithImplicitFunction : public vtkm::filter::NewFilterField
 {
 public:
-  VTKM_CONT
-  void SetClipValue(vtkm::Float64 value) { this->ClipValue = value; }
+  void SetImplicitFunction(const vtkm::ImplicitFunctionGeneral& func) { this->Function = func; }
 
-  VTKM_CONT
   void SetInvertClip(bool invert) { this->Invert = invert; }
 
-  VTKM_CONT
-  vtkm::Float64 GetClipValue() const { return this->ClipValue; }
+  const vtkm::ImplicitFunctionGeneral& GetImplicitFunction() const { return this->Function; }
 
 private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
-  vtkm::Float64 ClipValue = 0;
+  vtkm::ImplicitFunctionGeneral Function;
   bool Invert = false;
 };
 } // namespace contour
 } // namespace filter
 } // namespace vtkm
 
-#endif // vtk_m_filter_contour_ClipWithField_h
+#endif // vtk_m_filter_contour_ClipWithImplicitFunction_h

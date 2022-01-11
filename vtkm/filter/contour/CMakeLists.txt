@@ -10,12 +10,14 @@
 
 set(contour_headers
   ClipWithField.h
+  ClipWithImplicitFunction.h
   Contour.h
   Slice.h
 )
 
 set(contour_sources_device
   ClipWithField.cxx
+  ClipWithImplicitFunction.cxx
   Contour.cxx
   Slice.cxx
 )

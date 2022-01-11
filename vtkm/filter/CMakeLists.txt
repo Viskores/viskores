@@ -10,14 +10,10 @@
 
 vtkm_add_instantiations(GradientInstantiations FILTER Gradient)
 
-vtkm_add_instantiations(ClipWithImplicitFunctionInstantiations
-  FILTER ClipWithImplicitFunction
-  INSTANTIATIONS_FILE ClipWithImplicitFunctionExternInstantiations.h
-  )
-
 set(deprecated_headers
   CleanGrid.h
   ClipWithField.h
+  ClipWithImplicitFunction.h
   Contour.h
   DotProduct.h
   ExternalFaces.h
@@ -77,7 +73,6 @@ set(common_sources_device
 set(extra_headers
   AmrArrays.h
   CellSetConnectivity.h
-  ClipWithImplicitFunction.h
   ComputeMoments.h
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
@@ -133,8 +128,6 @@ set(extra_headers
 set(extra_header_template_sources
   AmrArrays.hxx
   CellSetConnectivity.hxx
-  ClipWithImplicitFunction.hxx
-  ClipWithImplicitFunctionExternInstantiations.h
   ComputeMoments.hxx
   ContourTreeUniformAugmented.hxx
   ContourTreeUniformDistributed.hxx
@@ -184,7 +177,6 @@ set(extra_header_template_sources
   )
 
 set(extra_sources_device
-  ${ClipWithImplicitFunctionInstantiations}
   VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
@@ -202,7 +194,6 @@ set(gradient_sources_device
   ${GradientInstantiations}
   )
 
-vtkm_pyexpander_generated_file(ClipWithImplicitFunctionExternInstantiations.h)
 
 set(core_headers
   NewFilter.h

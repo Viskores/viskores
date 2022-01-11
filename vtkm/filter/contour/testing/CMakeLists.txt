@@ -9,6 +9,7 @@
 ##============================================================================
 set(unit_tests
   UnitTestClipWithFieldFilter.cxx
+  UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourFilter.cxx
   UnitTestContourFilterNormals.cxx
 )

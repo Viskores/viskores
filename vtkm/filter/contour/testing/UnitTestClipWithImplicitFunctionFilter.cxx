@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/ClipWithImplicitFunction.h>
+#include <vtkm/filter/contour/ClipWithImplicitFunction.h>
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -25,15 +25,14 @@ vtkm::cont::DataSet MakeTestDatasetStructured()
   static constexpr vtkm::Id numVerts = xdim * ydim;
 
   vtkm::Float32 scalars[numVerts];
-  for (vtkm::Id i = 0; i < numVerts; ++i)
+  for (float& scalar : scalars)
   {
-    scalars[i] = 1.0f;
+    scalar = 1.0f;
   }
   scalars[4] = 0.0f;
 
   vtkm::cont::DataSet ds;
-  vtkm::cont::DataSetBuilderUniform builder;
-  ds = builder.Create(dim);
+  ds = vtkm::cont::DataSetBuilderUniform::Create(dim);
 
   ds.AddPointField("scalars", scalars, numVerts);
 
@@ -49,7 +48,7 @@ void TestClipStructured()
   vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
-  vtkm::filter::ClipWithImplicitFunction clip;
+  vtkm::filter::contour::ClipWithImplicitFunction clip;
   clip.SetImplicitFunction(vtkm::Sphere(center, radius));
   clip.SetFieldsToPass("scalars");
 
@@ -86,7 +85,7 @@ void TestClipStructuredInverted()
   vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
-  vtkm::filter::ClipWithImplicitFunction clip;
+  vtkm::filter::contour::ClipWithImplicitFunction clip;
   clip.SetImplicitFunction(vtkm::Sphere(center, radius));
   bool invert = true;
   clip.SetInvertClip(invert);
