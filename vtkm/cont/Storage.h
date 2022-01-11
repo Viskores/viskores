@@ -134,11 +134,12 @@ public:
   /// \brief Returns the number of entries allocated in the array.
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers);
 
-  /// \brief Fills the array with the given value starting at the given index.
+  /// \brief Fills the array with the given value starting and ending at the given indices.
   ///
   VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
                              const ValueType& fillValue,
                              vtkm::Id startIndex,
+                             vtkm::Id endIndex,
                              vtkm::cont::Token& token);
 
   /// \brief Create a read-only portal on the specified device.
@@ -191,6 +192,7 @@ struct StorageTraits<vtkm::cont::internal::Storage<T, S>>
   VTKM_CONT static void Fill(                                                                  \
     vtkm::cont::internal::Buffer*,                                                             \
     const typename vtkm::cont::internal::StorageTraits<Storage>::ValueType&,                   \
+    vtkm::Id,                                                                                  \
     vtkm::Id,                                                                                  \
     vtkm::cont::Token&)                                                                        \
   {                                                                                            \

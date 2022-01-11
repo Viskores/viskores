@@ -113,19 +113,27 @@ public:
   VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
                              bool fillValue,
                              vtkm::Id startBit,
+                             vtkm::Id endBit,
                              vtkm::cont::Token& token)
   {
     constexpr vtkm::BufferSizeType wordTypeSize =
       static_cast<vtkm::BufferSizeType>(sizeof(WordType));
-    if ((startBit % (wordTypeSize * CHAR_BIT)) == 0)
+    constexpr vtkm::BufferSizeType wordNumBits = wordTypeSize * CHAR_BIT;
+    // Special case where filling to end of array.
+    vtkm::Id totalBitsInArray = GetNumberOfValues(buffers);
+    if (endBit >= totalBitsInArray)
+    {
+      endBit = ((totalBitsInArray + (wordNumBits - 1)) / wordNumBits) * wordNumBits;
+    }
+    if (((startBit % wordNumBits) == 0) && ((endBit % wordNumBits) == 0))
     {
       WordType fillWord = (fillValue ? ~WordType{ 0 } : WordType{ 0 });
-      buffers[0].Fill(&fillWord, wordTypeSize, startBit / CHAR_BIT, token);
+      buffers[0].Fill(&fillWord, wordTypeSize, startBit / CHAR_BIT, endBit / CHAR_BIT, token);
     }
-    else if ((startBit % CHAR_BIT) == 0)
+    else if (((startBit % CHAR_BIT) == 0) && ((endBit % CHAR_BIT) == 0))
     {
       vtkm::UInt8 fillWord = (fillValue ? ~vtkm::UInt8{ 0 } : vtkm::UInt8{ 0 });
-      buffers[0].Fill(&fillWord, 1, startBit / CHAR_BIT, token);
+      buffers[0].Fill(&fillWord, 1, startBit / CHAR_BIT, endBit / CHAR_BIT, token);
     }
     else
     {

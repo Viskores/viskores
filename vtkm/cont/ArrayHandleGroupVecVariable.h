@@ -161,6 +161,7 @@ public:
   VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
                              const vtkm::VecFromPortal<ComponentsPortal>&,
                              vtkm::Id,
+                             vtkm::Id,
                              vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleGroupVecVariable.");

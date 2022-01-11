@@ -132,6 +132,7 @@ public:
   VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
                              const ValueType&,
                              vtkm::Id,
+                             vtkm::Id,
                              vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleExtractComponent.");

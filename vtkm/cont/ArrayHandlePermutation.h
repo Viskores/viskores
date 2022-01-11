@@ -140,7 +140,11 @@ public:
     return IndexStorage::GetNumberOfValues(IndexBuffers(buffers));
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*, const T&, vtkm::Id, vtkm::cont::Token&)
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+                             const T&,
+                             vtkm::Id,
+                             vtkm::Id,
+                             vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandlePermutation.");
   }

@@ -168,9 +168,18 @@ public:
     return ReadPortalType(SourceStorage::CreateReadPortal(buffers + 1, device, token), indices);
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*, const T&, vtkm::Id, vtkm::cont::Token&)
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const T& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token)
   {
-    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleView.");
+    vtkm::internal::ViewIndices indices = buffers[0].GetMetaData<vtkm::internal::ViewIndices>();
+    vtkm::Id adjustedStartIndex = startIndex + indices.StartIndex;
+    vtkm::Id adjustedEndIndex = (endIndex < indices.NumberOfValues)
+      ? endIndex + indices.StartIndex
+      : indices.NumberOfValues + indices.StartIndex;
+    SourceStorage::Fill(buffers, fillValue, adjustedStartIndex, adjustedEndIndex, token);
   }
 
   VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,

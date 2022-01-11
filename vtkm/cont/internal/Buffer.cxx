@@ -202,6 +202,7 @@ template <typename Device>
 void FillBuffer(const vtkm::cont::internal::Buffer& target,
                 const vtkm::cont::internal::Buffer& source,
                 vtkm::BufferSizeType start,
+                vtkm::BufferSizeType end,
                 Device device,
                 vtkm::cont::Token& token)
 {
@@ -217,8 +218,16 @@ void FillBuffer(const vtkm::cont::internal::Buffer& target,
   }
   VTKM_ASSERT((targetSize % sourceSize) == 0);
   VTKM_ASSERT((start % sourceSize) == 0);
+  VTKM_ASSERT((end % sourceSize) == 0);
+  VTKM_ASSERT(end <= targetSize);
+  VTKM_ASSERT(end >= start);
+  if (end <= start)
+  {
+    // Nothing to set.
+    return;
+  }
 
-  vtkm::Id numSourceRepetitions = (targetSize - start) / sourceSize;
+  vtkm::Id numSourceRepetitions = (end - start) / sourceSize;
 
   if ((sourceSize >= 8) && ((sourceSize % 8) == 0))
   {
@@ -1107,6 +1116,7 @@ vtkm::cont::internal::BufferInfo Buffer::GetDeviceBufferInfo(
 void Buffer::Fill(const void* source,
                   vtkm::BufferSizeType sourceSize,
                   vtkm::BufferSizeType start,
+                  vtkm::BufferSizeType end,
                   vtkm::cont::Token& token) const
 {
   vtkm::cont::internal::Buffer sourceBuffer;
@@ -1122,7 +1132,7 @@ void Buffer::Fill(const void* source,
   bool success = vtkm::cont::TryExecute([&](auto device) {
     if (this->IsAllocatedOnDevice(device))
     {
-      FillBuffer(*this, sourceBuffer, start, device, token);
+      FillBuffer(*this, sourceBuffer, start, end, device, token);
       return true;
     }
     else
@@ -1135,7 +1145,7 @@ void Buffer::Fill(const void* source,
   {
     // Likely the data was not on any device. Fill on any device.
     vtkm::cont::TryExecute([&](auto device) {
-      FillBuffer(*this, sourceBuffer, start, device, token);
+      FillBuffer(*this, sourceBuffer, start, end, device, token);
       return true;
     });
   }

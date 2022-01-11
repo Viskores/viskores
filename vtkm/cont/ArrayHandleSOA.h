@@ -165,15 +165,17 @@ public:
   VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
                              const ValueType& fillValue,
                              vtkm::Id startIndex,
+                             vtkm::Id endIndex,
                              vtkm::cont::Token& token)
   {
     constexpr vtkm::BufferSizeType sourceSize =
       static_cast<vtkm::BufferSizeType>(sizeof(ComponentType));
     vtkm::BufferSizeType startByte = startIndex * sourceSize;
+    vtkm::BufferSizeType endByte = endIndex * sourceSize;
     for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
     {
       ComponentType source = fillValue[componentIndex];
-      buffers[componentIndex].Fill(&source, sourceSize, startByte, token);
+      buffers[componentIndex].Fill(&source, sourceSize, startByte, endByte, token);
     }
   }
 

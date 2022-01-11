@@ -94,9 +94,9 @@ void TestConcatenateFill()
 
   VTKM_STATIC_ASSERT_MSG((ARRAY_SIZE % 2) == 0, "ARRAY_SIZE must be even for this test.");
 
-  concatArray.Fill(value0);
-  concatArray.Fill(value1, ARRAY_SIZE / 2);
   concatArray.Fill(value2, 3 * ARRAY_SIZE / 2);
+  concatArray.Fill(value1, ARRAY_SIZE / 2, 3 * ARRAY_SIZE / 2);
+  concatArray.Fill(value0, 0, ARRAY_SIZE / 2);
 
   vtkm::cont::printSummary_ArrayHandle(concatArray, std::cout, true);
 

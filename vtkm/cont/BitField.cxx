@@ -74,7 +74,7 @@ void BitField::FillImpl(const void* word,
                         vtkm::BufferSizeType wordSize,
                         vtkm::cont::Token& token) const
 {
-  this->Buffer.Fill(word, wordSize, 0, token);
+  this->Buffer.Fill(word, wordSize, 0, this->Buffer.GetNumberOfBytes(), token);
 }
 
 void BitField::ReleaseResourcesExecution()

@@ -558,7 +558,7 @@ public:
 
     if (startIndex < numberOfValues)
     {
-      this->Fill(fillValue, startIndex, token);
+      this->Fill(fillValue, startIndex, numberOfValues, token);
     }
   }
 
@@ -580,20 +580,26 @@ public:
   /// @{
   /// \brief Fills the array with a given value.
   ///
-  /// After calling this method, every entry in the array from `startIndex` to the
-  /// end of the array is set to `fillValue`. If `startIndex` is not specified, then
-  /// every entry is set to the fill value.
+  /// After calling this method, every entry in the array from `startIndex` to `endIndex`.
+  /// of the array is set to `fillValue`. If `startIndex` or `endIndex` is not specified,
+  /// then the fill happens from the begining or end, respectively.
   ///
   VTKM_CONT void Fill(const ValueType& fillValue,
                       vtkm::Id startIndex,
+                      vtkm::Id endIndex,
                       vtkm::cont::Token& token) const
   {
-    StorageType::Fill(this->GetBuffers(), fillValue, startIndex, token);
+    StorageType::Fill(this->GetBuffers(), fillValue, startIndex, endIndex, token);
+  }
+  VTKM_CONT void Fill(const ValueType& fillValue, vtkm::Id startIndex, vtkm::Id endIndex) const
+  {
+    vtkm::cont::Token token;
+    this->Fill(fillValue, startIndex, endIndex, token);
   }
   VTKM_CONT void Fill(const ValueType& fillValue, vtkm::Id startIndex = 0) const
   {
     vtkm::cont::Token token;
-    this->Fill(fillValue, startIndex, token);
+    this->Fill(fillValue, startIndex, this->GetNumberOfValues(), token);
   }
   /// @}
 

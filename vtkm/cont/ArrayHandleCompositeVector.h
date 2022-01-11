@@ -273,11 +273,15 @@ private:
                        vtkm::cont::internal::Buffer* buffers,
                        const ValueType& fillValue,
                        vtkm::Id startIndex,
+                       vtkm::Id endIndex,
                        vtkm::cont::Token& token)
   {
     auto init_list = { (
-      vtkm::tuple_element_t<Is, StorageTuple>::Fill(
-        Buffers<Is>(buffers), fillValue[static_cast<vtkm::IdComponent>(Is)], startIndex, token),
+      vtkm::tuple_element_t<Is, StorageTuple>::Fill(Buffers<Is>(buffers),
+                                                    fillValue[static_cast<vtkm::IdComponent>(Is)],
+                                                    startIndex,
+                                                    endIndex,
+                                                    token),
       false)... };
     (void)init_list;
   }
@@ -324,9 +328,10 @@ public:
   VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
                              const ValueType& fillValue,
                              vtkm::Id startIndex,
+                             vtkm::Id endIndex,
                              vtkm::cont::Token& token)
   {
-    FillImpl(IndexList{}, buffers, fillValue, startIndex, token);
+    FillImpl(IndexList{}, buffers, fillValue, startIndex, endIndex, token);
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,

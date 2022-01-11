@@ -149,16 +149,11 @@ public:
   VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
                              const T& fillValue,
                              vtkm::Id startIndex,
+                             vtkm::Id endIndex,
                              vtkm::cont::Token& token)
   {
-    if (startIndex == 0)
-    {
-      SourceStorage::Fill(buffers, fillValue, 0, token);
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadValue("ArrayHandleReverse cannot Fill partial array.");
-    }
+    vtkm::Id numValues = GetNumberOfValues(buffers);
+    SourceStorage::Fill(buffers, fillValue, numValues - endIndex, numValues - startIndex, token);
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,

@@ -177,9 +177,10 @@ struct MultiplexerFillFunctor
                             vtkm::cont::internal::Buffer* buffers,
                             const ValueType& fillValue,
                             vtkm::Id startIndex,
+                            vtkm::Id endIndex,
                             vtkm::cont::Token& token) const
   {
-    StorageType::Fill(buffers, fillValue, startIndex, token);
+    StorageType::Fill(buffers, fillValue, startIndex, endIndex, token);
   }
 };
 
@@ -272,10 +273,15 @@ public:
   VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
                              const ValueType& fillValue,
                              vtkm::Id startIndex,
+                             vtkm::Id endIndex,
                              vtkm::cont::Token& token)
   {
-    Variant(buffers).CastAndCall(
-      detail::MultiplexerFillFunctor{}, ArrayBuffers(buffers), fillValue, startIndex, token);
+    Variant(buffers).CastAndCall(detail::MultiplexerFillFunctor{},
+                                 ArrayBuffers(buffers),
+                                 fillValue,
+                                 startIndex,
+                                 endIndex,
+                                 token);
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,

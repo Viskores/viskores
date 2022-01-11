@@ -122,6 +122,7 @@ public:
   VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
                              const ValueType&,
                              vtkm::Id,
+                             vtkm::Id,
                              vtkm::cont::Token&)
   {
     // Fill is a NO-OP.
