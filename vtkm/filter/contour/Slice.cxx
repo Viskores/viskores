@@ -7,37 +7,37 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_Slice_hxx
-#define vtk_m_filter_Slice_hxx
 
 #include <vtkm/cont/ArrayHandleTransform.h>
+#include <vtkm/filter/contour/Slice.h>
 
 namespace vtkm
 {
 namespace filter
 {
-
-template <typename DerivedPolicy>
-vtkm::cont::DataSet Slice::DoExecute(const vtkm::cont::DataSet& input,
-                                     vtkm::filter::PolicyBase<DerivedPolicy> policy)
+namespace contour
+{
+vtkm::cont::DataSet Slice::DoExecute(const vtkm::cont::DataSet& input)
 {
   const auto& coords = input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   vtkm::cont::DataSet result;
   auto impFuncEval =
     vtkm::ImplicitFunctionValueFunctor<vtkm::ImplicitFunctionGeneral>(this->Function);
+  // FIXME: do we still need GetDataAsMultiplexer()? Can GetData() do it?
   auto sliceScalars =
     vtkm::cont::make_ArrayHandleTransform(coords.GetDataAsMultiplexer(), impFuncEval);
   auto field = vtkm::cont::make_FieldPoint("sliceScalars", sliceScalars);
+  // input is a const, we can not AddField to it.
+  vtkm::cont::DataSet clone = input;
+  clone.AddField(field);
 
-  this->ContourFilter.SetIsoValue(0.0);
-  result =
-    this->ContourFilter.DoExecute(input, sliceScalars, vtkm::filter::FieldMetadata(field), policy);
+  this->Contour::SetIsoValue(0.0);
+  this->Contour::SetActiveField("sliceScalars");
+  result = this->Contour::DoExecute(clone);
 
   return result;
 }
-
-}
-} // vtkm::filter
-
-#endif // vtk_m_filter_Slice_hxx
+} // namespace contour
+} // namespace filter
+} // namespace vtkm

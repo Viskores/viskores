@@ -13,10 +13,10 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/ClipWithField.h>
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/Gradient.h>
 #include <vtkm/filter/clean_grid/CleanGrid.h>
+#include <vtkm/filter/contour/ClipWithField.h>
+#include <vtkm/filter/contour/Contour.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/source/Tangle.h>
@@ -102,7 +102,7 @@ void TestMultiBlockFilter()
   std::vector<bool> flags = { false, true };
   for (const auto doThreading : flags)
   {
-    vtkm::filter::ClipWithField clip;
+    vtkm::filter::contour::ClipWithField clip;
     clip.SetRunMultiThreadedFilter(doThreading);
     clip.SetClipValue(0.0);
     clip.SetActiveField("tangle");
@@ -117,7 +117,7 @@ void TestMultiBlockFilter()
   results.clear();
   for (const auto doThreading : flags)
   {
-    vtkm::filter::Contour mc;
+    vtkm::filter::contour::Contour mc;
     mc.SetRunMultiThreadedFilter(doThreading);
     mc.SetGenerateNormals(true);
     mc.SetIsoValue(0, 0.5);

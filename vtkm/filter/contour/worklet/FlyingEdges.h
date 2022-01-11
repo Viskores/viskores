@@ -12,10 +12,10 @@
 #ifndef vtk_m_worklet_contour_flyingedges_h
 #define vtk_m_worklet_contour_flyingedges_h
 
-#include <vtkm/worklet/contour/FlyingEdgesHelpers.h>
-#include <vtkm/worklet/contour/FlyingEdgesPass1.h>
-#include <vtkm/worklet/contour/FlyingEdgesPass2.h>
-#include <vtkm/worklet/contour/FlyingEdgesPass4.h>
+#include <vtkm/filter/contour/worklet/FlyingEdgesHelpers.h>
+#include <vtkm/filter/contour/worklet/FlyingEdgesPass1.h>
+#include <vtkm/filter/contour/worklet/FlyingEdgesPass2.h>
+#include <vtkm/filter/contour/worklet/FlyingEdgesPass4.h>
 
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/Invoker.h>

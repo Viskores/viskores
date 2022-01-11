@@ -7,7 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/Contour.h>
+#include <vtkm/filter/contour/Contour.h>
 
 #include <vtkm/cont/ArrayCopy.h>
 
@@ -26,7 +26,7 @@ public:
     vtkm::source::Tangle tangle(dims);
     vtkm::cont::DataSet dataSet = tangle.Execute();
 
-    vtkm::filter::Contour filter;
+    vtkm::filter::contour::Contour filter;
     filter.SetGenerateNormals(true);
     filter.SetMergeDuplicatePoints(true);
     filter.SetIsoValue(0, 0.1);

@@ -14,7 +14,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/clean_grid/CleanGrid.h>
 
-#include <vtkm/filter/Contour.h>
+#include <vtkm/filter/contour/Contour.h>
 
 #include <vtkm/io/VTKDataSetWriter.h>
 
@@ -102,7 +102,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
 
-  vtkm::filter::Contour mc;
+  vtkm::filter::contour::Contour mc;
   mc.SetIsoValue(0, 200);
   mc.SetGenerateNormals(true);
 

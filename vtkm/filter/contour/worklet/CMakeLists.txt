@@ -9,7 +9,9 @@
 ##============================================================================
 
 set(headers
+  Clip.h
   CommonState.h
+  Contour.h
   FieldPropagation.h
   FlyingEdges.h
   FlyingEdgesHelpers.h
@@ -24,6 +26,8 @@ set(headers
   MarchingCellTables.h
   MarchingCells.h
   )
+
+add_subdirectory(clip)
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})

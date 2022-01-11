@@ -13,8 +13,8 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/clean_grid/CleanGrid.h>
+#include <vtkm/filter/contour/Contour.h>
 #include <vtkm/source/Tangle.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
@@ -32,7 +32,7 @@ void TestContourFilterWedge()
   vtkm::io::VTKDataSetReader reader(pathname);
   vtkm::cont::DataSet dataSet = reader.ReadDataSet();
 
-  vtkm::filter::Contour contour;
+  vtkm::filter::contour::Contour contour;
   contour.SetIsoValue(0, 1);
   contour.SetActiveField("gyroid");
   contour.SetFieldsToPass({ "gyroid", "cellvar" });
@@ -57,7 +57,7 @@ void TestContourFilterUniform()
   std::string fieldName = "pointvar";
   VTKM_TEST_ASSERT(inputData.HasField(fieldName));
 
-  vtkm::filter::Contour contour;
+  vtkm::filter::contour::Contour contour;
   contour.SetGenerateNormals(false);
   contour.SetMergeDuplicatePoints(true);
   contour.SetIsoValue(0, 100.0);
@@ -83,7 +83,7 @@ void TestContourFilterTangle()
   vtkm::source::Tangle tangle(dims);
   vtkm::cont::DataSet dataSet = tangle.Execute();
 
-  vtkm::filter::Contour contour;
+  vtkm::filter::contour::Contour contour;
   contour.SetGenerateNormals(true);
   contour.SetIsoValue(0, 1);
   contour.SetActiveField("tangle");

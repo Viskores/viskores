@@ -10,6 +10,7 @@
 #ifndef vtkm_m_worklet_Clip_h
 #define vtkm_m_worklet_Clip_h
 
+#include <vtkm/filter/contour/worklet/clip/ClipTables.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
@@ -17,7 +18,6 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
-#include <vtkm/worklet/clip/ClipTables.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>

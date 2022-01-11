@@ -11,7 +11,7 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/ClipWithField.h>
+#include <vtkm/filter/contour/ClipWithField.h>
 
 namespace
 {
@@ -54,7 +54,7 @@ void TestClipExplicit()
 
   vtkm::cont::DataSet ds = MakeTestDatasetExplicit();
 
-  vtkm::filter::ClipWithField clip;
+  vtkm::filter::contour::ClipWithField clip;
   clip.SetClipValue(0.5);
   clip.SetActiveField("scalars");
   clip.SetFieldsToPass("scalars", vtkm::cont::Field::Association::POINTS);
@@ -90,7 +90,7 @@ void TestClipVolume()
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::DataSet ds = maker.Make3DUniformDataSet3(dims);
 
-  vtkm::filter::ClipWithField clip;
+  vtkm::filter::contour::ClipWithField clip;
   clip.SetClipValue(0.0);
   clip.SetActiveField("pointvar");
   clip.SetFieldsToPass("pointvar", vtkm::cont::Field::Association::POINTS);

@@ -9,12 +9,13 @@
 //============================================================================
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/clean_grid/CleanGrid.h>
+#include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/field_transform/GenerateIds.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
@@ -38,7 +39,7 @@ public:
     genIds.SetCellFieldName("cellvar");
     vtkm::cont::DataSet dataSet = genIds.Execute(tangle.Execute());
 
-    vtkm::filter::Contour mc;
+    vtkm::filter::contour::Contour mc;
 
     mc.SetGenerateNormals(true);
     mc.SetIsoValue(0, 0.5);
@@ -133,7 +134,7 @@ public:
     vtkm::FloatDefault isovalue = 100.0;
     // Range = [10.1, 180.5]
     VTKM_TEST_ASSERT(range.Contains(isovalue));
-    vtkm::filter::Contour filter;
+    vtkm::filter::contour::Contour filter;
     filter.SetGenerateNormals(false);
     filter.SetMergeDuplicatePoints(true);
     filter.SetIsoValue(isovalue);
@@ -158,16 +159,15 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
     dataSet.GetPointField("gyroid").GetData().AsArrayHandle(fieldArray);
 
-    vtkm::worklet::Contour isosurfaceFilter;
+    vtkm::filter::contour::Contour isosurfaceFilter;
+    isosurfaceFilter.SetActiveField("gyroid");
     isosurfaceFilter.SetMergeDuplicatePoints(false);
+    isosurfaceFilter.SetIsoValue(0.0);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;
-    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normalsArray;
-
-    auto result = isosurfaceFilter.Run(
-      { 0.0f }, cellSet, dataSet.GetCoordinateSystem(), fieldArray, verticesArray, normalsArray);
+    auto result = isosurfaceFilter.Execute(dataSet);
     VTKM_TEST_ASSERT(result.GetNumberOfCells() == 52);
   }
+
 
   void operator()() const
   {

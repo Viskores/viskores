@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/Slice.h>
+#include <vtkm/filter/contour/Slice.h>
 
 #include <vtkm/ImplicitFunction.h>
 #include <vtkm/filter/Tetrahedralize.h>
@@ -28,7 +28,7 @@ void TestSliceStructuredPointsPlane()
   auto ds = wavelet.Execute();
 
   vtkm::Plane plane(vtkm::Plane::Vector{ 1, 1, 1 });
-  vtkm::filter::Slice slice;
+  vtkm::filter::contour::Slice slice;
   slice.SetImplicitFunction(plane);
   auto result = slice.Execute(ds);
 
@@ -49,7 +49,7 @@ void TestSliceStructuredPointsSphere()
   auto ds = wavelet.Execute();
 
   vtkm::Sphere sphere(8.5f);
-  vtkm::filter::Slice slice;
+  vtkm::filter::contour::Slice slice;
   slice.SetImplicitFunction(sphere);
   auto result = slice.Execute(ds);
 
@@ -72,7 +72,7 @@ void TestSliceUnstructuredGridPlane()
   ds = tetrahedralize.Execute(ds);
 
   vtkm::Plane plane(vtkm::Plane::Vector{ 1 });
-  vtkm::filter::Slice slice;
+  vtkm::filter::contour::Slice slice;
   slice.SetImplicitFunction(plane);
   auto result = slice.Execute(ds);
 
@@ -95,7 +95,7 @@ void TestSliceUnstructuredGridCylinder()
   ds = tetrahedralize.Execute(ds);
 
   vtkm::Cylinder cylinder(vtkm::Cylinder::Vector{ 0, 1, 0 }, 8.5f);
-  vtkm::filter::Slice slice;
+  vtkm::filter::contour::Slice slice;
   slice.SetImplicitFunction(cylinder);
   auto result = slice.Execute(ds);
 

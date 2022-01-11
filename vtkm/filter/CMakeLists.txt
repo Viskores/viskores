@@ -8,26 +8,33 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-vtkm_add_instantiations(ContourInstantiations FILTER Contour)
 vtkm_add_instantiations(GradientInstantiations FILTER Gradient)
-
-vtkm_add_instantiations(ClipWithFieldInstantiations
-  FILTER ClipWithField
-  INSTANTIATIONS_FILE ClipWithFieldExternInstantiations.h
-  )
 
 vtkm_add_instantiations(ClipWithImplicitFunctionInstantiations
   FILTER ClipWithImplicitFunction
   INSTANTIATIONS_FILE ClipWithImplicitFunctionExternInstantiations.h
   )
 
+set(deprecated_headers
+  CleanGrid.h
+  ClipWithField.h
+  Contour.h
+  DotProduct.h
+  ExternalFaces.h
+  ExtractPoints.h
+  ExtractStructured.h
+  GenerateIds.h
+  MaskPoints.h
+  Slice.h
+  ThresholdPoints.h
+  )
+
+vtkm_declare_headers(${deprecated_headers})
+
 set(common_headers
   CellAverage.h
   CellMeasures.h
-  CleanGrid.h
   ExtractGeometry.h
-  ExtractPoints.h
-  ExtractStructured.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -41,7 +48,6 @@ set(common_headers
   PolicyDefault.h
   TaskQueue.h
   Threshold.h
-  ThresholdPoints.h
   Instantiations.h
   )
 
@@ -66,23 +72,22 @@ set(common_sources_device
   ExtractStructured.cxx
   PointAverage.cxx
   Threshold.cxx
-)
+  )
 
 set(extra_headers
   AmrArrays.h
   CellSetConnectivity.h
-  ClipWithField.h
   ClipWithImplicitFunction.h
   ComputeMoments.h
+  ContourTreeUniformAugmented.h
+  ContourTreeUniformDistributed.h
+  ContourTreeUniform.h
   CoordinateSystemTransform.h
   CreateResult.h
   CrossProduct.h
-  DotProduct.h
   Entropy.h
-  ExternalFaces.h
   FieldSelection.h
   FieldToColors.h
-  GenerateIds.h
   GhostCellClassify.h
   GhostCellRemove.h
   Histogram.h
@@ -92,7 +97,6 @@ set(extra_headers
   Lagrangian.h
   LagrangianStructures.h
   Mask.h
-  MaskPoints.h
   MeshQuality.h
   MIRFilter.h
   NDEntropy.h
@@ -129,11 +133,12 @@ set(extra_headers
 set(extra_header_template_sources
   AmrArrays.hxx
   CellSetConnectivity.hxx
-  ClipWithField.hxx
   ClipWithImplicitFunction.hxx
-  ClipWithFieldExternInstantiations.h
   ClipWithImplicitFunctionExternInstantiations.h
   ComputeMoments.hxx
+  ContourTreeUniformAugmented.hxx
+  ContourTreeUniformDistributed.hxx
+  ContourTreeUniform.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
   Entropy.hxx
@@ -179,33 +184,10 @@ set(extra_header_template_sources
   )
 
 set(extra_sources_device
-  ${ClipWithFieldInstantiations}
   ${ClipWithImplicitFunctionInstantiations}
   VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
-)
-
-set(contour_headers
-  Contour.h
-  ContourTreeUniformAugmented.h
-  ContourTreeUniformDistributed.h
-  ContourTreeUniform.h
-  Slice.h
-  )
-
-set(contour_header_template_sources
-  Contour.hxx
-  ContourTreeUniformAugmented.hxx
-  ContourTreeUniformDistributed.hxx
-  ContourTreeUniform.hxx
-  Slice.hxx
-  )
-
-set(contour_sources_device
-  Contour.cxx
-  ${ContourInstantiations}
-  Slice.cxx
   )
 
 set(gradient_headers
@@ -220,7 +202,6 @@ set(gradient_sources_device
   ${GradientInstantiations}
   )
 
-vtkm_pyexpander_generated_file(ClipWithFieldExternInstantiations.h)
 vtkm_pyexpander_generated_file(ClipWithImplicitFunctionExternInstantiations.h)
 
 set(core_headers
@@ -254,7 +235,7 @@ vtkm_library(
   HEADERS ${common_headers}
   DEVICE_SOURCES ${common_sources_device}
   USE_VTKM_JOB_POOL
-  )
+)
 
 vtkm_library(
   NAME vtkm_filter_extra
@@ -262,15 +243,7 @@ vtkm_library(
   HEADERS ${extra_headers}
   DEVICE_SOURCES ${extra_sources_device}
   USE_VTKM_JOB_POOL
-  )
-
-vtkm_library(
-  NAME vtkm_filter_contour
-  TEMPLATE_SOURCES ${contour_header_template_sources}
-  HEADERS ${contour_headers}
-  DEVICE_SOURCES ${contour_sources_device}
-  USE_VTKM_JOB_POOL
-  )
+)
 
 vtkm_library(
   NAME vtkm_filter_gradient
@@ -278,33 +251,29 @@ vtkm_library(
   HEADERS ${gradient_headers}
   DEVICE_SOURCES ${gradient_sources_device}
   USE_VTKM_JOB_POOL
-  )
+)
 
 set_target_properties(
   vtkm_filter_common
   vtkm_filter_core
   vtkm_filter_extra
-  vtkm_filter_contour
   vtkm_filter_gradient
   PROPERTIES
   UNITY_BUILD ON
   UNITY_BUILD_MODE BATCH
-  )
+)
 
 target_link_libraries(vtkm_filter_common PUBLIC vtkm_filter_core vtkm_worklet) # TODO: deprecate vtkm_filter_common
 target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont vtkm_worklet)
 target_link_libraries(vtkm_filter_extra PUBLIC vtkm_filter_common)
-target_link_libraries(vtkm_filter_contour PUBLIC vtkm_filter_common)
 target_link_libraries(vtkm_filter_gradient PUBLIC vtkm_filter_common)
 if (VTKm_ENABLE_MPI)
   target_link_libraries(vtkm_filter_common PUBLIC MPI::MPI_CXX)
   target_link_libraries(vtkm_filter_extra PUBLIC MPI::MPI_CXX)
-  target_link_libraries(vtkm_filter_contour PUBLIC MPI::MPI_CXX)
   target_link_libraries(vtkm_filter_gradient PUBLIC MPI::MPI_CXX)
-endif()
+endif ()
 target_link_libraries(vtkm_filter PUBLIC INTERFACE
   vtkm_filter_extra
-  vtkm_filter_contour
   vtkm_filter_gradient
   vtkm_filter_common
   vtkm_filter_core
@@ -313,6 +282,7 @@ target_link_libraries(vtkm_filter PUBLIC INTERFACE
 install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
 add_subdirectory(clean_grid)
+add_subdirectory(contour)
 add_subdirectory(entity_extraction)
 add_subdirectory(internal)
 add_subdirectory(particleadvection)

@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/Clip.h>
+#include <vtkm/filter/contour/worklet/Clip.h>
 
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/CellSetExplicit.h>

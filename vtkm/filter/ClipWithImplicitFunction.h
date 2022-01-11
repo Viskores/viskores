@@ -15,7 +15,7 @@
 #include <vtkm/ImplicitFunction.h>
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/MapFieldPermutation.h>
-#include <vtkm/worklet/Clip.h>
+#include <vtkm/filter/contour/worklet/Clip.h>
 
 namespace vtkm
 {

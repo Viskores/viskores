@@ -12,7 +12,7 @@
 #ifndef vtk_m_worklet_contour_flyingedges_tables_h
 #define vtk_m_worklet_contour_flyingedges_tables_h
 
-#include <vtkm/worklet/contour/FlyingEdgesHelpers.h>
+#include <vtkm/filter/contour/worklet/FlyingEdgesHelpers.h>
 
 namespace vtkm
 {

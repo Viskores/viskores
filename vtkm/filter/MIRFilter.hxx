@@ -28,6 +28,7 @@
 
 #include <vtkm/exec/FunctorBase.h>
 
+#include <vtkm/filter/contour/worklet/clip/ClipTables.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
@@ -37,7 +38,6 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
-#include <vtkm/worklet/clip/ClipTables.h>
 
 #include <vtkm/filter/MeshQuality.h>
 

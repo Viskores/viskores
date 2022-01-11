@@ -10,7 +10,7 @@
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/Contour.h>
+#include <vtkm/filter/contour/Contour.h>
 
 #include <vtkm/worklet/connectivities/CellSetDualGraph.h>
 

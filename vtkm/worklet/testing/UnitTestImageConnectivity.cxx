@@ -9,7 +9,7 @@
 //============================================================================
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/Contour.h>
+#include <vtkm/filter/contour/Contour.h>
 
 #include <iomanip>
 #include <vtkm/worklet/connectivities/ImageConnectivity.h>

@@ -28,7 +28,6 @@
 #include <vtkm/cont/internal/OptionParser.h>
 
 #include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/Gradient.h>
 #include <vtkm/filter/PointAverage.h>
@@ -40,6 +39,7 @@
 #include <vtkm/filter/VertexClustering.h>
 #include <vtkm/filter/WarpScalar.h>
 #include <vtkm/filter/WarpVector.h>
+#include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
 
