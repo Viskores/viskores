@@ -31,14 +31,26 @@
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
 
-// This is a deprecated class. Don't warn about deprecation while implementing
-// deprecated functionality.
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-
 namespace vtkm
 {
 namespace cont
 {
+
+struct VTKM_DEPRECATED(1.8, "Use UnknownCellSet.h or UncertainCellSet.h.")
+  VariantArrayHandle_h_header_is_deprecated
+{
+  int x;
+};
+
+inline void EmitVariantArrayHandleHDeprecationWarning()
+{
+  static VariantArrayHandle_h_header_is_deprecated x;
+  ++x.x;
+}
+
+// This is a deprecated class. Don't warn about deprecation while implementing
+// deprecated functionality.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
 namespace internal

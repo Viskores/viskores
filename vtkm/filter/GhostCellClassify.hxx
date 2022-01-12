@@ -98,7 +98,7 @@ template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::DataSet& input,
                                                                   vtkm::filter::PolicyBase<Policy>)
 {
-  const vtkm::cont::DynamicCellSet& cellset = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cellset = input.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::UInt8> ghosts;
   const vtkm::Id numCells = cellset.GetNumberOfCells();
 
@@ -108,7 +108,8 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
     if (numCells <= 2)
       throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
 
-    vtkm::cont::CellSetStructured<1> cellset1d = cellset.Cast<vtkm::cont::CellSetStructured<1>>();
+    vtkm::cont::CellSetStructured<1> cellset1d =
+      cellset.AsCellSet<vtkm::cont::CellSetStructured<1>>();
 
     //We use the dual of the cellset since we are using the PointNeighborhood worklet
     vtkm::cont::CellSetStructured<3> dual;
@@ -121,7 +122,8 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
     if (numCells <= 4)
       throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
 
-    vtkm::cont::CellSetStructured<2> cellset2d = cellset.Cast<vtkm::cont::CellSetStructured<2>>();
+    vtkm::cont::CellSetStructured<2> cellset2d =
+      cellset.AsCellSet<vtkm::cont::CellSetStructured<2>>();
 
     //We use the dual of the cellset since we are using the PointNeighborhood worklet
     vtkm::cont::CellSetStructured<3> dual;
@@ -134,7 +136,8 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
     if (numCells <= 8)
       throw vtkm::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
 
-    vtkm::cont::CellSetStructured<3> cellset3d = cellset.Cast<vtkm::cont::CellSetStructured<3>>();
+    vtkm::cont::CellSetStructured<3> cellset3d =
+      cellset.AsCellSet<vtkm::cont::CellSetStructured<3>>();
 
     //We use the dual of the cellset since we are using the PointNeighborhood worklet
     vtkm::cont::CellSetStructured<3> dual;

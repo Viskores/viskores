@@ -27,7 +27,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     // RangeId3 and subsample
     vtkm::RangeId3 range(1, 4, 1, 4, 0, 1);
@@ -52,10 +52,10 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     vtkm::worklet::ExtractStructured worklet;
-    vtkm::worklet::ExtractStructured::DynamicCellSetStructured outCellSet;
+    vtkm::worklet::ExtractStructured::UncertainCellSetStructured outCellSet;
 
     // RangeId3 within dataset
     vtkm::RangeId3 range0(1, 4, 1, 4, 1, 4);
@@ -118,10 +118,10 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     vtkm::worklet::ExtractStructured worklet;
-    vtkm::worklet::ExtractStructured::DynamicCellSetStructured outCellSet;
+    vtkm::worklet::ExtractStructured::UncertainCellSetStructured outCellSet;
 
     // RangeId3 within data set with sampling
     vtkm::RangeId3 range0(0, 5, 0, 5, 1, 4);
@@ -169,7 +169,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DRectilinearDataSet0();
     CellSetType cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     // RangeId3 and subsample
     vtkm::RangeId3 range(0, 2, 0, 2, 0, 1);
@@ -195,7 +195,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DRectilinearDataSet0();
     CellSetType cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     // RangeId3 and subsample
     vtkm::RangeId3 range(0, 2, 0, 2, 0, 2);
@@ -235,13 +235,14 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), no_offset));
     vtkm::Id3 cellDims =
-      outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+      outCellSet.AsCellSet<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
 
     includeOffset = true;
     cellSet.SetGlobalPointIndexStart(test_offset);
     outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
-    cellDims = outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
-    CellSetType cs = outCellSet.Cast<CellSetType>();
+    cellDims =
+      outCellSet.AsCellSet<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+    CellSetType cs = outCellSet.AsCellSet<CellSetType>();
     cellDims = cs.GetPointDimensions();
     VTKM_TEST_ASSERT(test_equal(cellDims, new_dims));
     VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), test_offset));
@@ -264,7 +265,7 @@ public:
     vtkm::worklet::ExtractStructured worklet;
 
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
-    CellSetType cs = outCellSet.Cast<CellSetType>();
+    CellSetType cs = outCellSet.AsCellSet<CellSetType>();
     vtkm::Id3 cellDims = cs.GetPointDimensions();
     VTKM_TEST_ASSERT(test_equal(cellDims, test_dims));
     VTKM_TEST_ASSERT(test_equal(cs.GetGlobalPointIndexStart(), test_offset));
@@ -284,7 +285,7 @@ public:
     vtkm::worklet::ExtractStructured worklet;
 
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
-    CellSetType cs = outCellSet.Cast<CellSetType>();
+    CellSetType cs = outCellSet.AsCellSet<CellSetType>();
     VTKM_TEST_ASSERT(test_equal(cs.GetPointDimensions(), test_dims));
   }
   void TestOffset2D() const
@@ -305,13 +306,14 @@ public:
     auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
     VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), no_offset));
     vtkm::Id2 cellDims =
-      outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+      outCellSet.AsCellSet<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
     // Test with offset now
     includeOffset = true;
     cellSet.SetGlobalPointIndexStart(test_offset);
     outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, includeOffset);
-    cellDims = outCellSet.Cast<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
-    CellSetType cs = outCellSet.Cast<CellSetType>();
+    cellDims =
+      outCellSet.AsCellSet<CellSetType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+    CellSetType cs = outCellSet.AsCellSet<CellSetType>();
     cellDims = cs.GetPointDimensions();
     VTKM_TEST_ASSERT(test_equal(cellDims, new_dims));
     VTKM_TEST_ASSERT(test_equal(cellSet.GetGlobalPointIndexStart(), test_offset));

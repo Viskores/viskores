@@ -29,7 +29,7 @@ protected:
   TracerType Tracer;
   vtkm::cont::Field ScalarField;
   vtkm::cont::Field EmissionField;
-  vtkm::cont::DynamicCellSet Cells;
+  vtkm::cont::UnknownCellSet Cells;
   vtkm::cont::CoordinateSystem Coords;
   RenderMode Mode;
   vtkm::Bounds SpatialBounds;
@@ -249,7 +249,7 @@ ConnectivityProxy::ConnectivityProxy(vtkm::cont::DataSet& dataSet)
 }
 
 VTKM_CONT
-ConnectivityProxy::ConnectivityProxy(const vtkm::cont::DynamicCellSet& cellset,
+ConnectivityProxy::ConnectivityProxy(const vtkm::cont::UnknownCellSet& cellset,
                                      const vtkm::cont::CoordinateSystem& coords,
                                      const vtkm::cont::Field& scalarField)
 {

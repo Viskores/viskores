@@ -223,16 +223,17 @@ public:
   template <typename CellSetList, typename Functor, typename... Args>
   VTKM_CONT void CastAndCallForTypes(Functor&& functor, Args&&... args) const;
 
-  // Support for (soon to be) deprecated DynamicCellSet
-  // TODO: Deprecate these methods
+  // Support for deprecated DynamicCellSet features
 
   template <typename CellSetType>
+  VTKM_DEPRECATED(1.8, "Use CanConvert<decltype(cellset)>() (or IsType).")
   VTKM_CONT bool IsSameType(const CellSetType&) const
   {
     return this->IsType<CellSetType>();
   }
 
   template <typename CellSetType>
+  VTKM_DEPRECATED(1.8, "Use AsCellSet<CellSetType>().")
   VTKM_CONT CellSetType& Cast() const
   {
     VTKM_IS_CELL_SET(CellSetType);
@@ -247,12 +248,16 @@ public:
   }
 
   template <typename CellSetType>
+  VTKM_DEPRECATED(1.8, "Use AsCellSet(cellSet).")
   VTKM_CONT void CopyTo(CellSetType& cellSet) const
   {
     return this->AsCellSet(cellSet);
   }
 
   template <typename Functor, typename... Args>
+  VTKM_DEPRECATED(1.8,
+                  "Use the vtkm::cont::CastAndCall free function4 or use CastAndCallForTypes or "
+                  "use ResetCellList and then CastAndCall.")
   VTKM_CONT void CastAndCall(Functor&& f, Args&&... args) const
   {
     this->CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(std::forward<Functor>(f),

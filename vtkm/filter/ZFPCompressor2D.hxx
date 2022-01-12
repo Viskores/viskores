@@ -11,8 +11,8 @@
 #define vtk_m_filter_ZFPCompressor2D_hxx
 
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace vtkm
 {
@@ -23,7 +23,7 @@ namespace
 {
 
 template <typename CellSetList>
-bool IsCellSet2DStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset)
+bool IsCellSet2DStructured(const vtkm::cont::UnknownCellSet& cellset)
 {
   if (cellset.template IsType<vtkm::cont::CellSetStructured<2>>())
   {
@@ -50,7 +50,7 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor2D::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::CellSetStructured<2> cellSet;
-  input.GetCellSet().CopyTo(cellSet);
+  input.GetCellSet().AsCellSet(cellSet);
   vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
 
 

@@ -25,20 +25,21 @@ namespace
 
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
 {
-  const vtkm::cont::DynamicCellSet& inCellSet = inDataSet.GetCellSet();
+  const vtkm::cont::UnknownCellSet& inCellSet = inDataSet.GetCellSet();
 
   vtkm::cont::CellSetExplicit<> outCellSet;
 
   //Run the External Faces worklet
-  if (inCellSet.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  if (inCellSet.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {
-    vtkm::worklet::ExternalFaces().Run(inCellSet.Cast<vtkm::cont::CellSetStructured<3>>(),
+    vtkm::worklet::ExternalFaces().Run(inCellSet.AsCellSet<vtkm::cont::CellSetStructured<3>>(),
                                        inDataSet.GetCoordinateSystem(),
                                        outCellSet);
   }
   else
   {
-    vtkm::worklet::ExternalFaces().Run(inCellSet.Cast<vtkm::cont::CellSetExplicit<>>(), outCellSet);
+    vtkm::worklet::ExternalFaces().Run(inCellSet.AsCellSet<vtkm::cont::CellSetExplicit<>>(),
+                                       outCellSet);
   }
 
   vtkm::cont::DataSet outDataSet;
@@ -97,7 +98,7 @@ void TestExternalFaces1()
   //Run the External Faces worklet
   vtkm::cont::DataSet new_ds = RunExternalFaces(ds);
   vtkm::cont::CellSetExplicit<> new_cs;
-  new_ds.GetCellSet().CopyTo(new_cs);
+  new_ds.GetCellSet().AsCellSet(new_cs);
 
   vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
 
@@ -125,7 +126,7 @@ void TestExternalFaces2()
 
   vtkm::cont::DataSet outDataSet = RunExternalFaces(inDataSet);
   vtkm::cont::CellSetExplicit<> outCellSet;
-  outDataSet.GetCellSet().CopyTo(outCellSet);
+  outDataSet.GetCellSet().AsCellSet(outCellSet);
 
   VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == NUM_FACES, "Got wrong number of faces.");
 
@@ -168,7 +169,7 @@ void TestExternalFaces3()
   //Run the External Faces worklet
   vtkm::cont::DataSet new_ds = RunExternalFaces(dataSet);
   vtkm::cont::CellSetExplicit<> new_cs;
-  new_ds.GetCellSet().CopyTo(new_cs);
+  new_ds.GetCellSet().AsCellSet(new_cs);
 
   vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
 

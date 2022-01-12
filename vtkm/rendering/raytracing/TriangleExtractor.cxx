@@ -18,7 +18,7 @@ namespace rendering
 namespace raytracing
 {
 
-void TriangleExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells)
+void TriangleExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells)
 {
   vtkm::Id numberOfTriangles;
   vtkm::rendering::internal::RunTriangulator(cells, this->Triangles, numberOfTriangles);

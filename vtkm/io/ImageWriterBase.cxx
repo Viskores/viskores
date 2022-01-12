@@ -39,7 +39,7 @@ void ImageWriterBase::WriteDataSet(const vtkm::cont::DataSet& dataSet,
     throw vtkm::cont::ErrorBadType(
       "Image writers can only write data sets with 2D structured data.");
   }
-  CellSetType cellSet = dataSet.GetCellSet().Cast<CellSetType>();
+  CellSetType cellSet = dataSet.GetCellSet().AsCellSet<CellSetType>();
   vtkm::Id2 cellDimensions = cellSet.GetCellDimensions();
   // Number of points is one more in each dimension than number of cells
   vtkm::Id width = cellDimensions[0] + 1;

@@ -16,6 +16,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetPermutation.h>
+#include <vtkm/cont/UncertainCellSet.h>
 
 #include <vtkm/worklet/CellDeepCopy.h>
 
@@ -144,7 +145,7 @@ struct RemoveDegenerateCells
   };
 
   template <typename CellSetList>
-  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet)
+  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::UncertainCellSet<CellSetList>& cellSet)
   {
     vtkm::cont::CellSetExplicit<> output;
     cellSet.CastAndCall(CallWorklet(), *this, output);

@@ -26,7 +26,6 @@ set(unit_tests
   UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCrossProductFilter.cxx
-  UnitTestDotProductFilter.cxx
   UnitTestEntropyFilter.cxx
   UnitTestExternalFacesFilter.cxx
   UnitTestExtractGeometryFilter.cxx
@@ -95,16 +94,16 @@ set(libraries
 )
 
 if (VTKm_ENABLE_RENDERING)
-  list(APPEND libraries vtkm_rendering)
+  list(APPEND libraries vtkm_rendering vtkm_rendering_testing)
 
   list(APPEND unit_tests
-    RegressionTestAmrArrays.cxx
-    RegressionTestContourFilter.cxx
-    RegressionTestPointTransform.cxx
-    RegressionTestSliceFilter.cxx
-    RegressionTestSplitSharpEdges.cxx
-    RegressionTestStreamline.cxx
-    RegressionTestSurfaceNormals.cxx
+    RenderTestAmrArrays.cxx
+    RenderTestContourFilter.cxx
+    RenderTestPointTransform.cxx
+    RenderTestSliceFilter.cxx
+    RenderTestSplitSharpEdges.cxx
+    RenderTestStreamline.cxx
+    RenderTestSurfaceNormals.cxx
   )
 endif()
 

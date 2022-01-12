@@ -29,7 +29,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
-    dataset.GetCellSet().CopyTo(cellSet);
+    dataset.GetCellSet().AsCellSet(cellSet);
 
     // Cells to extract
     vtkm::cont::ArrayHandle<vtkm::Id> cellIds = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 2 });
@@ -60,7 +60,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
-    dataset.GetCellSet().CopyTo(cellSet);
+    dataset.GetCellSet().AsCellSet(cellSet);
 
     // Implicit function
     vtkm::Vec3f minPoint(0.5f, 0.0f, 0.0f);
@@ -72,7 +72,7 @@ public:
 
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    vtkm::cont::DynamicCellSet outCellSet =
+    vtkm::cont::UnknownCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coordinates"),
                           vtkm::Box(minPoint, maxPoint),
@@ -103,7 +103,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet().CopyTo(cellSet);
+    dataset.GetCellSet().AsCellSet(cellSet);
 
     // Cells to extract
     vtkm::cont::ArrayHandle<vtkm::Id> cellIds =
@@ -136,7 +136,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet().CopyTo(cellSet);
+    dataset.GetCellSet().AsCellSet(cellSet);
 
     // Cells to extract
     vtkm::cont::ArrayHandle<vtkm::Id> cellIds =
@@ -168,7 +168,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet().CopyTo(cellSet);
+    dataset.GetCellSet().AsCellSet(cellSet);
 
     // Implicit function
     vtkm::Vec3f minPoint(1.0f, 1.0f, 1.0f);
@@ -180,7 +180,7 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    vtkm::cont::DynamicCellSet outCellSet =
+    vtkm::cont::UnknownCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coords"),
                           vtkm::Box(minPoint, maxPoint),
@@ -208,7 +208,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet().CopyTo(cellSet);
+    dataset.GetCellSet().AsCellSet(cellSet);
 
     // Implicit function
     vtkm::Vec3f center(2.f, 2.f, 2.f);
@@ -220,7 +220,7 @@ public:
 
     // Output data set with cell set containing extracted cells
     vtkm::worklet::ExtractGeometry extractGeometry;
-    vtkm::cont::DynamicCellSet outCellSet =
+    vtkm::cont::UnknownCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coords"),
                           vtkm::Sphere(center, radius),

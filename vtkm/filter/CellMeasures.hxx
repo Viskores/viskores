@@ -11,7 +11,6 @@
 #ifndef vtk_m_filter_CellMeasures_hxx
 #define vtk_m_filter_CellMeasures_hxx
 
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
 namespace vtkm

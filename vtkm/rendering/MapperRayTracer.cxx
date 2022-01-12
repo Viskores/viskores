@@ -73,7 +73,7 @@ vtkm::rendering::Canvas* MapperRayTracer::GetCanvas() const
   return this->Internals->Canvas;
 }
 
-void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
+void MapperRayTracer::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                                   const vtkm::cont::CoordinateSystem& coords,
                                   const vtkm::cont::Field& scalarField,
                                   const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),

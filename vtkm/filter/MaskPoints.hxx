@@ -31,7 +31,7 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // extract the input cell set
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
 
   // run the worklet on the cell set and input field
   vtkm::cont::CellSetSingleType<> outCellSet;

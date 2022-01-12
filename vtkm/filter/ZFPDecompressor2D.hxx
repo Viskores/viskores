@@ -11,7 +11,6 @@
 #define vtk_m_filter_ZFPDecompressor2D_hxx
 
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
 namespace vtkm
@@ -48,7 +47,7 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor2D::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::CellSetStructured<2> cellSet;
-  input.GetCellSet().CopyTo(cellSet);
+  input.GetCellSet().AsCellSet(cellSet);
   vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
 
   vtkm::cont::ArrayHandle<vtkm::Float64> decompress;

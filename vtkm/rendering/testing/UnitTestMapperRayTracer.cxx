@@ -23,26 +23,30 @@ namespace
 
 void RenderTests()
 {
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
-  using V2 = vtkm::rendering::View2D;
-
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::cont::ColorTable colorTable("inferno");
 
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "rt_reg3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rt_rect3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "rt_expl3D.pnm");
+  vtkm::rendering::testing::RenderTestOptions options;
+  options.Mapper = vtkm::rendering::testing::MapperType::RayTracer;
+  options.AllowAnyDevice = false;
+  options.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;
 
-  vtkm::rendering::testing::Render<M, C, V2>(
-    maker.Make2DUniformDataSet1(), "pointvar", colorTable, "uni2D.pnm");
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DRegularDataSet0(), "pointvar", "rendering/raytracer/regular3D.png", options);
+  vtkm::rendering::testing::RenderTest(maker.Make3DRectilinearDataSet0(),
+                                       "pointvar",
+                                       "rendering/raytracer/rectilinear3D.png",
+                                       options);
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DExplicitDataSet4(), "pointvar", "rendering/raytracer/explicit3D.png", options);
 
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet7(), "cellvar", colorTable, "spheres.pnm");
+  // The result is blank. I don't think MapperRayTracer is actually supposed to render anything
+  // for 0D (vertex) cells, but it shouldn't crash if it receives them
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DExplicitDataSet7(), "cellvar", "rendering/raytracer/vertex-cells.png", options);
+
+  options.ViewDimension = 2;
+  vtkm::rendering::testing::RenderTest(
+    maker.Make2DUniformDataSet1(), "pointvar", "rendering/raytracer/uniform2D.png", options);
 }
 
 } //namespace

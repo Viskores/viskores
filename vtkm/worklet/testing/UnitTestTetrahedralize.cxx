@@ -35,7 +35,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet0();
     CellSetType cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     // Convert uniform hexahedra to tetrahedra
     vtkm::worklet::Tetrahedralize tetrahedralize;
@@ -63,7 +63,7 @@ public:
     // Create the input explicit cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
 
     // Convert explicit cells to tetrahedra
