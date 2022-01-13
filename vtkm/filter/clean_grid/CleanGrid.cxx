@@ -222,8 +222,8 @@ vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData)
   //
   // For filters that do not need to do interpolation for mapping fields, we provide an overload
   // that does not take the extra arguments and just AddField.
-  auto mapper = [&, this](auto& output, const auto& field) {
-    DoMapField(output, field, *this, worklets);
+  auto mapper = [&, this](auto& outDataSet, const auto& f) {
+    DoMapField(outDataSet, f, *this, worklets);
   };
   this->MapFieldsOntoOutput(inData, outData, mapper);
 
