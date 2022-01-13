@@ -163,7 +163,6 @@ set(sources
   ErrorBadType.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
-  internal/Buffer.cxx
   internal/DeviceAdapterMemoryManager.cxx
   internal/DeviceAdapterMemoryManagerShared.cxx
   internal/RuntimeDeviceConfiguration.cxx
@@ -193,6 +192,7 @@ set(device_sources
   ColorTable.cxx
   ConvertNumComponentsToOffsets.cxx
   Field.cxx
+  internal/Buffer.cxx
   MergePartitionedDataSet.cxx
   PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx

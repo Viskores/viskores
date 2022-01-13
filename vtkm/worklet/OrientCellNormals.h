@@ -348,16 +348,16 @@ public:
     auto activePoints = vtkm::cont::make_ArrayHandleBitField(activePointBits);
 
     vtkm::cont::BitField activeCellBits;
-    vtkm::cont::Algorithm::Fill(activeCellBits, false, numCells);
+    activeCellBits.AllocateAndFill(numCells, false);
     auto activeCells = vtkm::cont::make_ArrayHandleBitField(activeCellBits);
 
     // visited = cells / points that have been corrected.
     vtkm::cont::BitField visitedPointBits;
-    vtkm::cont::Algorithm::Fill(visitedPointBits, false, numPoints);
+    visitedPointBits.AllocateAndFill(numPoints, false);
     auto visitedPoints = vtkm::cont::make_ArrayHandleBitField(visitedPointBits);
 
     vtkm::cont::BitField visitedCellBits;
-    vtkm::cont::Algorithm::Fill(visitedCellBits, false, numCells);
+    visitedCellBits.AllocateAndFill(numCells, false);
     auto visitedCells = vtkm::cont::make_ArrayHandleBitField(visitedCellBits);
 
     vtkm::cont::Invoker invoke;

@@ -140,6 +140,15 @@ public:
     return IndexStorage::GetNumberOfValues(IndexBuffers(buffers));
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+                             const T&,
+                             vtkm::Id,
+                             vtkm::Id,
+                             vtkm::cont::Token&)
+  {
+    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandlePermutation.");
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)

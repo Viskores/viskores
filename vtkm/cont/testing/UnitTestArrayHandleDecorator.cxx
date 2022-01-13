@@ -278,7 +278,7 @@ struct DecoratorTests
     auto ah1 = vtkm::cont::make_ArrayHandleCounting(ValueType{ 0 }, ValueType{ 2 }, ARRAY_SIZE);
     auto ah2 = vtkm::cont::make_ArrayHandleConstant(ValueType{ ARRAY_SIZE }, ARRAY_SIZE);
     vtkm::cont::ArrayHandle<ValueType> ah3;
-    vtkm::cont::Algorithm::Fill(ah3, ValueType{ ARRAY_SIZE / 2 }, ARRAY_SIZE);
+    ah3.AllocateAndFill(ARRAY_SIZE, ValueType{ ARRAY_SIZE / 2 });
 
     auto ah3Const = vtkm::cont::make_ArrayHandleConstant(ValueType{ ARRAY_SIZE / 2 }, ARRAY_SIZE);
 
