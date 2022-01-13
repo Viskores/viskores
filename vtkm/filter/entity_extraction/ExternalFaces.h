@@ -11,8 +11,6 @@
 #ifndef vtkm_filter_entity_extraction_ExternalFaces_h
 #define vtkm_filter_entity_extraction_ExternalFaces_h
 
-#include <vtkm/cont/Algorithm.h>
-
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
