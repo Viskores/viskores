@@ -16,11 +16,16 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
-#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
+
+// For support of deprecated features.
+#include <vtkm/Deprecated.h>
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+#include <vtkm/cont/VariantArrayHandle.h>
+VTKM_DEPRECATED_SUPPRESS_END
 
 namespace vtkm
 {

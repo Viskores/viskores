@@ -12,7 +12,7 @@
 #define vtk_m_filter_ExtractPoints_hxx
 
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace vtkm
 {
@@ -33,7 +33,7 @@ inline vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& i
                                                     vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // extract the input cell set and coordinates
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 

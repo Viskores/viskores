@@ -59,7 +59,7 @@ vtkm::rendering::Canvas* MapperConnectivity::GetCanvas() const
 
 
 VTKM_CONT
-void MapperConnectivity::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
+void MapperConnectivity::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                                      const vtkm::cont::CoordinateSystem& coords,
                                      const vtkm::cont::Field& scalarField,
                                      const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),

@@ -214,15 +214,15 @@ public:
 
   VTKM_CONT
   void Run(const vtkm::cont::CoordinateSystem& coords,
-           const vtkm::cont::DynamicCellSet& cellset,
+           const vtkm::cont::UnknownCellSet& cellset,
            vtkm::cont::ArrayHandle<vtkm::Vec3f>& newPoints,
            vtkm::cont::CellSetSingleType<>& newCells)
   {
     using ExplCoordsType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
     if (!(coords.GetData().IsType<ExplCoordsType>() &&
-          (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()) ||
-           cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))))
+          (cellset.CanConvert<vtkm::cont::CellSetExplicit<>>() ||
+           cellset.CanConvert<vtkm::cont::CellSetSingleType<>>())))
     {
       throw vtkm::cont::ErrorBadValue("Stream surface requires polyline data.");
     }

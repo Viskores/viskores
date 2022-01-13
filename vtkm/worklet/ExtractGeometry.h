@@ -19,6 +19,7 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 #include <vtkm/ImplicitFunction.h>
 
@@ -97,11 +98,11 @@ public:
 
   class AddPermutationCellSet
   {
-    vtkm::cont::DynamicCellSet* Output;
+    vtkm::cont::UnknownCellSet* Output;
     vtkm::cont::ArrayHandle<vtkm::Id>* ValidIds;
 
   public:
-    AddPermutationCellSet(vtkm::cont::DynamicCellSet& cellOut,
+    AddPermutationCellSet(vtkm::cont::UnknownCellSet& cellOut,
                           vtkm::cont::ArrayHandle<vtkm::Id>& validIds)
       : Output(&cellOut)
       , ValidIds(&validIds)

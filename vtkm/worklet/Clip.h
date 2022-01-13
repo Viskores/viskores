@@ -26,7 +26,6 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
@@ -584,8 +583,8 @@ public:
   {
   }
 
-  template <typename CellSetList, typename ScalarsArrayHandle>
-  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
+  template <typename CellSetType, typename ScalarsArrayHandle>
+  vtkm::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
                                     const ScalarsArrayHandle& scalars,
                                     vtkm::Float64 value,
                                     bool invert)
@@ -697,13 +696,13 @@ public:
     return output;
   }
 
-  template <typename DynamicCellSet, typename ImplicitFunction>
+  template <typename CellSetType, typename ImplicitFunction>
   class ClipWithImplicitFunction
   {
   public:
     VTKM_CONT
     ClipWithImplicitFunction(Clip* clipper,
-                             const DynamicCellSet& cellSet,
+                             const CellSetType& cellSet,
                              const ImplicitFunction& function,
                              const bool invert,
                              vtkm::cont::CellSetExplicit<>* result)
@@ -730,21 +729,21 @@ public:
 
   private:
     Clip* Clipper;
-    const DynamicCellSet* CellSet;
+    const CellSetType* CellSet;
     ImplicitFunction Function;
     bool Invert;
     vtkm::cont::CellSetExplicit<>* Result;
   };
 
-  template <typename CellSetList, typename ImplicitFunction>
-  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
+  template <typename CellSetType, typename ImplicitFunction>
+  vtkm::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
                                     const ImplicitFunction& clipFunction,
                                     const vtkm::cont::CoordinateSystem& coords,
                                     const bool invert)
   {
     vtkm::cont::CellSetExplicit<> output;
 
-    ClipWithImplicitFunction<vtkm::cont::DynamicCellSetBase<CellSetList>, ImplicitFunction> clip(
+    ClipWithImplicitFunction<CellSetType, ImplicitFunction> clip(
       this, cellSet, clipFunction, invert, &output);
 
     CastAndCall(coords, clip);

@@ -15,7 +15,7 @@
 
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
-#include <vtkm/filter/GenerateIds.h>
+#include <vtkm/filter/field_transform/GenerateIds.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/source/Tangle.h>
@@ -32,7 +32,7 @@ public:
 
     vtkm::Id3 dims(4, 4, 4);
     vtkm::source::Tangle tangle(dims);
-    vtkm::filter::GenerateIds genIds;
+    vtkm::filter::field_transform::GenerateIds genIds;
     genIds.SetUseFloat(true);
     genIds.SetGeneratePointIds(false);
     genIds.SetCellFieldName("cellvar");
@@ -88,9 +88,9 @@ public:
       }
 
       vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
-      vtkm::cont::DynamicCellSet dcells = result.GetCellSet();
+      vtkm::cont::UnknownCellSet dcells = result.GetCellSet();
       using CellSetType = vtkm::cont::CellSetSingleType<>;
-      const CellSetType& cells = dcells.Cast<CellSetType>();
+      const CellSetType& cells = dcells.AsCellSet<CellSetType>();
 
       //verify that the number of points is correct (72)
       //verify that the number of cells is correct (160)
@@ -112,10 +112,10 @@ public:
                        "Shouldn't have less coordinates than the unmerged version");
 
       //verify that the number of cells is correct (160)
-      vtkm::cont::DynamicCellSet dcells = result.GetCellSet();
+      vtkm::cont::UnknownCellSet dcells = result.GetCellSet();
 
       using CellSetType = vtkm::cont::CellSetSingleType<>;
-      const CellSetType& cells = dcells.Cast<CellSetType>();
+      const CellSetType& cells = dcells.AsCellSet<CellSetType>();
       VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
     }
   }
@@ -153,7 +153,7 @@ public:
     vtkm::cont::DataSet dataSet = reader.ReadDataSet();
 
     vtkm::cont::CellSetSingleType<> cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
     dataSet.GetPointField("gyroid").GetData().AsArrayHandle(fieldArray);

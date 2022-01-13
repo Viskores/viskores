@@ -20,8 +20,9 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/UncertainCellSet.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace vtkm
 {
@@ -145,14 +146,14 @@ public:
   template <typename FieldArrayType, typename UnaryPredicate>
   struct CallWorklet
   {
-    vtkm::cont::DynamicCellSet& Output;
+    vtkm::cont::UnknownCellSet& Output;
     vtkm::worklet::Threshold& Worklet;
     const FieldArrayType& Field;
     const vtkm::cont::Field::Association FieldType;
     const UnaryPredicate& Predicate;
     const bool ReturnAllInRange;
 
-    CallWorklet(vtkm::cont::DynamicCellSet& output,
+    CallWorklet(vtkm::cont::UnknownCellSet& output,
                 vtkm::worklet::Threshold& worklet,
                 const FieldArrayType& field,
                 const vtkm::cont::Field::Association fieldType,
@@ -177,7 +178,7 @@ public:
   };
 
   template <typename CellSetList, typename ValueType, typename StorageType, typename UnaryPredicate>
-  vtkm::cont::DynamicCellSet Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
+  vtkm::cont::UnknownCellSet Run(const vtkm::cont::UncertainCellSet<CellSetList>& cellSet,
                                  const vtkm::cont::ArrayHandle<ValueType, StorageType>& field,
                                  const vtkm::cont::Field::Association fieldType,
                                  const UnaryPredicate& predicate,
@@ -185,7 +186,7 @@ public:
   {
     using Worker = CallWorklet<vtkm::cont::ArrayHandle<ValueType, StorageType>, UnaryPredicate>;
 
-    vtkm::cont::DynamicCellSet output;
+    vtkm::cont::UnknownCellSet output;
     Worker worker(output, *this, field, fieldType, predicate, returnAllInRange);
     cellSet.CastAndCall(worker);
 

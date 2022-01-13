@@ -21,7 +21,7 @@ template <typename DerivedPolicy>
 vtkm::cont::DataSet ExtractStructured::DoExecute(const vtkm::cont::DataSet& input,
                                                  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coordinates = input.GetCoordinateSystem();
 
   auto cellset = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSetStructured(cells, policy, *this),
@@ -34,7 +34,7 @@ vtkm::cont::DataSet ExtractStructured::DoExecute(const vtkm::cont::DataSet& inpu
   vtkm::cont::CoordinateSystem outputCoordinates(coordinates.GetName(), coords);
 
   vtkm::cont::DataSet output;
-  output.SetCellSet(vtkm::cont::DynamicCellSet(cellset));
+  output.SetCellSet(vtkm::cont::UnknownCellSet(cellset));
   output.AddCoordinateSystem(outputCoordinates);
 
   // Create map arrays for mapping fields. Could potentially save some time to first check to see

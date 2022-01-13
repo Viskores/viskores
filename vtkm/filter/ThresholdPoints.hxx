@@ -130,7 +130,7 @@ inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // extract the input cell set
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
 
   // field to threshold on must be a point field
   if (fieldMeta.IsPointField() == false)

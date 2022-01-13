@@ -19,9 +19,6 @@
 
 #include <vtkm/io/VTKDataSetReader.h>
 
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 #include <vtkm/rendering/testing/Testing.h>
 
@@ -30,12 +27,6 @@ namespace
 void TestContourFilterWedge()
 {
   std::cout << "Generate Image for Contour filter on an unstructured grid" << std::endl;
-
-  vtkm::cont::ColorTable colorTable(
-    { 0, 1 }, { 0.20f, 0.80f, 0.20f }, { 0.20f, 0.80f, 0.201f }, vtkm::ColorSpace::RGB);
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   auto pathname = vtkm::cont::testing::Testing::DataPath("unstructured/wedge_cells.vtk");
   vtkm::io::VTKDataSetReader reader(pathname);
@@ -50,24 +41,16 @@ void TestContourFilterWedge()
 
   result.PrintSummary(std::cout);
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result,
-    "gyroid",
-    colorTable,
-    "filter/contour-wedge.png",
-    false,
-    static_cast<vtkm::FloatDefault>(0.08));
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.Colors = { { 0.20f, 0.80f, 0.20f } };
+  testOptions.EnableAnnotations = false;
+  testOptions.DataViewPadding = 0.08;
+  vtkm::rendering::testing::RenderTest(result, "gyroid", "filter/contour-wedge.png", testOptions);
 }
 
 void TestContourFilterUniform()
 {
   std::cout << "Generate Image for Contour filter on a uniform grid" << std::endl;
-
-  vtkm::cont::ColorTable colorTable(
-    { 0, 1 }, { 0.20f, 0.80f, .20f }, { .20f, .80f, .201f }, vtkm::ColorSpace::RGB);
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::DataSet inputData = maker.Make3DUniformDataSet0();
@@ -85,19 +68,16 @@ void TestContourFilterUniform()
   result.PrintSummary(std::cout);
 
   //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "filter/contour-uniform.png", false);
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.Colors = { { 0.20f, 0.80f, 0.20f } };
+  testOptions.EnableAnnotations = false;
+  vtkm::rendering::testing::RenderTest(
+    result, "pointvar", "filter/contour-uniform.png", testOptions);
 }
 
 void TestContourFilterTangle()
 {
   std::cout << "Generate Image for Contour filter on a uniform tangle grid" << std::endl;
-
-  vtkm::cont::ColorTable colorTable(
-    { 0, 1 }, { 0.20f, 0.80f, .20f }, { .20f, .80f, .201f }, vtkm::ColorSpace::RGB);
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   vtkm::Id3 dims(4, 4, 4);
   vtkm::source::Tangle tangle(dims);
@@ -113,8 +93,10 @@ void TestContourFilterTangle()
   result.PrintSummary(std::cout);
 
   //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "tangle", colorTable, "filter/contour-tangle.png", false);
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.Colors = { { 0.20f, 0.80f, 0.20f } };
+  testOptions.EnableAnnotations = false;
+  vtkm::rendering::testing::RenderTest(result, "tangle", "filter/contour-tangle.png", testOptions);
 }
 
 void TestContourFilter()
@@ -125,7 +107,7 @@ void TestContourFilter()
 }
 } // namespace
 
-int RegressionTestContourFilter(int argc, char* argv[])
+int RenderTestContourFilter(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestContourFilter, argc, argv);
 }

@@ -12,7 +12,7 @@
 #include <vtkm/filter/SplitSharpEdges.h>
 #include <vtkm/filter/SurfaceNormals.h>
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/source/Wavelet.h>
@@ -165,8 +165,8 @@ void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
   vtkm::cont::DataSet result = splitSharpEdgesFilter.Execute(simpleCubeWithSN);
 
   auto newCoords = result.GetCoordinateSystem().GetDataAsMultiplexer();
-  vtkm::cont::CellSetExplicit<>& newCellset =
-    result.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
+  vtkm::cont::CellSetExplicit<> newCellset =
+    result.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>();
   auto newCoordsP = newCoords.ReadPortal();
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointvarField;
   result.GetField("pointvar").GetData().AsArrayHandle(newPointvarField);

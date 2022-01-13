@@ -15,7 +15,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
-#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 #include <vtkm/RangeId3.h>
 #include <vtkm/filter/ExtractStructured.h>
@@ -240,7 +240,7 @@ bool CanStrip(const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
 }
 
 template <typename T, typename StorageType>
-bool CanDoStructuredStrip(const vtkm::cont::DynamicCellSet& cells,
+bool CanDoStructuredStrip(const vtkm::cont::UnknownCellSet& cells,
                           const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
                           const vtkm::cont::Invoker& invoke,
                           bool removeAllGhost,
@@ -250,27 +250,27 @@ bool CanDoStructuredStrip(const vtkm::cont::DynamicCellSet& cells,
   bool canDo = false;
   vtkm::Id3 cellDims(1, 1, 1);
 
-  if (cells.IsSameType(vtkm::cont::CellSetStructured<1>()))
+  if (cells.CanConvert<vtkm::cont::CellSetStructured<1>>())
   {
-    auto cells1D = cells.Cast<vtkm::cont::CellSetStructured<1>>();
+    auto cells1D = cells.AsCellSet<vtkm::cont::CellSetStructured<1>>();
     vtkm::Id d = cells1D.GetCellDimensions();
     cellDims[0] = d;
     vtkm::Id sz = d;
 
     canDo = CanStrip<1>(ghostField, invoke, removeAllGhost, removeType, range, cellDims, sz);
   }
-  else if (cells.IsSameType(vtkm::cont::CellSetStructured<2>()))
+  else if (cells.CanConvert<vtkm::cont::CellSetStructured<2>>())
   {
-    auto cells2D = cells.Cast<vtkm::cont::CellSetStructured<2>>();
+    auto cells2D = cells.AsCellSet<vtkm::cont::CellSetStructured<2>>();
     vtkm::Id2 d = cells2D.GetCellDimensions();
     cellDims[0] = d[0];
     cellDims[1] = d[1];
     vtkm::Id sz = cellDims[0] * cellDims[1];
     canDo = CanStrip<2>(ghostField, invoke, removeAllGhost, removeType, range, cellDims, sz);
   }
-  else if (cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  else if (cells.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {
-    auto cells3D = cells.Cast<vtkm::cont::CellSetStructured<3>>();
+    auto cells3D = cells.AsCellSet<vtkm::cont::CellSetStructured<3>>();
     cellDims = cells3D.GetCellDimensions();
     vtkm::Id sz = cellDims[0] * cellDims[1] * cellDims[2];
     canDo = CanStrip<3>(ghostField, invoke, removeAllGhost, removeType, range, cellDims, sz);
@@ -306,13 +306,13 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
-  vtkm::cont::DynamicCellSet cellOut;
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
+  vtkm::cont::UnknownCellSet cellOut;
 
   //Preserve structured output where possible.
-  if (cells.IsSameType(vtkm::cont::CellSetStructured<1>()) ||
-      cells.IsSameType(vtkm::cont::CellSetStructured<2>()) ||
-      cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  if (cells.CanConvert<vtkm::cont::CellSetStructured<1>>() ||
+      cells.CanConvert<vtkm::cont::CellSetStructured<2>>() ||
+      cells.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {
     vtkm::RangeId3 range;
     if (CanDoStructuredStrip(

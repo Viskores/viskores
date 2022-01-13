@@ -14,14 +14,14 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace
 {
 
 struct CallWorker
 {
-  vtkm::cont::DynamicCellSet& Output;
+  vtkm::cont::UnknownCellSet& Output;
   vtkm::worklet::ExtractGeometry& Worklet;
   const vtkm::cont::CoordinateSystem& Coords;
   const vtkm::ImplicitFunctionGeneral& Function;
@@ -29,7 +29,7 @@ struct CallWorker
   bool ExtractBoundaryCells;
   bool ExtractOnlyBoundaryCells;
 
-  CallWorker(vtkm::cont::DynamicCellSet& output,
+  CallWorker(vtkm::cont::UnknownCellSet& output,
              vtkm::worklet::ExtractGeometry& worklet,
              const vtkm::cont::CoordinateSystem& coords,
              const vtkm::ImplicitFunctionGeneral& function,
@@ -71,11 +71,11 @@ vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input,
                                                vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // extract the input cell set and coordinates
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  vtkm::cont::DynamicCellSet outCells;
+  vtkm::cont::UnknownCellSet outCells;
   CallWorker worker(outCells,
                     this->Worklet,
                     coords,

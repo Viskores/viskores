@@ -30,7 +30,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     // Convert uniform quadrilaterals to triangles
     vtkm::worklet::Triangulate triangulate;
@@ -55,7 +55,7 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DExplicitDataSet0();
     CellSetType cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
 
     // Convert explicit cells to triangles

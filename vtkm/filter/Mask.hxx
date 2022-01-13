@@ -18,10 +18,10 @@ namespace
 struct CallWorklet
 {
   vtkm::Id Stride;
-  vtkm::cont::DynamicCellSet& Output;
+  vtkm::cont::UnknownCellSet& Output;
   vtkm::worklet::Mask& Worklet;
 
-  CallWorklet(vtkm::Id stride, vtkm::cont::DynamicCellSet& output, vtkm::worklet::Mask& worklet)
+  CallWorklet(vtkm::Id stride, vtkm::cont::UnknownCellSet& output, vtkm::worklet::Mask& worklet)
     : Stride(stride)
     , Output(output)
     , Worklet(worklet)
@@ -55,8 +55,8 @@ template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input,
                                                      vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
-  vtkm::cont::DynamicCellSet cellOut;
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
+  vtkm::cont::UnknownCellSet cellOut;
   CallWorklet workletCaller(this->Stride, cellOut, this->Worklet);
   vtkm::filter::ApplyPolicyCellSet(cells, policy, *this).CastAndCall(workletCaller);
 

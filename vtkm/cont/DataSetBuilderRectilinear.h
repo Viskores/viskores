@@ -10,7 +10,6 @@
 #ifndef vtk_m_cont_DataSetBuilderRectilinear_h
 #define vtk_m_cont_DataSetBuilderRectilinear_h
 
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/CoordinateSystem.h>
@@ -35,7 +34,7 @@ class VTKM_CONT_EXPORT DataSetBuilderRectilinear
   VTKM_CONT static void CopyInto(const vtkm::cont::ArrayHandle<T>& input,
                                  vtkm::cont::ArrayHandle<U>& output)
   {
-    vtkm::cont::ArrayCopy(input, output);
+    vtkm::cont::UnknownArrayHandle(output).DeepCopyFrom(input);
   }
 
   template <typename T, typename U>

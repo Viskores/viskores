@@ -57,7 +57,7 @@ foreach(option IN LISTS options)
     set(VTKm_NO_DEPRECATED_VIRTUAL "OFF" CACHE STRING "")
 
   elseif(no_testing STREQUAL option)
-    set(VTKm_ENABLE_TESTING OFF CACHE BOOL "")
+    set(VTKm_ENABLE_TESTING "OFF" CACHE STRING "")
 
   elseif(examples STREQUAL option)
     set(VTKm_ENABLE_EXAMPLES "ON" CACHE STRING "")
@@ -108,6 +108,37 @@ foreach(option IN LISTS options)
     set(CMAKE_CXX_COMPILER "/opt/rocm/llvm/bin/clang++" CACHE FILEPATH "")
     set(VTKm_ENABLE_KOKKOS_HIP ON CACHE STRING "")
     set(CMAKE_HIP_ARCHITECTURES "gfx900" CACHE STRING "")
+
+  elseif(ascent STREQUAL option)
+    set(CMAKE_C_FLAGS "-mcpu=power9" CACHE STRING "")
+    set(CMAKE_CXX_FLAGS "-mcpu=power9" CACHE STRING "")
+
+  elseif(ccache STREQUAL option)
+    find_program(CCACHE_COMMAND NAMES ccache REQUIRED)
+
+    set(CCACHE_VERSION "NotFound")
+    execute_process(
+      COMMAND ${CCACHE_COMMAND} "--version"
+      OUTPUT_VARIABLE CCACHE_VERSION
+      ECHO_ERROR_VARIABLE
+      )
+
+    string(REGEX REPLACE "\n" " " CCACHE_VERSION ${CCACHE_VERSION})
+    string(REGEX REPLACE "^.*ccache version ([.0-9]*).*$" "\\1"
+      CCACHE_VERSION ${CCACHE_VERSION})
+
+    # We need a recent version of ccache in order to ignore -isystem while
+    # hashing keys for the building cache.
+    if(${CCACHE_VERSION} VERSION_GREATER_EQUAL 4)
+      set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_COMMAND}" CACHE STRING "")
+      set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_COMMAND}" CACHE STRING "")
+
+      if(VTKm_ENABLE_CUDA)
+        set(CMAKE_CUDA_COMPILER_LAUNCHER "${CCACHE_COMMAND}" CACHE STRING "")
+      endif()
+    else()
+      message(FATAL_ERROR "CCACHE version [${CCACHE_VERSION}] is <= 4")
+    endif()
   endif()
 
 endforeach()

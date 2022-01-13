@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/DotProduct.h>
+#include <vtkm/filter/vector_calculus/DotProduct.h>
 
 #include <random>
 #include <vector>
@@ -128,7 +128,7 @@ void TestDotProduct()
 
     {
       std::cout << "  Both vectors as normal fields" << std::endl;
-      vtkm::filter::DotProduct filter;
+      vtkm::filter::vector_calculus::DotProduct filter;
       filter.SetPrimaryField("vec1");
       filter.SetSecondaryField("vec2");
       vtkm::cont::DataSet result = filter.Execute(dataSet);
@@ -137,7 +137,7 @@ void TestDotProduct()
 
     {
       std::cout << "  First field as coordinates" << std::endl;
-      vtkm::filter::DotProduct filter;
+      vtkm::filter::vector_calculus::DotProduct filter;
       filter.SetUseCoordinateSystemAsPrimaryField(true);
       filter.SetPrimaryCoordinateSystem(1);
       filter.SetSecondaryField("vec2");
@@ -147,7 +147,7 @@ void TestDotProduct()
 
     {
       std::cout << "  Second field as coordinates" << std::endl;
-      vtkm::filter::DotProduct filter;
+      vtkm::filter::vector_calculus::DotProduct filter;
       filter.SetPrimaryField("vec1");
       filter.SetUseCoordinateSystemAsSecondaryField(true);
       filter.SetSecondaryCoordinateSystem(2);

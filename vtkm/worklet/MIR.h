@@ -26,11 +26,9 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/exec/FunctorBase.h>
 

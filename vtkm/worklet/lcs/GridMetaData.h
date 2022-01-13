@@ -24,20 +24,20 @@ public:
   using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
   VTKM_CONT
-  GridMetaData(const vtkm::cont::DynamicCellSet cellSet)
+  GridMetaData(const vtkm::cont::UnknownCellSet cellSet)
   {
-    if (cellSet.IsType<Structured2DType>())
+    if (cellSet.CanConvert<Structured2DType>())
     {
       this->cellSet2D = true;
       vtkm::Id2 dims =
-        cellSet.Cast<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
+        cellSet.AsCellSet<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
       this->Dims = vtkm::Id3(dims[0], dims[1], 1);
     }
     else
     {
       this->cellSet2D = false;
       this->Dims =
-        cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
+        cellSet.AsCellSet<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
     }
     this->PlaneSize = Dims[0] * Dims[1];
     this->RowSize = Dims[0];

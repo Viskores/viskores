@@ -15,6 +15,7 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -537,14 +538,14 @@ public:
 
   template <typename Storage>
   VTKM_CONT void Run(const vtkm::cont::ArrayHandle<vtkm::Vec3f, Storage>& coords,
-                     const vtkm::cont::DynamicCellSet& cellset,
+                     const vtkm::cont::UnknownCellSet& cellset,
                      vtkm::cont::ArrayHandle<vtkm::Vec3f>& newPoints,
                      vtkm::cont::CellSetSingleType<>& newCells)
   {
     using NormalsType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
-    if (!cellset.IsSameType(vtkm::cont::CellSetExplicit<>()) &&
-        !cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
+    if (!cellset.CanConvert<vtkm::cont::CellSetExplicit<>>() &&
+        !cellset.CanConvert<vtkm::cont::CellSetSingleType<>>())
     {
       throw vtkm::cont::ErrorBadValue("Tube filter only supported for polyline data.");
     }

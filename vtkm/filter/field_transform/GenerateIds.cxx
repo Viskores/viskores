@@ -7,17 +7,15 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
-#include <vtkm/filter/GenerateIds.h>
-
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/filter/field_transform/GenerateIds.h>
 
 namespace
 {
 
-vtkm::cont::UnknownArrayHandle GenerateArray(const vtkm::filter::GenerateIds& self, vtkm::Id size)
+vtkm::cont::UnknownArrayHandle GenerateArray(const vtkm::filter::field_transform::GenerateIds& self,
+                                             vtkm::Id size)
 {
   vtkm::cont::ArrayHandleIndex indexArray(size);
 
@@ -41,8 +39,9 @@ namespace vtkm
 {
 namespace filter
 {
-
-vtkm::cont::DataSet GenerateIds::DoExecute(const vtkm::cont::DataSet& input) const
+namespace field_transform
+{
+vtkm::cont::DataSet GenerateIds::DoExecute(const vtkm::cont::DataSet& input)
 {
   vtkm::cont::DataSet output = input;
 
@@ -57,8 +56,10 @@ vtkm::cont::DataSet GenerateIds::DoExecute(const vtkm::cont::DataSet& input) con
     output.AddCellField(this->GetCellFieldName(), GenerateArray(*this, input.GetNumberOfCells()));
   }
 
+  this->MapFieldsOntoOutput(input, output);
+
   return output;
 }
-
+} // namespace field_transform
 } // namespace vtkm::filter
 } // namespace vtkm

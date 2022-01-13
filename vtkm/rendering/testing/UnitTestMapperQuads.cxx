@@ -23,27 +23,27 @@ namespace
 
 void RenderTests()
 {
-  typedef vtkm::rendering::MapperQuad M;
-  typedef vtkm::rendering::CanvasRayTracer C;
-  typedef vtkm::rendering::View3D V3;
-  typedef vtkm::rendering::View2D V2;
-
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::cont::ColorTable colorTable("inferno");
 
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "rt_reg3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rt_rect3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "rt_expl3D.pnm");
+  vtkm::rendering::testing::RenderTestOptions options;
+  options.Mapper = vtkm::rendering::testing::MapperType::Quad;
+  options.AllowAnyDevice = false;
+  options.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;
 
-  vtkm::rendering::testing::Render<M, C, V2>(
-    maker.Make2DUniformDataSet1(), "pointvar", colorTable, "uni2D.pnm");
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DRegularDataSet0(), "pointvar", "rendering/quad/regular3D.png", options);
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DRectilinearDataSet0(), "pointvar", "rendering/quad/rectilinear3D.png", options);
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DExplicitDataSet4(), "pointvar", "rendering/quad/explicit3D.png", options);
 
   //hexahedron, wedge, pyramid, tetrahedron
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet5(), "cellvar", colorTable, "rt_hex3d.pnm");
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DExplicitDataSet5(), "cellvar", "rendering/quad/mixed3D.png", options);
+
+  options.ViewDimension = 2;
+  vtkm::rendering::testing::RenderTest(
+    maker.Make2DUniformDataSet1(), "pointvar", "rendering/quad/uniform2D.png", options);
 }
 
 } //namespace

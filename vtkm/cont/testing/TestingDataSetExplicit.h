@@ -90,7 +90,7 @@ private:
 
     // test cell-to-point connectivity
     vtkm::cont::CellSetExplicit<> cellset;
-    ds.GetCellSet().CopyTo(cellset);
+    ds.GetCellSet().AsCellSet(cellset);
 
     vtkm::Id connectivitySize = 7;
     vtkm::Id numPoints = 5;

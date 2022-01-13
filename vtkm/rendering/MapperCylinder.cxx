@@ -115,7 +115,7 @@ void MapperCylinder::SetRadiusDelta(const vtkm::Float32& delta)
   this->Internals->Delta = delta;
 }
 
-void MapperCylinder::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
+void MapperCylinder::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                                  const vtkm::cont::CoordinateSystem& coords,
                                  const vtkm::cont::Field& scalarField,
                                  const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),

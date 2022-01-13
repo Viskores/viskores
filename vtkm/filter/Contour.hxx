@@ -13,8 +13,8 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 #include <vtkm/worklet/SurfaceNormals.h>
 
@@ -26,8 +26,7 @@ namespace filter
 namespace
 {
 
-template <typename CellSetList>
-inline bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset)
+inline bool IsCellSetStructured(const vtkm::cont::UnknownCellSet& cellset)
 {
   if (cellset.template IsType<vtkm::cont::CellSetStructured<1>>() ||
       cellset.template IsType<vtkm::cont::CellSetStructured<2>>() ||
@@ -68,7 +67,7 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& input,
   }
 
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
 
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());

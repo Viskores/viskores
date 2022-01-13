@@ -78,7 +78,7 @@ void TestTubeFilters()
   vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
   VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 22, "Wrong number of coordinates");
 
-  vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
+  vtkm::cont::UnknownCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 36, "Wrong number of cells");
 
   //Validate the point field

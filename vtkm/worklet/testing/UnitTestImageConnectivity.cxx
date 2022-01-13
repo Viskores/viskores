@@ -7,7 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/Contour.h>
 
@@ -45,7 +45,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
     vtkm::worklet::connectivity::ImageConnectivity().Run(
-      data.GetCellSet().Cast<vtkm::cont::CellSetStructured<2>>(),
+      data.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<2>>(),
       colorField.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>>(),
       component);
 
@@ -79,7 +79,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
     vtkm::worklet::connectivity::ImageConnectivity().Run(
-      data.GetCellSet().Cast<vtkm::cont::CellSetStructured<2>>(),
+      data.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<2>>(),
       colorField.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>>(),
       component);
 
@@ -118,7 +118,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
     vtkm::worklet::connectivity::ImageConnectivity().Run(
-      data.GetCellSet().Cast<vtkm::cont::CellSetStructured<2>>(),
+      data.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<2>>(),
       colorField.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>>(),
       component);
 

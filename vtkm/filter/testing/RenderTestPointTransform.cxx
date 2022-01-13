@@ -16,9 +16,6 @@
 #include <vtkm/filter/PointTransform.h>
 #include <vtkm/filter/VectorMagnitude.h>
 
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 #include <vtkm/rendering/testing/Testing.h>
 
@@ -27,11 +24,6 @@ namespace
 void TestPointTransform()
 {
   std::cout << "Generate Image for PointTransform filter with Translation" << std::endl;
-
-  vtkm::cont::ColorTable colorTable("inferno");
-  using M = vtkm::rendering::MapperRayTracer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
 
   auto pathname =
     vtkm::cont::testing::Testing::DataPath("unstructured/PointTransformTestDataSet.vtk");
@@ -52,12 +44,15 @@ void TestPointTransform()
   result = vectorMagnitude.Execute(result);
   result.PrintSummary(std::cout);
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "filter/point-transform.png", false);
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;
+  testOptions.EnableAnnotations = false;
+  vtkm::rendering::testing::RenderTest(
+    result, "pointvar", "filter/point-transform.png", testOptions);
 }
 } // namespace
 
-int RegressionTestPointTransform(int argc, char* argv[])
+int RenderTestPointTransform(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestPointTransform, argc, argv);
 }

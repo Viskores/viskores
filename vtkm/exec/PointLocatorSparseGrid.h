@@ -11,8 +11,6 @@
 #define vtk_m_exec_PointLocatorSparseGrid_h
 
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/Deprecated.h>
 #include <vtkm/VectorAnalysis.h>

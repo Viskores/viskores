@@ -65,31 +65,43 @@ set(headers
   )
 
 set(sources
+  Actor.cxx
+  AxisAnnotation.cxx
+  AxisAnnotation2D.cxx
+  AxisAnnotation3D.cxx
   BitmapFont.cxx
   BitmapFontFactory.cxx
-
+  BoundingBoxAnnotation.cxx
   Camera.cxx
   Color.cxx
+  ColorBarAnnotation.cxx
+  ColorLegendAnnotation.cxx
+  LineRenderer.cxx
+  Mapper.cxx
+  MapperConnectivity.cxx
+  Scene.cxx
+  TextAnnotation.cxx
+  TextAnnotationBillboard.cxx
+  TextAnnotationScreen.cxx
+  TextRenderer.cxx
+  View.cxx
+  View1D.cxx
+  View2D.cxx
+  View3D.cxx
+  WorldAnnotator.cxx
+
   raytracing/Logger.cxx
+  raytracing/MeshConnectivityContainers.cxx
+  raytracing/TriangleExtractor.cxx
   )
 
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
-  Actor.cxx
-  AxisAnnotation.cxx
-  AxisAnnotation2D.cxx
-  AxisAnnotation3D.cxx
-  BoundingBoxAnnotation.cxx
   Canvas.cxx
   CanvasRayTracer.cxx
-  ColorBarAnnotation.cxx
-  ColorLegendAnnotation.cxx
   ConnectivityProxy.cxx
-  LineRenderer.cxx
   LineRendererBatcher.cxx
-  Mapper.cxx
-  MapperConnectivity.cxx
   MapperCylinder.cxx
   MapperPoint.cxx
   MapperQuad.cxx
@@ -97,19 +109,10 @@ set(device_sources
   MapperVolume.cxx
   MapperWireframer.cxx
   ScalarRenderer.cxx
-  Scene.cxx
-  TextAnnotation.cxx
-  TextAnnotationBillboard.cxx
-  TextAnnotationScreen.cxx
-  TextRenderer.cxx
   TextRendererBatcher.cxx
-  View.cxx
-  View1D.cxx
-  View2D.cxx
-  View3D.cxx
-  WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx
+
   raytracing/BoundingVolumeHierarchy.cxx
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
@@ -117,16 +120,14 @@ set(device_sources
   raytracing/CylinderExtractor.cxx
   raytracing/CylinderIntersector.cxx
   raytracing/MeshConnectivityBuilder.cxx
-  raytracing/MeshConnectivityContainers.cxx
   raytracing/QuadExtractor.cxx
   raytracing/QuadIntersector.cxx
-  raytracing/RayTracer.cxx
   raytracing/RayOperations.cxx
+  raytracing/RayTracer.cxx
   raytracing/ScalarRenderer.cxx
   raytracing/ShapeIntersector.cxx
   raytracing/SphereExtractor.cxx
   raytracing/SphereIntersector.cxx
-  raytracing/TriangleExtractor.cxx
   raytracing/TriangleIntersector.cxx
   raytracing/VolumeRendererStructured.cxx
   )

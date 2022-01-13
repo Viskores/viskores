@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
@@ -25,22 +24,22 @@ using Structured3DType = vtkm::cont::CellSetStructured<3>;
 void CellLocatorUniformGrid::Build()
 {
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
-  vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = this->GetCellSet();
 
   if (!coords.GetData().IsType<UniformType>())
     throw vtkm::cont::ErrorBadType("Coordinates are not uniform type.");
 
-  if (cellSet.IsSameType(Structured2DType()))
+  if (cellSet.CanConvert<Structured2DType>())
   {
     this->Is3D = false;
-    Structured2DType structuredCellSet = cellSet.Cast<Structured2DType>();
+    Structured2DType structuredCellSet = cellSet.AsCellSet<Structured2DType>();
     vtkm::Id2 pointDims = structuredCellSet.GetSchedulingRange(vtkm::TopologyElementTagPoint());
     this->PointDims = vtkm::Id3(pointDims[0], pointDims[1], 1);
   }
-  else if (cellSet.IsSameType(Structured3DType()))
+  else if (cellSet.CanConvert<Structured3DType>())
   {
     this->Is3D = true;
-    Structured3DType structuredCellSet = cellSet.Cast<Structured3DType>();
+    Structured3DType structuredCellSet = cellSet.AsCellSet<Structured3DType>();
     this->PointDims = structuredCellSet.GetSchedulingRange(vtkm::TopologyElementTagPoint());
   }
   else

@@ -16,7 +16,7 @@
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/ClipWithImplicitFunction.h>
-#include <vtkm/filter/GenerateIds.h>
+#include <vtkm/filter/field_transform/GenerateIds.h>
 #include <vtkm/source/Tangle.h>
 #include <vtkm/worklet/Contour.h>
 
@@ -186,14 +186,14 @@ void TestContourUniformGrid()
 
   vtkm::Id3 dims(4, 4, 4);
   vtkm::source::Tangle tangle(dims);
-  vtkm::filter::GenerateIds genIds;
+  vtkm::filter::field_transform::GenerateIds genIds;
   genIds.SetUseFloat(true);
   genIds.SetGeneratePointIds(false);
   genIds.SetCellFieldName("cellvar");
   vtkm::cont::DataSet dataSet = genIds.Execute(tangle.Execute());
 
   vtkm::cont::CellSetStructured<3> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
   dataSet.GetField("tangle").GetData().AsArrayHandle(pointFieldArray);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
@@ -310,7 +310,7 @@ void TestContourExplicit()
   vtkm::cont::DataSet dataSet = dataSetGenerator.Make3DRadiantDataSet(Dimension);
 
   DataSetGenerator::CellSet cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   vtkm::cont::Field contourField = dataSet.GetField("distanceToOrigin");
   DataSetGenerator::DataArrayHandle contourArray;
@@ -365,7 +365,7 @@ void TestContourClipped()
 
   vtkm::Id3 dims(4, 4, 4);
   vtkm::source::Tangle tangle(dims);
-  vtkm::filter::GenerateIds genIds;
+  vtkm::filter::field_transform::GenerateIds genIds;
   genIds.SetUseFloat(true);
   genIds.SetGeneratePointIds(false);
   genIds.SetCellFieldName("cellvar");
@@ -377,7 +377,7 @@ void TestContourClipped()
   vtkm::cont::DataSet clipped = clip.Execute(dataSet);
 
   vtkm::cont::CellSetExplicit<> cellSet;
-  clipped.GetCellSet().CopyTo(cellSet);
+  clipped.GetCellSet().AsCellSet(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
   clipped.GetField("tangle").GetData().AsArrayHandle(pointFieldArray);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;

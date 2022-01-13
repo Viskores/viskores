@@ -15,6 +15,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/rendering/raytracing/MeshConnectivityBuilder.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -408,14 +409,14 @@ public:
   Cylinderizer() {}
 
   VTKM_CONT
-  void Run(const vtkm::cont::DynamicCellSet& cellset,
+  void Run(const vtkm::cont::UnknownCellSet& cellset,
            vtkm::cont::ArrayHandle<vtkm::Id3>& outputIndices,
            vtkm::Id& output)
   {
-    if (cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
+    if (cellset.CanConvert<vtkm::cont::CellSetStructured<3>>())
     {
       vtkm::cont::CellSetStructured<3> cellSetStructured3D =
-        cellset.Cast<vtkm::cont::CellSetStructured<3>>();
+        cellset.AsCellSet<vtkm::cont::CellSetStructured<3>>();
       const vtkm::Id numCells = cellSetStructured3D.GetNumberOfCells();
 
       vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0, 1, numCells);

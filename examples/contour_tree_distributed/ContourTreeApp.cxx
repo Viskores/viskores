@@ -646,8 +646,8 @@ int main(int argc, char* argv[])
       // in the values vector and copy the dimensions in the dims vector
       vtkm::Id3 pointDimensions;
       auto cellSet = inDataSet.GetCellSet();
-      cellSet.CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(),
-                          pointDimensions);
+      vtkm::cont::CastAndCall(
+        cellSet, vtkm::worklet::contourtree_augmented::GetPointDimensions(), pointDimensions);
       std::cout << "Point dimensions are " << pointDimensions << std::endl;
       dims.resize(3);
       dims[0] = pointDimensions[0];

@@ -99,7 +99,7 @@ private:
 
     //verify that we can get a CellSetSingleType from a dataset
     vtkm::cont::CellSetSingleType<> cellset;
-    dataSet.GetCellSet().CopyTo(cellset);
+    dataSet.GetCellSet().AsCellSet(cellset);
 
     //verify that the point to cell connectivity types are correct
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesPointToCell =

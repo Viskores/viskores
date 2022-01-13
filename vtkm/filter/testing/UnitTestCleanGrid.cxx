@@ -32,7 +32,7 @@ void TestUniformGrid(vtkm::filter::CleanGrid clean)
   VTKM_TEST_ASSERT(outData.HasField("cellvar"), "Failed to map cell field");
 
   vtkm::cont::CellSetExplicit<> outCellSet;
-  outData.GetCellSet().CopyTo(outCellSet);
+  outData.GetCellSet().AsCellSet(outCellSet);
   VTKM_TEST_ASSERT(outCellSet.GetNumberOfPoints() == 6,
                    "Wrong number of points: ",
                    outCellSet.GetNumberOfPoints());
