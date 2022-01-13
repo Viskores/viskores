@@ -1781,7 +1781,7 @@ public:
       IDType low = this->PPos.Get(point);
       IDType high = this->PPos.Get(point) + this->PLens.Get(point) - 1;
       IDType matIdAt = -1;
-      while (low < high)
+      while (low <= high)
       {
         IDType mid = (low + high) / 2;
         IDType midMatId = this->PIDs.Get(mid);
@@ -1799,7 +1799,7 @@ public:
           high = mid - 1;
         }
       }
-      if (matIdAt > 0)
+      if (matIdAt >= 0)
       {
         return this->PVFs.Get(matIdAt);
       }
