@@ -46,8 +46,7 @@ vtkm::cont::DataSet ExternalFaces::GenerateOutput(const vtkm::cont::DataSet& inp
   bool hasCellFields = false;
   for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
   {
-    auto f = input.GetField(fieldIdx);
-    hasCellFields = f.IsFieldCell();
+    hasCellFields = input.GetField(fieldIdx).IsFieldCell();
   }
 
   if (!hasCellFields)
@@ -91,16 +90,15 @@ vtkm::cont::DataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& input)
     // New Design: We are still using the old MapFieldOntoOutput to demonstrate the transition
     this->MapFieldOntoOutput(result, f);
   };
-
-  MapFieldsOntoOutput(input, output, mapper);
+  this->MapFieldsOntoOutput(input, output, mapper);
 
   // New Filter Design: then we remove entities if requested.
   if (this->CompactPoints)
   {
-    vtkm::filter::clean_grid::CleanGrid Compactor;
-    Compactor.SetCompactPointFields(true);
-    Compactor.SetMergePoints(false);
-    return Compactor.Execute(output);
+    vtkm::filter::clean_grid::CleanGrid compactor;
+    compactor.SetCompactPointFields(true);
+    compactor.SetMergePoints(false);
+    return compactor.Execute(output);
   }
   else
   {

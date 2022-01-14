@@ -14,7 +14,6 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/clean_grid/CleanGrid.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/field_transform/GenerateIds.h>
 
@@ -167,7 +166,6 @@ public:
     auto result = isosurfaceFilter.Execute(dataSet);
     VTKM_TEST_ASSERT(result.GetNumberOfCells() == 52);
   }
-
 
   void operator()() const
   {

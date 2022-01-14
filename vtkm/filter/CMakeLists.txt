@@ -262,7 +262,7 @@ if (VTKm_ENABLE_MPI)
   target_link_libraries(vtkm_filter_common PUBLIC MPI::MPI_CXX)
   target_link_libraries(vtkm_filter_extra PUBLIC MPI::MPI_CXX)
   target_link_libraries(vtkm_filter_gradient PUBLIC MPI::MPI_CXX)
-endif ()
+endif()
 target_link_libraries(vtkm_filter PUBLIC INTERFACE
   vtkm_filter_extra
   vtkm_filter_gradient

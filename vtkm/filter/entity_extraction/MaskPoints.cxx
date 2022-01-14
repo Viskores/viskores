@@ -36,15 +36,15 @@ VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(const vtkm::cont::DataSet& i
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
   auto mapper = [&, this](auto& result, const auto& f) { this->MapFieldOntoOutput(result, f); };
-  MapFieldsOntoOutput(input, output, mapper);
+  this->MapFieldsOntoOutput(input, output, mapper);
 
   // compact the unused points in the output dataset
   if (this->CompactPoints)
   {
-    vtkm::filter::clean_grid::CleanGrid Compactor;
-    Compactor.SetCompactPointFields(true);
-    Compactor.SetMergePoints(false);
-    return Compactor.Execute(output);
+    vtkm::filter::clean_grid::CleanGrid compactor;
+    compactor.SetCompactPointFields(true);
+    compactor.SetMergePoints(false);
+    return compactor.Execute(output);
   }
   else
   {

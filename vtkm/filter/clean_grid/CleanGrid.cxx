@@ -30,7 +30,7 @@ struct SharedStates
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
                                               vtkm::cont::CellSetExplicit<>& outputCellSet,
-                                              clean_grid::SharedStates& Worklets)
+                                              clean_grid::SharedStates& worklets)
 {
   using VecId = std::size_t;
   const auto activeCoordIndex = static_cast<VecId>(this->GetActiveCoordinateSystemIndex());
@@ -48,17 +48,17 @@ vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
   // Optionally adjust the cell set indices to remove all unused points
   if (this->GetCompactPointFields())
   {
-    Worklets.PointCompactor.FindPointsStart();
-    Worklets.PointCompactor.FindPoints(outputCellSet);
-    Worklets.PointCompactor.FindPointsEnd();
+    worklets.PointCompactor.FindPointsStart();
+    worklets.PointCompactor.FindPoints(outputCellSet);
+    worklets.PointCompactor.FindPointsEnd();
 
-    outputCellSet = Worklets.PointCompactor.MapCellSet(outputCellSet);
+    outputCellSet = worklets.PointCompactor.MapCellSet(outputCellSet);
 
     for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
     {
       outputCoordinateSystems[coordSystemIndex] =
         vtkm::cont::CoordinateSystem(outputCoordinateSystems[coordSystemIndex].GetName(),
-                                     Worklets.PointCompactor.MapPointFieldDeep(
+                                     worklets.PointCompactor.MapPointFieldDeep(
                                        outputCoordinateSystems[coordSystemIndex].GetData()));
     }
   }
@@ -77,7 +77,7 @@ vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
     }
 
     auto coordArray = activeCoordSystem.GetData();
-    Worklets.PointMerger.Run(delta, this->GetFastMerge(), bounds, coordArray);
+    worklets.PointMerger.Run(delta, this->GetFastMerge(), bounds, coordArray);
     activeCoordSystem = vtkm::cont::CoordinateSystem(activeCoordSystem.GetName(), coordArray);
 
     for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
@@ -90,17 +90,17 @@ vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
       {
         outputCoordinateSystems[coordSystemIndex] = vtkm::cont::CoordinateSystem(
           outputCoordinateSystems[coordSystemIndex].GetName(),
-          Worklets.PointMerger.MapPointField(outputCoordinateSystems[coordSystemIndex].GetData()));
+          worklets.PointMerger.MapPointField(outputCoordinateSystems[coordSystemIndex].GetData()));
       }
     }
 
-    outputCellSet = Worklets.PointMerger.MapCellSet(outputCellSet);
+    outputCellSet = worklets.PointMerger.MapCellSet(outputCellSet);
   }
 
   // Optionally remove degenerate cells
   if (this->GetRemoveDegenerateCells())
   {
-    outputCellSet = Worklets.CellCompactor.Run(outputCellSet);
+    outputCellSet = worklets.CellCompactor.Run(outputCellSet);
   }
 
   // Construct resulting data set with new cell sets
@@ -174,9 +174,9 @@ bool DoMapField(vtkm::cont::DataSet& result,
 vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData)
 {
   // New Filter Design: mutable states that was a data member of the filter is now a local
-  // variable. Each invocation of DoExecute() in the std::async will have a copy of Worklets
+  // variable. Each invocation of DoExecute() in the std::async will have a copy of worklets
   // thus making it thread-safe.
-  clean_grid::SharedStates Worklets;
+  clean_grid::SharedStates worklets;
 
   using CellSetType = vtkm::cont::CellSetExplicit<>;
 
@@ -206,19 +206,13 @@ vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData)
                  inCellSet,
                  shapes,
                  vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
-    shapes.ReleaseResourcesExecution();
-    offsets.ReleaseResourcesExecution();
-    connectivity.ReleaseResourcesExecution();
 
     outputCellSet.Fill(inCellSet.GetNumberOfPoints(), shapes, connectivity, offsets);
-
-    //Release the input grid from the execution space
-    inCellSet.ReleaseResourcesExecution();
   }
 
   // New Filter Design: The share, mutable state is pass to other methods via parameter, not as
   // a data member.
-  auto outData = this->GenerateOutput(inData, outputCellSet, Worklets);
+  auto outData = this->GenerateOutput(inData, outputCellSet, worklets);
 
   // New Filter Design: We pass the actions needed to be done as a lambda to the generic
   // MapFieldsOntoOutput method. MapFieldsOntoOutput now acts as thrust::transform_if on the
@@ -228,10 +222,10 @@ vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData)
   //
   // For filters that do not need to do interpolation for mapping fields, we provide an overload
   // that does not take the extra arguments and just AddField.
-  auto mapper = [&, this](auto& output, const auto& field) {
-    DoMapField(output, field, *this, Worklets);
+  auto mapper = [&, this](auto& outDataSet, const auto& f) {
+    DoMapField(outDataSet, f, *this, worklets);
   };
-  MapFieldsOntoOutput(inData, outData, mapper);
+  this->MapFieldsOntoOutput(inData, outData, mapper);
 
   return outData;
 }

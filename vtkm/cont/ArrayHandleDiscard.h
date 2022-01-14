@@ -119,6 +119,15 @@ public:
     return buffers[0].GetMetaData<DiscardMetaData>().NumberOfValues;
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+                             const ValueType&,
+                             vtkm::Id,
+                             vtkm::Id,
+                             vtkm::cont::Token&)
+  {
+    // Fill is a NO-OP.
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer*,
                                                    vtkm::cont::DeviceAdapterId,
                                                    vtkm::cont::Token&)

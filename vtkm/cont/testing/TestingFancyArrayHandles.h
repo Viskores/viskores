@@ -1495,6 +1495,28 @@ private:
         VTKM_TEST_ASSERT(test_equal(result_value, ValueType(static_cast<ValueComponentType>(i))),
                          "ArrayHandleZip Failed as input for value");
       }
+
+      // Test filling the zipped array.
+      vtkm::cont::printSummary_ArrayHandle(result_zip, std::cout, true);
+      PairType fillValue{ TestValue(1, KeyType{}), TestValue(2, ValueType{}) };
+      result_zip.Fill(fillValue, 1);
+      vtkm::cont::printSummary_ArrayHandle(result_zip, std::cout, true);
+      keysPortal = result_keys.ReadPortal();
+      valsPortal = result_values.ReadPortal();
+      // First entry should be the same.
+      VTKM_TEST_ASSERT(
+        test_equal(keysPortal.Get(0), KeyType(static_cast<KeyComponentType>(ARRAY_SIZE))));
+      VTKM_TEST_ASSERT(
+        test_equal(valsPortal.Get(0), ValueType(static_cast<ValueComponentType>(0))));
+      // The rest should be fillValue
+      for (vtkm::Id index = 1; index < ARRAY_SIZE; ++index)
+      {
+        const KeyType result_key = keysPortal.Get(index);
+        const ValueType result_value = valsPortal.Get(index);
+
+        VTKM_TEST_ASSERT(test_equal(result_key, fillValue.first));
+        VTKM_TEST_ASSERT(test_equal(result_value, fillValue.second));
+      }
     }
   };
 

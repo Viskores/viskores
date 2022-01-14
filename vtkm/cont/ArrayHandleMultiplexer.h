@@ -170,6 +170,20 @@ struct MultiplexerResizeBuffersFunctor
   }
 };
 
+struct MultiplexerFillFunctor
+{
+  template <typename ValueType, typename StorageType>
+  VTKM_CONT void operator()(StorageType,
+                            vtkm::cont::internal::Buffer* buffers,
+                            const ValueType& fillValue,
+                            vtkm::Id startIndex,
+                            vtkm::Id endIndex,
+                            vtkm::cont::Token& token) const
+  {
+    StorageType::Fill(buffers, fillValue, startIndex, endIndex, token);
+  }
+};
+
 template <typename ReadPortalType>
 struct MultiplexerCreateReadPortalFunctor
 {
@@ -254,6 +268,20 @@ public:
   {
     Variant(buffers).CastAndCall(
       detail::MultiplexerResizeBuffersFunctor{}, numValues, ArrayBuffers(buffers), preserve, token);
+  }
+
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const ValueType& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token)
+  {
+    Variant(buffers).CastAndCall(detail::MultiplexerFillFunctor{},
+                                 ArrayBuffers(buffers),
+                                 fillValue,
+                                 startIndex,
+                                 endIndex,
+                                 token);
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,

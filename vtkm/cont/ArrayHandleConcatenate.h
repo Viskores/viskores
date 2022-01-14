@@ -202,6 +202,29 @@ public:
             SourceStorage2::GetNumberOfValues(Buffers2(buffers)));
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const T& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token)
+  {
+    vtkm::Id size1 = SourceStorage1::GetNumberOfValues(Buffers1(buffers));
+    if ((startIndex < size1) && (endIndex <= size1))
+    {
+      SourceStorage1::Fill(Buffers1(buffers), fillValue, startIndex, endIndex, token);
+    }
+    else if (startIndex < size1) // && (endIndex > size1)
+    {
+      SourceStorage1::Fill(Buffers1(buffers), fillValue, startIndex, size1, token);
+      SourceStorage2::Fill(Buffers2(buffers), fillValue, 0, endIndex - size1, token);
+    }
+    else // startIndex >= size1
+    {
+      SourceStorage2::Fill(
+        Buffers2(buffers), fillValue, startIndex - size1, endIndex - size1, token);
+    }
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)

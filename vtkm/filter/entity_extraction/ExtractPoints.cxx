@@ -33,10 +33,7 @@ vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::worklet::ExtractPoints worklet;
 
   // FIXME: is the other overload of .Run ever used?
-  outCellSet = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
-                           coords.GetData(),
-                           this->Function,
-                           this->ExtractInside);
+  outCellSet = worklet.Run(cells, coords.GetData(), this->Function, this->ExtractInside);
 
   // create the output dataset
   vtkm::cont::DataSet output;
@@ -44,15 +41,15 @@ vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& input)
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
   auto mapper = [&, this](auto& result, const auto& f) { this->MapFieldOntoOutput(result, f); };
-  MapFieldsOntoOutput(input, output, mapper);
+  this->MapFieldsOntoOutput(input, output, mapper);
 
   // compact the unused points in the output dataset
   if (this->CompactPoints)
   {
-    vtkm::filter::clean_grid::CleanGrid Compactor;
-    Compactor.SetCompactPointFields(true);
-    Compactor.SetMergePoints(false);
-    return Compactor.Execute(output);
+    vtkm::filter::clean_grid::CleanGrid compactor;
+    compactor.SetCompactPointFields(true);
+    compactor.SetMergePoints(false);
+    return compactor.Execute(output);
   }
   else
   {
