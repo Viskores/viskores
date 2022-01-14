@@ -32,9 +32,7 @@ set(unit_tests
   UnitTestCrossProduct.cxx
   UnitTestDescriptiveStatistics.cxx
   UnitTestDotProduct.cxx
-  UnitTestExternalFaces.cxx
   UnitTestExtractGeometry.cxx
-  UnitTestExtractPoints.cxx
   UnitTestExtractStructured.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
@@ -45,7 +43,6 @@ set(unit_tests
   UnitTestMagnitude.cxx
   UnitTestMask.cxx
   UnitTestMaskIndices.cxx
-  UnitTestMaskPoints.cxx
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
   UnitTestNDimsEntropy.cxx
@@ -58,7 +55,6 @@ set(unit_tests
   UnitTestPointGradient.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx
-  UnitTestRemoveUnusedPoints.cxx
   UnitTestScalarsToColors.cxx
   UnitTestScatterAndMask.cxx
   UnitTestScatterCounting.cxx
@@ -72,7 +68,6 @@ set(unit_tests
   UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx
   UnitTestThreshold.cxx
-  UnitTestThresholdPoints.cxx
   UnitTestTriangleWinding.cxx
   UnitTestTriangulate.cxx
   UnitTestTube.cxx

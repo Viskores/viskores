@@ -16,7 +16,6 @@ set(unit_tests
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
   UnitTestCellSetConnectivityFilter.cxx
-  UnitTestCleanGrid.cxx
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourFilter.cxx
@@ -27,9 +26,7 @@ set(unit_tests
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCrossProductFilter.cxx
   UnitTestEntropyFilter.cxx
-  UnitTestExternalFacesFilter.cxx
   UnitTestExtractGeometryFilter.cxx
-  UnitTestExtractPointsFilter.cxx
   UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
@@ -47,7 +44,6 @@ set(unit_tests
   UnitTestMapFieldMergeAverage.cxx
   UnitTestMapFieldPermutation.cxx
   UnitTestMaskFilter.cxx
-  UnitTestMaskPointsFilter.cxx
   UnitTestMeshQualityFilter.cxx
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
@@ -67,7 +63,6 @@ set(unit_tests
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
   UnitTestThresholdFilter.cxx
-  UnitTestThresholdPointsFilter.cxx
   UnitTestTriangulateFilter.cxx
   UnitTestTubeFilter.cxx
   UnitTestVectorMagnitudeFilter.cxx

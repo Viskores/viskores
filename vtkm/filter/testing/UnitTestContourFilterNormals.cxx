@@ -12,7 +12,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CleanGrid.h>
+#include <vtkm/filter/clean_grid/CleanGrid.h>
 
 #include <vtkm/filter/Contour.h>
 
@@ -179,7 +179,7 @@ void TestContourNormals()
   TestNormals(dataset, true);
 
   std::cout << "\tUnstructured dataset\n";
-  vtkm::filter::CleanGrid makeUnstructured;
+  vtkm::filter::clean_grid::CleanGrid makeUnstructured;
   makeUnstructured.SetCompactPointFields(false);
   makeUnstructured.SetMergePoints(false);
   makeUnstructured.SetFieldsToPass("pointvar");

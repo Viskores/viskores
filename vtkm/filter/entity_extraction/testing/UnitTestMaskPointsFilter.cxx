@@ -11,7 +11,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/MaskPoints.h>
+#include <vtkm/filter/entity_extraction/MaskPoints.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 
@@ -26,7 +26,7 @@ public:
     std::cout << "Testing mask points on 2D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
 
-    vtkm::filter::MaskPoints maskPoints;
+    vtkm::filter::entity_extraction::MaskPoints maskPoints;
     maskPoints.SetStride(2);
     maskPoints.SetFieldsToPass("pointvar");
     vtkm::cont::DataSet output = maskPoints.Execute(dataset);
@@ -41,7 +41,7 @@ public:
     std::cout << "Testing mask points on 3D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
-    vtkm::filter::MaskPoints maskPoints;
+    vtkm::filter::entity_extraction::MaskPoints maskPoints;
     maskPoints.SetStride(5);
     maskPoints.SetFieldsToPass("pointvar");
     vtkm::cont::DataSet output = maskPoints.Execute(dataset);
@@ -56,7 +56,7 @@ public:
     std::cout << "Testing mask points on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
-    vtkm::filter::MaskPoints maskPoints;
+    vtkm::filter::entity_extraction::MaskPoints maskPoints;
     maskPoints.SetStride(3);
     maskPoints.SetCompactPoints(false);
     maskPoints.SetFieldsToPass("pointvar");
