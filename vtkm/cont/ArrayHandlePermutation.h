@@ -216,6 +216,10 @@ class ArrayHandlePermutation
   VTKM_IS_ARRAY_HANDLE(IndexArrayHandleType);
   VTKM_IS_ARRAY_HANDLE(ValueArrayHandleType);
 
+  VTKM_STATIC_ASSERT_MSG(
+    (std::is_same<vtkm::Id, typename IndexArrayHandleType::ValueType>::value),
+    "Permutation array in ArrayHandlePermutation must have vtkm::Id value type.");
+
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandlePermutation,

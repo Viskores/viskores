@@ -193,6 +193,7 @@ set(device_sources
   ConvertNumComponentsToOffsets.cxx
   Field.cxx
   internal/Buffer.cxx
+  internal/MapArrayPermutation.cxx
   MergePartitionedDataSet.cxx
   PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
