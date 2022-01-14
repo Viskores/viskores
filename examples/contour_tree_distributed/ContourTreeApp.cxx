@@ -393,11 +393,11 @@ int main(int argc, char* argv[])
                  << "    forwardSummary=" << forwardSummary << std::endl
                  << "    nblocks=" << numBlocks << std::endl
 #ifdef ENABLE_HDFIO
-                 << "    dataset=" << dataset_name << std::endl
+                 << "    dataset=" << dataset_name << " (HDF5 only)" << std::endl
                  << "    blocksPerDim=" << blocksPerDimIn[0] << "," << blocksPerDimIn[1] << ","
-                 << blocksPerDimIn[2] << std::endl
+                 << blocksPerDimIn[2] << " (HDF5 only)" << std::endl
                  << "    selectSize=" << selectSize[0] << "," << selectSize[1] << ","
-                 << selectSize[2] << std::endl
+                 << selectSize[2] << " (HDF5 only)" << std::endl
 #endif
     );
   }
@@ -528,27 +528,31 @@ int main(int argc, char* argv[])
       readOk = false;
 #endif
     }
-    readOk = readSingleBlockFile<ValueType>(
-      // inputs
-      rank,
-      size,
-      filename,
-      numBlocks,
-      blocksPerRank,
-      // outputs
-      nDims,
-      useDataSet,
-      globalSize,
-      blocksPerDim,
-      localBlockIndices,
-      localBlockOrigins,
-      localBlockSizes,
-      // output timers
-      dataReadTime,
-      buildDatasetTime);
+    else
+    {
+      readOk = readSingleBlockFile<ValueType>(
+        // inputs
+        rank,
+        size,
+        filename,
+        numBlocks,
+        blocksPerRank,
+        // outputs
+        nDims,
+        useDataSet,
+        globalSize,
+        blocksPerDim,
+        localBlockIndices,
+        localBlockOrigins,
+        localBlockSizes,
+        // output timers
+        dataReadTime,
+        buildDatasetTime);
+    }
   }
   if (!readOk)
   {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Data read failed.");
     MPI_Finalize();
     return EXIT_FAILURE;
   }
