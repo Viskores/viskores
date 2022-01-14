@@ -11,6 +11,8 @@
 #include <vtkm/cont/internal/CastInvalidValue.h>
 #include <vtkm/cont/internal/MapArrayPermutation.h>
 
+#include <vtkm/cont/ErrorBadType.h>
+
 #include <vtkm/worklet/WorkletMapField.h>
 
 
@@ -48,9 +50,9 @@ struct MapPermutationWorklet : vtkm::worklet::WorkletMapField
 
 struct DoMapFieldPermutation
 {
-  template <typename InputArrayType>
+  template <typename InputArrayType, typename PermutationArrayType>
   void operator()(const InputArrayType& input,
-                  const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
+                  const PermutationArrayType& permutation,
                   vtkm::cont::UnknownArrayHandle& output,
                   vtkm::Float64 invalidValue) const
   {
@@ -77,13 +79,19 @@ namespace internal
 
 vtkm::cont::UnknownArrayHandle MapArrayPermutation(
   const vtkm::cont::UnknownArrayHandle& inputArray,
-  const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
+  const vtkm::cont::UnknownArrayHandle& permutation,
   vtkm::Float64 invalidValue)
 {
+  if (!permutation.IsBaseComponentType<vtkm::Id>())
+  {
+    throw vtkm::cont::ErrorBadType("Permutation array input to MapArrayPermutation must have "
+                                   "values of vtkm::Id. Reported type is " +
+                                   permutation.GetBaseComponentTypeName());
+  }
   vtkm::cont::UnknownArrayHandle outputArray = inputArray.NewInstanceBasic();
   outputArray.Allocate(permutation.GetNumberOfValues());
   inputArray.CastAndCallWithExtractedArray(
-    DoMapFieldPermutation{}, permutation, outputArray, invalidValue);
+    DoMapFieldPermutation{}, permutation.ExtractComponent<vtkm::Id>(0), outputArray, invalidValue);
   return outputArray;
 }
 

@@ -183,6 +183,7 @@ set(sources
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
+  ArrayCopy.cxx
   ArrayGetValues.cxx
   ArrayRangeCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx

@@ -12,10 +12,13 @@
 
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
+
+#include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/cont/internal/MapArrayPermutation.h>
 
@@ -258,6 +261,48 @@ struct ArrayCopyConcreteSrc<vtkm::cont::StorageTagIndex>
   }
 };
 
+// Special case for ArrayHandleCounting to be efficient.
+template <>
+struct VTKM_CONT_EXPORT ArrayCopyConcreteSrc<vtkm::cont::StorageTagCounting>
+{
+  template <typename T1, typename T2, typename S2>
+  void operator()(const vtkm::cont::ArrayHandle<T1, vtkm::cont::StorageTagCounting>& source,
+                  vtkm::cont::ArrayHandle<T2, S2>& destination) const
+  {
+    vtkm::cont::ArrayHandleCounting<T1> countingSource = source;
+    T1 start = countingSource.GetStart();
+    T1 step = countingSource.GetStep();
+    vtkm::Id size = countingSource.GetNumberOfValues();
+    destination.Allocate(size);
+    vtkm::cont::UnknownArrayHandle unknownDest = destination;
+
+    using VTraits1 = vtkm::VecTraits<T1>;
+    using VTraits2 = vtkm::VecTraits<T2>;
+    for (vtkm::IdComponent comp = 0; comp < VTraits1::GetNumberOfComponents(start); ++comp)
+    {
+      this->CopyCountingFloat(
+        static_cast<vtkm::FloatDefault>(VTraits1::GetComponent(start, comp)),
+        static_cast<vtkm::FloatDefault>(VTraits1::GetComponent(step, comp)),
+        size,
+        unknownDest.ExtractComponent<typename VTraits2::BaseComponentType>(comp));
+    }
+  }
+
+  void operator()(const vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagCounting>& source,
+                  vtkm::cont::ArrayHandle<vtkm::Id>& destination) const
+  {
+    destination = this->CopyCountingId(source);
+  }
+
+private:
+  void CopyCountingFloat(vtkm::FloatDefault start,
+                         vtkm::FloatDefault step,
+                         vtkm::Id size,
+                         const vtkm::cont::UnknownArrayHandle& result) const;
+  vtkm::cont::ArrayHandle<Id> CopyCountingId(
+    const vtkm::cont::ArrayHandleCounting<vtkm::Id>& source) const;
+};
+
 // Special case for ArrayHandleConcatenate to be efficient
 template <typename ST1, typename ST2>
 struct ArrayCopyConcreteSrc<vtkm::cont::StorageTagConcatenate<ST1, ST2>>
@@ -280,10 +325,10 @@ struct ArrayCopyConcreteSrc<vtkm::cont::StorageTagConcatenate<ST1, ST2>>
 };
 
 // Special case for ArrayHandlePermutation to be efficient
-template <typename S>
-struct ArrayCopyConcreteSrc<vtkm::cont::StorageTagPermutation<vtkm::cont::StorageTagBasic, S>>
+template <typename SIndex, typename SValue>
+struct ArrayCopyConcreteSrc<vtkm::cont::StorageTagPermutation<SIndex, SValue>>
 {
-  using SourceStorageTag = vtkm::cont::StorageTagPermutation<vtkm::cont::StorageTagBasic, S>;
+  using SourceStorageTag = vtkm::cont::StorageTagPermutation<SIndex, SValue>;
   template <typename T1, typename T2, typename S2>
   void operator()(const vtkm::cont::ArrayHandle<T1, SourceStorageTag>& source,
                   vtkm::cont::ArrayHandle<T2, S2>& destination) const

@@ -26,7 +26,7 @@ namespace internal
 ///
 VTKM_CONT_EXPORT vtkm::cont::UnknownArrayHandle MapArrayPermutation(
   const vtkm::cont::UnknownArrayHandle& inputArray,
-  const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
+  const vtkm::cont::UnknownArrayHandle& permutation,
   vtkm::Float64 invalidValue = vtkm::Nan64());
 
 /// Used to map a permutation array.
