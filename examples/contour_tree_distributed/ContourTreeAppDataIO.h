@@ -83,11 +83,12 @@
 using namespace H5;
 
 
-
 /// Convert a 3D index of a cube to rank index
 vtkm::Id to1DIndex(vtkm::Id3 idx, vtkm::Id3 dims)
 {
-  return (idx[2] * dims[0] * dims[1]) + (idx[1] * dims[0]) + idx[0];
+  // return (idx[2] * dims[0] * dims[1]) + (idx[1] * dims[0]) + idx[0];
+  // Swap first and second dimension
+  return (idx[2] * dims[0] * dims[1]) + (idx[0] * dims[1]) + idx[1];
 }
 
 /// Convert the rank index to the index of the cube
@@ -96,8 +97,9 @@ vtkm::Id3 to3DIndex(vtkm::Id idx, vtkm::Id3 dims)
   vtkm::Id3 res;
   res[2] = idx / (dims[0] * dims[1]);
   idx -= (res[2] * dims[0] * dims[1]);
-  res[1] = idx / dims[0];
-  res[0] = idx % dims[0];
+  // Swap index 0 and 1
+  res[0] = idx / dims[0];
+  res[1] = idx % dims[0];
   return res;
 }
 
@@ -127,7 +129,7 @@ bool read3DHDF5File(const int& mpi_rank,
                     const std::string& dataset_name,
                     const int& blocksPerRank,
                     const vtkm::Id3& blocksPerDim,
-                    const vtkm::Id3 selectSize,
+                    const vtkm::Id3& selectSize,
                     std::vector<vtkm::Float32>::size_type& nDims,
                     vtkm::cont::PartitionedDataSet& useDataSet,
                     vtkm::Id3& globalSize,
@@ -160,8 +162,14 @@ bool read3DHDF5File(const int& mpi_rank,
   auto localBlockSizesPortal = localBlockSizes.WritePortal();
 
   herr_t status;
+  //Set up file access property list with parallel I/O access
+  //hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
+  //MPI_Comm comm  = MPI_COMM_WORLD;
+  //MPI_Info info  = MPI_INFO_NULL;
+  //H5Pset_fapl_mpio(plist_id, comm, info);
+
   // Open the file and the dataset
-  hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT); //  plist_id);//
   hid_t dataset = H5Dopen(file, dataset_name.c_str(), H5P_DEFAULT);
   // Get filespace for rank and dimension
   hid_t filespace = H5Dget_space(dataset);
@@ -174,6 +182,7 @@ bool read3DHDF5File(const int& mpi_rank,
     return false;
   }
   hsize_t dims[nDims]; // dataset dimensions
+  status = H5Sget_simple_extent_dims(filespace, dims, NULL);
   globalSize[0] = selectSize[0] < 0 ? dims[0] : selectSize[0];
   globalSize[1] = selectSize[1] < 0 ? dims[1] : selectSize[1];
   globalSize[2] = selectSize[2] < 0 ? dims[2] : selectSize[2];
@@ -181,21 +190,37 @@ bool read3DHDF5File(const int& mpi_rank,
   hid_t dataspace = H5Dget_space(dataset);
   // Read a hyperslap
   // define the hyperslap
-  hsize_t count[2];  // size of the hyperslab in the file
+  hsize_t count[3];  // size of the hyperslab in the file
   hsize_t offset[3]; // hyperslab offset in the file
-
   // Compute the origin and count
-  vtkm::Id3 blockSize(vtkm::Id(globalSize[0] / blocksPerDim[0]),
-                      vtkm::Id(globalSize[1] / blocksPerDim[1]),
-                      vtkm::Id(globalSize[2] / blocksPerDim[2]));
+  vtkm::Id3 blockSize(std::floor(vtkm::Id(globalSize[0] / blocksPerDim[0])),
+                      std::floor(vtkm::Id(globalSize[1] / blocksPerDim[1])),
+                      std::floor(vtkm::Id(globalSize[2] / blocksPerDim[2])));
   vtkm::Id3 blockIndex = to3DIndex(mpi_rank, blocksPerDim);
   // compute the offset and count for the block for this rank
   offset[0] = blockSize[0] * blockIndex[0];
   offset[1] = blockSize[1] * blockIndex[1];
-  offset[1] = blockSize[2] * blockIndex[2];
+  offset[2] = blockSize[2] * blockIndex[2];
   count[0] = blockSize[0];
   count[1] = blockSize[1];
   count[2] = blockSize[2];
+  // add ghost zone on the left
+  if (blockIndex[0] > 0)
+  {
+    offset[0] = offset[0] - 1;
+    count[0] = count[0] + 1;
+  }
+  if (blockIndex[1] > 0)
+  {
+    offset[1] = offset[1] - 1;
+    count[1] = count[1] + 1;
+  }
+  if (blockIndex[2] > 0)
+  {
+    offset[2] = offset[2] - 1;
+    count[2] = count[2] + 1;
+  }
+  // Check that we are not running over the end of the dataset
   if (offset[0] + count[0] > globalSize[0])
   {
     count[0] = globalSize[0] - offset[0];
@@ -208,16 +233,16 @@ bool read3DHDF5File(const int& mpi_rank,
   {
     count[2] = globalSize[2] - offset[2];
   }
-  // Select the data in the dataset
+  blockSize = vtkm::Id3{ static_cast<vtkm::Id>(count[0]),
+                         static_cast<vtkm::Id>(count[1]),
+                         static_cast<vtkm::Id>(count[2]) };
+  vtkm::Id3 blockOrigin = vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
+                                     static_cast<vtkm::Id>(offset[1]),
+                                     static_cast<vtkm::Id>(offset[2]) };
+  // Define the hyperslap to read the data into memory
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, offset, NULL, count, NULL);
   // Define the memory space for reading
   hid_t memspace = H5Screate_simple(nDims, count, NULL);
-  // Define the hyperslap to read the data into memory
-  hsize_t offset_out[3];
-  offset_out[0] = 0;
-  offset_out[1] = 0;
-  offset_out[2] = 0;
-  status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offset_out, NULL, count, NULL);
   // Read data from hyperslab in the file into the hyperslab in
   std::size_t numVertices = count[0] * count[1] * count[2];
   std::vector<ValueType> values(numVertices);
@@ -227,13 +252,13 @@ bool read3DHDF5File(const int& mpi_rank,
       double data_out[count[0]][count[1]][count[2]]; // output buffer
       status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace, H5P_DEFAULT, data_out);
       // Copy data to 1D array of the expected ValueType
-      for (vtkm::Id k = 0; k < globalSize[0]; k++)
+      for (vtkm::Id k = 0; k < count[0]; k++)
       {
-        for (vtkm::Id j = 0; j < globalSize[1]; j++)
+        for (vtkm::Id j = 0; j < count[1]; j++)
         {
-          for (vtkm::Id i = 0; i < globalSize[2]; i++)
+          for (vtkm::Id i = 0; i < count[2]; i++)
           {
-            values[to1DIndex(vtkm::Id3(k, j, i), globalSize)] = ValueType(data_out[k][j][i]);
+            values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
         }
       }
@@ -243,13 +268,13 @@ bool read3DHDF5File(const int& mpi_rank,
       int data_out[count[0]][count[1]][count[2]]; // output buffer
       status = H5Dread(dataset, H5T_NATIVE_INT, memspace, dataspace, H5P_DEFAULT, data_out);
       // Copy data to 1D array of the expected ValueType
-      for (vtkm::Id k = 0; k < globalSize[0]; k++)
+      for (vtkm::Id k = 0; k < count[0]; k++)
       {
-        for (vtkm::Id j = 0; j < globalSize[1]; j++)
+        for (vtkm::Id j = 0; j < count[1]; j++)
         {
-          for (vtkm::Id i = 0; i < globalSize[2]; i++)
+          for (vtkm::Id i = 0; i < count[2]; i++)
           {
-            values[to1DIndex(vtkm::Id3(k, j, i), globalSize)] = ValueType(data_out[k][j][i]);
+            values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
         }
       }
@@ -259,13 +284,13 @@ bool read3DHDF5File(const int& mpi_rank,
       unsigned char data_out[count[0]][count[1]][count[2]]; // output buffer
       status = H5Dread(dataset, H5T_NATIVE_UCHAR, memspace, dataspace, H5P_DEFAULT, data_out);
       // Copy data to 1D array of the expected ValueType
-      for (vtkm::Id k = 0; k < globalSize[0]; k++)
+      for (vtkm::Id k = 0; k < count[0]; k++)
       {
-        for (vtkm::Id j = 0; j < globalSize[1]; j++)
+        for (vtkm::Id j = 0; j < count[1]; j++)
         {
-          for (vtkm::Id i = 0; i < globalSize[2]; i++)
+          for (vtkm::Id i = 0; i < count[2]; i++)
           {
-            values[to1DIndex(vtkm::Id3(k, j, i), globalSize)] = ValueType(data_out[k][j][i]);
+            values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
         }
       }
@@ -280,27 +305,33 @@ bool read3DHDF5File(const int& mpi_rank,
   vtkm::cont::DataSetBuilderUniform dsb;
   vtkm::cont::DataSet ds;
   VTKM_ASSERT(nDims == 3);
-  const vtkm::Id3 v_dims{ static_cast<vtkm::Id>(count[0]),
-                          static_cast<vtkm::Id>(count[1]),
-                          static_cast<vtkm::Id>(count[2]) };
-  const vtkm::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[0]),
-                                          static_cast<ValueType>(offset[1]),
+
+  /*const vtkm::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[0]),
+                                            static_cast<ValueType>(offset[1]),
+                                            static_cast<ValueType>(offset[2]) };*/
+  // Swap first and second dimenion here as well for consistency
+  const vtkm::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[1]),
+                                          static_cast<ValueType>(offset[0]),
                                           static_cast<ValueType>(offset[2]) };
+  const vtkm::Id3 v_dims{ static_cast<vtkm::Id>(blockSize[1]),
+                          static_cast<vtkm::Id>(blockSize[0]),
+                          static_cast<vtkm::Id>(blockSize[2]) };
   vtkm::Vec<ValueType, 3> v_spacing(1, 1, 1);
   ds = dsb.Create(v_dims, v_origin, v_spacing);
   ds.AddPointField("values", values);
   // and add to partition
   useDataSet.AppendPartition(ds);
-  localBlockIndicesPortal.Set(blockNo, blockIndex);
-  localBlockOriginsPortal.Set(blockNo,
-                              vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
-                                         static_cast<vtkm::Id>(offset[1]),
-                                         static_cast<vtkm::Id>(offset[2]) });
-  localBlockSizesPortal.Set(blockNo,
-                            vtkm::Id3{ static_cast<vtkm::Id>(count[0]),
-                                       static_cast<vtkm::Id>(count[1]),
-                                       static_cast<vtkm::Id>(count[2]) });
-
+  // Original order
+  //localBlockIndicesPortal.Set(blockNo, blockIndex);
+  //localBlockOriginsPortal.Set(blockNo, blockOrigin);
+  //localBlockSizesPortal.Set(blockNo, blockSize);
+  localBlockIndicesPortal.Set(blockNo, vtkm::Id3(blockIndex[1], blockIndex[0], blockIndex[2]));
+  localBlockOriginsPortal.Set(blockNo, vtkm::Id3(blockOrigin[1], blockOrigin[0], blockOrigin[2]));
+  localBlockSizesPortal.Set(blockNo, vtkm::Id3(blockSize[1], blockSize[0], blockSize[2]));
+  // Swap dimensions so that they are from fastest to slowest growing
+  // dims[0] -> col; dims[1] -> row, dims[2] ->slice
+  // Swap the dimensions to match the pre-split file reader
+  globalSize = vtkm::Id3(globalSize[1], globalSize[0], globalSize[2]);
   // Finished data read
   currTime = totalTime.GetElapsedTime();
   dataReadTime = currTime - prevTime;
@@ -308,7 +339,7 @@ bool read3DHDF5File(const int& mpi_rank,
 
   currTime = totalTime.GetElapsedTime();
   buildDatasetTime = currTime - prevTime;
-  return false;
+  return true;
 }
 #endif
 
@@ -543,6 +574,7 @@ bool readPreSplitFiles(const int& rank,
       vtkm::Vec<ValueType, 3> v_spacing(1, 1, 1);
       ds = dsb.Create(v_dims, v_origin, v_spacing);
     }
+
     ds.AddPointField("values", values);
     // and add to partition
     useDataSet.AppendPartition(ds);
