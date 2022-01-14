@@ -167,13 +167,13 @@ vtkm::cont::DataSet GetDataForFilter(vtkm::cont::DataSet& data)
   using DataArray = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
 
   DataArray backArr;
-  data.GetField("mesh_topo/background").GetData().AsArrayHandle(backArr);
+  data.GetField("mesh_topo/background").GetDataAsDefaultFloat().AsArrayHandle(backArr);
   DataArray cirAArr;
-  data.GetField("mesh_topo/circle_a").GetData().AsArrayHandle(cirAArr);
+  data.GetField("mesh_topo/circle_a").GetDataAsDefaultFloat().AsArrayHandle(cirAArr);
   DataArray cirBArr;
-  data.GetField("mesh_topo/circle_b").GetData().AsArrayHandle(cirBArr);
+  data.GetField("mesh_topo/circle_b").GetDataAsDefaultFloat().AsArrayHandle(cirBArr);
   DataArray cirCArr;
-  data.GetField("mesh_topo/circle_c").GetData().AsArrayHandle(cirCArr);
+  data.GetField("mesh_topo/circle_c").GetDataAsDefaultFloat().AsArrayHandle(cirCArr);
 
   IdArray length;
   IdArray offset;
