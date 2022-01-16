@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/ImageConnectivity.h>
+#include <vtkm/filter/connected_components/ImageConnectivity.h>
 
 #include <vtkm/cont/DataSet.h>
 
@@ -39,7 +39,7 @@ void TestImageConnectivity()
 {
   vtkm::cont::DataSet dataSet = MakeTestDataSet();
 
-  vtkm::filter::ImageConnectivity connectivity;
+  vtkm::filter::connected_components::ImageConnectivity connectivity;
   connectivity.SetActiveField("color");
 
   const vtkm::cont::DataSet outputData = connectivity.Execute(dataSet);

@@ -11,8 +11,8 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CellSetConnectivity.h>
 #include <vtkm/filter/Contour.h>
+#include <vtkm/filter/connected_components/CellSetConnectivity.h>
 #include <vtkm/source/Tangle.h>
 
 namespace
@@ -34,7 +34,7 @@ public:
     filter.SetActiveField("tangle");
     vtkm::cont::DataSet iso = filter.Execute(dataSet);
 
-    vtkm::filter::CellSetConnectivity connectivity;
+    vtkm::filter::connected_components::CellSetConnectivity connectivity;
     const vtkm::cont::DataSet output = connectivity.Execute(iso);
 
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
@@ -52,7 +52,7 @@ public:
   {
     vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
 
-    vtkm::filter::CellSetConnectivity connectivity;
+    vtkm::filter::connected_components::CellSetConnectivity connectivity;
     const vtkm::cont::DataSet output = connectivity.Execute(dataSet);
 
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
@@ -69,7 +69,7 @@ public:
   void TestUniformDataSet() const
   {
     vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::CellSetConnectivity connectivity;
+    vtkm::filter::connected_components::CellSetConnectivity connectivity;
     const vtkm::cont::DataSet output = connectivity.Execute(dataSet);
 
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;

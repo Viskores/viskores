@@ -15,7 +15,6 @@ set(headers
 set(unit_tests
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
-  UnitTestCellSetConnectivityFilter.cxx
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourFilter.cxx
@@ -36,7 +35,6 @@ set(unit_tests
   UnitTestGhostCellClassify.cxx
   UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx
-  UnitTestImageConnectivityFilter.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
   UnitTestLagrangianFilter.cxx

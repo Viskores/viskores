@@ -10,8 +10,8 @@
 #ifndef vtk_m_worklet_connectivity_CellSetConnectivity_h
 #define vtk_m_worklet_connectivity_CellSetConnectivity_h
 
-#include <vtkm/worklet/connectivities/CellSetDualGraph.h>
-#include <vtkm/worklet/connectivities/GraphConnectivity.h>
+#include <vtkm/filter/connected_components/worklet/CellSetDualGraph.h>
+#include <vtkm/filter/connected_components/worklet/GraphConnectivity.h>
 
 namespace vtkm
 {

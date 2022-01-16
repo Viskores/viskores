@@ -12,9 +12,9 @@
 #define vtk_m_worklet_connectivity_graph_connectivity_h
 
 #include <vtkm/cont/Invoker.h>
-#include <vtkm/worklet/connectivities/CellSetDualGraph.h>
-#include <vtkm/worklet/connectivities/InnerJoin.h>
-#include <vtkm/worklet/connectivities/UnionFind.h>
+#include <vtkm/filter/connected_components/worklet/CellSetDualGraph.h>
+#include <vtkm/filter/connected_components/worklet/InnerJoin.h>
+#include <vtkm/filter/connected_components/worklet/UnionFind.h>
 
 namespace vtkm
 {
