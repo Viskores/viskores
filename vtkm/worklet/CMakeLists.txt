@@ -30,7 +30,7 @@ set(headers
   ExtractGeometry.h
   ExtractStructured.h
   FieldEntropy.h
-  FieldHistogram.h
+  ../filter/density_estimate/worklet/FieldHistogram.h
   FieldStatistics.h
   Gradient.h
   ImageDifference.h

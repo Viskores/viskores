@@ -8,13 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Histogram_hxx
-#define vtk_m_filter_Histogram_hxx
-
-#include <vtkm/worklet/FieldHistogram.h>
+#include <vtkm/filter/density_estimate/Histogram.h>
+#include <vtkm/filter/density_estimate/worklet/FieldHistogram.h>
 
 #include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/AssignerPartitionedDataSet.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
@@ -26,6 +23,8 @@
 namespace vtkm
 {
 namespace filter
+{
+namespace density_estimate
 {
 namespace detail
 {
@@ -165,53 +164,63 @@ private:
 } // namespace detail
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT Histogram::Histogram()
-  : NumberOfBins(10)
-  , BinDelta(0)
-  , ComputedRange()
-  , Range()
+VTKM_CONT Histogram::Histogram()
 {
   this->SetOutputFieldName("histogram");
 }
 
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(
-  const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata&,
-  vtkm::filter::PolicyBase<DerivedPolicy>)
+VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(const vtkm::cont::DataSet& input)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> binArray;
-  T delta;
 
-  vtkm::worklet::FieldHistogram worklet;
-  if (this->ComputedRange.IsNonEmpty())
-  {
-    worklet.Run(field,
-                this->NumberOfBins,
-                static_cast<T>(this->ComputedRange.Min),
-                static_cast<T>(this->ComputedRange.Max),
-                delta,
-                binArray);
-  }
-  else
-  {
-    worklet.Run(field, this->NumberOfBins, this->ComputedRange, delta, binArray);
-  }
+  auto resolveType = [&](const auto& concrete) {
+    using T = typename std::decay_t<decltype(concrete)>::ValueType;
+    T delta;
 
-  this->BinDelta = static_cast<vtkm::Float64>(delta);
+    vtkm::worklet::FieldHistogram worklet;
+    if (this->ComputedRange.IsNonEmpty())
+    {
+      worklet.Run(concrete,
+                  this->NumberOfBins,
+                  static_cast<T>(this->ComputedRange.Min),
+                  static_cast<T>(this->ComputedRange.Max),
+                  delta,
+                  binArray);
+    }
+    else
+    {
+      worklet.Run(concrete, this->NumberOfBins, this->ComputedRange, delta, binArray);
+    }
+
+    this->BinDelta = static_cast<vtkm::Float64>(delta);
+  };
+
+  const auto& fieldArray = this->GetFieldFromDataSet(input).GetData();
+  fieldArray
+    .CastAndCallForTypesWithFloatFallback<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(
+      resolveType);
+
   vtkm::cont::DataSet output;
   vtkm::cont::Field rfield(
     this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, binArray);
   output.AddField(rfield);
+
+  this->MapFieldsOntoOutput(input, output);
+
   return output;
 }
 
+VTKM_CONT vtkm::cont::PartitionedDataSet Histogram::DoExecutePartitions(
+  const vtkm::cont::PartitionedDataSet& input)
+{
+  this->PreExecute(input);
+  auto result = this->NewFilter::DoExecutePartitions(input);
+  this->PostExecute(input, result);
+  return result;
+}
+
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::PartitionedDataSet& input,
-                                            const vtkm::filter::PolicyBase<DerivedPolicy>&)
+VTKM_CONT void Histogram::PreExecute(const vtkm::cont::PartitionedDataSet& input)
 {
   if (this->Range.IsNonEmpty())
   {
@@ -230,10 +239,8 @@ inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::PartitionedDataSet
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT void Histogram::PostExecute(const vtkm::cont::PartitionedDataSet&,
-                                             vtkm::cont::PartitionedDataSet& result,
-                                             const vtkm::filter::PolicyBase<DerivedPolicy>&)
+VTKM_CONT void Histogram::PostExecute(const vtkm::cont::PartitionedDataSet&,
+                                      vtkm::cont::PartitionedDataSet& result)
 {
   // iterate and compute histogram for each local block.
   detail::DistributedHistogram helper(result.GetNumberOfPartitions());
@@ -250,7 +257,6 @@ inline VTKM_CONT void Histogram::PostExecute(const vtkm::cont::PartitionedDataSe
 
   result = vtkm::cont::PartitionedDataSet(output);
 }
-}
-} // namespace vtkm::filter
-
-#endif
+} // namespace density_estimate
+} // namespace filter
+} // namespace vtkm

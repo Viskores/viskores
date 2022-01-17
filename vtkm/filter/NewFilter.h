@@ -322,14 +322,15 @@ protected:
     this->MapFieldsOntoOutput(input, output, defaultMapper);
   }
 
+  VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData);
+
 private:
   VTKM_CONT
   virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
 
   // Note: In C++, subclasses can override private methods of superclass.
   VTKM_CONT virtual vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) = 0;
-  VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecutePartitions(
-    const vtkm::cont::PartitionedDataSet& inData);
 
   static void defaultMapper(vtkm::cont::DataSet& output, const vtkm::cont::Field& field)
   {

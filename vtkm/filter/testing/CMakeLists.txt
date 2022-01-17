@@ -35,7 +35,6 @@ set(unit_tests
   UnitTestGradientUniform.cxx
   UnitTestGhostCellClassify.cxx
   UnitTestGhostCellRemove.cxx
-  UnitTestHistogramFilter.cxx
   UnitTestImageConnectivityFilter.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
@@ -51,7 +50,6 @@ set(unit_tests
   UnitTestNDHistogramFilter.cxx
   UnitTestParticleDensity.cxx
   UnitTestPartitionedDataSetFilters.cxx
-  UnitTestPartitionedDataSetHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointAverageCellSetExtrude.cxx
   UnitTestPointElevationFilter.cxx

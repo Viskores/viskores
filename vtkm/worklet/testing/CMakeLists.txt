@@ -34,7 +34,6 @@ set(unit_tests
   UnitTestDotProduct.cxx
   UnitTestExtractGeometry.cxx
   UnitTestExtractStructured.cxx
-  UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestGraphConnectivity.cxx
   UnitTestInnerJoin.cxx

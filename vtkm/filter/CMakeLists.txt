@@ -21,6 +21,12 @@ vtkm_add_instantiations(ClipWithImplicitFunctionInstantiations
   INSTANTIATIONS_FILE ClipWithImplicitFunctionExternInstantiations.h
   )
 
+set(deprecated_headers
+  Histogram.h
+  )
+
+vtkm_declare_headers(${deprecated_headers})
+
 set(common_headers
   CellAverage.h
   CellMeasures.h
@@ -85,7 +91,6 @@ set(extra_headers
   GenerateIds.h
   GhostCellClassify.h
   GhostCellRemove.h
-  Histogram.h
   ImageConnectivity.h
   ImageDifference.h
   ImageMedian.h
@@ -140,7 +145,6 @@ set(extra_header_template_sources
   FieldToColors.hxx
   GhostCellClassify.hxx
   GhostCellRemove.hxx
-  Histogram.hxx
   ImageConnectivity.hxx
   ImageDifference.hxx
   ImageMedian.hxx
@@ -313,6 +317,7 @@ target_link_libraries(vtkm_filter PUBLIC INTERFACE
 install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
 add_subdirectory(clean_grid)
+add_subdirectory(density_estimate)
 add_subdirectory(entity_extraction)
 add_subdirectory(internal)
 add_subdirectory(particleadvection)

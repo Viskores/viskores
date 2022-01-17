@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/Histogram.h>
+#include <vtkm/filter/density_estimate/Histogram.h>
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -295,7 +295,7 @@ void TestHistogram()
   // Data attached is the poisson distribution
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
-  vtkm::filter::Histogram histogram;
+  vtkm::filter::density_estimate::Histogram histogram;
 
   // Run data
   histogram.SetNumberOfBins(10);
