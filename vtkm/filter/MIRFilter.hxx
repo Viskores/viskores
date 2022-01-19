@@ -276,8 +276,10 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
     std::cerr << "Error checking" << std::endl;
     // Hacking workaround to not clone an entire dataset.
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> avgSize;
+    std::cerr << "Cell Metrics" << std::endl;
     this->Invoke(getVol, saved.GetCellSet(), saved.GetCoordinateSystem(0).GetData(), avgSize);
 
+    std::cerr << "Making Keys" << std::endl;
     vtkm::worklet::CalcError_C calcErrC;
     vtkm::worklet::Keys<vtkm::Id> cellKeys(cellLookback);
     vtkm::cont::ArrayCopy(cellLookback, filterCellInterp);
@@ -285,12 +287,13 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> vfsOut, totalErrorOut;
 
     lenOut.Allocate(cellKeys.GetUniqueKeys().GetNumberOfValues());
+    std::cerr << "Error calc : CalcError_C" << std::endl;
     this->Invoke(calcErrC, cellKeys, prevMat, lendata_or, posdata_or, idsdata_or, lenOut);
 
     vtkm::Id numIDsOut = vtkm::cont::Algorithm::ScanExclusive(lenOut, posOut);
     idsOut.Allocate(numIDsOut);
     vfsOut.Allocate(numIDsOut);
-    std::cerr << "Error checking worklet" << std::endl;
+    std::cerr << "Error calc : CalcError" << std::endl;
     vtkm::worklet::CalcError calcErr(this->error_scaling);
     this->Invoke(calcErr,
                  cellKeys,
