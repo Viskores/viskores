@@ -290,6 +290,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
     vtkm::Id numIDsOut = vtkm::cont::Algorithm::ScanExclusive(lenOut, posOut);
     idsOut.Allocate(numIDsOut);
     vfsOut.Allocate(numIDsOut);
+    std::cerr << "Error checking worklet" << std::endl;
     vtkm::worklet::CalcError calcErr(this->error_scaling);
     this->Invoke(calcErr,
                  cellKeys,
@@ -309,13 +310,18 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
                  vfsOut,
                  avgSizeTot,
                  totalErrorOut);
+
+    std::cerr << "Error checking reduce " << std::endl;
     totalError = vtkm::cont::Algorithm::Reduce(totalErrorOut, vtkm::Float64(0));
+    std::cerr << "Error checking done" << std::endl;
+    std::cerr << "More array copies" << std::endl;
     vtkm::cont::ArrayCopy(lenOut, lendata);
     vtkm::cont::ArrayCopy(posOut, posdata);
     vtkm::cont::ArrayCopy(idsOut, idsdata);
     vtkm::cont::ArrayCopy(vfsOut, vfsdata);
     // Clean up the cells by calculating their volumes, and then calculate the relative error for each cell.
     // Note that the total error needs to be rescaled by the number of cells to get the % error.
+    std::cerr << "Some policy calculations" << std::endl;
     totalError =
       totalError /
       vtkm::Float64(
