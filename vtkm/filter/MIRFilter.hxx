@@ -275,14 +275,14 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
 
     std::cerr << "Error checking" << std::endl;
     // Hacking workaround to not clone an entire dataset.
-    vtkm::cont::ArrayHandle<vtkm::Float64> avgSize;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> avgSize;
     this->Invoke(getVol, saved.GetCellSet(), saved.GetCoordinateSystem(0).GetData(), avgSize);
 
     vtkm::worklet::CalcError_C calcErrC;
     vtkm::worklet::Keys<vtkm::Id> cellKeys(cellLookback);
     vtkm::cont::ArrayCopy(cellLookback, filterCellInterp);
     vtkm::cont::ArrayHandle<vtkm::Id> lenOut, posOut, idsOut;
-    vtkm::cont::ArrayHandle<vtkm::Float64> vfsOut, totalErrorOut;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> vfsOut, totalErrorOut;
 
     lenOut.Allocate(cellKeys.GetUniqueKeys().GetNumberOfValues());
     this->Invoke(calcErrC, cellKeys, prevMat, lendata_or, posdata_or, idsdata_or, lenOut);
