@@ -8,13 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particle_density_cic_hxx
-#define vtk_m_filter_particle_density_cic_hxx
-
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/filter/PolicyBase.h>
+#include <vtkm/filter/density_estimate/ParticleDensityCloudInCell.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -74,25 +71,22 @@ namespace vtkm
 {
 namespace filter
 {
-inline VTKM_CONT ParticleDensityCloudInCell::ParticleDensityCloudInCell(const vtkm::Id3& dimension,
-                                                                        const vtkm::Vec3f& origin,
-                                                                        const vtkm::Vec3f& spacing)
+namespace density_estimate
+{
+VTKM_CONT ParticleDensityCloudInCell::ParticleDensityCloudInCell(const vtkm::Id3& dimension,
+                                                                 const vtkm::Vec3f& origin,
+                                                                 const vtkm::Vec3f& spacing)
   : Superclass(dimension, origin, spacing)
 {
 }
 
-inline VTKM_CONT ParticleDensityCloudInCell::ParticleDensityCloudInCell(const Id3& dimension,
-                                                                        const vtkm::Bounds& bounds)
+VTKM_CONT ParticleDensityCloudInCell::ParticleDensityCloudInCell(const Id3& dimension,
+                                                                 const vtkm::Bounds& bounds)
   : Superclass(dimension, bounds)
 {
 }
 
-template <typename T, typename StorageType, typename Policy>
-inline VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(
-  const cont::DataSet& dataSet,
-  const cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata&,
-  PolicyBase<Policy>)
+VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(const cont::DataSet& input)
 {
   // Unlike ParticleDensityNGP, particle deposit mass on the grid points, thus it is natural to
   // return the density as PointField;
@@ -104,30 +98,56 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(
   locator.SetCoordinates(uniform.GetCoordinateSystem());
   locator.Update();
 
-  auto coords = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
+  auto coords = input.GetCoordinateSystem().GetDataAsMultiplexer();
 
-  vtkm::cont::ArrayHandle<T> density;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<T>(0, uniform.GetNumberOfPoints()),
-                        density);
+  auto resolveType = [&, this](const auto& concrete) {
+    // use std::decay to remove const ref from the decltype of concrete.
+    using T = typename std::decay_t<decltype(concrete)>::ValueType;
 
-  this->Invoke(vtkm::worklet::CICWorklet{},
-               coords,
-               field,
-               locator,
-               uniform.GetCellSet().template AsCellSet<vtkm::cont::CellSetStructured<3>>(),
-               density);
+    // We create an ArrayHandle and pass it to the Worklet as AtomicArrayInOut.
+    // However, the ArrayHandle needs to be allocated and initialized first. The
+    // easiest way to do it is to copy from an ArrayHandleConstant
+    vtkm::cont::ArrayHandle<T> density;
+    vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<T>(0, uniform.GetNumberOfPoints()),
+                          density);
 
-  if (DivideByVolume)
-  {
-    auto volume = this->Spacing[0] * this->Spacing[1] * this->Spacing[2];
-    this->Invoke(DivideByVolumeWorklet{ volume }, density);
-  }
+    this->Invoke(vtkm::worklet::CICWorklet{},
+                 coords,
+                 concrete,
+                 locator,
+                 uniform.GetCellSet().template AsCellSet<vtkm::cont::CellSetStructured<3>>(),
+                 density);
 
-  uniform.AddField(vtkm::cont::make_FieldPoint("density", density));
+    if (DivideByVolume)
+    {
+      this->DoDivideByVolume(density);
+    }
+
+    uniform.AddField(vtkm::cont::make_FieldPoint("density", density));
+  };
+
+  // Note: This is the so called Immediately-Invoked Function Expression (IIFE). Here we define
+  // a lambda expression and immediately call it at the end. This allows us to not declare an
+  // UnknownArrayHandle first and then assign it in the if-else statement. If I really want to
+  // show-off, I can even inline the `fieldArray` variable and turn it into a long expression.
+  auto fieldArray = [&, this]() -> vtkm::cont::UnknownArrayHandle {
+    if (this->ComputeNumberDensity)
+    {
+      return vtkm::cont::make_ArrayHandleConstant(vtkm::FloatDefault{ 1 },
+                                                  input.GetNumberOfPoints());
+    }
+    else
+    {
+      return this->GetFieldFromDataSet(input).GetData();
+    }
+  }();
+  fieldArray.CastAndCallForTypes<
+    vtkm::TypeListFieldScalar,
+    vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST, vtkm::List<vtkm::cont::StorageTagConstant>>>(
+    resolveType);
 
   return uniform;
 }
-
-}
-}
-#endif // vtk_m_filter_particle_density_cic_hxx
+} // namespace density_estimate
+} // namespace filter
+} // namespace vtkm

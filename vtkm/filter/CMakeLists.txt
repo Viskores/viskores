@@ -26,6 +26,8 @@ set(deprecated_headers
   Histogram.h
   NDEntropy.h
   NDHistogram.h
+  ParticleDensityCloudInCell.h
+  ParticleDensityNearestGridPoint.h
   )
 
 vtkm_declare_headers(${deprecated_headers})
@@ -102,9 +104,6 @@ set(extra_headers
   MaskPoints.h
   MeshQuality.h
   MIRFilter.h
-  ParticleDensityBase.h
-  ParticleDensityCloudInCell.h
-  ParticleDensityNearestGridPoint.h
   ParticleAdvection.h
   Pathline.h
   PathParticle.h
@@ -152,8 +151,6 @@ set(extra_header_template_sources
   Mask.hxx
   MeshQuality.hxx
   MIRFilter.hxx
-  ParticleDensityCloudInCell.hxx
-  ParticleDensityNearestGridPoint.hxx
   ParticleAdvection.hxx
   Pathline.hxx
   PathParticle.hxx

@@ -11,8 +11,8 @@
 #include <vtkm/cont/ArrayHandleRandomUniformReal.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/ParticleDensityCloudInCell.h>
-#include <vtkm/filter/ParticleDensityNearestGridPoint.h>
+#include <vtkm/filter/density_estimate/ParticleDensityCloudInCell.h>
+#include <vtkm/filter/density_estimate/ParticleDensityNearestGridPoint.h>
 #include <vtkm/worklet/DescriptiveStatistics.h>
 
 void TestNGP()
@@ -41,7 +41,7 @@ void TestNGP()
   dataSet.AddCellField("mass", mass);
 
   auto cellDims = vtkm::Id3{ 3, 3, 3 };
-  vtkm::filter::ParticleDensityNearestGridPoint filter{
+  vtkm::filter::density_estimate::ParticleDensityNearestGridPoint filter{
     cellDims, { 0.f, 0.f, 0.f }, vtkm::Vec3f{ 1.f / 3.f, 1.f / 3.f, 1.f / 3.f }
   };
   filter.SetActiveField("mass");
@@ -91,9 +91,9 @@ void TestCIC()
   dataSet.AddCellField("mass", mass);
 
   auto cellDims = vtkm::Id3{ 3, 3, 3 };
-  vtkm::filter::ParticleDensityCloudInCell filter{ cellDims,
-                                                   { 0.f, 0.f, 0.f },
-                                                   vtkm::Vec3f{ 1.f / 3.f, 1.f / 3.f, 1.f / 3.f } };
+  vtkm::filter::density_estimate::ParticleDensityCloudInCell filter{
+    cellDims, { 0.f, 0.f, 0.f }, vtkm::Vec3f{ 1.f / 3.f, 1.f / 3.f, 1.f / 3.f }
+  };
   filter.SetActiveField("mass");
   auto density = filter.Execute(dataSet);
 

@@ -13,7 +13,8 @@ set(unit_tests
   UnitTestHistogramFilter.cxx
   UnitTestNDEntropyFilter.cxx
   UnitTestNDHistogramFilter.cxx
-  UnitTestPartitionedDataSetHistogramFilter.cxx)
+  UnitTestPartitionedDataSetHistogramFilter.cxx
+  UnitTestParticleDensity.cxx)
 
 set(libraries
   vtkm_filter_density_estimate

@@ -12,13 +12,20 @@ set(density_estimate_headers
   Histogram.h
   NDEntropy.h
   NDHistogram.h
+  ParticleDensityBase.h
+  ParticleDensityCloudInCell.h
+  ParticleDensityNearestGridPoint.h
   )
 
 set(density_estimate_sources_device
   Entropy.cxx
   Histogram.cxx
   NDEntropy.cxx
-  NDHistogram.cxx)
+  NDHistogram.cxx
+  ParticleDensityBase.cxx
+  ParticleDensityCloudInCell.cxx
+  ParticleDensityNearestGridPoint.cxx
+  )
 
 vtkm_library(
   NAME vtkm_filter_density_estimate

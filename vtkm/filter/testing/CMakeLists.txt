@@ -45,7 +45,6 @@ set(unit_tests
   UnitTestMeshQualityFilter.cxx
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
-  UnitTestParticleDensity.cxx
   UnitTestPartitionedDataSetFilters.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointAverageCellSetExtrude.cxx
