@@ -65,8 +65,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-
-
+  std::cerr << "Starting filter" << std::endl;
   //{
   //(void)input;
   //(void)policy;
@@ -98,11 +97,13 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
                "No cells found for MIR filter! Please don't call me with nothing!");
   }
 
+  std::cerr << "Building pre-requisite" << std::endl;
   const vtkm::cont::CoordinateSystem inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::cont::ArrayHandle<vtkm::Float64> avgSizeTot;
   vtkm::worklet::MeshQuality<vtkm::filter::CellMetric> getVol;
   getVol.SetMetric(c3 > 0 ? vtkm::filter::CellMetric::VOLUME : vtkm::filter::CellMetric::AREA);
+  std::cerr << "Mesh quality" << std::endl;
   this->Invoke(getVol,
                vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this),
                inputCoords.GetData(),
@@ -116,6 +117,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> vfsdata_or, vfsdata;
   vtkm::cont::ArrayHandle<vtkm::Id> idsdata_or, idsdata, lendata_or, lendata, posdata_or, posdata,
     allids;
+  std::cerr << "Bunch of array stuff" << std::endl;
   or_pos.GetData().AsArrayHandle(posdata_or);
   or_len.GetData().AsArrayHandle(lendata_or);
   or_ids.GetData().AsArrayHandle(idsdata_or);
@@ -145,6 +147,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
   vtkm::worklet::ConstructCellWeightList constructReverseInformation;
   vtkm::cont::ArrayHandleIndex pointCounter(input.GetNumberOfPoints());
   this->Invoke(constructReverseInformation, pointCounter, pointIDs, pointWeights);
+  std::cerr << "Starting main loop" << std::endl;
   do
   {
     saved = vtkm::cont::DataSet();
@@ -158,6 +161,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
     vtkm::worklet::CombineVFsForPoints convertOrigCellTo_Full;
 
 
+    std::cerr << "CombineVFsForPoints_C" << std::endl;
     this->Invoke(convertOrigCellTo, saved.GetCellSet(), lendata, posdata, idsdata, pointlen);
     vtkm::Id pointcount = vtkm::cont::Algorithm::ScanExclusive(pointlen, pointpos);
     pointvf.Allocate(pointcount);
@@ -199,12 +203,14 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
       //{
       vtkm::worklet::ExtractVFsForMIR_C extractCurrentMatVF;
       vtkm::cont::ArrayHandle<vtkm::Id> currentCellPointCounts;
+      std::cerr << "ExtractVFsForMIR_C" << std::endl;
       this->Invoke(extractCurrentMatVF, saved.GetCellSet(), currentCellPointCounts);
       vtkm::worklet::ExtractVFsForMIR extractCurrentMatVF_SC(currentMatID);
       vtkm::worklet::ScatterCounting extractCurrentMatVF_SC_scatter =
         extractCurrentMatVF_SC.MakeScatter(currentCellPointCounts);
       vtkm::cont::ArrayHandle<vtkm::Float64> currentMatVF;
       vtkm::cont::ArrayHandle<vtkm::Float64> previousMatVF;
+      std::cerr << "ExtractVFsForMIR" << std::endl;
       this->Invoke(extractCurrentMatVF_SC,
                    extractCurrentMatVF_SC_scatter,
                    saved.GetCellSet(),
@@ -222,7 +228,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
         vtkm::worklet::MIR mir;
         vtkm::cont::ArrayHandle<vtkm::Id> newCellLookback, newCellID;
 
-
+        std::cerr << "Running MIR" << std::endl;
         vtkm::cont::CellSetExplicit<> out = mir.Run(saved.GetCellSet(),
                                                     previousMatVF,
                                                     currentMatVF,
@@ -239,6 +245,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
         // Now convert the point VFs...
         vtkm::cont::ArrayHandle<vtkm::Id> plen, ppos, pids;
         vtkm::cont::ArrayHandle<vtkm::Float64> pvf;
+        std::cerr << "Running MIR Process MIR Field" << std::endl;
         mir.ProcessMIRField(mirobj.getPointLenArr(),
                             mirobj.getPointPosArr(),
                             mirobj.getPointIDArr(),
@@ -256,14 +263,17 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
         //fs(("pID" + std::to_string(currentMatID) + ".txt").c_str(), pointIDs);
         //fs(("wID" + std::to_string(currentMatID) + ".txt").c_str(), pointWeights);
         mirobj = vtkm::worklet::MIRObject<vtkm::Id, vtkm::Float64>(plen, ppos, pids, pvf);
+        std::cerr << "Making new dataset" << std::endl;
         saved = vtkm::cont::DataSet();
         saved.SetCellSet(out);
         vtkm::cont::CoordinateSystem outCo2(inputCoords.GetName(), coords);
         saved.AddCoordinateSystem(outCo2);
+        std::cerr << "Loop back" << std::endl;
       }
     }
 
 
+    std::cerr << "Error checking" << std::endl;
     // Hacking workaround to not clone an entire dataset.
     vtkm::cont::ArrayHandle<vtkm::Float64> avgSize;
     this->Invoke(getVol, saved.GetCellSet(), saved.GetCoordinateSystem(0).GetData(), avgSize);
@@ -321,8 +331,10 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
 
     vtkm::cont::ArrayCopy(pointIDs, this->MIRIDs);
     vtkm::cont::ArrayCopy(pointWeights, this->MIRWeights);
+    std::cerr << "Iteration done" << std::endl;
   } while ((++currentIterationNum <= this->max_iter) && totalError >= this->max_error);
 
+  std::cerr << "Ending filter" << std::endl;
 
   return saved;
 }
