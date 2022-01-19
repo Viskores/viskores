@@ -8,9 +8,17 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(density_estimate_headers
-  Histogram.h)
+  Entropy.h
+  Histogram.h
+  NDEntropy.h
+  NDHistogram.h
+  )
+
 set(density_estimate_sources_device
-  Histogram.cxx)
+  Entropy.cxx
+  Histogram.cxx
+  NDEntropy.cxx
+  NDHistogram.cxx)
 
 vtkm_library(
   NAME vtkm_filter_density_estimate

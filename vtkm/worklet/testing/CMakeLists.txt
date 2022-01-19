@@ -44,8 +44,6 @@ set(unit_tests
   UnitTestMaskIndices.cxx
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
-  UnitTestNDimsEntropy.cxx
-  UnitTestNDimsHistogram.cxx
   UnitTestNDimsHistMarginalization.cxx
   UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx

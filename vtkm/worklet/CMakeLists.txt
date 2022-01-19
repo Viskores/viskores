@@ -29,8 +29,6 @@ set(headers
   DotProduct.h
   ExtractGeometry.h
   ExtractStructured.h
-  FieldEntropy.h
-  ../filter/density_estimate/worklet/FieldHistogram.h
   FieldStatistics.h
   Gradient.h
   ImageDifference.h
@@ -46,9 +44,7 @@ set(headers
   MaskSelect.h
   MeshQuality.h
   MIR.h
-  NDimsEntropy.h
   NDimsHistMarginalization.h
-  NDimsHistogram.h
   Normalize.h
   OrientCellNormals.h
   OrientNormals.h

@@ -7,20 +7,17 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_NDHistogram_hxx
-#define vtk_m_filter_NDHistogram_hxx
-
 #include <vector>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/worklet/NDimsHistogram.h>
+
+#include <vtkm/filter/density_estimate/NDHistogram.h>
+#include <vtkm/filter/density_estimate/worklet/NDimsHistogram.h>
 
 namespace vtkm
 {
 namespace filter
 {
-
-inline VTKM_CONT NDHistogram::NDHistogram() {}
-
+namespace density_estimate
+{
 void NDHistogram::AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins)
 {
   this->FieldNames.push_back(fieldName);
@@ -37,9 +34,7 @@ vtkm::Range NDHistogram::GetDataRange(size_t fieldIdx)
   return DataRanges[fieldIdx];
 }
 
-template <typename Policy>
-inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::DataSet& inData,
-                                                            vtkm::filter::PolicyBase<Policy> policy)
+VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::DataSet& inData)
 {
   vtkm::worklet::NDimsHistogram ndHistogram;
 
@@ -53,10 +48,7 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::Da
     vtkm::Range rangeField;
     vtkm::Float64 deltaField;
     ndHistogram.AddField(
-      vtkm::filter::ApplyPolicyFieldNotActive(inData.GetField(this->FieldNames[i]), policy),
-      this->NumOfBins[i],
-      rangeField,
-      deltaField);
+      inData.GetField(this->FieldNames[i]).GetData(), this->NumOfBins[i], rangeField, deltaField);
     DataRanges.push_back(rangeField);
     BinDeltas.push_back(deltaField);
   }
@@ -75,14 +67,6 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::Da
   return outputData;
 }
 
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT bool NDHistogram::MapFieldOntoOutput(vtkm::cont::DataSet&,
-                                                      const vtkm::cont::Field&,
-                                                      vtkm::filter::PolicyBase<DerivedPolicy>)
-{
-  return false;
-}
-}
-}
-#endif
+} // namespace density_estimate
+} // namespace filter
+} // namespace vtkm

@@ -22,7 +22,10 @@ vtkm_add_instantiations(ClipWithImplicitFunctionInstantiations
   )
 
 set(deprecated_headers
+  Entropy.h
   Histogram.h
+  NDEntropy.h
+  NDHistogram.h
   )
 
 vtkm_declare_headers(${deprecated_headers})
@@ -84,7 +87,6 @@ set(extra_headers
   CreateResult.h
   CrossProduct.h
   DotProduct.h
-  Entropy.h
   ExternalFaces.h
   FieldSelection.h
   FieldToColors.h
@@ -100,8 +102,6 @@ set(extra_headers
   MaskPoints.h
   MeshQuality.h
   MIRFilter.h
-  NDEntropy.h
-  NDHistogram.h
   ParticleDensityBase.h
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
@@ -141,7 +141,6 @@ set(extra_header_template_sources
   ComputeMoments.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
-  Entropy.hxx
   FieldToColors.hxx
   GhostCellClassify.hxx
   GhostCellRemove.hxx
@@ -153,8 +152,6 @@ set(extra_header_template_sources
   Mask.hxx
   MeshQuality.hxx
   MIRFilter.hxx
-  NDEntropy.hxx
-  NDHistogram.hxx
   ParticleDensityCloudInCell.hxx
   ParticleDensityNearestGridPoint.hxx
   ParticleAdvection.hxx

@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/Entropy.h>
+#include <vtkm/filter/density_estimate/Entropy.h>
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -24,7 +24,7 @@ void TestEntropy()
   vtkm::source::Tangle tangle(dims);
   vtkm::cont::DataSet dataSet = tangle.Execute();
 
-  vtkm::filter::Entropy entropyFilter;
+  vtkm::filter::density_estimate::Entropy entropyFilter;
 
   ///// calculate entropy of "tangle" field of the data set /////
   entropyFilter.SetNumberOfBins(50); //set number of bins

@@ -25,7 +25,6 @@ set(unit_tests
   UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCrossProductFilter.cxx
-  UnitTestEntropyFilter.cxx
   UnitTestExtractGeometryFilter.cxx
   UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
@@ -46,8 +45,6 @@ set(unit_tests
   UnitTestMeshQualityFilter.cxx
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
-  UnitTestNDEntropyFilter.cxx
-  UnitTestNDHistogramFilter.cxx
   UnitTestParticleDensity.cxx
   UnitTestPartitionedDataSetFilters.cxx
   UnitTestPointAverageFilter.cxx

@@ -9,6 +9,9 @@
 ##============================================================================
 
 set(headers
-  FieldHistogram.h)
+  FieldEntropy.h
+  FieldHistogram.h
+  NDimsEntropy.h
+  NDimsHistogram.h)
 
 vtkm_declare_headers(${headers})

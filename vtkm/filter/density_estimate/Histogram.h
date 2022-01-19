@@ -27,8 +27,6 @@ namespace density_estimate
 class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT Histogram : public vtkm::filter::NewFilterField
 {
 public:
-  using SupportedTypes = vtkm::TypeListScalarAll;
-
   //Construct a histogram with a default of 10 bins
   VTKM_CONT
   Histogram();

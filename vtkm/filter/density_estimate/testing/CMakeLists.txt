@@ -9,11 +9,15 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestEntropyFilter.cxx
   UnitTestHistogramFilter.cxx
+  UnitTestNDEntropyFilter.cxx
+  UnitTestNDHistogramFilter.cxx
   UnitTestPartitionedDataSetHistogramFilter.cxx)
 
 set(libraries
-  vtkm_filter_density_estimate)
+  vtkm_filter_density_estimate
+  vtkm_source)
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
