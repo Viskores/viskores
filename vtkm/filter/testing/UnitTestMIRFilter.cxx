@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -163,6 +164,10 @@ public:
 
 vtkm::cont::DataSet GetDataForFilter(vtkm::cont::DataSet& data)
 {
+  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
+  vtkm::cont::DataSet toReturn = dataSetBuilder.Create(
+    vtkm::Id2(251, 251), vtkm::Vec2f(0.0f, 0.0f), vtkm::Vec2f(1 / 250.f, 1 / 250.f));
+
   using IdArray = vtkm::cont::ArrayHandle<vtkm::Id>;
   using DataArray = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
 
@@ -191,14 +196,16 @@ vtkm::cont::DataSet GetDataForFilter(vtkm::cont::DataSet& data)
 
   invoker(MetaDataPopulate{}, offset, backArr, cirAArr, cirBArr, cirCArr, matIds, matVFs);
 
-  data.AddField(vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::CELL_SET, offset));
-  data.AddField(vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::CELL_SET, length));
-  data.AddField(
+  toReturn.AddField(
+    vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::CELL_SET, offset));
+  toReturn.AddField(
+    vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::CELL_SET, length));
+  toReturn.AddField(
     vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WHOLE_MESH, matIds));
-  data.AddField(
+  toReturn.AddField(
     vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WHOLE_MESH, matVFs));
 
-  return data;
+  return toReturn;
 }
 
 void TestMIRVenn250()
