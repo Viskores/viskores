@@ -10,8 +10,12 @@
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayCopyDevice.h>
+#include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
@@ -138,6 +142,25 @@ void TryCopy()
     vtkm::cont::ArrayHandle<ValueType> output;
     vtkm::cont::ArrayCopy(input, output);
     TestValues(input, output);
+  }
+
+  {
+    std::cout << "view -> basic" << std::endl;
+    vtkm::cont::ArrayHandle<ValueType> input = MakeInputArray<ValueType>();
+    auto viewInput = vtkm::cont::make_ArrayHandleView(input, 1, ARRAY_SIZE / 2);
+    vtkm::cont::ArrayHandle<ValueType> output;
+    vtkm::cont::ArrayCopy(input, output);
+    TestValues(input, output);
+  }
+
+  {
+    std::cout << "concatinate -> basic" << std::endl;
+    vtkm::cont::ArrayHandle<ValueType> input1 = MakeInputArray<ValueType>();
+    vtkm::cont::ArrayHandleConstant<ValueType> input2(TestValue(6, ValueType{}), ARRAY_SIZE / 2);
+    auto concatInput = vtkm::cont::make_ArrayHandleConcatenate(input1, input2);
+    vtkm::cont::ArrayHandle<ValueType> output;
+    vtkm::cont::ArrayCopy(concatInput, output);
+    TestValues(concatInput, output);
   }
 
   {

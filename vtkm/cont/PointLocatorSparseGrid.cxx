@@ -21,7 +21,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -82,9 +82,8 @@ void PointLocatorSparseGrid::Build()
                              static_cast<vtkm::FloatDefault>(this->Range[2].Max));
 
   // generate unique id for each input point
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(
-    0, 1, this->GetCoordinates().GetNumberOfValues());
-  vtkm::cont::ArrayCopy(pointCounting, this->PointIds);
+  vtkm::cont::ArrayHandleIndex pointIndex(this->GetCoordinates().GetNumberOfValues());
+  vtkm::cont::ArrayCopy(pointIndex, this->PointIds);
 
   using internal::BinPointsWorklet;
 

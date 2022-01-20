@@ -11,7 +11,7 @@
 #define vtk_m_worklet_AverageByKey_h
 
 #include <vtkm/VecTraits.h>
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/DescriptiveStatistics.h>
 #include <vtkm/worklet/Keys.h>
@@ -86,23 +86,13 @@ struct AverageByKey
     return outAverages;
   }
 
-  struct ExtractKey
-  {
-    template <typename First, typename Second>
-    VTKM_EXEC First operator()(const vtkm::Pair<First, Second>& pair) const
-    {
-      return pair.first;
-    }
-  };
-
   struct ExtractMean
   {
-    template <typename KeyType, typename ValueType>
-    VTKM_EXEC ValueType operator()(
-      const vtkm::Pair<KeyType, vtkm::worklet::DescriptiveStatistics::StatState<ValueType>>& pair)
-      const
+    template <typename ValueType>
+    VTKM_EXEC ValueType
+    operator()(const vtkm::worklet::DescriptiveStatistics::StatState<ValueType>& state) const
     {
-      return pair.second.Mean();
+      return state.Mean();
     }
   };
 
@@ -131,13 +121,15 @@ struct AverageByKey
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "AverageByKey::Run");
 
     auto results = vtkm::worklet::DescriptiveStatistics::Run(keyArray, valueArray);
-
-    // Copy/TransformCopy from results to outputKeyArray and outputValueArray
-    auto results_key = vtkm::cont::make_ArrayHandleTransform(results, ExtractKey{});
-    auto results_mean = vtkm::cont::make_ArrayHandleTransform(results, ExtractMean{});
-
-    vtkm::cont::ArrayCopy(results_key, outputKeyArray);
-    vtkm::cont::ArrayCopy(results_mean, outputValueArray);
+    // Extract results to outputKeyArray and outputValueArray
+    outputKeyArray = results.GetFirstArray();
+    // TODO: DescriptiveStatistics should write its output to a SOA instead of an AOS.
+    // An ArrayHandle of a weird struct by itself is not useful in any general algorithm.
+    // In fact, using DescriptiveStatistics at all seems like way overkill. It computes
+    // all sorts of statistics, and we then throw them all away except for mean.
+    auto resultsMean =
+      vtkm::cont::make_ArrayHandleTransform(results.GetSecondArray(), ExtractMean{});
+    vtkm::cont::ArrayCopyDevice(resultsMean, outputValueArray);
   }
 };
 }

@@ -426,7 +426,7 @@ private:
       SetPortal(basicArray.WritePortal());
 
       vtkm::cont::ArrayHandleSOA<ValueType> soaArray;
-      vtkm::cont::ArrayCopy(basicArray, soaArray);
+      vtkm::cont::Invoker{}(PassThrough{}, basicArray, soaArray);
 
       VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
@@ -1085,13 +1085,13 @@ private:
     VTKM_EXEC void operator()(const InputType& input, vtkm::Id workIndex, vtkm::Id& dummyOut) const
     {
       using ComponentType = typename InputType::ComponentType;
-      vtkm::IdComponent expectedSize = static_cast<vtkm::IdComponent>(workIndex + 1);
+      vtkm::IdComponent expectedSize = static_cast<vtkm::IdComponent>(workIndex);
       if (expectedSize != input.GetNumberOfComponents())
       {
         this->RaiseError("Got unexpected number of components.");
       }
 
-      vtkm::Id valueIndex = workIndex * (workIndex + 1) / 2;
+      vtkm::Id valueIndex = workIndex * (workIndex - 1) / 2;
       dummyOut = valueIndex;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < expectedSize; componentIndex++)
       {
@@ -1113,8 +1113,7 @@ private:
       vtkm::Id sourceArraySize;
 
       vtkm::cont::ArrayHandle<vtkm::Id> numComponentsArray;
-      vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleCounting<vtkm::IdComponent>(1, 1, ARRAY_SIZE),
-                            numComponentsArray);
+      vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), numComponentsArray);
       vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray =
         vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, sourceArraySize);
 
@@ -1147,13 +1146,13 @@ private:
     VTKM_EXEC void operator()(OutputType& output, vtkm::Id workIndex) const
     {
       using ComponentType = typename OutputType::ComponentType;
-      vtkm::IdComponent expectedSize = static_cast<vtkm::IdComponent>(workIndex + 1);
+      vtkm::IdComponent expectedSize = static_cast<vtkm::IdComponent>(workIndex);
       if (expectedSize != output.GetNumberOfComponents())
       {
         this->RaiseError("Got unexpected number of components.");
       }
 
-      vtkm::Id valueIndex = workIndex * (workIndex + 1) / 2;
+      vtkm::Id valueIndex = workIndex * (workIndex - 1) / 2;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < expectedSize; componentIndex++)
       {
         output[componentIndex] = TestValue(valueIndex, ComponentType());
@@ -1170,8 +1169,7 @@ private:
       vtkm::Id sourceArraySize;
 
       vtkm::cont::ArrayHandle<vtkm::Id> numComponentsArray;
-      vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleCounting<vtkm::IdComponent>(1, 1, ARRAY_SIZE),
-                            numComponentsArray);
+      vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), numComponentsArray);
       vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray = vtkm::cont::ConvertNumComponentsToOffsets(
         numComponentsArray, sourceArraySize, DeviceAdapterTag());
 
