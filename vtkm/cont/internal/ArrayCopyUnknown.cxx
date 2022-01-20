@@ -9,6 +9,8 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayCopyDevice.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/Invoker.h>
 
@@ -145,11 +147,68 @@ struct UnknownCopyFunctor1
   }
 };
 
+void ArrayCopySpecialCase(const vtkm::cont::ArrayHandleIndex& source,
+                          const vtkm::cont::UnknownArrayHandle& destination)
+{
+  if (destination.CanConvert<vtkm::cont::ArrayHandleIndex>())
+  {
+    // Unlikely, but we'll check.
+    destination.AsArrayHandle<vtkm::cont::ArrayHandleIndex>().DeepCopyFrom(source);
+  }
+  else if (destination.IsBaseComponentType<vtkm::Id>())
+  {
+    destination.Allocate(source.GetNumberOfValues());
+    auto dest = destination.ExtractComponent<vtkm::Id>(0, vtkm::CopyFlag::Off);
+    vtkm::cont::ArrayCopyDevice(source, dest);
+  }
+  else if (destination.IsBaseComponentType<vtkm::IdComponent>())
+  {
+    destination.Allocate(source.GetNumberOfValues());
+    auto dest = destination.ExtractComponent<vtkm::IdComponent>(0, vtkm::CopyFlag::Off);
+    vtkm::cont::ArrayCopyDevice(source, dest);
+  }
+  else if (destination.CanConvert<vtkm::cont::ArrayHandle<vtkm::FloatDefault>>())
+  {
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> dest;
+    destination.AsArrayHandle(dest);
+    vtkm::cont::ArrayCopyDevice(source, dest);
+  }
+  else
+  {
+    // Initializing something that is probably not really an index. Rather than trace down every
+    // unlikely possibility, just copy to float and then to the final array.
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> dest;
+    vtkm::cont::ArrayCopyDevice(source, dest);
+    vtkm::cont::ArrayCopy(dest, destination);
+  }
+}
+
+template <typename ArrayHandleType>
+bool TryArrayCopySpecialCase(const vtkm::cont::UnknownArrayHandle& source,
+                             const vtkm::cont::UnknownArrayHandle& destination)
+{
+  if (source.CanConvert<ArrayHandleType>())
+  {
+    ArrayCopySpecialCase(source.AsArrayHandle<ArrayHandleType>(), destination);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 void DoUnknownArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
                         const vtkm::cont::UnknownArrayHandle& destination)
 {
   if (source.GetNumberOfValues() > 0)
   {
+    // Try known special cases.
+    if (TryArrayCopySpecialCase<vtkm::cont::ArrayHandleIndex>(source, destination))
+    {
+      return;
+    }
+
     source.CastAndCallWithExtractedArray(UnknownCopyFunctor1{}, destination);
   }
   else

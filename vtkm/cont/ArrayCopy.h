@@ -10,7 +10,14 @@
 #ifndef vtk_m_cont_ArrayCopy_h
 #define vtk_m_cont_ArrayCopy_h
 
+#include <vtkm/cont/ArrayHandleConcatenate.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
+
+#include <vtkm/cont/internal/MapArrayPermutation.h>
 
 #include <vtkm/StaticAssert.h>
 #include <vtkm/VecTraits.h>
@@ -36,6 +43,70 @@ inline void ArrayCopyValueTypeCheck()
                          "must be deep copied, consider using `ArrayCopyDevice`. Look at the "
                          "compile error for the type assigned to template parameter `T` to "
                          "see the offending type.");
+}
+
+template <typename S>
+struct ArrayCopyConcreteSrc;
+
+template <typename SrcIsArrayHandle>
+inline void ArrayCopyImpl(const vtkm::cont::UnknownArrayHandle& source,
+                          vtkm::cont::UnknownArrayHandle& destination,
+                          SrcIsArrayHandle,
+                          std::false_type)
+{
+  destination.DeepCopyFrom(source);
+}
+template <typename SrcIsArrayHandle>
+inline void ArrayCopyImpl(const vtkm::cont::UnknownArrayHandle& source,
+                          const vtkm::cont::UnknownArrayHandle& destination,
+                          SrcIsArrayHandle,
+                          std::false_type)
+{
+  destination.DeepCopyFrom(source);
+}
+
+template <typename T, typename S>
+void ArrayCopyImpl(const vtkm::cont::UnknownArrayHandle& source,
+                   vtkm::cont::ArrayHandle<T, S>& destination,
+                   std::false_type,
+                   std::true_type)
+{
+  detail::ArrayCopyValueTypeCheck<T>();
+
+  using DestType = vtkm::cont::ArrayHandle<T, S>;
+  if (source.CanConvert<DestType>())
+  {
+    destination.DeepCopyFrom(source.AsArrayHandle<DestType>());
+  }
+  else
+  {
+    vtkm::cont::UnknownArrayHandle destWrapper(destination);
+    vtkm::cont::detail::ArrayCopyImpl(source, destWrapper, std::false_type{}, std::false_type{});
+    // Destination array should not change, but just in case.
+    destWrapper.AsArrayHandle(destination);
+  }
+}
+
+template <typename TS, typename SS, typename TD, typename SD>
+void ArrayCopyImpl(const vtkm::cont::ArrayHandle<TS, SS>& source,
+                   vtkm::cont::ArrayHandle<TD, SD>& destination,
+                   std::true_type,
+                   std::true_type)
+{
+  ArrayCopyValueTypeCheck<TS>();
+  ArrayCopyValueTypeCheck<TD>();
+
+  detail::ArrayCopyConcreteSrc<SS>{}(source, destination);
+}
+
+// Special case of copying data when type is the same.
+template <typename T, typename S>
+void ArrayCopyImpl(const vtkm::cont::ArrayHandle<T, S>& source,
+                   vtkm::cont::ArrayHandle<T, S>& destination,
+                   std::true_type,
+                   std::true_type)
+{
+  destination.DeepCopyFrom(source);
 }
 
 }
@@ -64,51 +135,23 @@ inline void ArrayCopyValueTypeCheck()
 ///
 /// @{
 ///
-inline void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
-                      vtkm::cont::UnknownArrayHandle& destination)
+template <typename SourceArrayType, typename DestArrayType>
+inline void ArrayCopy(const SourceArrayType& source, DestArrayType& destination)
 {
-  destination.DeepCopyFrom(source);
-}
-inline void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
-                      const vtkm::cont::UnknownArrayHandle& destination)
-{
-  destination.DeepCopyFrom(source);
+  detail::ArrayCopyImpl(source,
+                        destination,
+                        typename internal::ArrayHandleCheck<SourceArrayType>::type{},
+                        typename internal::ArrayHandleCheck<DestArrayType>::type{});
 }
 
-template <typename T, typename S>
-void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
-               vtkm::cont::ArrayHandle<T, S>& destination)
+// Special case where we allow a const UnknownArrayHandle as output.
+template <typename SourceArrayType>
+inline void ArrayCopy(const SourceArrayType& source, vtkm::cont::UnknownArrayHandle& destination)
 {
-  detail::ArrayCopyValueTypeCheck<T>();
-
-  using DestType = vtkm::cont::ArrayHandle<T, S>;
-  if (source.CanConvert<DestType>())
-  {
-    destination.DeepCopyFrom(source.AsArrayHandle<DestType>());
-  }
-  else
-  {
-    vtkm::cont::UnknownArrayHandle destWrapper(destination);
-    vtkm::cont::ArrayCopy(source, destWrapper);
-    // Destination array should not change, but just in case.
-    destWrapper.AsArrayHandle(destination);
-  }
-}
-
-template <typename T, typename S, typename DestArray>
-void ArrayCopy(const vtkm::cont::ArrayHandle<T, S>& source, DestArray& destination)
-{
-  detail::ArrayCopyValueTypeCheck<T>();
-
-  vtkm::cont::ArrayCopy(vtkm::cont::UnknownArrayHandle{ source }, destination);
-}
-
-// Special case of copying data when type is the same.
-template <typename T, typename S>
-void ArrayCopy(const vtkm::cont::ArrayHandle<T, S>& source,
-               vtkm::cont::ArrayHandle<T, S>& destination)
-{
-  destination.DeepCopyFrom(source);
+  detail::ArrayCopyImpl(source,
+                        destination,
+                        typename internal::ArrayHandleCheck<SourceArrayType>::type{},
+                        std::false_type{});
 }
 
 // Invalid const ArrayHandle in destination, which is not allowed because it will
@@ -149,6 +192,111 @@ VTKM_CONT void ArrayCopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle s
     destWrapper.AsArrayHandle(destination);
   }
 }
+
+namespace detail
+{
+
+template <typename S>
+struct ArrayCopyConcreteSrc
+{
+  template <typename T, typename DestArray>
+  void operator()(const vtkm::cont::ArrayHandle<T, S>& source, DestArray& destination) const
+  {
+    using ArrayType = vtkm::cont::ArrayHandle<T, S>;
+    this->DoIt(
+      source, destination, vtkm::cont::internal::ArrayExtractComponentIsInefficient<ArrayType>{});
+  }
+
+  template <typename T, typename DestArray>
+  void DoIt(const vtkm::cont::ArrayHandle<T, S>& source,
+            DestArray& destination,
+            std::false_type vtkmNotUsed(isInefficient)) const
+  {
+    vtkm::cont::ArrayCopy(vtkm::cont::UnknownArrayHandle{ source }, destination);
+  }
+
+  template <typename T, typename DestArray>
+  void DoIt(const vtkm::cont::ArrayHandle<T, S>& source,
+            DestArray& destination,
+            std::true_type vtkmNotUsed(isInefficient)) const
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Attempting to copy from an array of type " +
+                 vtkm::cont::TypeToString<vtkm::cont::ArrayHandle<T, S>>() +
+                 " with ArrayCopy is inefficient. It is highly recommended you use another method "
+                 "such as vtkm::cont::ArrayCopyDevice.");
+    // Still call the precompiled `ArrayCopy`. You will get another warning after this,
+    // but it will still technically work, albiet slowly.
+    vtkm::cont::ArrayCopy(vtkm::cont::UnknownArrayHandle{ source }, destination);
+  }
+};
+
+// Special case for constant arrays to be efficient.
+template <>
+struct ArrayCopyConcreteSrc<vtkm::cont::StorageTagConstant>
+{
+  template <typename T1, typename T2, typename S2>
+  void operator()(const vtkm::cont::ArrayHandle<T1, vtkm::cont::StorageTagConstant>& source_,
+                  vtkm::cont::ArrayHandle<T2, S2>& destination) const
+  {
+    vtkm::cont::ArrayHandleConstant<T1> source = source_;
+    destination.AllocateAndFill(source.GetNumberOfValues(), static_cast<T2>(source.GetValue()));
+  }
+};
+
+// Special case for ArrayHandleIndex to be efficient.
+template <>
+struct ArrayCopyConcreteSrc<vtkm::cont::StorageTagIndex>
+{
+  template <typename T, typename S>
+  void operator()(const vtkm::cont::ArrayHandleIndex& source,
+                  vtkm::cont::ArrayHandle<T, S>& destination) const
+  {
+    // Skip warning about inefficient copy because there is a special case in ArrayCopyUnknown.cxx
+    // to copy ArrayHandleIndex efficiently.
+    vtkm::cont::ArrayCopy(vtkm::cont::UnknownArrayHandle{ source }, destination);
+  }
+};
+
+// Special case for ArrayHandleConcatenate to be efficient
+template <typename ST1, typename ST2>
+struct ArrayCopyConcreteSrc<vtkm::cont::StorageTagConcatenate<ST1, ST2>>
+{
+  template <typename SourceArrayType, typename DestArrayType>
+  void operator()(const SourceArrayType& source, DestArrayType& destination) const
+  {
+    auto source1 = source.GetStorage().GetArray1(source.GetBuffers());
+    auto source2 = source.GetStorage().GetArray2(source.GetBuffers());
+
+    // Need to preallocate because view decorator will not be able to resize.
+    destination.Allocate(source.GetNumberOfValues());
+    auto dest1 = vtkm::cont::make_ArrayHandleView(destination, 0, source1.GetNumberOfValues());
+    auto dest2 = vtkm::cont::make_ArrayHandleView(
+      destination, source1.GetNumberOfValues(), source2.GetNumberOfValues());
+
+    vtkm::cont::ArrayCopy(source1, dest1);
+    vtkm::cont::ArrayCopy(source2, dest2);
+  }
+};
+
+// Special case for ArrayHandlePermutation to be efficient
+template <typename S>
+struct ArrayCopyConcreteSrc<vtkm::cont::StorageTagPermutation<vtkm::cont::StorageTagBasic, S>>
+{
+  using SourceStorageTag = vtkm::cont::StorageTagPermutation<vtkm::cont::StorageTagBasic, S>;
+  template <typename T1, typename T2, typename S2>
+  void operator()(const vtkm::cont::ArrayHandle<T1, SourceStorageTag>& source,
+                  vtkm::cont::ArrayHandle<T2, S2>& destination) const
+  {
+    auto indexArray = source.GetStorage().GetIndexArray(source.GetBuffers());
+    auto valueArray = source.GetStorage().GetValueArray(source.GetBuffers());
+    vtkm::cont::UnknownArrayHandle copy =
+      vtkm::cont::internal::MapArrayPermutation(valueArray, indexArray);
+    vtkm::cont::ArrayCopyShallowIfPossible(copy, destination);
+  }
+};
+
+} // namespace detail
 
 } // namespace cont
 } // namespace vtkm
