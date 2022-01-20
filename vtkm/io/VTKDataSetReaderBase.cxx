@@ -297,9 +297,16 @@ void VTKDataSetReaderBase::ReadCells(vtkm::cont::ArrayHandle<vtkm::Id>& connecti
     offsets.CastAndCallForTypes<vtkm::List<vtkm::Int64, vtkm::Int32>,
                                 vtkm::List<vtkm::cont::StorageTagBasic>>(
       [&](const auto& offsetsAH) {
-        vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleOffsetsToNumComponents(
-                                vtkm::cont::make_ArrayHandleCast(offsetsAH, vtkm::Id{})),
-                              numIndices);
+        // Convert on host. There will be several other passes of this array on the host anyway.
+        numIndices.Allocate(offsetsSize - 1);
+        auto offsetPortal = offsetsAH.ReadPortal();
+        auto numIndicesPortal = numIndices.WritePortal();
+        for (vtkm::Id cellIndex = 0; cellIndex < offsetsSize - 1; ++cellIndex)
+        {
+          numIndicesPortal.Set(cellIndex,
+                               static_cast<vtkm::IdComponent>(offsetPortal.Get(cellIndex + 1) -
+                                                              offsetPortal.Get(cellIndex)));
+        }
       });
 
     this->DataFile->Stream >> tag >> dataType >> std::ws;
