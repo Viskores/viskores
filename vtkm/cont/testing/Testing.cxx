@@ -66,7 +66,7 @@ std::string Testing::WriteDirPath(const std::string& filename)
 void Testing::SetEnv(const std::string& var, const std::string& value)
 {
   static std::vector<std::pair<std::string, std::string>> envVars{};
-#ifdef _MSC_VER
+#ifdef _WIN32
   auto iter = envVars.emplace(envVars.end(), var, value);
   _putenv_s(iter->first.c_str(), iter->second.c_str());
 #else
@@ -76,7 +76,7 @@ void Testing::SetEnv(const std::string& var, const std::string& value)
 
 void Testing::UnsetEnv(const std::string& var)
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
   SetEnv(var, "");
 #else
   unsetenv(var.c_str());

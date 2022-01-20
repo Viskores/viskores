@@ -49,6 +49,11 @@
 //compliance
 #define VTKM_CLANG
 
+#elif defined(__MINGW32__)
+//Check for MinGW before GCC, since MinGW will be otherwise categorized
+//as VTKM_GCC
+#define VTKM_MINGW
+
 #elif defined(__GNUC__)
 // Several compilers pretend to be GCC but have minor differences. Try to
 // compensate for that, by checking for those compilers first
