@@ -179,7 +179,7 @@ public:
     vtkm::Id adjustedEndIndex = (endIndex < indices.NumberOfValues)
       ? endIndex + indices.StartIndex
       : indices.NumberOfValues + indices.StartIndex;
-    SourceStorage::Fill(buffers, fillValue, adjustedStartIndex, adjustedEndIndex, token);
+    SourceStorage::Fill(buffers + 1, fillValue, adjustedStartIndex, adjustedEndIndex, token);
   }
 
   VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,

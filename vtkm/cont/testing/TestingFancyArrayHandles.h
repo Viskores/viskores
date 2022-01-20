@@ -1364,6 +1364,15 @@ private:
 
       //verify that the control portal works
       CheckPortal(view.ReadPortal());
+
+      //verify that filling works
+      const ValueType expected = TestValue(20, ValueType{});
+      view.Fill(expected);
+      auto valuesPortal = values.ReadPortal();
+      for (vtkm::Id index = length; index < 2 * length; ++index)
+      {
+        VTKM_TEST_ASSERT(valuesPortal.Get(index) == expected);
+      }
     }
   };
 
