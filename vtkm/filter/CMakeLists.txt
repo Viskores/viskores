@@ -48,8 +48,6 @@ set(common_headers
 set(common_header_template_sources
   CellAverage.hxx
   CellMeasures.hxx
-  ExtractGeometry.hxx
-  ExtractStructured.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
@@ -57,15 +55,11 @@ set(common_header_template_sources
   FilterParticleAdvection.hxx
   FilterTemporalParticleAdvection.hxx
   PointAverage.hxx
-  Threshold.hxx
   )
 
 set(common_sources_device
   CellAverage.cxx
-  ExtractGeometry.cxx
-  ExtractStructured.cxx
   PointAverage.cxx
-  Threshold.cxx
 )
 
 set(extra_headers
@@ -139,14 +133,12 @@ set(extra_header_template_sources
   Entropy.hxx
   FieldToColors.hxx
   GhostCellClassify.hxx
-  GhostCellRemove.hxx
   Histogram.hxx
   ImageConnectivity.hxx
   ImageDifference.hxx
   ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
-  Mask.hxx
   MeshQuality.hxx
   MIRFilter.hxx
   NDEntropy.hxx

@@ -10,16 +10,15 @@
 #ifndef vtkm_m_worklet_ExtractPoints_h
 #define vtkm_m_worklet_ExtractPoints_h
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
-
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Invoker.h>
 
 #include <vtkm/ImplicitFunction.h>
+
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
 {
@@ -41,7 +40,7 @@ public:
     using ExecutionSignature = _4(_2, _3);
 
     VTKM_CONT
-    ExtractPointsByVOI(bool extractInside)
+    explicit ExtractPointsByVOI(bool extractInside)
       : passValue(extractInside)
       , failValue(!extractInside)
     {
@@ -93,8 +92,8 @@ public:
     vtkm::cont::ArrayHandle<bool> passFlags;
 
     ExtractPointsByVOI worklet(extractInside);
-    DispatcherMapTopology<ExtractPointsByVOI> dispatcher(worklet);
-    dispatcher.Invoke(cellSet, coordinates, implicitFunction, passFlags);
+    vtkm::cont::Invoker invoke;
+    invoke(worklet, cellSet, coordinates, implicitFunction, passFlags);
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
       vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());

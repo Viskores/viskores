@@ -7,18 +7,15 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
-#ifndef vtk_m_filter_ExtractGeometry_hxx
-#define vtk_m_filter_ExtractGeometry_hxx
-
-#include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/UnknownCellSet.h>
 
+#include <vtkm/filter/MapFieldPermutation.h>
+#include <vtkm/filter/entity_extraction/ExtractGeometry.h>
+#include <vtkm/filter/entity_extraction/worklet/ExtractGeometry.h>
+
 namespace
 {
-
 struct CallWorker
 {
   vtkm::cont::UnknownCellSet& Output;
@@ -58,40 +55,68 @@ struct CallWorker
   }
 };
 
-} // end anon namespace
+bool DoMapField(vtkm::cont::DataSet& result,
+                const vtkm::cont::Field& field,
+                const vtkm::worklet::ExtractGeometry& worklet)
+{
+  if (field.IsFieldPoint())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else if (field.IsFieldCell())
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> permutation = worklet.GetValidCellIds();
+    return vtkm::filter::MapFieldPermutation(field, permutation, result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+} // anonymous namespace
 
 namespace vtkm
 {
 namespace filter
 {
-
+namespace entity_extraction
+{
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input,
-                                               vtkm::filter::PolicyBase<DerivedPolicy> policy)
+vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input)
 {
   // extract the input cell set and coordinates
   const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
+  vtkm::worklet::ExtractGeometry worklet;
   vtkm::cont::UnknownCellSet outCells;
   CallWorker worker(outCells,
-                    this->Worklet,
+                    worklet,
                     coords,
                     this->Function,
                     this->ExtractInside,
                     this->ExtractBoundaryCells,
                     this->ExtractOnlyBoundaryCells);
-  vtkm::filter::ApplyPolicyCellSet(cells, policy, *this).CastAndCall(worker);
+  cells.CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(worker);
 
   // create the output dataset
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.SetCellSet(outCells);
+
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+  this->MapFieldsOntoOutput(input, output, mapper);
+
   return output;
 }
-}
-}
 
-#endif
+} // namespace entity_extraction
+} // namespace filter
+} // namespace vtkm

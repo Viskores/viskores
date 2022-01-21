@@ -11,7 +11,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/ExtractGeometry.h>
+#include <vtkm/filter/entity_extraction/ExtractGeometry.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 
@@ -32,7 +32,7 @@ public:
     vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
-    vtkm::filter::ExtractGeometry extractGeometry;
+    vtkm::filter::entity_extraction::ExtractGeometry extractGeometry;
     extractGeometry.SetImplicitFunction(box);
     extractGeometry.SetExtractInside(true);
     extractGeometry.SetExtractBoundaryCells(false);
@@ -59,7 +59,7 @@ public:
     vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
-    vtkm::filter::ExtractGeometry extractGeometry;
+    vtkm::filter::entity_extraction::ExtractGeometry extractGeometry;
     extractGeometry.SetImplicitFunction(box);
     extractGeometry.SetExtractInside(false);
     extractGeometry.SetExtractBoundaryCells(false);
@@ -86,7 +86,7 @@ public:
     vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
-    vtkm::filter::ExtractGeometry extractGeometry;
+    vtkm::filter::entity_extraction::ExtractGeometry extractGeometry;
     extractGeometry.SetImplicitFunction(box);
     extractGeometry.SetExtractInside(true);
     extractGeometry.SetExtractBoundaryCells(true);
@@ -112,7 +112,7 @@ public:
     vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
-    vtkm::filter::ExtractGeometry extractGeometry;
+    vtkm::filter::entity_extraction::ExtractGeometry extractGeometry;
     extractGeometry.SetImplicitFunction(box);
     extractGeometry.SetExtractInside(true);
     extractGeometry.SetExtractBoundaryCells(true);
