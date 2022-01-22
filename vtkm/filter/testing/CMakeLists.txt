@@ -25,15 +25,12 @@ set(unit_tests
   UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCrossProductFilter.cxx
-  UnitTestExtractGeometryFilter.cxx
-  UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
   UnitTestGradientExplicit.cxx
   UnitTestGradientUniform.cxx
   UnitTestGhostCellClassify.cxx
-  UnitTestGhostCellRemove.cxx
   UnitTestImageConnectivityFilter.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
@@ -41,7 +38,6 @@ set(unit_tests
   UnitTestLagrangianStructuresFilter.cxx
   UnitTestMapFieldMergeAverage.cxx
   UnitTestMapFieldPermutation.cxx
-  UnitTestMaskFilter.cxx
   UnitTestMeshQualityFilter.cxx
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
@@ -56,7 +52,6 @@ set(unit_tests
   UnitTestStreamSurfaceFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
-  UnitTestThresholdFilter.cxx
   UnitTestTriangulateFilter.cxx
   UnitTestTubeFilter.cxx
   UnitTestVectorMagnitudeFilter.cxx

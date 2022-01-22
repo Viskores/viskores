@@ -22,12 +22,24 @@ vtkm_add_instantiations(ClipWithImplicitFunctionInstantiations
   )
 
 set(deprecated_headers
+  CleanGrid.h
+  DotProduct.h
   Entropy.h
+  ExternalFaces.h
+  ExtractGeometry.h
+  ExtractPoints.h
+  ExtractStructured.h
+  GenerateIds.h
+  GhostCellRemove.h
   Histogram.h
+  Mask.h
+  MaskPoints.h
   NDEntropy.h
   NDHistogram.h
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
+  Threshold.h
+  ThresholdPoints.h
   )
 
 vtkm_declare_headers(${deprecated_headers})
@@ -35,10 +47,6 @@ vtkm_declare_headers(${deprecated_headers})
 set(common_headers
   CellAverage.h
   CellMeasures.h
-  CleanGrid.h
-  ExtractGeometry.h
-  ExtractPoints.h
-  ExtractStructured.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -51,16 +59,12 @@ set(common_headers
   PolicyBase.h
   PolicyDefault.h
   TaskQueue.h
-  Threshold.h
-  ThresholdPoints.h
   Instantiations.h
   )
 
 set(common_header_template_sources
   CellAverage.hxx
   CellMeasures.hxx
-  ExtractGeometry.hxx
-  ExtractStructured.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
@@ -68,15 +72,11 @@ set(common_header_template_sources
   FilterParticleAdvection.hxx
   FilterTemporalParticleAdvection.hxx
   PointAverage.hxx
-  Threshold.hxx
   )
 
 set(common_sources_device
   CellAverage.cxx
-  ExtractGeometry.cxx
-  ExtractStructured.cxx
   PointAverage.cxx
-  Threshold.cxx
 )
 
 set(extra_headers
@@ -88,20 +88,14 @@ set(extra_headers
   CoordinateSystemTransform.h
   CreateResult.h
   CrossProduct.h
-  DotProduct.h
-  ExternalFaces.h
   FieldSelection.h
   FieldToColors.h
-  GenerateIds.h
   GhostCellClassify.h
-  GhostCellRemove.h
   ImageConnectivity.h
   ImageDifference.h
   ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
-  Mask.h
-  MaskPoints.h
   MeshQuality.h
   MIRFilter.h
   ParticleAdvection.h
@@ -142,13 +136,11 @@ set(extra_header_template_sources
   CrossProduct.hxx
   FieldToColors.hxx
   GhostCellClassify.hxx
-  GhostCellRemove.hxx
   ImageConnectivity.hxx
   ImageDifference.hxx
   ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
-  Mask.hxx
   MeshQuality.hxx
   MIRFilter.hxx
   ParticleAdvection.hxx

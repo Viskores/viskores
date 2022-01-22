@@ -32,15 +32,12 @@ set(unit_tests
   UnitTestCrossProduct.cxx
   UnitTestDescriptiveStatistics.cxx
   UnitTestDotProduct.cxx
-  UnitTestExtractGeometry.cxx
-  UnitTestExtractStructured.cxx
   UnitTestFieldStatistics.cxx
   UnitTestGraphConnectivity.cxx
   UnitTestInnerJoin.cxx
   UnitTestImageConnectivity.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
-  UnitTestMask.cxx
   UnitTestMaskIndices.cxx
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
@@ -64,7 +61,6 @@ set(unit_tests
   UnitTestSurfaceNormals.cxx
   UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx
-  UnitTestThreshold.cxx
   UnitTestTriangleWinding.cxx
   UnitTestTriangulate.cxx
   UnitTestTube.cxx

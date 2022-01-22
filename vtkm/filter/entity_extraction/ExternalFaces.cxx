@@ -46,7 +46,8 @@ vtkm::cont::DataSet ExternalFaces::GenerateOutput(const vtkm::cont::DataSet& inp
   bool hasCellFields = false;
   for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
   {
-    hasCellFields = input.GetField(fieldIdx).IsFieldCell();
+    const auto& f = input.GetField(fieldIdx);
+    hasCellFields = f.IsFieldCell();
   }
 
   if (!hasCellFields)

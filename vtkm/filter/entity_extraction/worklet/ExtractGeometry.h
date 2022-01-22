@@ -10,7 +10,6 @@
 #ifndef vtkm_m_worklet_ExtractGeometry_h
 #define vtkm_m_worklet_ExtractGeometry_h
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/cont/Algorithm.h>
@@ -18,7 +17,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/UnknownCellSet.h>
 
 #include <vtkm/ImplicitFunction.h>
@@ -144,8 +143,8 @@ public:
     vtkm::cont::ArrayHandle<bool> passFlags;
 
     ExtractCellsByVOI worklet(extractInside, extractBoundaryCells, extractOnlyBoundaryCells);
-    DispatcherMapTopology<ExtractCellsByVOI> dispatcher(worklet);
-    dispatcher.Invoke(cellSet, coordinates, implicitFunction, passFlags);
+    vtkm::cont::Invoker invoke;
+    invoke(worklet, cellSet, coordinates, implicitFunction, passFlags);
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
       vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());

@@ -17,7 +17,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <direct.h>
 #endif
 
@@ -42,7 +42,7 @@ std::string Filename(const std::string& filePath)
   // std::filesystem::path path(filePath);
   // return path.filename();
 
-#ifdef _MSC_VER
+#ifdef _WIN32
   auto lastSlashPos = filePath.rfind(GetWindowsPathSeperator(filePath));
 #else
   auto lastSlashPos = filePath.rfind('/');
@@ -60,7 +60,7 @@ std::string ParentPath(const std::string& filePath)
   // std::filesystem::path path(filePath);
   // return path.parent_path();
 
-#ifdef _MSC_VER
+#ifdef _WIN32
   auto lastSlashPos = filePath.rfind(GetWindowsPathSeperator(filePath));
 #else
   auto lastSlashPos = filePath.rfind('/');
@@ -88,7 +88,7 @@ bool CreateDirectoriesFromFilePath(const std::string& filePath)
     return false;
   }
 
-#ifdef _MSC_VER
+#ifdef _WIN32
   auto ret = _mkdir(dir.c_str());
 #else
   mode_t mode = 0755;
@@ -145,7 +145,7 @@ std::string MergePaths(const std::string& filePathPrefix, const std::string& fil
     return prefix;
   }
 
-#ifdef _MSC_VER
+#ifdef _WIN32
   prefixPathSeperator = GetWindowsPathSeperator(prefix);
   suffixPathSeperator = suffix[0] == '/' || suffix[0] == '\\' ? suffix[0] : prefixPathSeperator;
 #endif

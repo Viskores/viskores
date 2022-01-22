@@ -10,7 +10,6 @@
 #ifndef vtkm_m_worklet_Mask_h
 #define vtkm_m_worklet_Mask_h
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/cont/ArrayCopy.h>
@@ -18,7 +17,6 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
-#include <vtkm/cont/DataSet.h>
 
 namespace vtkm
 {

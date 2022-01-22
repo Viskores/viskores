@@ -27,8 +27,6 @@ set(headers
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   DotProduct.h
-  ExtractGeometry.h
-  ExtractStructured.h
   FieldStatistics.h
   Gradient.h
   ImageDifference.h
@@ -38,7 +36,6 @@ set(headers
   LagrangianStructures.h
   Magnitude.h
   Contour.h
-  Mask.h
   MaskIndices.h
   MaskNone.h
   MaskSelect.h
@@ -67,7 +64,6 @@ set(headers
   StreamSurface.h
   SurfaceNormals.h
   Tetrahedralize.h
-  Threshold.h
   TriangleWinding.h
   Triangulate.h
   Tube.h

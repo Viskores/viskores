@@ -36,7 +36,7 @@ class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExternalFaces : public vtkm::filter::
 {
 public:
   ExternalFaces();
-  ~ExternalFaces();
+  ~ExternalFaces() override;
 
   // New Design: I am too lazy to make this filter thread-safe. Let's use it as an example of
   // thread un-safe filter.

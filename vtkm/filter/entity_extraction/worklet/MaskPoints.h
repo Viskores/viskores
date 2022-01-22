@@ -13,7 +13,6 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DataSet.h>
 
 namespace vtkm
 {
