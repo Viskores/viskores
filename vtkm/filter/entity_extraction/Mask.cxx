@@ -7,14 +7,12 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_Mask_hxx
-#define vtk_m_filter_Mask_hxx
-
 #include <vtkm/filter/MapFieldPermutation.h>
+#include <vtkm/filter/entity_extraction/Mask.h>
+#include <vtkm/filter/entity_extraction/worklet/Mask.h>
 
 namespace
 {
-
 struct CallWorklet
 {
   vtkm::Id Stride;
@@ -35,43 +33,9 @@ struct CallWorklet
   }
 };
 
-} // end anon namespace
-
-namespace vtkm
-{
-namespace filter
-{
-
-//-----------------------------------------------------------------------------
-inline VTKM_CONT Mask::Mask()
-  : vtkm::filter::FilterDataSet<Mask>()
-  , Stride(1)
-  , CompactPoints(false)
-{
-}
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input,
-                                                     vtkm::filter::PolicyBase<DerivedPolicy> policy)
-{
-  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
-  vtkm::cont::UnknownCellSet cellOut;
-  CallWorklet workletCaller(this->Stride, cellOut, this->Worklet);
-  vtkm::filter::ApplyPolicyCellSet(cells, policy, *this).CastAndCall(workletCaller);
-
-  // create the output dataset
-  vtkm::cont::DataSet output;
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-  output.SetCellSet(cellOut);
-  return output;
-}
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT bool Mask::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                               const vtkm::cont::Field& field,
-                                               vtkm::filter::PolicyBase<DerivedPolicy>)
+VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
+                          const vtkm::cont::Field& field,
+                          const vtkm::worklet::Mask& worklet)
 {
   if (field.IsFieldPoint() || field.IsFieldGlobal())
   {
@@ -80,13 +44,41 @@ inline VTKM_CONT bool Mask::MapFieldOntoOutput(vtkm::cont::DataSet& result,
   }
   else if (field.IsFieldCell())
   {
-    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetValidCellIds(), result);
+    return vtkm::filter::MapFieldPermutation(field, worklet.GetValidCellIds(), result);
   }
   else
   {
     return false;
   }
 }
+} // end anon namespace
+
+namespace vtkm
+{
+namespace filter
+{
+namespace entity_extraction
+{
+//-----------------------------------------------------------------------------
+VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input)
+{
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
+  vtkm::cont::UnknownCellSet cellOut;
+  vtkm::worklet::Mask worklet;
+
+  CallWorklet workletCaller(this->Stride, cellOut, worklet);
+  cells.CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(workletCaller);
+
+  // create the output dataset
+  vtkm::cont::DataSet output;
+  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
+  output.SetCellSet(cellOut);
+
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+  this->MapFieldsOntoOutput(input, output, mapper);
+
+  return output;
 }
-}
-#endif
+} // namespace entity_extraction
+} // namespace filter
+} // namespace vtkm

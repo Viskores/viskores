@@ -12,49 +12,9 @@
 #include <vtkm/filter/entity_extraction/MaskPoints.h>
 #include <vtkm/filter/entity_extraction/worklet/MaskPoints.h>
 
-namespace vtkm
+namespace
 {
-namespace filter
-{
-namespace entity_extraction
-{
-//-----------------------------------------------------------------------------
-VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(const vtkm::cont::DataSet& input)
-{
-  // extract the input cell set
-  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
-
-  // run the worklet on the cell set and input field
-  vtkm::cont::CellSetSingleType<> outCellSet;
-  vtkm::worklet::MaskPoints worklet;
-
-  outCellSet = worklet.Run(cells, this->Stride);
-
-  // create the output dataset
-  vtkm::cont::DataSet output;
-  output.SetCellSet(outCellSet);
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-
-  auto mapper = [&, this](auto& result, const auto& f) { this->MapFieldOntoOutput(result, f); };
-  this->MapFieldsOntoOutput(input, output, mapper);
-
-  // compact the unused points in the output dataset
-  if (this->CompactPoints)
-  {
-    vtkm::filter::clean_grid::CleanGrid compactor;
-    compactor.SetCompactPointFields(true);
-    compactor.SetMergePoints(false);
-    return compactor.Execute(output);
-  }
-  else
-  {
-    return output;
-  }
-}
-
-//-----------------------------------------------------------------------------
-VTKM_CONT bool MaskPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                              const vtkm::cont::Field& field)
+bool DoMapField(vtkm::cont::DataSet& result, const vtkm::cont::Field& field)
 {
   // point data is copied as is because it was not collapsed
   if (field.IsFieldPoint())
@@ -73,6 +33,49 @@ VTKM_CONT bool MaskPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result,
     return false;
   }
 }
+} // anonymous namespace
+
+namespace vtkm
+{
+namespace filter
+{
+namespace entity_extraction
+{
+
+//-----------------------------------------------------------------------------
+VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(const vtkm::cont::DataSet& input)
+{
+  // extract the input cell set
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
+
+  // run the worklet on the cell set and input field
+  vtkm::cont::CellSetSingleType<> outCellSet;
+  vtkm::worklet::MaskPoints worklet;
+
+  outCellSet = worklet.Run(cells, this->Stride);
+
+  // create the output dataset
+  vtkm::cont::DataSet output;
+  output.SetCellSet(outCellSet);
+  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
+
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f); };
+  this->MapFieldsOntoOutput(input, output, mapper);
+
+  // compact the unused points in the output dataset
+  if (this->CompactPoints)
+  {
+    vtkm::filter::clean_grid::CleanGrid compactor;
+    compactor.SetCompactPointFields(true);
+    compactor.SetMergePoints(false);
+    return compactor.Execute(output);
+  }
+  else
+  {
+    return output;
+  }
+}
+
 } // namespace entity_extraction
 } // namespace filter
 } // namespace vtkm
