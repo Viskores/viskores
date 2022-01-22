@@ -33,22 +33,20 @@ VTKM_CONT vtkm::cont::DataSet Entropy::DoExecute(const vtkm::cont::DataSet& inDa
   auto resolveType = [&](const auto& concrete) { e = worklet.Run(concrete, this->NumberOfBins); };
   const auto& fieldArray = this->GetFieldFromDataSet(inDataSet).GetData();
   fieldArray
-    .CastAndCallForTypesWithFloatFallback<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(
+    .CastAndCallForTypesWithFloatFallback<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(
       resolveType);
 
-  //the entropy vector only contain one element, the entorpy of the input field
+  //the entropy vector only contain one element, the entropy of the input field
   vtkm::cont::ArrayHandle<vtkm::Float64> entropy;
   entropy.Allocate(1);
   entropy.WritePortal().Set(0, e);
 
-  auto result = CreateResult(inDataSet,
-                             vtkm::cont::Field{ this->GetOutputFieldName(),
-                                                vtkm::cont::Field::Association::WHOLE_MESH,
-                                                entropy });
+  vtkm::cont::DataSet output;
+  output.AddField(
+    { this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, entropy });
 
-  this->MapFieldsOntoOutput(inDataSet, result);
-
-  return result;
+  // The output is a "summary" of the input, no need to map fields
+  return output;
 }
 } // namespace density_estimate
 } // namespace filter

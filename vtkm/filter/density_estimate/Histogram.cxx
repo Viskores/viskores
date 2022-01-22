@@ -197,16 +197,14 @@ VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(const vtkm::cont::DataSet& in
 
   const auto& fieldArray = this->GetFieldFromDataSet(input).GetData();
   fieldArray
-    .CastAndCallForTypesWithFloatFallback<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(
+    .CastAndCallForTypesWithFloatFallback<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(
       resolveType);
 
   vtkm::cont::DataSet output;
-  vtkm::cont::Field rfield(
-    this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, binArray);
-  output.AddField(rfield);
+  output.AddField(
+    { this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, binArray });
 
-  this->MapFieldsOntoOutput(input, output);
-
+  // The output is a "summary" of the input, no need to map fields
   return output;
 }
 

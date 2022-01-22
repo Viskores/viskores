@@ -8,8 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/filter/density_estimate/ParticleDensityNearestGridPoint.h>
@@ -97,11 +95,9 @@ VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
 
     // We create an ArrayHandle and pass it to the Worklet as AtomicArrayInOut.
-    // However, the ArrayHandle needs to be allocated and initialized first. The
-    // easiest way to do it is to copy from an ArrayHandleConstant
+    // However, the ArrayHandle needs to be allocated and initialized first.
     vtkm::cont::ArrayHandle<T> density;
-    vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<T>(0, uniform.GetNumberOfCells()),
-                          density);
+    density.AllocateAndFill(uniform.GetNumberOfPoints(), 0);
 
     this->Invoke(vtkm::worklet::NGPWorklet{}, coords, concrete, locator, density);
 
@@ -133,6 +129,8 @@ VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
     vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST, vtkm::List<vtkm::cont::StorageTagConstant>>>(
     resolveType);
 
+  // Deposition of the input field to the output field is already mapping. No need to map other
+  // fields.
   return uniform;
 }
 }

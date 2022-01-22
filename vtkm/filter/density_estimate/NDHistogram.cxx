@@ -63,7 +63,7 @@ VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::DataSet& 
     outputData.AddField(vtkm::cont::make_FieldPoint(this->FieldNames[i], binIds[i]));
   }
   outputData.AddField(vtkm::cont::make_FieldPoint("Frequency", freqs));
-
+  // The output is a "summary" of the input, no need to map fields
   return outputData;
 }
 

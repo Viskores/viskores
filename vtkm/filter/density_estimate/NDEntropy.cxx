@@ -41,9 +41,9 @@ VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(const vtkm::cont::DataSet& in
   entropyHandle.Allocate(1);
   entropyHandle.WritePortal().Set(0, entropy);
 
-
   vtkm::cont::DataSet outputData;
-  outputData.AddField(vtkm::cont::make_FieldPoint("Entropy", entropyHandle));
+  outputData.AddField({ "Entropy", vtkm::cont::Field::Association::WHOLE_MESH, entropyHandle });
+  // The output is a "summary" of the input, no need to map fields
   return outputData;
 }
 } // namespace density_estimate
