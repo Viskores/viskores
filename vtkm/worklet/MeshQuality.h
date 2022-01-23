@@ -80,16 +80,6 @@ public:
                             const PointCoordVecType& pts,
                             OutType& metricValue) const
   {
-    if (index == 2120)
-    {
-      std::cout << "Start Debug " << std::endl;
-      std::cout << "Num Points : " << numPoints << std::endl;
-      for (int i = 0; i < numPoints; i++)
-      {
-        std::cout << pts[i] << std::endl;
-      }
-      std::cout << "End Debug " << std::endl;
-    }
     vtkm::UInt8 thisId = shape.Id;
     if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
     {

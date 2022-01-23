@@ -101,6 +101,12 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
     pts[0] - pts[3],
   };
 
+  if (vtkm::MagnitudeSquared(edges[0]) == OutType(0.0) ||
+      vtkm::MagnitudeSquared(edges[1]) == OutType(0.0) ||
+      vtkm::MagnitudeSquared(edges[2]) == OutType(0.0) ||
+      vtkm::MagnitudeSquared(edges[3]) == OutType(0.0))
+    return OutType(0.0);
+
   typename PointCoordVecType::ComponentType cornerNormals[4] = {
     Cross(edges[3], edges[0]),
     Cross(edges[0], edges[1]),
