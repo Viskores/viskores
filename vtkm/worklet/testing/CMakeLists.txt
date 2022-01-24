@@ -32,7 +32,6 @@ set(unit_tests
   UnitTestCrossProduct.cxx
   UnitTestDescriptiveStatistics.cxx
   UnitTestDotProduct.cxx
-  UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestGraphConnectivity.cxx
   UnitTestInnerJoin.cxx
@@ -42,8 +41,6 @@ set(unit_tests
   UnitTestMaskIndices.cxx
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
-  UnitTestNDimsEntropy.cxx
-  UnitTestNDimsHistogram.cxx
   UnitTestNDimsHistMarginalization.cxx
   UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx

@@ -25,14 +25,12 @@ set(unit_tests
   UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCrossProductFilter.cxx
-  UnitTestEntropyFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
   UnitTestGradientExplicit.cxx
   UnitTestGradientUniform.cxx
   UnitTestGhostCellClassify.cxx
-  UnitTestHistogramFilter.cxx
   UnitTestImageConnectivityFilter.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
@@ -43,11 +41,7 @@ set(unit_tests
   UnitTestMeshQualityFilter.cxx
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
-  UnitTestNDEntropyFilter.cxx
-  UnitTestNDHistogramFilter.cxx
-  UnitTestParticleDensity.cxx
   UnitTestPartitionedDataSetFilters.cxx
-  UnitTestPartitionedDataSetHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointAverageCellSetExtrude.cxx
   UnitTestPointElevationFilter.cxx

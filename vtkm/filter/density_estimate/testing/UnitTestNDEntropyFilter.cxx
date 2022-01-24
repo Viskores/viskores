@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/NDEntropy.h>
+#include <vtkm/filter/density_estimate/NDEntropy.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -177,7 +177,7 @@ void RunTest()
 {
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
-  vtkm::filter::NDEntropy ndEntropyFilter;
+  vtkm::filter::density_estimate::NDEntropy ndEntropyFilter;
 
   ndEntropyFilter.AddFieldAndBin("fieldA", 10);
   ndEntropyFilter.AddFieldAndBin("fieldB", 10);
