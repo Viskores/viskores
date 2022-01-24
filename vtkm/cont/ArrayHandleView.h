@@ -179,7 +179,7 @@ public:
     vtkm::Id adjustedEndIndex = (endIndex < indices.NumberOfValues)
       ? endIndex + indices.StartIndex
       : indices.NumberOfValues + indices.StartIndex;
-    SourceStorage::Fill(buffers, fillValue, adjustedStartIndex, adjustedEndIndex, token);
+    SourceStorage::Fill(buffers + 1, fillValue, adjustedStartIndex, adjustedEndIndex, token);
   }
 
   VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
@@ -258,8 +258,11 @@ ArrayHandleView<ArrayHandleType> make_ArrayHandleView(const ArrayHandleType& arr
 namespace internal
 {
 
+// Superclass will inherit the ArrayExtractComponentImplInefficient property if
+// the sub-storage is inefficient (thus making everything inefficient).
 template <typename StorageTag>
 struct ArrayExtractComponentImpl<StorageTagView<StorageTag>>
+  : vtkm::cont::internal::ArrayExtractComponentImpl<StorageTag>
 {
   template <typename T>
   using StrideArrayType =

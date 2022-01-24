@@ -152,8 +152,7 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   DataArrayHandle distanceToOther(coordinates, EuclideanNorm(CoordType(1., 1., 1.)));
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, nCells),
-                        cellFieldArray);
+  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleIndex(nCells), cellFieldArray);
 
   ConnectivityArrayHandle connectivity(
     vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, nCells * HexTraits::NUM_POINTS),

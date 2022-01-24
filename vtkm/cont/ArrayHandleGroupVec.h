@@ -249,9 +249,12 @@ VTKM_CONT vtkm::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS> make_
 namespace internal
 {
 
+// Superclass will inherit the ArrayExtractComponentImplInefficient property if
+// the sub-storage is inefficient (thus making everything inefficient).
 template <typename ComponentsStorageTag, vtkm::IdComponent NUM_COMPONENTS>
 struct ArrayExtractComponentImpl<
   vtkm::cont::StorageTagGroupVec<ComponentsStorageTag, NUM_COMPONENTS>>
+  : vtkm::cont::internal::ArrayExtractComponentImpl<ComponentsStorageTag>
 {
   template <typename T>
   vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(

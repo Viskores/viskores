@@ -10,7 +10,7 @@
 #ifndef vtk_m_worklet_RemoveUnusedPoints_h
 #define vtk_m_worklet_RemoveUnusedPoints_h
 
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -102,9 +102,7 @@ public:
     if (this->MaskArray.GetNumberOfValues() < 1)
     {
       // Initialize mask array to 0.
-      vtkm::cont::ArrayCopy(
-        vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(0, inCellSet.GetNumberOfPoints()),
-        this->MaskArray);
+      this->MaskArray.AllocateAndFill(inCellSet.GetNumberOfPoints(), 0);
     }
     VTKM_ASSERT(this->MaskArray.GetNumberOfValues() == inCellSet.GetNumberOfPoints());
 
@@ -257,7 +255,7 @@ public:
   VTKM_CONT void MapPointFieldDeep(const vtkm::cont::ArrayHandle<InT, InS>& inArray,
                                    vtkm::cont::ArrayHandle<OutT, OutS>& outArray) const
   {
-    vtkm::cont::ArrayCopy(this->MapPointFieldShallow(inArray), outArray);
+    vtkm::cont::ArrayCopyDevice(this->MapPointFieldShallow(inArray), outArray);
   }
 
   template <typename T, typename S>

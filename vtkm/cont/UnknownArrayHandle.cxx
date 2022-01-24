@@ -275,12 +275,32 @@ VTKM_CONT void UnknownArrayHandle::Allocate(vtkm::Id numValues, vtkm::CopyFlag p
 
 VTKM_CONT void UnknownArrayHandle::DeepCopyFrom(const vtkm::cont::UnknownArrayHandle& source)
 {
-  vtkm::cont::internal::ArrayCopyUnknown(source, *this);
+  if (!this->IsValid())
+  {
+    *this = source.NewInstance();
+  }
+
+  const_cast<const UnknownArrayHandle*>(this)->DeepCopyFrom(source);
 }
 
 VTKM_CONT void UnknownArrayHandle::DeepCopyFrom(const vtkm::cont::UnknownArrayHandle& source) const
 {
-  vtkm::cont::internal::ArrayCopyUnknown(source, *this);
+  if (!this->IsValid())
+  {
+    throw vtkm::cont::ErrorBadValue(
+      "Attempty to copy to a constant UnknownArrayHandle with no valid array.");
+  }
+
+  if (source.IsValueTypeImpl(this->Container->ValueType) &&
+      source.IsStorageTypeImpl(this->Container->StorageType))
+  {
+    this->Container->DeepCopy(source.Container->ArrayHandlePointer,
+                              this->Container->ArrayHandlePointer);
+  }
+  else
+  {
+    vtkm::cont::internal::ArrayCopyUnknown(source, *this);
+  }
 }
 
 VTKM_CONT
@@ -290,8 +310,10 @@ void UnknownArrayHandle::CopyShallowIfPossible(const vtkm::cont::UnknownArrayHan
   {
     *this = source;
   }
-
-  const_cast<const UnknownArrayHandle*>(this)->CopyShallowIfPossible(source);
+  else
+  {
+    const_cast<const UnknownArrayHandle*>(this)->CopyShallowIfPossible(source);
+  }
 }
 
 VTKM_CONT
@@ -311,7 +333,7 @@ void UnknownArrayHandle::CopyShallowIfPossible(const vtkm::cont::UnknownArrayHan
   }
   else
   {
-    this->DeepCopyFrom(source);
+    vtkm::cont::internal::ArrayCopyUnknown(source, *this);
   }
 }
 

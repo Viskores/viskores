@@ -8,6 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayHandleRandomUniformReal.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -27,7 +29,7 @@ void TestNGP()
     vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xdeed),
     vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xabba));
   vtkm::cont::ArrayHandle<vtkm::Vec3f> positions;
-  vtkm::cont::ArrayCopy(composite, positions);
+  vtkm::cont::ArrayCopyDevice(composite, positions);
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleIndex(N), connectivity);
@@ -36,8 +38,8 @@ void TestNGP()
     positions, vtkm::CellShapeTagVertex{}, 1, connectivity);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> mass;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(N, 0xd1ce),
-                        mass);
+  vtkm::cont::ArrayCopyDevice(
+    vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(N, 0xd1ce), mass);
   dataSet.AddCellField("mass", mass);
 
   auto cellDims = vtkm::Id3{ 3, 3, 3 };
@@ -78,7 +80,7 @@ void TestCIC()
     vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xdeed),
     vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xabba));
   vtkm::cont::ArrayHandle<vtkm::Vec3f> positions;
-  vtkm::cont::ArrayCopy(composite, positions);
+  vtkm::cont::ArrayCopyDevice(composite, positions);
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleIndex(N), connectivity);
@@ -87,7 +89,8 @@ void TestCIC()
     positions, vtkm::CellShapeTagVertex{}, 1, connectivity);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> mass;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xd1ce), mass);
+  vtkm::cont::ArrayCopyDevice(vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xd1ce),
+                              mass);
   dataSet.AddCellField("mass", mass);
 
   auto cellDims = vtkm::Id3{ 3, 3, 3 };
