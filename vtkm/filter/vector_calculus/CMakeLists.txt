@@ -8,9 +8,13 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(vector_calculus_headers
-  DotProduct.h)
+  CrossProduct.h
+  DotProduct.h
+  )
 set(vector_calculus_sources_device
-  DotProduct.cxx)
+  CrossProduct.cxx
+  DotProduct.cxx
+  )
 
 vtkm_library(
   NAME vtkm_filter_vector_calculus

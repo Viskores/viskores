@@ -29,7 +29,6 @@ set(unit_tests
   UnitTestContourTreeUniformDistributed.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCosmoTools.cxx
-  UnitTestCrossProduct.cxx
   UnitTestDescriptiveStatistics.cxx
   UnitTestDotProduct.cxx
   UnitTestFieldStatistics.cxx
