@@ -142,6 +142,54 @@ protected:
     }
   }
 
+  template <typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallScalarField(const vtkm::cont::UnknownArrayHandle& fieldArray,
+                                        Functor&& functor,
+                                        Args&&... args) const
+  {
+    fieldArray
+      .CastAndCallForTypesWithFloatFallback<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(
+        std::forward<Functor>(functor), std::forward<Args>(args)...);
+  }
+
+  template <typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallScalarField(const vtkm::cont::Field& field,
+                                        Functor&& functor,
+                                        Args&&... args) const
+  {
+    this->CastAndCallScalarField(
+      field.GetData(), std::forward<Functor>(functor), std::forward<Args>(args)...);
+  }
+
+private:
+  template <vtkm::IdComponent VecSize>
+  struct ScalarToVec
+  {
+    template <typename T>
+    using type = vtkm::Vec<T, VecSize>;
+  };
+
+protected:
+  template <vtkm::IdComponent VecSize, typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallVecField(const vtkm::cont::UnknownArrayHandle& fieldArray,
+                                     Functor&& functor,
+                                     Args&&... args) const
+  {
+    using VecList =
+      vtkm::ListTransform<vtkm::TypeListFieldScalar, ScalarToVec<VecSize>::template type>;
+    fieldArray.CastAndCallForTypesWithFloatFallback<VecList, VTKM_DEFAULT_STORAGE_LIST>(
+      std::forward<Functor>(functor), std::forward<Args>(args)...);
+  }
+
+  template <vtkm::IdComponent VecSize, typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallVecField(const vtkm::cont::Field& field,
+                                     Functor&& functor,
+                                     Args&&... args) const
+  {
+    this->CastAndCallVecField<VecSize>(
+      field.GetData(), std::forward<Functor>(functor), std::forward<Args>(args)...);
+  }
+
 private:
   void ResizeIfNeeded(size_t index_st);
 
