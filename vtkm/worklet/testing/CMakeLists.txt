@@ -31,7 +31,6 @@ set(unit_tests
   UnitTestCosmoTools.cxx
   UnitTestCrossProduct.cxx
   UnitTestDescriptiveStatistics.cxx
-  UnitTestDotProduct.cxx
   UnitTestFieldStatistics.cxx
   UnitTestGraphConnectivity.cxx
   UnitTestInnerJoin.cxx
