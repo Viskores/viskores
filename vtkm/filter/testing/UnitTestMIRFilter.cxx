@@ -162,14 +162,15 @@ public:
   }
 };
 
-vtkm::cont::DataSet GetDataForFilter(vtkm::cont::DataSet& data)
+void TestMIRVenn250()
 {
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-  vtkm::cont::DataSet toReturn = dataSetBuilder.Create(
-    vtkm::Id2(251, 251), vtkm::Vec2f(0.0f, 0.0f), vtkm::Vec2f(1 / 250.f, 1 / 250.f));
-
   using IdArray = vtkm::cont::ArrayHandle<vtkm::Id>;
   using DataArray = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
+  vtkm::cont::Invoker invoker;
+
+  std::string vennFile = vtkm::cont::testing::Testing::DataPath("uniform/venn250.vtk");
+  vtkm::io::VTKDataSetReader reader(vennFile);
+  vtkm::cont::DataSet data = reader.ReadDataSet();
 
   DataArray backArr;
   data.GetField("mesh_topo/background").GetDataAsDefaultFloat().AsArrayHandle(backArr);
@@ -184,7 +185,6 @@ vtkm::cont::DataSet GetDataForFilter(vtkm::cont::DataSet& data)
   IdArray offset;
   IdArray matIds;
   DataArray matVFs;
-  vtkm::cont::Invoker invoker;
 
   invoker(MetaDataLength{}, backArr, cirAArr, cirBArr, cirCArr, length);
 
@@ -196,24 +196,12 @@ vtkm::cont::DataSet GetDataForFilter(vtkm::cont::DataSet& data)
 
   invoker(MetaDataPopulate{}, offset, backArr, cirAArr, cirBArr, cirCArr, matIds, matVFs);
 
-  toReturn.AddField(
-    vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::CELL_SET, offset));
-  toReturn.AddField(
-    vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::CELL_SET, length));
-  toReturn.AddField(
+  data.AddField(vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::CELL_SET, offset));
+  data.AddField(vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::CELL_SET, length));
+  data.AddField(
     vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WHOLE_MESH, matIds));
-  toReturn.AddField(
+  data.AddField(
     vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WHOLE_MESH, matVFs));
-
-  return toReturn;
-}
-
-void TestMIRVenn250()
-{
-  std::string vennFile = vtkm::cont::testing::Testing::DataPath("uniform/venn250.vtk");
-  vtkm::io::VTKDataSetReader reader(vennFile);
-  vtkm::cont::DataSet data = reader.ReadDataSet();
-  vtkm::cont::DataSet forMIR = GetDataForFilter(data);
 
   vtkm::filter::MIRFilter mir;
   mir.SetIDWholeSetName("scatter_ids");
@@ -227,13 +215,13 @@ void TestMIRVenn250()
   // Note it is mathematically impossible to obtain 0% error outside of VERY special cases (neglecting float error)
   mir.SetMaxPercentError(vtkm::Float64(0.00001));
 
-  std::cerr << "Input cells : " << forMIR.GetNumberOfCells() << std::endl;
-  std::cerr << "Input points : " << forMIR.GetNumberOfPoints() << std::endl;
+  std::cerr << "Input cells : " << data.GetNumberOfCells() << std::endl;
+  std::cerr << "Input points : " << data.GetNumberOfPoints() << std::endl;
 
   vtkm::cont::Timer timer;
   timer.Start();
 
-  vtkm::cont::DataSet fromMIR = mir.Execute(forMIR);
+  vtkm::cont::DataSet fromMIR = mir.Execute(data);
 
   timer.Stop();
 

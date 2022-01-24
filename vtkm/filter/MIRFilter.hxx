@@ -122,14 +122,24 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
   or_len.GetData().AsArrayHandle(lendata_or);
   or_ids.GetData().AsArrayHandle(idsdata_or);
   or_vfs.GetData().AsArrayHandle(vfsdata_or);
+
+  auto portal = idsdata_or.ReadPortal();
+  for (int i = 0; i < 5; i++)
+    std::cerr << portal.Get(i) << std::endl;
   vtkm::cont::ArrayCopy(idsdata_or, allids);
+  std::cerr << "All Ids : " << allids.GetNumberOfValues() << std::endl;
   vtkm::cont::Algorithm::Sort(allids);
+  std::cerr << "All Ids sorted : " << allids.GetNumberOfValues() << std::endl;
   vtkm::cont::Algorithm::Unique(allids);
+  std::cerr << "All Ids unique: " << allids.GetNumberOfValues() << std::endl;
   vtkm::IdComponent numIDs = static_cast<vtkm::IdComponent>(allids.GetNumberOfValues());
   //using PortalConstType = vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl;
   //PortalConstType readPortal = allids.GetPortalConstControl();
   using PortalConstType = vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
   PortalConstType readPortal = allids.ReadPortal();
+  for (int i = 0; i < allids.GetNumberOfValues(); i++)
+    std::cerr << readPortal.Get(i) << "\t";
+  std::cerr << std::endl;
   vtkm::cont::ArrayCopy(idsdata_or, idsdata);
   vtkm::cont::ArrayCopy(lendata_or, lendata);
   vtkm::cont::ArrayCopy(posdata_or, posdata);
