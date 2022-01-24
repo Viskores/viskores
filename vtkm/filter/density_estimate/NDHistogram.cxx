@@ -60,9 +60,10 @@ VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::DataSet& 
   vtkm::cont::DataSet outputData;
   for (size_t i = 0; i < binIds.size(); i++)
   {
-    outputData.AddField(vtkm::cont::make_FieldPoint(this->FieldNames[i], binIds[i]));
+    outputData.AddField(
+      { this->FieldNames[i], vtkm::cont::Field::Association::WHOLE_MESH, binIds[i] });
   }
-  outputData.AddField(vtkm::cont::make_FieldPoint("Frequency", freqs));
+  outputData.AddField({ "Frequency", vtkm::cont::Field::Association::WHOLE_MESH, freqs });
   // The output is a "summary" of the input, no need to map fields
   return outputData;
 }
