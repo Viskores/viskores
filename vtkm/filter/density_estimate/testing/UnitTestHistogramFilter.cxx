@@ -8,23 +8,31 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/NDimsEntropy.h>
+#include <vtkm/filter/density_estimate/Histogram.h>
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-namespace
-{
-// Make testing dataset with three fields(variables), each one has 1000 values
+#include <vtkm/thirdparty/diy/environment.h>
+
+//
+// Make a simple 2D, 1000 point dataset populated with stat distributions
+//
 vtkm::cont::DataSet MakeTestDataSet()
 {
   vtkm::cont::DataSet dataSet;
 
+  const int dimension = 2;
   const int xVerts = 20;
   const int yVerts = 50;
   const int nVerts = xVerts * yVerts;
 
-  vtkm::Float32 fieldA[nVerts] = {
+  const int xCells = xVerts - 1;
+  const int yCells = yVerts - 1;
+  const int nCells = xCells * yCells;
+
+  // Poisson distribution [0:49] mean = 10
+  vtkm::Float32 poisson[nVerts] = {
     8,  10, 9,  8,  14, 11, 12, 9,  19, 7,  8,  11, 7,  10, 11, 11, 11, 6,  8,  8,  7,  15, 9,  7,
     8,  10, 9,  10, 10, 12, 7,  6,  14, 10, 14, 10, 7,  11, 13, 9,  13, 11, 10, 10, 12, 12, 7,  12,
     10, 11, 12, 8,  13, 9,  5,  12, 11, 9,  5,  9,  12, 9,  6,  10, 11, 9,  9,  11, 9,  7,  7,  18,
@@ -69,7 +77,8 @@ vtkm::cont::DataSet MakeTestDataSet()
     8,  7,  6,  8,  9,  19, 7,  12, 11, 8,  14, 12, 10, 9,  3,  7
   };
 
-  vtkm::Float32 fieldB[nVerts] = {
+  // Normal distribution [0:49] mean = 25 standard deviation = 5.0
+  vtkm::Float32 normal[nVerts] = {
     24, 19, 28, 19, 25, 28, 25, 22, 27, 26, 35, 26, 30, 28, 24, 23, 21, 31, 20, 11, 21, 22, 14, 25,
     20, 24, 24, 21, 24, 29, 26, 21, 32, 29, 23, 28, 31, 25, 23, 30, 18, 24, 22, 25, 33, 24, 22, 23,
     21, 17, 20, 28, 30, 18, 20, 32, 25, 24, 32, 15, 27, 24, 27, 19, 30, 27, 17, 24, 29, 23, 22, 19,
@@ -114,7 +123,8 @@ vtkm::cont::DataSet MakeTestDataSet()
     34, 20, 22, 36, 21, 29, 25, 20, 21, 22, 29, 29, 25, 22, 24, 22
   };
 
-  vtkm::Float32 fieldC[nVerts] = {
+  //Chi squared distribution [0:49] degrees of freedom = 5.0
+  vtkm::Float32 chiSquare[nVerts] = {
     3,  1,  4,  6,  5,  4,  8,  7,  2,  9,  2,  0,  0,  4,  3,  2,  5,  2,  3,  6,  3,  8,  3,  4,
     3,  3,  2,  7,  2,  10, 9,  6,  1,  1,  4,  7,  3,  3,  1,  4,  4,  3,  9,  4,  4,  7,  3,  2,
     4,  7,  3,  3,  2,  10, 1,  6,  2,  2,  3,  8,  3,  3,  6,  9,  4,  1,  4,  3,  16, 7,  0,  1,
@@ -159,47 +169,166 @@ vtkm::cont::DataSet MakeTestDataSet()
     4,  5,  6,  7,  6,  1,  5,  1,  6,  6,  2,  6,  7,  2,  4,  6
   };
 
+  // Uniform distribution [0:49]
+  vtkm::Float32 uniform[nVerts] = {
+    0,  6,  37, 22, 26, 10, 2,  33, 33, 46, 19, 25, 41, 1,  2,  26, 33, 0,  19, 3,  20, 34, 29, 46,
+    42, 26, 4,  32, 20, 35, 45, 38, 13, 2,  36, 16, 31, 37, 49, 18, 12, 49, 36, 37, 32, 3,  31, 44,
+    13, 21, 38, 23, 11, 13, 17, 8,  24, 44, 45, 3,  45, 25, 25, 15, 49, 24, 13, 4,  47, 3,  25, 19,
+    13, 45, 26, 23, 47, 2,  38, 38, 41, 6,  0,  34, 43, 31, 36, 36, 49, 44, 11, 15, 17, 25, 29, 42,
+    20, 42, 13, 20, 26, 23, 14, 8,  7,  28, 40, 1,  26, 24, 47, 37, 27, 44, 31, 42, 7,  10, 35, 6,
+    4,  13, 0,  20, 1,  35, 46, 11, 9,  15, 44, 32, 7,  34, 19, 19, 24, 7,  29, 42, 29, 47, 27, 7,
+    49, 20, 7,  28, 12, 24, 23, 48, 6,  9,  15, 31, 6,  32, 31, 40, 12, 23, 19, 10, 1,  45, 21, 7,
+    47, 20, 6,  44, 4,  8,  3,  18, 12, 6,  39, 22, 17, 22, 40, 46, 32, 10, 33, 45, 12, 43, 23, 25,
+    30, 40, 37, 23, 47, 31, 21, 41, 34, 35, 49, 47, 42, 14, 26, 25, 5,  20, 28, 43, 22, 36, 43, 35,
+    40, 35, 37, 0,  44, 26, 23, 3,  35, 24, 33, 34, 9,  45, 43, 44, 27, 6,  22, 49, 10, 22, 15, 25,
+    44, 21, 23, 40, 18, 10, 49, 7,  31, 30, 0,  0,  38, 36, 15, 20, 34, 34, 10, 41, 35, 41, 4,  4,
+    38, 31, 10, 10, 4,  19, 47, 47, 19, 13, 34, 14, 38, 39, 21, 14, 9,  0,  9,  49, 12, 40, 6,  19,
+    30, 8,  41, 7,  49, 12, 11, 5,  10, 31, 34, 39, 34, 37, 33, 31, 2,  29, 11, 15, 34, 5,  38, 26,
+    27, 29, 16, 35, 7,  8,  24, 43, 40, 27, 36, 15, 6,  26, 15, 29, 25, 21, 12, 18, 19, 22, 23, 19,
+    13, 3,  18, 12, 33, 33, 25, 36, 36, 47, 23, 47, 16, 23, 25, 33, 20, 30, 49, 7,  33, 17, 27, 26,
+    41, 0,  13, 32, 27, 45, 13, 48, 12, 42, 34, 22, 40, 1,  8,  35, 35, 21, 29, 37, 49, 34, 13, 37,
+    8,  0,  24, 3,  8,  45, 39, 37, 21, 0,  29, 25, 3,  27, 19, 10, 19, 31, 32, 35, 26, 14, 40, 18,
+    34, 15, 0,  5,  26, 38, 11, 2,  3,  8,  36, 14, 2,  23, 22, 25, 22, 7,  14, 41, 34, 28, 34, 16,
+    2,  49, 27, 0,  42, 1,  18, 24, 28, 36, 33, 26, 1,  6,  48, 9,  17, 30, 30, 6,  27, 47, 17, 41,
+    48, 12, 12, 21, 40, 44, 12, 38, 34, 22, 13, 33, 5,  10, 5,  27, 0,  8,  29, 21, 4,  34, 18, 41,
+    6,  48, 1,  4,  24, 38, 46, 12, 17, 38, 24, 37, 33, 34, 37, 1,  11, 11, 28, 32, 30, 18, 11, 11,
+    32, 8,  37, 7,  2,  33, 6,  47, 24, 31, 45, 0,  29, 36, 24, 2,  22, 25, 38, 3,  22, 48, 23, 16,
+    22, 37, 10, 8,  18, 46, 48, 12, 3,  6,  26, 8,  25, 5,  42, 18, 21, 16, 35, 28, 43, 37, 41, 34,
+    19, 46, 30, 18, 26, 22, 20, 12, 4,  21, 23, 14, 5,  10, 40, 26, 33, 43, 12, 35, 13, 19, 4,  22,
+    11, 39, 24, 0,  13, 33, 21, 9,  48, 6,  39, 47, 8,  30, 3,  17, 14, 25, 41, 41, 36, 16, 40, 31,
+    2,  2,  7,  38, 3,  25, 46, 11, 10, 4,  34, 35, 24, 13, 35, 18, 10, 11, 21, 23, 43, 48, 22, 1,
+    26, 1,  37, 29, 41, 16, 11, 26, 21, 20, 49, 48, 42, 43, 15, 7,  49, 31, 23, 46, 34, 40, 27, 28,
+    7,  47, 41, 7,  2,  17, 5,  4,  25, 1,  28, 42, 25, 33, 36, 34, 1,  9,  33, 17, 3,  7,  46, 11,
+    19, 29, 8,  1,  34, 38, 35, 3,  29, 46, 46, 21, 25, 41, 45, 30, 36, 25, 24, 8,  48, 28, 13, 26,
+    34, 33, 4,  27, 30, 33, 24, 28, 29, 22, 7,  25, 36, 1,  2,  26, 16, 1,  12, 5,  19, 27, 29, 30,
+    46, 38, 25, 24, 32, 34, 20, 24, 23, 35, 26, 13, 30, 14, 35, 26, 46, 11, 20, 29, 39, 46, 34, 41,
+    26, 11, 7,  44, 12, 32, 0,  46, 13, 42, 13, 47, 25, 6,  20, 35, 21, 5,  38, 4,  22, 17, 14, 37,
+    16, 16, 2,  28, 24, 10, 5,  48, 43, 24, 18, 40, 8,  7,  2,  7,  23, 19, 44, 21, 20, 32, 15, 3,
+    40, 44, 45, 45, 38, 8,  28, 1,  40, 26, 43, 13, 43, 29, 19, 40, 26, 46, 21, 28, 37, 44, 16, 9,
+    37, 35, 43, 3,  35, 43, 17, 4,  8,  20, 4,  33, 28, 40, 43, 38, 31, 44, 43, 24, 5,  18, 19, 34,
+    6,  3,  7,  23, 35, 11, 19, 48, 31, 34, 45, 18, 42, 39, 21, 3,  24, 24, 22, 24, 37, 46, 15, 7,
+    5,  4,  48, 20, 11, 48, 41, 9,  6,  9,  16, 28, 22, 29, 21, 18, 19, 30, 21, 7,  33, 49, 34, 20,
+    42, 40, 39, 18, 0,  23, 31, 32, 32, 39, 18, 17, 19, 16, 34, 7,  14, 33, 42, 15, 7,  30, 0,  46,
+    19, 25, 17, 13, 14, 41, 6,  31, 2,  22, 18, 7,  37, 33, 0,  39, 28, 14, 20, 16, 25, 35, 42, 11,
+    23, 18, 2,  3,  10, 28, 41, 21, 41, 14, 9,  17, 46, 29, 18, 23, 31, 47, 20, 2,  22, 29, 37, 43,
+    6,  5,  33, 41, 29, 32, 49, 0,  46, 9,  48, 26, 13, 35, 29, 41, 41, 32, 36, 32, 17, 26, 33, 16,
+    43, 22, 45, 13, 47, 5,  20, 41, 48, 16, 26, 26, 40, 46, 33, 12
+  };
+
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vtkm::Id3(xVerts, yVerts, 1));
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   // Set point scalars
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldA", vtkm::cont::Field::Association::POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
+    "p_poisson", vtkm::cont::Field::Association::POINTS, poisson, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldB", vtkm::cont::Field::Association::POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
+    "p_normal", vtkm::cont::Field::Association::POINTS, normal, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldC", vtkm::cont::Field::Association::POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
+    "p_chiSquare", vtkm::cont::Field::Association::POINTS, chiSquare, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "p_uniform", vtkm::cont::Field::Association::POINTS, uniform, nVerts, vtkm::CopyFlag::On));
+
+  // Set cell scalars
+  dataSet.AddField(vtkm::cont::make_Field(
+    "c_poisson", vtkm::cont::Field::Association::CELL_SET, poisson, nCells, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "c_normal", vtkm::cont::Field::Association::CELL_SET, normal, nCells, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field("c_chiSquare",
+                                          vtkm::cont::Field::Association::CELL_SET,
+                                          chiSquare,
+                                          nCells,
+                                          vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "c_uniform", vtkm::cont::Field::Association::CELL_SET, poisson, nCells, vtkm::CopyFlag::On));
+
+  vtkm::cont::CellSetStructured<dimension> cellSet;
+
+  //Set regular structure
+  cellSet.SetPointDimensions(vtkm::make_Vec(xVerts, yVerts));
+  dataSet.SetCellSet(cellSet);
 
   return dataSet;
 }
 
 //
-// Create a dataset with known point data
-// Extract the three field
-// Run NDimsEntropy to calculate the entropy
+// Verify the histogram result and tally
 //
-void TestNDimsEntropy()
+void VerifyHistogram(const vtkm::cont::DataSet& result,
+                     vtkm::Id numberOfBins,
+                     const vtkm::Range& range,
+                     vtkm::Float64 delta,
+                     bool output = true)
 {
+  VTKM_TEST_ASSERT(result.HasField("histogram"), "Output field missing");
+
+  vtkm::cont::ArrayHandle<vtkm::Id> bins;
+  result.GetField("histogram").GetData().AsArrayHandle(bins);
+
+  vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType binPortal = bins.ReadPortal();
+
+  vtkm::Id sum = 0;
+  for (vtkm::Id i = 0; i < numberOfBins; i++)
+  {
+    vtkm::Float64 lo = range.Min + (static_cast<vtkm::Float64>(i) * delta);
+    vtkm::Float64 hi = lo + delta;
+    sum += binPortal.Get(i);
+    if (output)
+    {
+      std::cout << "  BIN[" << i << "] Range[" << lo << ", " << hi << "] = " << binPortal.Get(i)
+                << std::endl;
+    }
+  }
+  VTKM_TEST_ASSERT(test_equal(sum, 1000), "Histogram not full");
+}
+
+//
+// Create a dataset with known point data and cell data (statistical distributions)
+// Extract arrays of point and cell fields
+// Create output structure to hold histogram bins
+// Run FieldHistogram filter
+//
+void TestHistogram()
+{
+  vtkm::Float64 delta;
+  vtkm::Range range;
+
   // Data attached is the poisson distribution
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
-  vtkm::worklet::NDimsEntropy ndEntropy;
-  ndEntropy.SetNumOfDataPoints(ds.GetField(0).GetNumberOfValues());
+  vtkm::filter::density_estimate::Histogram histogram;
 
-  // Add field one by one
-  ndEntropy.AddField(ds.GetField("fieldA").GetData(), 10);
-  ndEntropy.AddField(ds.GetField("fieldB").GetData(), 10);
-  ndEntropy.AddField(ds.GetField("fieldC").GetData(), 10);
+  // Run data
+  histogram.SetNumberOfBins(10);
+  histogram.SetActiveField("p_poisson");
+  auto result = histogram.Execute(ds);
+  delta = histogram.GetBinDelta();
+  range = histogram.GetComputedRange();
+  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
 
-  // Run worklet to calculate multi-variate entropy
-  vtkm::Float64 entropy = ndEntropy.Run();
+  histogram.SetNumberOfBins(100);
+  histogram.SetActiveField("p_normal");
+  result = histogram.Execute(ds);
+  delta = histogram.GetBinDelta();
+  range = histogram.GetComputedRange();
+  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta, false);
 
-  VTKM_TEST_ASSERT(fabs(entropy - 7.457857) < 0.001,
-                   "N-Dimentional entropy calculation is incorrect");
-} // TestNDimsEntropy
-}
+  histogram.SetNumberOfBins(1);
+  histogram.SetActiveField("p_chiSquare");
+  result = histogram.Execute(ds);
+  delta = histogram.GetBinDelta();
+  range = histogram.GetComputedRange();
+  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
 
-int UnitTestNDimsEntropy(int argc, char* argv[])
+  histogram.SetNumberOfBins(1000000);
+  histogram.SetActiveField("p_uniform");
+  result = histogram.Execute(ds);
+  delta = histogram.GetBinDelta();
+  range = histogram.GetComputedRange();
+  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta, false);
+
+} // TestFieldHistogram
+
+int UnitTestHistogramFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestNDimsEntropy, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestHistogram, argc, argv);
 }

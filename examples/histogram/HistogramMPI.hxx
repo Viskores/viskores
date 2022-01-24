@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/FieldHistogram.h>
+#include <vtkm/filter/density_estimate/worklet/FieldHistogram.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>

@@ -30,15 +30,12 @@ set(unit_tests
   UnitTestCrossProduct.cxx
   UnitTestDescriptiveStatistics.cxx
   UnitTestDotProduct.cxx
-  UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
   UnitTestMaskIndices.cxx
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
-  UnitTestNDimsEntropy.cxx
-  UnitTestNDimsHistogram.cxx
   UnitTestNDimsHistMarginalization.cxx
   UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx

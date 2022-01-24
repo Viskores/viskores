@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/filter/density_estimate/worklet/NDimsHistogram.h>
 #include <vtkm/worklet/NDimsHistMarginalization.h>
-#include <vtkm/worklet/NDimsHistogram.h>
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>

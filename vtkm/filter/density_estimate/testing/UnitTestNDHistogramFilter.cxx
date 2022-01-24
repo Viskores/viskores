@@ -8,14 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/NDimsHistogram.h>
-
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/density_estimate/NDHistogram.h>
 
 namespace
 {
-// Make testing dataset with three fields(variables), each one has 100 values
+
 vtkm::cont::DataSet MakeTestDataSet()
 {
   vtkm::cont::DataSet dataSet;
@@ -56,37 +54,28 @@ vtkm::cont::DataSet MakeTestDataSet()
   return dataSet;
 }
 
-void TestNDimsHistogram()
+void RunTest()
 {
-  // Create a dataset
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
-  vtkm::worklet::NDimsHistogram ndHistogram;
+  vtkm::filter::density_estimate::NDHistogram ndHistFilter;
 
-  // Set the number of data points
-  ndHistogram.SetNumOfDataPoints(ds.GetField(0).GetNumberOfValues());
+  ndHistFilter.AddFieldAndBin("fieldA", 4);
+  ndHistFilter.AddFieldAndBin("fieldB", 4);
+  ndHistFilter.AddFieldAndBin("fieldC", 4);
 
-  // Add field one by one
-  vtkm::Range rangeFieldA;
-  vtkm::Float64 deltaFieldA;
-  ndHistogram.AddField(ds.GetField("fieldA").GetData(), 4, rangeFieldA, deltaFieldA);
-
-  vtkm::Range rangeFieldB;
-  vtkm::Float64 deltaFieldB;
-  ndHistogram.AddField(ds.GetField("fieldB").GetData(), 4, rangeFieldB, deltaFieldB);
-
-  vtkm::Range rangeFieldC;
-  vtkm::Float64 deltaFieldC;
-  ndHistogram.AddField(ds.GetField("fieldC").GetData(), 4, rangeFieldC, deltaFieldC);
-
-  // the return binIds and freqs is sparse distribution representation
-  // (we do not keep the 0 frequency entities)
-  // e.g. we have three variable(data arrays) in this example
-  // binIds[0, 1, 2][j] is a combination of bin ID of three variable,
-  // freqs[j] is the frequency of this bin IDs combination
-  std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> binIds;
-  vtkm::cont::ArrayHandle<vtkm::Id> freqs;
-  ndHistogram.Run(binIds, freqs);
+  //The return data set contains fieldNames.size() + 1 fields
+  //The first "fieldNames.size()"" fields are the binId arrays for inputs field
+  //And their order and field names are the same as the order and name in fieldNames
+  //The name of last fields in the dataset is "Frequency"
+  //This field contains all the frequencies of the N-Dims histogram
+  //The result histogram is stored in sparse representation
+  //(Do not store and return zero frequency bins)
+  //All fields in return dataset must have the same length
+  //So, e.g. (FieldA[i], FieldB[i], FieldC[i], Frequency[i] ) is a bin in the histogram
+  //First three numbers are binID for FieldA, FieldB, FieldC
+  //Frequency[i] is frequency for this bin
+  vtkm::cont::DataSet outputData = ndHistFilter.Execute(ds);
 
   // Ground truth ND histogram
   vtkm::Id gtNonSparseBins = 33;
@@ -100,22 +89,31 @@ void TestNDimsHistogram()
                           1, 1, 4, 11, 4, 1, 1, 3, 3, 1, 1,  1, 1, 1, 2, 1 };
 
   // Check result
-  vtkm::Id nonSparseBins = binIds[0].WritePortal().GetNumberOfValues();
-  VTKM_TEST_ASSERT(nonSparseBins == gtNonSparseBins, "Incorrect ND-histogram results");
+  vtkm::Id nonSparseBins = outputData.GetField(0).GetNumberOfValues();
+  VTKM_TEST_ASSERT(nonSparseBins == gtNonSparseBins, "Incorrect ND-histogram Filter results");
 
+  vtkm::cont::ArrayHandle<vtkm::Id> binId0;
+  outputData.GetField("fieldA").GetData().AsArrayHandle(binId0);
+  vtkm::cont::ArrayHandle<vtkm::Id> binId1;
+  outputData.GetField("fieldB").GetData().AsArrayHandle(binId1);
+  vtkm::cont::ArrayHandle<vtkm::Id> binId2;
+  outputData.GetField("fieldC").GetData().AsArrayHandle(binId2);
+  vtkm::cont::ArrayHandle<vtkm::Id> freqs;
+  outputData.GetField("Frequency").GetData().AsArrayHandle(freqs);
   for (int i = 0; i < nonSparseBins; i++)
   {
-    vtkm::Id idx0 = binIds[0].WritePortal().Get(i);
-    vtkm::Id idx1 = binIds[1].WritePortal().Get(i);
-    vtkm::Id idx2 = binIds[2].WritePortal().Get(i);
+    vtkm::Id idx0 = binId0.WritePortal().Get(i);
+    vtkm::Id idx1 = binId1.WritePortal().Get(i);
+    vtkm::Id idx2 = binId2.WritePortal().Get(i);
     vtkm::Id f = freqs.WritePortal().Get(i);
     VTKM_TEST_ASSERT(idx0 == gtIdx0[i] && idx1 == gtIdx1[i] && idx2 == gtIdx2[i] && f == gtFreq[i],
-                     "Incorrect ND-histogram results");
+                     "Incorrect ND-histogram Filter results");
   }
-} // TestNDHistogram
 }
 
-int UnitTestNDimsHistogram(int argc, char* argv[])
+} // anonymous namespace
+
+int UnitTestNDHistogramFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestNDimsHistogram, argc, argv);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

@@ -23,7 +23,25 @@ vtkm_add_instantiations(ClipWithImplicitFunctionInstantiations
 
 set(deprecated_headers
   CellSetConnectivity.h
+  CleanGrid.h
+  DotProduct.h
+  Entropy.h
+  ExternalFaces.h
+  ExtractGeometry.h
+  ExtractPoints.h
+  ExtractStructured.h
+  GenerateIds.h
+  GhostCellRemove.h
+  Histogram.h
   ImageConnectivity.h
+  Mask.h
+  MaskPoints.h
+  NDEntropy.h
+  NDHistogram.h
+  ParticleDensityCloudInCell.h
+  ParticleDensityNearestGridPoint.h
+  Threshold.h
+  ThresholdPoints.h
   )
 
 vtkm_declare_headers(${deprecated_headers})
@@ -31,10 +49,6 @@ vtkm_declare_headers(${deprecated_headers})
 set(common_headers
   CellAverage.h
   CellMeasures.h
-  CleanGrid.h
-  ExtractGeometry.h
-  ExtractPoints.h
-  ExtractStructured.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -47,8 +61,6 @@ set(common_headers
   PolicyBase.h
   PolicyDefault.h
   TaskQueue.h
-  Threshold.h
-  ThresholdPoints.h
   Instantiations.h
   )
 
@@ -77,28 +89,16 @@ set(extra_headers
   CoordinateSystemTransform.h
   CreateResult.h
   CrossProduct.h
-  DotProduct.h
-  Entropy.h
-  ExternalFaces.h
   FieldSelection.h
   FieldToColors.h
-  GenerateIds.h
   GhostCellClassify.h
-  GhostCellRemove.h
-  Histogram.h
+  ImageConnectivity.h
   ImageDifference.h
   ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
-  Mask.h
-  MaskPoints.h
   MeshQuality.h
   MIRFilter.h
-  NDEntropy.h
-  NDHistogram.h
-  ParticleDensityBase.h
-  ParticleDensityCloudInCell.h
-  ParticleDensityNearestGridPoint.h
   ParticleAdvection.h
   Pathline.h
   PathParticle.h
@@ -134,20 +134,14 @@ set(extra_header_template_sources
   ComputeMoments.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
-  Entropy.hxx
   FieldToColors.hxx
   GhostCellClassify.hxx
-  Histogram.hxx
   ImageDifference.hxx
   ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
   MeshQuality.hxx
   MIRFilter.hxx
-  NDEntropy.hxx
-  NDHistogram.hxx
-  ParticleDensityCloudInCell.hxx
-  ParticleDensityNearestGridPoint.hxx
   ParticleAdvection.hxx
   Pathline.hxx
   PathParticle.hxx
@@ -309,6 +303,7 @@ install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
 add_subdirectory(clean_grid)
 add_subdirectory(connected_components)
+add_subdirectory(density_estimate)
 add_subdirectory(entity_extraction)
 add_subdirectory(internal)
 add_subdirectory(particleadvection)

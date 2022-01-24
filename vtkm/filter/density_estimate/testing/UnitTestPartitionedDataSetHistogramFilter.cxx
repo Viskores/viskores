@@ -7,7 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/Histogram.h>
+#include <vtkm/filter/density_estimate/Histogram.h>
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/PartitionedDataSet.h>
@@ -102,7 +102,7 @@ static void TestPartitionedDataSetHistogram()
   AddField<double>(partition2, 100.0, 500.0, 1024, "double");
   mb.AppendPartition(partition2);
 
-  vtkm::filter::Histogram histogram;
+  vtkm::filter::density_estimate::Histogram histogram;
   histogram.SetActiveField("double");
   auto result = histogram.Execute(mb);
   VTKM_TEST_ASSERT(result.GetNumberOfPartitions() == 1, "Expecting 1 partition.");

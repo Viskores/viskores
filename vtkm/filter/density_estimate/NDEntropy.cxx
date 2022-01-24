@@ -7,29 +7,22 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_NDEntropy_hxx
-#define vtk_m_filter_NDEntropy_hxx
-
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/worklet/NDimsEntropy.h>
+#include <vtkm/filter/density_estimate/NDEntropy.h>
+#include <vtkm/filter/density_estimate/worklet/NDimsEntropy.h>
 
 namespace vtkm
 {
 namespace filter
 {
-
-inline VTKM_CONT NDEntropy::NDEntropy() {}
-
+namespace density_estimate
+{
 void NDEntropy::AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins)
 {
   this->FieldNames.push_back(fieldName);
   this->NumOfBins.push_back(numOfBins);
 }
 
-template <typename Policy>
-inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
-  const vtkm::cont::DataSet& inData,
-  vtkm::filter::PolicyBase<Policy> vtkmNotUsed(policy))
+VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(const vtkm::cont::DataSet& inData)
 {
   vtkm::worklet::NDimsEntropy ndEntropy;
   ndEntropy.SetNumOfDataPoints(inData.GetField(0).GetNumberOfValues());
@@ -48,20 +41,11 @@ inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
   entropyHandle.Allocate(1);
   entropyHandle.WritePortal().Set(0, entropy);
 
-
   vtkm::cont::DataSet outputData;
-  outputData.AddField(vtkm::cont::make_FieldPoint("Entropy", entropyHandle));
+  outputData.AddField({ "Entropy", vtkm::cont::Field::Association::WHOLE_MESH, entropyHandle });
+  // The output is a "summary" of the input, no need to map fields
   return outputData;
 }
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT bool NDEntropy::MapFieldOntoOutput(vtkm::cont::DataSet&,
-                                                    const vtkm::cont::Field&,
-                                                    vtkm::filter::PolicyBase<DerivedPolicy>)
-{
-  return false;
-}
-}
-}
-#endif
+} // namespace density_estimate
+} // namespace filter
+} // namespace vtkm

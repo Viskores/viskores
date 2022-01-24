@@ -27,8 +27,6 @@ set(headers
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   DotProduct.h
-  FieldEntropy.h
-  FieldHistogram.h
   FieldStatistics.h
   Gradient.h
   ImageDifference.h
@@ -43,9 +41,7 @@ set(headers
   MaskSelect.h
   MeshQuality.h
   MIR.h
-  NDimsEntropy.h
   NDimsHistMarginalization.h
-  NDimsHistogram.h
   Normalize.h
   OrientCellNormals.h
   OrientNormals.h

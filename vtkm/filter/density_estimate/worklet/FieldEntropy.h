@@ -15,8 +15,8 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/filter/density_estimate/worklet/FieldHistogram.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/FieldHistogram.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/Field.h>
