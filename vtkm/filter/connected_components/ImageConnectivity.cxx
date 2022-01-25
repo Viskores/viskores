@@ -33,7 +33,7 @@ VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(const vtkm::cont::Dat
     vtkm::worklet::connectivity::ImageConnectivity().Run(input.GetCellSet(), concrete, component);
   };
   const auto& fieldArray = field.GetData();
-  fieldArray.CastAndCallForTypes<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(resolveType);
+  this->CastAndCallScalarField(fieldArray, resolveType);
 
   auto output = CreateResultFieldPoint(input, component, this->GetOutputFieldName());
   this->MapFieldsOntoOutput(input, output);

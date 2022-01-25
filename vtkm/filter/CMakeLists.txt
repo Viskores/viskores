@@ -92,7 +92,6 @@ set(extra_headers
   FieldSelection.h
   FieldToColors.h
   GhostCellClassify.h
-  ImageConnectivity.h
   ImageDifference.h
   ImageMedian.h
   Lagrangian.h
