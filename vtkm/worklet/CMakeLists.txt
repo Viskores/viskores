@@ -20,13 +20,11 @@ set(headers
   ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
   CosmoTools.h
-  CrossProduct.h
   DispatcherMapField.h
   DispatcherMapTopology.h
   DispatcherCellNeighborhood.h
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
-  DotProduct.h
   FieldStatistics.h
   Gradient.h
   ImageDifference.h

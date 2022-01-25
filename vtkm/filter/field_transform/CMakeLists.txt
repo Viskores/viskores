@@ -9,13 +9,13 @@
 ##============================================================================
 set(field_transform_headers
   GenerateIds.h)
-set(field_transform_sources_device
+set(field_transform_sources
   GenerateIds.cxx)
 
 vtkm_library(
   NAME vtkm_filter_field_transform
   HEADERS ${field_transform_headers}
-  DEVICE_SOURCES ${field_transform_sources_device}
+  SOURCES ${field_transform_sources}
   USE_VTKM_JOB_POOL
 )
 

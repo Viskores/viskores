@@ -19,6 +19,8 @@
 #include <vtkm/VecFlat.h>
 #include <vtkm/VecTraits.h>
 
+#include <vtkmstd/integer_sequence.h>
+
 #include <vtkm/cont/vtkm_cont_export.h>
 
 namespace vtkm
@@ -136,6 +138,39 @@ struct ArrayExtractComponentImpl<vtkm::cont::StorageTagBasic>
       allowCopy);
   }
 };
+
+namespace detail
+{
+
+template <std::size_t, typename Super>
+struct ForwardSuper : Super
+{
+};
+
+template <typename sequence, typename... Supers>
+struct SharedSupersImpl;
+
+template <std::size_t... Indices, typename... Supers>
+struct SharedSupersImpl<vtkmstd::index_sequence<Indices...>, Supers...>
+  : ForwardSuper<Indices, Supers>...
+{
+};
+
+} // namespace detail
+
+// `ArrayExtractComponentImpl`s that modify the behavior from other storage types might
+// want to inherit from the `ArrayExtractComponentImpl`s of these storage types. However,
+// if the template specifies multiple storage types, two of the same might be specified,
+// and it is illegal in C++ to directly inherit from the same type twice. This special
+// superclass accepts a variable amout of superclasses. Inheriting from this will inherit
+// from all these superclasses, and duplicates are allowed.
+template <typename... Supers>
+using DuplicatedSuperclasses =
+  detail::SharedSupersImpl<vtkmstd::make_index_sequence<sizeof...(Supers)>, Supers...>;
+
+template <typename... StorageTags>
+using ArrayExtractComponentImplInherit =
+  DuplicatedSuperclasses<vtkm::cont::internal::ArrayExtractComponentImpl<StorageTags>...>;
 
 /// \brief Resolves to true if ArrayHandleComponent of the array handle would be inefficient.
 ///

@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayHandleBasic.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
@@ -84,13 +84,13 @@ void FillArray(vtkm::cont::ArrayHandle<T, S>& array)
   using Traits = vtkm::VecTraits<T>;
   vtkm::IdComponent numComponents = Traits::NUM_COMPONENTS;
 
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleConstant(T{}, ARRAY_SIZE), array);
+  array.AllocateAndFill(ARRAY_SIZE, vtkm::TypeTraits<T>::ZeroInitialization());
 
   for (vtkm::IdComponent component = 0; component < numComponents; ++component)
   {
     vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float64> randomArray(ARRAY_SIZE);
     auto dest = vtkm::cont::make_ArrayHandleExtractComponent(array, component);
-    vtkm::cont::ArrayCopy(randomArray, dest);
+    vtkm::cont::ArrayCopyDevice(randomArray, dest);
   }
 }
 

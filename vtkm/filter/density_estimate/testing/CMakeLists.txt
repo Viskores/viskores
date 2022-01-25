@@ -23,6 +23,6 @@ set(libraries
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
-  ALL_BACKENDS # use ArrayCopy
+  ALL_BACKENDS # UnitTestParticleDensity.cxx uses DescriptiveStatistcs worklet
   USE_VTKM_JOB_POOL
 )

@@ -12,7 +12,6 @@
 #define vtk_m_cont_ParticleArrayCopy_hxx
 
 #include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
@@ -84,7 +83,7 @@ VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
     vtkm::cont::Algorithm::CopyIf(posTrn, termTrn, outPos);
   }
   else
-    vtkm::cont::ArrayCopy(posTrn, outPos);
+    vtkm::cont::Algorithm::Copy(posTrn, outPos);
 }
 
 

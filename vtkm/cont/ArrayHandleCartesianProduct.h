@@ -379,8 +379,11 @@ VTKM_CONT
 namespace internal
 {
 
+// Superclass will inherit the ArrayExtractComponentImplInefficient property if any
+// of the sub-storage are inefficient (thus making everything inefficient).
 template <typename... STs>
 struct ArrayExtractComponentImpl<vtkm::cont::StorageTagCartesianProduct<STs...>>
+  : vtkm::cont::internal::ArrayExtractComponentImplInherit<STs...>
 {
   template <typename T>
   vtkm::cont::ArrayHandleStride<T> AdjustStrideForComponent(

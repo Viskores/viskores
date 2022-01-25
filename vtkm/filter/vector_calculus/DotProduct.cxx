@@ -8,33 +8,59 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/vector_calculus/DotProduct.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace // anonymous namespace making worklet::DotProduct internal to this .cxx
 {
-namespace worklet
+
+struct DotProductWorklet : vtkm::worklet::WorkletMapField
 {
-class DotProduct : public vtkm::worklet::WorkletMapField
-{
-public:
   using ControlSignature = void(FieldIn, FieldIn, FieldOut);
 
-  template <typename T, vtkm::IdComponent Size>
-  VTKM_EXEC void operator()(const vtkm::Vec<T, Size>& v1,
-                            const vtkm::Vec<T, Size>& v2,
-                            T& outValue) const
+  template <typename T1, typename T2, typename T3>
+  VTKM_EXEC void operator()(const T1& v1, const T2& v2, T3& outValue) const
   {
-    outValue = static_cast<T>(vtkm::Dot(v1, v2));
-  }
-
-  template <typename T>
-  VTKM_EXEC void operator()(T s1, T s2, T& outValue) const
-  {
-    outValue = static_cast<T>(s1 * s2);
+    VTKM_ASSERT(v1.GetNumberOfComponents() == v2.GetNumberOfComponents());
+    outValue = v1[0] * v2[0];
+    for (vtkm::IdComponent i = 1; i < v1.GetNumberOfComponents(); ++i)
+    {
+      outValue += v1[i] * v2[i];
+    }
   }
 };
-} // namespace worklet
+
+template <typename PrimaryArrayType>
+vtkm::cont::UnknownArrayHandle DoDotProduct(const PrimaryArrayType& primaryArray,
+                                            const vtkm::cont::Field& secondaryField)
+{
+  using T = typename PrimaryArrayType::ValueType::ComponentType;
+
+  vtkm::cont::Invoker invoke;
+  vtkm::cont::ArrayHandle<T> outputArray;
+
+  if (secondaryField.GetData().IsBaseComponentType<T>())
+  {
+    invoke(DotProductWorklet{},
+           primaryArray,
+           secondaryField.GetData().ExtractArrayFromComponents<T>(),
+           outputArray);
+  }
+  else
+  {
+    // Data types of primary and secondary array do not match. Rather than try to replicate every
+    // possibility, get the secondary array as a FloatDefault.
+    vtkm::cont::UnknownArrayHandle castSecondaryArray = secondaryField.GetDataAsDefaultFloat();
+    invoke(DotProductWorklet{},
+           primaryArray,
+           castSecondaryArray.ExtractArrayFromComponents<vtkm::FloatDefault>(),
+           outputArray);
+  }
+
+  return outputArray;
+}
+
 } // anonymous namespace
 
 namespace vtkm
@@ -51,37 +77,39 @@ VTKM_CONT DotProduct::DotProduct()
 
 VTKM_CONT vtkm::cont::DataSet DotProduct::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
-  const auto& primaryArray = this->GetFieldFromDataSet(inDataSet).GetData();
+  vtkm::cont::Field primaryField = this->GetFieldFromDataSet(0, inDataSet);
+  vtkm::cont::UnknownArrayHandle primaryArray = primaryField.GetData();
+
+  vtkm::cont::Field secondaryField = this->GetFieldFromDataSet(1, inDataSet);
+
+  if (primaryArray.GetNumberOfComponentsFlat() !=
+      secondaryField.GetData().GetNumberOfComponentsFlat())
+  {
+    throw vtkm::cont::ErrorFilterExecution(
+      "Primary and secondary arrays of DotProduct filter have different number of components.");
+  }
 
   vtkm::cont::UnknownArrayHandle outArray;
 
-  // We are using a C++14 auto lambda here. The advantage over a Functor is obvious, we don't
-  // need to explicitly pass filter, input/output DataSets etc. thus reduce the impact to
-  // the legacy code. The lambda can also access the private part of the filter thus reducing
-  // filter's public interface profile. CastAndCall tries to cast primaryArray of unknown value
-  // type and storage to a concrete ArrayHandle<T, S> with T from the `TypeList` and S from
-  // `StorageList`. It then passes the concrete array to the lambda as the first argument.
-  // We can later recover the concrete ValueType, T, from the concrete array.
-  auto ResolveType = [&, this](const auto& concrete) {
-    // use std::decay to remove const ref from the decltype of concrete.
-    using T = typename std::decay_t<decltype(concrete)>::ValueType;
-    const auto& secondaryField = this->GetFieldFromDataSet(1, inDataSet);
-    vtkm::cont::UnknownArrayHandle secondary = vtkm::cont::ArrayHandle<T>{};
-    secondary.CopyShallowIfPossible(secondaryField.GetData());
+  if (primaryArray.IsBaseComponentType<vtkm::Float32>())
+  {
+    outArray =
+      DoDotProduct(primaryArray.ExtractArrayFromComponents<vtkm::Float32>(), secondaryField);
+  }
+  else if (primaryArray.IsBaseComponentType<vtkm::Float64>())
+  {
+    outArray =
+      DoDotProduct(primaryArray.ExtractArrayFromComponents<vtkm::Float64>(), secondaryField);
+  }
+  else
+  {
+    primaryArray = primaryField.GetDataAsDefaultFloat();
+    outArray =
+      DoDotProduct(primaryArray.ExtractArrayFromComponents<vtkm::FloatDefault>(), secondaryField);
+  }
 
-    vtkm::cont::ArrayHandle<typename vtkm::VecTraits<T>::ComponentType> result;
-    this->Invoke(::worklet::DotProduct{},
-                 concrete,
-                 secondary.template AsArrayHandle<vtkm::cont::ArrayHandle<T>>(),
-                 result);
-    outArray = result;
-  };
-
-  primaryArray
-    .CastAndCallForTypesWithFloatFallback<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
-      ResolveType);
-
-  vtkm::cont::DataSet outDataSet = inDataSet; // copy
+  vtkm::cont::DataSet outDataSet;
+  outDataSet.CopyStructure(inDataSet);
   outDataSet.AddField({ this->GetOutputFieldName(),
                         this->GetFieldFromDataSet(inDataSet).GetAssociation(),
                         outArray });

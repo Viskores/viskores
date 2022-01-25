@@ -507,16 +507,19 @@ struct ExtractComponentCompositeVecFunctor
 
 } // namespace detail
 
+// Superclass will inherit the ArrayExtractComponentImplInefficient property if any
+// of the sub-storage are inefficient (thus making everything inefficient).
 template <typename... StorageTags>
 struct ArrayExtractComponentImpl<StorageTagCompositeVec<StorageTags...>>
+  : vtkm::cont::internal::ArrayExtractComponentImplInherit<StorageTags...>
 {
-  template <typename T, vtkm::IdComponent NUM_COMPONENTS>
-  typename detail::ExtractComponentCompositeVecFunctor<T>::ResultArray operator()(
-    const vtkm::cont::ArrayHandle<vtkm::Vec<T, NUM_COMPONENTS>,
-                                  vtkm::cont::StorageTagCompositeVec<StorageTags...>>& src,
+  template <typename VecT>
+  auto operator()(
+    const vtkm::cont::ArrayHandle<VecT, vtkm::cont::StorageTagCompositeVec<StorageTags...>>& src,
     vtkm::IdComponent componentIndex,
     vtkm::CopyFlag allowCopy) const
   {
+    using T = typename vtkm::VecTraits<VecT>::ComponentType;
     vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<T, StorageTags>...> array(src);
     constexpr vtkm::IdComponent NUM_SUB_COMPONENTS = vtkm::VecFlat<T>::NUM_COMPONENTS;
 

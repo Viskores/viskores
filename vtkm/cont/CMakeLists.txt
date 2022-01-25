@@ -11,6 +11,7 @@
 set(headers
   Algorithm.h
   ArrayCopy.h
+  ArrayCopyDevice.h
   ArrayExtractComponent.h
   ArrayGetValues.h
   ArrayHandle.h
@@ -192,7 +193,9 @@ set(device_sources
   ColorTable.cxx
   ConvertNumComponentsToOffsets.cxx
   Field.cxx
+  internal/ArrayCopyUnknown.cxx
   internal/Buffer.cxx
+  internal/MapArrayPermutation.cxx
   MergePartitionedDataSet.cxx
   PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
