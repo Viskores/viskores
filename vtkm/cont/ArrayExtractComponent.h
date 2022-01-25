@@ -93,23 +93,52 @@ template <>
 struct ArrayExtractComponentImpl<vtkm::cont::StorageTagStride>
 {
   template <typename T>
-  vtkm::cont::ArrayHandleStride<T> operator()(
+  vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(
     const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagStride>& src,
     vtkm::IdComponent componentIndex,
-    vtkm::CopyFlag vtkmNotUsed(allowCopy)) const
+    vtkm::CopyFlag allowCopy) const
   {
-    VTKM_ASSERT(componentIndex == 0);
-    return src;
+    return this->DoExtract(
+      src, componentIndex, allowCopy, typename vtkm::VecTraits<T>::HasMultipleComponents{});
   }
 
-  template <typename T, vtkm::IdComponent N>
-  auto operator()(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, vtkm::cont::StorageTagStride>& src,
-                  vtkm::IdComponent componentIndex,
-                  vtkm::CopyFlag allowCopy) const
-    -> decltype((*this)(vtkm::cont::ArrayHandleStride<T>{}, componentIndex, allowCopy))
+private:
+  template <typename T>
+  auto DoExtract(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagStride>& src,
+                 vtkm::IdComponent componentIndex,
+                 vtkm::CopyFlag vtkmNotUsed(allowCopy),
+                 vtkm::VecTraitsTagSingleComponent) const
   {
+    VTKM_ASSERT(componentIndex == 0);
+    using VTraits = vtkm::VecTraits<T>;
+    using TBase = typename VTraits::BaseComponentType;
+    VTKM_STATIC_ASSERT(VTraits::NUM_COMPONENTS == 1);
+
+    vtkm::cont::ArrayHandleStride<T> array(src);
+
+    // Note, we are initializing the result in this strange way for cases where type
+    // T has a single component but does not equal its own BaseComponentType. A vtkm::Vec
+    // of size 1 fits into this category.
+    return vtkm::cont::ArrayHandleStride<TBase>(array.GetBuffers()[1],
+                                                array.GetNumberOfValues(),
+                                                array.GetStride(),
+                                                array.GetOffset(),
+                                                array.GetModulo(),
+                                                array.GetDivisor());
+  }
+
+  template <typename VecType>
+  auto DoExtract(const vtkm::cont::ArrayHandle<VecType, vtkm::cont::StorageTagStride>& src,
+                 vtkm::IdComponent componentIndex,
+                 vtkm::CopyFlag allowCopy,
+                 vtkm::VecTraitsTagMultipleComponents) const
+  {
+    using VTraits = vtkm::VecTraits<VecType>;
+    using T = typename VTraits::ComponentType;
+    constexpr vtkm::IdComponent N = VTraits::NUM_COMPONENTS;
+
     constexpr vtkm::IdComponent subStride = vtkm::internal::TotalNumComponents<T>::value;
-    vtkm::cont::ArrayHandleStride<vtkm::Vec<T, N>> array(src);
+    vtkm::cont::ArrayHandleStride<VecType> array(src);
     vtkm::cont::ArrayHandleStride<T> tmpIn(array.GetBuffers()[1],
                                            array.GetNumberOfValues(),
                                            array.GetStride() * N,
