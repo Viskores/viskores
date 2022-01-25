@@ -23,6 +23,7 @@ vtkm_add_instantiations(ClipWithImplicitFunctionInstantiations
 
 set(deprecated_headers
   CleanGrid.h
+  CrossProduct.h
   DotProduct.h
   Entropy.h
   ExternalFaces.h
@@ -87,7 +88,6 @@ set(extra_headers
   ComputeMoments.h
   CoordinateSystemTransform.h
   CreateResult.h
-  CrossProduct.h
   FieldSelection.h
   FieldToColors.h
   GhostCellClassify.h
@@ -133,7 +133,6 @@ set(extra_header_template_sources
   ClipWithImplicitFunctionExternInstantiations.h
   ComputeMoments.hxx
   CoordinateSystemTransform.hxx
-  CrossProduct.hxx
   FieldToColors.hxx
   GhostCellClassify.hxx
   ImageConnectivity.hxx

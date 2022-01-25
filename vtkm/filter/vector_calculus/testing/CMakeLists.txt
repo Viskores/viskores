@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestCrossProductFilter.cxx
   UnitTestDotProductFilter.cxx
   )
 

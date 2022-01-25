@@ -147,7 +147,7 @@ VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(const vtkm::cont::DataS
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::ThresholdPoints worklet;
 
-  auto ResolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&, this](const auto& concrete) {
     switch (this->ThresholdType)
     {
       case THRESHOLD_BELOW:
@@ -170,8 +170,7 @@ VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(const vtkm::cont::DataS
     }
   };
 
-  const auto& fieldArray = field.GetData();
-  fieldArray.CastAndCallForTypes<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(ResolveType);
+  this->CastAndCallScalarField(field, resolveType);
 
   // create the output dataset
   vtkm::cont::DataSet output;
