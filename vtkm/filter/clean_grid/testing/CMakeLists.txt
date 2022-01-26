@@ -18,6 +18,5 @@ set(libraries
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
-#  ALL_BACKENDS # deivce compiler needed, uses ArrayCopy
   USE_VTKM_JOB_POOL
 )
