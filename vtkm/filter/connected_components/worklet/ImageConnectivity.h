@@ -11,14 +11,15 @@
 #ifndef vtk_m_worklet_connectivity_ImageConnectivity_h
 #define vtk_m_worklet_connectivity_ImageConnectivity_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
-#include <vtkm/worklet/connectivities/InnerJoin.h>
-#include <vtkm/worklet/connectivities/UnionFind.h>
+#include <vtkm/filter/connected_components/worklet/InnerJoin.h>
+#include <vtkm/filter/connected_components/worklet/UnionFind.h>
 
 
 namespace vtkm
@@ -41,7 +42,7 @@ public:
   using ExecutionSignature = void(Boundary, _2, _3, _4);
 
 
-  // compOut is a "linear" alias of neightborComp such that we can update component labels
+  // compOut is a "linear" alias of neighborComp such that we can update component labels
   template <typename Boundary,
             typename NeighborComp,
             typename NeighborColor,
@@ -80,7 +81,7 @@ public:
     }
   }
 };
-}
+} // namespace detail
 
 // Single pass connected component algorithm from
 // Jaiganesh, Jayadharini, and Martin Burtscher.
@@ -153,8 +154,8 @@ public:
       .CastAndCall(ResolveUnknownCellSet(), pixels, componentsOut);
   }
 };
-}
-}
-}
+} // namespace connectivity
+} // namespace worklet
+} // namespace vtkm
 
 #endif // vtk_m_worklet_connectivity_ImageConnectivity_h

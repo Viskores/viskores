@@ -22,6 +22,7 @@ vtkm_add_instantiations(ClipWithImplicitFunctionInstantiations
   )
 
 set(deprecated_headers
+  CellSetConnectivity.h
   CleanGrid.h
   CrossProduct.h
   DotProduct.h
@@ -33,6 +34,7 @@ set(deprecated_headers
   GenerateIds.h
   GhostCellRemove.h
   Histogram.h
+  ImageConnectivity.h
   Mask.h
   MaskPoints.h
   NDEntropy.h
@@ -82,7 +84,6 @@ set(common_sources_device
 
 set(extra_headers
   AmrArrays.h
-  CellSetConnectivity.h
   ClipWithField.h
   ClipWithImplicitFunction.h
   ComputeMoments.h
@@ -91,7 +92,6 @@ set(extra_headers
   FieldSelection.h
   FieldToColors.h
   GhostCellClassify.h
-  ImageConnectivity.h
   ImageDifference.h
   ImageMedian.h
   Lagrangian.h
@@ -126,7 +126,6 @@ set(extra_headers
 
 set(extra_header_template_sources
   AmrArrays.hxx
-  CellSetConnectivity.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ClipWithFieldExternInstantiations.h
@@ -135,7 +134,6 @@ set(extra_header_template_sources
   CoordinateSystemTransform.hxx
   FieldToColors.hxx
   GhostCellClassify.hxx
-  ImageConnectivity.hxx
   ImageDifference.hxx
   ImageMedian.hxx
   Lagrangian.hxx
@@ -302,6 +300,7 @@ target_link_libraries(vtkm_filter PUBLIC INTERFACE
 install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
 add_subdirectory(clean_grid)
+add_subdirectory(connected_components)
 add_subdirectory(density_estimate)
 add_subdirectory(entity_extraction)
 add_subdirectory(internal)

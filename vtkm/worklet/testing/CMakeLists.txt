@@ -19,8 +19,6 @@ set(unit_tests
   UnitTestCellAverage.cxx
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
-  UnitTestCellSetConnectivity.cxx
-  UnitTestCellSetDualGraph.cxx
   UnitTestCellMeasure.cxx
   UnitTestClipping.cxx
   UnitTestContour.cxx
@@ -31,9 +29,6 @@ set(unit_tests
   UnitTestCosmoTools.cxx
   UnitTestDescriptiveStatistics.cxx
   UnitTestFieldStatistics.cxx
-  UnitTestGraphConnectivity.cxx
-  UnitTestInnerJoin.cxx
-  UnitTestImageConnectivity.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
   UnitTestMaskIndices.cxx
@@ -43,7 +38,6 @@ set(unit_tests
   UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
-  UnitTestPointerJumping.cxx
   UnitTestPointGradient.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx
