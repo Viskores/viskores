@@ -36,7 +36,7 @@ set_property(TARGET
   PROPERTY UNITY_BUILD_MODE GROUP
 )
 
-target_link_libraries(vtkm_filter_contour PUBLIC vtkm_worklet vtkm_filter_core)
+target_link_libraries(vtkm_filter_contour PRIVATE vtkm_worklet PUBLIC vtkm_filter_core)
 
 if (VTKm_ENABLE_MPI)
   target_link_libraries(vtkm_filter_contour PUBLIC MPI::MPI_CXX)

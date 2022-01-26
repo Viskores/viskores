@@ -10,12 +10,11 @@
 #ifndef vtkm_m_worklet_ThresholdPoints_h
 #define vtkm_m_worklet_ThresholdPoints_h
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
-
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Invoker.h>
+
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
 {
@@ -64,8 +63,8 @@ public:
     using ThresholdWorklet = ThresholdPointField<UnaryPredicate>;
 
     ThresholdWorklet worklet(predicate);
-    DispatcherMapTopology<ThresholdWorklet> dispatcher(worklet);
-    dispatcher.Invoke(cellSet, scalars, passFlags);
+    vtkm::cont::Invoker invoker;
+    invoker(worklet, cellSet, scalars, passFlags);
 
     vtkm::cont::ArrayHandle<vtkm::Id> pointIds;
     vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =

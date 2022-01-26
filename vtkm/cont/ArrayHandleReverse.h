@@ -217,8 +217,11 @@ VTKM_CONT ArrayHandleReverse<HandleType> make_ArrayHandleReverse(const HandleTyp
 namespace internal
 {
 
+// Superclass will inherit the ArrayExtractComponentImplInefficient property if
+// the sub-storage is inefficient (thus making everything inefficient).
 template <typename StorageTag>
 struct ArrayExtractComponentImpl<vtkm::cont::StorageTagReverse<StorageTag>>
+  : vtkm::cont::internal::ArrayExtractComponentImpl<StorageTag>
 {
   template <typename T>
   using StrideArrayType =

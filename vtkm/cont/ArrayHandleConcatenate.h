@@ -248,12 +248,12 @@ public:
     return vtkm::cont::internal::CreateBuffers(array1, array2);
   }
 
-  VTKM_CONT static const ArrayHandleType1& GetArray1(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static const ArrayHandleType1 GetArray1(const vtkm::cont::internal::Buffer* buffers)
   {
     return ArrayHandleType1(Buffers1(buffers));
   }
 
-  VTKM_CONT static const ArrayHandleType2& GetArray2(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static const ArrayHandleType2 GetArray2(const vtkm::cont::internal::Buffer* buffers)
   {
     return ArrayHandleType2(Buffers2(buffers));
   }

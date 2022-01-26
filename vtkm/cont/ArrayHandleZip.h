@@ -208,6 +208,15 @@ public:
       FirstStorage::CreateWritePortal(FirstArrayBuffers(buffers), device, token),
       SecondStorage::CreateWritePortal(SecondArrayBuffers(buffers), device, token));
   }
+
+  vtkm::cont::ArrayHandle<T1, ST1> GetFirstArray(const vtkm::cont::internal::Buffer* buffers)
+  {
+    return { FirstArrayBuffers(buffers) };
+  }
+  vtkm::cont::ArrayHandle<T2, ST2> GetSecondArray(const vtkm::cont::internal::Buffer* buffers)
+  {
+    return { SecondArrayBuffers(buffers) };
+  }
 };
 } // namespace internal
 
@@ -237,6 +246,15 @@ public:
   ArrayHandleZip(const FirstHandleType& firstArray, const SecondHandleType& secondArray)
     : Superclass(vtkm::cont::internal::CreateBuffers(firstArray, secondArray))
   {
+  }
+
+  FirstHandleType GetFirstArray() const
+  {
+    return this->GetStorage().GetFirstArray(this->GetBuffers());
+  }
+  SecondHandleType GetSecondArray() const
+  {
+    return this->GetStorage().GetSecondArray(this->GetBuffers());
   }
 };
 

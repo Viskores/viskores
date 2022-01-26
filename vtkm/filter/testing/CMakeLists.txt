@@ -15,39 +15,26 @@ set(headers
 set(unit_tests
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
-  UnitTestCellSetConnectivityFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
-  UnitTestCrossProductFilter.cxx
-  UnitTestEntropyFilter.cxx
-  UnitTestExtractGeometryFilter.cxx
-  UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
   UnitTestGradientExplicit.cxx
   UnitTestGradientUniform.cxx
   UnitTestGhostCellClassify.cxx
-  UnitTestGhostCellRemove.cxx
-  UnitTestHistogramFilter.cxx
-  UnitTestImageConnectivityFilter.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestLagrangianStructuresFilter.cxx
   UnitTestMapFieldMergeAverage.cxx
   UnitTestMapFieldPermutation.cxx
-  UnitTestMaskFilter.cxx
   UnitTestMeshQualityFilter.cxx
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
-  UnitTestNDEntropyFilter.cxx
-  UnitTestNDHistogramFilter.cxx
-  UnitTestParticleDensity.cxx
   UnitTestPartitionedDataSetFilters.cxx
-  UnitTestPartitionedDataSetHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointAverageCellSetExtrude.cxx
   UnitTestPointElevationFilter.cxx
@@ -58,7 +45,6 @@ set(unit_tests
   UnitTestStreamSurfaceFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
-  UnitTestThresholdFilter.cxx
   UnitTestTriangulateFilter.cxx
   UnitTestTubeFilter.cxx
   UnitTestVectorMagnitudeFilter.cxx

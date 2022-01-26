@@ -114,6 +114,15 @@ void UnknownAHShallowCopy(const void* sourceMem, void* destinationMem)
 }
 
 template <typename T, typename S>
+void UnknownAHDeepCopy(const void* sourceMem, void* destinationMem)
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  const AH* source = reinterpret_cast<const AH*>(sourceMem);
+  AH* destination = reinterpret_cast<AH*>(destinationMem);
+  destination->DeepCopyFrom(*source);
+}
+
+template <typename T, typename S>
 std::vector<vtkm::cont::internal::Buffer>
 UnknownAHExtractComponent(void* mem, vtkm::IdComponent componentIndex, vtkm::CopyFlag allowCopy)
 {
@@ -224,6 +233,9 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   using ShallowCopyType = void(const void*, void*);
   ShallowCopyType* ShallowCopy;
 
+  using DeepCopyType = void(const void*, void*);
+  DeepCopyType* DeepCopy;
+
   using ExtractComponentType = std::vector<vtkm::cont::internal::Buffer>(void*,
                                                                          vtkm::IdComponent,
                                                                          vtkm::CopyFlag);
@@ -331,6 +343,7 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T>)
   , Allocate(detail::UnknownAHAllocate<T, S>)
   , ShallowCopy(detail::UnknownAHShallowCopy<T, S>)
+  , DeepCopy(detail::UnknownAHDeepCopy<T, S>)
   , ExtractComponent(detail::UnknownAHExtractComponent<T, S>)
   , ReleaseResources(detail::UnknownAHReleaseResources<T, S>)
   , ReleaseResourcesExecution(detail::UnknownAHReleaseResourcesExecution<T, S>)

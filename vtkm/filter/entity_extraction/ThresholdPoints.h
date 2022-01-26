@@ -41,17 +41,15 @@ public:
   void SetUpperThreshold(vtkm::Float64 value) { this->UpperValue = value; }
 
   VTKM_CONT
-  void SetThresholdBelow(const vtkm::Float64 value);
+  void SetThresholdBelow(vtkm::Float64 value);
   VTKM_CONT
-  void SetThresholdAbove(const vtkm::Float64 value);
+  void SetThresholdAbove(vtkm::Float64 value);
   VTKM_CONT
-  void SetThresholdBetween(const vtkm::Float64 value1, const vtkm::Float64 value2);
+  void SetThresholdBetween(vtkm::Float64 value1, vtkm::Float64 value2);
 
 private:
   VTKM_CONT
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
-
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
 
   constexpr static int THRESHOLD_BELOW = 0;
   constexpr static int THRESHOLD_ABOVE = 1;

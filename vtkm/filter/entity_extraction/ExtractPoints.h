@@ -51,7 +51,7 @@ public:
   const vtkm::ImplicitFunctionGeneral& GetImplicitFunction() const { return this->Function; }
 
   VTKM_CONT
-  bool GetExtractInside() { return this->ExtractInside; }
+  bool GetExtractInside() const { return this->ExtractInside; }
   VTKM_CONT
   void SetExtractInside(bool value) { this->ExtractInside = value; }
   VTKM_CONT
@@ -62,9 +62,6 @@ public:
 private:
   VTKM_CONT
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
-
-  //Map a new field onto the resulting dataset after running the filter
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
 
   bool ExtractInside = true;
   vtkm::ImplicitFunctionGeneral Function;

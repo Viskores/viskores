@@ -19,17 +19,11 @@ set(headers
   ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
   CosmoTools.h
-  CrossProduct.h
   DispatcherMapField.h
   DispatcherMapTopology.h
   DispatcherCellNeighborhood.h
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
-  DotProduct.h
-  ExtractGeometry.h
-  ExtractStructured.h
-  FieldEntropy.h
-  FieldHistogram.h
   FieldStatistics.h
   Gradient.h
   ImageDifference.h
@@ -38,15 +32,12 @@ set(headers
   Keys.h
   LagrangianStructures.h
   Magnitude.h
-  Mask.h
   MaskIndices.h
   MaskNone.h
   MaskSelect.h
   MeshQuality.h
   MIR.h
-  NDimsEntropy.h
   NDimsHistMarginalization.h
-  NDimsHistogram.h
   Normalize.h
   OrientCellNormals.h
   OrientNormals.h
@@ -69,7 +60,6 @@ set(headers
   StreamSurface.h
   SurfaceNormals.h
   Tetrahedralize.h
-  Threshold.h
   TriangleWinding.h
   Triangulate.h
   Tube.h
@@ -117,7 +107,6 @@ set(sources_device
 add_subdirectory(internal)
 add_subdirectory(cellmetrics)
 add_subdirectory(colorconversion)
-add_subdirectory(connectivities)
 add_subdirectory(contourtree)
 add_subdirectory(contourtree_augmented)
 add_subdirectory(contourtree_distributed)

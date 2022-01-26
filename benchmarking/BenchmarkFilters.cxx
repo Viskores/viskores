@@ -33,7 +33,6 @@
 #include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Tetrahedralize.h>
-#include <vtkm/filter/Threshold.h>
 #include <vtkm/filter/Triangulate.h>
 #include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/filter/VertexClustering.h>
@@ -41,6 +40,7 @@
 #include <vtkm/filter/WarpVector.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
+#include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
@@ -193,7 +193,7 @@ void BenchThreshold(::benchmark::State& state)
   vtkm::Float64 quarter = range.Length() / 4.;
   vtkm::Float64 mid = range.Center();
 
-  vtkm::filter::Threshold filter;
+  vtkm::filter::entity_extraction::Threshold filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);

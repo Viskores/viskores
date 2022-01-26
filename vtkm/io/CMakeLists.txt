@@ -49,17 +49,13 @@ set(sources
   ImageWriterPNG.cxx
   ImageWriterPNM.cxx
   VTKDataSetReader.cxx
+  VTKDataSetReaderBase.cxx
   VTKDataSetWriter.cxx
   VTKPolyDataReader.cxx
+  VTKRectilinearGridReader.cxx
   VTKStructuredGridReader.cxx
   VTKStructuredPointsReader.cxx
   VTKUnstructuredGridReader.cxx
-  )
-
-# These files use ArrayCopy which uses a WorkletMapField thus are required to be device_sources
-set(device_sources
-  VTKDataSetReaderBase.cxx
-  VTKRectilinearGridReader.cxx
   )
 
 if (VTKm_ENABLE_HDF5_IO)

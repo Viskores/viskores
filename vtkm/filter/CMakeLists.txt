@@ -11,26 +11,40 @@
 vtkm_add_instantiations(GradientInstantiations FILTER Gradient)
 
 set(deprecated_headers
+  CellSetConnectivity.h
   CleanGrid.h
   ClipWithField.h
   ClipWithImplicitFunction.h
   Contour.h
+  CrossProduct.h
   DotProduct.h
+  Entropy.h
   ExternalFaces.h
+  ExtractGeometry.h
   ExtractPoints.h
   ExtractStructured.h
   GenerateIds.h
+  GhostCellRemove.h
+  Histogram.h
+  ImageConnectivity.h
+  Mask.h
   MaskPoints.h
+  NDEntropy.h
+  NDHistogram.h
+  ParticleDensityCloudInCell.h
+  ParticleDensityNearestGridPoint.h
   Slice.h
+  Threshold.h
   ThresholdPoints.h
   )
+
+  vtkm_declare_headers(${deprecated_headers})
 
 vtkm_declare_headers(${deprecated_headers})
 
 set(common_headers
   CellAverage.h
   CellMeasures.h
-  ExtractGeometry.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -43,15 +57,12 @@ set(common_headers
   PolicyBase.h
   PolicyDefault.h
   TaskQueue.h
-  Threshold.h
   Instantiations.h
   )
 
 set(common_header_template_sources
   CellAverage.hxx
   CellMeasures.hxx
-  ExtractGeometry.hxx
-  ExtractStructured.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
@@ -59,46 +70,30 @@ set(common_header_template_sources
   FilterParticleAdvection.hxx
   FilterTemporalParticleAdvection.hxx
   PointAverage.hxx
-  Threshold.hxx
   )
 
 set(common_sources_device
   CellAverage.cxx
-  ExtractGeometry.cxx
-  ExtractStructured.cxx
   PointAverage.cxx
-  Threshold.cxx
-  )
+)
 
 set(extra_headers
   AmrArrays.h
-  CellSetConnectivity.h
   ComputeMoments.h
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   ContourTreeUniform.h
   CoordinateSystemTransform.h
   CreateResult.h
-  CrossProduct.h
-  Entropy.h
   FieldSelection.h
   FieldToColors.h
   GhostCellClassify.h
-  GhostCellRemove.h
-  Histogram.h
-  ImageConnectivity.h
   ImageDifference.h
   ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
-  Mask.h
   MeshQuality.h
   MIRFilter.h
-  NDEntropy.h
-  NDHistogram.h
-  ParticleDensityBase.h
-  ParticleDensityCloudInCell.h
-  ParticleDensityNearestGridPoint.h
   ParticleAdvection.h
   Pathline.h
   PathParticle.h
@@ -127,30 +122,19 @@ set(extra_headers
 
 set(extra_header_template_sources
   AmrArrays.hxx
-  CellSetConnectivity.hxx
   ComputeMoments.hxx
   ContourTreeUniformAugmented.hxx
   ContourTreeUniformDistributed.hxx
   ContourTreeUniform.hxx
   CoordinateSystemTransform.hxx
-  CrossProduct.hxx
-  Entropy.hxx
   FieldToColors.hxx
   GhostCellClassify.hxx
-  GhostCellRemove.hxx
-  Histogram.hxx
-  ImageConnectivity.hxx
   ImageDifference.hxx
   ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
-  Mask.hxx
   MeshQuality.hxx
   MIRFilter.hxx
-  NDEntropy.hxx
-  NDHistogram.hxx
-  ParticleDensityCloudInCell.hxx
-  ParticleDensityNearestGridPoint.hxx
   ParticleAdvection.hxx
   Pathline.hxx
   PathParticle.hxx
@@ -273,7 +257,9 @@ target_link_libraries(vtkm_filter PUBLIC INTERFACE
 install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
 add_subdirectory(clean_grid)
+add_subdirectory(connected_components)
 add_subdirectory(contour)
+add_subdirectory(density_estimate)
 add_subdirectory(entity_extraction)
 add_subdirectory(internal)
 add_subdirectory(particleadvection)

@@ -19,38 +19,23 @@ set(unit_tests
   UnitTestCellAverage.cxx
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
-  UnitTestCellSetConnectivity.cxx
-  UnitTestCellSetDualGraph.cxx
   UnitTestCellMeasure.cxx
-  UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestContourTreeUniformAugmented.cxx
   UnitTestContourTreeUniformDistributed.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCosmoTools.cxx
-  UnitTestCrossProduct.cxx
   UnitTestDescriptiveStatistics.cxx
-  UnitTestDotProduct.cxx
-  UnitTestExtractGeometry.cxx
-  UnitTestExtractStructured.cxx
-  UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
-  UnitTestGraphConnectivity.cxx
-  UnitTestInnerJoin.cxx
-  UnitTestImageConnectivity.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
-  UnitTestMask.cxx
   UnitTestMaskIndices.cxx
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
-  UnitTestNDimsEntropy.cxx
-  UnitTestNDimsHistogram.cxx
   UnitTestNDimsHistMarginalization.cxx
   UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
-  UnitTestPointerJumping.cxx
   UnitTestPointGradient.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx
@@ -66,7 +51,6 @@ set(unit_tests
   UnitTestSurfaceNormals.cxx
   UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx
-  UnitTestThreshold.cxx
   UnitTestTriangleWinding.cxx
   UnitTestTriangulate.cxx
   UnitTestTube.cxx

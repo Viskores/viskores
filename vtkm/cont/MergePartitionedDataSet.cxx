@@ -9,6 +9,7 @@
 //============================================================================
 #include <vtkm/cont/MergePartitionedDataSet.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleView.h>

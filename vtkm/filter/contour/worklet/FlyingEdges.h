@@ -17,6 +17,7 @@
 #include <vtkm/filter/contour/worklet/FlyingEdgesPass2.h>
 #include <vtkm/filter/contour/worklet/FlyingEdgesPass4.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/Invoker.h>
 

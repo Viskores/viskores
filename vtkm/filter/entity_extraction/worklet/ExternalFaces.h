@@ -18,6 +18,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
@@ -940,7 +941,9 @@ public:
       auto offsetsArray =
         vtkm::cont::make_ArrayHandleConcatenate(faceOffsetsTrim, adjustedPolyDataOffsets);
       OffsetsArrayType joinedOffsets;
-      vtkm::cont::ArrayCopy(offsetsArray, joinedOffsets);
+      // Need to compile a special device copy because the precompiled ArrayCopy does not
+      // know how to copy the ArrayHandleTransform.
+      vtkm::cont::ArrayCopyDevice(offsetsArray, joinedOffsets);
 
       vtkm::cont::ArrayHandleConcatenate<vtkm::cont::ArrayHandle<vtkm::Id>,
                                          vtkm::cont::ArrayHandle<vtkm::Id>>
