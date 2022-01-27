@@ -221,6 +221,14 @@ public:
   vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name);
   //@}
 
+  /// Returns an `std::vector` of `CoordinateSystem`s held in this `DataSet`.
+  ///
+  VTKM_CONT
+  std::vector<vtkm::cont::CoordinateSystem> GetCoordinateSystems() const
+  {
+    return this->CoordSystems;
+  }
+
   template <typename CellSetType>
   VTKM_CONT void SetCellSet(const CellSetType& cellSet)
   {

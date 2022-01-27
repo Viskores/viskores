@@ -108,15 +108,10 @@ VTKM_CONT vtkm::cont::DataSet DotProduct::DoExecute(const vtkm::cont::DataSet& i
       DoDotProduct(primaryArray.ExtractArrayFromComponents<vtkm::FloatDefault>(), secondaryField);
   }
 
-  vtkm::cont::DataSet outDataSet;
-  outDataSet.CopyStructure(inDataSet);
-  outDataSet.AddField({ this->GetOutputFieldName(),
-                        this->GetFieldFromDataSet(inDataSet).GetAssociation(),
-                        outArray });
-
-  this->MapFieldsOntoOutput(inDataSet, outDataSet);
-
-  return outDataSet;
+  return this->CreateResultField(inDataSet,
+                                 this->GetOutputFieldName(),
+                                 this->GetFieldFromDataSet(inDataSet).GetAssociation(),
+                                 outArray);
 }
 
 } // namespace vector_calculus

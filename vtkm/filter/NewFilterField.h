@@ -161,6 +161,7 @@ protected:
       field.GetData(), std::forward<Functor>(functor), std::forward<Args>(args)...);
   }
 
+
 private:
   template <vtkm::IdComponent VecSize>
   struct ScalarToVec
@@ -188,6 +189,97 @@ protected:
   {
     this->CastAndCallVecField<VecSize>(
       field.GetData(), std::forward<Functor>(functor), std::forward<Args>(args)...);
+  }
+
+  /// \brief Create the output data set for `DoExecute`
+  ///
+  /// This form of `CreateResult` will create an output data set with the same cell
+  /// structure and coordinate system as the input and pass all fields (as requested
+  /// by the `Filter` state). Additionally, it will add the provided field to the
+  /// result.
+  ///
+  /// \param[in] inDataSet The input data set being modified (usually the one passed
+  ///     into `DoExecute`). The returned `DataSet` is filled with fields of `inDataSet`
+  ///     (as selected by the `FieldsToPass` state of the filter).
+  /// \param[in] resultField A `Field` that is added to the returned `DataSet`.
+  ///
+  VTKM_CONT vtkm::cont::DataSet CreateResultField(const vtkm::cont::DataSet& inDataSet,
+                                                  const vtkm::cont::Field& resultField) const;
+
+  /// \brief Create the output data set for `DoExecute`
+  ///
+  /// This form of `CreateResult` will create an output data set with the same cell
+  /// structure and coordinate system as the input and pass all fields (as requested
+  /// by the `Filter` state). Additionally, it will add a field matching the provided
+  /// specifications to the result.
+  ///
+  /// \param[in] inDataSet The input data set being modified (usually the one passed
+  ///     into `DoExecute`). The returned `DataSet` is filled with fields of `inDataSet`
+  ///     (as selected by the `FieldsToPass` state of the filter).
+  /// \param[in] resultFieldName The name of the field added to the returned `DataSet`.
+  /// \param[in] resultFieldAssociation The association of the field (e.g. point or cell)
+  ///     added to the returned `DataSet`.
+  /// \param[in] resultFieldArray An array containing the data for the field added to the
+  ///     returned `DataSet`.
+  ///
+  VTKM_CONT vtkm::cont::DataSet CreateResultField(
+    const vtkm::cont::DataSet& inDataSet,
+    const std::string& resultFieldName,
+    vtkm::cont::Field::Association resultFieldAssociation,
+    const vtkm::cont::UnknownArrayHandle& resultFieldArray) const
+  {
+    return this->CreateResultField(
+      inDataSet, vtkm::cont::Field{ resultFieldName, resultFieldAssociation, resultFieldArray });
+  }
+
+  /// \brief Create the output data set for `DoExecute`
+  ///
+  /// This form of `CreateResult` will create an output data set with the same cell
+  /// structure and coordinate system as the input and pass all fields (as requested
+  /// by the `Filter` state). Additionally, it will add a point field matching the
+  /// provided specifications to the result.
+  ///
+  /// \param[in] inDataSet The input data set being modified (usually the one passed
+  ///     into `DoExecute`). The returned `DataSet` is filled with fields of `inDataSet`
+  ///     (as selected by the `FieldsToPass` state of the filter).
+  /// \param[in] resultFieldName The name of the field added to the returned `DataSet`.
+  /// \param[in] resultFieldArray An array containing the data for the field added to the
+  ///     returned `DataSet`.
+  ///
+  VTKM_CONT vtkm::cont::DataSet CreateResultFieldPoint(
+    const vtkm::cont::DataSet& inDataSet,
+    const std::string& resultFieldName,
+    const vtkm::cont::UnknownArrayHandle& resultFieldArray) const
+  {
+    return this->CreateResultField(inDataSet,
+                                   vtkm::cont::Field{ resultFieldName,
+                                                      vtkm::cont::Field::Association::POINTS,
+                                                      resultFieldArray });
+  }
+
+  /// \brief Create the output data set for `DoExecute`
+  ///
+  /// This form of `CreateResult` will create an output data set with the same cell
+  /// structure and coordinate system as the input and pass all fields (as requested
+  /// by the `Filter` state). Additionally, it will add a cell field matching the
+  /// provided specifications to the result.
+  ///
+  /// \param[in] inDataSet The input data set being modified (usually the one passed
+  ///     into `DoExecute`). The returned `DataSet` is filled with fields of `inDataSet`
+  ///     (as selected by the `FieldsToPass` state of the filter).
+  /// \param[in] resultFieldName The name of the field added to the returned `DataSet`.
+  /// \param[in] resultFieldArray An array containing the data for the field added to the
+  ///     returned `DataSet`.
+  ///
+  VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
+    const vtkm::cont::DataSet& inDataSet,
+    const std::string& resultFieldName,
+    const vtkm::cont::UnknownArrayHandle& resultFieldArray) const
+  {
+    return this->CreateResultField(inDataSet,
+                                   vtkm::cont::Field{ resultFieldName,
+                                                      vtkm::cont::Field::Association::CELL_SET,
+                                                      resultFieldArray });
   }
 
 private:

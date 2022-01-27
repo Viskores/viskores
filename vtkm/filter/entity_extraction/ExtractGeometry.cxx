@@ -107,14 +107,8 @@ vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input)
   cells.CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(worker);
 
   // create the output dataset
-  vtkm::cont::DataSet output;
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-  output.SetCellSet(outCells);
-
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  this->MapFieldsOntoOutput(input, output, mapper);
-
-  return output;
+  return this->CreateResult(input, outCells, input.GetCoordinateSystems(), mapper);
 }
 
 } // namespace entity_extraction

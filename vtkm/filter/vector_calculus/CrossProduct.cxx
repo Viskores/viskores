@@ -77,13 +77,8 @@ VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(const vtkm::cont::DataSet&
 
   this->CastAndCallVecField<3>(primaryArray, resolveType);
 
-  vtkm::cont::DataSet outDataSet;
-  outDataSet.CopyStructure(inDataSet);
-  outDataSet.AddField({ this->GetOutputFieldName(), primaryField.GetAssociation(), outArray });
-
-  this->MapFieldsOntoOutput(inDataSet, outDataSet);
-
-  return outDataSet;
+  return this->CreateResultField(
+    inDataSet, this->GetOutputFieldName(), primaryField.GetAssociation(), outArray);
 }
 
 }

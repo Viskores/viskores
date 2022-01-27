@@ -43,7 +43,7 @@ namespace field_transform
 {
 vtkm::cont::DataSet GenerateIds::DoExecute(const vtkm::cont::DataSet& input)
 {
-  vtkm::cont::DataSet output = input;
+  vtkm::cont::DataSet output = this->CreateResult(input);
 
   if (this->GetGeneratePointIds())
   {
@@ -55,8 +55,6 @@ vtkm::cont::DataSet GenerateIds::DoExecute(const vtkm::cont::DataSet& input)
   {
     output.AddCellField(this->GetCellFieldName(), GenerateArray(*this, input.GetNumberOfCells()));
   }
-
-  this->MapFieldsOntoOutput(input, output);
 
   return output;
 }

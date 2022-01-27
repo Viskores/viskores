@@ -70,14 +70,8 @@ VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input)
   cells.CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(workletCaller);
 
   // create the output dataset
-  vtkm::cont::DataSet output;
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-  output.SetCellSet(cellOut);
-
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  this->MapFieldsOntoOutput(input, output, mapper);
-
-  return output;
+  return this->CreateResult(input, cellOut, input.GetCoordinateSystems(), mapper);
 }
 } // namespace entity_extraction
 } // namespace filter

@@ -59,12 +59,9 @@ vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& input)
   outCellSet = worklet.Run(cells, coords.GetData(), this->Function, this->ExtractInside);
 
   // create the output dataset
-  vtkm::cont::DataSet output;
-  output.SetCellSet(outCellSet);
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f); };
-  this->MapFieldsOntoOutput(input, output, mapper);
+  vtkm::cont::DataSet output =
+    this->CreateResult(input, outCellSet, input.GetCoordinateSystems(), mapper);
 
   // compact the unused points in the output dataset
   if (this->CompactPoints)
