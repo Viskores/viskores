@@ -62,10 +62,6 @@ vtkm::cont::DataSet ExtractStructured::DoExecute(const vtkm::cont::DataSet& inpu
   auto coords = worklet.MapCoordinates(coordinates);
   vtkm::cont::CoordinateSystem outputCoordinates(coordinates.GetName(), coords);
 
-  vtkm::cont::DataSet output;
-  output.SetCellSet(vtkm::cont::UnknownCellSet(cellset));
-  output.AddCoordinateSystem(outputCoordinates);
-
   // Create map arrays for mapping fields. Could potentially save some time to first check to see
   // if these arrays would be used.
   auto CellFieldMap =
@@ -76,9 +72,7 @@ vtkm::cont::DataSet ExtractStructured::DoExecute(const vtkm::cont::DataSet& inpu
   auto mapper = [&](auto& result, const auto& f) {
     DoMapField(result, f, CellFieldMap, PointFieldMap);
   };
-  this->MapFieldsOntoOutput(input, output, mapper);
-
-  return output;
+  return this->CreateResult(input, cellset, outputCoordinates, mapper);
 }
 
 } // namespace entity_extraction
