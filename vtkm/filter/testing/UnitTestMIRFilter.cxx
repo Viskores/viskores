@@ -103,6 +103,7 @@ class MetaDataLength : public vtkm::worklet::WorkletMapField
 public:
   using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut);
 
+  VTKM_EXEC
   void operator()(const vtkm::FloatDefault& background,
                   const vtkm::FloatDefault& circle_a,
                   const vtkm::FloatDefault& circle_b,
@@ -130,16 +131,15 @@ public:
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7);
 
   template <typename IdArray, typename DataArray>
-  void operator()(const vtkm::Id ind,
-                  const vtkm::Id& offset,
-                  const vtkm::FloatDefault& background,
-                  const vtkm::FloatDefault& circle_a,
-                  const vtkm::FloatDefault& circle_b,
-                  const vtkm::FloatDefault& circle_c,
-                  IdArray& matIds,
-                  DataArray& matVFs) const
+  VTKM_EXEC void operator()(const vtkm::Id ind,
+                            const vtkm::Id& offset,
+                            const vtkm::FloatDefault& background,
+                            const vtkm::FloatDefault& circle_a,
+                            const vtkm::FloatDefault& circle_b,
+                            const vtkm::FloatDefault& circle_c,
+                            IdArray& matIds,
+                            DataArray& matVFs) const
   {
-    printf("B: %f, a: %f, b: %f, c: %f\n", background, circle_a, circle_b, circle_c);
     vtkm::Id index = offset;
     if (background > vtkm::FloatDefault(0.0))
     {
@@ -167,18 +167,6 @@ public:
     }
   }
 };
-
-template <typename DataArray>
-void PrintArray(const DataArray& data)
-{
-  data.SyncControlArray();
-  auto portal = data.ReadPortal();
-  for (vtkm::Id i = 0; i < 100; i++)
-  {
-    std::cerr << portal.Get(i) << "\t";
-  }
-  std::cerr << std::endl;
-}
 
 void TestMIRVenn250()
 {
