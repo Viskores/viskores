@@ -17,6 +17,8 @@
 
 #include <vtkm/io/VTKDataSetReader.h>
 
+#include <stdio.h>
+
 void ConnectionHelperHex(std::vector<vtkm::Id>& conn, int x, int y, int z, int mx, int my, int mz)
 {
   (void)mz;
@@ -108,13 +110,13 @@ public:
                   vtkm::Id& length) const
   {
     length = 0;
-    if (background > 0)
+    if (background > vtkm::FloatDefault(0.0))
       length++;
-    if (circle_a > 0)
+    if (circle_a > vtkm::FloatDefault(0.0))
       length++;
-    if (circle_b > 0)
+    if (circle_b > vtkm::FloatDefault(0.0))
       length++;
-    if (circle_c > 0)
+    if (circle_c > vtkm::FloatDefault(0.0))
       length++;
   }
 };
@@ -125,8 +127,11 @@ public:
   using ControlSignature =
     void(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayOut, WholeArrayOut);
 
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7);
+
   template <typename IdArray, typename DataArray>
-  void operator()(const vtkm::Id offset,
+  void operator()(const vtkm::Id ind,
+                  const vtkm::Id& offset,
                   const vtkm::FloatDefault& background,
                   const vtkm::FloatDefault& circle_a,
                   const vtkm::FloatDefault& circle_b,
@@ -134,26 +139,27 @@ public:
                   IdArray& matIds,
                   DataArray& matVFs) const
   {
+    printf("B: %f, a: %f, b: %f, c: %f\n", background, circle_a, circle_b, circle_c);
     vtkm::Id index = offset;
-    if (background > 0)
+    if (background > vtkm::FloatDefault(0.0))
     {
       matIds.Set(index, 1);
       matVFs.Set(index, background);
       index++;
     }
-    if (circle_a > 0)
+    if (circle_a > vtkm::FloatDefault(0.0))
     {
       matIds.Set(index, 2);
       matVFs.Set(index, circle_a);
       index++;
     }
-    if (circle_b > 0)
+    if (circle_b > vtkm::FloatDefault(0.0))
     {
       matIds.Set(index, 3);
       matVFs.Set(index, circle_b);
       index++;
     }
-    if (circle_c > 0)
+    if (circle_c > vtkm::FloatDefault(0.0))
     {
       matIds.Set(index, 4);
       matVFs.Set(index, circle_c);
@@ -161,6 +167,18 @@ public:
     }
   }
 };
+
+template <typename DataArray>
+void PrintArray(const DataArray& data)
+{
+  data.SyncControlArray();
+  auto portal = data.ReadPortal();
+  for (vtkm::Id i = 0; i < 100; i++)
+  {
+    std::cerr << portal.Get(i) << "\t";
+  }
+  std::cerr << std::endl;
+}
 
 void TestMIRVenn250()
 {
@@ -185,16 +203,54 @@ void TestMIRVenn250()
   IdArray offset;
   IdArray matIds;
   DataArray matVFs;
-
+  std::cerr << "Before Length" << std::endl;
+  vtkm::cont::printSummary_ArrayHandle(backArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirAArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirBArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirCArr, std::cerr);
   invoker(MetaDataLength{}, backArr, cirAArr, cirBArr, cirCArr, length);
-
+  std::cerr << "After Length" << std::endl;
+  vtkm::cont::printSummary_ArrayHandle(backArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirAArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirBArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirCArr, std::cerr);
+  std::cerr << "Lengths" << std::endl;
+  PrintArray(length);
   vtkm::cont::Algorithm::ScanExclusive(length, offset);
+  std::cerr << "Offsets (" << offset.GetNumberOfValues() << ")" << std::endl;
+  PrintArray(offset);
 
   vtkm::Id total = vtkm::cont::Algorithm::Reduce(length, 0);
+  std::cerr << "Total : " << total << std::endl;
   matIds.Allocate(total);
   matVFs.Allocate(total);
 
+  std::cerr << "Before Meta" << std::endl;
+  vtkm::cont::printSummary_ArrayHandle(backArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirAArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirBArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirCArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(offset, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(matIds, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(matVFs, std::cerr);
   invoker(MetaDataPopulate{}, offset, backArr, cirAArr, cirBArr, cirCArr, matIds, matVFs);
+  std::cerr << "After Meta" << std::endl;
+  vtkm::cont::printSummary_ArrayHandle(backArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirAArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirBArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(cirCArr, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(offset, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(matIds, std::cerr);
+  vtkm::cont::printSummary_ArrayHandle(matVFs, std::cerr);
+  std::cerr << "Material Ids :" << std::endl;
+  PrintArray(matIds);
+  std::cerr << "Material VFs" << std::endl;
+  PrintArray(matVFs);
+
+  auto portal = matIds.ReadPortal();
+  for (int i = 0; i < 5; i++)
+    std::cout << portal.Get(i) << "\t";
+  std::cout << std::endl;
 
   data.AddField(vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::CELL_SET, offset));
   data.AddField(vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::CELL_SET, length));
