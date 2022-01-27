@@ -51,9 +51,8 @@ bool DoMapField(vtkm::cont::DataSet& result,
     };
 
     auto inputArray = field.GetData();
-    inputArray
-      .CastAndCallForTypesWithFloatFallback<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(
-        resolve);
+    inputArray.CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
+      resolve);
     return true;
   }
   else if (field.IsFieldCell())
@@ -83,32 +82,31 @@ vtkm::cont::DataSet ClipWithField::DoExecute(const vtkm::cont::DataSet& input)
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
-  vtkm::worklet::Clip Worklet;
+  vtkm::worklet::Clip worklet;
 
   //get the cells and coordinates of the dataset
   const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   vtkm::cont::DataSet output;
 
-  auto ResolveFieldType = [&, this](auto concrete) {
+  auto resolveFieldType = [&, this](auto concrete) {
     vtkm::cont::CellSetExplicit<> outputCellSet =
-      Worklet.Run(cells, concrete, this->ClipValue, this->Invert);
+      worklet.Run(cells, concrete, this->ClipValue, this->Invert);
 
     output.SetCellSet(outputCellSet);
-
-    // Compute the new boundary points and add them to the output:
-    for (vtkm::IdComponent coordSystemId = 0; coordSystemId < input.GetNumberOfCoordinateSystems();
-         ++coordSystemId)
-    {
-      const vtkm::cont::CoordinateSystem& coords = input.GetCoordinateSystem(coordSystemId);
-      coords.GetData().CastAndCall(ClipWithFieldProcessCoords{}, coords.GetName(), Worklet, output);
-    }
   };
 
   const auto& inArray = this->GetFieldFromDataSet(input).GetData();
-  inArray.CastAndCallForTypesWithFloatFallback<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(
-    ResolveFieldType);
+  this->CastAndCallScalarField(inArray, resolveFieldType);
 
-  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
+  // Compute the new boundary points and add them to the output:
+  for (vtkm::IdComponent coordSystemId = 0; coordSystemId < input.GetNumberOfCoordinateSystems();
+       ++coordSystemId)
+  {
+    const vtkm::cont::CoordinateSystem& coords = input.GetCoordinateSystem(coordSystemId);
+    coords.GetData().CastAndCall(ClipWithFieldProcessCoords{}, coords.GetName(), worklet, output);
+  }
+
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
   MapFieldsOntoOutput(input, output, mapper);
 
   return output;

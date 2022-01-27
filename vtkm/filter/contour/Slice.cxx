@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/filter/contour/Slice.h>
 
@@ -24,9 +25,10 @@ vtkm::cont::DataSet Slice::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::cont::DataSet result;
   auto impFuncEval =
     vtkm::ImplicitFunctionValueFunctor<vtkm::ImplicitFunctionGeneral>(this->Function);
-  // FIXME: do we still need GetDataAsMultiplexer()? Can GetData() do it?
-  auto sliceScalars =
+  auto coordTransform =
     vtkm::cont::make_ArrayHandleTransform(coords.GetDataAsMultiplexer(), impFuncEval);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> sliceScalars;
+  vtkm::cont::ArrayCopyDevice(coordTransform, sliceScalars);
   auto field = vtkm::cont::make_FieldPoint("sliceScalars", sliceScalars);
   // input is a const, we can not AddField to it.
   vtkm::cont::DataSet clone = input;

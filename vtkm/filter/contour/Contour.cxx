@@ -42,23 +42,24 @@ inline bool IsCellSetStructured(const vtkm::cont::UnknownCellSet& cellset)
 
 VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
-                          vtkm::worklet::Contour& Worklet)
+                          vtkm::worklet::Contour& worklet)
 {
   if (field.IsFieldPoint())
   {
     auto array = field.GetData();
 
     auto functor = [&](auto concrete) {
-      auto fieldArray = Worklet.ProcessPointField(concrete);
+      auto fieldArray = worklet.ProcessPointField(concrete);
       result.AddPointField(field.GetName(), fieldArray);
     };
-    array.CastAndCallForTypesWithFloatFallback<SupportedTypes, VTKM_DEFAULT_STORAGE_LIST>(functor);
+    array.CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
+      functor);
     return true;
   }
   else if (field.IsFieldCell())
   {
     // Use the precompiled field permutation function.
-    vtkm::cont::ArrayHandle<vtkm::Id> permutation = Worklet.GetCellIdMap();
+    vtkm::cont::ArrayHandle<vtkm::Id> permutation = worklet.GetCellIdMap();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
   else if (field.IsFieldGlobal())
@@ -91,28 +92,17 @@ bool Contour::GetMergeDuplicatePoints() const
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
-  vtkm::worklet::Contour Worklet;
-  Worklet.SetMergeDuplicatePoints(this->GetMergeDuplicatePoints());
+  vtkm::worklet::Contour worklet;
+  worklet.SetMergeDuplicatePoints(this->GetMergeDuplicatePoints());
 
   if (!this->GetFieldFromDataSet(inDataSet).IsFieldPoint())
   {
-    throw vtkm::cont::ErrorFilterExecution("Point fieldArray expected.");
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
   if (this->IsoValues.empty())
   {
     throw vtkm::cont::ErrorFilterExecution("No iso-values provided.");
-  }
-
-  // Check the fields of the dataset to see what kinds of fields are present so
-  // we can free the mapping arrays that won't be needed. A point fieldArray must
-  // exist for this algorithm, so just check cells.
-  const vtkm::Id numFields = inDataSet.GetNumberOfFields();
-  bool hasCellFields = false;
-  for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
-  {
-    const auto& f = inDataSet.GetField(fieldIdx);
-    hasCellFields = f.IsFieldCell();
   }
 
   //get the cells and coordinates of the dataset
@@ -139,11 +129,11 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
 
     if (this->GenerateNormals && generateHighQualityNormals)
     {
-      outputCells = Worklet.Run(ivalues, cells, coords.GetData(), concrete, vertices, normals);
+      outputCells = worklet.Run(ivalues, cells, coords.GetData(), concrete, vertices, normals);
     }
     else
     {
-      outputCells = Worklet.Run(ivalues, cells, coords.GetData(), concrete, vertices);
+      outputCells = worklet.Run(ivalues, cells, coords.GetData(), concrete, vertices);
     }
   };
 
@@ -169,7 +159,7 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
   {
     vtkm::cont::Field interpolationEdgeIdsField(InterpolationEdgeIdsArrayName,
                                                 vtkm::cont::Field::Association::POINTS,
-                                                Worklet.GetInterpolationEdgeIds());
+                                                worklet.GetInterpolationEdgeIds());
     output.AddField(interpolationEdgeIdsField);
   }
 
@@ -180,12 +170,7 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
   vtkm::cont::CoordinateSystem outputCoords("coordinates", vertices);
   output.AddCoordinateSystem(outputCoords);
 
-  if (!hasCellFields)
-  {
-    Worklet.ReleaseCellMapArrays();
-  }
-
-  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
   MapFieldsOntoOutput(inDataSet, output, mapper);
 
   return output;

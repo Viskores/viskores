@@ -38,8 +38,6 @@ set(deprecated_headers
   ThresholdPoints.h
   )
 
-  vtkm_declare_headers(${deprecated_headers})
-
 vtkm_declare_headers(${deprecated_headers})
 
 set(common_headers
