@@ -76,20 +76,17 @@ bool DoMapField(vtkm::cont::DataSet& result,
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(const vtkm::cont::DataSet& input)
 {
-  //get the cells and coordinates of the dataset
-  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
-
+  const vtkm::cont::UnknownCellSet& inputCellSet = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  vtkm::worklet::Clip Worklet;
+  vtkm::worklet::Clip worklet;
 
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    Worklet.Run(cells, this->Function, inputCoords, this->Invert);
+    worklet.Run(inputCellSet, this->Function, inputCoords, this->Invert);
 
-  //create the output data
-  vtkm::cont::DataSet output;
-  output.SetCellSet(outputCellSet);
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+  vtkm::cont::DataSet output = this->CreateResult(input, outputCellSet, mapper);
 
   // compute output coordinates
   for (vtkm::IdComponent coordSystemId = 0; coordSystemId < input.GetNumberOfCoordinateSystems();
@@ -97,11 +94,8 @@ vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(const vtkm::cont::DataSe
   {
     const vtkm::cont::CoordinateSystem& coords = input.GetCoordinateSystem(coordSystemId);
     coords.GetData().CastAndCall(
-      ClipWithImplicitFunctionProcessCoords{}, coords.GetName(), Worklet, output);
+      ClipWithImplicitFunctionProcessCoords{}, coords.GetName(), worklet, output);
   }
-
-  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, Worklet); };
-  MapFieldsOntoOutput(input, output, mapper);
 
   return output;
 }

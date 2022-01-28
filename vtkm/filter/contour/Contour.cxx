@@ -105,10 +105,9 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
     throw vtkm::cont::ErrorFilterExecution("No iso-values provided.");
   }
 
-  //get the cells and coordinates of the dataset
-  const vtkm::cont::UnknownCellSet& cells = inDataSet.GetCellSet();
-
-  const vtkm::cont::CoordinateSystem& coords =
+  //get the inputCells and coordinates of the dataset
+  const vtkm::cont::UnknownCellSet& inputCells = inDataSet.GetCellSet();
+  const vtkm::cont::CoordinateSystem& inputCoords =
     inDataSet.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   const auto& fieldArray = this->GetFieldFromDataSet(inDataSet).GetData();
@@ -117,10 +116,9 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
   Vec3HandleType vertices;
   Vec3HandleType normals;
 
-  vtkm::cont::DataSet output;
   vtkm::cont::CellSetSingleType<> outputCells;
 
-  bool generateHighQualityNormals = IsCellSetStructured(cells)
+  bool generateHighQualityNormals = IsCellSetStructured(inputCells)
     ? !this->ComputeFastNormalsForStructured
     : !this->ComputeFastNormalsForUnstructured;
 
@@ -129,16 +127,21 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
 
     if (this->GenerateNormals && generateHighQualityNormals)
     {
-      outputCells = worklet.Run(ivalues, cells, coords.GetData(), concrete, vertices, normals);
+      outputCells =
+        worklet.Run(ivalues, inputCells, inputCoords.GetData(), concrete, vertices, normals);
     }
     else
     {
-      outputCells = worklet.Run(ivalues, cells, coords.GetData(), concrete, vertices);
+      outputCells = worklet.Run(ivalues, inputCells, inputCoords.GetData(), concrete, vertices);
     }
   };
 
   fieldArray.CastAndCallForTypesWithFloatFallback<SupportedTypes, VTKM_DEFAULT_STORAGE_LIST>(
     ResolveFieldType);
+
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+  vtkm::cont::DataSet output = this->CreateResult(
+    inDataSet, outputCells, vtkm::cont::CoordinateSystem{ "coordinates", vertices }, mapper);
 
   if (this->GenerateNormals)
   {
@@ -162,16 +165,6 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
                                                 worklet.GetInterpolationEdgeIds());
     output.AddField(interpolationEdgeIdsField);
   }
-
-  //assign the connectivity to the cell set
-  output.SetCellSet(outputCells);
-
-  //add the coordinates to the output dataset
-  vtkm::cont::CoordinateSystem outputCoords("coordinates", vertices);
-  output.AddCoordinateSystem(outputCoords);
-
-  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  MapFieldsOntoOutput(inDataSet, output, mapper);
 
   return output;
 }
