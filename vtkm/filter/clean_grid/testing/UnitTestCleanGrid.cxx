@@ -10,10 +10,10 @@
 
 #include <vtkm/filter/clean_grid/CleanGrid.h>
 
-#include <vtkm/filter/Contour.h>
-
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/contour/Contour.h>
 
 namespace
 {
@@ -78,7 +78,7 @@ void TestPointMerging()
   vtkm::cont::ArrayCopy(baseData.GetCoordinateSystem().GetData(), newcoords);
   baseData.GetCoordinateSystem().SetData(newcoords);
 
-  vtkm::filter::Contour marchingCubes;
+  vtkm::filter::contour::Contour marchingCubes;
   marchingCubes.SetIsoValue(0.05);
   marchingCubes.SetMergeDuplicatePoints(false);
   marchingCubes.SetActiveField("pointvar");

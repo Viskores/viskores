@@ -32,10 +32,10 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/SurfaceNormals.h>
 #include <vtkm/filter/clean_grid/CleanGrid.h>
+#include <vtkm/filter/contour/Contour.h>
 
 #include <vtkm/source/Wavelet.h>
 
@@ -59,7 +59,7 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
   vtkm::filter::clean_grid::CleanGrid toGrid;
 
   // unstructured grid contour
-  vtkm::filter::Contour contour;
+  vtkm::filter::contour::Contour contour;
   contour.SetActiveField("RTData", vtkm::cont::Field::Association::POINTS);
   contour.SetNumberOfIsoValues(1);
   contour.SetIsoValue(192);

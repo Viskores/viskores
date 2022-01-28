@@ -20,8 +20,6 @@ set(unit_tests
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
   UnitTestCellMeasure.cxx
-  UnitTestClipping.cxx
-  UnitTestContour.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestContourTreeUniformAugmented.cxx
   UnitTestContourTreeUniformDistributed.cxx

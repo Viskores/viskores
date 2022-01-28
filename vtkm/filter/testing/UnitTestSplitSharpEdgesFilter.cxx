@@ -8,9 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/SplitSharpEdges.h>
 #include <vtkm/filter/SurfaceNormals.h>
+#include <vtkm/filter/contour/Contour.h>
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -225,7 +225,7 @@ void TestWithStructuredData()
   vtkm::cont::DataSet dataSet = Make3DWavelet();
 
   // Cut a contour:
-  vtkm::filter::Contour contour;
+  vtkm::filter::contour::Contour contour;
   contour.SetActiveField("RTData", vtkm::cont::Field::Association::POINTS);
   contour.SetNumberOfIsoValues(1);
   contour.SetIsoValue(192);

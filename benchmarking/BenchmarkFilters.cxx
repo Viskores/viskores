@@ -28,7 +28,6 @@
 #include <vtkm/cont/internal/OptionParser.h>
 
 #include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/Gradient.h>
 #include <vtkm/filter/PointAverage.h>
@@ -39,6 +38,7 @@
 #include <vtkm/filter/VertexClustering.h>
 #include <vtkm/filter/WarpScalar.h>
 #include <vtkm/filter/WarpVector.h>
+#include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
@@ -345,7 +345,7 @@ void BenchContour(::benchmark::State& state)
   const bool normals = static_cast<bool>(state.range(3));
   const bool fastNormals = static_cast<bool>(state.range(4));
 
-  vtkm::filter::Contour filter;
+  vtkm::filter::contour::Contour filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
 
   // Set up some equally spaced contours, with the min/max slightly inside the

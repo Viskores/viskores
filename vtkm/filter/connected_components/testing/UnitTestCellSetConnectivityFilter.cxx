@@ -8,11 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/connected_components/CellSetConnectivity.h>
+#include <vtkm/filter/contour/Contour.h>
+
 #include <vtkm/source/Tangle.h>
 
 namespace
@@ -27,7 +28,7 @@ public:
     vtkm::source::Tangle tangle(dims);
     vtkm::cont::DataSet dataSet = tangle.Execute();
 
-    vtkm::filter::Contour filter;
+    vtkm::filter::contour::Contour filter;
     filter.SetGenerateNormals(true);
     filter.SetMergeDuplicatePoints(true);
     filter.SetIsoValue(0, 0.1);

@@ -41,7 +41,7 @@
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
 
-#include <vtkm/worklet/clip/ClipTables.h>
+#include <vtkm/filter/contour/worklet/clip/ClipTables.h>
 #include <vtkm/worklet/mir/MIRTables.h>
 
 namespace vtkm

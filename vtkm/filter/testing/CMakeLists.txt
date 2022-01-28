@@ -15,10 +15,6 @@ set(headers
 set(unit_tests
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
-  UnitTestClipWithFieldFilter.cxx
-  UnitTestClipWithImplicitFunctionFilter.cxx
-  UnitTestContourFilter.cxx
-  UnitTestContourFilterNormals.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestContourTreeUniformDistributedFilter.cxx
@@ -79,9 +75,7 @@ if (VTKm_ENABLE_RENDERING)
 
   list(APPEND unit_tests
     RenderTestAmrArrays.cxx
-    RenderTestContourFilter.cxx
     RenderTestPointTransform.cxx
-    RenderTestSliceFilter.cxx
     RenderTestSplitSharpEdges.cxx
     RenderTestStreamline.cxx
     RenderTestSurfaceNormals.cxx

@@ -15,7 +15,6 @@ set(headers
   CellAverage.h
   CellDeepCopy.h
   CellMeasure.h
-  Clip.h
   ContourTreeUniform.h
   ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
@@ -33,7 +32,6 @@ set(headers
   Keys.h
   LagrangianStructures.h
   Magnitude.h
-  Contour.h
   MaskIndices.h
   MaskNone.h
   MaskSelect.h
@@ -108,9 +106,7 @@ set(sources_device
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(cellmetrics)
-add_subdirectory(clip)
 add_subdirectory(colorconversion)
-add_subdirectory(contour)
 add_subdirectory(contourtree)
 add_subdirectory(contourtree_augmented)
 add_subdirectory(contourtree_distributed)

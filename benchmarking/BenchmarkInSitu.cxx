@@ -25,12 +25,12 @@
 
 #include <vtkm/cont/internal/OptionParser.h>
 
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/Gradient.h>
-#include <vtkm/filter/Slice.h>
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/filter/Tube.h>
+#include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/contour/Slice.h>
 
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -259,7 +259,7 @@ void WriteToDisk(const vtkm::rendering::Canvas& canvas,
 
 
 template <typename DataSetType>
-DataSetType RunContourHelper(vtkm::filter::Contour& filter,
+DataSetType RunContourHelper(vtkm::filter::contour::Contour& filter,
                              vtkm::Id numIsoVals,
                              const DataSetType& input)
 {
@@ -293,7 +293,7 @@ void BenchContour(::benchmark::State& state)
   BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim);
   inputGenTimer.Stop();
 
-  vtkm::filter::Contour filter;
+  vtkm::filter::contour::Contour filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
   filter.SetMergeDuplicatePoints(true);
   filter.SetGenerateNormals(true);
@@ -577,7 +577,7 @@ void BenchSlice(::benchmark::State& state)
   BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim);
   inputGenTimer.Stop();
 
-  vtkm::filter::Slice filter;
+  vtkm::filter::contour::Slice filter;
 
   vtkm::cont::Timer totalTimer{ device };
   vtkm::cont::Timer filterTimer{ device };
