@@ -31,7 +31,7 @@ struct SharedStates
 }
 
 // New Filter Design: DoMapField is now a free function in an anonymous namespace. It should be
-// considered as a convenience/extension to the lambda passed to the MapFieldsOntoOutput.
+// considered as a convenience/extension to the lambda passed to CreateResult.
 // Being a free function discourages the developer to "pass" mutable states from DoExecute phase
 // to DoMapField phase via data member. However, there is nothing to prevent developer doing
 // stupid thing to circumvent the protection. One example here is that the developer could
@@ -167,17 +167,18 @@ vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
     outputCellSet = worklets.CellCompactor.Run(outputCellSet);
   }
 
-  // Construct resulting data set with new cell sets
-  vtkm::cont::DataSet outData;
-  outData.SetCellSet(outputCellSet);
-
-  // Pass the coordinate systems
-  for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
-  {
-    outData.AddCoordinateSystem(outputCoordinateSystems[coordSystemIndex]);
-  }
-
-  return outData;
+  // New Filter Design: We pass the actions needed to be done as a lambda to the generic
+  // CreateResult method. CreateResult now acts as thrust::transform_if on the
+  // Fields. Shared mutable state is captured by the lambda. We could also put all the logic
+  // of field mapping in the lambda. However, it is cleaner to put it in the filter specific
+  // implementation of DoMapField which takes mutable state as an extra parameter.
+  //
+  // For filters that do not need to do interpolation for mapping fields, we provide an overload
+  // that does not take the extra arguments and just AddField.
+  auto mapper = [&, this](auto& outDataSet, const auto& f) {
+    DoMapField(outDataSet, f, *this, worklets);
+  };
+  return this->CreateResult(inData, outputCellSet, outputCoordinateSystems, mapper);
 }
 
 vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData)
@@ -221,22 +222,7 @@ vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData)
 
   // New Filter Design: The share, mutable state is pass to other methods via parameter, not as
   // a data member.
-  auto outData = this->GenerateOutput(inData, outputCellSet, worklets);
-
-  // New Filter Design: We pass the actions needed to be done as a lambda to the generic
-  // MapFieldsOntoOutput method. MapFieldsOntoOutput now acts as thrust::transform_if on the
-  // Fields. Shared mutable state is captured by the lambda. We could also put all the logic
-  // of field mapping in the lambda. However, it is cleaner to put it in the filter specific
-  // implementation of DoMapField which takes mutable state as an extra parameter.
-  //
-  // For filters that do not need to do interpolation for mapping fields, we provide an overload
-  // that does not take the extra arguments and just AddField.
-  auto mapper = [&, this](auto& outDataSet, const auto& f) {
-    DoMapField(outDataSet, f, *this, worklets);
-  };
-  this->MapFieldsOntoOutput(inData, outData, mapper);
-
-  return outData;
+  return this->GenerateOutput(inData, outputCellSet, worklets);
 }
 } //namespace clean_grid
 } //namespace filter

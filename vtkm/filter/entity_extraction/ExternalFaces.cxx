@@ -56,11 +56,11 @@ vtkm::cont::DataSet ExternalFaces::GenerateOutput(const vtkm::cont::DataSet& inp
   }
 
   //4. create the output dataset
-  vtkm::cont::DataSet output;
-  output.SetCellSet(outCellSet);
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-
-  return output;
+  auto mapper = [&, this](auto& result, const auto& f) {
+    // New Design: We are still using the old MapFieldOntoOutput to demonstrate the transition
+    this->MapFieldOntoOutput(result, f);
+  };
+  return this->CreateResult(input, outCellSet, input.GetCoordinateSystems(), mapper);
 }
 
 //-----------------------------------------------------------------------------
@@ -87,11 +87,6 @@ vtkm::cont::DataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& input)
 
   // New Filter Design: we generate new output and map the fields first.
   auto output = this->GenerateOutput(input, outCellSet);
-  auto mapper = [&, this](auto& result, const auto& f) {
-    // New Design: We are still using the old MapFieldOntoOutput to demonstrate the transition
-    this->MapFieldOntoOutput(result, f);
-  };
-  this->MapFieldsOntoOutput(input, output, mapper);
 
   // New Filter Design: then we remove entities if requested.
   if (this->CompactPoints)

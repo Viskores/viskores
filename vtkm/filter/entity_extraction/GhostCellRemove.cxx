@@ -368,14 +368,8 @@ VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataS
     throw vtkm::cont::ErrorFilterExecution("Unsupported ghost cell removal type");
   }
 
-  vtkm::cont::DataSet output;
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-  output.SetCellSet(cellOut);
-
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  this->MapFieldsOntoOutput(input, output, mapper);
-
-  return output;
+  return this->CreateResult(input, cellOut, input.GetCoordinateSystems(), mapper);
 }
 
 }

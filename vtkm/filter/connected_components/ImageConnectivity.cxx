@@ -35,10 +35,7 @@ VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(const vtkm::cont::Dat
   const auto& fieldArray = field.GetData();
   this->CastAndCallScalarField(fieldArray, resolveType);
 
-  auto output = CreateResultFieldPoint(input, component, this->GetOutputFieldName());
-  this->MapFieldsOntoOutput(input, output);
-
-  return output;
+  return this->CreateResultFieldPoint(input, this->GetOutputFieldName(), component);
 }
 } // namespace connected_components
 } // namespace filter

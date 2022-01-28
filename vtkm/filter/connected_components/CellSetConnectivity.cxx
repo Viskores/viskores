@@ -24,10 +24,7 @@ VTKM_CONT vtkm::cont::DataSet CellSetConnectivity::DoExecute(const vtkm::cont::D
 
   vtkm::worklet::connectivity::CellSetConnectivity().Run(input.GetCellSet(), component);
 
-  auto output = CreateResultFieldCell(input, component, this->GetOutputFieldName());
-  this->MapFieldsOntoOutput(input, output);
-
-  return output;
+  return this->CreateResultFieldCell(input, this->GetOutputFieldName(), component);
 }
 } // namespace connected_components
 } // namespace filter

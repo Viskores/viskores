@@ -98,14 +98,8 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
   fieldArray.CastAndCallForTypes<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(
     ResolveArrayType);
 
-  vtkm::cont::DataSet output;
-  output.SetCellSet(cellOut);
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  this->MapFieldsOntoOutput(input, output, mapper);
-
-  return output;
+  return this->CreateResult(input, cellOut, input.GetCoordinateSystems(), mapper);
 }
 } // namespace entity_extraction
 } // namespace filter
