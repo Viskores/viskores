@@ -43,8 +43,9 @@ bool DoMapField(vtkm::cont::DataSet& result,
 {
   if (field.IsFieldPoint())
   {
-    auto resolve = [&](auto concrete) {
-      using T = typename decltype(concrete)::ValueType;
+    auto resolve = [&](const auto& concrete) {
+      // use std::decay to remove const ref from the decltype of concrete.
+      using T = typename std::decay_t<decltype(concrete)>::ValueType;
       vtkm::cont::ArrayHandle<T> outputArray;
       outputArray = Worklet.ProcessPointField(concrete);
       result.AddPointField(field.GetName(), outputArray);

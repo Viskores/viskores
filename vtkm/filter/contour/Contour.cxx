@@ -48,7 +48,7 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
   {
     auto array = field.GetData();
 
-    auto functor = [&](auto concrete) {
+    auto functor = [&](const auto& concrete) {
       auto fieldArray = worklet.ProcessPointField(concrete);
       result.AddPointField(field.GetName(), fieldArray);
     };
@@ -122,8 +122,14 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
     ? !this->ComputeFastNormalsForStructured
     : !this->ComputeFastNormalsForUnstructured;
 
-  auto ResolveFieldType = [&, this](auto concrete) {
-    std::vector<typename decltype(concrete)::ValueType> ivalues(IsoValues.begin(), IsoValues.end());
+  auto resolveFieldType = [&, this](const auto& concrete) {
+    // use std::decay to remove const ref from the decltype of concrete.
+    using T = typename std::decay_t<decltype(concrete)>::ValueType;
+    std::vector<T> ivalues(this->IsoValues.size());
+    for (std::size_t i = 0; i < ivalues.size(); ++i)
+    {
+      ivalues[i] = static_cast<T>(this->IsoValues[i]);
+    }
 
     if (this->GenerateNormals && generateHighQualityNormals)
     {
@@ -137,7 +143,7 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
   };
 
   fieldArray.CastAndCallForTypesWithFloatFallback<SupportedTypes, VTKM_DEFAULT_STORAGE_LIST>(
-    ResolveFieldType);
+    resolveFieldType);
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
   vtkm::cont::DataSet output = this->CreateResult(

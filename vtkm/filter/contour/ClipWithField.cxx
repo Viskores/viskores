@@ -43,8 +43,9 @@ bool DoMapField(vtkm::cont::DataSet& result,
 {
   if (field.IsFieldPoint())
   {
-    auto resolve = [&](auto concrete) {
-      using T = typename decltype(concrete)::ValueType;
+    auto resolve = [&](const auto& concrete) {
+      // use std::decay to remove const ref from the decltype of concrete.
+      using T = typename std::decay_t<decltype(concrete)>::ValueType;
       vtkm::cont::ArrayHandle<T> outputArray;
       outputArray = worklet.ProcessPointField(concrete);
       result.AddPointField(field.GetName(), outputArray);
@@ -87,7 +88,7 @@ vtkm::cont::DataSet ClipWithField::DoExecute(const vtkm::cont::DataSet& input)
   const vtkm::cont::UnknownCellSet& inputCellSet = input.GetCellSet();
   vtkm::cont::CellSetExplicit<> outputCellSet;
 
-  auto resolveFieldType = [&, this](auto concrete) {
+  auto resolveFieldType = [&, this](const auto& concrete) {
     outputCellSet = worklet.Run(inputCellSet, concrete, this->ClipValue, this->Invert);
   };
   this->CastAndCallScalarField(this->GetFieldFromDataSet(input).GetData(), resolveFieldType);
