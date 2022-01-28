@@ -168,6 +168,11 @@ upper right.
         destination.
       * The `gitlab-push` script also pushes the `master` branch to your
         fork in GitLab to keep it in sync with the upstream `master`.
+      * If you have created or modified Git-LFS files, you will need to
+
+
+        need developer access to the VTK-m repository do this. If you do
+        not have developer access, ask the VTK-m group for help.
 
     The output will include a link to the topic branch in your fork in
     GitLab and a link to a page for creating a Merge Request.
@@ -580,7 +585,7 @@ To find out if you have local commits on your master branch, check its
 status:
 
     $ git checkout master
-	$ git status
+    $ git status
 
 If status responds that your branch is up to date or that your branch is
 _behind_ the `origin/master` remote branch, then everything is fine. (If
@@ -595,7 +600,7 @@ branch.
 
         $ git branch my-topic
 
-	Of course, replace `my-topic` with something that better describes your
+    Of course, replace `my-topic` with something that better describes your
     changes.
 
 2.  Reset the local master branch to the remote master branch:
