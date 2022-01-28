@@ -213,8 +213,8 @@ if(VTKm_ENABLE_CUDA)
     elseif(VTKm_CUDA_Architecture STREQUAL "turing")
       set(arch_flags --generate-code=arch=compute_75,code=sm_75)
     elseif(VTKm_CUDA_Architecture STREQUAL "ampere")
-      set(arch_flags --generate-code=arch=compute_80,code=sm_80)
-      set(arch_flags --generate-code=arch=compute_86,code=sm_86)
+      set(arch_flags --generate-code=arch=compute_80,code=sm_80
+                     --generate-code=arch=compute_86,code=sm_86)
     elseif(VTKm_CUDA_Architecture STREQUAL "all")
       set(arch_flags --generate-code=arch=compute_30,code=sm_30
                      --generate-code=arch=compute_35,code=sm_35
