@@ -63,7 +63,7 @@ public:
   using ControlSignature = void(CellSetIn cellset,
                                 FieldInPoint pointCoords,
                                 FieldOutCell metricOut);
-  using ExecutionSignature = void(WorkIndex, CellShape, PointCount, _2, _3);
+  using ExecutionSignature = void(CellShape, PointCount, _2, _3);
   using InputDomain = _1;
 
   void SetMetric(MetricTagType m) { this->Metric = m; }
@@ -71,8 +71,7 @@ public:
   void SetAverageVolume(vtkm::FloatDefault v) { this->AverageVolume = v; };
 
   template <typename CellShapeType, typename PointCoordVecType, typename OutType>
-  VTKM_EXEC void operator()(const vtkm::Id& index,
-                            CellShapeType shape,
+  VTKM_EXEC void operator()(CellShapeType shape,
                             const vtkm::IdComponent& numPoints,
                             //const CountsArrayType& counts,
                             //const MetricsArrayType& metrics,
