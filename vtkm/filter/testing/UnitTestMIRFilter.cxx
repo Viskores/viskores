@@ -203,10 +203,8 @@ void TestMIRVenn250()
   vtkm::cont::printSummary_ArrayHandle(cirBArr, std::cerr);
   vtkm::cont::printSummary_ArrayHandle(cirCArr, std::cerr);
   std::cerr << "Lengths" << std::endl;
-  PrintArray(length);
   vtkm::cont::Algorithm::ScanExclusive(length, offset);
   std::cerr << "Offsets (" << offset.GetNumberOfValues() << ")" << std::endl;
-  PrintArray(offset);
 
   vtkm::Id total = vtkm::cont::Algorithm::Reduce(length, 0);
   std::cerr << "Total : " << total << std::endl;
@@ -231,9 +229,7 @@ void TestMIRVenn250()
   vtkm::cont::printSummary_ArrayHandle(matIds, std::cerr);
   vtkm::cont::printSummary_ArrayHandle(matVFs, std::cerr);
   std::cerr << "Material Ids :" << std::endl;
-  PrintArray(matIds);
   std::cerr << "Material VFs" << std::endl;
-  PrintArray(matVFs);
 
   auto portal = matIds.ReadPortal();
   for (int i = 0; i < 5; i++)
