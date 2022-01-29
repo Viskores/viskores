@@ -27,10 +27,8 @@
 
 #include <vtkm/cont/internal/OptionParser.h>
 
-#include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/Gradient.h>
-#include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/filter/Triangulate.h>
@@ -42,6 +40,8 @@
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
+#include <vtkm/filter/field_conversion/PointAverage.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 
@@ -252,7 +252,7 @@ void BenchCellAverage(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::CellAverage filter;
+  vtkm::filter::field_conversion::CellAverage filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
 
   vtkm::cont::Timer timer{ device };
@@ -273,7 +273,7 @@ void BenchPointAverage(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::PointAverage filter;
+  vtkm::filter::field_conversion::PointAverage filter;
   filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
 
   vtkm::cont::Timer timer{ device };
@@ -692,7 +692,7 @@ void CreateMissingFields()
   {
     if (!CellScalarsName.empty())
     { // Generate from found cell field:
-      vtkm::filter::PointAverage avg;
+      vtkm::filter::field_conversion::PointAverage avg;
       avg.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
       avg.SetOutputFieldName("GeneratedPointScalars");
       auto outds = avg.Execute(InputDataSet);
@@ -721,7 +721,7 @@ void CreateMissingFields()
   if (CellScalarsName.empty())
   { // Attempt to construct them from a point field:
     VTKM_ASSERT(!PointScalarsName.empty());
-    vtkm::filter::CellAverage avg;
+    vtkm::filter::field_conversion::CellAverage avg;
     avg.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
     avg.SetOutputFieldName("GeneratedCellScalars");
     auto outds = avg.Execute(InputDataSet);

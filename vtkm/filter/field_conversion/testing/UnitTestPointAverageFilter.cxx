@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/PointAverage.h>
+#include <vtkm/filter/field_conversion/PointAverage.h>
 
 namespace
 {
@@ -22,7 +22,7 @@ void TestPointAverageUniform3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::filter::PointAverage pointAverage;
+  vtkm::filter::field_conversion::PointAverage pointAverage;
   pointAverage.SetOutputFieldName("avgvals");
   pointAverage.SetActiveField("cellvar");
   auto result = pointAverage.Execute(dataSet);
@@ -47,7 +47,7 @@ void TestPointAverageRegular3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DRectilinearDataSet0();
 
-  vtkm::filter::PointAverage pointAverage;
+  vtkm::filter::field_conversion::PointAverage pointAverage;
   pointAverage.SetActiveField("cellvar");
   auto result = pointAverage.Execute(dataSet);
 
@@ -73,7 +73,7 @@ void TestPointAverageExplicit1()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet1();
 
-  vtkm::filter::PointAverage pointAverage;
+  vtkm::filter::field_conversion::PointAverage pointAverage;
   pointAverage.SetActiveField("cellvar");
   auto result = pointAverage.Execute(dataSet);
 
@@ -96,7 +96,7 @@ void TestPointAverageExplicit2()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet5();
 
-  vtkm::filter::PointAverage pointAverage;
+  vtkm::filter::field_conversion::PointAverage pointAverage;
   pointAverage.SetActiveField("cellvar");
   auto result = pointAverage.Execute(dataSet);
 

@@ -11,6 +11,7 @@
 vtkm_add_instantiations(GradientInstantiations FILTER Gradient)
 
 set(deprecated_headers
+  CellAverage.h
   CellSetConnectivity.h
   CleanGrid.h
   ClipWithField.h
@@ -33,6 +34,7 @@ set(deprecated_headers
   NDHistogram.h
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
+  PointAverage.h
   Slice.h
   Threshold.h
   ThresholdPoints.h
@@ -41,7 +43,6 @@ set(deprecated_headers
 vtkm_declare_headers(${deprecated_headers})
 
 set(common_headers
-  CellAverage.h
   CellMeasures.h
   FieldMetadata.h
   FilterCell.h
@@ -57,9 +58,9 @@ set(common_headers
   TaskQueue.h
   Instantiations.h
   )
+vtkm_declare_headers(${common_headers})
 
 set(common_header_template_sources
-  CellAverage.hxx
   CellMeasures.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
@@ -67,13 +68,8 @@ set(common_header_template_sources
   Filter.hxx
   FilterParticleAdvection.hxx
   FilterTemporalParticleAdvection.hxx
-  PointAverage.hxx
   )
-
-set(common_sources_device
-  CellAverage.cxx
-  PointAverage.cxx
-)
+vtkm_declare_headers(${common_header_template_sources})
 
 set(extra_headers
   AmrArrays.h
@@ -95,7 +91,6 @@ set(extra_headers
   ParticleAdvection.h
   Pathline.h
   PathParticle.h
-  PointAverage.h
   PointElevation.h
   PointTransform.h
   Probe.h
@@ -203,14 +198,6 @@ vtkm_library(
 add_library(vtkm_filter INTERFACE)
 
 vtkm_library(
-  NAME vtkm_filter_common
-  TEMPLATE_SOURCES ${common_header_template_sources}
-  HEADERS ${common_headers}
-  DEVICE_SOURCES ${common_sources_device}
-  USE_VTKM_JOB_POOL
-)
-
-vtkm_library(
   NAME vtkm_filter_extra
   TEMPLATE_SOURCES ${extra_header_template_sources}
   HEADERS ${extra_headers}
@@ -227,7 +214,6 @@ vtkm_library(
 )
 
 set_target_properties(
-  vtkm_filter_common
   vtkm_filter_core
   vtkm_filter_extra
   vtkm_filter_gradient
@@ -236,19 +222,16 @@ set_target_properties(
   UNITY_BUILD_MODE BATCH
 )
 
-target_link_libraries(vtkm_filter_common PUBLIC vtkm_filter_core vtkm_worklet) # TODO: deprecate vtkm_filter_common
 target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont vtkm_worklet)
-target_link_libraries(vtkm_filter_extra PUBLIC vtkm_filter_common)
-target_link_libraries(vtkm_filter_gradient PUBLIC vtkm_filter_common)
+target_link_libraries(vtkm_filter_extra PUBLIC vtkm_cont vtkm_worklet)
+target_link_libraries(vtkm_filter_gradient PUBLIC vtkm_cont vtkm_worklet)
 if (VTKm_ENABLE_MPI)
-  target_link_libraries(vtkm_filter_common PUBLIC MPI::MPI_CXX)
   target_link_libraries(vtkm_filter_extra PUBLIC MPI::MPI_CXX)
   target_link_libraries(vtkm_filter_gradient PUBLIC MPI::MPI_CXX)
 endif()
 target_link_libraries(vtkm_filter PUBLIC INTERFACE
   vtkm_filter_extra
   vtkm_filter_gradient
-  vtkm_filter_common
   vtkm_filter_core
   )
 
@@ -261,6 +244,7 @@ add_subdirectory(density_estimate)
 add_subdirectory(entity_extraction)
 add_subdirectory(internal)
 add_subdirectory(particleadvection)
+add_subdirectory(field_conversion)
 add_subdirectory(field_transform)
 add_subdirectory(vector_calculus)
 
