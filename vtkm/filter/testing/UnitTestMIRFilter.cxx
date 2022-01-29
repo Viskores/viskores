@@ -191,7 +191,7 @@ void TestMIRVenn250()
   invoker(MetaDataLength{}, backArr, cirAArr, cirBArr, cirCArr, length);
   vtkm::cont::Algorithm::ScanExclusive(length, offset);
 
-  vtkm::Id total = vtkm::cont::Algorithm::Reduce(length, 0);
+  vtkm::Id total = vtkm::cont::Algorithm::Reduce(length, vtkm::Id(0));
   matIds.Allocate(total);
   matVFs.Allocate(total);
 
