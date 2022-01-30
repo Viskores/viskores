@@ -19,7 +19,7 @@ set(field_conversion_sources
 vtkm_library(
   NAME vtkm_filter_field_conversion
   HEADERS ${field_conversion_headers}
-  SOURCES ${field_conversion_sources}
+  DEVICE_SOURCES ${field_conversion_sources}
   USE_VTKM_JOB_POOL
 )
 
