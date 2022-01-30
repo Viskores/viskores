@@ -8,19 +8,11 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(unit_tests
-  UnitTestCrossProductFilter.cxx
-  UnitTestDotProductFilter.cxx
-  UnitTestGradientExplicit.cxx
-  UnitTestGradientUniform.cxx
+set(headers
+  Gradient.h
   )
 
-set(libraries
-  vtkm_filter_vector_calculus
-  )
+add_subdirectory(gradient)
 
-vtkm_unit_tests(
-  SOURCES ${unit_tests}
-  LIBRARIES ${libraries}
-  USE_VTKM_JOB_POOL
-)
+#-----------------------------------------------------------------------------
+vtkm_declare_headers(${headers})

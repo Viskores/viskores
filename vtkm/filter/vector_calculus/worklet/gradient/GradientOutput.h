@@ -19,9 +19,9 @@
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 
-#include <vtkm/worklet/gradient/Divergence.h>
-#include <vtkm/worklet/gradient/QCriterion.h>
-#include <vtkm/worklet/gradient/Vorticity.h>
+#include <vtkm/filter/vector_calculus/worklet/gradient/Divergence.h>
+#include <vtkm/filter/vector_calculus/worklet/gradient/QCriterion.h>
+#include <vtkm/filter/vector_calculus/worklet/gradient/Vorticity.h>
 
 namespace vtkm
 {

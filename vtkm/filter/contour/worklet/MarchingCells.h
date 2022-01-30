@@ -30,9 +30,9 @@
 
 #include <vtkm/filter/contour/worklet/CommonState.h>
 #include <vtkm/filter/contour/worklet/MarchingCellTables.h>
+#include <vtkm/filter/vector_calculus/worklet/gradient/PointGradient.h>
+#include <vtkm/filter/vector_calculus/worklet/gradient/StructuredPointGradient.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
-#include <vtkm/worklet/gradient/PointGradient.h>
-#include <vtkm/worklet/gradient/StructuredPointGradient.h>
 
 namespace vtkm
 {

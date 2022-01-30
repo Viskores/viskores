@@ -8,8 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/vector_calculus/Gradient.h>
 
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -23,7 +24,7 @@ void TestCellGradientUniform3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::filter::Gradient gradient;
+  vtkm::filter::vector_calculus::Gradient gradient;
   gradient.SetOutputFieldName("Gradient");
 
   gradient.SetComputeVorticity(true);  //this won't work as we have a scalar field
@@ -65,7 +66,7 @@ void TestCellGradientUniform3DWithVectorField()
   dataSet.AddPointField("vec_pointvar", input);
 
   //we need to add Vec3 array to the dataset
-  vtkm::filter::Gradient gradient;
+  vtkm::filter::vector_calculus::Gradient gradient;
   gradient.SetOutputFieldName("vec_gradient");
   gradient.SetComputeVorticity(true);
   gradient.SetComputeQCriterion(true);
@@ -124,7 +125,7 @@ void TestPointGradientUniform3DWithVectorField()
   dataSet.AddPointField("vec_pointvar", input);
 
   //we need to add Vec3 array to the dataset
-  vtkm::filter::Gradient gradient;
+  vtkm::filter::vector_calculus::Gradient gradient;
   gradient.SetComputePointGradient(true);
   gradient.SetOutputFieldName("vec_gradient");
   gradient.SetActiveField("vec_pointvar");

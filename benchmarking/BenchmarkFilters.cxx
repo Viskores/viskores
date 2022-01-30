@@ -29,7 +29,6 @@
 
 #include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/FieldSelection.h>
-#include <vtkm/filter/Gradient.h>
 #include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Tetrahedralize.h>
@@ -42,6 +41,7 @@
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
+#include <vtkm/filter/vector_calculus/Gradient.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 
@@ -117,7 +117,7 @@ void BenchGradient(::benchmark::State& state, int options)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::Gradient filter;
+  vtkm::filter::vector_calculus::Gradient filter;
 
   if (options & ScalarInput)
   {

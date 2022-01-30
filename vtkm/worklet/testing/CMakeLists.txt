@@ -18,7 +18,6 @@ set(unit_tests
   UnitTestBoundingIntervalHierarchy.cxx
   UnitTestCellAverage.cxx
   UnitTestCellDeepCopy.cxx
-  UnitTestCellGradient.cxx
   UnitTestCellMeasure.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestContourTreeUniformAugmented.cxx
@@ -36,7 +35,6 @@ set(unit_tests
   UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
-  UnitTestPointGradient.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx
   UnitTestScalarsToColors.cxx

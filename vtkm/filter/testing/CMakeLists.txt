@@ -22,8 +22,6 @@ set(unit_tests
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
-  UnitTestGradientExplicit.cxx
-  UnitTestGradientUniform.cxx
   UnitTestGhostCellClassify.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
