@@ -11,11 +11,15 @@ set(vector_calculus_headers
   CrossProduct.h
   DotProduct.h
   Gradient.h
+  SurfaceNormals.h
+  VectorMagnitude.h
   )
 set(vector_calculus_sources_device
   CrossProduct.cxx
   DotProduct.cxx
   Gradient.cxx
+  SurfaceNormals.cxx
+  VectorMagnitude.cxx
   )
 
 vtkm_library(
@@ -27,11 +31,6 @@ vtkm_library(
 
 target_link_libraries(vtkm_filter_vector_calculus PUBLIC vtkm_worklet vtkm_filter_core)
 target_link_libraries(vtkm_filter PUBLIC INTERFACE vtkm_filter_vector_calculus)
-
-if (VTKm_ENABLE_MPI)
-  # TODO: is this necessary?
-  #  target_link_libraries(vtkm_filter_gradient PUBLIC MPI::MPI_CXX)
-endif()
 
 add_subdirectory(worklet)
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -

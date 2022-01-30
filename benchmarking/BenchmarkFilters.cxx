@@ -13,6 +13,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -33,7 +34,6 @@
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/filter/Triangulate.h>
-#include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/filter/VertexClustering.h>
 #include <vtkm/filter/WarpScalar.h>
 #include <vtkm/filter/WarpVector.h>
@@ -42,6 +42,7 @@
 #include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
 #include <vtkm/filter/vector_calculus/Gradient.h>
+#include <vtkm/filter/vector_calculus/VectorMagnitude.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 
@@ -706,7 +707,7 @@ void CreateMissingFields()
     {
       // Compute the magnitude of the vectors:
       VTKM_ASSERT(!PointVectorsName.empty());
-      vtkm::filter::VectorMagnitude mag;
+      vtkm::filter::vector_calculus::VectorMagnitude mag;
       mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
       mag.SetOutputFieldName("GeneratedPointScalars");
       auto outds = mag.Execute(InputDataSet);

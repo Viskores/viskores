@@ -134,6 +134,6 @@ vtkm::cont::DataSet Gradient::DoExecute(const vtkm::cont::DataSet& inputDataSet)
   }
   return outputDataSet;
 }
-}
-}
-} // namespace vtkm::filter
+} // namespace vector_calculus
+} // namespace filter
+} // namespace vtkm

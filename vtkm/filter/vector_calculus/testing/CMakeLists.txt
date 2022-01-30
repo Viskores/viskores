@@ -13,11 +13,23 @@ set(unit_tests
   UnitTestDotProductFilter.cxx
   UnitTestGradientExplicit.cxx
   UnitTestGradientUniform.cxx
+  UnitTestSurfaceNormalsFilter.cxx
+  UnitTestVectorMagnitudeFilter.cxx
   )
 
 set(libraries
   vtkm_filter_vector_calculus
   )
+
+if (VTKm_ENABLE_RENDERING)
+  list(APPEND libraries
+    vtkm_rendering_testing
+    vtkm_rendering)
+
+  list(APPEND unit_tests
+    RenderTestSurfaceNormals.cxx
+    )
+endif()
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}

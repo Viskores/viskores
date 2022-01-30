@@ -33,8 +33,10 @@ set(deprecated_headers
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
   Slice.h
+  SurfaceNormal.h
   Threshold.h
   ThresholdPoints.h
+  VectorMagnitude.h
   )
 
 vtkm_declare_headers(${deprecated_headers})
@@ -101,11 +103,9 @@ set(extra_headers
   SplitSharpEdges.h
   Streamline.h
   StreamSurface.h
-  SurfaceNormals.h
   Tetrahedralize.h
   Triangulate.h
   Tube.h
-  VectorMagnitude.h
   VertexClustering.h
   WarpScalar.h
   WarpVector.h
@@ -141,11 +141,9 @@ set(extra_header_template_sources
   SplitSharpEdges.hxx
   Streamline.hxx
   StreamSurface.hxx
-  SurfaceNormals.hxx
   Tetrahedralize.hxx
   Triangulate.hxx
   Tube.hxx
-  VectorMagnitude.hxx
   VertexClustering.hxx
   WarpScalar.hxx
   WarpVector.hxx
@@ -158,7 +156,6 @@ set(extra_header_template_sources
   )
 
 set(extra_sources_device
-  VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
   )

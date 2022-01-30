@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Gradient_h
-#define vtk_m_filter_Gradient_h
+#ifndef vtk_m_filter_vector_calculus_Gradient_h
+#define vtk_m_filter_vector_calculus_Gradient_h
 
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/vector_calculus/vtkm_filter_vector_calculus_export.h>
@@ -32,8 +32,6 @@ namespace vector_calculus
 class VTKM_FILTER_VECTOR_CALCULUS_EXPORT Gradient : public vtkm::filter::NewFilterField
 {
 public:
-  using SupportedTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
-
   /// When this flag is on (default is off), the gradient filter will provide a
   /// point based gradients, which are significantly more costly since for each
   /// point we need to compute the gradient of each cell that uses it.
@@ -90,6 +88,8 @@ public:
   const std::string& GetQCriterionName() const { return this->QCriterionName; }
 
 private:
+  using SupportedTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
+
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inputDataSet) override;
 
   bool ComputePointGradient = false;
@@ -109,4 +109,4 @@ private:
 } // namespace filter
 } // namespace vtkm::filter
 
-#endif // vtk_m_filter_Gradient_h
+#endif // vtk_m_filter_vector_calculus_Gradient_h

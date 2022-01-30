@@ -10,6 +10,12 @@
 
 set(headers
   Gradient.h
+  Magnitude.h
+  OrientCellNormals.h
+  OrientNormals.h
+  OrientPointAndCellNormals.h
+  OrientPointNormals.h
+  SurfaceNormals.h
   )
 
 add_subdirectory(gradient)

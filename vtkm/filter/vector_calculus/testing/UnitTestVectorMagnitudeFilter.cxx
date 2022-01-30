@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/VectorMagnitude.h>
+#include <vtkm/filter/vector_calculus/VectorMagnitude.h>
 
 #include <vector>
 
@@ -38,7 +38,7 @@ void TestVectorMagnitude()
 
   dataSet.AddPointField("double_vec_pointvar", finput);
 
-  vtkm::filter::VectorMagnitude vm;
+  vtkm::filter::vector_calculus::VectorMagnitude vm;
   vm.SetActiveField("double_vec_pointvar");
   auto result = vm.Execute(dataSet);
 

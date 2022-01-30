@@ -30,7 +30,6 @@ set(headers
   KernelSplatter.h
   Keys.h
   LagrangianStructures.h
-  Magnitude.h
   MaskIndices.h
   MaskNone.h
   MaskSelect.h
@@ -38,10 +37,6 @@ set(headers
   MIR.h
   NDimsHistMarginalization.h
   Normalize.h
-  OrientCellNormals.h
-  OrientNormals.h
-  OrientPointNormals.h
-  OrientPointAndCellNormals.h
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h
@@ -57,7 +52,6 @@ set(headers
   DescriptiveStatistics.h
   StreamLineUniformGrid.h
   StreamSurface.h
-  SurfaceNormals.h
   Tetrahedralize.h
   TriangleWinding.h
   Triangulate.h

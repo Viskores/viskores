@@ -27,12 +27,10 @@ set(unit_tests
   UnitTestDescriptiveStatistics.cxx
   UnitTestFieldStatistics.cxx
   UnitTestKeys.cxx
-  UnitTestMagnitude.cxx
   UnitTestMaskIndices.cxx
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
   UnitTestNDimsHistMarginalization.cxx
-  UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
   UnitTestPointTransform.cxx
@@ -46,7 +44,6 @@ set(unit_tests
   UnitTestScatterAndMaskWithTopology.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestStreamSurface.cxx
-  UnitTestSurfaceNormals.cxx
   UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx
   UnitTestTriangleWinding.cxx
