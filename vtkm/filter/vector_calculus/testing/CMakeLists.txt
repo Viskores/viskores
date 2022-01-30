@@ -34,5 +34,6 @@ endif()
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
+  ALL_BACKENDS # RendererTest needs device compiler
   USE_VTKM_JOB_POOL
 )
