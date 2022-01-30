@@ -58,7 +58,6 @@ set(common_headers
   TaskQueue.h
   Instantiations.h
   )
-vtkm_declare_headers(${common_headers})
 
 set(common_header_template_sources
   CellMeasures.hxx
@@ -69,7 +68,10 @@ set(common_header_template_sources
   FilterParticleAdvection.hxx
   FilterTemporalParticleAdvection.hxx
   )
-vtkm_declare_headers(${common_header_template_sources})
+
+set(common_sources_device
+  Filter.cxx
+  )
 
 set(extra_headers
   AmrArrays.h
@@ -196,6 +198,15 @@ vtkm_library(
 )
 
 add_library(vtkm_filter INTERFACE)
+
+# Deprecated!!! Just to make all the CMake magic work!!!
+vtkm_library(
+  NAME vtkm_filter_common
+  TEMPLATE_SOURCES ${common_header_template_sources}
+  HEADERS ${common_headers}
+  DEVICE_SOURCES ${common_sources_device}
+  USE_VTKM_JOB_POOL
+)
 
 vtkm_library(
   NAME vtkm_filter_extra
