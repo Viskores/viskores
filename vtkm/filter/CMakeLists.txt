@@ -60,6 +60,8 @@ set(common_headers
   Instantiations.h
   )
 
+vtkm_declare_headers(${common_headers})
+
 set(common_header_template_sources
   CellMeasures.hxx
   FilterDataSet.hxx
@@ -70,9 +72,7 @@ set(common_header_template_sources
   FilterTemporalParticleAdvection.hxx
   )
 
-set(common_sources_device
-  Filter.cxx
-  )
+vtkm_declare_headers(${common_header_template_sources})
 
 set(extra_headers
   AmrArrays.h
@@ -182,15 +182,6 @@ vtkm_library(
 
 add_library(vtkm_filter INTERFACE)
 
-# Deprecated!!! Just to make all the CMake magic work!!!
-vtkm_library(
-  NAME vtkm_filter_common
-  TEMPLATE_SOURCES ${common_header_template_sources}
-  HEADERS ${common_headers}
-  DEVICE_SOURCES ${common_sources_device}
-  USE_VTKM_JOB_POOL
-)
-
 vtkm_library(
   NAME vtkm_filter_extra
   TEMPLATE_SOURCES ${extra_header_template_sources}
@@ -208,7 +199,7 @@ set_target_properties(
 )
 
 target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont vtkm_worklet)
-target_link_libraries(vtkm_filter_extra PUBLIC vtkm_filter_common)
+target_link_libraries(vtkm_filter_extra PUBLIC vtkm_cont vtkm_worklet)
 if (VTKm_ENABLE_MPI)
   target_link_libraries(vtkm_filter_extra PUBLIC MPI::MPI_CXX)
 endif()
