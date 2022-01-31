@@ -2310,7 +2310,7 @@ public:
       //            << totalVolForColor << " L: " << this->lerping << " and " << prevTarget << " / " << totalError
       //            << "\n" << inputPos.Get(cellID));
       inputIDs.Set(inputPos.Get(cellID) + uniqueMats, lowest);
-      inputVFs.Set(inputPos.Get(cellID) + uniqueMats, prevTarget);
+      inputVFs.Set(inputPos.Get(cellID) + uniqueMats, vtkm::FloatDefault(prevTarget));
       uniqueMats++;
 
       prevLowest = lowest;
