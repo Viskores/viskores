@@ -15,3 +15,5 @@ set(headers
   NDimsHistogram.h)
 
 vtkm_declare_headers(${headers})
+
+add_subdirectory(histogram)

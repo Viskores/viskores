@@ -17,10 +17,10 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/filter/density_estimate/worklet/histogram/ComputeNDHistogram.h>
+#include <vtkm/filter/density_estimate/worklet/histogram/MarginalizeNDHistogram.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/MarginalizeNDHistogram.h>
 
 #include <vtkm/cont/Field.h>
 

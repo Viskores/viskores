@@ -18,9 +18,9 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/filter/density_estimate/worklet/histogram/ComputeNDHistogram.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/histogram/ComputeNDHistogram.h>
 
 #include <vtkm/cont/Field.h>
 
