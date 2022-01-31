@@ -26,9 +26,9 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 
-#include <vtkm/worklet/OrientCellNormals.h>
-#include <vtkm/worklet/OrientPointAndCellNormals.h>
-#include <vtkm/worklet/OrientPointNormals.h>
+#include <vtkm/filter/vector_analysis/worklet/OrientCellNormals.h>
+#include <vtkm/filter/vector_analysis/worklet/OrientPointAndCellNormals.h>
+#include <vtkm/filter/vector_analysis/worklet/OrientPointNormals.h>
 
 namespace vtkm
 {

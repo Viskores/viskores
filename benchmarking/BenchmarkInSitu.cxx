@@ -25,12 +25,12 @@
 
 #include <vtkm/cont/internal/OptionParser.h>
 
-#include <vtkm/filter/Gradient.h>
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/filter/Tube.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/contour/Slice.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
 
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -119,7 +119,7 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
   }
 
   // Generate Perln Noise Gradient point vector field
-  vtkm::filter::Gradient gradientFilter;
+  vtkm::filter::vector_analysis::Gradient gradientFilter;
   gradientFilter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
   gradientFilter.SetComputePointGradient(true);
   gradientFilter.SetOutputFieldName(PointVectorsName);

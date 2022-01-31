@@ -7,27 +7,27 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_SurfaceNormals_h
-#define vtk_m_filter_SurfaceNormals_h
+#ifndef vtk_m_filter_vector_analysis_SurfaceNormal_h
+#define vtk_m_filter_vector_analysis_SurfaceNormal_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
 namespace vtkm
 {
 namespace filter
 {
-
+namespace vector_analysis
+{
 /// \brief compute normals for polygonal mesh
 ///
 /// Compute surface normals on points and/or cells of a polygonal dataset.
 /// The cell normals are faceted and are computed based on the plane where a
 /// face lies. The point normals are smooth normals, computed by averaging
 /// the face normals of incident cells.
-class SurfaceNormals : public vtkm::filter::FilterField<SurfaceNormals>
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT SurfaceNormals : public vtkm::filter::NewFilterField
 {
 public:
-  using SupportedTypes = vtkm::TypeListFieldVec3;
-
   /// Create SurfaceNormals filter. This calls
   /// this->SetUseCoordinateSystemAsField(true) since that is the most common
   /// use-case for surface normals.
@@ -94,26 +94,21 @@ public:
   bool GetConsistency() const { return this->Consistency; }
   /// @}
 
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
-                                const vtkm::filter::FieldMetadata& fieldMeta,
-                                vtkm::filter::PolicyBase<DerivedPolicy> policy);
-
 private:
-  bool GenerateCellNormals;
-  bool NormalizeCellNormals;
-  bool GeneratePointNormals;
-  bool AutoOrientNormals;
-  bool FlipNormals;
-  bool Consistency;
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inputDataSet) override;
+
+  bool GenerateCellNormals = false;
+  bool NormalizeCellNormals = true;
+  bool GeneratePointNormals = true;
+  bool AutoOrientNormals = false;
+  bool FlipNormals = false;
+  bool Consistency = true;
 
   std::string CellNormalsName;
   std::string PointNormalsName;
 };
 }
+}
 } // vtkm::filter
 
-#include <vtkm/filter/SurfaceNormals.hxx>
-
-#endif // vtk_m_filter_SurfaceNormals_h
+#endif // vtk_m_filter_vector_analysis_SurfaceNormal_h

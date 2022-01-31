@@ -8,8 +8,6 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-vtkm_add_instantiations(GradientInstantiations FILTER Gradient)
-
 set(deprecated_headers
   CellSetConnectivity.h
   CleanGrid.h
@@ -25,6 +23,7 @@ set(deprecated_headers
   ExtractStructured.h
   GenerateIds.h
   GhostCellRemove.h
+  Gradient.h
   Histogram.h
   ImageConnectivity.h
   Mask.h
@@ -34,8 +33,10 @@ set(deprecated_headers
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
   Slice.h
+  SurfaceNormal.h
   Threshold.h
   ThresholdPoints.h
+  VectorMagnitude.h
   )
 
 vtkm_declare_headers(${deprecated_headers})
@@ -102,11 +103,9 @@ set(extra_headers
   SplitSharpEdges.h
   Streamline.h
   StreamSurface.h
-  SurfaceNormals.h
   Tetrahedralize.h
   Triangulate.h
   Tube.h
-  VectorMagnitude.h
   VertexClustering.h
   WarpScalar.h
   WarpVector.h
@@ -142,11 +141,9 @@ set(extra_header_template_sources
   SplitSharpEdges.hxx
   Streamline.hxx
   StreamSurface.hxx
-  SurfaceNormals.hxx
   Tetrahedralize.hxx
   Triangulate.hxx
   Tube.hxx
-  VectorMagnitude.hxx
   VertexClustering.hxx
   WarpScalar.hxx
   WarpVector.hxx
@@ -159,23 +156,9 @@ set(extra_header_template_sources
   )
 
 set(extra_sources_device
-  VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
   )
-
-set(gradient_headers
-  Gradient.h
-  )
-
-set(gradient_header_template_sources
-  Gradient.hxx
-  )
-
-set(gradient_sources_device
-  ${GradientInstantiations}
-  )
-
 
 set(core_headers
   NewFilter.h
@@ -218,19 +201,10 @@ vtkm_library(
   USE_VTKM_JOB_POOL
 )
 
-vtkm_library(
-  NAME vtkm_filter_gradient
-  TEMPLATE_SOURCES ${gradient_header_template_sources}
-  HEADERS ${gradient_headers}
-  DEVICE_SOURCES ${gradient_sources_device}
-  USE_VTKM_JOB_POOL
-)
-
 set_target_properties(
   vtkm_filter_common
   vtkm_filter_core
   vtkm_filter_extra
-  vtkm_filter_gradient
   PROPERTIES
   UNITY_BUILD ON
   UNITY_BUILD_MODE BATCH
@@ -239,15 +213,13 @@ set_target_properties(
 target_link_libraries(vtkm_filter_common PUBLIC vtkm_filter_core vtkm_worklet) # TODO: deprecate vtkm_filter_common
 target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont vtkm_worklet)
 target_link_libraries(vtkm_filter_extra PUBLIC vtkm_filter_common)
-target_link_libraries(vtkm_filter_gradient PUBLIC vtkm_filter_common)
 if (VTKm_ENABLE_MPI)
   target_link_libraries(vtkm_filter_common PUBLIC MPI::MPI_CXX)
   target_link_libraries(vtkm_filter_extra PUBLIC MPI::MPI_CXX)
-  target_link_libraries(vtkm_filter_gradient PUBLIC MPI::MPI_CXX)
 endif()
+
 target_link_libraries(vtkm_filter PUBLIC INTERFACE
   vtkm_filter_extra
-  vtkm_filter_gradient
   vtkm_filter_common
   vtkm_filter_core
   )
@@ -262,7 +234,7 @@ add_subdirectory(entity_extraction)
 add_subdirectory(internal)
 add_subdirectory(particleadvection)
 add_subdirectory(field_transform)
-add_subdirectory(vector_calculus)
+add_subdirectory(vector_analysis)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 if (VTKm_ENABLE_TESTING)

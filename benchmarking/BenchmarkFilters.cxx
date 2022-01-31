@@ -13,6 +13,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -29,12 +30,10 @@
 
 #include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/FieldSelection.h>
-#include <vtkm/filter/Gradient.h>
 #include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/filter/Triangulate.h>
-#include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/filter/VertexClustering.h>
 #include <vtkm/filter/WarpScalar.h>
 #include <vtkm/filter/WarpVector.h>
@@ -42,6 +41,8 @@
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
+#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 
@@ -117,7 +118,7 @@ void BenchGradient(::benchmark::State& state, int options)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::Gradient filter;
+  vtkm::filter::vector_analysis::Gradient filter;
 
   if (options & ScalarInput)
   {
@@ -706,7 +707,7 @@ void CreateMissingFields()
     {
       // Compute the magnitude of the vectors:
       VTKM_ASSERT(!PointVectorsName.empty());
-      vtkm::filter::VectorMagnitude mag;
+      vtkm::filter::vector_analysis::VectorMagnitude mag;
       mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
       mag.SetOutputFieldName("GeneratedPointScalars");
       auto outds = mag.Execute(InputDataSet);

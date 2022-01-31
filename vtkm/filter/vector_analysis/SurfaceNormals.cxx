@@ -7,13 +7,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_SurfaceNormals_hxx
-#define vtk_m_filter_SurfaceNormals_hxx
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-
-#include <vtkm/worklet/OrientNormals.h>
-#include <vtkm/worklet/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/worklet/OrientNormals.h>
+#include <vtkm/filter/vector_analysis/worklet/SurfaceNormals.h>
 #include <vtkm/worklet/TriangleWinding.h>
 
 namespace vtkm
@@ -21,9 +19,10 @@ namespace vtkm
 namespace filter
 {
 
-namespace internal
+namespace vector_analysis
 {
-
+namespace
+{
 inline std::string ComputePointNormalsName(const SurfaceNormals* filter)
 {
   if (!filter->GetPointNormalsName().empty())
@@ -58,59 +57,54 @@ inline std::string ComputeCellNormalsName(const SurfaceNormals* filter)
 
 } // internal
 
-inline SurfaceNormals::SurfaceNormals()
-  : GenerateCellNormals(false)
-  , NormalizeCellNormals(true)
-  , GeneratePointNormals(true)
-  , AutoOrientNormals(false)
-  , FlipNormals(false)
-  , Consistency(true)
+SurfaceNormals::SurfaceNormals()
 {
   this->SetUseCoordinateSystemAsField(true);
 }
 
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+vtkm::cont::DataSet SurfaceNormals::DoExecute(const vtkm::cont::DataSet& inputDataSet)
 {
-  VTKM_ASSERT(fieldMeta.IsPointField());
+  if (!this->GetUseCoordinateSystemAsField())
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Active scalars to SurfaceNormals filter must be a coordinate system. "
+               "Ignoring false UseCoordinateSystemAsField flag.");
+  }
 
   if (!this->GenerateCellNormals && !this->GeneratePointNormals)
   {
     throw vtkm::cont::ErrorFilterExecution("No normals selected.");
   }
 
-  const auto cellset =
-    vtkm::filter::ApplyPolicyCellSetUnstructured(input.GetCellSet(), policy, *this);
-  const auto coords =
-    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()).GetDataAsMultiplexer();
+  const auto& inputCellSet = inputDataSet.GetCellSet();
+  const auto& coords =
+    inputDataSet.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()).GetDataAsMultiplexer();
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> faceNormals;
-  vtkm::worklet::FacetedSurfaceNormals faceted;
-  faceted.SetNormalize(this->NormalizeCellNormals);
-  faceted.Run(cellset, points, faceNormals);
+  auto resolveType = [&](const auto& concrete) {
+    vtkm::worklet::FacetedSurfaceNormals faceted;
+    faceted.SetNormalize(this->NormalizeCellNormals);
+    faceted.Run(inputCellSet, concrete, faceNormals);
+  };
+  this->CastAndCallVecField<3>(coords, resolveType);
 
-  vtkm::cont::DataSet result;
+  vtkm::cont::DataSet outputDataSet;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> pointNormals;
   if (this->GeneratePointNormals)
   {
     vtkm::worklet::SmoothSurfaceNormals smooth;
-    smooth.Run(cellset, faceNormals, pointNormals);
-
-
-    result = CreateResultFieldPoint(input, pointNormals, internal::ComputePointNormalsName(this));
+    smooth.Run(inputCellSet, faceNormals, pointNormals);
+    outputDataSet =
+      this->CreateResultFieldPoint(inputDataSet, ComputePointNormalsName(this), pointNormals);
     if (this->GenerateCellNormals)
     {
-      result.AddField(
-        vtkm::cont::make_FieldCell(internal::ComputeCellNormalsName(this), faceNormals));
+      outputDataSet.AddField(vtkm::cont::make_FieldCell(ComputeCellNormalsName(this), faceNormals));
     }
   }
   else
   {
-    result = CreateResultFieldCell(input, faceNormals, internal::ComputeCellNormalsName(this));
+    outputDataSet =
+      this->CreateResultFieldCell(inputDataSet, ComputeCellNormalsName(this), faceNormals);
   }
 
   if (this->AutoOrientNormals)
@@ -119,15 +113,15 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
 
     if (this->GenerateCellNormals && this->GeneratePointNormals)
     {
-      Orient::RunPointAndCellNormals(cellset, coords, pointNormals, faceNormals);
+      Orient::RunPointAndCellNormals(inputCellSet, coords, pointNormals, faceNormals);
     }
     else if (this->GenerateCellNormals)
     {
-      Orient::RunCellNormals(cellset, coords, faceNormals);
+      Orient::RunCellNormals(inputCellSet, coords, faceNormals);
     }
     else if (this->GeneratePointNormals)
     {
-      Orient::RunPointNormals(cellset, coords, pointNormals);
+      Orient::RunPointNormals(inputCellSet, coords, pointNormals);
     }
 
     if (this->FlipNormals)
@@ -145,12 +139,12 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
 
   if (this->Consistency && this->GenerateCellNormals)
   {
-    auto newCells = vtkm::worklet::TriangleWinding::Run(cellset, coords, faceNormals);
-    result.SetCellSet(newCells); // Overwrite the cellset in the result
+    auto newCells = vtkm::worklet::TriangleWinding::Run(inputCellSet, coords, faceNormals);
+    outputDataSet.SetCellSet(newCells); // Overwrite the inputCellSet in the outputDataSet
   }
 
-  return result;
+  return outputDataSet;
 }
-}
-} // vtkm::filter
-#endif
+} // namespace vector_analysis
+} // namespace filter
+} // namespace vtkm

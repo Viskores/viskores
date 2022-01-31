@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/vector_calculus/CrossProduct.h>
+#include <vtkm/filter/vector_analysis/CrossProduct.h>
 
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -39,7 +39,7 @@ namespace vtkm
 {
 namespace filter
 {
-namespace vector_calculus
+namespace vector_analysis
 {
 
 //-----------------------------------------------------------------------------
@@ -83,4 +83,4 @@ VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(const vtkm::cont::DataSet&
 
 }
 }
-} // namespace vtkm::filter::vector_calculus
+} // namespace vtkm::filter::vector_analysis

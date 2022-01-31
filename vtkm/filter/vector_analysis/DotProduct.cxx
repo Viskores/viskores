@@ -9,7 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/vector_calculus/DotProduct.h>
+#include <vtkm/filter/vector_analysis/DotProduct.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace // anonymous namespace making worklet::DotProduct internal to this .cxx
@@ -67,7 +67,7 @@ namespace vtkm
 {
 namespace filter
 {
-namespace vector_calculus
+namespace vector_analysis
 {
 
 VTKM_CONT DotProduct::DotProduct()
@@ -114,6 +114,6 @@ VTKM_CONT vtkm::cont::DataSet DotProduct::DoExecute(const vtkm::cont::DataSet& i
                                  outArray);
 }
 
-} // namespace vector_calculus
+} // namespace vector_analysis
 } // namespace filter
 } // namespace vtkm

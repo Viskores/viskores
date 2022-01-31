@@ -11,14 +11,29 @@
 set(unit_tests
   UnitTestCrossProductFilter.cxx
   UnitTestDotProductFilter.cxx
+  UnitTestGradientExplicit.cxx
+  UnitTestGradientUniform.cxx
+  UnitTestSurfaceNormalsFilter.cxx
+  UnitTestVectorMagnitudeFilter.cxx
   )
 
 set(libraries
-  vtkm_filter_vector_calculus
+  vtkm_filter_vector_analysis
   )
+
+if (VTKm_ENABLE_RENDERING)
+  list(APPEND libraries
+    vtkm_rendering_testing
+    vtkm_rendering)
+
+  list(APPEND unit_tests
+    RenderTestSurfaceNormals.cxx
+    )
+endif()
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
+  ALL_BACKENDS # RendererTest needs device compiler
   USE_VTKM_JOB_POOL
 )

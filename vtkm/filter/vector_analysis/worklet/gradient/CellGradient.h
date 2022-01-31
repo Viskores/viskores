@@ -15,7 +15,7 @@
 #include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/worklet/gradient/GradientOutput.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/GradientOutput.h>
 
 namespace vtkm
 {

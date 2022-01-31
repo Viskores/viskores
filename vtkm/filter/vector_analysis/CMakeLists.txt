@@ -7,25 +7,32 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
-set(vector_calculus_headers
+set(vector_analysis_headers
   CrossProduct.h
   DotProduct.h
+  Gradient.h
+  SurfaceNormals.h
+  VectorMagnitude.h
   )
-set(vector_calculus_sources_device
+set(vector_analysis_sources_device
   CrossProduct.cxx
   DotProduct.cxx
+  Gradient.cxx
+  SurfaceNormals.cxx
+  VectorMagnitude.cxx
   )
 
 vtkm_library(
-  NAME vtkm_filter_vector_calculus
-  HEADERS ${vector_calculus_headers}
-  DEVICE_SOURCES ${vector_calculus_sources_device}
+  NAME vtkm_filter_vector_analysis
+  HEADERS ${vector_analysis_headers}
+  DEVICE_SOURCES ${vector_analysis_sources_device}
   USE_VTKM_JOB_POOL
 )
 
-target_link_libraries(vtkm_filter_vector_calculus PUBLIC vtkm_worklet vtkm_filter_core)
-target_link_libraries(vtkm_filter PUBLIC INTERFACE vtkm_filter_vector_calculus)
+target_link_libraries(vtkm_filter_vector_analysis PUBLIC vtkm_worklet vtkm_filter_core)
+target_link_libraries(vtkm_filter PUBLIC INTERFACE vtkm_filter_vector_analysis)
 
+add_subdirectory(worklet)
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 if (VTKm_ENABLE_TESTING)
   add_subdirectory(testing)
