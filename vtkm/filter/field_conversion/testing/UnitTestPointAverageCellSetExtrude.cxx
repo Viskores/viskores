@@ -7,8 +7,6 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/cont/ArrayHandleXGCCoordinates.h>
 #include <vtkm/cont/CellSetExtrude.h>
