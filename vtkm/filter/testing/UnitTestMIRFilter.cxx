@@ -216,19 +216,13 @@ void TestMIRVenn250()
   // Note it is mathematically impossible to obtain 0% error outside of VERY special cases (neglecting float error)
   mir.SetMaxPercentError(vtkm::Float64(0.00001));
 
-  std::cerr << "Input cells : " << data.GetNumberOfCells() << std::endl;
-  std::cerr << "Input points : " << data.GetNumberOfPoints() << std::endl;
-
-  vtkm::cont::Timer timer;
-  timer.Start();
+  VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Before executing filter w/ Venn data");
 
   vtkm::cont::DataSet fromMIR = mir.Execute(data);
 
-  timer.Stop();
+  VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "After executing filter w/ Venn data");
 
-  std::cerr << "Finished in : " << timer.GetElapsedTime() << std::endl;
-  std::cerr << "Output cells : " << fromMIR.GetNumberOfCells() << std::endl;
-  std::cerr << "Output points : " << fromMIR.GetNumberOfPoints() << std::endl;
+  VTKM_TEST_ASSERT(fromMIR.GetNumberOfCells() == 66086, "Wrong number of output cells");
 }
 
 void TestMIRSynthetic()
