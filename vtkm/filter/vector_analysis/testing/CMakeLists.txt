@@ -18,7 +18,7 @@ set(unit_tests
   )
 
 set(libraries
-  vtkm_filter_vector_calculus
+  vtkm_filter_vector_analysis
   )
 
 if (VTKm_ENABLE_RENDERING)

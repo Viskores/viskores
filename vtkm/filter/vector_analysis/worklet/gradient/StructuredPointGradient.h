@@ -11,7 +11,7 @@
 #ifndef vtk_m_worklet_gradient_StructuredPointGradient_h
 #define vtk_m_worklet_gradient_StructuredPointGradient_h
 
-#include <vtkm/filter/vector_calculus/worklet/gradient/GradientOutput.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/GradientOutput.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 

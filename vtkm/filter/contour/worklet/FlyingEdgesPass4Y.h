@@ -18,7 +18,7 @@
 #include <vtkm/filter/contour/worklet/FlyingEdgesTables.h>
 
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/filter/vector_calculus/worklet/gradient/StructuredPointGradient.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/StructuredPointGradient.h>
 
 namespace vtkm
 {

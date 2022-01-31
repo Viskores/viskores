@@ -7,17 +7,17 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_vector_calculus_SurfaceNormal_h
-#define vtk_m_filter_vector_calculus_SurfaceNormal_h
+#ifndef vtk_m_filter_vector_analysis_SurfaceNormal_h
+#define vtk_m_filter_vector_analysis_SurfaceNormal_h
 
 #include <vtkm/filter/NewFilterField.h>
-#include <vtkm/filter/vector_calculus/vtkm_filter_vector_calculus_export.h>
+#include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
 namespace vtkm
 {
 namespace filter
 {
-namespace vector_calculus
+namespace vector_analysis
 {
 /// \brief compute normals for polygonal mesh
 ///
@@ -25,7 +25,7 @@ namespace vector_calculus
 /// The cell normals are faceted and are computed based on the plane where a
 /// face lies. The point normals are smooth normals, computed by averaging
 /// the face normals of incident cells.
-class VTKM_FILTER_VECTOR_CALCULUS_EXPORT SurfaceNormals : public vtkm::filter::NewFilterField
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT SurfaceNormals : public vtkm::filter::NewFilterField
 {
 public:
   /// Create SurfaceNormals filter. This calls
@@ -113,4 +113,4 @@ private:
 }
 } // vtkm::filter
 
-#endif // vtk_m_filter_vector_calculus_SurfaceNormal_h
+#endif // vtk_m_filter_vector_analysis_SurfaceNormal_h

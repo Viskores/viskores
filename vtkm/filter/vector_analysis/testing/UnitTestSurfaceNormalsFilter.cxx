@@ -7,7 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/vector_calculus/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -57,7 +57,7 @@ void TestSurfaceNormals()
 {
   vtkm::cont::DataSet ds = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
 
-  vtkm::filter::vector_calculus::SurfaceNormals filter;
+  vtkm::filter::vector_analysis::SurfaceNormals filter;
   vtkm::cont::DataSet result;
 
   std::cout << "testing default output (generate only point normals):\n";

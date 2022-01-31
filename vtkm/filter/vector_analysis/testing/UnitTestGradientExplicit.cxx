@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/vector_calculus/Gradient.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -23,7 +23,7 @@ void TestCellGradientExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::filter::vector_calculus::Gradient gradient;
+  vtkm::filter::vector_analysis::Gradient gradient;
   gradient.SetOutputFieldName("gradient");
   gradient.SetActiveField("pointvar");
 
@@ -48,7 +48,7 @@ void TestPointGradientExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::filter::vector_calculus::Gradient gradient;
+  vtkm::filter::vector_analysis::Gradient gradient;
   gradient.SetComputePointGradient(true);
   gradient.SetOutputFieldName("gradient");
   gradient.SetActiveField("pointvar");

@@ -8,31 +8,28 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_vector_calculus_VectorMagnitude_h
-#define vtk_m_filter_vector_calculus_VectorMagnitude_h
+#ifndef vtk_m_filter_vector_analysis_VectorMagnitude_h
+#define vtk_m_filter_vector_analysis_VectorMagnitude_h
 
 #include <vtkm/filter/NewFilterField.h>
-#include <vtkm/filter/vector_calculus/vtkm_filter_vector_calculus_export.h>
+#include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
 namespace vtkm
 {
 namespace filter
 {
-namespace vector_calculus
+namespace vector_analysis
 {
-class VTKM_FILTER_VECTOR_CALCULUS_EXPORT VectorMagnitude : public vtkm::filter::NewFilterField
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT VectorMagnitude : public vtkm::filter::NewFilterField
 {
 public:
   VectorMagnitude();
 
 private:
-  //currently, the VectorMagnitude filter only works on vector data.
-  using SupportedTypes = vtkm::TypeListVecCommon;
-
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
-} // namespace vector_calculus
+} // namespace vector_analysis
 } // namespace filter
 } // namespace vtkm::filter
 
-#endif // vtk_m_filter_vector_calculus_VectorMagnitude_h
+#endif // vtk_m_filter_vector_analysis_VectorMagnitude_h

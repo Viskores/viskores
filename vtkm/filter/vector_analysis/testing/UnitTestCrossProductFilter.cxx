@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/vector_calculus/CrossProduct.h>
+#include <vtkm/filter/vector_analysis/CrossProduct.h>
 
 #include <vtkm/VectorAnalysis.h>
 
@@ -141,7 +141,7 @@ void TestCrossProduct()
 
     {
       std::cout << "  Both vectors as normal fields" << std::endl;
-      vtkm::filter::vector_calculus::CrossProduct filter;
+      vtkm::filter::vector_analysis::CrossProduct filter;
       filter.SetPrimaryField("vec1");
       filter.SetSecondaryField("vec2", vtkm::cont::Field::Association::POINTS);
 
@@ -165,7 +165,7 @@ void TestCrossProduct()
 
     {
       std::cout << "  First field as coordinates" << std::endl;
-      vtkm::filter::vector_calculus::CrossProduct filter;
+      vtkm::filter::vector_analysis::CrossProduct filter;
       filter.SetUseCoordinateSystemAsPrimaryField(true);
       filter.SetPrimaryCoordinateSystem(1);
       filter.SetSecondaryField("vec2");
@@ -186,7 +186,7 @@ void TestCrossProduct()
 
     {
       std::cout << "  Second field as coordinates" << std::endl;
-      vtkm::filter::vector_calculus::CrossProduct filter;
+      vtkm::filter::vector_analysis::CrossProduct filter;
       filter.SetPrimaryField("vec1");
       filter.SetUseCoordinateSystemAsSecondaryField(true);
       filter.SetSecondaryCoordinateSystem(2);

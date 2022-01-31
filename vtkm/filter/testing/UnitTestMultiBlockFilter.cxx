@@ -16,7 +16,7 @@
 #include <vtkm/filter/clean_grid/CleanGrid.h>
 #include <vtkm/filter/contour/ClipWithField.h>
 #include <vtkm/filter/contour/Contour.h>
-#include <vtkm/filter/vector_calculus/Gradient.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/source/Tangle.h>
@@ -147,7 +147,7 @@ void TestMultiBlockFilter()
   results.clear();
   for (const auto doThreading : flags)
   {
-    vtkm::filter::vector_calculus::Gradient grad;
+    vtkm::filter::vector_analysis::Gradient grad;
     grad.SetRunMultiThreadedFilter(doThreading);
     grad.SetComputePointGradient(true);
     grad.SetActiveField("tangle");

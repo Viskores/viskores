@@ -11,7 +11,7 @@
 #define vtk_m_filter_Gradient_h
 
 #include <vtkm/Deprecated.h>
-#include <vtkm/filter/vector_calculus/Gradient.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
 
 namespace vtkm
 {
@@ -19,7 +19,7 @@ namespace filter
 {
 
 VTKM_DEPRECATED(1.8,
-                "Use vtkm/filter/vector_calculus/Gradient.h instead of vtkm/filter/Gradient.h.")
+                "Use vtkm/filter/vector_analysis/Gradient.h instead of vtkm/filter/Gradient.h.")
 inline void Gradient_deprecated() {}
 
 inline void Gradient_deprecated_warning()
@@ -27,10 +27,10 @@ inline void Gradient_deprecated_warning()
   Gradient_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_calculus::Gradient.") Gradient
-  : public vtkm::filter::vector_calculus::Gradient
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::Gradient.") Gradient
+  : public vtkm::filter::vector_analysis::Gradient
 {
-  using vector_calculus::Gradient::Gradient;
+  using vector_analysis::Gradient::Gradient;
 };
 
 }

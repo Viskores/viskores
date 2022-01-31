@@ -16,7 +16,7 @@
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <utility>
-#include <vtkm/filter/vector_calculus/worklet/gradient/GradientOutput.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/GradientOutput.h>
 
 
 namespace vtkm

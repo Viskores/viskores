@@ -11,7 +11,7 @@
 #define vtk_m_filter_VectorMagnitude_h
 
 #include <vtkm/Deprecated.h>
-#include <vtkm/filter/vector_calculus/VectorMagnitude.h>
+#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
 namespace vtkm
 {
@@ -20,7 +20,7 @@ namespace filter
 
 VTKM_DEPRECATED(
   1.8,
-  "Use vtkm/filter/vector_calculus/VectorMagnitude.h instead of vtkm/filter/VectorMagnitude.h.")
+  "Use vtkm/filter/vector_analysis/VectorMagnitude.h instead of vtkm/filter/VectorMagnitude.h.")
 inline void VectorMagnitude_deprecated() {}
 
 inline void VectorMagnitude_deprecated_warning()
@@ -28,10 +28,10 @@ inline void VectorMagnitude_deprecated_warning()
   VectorMagnitude_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_calculus::VectorMagnitude.") VectorMagnitude
-  : public vtkm::filter::vector_calculus::VectorMagnitude
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::VectorMagnitude.") VectorMagnitude
+  : public vtkm::filter::vector_analysis::VectorMagnitude
 {
-  using vector_calculus::VectorMagnitude::VectorMagnitude;
+  using vector_analysis::VectorMagnitude::VectorMagnitude;
 };
 
 }

@@ -234,7 +234,7 @@ add_subdirectory(entity_extraction)
 add_subdirectory(internal)
 add_subdirectory(particleadvection)
 add_subdirectory(field_transform)
-add_subdirectory(vector_calculus)
+add_subdirectory(vector_analysis)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 if (VTKm_ENABLE_TESTING)

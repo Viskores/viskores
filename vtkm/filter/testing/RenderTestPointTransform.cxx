@@ -14,7 +14,7 @@
 #include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/filter/PointTransform.h>
-#include <vtkm/filter/vector_calculus/VectorMagnitude.h>
+#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
 #include <vtkm/rendering/testing/RenderTest.h>
 #include <vtkm/rendering/testing/Testing.h>
@@ -38,7 +38,7 @@ void TestPointTransform()
 
   // Need to take the magnitude of the "translation" field.
   // ColorMap only works with scalar fields (1 component)
-  vtkm::filter::vector_calculus::VectorMagnitude vectorMagnitude;
+  vtkm::filter::vector_analysis::VectorMagnitude vectorMagnitude;
   vectorMagnitude.SetActiveField("translation");
   vectorMagnitude.SetOutputFieldName("pointvar");
   result = vectorMagnitude.Execute(result);

@@ -12,7 +12,7 @@
 #define vtk_m_filter_CrossProduct_h
 
 #include <vtkm/Deprecated.h>
-#include <vtkm/filter/vector_calculus/CrossProduct.h>
+#include <vtkm/filter/vector_analysis/CrossProduct.h>
 
 namespace vtkm
 {
@@ -21,7 +21,7 @@ namespace filter
 
 VTKM_DEPRECATED(
   1.8,
-  "Use vtkm/filter/vector_calculus/CrossProduct.h instead of vtkm/filter/CrossProduct.h.")
+  "Use vtkm/filter/vector_analysis/CrossProduct.h instead of vtkm/filter/CrossProduct.h.")
 inline void CrossProduct_deprecated() {}
 
 inline void CrossProduct_deprecated_warning()
@@ -29,10 +29,10 @@ inline void CrossProduct_deprecated_warning()
   CrossProduct_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_calculus::CrossProduct.") CrossProduct
-  : public vtkm::filter::vector_calculus::CrossProduct
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::CrossProduct.") CrossProduct
+  : public vtkm::filter::vector_analysis::CrossProduct
 {
-  using vector_calculus::CrossProduct::CrossProduct;
+  using vector_analysis::CrossProduct::CrossProduct;
 };
 
 }

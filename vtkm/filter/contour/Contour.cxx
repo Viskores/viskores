@@ -17,7 +17,7 @@
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/contour/worklet/Contour.h>
 
-#include <vtkm/filter/vector_calculus/worklet/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/worklet/SurfaceNormals.h>
 
 namespace vtkm
 {

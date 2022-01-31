@@ -10,7 +10,7 @@
 #include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/SplitSharpEdges.h>
 #include <vtkm/filter/contour/Contour.h>
-#include <vtkm/filter/vector_calculus/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -205,7 +205,7 @@ void TestWithExplicitData()
   vtkm::cont::DataSet simpleCube = Make3DExplicitSimpleCube();
 
   // Generate surface normal field
-  vtkm::filter::vector_calculus::SurfaceNormals surfaceNormalsFilter;
+  vtkm::filter::vector_analysis::SurfaceNormals surfaceNormalsFilter;
   surfaceNormalsFilter.SetGenerateCellNormals(true);
   vtkm::cont::DataSet simpleCubeWithSN = surfaceNormalsFilter.Execute(simpleCube);
   VTKM_TEST_ASSERT(simpleCubeWithSN.HasCellField("Normals"), "Cell normals missing.");

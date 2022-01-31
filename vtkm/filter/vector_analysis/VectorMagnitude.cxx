@@ -8,17 +8,16 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/vector_calculus/VectorMagnitude.h>
-#include <vtkm/filter/vector_calculus/worklet/Magnitude.h>
+#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
+#include <vtkm/filter/vector_analysis/worklet/Magnitude.h>
 
 namespace vtkm
 {
 namespace filter
 {
-namespace vector_calculus
+namespace vector_analysis
 {
 VectorMagnitude::VectorMagnitude()
-
 {
   this->SetOutputFieldName("magnitude");
 }
@@ -37,12 +36,13 @@ VTKM_CONT vtkm::cont::DataSet VectorMagnitude::DoExecute(const vtkm::cont::DataS
     this->Invoke(vtkm::worklet::Magnitude{}, concrete, result);
     outArray = result;
   };
-  field.GetData().CastAndCallForTypesWithFloatFallback<SupportedTypes, VTKM_DEFAULT_STORAGE_LIST>(
-    resolveType);
+  field.GetData()
+    .CastAndCallForTypesWithFloatFallback<vtkm::TypeListVecCommon, VTKM_DEFAULT_STORAGE_LIST>(
+      resolveType);
 
   return this->CreateResultField(
     inDataSet, this->GetOutputFieldName(), field.GetAssociation(), outArray);
 }
-} // namespace vector_calculus
+} // namespace vector_analysis
 } // namespace filter
 } // namespace vtkm

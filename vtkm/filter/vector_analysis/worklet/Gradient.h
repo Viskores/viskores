@@ -14,14 +14,14 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/DispatcherPointNeighborhood.h>
 
-#include <vtkm/filter/vector_calculus/worklet/gradient/CellGradient.h>
-#include <vtkm/filter/vector_calculus/worklet/gradient/Divergence.h>
-#include <vtkm/filter/vector_calculus/worklet/gradient/GradientOutput.h>
-#include <vtkm/filter/vector_calculus/worklet/gradient/PointGradient.h>
-#include <vtkm/filter/vector_calculus/worklet/gradient/QCriterion.h>
-#include <vtkm/filter/vector_calculus/worklet/gradient/StructuredPointGradient.h>
-#include <vtkm/filter/vector_calculus/worklet/gradient/Transpose.h>
-#include <vtkm/filter/vector_calculus/worklet/gradient/Vorticity.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/CellGradient.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/Divergence.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/GradientOutput.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/PointGradient.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/QCriterion.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/StructuredPointGradient.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/Transpose.h>
+#include <vtkm/filter/vector_analysis/worklet/gradient/Vorticity.h>
 
 namespace vtkm
 {

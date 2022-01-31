@@ -8,17 +8,17 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_vector_calculus_Gradient_h
-#define vtk_m_filter_vector_calculus_Gradient_h
+#ifndef vtk_m_filter_vector_analysis_Gradient_h
+#define vtk_m_filter_vector_analysis_Gradient_h
 
 #include <vtkm/filter/NewFilterField.h>
-#include <vtkm/filter/vector_calculus/vtkm_filter_vector_calculus_export.h>
+#include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
 namespace vtkm
 {
 namespace filter
 {
-namespace vector_calculus
+namespace vector_analysis
 {
 /// \brief A general filter for gradient estimation.
 /// Estimates the gradient of a point field in a data set. The created gradient array
@@ -29,7 +29,7 @@ namespace vector_calculus
 ///
 /// Note: If no explicit name for the output field is provided the filter will
 /// default to "Gradients"
-class VTKM_FILTER_VECTOR_CALCULUS_EXPORT Gradient : public vtkm::filter::NewFilterField
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT Gradient : public vtkm::filter::NewFilterField
 {
 public:
   /// When this flag is on (default is off), the gradient filter will provide a
@@ -88,8 +88,6 @@ public:
   const std::string& GetQCriterionName() const { return this->QCriterionName; }
 
 private:
-  using SupportedTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
-
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inputDataSet) override;
 
   bool ComputePointGradient = false;
@@ -105,8 +103,8 @@ private:
   std::string VorticityName = "Vorticity";
 };
 
-} // namespace vector_calculus
+} // namespace vector_analysis
 } // namespace filter
 } // namespace vtkm::filter
 
-#endif // vtk_m_filter_vector_calculus_Gradient_h
+#endif // vtk_m_filter_vector_analysis_Gradient_h

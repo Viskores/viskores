@@ -8,28 +8,25 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_vector_calculus_CrossProduct_h
-#define vtk_m_filter_vector_calculus_CrossProduct_h
+#ifndef vtk_m_filter_vector_analysis_DotProduct_h
+#define vtk_m_filter_vector_analysis_DotProduct_h
 
 #include <vtkm/filter/NewFilterField.h>
-
-#include <vtkm/filter/vector_calculus/vtkm_filter_vector_calculus_export.h>
+#include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
 namespace vtkm
 {
 namespace filter
 {
-namespace vector_calculus
+namespace vector_analysis
 {
-
-class VTKM_FILTER_VECTOR_CALCULUS_EXPORT CrossProduct : public vtkm::filter::NewFilterField
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT DotProduct : public vtkm::filter::NewFilterField
 {
 public:
-  VTKM_CONT
-  CrossProduct();
+  VTKM_CONT DotProduct();
 
   //@{
-  /// Choose the primary field to operate on. In the cross product operation A x B, A is
+  /// Choose the primary field to operate on. In the dot product operation A . B, A is
   /// the primary field.
   VTKM_CONT
   void SetPrimaryField(
@@ -62,10 +59,13 @@ public:
   //@}
 
   //@{
-  /// Select the coordinate system index to use as the primary field. This only has an effect when
+  /// Select the coordinate system coord_idx to use as the primary field. This only has an effect when
   /// UseCoordinateSystemAsPrimaryField is true.
   VTKM_CONT
-  void SetPrimaryCoordinateSystem(vtkm::Id index) { this->SetActiveCoordinateSystem(index); }
+  void SetPrimaryCoordinateSystem(vtkm::Id coord_idx)
+  {
+    this->SetActiveCoordinateSystem(coord_idx);
+  }
   VTKM_CONT
   vtkm::Id GetPrimaryCoordinateSystemIndex() const
   {
@@ -119,11 +119,10 @@ public:
   //@}
 
 private:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
+  vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
+} // namespace vector_analysis
+} // namespace filter
+} // namespace vtkm
 
-}
-}
-} // namespace vtkm::filter::vector_calculus
-
-#endif // vtk_m_filter_vector_calculus_CrossProduct_h
+#endif // vtk_m_filter_vector_analysis_DotProduct_h

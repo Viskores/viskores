@@ -9,8 +9,8 @@
 //============================================================================
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/UnknownCellSet.h>
-#include <vtkm/filter/vector_calculus/Gradient.h>
-#include <vtkm/filter/vector_calculus/worklet/Gradient.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
+#include <vtkm/filter/vector_analysis/worklet/Gradient.h>
 
 namespace
 {
@@ -34,7 +34,7 @@ namespace vtkm
 {
 namespace filter
 {
-namespace vector_calculus
+namespace vector_analysis
 {
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet Gradient::DoExecute(const vtkm::cont::DataSet& inputDataSet)
@@ -97,8 +97,7 @@ vtkm::cont::DataSet Gradient::DoExecute(const vtkm::cont::DataSet& inputDataSet)
     qcriterionArray = gradientfields.QCriterion;
   };
 
-  // TODO: do we need to deal with vtkm::cont::StorageTagXGCCoordinates? or it is already part of
-  //  VTKM_DEFAULT_STORAGE_LIST when enabled.
+  using SupportedTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
   field.GetData().CastAndCallForTypesWithFloatFallback<SupportedTypes, VTKM_DEFAULT_STORAGE_LIST>(
     resolveType);
 
@@ -134,6 +133,6 @@ vtkm::cont::DataSet Gradient::DoExecute(const vtkm::cont::DataSet& inputDataSet)
   }
   return outputDataSet;
 }
-} // namespace vector_calculus
+} // namespace vector_analysis
 } // namespace filter
 } // namespace vtkm

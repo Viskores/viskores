@@ -41,8 +41,8 @@
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
-#include <vtkm/filter/vector_calculus/Gradient.h>
-#include <vtkm/filter/vector_calculus/VectorMagnitude.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
+#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 
@@ -118,7 +118,7 @@ void BenchGradient(::benchmark::State& state, int options)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::vector_calculus::Gradient filter;
+  vtkm::filter::vector_analysis::Gradient filter;
 
   if (options & ScalarInput)
   {
@@ -707,7 +707,7 @@ void CreateMissingFields()
     {
       // Compute the magnitude of the vectors:
       VTKM_ASSERT(!PointVectorsName.empty());
-      vtkm::filter::vector_calculus::VectorMagnitude mag;
+      vtkm::filter::vector_analysis::VectorMagnitude mag;
       mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
       mag.SetOutputFieldName("GeneratedPointScalars");
       auto outds = mag.Execute(InputDataSet);

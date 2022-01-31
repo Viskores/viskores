@@ -9,9 +9,9 @@
 //============================================================================
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/vector_calculus/SurfaceNormals.h>
-#include <vtkm/filter/vector_calculus/worklet/OrientNormals.h>
-#include <vtkm/filter/vector_calculus/worklet/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/worklet/OrientNormals.h>
+#include <vtkm/filter/vector_analysis/worklet/SurfaceNormals.h>
 #include <vtkm/worklet/TriangleWinding.h>
 
 namespace vtkm
@@ -19,7 +19,7 @@ namespace vtkm
 namespace filter
 {
 
-namespace vector_calculus
+namespace vector_analysis
 {
 namespace
 {
@@ -145,6 +145,6 @@ vtkm::cont::DataSet SurfaceNormals::DoExecute(const vtkm::cont::DataSet& inputDa
 
   return outputDataSet;
 }
-} // namespace vector_calculus
+} // namespace vector_analysis
 } // namespace filter
 } // namespace vtkm
