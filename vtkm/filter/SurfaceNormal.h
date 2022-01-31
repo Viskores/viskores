@@ -7,12 +7,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
-#ifndef vtk_m_filter_CrossProduct_h
-#define vtk_m_filter_CrossProduct_h
+#ifndef vtk_m_filter_SurfaceNormal_h
+#define vtk_m_filter_SurfaceNormal_h
 
 #include <vtkm/Deprecated.h>
-#include <vtkm/filter/vector_analysis/CrossProduct.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormal.h>
 
 namespace vtkm
 {
@@ -21,21 +20,21 @@ namespace filter
 
 VTKM_DEPRECATED(
   1.8,
-  "Use vtkm/filter/vector_analysis/CrossProduct.h instead of vtkm/filter/CrossProduct.h.")
-inline void CrossProduct_deprecated() {}
+  "Use vtkm/filter/vector_analysis/SurfaceNormal.h instead of vtkm/filter/SurfaceNormal.h.")
+inline void SurfaceNormal_deprecated() {}
 
-inline void CrossProduct_deprecated_warning()
+inline void SurfaceNormal_deprecated_warning()
 {
-  CrossProduct_deprecated();
+  SurfaceNormal_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::CrossProduct.") CrossProduct
-  : public vtkm::filter::vector_analysis::CrossProduct
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::SurfaceNormal.") SurfaceNormal
+  : public vtkm::filter::vector_analysis::SurfaceNormal
 {
-  using vector_analysis::CrossProduct::CrossProduct;
+  using vector_analysis::SurfaceNormal::SurfaceNormal;
 };
 
 }
 } // namespace vtkm::filter
 
-#endif // vtk_m_filter_CrossProduct_h
+#endif //vtk_m_filter_SurfaceNormal_h

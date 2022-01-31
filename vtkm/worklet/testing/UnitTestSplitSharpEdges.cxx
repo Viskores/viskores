@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#include <vtkm/filter/vector_analysis/worklet/SurfaceNormals.h>
 #include <vtkm/worklet/SplitSharpEdges.h>
-#include <vtkm/worklet/SurfaceNormals.h>
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>

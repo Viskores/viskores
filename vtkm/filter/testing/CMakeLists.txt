@@ -21,8 +21,6 @@ set(unit_tests
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
-  UnitTestGradientExplicit.cxx
-  UnitTestGradientUniform.cxx
   UnitTestGhostCellClassify.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
@@ -40,11 +38,9 @@ set(unit_tests
   UnitTestSplitSharpEdgesFilter.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestStreamSurfaceFilter.cxx
-  UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
   UnitTestTriangulateFilter.cxx
   UnitTestTubeFilter.cxx
-  UnitTestVectorMagnitudeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
   UnitTestWarpScalarFilter.cxx
   UnitTestWarpVectorFilter.cxx
@@ -75,7 +71,6 @@ if (VTKm_ENABLE_RENDERING)
     RenderTestPointTransform.cxx
     RenderTestSplitSharpEdges.cxx
     RenderTestStreamline.cxx
-    RenderTestSurfaceNormals.cxx
   )
 endif()
 

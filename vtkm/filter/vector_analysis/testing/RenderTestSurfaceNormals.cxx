@@ -13,7 +13,6 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/VTKDataSetReader.h>
 
-#include <vtkm/filter/SplitSharpEdges.h>
 #include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
 #include <vtkm/rendering/testing/RenderTest.h>
@@ -21,31 +20,34 @@
 
 namespace
 {
-void TestSplitSharpEdges()
+void TestSurfaceNormals()
 {
-  std::cout << "Generate Image for SplitSharpEdges filter" << std::endl;
+  std::cout << "Generate Image for SurfaceNormals filter" << std::endl;
 
+  // NOTE: This dataset stores a shape value of 7 for polygons.  The
+  // VTKDataSetReader currently converts all polygons with 4 verticies to
+  // quads (shape 9).
   auto pathname =
-    vtkm::cont::testing::Testing::DataPath("unstructured/SplitSharpEdgesTestDataSet.vtk");
+    vtkm::cont::testing::Testing::DataPath("unstructured/SurfaceNormalsTestDataSet.vtk");
   vtkm::io::VTKDataSetReader reader(pathname);
   auto dataSet = reader.ReadDataSet();
 
-  vtkm::filter::SplitSharpEdges splitSharpEdges;
-  splitSharpEdges.SetFeatureAngle(89.0);
-  splitSharpEdges.SetActiveField("Normals", vtkm::cont::Field::Association::CELL_SET);
+  vtkm::filter::vector_analysis::SurfaceNormals surfaceNormals;
+  surfaceNormals.SetGeneratePointNormals(true);
+  surfaceNormals.SetAutoOrientNormals(true);
 
-  auto result = splitSharpEdges.Execute(dataSet);
+  auto result = surfaceNormals.Execute(dataSet);
   result.PrintSummary(std::cout);
 
   vtkm::rendering::testing::RenderTestOptions testOptions;
   testOptions.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;
   testOptions.EnableAnnotations = false;
   vtkm::rendering::testing::RenderTest(
-    result, "pointvar", "filter/split-sharp-edges.png", testOptions);
+    result, "pointvar", "filter/surface-normals.png", testOptions);
 }
 } // namespace
 
-int RenderTestSplitSharpEdges(int argc, char* argv[])
+int RenderTestSurfaceNormals(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestSplitSharpEdges, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestSurfaceNormals, argc, argv);
 }

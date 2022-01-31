@@ -1,7 +1,7 @@
 VTKm License Version 1.7
 ========================================================================
 
-Copyright (c) 2014-2021
+Copyright (c) 2014-2022
 Kitware Inc.,
 National Technology & Engineering Solutions of Sandia, LLC (NTESS),
 UT-Battelle, LLC.,

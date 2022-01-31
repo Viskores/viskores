@@ -15,7 +15,7 @@
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-#include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
 
 
 namespace
@@ -206,7 +206,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForE
 
 
   //Step 3. Construct the filter we want to run on each partition
-  vtkm::filter::Gradient gradient;
+  vtkm::filter::vector_analysis::Gradient gradient;
   gradient.SetComputePointGradient(this->GetComputePointGradient());
   gradient.SetActiveField(this->GetActiveFieldName());
 
@@ -218,7 +218,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForE
     vtkm::cont::DataSet input = *partition;
     this->Queue.push( //build a lambda that is the work to do
       [=]() {
-        vtkm::filter::Gradient perThreadGrad = gradient;
+        vtkm::filter::vector_analysis::Gradient perThreadGrad = gradient;
 
         vtkm::cont::DataSet result = perThreadGrad.Execute(input);
         outPtr->ReplacePartition(0, result);
@@ -237,7 +237,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForE
     //blocking manner
     this->Queue.push( //build a lambda that is the work to do
       [=]() {
-        vtkm::filter::Gradient perThreadGrad = gradient;
+        vtkm::filter::vector_analysis::Gradient perThreadGrad = gradient;
 
         vtkm::cont::DataSet result = perThreadGrad.Execute(input);
         outPtr->ReplacePartition(index, result);

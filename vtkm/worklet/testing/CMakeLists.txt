@@ -17,7 +17,6 @@ set(unit_tests
   UnitTestAverageByKey.cxx
   UnitTestBoundingIntervalHierarchy.cxx
   UnitTestCellDeepCopy.cxx
-  UnitTestCellGradient.cxx
   UnitTestCellMeasure.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestContourTreeUniformAugmented.cxx
@@ -27,15 +26,12 @@ set(unit_tests
   UnitTestDescriptiveStatistics.cxx
   UnitTestFieldStatistics.cxx
   UnitTestKeys.cxx
-  UnitTestMagnitude.cxx
   UnitTestMaskIndices.cxx
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
   UnitTestNDimsHistMarginalization.cxx
-  UnitTestOrientNormals.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
-  UnitTestPointGradient.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx
   UnitTestScalarsToColors.cxx
@@ -47,7 +43,6 @@ set(unit_tests
   UnitTestScatterAndMaskWithTopology.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestStreamSurface.cxx
-  UnitTestSurfaceNormals.cxx
   UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx
   UnitTestTriangleWinding.cxx
