@@ -95,8 +95,6 @@ public:
   /// @}
 
 private:
-  using SupportedTypes = vtkm::TypeListFieldVec3;
-
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inputDataSet) override;
 
   bool GenerateCellNormals = false;

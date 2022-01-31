@@ -64,12 +64,11 @@ SurfaceNormals::SurfaceNormals()
 
 vtkm::cont::DataSet SurfaceNormals::DoExecute(const vtkm::cont::DataSet& inputDataSet)
 {
-  auto field = this->GetFieldFromDataSet(inputDataSet);
-  if (!field.IsFieldPoint())
+  if (!this->GetUseCoordinateSystemAsField())
   {
-    // TODO: why only PointField?
-    //  VTKM_ASSERT(fieldMeta.IsPointField());
-    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+               "Active scalars to SurfaceNormals filter must be a coordinate system. "
+               "Ignoring false UseCoordinateSystemAsField flag.");
   }
 
   if (!this->GenerateCellNormals && !this->GeneratePointNormals)
@@ -82,11 +81,12 @@ vtkm::cont::DataSet SurfaceNormals::DoExecute(const vtkm::cont::DataSet& inputDa
     inputDataSet.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()).GetDataAsMultiplexer();
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> faceNormals;
-  vtkm::worklet::FacetedSurfaceNormals faceted;
-  faceted.SetNormalize(this->NormalizeCellNormals);
-  faceted.Run(inputCellSet,
-              field.GetData().ResetTypes<SupportedTypes, VTKM_DEFAULT_STORAGE_LIST>(),
-              faceNormals);
+  auto resolveType = [&](const auto& concrete) {
+    vtkm::worklet::FacetedSurfaceNormals faceted;
+    faceted.SetNormalize(this->NormalizeCellNormals);
+    faceted.Run(inputCellSet, concrete, faceNormals);
+  };
+  this->CastAndCallVecField<3>(coords, resolveType);
 
   vtkm::cont::DataSet outputDataSet;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> pointNormals;
