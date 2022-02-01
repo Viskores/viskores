@@ -7,14 +7,12 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/cont/ArrayHandleXGCCoordinates.h>
 #include <vtkm/cont/CellSetExtrude.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/PointAverage.h>
+#include <vtkm/filter/field_conversion/PointAverage.h>
 
 namespace
 {
@@ -50,7 +48,7 @@ int TestCellSetExtrude()
     "cfield", vtkm::cont::Field::Association::CELL_SET, cvalues, vtkm::CopyFlag::Off);
   dataset.AddField(cfield);
 
-  vtkm::filter::PointAverage avg;
+  vtkm::filter::field_conversion::PointAverage avg;
   try
   {
     avg.SetActiveField("cfield");

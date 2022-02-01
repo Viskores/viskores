@@ -17,8 +17,7 @@
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/PointAverage.h>
-#include <vtkm/filter/PointAverage.hxx>
+#include <vtkm/filter/field_conversion/PointAverage.h>
 
 namespace
 {

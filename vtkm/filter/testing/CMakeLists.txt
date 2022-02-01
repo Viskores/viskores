@@ -13,7 +13,6 @@ set(headers
 )
 
 set(unit_tests
-  UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
@@ -33,8 +32,6 @@ set(unit_tests
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx
-  UnitTestPointAverageFilter.cxx
-  UnitTestPointAverageCellSetExtrude.cxx
   UnitTestPointElevationFilter.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx

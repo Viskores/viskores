@@ -7,9 +7,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/SplitSharpEdges.h>
 #include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
 #include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
@@ -236,7 +236,7 @@ void TestWithStructuredData()
   dataSet = contour.Execute(dataSet);
 
   // Compute cell normals:
-  vtkm::filter::CellAverage cellNormals;
+  vtkm::filter::field_conversion::CellAverage cellNormals;
   cellNormals.SetActiveField("normals", vtkm::cont::Field::Association::POINTS);
   dataSet = cellNormals.Execute(dataSet);
 

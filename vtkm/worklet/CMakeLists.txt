@@ -12,7 +12,6 @@ set(headers
   AverageByKey.h
   BoundaryTypes.h
   AveragePointNeighborhood.h
-  CellAverage.h
   CellDeepCopy.h
   CellMeasure.h
   ContourTreeUniform.h
@@ -38,7 +37,6 @@ set(headers
   NDimsHistMarginalization.h
   Normalize.h
   ParticleAdvection.h
-  PointAverage.h
   PointElevation.h
   PointTransform.h
   Probe.h
