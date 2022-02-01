@@ -8,18 +8,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/worklet/CoordinateSystemTransform.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/filter/field_transform/CoordinateSystemTransform.h>
 
-#include <random>
+#include <string>
 #include <vector>
 
 namespace
 {
-std::mt19937 randGenerator;
 
 enum CoordinateType
 {
@@ -70,10 +66,10 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
     vtkm::FloatDefault R = 1.0f;
     vtkm::FloatDefault eps = vtkm::Epsilon<float>();
     std::vector<vtkm::FloatDefault> Thetas = {
-      eps, vtkm::Pif() / 4, vtkm::Pif() / 3, vtkm::Pif() / 2, vtkm::Pif() - eps
+      eps, vtkm::Pif() / 4.0f, vtkm::Pif() / 3.0f, vtkm::Pif() / 2.0f, vtkm::Pif() - eps
     };
     std::vector<vtkm::FloatDefault> Phis = {
-      eps, vtkm::TwoPif() / 4, vtkm::TwoPif() / 3, vtkm::TwoPif() / 2, vtkm::TwoPif() - eps
+      eps, vtkm::TwoPif() / 4.0f, vtkm::TwoPif() / 3.0f, vtkm::TwoPif() / 2.0f, vtkm::TwoPif() - eps
     };
     for (std::size_t i = 0; i < Thetas.size(); i++)
       for (std::size_t j = 0; j < Phis.size(); j++)
@@ -102,24 +98,22 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
   return dataSet;
 }
 
-void ValidateCoordTransform(const vtkm::cont::CoordinateSystem& coords,
-                            const vtkm::cont::ArrayHandle<vtkm::Vec3f>& transform,
-                            const vtkm::cont::ArrayHandle<vtkm::Vec3f>& doubleTransform,
+void ValidateCoordTransform(const vtkm::cont::DataSet& ds,
+                            const vtkm::cont::DataSet& dsTrn,
                             const std::vector<bool>& isAngle)
 {
-  auto points = coords.GetDataAsMultiplexer();
-  VTKM_TEST_ASSERT(points.GetNumberOfValues() == transform.GetNumberOfValues() &&
-                     points.GetNumberOfValues() == doubleTransform.GetNumberOfValues(),
+  auto points = ds.GetCoordinateSystem().GetDataAsMultiplexer();
+  auto pointsTrn = dsTrn.GetCoordinateSystem().GetDataAsMultiplexer();
+  VTKM_TEST_ASSERT(points.GetNumberOfValues() == pointsTrn.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 
-  //The double transform should produce the same result.
   auto pointsPortal = points.ReadPortal();
-  auto resultsPortal = doubleTransform.ReadPortal();
+  auto pointsTrnPortal = pointsTrn.ReadPortal();
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
   {
     vtkm::Vec3f p = pointsPortal.Get(i);
-    vtkm::Vec3f r = resultsPortal.Get(i);
+    vtkm::Vec3f r = pointsTrnPortal.Get(i);
     bool isEqual = true;
     for (vtkm::IdComponent j = 0; j < 3; j++)
     {
@@ -136,66 +130,55 @@ void ValidateCoordTransform(const vtkm::cont::CoordinateSystem& coords,
 
 void TestCoordinateSystemTransform()
 {
-  std::cout << "Testing CylindricalCoordinateTransform Worklet" << std::endl;
+  std::cout << "Testing CylindricalCoordinateTransform Filter" << std::endl;
 
   //Test cartesian to cyl
   vtkm::cont::DataSet dsCart = MakeTestDataSet(CART);
-  vtkm::worklet::CylindricalCoordinateTransform cylTrn;
-
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> carToCylPts;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> revResult;
+  vtkm::filter::field_transform::CylindricalCoordinateTransform cylTrn;
 
   cylTrn.SetCartesianToCylindrical();
-  cylTrn.Run(dsCart.GetCoordinateSystem(), carToCylPts);
+  cylTrn.SetUseCoordinateSystemAsField(true);
+  vtkm::cont::DataSet carToCylDataSet = cylTrn.Execute(dsCart);
 
   cylTrn.SetCylindricalToCartesian();
-  cylTrn.Run(carToCylPts, revResult);
-  ValidateCoordTransform(
-    dsCart.GetCoordinateSystem(), carToCylPts, revResult, { false, false, false });
+  cylTrn.SetUseCoordinateSystemAsField(true);
+  vtkm::cont::DataSet cylToCarDataSet = cylTrn.Execute(carToCylDataSet);
+  ValidateCoordTransform(dsCart, cylToCarDataSet, { false, false, false });
 
-  //Test cylindrical to cartesian
+  //Test cyl to cart.
   vtkm::cont::DataSet dsCyl = MakeTestDataSet(CYL);
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> cylToCarPts;
   cylTrn.SetCylindricalToCartesian();
-  cylTrn.Run(dsCyl.GetCoordinateSystem(), cylToCarPts);
+  cylTrn.SetUseCoordinateSystemAsField(true);
+  cylToCarDataSet = cylTrn.Execute(dsCyl);
 
   cylTrn.SetCartesianToCylindrical();
-  cylTrn.Run(cylToCarPts, revResult);
-  ValidateCoordTransform(
-    dsCyl.GetCoordinateSystem(), cylToCarPts, revResult, { false, true, false });
+  cylTrn.SetUseCoordinateSystemAsField(true);
+  carToCylDataSet = cylTrn.Execute(cylToCarDataSet);
+  ValidateCoordTransform(dsCyl, carToCylDataSet, { false, true, false });
 
-  //Spherical transform
-  //Test cartesian to sph
-  vtkm::worklet::SphericalCoordinateTransform sphTrn;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> carToSphPts;
+  std::cout << "Testing SphericalCoordinateTransform Filter" << std::endl;
 
+  vtkm::filter::field_transform::SphericalCoordinateTransform sphTrn;
+  sphTrn.SetUseCoordinateSystemAsField(true);
   sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(dsCart.GetCoordinateSystem(), carToSphPts);
+  vtkm::cont::DataSet carToSphDataSet = sphTrn.Execute(dsCart);
 
+  sphTrn.SetUseCoordinateSystemAsField(true);
   sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(carToSphPts, revResult);
-  ValidateCoordTransform(
-    dsCart.GetCoordinateSystem(), carToSphPts, revResult, { false, true, true });
+  vtkm::cont::DataSet sphToCarDataSet = sphTrn.Execute(carToSphDataSet);
+  ValidateCoordTransform(dsCart, sphToCarDataSet, { false, true, true });
 
-  //Test spherical to cartesian
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> sphToCarPts;
   vtkm::cont::DataSet dsSph = MakeTestDataSet(SPH);
-
   sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(dsSph.GetCoordinateSystem(), sphToCarPts);
+  sphTrn.SetUseCoordinateSystemAsField(true);
+  sphToCarDataSet = sphTrn.Execute(dsSph);
 
   sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(sphToCarPts, revResult);
-
-  ValidateCoordTransform(
-    dsSph.GetCoordinateSystem(), sphToCarPts, revResult, { false, true, true });
-  sphTrn.SetSphericalToCartesian();
-  sphTrn.Run(dsSph.GetCoordinateSystem(), sphToCarPts);
-  sphTrn.SetCartesianToSpherical();
-  sphTrn.Run(sphToCarPts, revResult);
-  ValidateCoordTransform(
-    dsSph.GetCoordinateSystem(), sphToCarPts, revResult, { false, true, true });
+  sphTrn.SetUseCoordinateSystemAsField(true);
+  carToSphDataSet = sphTrn.Execute(sphToCarDataSet);
+  ValidateCoordTransform(dsSph, carToSphDataSet, { false, true, true });
 }
+
 
 int UnitTestCoordinateSystemTransform(int argc, char* argv[])
 {

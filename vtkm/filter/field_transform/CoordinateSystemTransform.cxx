@@ -1,0 +1,75 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//============================================================================
+
+#include <vtkm/filter/field_transform/CoordinateSystemTransform.h>
+#include <vtkm/filter/field_transform/worklet/CoordinateSystemTransform.h>
+
+namespace vtkm
+{
+namespace filter
+{
+namespace field_transform
+{
+//-----------------------------------------------------------------------------
+vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(const vtkm::cont::DataSet& inDataSet)
+{
+  auto field = this->GetFieldFromDataSet(inDataSet);
+
+  vtkm::cont::UnknownArrayHandle outArray;
+
+  auto resolveType = [&](const auto& concrete) {
+    // use std::decay to remove const ref from the decltype of concrete.
+    using T = typename std::decay_t<decltype(concrete)>::ValueType;
+    vtkm::cont::ArrayHandle<T> result;
+    vtkm::worklet::CylindricalCoordinateTransform Worklet{ this->cartesianToCylindrical };
+    Worklet.Run(concrete, result);
+    outArray = result;
+  };
+  this->CastAndCallVecField<3>(field, resolveType);
+
+  vtkm::cont::DataSet outDataSet =
+    this->CreateResult(inDataSet,
+                       inDataSet.GetCellSet(),
+                       vtkm::cont::CoordinateSystem("coordinates", outArray),
+                       [](vtkm::cont::DataSet& out, const vtkm::cont::Field& fieldToPass) {
+                         out.AddField(fieldToPass);
+                       });
+  return outDataSet;
+}
+
+//-----------------------------------------------------------------------------
+vtkm::cont::DataSet SphericalCoordinateTransform::DoExecute(const vtkm::cont::DataSet& inDataSet)
+{
+  auto field = this->GetFieldFromDataSet(inDataSet);
+
+  vtkm::cont::UnknownArrayHandle outArray;
+
+  auto resolveType = [&](const auto& concrete) {
+    // use std::decay to remove const ref from the decltype of concrete.
+    using T = typename std::decay_t<decltype(concrete)>::ValueType;
+    vtkm::cont::ArrayHandle<T> result;
+    vtkm::worklet::SphericalCoordinateTransform Worklet{ this->cartesianToSpherical };
+    Worklet.Run(concrete, result);
+    outArray = result;
+  };
+  this->CastAndCallVecField<3>(field, resolveType);
+
+  vtkm::cont::DataSet outDataSet =
+    this->CreateResult(inDataSet,
+                       inDataSet.GetCellSet(),
+                       vtkm::cont::CoordinateSystem("coordinates", outArray),
+                       [](vtkm::cont::DataSet& out, const vtkm::cont::Field& fieldToPass) {
+                         out.AddField(fieldToPass);
+                       });
+  return outDataSet;
+}
+} // namespace field_transform
+} // namespace filter
+} // namespace vtkm

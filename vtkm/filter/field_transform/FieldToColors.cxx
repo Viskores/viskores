@@ -7,19 +7,17 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
-#ifndef vtk_m_filter_FieldToColors_hxx
-#define vtk_m_filter_FieldToColors_hxx
-
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ColorTableMap.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/field_transform/FieldToColors.h>
 
 namespace vtkm
 {
 namespace filter
 {
-
+namespace field_transform
+{
 namespace
 {
 struct ScalarInputMode
@@ -100,16 +98,9 @@ inline bool execute(ComponentInputMode,
 
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT FieldToColors::FieldToColors(const vtkm::cont::ColorTable& table)
-  : vtkm::filter::FilterField<FieldToColors>()
-  , Table(table)
-  , InputMode(SCALAR)
-  , OutputMode(RGBA)
-  , SamplesRGB()
-  , SamplesRGBA()
-  , Component(0)
-  , SampleCount(256)
-  , ModifiedCount(-1)
+VTKM_CONT FieldToColors::FieldToColors(const vtkm::cont::ColorTable& table)
+  : Table(table)
+
 {
 }
 
@@ -124,13 +115,10 @@ inline VTKM_CONT void FieldToColors::SetNumberOfSamplingPoints(vtkm::Int32 count
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& inField,
-  const vtkm::filter::FieldMetadata& fieldMetadata,
-  vtkm::filter::PolicyBase<DerivedPolicy>)
+vtkm::cont::DataSet FieldToColors::DoExecute(const vtkm::cont::DataSet& input)
 {
+  auto field = this->GetFieldFromDataSet(input);
+
   //If the table has been modified we need to rebuild our
   //sample tables
   if (this->Table.GetModifiedCount() > this->ModifiedCount)
@@ -140,89 +128,94 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
     this->ModifiedCount = this->Table.GetModifiedCount();
   }
 
-
   std::string outputName = this->GetOutputFieldName();
   if (outputName.empty())
   {
     // Default name is name of input_colors.
-    outputName = fieldMetadata.GetName() + "_colors";
+    outputName = field.GetName() + "_colors";
   }
   vtkm::cont::Field outField;
 
   //We need to verify if the array is a vtkm::Vec
+  vtkm::cont::UnknownArrayHandle outArray;
+  auto resolveType = [&, this](const auto& concrete) {
+    // use std::decay to remove const ref from the decltype of concrete.
+    using T = typename std::decay_t<decltype(concrete)>::ValueType;
+    using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
 
-  using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
-  if (this->OutputMode == RGBA)
-  {
-    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> output;
-
-    bool ran = false;
-    switch (this->InputMode)
+    if (this->OutputMode == RGBA)
     {
-      case SCALAR:
-      {
-        ran =
-          execute(ScalarInputMode{}, this->Component, inField, this->SamplesRGBA, output, IsVec{});
-        break;
-      }
-      case MAGNITUDE:
-      {
-        ran = execute(
-          MagnitudeInputMode{}, this->Component, inField, this->SamplesRGBA, output, IsVec{});
-        break;
-      }
-      case COMPONENT:
-      {
-        ran = execute(
-          ComponentInputMode{}, this->Component, inField, this->SamplesRGBA, output, IsVec{});
-        break;
-      }
-    }
+      vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> result;
 
-    if (!ran)
+      bool ran = false;
+      switch (this->InputMode)
+      {
+        case SCALAR:
+        {
+          ran = execute(
+            ScalarInputMode{}, this->Component, concrete, this->SamplesRGBA, result, IsVec{});
+          break;
+        }
+        case MAGNITUDE:
+        {
+          ran = execute(
+            MagnitudeInputMode{}, this->Component, concrete, this->SamplesRGBA, result, IsVec{});
+          break;
+        }
+        case COMPONENT:
+        {
+          ran = execute(
+            ComponentInputMode{}, this->Component, concrete, this->SamplesRGBA, result, IsVec{});
+          break;
+        }
+      }
+
+      if (!ran)
+      {
+        throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
+      }
+      outField = vtkm::cont::make_FieldPoint(outputName, result);
+    }
+    else
     {
-      throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
-    }
-    outField = vtkm::cont::make_FieldPoint(outputName, output);
-  }
-  else
-  {
-    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> output;
+      vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> result;
 
-    bool ran = false;
-    switch (this->InputMode)
-    {
-      case SCALAR:
+      bool ran = false;
+      switch (this->InputMode)
       {
-        ran =
-          execute(ScalarInputMode{}, this->Component, inField, this->SamplesRGB, output, IsVec{});
-        break;
+        case SCALAR:
+        {
+          ran = execute(
+            ScalarInputMode{}, this->Component, concrete, this->SamplesRGB, result, IsVec{});
+          break;
+        }
+        case MAGNITUDE:
+        {
+          ran = execute(
+            MagnitudeInputMode{}, this->Component, concrete, this->SamplesRGB, result, IsVec{});
+          break;
+        }
+        case COMPONENT:
+        {
+          ran = execute(
+            ComponentInputMode{}, this->Component, concrete, this->SamplesRGB, result, IsVec{});
+          break;
+        }
       }
-      case MAGNITUDE:
+
+      if (!ran)
       {
-        ran = execute(
-          MagnitudeInputMode{}, this->Component, inField, this->SamplesRGB, output, IsVec{});
-        break;
+        throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
       }
-      case COMPONENT:
-      {
-        ran = execute(
-          ComponentInputMode{}, this->Component, inField, this->SamplesRGB, output, IsVec{});
-        break;
-      }
+      outField = vtkm::cont::make_FieldPoint(outputName, result);
     }
+  };
+  field.GetData()
+    .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
+      resolveType);
 
-    if (!ran)
-    {
-      throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
-    }
-    outField = vtkm::cont::make_FieldPoint(outputName, output);
-  }
-
-
-  return CreateResult(input, outField);
+  return this->CreateResultField(input, outField);
 }
-}
-} // namespace vtkm::filter
-
-#endif
+} // namespace field_transform
+} // namespace filter
+} // namespace vtkm

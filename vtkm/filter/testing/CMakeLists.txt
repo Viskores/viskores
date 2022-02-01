@@ -17,10 +17,8 @@ set(unit_tests
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestContourTreeUniformDistributedFilter.cxx
-  UnitTestCoordinateSystemTransform.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
-  UnitTestFieldToColors.cxx
   UnitTestGhostCellClassify.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
@@ -32,8 +30,6 @@ set(unit_tests
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx
-  UnitTestPointElevationFilter.cxx
-  UnitTestPointTransform.cxx
   UnitTestProbe.cxx
   UnitTestSplitSharpEdgesFilter.cxx
   UnitTestStreamlineFilter.cxx
@@ -42,8 +38,6 @@ set(unit_tests
   UnitTestTriangulateFilter.cxx
   UnitTestTubeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
-  UnitTestWarpScalarFilter.cxx
-  UnitTestWarpVectorFilter.cxx
   UnitTestZFP.cxx
 )
 
@@ -68,7 +62,6 @@ if (VTKm_ENABLE_RENDERING)
 
   list(APPEND unit_tests
     RenderTestAmrArrays.cxx
-    RenderTestPointTransform.cxx
     RenderTestSplitSharpEdges.cxx
     RenderTestStreamline.cxx
   )

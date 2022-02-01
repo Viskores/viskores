@@ -21,7 +21,6 @@ set(unit_tests
   UnitTestContourTreeUniform.cxx
   UnitTestContourTreeUniformAugmented.cxx
   UnitTestContourTreeUniformDistributed.cxx
-  UnitTestCoordinateSystemTransform.cxx
   UnitTestCosmoTools.cxx
   UnitTestDescriptiveStatistics.cxx
   UnitTestFieldStatistics.cxx
@@ -31,8 +30,6 @@ set(unit_tests
   UnitTestNormalize.cxx
   UnitTestNDimsHistMarginalization.cxx
   UnitTestParticleAdvection.cxx
-  UnitTestPointElevation.cxx
-  UnitTestPointTransform.cxx
   UnitTestProbe.cxx
   UnitTestScalarsToColors.cxx
   UnitTestScatterAndMask.cxx
@@ -59,8 +56,6 @@ set(unit_tests
   UnitTestWorkletMapTopologyUniform.cxx
   UnitTestWorkletReduceByKey.cxx
   UnitTestVertexClustering.cxx
-  UnitTestWarpScalar.cxx
-  UnitTestWarpVector.cxx
   UnitTestWaveletCompressor.cxx
   UnitTestZFPCompressor.cxx
  )

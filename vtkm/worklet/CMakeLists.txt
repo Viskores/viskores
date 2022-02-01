@@ -16,7 +16,6 @@ set(headers
   CellMeasure.h
   ContourTreeUniform.h
   ContourTreeUniformAugmented.h
-  CoordinateSystemTransform.h
   CosmoTools.h
   DispatcherMapField.h
   DispatcherMapTopology.h
@@ -37,8 +36,6 @@ set(headers
   NDimsHistMarginalization.h
   Normalize.h
   ParticleAdvection.h
-  PointElevation.h
-  PointTransform.h
   Probe.h
   ScalarsToColors.h
   ScatterCounting.h
@@ -55,8 +52,6 @@ set(headers
   Triangulate.h
   Tube.h
   VertexClustering.h
-  WarpScalar.h
-  WarpVector.h
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h

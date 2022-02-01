@@ -37,25 +37,15 @@ public:
   using ExecutionSignature = _2(_1);
 
   VTKM_CONT
-  PointElevation()
-    : LowPoint(0.0, 0.0, 0.0)
-    , HighPoint(0.0, 0.0, 1.0)
-    , RangeLow(0.0)
-    , RangeHigh(1.0)
+  PointElevation(const vtkm::Vec3f_64& lp,
+                 const vtkm::Vec3f_64& hp,
+                 vtkm::Float64 low,
+                 vtkm::Float64 hi)
+    : LowPoint(lp)
+    , HighPoint(hp)
+    , RangeLow(low)
+    , RangeHigh(hi)
   {
-  }
-
-  VTKM_CONT
-  void SetLowPoint(const vtkm::Vec3f_64& point) { this->LowPoint = point; }
-
-  VTKM_CONT
-  void SetHighPoint(const vtkm::Vec3f_64& point) { this->HighPoint = point; }
-
-  VTKM_CONT
-  void SetRange(vtkm::Float64 low, vtkm::Float64 high)
-  {
-    this->RangeLow = low;
-    this->RangeHigh = high;
   }
 
   VTKM_EXEC
@@ -78,8 +68,8 @@ public:
   }
 
 private:
-  vtkm::Vec3f_64 LowPoint, HighPoint;
-  vtkm::Float64 RangeLow, RangeHigh;
+  const vtkm::Vec3f_64 LowPoint, HighPoint;
+  const vtkm::Float64 RangeLow, RangeHigh;
 };
 }
 } // namespace vtkm::worklet

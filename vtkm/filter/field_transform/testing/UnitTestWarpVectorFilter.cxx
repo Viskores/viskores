@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/WarpVector.h>
+#include <vtkm/filter/field_transform/WarpVector.h>
 
 #include <random>
 #include <vector>
@@ -51,7 +51,8 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
   return dataSet;
 }
 
-void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataSet& result)
+void CheckResult(const vtkm::filter::field_transform::WarpVector& filter,
+                 const vtkm::cont::DataSet& result)
 {
   VTKM_TEST_ASSERT(result.HasPointField("warpvector"), "Output filed WarpVector is missing");
   using vecType = vtkm::Vec3f;
@@ -88,7 +89,7 @@ void TestWarpVectorFilter()
 
   {
     std::cout << "   First field as coordinates" << std::endl;
-    vtkm::filter::WarpVector filter(scale);
+    vtkm::filter::field_transform::WarpVector filter(scale);
     filter.SetUseCoordinateSystemAsField(true);
     filter.SetVectorField("vec2");
     vtkm::cont::DataSet result = filter.Execute(ds);
@@ -97,7 +98,7 @@ void TestWarpVectorFilter()
 
   {
     std::cout << "   First field as a vector" << std::endl;
-    vtkm::filter::WarpVector filter(scale);
+    vtkm::filter::field_transform::WarpVector filter(scale);
     filter.SetActiveField("vec1");
     filter.SetVectorField("vec2");
     vtkm::cont::DataSet result = filter.Execute(ds);
