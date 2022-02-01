@@ -10,7 +10,6 @@
 #ifndef vtk_m_cont_testing_TestingArrayHandleMultiplexer_h
 #define vtk_m_cont_testing_TestingArrayHandleMultiplexer_h
 
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
@@ -52,7 +51,7 @@ class TestingArrayHandleMultiplexer
                      "Multiplexer array gave wrong result in control environment");
 
     vtkm::cont::ArrayHandle<T> copy;
-    vtkm::cont::ArrayCopy(multiplexerArray, copy);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(multiplexerArray, copy);
     VTKM_TEST_ASSERT(test_equal_portals(copy.ReadPortal(), expectedArray.ReadPortal()),
                      "Multiplexer did not copy correctly in execution environment");
   }
