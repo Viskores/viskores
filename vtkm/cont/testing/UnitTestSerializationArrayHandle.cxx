@@ -48,18 +48,6 @@ using TestTypesListScalar = vtkm::List<vtkm::Int8, vtkm::Id, vtkm::FloatDefault>
 using TestTypesListVec = vtkm::List<vtkm::Vec3f_32, vtkm::Vec3f_64>;
 using TestTypesList = vtkm::ListAppend<TestTypesListScalar, TestTypesListVec>;
 
-using StorageListEfficentExtract =
-  vtkm::List<vtkm::cont::StorageTagBasic,
-             vtkm::cont::StorageTagSOA,
-             vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
-                                                    vtkm::cont::StorageTagBasic,
-                                                    vtkm::cont::StorageTagBasic>,
-             vtkm::cont::StorageTagGroupVec<vtkm::cont::StorageTagBasic, 2>,
-             vtkm::cont::StorageTagGroupVec<vtkm::cont::StorageTagBasic, 3>,
-             vtkm::cont::StorageTagGroupVec<vtkm::cont::StorageTagBasic, 4>,
-             vtkm::cont::StorageTagReverse<vtkm::cont::StorageTagBasic>,
-             vtkm::cont::StorageTagUniformPoints>;
-
 using StorageListInefficientExtract = vtkm::List<
   vtkm::cont::StorageTagCast<vtkm::Int8, vtkm::cont::StorageTagBasic>,
   vtkm::cont::StorageTagConstant,
