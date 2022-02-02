@@ -15,6 +15,7 @@
 #include <vtkm/cont/ArrayGetValues.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
