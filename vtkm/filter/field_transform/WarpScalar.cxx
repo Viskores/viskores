@@ -36,7 +36,6 @@ VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(const vtkm::cont::DataSet& i
   // TODO:
   //  Ken suggested to provide additional public interface for user to supply a single
   //  value for const normal (and scale factor?).
-  auto field = this->GetFieldFromDataSet(inDataSet);
   vtkm::cont::Field normalF =
     inDataSet.GetField(this->NormalFieldName, this->NormalFieldAssociation);
   vtkm::cont::ArrayHandle<vtkm::Vec3f> normalArray;
@@ -73,7 +72,8 @@ VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(const vtkm::cont::DataSet& i
     worklet.Run(concrete, normalArray, scaleFactorArray, this->ScaleAmount, result);
     outArray = result;
   };
-  this->CastAndCallVecField<3>(field.GetData(), resolveType);
+  auto field = this->GetFieldFromDataSet(inDataSet);
+  this->CastAndCallVecField<3>(field, resolveType);
 
   return this->CreateResultField(
     inDataSet, this->GetOutputFieldName(), field.GetAssociation(), outArray);

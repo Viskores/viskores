@@ -28,7 +28,6 @@ VTKM_CONT WarpVector::WarpVector(vtkm::FloatDefault scale)
 //-----------------------------------------------------------------------------
 VTKM_CONT vtkm::cont::DataSet WarpVector::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
-  auto field = this->GetFieldFromDataSet(inDataSet);
   vtkm::cont::Field vectorF =
     inDataSet.GetField(this->VectorFieldName, this->VectorFieldAssociation);
   vtkm::cont::ArrayHandle<vtkm::Vec3f> vectorArray;
@@ -60,6 +59,7 @@ VTKM_CONT vtkm::cont::DataSet WarpVector::DoExecute(const vtkm::cont::DataSet& i
     worklet.Run(concrete, vectorArray, this->Scale, result);
     outArray = result;
   };
+  auto field = this->GetFieldFromDataSet(inDataSet);
   this->CastAndCallVecField<3>(field, resolveType);
 
   return this->CreateResultField(

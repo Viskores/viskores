@@ -39,15 +39,15 @@ inline VTKM_CONT bool PointTransform::GetChangeCoordinateSystem() const
 //-----------------------------------------------------------------------------
 VTKM_CONT vtkm::cont::DataSet PointTransform::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
-  auto field = this->GetFieldFromDataSet(inDataSet);
   vtkm::cont::UnknownArrayHandle outArray;
 
   auto resolveType = [&, this](const auto& concrete) {
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     vtkm::cont::ArrayHandle<T> result;
-    this->Invoke(vtkm::worklet::PointTransform{ this->matrix }, field, result);
+    this->Invoke(vtkm::worklet::PointTransform{ this->matrix }, concrete, result);
     outArray = result;
   };
+  auto field = this->GetFieldFromDataSet(inDataSet);
   this->CastAndCallVecField<3>(field.GetData(), resolveType);
 
   vtkm::cont::DataSet outData = this->CreateResultField(

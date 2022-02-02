@@ -47,19 +47,17 @@ vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(const vtkm::cont::
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet SphericalCoordinateTransform::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
-  auto field = this->GetFieldFromDataSet(inDataSet);
-
   vtkm::cont::UnknownArrayHandle outArray;
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&, this](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     vtkm::cont::ArrayHandle<T> result;
-    vtkm::worklet::SphericalCoordinateTransform Worklet{ this->cartesianToSpherical };
-    Worklet.Run(concrete, result);
+    vtkm::worklet::SphericalCoordinateTransform worklet{ this->cartesianToSpherical };
+    worklet.Run(concrete, result);
     outArray = result;
   };
-  this->CastAndCallVecField<3>(field, resolveType);
+  this->CastAndCallVecField<3>(this->GetFieldFromDataSet(inDataSet), resolveType);
 
   vtkm::cont::DataSet outDataSet =
     this->CreateResult(inDataSet,

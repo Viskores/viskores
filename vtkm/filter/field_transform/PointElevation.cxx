@@ -26,7 +26,6 @@ VTKM_CONT PointElevation::PointElevation()
 //-----------------------------------------------------------------------------
 VTKM_CONT vtkm::cont::DataSet PointElevation::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
-  auto field = this->GetFieldFromDataSet(inDataSet);
   vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
 
   auto resolveType = [&, this](const auto& concrete) {
@@ -36,7 +35,8 @@ VTKM_CONT vtkm::cont::DataSet PointElevation::DoExecute(const vtkm::cont::DataSe
       concrete,
       outArray);
   };
-  this->CastAndCallVecField<3>(field.GetData(), resolveType);
+  auto field = this->GetFieldFromDataSet(inDataSet);
+  this->CastAndCallVecField<3>(field, resolveType);
 
   return this->CreateResultField(
     inDataSet, this->GetOutputFieldName(), field.GetAssociation(), outArray);
