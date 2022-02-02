@@ -16,9 +16,9 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/filter/density_estimate/worklet/NDimsHistogram.h>
+#include <vtkm/filter/density_estimate/worklet/histogram/ComputeNDEntropy.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/histogram/ComputeNDEntropy.h>
 
 #include <vtkm/cont/Field.h>
 
@@ -80,7 +80,7 @@ public:
 
 private:
   vtkm::worklet::NDimsHistogram NdHistogram;
-  vtkm::Id NumDataPoints;
+  vtkm::Id NumDataPoints{};
 };
 }
 } // namespace vtkm::worklet

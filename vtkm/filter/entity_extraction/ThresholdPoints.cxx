@@ -147,7 +147,7 @@ VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(const vtkm::cont::DataS
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::ThresholdPoints worklet;
 
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
     switch (this->ThresholdType)
     {
       case THRESHOLD_BELOW:

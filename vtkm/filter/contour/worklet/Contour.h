@@ -15,10 +15,10 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 
-#include <vtkm/filter/contour/worklet/CommonState.h>
-#include <vtkm/filter/contour/worklet/FieldPropagation.h>
-#include <vtkm/filter/contour/worklet/FlyingEdges.h>
-#include <vtkm/filter/contour/worklet/MarchingCells.h>
+#include <vtkm/filter/contour/worklet/contour/CommonState.h>
+#include <vtkm/filter/contour/worklet/contour/FieldPropagation.h>
+#include <vtkm/filter/contour/worklet/contour/FlyingEdges.h>
+#include <vtkm/filter/contour/worklet/contour/MarchingCells.h>
 
 
 namespace vtkm

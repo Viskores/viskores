@@ -27,8 +27,7 @@ vtkm::cont::DataSet MakeTestDataSet()
     0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0,
   };
 
-  vtkm::cont::DataSetBuilderUniform builder;
-  vtkm::cont::DataSet dataSet = builder.Create(vtkm::Id3(8, 8, 1));
+  vtkm::cont::DataSet dataSet = vtkm::cont::DataSetBuilderUniform::Create(vtkm::Id3(8, 8, 1));
 
   dataSet.AddPointField("color", pixels);
 

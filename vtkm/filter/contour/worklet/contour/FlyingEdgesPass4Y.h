@@ -14,8 +14,8 @@
 #define vtk_m_worklet_contour_flyingedges_pass4y_h
 
 
-#include <vtkm/filter/contour/worklet/FlyingEdgesHelpers.h>
-#include <vtkm/filter/contour/worklet/FlyingEdgesTables.h>
+#include <vtkm/filter/contour/worklet/contour/FlyingEdgesHelpers.h>
+#include <vtkm/filter/contour/worklet/contour/FlyingEdgesTables.h>
 
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/filter/vector_analysis/worklet/gradient/StructuredPointGradient.h>

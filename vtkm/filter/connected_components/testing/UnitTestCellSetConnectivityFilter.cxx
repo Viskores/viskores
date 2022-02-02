@@ -22,7 +22,7 @@ namespace
 class TestCellSetConnectivity
 {
 public:
-  void TestTangleIsosurface() const
+  static void TestTangleIsosurface()
   {
     vtkm::Id3 dims(4, 4, 4);
     vtkm::source::Tangle tangle(dims);
@@ -49,7 +49,7 @@ public:
                      "Wrong number of connected components");
   }
 
-  void TestExplicitDataSet() const
+  static void TestExplicitDataSet()
   {
     vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
 
@@ -67,7 +67,7 @@ public:
                      "Wrong number of connected components");
   }
 
-  void TestUniformDataSet() const
+  static void TestUniformDataSet()
   {
     vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::connected_components::CellSetConnectivity connectivity;
@@ -86,9 +86,9 @@ public:
 
   void operator()() const
   {
-    this->TestTangleIsosurface();
-    this->TestExplicitDataSet();
-    this->TestUniformDataSet();
+    TestCellSetConnectivity::TestTangleIsosurface();
+    TestCellSetConnectivity::TestExplicitDataSet();
+    TestCellSetConnectivity::TestUniformDataSet();
   }
 };
 }

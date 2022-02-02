@@ -106,8 +106,8 @@ vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
                                     bool addMidGhost = false)
 {
   vtkm::cont::DataSet ds;
-  std::size_t nx(static_cast<std::size_t>(numI + 1));
-  std::size_t ny(static_cast<std::size_t>(numJ + 1));
+  auto nx(static_cast<std::size_t>(numI + 1));
+  auto ny(static_cast<std::size_t>(numJ + 1));
 
   std::vector<float> x(nx), y(ny);
   for (std::size_t i = 0; i < nx; i++)
@@ -119,7 +119,7 @@ vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
     ds = vtkm::cont::DataSetBuilderRectilinear::Create(x, y);
   else
   {
-    std::size_t nz(static_cast<std::size_t>(numK + 1));
+    auto nz(static_cast<std::size_t>(numK + 1));
     std::vector<float> z(nz);
     for (std::size_t i = 0; i < nz; i++)
       z[i] = static_cast<float>(i);

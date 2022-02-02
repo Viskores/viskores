@@ -39,7 +39,7 @@ namespace vector_analysis
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet Gradient::DoExecute(const vtkm::cont::DataSet& inputDataSet)
 {
-  auto field = this->GetFieldFromDataSet(inputDataSet);
+  const auto& field = this->GetFieldFromDataSet(inputDataSet);
   if (!field.IsFieldPoint())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
@@ -67,7 +67,7 @@ vtkm::cont::DataSet Gradient::DoExecute(const vtkm::cont::DataSet& inputDataSet)
   // TODO: there are a humungous number of (weak) symbols in the .o file. Investigate if
   //  they are all legit.
 
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     vtkm::worklet::GradientOutputFields<T> gradientfields(this->GetComputeGradient(),

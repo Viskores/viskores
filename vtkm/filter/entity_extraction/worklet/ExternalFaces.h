@@ -68,10 +68,10 @@ struct ExternalFaces
     }
 
     VTKM_EXEC
-    inline vtkm::IdComponent CountExternalFacesOnDimension(vtkm::Float64 grid_min,
-                                                           vtkm::Float64 grid_max,
-                                                           vtkm::Float64 cell_min,
-                                                           vtkm::Float64 cell_max) const
+    static inline vtkm::IdComponent CountExternalFacesOnDimension(vtkm::Float64 grid_min,
+                                                                  vtkm::Float64 grid_max,
+                                                                  vtkm::Float64 cell_min,
+                                                                  vtkm::Float64 cell_max)
     {
       vtkm::IdComponent count = 0;
 
@@ -159,14 +159,14 @@ struct ExternalFaces
     };
 
     VTKM_EXEC
-    inline bool FoundFaceOnDimension(vtkm::Float64 grid_min,
-                                     vtkm::Float64 grid_max,
-                                     vtkm::Float64 cell_min,
-                                     vtkm::Float64 cell_max,
-                                     vtkm::IdComponent& faceIndex,
-                                     vtkm::IdComponent& count,
-                                     vtkm::IdComponent dimensionFaceOffset,
-                                     vtkm::IdComponent visitIndex) const
+    static inline bool FoundFaceOnDimension(vtkm::Float64 grid_min,
+                                            vtkm::Float64 grid_max,
+                                            vtkm::Float64 cell_min,
+                                            vtkm::Float64 cell_max,
+                                            vtkm::IdComponent& faceIndex,
+                                            vtkm::IdComponent& count,
+                                            vtkm::IdComponent dimensionFaceOffset,
+                                            vtkm::IdComponent visitIndex)
     {
       bool cell_min_at_grid_boundary = cell_min <= grid_min;
       bool cell_max_at_grid_boundary = cell_max >= grid_max;
@@ -648,7 +648,7 @@ public:
   struct BiasFunctor
   {
     VTKM_EXEC_CONT
-    BiasFunctor(T bias = T(0))
+    explicit BiasFunctor(T bias = T(0))
       : Bias(bias)
     {
     }

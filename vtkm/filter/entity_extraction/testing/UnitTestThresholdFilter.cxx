@@ -21,7 +21,7 @@ namespace
 class TestingThreshold
 {
 public:
-  void TestRegular2D(bool returnAllInRange) const
+  static void TestRegular2D(bool returnAllInRange)
   {
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet0();
     vtkm::filter::entity_extraction::Threshold threshold;
@@ -77,7 +77,7 @@ public:
     clean.Execute(output);
   }
 
-  void TestRegular3D(bool returnAllInRange) const
+  static void TestRegular3D(bool returnAllInRange)
   {
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
     vtkm::filter::entity_extraction::Threshold threshold;
@@ -136,7 +136,7 @@ public:
     clean.Execute(output);
   }
 
-  void TestExplicit3D() const
+  static void TestExplicit3D()
   {
     std::cout << "Testing threshold on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
@@ -166,7 +166,7 @@ public:
     clean.Execute(output);
   }
 
-  void TestExplicit3DZeroResults() const
+  static void TestExplicit3DZeroResults()
   {
     std::cout << "Testing threshold on 3D explicit dataset with empty results" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
@@ -195,12 +195,12 @@ public:
 
   void operator()() const
   {
-    this->TestRegular2D(false);
-    this->TestRegular2D(true);
-    this->TestRegular3D(false);
-    this->TestRegular3D(true);
-    this->TestExplicit3D();
-    this->TestExplicit3DZeroResults();
+    TestingThreshold::TestRegular2D(false);
+    TestingThreshold::TestRegular2D(true);
+    TestingThreshold::TestRegular3D(false);
+    TestingThreshold::TestRegular3D(true);
+    TestingThreshold::TestExplicit3D();
+    TestingThreshold::TestExplicit3DZeroResults();
   }
 };
 }

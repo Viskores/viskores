@@ -15,6 +15,7 @@
 #include <vtkm/cont/ArrayGetValues.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
@@ -147,7 +148,7 @@ public:
   vtkm::Id numberOfBins;
 
   VTKM_CONT
-  ConvertHistBinToND(vtkm::Id numberOfBins0)
+  explicit ConvertHistBinToND(vtkm::Id numberOfBins0)
     : numberOfBins(numberOfBins0)
   {
   }

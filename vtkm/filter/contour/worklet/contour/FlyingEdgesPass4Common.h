@@ -13,8 +13,8 @@
 #ifndef vtk_m_worklet_contour_flyingedges_pass4_common_h
 #define vtk_m_worklet_contour_flyingedges_pass4_common_h
 
-#include <vtkm/filter/contour/worklet/FlyingEdgesHelpers.h>
-#include <vtkm/filter/contour/worklet/FlyingEdgesTables.h>
+#include <vtkm/filter/contour/worklet/contour/FlyingEdgesHelpers.h>
+#include <vtkm/filter/contour/worklet/contour/FlyingEdgesTables.h>
 
 namespace vtkm
 {

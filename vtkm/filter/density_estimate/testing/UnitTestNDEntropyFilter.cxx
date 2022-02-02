@@ -10,7 +10,6 @@
 
 #include <vtkm/filter/density_estimate/NDEntropy.h>
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace

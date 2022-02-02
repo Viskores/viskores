@@ -21,7 +21,7 @@ namespace
 class TestingThresholdPoints
 {
 public:
-  void TestRegular2D() const
+  static void TestRegular2D()
   {
     std::cout << "Testing threshold points on 2D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
@@ -42,7 +42,7 @@ public:
     VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(12) == 50.0f, "Wrong point field data");
   }
 
-  void TestRegular3D() const
+  static void TestRegular3D()
   {
     std::cout << "Testing threshold points on 3D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -64,7 +64,7 @@ public:
     VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(0) == 99.0f, "Wrong point field data");
   }
 
-  void TestExplicit3D() const
+  static void TestExplicit3D()
   {
     std::cout << "Testing threshold points on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -86,7 +86,7 @@ public:
     VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(4) == 10.f, "Wrong point field data");
   }
 
-  void TestExplicit3DZeroResults() const
+  static void TestExplicit3DZeroResults()
   {
     std::cout << "Testing threshold on 3D explicit dataset with empty results" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
@@ -104,10 +104,10 @@ public:
 
   void operator()() const
   {
-    this->TestRegular2D();
-    this->TestRegular3D();
-    this->TestExplicit3D();
-    this->TestExplicit3DZeroResults();
+    TestingThresholdPoints::TestRegular2D();
+    TestingThresholdPoints::TestRegular3D();
+    TestingThresholdPoints::TestExplicit3D();
+    TestingThresholdPoints::TestExplicit3DZeroResults();
   }
 };
 }

@@ -56,7 +56,7 @@ vtkm::cont::DataSet ExternalFaces::GenerateOutput(const vtkm::cont::DataSet& inp
   }
 
   //4. create the output dataset
-  auto mapper = [&, this](auto& result, const auto& f) {
+  auto mapper = [&](auto& result, const auto& f) {
     // New Design: We are still using the old MapFieldOntoOutput to demonstrate the transition
     this->MapFieldOntoOutput(result, f);
   };

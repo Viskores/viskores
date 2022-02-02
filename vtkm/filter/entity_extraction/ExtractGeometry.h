@@ -17,12 +17,6 @@
 
 namespace vtkm
 {
-namespace worklet
-{
-// Forward declaration for the worklet so we don't need to include the worklet header file
-// which would require user code to be compilerd by device compiler.
-class ExtractGeometry;
-}
 namespace filter
 {
 namespace entity_extraction

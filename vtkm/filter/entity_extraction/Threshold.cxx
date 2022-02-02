@@ -82,7 +82,7 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::worklet::Threshold worklet;
   vtkm::cont::UnknownCellSet cellOut;
 
-  auto resolveArrayType = [&, this](const auto& concrete) {
+  auto resolveArrayType = [&](const auto& concrete) {
     // Note: there are two overloads of .Run, the first one taking an UncertainCellSet, which is
     // the desired entry point in the following call. The other is a function template on the input
     // CellSet. Without the call to .ResetCellSetList to turn an UnknownCellSet to an UncertainCellSet,
@@ -94,8 +94,7 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
                           this->GetAllInRange());
   };
 
-  const auto& fieldArray = field.GetData();
-  fieldArray.CastAndCallForTypes<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(
+  field.GetData().CastAndCallForTypes<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(
     resolveArrayType);
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };

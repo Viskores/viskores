@@ -21,7 +21,7 @@ namespace
 class TestingMask
 {
 public:
-  void TestUniform2D() const
+  static void TestUniform2D()
   {
     std::cout << "Testing mask cells uniform grid :" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
@@ -44,7 +44,7 @@ public:
                      "Wrong mask data");
   }
 
-  void TestUniform3D() const
+  static void TestUniform3D()
   {
     std::cout << "Testing mask cells uniform grid :" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -65,7 +65,7 @@ public:
                      "Wrong mask data");
   }
 
-  void TestExplicit() const
+  static void TestExplicit()
   {
     std::cout << "Testing mask cells explicit:" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -88,9 +88,9 @@ public:
 
   void operator()() const
   {
-    this->TestUniform2D();
-    this->TestUniform3D();
-    this->TestExplicit();
+    TestingMask::TestUniform2D();
+    TestingMask::TestUniform3D();
+    TestingMask::TestExplicit();
   }
 };
 }

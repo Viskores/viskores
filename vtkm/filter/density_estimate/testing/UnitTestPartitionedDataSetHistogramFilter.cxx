@@ -18,12 +18,11 @@
 #include <algorithm>
 #include <numeric>
 #include <random>
-#include <utility>
 
 namespace
 {
 
-static unsigned int uid = 1;
+unsigned int uid = 1;
 
 template <typename T>
 vtkm::cont::ArrayHandle<T> CreateArrayHandle(T min, T max, vtkm::Id numVals)
@@ -125,7 +124,7 @@ static void TestPartitionedDataSetHistogram()
     std::cout << " " << binsPortal.Get(cc);
   }
   std::cout << std::endl;
-};
+}
 
 int UnitTestPartitionedDataSetHistogramFilter(int argc, char* argv[])
 {

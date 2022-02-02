@@ -21,7 +21,7 @@ namespace
 class TestingMaskPoints
 {
 public:
-  void TestRegular2D() const
+  static void TestRegular2D()
   {
     std::cout << "Testing mask points on 2D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
@@ -36,7 +36,7 @@ public:
                      "Wrong number of points for MaskPoints");
   }
 
-  void TestRegular3D() const
+  static void TestRegular3D()
   {
     std::cout << "Testing mask points on 3D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -51,7 +51,7 @@ public:
                      "Wrong number of points for MaskPoints");
   }
 
-  void TestExplicit3D() const
+  static void TestExplicit3D()
   {
     std::cout << "Testing mask points on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -69,9 +69,9 @@ public:
 
   void operator()() const
   {
-    this->TestRegular2D();
-    this->TestRegular3D();
-    this->TestExplicit3D();
+    TestingMaskPoints::TestRegular2D();
+    TestingMaskPoints::TestRegular3D();
+    TestingMaskPoints::TestExplicit3D();
   }
 };
 }

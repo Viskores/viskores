@@ -10,24 +10,25 @@
 
 set(headers
   Clip.h
-  CommonState.h
+  contour/CommonState.h
   Contour.h
-  FieldPropagation.h
-  FlyingEdges.h
-  FlyingEdgesHelpers.h
-  FlyingEdgesPass1.h
-  FlyingEdgesPass2.h
-  FlyingEdgesPass4.h
-  FlyingEdgesPass4Common.h
-  FlyingEdgesPass4X.h
-  FlyingEdgesPass4XWithNormals.h
-  FlyingEdgesPass4Y.h
-  FlyingEdgesTables.h
-  MarchingCellTables.h
-  MarchingCells.h
+  contour/FieldPropagation.h
+  contour/FlyingEdges.h
+  contour/FlyingEdgesHelpers.h
+  contour/FlyingEdgesPass1.h
+  contour/FlyingEdgesPass2.h
+  contour/FlyingEdgesPass4.h
+  contour/FlyingEdgesPass4Common.h
+  contour/FlyingEdgesPass4X.h
+  contour/FlyingEdgesPass4XWithNormals.h
+  contour/FlyingEdgesPass4Y.h
+  contour/FlyingEdgesTables.h
+  contour/MarchingCellTables.h
+  contour/MarchingCells.h
   )
 
 add_subdirectory(clip)
+add_subdirectory(contour)
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})

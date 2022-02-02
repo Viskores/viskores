@@ -25,7 +25,7 @@ class ConditionalFreq : public vtkm::worklet::WorkletMapField
 {
 public:
   VTKM_CONT
-  ConditionalFreq(BinaryCompare _bop)
+  explicit ConditionalFreq(BinaryCompare _bop)
     : bop(_bop)
   {
   }
@@ -34,7 +34,7 @@ public:
   void setVar(vtkm::Id _var) { var = _var; }
 
   BinaryCompare bop;
-  vtkm::Id var;
+  vtkm::Id var{};
 
   using ControlSignature = void(FieldIn, FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2, _3);
@@ -60,7 +60,7 @@ public:
   vtkm::Id numberOfBins;
 
   VTKM_CONT
-  To1DIndex(vtkm::Id numberOfBins0)
+  explicit To1DIndex(vtkm::Id numberOfBins0)
     : numberOfBins(numberOfBins0)
   {
   }
