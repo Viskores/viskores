@@ -63,21 +63,22 @@ VTKM_EXEC OutType CellSkewMetric(const vtkm::IdComponent& numPts,
   using Scalar = OutType;
   using Vector = typename PointCoordVecType::ComponentType;
   Vector X1 = (pts[1] - pts[0]) + (pts[2] - pts[3]) + (pts[5] - pts[4]) + (pts[6] - pts[7]);
-  Scalar X1_mag = vtkm::Magnitude(X1);
-  if (X1_mag <= Scalar(0.0))
+  auto X1_mag = vtkm::Magnitude(X1);
+  if (Scalar(X1_mag) <= Scalar(0.0))
     return vtkm::Infinity<Scalar>();
   Vector x1 = X1 / X1_mag;
   Vector X2 = (pts[3] - pts[0]) + (pts[2] - pts[1]) + (pts[7] - pts[4]) + (pts[6] - pts[5]);
-  Scalar X2_mag = vtkm::Magnitude(X2);
-  if (X2_mag <= Scalar(0.0))
+  auto X2_mag = vtkm::Magnitude(X2);
+  if (Scalar(X2_mag) <= Scalar(0.0))
     return vtkm::Infinity<Scalar>();
   Vector x2 = X2 / X2_mag;
   Vector X3 = (pts[4] - pts[0]) + (pts[5] - pts[1]) + (pts[6] - pts[2]) + (pts[7] - pts[3]);
-  Scalar X3_mag = vtkm::Magnitude(X3);
-  if (X3_mag <= Scalar(0.0))
+  auto X3_mag = vtkm::Magnitude(X3);
+  if (Scalar(X3_mag) <= Scalar(0.0))
     return vtkm::Infinity<Scalar>();
   Vector x3 = X3 / X3_mag;
-  return vtkm::Max(vtkm::Dot(x1, x2), vtkm::Max(vtkm::Dot(x1, x3), vtkm::Dot(x2, x3)));
+  return static_cast<Scalar>(
+    vtkm::Max(vtkm::Dot(x1, x2), vtkm::Max(vtkm::Dot(x1, x3), vtkm::Dot(x2, x3))));
 }
 
 template <typename OutType, typename PointCoordVecType>

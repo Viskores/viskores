@@ -76,9 +76,9 @@ VTKM_EXEC OutType CellTaperMetric(const vtkm::IdComponent& numPts,
   const Vector X1 = GetQuadX0<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector X2 = GetQuadX1<Scalar, Vector, CollectionOfPoints>(pts);
 
-  const Scalar x12 = vtkm::Sqrt(vtkm::MagnitudeSquared(X12));
-  const Scalar x1 = vtkm::Sqrt(vtkm::MagnitudeSquared(X1));
-  const Scalar x2 = vtkm::Sqrt(vtkm::MagnitudeSquared(X2));
+  const Scalar x12 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(X12)));
+  const Scalar x1 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(X1)));
+  const Scalar x2 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(X2)));
   const Scalar minLength = vtkm::Min(x1, x2);
 
   if (minLength <= Scalar(0.0))
