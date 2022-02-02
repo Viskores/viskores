@@ -274,9 +274,10 @@ VTKM_EXEC OutType CellDimensionMetric(const vtkm::IdComponent& numPts,
   gradop[7][2] = (x7 * (y3 - y6 - y54) + x6 * y75 + x5 * (y6 - y1 - y47) + x4 * (y1 - y3 - y75) +
                   x3 * y47 + x1 * y54) /
     (OutType)12.0;
-  OutType volume = pts[0][0] * gradop[0][0] + pts[1][0] * gradop[1][0] + pts[2][0] * gradop[2][0] +
-    pts[3][0] * gradop[3][0] + pts[4][0] * gradop[4][0] + pts[5][0] * gradop[5][0] +
-    pts[6][0] * gradop[6][0] + pts[7][0] * gradop[7][0];
+  OutType volume = OutType(pts[0][0]) * gradop[0][0] + OutType(pts[1][0]) * gradop[1][0] +
+    OutType(pts[2][0]) * gradop[2][0] + OutType(pts[3][0]) * gradop[3][0] +
+    OutType(pts[4][0]) * gradop[4][0] + OutType(pts[5][0]) * gradop[5][0] +
+    OutType(pts[6][0]) * gradop[6][0] + OutType(pts[7][0]) * gradop[7][0];
   OutType two = (OutType)2.;
   OutType aspect = (OutType).5 * vtkm::Pow(volume, two) /
     (vtkm::Pow(gradop[0][0], two) + vtkm::Pow(gradop[1][0], two) + vtkm::Pow(gradop[2][0], two) +
