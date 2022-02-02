@@ -70,8 +70,8 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
     std::vector<vtkm::FloatDefault> Phis = {
       eps, vtkm::TwoPif() / 4.0f, vtkm::TwoPif() / 3.0f, vtkm::TwoPif() / 2.0f, vtkm::TwoPif() - eps
     };
-    for (float& Theta : Thetas)
-      for (float& Phi : Phis)
+    for (auto& Theta : Thetas)
+      for (auto& Phi : Phis)
         coordinates.push_back(vtkm::make_Vec(R, Theta, Phi));
   }
 

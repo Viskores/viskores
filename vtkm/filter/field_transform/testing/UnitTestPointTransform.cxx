@@ -187,7 +187,7 @@ void TestPointTransform()
   for (int i = 0; i < N; i++)
     axes.emplace_back(axisDist(randGenerator), axisDist(randGenerator), axisDist(randGenerator));
 
-  for (float& angle : angles)
+  for (auto& angle : angles)
     for (auto& axe : axes)
       TestPointTransformRotation(ds, angle, axe);
 }
