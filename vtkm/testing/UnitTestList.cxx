@@ -202,10 +202,13 @@ void TestLists()
 
   std::cout << "ListCross" << std::endl;
   CheckList(vtkm::List<vtkm::List<TestClass<31>, TestClass<11>>,
+                       vtkm::List<TestClass<31>, TestClass<12>>,
                        vtkm::List<TestClass<32>, TestClass<11>>,
-                       vtkm::List<TestClass<33>, TestClass<11>>>{},
+                       vtkm::List<TestClass<32>, TestClass<12>>,
+                       vtkm::List<TestClass<33>, TestClass<11>>,
+                       vtkm::List<TestClass<33>, TestClass<12>>>{},
             vtkm::ListCross<vtkm::List<TestClass<31>, TestClass<32>, TestClass<33>>,
-                            vtkm::List<TestClass<11>>>{});
+                            vtkm::List<TestClass<11>, TestClass<12>>>{});
 
   std::cout << "ListAt" << std::endl;
   CheckSame(TestClass<2>{}, vtkm::ListAt<EvenList, 0>{});
