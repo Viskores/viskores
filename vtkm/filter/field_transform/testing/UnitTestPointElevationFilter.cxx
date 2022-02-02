@@ -9,7 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/PointElevation.h>
+#include <vtkm/filter/field_transform/PointElevation.h>
 
 #include <vector>
 
@@ -62,9 +62,9 @@ void TestPointElevationNoPolicy()
 
   vtkm::cont::DataSet inputData = MakePointElevationTestDataSet();
 
-  vtkm::filter::PointElevation filter;
-  filter.SetLowPoint(0.0, 0.0, 0.0);
-  filter.SetHighPoint(0.0, 1.0, 0.0);
+  vtkm::filter::field_transform::PointElevation filter;
+  filter.SetLowPoint({ 0.0, 0.0, 0.0 });
+  filter.SetHighPoint({ 0.0, 1.0, 0.0 });
   filter.SetRange(0.0, 2.0);
 
   filter.SetOutputFieldName("height");
@@ -94,9 +94,9 @@ void TestPointElevationWithPolicy()
 
   vtkm::cont::DataSet inputData = MakePointElevationTestDataSet();
 
-  vtkm::filter::PointElevation filter;
-  filter.SetLowPoint(0.0, 0.0, 0.0);
-  filter.SetHighPoint(0.0, 1.0, 0.0);
+  vtkm::filter::field_transform::PointElevation filter;
+  filter.SetLowPoint({ 0.0, 0.0, 0.0 });
+  filter.SetHighPoint({ 0.0, 1.0, 0.0 });
   filter.SetRange(0.0, 2.0);
   filter.SetUseCoordinateSystemAsField(true);
 

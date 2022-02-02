@@ -36,7 +36,7 @@ public:
     using ControlSignature = void(FieldIn, FieldIn, FieldOut);
     using ExecutionSignature = _3(_1, _2);
     VTKM_CONT
-    WarpVectorImp(vtkm::FloatDefault scale)
+    explicit WarpVectorImp(vtkm::FloatDefault scale)
       : Scale(scale)
     {
     }

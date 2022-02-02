@@ -8,11 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/WarpScalar.h>
+#include <vtkm/filter/field_transform/WarpScalar.h>
 
-#include <random>
 #include <vector>
 
 namespace
@@ -54,7 +52,8 @@ vtkm::cont::DataSet MakeWarpScalarTestDataSet()
   return dataSet;
 }
 
-void CheckResult(const vtkm::filter::WarpScalar& filter, const vtkm::cont::DataSet& result)
+void CheckResult(const vtkm::filter::field_transform::WarpScalar& filter,
+                 const vtkm::cont::DataSet& result)
 {
   VTKM_TEST_ASSERT(result.HasPointField("warpscalar"), "Output filed warpscalar is missing");
   using vecType = vtkm::Vec3f;
@@ -94,7 +93,7 @@ void TestWarpScalarFilter()
 
   {
     std::cout << "   First field as coordinates" << std::endl;
-    vtkm::filter::WarpScalar filter(scale);
+    vtkm::filter::field_transform::WarpScalar filter(scale);
     filter.SetUseCoordinateSystemAsField(true);
     filter.SetNormalField("normal");
     filter.SetScalarFactorField("scalarfactor");
@@ -104,7 +103,7 @@ void TestWarpScalarFilter()
 
   {
     std::cout << "   First field as a vector" << std::endl;
-    vtkm::filter::WarpScalar filter(scale);
+    vtkm::filter::field_transform::WarpScalar filter(scale);
     filter.SetActiveField("vec1");
     filter.SetNormalField("normal");
     filter.SetScalarFactorField("scalarfactor");

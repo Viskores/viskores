@@ -9,14 +9,32 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestGenerateIds.cxx)
+  UnitTestCoordinateSystemTransform.cxx
+  UnitTestFieldToColors.cxx
+  UnitTestGenerateIds.cxx
+  UnitTestPointElevationFilter.cxx
+  UnitTestPointTransform.cxx
+  UnitTestWarpScalarFilter.cxx
+  UnitTestWarpVectorFilter.cxx
+  )
 
 set(libraries
   vtkm_filter_field_transform
   vtkm_source)
 
+if (VTKm_ENABLE_RENDERING)
+  list(APPEND libraries
+    vtkm_rendering_testing
+    vtkm_rendering)
+
+  list(APPEND unit_tests
+    RenderTestPointTransform.cxx
+    )
+endif()
+
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
+  ALL_BACKENDS # renderer requires device compiler
   USE_VTKM_JOB_POOL
 )

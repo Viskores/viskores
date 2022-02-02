@@ -15,6 +15,7 @@ set(deprecated_headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   Contour.h
+  CoordinateSystemTransform.h
   CrossProduct.h
   DotProduct.h
   Entropy.h
@@ -22,6 +23,7 @@ set(deprecated_headers
   ExtractGeometry.h
   ExtractPoints.h
   ExtractStructured.h
+  FieldToColors.h
   GenerateIds.h
   GhostCellRemove.h
   Gradient.h
@@ -34,11 +36,15 @@ set(deprecated_headers
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
   PointAverage.h
+  PointElevation.h
+  PointTransform.h
   Slice.h
   SurfaceNormal.h
   Threshold.h
   ThresholdPoints.h
   VectorMagnitude.h
+  WarpScalar.h
+  WarpVector.h
   )
 
 vtkm_declare_headers(${deprecated_headers})
@@ -80,10 +86,8 @@ set(extra_headers
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   ContourTreeUniform.h
-  CoordinateSystemTransform.h
   CreateResult.h
   FieldSelection.h
-  FieldToColors.h
   GhostCellClassify.h
   ImageDifference.h
   ImageMedian.h
@@ -94,8 +98,6 @@ set(extra_headers
   ParticleAdvection.h
   Pathline.h
   PathParticle.h
-  PointElevation.h
-  PointTransform.h
   Probe.h
   SplitSharpEdges.h
   Streamline.h
@@ -104,8 +106,6 @@ set(extra_headers
   Triangulate.h
   Tube.h
   VertexClustering.h
-  WarpScalar.h
-  WarpVector.h
   ZFPCompressor1D.h
   ZFPCompressor2D.h
   ZFPCompressor3D.h
@@ -120,8 +120,6 @@ set(extra_header_template_sources
   ContourTreeUniformAugmented.hxx
   ContourTreeUniformDistributed.hxx
   ContourTreeUniform.hxx
-  CoordinateSystemTransform.hxx
-  FieldToColors.hxx
   GhostCellClassify.hxx
   ImageDifference.hxx
   ImageMedian.hxx
@@ -132,8 +130,6 @@ set(extra_header_template_sources
   ParticleAdvection.hxx
   Pathline.hxx
   PathParticle.hxx
-  PointElevation.hxx
-  PointTransform.hxx
   Probe.hxx
   SplitSharpEdges.hxx
   Streamline.hxx
@@ -142,8 +138,6 @@ set(extra_header_template_sources
   Triangulate.hxx
   Tube.hxx
   VertexClustering.hxx
-  WarpScalar.hxx
-  WarpVector.hxx
   ZFPCompressor1D.hxx
   ZFPCompressor2D.hxx
   ZFPCompressor3D.hxx

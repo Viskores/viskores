@@ -13,7 +13,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/VTKDataSetReader.h>
 
-#include <vtkm/filter/PointTransform.h>
+#include <vtkm/filter/field_transform/PointTransform.h>
 #include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
 #include <vtkm/rendering/testing/RenderTest.h>
@@ -30,7 +30,7 @@ void TestPointTransform()
   vtkm::io::VTKDataSetReader reader(pathname);
   vtkm::cont::DataSet dataSet = reader.ReadDataSet();
 
-  vtkm::filter::PointTransform pointTransform;
+  vtkm::filter::field_transform::PointTransform pointTransform;
   pointTransform.SetOutputFieldName("translation");
   pointTransform.SetTranslation(vtkm::Vec3f(1, 1, 1));
 

@@ -33,14 +33,14 @@
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/filter/Triangulate.h>
 #include <vtkm/filter/VertexClustering.h>
-#include <vtkm/filter/WarpScalar.h>
-#include <vtkm/filter/WarpVector.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
 #include <vtkm/filter/field_conversion/CellAverage.h>
 #include <vtkm/filter/field_conversion/PointAverage.h>
+#include <vtkm/filter/field_transform/WarpScalar.h>
+#include <vtkm/filter/field_transform/WarpVector.h>
 #include <vtkm/filter/vector_analysis/Gradient.h>
 #include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
@@ -295,7 +295,7 @@ void BenchWarpScalar(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::WarpScalar filter{ 2. };
+  vtkm::filter::field_transform::WarpScalar filter{ 2. };
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
   filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
@@ -318,7 +318,7 @@ void BenchWarpVector(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::WarpVector filter{ 2. };
+  vtkm::filter::field_transform::WarpVector filter{ 2. };
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
 

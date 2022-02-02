@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/FieldToColors.h>
+#include <vtkm/filter/field_transform/FieldToColors.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -31,7 +31,7 @@ void TestFieldToColors()
   vtkm::cont::DataSet ds = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
   ds.AddPointField("faux", data, nvals);
 
-  vtkm::filter::FieldToColors ftc(table);
+  vtkm::filter::field_transform::FieldToColors ftc(table);
   ftc.SetOutputToRGBA();
   ftc.SetActiveField("faux");
   ftc.SetOutputFieldName("colors");
