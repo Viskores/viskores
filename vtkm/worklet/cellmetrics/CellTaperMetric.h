@@ -102,22 +102,22 @@ VTKM_EXEC OutType CellTaperMetric(const vtkm::IdComponent& numPts,
   UNUSED(ec);
   using Scalar = OutType;
 
-  Scalar X1 = vtkm::Sqrt(vtkm::MagnitudeSquared((pts[1] - pts[0]) + (pts[2] - pts[3]) +
-                                                (pts[5] - pts[4]) + (pts[6] - pts[7])));
-  Scalar X2 = vtkm::Sqrt(vtkm::MagnitudeSquared((pts[3] - pts[0]) + (pts[2] - pts[1]) +
-                                                (pts[7] - pts[4]) + (pts[6] - pts[5])));
-  Scalar X3 = vtkm::Sqrt(vtkm::MagnitudeSquared((pts[4] - pts[0]) + (pts[5] - pts[1]) +
-                                                (pts[6] - pts[2]) + (pts[7] - pts[3])));
+  Scalar X1 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(
+    (pts[1] - pts[0]) + (pts[2] - pts[3]) + (pts[5] - pts[4]) + (pts[6] - pts[7]))));
+  Scalar X2 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(
+    (pts[3] - pts[0]) + (pts[2] - pts[1]) + (pts[7] - pts[4]) + (pts[6] - pts[5]))));
+  Scalar X3 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(
+    (pts[4] - pts[0]) + (pts[5] - pts[1]) + (pts[6] - pts[2]) + (pts[7] - pts[3]))));
   if ((X1 <= Scalar(0.0)) || (X2 <= Scalar(0.0)) || (X3 <= Scalar(0.0)))
   {
     return vtkm::Infinity<Scalar>();
   }
-  Scalar X12 = vtkm::Sqrt(vtkm::MagnitudeSquared(((pts[2] - pts[3]) - (pts[1] - pts[0])) +
-                                                 ((pts[6] - pts[7]) - (pts[5] - pts[4]))));
-  Scalar X13 = vtkm::Sqrt(vtkm::MagnitudeSquared(((pts[5] - pts[1]) - (pts[4] - pts[0])) +
-                                                 ((pts[6] - pts[2]) - (pts[7] - pts[3]))));
-  Scalar X23 = vtkm::Sqrt(vtkm::MagnitudeSquared(((pts[7] - pts[4]) - (pts[3] - pts[0])) +
-                                                 ((pts[6] - pts[5]) - (pts[2] - pts[1]))));
+  Scalar X12 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(
+    ((pts[2] - pts[3]) - (pts[1] - pts[0])) + ((pts[6] - pts[7]) - (pts[5] - pts[4])))));
+  Scalar X13 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(
+    ((pts[5] - pts[1]) - (pts[4] - pts[0])) + ((pts[6] - pts[2]) - (pts[7] - pts[3])))));
+  Scalar X23 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(
+    ((pts[7] - pts[4]) - (pts[3] - pts[0])) + ((pts[6] - pts[5]) - (pts[2] - pts[1])))));
   Scalar T12 = X12 / vtkm::Min(X1, X2);
   Scalar T13 = X13 / vtkm::Min(X1, X3);
   Scalar T23 = X23 / vtkm::Min(X2, X3);

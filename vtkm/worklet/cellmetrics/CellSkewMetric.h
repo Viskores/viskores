@@ -93,14 +93,14 @@ VTKM_EXEC OutType CellSkewMetric(const vtkm::IdComponent& numPts,
   using Vector = typename PointCoordVecType::ComponentType;
   const Vector X0 = GetQuadX0<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector X1 = GetQuadX1<Scalar, Vector, CollectionOfPoints>(pts);
-  const Scalar X0Mag = vtkm::Magnitude(X0);
-  const Scalar X1Mag = vtkm::Magnitude(X1);
+  const auto X0Mag = vtkm::Magnitude(X0);
+  const auto X1Mag = vtkm::Magnitude(X1);
 
-  if (X0Mag < Scalar(0.0) || X1Mag < Scalar(0.0))
+  if (Scalar(X0Mag) < Scalar(0.0) || Scalar(X1Mag) < Scalar(0.0))
     return Scalar(0.0);
   const Vector x0Normalized = X0 / X0Mag;
   const Vector x1Normalized = X1 / X1Mag;
-  const Scalar dot = vtkm::Dot(x0Normalized, x1Normalized);
+  const Scalar dot = static_cast<Scalar>(vtkm::Dot(x0Normalized, x1Normalized));
   return vtkm::Abs(dot);
 }
 }

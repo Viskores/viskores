@@ -67,8 +67,8 @@ VTKM_EXEC OutType CellWarpageMetric(const vtkm::IdComponent& numPts,
 
   if (N0Mag < Scalar(0.0) || N1Mag < Scalar(0.0) || N2Mag < Scalar(0.0) || N3Mag < Scalar(0.0))
     return vtkm::Infinity<Scalar>();
-  const Scalar n0dotn2 = vtkm::Dot(N0Mag, N2Mag);
-  const Scalar n1dotn3 = vtkm::Dot(N1Mag, N3Mag);
+  const Scalar n0dotn2 = static_cast<Scalar>(vtkm::Dot(N0Mag, N2Mag));
+  const Scalar n1dotn3 = static_cast<Scalar>(vtkm::Dot(N1Mag, N3Mag));
   const Scalar min = vtkm::Min(n0dotn2, n1dotn3);
 
   const Scalar minCubed = vtkm::Pow(min, 3);
