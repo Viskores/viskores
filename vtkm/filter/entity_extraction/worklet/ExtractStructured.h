@@ -115,27 +115,28 @@ private:
   using CellIndexArray = vtkm::cont::
     ArrayHandleCartesianProduct<AxisIndexArrayCells, AxisIndexArrayCells, AxisIndexArrayCells>;
 
-  inline AxisIndexArrayPoints MakeAxisIndexArrayPoints(vtkm::Id count,
-                                                       vtkm::Id first,
-                                                       vtkm::Id last,
-                                                       vtkm::Id stride,
-                                                       bool includeBoundary)
+  static inline AxisIndexArrayPoints MakeAxisIndexArrayPoints(vtkm::Id count,
+                                                              vtkm::Id first,
+                                                              vtkm::Id last,
+                                                              vtkm::Id stride,
+                                                              bool includeBoundary)
   {
     auto fnctr = extractstructured::internal::SubArrayPermutePoints(
       count, first, last, stride, includeBoundary);
     return vtkm::cont::make_ArrayHandleImplicit(fnctr, count);
   }
 
-  inline AxisIndexArrayCells MakeAxisIndexArrayCells(vtkm::Id count,
-                                                     vtkm::Id start,
-                                                     vtkm::Id stride)
+  static inline AxisIndexArrayCells MakeAxisIndexArrayCells(vtkm::Id count,
+                                                            vtkm::Id start,
+                                                            vtkm::Id stride)
   {
     return vtkm::cont::make_ArrayHandleCounting(start, stride, count);
   }
 
-  UncertainCellSetStructured MakeCellSetStructured(const vtkm::Id3& inputPointDims,
-                                                   const vtkm::Id3& inputOffsets,
-                                                   vtkm::IdComponent forcedDimensionality = 0)
+  static UncertainCellSetStructured MakeCellSetStructured(
+    const vtkm::Id3& inputPointDims,
+    const vtkm::Id3& inputOffsets,
+    vtkm::IdComponent forcedDimensionality = 0)
   {
     // when the point dimension for a given axis is 1 we
     // need to lower the dimensonality by 1. So a Plane

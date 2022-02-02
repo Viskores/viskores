@@ -21,7 +21,7 @@ namespace
 class TestingExtractStructured
 {
 public:
-  void TestUniform2D() const
+  static void TestUniform2D()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
@@ -58,7 +58,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(3) == 10.0f, "Wrong cell field data");
   }
 
-  void TestUniform3D0() const
+  static void TestUniform3D0()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -94,7 +94,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(7) == 42.0f, "Wrong cell field data");
   }
 
-  void TestUniform3D1() const
+  static void TestUniform3D1()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -132,7 +132,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(63) == 63.0f, "Wrong cell field data");
   }
 
-  void TestUniform3D2() const
+  static void TestUniform3D2()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -169,7 +169,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(7) == 21.0f, "Wrong cell field data");
   }
 
-  void TestUniform3D3() const
+  static void TestUniform3D3()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -206,7 +206,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(26) == 63.0f, "Wrong cell field data");
   }
 
-  void TestUniform3D4() const
+  static void TestUniform3D4()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -244,7 +244,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(7) == 43.0f, "Wrong cell field data");
   }
 
-  void TestUniform3D5() const
+  static void TestUniform3D5()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -282,7 +282,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(3) == 39.0f, "Wrong cell field data");
   }
 
-  void TestUniform3D6() const
+  static void TestUniform3D6()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -320,7 +320,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(3) == 26.0f, "Wrong cell field data");
   }
 
-  void TestUniform3D7() const
+  static void TestUniform3D7()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -357,7 +357,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 16.0f, "Wrong cell field data");
   }
 
-  void TestUniform3D8() const
+  static void TestUniform3D8()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -396,7 +396,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(3) == 31.0f, "Wrong cell field data");
   }
 
-  void TestRectilinear2D() const
+  static void TestRectilinear2D()
   {
     std::cout << "Testing extract structured rectilinear" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DRectilinearDataSet0();
@@ -433,7 +433,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 0.0f, "Wrong cell field data");
   }
 
-  void TestRectilinear3D() const
+  static void TestRectilinear3D()
   {
     std::cout << "Testing extract structured rectilinear" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DRectilinearDataSet0();
@@ -472,18 +472,18 @@ public:
 
   void operator()() const
   {
-    this->TestUniform2D();
-    this->TestUniform3D0();
-    this->TestUniform3D1();
-    this->TestUniform3D2();
-    this->TestUniform3D3();
-    this->TestUniform3D4();
-    this->TestUniform3D5();
-    this->TestUniform3D6();
-    this->TestUniform3D7();
-    this->TestUniform3D8();
-    this->TestRectilinear2D();
-    this->TestRectilinear3D();
+    TestingExtractStructured::TestUniform2D();
+    TestingExtractStructured::TestUniform3D0();
+    TestingExtractStructured::TestUniform3D1();
+    TestingExtractStructured::TestUniform3D2();
+    TestingExtractStructured::TestUniform3D3();
+    TestingExtractStructured::TestUniform3D4();
+    TestingExtractStructured::TestUniform3D5();
+    TestingExtractStructured::TestUniform3D6();
+    TestingExtractStructured::TestUniform3D7();
+    TestingExtractStructured::TestUniform3D8();
+    TestingExtractStructured::TestRectilinear2D();
+    TestingExtractStructured::TestRectilinear3D();
   }
 };
 }

@@ -332,7 +332,8 @@ private:
     bool fastCheck,                                   // If true, approximate distances are used
     const BinLocator& binLocator,                     // Used to find nearby points
     vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& points, // coordinates, modified to merge close
-    vtkm::cont::ArrayHandle<vtkm::Id> indexNeighborMap) // identifies each neighbor group, updated
+    const vtkm::cont::ArrayHandle<vtkm::Id>&
+      indexNeighborMap) // identifies each neighbor group, updated
   {
     vtkm::cont::Invoker invoker;
 

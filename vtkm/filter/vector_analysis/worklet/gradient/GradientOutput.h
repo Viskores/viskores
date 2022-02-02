@@ -71,8 +71,6 @@ struct GradientScalarOutput : public vtkm::cont::ExecutionObjectBase
       this->Gradient, this->Size, device, token);
   }
 
-  GradientScalarOutput() = default;
-
   GradientScalarOutput(bool,
                        bool,
                        bool,

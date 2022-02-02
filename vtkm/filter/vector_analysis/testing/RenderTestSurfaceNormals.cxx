@@ -9,7 +9,6 @@
 //============================================================================
 
 #include <vtkm/Math.h>
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/VTKDataSetReader.h>
 

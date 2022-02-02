@@ -63,7 +63,7 @@ VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(const vtkm::cont::DataSet&
   // type and storage to a concrete ArrayHandle<T, S> with T from the `TypeList` and S from
   // `StorageList`. It then passes the concrete array to the lambda as the first argument.
   // We can later recover the concrete ValueType, T, from the concrete array.
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     const auto& secondaryField = this->GetFieldFromDataSet(1, inDataSet);

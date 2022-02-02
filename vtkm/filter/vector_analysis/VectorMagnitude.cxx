@@ -24,10 +24,9 @@ VectorMagnitude::VectorMagnitude()
 
 VTKM_CONT vtkm::cont::DataSet VectorMagnitude::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
-  auto field = this->GetFieldFromDataSet(inDataSet);
   vtkm::cont::UnknownArrayHandle outArray;
 
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     using ReturnType = typename ::vtkm::detail::FloatingPointReturnType<T>::Type;
@@ -36,6 +35,7 @@ VTKM_CONT vtkm::cont::DataSet VectorMagnitude::DoExecute(const vtkm::cont::DataS
     this->Invoke(vtkm::worklet::Magnitude{}, concrete, result);
     outArray = result;
   };
+  const auto& field = this->GetFieldFromDataSet(inDataSet);
   field.GetData()
     .CastAndCallForTypesWithFloatFallback<vtkm::TypeListVecCommon, VTKM_DEFAULT_STORAGE_LIST>(
       resolveType);

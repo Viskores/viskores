@@ -21,7 +21,7 @@ namespace
 class TestingExtractPoints
 {
 public:
-  void TestUniformByBox0() const
+  static void TestUniformByBox0()
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -51,7 +51,7 @@ public:
     VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(26) == 97.0f, "Wrong point field data");
   }
 
-  void TestUniformByBox1() const
+  static void TestUniformByBox1()
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -83,7 +83,7 @@ public:
     }
   }
 
-  void TestUniformBySphere() const
+  static void TestUniformBySphere()
   {
     std::cout << "Testing extract points with implicit function (sphere):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -102,7 +102,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
   }
 
-  void TestExplicitByBox0() const
+  static void TestExplicitByBox0()
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -121,7 +121,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8), "Wrong result for ExtractPoints");
   }
 
-  void TestExplicitByBox1() const
+  static void TestExplicitByBox1()
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -142,11 +142,11 @@ public:
 
   void operator()() const
   {
-    this->TestUniformByBox0();
-    this->TestUniformByBox1();
-    this->TestUniformBySphere();
-    this->TestExplicitByBox0();
-    this->TestExplicitByBox1();
+    TestingExtractPoints::TestUniformByBox0();
+    TestingExtractPoints::TestUniformByBox1();
+    TestingExtractPoints::TestUniformBySphere();
+    TestingExtractPoints::TestExplicitByBox0();
+    TestingExtractPoints::TestExplicitByBox1();
   }
 };
 }

@@ -99,7 +99,7 @@ VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(const cont::
 
   auto coords = input.GetCoordinateSystem().GetDataAsMultiplexer();
 
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
 
@@ -127,7 +127,7 @@ VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(const cont::
   // a lambda expression and immediately call it at the end. This allows us to not declare an
   // UnknownArrayHandle first and then assign it in the if-else statement. If I really want to
   // show-off, I can even inline the `fieldArray` variable and turn it into a long expression.
-  auto fieldArray = [&, this]() -> vtkm::cont::UnknownArrayHandle {
+  auto fieldArray = [&]() -> vtkm::cont::UnknownArrayHandle {
     if (this->ComputeNumberDensity)
     {
       return vtkm::cont::make_ArrayHandleConstant(vtkm::FloatDefault{ 1 },

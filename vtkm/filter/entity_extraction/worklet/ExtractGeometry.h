@@ -41,8 +41,6 @@ public:
                                   FieldOutCell passFlags);
     using ExecutionSignature = _4(PointCount, PointIndices, _2, _3);
 
-    ExtractCellsByVOI() = default;
-
     VTKM_CONT
     ExtractCellsByVOI(bool extractInside, bool extractBoundaryCells, bool extractOnlyBoundaryCells)
       : ExtractInside(extractInside)

@@ -22,7 +22,7 @@ namespace field_conversion
 {
 vtkm::cont::DataSet PointAverage::DoExecute(const vtkm::cont::DataSet& input)
 {
-  auto field = GetFieldFromDataSet(input);
+  const auto& field = GetFieldFromDataSet(input);
   if (!field.IsFieldCell())
   {
     throw vtkm::cont::ErrorFilterExecution("Cell field expected.");
@@ -31,7 +31,7 @@ vtkm::cont::DataSet PointAverage::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::cont::UnknownCellSet cellSet = input.GetCellSet();
   vtkm::cont::UnknownArrayHandle outArray;
 
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     using SupportedCellSets =
       vtkm::ListAppend<vtkm::List<vtkm::cont::CellSetExtrude>, VTKM_DEFAULT_CELL_SET_LIST>;

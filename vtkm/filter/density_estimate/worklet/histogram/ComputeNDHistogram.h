@@ -148,7 +148,7 @@ public:
   vtkm::Id numberOfBins;
 
   VTKM_CONT
-  ConvertHistBinToND(vtkm::Id numberOfBins0)
+  explicit ConvertHistBinToND(vtkm::Id numberOfBins0)
     : numberOfBins(numberOfBins0)
   {
   }

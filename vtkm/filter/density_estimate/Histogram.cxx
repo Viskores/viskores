@@ -73,7 +73,7 @@ class DistributedHistogram
   std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> LocalBlocks;
 
 public:
-  DistributedHistogram(vtkm::Id numLocalBlocks)
+  explicit DistributedHistogram(vtkm::Id numLocalBlocks)
     : LocalBlocks(static_cast<size_t>(numLocalBlocks))
   {
   }
@@ -134,7 +134,7 @@ public:
   }
 
 private:
-  void Broadcast(vtkm::cont::ArrayHandle<vtkm::Id>& data) const
+  static void Broadcast(vtkm::cont::ArrayHandle<vtkm::Id>& data)
   {
     // broadcast to all ranks (and not blocks).
     auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();

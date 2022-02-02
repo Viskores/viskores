@@ -40,7 +40,7 @@ public:
     vtkm::Float64 FreqSum;
 
     VTKM_CONT
-    SetBinInformationContent(vtkm::Float64 _freqSum)
+    explicit SetBinInformationContent(vtkm::Float64 _freqSum)
       : FreqSum(_freqSum)
     {
     }

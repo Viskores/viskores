@@ -175,7 +175,7 @@ vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
   //
   // For filters that do not need to do interpolation for mapping fields, we provide an overload
   // that does not take the extra arguments and just AddField.
-  auto mapper = [&, this](auto& outDataSet, const auto& f) {
+  auto mapper = [&](auto& outDataSet, const auto& f) {
     DoMapField(outDataSet, f, *this, worklets);
   };
   return this->CreateResult(inData, outputCellSet, outputCoordinateSystems, mapper);

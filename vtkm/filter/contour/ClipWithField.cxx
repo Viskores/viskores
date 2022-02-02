@@ -51,9 +51,9 @@ bool DoMapField(vtkm::cont::DataSet& result,
       result.AddPointField(field.GetName(), outputArray);
     };
 
-    auto inputArray = field.GetData();
-    inputArray.CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
-      resolve);
+    field.GetData()
+      .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
+        resolve);
     return true;
   }
   else if (field.IsFieldCell())
@@ -77,7 +77,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet ClipWithField::DoExecute(const vtkm::cont::DataSet& input)
 {
-  auto field = this->GetFieldFromDataSet(input);
+  const auto& field = this->GetFieldFromDataSet(input);
   if (!field.IsFieldPoint())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
@@ -88,7 +88,7 @@ vtkm::cont::DataSet ClipWithField::DoExecute(const vtkm::cont::DataSet& input)
   const vtkm::cont::UnknownCellSet& inputCellSet = input.GetCellSet();
   vtkm::cont::CellSetExplicit<> outputCellSet;
 
-  auto resolveFieldType = [&, this](const auto& concrete) {
+  auto resolveFieldType = [&](const auto& concrete) {
     outputCellSet = worklet.Run(inputCellSet, concrete, this->ClipValue, this->Invert);
   };
   this->CastAndCallScalarField(this->GetFieldFromDataSet(input).GetData(), resolveFieldType);

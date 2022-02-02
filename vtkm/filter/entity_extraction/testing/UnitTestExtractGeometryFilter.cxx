@@ -21,7 +21,7 @@ namespace
 class TestingExtractGeometry
 {
 public:
-  void TestUniformByBox0() const
+  static void TestUniformByBox0()
   {
     std::cout << "Testing extract geometry with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -48,7 +48,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(7) == 42.f, "Wrong cell field data");
   }
 
-  void TestUniformByBox1() const
+  static void TestUniformByBox1()
   {
     std::cout << "Testing extract geometry with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -75,7 +75,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(55) == 63.f, "Wrong cell field data");
   }
 
-  void TestUniformByBox2() const
+  static void TestUniformByBox2()
   {
     std::cout << "Testing extract geometry with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -101,7 +101,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 0.f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(63) == 63.f, "Wrong cell field data");
   }
-  void TestUniformByBox3() const
+  static void TestUniformByBox3()
   {
     std::cout << "Testing extract geometry with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -130,10 +130,10 @@ public:
 
   void operator()() const
   {
-    this->TestUniformByBox0();
-    this->TestUniformByBox1();
-    this->TestUniformByBox2();
-    this->TestUniformByBox3();
+    TestingExtractGeometry::TestUniformByBox0();
+    TestingExtractGeometry::TestUniformByBox1();
+    TestingExtractGeometry::TestUniformByBox2();
+    TestingExtractGeometry::TestUniformByBox3();
   }
 };
 }

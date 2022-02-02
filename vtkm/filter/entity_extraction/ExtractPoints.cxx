@@ -7,7 +7,6 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/filter/clean_grid/CleanGrid.h>
 #include <vtkm/filter/entity_extraction/ExtractPoints.h>

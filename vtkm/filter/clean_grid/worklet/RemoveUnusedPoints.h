@@ -76,10 +76,10 @@ public:
 
 public:
   VTKM_CONT
-  RemoveUnusedPoints() {}
+  RemoveUnusedPoints() = default;
 
   template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
-  VTKM_CONT RemoveUnusedPoints(
+  VTKM_CONT explicit RemoveUnusedPoints(
     const vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& inCellSet)
   {
     this->FindPointsStart();
@@ -305,10 +305,7 @@ public:
   VTKM_DEPRECATED_SUPPRESS_END
   ///@}
 
-  const vtkm::worklet::ScatterCounting& GetPointScatter() const
-  {
-    return *this->PointScatter.get();
-  }
+  const vtkm::worklet::ScatterCounting& GetPointScatter() const { return *this->PointScatter; }
 
 private:
   vtkm::cont::ArrayHandle<vtkm::IdComponent> MaskArray;

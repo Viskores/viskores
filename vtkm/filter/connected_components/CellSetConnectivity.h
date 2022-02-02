@@ -36,8 +36,6 @@ public:
 private:
   VTKM_CONT
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
-
-  std::string OutputFieldName;
 };
 }
 }

@@ -46,14 +46,13 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
 {
   if (field.IsFieldPoint())
   {
-    auto array = field.GetData();
-
     auto functor = [&](const auto& concrete) {
       auto fieldArray = worklet.ProcessPointField(concrete);
       result.AddPointField(field.GetName(), fieldArray);
     };
-    array.CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
-      functor);
+    field.GetData()
+      .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
+        functor);
     return true;
   }
   else if (field.IsFieldCell())
@@ -110,8 +109,6 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
   const vtkm::cont::CoordinateSystem& inputCoords =
     inDataSet.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  const auto& fieldArray = this->GetFieldFromDataSet(inDataSet).GetData();
-
   using Vec3HandleType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
   Vec3HandleType vertices;
   Vec3HandleType normals;
@@ -122,7 +119,7 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
     ? !this->ComputeFastNormalsForStructured
     : !this->ComputeFastNormalsForUnstructured;
 
-  auto resolveFieldType = [&, this](const auto& concrete) {
+  auto resolveFieldType = [&](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     std::vector<T> ivalues(this->IsoValues.size());
@@ -142,8 +139,10 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
     }
   };
 
-  fieldArray.CastAndCallForTypesWithFloatFallback<SupportedTypes, VTKM_DEFAULT_STORAGE_LIST>(
-    resolveFieldType);
+  this->GetFieldFromDataSet(inDataSet)
+    .GetData()
+    .CastAndCallForTypesWithFloatFallback<SupportedTypes, VTKM_DEFAULT_STORAGE_LIST>(
+      resolveFieldType);
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
   vtkm::cont::DataSet output = this->CreateResult(

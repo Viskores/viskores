@@ -80,7 +80,7 @@ public:
 
 private:
   vtkm::worklet::NDimsHistogram NdHistogram;
-  vtkm::Id NumDataPoints;
+  vtkm::Id NumDataPoints{};
 };
 }
 } // namespace vtkm::worklet
