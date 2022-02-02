@@ -71,15 +71,16 @@ VTKM_EXEC OutType ComputeTetCondition(const VecType edges[])
   if (det <= vtkm::NegativeInfinity<OutType>())
     return vtkm::Infinity<OutType>();
 
-  OutType term1 =
-    vtkm::Dot(edges[0], edges[0]) + vtkm::Dot(edges[1], edges[1]) + vtkm::Dot(edges[2], edges[2]);
+  OutType term1 = static_cast<OutType>(
+    vtkm::Dot(edges[0], edges[0]) + vtkm::Dot(edges[1], edges[1]) + vtkm::Dot(edges[2], edges[2]));
 
   VecType crosses[3] = { vtkm::Cross(edges[0], edges[1]),
                          vtkm::Cross(edges[1], edges[2]),
                          vtkm::Cross(edges[2], edges[0]) };
 
-  OutType term2 = vtkm::Dot(crosses[0], crosses[0]) + vtkm::Dot(crosses[1], crosses[1]) +
-    vtkm::Dot(crosses[2], crosses[2]);
+  OutType term2 =
+    static_cast<OutType>(vtkm::Dot(crosses[0], crosses[0]) + vtkm::Dot(crosses[1], crosses[1]) +
+                         vtkm::Dot(crosses[2], crosses[2]));
 
   return vtkm::Sqrt(term1 * term2) / det;
 }

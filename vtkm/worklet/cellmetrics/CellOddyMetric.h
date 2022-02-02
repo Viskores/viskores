@@ -78,12 +78,12 @@ VTKM_EXEC Scalar GetQuadOddyQi(const Vector& Li, const Vector& LiPlus1, const Ve
 {
   const Scalar two(2.0);
   const Scalar four(4.0);
-  const Scalar liMagnitudeSquared = vtkm::MagnitudeSquared(Li);
-  const Scalar liPlus1MagnitudeSquared = vtkm::MagnitudeSquared(LiPlus1);
-  const Scalar niPlus1MagnitudeSquared = vtkm::MagnitudeSquared(NiPlus1);
+  const Scalar liMagnitudeSquared = static_cast<Scalar>(vtkm::MagnitudeSquared(Li));
+  const Scalar liPlus1MagnitudeSquared = static_cast<Scalar>(vtkm::MagnitudeSquared(LiPlus1));
+  const Scalar niPlus1MagnitudeSquared = static_cast<Scalar>(vtkm::MagnitudeSquared(NiPlus1));
   const Scalar q = (((liMagnitudeSquared - liPlus1MagnitudeSquared) *
                      (liMagnitudeSquared - liPlus1MagnitudeSquared)) +
-                    (four * (vtkm::Dot(Li, LiPlus1) * vtkm::Dot(Li, LiPlus1)))) /
+                    (four * static_cast<Scalar>(vtkm::Dot(Li, LiPlus1) * vtkm::Dot(Li, LiPlus1)))) /
     (two * niPlus1MagnitudeSquared);
 
   return q;

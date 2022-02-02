@@ -195,8 +195,8 @@ VTKM_EXEC Vector GetHexL11(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL0Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l0 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL0<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l0 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL0<Scalar, Vector, CollectionOfPoints>(pts))));
   return l0;
 }
 /**
@@ -208,8 +208,8 @@ VTKM_EXEC Scalar GetHexL0Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL1Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l1 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL1<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l1 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL1<Scalar, Vector, CollectionOfPoints>(pts))));
   return l1;
 }
 /**
@@ -221,8 +221,8 @@ VTKM_EXEC Scalar GetHexL1Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL2Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l2 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL2<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l2 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL2<Scalar, Vector, CollectionOfPoints>(pts))));
   return l2;
 }
 /**
@@ -234,8 +234,8 @@ VTKM_EXEC Scalar GetHexL2Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL3Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l3 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL3<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l3 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL3<Scalar, Vector, CollectionOfPoints>(pts))));
   return l3;
 }
 /**
@@ -247,8 +247,8 @@ VTKM_EXEC Scalar GetHexL3Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL4Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l4 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL4<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l4 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL4<Scalar, Vector, CollectionOfPoints>(pts))));
   return l4;
 }
 /**
@@ -260,8 +260,8 @@ VTKM_EXEC Scalar GetHexL4Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL5Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l5 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL5<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l5 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL5<Scalar, Vector, CollectionOfPoints>(pts))));
   return l5;
 }
 /**
@@ -273,8 +273,8 @@ VTKM_EXEC Scalar GetHexL5Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL6Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l6 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL6<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l6 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL6<Scalar, Vector, CollectionOfPoints>(pts))));
   return l6;
 }
 /**
@@ -286,8 +286,8 @@ VTKM_EXEC Scalar GetHexL6Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL7Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l7 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL7<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l7 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL7<Scalar, Vector, CollectionOfPoints>(pts))));
   return l7;
 }
 /**
@@ -299,8 +299,8 @@ VTKM_EXEC Scalar GetHexL7Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL8Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l8 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL8<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l8 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL8<Scalar, Vector, CollectionOfPoints>(pts))));
   return l8;
 }
 /**
@@ -312,8 +312,8 @@ VTKM_EXEC Scalar GetHexL8Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL9Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l9 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL9<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l9 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL9<Scalar, Vector, CollectionOfPoints>(pts))));
   return l9;
 }
 /**
@@ -325,8 +325,8 @@ VTKM_EXEC Scalar GetHexL9Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL10Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l10 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL10<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l10 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL10<Scalar, Vector, CollectionOfPoints>(pts))));
   return l10;
 }
 /**
@@ -338,8 +338,8 @@ VTKM_EXEC Scalar GetHexL10Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexL11Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l11 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL11<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l11 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexL11<Scalar, Vector, CollectionOfPoints>(pts))));
   return l11;
 }
 /**
@@ -701,9 +701,9 @@ template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexAiNormSquared(const CollectionOfPoints& pts, const vtkm::Id& index)
 {
   const vtkm::Vec<Vector, 3> Ai = GetHexAi<Scalar, Vector, CollectionOfPoints>(pts, index);
-  const Scalar magSquared0 = vtkm::MagnitudeSquared(Ai[0]);
-  const Scalar magSquared1 = vtkm::MagnitudeSquared(Ai[1]);
-  const Scalar magSquared2 = vtkm::MagnitudeSquared(Ai[2]);
+  const Scalar magSquared0 = static_cast<Scalar>(vtkm::MagnitudeSquared(Ai[0]));
+  const Scalar magSquared1 = static_cast<Scalar>(vtkm::MagnitudeSquared(Ai[1]));
+  const Scalar magSquared2 = static_cast<Scalar>(vtkm::MagnitudeSquared(Ai[2]));
 
   const Scalar AiNormSquared = magSquared0 + magSquared1 + magSquared2;
 
@@ -721,9 +721,9 @@ template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexAiAdjNormSquared(const CollectionOfPoints& pts, const vtkm::Id& index)
 {
   const vtkm::Vec<Vector, 3> Ai = GetHexAi<Scalar, Vector, CollectionOfPoints>(pts, index);
-  const Scalar magSquared0 = vtkm::MagnitudeSquared(vtkm::Cross(Ai[0], Ai[1]));
-  const Scalar magSquared1 = vtkm::MagnitudeSquared(vtkm::Cross(Ai[1], Ai[2]));
-  const Scalar magSquared2 = vtkm::MagnitudeSquared(vtkm::Cross(Ai[2], Ai[0]));
+  const Scalar magSquared0 = static_cast<Scalar>(vtkm::MagnitudeSquared(vtkm::Cross(Ai[0], Ai[1])));
+  const Scalar magSquared1 = static_cast<Scalar>(vtkm::MagnitudeSquared(vtkm::Cross(Ai[1], Ai[2])));
+  const Scalar magSquared2 = static_cast<Scalar>(vtkm::MagnitudeSquared(vtkm::Cross(Ai[2], Ai[0])));
 
   const Scalar AiAdjNormSquared = magSquared0 + magSquared1 + magSquared2;
 
@@ -741,7 +741,7 @@ template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexAlphai(const CollectionOfPoints& pts, const vtkm::Id& index)
 {
   const vtkm::Vec<Vector, 3> Ai = GetHexAi<Scalar, Vector, CollectionOfPoints>(pts, index);
-  const Scalar alpha_i = vtkm::Dot(Ai[0], vtkm::Cross(Ai[1], Ai[2]));
+  const Scalar alpha_i = static_cast<Scalar>(vtkm::Dot(Ai[0], vtkm::Cross(Ai[1], Ai[2])));
 
   return alpha_i;
 }
