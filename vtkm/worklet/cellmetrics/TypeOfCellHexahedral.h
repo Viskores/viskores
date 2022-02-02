@@ -481,8 +481,8 @@ VTKM_EXEC Vector GetHexD3(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexD0Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar d0 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexD0<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar d0 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexD0<Scalar, Vector, CollectionOfPoints>(pts))));
   return d0;
 }
 
@@ -495,8 +495,8 @@ VTKM_EXEC Scalar GetHexD0Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexD1Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar d1 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexD1<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar d1 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexD1<Scalar, Vector, CollectionOfPoints>(pts))));
   return d1;
 }
 
@@ -509,8 +509,8 @@ VTKM_EXEC Scalar GetHexD1Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexD2Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar d2 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexD2<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar d2 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexD2<Scalar, Vector, CollectionOfPoints>(pts))));
   return d2;
 }
 
@@ -523,8 +523,8 @@ VTKM_EXEC Scalar GetHexD2Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexD3Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar d3 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexD3<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar d3 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetHexD3<Scalar, Vector, CollectionOfPoints>(pts))));
   return d3;
 }
 
@@ -775,7 +775,7 @@ template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetHexAlphaiHat(const CollectionOfPoints& pts, const vtkm::Id& index)
 {
   const vtkm::Vec<Vector, 3> Ai = GetHexAiHat<Scalar, Vector, CollectionOfPoints>(pts, index);
-  const Scalar hatAlpha_i = vtkm::Dot(Ai[0], vtkm::Cross(Ai[1], Ai[2]));
+  const Scalar hatAlpha_i = static_cast<Scalar>(vtkm::Dot(Ai[0], vtkm::Cross(Ai[1], Ai[2])));
 
   return hatAlpha_i;
 }

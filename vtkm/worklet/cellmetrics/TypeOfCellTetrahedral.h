@@ -234,10 +234,10 @@ VTKM_EXEC Scalar GetTetraArea(const CollectionOfPoints& pts)
   const Vector L3 = GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector L4 = GetTetraL4<Scalar, Vector, CollectionOfPoints>(pts);
 
-  const Scalar a = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L2, L0)));
-  const Scalar b = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L3, L0)));
-  const Scalar c = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L4, L1)));
-  const Scalar d = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L3, L2)));
+  const Scalar a = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L2, L0))));
+  const Scalar b = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L3, L0))));
+  const Scalar c = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L4, L1))));
+  const Scalar d = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L3, L2))));
   const Scalar hhalf(0.5);
 
   const Scalar area = hhalf * (a + b + c + d);

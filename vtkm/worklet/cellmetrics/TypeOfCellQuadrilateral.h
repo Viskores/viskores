@@ -209,8 +209,8 @@ VTKM_EXEC Vector GetQuadD1(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetQuadD0Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar d0 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadD0<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar d0 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadD0<Scalar, Vector, CollectionOfPoints>(pts))));
   return d0;
 }
 
@@ -223,8 +223,8 @@ VTKM_EXEC Scalar GetQuadD0Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetQuadD1Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar d1 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadD1<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar d1 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadD1<Scalar, Vector, CollectionOfPoints>(pts))));
   return d1;
 }
 
