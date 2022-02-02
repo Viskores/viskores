@@ -174,10 +174,10 @@ void TestPointTransform()
     angles.push_back(angleDist(randGenerator));
 
   std::vector<vtkm::Vec3f> axes;
-  axes.emplace_back(1, 0, 0);
-  axes.emplace_back(0, 1, 0);
-  axes.emplace_back(0, 0, 1);
-  axes.emplace_back(1, 1, 1);
+  axes.emplace_back(1.f, 0.f, 0.f);
+  axes.emplace_back(0.f, 1.f, 0.f);
+  axes.emplace_back(0.f, 0.f, 1.f);
+  axes.emplace_back(1.f, 1.f, 1.f);
   axes.push_back(-axes[0]);
   axes.push_back(-axes[1]);
   axes.push_back(-axes[2]);
