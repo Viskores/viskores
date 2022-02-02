@@ -117,7 +117,7 @@ inline VTKM_CONT void FieldToColors::SetNumberOfSamplingPoints(vtkm::Int32 count
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet FieldToColors::DoExecute(const vtkm::cont::DataSet& input)
 {
-  auto field = this->GetFieldFromDataSet(input);
+  const auto& field = this->GetFieldFromDataSet(input);
 
   //If the table has been modified we need to rebuild our
   //sample tables
@@ -138,7 +138,7 @@ vtkm::cont::DataSet FieldToColors::DoExecute(const vtkm::cont::DataSet& input)
 
   //We need to verify if the array is a vtkm::Vec
   vtkm::cont::UnknownArrayHandle outArray;
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;

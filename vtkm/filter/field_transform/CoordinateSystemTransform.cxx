@@ -20,19 +20,17 @@ namespace field_transform
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
-  auto field = this->GetFieldFromDataSet(inDataSet);
-
   vtkm::cont::UnknownArrayHandle outArray;
 
   auto resolveType = [&](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     vtkm::cont::ArrayHandle<T> result;
-    vtkm::worklet::CylindricalCoordinateTransform Worklet{ this->cartesianToCylindrical };
-    Worklet.Run(concrete, result);
+    vtkm::worklet::CylindricalCoordinateTransform worklet{ this->CartesianToCylindrical };
+    worklet.Run(concrete, result);
     outArray = result;
   };
-  this->CastAndCallVecField<3>(field, resolveType);
+  this->CastAndCallVecField<3>(this->GetFieldFromDataSet(inDataSet), resolveType);
 
   vtkm::cont::DataSet outDataSet =
     this->CreateResult(inDataSet,
@@ -49,11 +47,11 @@ vtkm::cont::DataSet SphericalCoordinateTransform::DoExecute(const vtkm::cont::Da
 {
   vtkm::cont::UnknownArrayHandle outArray;
 
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     vtkm::cont::ArrayHandle<T> result;
-    vtkm::worklet::SphericalCoordinateTransform worklet{ this->cartesianToSpherical };
+    vtkm::worklet::SphericalCoordinateTransform worklet{ this->CartesianToSpherical };
     worklet.Run(concrete, result);
     outArray = result;
   };

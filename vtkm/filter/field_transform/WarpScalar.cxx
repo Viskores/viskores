@@ -63,7 +63,7 @@ VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(const vtkm::cont::DataSet& i
 
   vtkm::cont::UnknownArrayHandle outArray;
 
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
     // We know ValueType is some form of Vec3 due to CastAndCallVecField
     using VecType = typename std::decay_t<decltype(concrete)>::ValueType;
 
@@ -72,7 +72,7 @@ VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(const vtkm::cont::DataSet& i
     worklet.Run(concrete, normalArray, scaleFactorArray, this->ScaleAmount, result);
     outArray = result;
   };
-  auto field = this->GetFieldFromDataSet(inDataSet);
+  const auto& field = this->GetFieldFromDataSet(inDataSet);
   this->CastAndCallVecField<3>(field, resolveType);
 
   return this->CreateResultField(

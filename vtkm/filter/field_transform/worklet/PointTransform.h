@@ -28,7 +28,7 @@ public:
   using ExecutionSignature = _2(_1);
 
   VTKM_CONT
-  PointTransform(const vtkm::Matrix<vtkm::FloatDefault, 4, 4>& m)
+  explicit PointTransform(const vtkm::Matrix<vtkm::FloatDefault, 4, 4>& m)
     : matrix(m)
   {
   }

@@ -61,7 +61,7 @@ vtkm::cont::DataSet MakePointTransformTestDataSet()
 }
 
 void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
-                            const std::string fieldName,
+                            const std::string& fieldName,
                             const vtkm::cont::DataSet& result,
                             const vtkm::Matrix<vtkm::FloatDefault, 4, 4>& matrix)
 {
@@ -174,10 +174,10 @@ void TestPointTransform()
     angles.push_back(angleDist(randGenerator));
 
   std::vector<vtkm::Vec3f> axes;
-  axes.push_back(vtkm::Vec3f(1, 0, 0));
-  axes.push_back(vtkm::Vec3f(0, 1, 0));
-  axes.push_back(vtkm::Vec3f(0, 0, 1));
-  axes.push_back(vtkm::Vec3f(1, 1, 1));
+  axes.emplace_back(1, 0, 0);
+  axes.emplace_back(0, 1, 0);
+  axes.emplace_back(0, 0, 1);
+  axes.emplace_back(1, 1, 1);
   axes.push_back(-axes[0]);
   axes.push_back(-axes[1]);
   axes.push_back(-axes[2]);
@@ -185,12 +185,11 @@ void TestPointTransform()
 
   std::uniform_real_distribution<vtkm::FloatDefault> axisDist(-1, 1);
   for (int i = 0; i < N; i++)
-    axes.push_back(
-      vtkm::Vec3f(axisDist(randGenerator), axisDist(randGenerator), axisDist(randGenerator)));
+    axes.emplace_back(axisDist(randGenerator), axisDist(randGenerator), axisDist(randGenerator));
 
-  for (std::size_t i = 0; i < angles.size(); i++)
-    for (std::size_t j = 0; j < axes.size(); j++)
-      TestPointTransformRotation(ds, angles[i], axes[j]);
+  for (float& angle : angles)
+    for (auto& axe : axes)
+      TestPointTransformRotation(ds, angle, axe);
 }
 
 

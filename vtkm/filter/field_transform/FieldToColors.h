@@ -27,7 +27,7 @@ class VTKM_FILTER_FIELD_TRANSFORM_EXPORT FieldToColors : public vtkm::filter::Ne
 {
 public:
   VTKM_CONT
-  FieldToColors(const vtkm::cont::ColorTable& table = vtkm::cont::ColorTable());
+  explicit FieldToColors(const vtkm::cont::ColorTable& table = vtkm::cont::ColorTable());
 
   enum FieldToColorsInputMode
   {

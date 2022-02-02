@@ -111,14 +111,14 @@ struct CarToSphere : public vtkm::worklet::WorkletMapField
     return vtkm::Vec<T, 3>(R, Theta, Phi);
   }
 };
-};
+}
 
 class CylindricalCoordinateTransform
 {
 public:
   VTKM_CONT
-  CylindricalCoordinateTransform(bool car2cyl)
-    : cartesianToCylindrical(car2cyl)
+  explicit CylindricalCoordinateTransform(bool car2cyl)
+    : CartesianToCylindrical(car2cyl)
   {
   }
 
@@ -126,7 +126,7 @@ public:
   void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, InStorageType>& inPoints,
            vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, OutStorageType>& outPoints) const
   {
-    if (cartesianToCylindrical)
+    if (CartesianToCylindrical)
     {
       vtkm::worklet::DispatcherMapField<detail::CarToCyl<T>> dispatcher;
       dispatcher.Invoke(inPoints, outPoints);
@@ -142,7 +142,7 @@ public:
   void Run(const vtkm::cont::CoordinateSystem& inPoints,
            vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints) const
   {
-    if (cartesianToCylindrical)
+    if (CartesianToCylindrical)
     {
       vtkm::worklet::DispatcherMapField<detail::CarToCyl<T>> dispatcher;
       dispatcher.Invoke(inPoints, outPoints);
@@ -155,15 +155,15 @@ public:
   }
 
 private:
-  bool cartesianToCylindrical;
+  bool CartesianToCylindrical;
 };
 
 class SphericalCoordinateTransform
 {
 public:
   VTKM_CONT
-  SphericalCoordinateTransform(bool car2sph)
-    : cartesianToSpherical(car2sph)
+  explicit SphericalCoordinateTransform(bool car2sph)
+    : CartesianToSpherical(car2sph)
   {
   }
 
@@ -171,7 +171,7 @@ public:
   void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, InStorageType>& inPoints,
            vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, OutStorageType>& outPoints) const
   {
-    if (cartesianToSpherical)
+    if (CartesianToSpherical)
     {
       vtkm::worklet::DispatcherMapField<detail::CarToSphere<T>> dispatcher;
       dispatcher.Invoke(inPoints, outPoints);
@@ -187,7 +187,7 @@ public:
   void Run(const vtkm::cont::CoordinateSystem& inPoints,
            vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints) const
   {
-    if (cartesianToSpherical)
+    if (CartesianToSpherical)
     {
       vtkm::worklet::DispatcherMapField<detail::CarToSphere<T>> dispatcher;
       dispatcher.Invoke(inPoints, outPoints);
@@ -200,7 +200,7 @@ public:
   }
 
 private:
-  bool cartesianToSpherical;
+  bool CartesianToSpherical;
 };
 }
 } // namespace vtkm::worklet

@@ -27,26 +27,26 @@ class VTKM_FILTER_FIELD_TRANSFORM_EXPORT CylindricalCoordinateTransform
   : public vtkm::filter::NewFilterField
 {
 public:
-  VTKM_CONT void SetCartesianToCylindrical() { cartesianToCylindrical = true; }
-  VTKM_CONT void SetCylindricalToCartesian() { cartesianToCylindrical = false; }
+  VTKM_CONT void SetCartesianToCylindrical() { CartesianToCylindrical = true; }
+  VTKM_CONT void SetCylindricalToCartesian() { CartesianToCylindrical = false; }
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
-  bool cartesianToCylindrical = true;
+  bool CartesianToCylindrical = true;
 };
 
 class VTKM_FILTER_FIELD_TRANSFORM_EXPORT SphericalCoordinateTransform
   : public vtkm::filter::NewFilterField
 {
 public:
-  VTKM_CONT void SetCartesianToSpherical() { cartesianToSpherical = true; }
-  VTKM_CONT void SetSphericalToCartesian() { cartesianToSpherical = false; }
+  VTKM_CONT void SetCartesianToSpherical() { CartesianToSpherical = true; }
+  VTKM_CONT void SetSphericalToCartesian() { CartesianToSpherical = false; }
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
-  bool cartesianToSpherical = true;
+  bool CartesianToSpherical = true;
 };
 } // namespace field_transform
 } // namespace filter

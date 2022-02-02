@@ -32,7 +32,7 @@ class VTKM_FILTER_FIELD_TRANSFORM_EXPORT WarpScalar : public vtkm::filter::NewFi
 {
 public:
   VTKM_CONT
-  WarpScalar(vtkm::FloatDefault scaleAmount);
+  explicit WarpScalar(vtkm::FloatDefault scaleAmount);
 
   //@{
   /// Choose the secondary field to operate on. In the warp op A + B *

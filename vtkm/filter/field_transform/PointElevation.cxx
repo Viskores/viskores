@@ -28,14 +28,14 @@ VTKM_CONT vtkm::cont::DataSet PointElevation::DoExecute(const vtkm::cont::DataSe
 {
   vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
 
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
     this->Invoke(
       vtkm::worklet::PointElevation{
         this->LowPoint, this->HighPoint, this->RangeLow, this->RangeHigh },
       concrete,
       outArray);
   };
-  auto field = this->GetFieldFromDataSet(inDataSet);
+  const auto& field = this->GetFieldFromDataSet(inDataSet);
   this->CastAndCallVecField<3>(field, resolveType);
 
   return this->CreateResultField(

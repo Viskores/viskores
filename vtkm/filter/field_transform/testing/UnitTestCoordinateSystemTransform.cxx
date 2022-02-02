@@ -11,7 +11,6 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/field_transform/CoordinateSystemTransform.h>
 
-#include <string>
 #include <vector>
 
 namespace
@@ -71,9 +70,9 @@ vtkm::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
     std::vector<vtkm::FloatDefault> Phis = {
       eps, vtkm::TwoPif() / 4.0f, vtkm::TwoPif() / 3.0f, vtkm::TwoPif() / 2.0f, vtkm::TwoPif() - eps
     };
-    for (std::size_t i = 0; i < Thetas.size(); i++)
-      for (std::size_t j = 0; j < Phis.size(); j++)
-        coordinates.push_back(vtkm::make_Vec(R, Thetas[i], Phis[j]));
+    for (float& Theta : Thetas)
+      for (float& Phi : Phis)
+        coordinates.push_back(vtkm::make_Vec(R, Theta, Phi));
   }
 
   vtkm::Id numCells = (dim - 1) * (dim - 1);

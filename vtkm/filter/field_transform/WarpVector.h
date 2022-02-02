@@ -32,7 +32,7 @@ class VTKM_FILTER_FIELD_TRANSFORM_EXPORT WarpVector : public vtkm::filter::NewFi
 {
 public:
   VTKM_CONT
-  WarpVector(vtkm::FloatDefault scale);
+  explicit WarpVector(vtkm::FloatDefault scale);
 
   //@{
   /// Choose the vector field to operate on. In the warp op A + B *scale, B is

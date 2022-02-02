@@ -41,14 +41,15 @@ VTKM_CONT vtkm::cont::DataSet PointTransform::DoExecute(const vtkm::cont::DataSe
 {
   vtkm::cont::UnknownArrayHandle outArray;
 
-  auto resolveType = [&, this](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete) {
+    // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     vtkm::cont::ArrayHandle<T> result;
     this->Invoke(vtkm::worklet::PointTransform{ this->matrix }, concrete, result);
     outArray = result;
   };
-  auto field = this->GetFieldFromDataSet(inDataSet);
-  this->CastAndCallVecField<3>(field.GetData(), resolveType);
+  const auto& field = this->GetFieldFromDataSet(inDataSet);
+  this->CastAndCallVecField<3>(field, resolveType);
 
   vtkm::cont::DataSet outData = this->CreateResultField(
     inDataSet, this->GetOutputFieldName(), field.GetAssociation(), outArray);
