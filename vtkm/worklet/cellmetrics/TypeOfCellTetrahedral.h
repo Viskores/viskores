@@ -71,7 +71,7 @@ VTKM_EXEC Vector GetTetraL3(const CollectionOfPoints& pts)
   return L3;
 }
 
-/**:
+/**
  * Returns the L4 vector, as defined by the verdict manual.
  *
  *  \param [in] pts The four points which define the quadrilateral.
