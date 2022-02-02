@@ -65,8 +65,6 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-
-
   //{
   //(void)input;
   //(void)policy;
@@ -113,13 +111,14 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
   vtkm::cont::Field or_ids = input.GetField(this->id_name);
   vtkm::cont::Field or_vfs = input.GetField(this->vf_name);
   // TODO: Check all fields for 'IsFieldCell'
-  vtkm::cont::ArrayHandle<vtkm::Float32> vfsdata_or, vfsdata;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> vfsdata_or, vfsdata;
   vtkm::cont::ArrayHandle<vtkm::Id> idsdata_or, idsdata, lendata_or, lendata, posdata_or, posdata,
     allids;
   or_pos.GetData().AsArrayHandle(posdata_or);
   or_len.GetData().AsArrayHandle(lendata_or);
   or_ids.GetData().AsArrayHandle(idsdata_or);
   or_vfs.GetData().AsArrayHandle(vfsdata_or);
+
   vtkm::cont::ArrayCopy(idsdata_or, allids);
   vtkm::cont::Algorithm::Sort(allids);
   vtkm::cont::Algorithm::Unique(allids);
@@ -222,7 +221,6 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
         vtkm::worklet::MIR mir;
         vtkm::cont::ArrayHandle<vtkm::Id> newCellLookback, newCellID;
 
-
         vtkm::cont::CellSetExplicit<> out = mir.Run(saved.GetCellSet(),
                                                     previousMatVF,
                                                     currentMatVF,
@@ -265,14 +263,14 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
 
 
     // Hacking workaround to not clone an entire dataset.
-    vtkm::cont::ArrayHandle<vtkm::Float64> avgSize;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> avgSize;
     this->Invoke(getVol, saved.GetCellSet(), saved.GetCoordinateSystem(0).GetData(), avgSize);
 
     vtkm::worklet::CalcError_C calcErrC;
     vtkm::worklet::Keys<vtkm::Id> cellKeys(cellLookback);
     vtkm::cont::ArrayCopy(cellLookback, filterCellInterp);
     vtkm::cont::ArrayHandle<vtkm::Id> lenOut, posOut, idsOut;
-    vtkm::cont::ArrayHandle<vtkm::Float64> vfsOut, totalErrorOut;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> vfsOut, totalErrorOut;
 
     lenOut.Allocate(cellKeys.GetUniqueKeys().GetNumberOfValues());
     this->Invoke(calcErrC, cellKeys, prevMat, lendata_or, posdata_or, idsdata_or, lenOut);
@@ -299,6 +297,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
                  vfsOut,
                  avgSizeTot,
                  totalErrorOut);
+
     totalError = vtkm::cont::Algorithm::Reduce(totalErrorOut, vtkm::Float64(0));
     vtkm::cont::ArrayCopy(lenOut, lendata);
     vtkm::cont::ArrayCopy(posOut, posdata);

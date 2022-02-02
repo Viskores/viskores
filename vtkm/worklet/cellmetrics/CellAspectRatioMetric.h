@@ -110,8 +110,8 @@ VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
   const Vector X1 = GetQuadX0<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector X2 = GetQuadX1<Scalar, Vector, CollectionOfPoints>(pts);
 
-  const Scalar x1 = vtkm::Sqrt(vtkm::MagnitudeSquared(X1));
-  const Scalar x2 = vtkm::Sqrt(vtkm::MagnitudeSquared(X2));
+  const Scalar x1 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(X1)));
+  const Scalar x2 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(X2)));
   if (x1 <= Scalar(0.0) || x2 <= Scalar(0.0))
   {
     return vtkm::Infinity<Scalar>();
@@ -142,9 +142,9 @@ VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
   const Vector X2 = GetHexX2<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector X3 = GetHexX3<Scalar, Vector, CollectionOfPoints>(pts);
 
-  const Scalar x1 = vtkm::Sqrt(vtkm::MagnitudeSquared(X1));
-  const Scalar x2 = vtkm::Sqrt(vtkm::MagnitudeSquared(X2));
-  const Scalar x3 = vtkm::Sqrt(vtkm::MagnitudeSquared(X3));
+  const Scalar x1 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(X1)));
+  const Scalar x2 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(X2)));
+  const Scalar x3 = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(X3)));
 
   if (x1 <= Scalar(0.0) || x2 <= Scalar(0.0) || x3 <= Scalar(0.0))
   {

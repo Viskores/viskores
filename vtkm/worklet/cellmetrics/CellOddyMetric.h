@@ -78,12 +78,12 @@ VTKM_EXEC Scalar GetQuadOddyQi(const Vector& Li, const Vector& LiPlus1, const Ve
 {
   const Scalar two(2.0);
   const Scalar four(4.0);
-  const Scalar liMagnitudeSquared = vtkm::MagnitudeSquared(Li);
-  const Scalar liPlus1MagnitudeSquared = vtkm::MagnitudeSquared(LiPlus1);
-  const Scalar niPlus1MagnitudeSquared = vtkm::MagnitudeSquared(NiPlus1);
+  const Scalar liMagnitudeSquared = static_cast<Scalar>(vtkm::MagnitudeSquared(Li));
+  const Scalar liPlus1MagnitudeSquared = static_cast<Scalar>(vtkm::MagnitudeSquared(LiPlus1));
+  const Scalar niPlus1MagnitudeSquared = static_cast<Scalar>(vtkm::MagnitudeSquared(NiPlus1));
   const Scalar q = (((liMagnitudeSquared - liPlus1MagnitudeSquared) *
                      (liMagnitudeSquared - liPlus1MagnitudeSquared)) +
-                    (four * (vtkm::Dot(Li, LiPlus1) * vtkm::Dot(Li, LiPlus1)))) /
+                    (four * static_cast<Scalar>(vtkm::Dot(Li, LiPlus1) * vtkm::Dot(Li, LiPlus1)))) /
     (two * niPlus1MagnitudeSquared);
 
   return q;
@@ -190,21 +190,21 @@ VTKM_EXEC OutType CellOddyMetric(const vtkm::IdComponent& numPts,
     // Note that the values 1_2 = 2_1, 1_3 = 3_1, and 2_3 = 3_2.
     // This fact is used to optimize the computation
     */
-    tempMatrix1_1 =
-      vtkm::Dot(hexJacobianMatrices[matrixNumber][0], hexJacobianMatrices[matrixNumber][0]);
-    tempMatrix1_2 =
-      vtkm::Dot(hexJacobianMatrices[matrixNumber][0], hexJacobianMatrices[matrixNumber][1]);
-    tempMatrix1_3 =
-      vtkm::Dot(hexJacobianMatrices[matrixNumber][0], hexJacobianMatrices[matrixNumber][2]);
-    tempMatrix2_2 =
-      vtkm::Dot(hexJacobianMatrices[matrixNumber][1], hexJacobianMatrices[matrixNumber][1]);
-    tempMatrix2_3 =
-      vtkm::Dot(hexJacobianMatrices[matrixNumber][1], hexJacobianMatrices[matrixNumber][2]);
-    tempMatrix3_3 =
-      vtkm::Dot(hexJacobianMatrices[matrixNumber][2], hexJacobianMatrices[matrixNumber][2]);
-    determinant = vtkm::Dot(
+    tempMatrix1_1 = static_cast<OutType>(
+      vtkm::Dot(hexJacobianMatrices[matrixNumber][0], hexJacobianMatrices[matrixNumber][0]));
+    tempMatrix1_2 = static_cast<OutType>(
+      vtkm::Dot(hexJacobianMatrices[matrixNumber][0], hexJacobianMatrices[matrixNumber][1]));
+    tempMatrix1_3 = static_cast<OutType>(
+      vtkm::Dot(hexJacobianMatrices[matrixNumber][0], hexJacobianMatrices[matrixNumber][2]));
+    tempMatrix2_2 = static_cast<OutType>(
+      vtkm::Dot(hexJacobianMatrices[matrixNumber][1], hexJacobianMatrices[matrixNumber][1]));
+    tempMatrix2_3 = static_cast<OutType>(
+      vtkm::Dot(hexJacobianMatrices[matrixNumber][1], hexJacobianMatrices[matrixNumber][2]));
+    tempMatrix3_3 = static_cast<OutType>(
+      vtkm::Dot(hexJacobianMatrices[matrixNumber][2], hexJacobianMatrices[matrixNumber][2]));
+    determinant = static_cast<OutType>(vtkm::Dot(
       hexJacobianMatrices[matrixNumber][0],
-      vtkm::Cross(hexJacobianMatrices[matrixNumber][1], hexJacobianMatrices[matrixNumber][2]));
+      vtkm::Cross(hexJacobianMatrices[matrixNumber][1], hexJacobianMatrices[matrixNumber][2])));
     if (determinant <= OutType(0.0))
     {
       return vtkm::Infinity<OutType>();

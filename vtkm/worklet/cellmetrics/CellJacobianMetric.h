@@ -176,7 +176,7 @@ VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
   const Vector L2 = GetTetraL2<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector L3 = GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts);
 
-  const Scalar q = vtkm::Dot(vtkm::Cross(L2, L0), L3);
+  const Scalar q = static_cast<Scalar>((vtkm::Dot(vtkm::Cross(L2, L0), L3)));
 
   return q;
 }

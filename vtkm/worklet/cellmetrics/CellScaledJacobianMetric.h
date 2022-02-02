@@ -107,7 +107,7 @@ VTKM_EXEC OutType CellScaledJacobianMetric(const vtkm::IdComponent& numPts,
   }
   // compute jacobian of triangle
   Vector TriCross = vtkm::Cross(l2, l1);
-  Scalar scaledJacobian = vtkm::Magnitude(TriCross);
+  Scalar scaledJacobian = static_cast<OutType>(vtkm::Magnitude(TriCross));
 
   //add all pieces together
   //TODO change
@@ -279,13 +279,13 @@ VTKM_EXEC OutType CellScaledJacobianMetric(const vtkm::IdComponent& numPts,
   Edge Edges[6] = { pts[1] - pts[0], pts[2] - pts[1], pts[0] - pts[2],
                     pts[3] - pts[0], pts[3] - pts[1], pts[3] - pts[2] };
   OutType EdgesSquared[6];
-  OutType jacobian = vtkm::Dot(vtkm::Cross(Edges[2], Edges[0]), Edges[3]);
+  OutType jacobian = static_cast<OutType>(vtkm::Dot(vtkm::Cross(Edges[2], Edges[0]), Edges[3]));
   // compute the scaled jacobian
   OutType currSide, maxSide = vtkm::NegativeInfinity<OutType>();
   vtkm::IdComponent edgeIndex, sideIndex;
   for (edgeIndex = 0; edgeIndex < 6; edgeIndex++)
   {
-    EdgesSquared[edgeIndex] = vtkm::MagnitudeSquared(Edges[edgeIndex]);
+    EdgesSquared[edgeIndex] = static_cast<OutType>(vtkm::MagnitudeSquared(Edges[edgeIndex]));
   }
   OutType Sides[4] = { EdgesSquared[0] * EdgesSquared[2] * EdgesSquared[3],
                        EdgesSquared[0] * EdgesSquared[1] * EdgesSquared[4],

@@ -106,8 +106,8 @@ VTKM_EXEC Vector GetTetraL5(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetTetraL0Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l0 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL0<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l0 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL0<Scalar, Vector, CollectionOfPoints>(pts))));
   return l0;
 }
 
@@ -120,8 +120,8 @@ VTKM_EXEC Scalar GetTetraL0Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetTetraL1Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l1 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL1<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l1 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL1<Scalar, Vector, CollectionOfPoints>(pts))));
   return l1;
 }
 
@@ -134,8 +134,8 @@ VTKM_EXEC Scalar GetTetraL1Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetTetraL2Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l2 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL2<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l2 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL2<Scalar, Vector, CollectionOfPoints>(pts))));
   return l2;
 }
 
@@ -148,8 +148,8 @@ VTKM_EXEC Scalar GetTetraL2Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetTetraL3Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l3 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l3 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts))));
   return l3;
 }
 
@@ -162,8 +162,8 @@ VTKM_EXEC Scalar GetTetraL3Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetTetraL4Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l4 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL4<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l4 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL4<Scalar, Vector, CollectionOfPoints>(pts))));
   return l4;
 }
 
@@ -176,8 +176,8 @@ VTKM_EXEC Scalar GetTetraL4Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetTetraL5Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l5 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL5<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l5 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTetraL5<Scalar, Vector, CollectionOfPoints>(pts))));
   return l5;
 }
 
@@ -234,10 +234,10 @@ VTKM_EXEC Scalar GetTetraArea(const CollectionOfPoints& pts)
   const Vector L3 = GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector L4 = GetTetraL4<Scalar, Vector, CollectionOfPoints>(pts);
 
-  const Scalar a = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L2, L0)));
-  const Scalar b = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L3, L0)));
-  const Scalar c = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L4, L1)));
-  const Scalar d = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L3, L2)));
+  const Scalar a = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L2, L0))));
+  const Scalar b = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L3, L0))));
+  const Scalar c = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L4, L1))));
+  const Scalar d = static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L3, L2))));
   const Scalar hhalf(0.5);
 
   const Scalar area = hhalf * (a + b + c + d);
@@ -258,7 +258,7 @@ VTKM_EXEC Scalar GetTetraVolume(const CollectionOfPoints& pts)
   const Vector L3 = GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts);
   const Scalar six(6.0);
 
-  return vtkm::Dot(vtkm::Cross(L2, L0), L3) / six;
+  return static_cast<Scalar>(vtkm::Dot(vtkm::Cross(L2, L0), L3)) / six;
 }
 
 /**

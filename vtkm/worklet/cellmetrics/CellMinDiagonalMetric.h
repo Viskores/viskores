@@ -82,28 +82,28 @@ VTKM_EXEC OutType CellMinDiagonalMetric(const vtkm::IdComponent& numPts,
   //lengths^2  f diag nals
   for (i = 0; i < 3; i++)
   {
-    temp[i] = pts[6][i] - pts[0][i];
+    temp[i] = static_cast<Scalar>(pts[6][i] - pts[0][i]);
     temp[i] = temp[i] * temp[i];
   }
   diag[0] = vtkm::Sqrt(temp[0] + temp[1] + temp[2]);
 
   for (i = 0; i < 3; i++)
   {
-    temp[i] = pts[4][i] - pts[2][i];
+    temp[i] = static_cast<Scalar>(pts[4][i] - pts[2][i]);
     temp[i] = temp[i] * temp[i];
   }
   diag[1] = vtkm::Sqrt(temp[0] + temp[1] + temp[2]);
 
   for (i = 0; i < 3; i++)
   {
-    temp[i] = pts[7][i] - pts[1][i];
+    temp[i] = static_cast<Scalar>(pts[7][i] - pts[1][i]);
     temp[i] = temp[i] * temp[i];
   }
   diag[2] = vtkm::Sqrt(temp[0] + temp[1] + temp[2]);
 
   for (i = 0; i < 3; i++)
   {
-    temp[i] = pts[5][i] - pts[3][i];
+    temp[i] = static_cast<Scalar>(pts[5][i] - pts[3][i]);
     temp[i] = temp[i] * temp[i];
   }
   diag[3] = vtkm::Sqrt(temp[0] + temp[1] + temp[2]);

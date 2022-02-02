@@ -80,32 +80,32 @@ VTKM_EXEC OutType CellDimensionMetric(const vtkm::IdComponent& numPts,
   UNUSED(ec);
 
   OutType gradop[8][3];
-  OutType x1 = pts[0][0];
-  OutType x2 = pts[1][0];
-  OutType x3 = pts[2][0];
-  OutType x4 = pts[3][0];
-  OutType x5 = pts[4][0];
-  OutType x6 = pts[5][0];
-  OutType x7 = pts[6][0];
-  OutType x8 = pts[7][0];
+  OutType x1 = static_cast<OutType>(pts[0][0]);
+  OutType x2 = static_cast<OutType>(pts[1][0]);
+  OutType x3 = static_cast<OutType>(pts[2][0]);
+  OutType x4 = static_cast<OutType>(pts[3][0]);
+  OutType x5 = static_cast<OutType>(pts[4][0]);
+  OutType x6 = static_cast<OutType>(pts[5][0]);
+  OutType x7 = static_cast<OutType>(pts[6][0]);
+  OutType x8 = static_cast<OutType>(pts[7][0]);
 
-  OutType y1 = pts[0][1];
-  OutType y2 = pts[1][1];
-  OutType y3 = pts[2][1];
-  OutType y4 = pts[3][1];
-  OutType y5 = pts[4][1];
-  OutType y6 = pts[5][1];
-  OutType y7 = pts[6][1];
-  OutType y8 = pts[7][1];
+  OutType y1 = static_cast<OutType>(pts[0][1]);
+  OutType y2 = static_cast<OutType>(pts[1][1]);
+  OutType y3 = static_cast<OutType>(pts[2][1]);
+  OutType y4 = static_cast<OutType>(pts[3][1]);
+  OutType y5 = static_cast<OutType>(pts[4][1]);
+  OutType y6 = static_cast<OutType>(pts[5][1]);
+  OutType y7 = static_cast<OutType>(pts[6][1]);
+  OutType y8 = static_cast<OutType>(pts[7][1]);
 
-  OutType z1 = pts[0][2];
-  OutType z2 = pts[1][2];
-  OutType z3 = pts[2][2];
-  OutType z4 = pts[3][2];
-  OutType z5 = pts[4][2];
-  OutType z6 = pts[5][2];
-  OutType z7 = pts[6][2];
-  OutType z8 = pts[7][2];
+  OutType z1 = static_cast<OutType>(pts[0][2]);
+  OutType z2 = static_cast<OutType>(pts[1][2]);
+  OutType z3 = static_cast<OutType>(pts[2][2]);
+  OutType z4 = static_cast<OutType>(pts[3][2]);
+  OutType z5 = static_cast<OutType>(pts[4][2]);
+  OutType z6 = static_cast<OutType>(pts[5][2]);
+  OutType z7 = static_cast<OutType>(pts[6][2]);
+  OutType z8 = static_cast<OutType>(pts[7][2]);
 
   OutType z24 = z2 - z4;
   OutType z52 = z5 - z2;
@@ -274,9 +274,10 @@ VTKM_EXEC OutType CellDimensionMetric(const vtkm::IdComponent& numPts,
   gradop[7][2] = (x7 * (y3 - y6 - y54) + x6 * y75 + x5 * (y6 - y1 - y47) + x4 * (y1 - y3 - y75) +
                   x3 * y47 + x1 * y54) /
     (OutType)12.0;
-  OutType volume = pts[0][0] * gradop[0][0] + pts[1][0] * gradop[1][0] + pts[2][0] * gradop[2][0] +
-    pts[3][0] * gradop[3][0] + pts[4][0] * gradop[4][0] + pts[5][0] * gradop[5][0] +
-    pts[6][0] * gradop[6][0] + pts[7][0] * gradop[7][0];
+  OutType volume = OutType(pts[0][0]) * gradop[0][0] + OutType(pts[1][0]) * gradop[1][0] +
+    OutType(pts[2][0]) * gradop[2][0] + OutType(pts[3][0]) * gradop[3][0] +
+    OutType(pts[4][0]) * gradop[4][0] + OutType(pts[5][0]) * gradop[5][0] +
+    OutType(pts[6][0]) * gradop[6][0] + OutType(pts[7][0]) * gradop[7][0];
   OutType two = (OutType)2.;
   OutType aspect = (OutType).5 * vtkm::Pow(volume, two) /
     (vtkm::Pow(gradop[0][0], two) + vtkm::Pow(gradop[1][0], two) + vtkm::Pow(gradop[2][0], two) +

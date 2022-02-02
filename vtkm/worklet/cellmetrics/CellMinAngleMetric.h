@@ -161,16 +161,20 @@ VTKM_EXEC OutType CellMinAngleMetric(const vtkm::IdComponent& numPts,
   const Scalar oneEightyOverPi = (Scalar)57.2957795131; // ~ 180/pi
   const Scalar threeSixty(360.0);
   const Scalar q0 =
-    (vtkm::Pow(neg1, s0) * vtkm::ACos(neg1 * ((vtkm::Dot(L0, L1)) / (l0 * l1))) * oneEightyOverPi) +
+    (vtkm::Pow(neg1, s0) * vtkm::ACos(neg1 * (static_cast<Scalar>(vtkm::Dot(L0, L1)) / (l0 * l1))) *
+     oneEightyOverPi) +
     (threeSixty * s0);
   const Scalar q1 =
-    (vtkm::Pow(neg1, s1) * vtkm::ACos(neg1 * ((vtkm::Dot(L1, L2)) / (l1 * l2))) * oneEightyOverPi) +
+    (vtkm::Pow(neg1, s1) * vtkm::ACos(neg1 * (static_cast<Scalar>(vtkm::Dot(L1, L2)) / (l1 * l2))) *
+     oneEightyOverPi) +
     (threeSixty * s1);
   const Scalar q2 =
-    (vtkm::Pow(neg1, s2) * vtkm::ACos(neg1 * ((vtkm::Dot(L2, L3)) / (l2 * l3))) * oneEightyOverPi) +
+    (vtkm::Pow(neg1, s2) * vtkm::ACos(neg1 * (static_cast<Scalar>(vtkm::Dot(L2, L3)) / (l2 * l3))) *
+     oneEightyOverPi) +
     (threeSixty * s2);
   const Scalar q3 =
-    (vtkm::Pow(neg1, s3) * vtkm::ACos(neg1 * ((vtkm::Dot(L3, L0)) / (l3 * l0))) * oneEightyOverPi) +
+    (vtkm::Pow(neg1, s3) * vtkm::ACos(neg1 * (static_cast<Scalar>(vtkm::Dot(L3, L0)) / (l3 * l0))) *
+     oneEightyOverPi) +
     (threeSixty * s3);
 
   const Scalar q = vtkm::Min(q0, vtkm::Min(q1, vtkm::Min(q2, q3)));

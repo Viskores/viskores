@@ -151,26 +151,26 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
     ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(-1.);
   }
-  OutType X1x = (pts[1][0] - pts[0][0]) + (pts[2][0] - pts[3][0]) + (pts[5][0] - pts[4][0]) +
-    (pts[6][0] - pts[7][0]);
-  OutType X1y = (pts[1][1] - pts[0][1]) + (pts[2][1] - pts[3][1]) + (pts[5][1] - pts[4][1]) +
-    (pts[6][1] - pts[7][1]);
-  OutType X1z = (pts[1][2] - pts[0][2]) + (pts[2][2] - pts[3][2]) + (pts[5][2] - pts[4][2]) +
-    (pts[6][2] - pts[7][2]);
+  OutType X1x = static_cast<OutType>((pts[1][0] - pts[0][0]) + (pts[2][0] - pts[3][0]) +
+                                     (pts[5][0] - pts[4][0]) + (pts[6][0] - pts[7][0]));
+  OutType X1y = static_cast<OutType>((pts[1][1] - pts[0][1]) + (pts[2][1] - pts[3][1]) +
+                                     (pts[5][1] - pts[4][1]) + (pts[6][1] - pts[7][1]));
+  OutType X1z = static_cast<OutType>((pts[1][2] - pts[0][2]) + (pts[2][2] - pts[3][2]) +
+                                     (pts[5][2] - pts[4][2]) + (pts[6][2] - pts[7][2]));
 
-  OutType X2x = (pts[2][0] - pts[0][0]) + (pts[2][0] - pts[1][0]) + (pts[7][0] - pts[4][0]) +
-    (pts[6][0] - pts[5][0]);
-  OutType X2y = (pts[2][1] - pts[0][1]) + (pts[2][1] - pts[1][1]) + (pts[7][1] - pts[4][1]) +
-    (pts[6][1] - pts[5][1]);
-  OutType X2z = (pts[2][2] - pts[0][2]) + (pts[2][2] - pts[1][2]) + (pts[7][2] - pts[4][2]) +
-    (pts[6][2] - pts[5][2]);
+  OutType X2x = static_cast<OutType>((pts[2][0] - pts[0][0]) + (pts[2][0] - pts[1][0]) +
+                                     (pts[7][0] - pts[4][0]) + (pts[6][0] - pts[5][0]));
+  OutType X2y = static_cast<OutType>((pts[2][1] - pts[0][1]) + (pts[2][1] - pts[1][1]) +
+                                     (pts[7][1] - pts[4][1]) + (pts[6][1] - pts[5][1]));
+  OutType X2z = static_cast<OutType>((pts[2][2] - pts[0][2]) + (pts[2][2] - pts[1][2]) +
+                                     (pts[7][2] - pts[4][2]) + (pts[6][2] - pts[5][2]));
 
-  OutType X3x = (pts[4][0] - pts[0][0]) + (pts[5][0] - pts[1][0]) + (pts[6][0] - pts[2][0]) +
-    (pts[7][0] - pts[3][0]);
-  OutType X3y = (pts[4][1] - pts[0][1]) + (pts[5][1] - pts[1][1]) + (pts[6][1] - pts[2][1]) +
-    (pts[7][1] - pts[3][1]);
-  OutType X3z = (pts[4][2] - pts[0][2]) + (pts[5][2] - pts[1][2]) + (pts[6][2] - pts[2][2]) +
-    (pts[7][2] - pts[3][2]);
+  OutType X3x = static_cast<OutType>((pts[4][0] - pts[0][0]) + (pts[5][0] - pts[1][0]) +
+                                     (pts[6][0] - pts[2][0]) + (pts[7][0] - pts[3][0]));
+  OutType X3y = static_cast<OutType>((pts[4][1] - pts[0][1]) + (pts[5][1] - pts[1][1]) +
+                                     (pts[6][1] - pts[2][1]) + (pts[7][1] - pts[3][1]));
+  OutType X3z = static_cast<OutType>((pts[4][2] - pts[0][2]) + (pts[5][2] - pts[1][2]) +
+                                     (pts[6][2] - pts[2][2]) + (pts[7][2] - pts[3][2]));
   vtkm::Matrix<OutType, 3, 3> A8;
   vtkm::MatrixSetRow(A8, 0, vtkm::Vec<OutType, 3>(X1x, X1y, X1z));
   vtkm::MatrixSetRow(A8, 1, vtkm::Vec<OutType, 3>(X2x, X2y, X2z));

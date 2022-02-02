@@ -81,8 +81,8 @@ VTKM_EXEC Vector GetTriangleL2(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetTriangleL0Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l0 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTriangleL0<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l0 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTriangleL0<Scalar, Vector, CollectionOfPoints>(pts))));
   return l0;
 }
 
@@ -95,8 +95,8 @@ VTKM_EXEC Scalar GetTriangleL0Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetTriangleL1Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l1 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTriangleL1<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l1 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTriangleL1<Scalar, Vector, CollectionOfPoints>(pts))));
   return l1;
 }
 
@@ -109,8 +109,8 @@ VTKM_EXEC Scalar GetTriangleL1Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetTriangleL2Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l2 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTriangleL2<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l2 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetTriangleL2<Scalar, Vector, CollectionOfPoints>(pts))));
   return l2;
 }
 
@@ -165,7 +165,8 @@ VTKM_EXEC Scalar GetTriangleArea(const CollectionOfPoints& pts)
   const Vector L0 = GetTriangleL0<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector L1 = GetTriangleL1<Scalar, Vector, CollectionOfPoints>(pts);
   const Scalar hhalf(0.5);
-  const Scalar crossProductMagnitude = vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L0, L1)));
+  const Scalar crossProductMagnitude =
+    static_cast<Scalar>(vtkm::Sqrt(vtkm::MagnitudeSquared(vtkm::Cross(L0, L1))));
   const Scalar area = hhalf * crossProductMagnitude;
   return area;
 }

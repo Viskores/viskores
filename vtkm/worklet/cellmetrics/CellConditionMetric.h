@@ -93,7 +93,8 @@ VTKM_EXEC OutType CellConditionMetric(const vtkm::IdComponent& numPts,
   const Vector L2 = GetTriangleL2<Scalar, Vector, CollectionOfPoints>(pts);
 
   const Scalar q =
-    (vtkm::Dot(L2, L2) + vtkm::Dot(L1, L1) + vtkm::Dot(L1, L2)) / (two * area * rootThree);
+    static_cast<Scalar>((vtkm::Dot(L2, L2) + vtkm::Dot(L1, L1) + vtkm::Dot(L1, L2))) /
+    (two * area * rootThree);
   return q;
 }
 
@@ -164,7 +165,7 @@ VTKM_EXEC OutType CellConditionMetric(const vtkm::IdComponent& numPts,
   const Vector C2 = ((negTwo * L2) - L0) / root3;
   const Vector C3 = ((three * L3) + L2 - L0) / root6;
 
-  const Scalar cDet = vtkm::Dot(C1, vtkm::Cross(C2, C3));
+  const Scalar cDet = static_cast<Scalar>(vtkm::Dot(C1, vtkm::Cross(C2, C3)));
 
   if (cDet <= Scalar(0.0))
   {
@@ -175,8 +176,9 @@ VTKM_EXEC OutType CellConditionMetric(const vtkm::IdComponent& numPts,
   const Vector C2xC3 = vtkm::Cross(C2, C3);
   const Vector C1xC3 = vtkm::Cross(C1, C3);
 
-  const Scalar t1 = vtkm::Dot(C1, C1) + vtkm::Dot(C2, C2) + vtkm::Dot(C3, C3);
-  const Scalar t2 = vtkm::Dot(C1xC2, C1xC2) + vtkm::Dot(C2xC3, C2xC3) + vtkm::Dot(C1xC3, C1xC3);
+  const Scalar t1 = static_cast<Scalar>(vtkm::Dot(C1, C1) + vtkm::Dot(C2, C2) + vtkm::Dot(C3, C3));
+  const Scalar t2 = static_cast<Scalar>(vtkm::Dot(C1xC2, C1xC2) + vtkm::Dot(C2xC3, C2xC3) +
+                                        vtkm::Dot(C1xC3, C1xC3));
 
   const Scalar q = vtkm::Sqrt(t1 * t2) / (three * cDet);
   return q;

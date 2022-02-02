@@ -160,12 +160,12 @@ VTKM_EXEC OutType CellShapeMetric(const vtkm::IdComponent& numPts,
   const Vector l3 = GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector negl2 = -1 * l2;
 
-  const Scalar l0l0 = vtkm::Dot(l0, l0);
-  const Scalar l2l2 = vtkm::Dot(l2, l2);
-  const Scalar l3l3 = vtkm::Dot(l3, l3);
-  const Scalar l0negl2 = vtkm::Dot(l0, negl2);
-  const Scalar l0l3 = vtkm::Dot(l0, l3);
-  const Scalar negl2l3 = vtkm::Dot(negl2, l3);
+  const Scalar l0l0 = static_cast<Scalar>(vtkm::Dot(l0, l0));
+  const Scalar l2l2 = static_cast<Scalar>(vtkm::Dot(l2, l2));
+  const Scalar l3l3 = static_cast<Scalar>(vtkm::Dot(l3, l3));
+  const Scalar l0negl2 = static_cast<Scalar>(vtkm::Dot(l0, negl2));
+  const Scalar l0l3 = static_cast<Scalar>(vtkm::Dot(l0, l3));
+  const Scalar negl2l3 = static_cast<Scalar>(vtkm::Dot(negl2, l3));
 
   const Scalar numerator = three * vtkm::Pow(jacobian * rtTwo, twoThirds);
   Scalar denominator = (threeHalves * (l0l0 + l2l2 + l3l3)) - (l0negl2 + l0l3 + negl2l3);

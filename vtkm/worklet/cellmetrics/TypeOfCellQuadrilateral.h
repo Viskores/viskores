@@ -93,8 +93,8 @@ VTKM_EXEC Vector GetQuadL3(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetQuadL0Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l0 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadL0<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l0 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadL0<Scalar, Vector, CollectionOfPoints>(pts))));
   return l0;
 }
 
@@ -107,8 +107,8 @@ VTKM_EXEC Scalar GetQuadL0Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetQuadL1Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l1 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadL1<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l1 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadL1<Scalar, Vector, CollectionOfPoints>(pts))));
   return l1;
 }
 
@@ -121,8 +121,8 @@ VTKM_EXEC Scalar GetQuadL1Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetQuadL2Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l2 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadL2<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l2 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadL2<Scalar, Vector, CollectionOfPoints>(pts))));
   return l2;
 }
 
@@ -135,8 +135,8 @@ VTKM_EXEC Scalar GetQuadL2Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetQuadL3Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l3 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadL3<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar l3 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadL3<Scalar, Vector, CollectionOfPoints>(pts))));
   return l3;
 }
 
@@ -209,8 +209,8 @@ VTKM_EXEC Vector GetQuadD1(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetQuadD0Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar d0 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadD0<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar d0 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadD0<Scalar, Vector, CollectionOfPoints>(pts))));
   return d0;
 }
 
@@ -223,8 +223,8 @@ VTKM_EXEC Scalar GetQuadD0Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VTKM_EXEC Scalar GetQuadD1Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar d1 =
-    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadD1<Scalar, Vector, CollectionOfPoints>(pts)));
+  const Scalar d1 = static_cast<Scalar>(
+    vtkm::Sqrt(vtkm::MagnitudeSquared(GetQuadD1<Scalar, Vector, CollectionOfPoints>(pts))));
   return d1;
 }
 
@@ -417,7 +417,7 @@ VTKM_EXEC Scalar GetQuadAlpha0(const CollectionOfPoints& pts)
   const Vector normalizedCenterNormal =
     GetQuadNcNormalized<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector N0 = GetQuadN0<Scalar, Vector, CollectionOfPoints>(pts);
-  return vtkm::Dot(normalizedCenterNormal, N0);
+  return static_cast<Scalar>(vtkm::Dot(normalizedCenterNormal, N0));
 }
 
 /**
@@ -432,7 +432,7 @@ VTKM_EXEC Scalar GetQuadAlpha1(const CollectionOfPoints& pts)
   const Vector normalizedCenterNormal =
     GetQuadNcNormalized<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector N1 = GetQuadN1<Scalar, Vector, CollectionOfPoints>(pts);
-  return vtkm::Dot(normalizedCenterNormal, N1);
+  return static_cast<Scalar>(vtkm::Dot(normalizedCenterNormal, N1));
 }
 
 /**
@@ -447,7 +447,7 @@ VTKM_EXEC Scalar GetQuadAlpha2(const CollectionOfPoints& pts)
   const Vector normalizedCenterNormal =
     GetQuadNcNormalized<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector N2 = GetQuadN2<Scalar, Vector, CollectionOfPoints>(pts);
-  return vtkm::Dot(normalizedCenterNormal, N2);
+  return static_cast<Scalar>(vtkm::Dot(normalizedCenterNormal, N2));
 }
 
 
@@ -463,7 +463,7 @@ VTKM_EXEC Scalar GetQuadAlpha3(const CollectionOfPoints& pts)
   const Vector normalizedCenterNormal =
     GetQuadNcNormalized<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector N3 = GetQuadN3<Scalar, Vector, CollectionOfPoints>(pts);
-  return vtkm::Dot(normalizedCenterNormal, N3);
+  return static_cast<Scalar>(vtkm::Dot(normalizedCenterNormal, N3));
 }
 
 
