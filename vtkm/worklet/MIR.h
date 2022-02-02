@@ -2316,7 +2316,7 @@ public:
       prevLowest = lowest;
       lowest = largest;
     }
-    totalErrorOut = totalError;
+    totalErrorOut = TEO(totalError);
   }
 };
 struct CheckFor2D : public vtkm::worklet::WorkletVisitCellsWithPoints
