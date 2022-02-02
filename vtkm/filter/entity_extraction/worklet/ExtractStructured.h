@@ -11,7 +11,7 @@
 #define vtk_m_worklet_ExtractStructured_h
 
 #include <vtkm/RangeId3.h>
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
@@ -469,8 +469,8 @@ private:
       }
       else
       {
-        vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandlePermutation(validIds[i], arrays[i]),
-                              xyzs[i]);
+        vtkm::cont::ArrayCopyDevice(vtkm::cont::make_ArrayHandlePermutation(validIds[i], arrays[i]),
+                                    xyzs[i]);
         ++dim;
       }
     }
