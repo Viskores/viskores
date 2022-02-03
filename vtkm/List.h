@@ -622,6 +622,56 @@ using ListTransform = typename detail::ListTransformImpl<internal::AsList<List>,
 namespace detail
 {
 
+#if defined(VTKM_MSVC) && (_MSC_VER < 1920)
+// Special (inefficient) implementation for MSVC 2017, which has an ICE for the regular version
+
+template <typename Passed,
+          typename Next,
+          bool Remove,
+          typename Rest,
+          template <typename>
+          class Predicate>
+struct ListRemoveIfCheckNext;
+
+template <typename Passed, typename Rest, template <typename> class Predicate>
+struct ListRemoveIfGetNext;
+
+template <typename Passed, typename Next, typename Rest, template <typename> class Predicate>
+struct ListRemoveIfCheckNext<Passed, Next, true, Rest, Predicate>
+{
+  using type = typename ListRemoveIfGetNext<Passed, Rest, Predicate>::type;
+};
+
+template <typename... PassedTs, typename Next, typename Rest, template <typename> class Predicate>
+struct ListRemoveIfCheckNext<vtkm::List<PassedTs...>, Next, false, Rest, Predicate>
+{
+  using type = typename ListRemoveIfGetNext<vtkm::List<PassedTs..., Next>, Rest, Predicate>::type;
+};
+
+template <typename Passed, typename Next, typename... RestTs, template <typename> class Predicate>
+struct ListRemoveIfGetNext<Passed, vtkm::List<Next, RestTs...>, Predicate>
+{
+  using type = typename ListRemoveIfCheckNext<Passed,
+                                              Next,
+                                              Predicate<Next>::value,
+                                              vtkm::List<RestTs...>,
+                                              Predicate>::type;
+};
+
+template <typename Passed, template <typename> class Predicate>
+struct ListRemoveIfGetNext<Passed, vtkm::List<>, Predicate>
+{
+  using type = Passed;
+};
+
+template <typename L, template <typename> class Predicate>
+struct ListRemoveIfImpl
+{
+  using type = typename ListRemoveIfGetNext<vtkm::List<>, L, Predicate>::type;
+};
+
+#else
+
 template <typename L, template <typename> class Predicate>
 struct ListRemoveIfImpl;
 
@@ -631,6 +681,8 @@ struct ListRemoveIfImpl<vtkm::List<Ts...>, Predicate>
   using type = typename ListAppendImpl<
     std::conditional_t<Predicate<Ts>::value, vtkm::List<>, vtkm::List<Ts>>...>::type;
 };
+
+#endif
 
 } // namespace detail
 

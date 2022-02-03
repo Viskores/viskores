@@ -178,6 +178,13 @@ void TestLists()
                              vtkm::List<TestClass<11>>,
                              vtkm::List<TestClass<21>, TestClass<22>>>{});
 
+  std::cout << "ListTransform" << std::endl;
+  CheckList(EvenList{}, vtkm::ListTransform<SimpleCount, DoubleTransform>{});
+
+  std::cout << "ListRemoveIf" << std::endl;
+  CheckList(vtkm::List<TestClass<1>, TestClass<3>>{},
+            vtkm::ListRemoveIf<SimpleCount, EvenPredicate>{});
+
   std::cout << "ListIntersect" << std::endl;
   CheckList(vtkm::List<TestClass<3>, TestClass<5>>{},
             vtkm::ListIntersect<
@@ -187,13 +194,6 @@ void TestLists()
             vtkm::ListIntersect<vtkm::List<TestClass<1>, TestClass<2>>, vtkm::ListUniversal>{});
   CheckList(vtkm::List<TestClass<1>, TestClass<2>>{},
             vtkm::ListIntersect<vtkm::ListUniversal, vtkm::List<TestClass<1>, TestClass<2>>>{});
-
-  std::cout << "ListTransform" << std::endl;
-  CheckList(EvenList{}, vtkm::ListTransform<SimpleCount, DoubleTransform>{});
-
-  std::cout << "ListRemoveIf" << std::endl;
-  CheckList(vtkm::List<TestClass<1>, TestClass<3>>{},
-            vtkm::ListRemoveIf<SimpleCount, EvenPredicate>{});
 
   std::cout << "ListSize" << std::endl;
   VTKM_TEST_ASSERT(vtkm::ListSize<vtkm::ListEmpty>::value == 0);
