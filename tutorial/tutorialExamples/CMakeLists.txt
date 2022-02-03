@@ -28,8 +28,10 @@ target_link_libraries(tut_2filters vtkm_filter vtkm_io)
 add_executable(tut_mag_grad tut_mag_grad.cxx)
 target_link_libraries(tut_mag_grad vtkm_filter vtkm_io)
 
-add_executable(tut_rendering tut_rendering.cxx)
-target_link_libraries(tut_rendering vtkm_filter vtkm_io vtkm_rendering)
+if (VTKm_ENABLE_RENDERING)
+  add_executable(tut_rendering tut_rendering.cxx)
+  target_link_libraries(tut_rendering vtkm_filter vtkm_io vtkm_rendering)
+endif()
 
 add_executable(tut_error_handling tut_error_handling.cxx)
 target_link_libraries(tut_error_handling vtkm_filter vtkm_io)
@@ -43,11 +45,19 @@ target_link_libraries(tut_point_to_cell vtkm_cont vtkm_filter vtkm_io)
 add_executable(tut_extract_edges tut_extract_edges.cxx)
 target_link_libraries(tut_extract_edges vtkm_cont vtkm_filter vtkm_io)
 
+
+set(tutorial_sources tut_io.cxx tut_contour.cxx tut_contour_2fields.cxx tut_2filters.cxx tut_mag_grad.cxx tut_error_handling.cxx tut_logging.cxx tut_point_to_cell.cxx tut_extract_edges.cxx)
+
+if (VTKm_ENABLE_RENDERING)
+  list(APPEND tutorial_sources tut_rendering.cxx)
+endif()
+
+
 vtkm_add_target_information(tut_io tut_contour tut_contour_2fields tut_2filters tut_mag_grad tut_rendering tut_error_handling tut_logging tut_point_to_cell tut_extract_edges
                             DROP_UNUSED_SYMBOLS
                             MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES
-                              tut_io.cxx tut_contour.cxx tut_contour_2fields.cxx tut_2filters.cxx tut_mag_grad.cxx tut_rendering.cxx tut_error_handling.cxx tut_logging.cxx tut_point_to_cell.cxx tut_extract_edges.cxx)
+                             tutotial_sources)
 
 
 # Copy the data file to be adjacent to the binaries

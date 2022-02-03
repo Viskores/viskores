@@ -410,4 +410,4 @@ endif()
 add_subdirectory(examples)
 
 # Tutorial examples
-add_subdirectory(vtkm-tutorial)
+add_subdirectory(tutorial)
