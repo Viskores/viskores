@@ -35,7 +35,7 @@ struct ComputeMagnitude : vtkm::worklet::WorkletMapField
 class FieldMagnitude : public vtkm::filter::FilterField<FieldMagnitude>
 {
 public:
-  using SupportedTypes = vtkm::ListTagBase<vtkm::Vec3f>;
+  using SupportedTypes = vtkm::List<vtkm::Vec3f>;
 
   template <typename ArrayHandleType, typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet,

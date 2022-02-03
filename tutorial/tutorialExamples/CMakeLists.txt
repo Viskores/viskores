@@ -46,14 +46,17 @@ add_executable(tut_extract_edges tut_extract_edges.cxx)
 target_link_libraries(tut_extract_edges vtkm_cont vtkm_filter vtkm_io)
 
 
+set(tutorial_targets tut_io tut_contour tut_contour_2fields tut_2filters tut_mag_grad tut_error_handling tut_logging tut_point_to_cell tut_extract_edges)
+
 set(tutorial_sources tut_io.cxx tut_contour.cxx tut_contour_2fields.cxx tut_2filters.cxx tut_mag_grad.cxx tut_error_handling.cxx tut_logging.cxx tut_point_to_cell.cxx tut_extract_edges.cxx)
 
 if (VTKm_ENABLE_RENDERING)
   list(APPEND tutorial_sources tut_rendering.cxx)
+  list(APPEND tutorial_targets tut_rendering)
 endif()
 
 
-vtkm_add_target_information(tut_io tut_contour tut_contour_2fields tut_2filters tut_mag_grad tut_rendering tut_error_handling tut_logging tut_point_to_cell tut_extract_edges
+vtkm_add_target_information(${tutorial_targets}
                             DROP_UNUSED_SYMBOLS
                             MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES
