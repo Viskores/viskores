@@ -159,10 +159,7 @@ namespace cont
 template <typename ValueTypeList, typename StorageTypeList>
 struct SerializableTypeString<vtkm::cont::UncertainArrayHandle<ValueTypeList, StorageTypeList>>
 {
-  static VTKM_CONT std::string Get()
-  {
-    return SerializableTypeString<vtkm::cont::UnknownArrayHandle>::Get();
-  }
+  static VTKM_CONT std::string Get() { return "UncertainAH"; }
 };
 }
 } // namespace vtkm::cont
