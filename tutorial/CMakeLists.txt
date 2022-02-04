@@ -66,7 +66,7 @@ vtkm_add_target_information(${tutorial_targets}
                             DROP_UNUSED_SYMBOLS
                             MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES
-                             tutorial_sources)
+                             ${tutorial_sources})
 
 
 # Copy the data file to be adjacent to the binaries
