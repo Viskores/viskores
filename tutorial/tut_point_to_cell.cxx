@@ -28,7 +28,8 @@ struct ConvertPointFieldToCells : vtkm::worklet::WorkletVisitCellsWithPoints
   using InputDomain = _1;
 
   template <typename InPointFieldVecType, typename OutCellFieldType>
-  void operator()(const InPointFieldVecType& inPointFieldVec, OutCellFieldType& outCellField) const
+  VTKM_EXEC void operator()(const InPointFieldVecType& inPointFieldVec,
+                            OutCellFieldType& outCellField) const
   {
     vtkm::IdComponent numPoints = inPointFieldVec.GetNumberOfComponents();
 
