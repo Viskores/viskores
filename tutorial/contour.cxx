@@ -10,9 +10,9 @@
 // Example 2: do a contour!, write it out.
 //
 #include <vtkm/cont/Initialize.h>
-#include <vtkm/filter/Contour.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/filter/contour/Contour.h>
+#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 int main(int argc, char** argv)
 {
@@ -22,16 +22,16 @@ int main(int argc, char** argv)
   vtkm::io::VTKDataSetReader reader("data/kitchen.vtk");
   vtkm::cont::DataSet ds_from_file = reader.ReadDataSet();
 
-  vtkm::filter::Contour contour;
+  vtkm::filter::contour::Contour contour;
   contour.SetActiveField("c1");
   contour.SetNumberOfIsoValues(3);
   contour.SetIsoValue(0, 0.05);
   contour.SetIsoValue(1, 0.10);
   contour.SetIsoValue(2, 0.15);
 
-  vtkm::cont::DataSet ds_from_mc = contour.Execute(ds_from_file);
+  vtkm::cont::DataSet ds_from_contour = contour.Execute(ds_from_file);
   vtkm::io::VTKDataSetWriter writer("out_mc.vtk");
-  writer.WriteDataSet(ds_from_mc);
+  writer.WriteDataSet(ds_from_contour);
 
   return 0;
 }

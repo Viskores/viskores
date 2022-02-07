@@ -51,10 +51,29 @@ target_link_libraries(point_to_cell vtkm_cont vtkm_filter vtkm_io)
 add_executable(extract_edges extract_edges.cxx)
 target_link_libraries(extract_edges vtkm_cont vtkm_filter vtkm_io)
 
+set(tutorial_targets
+io
+contour
+contour_two_fields
+two_filters
+mag_grad
+error_handling
+logging
+point_to_cell
+extract_edges
+)
 
-set(tutorial_targets io contour contour_two_fields two_filters mag_grad error_handling logging point_to_cell extract_edges)
-
-set(tutorial_sources io.cxx contour.cxx contour_two_fields.cxx two_filters.cxx mag_grad.cxx error_handling.cxx logging.cxx point_to_cell.cxx extract_edges.cxx)
+set(tutorial_sources
+io.cxx
+contour.cxx
+contour_two_fields.cxx
+two_filters.cxx
+mag_grad.cxx
+error_handling.cxx
+logging.cxx
+point_to_cell.cxx
+extract_edges.cxx
+)
 
 if (VTKm_ENABLE_RENDERING)
   list(APPEND tutorial_sources rendering.cxx)

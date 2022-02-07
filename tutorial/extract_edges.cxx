@@ -17,11 +17,12 @@
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/ScatterCounting.h>
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/FilterDataSet.h>
+#include <vtkm/filter/contour/Contour.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
 {
@@ -220,7 +221,7 @@ int main(int argc, char** argv)
   vtkm::io::VTKDataSetReader reader(input);
   vtkm::cont::DataSet ds_from_file = reader.ReadDataSet();
 
-  vtkm::filter::Contour contour;
+  vtkm::filter::contour::Contour contour;
   contour.SetActiveField("c1");
   contour.SetIsoValue(0.10);
   vtkm::cont::DataSet ds_from_contour = contour.Execute(ds_from_file);

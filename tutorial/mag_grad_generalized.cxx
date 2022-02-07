@@ -15,10 +15,10 @@
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
-#include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
 
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
   vtkm::io::VTKDataSetReader reader("data/kitchen.vtk");
   vtkm::cont::DataSet ds_from_file = reader.ReadDataSet();
 
-  vtkm::filter::Gradient grad;
+  vtkm::filter::vector_analysis::Gradient grad;
   grad.SetActiveField("c1");
   vtkm::cont::DataSet ds_from_grad = grad.Execute(ds_from_file);
 
