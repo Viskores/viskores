@@ -34,7 +34,7 @@ namespace moments
 struct ComputeMoments2D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  ComputeMoments2D(const vtkm::Vec3f& _spacing, vtkm::FloatDefault _radius, int _p, int _q)
+  ComputeMoments2D(const vtkm::Vec3f& _spacing, vtkm::Float64 _radius, int _p, int _q)
     : Radius(_radius)
     , RadiusDiscrete(vtkm::IdComponent(_radius / (_spacing[0] - 1e-10)),
                      vtkm::IdComponent(_radius / (_spacing[1] - 1e-10)),
@@ -95,9 +95,9 @@ public:
   }
 
 private:
-  const vtkm::FloatDefault Radius;
+  const vtkm::Float64 Radius;
   vtkm::Vec3i_32 RadiusDiscrete;
-  const vtkm::FloatDefault SpacingProduct;
+  const vtkm::Float64 SpacingProduct;
   const int p;
   const int q;
 };
@@ -105,7 +105,7 @@ private:
 struct ComputeMoments3D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  ComputeMoments3D(const vtkm::Vec3f& _spacing, vtkm::FloatDefault _radius, int _p, int _q, int _r)
+  ComputeMoments3D(const vtkm::Vec3f& _spacing, vtkm::Float64 _radius, int _p, int _q, int _r)
     : Radius(_radius)
     , RadiusDiscrete(vtkm::IdComponent(_radius / (_spacing[0] - 1e-10)),
                      vtkm::IdComponent(_radius / (_spacing[1] - 1e-10)),
@@ -177,9 +177,9 @@ public:
   }
 
 private:
-  const vtkm::FloatDefault Radius;
+  const vtkm::Float64 Radius;
   vtkm::Vec3i_32 RadiusDiscrete;
-  const vtkm::FloatDefault SpacingProduct;
+  const vtkm::Float64 SpacingProduct;
   const int p;
   const int q;
   const int r;
@@ -200,8 +200,8 @@ public:
     template <typename T, typename S>
     void operator()(const vtkm::cont::CellSetStructured<2>& input,
                     const vtkm::cont::ArrayHandle<T, S>& pixels,
-                    vtkm::Vec3f Spacing,
-                    vtkm::FloatDefault Radius,
+                    vtkm::Vec3f spacing,
+                    vtkm::Float64 radius,
                     int maxOrder,
                     vtkm::cont::DataSet& output) const
     {
@@ -216,7 +216,7 @@ public:
 
           vtkm::cont::ArrayHandle<T> moments;
 
-          DispatcherType dispatcher(WorkletType{ Spacing, Radius, p, q });
+          DispatcherType dispatcher(WorkletType{ spacing, radius, p, q });
           dispatcher.Invoke(input, pixels, moments);
 
           std::string fieldName = std::string("index") + std::string(p, '0') + std::string(q, '1');
@@ -231,8 +231,8 @@ public:
     template <typename T, typename S>
     void operator()(const vtkm::cont::CellSetStructured<3>& input,
                     const vtkm::cont::ArrayHandle<T, S>& pixels,
-                    vtkm::Vec3f Spacing,
-                    vtkm::FloatDefault Radius,
+                    vtkm::Vec3f spacing,
+                    vtkm::Float64 radius,
                     int maxOrder,
                     vtkm::cont::DataSet& output) const
     {
@@ -250,7 +250,7 @@ public:
 
             vtkm::cont::ArrayHandle<T> moments;
 
-            DispatcherType dispatcher(WorkletType{ Spacing, Radius, p, q, r });
+            DispatcherType dispatcher(WorkletType{ spacing, radius, p, q, r });
             dispatcher.Invoke(input, pixels, moments);
 
             std::string fieldName = std::string("index") + std::string(p, '0') +
@@ -276,7 +276,7 @@ public:
   }
 
 private:
-  const vtkm::FloatDefault Radius;
+  const vtkm::Float64 Radius;
   const vtkm::Vec3f Spacing;
 };
 }
