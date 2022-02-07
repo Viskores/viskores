@@ -23,7 +23,6 @@ set(headers
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   FieldStatistics.h
-  ImageDifference.h
   KdTree3D.h            # Deprecated
   KernelSplatter.h
   Keys.h
@@ -99,7 +98,6 @@ add_subdirectory(contourtree_distributed)
 add_subdirectory(cosmotools)
 add_subdirectory(lcs)
 add_subdirectory(mir)
-add_subdirectory(moments)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
 add_subdirectory(tetrahedralize)

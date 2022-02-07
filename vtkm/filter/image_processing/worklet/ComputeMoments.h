@@ -17,6 +17,7 @@
 
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
+#include <vtkm/cont/UncertainCellSet.h>
 
 #include <vtkm/exec/BoundaryState.h>
 
@@ -187,9 +188,9 @@ private:
 class ComputeMoments
 {
 public:
-  ComputeMoments(const vtkm::Vec3f& _spacing, const double _radius)
-    : Spacing(_spacing)
-    , Radius(_radius)
+  ComputeMoments(double _radius, const vtkm::Vec3f& _spacing)
+    : Radius(_radius)
+    , Spacing(_spacing)
   {
   }
 
@@ -275,8 +276,8 @@ public:
   }
 
 private:
-  const vtkm::FloatDefault Radius = 1;
-  const vtkm::Vec3f Spacing = { 1, 1, 1 };
+  const vtkm::FloatDefault Radius;
+  const vtkm::Vec3f Spacing;
 };
 }
 }

@@ -17,7 +17,7 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/ImageDifference.h>
+#include <vtkm/filter/image_processing/ImageDifference.h>
 #include <vtkm/internal/Configure.h>
 #include <vtkm/io/FileUtils.h>
 #include <vtkm/io/ImageUtils.h>

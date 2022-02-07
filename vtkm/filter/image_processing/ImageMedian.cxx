@@ -8,17 +8,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ImageMedian_hxx
-#define vtk_m_filter_ImageMedian_hxx
-
 #include <vtkm/Swap.h>
+#include <vtkm/filter/image_processing/ImageMedian.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-
 // An implementation of the quickselect/Hoare's selection algorithm to find medians
 // inplace, generally fairly fast for reasonable sized data.
 //
@@ -86,42 +83,45 @@ struct ImageMedian : public vtkm::worklet::WorkletPointNeighborhood
 
 namespace filter
 {
-
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet ImageMedian::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+namespace image_processing
 {
-  if (!fieldMetadata.IsPointField())
+VTKM_CONT vtkm::cont::DataSet ImageMedian::DoExecute(const vtkm::cont::DataSet& input)
+{
+  const auto& field = this->GetFieldFromDataSet(input);
+  if (!field.IsFieldPoint())
   {
     throw vtkm::cont::ErrorBadValue("Active field for ImageMedian must be a point field.");
   }
 
-  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
-  vtkm::cont::ArrayHandle<T> result;
-  if (this->Neighborhood == 1 || this->Neighborhood == 2)
-  {
-    this->Invoke(worklet::ImageMedian{ this->Neighborhood },
-                 vtkm::filter::ApplyPolicyCellSetStructured(cells, policy, *this),
-                 field,
-                 result);
-  }
-  else
-  {
-    throw vtkm::cont::ErrorBadValue("ImageMedian only support a 3x3 or 5x5 stencil.");
-  }
+  const vtkm::cont::UnknownCellSet& inputCellSet = input.GetCellSet();
+  vtkm::cont::UnknownArrayHandle outArray;
+
+  auto resolveType = [&](const auto& concrete) {
+    // use std::decay to remove const ref from the decltype of concrete.
+    using T = typename std::decay_t<decltype(concrete)>::ValueType;
+    vtkm::cont::ArrayHandle<T> result;
+    if (this->Neighborhood == 1 || this->Neighborhood == 2) // TODO: unnecessary test, see below.
+    {
+      this->Invoke(worklet::ImageMedian{ this->Neighborhood }, inputCellSet, concrete, result);
+    }
+    else
+    {
+      // TODO: this->Neighborhood is already either 1 or 2 by construction. This line is
+      //  unreachable!!! Remove it if Ken is O.K..
+      throw vtkm::cont::ErrorBadValue("ImageMedian only support a 3x3 or 5x5 stencil.");
+    }
+    outArray = result;
+  };
+  this->CastAndCallScalarField(field, resolveType);
 
   std::string name = this->GetOutputFieldName();
+  // TODO: this test is also questionable, didn't we set the output name in the constructor?
   if (name.empty())
   {
-    name = fieldMetadata.GetName();
+    name = field.GetName();
   }
-
-  return CreateResult(input, fieldMetadata.AsField(name, result));
+  return this->CreateResultFieldPoint(input, name, outArray);
 }
-}
-}
-
-#endif
+} // namespace image_processing
+} // namespace filter
+} // namespace vtkm

@@ -14,6 +14,7 @@ set(deprecated_headers
   CleanGrid.h
   ClipWithField.h
   ClipWithImplicitFunction.h
+  ComputeMoments.h
   Contour.h
   CoordinateSystemTransform.h
   CrossProduct.h
@@ -29,6 +30,8 @@ set(deprecated_headers
   Gradient.h
   Histogram.h
   ImageConnectivity.h
+  ImageDifference.h
+  ImageMedian.h
   Mask.h
   MaskPoints.h
   NDEntropy.h
@@ -82,15 +85,12 @@ vtkm_declare_headers(${common_header_template_sources})
 
 set(extra_headers
   AmrArrays.h
-  ComputeMoments.h
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   ContourTreeUniform.h
   CreateResult.h
   FieldSelection.h
   GhostCellClassify.h
-  ImageDifference.h
-  ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
   MeshQuality.h
@@ -116,13 +116,10 @@ set(extra_headers
 
 set(extra_header_template_sources
   AmrArrays.hxx
-  ComputeMoments.hxx
   ContourTreeUniformAugmented.hxx
   ContourTreeUniformDistributed.hxx
   ContourTreeUniform.hxx
   GhostCellClassify.hxx
-  ImageDifference.hxx
-  ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
   MeshQuality.hxx
@@ -210,6 +207,7 @@ add_subdirectory(connected_components)
 add_subdirectory(contour)
 add_subdirectory(density_estimate)
 add_subdirectory(entity_extraction)
+add_subdirectory(image_processing)
 add_subdirectory(internal)
 add_subdirectory(particleadvection)
 add_subdirectory(field_conversion)

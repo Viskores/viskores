@@ -20,8 +20,6 @@ set(unit_tests
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestGhostCellClassify.cxx
-  UnitTestImageDifferenceFilter.cxx
-  UnitTestImageMedianFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestLagrangianStructuresFilter.cxx
   UnitTestMapFieldMergeAverage.cxx
