@@ -35,8 +35,7 @@ struct ComputeMoments2D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
   ComputeMoments2D(const vtkm::Vec3f& _spacing, vtkm::Float64 _radius, int _p, int _q)
-    : Radius(_radius)
-    , RadiusDiscrete(vtkm::IdComponent(_radius / (_spacing[0] - 1e-10)),
+    : RadiusDiscrete(vtkm::IdComponent(_radius / (_spacing[0] - 1e-10)),
                      vtkm::IdComponent(_radius / (_spacing[1] - 1e-10)),
                      vtkm::IdComponent(_radius / (_spacing[2] - 1e-10)))
     , SpacingProduct(_spacing[0] * _spacing[1])
@@ -95,7 +94,6 @@ public:
   }
 
 private:
-  const vtkm::Float64 Radius;
   vtkm::Vec3i_32 RadiusDiscrete;
   const vtkm::Float64 SpacingProduct;
   const int p;
@@ -106,8 +104,7 @@ struct ComputeMoments3D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
   ComputeMoments3D(const vtkm::Vec3f& _spacing, vtkm::Float64 _radius, int _p, int _q, int _r)
-    : Radius(_radius)
-    , RadiusDiscrete(vtkm::IdComponent(_radius / (_spacing[0] - 1e-10)),
+    : RadiusDiscrete(vtkm::IdComponent(_radius / (_spacing[0] - 1e-10)),
                      vtkm::IdComponent(_radius / (_spacing[1] - 1e-10)),
                      vtkm::IdComponent(_radius / (_spacing[2] - 1e-10)))
     , SpacingProduct(vtkm::ReduceProduct(_spacing))
@@ -177,7 +174,6 @@ public:
   }
 
 private:
-  const vtkm::Float64 Radius;
   vtkm::Vec3i_32 RadiusDiscrete;
   const vtkm::Float64 SpacingProduct;
   const int p;
