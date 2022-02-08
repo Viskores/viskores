@@ -28,7 +28,7 @@ template <typename T>
 VTKM_EXEC_CONT void Swap(T& a, T& b)
 {
   using namespace thrust;
-  swap(a, b);
+  thrust::swap(a, b);
 }
 #elif defined(VTKM_HIP)
 template <typename T>
