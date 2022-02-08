@@ -8,13 +8,13 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(image_processing_headers
-  ComputeMoments.h
+#  ComputeMoments.h
   ImageDifference.h
   ImageMedian.h
   )
 
 set(image_processing_sources
-  ComputeMoments.cxx
+#  ComputeMoments.cxx
   ImageDifference.cxx
   ImageMedian.cxx
   )
