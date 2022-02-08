@@ -8,9 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/Swap.h>
 #include <vtkm/filter/image_processing/ImageMedian.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
+
+// NOTE BIEN!!! This line has to come last!!! Otherwise CUDA complains!!! NEIB ETON
+#include <vtkm/Swap.h>
 
 namespace vtkm
 {
