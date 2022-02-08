@@ -78,4 +78,4 @@ VTKM_EXEC OutType CellWarpageMetric(const vtkm::IdComponent& numPts,
 }
 } // worklet
 } // vtkm
-#endif // vtk_m_worklet_CellWarpage_Metric_h
+#endif // vtk_m_worklet_CellWarpageMetric_h

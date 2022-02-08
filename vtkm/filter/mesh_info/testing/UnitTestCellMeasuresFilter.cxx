@@ -13,7 +13,6 @@
 
 #include <vector>
 #include <vtkm/filter/mesh_info/CellMeasures.h>
-//#include <vtkm/filter/mesh_info/worklet/CellMeasure.h>
 
 namespace
 {

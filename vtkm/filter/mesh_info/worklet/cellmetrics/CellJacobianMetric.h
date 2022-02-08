@@ -184,4 +184,4 @@ VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
 } // namespace worklet
 } // namespace vtkm
 
-#endif // vtk_m_worklet_cellmetrics_CellJacobianMetric_h
+#endif // vtk_m_worklet_cellmetrics_Jacobian_h

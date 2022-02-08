@@ -39,7 +39,7 @@ class VTKM_FILTER_MESH_INFO_EXPORT CellMeasures : public vtkm::filter::NewFilter
 {
 public:
   VTKM_CONT
-  CellMeasures(IntegrationType);
+  explicit CellMeasures(IntegrationType);
 
   /// Set/Get the name of the cell measure field. If not set, "measure" is used.
   void SetCellMeasureName(const std::string& name) { this->SetOutputFieldName(name); }

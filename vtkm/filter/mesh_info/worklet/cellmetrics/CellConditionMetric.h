@@ -197,4 +197,4 @@ VTKM_EXEC OutType CellConditionMetric(const vtkm::IdComponent& numPts,
 }
 }
 }
-#endif // vtk_m_worklet_CellConditionMetric_h
+#endif // vtk_m_worklet_cellmetrics_CellConditionMetric_h

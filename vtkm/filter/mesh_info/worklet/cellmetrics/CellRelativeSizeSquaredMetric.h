@@ -187,4 +187,4 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
 } // namespace worklet
 } // namespace vtkm
 
-#endif // vtk_m_exec_cellmetrics_CellRelativeSizeSquaredMetric.h
+#endif // vtk_m_worklet_cellmetrics_CellRelativeSizeSquaredMetric_h

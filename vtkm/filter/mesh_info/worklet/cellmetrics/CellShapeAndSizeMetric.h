@@ -130,4 +130,4 @@ VTKM_EXEC OutType CellShapeAndSizeMetric(const vtkm::IdComponent& numPts,
 } // namespace worklet
 } // namespace vtkm
 
-#endif // vtk_m_exec_cellmetrics_CellShapeAndSizeMetric.h
+#endif // vtk_m_worklet_cellmetrics_CellShapeAndSizeMetric_h

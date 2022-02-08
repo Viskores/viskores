@@ -126,4 +126,4 @@ VTKM_EXEC OutType CellTaperMetric(const vtkm::IdComponent& numPts,
 }
 } // worklet
 } // vtkm
-#endif // vtk_m_worklet_CellTaper_Metric_h
+#endif // vtk_m_worklet_CellTaperMetric_h

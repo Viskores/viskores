@@ -24,7 +24,7 @@ namespace detail
 class SetStructuredGhostCells1D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  SetStructuredGhostCells1D(vtkm::IdComponent numLayers = 1)
+  explicit SetStructuredGhostCells1D(vtkm::IdComponent numLayers = 1)
     : NumLayers(numLayers)
   {
   }
@@ -45,7 +45,7 @@ private:
 class SetStructuredGhostCells2D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  SetStructuredGhostCells2D(vtkm::IdComponent numLayers = 1)
+  explicit SetStructuredGhostCells2D(vtkm::IdComponent numLayers = 1)
     : NumLayers(numLayers)
   {
   }
@@ -67,7 +67,7 @@ private:
 class SetStructuredGhostCells3D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  SetStructuredGhostCells3D(vtkm::IdComponent numLayers = 1)
+  explicit SetStructuredGhostCells3D(vtkm::IdComponent numLayers = 1)
     : NumLayers(numLayers)
   {
   }

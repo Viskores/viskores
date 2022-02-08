@@ -71,7 +71,7 @@ enum class CellMetric
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQuality : public vtkm::filter::NewFilterField
 {
 public:
-  VTKM_CONT MeshQuality(CellMetric);
+  VTKM_CONT explicit MeshQuality(CellMetric);
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

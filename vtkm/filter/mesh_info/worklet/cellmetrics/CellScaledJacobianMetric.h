@@ -307,4 +307,4 @@ VTKM_EXEC OutType CellScaledJacobianMetric(const vtkm::IdComponent& numPts,
 } // namespace cellmetrics
 } // namespace worklet
 } // namespace vtkm
-#endif // vtk_m_worklet_cellmetrics_CellEdgeRatioMetric_h
+#endif // vtk_m_worklet_cellmetrics_ScaledJacobian_h

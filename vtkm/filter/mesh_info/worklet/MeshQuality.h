@@ -94,11 +94,11 @@ public:
     }
   }
 
-protected:
+private:
   // data member
-  vtkm::filter::mesh_info::CellMetric Metric;
-  vtkm::FloatDefault AverageArea;
-  vtkm::FloatDefault AverageVolume;
+  vtkm::filter::mesh_info::CellMetric Metric{ vtkm::filter::mesh_info::CellMetric::EMPTY };
+  vtkm::FloatDefault AverageArea{};
+  vtkm::FloatDefault AverageVolume{};
 
   template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VTKM_EXEC OutType ComputeMetric(const vtkm::IdComponent& numPts,
