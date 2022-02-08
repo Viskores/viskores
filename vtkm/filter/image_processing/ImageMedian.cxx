@@ -100,22 +100,15 @@ VTKM_CONT vtkm::cont::DataSet ImageMedian::DoExecute(const vtkm::cont::DataSet& 
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     vtkm::cont::ArrayHandle<T> result;
-    if (this->Neighborhood == 1 || this->Neighborhood == 2) // TODO: unnecessary test, see below.
-    {
-      this->Invoke(worklet::ImageMedian{ this->Neighborhood }, inputCellSet, concrete, result);
-    }
-    else
-    {
-      // TODO: this->Neighborhood is already either 1 or 2 by construction. This line is
-      //  unreachable!!! Remove it if Ken is O.K..
-      throw vtkm::cont::ErrorBadValue("ImageMedian only support a 3x3 or 5x5 stencil.");
-    }
+
+    VTKM_ASSERT((this->Neighborhood == 1) || (this->Neighborhood == 2));
+    this->Invoke(worklet::ImageMedian{ this->Neighborhood }, inputCellSet, concrete, result);
+
     outArray = result;
   };
   this->CastAndCallScalarField(field, resolveType);
 
   std::string name = this->GetOutputFieldName();
-  // TODO: this test is also questionable, didn't we set the output name in the constructor?
   if (name.empty())
   {
     name = field.GetName();
