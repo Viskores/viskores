@@ -11,32 +11,12 @@
 #ifndef vtk_m_worklet_CellMeasure_h
 #define vtk_m_worklet_CellMeasure_h
 
-#include <vtkm/worklet/WorkletMapTopology.h>
-
 #include <vtkm/exec/CellMeasure.h>
+#include <vtkm/filter/mesh_info/CellMeasures.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
 {
-
-// Tags used to choose which types of integration are performed on cells:
-struct IntegrateOver
-{
-};
-struct IntegrateOverCurve : IntegrateOver
-{
-};
-struct IntegrateOverSurface : IntegrateOver
-{
-};
-struct IntegrateOverSolid : IntegrateOver
-{
-};
-
-// Lists of acceptable types of integration
-using ArcLength = vtkm::List<IntegrateOverCurve>;
-using Area = vtkm::List<IntegrateOverSurface>;
-using Volume = vtkm::List<IntegrateOverSolid>;
-using AllMeasures = vtkm::List<IntegrateOverSolid, IntegrateOverSurface, IntegrateOverCurve>;
 
 namespace worklet
 {
@@ -51,7 +31,6 @@ namespace worklet
   *
   * Note that the integrals are signed; inverted cells will report negative values.
   */
-template <typename IntegrationTypeList>
 class CellMeasure : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
@@ -60,6 +39,11 @@ public:
                                 FieldOutCell volumesOut);
   using ExecutionSignature = void(CellShape, PointCount, _2, _3);
   using InputDomain = _1;
+
+  explicit CellMeasure(vtkm::filter::mesh_info::IntegrationType m)
+    : measure(m)
+  {
+  }
 
   template <typename CellShape, typename PointCoordVecType, typename OutType>
   VTKM_EXEC void operator()(CellShape shape,
@@ -77,7 +61,7 @@ public:
     }
   }
 
-protected:
+private:
   template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VTKM_EXEC OutType ComputeMeasure(const vtkm::IdComponent& numPts,
                                    const PointCoordVecType& pts,
@@ -91,6 +75,7 @@ protected:
 #pragma push
 #pragma diag_suppress = code_is_unreachable
 #endif
+    using vtkm::filter::mesh_info::IntegrationType;
 
     vtkm::ErrorCode ec;
     switch (vtkm::CellTraits<CellShapeType>::TOPOLOGICAL_DIMENSIONS)
@@ -99,19 +84,19 @@ protected:
         // Fall through to return 0 measure.
         break;
       case 1:
-        if (vtkm::ListHas<IntegrationTypeList, IntegrateOverCurve>::value)
+        if (this->measure & IntegrationType::ArcLength)
         {
           return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), ec);
         }
         break;
       case 2:
-        if (vtkm::ListHas<IntegrationTypeList, IntegrateOverSurface>::value)
+        if (this->measure & IntegrationType::Area)
         {
           return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), ec);
         }
         break;
       case 3:
-        if (vtkm::ListHas<IntegrationTypeList, IntegrateOverSolid>::value)
+        if (this->measure & IntegrationType::Volume)
         {
           return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), ec);
         }
@@ -128,6 +113,8 @@ protected:
 #pragma warning(pop)
 #endif
   }
+
+  vtkm::filter::mesh_info::IntegrationType measure;
 };
 }
 } // namespace vtkm::worklet

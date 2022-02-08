@@ -35,12 +35,12 @@
 * See: vtk/ThirdParty/verdict/vtkverdict (for VTK code implementation of this metric)
 */
 
+#include "CellAspectFrobeniusMetric.h"
 #include "vtkm/CellShape.h"
 #include "vtkm/CellTraits.h"
 #include "vtkm/VecTraits.h"
 #include "vtkm/VectorAnalysis.h"
 #include "vtkm/exec/FunctorBase.h"
-#include "vtkm/worklet/cellmetrics/CellAspectFrobeniusMetric.h"
 
 #define UNUSED(expr) (void)(expr);
 

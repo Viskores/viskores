@@ -8,46 +8,41 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_CellMeasures_hxx
-#define vtk_m_filter_CellMeasures_hxx
-
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/mesh_info/CellMeasures.h>
+#include <vtkm/filter/mesh_info/worklet/CellMeasure.h>
 
 namespace vtkm
 {
 namespace filter
 {
-
+namespace mesh_info
+{
 //-----------------------------------------------------------------------------
-template <typename IntegrationType>
-inline VTKM_CONT CellMeasures<IntegrationType>::CellMeasures()
-  : vtkm::filter::FilterField<CellMeasures<IntegrationType>>()
+VTKM_CONT CellMeasures::CellMeasures(IntegrationType m)
+  : measure(m)
 {
   this->SetUseCoordinateSystemAsField(true);
   this->SetCellMeasureName("measure");
 }
 
 //-----------------------------------------------------------------------------
-template <typename IntegrationType>
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+
+VTKM_CONT vtkm::cont::DataSet CellMeasures::DoExecute(const vtkm::cont::DataSet& input)
 {
-  if (fieldMeta.IsPointField() == false)
+  const auto& field = this->GetFieldFromDataSet(input);
+  if (!field.IsFieldPoint())
   {
     throw vtkm::cont::ErrorFilterExecution("CellMeasures expects point field input.");
   }
 
   const auto& cellset = input.GetCellSet();
-  vtkm::cont::ArrayHandle<T> outArray;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
 
-  this->Invoke(vtkm::worklet::CellMeasure<IntegrationType>{},
-               vtkm::filter::ApplyPolicyCellSet(cellset, policy, *this),
-               points,
-               outArray);
+  auto resolveType = [&](const auto& concrete) {
+    this->Invoke(vtkm::worklet::CellMeasure{ this->measure }, cellset, concrete, outArray);
+  };
+  this->CastAndCallVecField<3>(field, resolveType);
 
   std::string outputName = this->GetCellMeasureName();
   if (outputName.empty())
@@ -55,9 +50,8 @@ inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
     // Default name is name of input.
     outputName = "measure";
   }
-  return CreateResultFieldCell(input, outArray, outputName);
+  return this->CreateResultFieldCell(input, outputName, outArray);
 }
-}
-} // namespace vtkm::filter
-
-#endif
+} // namespace mesh_info
+} // namespace filter
+} // namespace vtkm

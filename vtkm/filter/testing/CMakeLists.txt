@@ -13,20 +13,17 @@ set(headers
 )
 
 set(unit_tests
-  UnitTestCellMeasuresFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
-  UnitTestGhostCellClassify.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestLagrangianStructuresFilter.cxx
   UnitTestMapFieldMergeAverage.cxx
   UnitTestMapFieldPermutation.cxx
-  UnitTestMeshQualityFilter.cxx
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx

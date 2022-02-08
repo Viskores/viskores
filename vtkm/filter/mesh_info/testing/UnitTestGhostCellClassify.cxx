@@ -9,12 +9,12 @@
 //============================================================================
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/GhostCellClassify.h>
+#include <vtkm/CellClassification.h>
+#include <vtkm/filter/mesh_info/GhostCellClassify.h>
 
 namespace
 {
@@ -100,7 +100,7 @@ void TestStructured()
         else if (dsType == "rectilinear")
           ds = MakeRectilinear(nx, ny, nz);
 
-        vtkm::filter::GhostCellClassify addGhost;
+        vtkm::filter::mesh_info::GhostCellClassify addGhost;
 
         auto output = addGhost.Execute(ds);
 

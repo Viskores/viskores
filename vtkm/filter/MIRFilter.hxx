@@ -39,7 +39,7 @@
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
 
-#include <vtkm/filter/MeshQuality.h>
+#include <vtkm/filter/mesh_info/worklet/MeshQuality.h>
 
 namespace vtkm
 {
@@ -99,8 +99,9 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
   const vtkm::cont::CoordinateSystem inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::cont::ArrayHandle<vtkm::Float64> avgSizeTot;
-  vtkm::worklet::MeshQuality<vtkm::filter::CellMetric> getVol;
-  getVol.SetMetric(c3 > 0 ? vtkm::filter::CellMetric::VOLUME : vtkm::filter::CellMetric::AREA);
+  vtkm::worklet::MeshQuality getVol;
+  getVol.SetMetric(c3 > 0 ? vtkm::filter::mesh_info::CellMetric::VOLUME
+                          : vtkm::filter::mesh_info::CellMetric::AREA);
   this->Invoke(getVol,
                vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this),
                inputCoords.GetData(),
