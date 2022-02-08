@@ -178,6 +178,9 @@ void TestLists()
                              vtkm::List<TestClass<11>>,
                              vtkm::List<TestClass<21>, TestClass<22>>>{});
 
+  std::cout << "ListFill" << std::endl;
+  CheckList(vtkm::List<int, int, int, int, int>{}, vtkm::ListFill<int, 5>{});
+
   std::cout << "ListTransform" << std::endl;
   CheckList(EvenList{}, vtkm::ListTransform<SimpleCount, DoubleTransform>{});
 

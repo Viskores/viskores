@@ -128,6 +128,169 @@ using ListApply = typename detail::ListApplyImpl<internal::AsList<List>, Target>
 namespace detail
 {
 
+template <typename... Ls>
+struct ListAppendImpl;
+
+template <>
+struct ListAppendImpl<>
+{
+  using type = vtkm::ListEmpty;
+};
+
+template <typename L>
+struct ListAppendImpl<L>
+{
+  using type = L;
+};
+
+template <typename... T0s, typename... T1s>
+struct ListAppendImpl<vtkm::List<T0s...>, vtkm::List<T1s...>>
+{
+  using type = vtkm::List<T0s..., T1s...>;
+};
+
+template <typename... T0s, typename... T1s, typename... T2s>
+struct ListAppendImpl<vtkm::List<T0s...>, vtkm::List<T1s...>, vtkm::List<T2s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s...>;
+};
+
+template <typename... T0s, typename... T1s, typename... T2s, typename... T3s>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s..., T3s...>;
+};
+
+template <typename... T0s, typename... T1s, typename... T2s, typename... T3s, typename... T4s>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>,
+                      vtkm::List<T4s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s...>;
+};
+
+template <typename... T0s,
+          typename... T1s,
+          typename... T2s,
+          typename... T3s,
+          typename... T4s,
+          typename... T5s>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>,
+                      vtkm::List<T4s...>,
+                      vtkm::List<T5s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s...>;
+};
+
+template <typename... T0s,
+          typename... T1s,
+          typename... T2s,
+          typename... T3s,
+          typename... T4s,
+          typename... T5s,
+          typename... T6s>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>,
+                      vtkm::List<T4s...>,
+                      vtkm::List<T5s...>,
+                      vtkm::List<T6s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s...>;
+};
+
+template <typename... T0s,
+          typename... T1s,
+          typename... T2s,
+          typename... T3s,
+          typename... T4s,
+          typename... T5s,
+          typename... T6s,
+          typename... T7s>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>,
+                      vtkm::List<T4s...>,
+                      vtkm::List<T5s...>,
+                      vtkm::List<T6s...>,
+                      vtkm::List<T7s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s..., T7s...>;
+};
+
+template <typename... T0s,
+          typename... T1s,
+          typename... T2s,
+          typename... T3s,
+          typename... T4s,
+          typename... T5s,
+          typename... T6s,
+          typename... T7s,
+          typename... Ls>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>,
+                      vtkm::List<T4s...>,
+                      vtkm::List<T5s...>,
+                      vtkm::List<T6s...>,
+                      vtkm::List<T7s...>,
+                      Ls...>
+  : ListAppendImpl<vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s..., T7s...>,
+                   Ls...>
+{
+};
+
+} // namespace detail
+
+/// Concatinates a set of lists into a single list.
+///
+/// Note that this does not work correctly with `vtkm::ListUniversal`.
+template <typename... Lists>
+using ListAppend = typename detail::ListAppendImpl<internal::AsList<Lists>...>::type;
+
+namespace detail
+{
+
+template <typename T, vtkm::IdComponent N>
+struct ListFillImpl
+{
+  using type = typename ListAppendImpl<typename ListFillImpl<T, (N / 2)>::type,
+                                       typename ListFillImpl<T, (N - N / 2)>::type>::type;
+};
+
+template <typename T>
+struct ListFillImpl<T, 1>
+{
+  using type = vtkm::List<T>;
+};
+
+template <typename T>
+struct ListFillImpl<T, 0>
+{
+  using type = vtkm::List<>;
+};
+
+} // namespace detail
+
+/// \brief Returns a list filled with N copies of type T
+///
+template <typename T, vtkm::IdComponent N>
+using ListFill = typename detail::ListFillImpl<T, N>::type;
+
+namespace detail
+{
+
 template <typename L>
 struct ListSizeImpl;
 
@@ -148,84 +311,32 @@ using ListSize = typename detail::ListSizeImpl<internal::AsList<List>>::type;
 namespace detail
 {
 
-template <vtkm::IdComponent I, bool LessThan8, typename L>
+template <typename T>
+struct ListAtImplFunc;
+
+template <typename... VoidTypes>
+struct ListAtImplFunc<vtkm::List<VoidTypes...>>
+{
+  // Rather than declare a `type`, make a declaration of a function that returns the type
+  // after some number of `const void*` arguments. We can use ListFill to quickly create
+  // the list of `const void*` arguments, so the type can be returned. We can then use
+  // decltype to get the returned type.
+  //
+  // Templating the `Other` should not be strictly necessary. (You should be able to just
+  // end with `...`.) But some compilers (such as CUDA 8 and Intel 18) have a problem with
+  // that.
+  template <typename T, class... Other>
+  static T at(VoidTypes..., T*, Other...);
+};
+
+template <typename T, vtkm::IdComponent Index>
 struct ListAtImpl;
 
-template <typename Tx, typename... Ts>
-struct ListAtImpl<0, true, vtkm::List<Tx, Ts...>>
+template <typename... Ts, vtkm::IdComponent Index>
+struct ListAtImpl<vtkm::List<Ts...>, Index>
 {
-  using type = Tx;
-};
-template <typename T0, typename Tx, typename... Ts>
-struct ListAtImpl<1, true, vtkm::List<T0, Tx, Ts...>>
-{
-  using type = Tx;
-};
-template <typename T0, typename T1, typename Tx, typename... Ts>
-struct ListAtImpl<2, true, vtkm::List<T0, T1, Tx, Ts...>>
-{
-  using type = Tx;
-};
-template <typename T0, typename T1, typename T2, typename Tx, typename... Ts>
-struct ListAtImpl<3, true, vtkm::List<T0, T1, T2, Tx, Ts...>>
-{
-  using type = Tx;
-};
-template <typename T0, typename T1, typename T2, typename T3, typename Tx, typename... Ts>
-struct ListAtImpl<4, true, vtkm::List<T0, T1, T2, T3, Tx, Ts...>>
-{
-  using type = Tx;
-};
-template <typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename Tx,
-          typename... Ts>
-struct ListAtImpl<5, true, vtkm::List<T0, T1, T2, T3, T4, Tx, Ts...>>
-{
-  using type = Tx;
-};
-template <typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename Tx,
-          typename... Ts>
-struct ListAtImpl<6, true, vtkm::List<T0, T1, T2, T3, T4, T5, Tx, Ts...>>
-{
-  using type = Tx;
-};
-template <typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename Tx,
-          typename... Ts>
-struct ListAtImpl<7, true, vtkm::List<T0, T1, T2, T3, T4, T5, T6, Tx, Ts...>>
-{
-  using type = Tx;
-};
-
-template <vtkm::IdComponent I,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename... Ts>
-struct ListAtImpl<I, false, vtkm::List<T0, T1, T2, T3, T4, T5, T6, T7, Ts...>>
-  : ListAtImpl<I - 8, ((I - 8) < 8), vtkm::List<Ts...>>
-{
+  using type =
+    decltype(ListAtImplFunc<vtkm::ListFill<const void*, Index>>::at(static_cast<Ts*>(nullptr)...));
 };
 
 } // namespace detail
@@ -235,7 +346,7 @@ struct ListAtImpl<I, false, vtkm::List<T0, T1, T2, T3, T4, T5, T6, T7, Ts...>>
 /// This becomes the type of the list at the given index.
 ///
 template <typename List, vtkm::IdComponent Index>
-using ListAt = typename detail::ListAtImpl<Index, (Index < 8), internal::AsList<List>>::type;
+using ListAt = typename detail::ListAtImpl<internal::AsList<List>, Index>::type;
 
 namespace detail
 {
@@ -463,140 +574,6 @@ struct ListHasImpl<vtkm::ListUniversal, T>
 ///
 template <typename List, typename T>
 using ListHas = typename detail::ListHasImpl<internal::AsList<List>, T>::type;
-
-namespace detail
-{
-
-template <typename... Ls>
-struct ListAppendImpl;
-
-template <>
-struct ListAppendImpl<>
-{
-  using type = vtkm::ListEmpty;
-};
-
-template <typename L>
-struct ListAppendImpl<L>
-{
-  using type = L;
-};
-
-template <typename... T0s, typename... T1s>
-struct ListAppendImpl<vtkm::List<T0s...>, vtkm::List<T1s...>>
-{
-  using type = vtkm::List<T0s..., T1s...>;
-};
-
-template <typename... T0s, typename... T1s, typename... T2s>
-struct ListAppendImpl<vtkm::List<T0s...>, vtkm::List<T1s...>, vtkm::List<T2s...>>
-{
-  using type = vtkm::List<T0s..., T1s..., T2s...>;
-};
-
-template <typename... T0s, typename... T1s, typename... T2s, typename... T3s>
-struct ListAppendImpl<vtkm::List<T0s...>,
-                      vtkm::List<T1s...>,
-                      vtkm::List<T2s...>,
-                      vtkm::List<T3s...>>
-{
-  using type = vtkm::List<T0s..., T1s..., T2s..., T3s...>;
-};
-
-template <typename... T0s, typename... T1s, typename... T2s, typename... T3s, typename... T4s>
-struct ListAppendImpl<vtkm::List<T0s...>,
-                      vtkm::List<T1s...>,
-                      vtkm::List<T2s...>,
-                      vtkm::List<T3s...>,
-                      vtkm::List<T4s...>>
-{
-  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s...>;
-};
-
-template <typename... T0s,
-          typename... T1s,
-          typename... T2s,
-          typename... T3s,
-          typename... T4s,
-          typename... T5s>
-struct ListAppendImpl<vtkm::List<T0s...>,
-                      vtkm::List<T1s...>,
-                      vtkm::List<T2s...>,
-                      vtkm::List<T3s...>,
-                      vtkm::List<T4s...>,
-                      vtkm::List<T5s...>>
-{
-  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s...>;
-};
-
-template <typename... T0s,
-          typename... T1s,
-          typename... T2s,
-          typename... T3s,
-          typename... T4s,
-          typename... T5s,
-          typename... T6s>
-struct ListAppendImpl<vtkm::List<T0s...>,
-                      vtkm::List<T1s...>,
-                      vtkm::List<T2s...>,
-                      vtkm::List<T3s...>,
-                      vtkm::List<T4s...>,
-                      vtkm::List<T5s...>,
-                      vtkm::List<T6s...>>
-{
-  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s...>;
-};
-
-template <typename... T0s,
-          typename... T1s,
-          typename... T2s,
-          typename... T3s,
-          typename... T4s,
-          typename... T5s,
-          typename... T6s,
-          typename... T7s>
-struct ListAppendImpl<vtkm::List<T0s...>,
-                      vtkm::List<T1s...>,
-                      vtkm::List<T2s...>,
-                      vtkm::List<T3s...>,
-                      vtkm::List<T4s...>,
-                      vtkm::List<T5s...>,
-                      vtkm::List<T6s...>,
-                      vtkm::List<T7s...>>
-{
-  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s..., T7s...>;
-};
-
-template <typename... T0s,
-          typename... T1s,
-          typename... T2s,
-          typename... T3s,
-          typename... T4s,
-          typename... T5s,
-          typename... T6s,
-          typename... T7s,
-          typename... Ls>
-struct ListAppendImpl<vtkm::List<T0s...>,
-                      vtkm::List<T1s...>,
-                      vtkm::List<T2s...>,
-                      vtkm::List<T3s...>,
-                      vtkm::List<T4s...>,
-                      vtkm::List<T5s...>,
-                      vtkm::List<T6s...>,
-                      vtkm::List<T7s...>,
-                      Ls...>
-  : ListAppendImpl<vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s..., T7s...>,
-                   Ls...>
-{
-};
-
-} // namespace detail
-
-/// Concatinates a set of lists into a single list.
-///
-/// Note that this does not work correctly with `vtkm::ListUniversal`.
-template <typename... Lists>
-using ListAppend = typename detail::ListAppendImpl<internal::AsList<Lists>...>::type;
 
 namespace detail
 {
