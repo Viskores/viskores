@@ -9,35 +9,33 @@
 //============================================================================
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/GhostCellClassify.h>
+#include <vtkm/CellClassification.h>
+#include <vtkm/filter/mesh_info/GhostCellClassify.h>
 
 namespace
 {
 
-static vtkm::cont::DataSet MakeUniform(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK)
+vtkm::cont::DataSet MakeUniform(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK)
 {
-  vtkm::cont::DataSetBuilderUniform dsb;
 
   vtkm::cont::DataSet ds;
 
   if (numJ == 0 && numK == 0)
-    ds = dsb.Create(numI + 1);
+    ds = vtkm::cont::DataSetBuilderUniform::Create(numI + 1);
   else if (numK == 0)
-    ds = dsb.Create(vtkm::Id2(numI + 1, numJ + 1));
+    ds = vtkm::cont::DataSetBuilderUniform::Create(vtkm::Id2(numI + 1, numJ + 1));
   else
-    ds = dsb.Create(vtkm::Id3(numI + 1, numJ + 1, numK + 1));
+    ds = vtkm::cont::DataSetBuilderUniform::Create(vtkm::Id3(numI + 1, numJ + 1, numK + 1));
 
   return ds;
 }
 
-static vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK)
+vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK)
 {
-  vtkm::cont::DataSetBuilderRectilinear dsb;
   vtkm::cont::DataSet ds;
   std::size_t nx(static_cast<std::size_t>(numI + 1));
   std::size_t ny(static_cast<std::size_t>(numJ + 1));
@@ -49,14 +47,14 @@ static vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI, vtkm::Id numJ, vtkm::I
     y[i] = static_cast<float>(i);
 
   if (numK == 0)
-    ds = dsb.Create(x, y);
+    ds = vtkm::cont::DataSetBuilderRectilinear::Create(x, y);
   else
   {
     std::size_t nz(static_cast<std::size_t>(numK + 1));
     std::vector<float> z(nz);
     for (std::size_t i = 0; i < nz; i++)
       z[i] = static_cast<float>(i);
-    ds = dsb.Create(x, y, z);
+    ds = vtkm::cont::DataSetBuilderRectilinear::Create(x, y, z);
   }
 
   return ds;
@@ -100,7 +98,7 @@ void TestStructured()
         else if (dsType == "rectilinear")
           ds = MakeRectilinear(nx, ny, nz);
 
-        vtkm::filter::GhostCellClassify addGhost;
+        vtkm::filter::mesh_info::GhostCellClassify addGhost;
 
         auto output = addGhost.Execute(ds);
 

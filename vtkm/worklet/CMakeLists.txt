@@ -13,7 +13,6 @@ set(headers
   BoundaryTypes.h
   AveragePointNeighborhood.h
   CellDeepCopy.h
-  CellMeasure.h
   ContourTreeUniform.h
   ContourTreeUniformAugmented.h
   CosmoTools.h
@@ -31,7 +30,6 @@ set(headers
   MaskIndices.h
   MaskNone.h
   MaskSelect.h
-  MeshQuality.h
   MIR.h
   NDimsHistMarginalization.h
   Normalize.h
@@ -91,7 +89,6 @@ set(sources_device
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
-add_subdirectory(cellmetrics)
 add_subdirectory(colorconversion)
 add_subdirectory(contourtree)
 add_subdirectory(contourtree_augmented)

@@ -22,6 +22,7 @@
 /*
 */
 
+#include "CellConditionMetric.h"
 #include "TypeOfCellHexahedral.h"
 #include "TypeOfCellQuadrilateral.h"
 #include "TypeOfCellTetrahedral.h"
@@ -31,7 +32,6 @@
 #include "vtkm/VecTraits.h"
 #include "vtkm/VectorAnalysis.h"
 #include "vtkm/exec/FunctorBase.h"
-#include "vtkm/worklet/cellmetrics/CellConditionMetric.h"
 
 namespace vtkm
 {

@@ -7,17 +7,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_GhostCellClassify_hxx
-#define vtk_m_filter_GhostCellClassify_hxx
 
 #include <vtkm/CellClassification.h>
-#include <vtkm/RangeId.h>
-#include <vtkm/RangeId2.h>
-#include <vtkm/RangeId3.h>
-#include <vtkm/Types.h>
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-
+#include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/mesh_info/GhostCellClassify.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 namespace vtkm
@@ -30,7 +24,7 @@ namespace detail
 class SetStructuredGhostCells1D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  SetStructuredGhostCells1D(vtkm::IdComponent numLayers = 1)
+  explicit SetStructuredGhostCells1D(vtkm::IdComponent numLayers = 1)
     : NumLayers(numLayers)
   {
   }
@@ -51,7 +45,7 @@ private:
 class SetStructuredGhostCells2D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  SetStructuredGhostCells2D(vtkm::IdComponent numLayers = 1)
+  explicit SetStructuredGhostCells2D(vtkm::IdComponent numLayers = 1)
     : NumLayers(numLayers)
   {
   }
@@ -73,7 +67,7 @@ private:
 class SetStructuredGhostCells3D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  SetStructuredGhostCells3D(vtkm::IdComponent numLayers = 1)
+  explicit SetStructuredGhostCells3D(vtkm::IdComponent numLayers = 1)
     : NumLayers(numLayers)
   {
   }
@@ -92,11 +86,9 @@ private:
 };
 } // namespace detail
 
-inline VTKM_CONT GhostCellClassify::GhostCellClassify() {}
-
-template <typename Policy>
-inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::DataSet& input,
-                                                                  vtkm::filter::PolicyBase<Policy>)
+namespace mesh_info
+{
+VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::DataSet& input)
 {
   const vtkm::cont::UnknownCellSet& cellset = input.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::UInt8> ghosts;
@@ -149,8 +141,10 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
     throw vtkm::cont::ErrorFilterExecution("Unsupported cellset type for GhostCellClassify.");
   }
 
-  return CreateResultFieldCell(input, ghosts, "vtkmGhostCells");
+  auto output = this->CreateResult(input);
+  output.AddCellField("vtkmGhostCells", ghosts);
+  return output;
 }
 }
 }
-#endif
+}

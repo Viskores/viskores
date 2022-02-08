@@ -31,12 +31,12 @@
  * metric)
  */
 
+#include "CellShapeMetric.h"
 #include "vtkm/CellShape.h"
 #include "vtkm/CellTraits.h"
 #include "vtkm/VecTraits.h"
 #include "vtkm/VectorAnalysis.h"
 #include "vtkm/exec/FunctorBase.h"
-#include "vtkm/worklet/cellmetrics/CellShapeMetric.h"
 
 #define UNUSED(expr) (void)(expr);
 
@@ -130,4 +130,4 @@ VTKM_EXEC OutType CellShapeAndSizeMetric(const vtkm::IdComponent& numPts,
 } // namespace worklet
 } // namespace vtkm
 
-#endif // vtk_m_exec_cellmetrics_CellShapeAndSizeMetric.h
+#endif // vtk_m_worklet_cellmetrics_CellShapeAndSizeMetric_h

@@ -28,6 +28,8 @@
 * See: vtk/ThirdParty/verdict/vtkverdict (for VTK code implementation of this metric)
 */
 
+#include "CellConditionMetric.h"
+#include "CellJacobianMetric.h"
 #include "TypeOfCellHexahedral.h"
 #include "TypeOfCellQuadrilateral.h"
 #include "TypeOfCellTetrahedral.h"
@@ -37,8 +39,6 @@
 #include "vtkm/VecTraits.h"
 #include "vtkm/VectorAnalysis.h"
 #include "vtkm/exec/FunctorBase.h"
-#include "vtkm/worklet/cellmetrics/CellConditionMetric.h"
-#include "vtkm/worklet/cellmetrics/CellJacobianMetric.h"
 
 namespace vtkm
 {

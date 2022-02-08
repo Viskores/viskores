@@ -10,6 +10,7 @@
 
 set(deprecated_headers
   CellAverage.h
+  CellMeasures.h
   CellSetConnectivity.h
   CleanGrid.h
   ClipWithField.h
@@ -25,12 +26,14 @@ set(deprecated_headers
   ExtractStructured.h
   FieldToColors.h
   GenerateIds.h
+  GhostCellClassify.h
   GhostCellRemove.h
   Gradient.h
   Histogram.h
   ImageConnectivity.h
   Mask.h
   MaskPoints.h
+  MeshQuality.h
   NDEntropy.h
   NDHistogram.h
   ParticleDensityCloudInCell.h
@@ -50,7 +53,6 @@ set(deprecated_headers
 vtkm_declare_headers(${deprecated_headers})
 
 set(common_headers
-  CellMeasures.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -69,7 +71,6 @@ set(common_headers
 vtkm_declare_headers(${common_headers})
 
 set(common_header_template_sources
-  CellMeasures.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
@@ -88,12 +89,10 @@ set(extra_headers
   ContourTreeUniform.h
   CreateResult.h
   FieldSelection.h
-  GhostCellClassify.h
   ImageDifference.h
   ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
-  MeshQuality.h
   MIRFilter.h
   ParticleAdvection.h
   Pathline.h
@@ -120,12 +119,10 @@ set(extra_header_template_sources
   ContourTreeUniformAugmented.hxx
   ContourTreeUniformDistributed.hxx
   ContourTreeUniform.hxx
-  GhostCellClassify.hxx
   ImageDifference.hxx
   ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
-  MeshQuality.hxx
   MIRFilter.hxx
   ParticleAdvection.hxx
   Pathline.hxx
@@ -214,6 +211,7 @@ add_subdirectory(internal)
 add_subdirectory(particleadvection)
 add_subdirectory(field_conversion)
 add_subdirectory(field_transform)
+add_subdirectory(mesh_info)
 add_subdirectory(vector_analysis)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
