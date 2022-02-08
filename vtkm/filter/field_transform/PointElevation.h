@@ -33,11 +33,17 @@ public:
   VTKM_CONT
   PointElevation();
 
-  VTKM_CONT
-  void SetLowPoint(const vtkm::Vec3f_64& point) { this->LowPoint = point; }
+  VTKM_CONT void SetLowPoint(const vtkm::Vec3f_64& point) { this->LowPoint = point; }
+  VTKM_CONT void SetLowPoint(vtkm::Float64 x, vtkm::Float64 y, vtkm::Float64 z)
+  {
+    this->SetLowPoint({ x, y, z });
+  }
 
-  VTKM_CONT
-  void SetHighPoint(const vtkm::Vec3f_64& point) { this->HighPoint = point; }
+  VTKM_CONT void SetHighPoint(const vtkm::Vec3f_64& point) { this->HighPoint = point; }
+  VTKM_CONT void SetHighPoint(vtkm::Float64 x, vtkm::Float64 y, vtkm::Float64 z)
+  {
+    this->SetHighPoint({ x, y, z });
+  }
 
   VTKM_CONT
   void SetRange(vtkm::Float64 low, vtkm::Float64 high)
