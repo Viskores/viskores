@@ -142,4 +142,4 @@ VTKM_EXEC OutType CellShearMetric(const vtkm::IdComponent& numPts,
 } // namespace worklet
 } // namespace vtkm
 
-#endif // vtk_m_worklet_cellmetrics_CellEdgeRatioMetric_h
+#endif // vtk_m_worklet_cellmetrics_CellShearMetric_h

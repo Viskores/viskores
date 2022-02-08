@@ -8,12 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/CellMeasures.h>
-
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vector>
+#include <vtkm/filter/mesh_info/CellMeasures.h>
 
 namespace
 {
@@ -37,15 +36,14 @@ struct CheckCellMeasuresFunctor
   }
 };
 
-template <typename IntegrationType>
 void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
                             const char* msg,
                             const std::vector<vtkm::Float32>& expected,
-                            const IntegrationType&)
+                            const vtkm::filter::mesh_info::IntegrationType& type)
 {
   std::cout << "Testing CellMeasures Filter on " << msg << "\n";
 
-  vtkm::filter::CellMeasures<IntegrationType> vols;
+  vtkm::filter::mesh_info::CellMeasures vols{ type };
   vtkm::cont::DataSet outputData = vols.Execute(dataset);
 
   VTKM_TEST_ASSERT(vols.GetCellMeasureName() == "measure");
@@ -67,35 +65,36 @@ void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
 
 void TestCellMeasures()
 {
-  using vtkm::AllMeasures;
-  using vtkm::Volume;
+  using vtkm::filter::mesh_info::IntegrationType;
 
   vtkm::cont::testing::MakeTestDataSet factory;
   vtkm::cont::DataSet data;
 
   data = factory.Make3DExplicitDataSet2();
-  TestCellMeasuresFilter(data, "explicit dataset 2", { -1.f }, AllMeasures());
+  TestCellMeasuresFilter(data, "explicit dataset 2", { -1.f }, IntegrationType::AllMeasures);
 
   data = factory.Make3DExplicitDataSet3();
-  TestCellMeasuresFilter(data, "explicit dataset 3", { -1.f / 6.f }, AllMeasures());
+  TestCellMeasuresFilter(data, "explicit dataset 3", { -1.f / 6.f }, IntegrationType::AllMeasures);
 
   data = factory.Make3DExplicitDataSet4();
-  TestCellMeasuresFilter(data, "explicit dataset 4", { -1.f, -1.f }, AllMeasures());
+  TestCellMeasuresFilter(data, "explicit dataset 4", { -1.f, -1.f }, IntegrationType::AllMeasures);
 
   data = factory.Make3DExplicitDataSet5();
-  TestCellMeasuresFilter(
-    data, "explicit dataset 5", { 1.f, 1.f / 3.f, 1.f / 6.f, -1.f / 2.f }, AllMeasures());
+  TestCellMeasuresFilter(data,
+                         "explicit dataset 5",
+                         { 1.f, 1.f / 3.f, 1.f / 6.f, -1.f / 2.f },
+                         IntegrationType::AllMeasures);
 
   data = factory.Make3DExplicitDataSet6();
   TestCellMeasuresFilter(data,
                          "explicit dataset 6 (only volume)",
                          { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.083426f, 0.25028f },
-                         Volume());
+                         IntegrationType::Volume);
   TestCellMeasuresFilter(
     data,
     "explicit dataset 6 (all)",
     { 0.999924f, 0.999924f, 0.f, 0.f, 3.85516f, 1.00119f, 0.083426f, 0.25028f },
-    AllMeasures());
+    IntegrationType::AllMeasures);
 }
 
 } // anonymous namespace

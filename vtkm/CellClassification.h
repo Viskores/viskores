@@ -10,6 +10,8 @@
 #ifndef vtk_m_CellClassification_h
 #define vtk_m_CellClassification_h
 
+#include <vtkm/Types.h>
+
 namespace vtkm
 {
 

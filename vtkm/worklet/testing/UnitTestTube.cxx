@@ -206,6 +206,72 @@ void TestLinearPolylines()
   }
 }
 
+void TestPolylinesWithCoincidentPoints()
+{
+  using VecType = vtkm::Vec3f;
+
+  bool capEnds = false;
+  vtkm::Id numSides = 3;
+  vtkm::FloatDefault radius = 1;
+  vtkm::cont::DataSetBuilderExplicitIterative dsb;
+  std::vector<vtkm::Id> ids;
+  std::vector<vtkm::FloatDefault> ptVar;
+  vtkm::FloatDefault eps = vtkm::Epsilon<vtkm::FloatDefault>() * 0.1f;
+  vtkm::Id numPtsToSkip = 0;
+  vtkm::Id numPts = 0;
+
+  ids.clear();
+  appendPts(dsb, VecType(0.0f, 0.0f, 0.0f), ids);
+  ptVar.push_back(1);
+  appendPts(dsb, VecType(0.0f, 0.0f, 0.0f), ids);
+  ptVar.push_back(2);
+  appendPts(dsb, VecType(eps, 0.0f, 0.0f), ids);
+  ptVar.push_back(3);
+  dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
+  numPts += 3;
+  numPtsToSkip += 3;
+
+  ids.clear();
+  appendPts(dsb, VecType(0.0f, 0.0f, 0.0f), ids);
+  ptVar.push_back(7);
+  appendPts(dsb, VecType(1.0f, 0.0f, 0.0f), ids);
+  ptVar.push_back(8);
+  appendPts(dsb, VecType(1.0f + eps, 0.0f, 0.0f), ids);
+  ptVar.push_back(9);
+  appendPts(dsb, VecType(1.0f, -eps, 0.0f), ids);
+  ptVar.push_back(13);
+  appendPts(dsb, VecType(2.0f, 0.0f, 0.0f), ids);
+  ptVar.push_back(10);
+  appendPts(dsb, VecType(2.0f, 0.0f, eps), ids);
+  ptVar.push_back(11);
+  appendPts(dsb, VecType(2.0f + eps, eps, eps), ids);
+  ptVar.push_back(12);
+  dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
+  numPts += 7;
+  numPtsToSkip += 4;
+
+  vtkm::cont::DataSet ds = dsb.Create();
+
+  vtkm::Id reqNumPts = calcNumPoints(numPts - numPtsToSkip, numSides, capEnds);
+  vtkm::Id reqNumCells = calcNumCells(numPts - numPtsToSkip, numSides, capEnds);
+
+  vtkm::worklet::Tube tubeWorklet(capEnds, numSides, radius);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
+  vtkm::cont::CellSetSingleType<> newCells;
+  tubeWorklet.Run(
+    ds.GetCoordinateSystem(0).GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f>>(),
+    ds.GetCellSet(),
+    newPoints,
+    newCells);
+
+  VTKM_TEST_ASSERT(newPoints.GetNumberOfValues() == reqNumPts,
+                   "Wrong number of points in Tube worklet");
+  VTKM_TEST_ASSERT(newCells.GetNumberOfCells() == reqNumCells, "Wrong cell shape in Tube worklet");
+  VTKM_TEST_ASSERT(newCells.GetCellShape(0) == vtkm::CELL_SHAPE_TRIANGLE,
+                   "Wrong cell shape in Tube worklet");
+}
+
+
 void TestTubeWorklets()
 {
   std::cout << "Testing Tube Worklet" << std::endl;
@@ -223,6 +289,7 @@ void TestTubeWorklets()
       }
 
   TestLinearPolylines();
+  TestPolylinesWithCoincidentPoints();
 }
 }
 
