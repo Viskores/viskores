@@ -36,8 +36,9 @@ You can find out more about the design of VTK-m on the [VTK-m Wiki].
 
   + Community discussion takes place on the [VTK-m users email list].
 
-  + Doxygen-generated nightly reference documentation is available
-    [online][VTK-m Doxygen].
+  + Doxygen-generated reference documentation is available for both:
+    + Last Nightly build [VTK-m Doxygen nightly]
+    + Last release [VTK-m Doxygen latest]
 
 
 ## Contributing ##
@@ -226,7 +227,8 @@ See [LICENSE.txt](LICENSE.txt) for details.
 
 [VTK-m]:                    https://gitlab.kitware.com/vtk/vtk-m/
 [VTK-m Coding Conventions]: docs/CodingConventions.md
-[VTK-m Doxygen]:            http://m.vtk.org/documentation/
+[VTK-m Doxygen latest]:     https://docs-m.vtk.org/latest/index.html
+[VTK-m Doxygen nightly]:    https://docs-m.vtk.org/nightly/
 [VTK-m download page]:      http://m.vtk.org/index.php/VTK-m_Releases
 [VTK-m git repository]:     https://gitlab.kitware.com/vtk/vtk-m/
 [VTK-m Issue Tracker]:      https://gitlab.kitware.com/vtk/vtk-m/-/issues
