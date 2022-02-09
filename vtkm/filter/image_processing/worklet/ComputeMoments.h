@@ -85,7 +85,8 @@ public:
 
         if (vtkm::Dot(radius, radius) <= 1)
         {
-          sum += pow(radius[0], p) * pow(radius[1], q) * image.Get(i, j, 0);
+          sum +=
+            static_cast<T>(vtkm::Pow(radius[0], p) * vtkm::Pow(radius[1], q) * image.Get(i, j, 0));
         }
       }
     }
@@ -164,7 +165,8 @@ public:
 
           if (vtkm::Dot(radius, radius) <= 1)
           {
-            sum += pow(radius[0], p) * pow(radius[1], q) * pow(radius[2], r) * image.Get(i, j, k);
+            sum += static_cast<T>(vtkm::Pow(radius[0], p) * vtkm::Pow(radius[1], q) *
+                                  vtkm::Pow(radius[2], r) * image.Get(i, j, k));
           }
         }
       }
