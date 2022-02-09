@@ -7,7 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
+#include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/rendering/testing/Testing.h>
 
 TestEqualResult test_equal_images(vtkm::rendering::View& view,
@@ -116,7 +116,7 @@ TestEqualResult test_equal_images(const vtkm::cont::DataSet& dataset,
     dartXML << "</DartMeasurementFile>\n";
 
     imageDataSet.AddPointField("generated-image", dataset.GetField(0).GetData());
-    vtkm::filter::ImageDifference filter;
+    vtkm::filter::image_processing::ImageDifference filter;
     filter.SetPrimaryField("baseline-image");
     filter.SetSecondaryField("generated-image");
     filter.SetAverageRadius(averageRadius);

@@ -17,6 +17,7 @@
 
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
+#include <vtkm/cont/UncertainCellSet.h>
 
 #include <vtkm/exec/BoundaryState.h>
 
@@ -33,9 +34,8 @@ namespace moments
 struct ComputeMoments2D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  ComputeMoments2D(const vtkm::Vec3f& _spacing, vtkm::FloatDefault _radius, int _p, int _q)
-    : Radius(_radius)
-    , RadiusDiscrete(vtkm::IdComponent(_radius / (_spacing[0] - 1e-10)),
+  ComputeMoments2D(const vtkm::Vec3f& _spacing, vtkm::Float64 _radius, int _p, int _q)
+    : RadiusDiscrete(vtkm::IdComponent(_radius / (_spacing[0] - 1e-10)),
                      vtkm::IdComponent(_radius / (_spacing[1] - 1e-10)),
                      vtkm::IdComponent(_radius / (_spacing[2] - 1e-10)))
     , SpacingProduct(_spacing[0] * _spacing[1])
@@ -85,7 +85,8 @@ public:
 
         if (vtkm::Dot(radius, radius) <= 1)
         {
-          sum += pow(radius[0], p) * pow(radius[1], q) * image.Get(i, j, 0);
+          sum +=
+            static_cast<T>(vtkm::Pow(radius[0], p) * vtkm::Pow(radius[1], q) * image.Get(i, j, 0));
         }
       }
     }
@@ -94,9 +95,8 @@ public:
   }
 
 private:
-  const vtkm::FloatDefault Radius;
   vtkm::Vec3i_32 RadiusDiscrete;
-  const vtkm::FloatDefault SpacingProduct;
+  const vtkm::Float64 SpacingProduct;
   const int p;
   const int q;
 };
@@ -104,9 +104,8 @@ private:
 struct ComputeMoments3D : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
-  ComputeMoments3D(const vtkm::Vec3f& _spacing, vtkm::FloatDefault _radius, int _p, int _q, int _r)
-    : Radius(_radius)
-    , RadiusDiscrete(vtkm::IdComponent(_radius / (_spacing[0] - 1e-10)),
+  ComputeMoments3D(const vtkm::Vec3f& _spacing, vtkm::Float64 _radius, int _p, int _q, int _r)
+    : RadiusDiscrete(vtkm::IdComponent(_radius / (_spacing[0] - 1e-10)),
                      vtkm::IdComponent(_radius / (_spacing[1] - 1e-10)),
                      vtkm::IdComponent(_radius / (_spacing[2] - 1e-10)))
     , SpacingProduct(vtkm::ReduceProduct(_spacing))
@@ -166,7 +165,8 @@ public:
 
           if (vtkm::Dot(radius, radius) <= 1)
           {
-            sum += pow(radius[0], p) * pow(radius[1], q) * pow(radius[2], r) * image.Get(i, j, k);
+            sum += static_cast<T>(vtkm::Pow(radius[0], p) * vtkm::Pow(radius[1], q) *
+                                  vtkm::Pow(radius[2], r) * image.Get(i, j, k));
           }
         }
       }
@@ -176,9 +176,8 @@ public:
   }
 
 private:
-  const vtkm::FloatDefault Radius;
   vtkm::Vec3i_32 RadiusDiscrete;
-  const vtkm::FloatDefault SpacingProduct;
+  const vtkm::Float64 SpacingProduct;
   const int p;
   const int q;
   const int r;
@@ -187,9 +186,9 @@ private:
 class ComputeMoments
 {
 public:
-  ComputeMoments(const vtkm::Vec3f& _spacing, const double _radius)
-    : Spacing(_spacing)
-    , Radius(_radius)
+  ComputeMoments(double _radius, const vtkm::Vec3f& _spacing)
+    : Radius(_radius)
+    , Spacing(_spacing)
   {
   }
 
@@ -199,8 +198,8 @@ public:
     template <typename T, typename S>
     void operator()(const vtkm::cont::CellSetStructured<2>& input,
                     const vtkm::cont::ArrayHandle<T, S>& pixels,
-                    vtkm::Vec3f Spacing,
-                    vtkm::FloatDefault Radius,
+                    vtkm::Vec3f spacing,
+                    vtkm::Float64 radius,
                     int maxOrder,
                     vtkm::cont::DataSet& output) const
     {
@@ -215,7 +214,7 @@ public:
 
           vtkm::cont::ArrayHandle<T> moments;
 
-          DispatcherType dispatcher(WorkletType{ Spacing, Radius, p, q });
+          DispatcherType dispatcher(WorkletType{ spacing, radius, p, q });
           dispatcher.Invoke(input, pixels, moments);
 
           std::string fieldName = std::string("index") + std::string(p, '0') + std::string(q, '1');
@@ -230,8 +229,8 @@ public:
     template <typename T, typename S>
     void operator()(const vtkm::cont::CellSetStructured<3>& input,
                     const vtkm::cont::ArrayHandle<T, S>& pixels,
-                    vtkm::Vec3f Spacing,
-                    vtkm::FloatDefault Radius,
+                    vtkm::Vec3f spacing,
+                    vtkm::Float64 radius,
                     int maxOrder,
                     vtkm::cont::DataSet& output) const
     {
@@ -249,7 +248,7 @@ public:
 
             vtkm::cont::ArrayHandle<T> moments;
 
-            DispatcherType dispatcher(WorkletType{ Spacing, Radius, p, q, r });
+            DispatcherType dispatcher(WorkletType{ spacing, radius, p, q, r });
             dispatcher.Invoke(input, pixels, moments);
 
             std::string fieldName = std::string("index") + std::string(p, '0') +
@@ -275,8 +274,8 @@ public:
   }
 
 private:
-  const vtkm::FloatDefault Radius = 1;
-  const vtkm::Vec3f Spacing = { 1, 1, 1 };
+  const vtkm::Float64 Radius;
+  const vtkm::Vec3f Spacing;
 };
 }
 }

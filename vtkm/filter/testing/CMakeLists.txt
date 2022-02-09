@@ -18,8 +18,6 @@ set(unit_tests
   UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
-  UnitTestImageDifferenceFilter.cxx
-  UnitTestImageMedianFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestLagrangianStructuresFilter.cxx
   UnitTestMapFieldMergeAverage.cxx

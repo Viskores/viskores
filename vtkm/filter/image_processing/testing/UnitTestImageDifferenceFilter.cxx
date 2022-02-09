@@ -11,7 +11,7 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/ImageDifference.h>
+#include <vtkm/filter/image_processing/ImageDifference.h>
 
 #include <random>
 #include <vector>
@@ -99,7 +99,7 @@ void TestImageDifference()
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Matching Images");
     auto dataSet = FillDataSet(static_cast<vtkm::FloatDefault>(1));
-    vtkm::filter::ImageDifference filter;
+    vtkm::filter::image_processing::ImageDifference filter;
     filter.SetPrimaryField("primary");
     filter.SetSecondaryField("secondary");
     filter.SetPixelDiffThreshold(0.05f);
@@ -122,7 +122,7 @@ void TestImageDifference()
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Matching Images with Average");
     auto dataSet = FillDataSet(static_cast<vtkm::FloatDefault>(1));
-    vtkm::filter::ImageDifference filter;
+    vtkm::filter::image_processing::ImageDifference filter;
     filter.SetPrimaryField("primary");
     filter.SetSecondaryField("secondary");
     filter.SetPixelDiffThreshold(0.05f);
@@ -146,7 +146,7 @@ void TestImageDifference()
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Non Matching Images (Different R pixel)");
     auto dataSet = FillDataSet(static_cast<vtkm::FloatDefault>(3));
-    vtkm::filter::ImageDifference filter;
+    vtkm::filter::image_processing::ImageDifference filter;
     filter.SetPrimaryField("primary");
     filter.SetSecondaryField("secondary");
     filter.SetPixelDiffThreshold(0.05f);
@@ -169,7 +169,7 @@ void TestImageDifference()
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Non Matching Images (Different R pixel)");
     auto dataSet = FillDataSet(static_cast<vtkm::FloatDefault>(3));
-    vtkm::filter::ImageDifference filter;
+    vtkm::filter::image_processing::ImageDifference filter;
     filter.SetPrimaryField("primary");
     filter.SetSecondaryField("secondary");
     filter.SetPixelDiffThreshold(0.05f);
@@ -194,7 +194,7 @@ void TestImageDifference()
     VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                "Non Matching Images (Different R pixel), Large Threshold");
     auto dataSet = FillDataSet(static_cast<vtkm::FloatDefault>(3));
-    vtkm::filter::ImageDifference filter;
+    vtkm::filter::image_processing::ImageDifference filter;
     filter.SetPrimaryField("primary");
     filter.SetSecondaryField("secondary");
     filter.SetPixelDiffThreshold(3.0f);

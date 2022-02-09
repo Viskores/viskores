@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/ImageMedian.h>
+#include <vtkm/filter/image_processing/ImageMedian.h>
 
 namespace
 {
@@ -22,7 +22,7 @@ void TestImageMedian()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet2();
 
-  vtkm::filter::ImageMedian median;
+  vtkm::filter::image_processing::ImageMedian median;
   median.Perform3x3();
   median.SetActiveField("pointvar");
   auto result = median.Execute(dataSet);
