@@ -48,6 +48,12 @@ set(deprecated_headers
   VectorMagnitude.h
   WarpScalar.h
   WarpVector.h
+  ZFPCompressor1D.h
+  ZFPCompressor2D.h
+  ZFPCompressor3D.h
+  ZFPDecompressor1D.h
+  ZFPDecompressor2D.h
+  ZFPDecompressor3D.h
   )
 
 vtkm_declare_headers(${deprecated_headers})
@@ -105,12 +111,6 @@ set(extra_headers
   Triangulate.h
   Tube.h
   VertexClustering.h
-  ZFPCompressor1D.h
-  ZFPCompressor2D.h
-  ZFPCompressor3D.h
-  ZFPDecompressor1D.h
-  ZFPDecompressor2D.h
-  ZFPDecompressor3D.h
   )
 
 set(extra_header_template_sources
@@ -135,12 +135,6 @@ set(extra_header_template_sources
   Triangulate.hxx
   Tube.hxx
   VertexClustering.hxx
-  ZFPCompressor1D.hxx
-  ZFPCompressor2D.hxx
-  ZFPCompressor3D.hxx
-  ZFPDecompressor1D.hxx
-  ZFPDecompressor2D.hxx
-  ZFPDecompressor3D.hxx
   )
 
 set(extra_sources_device
@@ -213,6 +207,7 @@ add_subdirectory(field_conversion)
 add_subdirectory(field_transform)
 add_subdirectory(mesh_info)
 add_subdirectory(vector_analysis)
+add_subdirectory(zfp)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 if (VTKm_ENABLE_TESTING)

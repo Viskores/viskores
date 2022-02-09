@@ -57,12 +57,6 @@ set(headers
   WorkletCellNeighborhood.h
   WorkletPointNeighborhood.h
   WorkletReduceByKey.h
-  ZFPCompressor.h
-  ZFPDecompress.h
-  ZFP1DCompressor.h
-  ZFP1DDecompress.h
-  ZFP2DCompressor.h
-  ZFP2DDecompress.h
   )
 
 
@@ -103,7 +97,6 @@ add_subdirectory(tetrahedralize)
 add_subdirectory(triangulate)
 add_subdirectory(wavelets)
 add_subdirectory(particleadvection)
-add_subdirectory(zfp)
 
 vtkm_library(
   NAME vtkm_worklet
