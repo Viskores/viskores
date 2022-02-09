@@ -12,6 +12,8 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/internal/Meta.h>
+
 namespace vtkm
 {
 
@@ -806,6 +808,81 @@ struct ListCrossImpl<vtkm::List<T0s...>, vtkm::List<T1s...>>
 template <typename List1, typename List2>
 using ListCross =
   typename detail::ListCrossImpl<internal::AsList<List1>, internal::AsList<List2>>::type;
+
+namespace detail
+{
+
+template <typename L, template <typename T1, typename T2> class Operator, typename Result>
+struct ListReduceImpl;
+
+template <template <typename T1, typename T2> class Operator, typename Result>
+struct ListReduceImpl<vtkm::List<>, Operator, Result>
+{
+  using type = Result;
+};
+
+template <typename T0,
+          typename... Ts,
+          template <typename O1, typename O2>
+          class Operator,
+          typename Result>
+struct ListReduceImpl<vtkm::List<T0, Ts...>, Operator, Result>
+{
+  using type = typename ListReduceImpl<vtkm::List<Ts...>, Operator, Operator<Result, T0>>::type;
+};
+
+template <typename T0,
+          typename T1,
+          typename T2,
+          typename T3,
+          typename T4,
+          typename T5,
+          typename T6,
+          typename T7,
+          typename T8,
+          typename... Ts,
+          template <typename O1, typename O2>
+          class Operator,
+          typename Result>
+struct ListReduceImpl<vtkm::List<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>, Operator, Result>
+{
+  using type = typename ListReduceImpl<
+    vtkm::List<T8, Ts...>,
+    Operator,
+    typename ListReduceImpl<vtkm::List<T0, T1, T2, T3, T4, T5, T6, T7>, Operator, Result>::type>::
+    type;
+};
+
+} // namespace detail
+
+/// \brief Reduces a list to a single type using an operator.
+///
+/// `ListReduce` takes a `vtkm::List`, an operator template, and an initial type. `ListReduce`
+/// first applies the initial type and the first item in the list to the operator and gets
+/// that type. That then applies the operator to that result and the next item in the list.
+/// This continues until a single value is left.
+///
+template <typename List, template <typename T1, typename T2> class Operator, typename Initial>
+using ListReduce = typename detail::ListReduceImpl<internal::AsList<List>, Operator, Initial>::type;
+
+/// \brief Determines whether all the types in the list are "true."
+///
+/// `ListAll` expects a `vtkm::List` with types that have a `value` that is either true or false
+/// (such as `std::true_type` and `std::false_type`. Resolves to `std::true_type` if all the types
+/// are true, `std::false_type` otherwise. If the list is empty, resolves to `std::true_type`.
+///
+template <typename List>
+using ListAll = vtkm::ListReduce<List, vtkm::internal::meta::And, std::true_type>;
+
+/// \brief Determines whether any of the types in the list are "true."
+///
+/// `ListAll` expects a `vtkm::List` with types that have a `value` that is either true or false
+/// (such as `std::true_type` and `std::false_type`. Resolves to `std::true_type` if any of the
+/// types are true, `std::false_type` otherwise. If the list is empty, resolves to
+/// `std::false_type`.
+///
+template <typename List>
+using ListAny = vtkm::ListReduce<List, vtkm::internal::meta::Or, std::false_type>;
 
 #undef VTKM_CHECK_LIST_SIZE
 
