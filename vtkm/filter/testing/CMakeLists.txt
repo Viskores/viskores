@@ -33,7 +33,6 @@ set(unit_tests
   UnitTestTriangulateFilter.cxx
   UnitTestTubeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
-  UnitTestZFP.cxx
 )
 
 #Taking too long to compile with HIPCC

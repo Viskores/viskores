@@ -56,7 +56,6 @@ set(unit_tests
   UnitTestWorkletReduceByKey.cxx
   UnitTestVertexClustering.cxx
   UnitTestWaveletCompressor.cxx
-  UnitTestZFPCompressor.cxx
  )
 
 if(HIP IN_LIST Kokkos_DEVICES)
