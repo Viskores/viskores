@@ -195,7 +195,6 @@ struct VTKM_NEVER_EXPORT InitializeDeviceMemoryManagers
 
     if (id > 0 && id < VTKM_MAX_DEVICE_ADAPTER_ID)
     {
-      auto name = vtkm::cont::DeviceAdapterTraits<Device>::GetName();
       this->Managers[id].reset(new vtkm::cont::internal::DeviceAdapterMemoryManager<Device>);
     }
   }
