@@ -404,15 +404,12 @@ class VTKM_CONT_EXPORT UnknownArrayHandle
 
 public:
   VTKM_CONT UnknownArrayHandle() = default;
-  UnknownArrayHandle(const UnknownArrayHandle&) = default;
 
   template <typename T, typename S>
   VTKM_CONT UnknownArrayHandle(const vtkm::cont::ArrayHandle<T, S>& array)
     : Container(detail::UnknownAHContainer::Make(array))
   {
   }
-
-  UnknownArrayHandle& operator=(const vtkm::cont::UnknownArrayHandle&) = default;
 
   /// \brief Returns whether an array is stored in this `UnknownArrayHandle`.
   ///
