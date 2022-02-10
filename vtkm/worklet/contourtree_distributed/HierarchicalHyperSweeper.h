@@ -215,13 +215,10 @@ HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::HierarchicalHype
   , NumOwnedRegularVertices(vtkm::Id{ 0 })
 { // constructor
   // Initalize arrays with 0s
-  vtkm::cont::Algorithm::Fill(
-    this->ValuePrefixSum, vtkm::Id{ 0 }, this->HierarchicalTree.Supernodes.GetNumberOfValues());
-  vtkm::cont::Algorithm::Fill(
-    this->TransferTarget, vtkm::Id{ 0 }, this->HierarchicalTree.Supernodes.GetNumberOfValues());
-  vtkm::cont::Algorithm::Fill(this->SortedTransferTarget,
-                              vtkm::Id{ 0 },
-                              this->HierarchicalTree.Supernodes.GetNumberOfValues());
+  this->ValuePrefixSum.AllocateAndFill(this->HierarchicalTree.Supernodes.GetNumberOfValues(), 0);
+  this->TransferTarget.AllocateAndFill(this->HierarchicalTree.Supernodes.GetNumberOfValues(), 0);
+  this->SortedTransferTarget.AllocateAndFill(this->HierarchicalTree.Supernodes.GetNumberOfValues(),
+                                             0);
   // Initialize the supersortPermute to the identity
   vtkm::cont::ArrayHandleIndex tempIndexArray(
     this->HierarchicalTree.Supernodes.GetNumberOfValues());
@@ -295,8 +292,7 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::InitializeI
 #endif
 
   // initialize the counts to zero.
-  vtkm::cont::Algorithm::Fill(
-    superarcRegularCounts, vtkm::Id{ 0 }, this->HierarchicalTree.Supernodes.GetNumberOfValues());
+  superarcRegularCounts.AllocateAndFill(this->HierarchicalTree.Supernodes.GetNumberOfValues(), 0);
 
   // set the count to the Id one off the high end of each range
   Invoke(vtkm::worklet::contourtree_distributed::hierarchical_hyper_sweeper::

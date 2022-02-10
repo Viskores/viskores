@@ -10,7 +10,7 @@
 
 #include <vtkm/source/PerlinNoise.h>
 
-#include <vtkm/filter/Contour.h>
+#include <vtkm/filter/contour/Contour.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
@@ -29,7 +29,7 @@ void TestPerlinNoise()
 
   noise.PrintSummary(std::cout);
 
-  vtkm::filter::Contour contourFilter;
+  vtkm::filter::contour::Contour contourFilter;
   contourFilter.SetIsoValues({ 0.3, 0.4, 0.5, 0.6, 0.7 });
   contourFilter.SetActiveField("perlinnoise");
   vtkm::cont::DataSet contours = contourFilter.Execute(noise);

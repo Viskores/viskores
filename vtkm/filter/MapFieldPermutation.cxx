@@ -8,75 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/MapFieldPermutation.h>
-
-#include <vtkm/TypeList.h>
-#include <vtkm/TypeTraits.h>
-#include <vtkm/VecTraits.h>
-
 #include <vtkm/cont/Logging.h>
 
-#include <vtkm/cont/internal/CastInvalidValue.h>
+#include <vtkm/cont/internal/MapArrayPermutation.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/filter/MapFieldPermutation.h>
 
-#include <vtkm/filter/PolicyDefault.h>
-
-namespace
-{
-
-template <typename T>
-struct MapPermutationWorklet : vtkm::worklet::WorkletMapField
-{
-  T InvalidValue;
-
-  explicit MapPermutationWorklet(T invalidValue)
-    : InvalidValue(invalidValue)
-  {
-  }
-
-  using ControlSignature = void(FieldIn permutationIndex, WholeArrayIn input, FieldOut output);
-
-  template <typename InputPortalType, typename OutputType>
-  VTKM_EXEC void operator()(vtkm::Id permutationIndex,
-                            InputPortalType inputPortal,
-                            OutputType& output) const
-  {
-    VTKM_STATIC_ASSERT(vtkm::HasVecTraits<OutputType>::value);
-    if ((permutationIndex >= 0) && (permutationIndex < inputPortal.GetNumberOfValues()))
-    {
-      output = inputPortal.Get(permutationIndex);
-    }
-    else
-    {
-      output = this->InvalidValue;
-    }
-  }
-};
-
-struct DoMapFieldPermutation
-{
-  template <typename InputArrayType>
-  void operator()(const InputArrayType& input,
-                  const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
-                  vtkm::cont::UnknownArrayHandle& output,
-                  vtkm::Float64 invalidValue) const
-  {
-    using BaseComponentType = typename InputArrayType::ValueType::ComponentType;
-
-    MapPermutationWorklet<BaseComponentType> worklet(
-      vtkm::cont::internal::CastInvalidValue<BaseComponentType>(invalidValue));
-    vtkm::cont::Invoker{}(
-      worklet,
-      permutation,
-      input,
-      output.ExtractArrayFromComponents<BaseComponentType>(vtkm::CopyFlag::Off));
-  }
-};
-
-} // anonymous namespace
-
-VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
+VTKM_FILTER_CORE_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
   const vtkm::cont::Field& inputField,
   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
   vtkm::cont::Field& outputField,
@@ -84,12 +22,10 @@ VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
 {
   VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-  vtkm::cont::UnknownArrayHandle outputArray = inputField.GetData().NewInstanceBasic();
-  outputArray.Allocate(permutation.GetNumberOfValues());
   try
   {
-    inputField.GetData().CastAndCallWithExtractedArray(
-      DoMapFieldPermutation{}, permutation, outputArray, invalidValue);
+    vtkm::cont::UnknownArrayHandle outputArray =
+      vtkm::cont::internal::MapArrayPermutation(inputField.GetData(), permutation, invalidValue);
     outputField = vtkm::cont::Field(inputField.GetName(), inputField.GetAssociation(), outputArray);
     return true;
   }
@@ -100,7 +36,7 @@ VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
   }
 }
 
-VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
+VTKM_FILTER_CORE_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
   const vtkm::cont::Field& inputField,
   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
   vtkm::cont::DataSet& outputData,

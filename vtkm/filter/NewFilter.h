@@ -128,17 +128,18 @@ namespace filter
 /// full control over the execution, including any mapping of fields to output (described in next
 /// sub-section).
 ///
-/// \subsection FilterMappingFields MapFieldsOntoOutput
+/// \subsection Creating results and mapping fields
 ///
 /// For subclasses that map input fields into output fields, the implementation of its
-/// `DoExecute(DataSet&)` should call `NewFilter::MapFieldsOntoOutput` with a properly defined
-/// `Mapper`, before returning the output DataSet. For example:
+/// `DoExecute(DataSet&)` should create the `DataSet` to be returned with a call to
+/// `NewFilter::CreateResult` or a similar method in a subclass (such as
+/// `NewFilterField::CreateResultField`).
 ///
 /// \code{cpp}
 /// VTKM_CONT DataSet SomeFilter::DoExecute(const vtkm::cont::DataSet& input)
 /// {
-///   vtkm::cont::DataSet output;
-///   output = ... // Generation of the new DataSet
+///   vtkm::cont::UnknownCellSet outCellSet;
+///   outCellSet = ... // Generation of the new CellSet
 ///
 ///   // Mapper is a callable object (function object, lambda, etc.) that takes an input Field
 ///   // and maps it to an output Field and then add the output Field to the output DataSet
@@ -146,18 +147,19 @@ namespace filter
 ///      auto outputField = ... // Business logic for mapping input field to output field
 ///      output.AddField(outputField);
 ///   };
-///   this->MapFieldsOntoOutput(input, output, mapper);
-///
-///   return output;
+///   // This passes coordinate systems directly from input to output. If the points of
+///   // the cell set change at all, they will have to be mapped by hand.
+///   return this->CreateResult(input, outCellSet, input.GetCoordinateSystems(), mapper);
 /// }
 /// \endcode
 ///
-/// `MapFieldsOntoOutput` iterates through each `FieldToPass` in the input DataSet and calls the
-/// Mapper to map the input Field to output Field. For simple filters that just pass on input
+/// In addition to creating a new `DataSet` filled with the proper cell structure and coordinate
+/// systems, `CreateResult` iterates through each `FieldToPass` in the input DataSet and calls the
+/// FieldMapper to map the input Field to output Field. For simple filters that just pass on input
 /// fields to the output DataSet without any computation, an overload of
-/// `MapFieldsOntoOutput(const vtkm::cont::DataSet& input, vtkm::cont::DataSet& output)` is also
+/// `CreateResult(const vtkm::cont::DataSet& input)` is also
 /// provided as a convenience that uses the default mapper which trivially adds input Field to
-/// output DaaSet (via a shallow copy).
+/// output DataSet (via a shallow copy).
 ///
 /// \subsection FilterThreadSafety CanThread
 ///
@@ -302,39 +304,139 @@ public:
 protected:
   vtkm::cont::Invoker Invoke;
 
-  template <typename Mapper>
+  /// \brief Create the output data set for `DoExecute`.
+  ///
+  /// This form of `CreateResult` will create an output data set with the same cell
+  /// structure and coordinate system as the input and pass all fields (as requested
+  /// by the `Filter` state).
+  ///
+  /// \param[in] inDataSet The input data set being modified (usually the one passed into
+  /// `DoExecute`). The returned `DataSet` is filled with the cell set, coordinate system, and
+  /// fields of `inDataSet` (as selected by the `FieldsToPass` state of the filter).
+  ///
+  VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet) const;
+
+  /// \brief Create the output data set for `DoExecute`.
+  ///
+  /// This form of `CreateResult` will create an output data set with the given `CellSet`. You must
+  /// also provide a field mapper function, which is a function that takes the output `DataSet`
+  /// being created and a `Field` from the input and then applies any necessary transformations to
+  /// the field array and adds it to the `DataSet`.
+  ///
+  /// This form of `CreateResult` returns a `DataSet` with _no_ coordinate systems. The calling
+  /// program must add any necessary `CoordinateSystem`s.
+  ///
+  /// \param[in] inDataSet The input data set being modified (usually the one passed
+  ///     into `DoExecute`). The returned `DataSet` is filled with fields of `inDataSet`
+  ///     (as selected by the `FieldsToPass` state of the filter).
+  /// \param[in] resultCellSet The `CellSet` of the output will be set to this.
+  /// \param[in] fieldMapper A function or functor that takes a `DataSet` as its first
+  ///     argument and a `Field` as its second argument. The `DataSet` is the data being
+  ///     created and will eventually be returned by `CreateResult`. The `Field` comes from
+  ///     `inDataSet`. The function should map the `Field` to match `resultCellSet` and then
+  ///     add the resulting field to the `DataSet`. If the mapping is not possible, then
+  ///     the function should do nothing.
+  ///
+  template <typename FieldMapper>
+  VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
+                                             const vtkm::cont::UnknownCellSet& resultCellSet,
+                                             FieldMapper&& fieldMapper) const
+  {
+    vtkm::cont::DataSet outDataSet;
+    outDataSet.SetCellSet(resultCellSet);
+    this->MapFieldsOntoOutput(inDataSet, outDataSet, fieldMapper);
+    return outDataSet;
+  }
+
+  /// \brief Create the output data set for `DoExecute`.
+  ///
+  /// This form of `CreateResult` will create an output data set with the given `CellSet`
+  /// and set of `CoordinateSystem`s. You must also provide a field mapper function, which
+  /// is a function that takes the output `DataSet` being created and a `Field` from the
+  /// input and then applies any necessary transformations to the field array and adds it
+  /// to the `DataSet`.
+  ///
+  /// \param[in] inDataSet The input data set being modified (usually the one passed
+  ///     into `DoExecute`). The returned `DataSet` is filled with fields of `inDataSet`
+  ///     (as selected by the `FieldsToPass` state of the filter).
+  /// \param[in] resultCellSet The `CellSet` of the output will be set to this.
+  /// \param[in] resultCoordSystems These `CoordinateSystem`s will be added to the output.
+  /// \param[in] fieldMapper A function or functor that takes a `DataSet` as its first
+  ///     argument and a `Field` as its second argument. The `DataSet` is the data being
+  ///     created and will eventually be returned by `CreateResult`. The `Field` comes from
+  ///     `inDataSet`. The function should map the `Field` to match `resultCellSet` and then
+  ///     add the resulting field to the `DataSet`. If the mapping is not possible, then
+  ///     the function should do nothing.
+  ///
+  template <typename FieldMapper>
+  VTKM_CONT vtkm::cont::DataSet CreateResult(
+    const vtkm::cont::DataSet& inDataSet,
+    const vtkm::cont::UnknownCellSet& resultCellSet,
+    const std::vector<vtkm::cont::CoordinateSystem>& resultCoordSystems,
+    FieldMapper&& fieldMapper) const
+  {
+    vtkm::cont::DataSet outDataSet = this->CreateResult(inDataSet, resultCellSet, fieldMapper);
+    for (auto&& cs : resultCoordSystems)
+    {
+      outDataSet.AddCoordinateSystem(cs);
+    }
+    return outDataSet;
+  }
+
+  /// \brief Create the output data set for `DoExecute`.
+  ///
+  /// This form of `CreateResult` will create an output data set with the given `CellSet`
+  /// and `CoordinateSystem`. You must also provide a field mapper function, which is a
+  /// function that takes the output `DataSet` being created and a `Field` from the input
+  /// and then applies any necessary transformations to the field array and adds it to
+  /// the `DataSet`.
+  ///
+  /// \param[in] inDataSet The input data set being modified (usually the one passed
+  ///     into `DoExecute`). The returned `DataSet` is filled with fields of `inDataSet`
+  ///     (as selected by the `FieldsToPass` state of the filter).
+  /// \param[in] resultCellSet The `CellSet` of the output will be set to this.
+  /// \param[in] resultCoordSystem This `CoordinateSystem` will be added to the output.
+  /// \param[in] fieldMapper A function or functor that takes a `DataSet` as its first
+  ///     argument and a `Field` as its second argument. The `DataSet` is the data being
+  ///     created and will eventually be returned by `CreateResult`. The `Field` comes from
+  ///     `inDataSet`. The function should map the `Field` to match `resultCellSet` and then
+  ///     add the resulting field to the `DataSet`. If the mapping is not possible, then
+  ///     the function should do nothing.
+  ///
+  template <typename FieldMapper>
+  VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
+                                             const vtkm::cont::UnknownCellSet& resultCellSet,
+                                             const vtkm::cont::CoordinateSystem& resultCoordSystem,
+                                             FieldMapper&& fieldMapper) const
+  {
+    return this->CreateResult(inDataSet,
+                              resultCellSet,
+                              std::vector<vtkm::cont::CoordinateSystem>{ resultCoordSystem },
+                              fieldMapper);
+  }
+
+  VTKM_CONT virtual vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) = 0;
+  VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData);
+
+private:
+  VTKM_CONT
+  virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
+
+  template <typename FieldMapper>
   VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input,
                                      vtkm::cont::DataSet& output,
-                                     Mapper&& mapper)
+                                     FieldMapper&& fieldMapper) const
   {
     for (vtkm::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)
     {
       auto field = input.GetField(cc);
       if (this->GetFieldsToPass().IsFieldSelected(field))
       {
-        mapper(output, field);
+        fieldMapper(output, field);
       }
     }
   }
-
-  VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input, vtkm::cont::DataSet& output)
-  {
-    this->MapFieldsOntoOutput(input, output, defaultMapper);
-  }
-
-private:
-  VTKM_CONT
-  virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
-
-  // Note: In C++, subclasses can override private methods of superclass.
-  VTKM_CONT virtual vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) = 0;
-  VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecutePartitions(
-    const vtkm::cont::PartitionedDataSet& inData);
-
-  static void defaultMapper(vtkm::cont::DataSet& output, const vtkm::cont::Field& field)
-  {
-    output.AddField(field);
-  };
 
   vtkm::filter::FieldSelection FieldsToPass = vtkm::filter::FieldSelection::MODE_ALL;
   bool RunFilterWithMultipleThreads = false;

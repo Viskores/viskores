@@ -13,6 +13,9 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 
+#include <vtkm/Bounds.h>
+#include <vtkm/Range.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
@@ -145,11 +148,35 @@ void TryCopy()
 }
 }
 
+void TryRange()
+{
+  std::cout << "Trying vtkm::Range" << std::endl;
+
+  vtkm::cont::ArrayHandle<vtkm::Range> values =
+    vtkm::cont::make_ArrayHandle<vtkm::Range>({ { 0.0, 1.0 }, { 1.0, 2.0 }, { 2.0, 4.0 } });
+  vtkm::Range range = vtkm::cont::ArrayGetValue(1, values);
+  VTKM_TEST_ASSERT(range == vtkm::Range{ 1.0, 2.0 });
+}
+
+void TryBounds()
+{
+  std::cout << "Trying vtkm::Bounds" << std::endl;
+
+  vtkm::cont::ArrayHandle<vtkm::Bounds> values =
+    vtkm::cont::make_ArrayHandle<vtkm::Bounds>({ { { 0.0, 1.0 }, { 0.0, 1.0 }, { 0.0, 1.0 } },
+                                                 { { 1.0, 2.0 }, { 1.0, 2.0 }, { 1.0, 2.0 } },
+                                                 { { 2.0, 4.0 }, { 2.0, 4.0 }, { 2.0, 4.0 } } });
+  vtkm::Bounds bounds = vtkm::cont::ArrayGetValue(1, values);
+  VTKM_TEST_ASSERT(bounds == vtkm::Bounds{ { 1.0, 2.0 }, { 1.0, 2.0 }, { 1.0, 2.0 } });
+}
+
 void Test()
 {
   TryCopy<vtkm::Id>();
   TryCopy<vtkm::IdComponent>();
   TryCopy<vtkm::Float32>();
+  TryRange();
+  TryBounds();
 }
 
 } // anonymous namespace

@@ -10,7 +10,6 @@
 #ifndef vtk_m_cont_testing_TestingArrayHandleMultiplexer_h
 #define vtk_m_cont_testing_TestingArrayHandleMultiplexer_h
 
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
@@ -52,14 +51,14 @@ class TestingArrayHandleMultiplexer
                      "Multiplexer array gave wrong result in control environment");
 
     vtkm::cont::ArrayHandle<T> copy;
-    vtkm::cont::ArrayCopy(multiplexerArray, copy);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(multiplexerArray, copy);
     VTKM_TEST_ASSERT(test_equal_portals(copy.ReadPortal(), expectedArray.ReadPortal()),
                      "Multiplexer did not copy correctly in execution environment");
   }
 
   static void BasicSwitch()
   {
-    std::cout << std::endl << "--- Basic switch" << std::endl;
+    std::cout << "\n--- Basic switch" << std::endl;
 
     using ValueType = vtkm::FloatDefault;
 
@@ -93,7 +92,7 @@ class TestingArrayHandleMultiplexer
     // algorithm on CUDA. Most likely related to:
     // https://github.com/thrust/thrust/issues/928
     // https://github.com/thrust/thrust/issues/1044
-    std::cout << std::endl << "--- Reduce" << std::endl;
+    std::cout << "\n--- Reduce" << std::endl;
 
     using ValueType = vtkm::Vec3f;
     using MultiplexerType = vtkm::cont::ArrayHandleMultiplexer<
@@ -127,10 +126,62 @@ class TestingArrayHandleMultiplexer
     }
   }
 
+  static void Fill()
+  {
+    std::cout << "\n--- Fill" << std::endl;
+
+    using ValueType = vtkm::Vec3f;
+    using MultiplexerType = vtkm::cont::ArrayHandleMultiplexer<
+      vtkm::cont::ArrayHandleConstant<ValueType>,
+      vtkm::cont::ArrayHandleCounting<ValueType>,
+      vtkm::cont::ArrayHandle<ValueType>,
+      vtkm::cont::ArrayHandleUniformPointCoordinates,
+      vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                              vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                              vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>;
+
+    const ValueType testValue1 = TestValue(1, ValueType{});
+    const ValueType testValue2 = TestValue(2, ValueType{});
+
+    MultiplexerType multiplexer = vtkm::cont::ArrayHandle<ValueType>{};
+
+    multiplexer.AllocateAndFill(ARRAY_SIZE, testValue1);
+    {
+      auto portal = multiplexer.ReadPortal();
+      VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE);
+      for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        VTKM_TEST_ASSERT(portal.Get(index) == testValue1);
+      }
+    }
+
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> array1;
+    array1.Allocate(ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> array2;
+    array2.Allocate(ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> array3;
+    array3.Allocate(ARRAY_SIZE);
+    multiplexer = vtkm::cont::make_ArrayHandleCartesianProduct(array1, array2, array3);
+
+    multiplexer.Fill(testValue2);
+    {
+      auto portal1 = array1.ReadPortal();
+      auto portal2 = array2.ReadPortal();
+      auto portal3 = array3.ReadPortal();
+      for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        VTKM_TEST_ASSERT(portal1.Get(index) == testValue2[0]);
+        VTKM_TEST_ASSERT(portal2.Get(index) == testValue2[1]);
+        VTKM_TEST_ASSERT(portal3.Get(index) == testValue2[2]);
+      }
+    }
+  }
+
   static void TestAll()
   {
     BasicSwitch();
     Reduce();
+    Fill();
   }
 
 public:

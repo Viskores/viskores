@@ -7,10 +7,10 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/Contour.h>
 #include <vtkm/filter/SplitSharpEdges.h>
-#include <vtkm/filter/SurfaceNormals.h>
+#include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -205,7 +205,7 @@ void TestWithExplicitData()
   vtkm::cont::DataSet simpleCube = Make3DExplicitSimpleCube();
 
   // Generate surface normal field
-  vtkm::filter::SurfaceNormals surfaceNormalsFilter;
+  vtkm::filter::vector_analysis::SurfaceNormals surfaceNormalsFilter;
   surfaceNormalsFilter.SetGenerateCellNormals(true);
   vtkm::cont::DataSet simpleCubeWithSN = surfaceNormalsFilter.Execute(simpleCube);
   VTKM_TEST_ASSERT(simpleCubeWithSN.HasCellField("Normals"), "Cell normals missing.");
@@ -225,7 +225,7 @@ void TestWithStructuredData()
   vtkm::cont::DataSet dataSet = Make3DWavelet();
 
   // Cut a contour:
-  vtkm::filter::Contour contour;
+  vtkm::filter::contour::Contour contour;
   contour.SetActiveField("RTData", vtkm::cont::Field::Association::POINTS);
   contour.SetNumberOfIsoValues(1);
   contour.SetIsoValue(192);
@@ -236,7 +236,7 @@ void TestWithStructuredData()
   dataSet = contour.Execute(dataSet);
 
   // Compute cell normals:
-  vtkm::filter::CellAverage cellNormals;
+  vtkm::filter::field_conversion::CellAverage cellNormals;
   cellNormals.SetActiveField("normals", vtkm::cont::Field::Association::POINTS);
   dataSet = cellNormals.Execute(dataSet);
 

@@ -59,8 +59,6 @@ public:
   {
   }
 
-  UncertainCellSet(const Thisclass&) = default;
-
   template <typename OtherCellSetList>
   explicit VTKM_CONT UncertainCellSet(const UncertainCellSet<OtherCellSetList>& src)
     : Superclass(src)

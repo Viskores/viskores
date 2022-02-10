@@ -531,6 +531,31 @@ struct TestingBitField
     testMask64(129, 0x0000000000000001);
   }
 
+  VTKM_CONT static void TestFill()
+  {
+    vtkm::cont::BitField bitField;
+    bitField.Allocate(NUM_BITS);
+
+    bitField.Fill(true);
+    {
+      auto portal = bitField.ReadPortal();
+      for (vtkm::Id index = 0; index < NUM_BITS; ++index)
+      {
+        VTKM_TEST_ASSERT(portal.GetBit(index));
+      }
+    }
+
+    constexpr vtkm::UInt8 word8 = 0xA6;
+    bitField.Fill(word8);
+    {
+      auto portal = bitField.ReadPortal();
+      for (vtkm::Id index = 0; index < NUM_BITS; ++index)
+      {
+        VTKM_TEST_ASSERT(portal.GetBit(index) == ((word8 >> (index % 8)) & 0x01));
+      }
+    }
+  }
+
   struct ArrayHandleBitFieldChecker : vtkm::exec::FunctorBase
   {
     using PortalType = vtkm::cont::ArrayHandleBitField::WritePortalType;
@@ -574,13 +599,34 @@ struct TestingBitField
                      " got: ",
                      numBits);
 
-    vtkm::cont::Token token;
-    Algo::Schedule(
-      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), false },
-      numBits);
-    Algo::Schedule(
-      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), true },
-      numBits);
+    {
+      vtkm::cont::Token token;
+      Algo::Schedule(
+        ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), false },
+        numBits);
+      Algo::Schedule(
+        ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), true },
+        numBits);
+    }
+
+    handle.Fill(true);
+    {
+      auto portal = handle.ReadPortal();
+      for (vtkm::Id index = 0; index < NUM_BITS; ++index)
+      {
+        VTKM_TEST_ASSERT(portal.Get(index));
+      }
+    }
+
+    handle.Fill(false, 24);
+    handle.Fill(true, 64);
+    {
+      auto portal = handle.ReadPortal();
+      for (vtkm::Id index = 0; index < NUM_BITS; ++index)
+      {
+        VTKM_TEST_ASSERT(portal.Get(index) == ((index < 24) || (index >= 64)));
+      }
+    }
   }
 
   VTKM_CONT
@@ -647,6 +693,7 @@ struct TestingBitField
       TestingBitField::TestControlPortals();
       TestingBitField::TestExecutionPortals();
       TestingBitField::TestFinalWordMask();
+      TestingBitField::TestFill();
       TestingBitField::TestArrayHandleBitField();
       TestingBitField::TestArrayInvokeWorklet();
       TestingBitField::TestArrayInvokeWorklet2();

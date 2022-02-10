@@ -8,9 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CellAverage.h>
+#include <vtkm/filter/FieldMetadata.h>
 
 namespace
 {

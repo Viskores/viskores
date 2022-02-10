@@ -1,35 +1,46 @@
-
-# Build on documentation for VTK-m on ubuntu2004 with TBB and OpenMP
-# Uses gcc 9
-# Uses MPICH2
-doxygen:
+.doxygen_submit: &doxygen_submit
   stage: build
-  environment:
-    #establish that we need doxygen related
-    #env variables
-    name: doxygen-upload
-  only:
-    #make sure we are only trigged on
-    #the vtk-m primary project
-    variables:
-      - '$DOXYGEN_UPLOAD_ENABLE == "true"'
-  timeout:  30 minutes
-  interruptible: true
   tags:
     - vtkm
     - docker
     - linux
-  extends:
-    - .ubuntu2004_doxygen
   before_script:
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
     - doxygen build/docs/doxyfile
     - chmod 400 $DOC_KEY_FILE
-    - test -n "$GIT_COMMIT_TAG" && DOXYGEN_UPLOAD_REMOTE_PATH=latest
     - rsync -tv --recursive --delete -e "ssh -i $DOC_KEY_FILE -o StrictHostKeyChecking=no" build/docs/doxygen/html/ "kitware@web.kitware.com:vtkm_documentation/$DOXYGEN_UPLOAD_REMOTE_PATH"
+  timeout:  30 minutes
+  interruptible: true
   variables:
     CMAKE_BUILD_TYPE: Release
     VTKM_SETTINGS: "tbb+openmp+mpi+shared+docs"
+
+docs:nightly:
+  environment:
+    name: doxygen-nightly
+    url: https://docs-m.vtk.org/nightly/
+  rules:
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_REF_NAME == "master"'
+      when: on_success
+    - when: never
+  extends:
+    - .ubuntu2004_doxygen
+    - .doxygen_submit
+  variables:
     DOXYGEN_UPLOAD_REMOTE_PATH: "nightly"
+
+docs:latest:
+  environment:
+    name: doxygen-latest
+    url: https://docs-m.vtk.org/latest/index.html
+  rules:
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_TAG'
+      when: on_success
+    - when: never
+  extends:
+    - .ubuntu2004_doxygen
+    - .doxygen_submit
+  variables:
+    DOXYGEN_UPLOAD_REMOTE_PATH: "latest"

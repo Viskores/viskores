@@ -11,7 +11,7 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/filter/GhostCellClassify.h>
+#include <vtkm/filter/mesh_info/GhostCellClassify.h>
 
 namespace vtkm
 {
@@ -46,7 +46,7 @@ inline vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds,
 
   if (addGhost)
   {
-    vtkm::filter::GhostCellClassify addGhostFilter;
+    vtkm::filter::mesh_info::GhostCellClassify addGhostFilter;
     return addGhostFilter.Execute(ds);
   }
   return ds;
@@ -84,7 +84,7 @@ inline vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds,
 
   if (addGhost)
   {
-    vtkm::filter::GhostCellClassify addGhostFilter;
+    vtkm::filter::mesh_info::GhostCellClassify addGhostFilter;
     return addGhostFilter.Execute(ds);
   }
   return ds;

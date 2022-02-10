@@ -17,7 +17,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/worklet/CellAverage.h>
+#include <vtkm/filter/field_conversion/worklet/CellAverage.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace vtkm

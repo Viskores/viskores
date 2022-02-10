@@ -215,7 +215,7 @@ void DoTest()
   }
 
   {
-    std::cout << "ArrayHandleIndex" << std::endl;
+    std::cout << "ArrayHandleIndex (expect warning)" << std::endl;
     vtkm::cont::ArrayHandleIndex array(ARRAY_SIZE);
     CheckInputArray(array, vtkm::CopyFlag::On);
   }

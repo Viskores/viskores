@@ -117,12 +117,17 @@ public:
   {
     for (vtkm::Int32 dim = 0; dim < 3; ++dim)
     {
+      if (point[dim] <= MinPoint[dim])
+      {
+        cell[dim] = 0;
+        continue;
+      }
       //
       // When searching for points, we consider the max value of the cell
       // to be apart of the next cell. If the point falls on the boundary of the
       // data set, then it is technically inside a cell. This checks for that case
       //
-      if (point[dim] == MaxPoint[dim])
+      if (point[dim] >= MaxPoint[dim])
       {
         cell[dim] = PointDimensions[dim] - 2;
         continue;
@@ -261,12 +266,18 @@ public:
     vtkm::Vec3f_32 temp = point;
     temp = temp - Origin;
     temp = temp * InvSpacing;
-    //make sure that if we border the upper edge, we sample the correct cell
-    if (temp[0] == vtkm::Float32(PointDimensions[0] - 1))
+    //make sure that if we border the edges, we sample the correct cell
+    if (temp[0] < 0.0f)
+      temp[0] = 0.0f;
+    if (temp[1] < 0.0f)
+      temp[1] = 0.0f;
+    if (temp[2] < 0.0f)
+      temp[2] = 0.0f;
+    if (temp[0] >= vtkm::Float32(PointDimensions[0] - 1))
       temp[0] = vtkm::Float32(PointDimensions[0] - 2);
-    if (temp[1] == vtkm::Float32(PointDimensions[1] - 1))
+    if (temp[1] >= vtkm::Float32(PointDimensions[1] - 1))
       temp[1] = vtkm::Float32(PointDimensions[1] - 2);
-    if (temp[2] == vtkm::Float32(PointDimensions[2] - 1))
+    if (temp[2] >= vtkm::Float32(PointDimensions[2] - 1))
       temp[2] = vtkm::Float32(PointDimensions[2] - 2);
     cell = temp;
     invSpacing = InvSpacing;

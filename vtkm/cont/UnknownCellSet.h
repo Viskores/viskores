@@ -65,7 +65,6 @@ class VTKM_CONT_EXPORT UnknownCellSet
 
 public:
   VTKM_CONT UnknownCellSet() = default;
-  UnknownCellSet(const UnknownCellSet&) = default;
 
   template <typename CellSetType>
   VTKM_CONT UnknownCellSet(const CellSetType& cellSet)

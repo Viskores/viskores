@@ -13,6 +13,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -27,21 +28,21 @@
 
 #include <vtkm/cont/internal/OptionParser.h>
 
-#include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/Contour.h>
-#include <vtkm/filter/ExternalFaces.h>
 #include <vtkm/filter/FieldSelection.h>
-#include <vtkm/filter/Gradient.h>
-#include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Tetrahedralize.h>
-#include <vtkm/filter/Threshold.h>
-#include <vtkm/filter/ThresholdPoints.h>
 #include <vtkm/filter/Triangulate.h>
-#include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/filter/VertexClustering.h>
-#include <vtkm/filter/WarpScalar.h>
-#include <vtkm/filter/WarpVector.h>
+#include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
+#include <vtkm/filter/entity_extraction/Threshold.h>
+#include <vtkm/filter/entity_extraction/ThresholdPoints.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
+#include <vtkm/filter/field_conversion/PointAverage.h>
+#include <vtkm/filter/field_transform/WarpScalar.h>
+#include <vtkm/filter/field_transform/WarpVector.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
+#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 
@@ -117,7 +118,7 @@ void BenchGradient(::benchmark::State& state, int options)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::Gradient filter;
+  vtkm::filter::vector_analysis::Gradient filter;
 
   if (options & ScalarInput)
   {
@@ -193,7 +194,7 @@ void BenchThreshold(::benchmark::State& state)
   vtkm::Float64 quarter = range.Length() / 4.;
   vtkm::Float64 mid = range.Center();
 
-  vtkm::filter::Threshold filter;
+  vtkm::filter::entity_extraction::Threshold filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
@@ -228,7 +229,7 @@ void BenchThresholdPoints(::benchmark::State& state)
   vtkm::Float64 quarter = range.Length() / 4.;
   vtkm::Float64 mid = range.Center();
 
-  vtkm::filter::ThresholdPoints filter;
+  vtkm::filter::entity_extraction::ThresholdPoints filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
@@ -252,7 +253,7 @@ void BenchCellAverage(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::CellAverage filter;
+  vtkm::filter::field_conversion::CellAverage filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
 
   vtkm::cont::Timer timer{ device };
@@ -273,7 +274,7 @@ void BenchPointAverage(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::PointAverage filter;
+  vtkm::filter::field_conversion::PointAverage filter;
   filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
 
   vtkm::cont::Timer timer{ device };
@@ -294,7 +295,7 @@ void BenchWarpScalar(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::WarpScalar filter{ 2. };
+  vtkm::filter::field_transform::WarpScalar filter{ 2. };
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
   filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
@@ -317,7 +318,7 @@ void BenchWarpVector(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::WarpVector filter{ 2. };
+  vtkm::filter::field_transform::WarpVector filter{ 2. };
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
 
@@ -345,7 +346,7 @@ void BenchContour(::benchmark::State& state)
   const bool normals = static_cast<bool>(state.range(3));
   const bool fastNormals = static_cast<bool>(state.range(4));
 
-  vtkm::filter::Contour filter;
+  vtkm::filter::contour::Contour filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
 
   // Set up some equally spaced contours, with the min/max slightly inside the
@@ -412,7 +413,7 @@ void BenchExternalFaces(::benchmark::State& state)
   const vtkm::cont::DeviceAdapterId device = Config.Device;
   const bool compactPoints = static_cast<bool>(state.range(0));
 
-  vtkm::filter::ExternalFaces filter;
+  vtkm::filter::entity_extraction::ExternalFaces filter;
   filter.SetCompactPoints(compactPoints);
 
   vtkm::cont::Timer timer{ device };
@@ -692,7 +693,7 @@ void CreateMissingFields()
   {
     if (!CellScalarsName.empty())
     { // Generate from found cell field:
-      vtkm::filter::PointAverage avg;
+      vtkm::filter::field_conversion::PointAverage avg;
       avg.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
       avg.SetOutputFieldName("GeneratedPointScalars");
       auto outds = avg.Execute(InputDataSet);
@@ -706,7 +707,7 @@ void CreateMissingFields()
     {
       // Compute the magnitude of the vectors:
       VTKM_ASSERT(!PointVectorsName.empty());
-      vtkm::filter::VectorMagnitude mag;
+      vtkm::filter::vector_analysis::VectorMagnitude mag;
       mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
       mag.SetOutputFieldName("GeneratedPointScalars");
       auto outds = mag.Execute(InputDataSet);
@@ -721,7 +722,7 @@ void CreateMissingFields()
   if (CellScalarsName.empty())
   { // Attempt to construct them from a point field:
     VTKM_ASSERT(!PointScalarsName.empty());
-    vtkm::filter::CellAverage avg;
+    vtkm::filter::field_conversion::CellAverage avg;
     avg.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
     avg.SetOutputFieldName("GeneratedCellScalars");
     auto outds = avg.Execute(InputDataSet);

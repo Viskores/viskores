@@ -14,7 +14,7 @@
 #include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/filter/SplitSharpEdges.h>
-#include <vtkm/filter/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
 #include <vtkm/rendering/testing/RenderTest.h>
 #include <vtkm/rendering/testing/Testing.h>

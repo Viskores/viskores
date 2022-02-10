@@ -13,6 +13,7 @@
 #include <typeinfo>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/UnknownCellSet.h>
@@ -40,35 +41,56 @@ public:
     {
     }
 
-    using ControlSignature = void(CellSetIn,
+    using ControlSignature = void(CellSetIn cellset,
+                                  WholeArrayIn pointCoords,
+                                  FieldOut nonIncidentPtsPerPolyline,
                                   FieldOut ptsPerPolyline,
                                   FieldOut ptsPerTube,
                                   FieldOut numTubeConnIds,
                                   FieldOut linesPerPolyline);
     using ExecutionSignature = void(CellShape shapeType,
                                     PointCount numPoints,
-                                    _2 ptsPerPolyline,
-                                    _3 ptsPerTube,
-                                    _4 numTubeConnIds,
-                                    _5 linesPerPolyline);
+                                    PointIndices ptIndices,
+                                    _2 inPts,
+                                    _3 nonIncidentPtsPerPolyline,
+                                    _4 ptsPerPolyline,
+                                    _5 ptsPerTube,
+                                    _6 numTubeConnIds,
+                                    _7 linesPerPolyline);
     using InputDomain = _1;
 
-    template <typename CellShapeTag>
+    template <typename CellShapeTag, typename PointIndexType, typename InPointsType>
     VTKM_EXEC void operator()(const CellShapeTag& shapeType,
                               const vtkm::IdComponent& numPoints,
+                              const PointIndexType& ptIndices,
+                              const InPointsType& inPts,
+                              vtkm::IdComponent& nonIncidentPtsPerPolyline,
                               vtkm::Id& ptsPerPolyline,
                               vtkm::Id& ptsPerTube,
                               vtkm::Id& numTubeConnIds,
                               vtkm::Id& linesPerPolyline) const
     {
       // We only support polylines that contain 2 or more points.
-      if (shapeType.Id == vtkm::CELL_SHAPE_POLY_LINE && numPoints > 1)
+      vtkm::IdComponent numNonCoincidentPoints = 1;
+      vtkm::Vec3f p = inPts.Get(ptIndices[0]);
+      for (int i = 1; i < numPoints; ++i)
+      {
+        vtkm::Vec3f pNext = inPts.Get(ptIndices[i]);
+        if (vtkm::Magnitude(pNext - p) > vtkm::Epsilon<vtkm::FloatDefault>())
+        {
+          numNonCoincidentPoints++;
+          p = pNext;
+        }
+      }
+
+      if (shapeType.Id == vtkm::CELL_SHAPE_POLY_LINE && numNonCoincidentPoints > 1)
       {
         ptsPerPolyline = numPoints;
-        ptsPerTube = this->NumSides * numPoints;
+        nonIncidentPtsPerPolyline = numNonCoincidentPoints;
+        ptsPerTube = this->NumSides * numNonCoincidentPoints;
         // (two tris per segment) X (numSides) X numVertsPerCell
-        numTubeConnIds = (numPoints - 1) * 2 * this->NumSides * this->NumVertsPerCell;
-        linesPerPolyline = numPoints - 1;
+        numTubeConnIds = (numNonCoincidentPoints - 1) * 2 * this->NumSides * this->NumVertsPerCell;
+        linesPerPolyline = numNonCoincidentPoints - 1;
 
         //Capping adds center vertex in middle of cap, plus NumSides triangles for cap.
         if (this->Capping)
@@ -80,6 +102,7 @@ public:
       else
       {
         ptsPerPolyline = 0;
+        nonIncidentPtsPerPolyline = 0;
         ptsPerTube = 0;
         numTubeConnIds = 0;
         linesPerPolyline = 0;
@@ -270,6 +293,7 @@ public:
     using ControlSignature = void(CellSetIn cellset,
                                   WholeArrayIn pointCoords,
                                   WholeArrayIn normals,
+                                  FieldInCell numNonCoincidentPts,
                                   FieldInCell tubePointOffsets,
                                   FieldInCell polylineOffset,
                                   WholeArrayOut newPointCoords,
@@ -279,10 +303,11 @@ public:
                                     PointIndices ptIndices,
                                     _2 inPts,
                                     _3 inNormals,
-                                    _4 tubePointOffsets,
-                                    _5 polylineOffset,
-                                    _6 outPts,
-                                    _7 outPointSrcIdx);
+                                    _4 numNonCoincidentPts,
+                                    _5 tubePointOffsets,
+                                    _6 polylineOffset,
+                                    _7 outPts,
+                                    _8 outPointSrcIdx);
     using InputDomain = _1;
 
     template <typename CellShapeTag,
@@ -296,29 +321,44 @@ public:
                               const PointIndexType& ptIndices,
                               const InPointsType& inPts,
                               const InNormalsType& inNormals,
+                              const vtkm::Id& numNonCoincidentPts,
                               const vtkm::Id& tubePointOffsets,
                               const vtkm::Id& polylineOffset,
                               OutPointsType& outPts,
                               OutPointSrcIdxType& outPointSrcIdx) const
     {
-      if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE || numPoints < 2)
+      if (shapeType.Id != vtkm::CELL_SHAPE_POLY_LINE || numNonCoincidentPts < 2)
         return;
       else
       {
         vtkm::Id outIdx = tubePointOffsets;
         vtkm::Id pIdx = ptIndices[0];
-        vtkm::Id pNextIdx = ptIndices[1];
+        vtkm::Id pNextIdx =
+          ptIndices[this->FindNextNonCoincidentPointIndex(ptIndices, inPts, 0, numPoints)];
         vtkm::Vec3f p = inPts.Get(pIdx);
         vtkm::Vec3f pNext = inPts.Get(pNextIdx);
         vtkm::Vec3f sNext = pNext - p;
         vtkm::Vec3f sPrev = sNext;
-        for (vtkm::IdComponent j = 0; j < numPoints; j++)
+        vtkm::FloatDefault eps = vtkm::Epsilon<vtkm::FloatDefault>();
+
+        //Add the start cap vertex. This is just a point at the center of the tube (on the polyline).
+        if (this->Capping)
         {
+          outPts.Set(outIdx, p);
+          outPointSrcIdx.Set(outIdx, pIdx);
+          outIdx++;
+        }
+
+        vtkm::IdComponent j = 0;
+        while (j < numPoints)
+        {
+          vtkm::IdComponent jNext =
+            this->FindNextNonCoincidentPointIndex(ptIndices, inPts, j, numPoints);
           if (j == 0) //first point
           {
             //Variables initialized before loop started.
           }
-          else if (j == numPoints - 1) //last point
+          else if (jNext == numPoints) //last point
           {
             sPrev = sNext;
             p = pNext;
@@ -328,40 +368,28 @@ public:
           {
             p = pNext;
             pIdx = pNextIdx;
-            pNextIdx = ptIndices[j + 1];
+            pNextIdx = ptIndices[jNext];
             pNext = inPts.Get(pNextIdx);
             sPrev = sNext;
             sNext = pNext - p;
           }
           vtkm::Vec3f n = inNormals.Get(polylineOffset + j);
 
-          //Coincident points.
-          if (vtkm::Magnitude(sNext) <= vtkm::Epsilon<vtkm::FloatDefault>())
-            this->RaiseError("Coincident points in Tube worklet.");
-
           vtkm::Normalize(sNext);
           auto s = (sPrev + sNext) / 2.;
-          if (vtkm::Magnitude(s) <= vtkm::Epsilon<vtkm::FloatDefault>())
+          if (vtkm::Magnitude(s) <= eps)
             s = vtkm::Cross(sPrev, n);
           vtkm::Normalize(s);
 
           auto w = vtkm::Cross(s, n);
           //Bad normal
-          if (vtkm::Magnitude(w) <= vtkm::Epsilon<vtkm::FloatDefault>())
+          if (vtkm::Magnitude(w) <= eps)
             this->RaiseError("Bad normal in Tube worklet.");
           vtkm::Normalize(w);
 
           //create orthogonal coordinate system.
           auto nP = vtkm::Cross(w, s);
           vtkm::Normalize(nP);
-
-          //Add the start cap vertex. This is just a point at the center of the tube (on the polyline).
-          if (this->Capping && j == 0)
-          {
-            outPts.Set(outIdx, p);
-            outPointSrcIdx.Set(outIdx, pIdx);
-            outIdx++;
-          }
 
           //this only implements the 'sides share vertices' line 476
           vtkm::Vec3f normal;
@@ -377,15 +405,39 @@ public:
             outIdx++;
           }
 
-          //Add the end cap vertex. This is just a point at the center of the tube (on the polyline).
-          if (this->Capping && j == numPoints - 1)
-          {
-            outPts.Set(outIdx, p);
-            outPointSrcIdx.Set(outIdx, pIdx);
-            outIdx++;
-          }
+          j = jNext;
+        }
+
+        //Add the end cap vertex. This is just a point at the center of the tube (on the polyline).
+        if (this->Capping)
+        {
+          outPts.Set(outIdx, p);
+          outPointSrcIdx.Set(outIdx, pIdx);
+          outIdx++;
         }
       }
+    }
+
+    template <typename PointIndexType, typename InPointsType>
+    VTKM_EXEC vtkm::IdComponent FindNextNonCoincidentPointIndex(const PointIndexType& ptIndices,
+                                                                const InPointsType& inPts,
+                                                                vtkm::IdComponent start,
+                                                                vtkm::IdComponent numPoints) const
+    {
+      vtkm::Id pIdx = ptIndices[start];
+      vtkm::Id pNextIdx;
+      vtkm::Float32 eps = vtkm::Epsilon<vtkm::FloatDefault>();
+      for (vtkm::IdComponent i = start + 1; i < numPoints; ++i)
+      {
+        pNextIdx = ptIndices[i];
+        vtkm::FloatDefault pNext = vtkm::Magnitude(inPts.Get(pIdx) - inPts.Get(pNextIdx));
+        if (pNext > eps)
+        {
+          return i;
+        }
+      }
+
+      return numPoints;
     }
 
   private:
@@ -407,18 +459,19 @@ public:
     }
 
     using ControlSignature = void(CellSetIn cellset,
+                                  FieldInCell ptsPerPolyline,
                                   FieldInCell tubePointOffsets,
                                   FieldInCell tubeConnOffsets,
                                   FieldInCell segOffset,
                                   WholeArrayOut outConnectivity,
                                   WholeArrayOut outCellSrcIdx);
     using ExecutionSignature = void(CellShape shapeType,
-                                    PointCount numPoints,
-                                    _2 tubePointOffset,
-                                    _3 tubeConnOffsets,
-                                    _4 segOffset,
-                                    _5 outConn,
-                                    _6 outCellSrcIdx);
+                                    _2 ptsPerPolyline,
+                                    _3 tubePointOffset,
+                                    _4 tubeConnOffsets,
+                                    _5 segOffset,
+                                    _6 outConn,
+                                    _7 outCellSrcIdx);
     using InputDomain = _1;
 
     template <typename CellShapeTag, typename OutConnType, typename OutCellSrcIdxType>
@@ -525,7 +578,6 @@ public:
     : Capping(capping)
     , NumSides(n)
     , Radius(r)
-
   {
   }
 
@@ -552,9 +604,16 @@ public:
 
     //Count number of polyline pts, tube pts and tube cells
     vtkm::cont::ArrayHandle<vtkm::Id> ptsPerPolyline, ptsPerTube, numTubeConnIds, segPerPolyline;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> nonIncidentPtsPerPolyline;
     CountSegments countSegs(this->Capping, this->NumSides);
     vtkm::worklet::DispatcherMapTopology<CountSegments> countInvoker(countSegs);
-    countInvoker.Invoke(cellset, ptsPerPolyline, ptsPerTube, numTubeConnIds, segPerPolyline);
+    countInvoker.Invoke(cellset,
+                        coords,
+                        nonIncidentPtsPerPolyline,
+                        ptsPerPolyline,
+                        ptsPerTube,
+                        numTubeConnIds,
+                        segPerPolyline);
 
     vtkm::Id totalPolylinePts = vtkm::cont::Algorithm::Reduce(ptsPerPolyline, vtkm::Id(0));
     if (totalPolylinePts == 0)
@@ -564,9 +623,12 @@ public:
     //All cells are triangles, so cell count is simple to compute.
     vtkm::Id totalTubeCells = totalTubeConnIds / 3;
 
-    vtkm::cont::ArrayHandle<vtkm::Id> polylinePtOffset, tubePointOffsets, tubeConnOffsets,
-      segOffset;
+    vtkm::cont::ArrayHandle<vtkm::Id> polylinePtOffset, nonIncidentPolylinePtOffset,
+      tubePointOffsets, tubeConnOffsets, segOffset;
     vtkm::cont::Algorithm::ScanExclusive(ptsPerPolyline, polylinePtOffset);
+    vtkm::cont::Algorithm::ScanExclusive(
+      vtkm::cont::make_ArrayHandleCast<vtkm::Id>(nonIncidentPtsPerPolyline),
+      nonIncidentPolylinePtOffset);
     vtkm::cont::Algorithm::ScanExclusive(ptsPerTube, tubePointOffsets);
     vtkm::cont::Algorithm::ScanExclusive(numTubeConnIds, tubeConnOffsets);
     vtkm::cont::Algorithm::ScanExclusive(segPerPolyline, segOffset);
@@ -585,6 +647,7 @@ public:
     genPtsDisp.Invoke(cellset,
                       coords,
                       normals,
+                      nonIncidentPtsPerPolyline,
                       tubePointOffsets,
                       polylinePtOffset,
                       newPoints,
@@ -597,6 +660,7 @@ public:
     GenerateCells genCells(this->Capping, this->NumSides);
     vtkm::worklet::DispatcherMapTopology<GenerateCells> genCellsDisp(genCells);
     genCellsDisp.Invoke(cellset,
+                        nonIncidentPtsPerPolyline,
                         tubePointOffsets,
                         tubeConnOffsets,
                         segOffset,

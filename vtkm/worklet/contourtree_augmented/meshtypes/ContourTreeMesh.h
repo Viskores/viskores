@@ -738,9 +738,8 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   vtkm::cont::ArrayHandle<vtkm::IdComponent> thisToCombinedSortOrderIsDuplicate;
   thisToCombinedSortOrderIsDuplicate.Allocate(thisToCombinedSortOrder.GetNumberOfValues());
   vtkm::cont::ArrayHandle<vtkm::IdComponent> otherToCombinedSortOrderIsDuplicate;
-  vtkm::cont::Algorithm::Fill(otherToCombinedSortOrderIsDuplicate,
-                              vtkm::IdComponent{ 0 },
-                              otherToCombinedSortOrder.GetNumberOfValues());
+  otherToCombinedSortOrderIsDuplicate.AllocateAndFill(otherToCombinedSortOrder.GetNumberOfValues(),
+                                                      vtkm::IdComponent{ 0 });
   this->Invoke(contourtree_mesh_inc_ns::FindDuplicateInOtherWorklet{},
                thisToCombinedSortOrder,
                otherToCombinedSortOrder,

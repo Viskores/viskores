@@ -13,68 +13,26 @@ set(headers
 )
 
 set(unit_tests
-  UnitTestCellAverageFilter.cxx
-  UnitTestCellMeasuresFilter.cxx
-  UnitTestCellSetConnectivityFilter.cxx
-  UnitTestCleanGrid.cxx
-  UnitTestClipWithFieldFilter.cxx
-  UnitTestClipWithImplicitFunctionFilter.cxx
-  UnitTestContourFilter.cxx
-  UnitTestContourFilterNormals.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestContourTreeUniformDistributedFilter.cxx
-  UnitTestCoordinateSystemTransform.cxx
-  UnitTestCrossProductFilter.cxx
-  UnitTestEntropyFilter.cxx
-  UnitTestExternalFacesFilter.cxx
-  UnitTestExtractGeometryFilter.cxx
-  UnitTestExtractPointsFilter.cxx
-  UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
-  UnitTestFieldToColors.cxx
-  UnitTestGradientExplicit.cxx
-  UnitTestGradientUniform.cxx
-  UnitTestGhostCellClassify.cxx
-  UnitTestGhostCellRemove.cxx
-  UnitTestHistogramFilter.cxx
-  UnitTestImageConnectivityFilter.cxx
-  UnitTestImageDifferenceFilter.cxx
-  UnitTestImageMedianFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestLagrangianStructuresFilter.cxx
   UnitTestMapFieldMergeAverage.cxx
   UnitTestMapFieldPermutation.cxx
-  UnitTestMaskFilter.cxx
-  UnitTestMaskPointsFilter.cxx
-  UnitTestMeshQualityFilter.cxx
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
-  UnitTestNDEntropyFilter.cxx
-  UnitTestNDHistogramFilter.cxx
-  UnitTestParticleDensity.cxx
   UnitTestPartitionedDataSetFilters.cxx
-  UnitTestPartitionedDataSetHistogramFilter.cxx
-  UnitTestPointAverageFilter.cxx
-  UnitTestPointAverageCellSetExtrude.cxx
-  UnitTestPointElevationFilter.cxx
-  UnitTestPointTransform.cxx
   UnitTestProbe.cxx
   UnitTestSplitSharpEdgesFilter.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestStreamSurfaceFilter.cxx
-  UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
-  UnitTestThresholdFilter.cxx
-  UnitTestThresholdPointsFilter.cxx
   UnitTestTriangulateFilter.cxx
   UnitTestTubeFilter.cxx
-  UnitTestVectorMagnitudeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
-  UnitTestWarpScalarFilter.cxx
-  UnitTestWarpVectorFilter.cxx
-  UnitTestZFP.cxx
 )
 
 #Taking too long to compile with HIPCC
@@ -98,12 +56,8 @@ if (VTKm_ENABLE_RENDERING)
 
   list(APPEND unit_tests
     RenderTestAmrArrays.cxx
-    RenderTestContourFilter.cxx
-    RenderTestPointTransform.cxx
-    RenderTestSliceFilter.cxx
     RenderTestSplitSharpEdges.cxx
     RenderTestStreamline.cxx
-    RenderTestSurfaceNormals.cxx
   )
 endif()
 

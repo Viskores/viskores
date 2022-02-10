@@ -225,7 +225,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> cellIndex;
     vtkm::Id connectivityLen = vtkm::cont::Algorithm::ScanExclusive(numPoints, cellIndex);
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> connCount(0, 1, connectivityLen);
+    vtkm::cont::ArrayHandleIndex connCount(connectivityLen);
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
     vtkm::cont::ArrayCopy(connCount, connectivity);
 

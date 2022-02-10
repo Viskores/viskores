@@ -168,6 +168,20 @@ public:
     return ReadPortalType(SourceStorage::CreateReadPortal(buffers + 1, device, token), indices);
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const T& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token)
+  {
+    vtkm::internal::ViewIndices indices = buffers[0].GetMetaData<vtkm::internal::ViewIndices>();
+    vtkm::Id adjustedStartIndex = startIndex + indices.StartIndex;
+    vtkm::Id adjustedEndIndex = (endIndex < indices.NumberOfValues)
+      ? endIndex + indices.StartIndex
+      : indices.NumberOfValues + indices.StartIndex;
+    SourceStorage::Fill(buffers + 1, fillValue, adjustedStartIndex, adjustedEndIndex, token);
+  }
+
   VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
                                                      vtkm::cont::DeviceAdapterId device,
                                                      vtkm::cont::Token& token)
@@ -244,8 +258,11 @@ ArrayHandleView<ArrayHandleType> make_ArrayHandleView(const ArrayHandleType& arr
 namespace internal
 {
 
+// Superclass will inherit the ArrayExtractComponentImplInefficient property if
+// the sub-storage is inefficient (thus making everything inefficient).
 template <typename StorageTag>
 struct ArrayExtractComponentImpl<StorageTagView<StorageTag>>
+  : vtkm::cont::internal::ArrayExtractComponentImpl<StorageTag>
 {
   template <typename T>
   using StrideArrayType =

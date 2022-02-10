@@ -11,7 +11,7 @@
 
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/filter/AmrArrays.h>
-#include <vtkm/filter/CellAverage.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
 #include <vtkm/source/Amr.h>
 #include <vtkm/source/Wavelet.h>
 
@@ -61,7 +61,7 @@ vtkm::cont::DataSet Amr::GenerateDataSet(unsigned int level, unsigned int amrInd
   waveletSource.SetStandardDeviation(deviation);
   vtkm::cont::DataSet wavelet = waveletSource.Execute();
 
-  vtkm::filter::CellAverage cellAverage;
+  vtkm::filter::field_conversion::CellAverage cellAverage;
   cellAverage.SetActiveField("RTData", vtkm::cont::Field::Association::POINTS);
   cellAverage.SetOutputFieldName("RTDataCells");
   return cellAverage.Execute(wavelet);

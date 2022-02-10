@@ -44,7 +44,7 @@ vtkm::cont::DataSet GenerateDataSet()
   const auto numCells = ds.GetNumberOfCells();
 
   vtkm::cont::ArrayHandle<MyNormalT> cellNormals;
-  vtkm::cont::Algorithm::Fill(cellNormals, MyNormalT{ 1., 0., 0. }, numCells);
+  cellNormals.AllocateAndFill(numCells, MyNormalT{ 1., 0., 0. });
 
   ds.AddField(vtkm::cont::make_FieldCell("normals", cellNormals));
   return ds;

@@ -12,7 +12,7 @@
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
-#include <vtkm/filter/ClipWithField.h>
+#include <vtkm/filter/contour/ClipWithField.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
   vtkm::io::VTKDataSetReader reader(infilename);
   vtkm::cont::DataSet input = reader.ReadDataSet();
 
-  vtkm::filter::ClipWithField clipFilter;
+  vtkm::filter::contour::ClipWithField clipFilter;
   clipFilter.SetActiveField(infield);
   clipFilter.SetClipValue(fieldValue);
   vtkm::cont::DataSet output = clipFilter.Execute(input);

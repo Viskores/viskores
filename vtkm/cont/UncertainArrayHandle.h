@@ -63,8 +63,6 @@ public:
   {
   }
 
-  UncertainArrayHandle(const Thisclass&) = default;
-
   template <typename OtherValues, typename OtherStorage>
   VTKM_CONT UncertainArrayHandle(const UncertainArrayHandle<OtherValues, OtherStorage>& src)
     : Superclass(src)

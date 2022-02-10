@@ -101,6 +101,12 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
     pts[0] - pts[3],
   };
 
+  if (vtkm::MagnitudeSquared(edges[0]) == OutType(0.0) ||
+      vtkm::MagnitudeSquared(edges[1]) == OutType(0.0) ||
+      vtkm::MagnitudeSquared(edges[2]) == OutType(0.0) ||
+      vtkm::MagnitudeSquared(edges[3]) == OutType(0.0))
+    return OutType(0.0);
+
   typename PointCoordVecType::ComponentType cornerNormals[4] = {
     Cross(edges[3], edges[0]),
     Cross(edges[0], edges[1]),
@@ -120,8 +126,9 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
   Normalize(unitCenterNormal);
 
   OutType area =
-    (Dot(unitCenterNormal, cornerNormals[0]) + Dot(unitCenterNormal, cornerNormals[1]) +
-     Dot(unitCenterNormal, cornerNormals[2]) + Dot(unitCenterNormal, cornerNormals[3])) *
+    static_cast<OutType>(
+      (Dot(unitCenterNormal, cornerNormals[0]) + Dot(unitCenterNormal, cornerNormals[1]) +
+       Dot(unitCenterNormal, cornerNormals[2]) + Dot(unitCenterNormal, cornerNormals[3]))) *
     OutType(0.25);
   return area;
 }
@@ -154,7 +161,7 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
   typename PointCoordVecType::ComponentType v1 = pts[1] - pts[0];
   typename PointCoordVecType::ComponentType v2 = pts[2] - pts[0];
   typename PointCoordVecType::ComponentType v3 = pts[3] - pts[0];
-  OutType volume = Dot(Cross(v1, v2), v3) / OutType(6.0);
+  OutType volume = static_cast<OutType>(Dot(Cross(v1, v2), v3)) / OutType(6.0);
   return volume;
 }
 
@@ -198,7 +205,7 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
   efg3 -= pts[2];
   efg3 -= pts[3];
 
-  OutType volume = Dot(Cross(efg2, efg3), efg1) / OutType(64.0);
+  OutType volume = static_cast<OutType>(Dot(Cross(efg2, efg3), efg1)) / OutType(64.0);
   return volume;
 }
 
@@ -218,17 +225,17 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
   typename PointCoordVecType::ComponentType v0 = pts[1] - pts[0];
   typename PointCoordVecType::ComponentType v1 = pts[2] - pts[0];
   typename PointCoordVecType::ComponentType v2 = pts[3] - pts[0];
-  OutType volume = Dot(Cross(v0, v1), v2) / OutType(6.0);
+  OutType volume = static_cast<OutType>(Dot(Cross(v0, v1), v2)) / OutType(6.0);
 
   typename PointCoordVecType::ComponentType v3 = pts[4] - pts[1];
   typename PointCoordVecType::ComponentType v4 = pts[5] - pts[1];
   typename PointCoordVecType::ComponentType v5 = pts[3] - pts[1];
-  volume += Dot(Cross(v3, v4), v5) / OutType(6.0);
+  volume += static_cast<OutType>(Dot(Cross(v3, v4), v5)) / OutType(6.0);
 
   typename PointCoordVecType::ComponentType v6 = pts[5] - pts[1];
   typename PointCoordVecType::ComponentType v7 = pts[2] - pts[1];
   typename PointCoordVecType::ComponentType v8 = pts[3] - pts[1];
-  volume += Dot(Cross(v6, v7), v8) / OutType(6.0);
+  volume += static_cast<OutType>(Dot(Cross(v6, v7), v8)) / OutType(6.0);
 
   return volume;
 }
@@ -249,12 +256,12 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
   typename PointCoordVecType::ComponentType v1 = pts[1] - pts[0];
   typename PointCoordVecType::ComponentType v2 = pts[3] - pts[0];
   typename PointCoordVecType::ComponentType v3 = pts[4] - pts[0];
-  OutType volume = Dot(Cross(v1, v2), v3) / OutType(6.0);
+  OutType volume = static_cast<OutType>(Dot(Cross(v1, v2), v3)) / OutType(6.0);
 
   typename PointCoordVecType::ComponentType v4 = pts[1] - pts[2];
   typename PointCoordVecType::ComponentType v5 = pts[3] - pts[2];
   typename PointCoordVecType::ComponentType v6 = pts[4] - pts[2];
-  volume += Dot(Cross(v5, v4), v6) / OutType(6.0);
+  volume += static_cast<OutType>(Dot(Cross(v5, v4), v6)) / OutType(6.0);
 
   return volume;
 }

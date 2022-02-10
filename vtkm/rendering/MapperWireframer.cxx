@@ -8,12 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/Assert.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Algorithm.h>
 
-#include <vtkm/cont/TryExecute.h>
 #include <vtkm/exec/CellEdge.h>
-#include <vtkm/filter/ExternalFaces.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/MapperWireframer.h>
@@ -300,7 +298,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
     dataSet.AddCoordinateSystem(actualCoords);
     dataSet.SetCellSet(inCellSet);
     dataSet.AddField(inScalarField);
-    vtkm::filter::ExternalFaces externalFaces;
+    vtkm::filter::entity_extraction::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
     externalFaces.SetPassPolyData(true);
     vtkm::cont::DataSet output = externalFaces.Execute(dataSet);
@@ -315,8 +313,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
   vtkm::worklet::DispatcherMapTopology<EdgesExtracter> extractDispatcher(
     EdgesExtracter::MakeScatter(counts));
   extractDispatcher.Invoke(cellSet, edgeIndices);
-  vtkm::cont::Algorithm::template Sort<vtkm::Id2>(edgeIndices);
-  vtkm::cont::Algorithm::template Unique<vtkm::Id2>(edgeIndices);
+  vtkm::cont::Algorithm::Sort(edgeIndices);
+  vtkm::cont::Algorithm::Unique(edgeIndices);
 
   Wireframer renderer(
     this->Internals->Canvas, this->Internals->ShowInternalZones, this->Internals->IsOverlay);
