@@ -11,5 +11,4 @@
 set(unit_tests
   UnitTestPhiloxRNG.cxx)
 
-vtkm_unit_tests(SOURCES ${unit_tests}
-  ALL_BACKENDS)
+vtkm_unit_tests(SOURCES ${unit_tests})

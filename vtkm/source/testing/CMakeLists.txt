@@ -24,12 +24,6 @@ if (VTKm_ENABLE_RENDERING)
   list(APPEND unit_tests
     RenderTestPerlinNoise.cxx
     )
-
-  # Currently to use the rendering in VTK-m, you have to compile with a device compiler.
-  # We hope to change that in the near future, but until then we need to add the
-  # `ALL_BACKENDS` flag to `vtkm_unit_tests` to compile with the device compiler. Here
-  # is a hack to add it.
-  list(APPEND unit_tests ALL_BACKENDS)
 endif()
 
 vtkm_unit_tests(
