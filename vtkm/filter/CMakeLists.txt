@@ -62,6 +62,7 @@ set(deprecated_headers
 vtkm_declare_headers(${deprecated_headers})
 
 set(common_headers
+  CreateResult.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -73,7 +74,6 @@ set(common_headers
   FilterTraits.h
   PolicyBase.h
   PolicyDefault.h
-  TaskQueue.h
   Instantiations.h
   )
 
@@ -95,8 +95,6 @@ set(extra_headers
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   ContourTreeUniform.h
-  CreateResult.h
-  FieldSelection.h
   Lagrangian.h
   LagrangianStructures.h
   MIRFilter.h
@@ -140,10 +138,12 @@ set(extra_sources_device
   )
 
 set(core_headers
+  FieldSelection.h
   NewFilter.h
   NewFilterField.h
   MapFieldMergeAverage.h
   MapFieldPermutation.h
+  TaskQueue.h
   )
 set(core_sources
   NewFilterField.cxx

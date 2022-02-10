@@ -19,8 +19,6 @@
 //=========================================================================
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/cont/Field.h>
-#include <vtkm/filter/CreateResult.h>
 #include <vtkm/filter/mesh_info/MeshQuality.h>
 #include <vtkm/filter/mesh_info/worklet/MeshQuality.h>
 

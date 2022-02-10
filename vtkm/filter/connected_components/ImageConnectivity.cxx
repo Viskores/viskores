@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/CreateResult.h>
 #include <vtkm/filter/connected_components/ImageConnectivity.h>
 #include <vtkm/filter/connected_components/worklet/ImageConnectivity.h>
 
