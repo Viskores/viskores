@@ -24,8 +24,6 @@ if (VTKm_ENABLE_RENDERING)
   list(APPEND unit_tests
     RenderTestPerlinNoise.cxx
     )
-
-  list(APPEND unit_tests)
 endif()
 
 vtkm_unit_tests(
