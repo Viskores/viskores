@@ -407,7 +407,6 @@ namespace mangled_diy_namespace
 void Serialization<vtkm::cont::UnknownArrayHandle>::save(BinaryBuffer& bb,
                                                          const vtkm::cont::UnknownArrayHandle& obj)
 {
-  //  vtkmdiy::save(bb, obj.ResetTypes<UnknownSerializationTypes, UnknownSerializationStorage>());
   vtkm::IdComponent numComponents = obj.GetNumberOfComponents();
   switch (numComponents)
   {

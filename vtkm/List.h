@@ -12,13 +12,24 @@
 
 #include <vtkm/Types.h>
 
-
 namespace vtkm
 {
+
+// We are currently limiting the size of a `vtkm::List`. Generally, a compiler will
+// happily create a list of any size. However, to make sure the compiler does not go
+// into an infinite loop, you can only iterate on a list so far. As such, it is safer
+// to limit the size of the lists.
+#define VTKM_CHECK_LIST_SIZE(size)                                                               \
+  static_assert((size) <= 512,                                                                   \
+                "A vtkm::List with more than 512 elements is not supported."                     \
+                " A list this long is problematic for compilers."                                \
+                " Compilers often have a recursive template instantiation limit of around 1024," \
+                " so operations on lists this large can lead to confusing and misleading errors.")
 
 template <typename... Ts>
 struct List
 {
+  VTKM_CHECK_LIST_SIZE(sizeof...(Ts));
 };
 
 namespace detail
@@ -104,6 +115,26 @@ using ListUniversal = vtkm::List<detail::UniversalTypeTag>;
 namespace detail
 {
 
+template <typename L>
+struct ListSizeImpl;
+
+template <typename... Ts>
+struct ListSizeImpl<vtkm::List<Ts...>>
+{
+  using type =
+    std::integral_constant<vtkm::IdComponent, static_cast<vtkm::IdComponent>(sizeof...(Ts))>;
+};
+
+} // namespace detail
+
+/// Becomes an std::integral_constant containing the number of types in a list.
+///
+template <typename List>
+using ListSize = typename detail::ListSizeImpl<internal::AsList<List>>::type;
+
+namespace detail
+{
+
 template <typename T, template <typename...> class Target>
 struct ListApplyImpl;
 template <typename... Ts, template <typename...> class Target>
@@ -147,12 +178,14 @@ template <typename... T0s, typename... T1s>
 struct ListAppendImpl<vtkm::List<T0s...>, vtkm::List<T1s...>>
 {
   using type = vtkm::List<T0s..., T1s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
 };
 
 template <typename... T0s, typename... T1s, typename... T2s>
 struct ListAppendImpl<vtkm::List<T0s...>, vtkm::List<T1s...>, vtkm::List<T2s...>>
 {
   using type = vtkm::List<T0s..., T1s..., T2s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
 };
 
 template <typename... T0s, typename... T1s, typename... T2s, typename... T3s>
@@ -162,6 +195,7 @@ struct ListAppendImpl<vtkm::List<T0s...>,
                       vtkm::List<T3s...>>
 {
   using type = vtkm::List<T0s..., T1s..., T2s..., T3s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
 };
 
 template <typename... T0s, typename... T1s, typename... T2s, typename... T3s, typename... T4s>
@@ -172,6 +206,7 @@ struct ListAppendImpl<vtkm::List<T0s...>,
                       vtkm::List<T4s...>>
 {
   using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
 };
 
 template <typename... T0s,
@@ -188,6 +223,7 @@ struct ListAppendImpl<vtkm::List<T0s...>,
                       vtkm::List<T5s...>>
 {
   using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
 };
 
 template <typename... T0s,
@@ -206,6 +242,7 @@ struct ListAppendImpl<vtkm::List<T0s...>,
                       vtkm::List<T6s...>>
 {
   using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
 };
 
 template <typename... T0s,
@@ -226,6 +263,7 @@ struct ListAppendImpl<vtkm::List<T0s...>,
                       vtkm::List<T7s...>>
 {
   using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s..., T7s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
 };
 
 template <typename... T0s,
@@ -246,9 +284,11 @@ struct ListAppendImpl<vtkm::List<T0s...>,
                       vtkm::List<T6s...>,
                       vtkm::List<T7s...>,
                       Ls...>
-  : ListAppendImpl<vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s..., T7s...>,
-                   Ls...>
 {
+  using type = typename ListAppendImpl<
+    vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s..., T7s...>,
+    Ls...>::type;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
 };
 
 } // namespace detail
@@ -266,7 +306,7 @@ template <typename T, vtkm::IdComponent N>
 struct ListFillImpl
 {
   using type = typename ListAppendImpl<typename ListFillImpl<T, (N / 2)>::type,
-                                       typename ListFillImpl<T, (N - N / 2)>::type>::type;
+                                       typename ListFillImpl<T, (N - (N / 2))>::type>::type;
 };
 
 template <typename T>
@@ -287,26 +327,6 @@ struct ListFillImpl<T, 0>
 ///
 template <typename T, vtkm::IdComponent N>
 using ListFill = typename detail::ListFillImpl<T, N>::type;
-
-namespace detail
-{
-
-template <typename L>
-struct ListSizeImpl;
-
-template <typename... Ts>
-struct ListSizeImpl<vtkm::List<Ts...>>
-{
-  using type =
-    std::integral_constant<vtkm::IdComponent, static_cast<vtkm::IdComponent>(sizeof...(Ts))>;
-};
-
-} // namespace detail
-
-/// Becomes an std::integral_constant containing the number of types in a list.
-///
-template <typename List>
-using ListSize = typename detail::ListSizeImpl<internal::AsList<List>>::type;
 
 namespace detail
 {
@@ -786,6 +806,8 @@ struct ListCrossImpl<vtkm::List<T0s...>, vtkm::List<T1s...>>
 template <typename List1, typename List2>
 using ListCross =
   typename detail::ListCrossImpl<internal::AsList<List1>, internal::AsList<List2>>::type;
+
+#undef VTKM_CHECK_LIST_SIZE
 
 } // namespace vtkm
 
