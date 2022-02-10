@@ -10,13 +10,18 @@
 #ifndef vtk_m_cont_AtomicArray_h
 #define vtk_m_cont_AtomicArray_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/List.h>
-#include <vtkm/ListTag.h>
 #include <vtkm/StaticAssert.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/exec/AtomicArrayExecutionObject.h>
+
+// Support deprecated features
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+#include <vtkm/ListTag.h>
+VTKM_DEPRECATED_SUPPRESS_END
 
 namespace vtkm
 {

@@ -16,9 +16,20 @@
 
 #include <vtkm/StaticAssert.h>
 #include <vtkm/internal/ExportMacros.h>
-#include <vtkm/internal/brigand.hpp>
 
 #include <type_traits>
+
+struct VTKM_DEPRECATED(1.6, "ListTag.h is deprecated. Include List.h and use vtkm::List instead.")
+  VTKmListTagHeaderDeprecationWarning
+{
+};
+
+inline VTKmListTagHeaderDeprecationWarning IssueVTKmListTagHeaderDeprecationWarning()
+{
+  return {};
+}
+
+#include <vtkm/internal/brigand.hpp>
 
 namespace vtkm
 {

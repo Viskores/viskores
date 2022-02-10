@@ -6,6 +6,18 @@
 #ifndef BRIGAND_HPP_INCLUDED
 #define BRIGAND_HPP_INCLUDED
 
+#include <vtkm/Deprecated.h>
+
+struct VTKM_DEPRECATED(1.8, "VTK-m is no longer internally using brigand.hpp. This header will be removed in the future.")
+VTKmBrigandHeaderDeprecationWarning
+{
+};
+
+inline VTKmBrigandHeaderDeprecationWarning IssueVTKmBrigandHeaderDeprecationWarning()
+{
+  return {};
+}
+
 #ifndef BRIGAND_NO_BOOST_SUPPORT
 #define BRIGAND_NO_BOOST_SUPPORT
 #endif
