@@ -12,14 +12,24 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/internal/brigand.hpp>
-
 namespace vtkm
 {
+
+// We are currently limiting the size of a `vtkm::List`. Generally, a compiler will
+// happily create a list of any size. However, to make sure the compiler does not go
+// into an infinite loop, you can only iterate on a list so far. As such, it is safer
+// to limit the size of the lists.
+#define VTKM_CHECK_LIST_SIZE(size)                                                               \
+  static_assert((size) <= 512,                                                                   \
+                "A vtkm::List with more than 512 elements is not supported."                     \
+                " A list this long is problematic for compilers."                                \
+                " Compilers often have a recursive template instantiation limit of around 1024," \
+                " so operations on lists this large can lead to confusing and misleading errors.")
 
 template <typename... Ts>
 struct List
 {
+  VTKM_CHECK_LIST_SIZE(sizeof...(Ts));
 };
 
 namespace detail
@@ -105,6 +115,26 @@ using ListUniversal = vtkm::List<detail::UniversalTypeTag>;
 namespace detail
 {
 
+template <typename L>
+struct ListSizeImpl;
+
+template <typename... Ts>
+struct ListSizeImpl<vtkm::List<Ts...>>
+{
+  using type =
+    std::integral_constant<vtkm::IdComponent, static_cast<vtkm::IdComponent>(sizeof...(Ts))>;
+};
+
+} // namespace detail
+
+/// Becomes an std::integral_constant containing the number of types in a list.
+///
+template <typename List>
+using ListSize = typename detail::ListSizeImpl<internal::AsList<List>>::type;
+
+namespace detail
+{
+
 template <typename T, template <typename...> class Target>
 struct ListApplyImpl;
 template <typename... Ts, template <typename...> class Target>
@@ -126,27 +156,220 @@ struct ListApplyImpl<vtkm::ListUniversal, Target>;
 template <typename List, template <typename...> class Target>
 using ListApply = typename detail::ListApplyImpl<internal::AsList<List>, Target>::type;
 
-/// Becomes an std::integral_constant containing the number of types in a list.
+namespace detail
+{
+
+template <typename... Ls>
+struct ListAppendImpl;
+
+template <>
+struct ListAppendImpl<>
+{
+  using type = vtkm::ListEmpty;
+};
+
+template <typename L>
+struct ListAppendImpl<L>
+{
+  using type = L;
+};
+
+template <typename... T0s, typename... T1s>
+struct ListAppendImpl<vtkm::List<T0s...>, vtkm::List<T1s...>>
+{
+  using type = vtkm::List<T0s..., T1s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
+};
+
+template <typename... T0s, typename... T1s, typename... T2s>
+struct ListAppendImpl<vtkm::List<T0s...>, vtkm::List<T1s...>, vtkm::List<T2s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
+};
+
+template <typename... T0s, typename... T1s, typename... T2s, typename... T3s>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s..., T3s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
+};
+
+template <typename... T0s, typename... T1s, typename... T2s, typename... T3s, typename... T4s>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>,
+                      vtkm::List<T4s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
+};
+
+template <typename... T0s,
+          typename... T1s,
+          typename... T2s,
+          typename... T3s,
+          typename... T4s,
+          typename... T5s>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>,
+                      vtkm::List<T4s...>,
+                      vtkm::List<T5s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
+};
+
+template <typename... T0s,
+          typename... T1s,
+          typename... T2s,
+          typename... T3s,
+          typename... T4s,
+          typename... T5s,
+          typename... T6s>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>,
+                      vtkm::List<T4s...>,
+                      vtkm::List<T5s...>,
+                      vtkm::List<T6s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
+};
+
+template <typename... T0s,
+          typename... T1s,
+          typename... T2s,
+          typename... T3s,
+          typename... T4s,
+          typename... T5s,
+          typename... T6s,
+          typename... T7s>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>,
+                      vtkm::List<T4s...>,
+                      vtkm::List<T5s...>,
+                      vtkm::List<T6s...>,
+                      vtkm::List<T7s...>>
+{
+  using type = vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s..., T7s...>;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
+};
+
+template <typename... T0s,
+          typename... T1s,
+          typename... T2s,
+          typename... T3s,
+          typename... T4s,
+          typename... T5s,
+          typename... T6s,
+          typename... T7s,
+          typename... Ls>
+struct ListAppendImpl<vtkm::List<T0s...>,
+                      vtkm::List<T1s...>,
+                      vtkm::List<T2s...>,
+                      vtkm::List<T3s...>,
+                      vtkm::List<T4s...>,
+                      vtkm::List<T5s...>,
+                      vtkm::List<T6s...>,
+                      vtkm::List<T7s...>,
+                      Ls...>
+{
+  using type = typename ListAppendImpl<
+    vtkm::List<T0s..., T1s..., T2s..., T3s..., T4s..., T5s..., T6s..., T7s...>,
+    Ls...>::type;
+  VTKM_CHECK_LIST_SIZE(vtkm::ListSize<type>::value);
+};
+
+} // namespace detail
+
+/// Concatinates a set of lists into a single list.
 ///
-template <typename List>
-using ListSize =
-  std::integral_constant<vtkm::IdComponent,
-                         vtkm::IdComponent{ brigand::size<internal::AsList<List>>::value }>;
+/// Note that this does not work correctly with `vtkm::ListUniversal`.
+template <typename... Lists>
+using ListAppend = typename detail::ListAppendImpl<internal::AsList<Lists>...>::type;
+
+namespace detail
+{
+
+template <typename T, vtkm::IdComponent N>
+struct ListFillImpl
+{
+  using type = typename ListAppendImpl<typename ListFillImpl<T, (N / 2)>::type,
+                                       typename ListFillImpl<T, (N - (N / 2))>::type>::type;
+};
+
+template <typename T>
+struct ListFillImpl<T, 1>
+{
+  using type = vtkm::List<T>;
+};
+
+template <typename T>
+struct ListFillImpl<T, 0>
+{
+  using type = vtkm::List<>;
+};
+
+} // namespace detail
+
+/// \brief Returns a list filled with N copies of type T
+///
+template <typename T, vtkm::IdComponent N>
+using ListFill = typename detail::ListFillImpl<T, N>::type;
+
+namespace detail
+{
+
+template <typename T>
+struct ListAtImplFunc;
+
+template <typename... VoidTypes>
+struct ListAtImplFunc<vtkm::List<VoidTypes...>>
+{
+  // Rather than declare a `type`, make a declaration of a function that returns the type
+  // after some number of `const void*` arguments. We can use ListFill to quickly create
+  // the list of `const void*` arguments, so the type can be returned. We can then use
+  // decltype to get the returned type.
+  //
+  // Templating the `Other` should not be strictly necessary. (You should be able to just
+  // end with `...`.) But some compilers (such as CUDA 8 and Intel 18) have a problem with
+  // that.
+  template <typename T, class... Other>
+  static T at(VoidTypes..., T*, Other...);
+};
+
+template <typename T, vtkm::IdComponent Index>
+struct ListAtImpl;
+
+template <typename... Ts, vtkm::IdComponent Index>
+struct ListAtImpl<vtkm::List<Ts...>, Index>
+{
+  using type =
+    decltype(ListAtImplFunc<vtkm::ListFill<const void*, Index>>::at(static_cast<Ts*>(nullptr)...));
+};
+
+} // namespace detail
 
 /// \brief Finds the type at the given index.
 ///
 /// This becomes the type of the list at the given index.
 ///
 template <typename List, vtkm::IdComponent Index>
-using ListAt =
-  brigand::at<internal::AsList<List>, std::integral_constant<vtkm::IdComponent, Index>>;
+using ListAt = typename detail::ListAtImpl<internal::AsList<List>, Index>::type;
 
 namespace detail
 {
-
-// This find is roughly based on the brigand::find functionality. We don't use brigand::find
-// because it has an apparent bug where if a list contains templated types, it trys to
-// apply those types as predicates, which is wrong.
 
 template <vtkm::IdComponent NumSearched, typename Target, typename... Remaining>
 struct FindFirstOfType;
@@ -372,98 +595,6 @@ struct ListHasImpl<vtkm::ListUniversal, T>
 template <typename List, typename T>
 using ListHas = typename detail::ListHasImpl<internal::AsList<List>, T>::type;
 
-#if defined(VTKM_MSVC) && (_MSC_VER < 1911)
-
-// Alternate definition of ListAppend to get around an apparent issue with
-// Visual Studio 2015.
-namespace detail
-{
-
-template <typename... Lists>
-struct ListAppendImpl
-{
-  using type = brigand::append<internal::AsList<Lists>...>;
-};
-
-} // namespace detail
-
-template <typename... Lists>
-using ListAppend = typename detail::ListAppendImpl<Lists...>::type;
-
-#else // Normal definition
-
-/// Concatinates a set of lists into a single list.
-///
-/// Note that this does not work correctly with `vtkm::ListUniversal`.
-template <typename... Lists>
-using ListAppend = brigand::append<internal::AsList<Lists>...>;
-
-#endif
-
-namespace detail
-{
-
-template <bool Has, typename State, typename Element>
-struct ListIntersectTagsChoose;
-
-template <typename State, typename Element>
-struct ListIntersectTagsChoose<true, State, Element>
-{
-  using type = brigand::push_back<State, Element>;
-};
-
-template <typename State, typename Element>
-struct ListIntersectTagsChoose<false, State, Element>
-{
-  using type = State;
-};
-
-template <class State, class Element, class List>
-struct ListIntersectTags
-  : ListIntersectTagsChoose<vtkm::ListHas<List, Element>::value, State, Element>
-{
-};
-
-template <typename List1, typename List2>
-struct ListIntersectImpl
-{
-  VTKM_IS_LIST(List1);
-  VTKM_IS_LIST(List2);
-
-  using type =
-    brigand::fold<List1,
-                  vtkm::List<>,
-                  ListIntersectTags<brigand::_state, brigand::_element, brigand::pin<List2>>>;
-};
-
-template <typename List1>
-struct ListIntersectImpl<List1, vtkm::ListUniversal>
-{
-  VTKM_IS_LIST(List1);
-
-  using type = List1;
-};
-template <typename List2>
-struct ListIntersectImpl<vtkm::ListUniversal, List2>
-{
-  VTKM_IS_LIST(List2);
-
-  using type = List2;
-};
-template <>
-struct ListIntersectImpl<vtkm::ListUniversal, vtkm::ListUniversal>
-{
-  using type = vtkm::ListUniversal;
-};
-
-} // namespace detail
-
-/// Constructs a list containing types present in all lists.
-///
-template <typename List1, typename List2>
-using ListIntersect =
-  typename detail::ListIntersectImpl<internal::AsList<List1>, internal::AsList<List2>>::type;
-
 namespace detail
 {
 
@@ -485,6 +616,73 @@ struct ListTransformImpl<vtkm::ListUniversal, Target>;
 template <typename List, template <typename> class Transform>
 using ListTransform = typename detail::ListTransformImpl<internal::AsList<List>, Transform>::type;
 
+namespace detail
+{
+
+#if defined(VTKM_MSVC) && (_MSC_VER < 1920)
+// Special (inefficient) implementation for MSVC 2017, which has an ICE for the regular version
+
+template <typename Passed,
+          typename Next,
+          bool Remove,
+          typename Rest,
+          template <typename>
+          class Predicate>
+struct ListRemoveIfCheckNext;
+
+template <typename Passed, typename Rest, template <typename> class Predicate>
+struct ListRemoveIfGetNext;
+
+template <typename Passed, typename Next, typename Rest, template <typename> class Predicate>
+struct ListRemoveIfCheckNext<Passed, Next, true, Rest, Predicate>
+{
+  using type = typename ListRemoveIfGetNext<Passed, Rest, Predicate>::type;
+};
+
+template <typename... PassedTs, typename Next, typename Rest, template <typename> class Predicate>
+struct ListRemoveIfCheckNext<vtkm::List<PassedTs...>, Next, false, Rest, Predicate>
+{
+  using type = typename ListRemoveIfGetNext<vtkm::List<PassedTs..., Next>, Rest, Predicate>::type;
+};
+
+template <typename Passed, typename Next, typename... RestTs, template <typename> class Predicate>
+struct ListRemoveIfGetNext<Passed, vtkm::List<Next, RestTs...>, Predicate>
+{
+  using type = typename ListRemoveIfCheckNext<Passed,
+                                              Next,
+                                              Predicate<Next>::value,
+                                              vtkm::List<RestTs...>,
+                                              Predicate>::type;
+};
+
+template <typename Passed, template <typename> class Predicate>
+struct ListRemoveIfGetNext<Passed, vtkm::List<>, Predicate>
+{
+  using type = Passed;
+};
+
+template <typename L, template <typename> class Predicate>
+struct ListRemoveIfImpl
+{
+  using type = typename ListRemoveIfGetNext<vtkm::List<>, L, Predicate>::type;
+};
+
+#else
+
+template <typename L, template <typename> class Predicate>
+struct ListRemoveIfImpl;
+
+template <typename... Ts, template <typename> class Predicate>
+struct ListRemoveIfImpl<vtkm::List<Ts...>, Predicate>
+{
+  using type = typename ListAppendImpl<
+    std::conditional_t<Predicate<Ts>::value, vtkm::List<>, vtkm::List<Ts>>...>::type;
+};
+
+#endif
+
+} // namespace detail
+
 /// Takes an existing `List` and a predicate template that is applied to each type in the `List`.
 /// Any type in the `List` that has a value element equal to true (the equivalent of
 /// `std::true_type`), that item will be removed from the list. For example the following type
@@ -498,8 +696,46 @@ using ListTransform = typename detail::ListTransformImpl<internal::AsList<List>,
 /// `std::is_integral<float>` and `std::is_integral<double>` resolve to `std::false_type`.
 ///
 template <typename List, template <typename> class Predicate>
-using ListRemoveIf =
-  brigand::remove_if<internal::AsList<List>, brigand::bind<Predicate, brigand::_1>>;
+using ListRemoveIf = typename detail::ListRemoveIfImpl<internal::AsList<List>, Predicate>::type;
+
+namespace detail
+{
+
+template <typename List1, typename List2>
+struct ListIntersectImpl
+{
+  template <typename T>
+  struct Predicate
+  {
+    static constexpr bool value = !vtkm::ListHas<List1, T>::value;
+  };
+
+  using type = vtkm::ListRemoveIf<List2, Predicate>;
+};
+
+template <typename List1>
+struct ListIntersectImpl<List1, vtkm::ListUniversal>
+{
+  using type = List1;
+};
+template <typename List2>
+struct ListIntersectImpl<vtkm::ListUniversal, List2>
+{
+  using type = List2;
+};
+template <>
+struct ListIntersectImpl<vtkm::ListUniversal, vtkm::ListUniversal>
+{
+  using type = vtkm::ListUniversal;
+};
+
+} // namespace detail
+
+/// Constructs a list containing types present in all lists.
+///
+template <typename List1, typename List2>
+using ListIntersect =
+  typename detail::ListIntersectImpl<internal::AsList<List1>, internal::AsList<List2>>::type;
 
 namespace detail
 {
@@ -547,25 +783,18 @@ namespace detail
 {
 
 template <typename List1, typename List2>
-struct ListCrossImpl
-{
-  VTKM_IS_LIST(List1);
-  VTKM_IS_LIST(List2);
+struct ListCrossImpl;
 
-  // This is a lazy Cartesian product generator.
-  // This version was settled on as being the best default
-  // version as all compilers including Intel handle this
-  // implementation without issue for very large cross products
-  using type = brigand::reverse_fold<
-    vtkm::List<List1, List2>,
-    vtkm::List<vtkm::List<>>,
-    brigand::lazy::join<brigand::lazy::transform<
-      brigand::_2,
-      brigand::defer<brigand::lazy::join<brigand::lazy::transform<
-        brigand::parent<brigand::_1>,
-        brigand::defer<brigand::bind<
-          vtkm::List,
-          brigand::lazy::push_front<brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
+template <typename... T0s, typename... T1s>
+struct ListCrossImpl<vtkm::List<T0s...>, vtkm::List<T1s...>>
+{
+  template <typename T>
+  struct Predicate
+  {
+    using type = vtkm::List<vtkm::List<T, T1s>...>;
+  };
+
+  using type = vtkm::ListAppend<typename Predicate<T0s>::type...>;
 };
 
 } // namespace detail
@@ -577,6 +806,8 @@ struct ListCrossImpl
 template <typename List1, typename List2>
 using ListCross =
   typename detail::ListCrossImpl<internal::AsList<List1>, internal::AsList<List2>>::type;
+
+#undef VTKM_CHECK_LIST_SIZE
 
 } // namespace vtkm
 

@@ -345,8 +345,7 @@ namespace detail
 template <typename... ArrayHandleTypes>
 struct ArrayHandleMultiplexerTraits
 {
-  using ArrayHandleType0 =
-    brigand::at<brigand::list<ArrayHandleTypes...>, std::integral_constant<vtkm::IdComponent, 0>>;
+  using ArrayHandleType0 = vtkm::ListAt<vtkm::List<ArrayHandleTypes...>, 0>;
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType0);
   using ValueType = typename ArrayHandleType0::ValueType;
 
@@ -360,7 +359,7 @@ struct ArrayHandleMultiplexerTraits
     VTKM_IS_ARRAY_HANDLE(ArrayHandle);
     VTKM_STATIC_ASSERT((std::is_same<ValueType, typename ArrayHandle::ValueType>::value));
   };
-  using CheckArrayHandle = brigand::list<CheckArrayHandleTransform<ArrayHandleTypes>...>;
+  using CheckArrayHandle = vtkm::List<CheckArrayHandleTransform<ArrayHandleTypes>...>;
 
   // Note that this group of code could be simplified as the pair of lines:
   //   template <typename ArrayHandle>
