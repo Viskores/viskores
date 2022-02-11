@@ -24,9 +24,7 @@
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-namespace vtkm
-{
-namespace worklet
+namespace
 {
 
 struct CountEdgesWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
@@ -101,12 +99,9 @@ struct EdgeIndicesWorklet : vtkm::worklet::WorkletReduceByKey
   }
 };
 
-} // namespace worklet
-} // namespace vtkm
+}
 
-namespace vtkm
-{
-namespace filter
+namespace
 {
 
 class ExtractEdges : public vtkm::filter::FilterDataSet<ExtractEdges>
@@ -136,7 +131,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractEdges::DoExecute(
 
   // First, count the edges in each cell.
   vtkm::cont::ArrayHandle<vtkm::IdComponent> edgeCounts;
-  this->Invoke(vtkm::worklet::CountEdgesWorklet{}, inCellSet, edgeCounts);
+  this->Invoke(CountEdgesWorklet{}, inCellSet, edgeCounts);
 
   // Second, using these counts build a scatter that repeats a cell's visit
   // for each edge in the cell.
@@ -147,14 +142,14 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractEdges::DoExecute(
 
   // Third, for each edge, extract a canonical id.
   vtkm::cont::ArrayHandle<vtkm::Id2> canonicalIds;
-  this->Invoke(vtkm::worklet::EdgeIdsWorklet{}, scatter, inCellSet, canonicalIds);
+  this->Invoke(EdgeIdsWorklet{}, scatter, inCellSet, canonicalIds);
 
   // Fourth, construct a Keys object to combine all like edge ids.
   this->CellToEdgeKeys = vtkm::worklet::Keys<vtkm::Id2>(canonicalIds);
 
   // Fifth, use a reduce-by-key to extract indices for each unique edge.
   vtkm::cont::ArrayHandle<vtkm::Id> connectivityArray;
-  this->Invoke(vtkm::worklet::EdgeIndicesWorklet{},
+  this->Invoke(EdgeIndicesWorklet{},
                this->CellToEdgeKeys,
                inCellSet,
                this->OutputToInputCellMap,
@@ -209,8 +204,7 @@ inline VTKM_CONT bool ExtractEdges::DoMapField(
   return true;
 }
 
-} // namespace filter
-} // namespace vtkm
+}
 
 int main(int argc, char** argv)
 {
@@ -226,7 +220,7 @@ int main(int argc, char** argv)
   contour.SetIsoValue(0.10);
   vtkm::cont::DataSet ds_from_contour = contour.Execute(ds_from_file);
 
-  vtkm::filter::ExtractEdges extractEdges;
+  ExtractEdges extractEdges;
   vtkm::cont::DataSet wireframe = extractEdges.Execute(ds_from_contour);
 
   vtkm::io::VTKDataSetWriter writer("out_wireframe.vtk");
