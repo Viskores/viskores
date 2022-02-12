@@ -39,16 +39,11 @@ set(headers
   ScatterIdentity.h
   ScatterPermutation.h
   ScatterUniform.h
-  SplitSharpEdges.h
   StableSortIndices.h
   DescriptiveStatistics.h
   StreamLineUniformGrid.h
   StreamSurface.h
-  Tetrahedralize.h
   TriangleWinding.h
-  Triangulate.h
-  Tube.h
-  VertexClustering.h
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h
@@ -91,8 +86,6 @@ add_subdirectory(lcs)
 add_subdirectory(mir)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
-add_subdirectory(tetrahedralize)
-add_subdirectory(triangulate)
 add_subdirectory(wavelets)
 add_subdirectory(particleadvection)
 

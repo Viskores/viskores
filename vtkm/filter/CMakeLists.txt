@@ -45,9 +45,14 @@ set(deprecated_headers
   PointElevation.h
   PointTransform.h
   Slice.h
+  SplitSharpEdges.h
   SurfaceNormal.h
+  Tetrahedralize.h
   Threshold.h
   ThresholdPoints.h
+  Triangulate.h
+  Tube.h
+  VertexClustering.h
   VectorMagnitude.h
   WarpScalar.h
   WarpVector.h
@@ -102,13 +107,8 @@ set(extra_headers
   Pathline.h
   PathParticle.h
   Probe.h
-  SplitSharpEdges.h
   Streamline.h
   StreamSurface.h
-  Tetrahedralize.h
-  Triangulate.h
-  Tube.h
-  VertexClustering.h
   )
 
 set(extra_header_template_sources
@@ -123,13 +123,8 @@ set(extra_header_template_sources
   Pathline.hxx
   PathParticle.hxx
   Probe.hxx
-  SplitSharpEdges.hxx
   Streamline.hxx
   StreamSurface.hxx
-  Tetrahedralize.hxx
-  Triangulate.hxx
-  Tube.hxx
-  VertexClustering.hxx
   )
 
 set(extra_sources_device
@@ -203,6 +198,7 @@ add_subdirectory(internal)
 add_subdirectory(particleadvection)
 add_subdirectory(field_conversion)
 add_subdirectory(field_transform)
+add_subdirectory(geometry_refinement)
 add_subdirectory(mesh_info)
 add_subdirectory(vector_analysis)
 add_subdirectory(zfp)

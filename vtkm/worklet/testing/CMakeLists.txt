@@ -35,15 +35,11 @@ set(unit_tests
   UnitTestScatterCounting.cxx
   UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx
-  UnitTestSplitSharpEdges.cxx
   UnitTestScatterAndMaskWithTopology.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestStreamSurface.cxx
   UnitTestTemporalAdvection.cxx
-  UnitTestTetrahedralize.cxx
   UnitTestTriangleWinding.cxx
-  UnitTestTriangulate.cxx
-  UnitTestTube.cxx
   UnitTestWholeCellSetIn.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapField3d.cxx
@@ -54,7 +50,6 @@ set(unit_tests
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyUniform.cxx
   UnitTestWorkletReduceByKey.cxx
-  UnitTestVertexClustering.cxx
   UnitTestWaveletCompressor.cxx
  )
 

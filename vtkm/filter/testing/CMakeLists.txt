@@ -26,13 +26,8 @@ set(unit_tests
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx
   UnitTestProbe.cxx
-  UnitTestSplitSharpEdgesFilter.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestStreamSurfaceFilter.cxx
-  UnitTestTetrahedralizeFilter.cxx
-  UnitTestTriangulateFilter.cxx
-  UnitTestTubeFilter.cxx
-  UnitTestVertexClusteringFilter.cxx
 )
 
 #Taking too long to compile with HIPCC
@@ -56,7 +51,6 @@ if (VTKm_ENABLE_RENDERING)
 
   list(APPEND unit_tests
     RenderTestAmrArrays.cxx
-    RenderTestSplitSharpEdges.cxx
     RenderTestStreamline.cxx
   )
 endif()

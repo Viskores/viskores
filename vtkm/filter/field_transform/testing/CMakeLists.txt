@@ -20,6 +20,7 @@ set(unit_tests
 
 set(libraries
   vtkm_filter_field_transform
+  vtkm_filter_vector_analysis
   vtkm_source)
 
 if (VTKm_ENABLE_RENDERING)

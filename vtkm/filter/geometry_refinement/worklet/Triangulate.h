@@ -7,18 +7,18 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtkm_m_worklet_Tetrahedralize_h
-#define vtkm_m_worklet_Tetrahedralize_h
+#ifndef vtkm_m_worklet_Triangulate_h
+#define vtkm_m_worklet_Triangulate_h
 
-#include <vtkm/worklet/tetrahedralize/TetrahedralizeExplicit.h>
-#include <vtkm/worklet/tetrahedralize/TetrahedralizeStructured.h>
+#include <vtkm/filter/geometry_refinement/worklet/triangulate/TriangulateExplicit.h>
+#include <vtkm/filter/geometry_refinement/worklet/triangulate/TriangulateStructured.h>
 
 namespace vtkm
 {
 namespace worklet
 {
 
-class Tetrahedralize
+class Triangulate
 {
 public:
   //
@@ -27,7 +27,6 @@ public:
   struct DistributeCellData : public vtkm::worklet::WorkletMapField
   {
     using ControlSignature = void(FieldIn inIndices, FieldOut outIndices);
-    using ExecutionSignature = void(_1, _2);
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
@@ -44,35 +43,35 @@ public:
     }
   };
 
-  Tetrahedralize()
+  Triangulate()
     : OutCellScatter(vtkm::cont::ArrayHandle<vtkm::IdComponent>{})
   {
   }
 
-  // Tetrahedralize explicit data set, save number of tetra cells per input
+  // Triangulate explicit data set, save number of triangulated cells per input
   template <typename CellSetType>
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet)
   {
-    TetrahedralizeExplicit worklet;
+    TriangulateExplicit worklet;
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
     vtkm::cont::CellSetSingleType<> result = worklet.Run(cellSet, outCellsPerCell);
     this->OutCellScatter = DistributeCellData::MakeScatter(outCellsPerCell);
     return result;
   }
 
-  // Tetrahedralize structured data set, save number of tetra cells per input
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>& cellSet)
+  // Triangulate structured data set, save number of triangulated cells per input
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>& cellSet)
   {
-    TetrahedralizeStructured worklet;
+    TriangulateStructured worklet;
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
     vtkm::cont::CellSetSingleType<> result = worklet.Run(cellSet, outCellsPerCell);
     this->OutCellScatter = DistributeCellData::MakeScatter(outCellsPerCell);
     return result;
   }
 
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>&)
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>&)
   {
-    throw vtkm::cont::ErrorBadType("CellSetStructured<2> can't be tetrahedralized");
+    throw vtkm::cont::ErrorBadType("CellSetStructured<3> can't be triangulated");
   }
 
   vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<1>&)
@@ -81,11 +80,11 @@ public:
   }
 
   // Using the saved input to output cells, expand cell data
-  template <typename T, typename StorageType>
-  vtkm::cont::ArrayHandle<T> ProcessCellField(
-    const vtkm::cont::ArrayHandle<T, StorageType>& input) const
+  template <typename ValueType, typename StorageType>
+  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input) const
   {
-    vtkm::cont::ArrayHandle<T> output;
+    vtkm::cont::ArrayHandle<ValueType> output;
 
     vtkm::worklet::DispatcherMapField<DistributeCellData> dispatcher(this->OutCellScatter);
     dispatcher.Invoke(input, output);
@@ -101,4 +100,4 @@ private:
 }
 } // namespace vtkm::worklet
 
-#endif // vtkm_m_worklet_Tetrahedralize_h
+#endif // vtkm_m_worklet_Triangulate_h

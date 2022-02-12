@@ -30,9 +30,6 @@
 
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/Tetrahedralize.h>
-#include <vtkm/filter/Triangulate.h>
-#include <vtkm/filter/VertexClustering.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/filter/entity_extraction/Threshold.h>
@@ -41,6 +38,9 @@
 #include <vtkm/filter/field_conversion/PointAverage.h>
 #include <vtkm/filter/field_transform/WarpScalar.h>
 #include <vtkm/filter/field_transform/WarpVector.h>
+#include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
+#include <vtkm/filter/geometry_refinement/Triangulate.h>
+#include <vtkm/filter/geometry_refinement/VertexClustering.h>
 #include <vtkm/filter/vector_analysis/Gradient.h>
 #include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
@@ -440,7 +440,7 @@ void BenchTetrahedralize(::benchmark::State& state)
     state.SkipWithError("Tetrahedralize Filter requires structured data.");
   }
 
-  vtkm::filter::Tetrahedralize filter;
+  vtkm::filter::geometry_refinement::Tetrahedralize filter;
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
@@ -467,7 +467,7 @@ void BenchVertexClustering(::benchmark::State& state)
     state.SkipWithError("VertexClustering Filter requires unstructured data (use --tetra).");
   }
 
-  vtkm::filter::VertexClustering filter;
+  vtkm::filter::geometry_refinement::VertexClustering filter;
   filter.SetNumberOfDivisions({ numDivs });
 
   vtkm::cont::Timer timer{ device };
@@ -968,7 +968,7 @@ void InitDataSet(int& argc, char** argv)
 
   std::cerr
     << "[InitDataSet] Create UnstructuredInputDataSet from Tetrahedralized InputDataSet...\n";
-  vtkm::filter::Tetrahedralize tet;
+  vtkm::filter::geometry_refinement::Tetrahedralize tet;
   tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
   UnstructuredInputDataSet = tet.Execute(InputDataSet);
 

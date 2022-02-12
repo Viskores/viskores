@@ -11,7 +11,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/Triangulate.h>
+#include <vtkm/filter/geometry_refinement/Triangulate.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 
@@ -25,7 +25,7 @@ public:
   {
     std::cout << "Testing triangulate structured" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
-    vtkm::filter::Triangulate triangulate;
+    vtkm::filter::geometry_refinement::Triangulate triangulate;
     triangulate.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = triangulate.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 32), "Wrong result for Triangulate");
@@ -45,7 +45,7 @@ public:
   {
     std::cout << "Testing triangulate explicit" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DExplicitDataSet0();
-    vtkm::filter::Triangulate triangulate;
+    vtkm::filter::geometry_refinement::Triangulate triangulate;
     triangulate.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = triangulate.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 14), "Wrong result for Triangulate");
