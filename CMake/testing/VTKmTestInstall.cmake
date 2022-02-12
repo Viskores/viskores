@@ -135,7 +135,17 @@ function(vtkm_test_against_install dir)
            --build-options
             ${args}
             --no-warn-unused-cli
+           --test-command ${CMAKE_CTEST_COMMAND} --verbose
            )
+
+  if (WIN32)
+    string(REPLACE ";" "\\;" escaped_path "$ENV{PATH}")
+    set_tests_properties(${build_name} PROPERTIES
+      ENVIRONMENT "PATH=$<SHELL_PATH:${install_prefix}/bin>\\;${escaped_path}")
+  else()
+    set_tests_properties(${build_name} PROPERTIES
+      ENVIRONMENT LD_LIBRARY_PATH=${install_prefix}/lib:$ENV{LD_LIBRARY_PATH})
+  endif()
 
   set_tests_properties(${build_name} PROPERTIES LABELS ${test_label} )
   set_tests_properties(${build_name} PROPERTIES FIXTURES_REQUIRED vtkm_installed)

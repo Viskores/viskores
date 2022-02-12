@@ -30,7 +30,8 @@ test:centos8_sanitizer:
   variables:
     OMP_NUM_THREADS: 4
     CTEST_MEMORYCHECK_TYPE: LeakSanitizer
-    CTEST_EXCLUSIONS: "RegressionTest.*"
+    CTEST_EXCLUSIONS: smoke_test_built_against_test_install
+
   dependencies:
     - build:centos8_sanitizer
   needs:
