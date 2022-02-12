@@ -52,7 +52,7 @@ int main(int argc, char** argv)
   view.Paint();
 
   //Saving View
-  view.SaveAs("BasicRendering.ppm");
+  view.SaveAs("BasicRendering.png");
 
   return 0;
 }

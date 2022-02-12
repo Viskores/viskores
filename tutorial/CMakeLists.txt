@@ -10,6 +10,9 @@
 
 #add the directory that contains the VTK-m config file to the cmake
 #path so that our examples can find VTK-m
+#Normally when running CMake, you need to set the VTKm_DIR to
+#find the VTKmConfig.cmake file. Because we already know where this
+#file is, we can add the location to look to CMAKE_PREFIX_PATH.
 
 set(CMAKE_PREFIX_PATH ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR})
 
