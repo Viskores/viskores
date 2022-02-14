@@ -89,9 +89,9 @@ struct EdgeIndicesWorklet : vtkm::worklet::WorkletReduceByKey
     auto cellShape = cellSet.GetCellShape(originCells[0]);
 
     vtkm::IdComponent pointInCellIndex0;
-    vtkm::exec::CellEdgeLocalIndex(numPointsInCell, 0, edgeIndex, cellShape, pointInCellIndex0));
+    vtkm::exec::CellEdgeLocalIndex(numPointsInCell, 0, edgeIndex, cellShape, pointInCellIndex0);
     vtkm::IdComponent pointInCellIndex1;
-    vtkm::exec::CellEdgeLocalIndex(numPointsInCell, 1, edgeIndex, cellShape, pointInCellIndex1));
+    vtkm::exec::CellEdgeLocalIndex(numPointsInCell, 1, edgeIndex, cellShape, pointInCellIndex1);
 
     auto globalPointIndicesForCell = cellSet.GetIndices(originCells[0]);
     connectivityOut[0] = globalPointIndicesForCell[pointInCellIndex0];
