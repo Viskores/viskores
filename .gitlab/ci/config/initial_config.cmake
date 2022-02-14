@@ -143,6 +143,10 @@ foreach(option IN LISTS options)
 
 endforeach()
 
+# Compile tutorials on all builders. The code is small and basic. And since
+# it is the tutorial, it should work really well.
+set(VTKm_ENABLE_TUTORIALS "ON" CACHE STRING "")
+
 set(CTEST_USE_LAUNCHERS "ON" CACHE STRING "")
 
 # We need to store the absolute path so that
