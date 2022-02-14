@@ -1,7 +1,8 @@
 # No longer use brigand.hpp
 
-Deprecate the use of brigand.hpp both within VTK-m and for any code that
-might use VTK-m's distribution of brigand.hpp.
+Remove brigand.hpp from VTK-m's source and all references to it. This was
+declared in an internal directory, so making this backward-incompatible
+changes should be OK.
 
 Brigand is a third-party library to support template meta-programming. Over
 the years, we have had to make a few modifications to make sure it compiles

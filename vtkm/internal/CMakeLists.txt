@@ -56,7 +56,6 @@ set(headers
   ArrayPortalUniformPointCoordinates.h
   ArrayPortalValueReference.h
   Assume.h
-  brigand.hpp # Deprecated
   ConfigureFor32.h
   ConfigureFor64.h
   ConnectivityStructuredInternals.h
