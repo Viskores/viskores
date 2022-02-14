@@ -61,6 +61,7 @@ foreach(option IN LISTS options)
 
   elseif(examples STREQUAL option)
     set(VTKm_ENABLE_EXAMPLES "ON" CACHE STRING "")
+    set(VTKm_INSTALL_EXAMPLES "ON" CACHE STRING "")
 
   elseif(docs STREQUAL option)
     set(VTKm_ENABLE_DOCUMENTATION "ON" CACHE STRING "")
