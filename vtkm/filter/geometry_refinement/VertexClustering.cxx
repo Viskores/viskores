@@ -62,11 +62,8 @@ VTKM_CONT vtkm::cont::DataSet VertexClustering::DoExecute(const vtkm::cont::Data
               outCoords);
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  // create the output dataset (without a CoordinateSystem).
-  vtkm::cont::DataSet output = this->CreateResult(input, outCellSet, mapper);
-
-  output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", outCoords));
-  return output;
+  return this->CreateResult(
+    input, outCellSet, vtkm::cont::CoordinateSystem("coordinates", outCoords), mapper);
 }
 } // namespace geometry_refinement
 } // namespace filter
