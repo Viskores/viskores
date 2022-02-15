@@ -17,11 +17,11 @@
 
 #include <vtkm/exec/ParametricCoordinates.h>
 
+#include <vtkm/filter/geometry_refinement/worklet/Tetrahedralize.h>
+#include <vtkm/filter/geometry_refinement/worklet/Triangulate.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/ScatterPermutation.h>
-#include <vtkm/worklet/Tetrahedralize.h>
-#include <vtkm/worklet/Triangulate.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 

@@ -7,12 +7,10 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_Triangulate_hxx
-#define vtk_m_filter_Triangulate_hxx
-
-#include <vtkm/filter/Triangulate.h>
 
 #include <vtkm/filter/MapFieldPermutation.h>
+#include <vtkm/filter/geometry_refinement/Triangulate.h>
+#include <vtkm/filter/geometry_refinement/worklet/Triangulate.h>
 
 namespace
 {
@@ -50,46 +48,11 @@ void DeduceCellSetTriangulate::operator()(const vtkm::cont::CellSetStructured<3>
 {
   this->OutCellSet = Worklet.Run(cellset);
 }
-}
-
-namespace vtkm
-{
-namespace filter
-{
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT Triangulate::Triangulate()
-  : vtkm::filter::FilterDataSet<Triangulate>()
-  , Worklet()
-{
-}
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Triangulate::DoExecute(
-  const vtkm::cont::DataSet& input,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
-{
-  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
-
-  vtkm::cont::CellSetSingleType<> outCellSet;
-  DeduceCellSetTriangulate triangulate(this->Worklet, outCellSet);
-
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this), triangulate);
-
-  // create the output dataset
-  vtkm::cont::DataSet output;
-  output.SetCellSet(outCellSet);
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-
-  return output;
-}
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT bool Triangulate::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                      const vtkm::cont::Field& field,
-                                                      vtkm::filter::PolicyBase<DerivedPolicy>)
+VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
+                          const vtkm::cont::Field& field,
+                          const vtkm::worklet::Triangulate& worklet)
 {
   if (field.IsFieldPoint())
   {
@@ -101,7 +64,7 @@ inline VTKM_CONT bool Triangulate::MapFieldOntoOutput(vtkm::cont::DataSet& resul
   {
     // cell data must be scattered to the cells created per input cell
     vtkm::cont::ArrayHandle<vtkm::Id> permutation =
-      this->Worklet.GetOutCellScatter().GetOutputToInputMap();
+      worklet.GetOutCellScatter().GetOutputToInputMap();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
   else if (field.IsFieldGlobal())
@@ -114,6 +77,37 @@ inline VTKM_CONT bool Triangulate::MapFieldOntoOutput(vtkm::cont::DataSet& resul
     return false;
   }
 }
+} // anonymous namespace
+
+namespace vtkm
+{
+namespace filter
+{
+namespace geometry_refinement
+{
+VTKM_CONT vtkm::cont::DataSet Triangulate::DoExecute(const vtkm::cont::DataSet& input)
+{
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
+
+  vtkm::cont::CellSetSingleType<> outCellSet;
+  vtkm::worklet::Triangulate worklet;
+  DeduceCellSetTriangulate triangulate(worklet, outCellSet);
+
+  vtkm::cont::CastAndCall(cells, triangulate);
+
+  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+  // create the output dataset (without a CoordinateSystem).
+  vtkm::cont::DataSet output = this->CreateResult(input, outCellSet, mapper);
+
+  // We did not change the geometry of the input dataset at all. Just attach coordinate system
+  // of input dataset to output dataset.
+  for (vtkm::IdComponent coordSystemId = 0; coordSystemId < input.GetNumberOfCoordinateSystems();
+       ++coordSystemId)
+  {
+    output.AddCoordinateSystem(input.GetCoordinateSystem(coordSystemId));
+  }
+  return output;
 }
-}
-#endif
+} // namespace geometry_refinement
+} // namespace filter
+} // namespace vtkm

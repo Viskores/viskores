@@ -11,7 +11,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/Tetrahedralize.h>
+#include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 
@@ -26,7 +26,7 @@ public:
     std::cout << "Testing tetrahedralize structured" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
 
-    vtkm::filter::Tetrahedralize tetrahedralize;
+    vtkm::filter::geometry_refinement::Tetrahedralize tetrahedralize;
     tetrahedralize.SetFieldsToPass({ "pointvar", "cellvar" });
 
     vtkm::cont::DataSet output = tetrahedralize.Execute(dataset);
@@ -49,7 +49,7 @@ public:
     std::cout << "Testing tetrahedralize explicit" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
-    vtkm::filter::Tetrahedralize tetrahedralize;
+    vtkm::filter::geometry_refinement::Tetrahedralize tetrahedralize;
     tetrahedralize.SetFieldsToPass({ "pointvar", "cellvar" });
 
     vtkm::cont::DataSet output = tetrahedralize.Execute(dataset);

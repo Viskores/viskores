@@ -8,25 +8,15 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(unit_tests
-  UnitTestOscillatorSource.cxx
-  UnitTestTangleSource.cxx
-  UnitTestWaveletSource.cxx
- )
-
-set(libraries
-  vtkm_source
+set(headers
+  SplitSharpEdges.h
+  Tetrahedralize.h
+  Triangulate.h
+  Tube.h
+  VertexClustering.h
   )
 
-if (VTKm_ENABLE_RENDERING)
-  list(APPEND libraries vtkm_rendering_testing vtkm_filter_contour)
+add_subdirectory(tetrahedralize)
+add_subdirectory(triangulate)
 
-  list(APPEND unit_tests
-    RenderTestPerlinNoise.cxx
-    )
-endif()
-
-vtkm_unit_tests(
-  SOURCES ${unit_tests}
-  LIBRARIES ${libraries}
-)
+vtkm_declare_headers(${headers})

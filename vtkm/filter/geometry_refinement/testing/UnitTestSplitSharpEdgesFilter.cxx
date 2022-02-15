@@ -7,9 +7,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/SplitSharpEdges.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/field_conversion/CellAverage.h>
+#include <vtkm/filter/geometry_refinement/SplitSharpEdges.h>
 #include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
@@ -122,8 +122,9 @@ vtkm::cont::DataSet Make3DWavelet()
 }
 
 
-void TestSplitSharpEdgesFilterSplitEveryEdge(vtkm::cont::DataSet& simpleCubeWithSN,
-                                             vtkm::filter::SplitSharpEdges& splitSharpEdgesFilter)
+void TestSplitSharpEdgesFilterSplitEveryEdge(
+  vtkm::cont::DataSet& simpleCubeWithSN,
+  vtkm::filter::geometry_refinement::SplitSharpEdges& splitSharpEdgesFilter)
 {
   // Split every edge
   vtkm::FloatDefault featureAngle = 89.0;
@@ -155,8 +156,9 @@ void TestSplitSharpEdgesFilterSplitEveryEdge(vtkm::cont::DataSet& simpleCubeWith
   }
 }
 
-void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
-                                      vtkm::filter::SplitSharpEdges& splitSharpEdgesFilter)
+void TestSplitSharpEdgesFilterNoSplit(
+  vtkm::cont::DataSet& simpleCubeWithSN,
+  vtkm::filter::geometry_refinement::SplitSharpEdges& splitSharpEdgesFilter)
 {
   // Do nothing
   vtkm::FloatDefault featureAngle = 91.0;
@@ -212,7 +214,7 @@ void TestWithExplicitData()
   VTKM_TEST_ASSERT(simpleCubeWithSN.HasPointField("pointvar"), "point field pointvar missing.");
 
 
-  vtkm::filter::SplitSharpEdges splitSharpEdgesFilter;
+  vtkm::filter::geometry_refinement::SplitSharpEdges splitSharpEdgesFilter;
 
   TestSplitSharpEdgesFilterSplitEveryEdge(simpleCubeWithSN, splitSharpEdgesFilter);
   TestSplitSharpEdgesFilterNoSplit(simpleCubeWithSN, splitSharpEdgesFilter);
@@ -243,7 +245,7 @@ void TestWithStructuredData()
   // Split sharp edges:
   std::cout << dataSet.GetNumberOfCells() << std::endl;
   std::cout << dataSet.GetNumberOfPoints() << std::endl;
-  vtkm::filter::SplitSharpEdges split;
+  vtkm::filter::geometry_refinement::SplitSharpEdges split;
   split.SetActiveField("normals", vtkm::cont::Field::Association::CELL_SET);
   dataSet = split.Execute(dataSet);
 }

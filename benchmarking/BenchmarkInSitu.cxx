@@ -26,10 +26,10 @@
 #include <vtkm/cont/internal/OptionParser.h>
 
 #include <vtkm/filter/Streamline.h>
-#include <vtkm/filter/Tetrahedralize.h>
-#include <vtkm/filter/Tube.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/contour/Slice.h>
+#include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
+#include <vtkm/filter/geometry_refinement/Tube.h>
 #include <vtkm/filter/vector_analysis/Gradient.h>
 
 #include <vtkm/rendering/Actor.h>
@@ -137,7 +137,7 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
   // Run Tetrahedralize filter to convert uniform dataset(s) into unstructured ones
   if (!isStructured)
   {
-    vtkm::filter::Tetrahedralize destructizer;
+    vtkm::filter::geometry_refinement::Tetrahedralize destructizer;
     destructizer.SetFieldsToPass(
       vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
     if (isMultiBlock)

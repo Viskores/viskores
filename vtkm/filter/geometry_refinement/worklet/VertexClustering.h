@@ -316,10 +316,12 @@ public:
   /// \brief VertexClustering: Mesh simplification
   ///
   template <typename UnknownCellSetType, typename DynamicCoordinateHandleType>
-  vtkm::cont::DataSet Run(const UnknownCellSetType& cellSet,
-                          const DynamicCoordinateHandleType& coordinates,
-                          const vtkm::Bounds& bounds,
-                          const vtkm::Id3& nDivisions)
+  void Run(const UnknownCellSetType& cellSet,
+           const DynamicCoordinateHandleType& coordinates,
+           const vtkm::Bounds& bounds,
+           const vtkm::Id3& nDivisions,
+           vtkm::cont::UnknownCellSet& outCellSet,
+           vtkm::cont::UnknownArrayHandle& outCoords)
   {
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "VertexClustering Worklet");
 
@@ -507,15 +509,14 @@ public:
     }
 
     /// output
-    vtkm::cont::DataSet output;
-    output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
+    outCoords = repPointArray;
 
     vtkm::cont::CellSetSingleType<> triangles;
     triangles.Fill(repPointArray.GetNumberOfValues(),
                    vtkm::CellShapeTagTriangle::Id,
                    3,
                    internal::copyFromVec(pointId3Array));
-    output.SetCellSet(triangles);
+    outCellSet = triangles;
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Wrap-up (s): " << timer.GetElapsedTime() << std::endl;
@@ -524,8 +525,6 @@ public:
     std::cout << "number of output points: " << repPointArray.GetNumberOfValues() << std::endl;
     std::cout << "number of output cells: " << pointId3Array.GetNumberOfValues() << std::endl;
 #endif
-
-    return output;
   }
 
   template <typename ValueType, typename StorageType>

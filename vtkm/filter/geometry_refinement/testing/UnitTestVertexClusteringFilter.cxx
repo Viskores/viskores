@@ -11,7 +11,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/VertexClustering.h>
+#include <vtkm/filter/geometry_refinement/VertexClustering.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 
@@ -24,7 +24,7 @@ void TestVertexClustering()
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose();
 
-  vtkm::filter::VertexClustering clustering;
+  vtkm::filter::geometry_refinement::VertexClustering clustering;
 
   clustering.SetNumberOfDivisions(vtkm::Id3(3, 3, 3));
   clustering.SetFieldsToPass({ "pointvar", "cellvar" });

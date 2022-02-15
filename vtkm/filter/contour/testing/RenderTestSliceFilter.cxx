@@ -11,7 +11,7 @@
 #include <vtkm/filter/contour/Slice.h>
 
 #include <vtkm/ImplicitFunction.h>
-#include <vtkm/filter/Tetrahedralize.h>
+#include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
 #include <vtkm/source/Wavelet.h>
 
 #include <vtkm/rendering/testing/RenderTest.h>
@@ -68,7 +68,7 @@ void TestSliceUnstructuredGridPlane()
 
   vtkm::source::Wavelet wavelet(vtkm::Id3(-8), vtkm::Id3(8));
   auto ds = wavelet.Execute();
-  vtkm::filter::Tetrahedralize tetrahedralize;
+  vtkm::filter::geometry_refinement::Tetrahedralize tetrahedralize;
   ds = tetrahedralize.Execute(ds);
 
   vtkm::Plane plane(vtkm::Plane::Vector{ 1 });
@@ -91,7 +91,7 @@ void TestSliceUnstructuredGridCylinder()
 
   vtkm::source::Wavelet wavelet(vtkm::Id3(-8), vtkm::Id3(8));
   auto ds = wavelet.Execute();
-  vtkm::filter::Tetrahedralize tetrahedralize;
+  vtkm::filter::geometry_refinement::Tetrahedralize tetrahedralize;
   ds = tetrahedralize.Execute(ds);
 
   vtkm::Cylinder cylinder(vtkm::Cylinder::Vector{ 0, 1, 0 }, 8.5f);
