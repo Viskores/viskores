@@ -38,8 +38,7 @@ struct ConvertPointFieldToCells : vtkm::worklet::WorkletVisitCellsWithPoints
     {
       outCellField = outCellField + inPointFieldVec[pointIndex];
     }
-    outCellField =
-      static_cast<vtkm::FloatDefault>(outCellField) / static_cast<vtkm::FloatDefault>(numPoints);
+    outCellField = outCellField / static_cast<vtkm::FloatDefault>(numPoints);
   }
 };
 
