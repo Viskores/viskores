@@ -88,7 +88,3 @@ vtkm_pyexpander_generated_file(FunctionInterfaceDetailPre.h)
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPost.h)
 vtkm_pyexpander_generated_file(VariantImplDetail.h)
 vtkm_pyexpander_generated_file(VecOperators.h)
-
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

@@ -79,46 +79,11 @@ vtkm_declare_headers(
   ${template_sources}
 )
 
-#-----------------------------------------------------------------------------
-#first add all the components vtkm that are shared between control and exec
-add_subdirectory(thirdparty/diy)
-add_subdirectory(thirdparty/lodepng)
-if(VTKm_ENABLE_LOGGING)
-  add_subdirectory(thirdparty/loguru)
-endif()
-add_subdirectory(thirdparty/optionparser)
-add_subdirectory(thirdparty/lcl)
+# Declare testing headers to install. (Needs to be special because they are in a different dir.)
+set(testing_headers
+  testing/Testing.h
+  testing/VecTraitsTests.h
+  )
+vtkm_install_headers(${kit_dir}/testing ${testing_headers})
 
-if(VTKm_ENABLE_TESTING_LIBRARY)
-  add_subdirectory(testing)
-endif()
 add_subdirectory(internal)
-
-#-----------------------------------------------------------------------------
-#add the control and exec folders
-add_subdirectory(cont)
-add_subdirectory(exec)
-
-#-----------------------------------------------------------------------------
-#add the worklet folder
-add_subdirectory(worklet)
-
-#-----------------------------------------------------------------------------
-#add the filter folder
-add_subdirectory(filter)
-
-#-----------------------------------------------------------------------------
-# Build rendering
-add_subdirectory(rendering)
-
-add_subdirectory(interop)
-
-#-----------------------------------------------------------------------------
-#add the io folder
-add_subdirectory(io)
-
-#add the source folder
-add_subdirectory(source)
-
-#add Pseudo Random Number Generator folder
-add_subdirectory(random)

@@ -10,7 +10,7 @@ build:ubuntu2004_gcc9:
     - .run_automatically
   variables:
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5"
+    VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5+min_build"
 
 test:ubuntu2004_gcc9:
   tags:

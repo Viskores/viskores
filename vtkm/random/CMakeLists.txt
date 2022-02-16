@@ -12,8 +12,3 @@ set(headers
   Philox.h)
 
 vtkm_declare_headers(${headers})
-
-#-----------------------------------------------------------------------------
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

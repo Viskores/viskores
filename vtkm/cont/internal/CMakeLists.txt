@@ -59,7 +59,3 @@ vtkm_declare_headers(${headers})
 # They are in a separate directory to highlight which objects are
 # internal and which are part of the external interface.
 #add_custom_target(vtkmContInternal ALL DEPENDS vtkmCont)
-
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

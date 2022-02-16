@@ -24,7 +24,11 @@
 #include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
-#include <vtkm/cont/testing/vtkm_cont_testing_export.h>
+// Because the testing directory is reserved for test executables and not
+// libraries, the vtkm_cont_testing module has to put this file in
+// vtkm/cont/testlib instead of vtkm/cont/testing where you normally would
+// expect it.
+#include <vtkm/cont/testlib/vtkm_cont_testing_export.h>
 
 #include <sstream>
 #include <vtkm/thirdparty/diy/diy.h>

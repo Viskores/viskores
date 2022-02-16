@@ -53,16 +53,3 @@ add_subdirectory(arg)
 vtkm_declare_headers(${headers}
                     ${header_impls}
                     )
-
-
-#-----------------------------------------------------------------------------
-add_subdirectory(serial)
-add_subdirectory(tbb)
-add_subdirectory(openmp)
-add_subdirectory(cuda)
-add_subdirectory(kokkos)
-
-#-----------------------------------------------------------------------------
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

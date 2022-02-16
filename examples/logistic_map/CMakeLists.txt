@@ -12,9 +12,12 @@ project(LogisticMap CXX)
 
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(LogisticMap LogisticMap.cxx)
-target_link_libraries(LogisticMap PRIVATE vtkm_io)
+if(TARGET vtkm_io)
+  add_executable(LogisticMap LogisticMap.cxx)
+  target_link_libraries(LogisticMap PRIVATE vtkm_io)
 
-vtkm_add_target_information(LogisticMap
-                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
-                            DEVICE_SOURCES LogisticMap.cxx)
+  vtkm_add_target_information(LogisticMap
+    DROP_UNUSED_SYMBOLS
+    MODIFY_CUDA_FLAGS
+    DEVICE_SOURCES LogisticMap.cxx)
+endif()

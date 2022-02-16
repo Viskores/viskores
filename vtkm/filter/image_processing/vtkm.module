@@ -1,0 +1,11 @@
+NAME
+  vtkm_filter_image_processing
+GROUPS
+  FiltersCommon
+  Filters
+DEPENDS
+  vtkm_filter_core
+PRIVATE_DEPENDS
+  vtkm_worklet
+TEST_DEPENDS
+  vtkm_source

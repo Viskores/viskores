@@ -1,0 +1,8 @@
+NAME
+  vtkm_filter_field_conversion
+GROUPS
+  Filters
+DEPENDS
+  vtkm_filter_core
+PRIVATE_DEPENDS
+  vtkm_worklet

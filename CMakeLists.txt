@@ -112,6 +112,14 @@ cmake_dependent_option(VTKm_ENABLE_TESTING_LIBRARY "Enable VTKm Testing Library"
   OFF "NOT VTKm_ENABLE_TESTING;NOT VTKm_ENABLE_BENCHMARKS" ON)
 mark_as_advanced(VTKm_ENABLE_TESTING_LIBRARY)
 
+# We may want to make finer controls on whether libraries/modules get built.
+# VTK uses the concept of groups for its modules
+vtkm_option(VTKm_BUILD_ALL_LIBRARIES
+  "Build all libraries by default. (Can be overridden for each library.)"
+  ON
+  )
+mark_as_advanced(VTKm_BUILD_ALL_LIBRARIES)
+
 vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
@@ -193,6 +201,26 @@ mark_as_advanced(
   )
 
 #-----------------------------------------------------------------------------
+# Force building of modules where specified by user-facing options.
+include(VTKmModules)
+vtkm_module_force_group(Core VALUE "YES" REASON "Core modules always built")
+vtkm_module_force_group(Rendering ENABLE_OPTION VTKm_ENABLE_RENDERING)
+vtkm_module_force_group(Logging ENABLE_OPTION VTKm_ENABLE_LOGGING)
+vtkm_module_force_group(Testing
+  ENABLE_OPTION VTKm_ENABLE_TESTING_LIBRARY
+  ENABLE_VALUE "WANT"
+  DISABLE_VALUE "DONT_WANT"
+  )
+vtkm_module_force_group(Benchmarking ENABLE_OPTION VTKm_ENABLE_BENCHMARKS)
+
+# The tutorial requires several common filters. This logic might need to
+# become more complicated (or less compliated if we decide to always
+# compile these).
+if(VTKm_ENABLE_TUTORIALS)
+  vtkm_module_force_group(FiltersCommon VALUE "YES" REASON "Tutorial needs common filters.")
+endif()
+
+#-----------------------------------------------------------------------------
 
 # Setup default build types
 include(VTKmBuildType)
@@ -264,7 +292,18 @@ check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 #-----------------------------------------------------------------------------
 # Add subdirectories
 add_subdirectory(vtkmstd)
-add_subdirectory(vtkm)
+
+#-----------------------------------------------------------------------------
+# Process modules
+vtkm_modules_scan(
+  SCAN_DIRECTORIES vtkm benchmarking
+  PROVIDED_MODULES all_modules
+  )
+vtkm_modules_build(
+  PROVIDED_MODULES ${all_modules}
+  WANT_BY_DEFAULT ${VTKm_BUILD_ALL_LIBRARIES}
+  WANT_BY_DEFAULT_REASON "VTKm_BUILD_ALL_LIBRARIES is `${VTKm_BUILD_ALL_LIBRARIES}`"
+  )
 
 #-----------------------------------------------------------------------------
 # Build documentation
@@ -377,12 +416,6 @@ if (VTKm_ENABLE_CPACK)
   set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)
   include(CPack)
 endif ()
-
-#-----------------------------------------------------------------------------
-#add the benchmarking folder
-if(VTKm_ENABLE_BENCHMARKS)
-  add_subdirectory(benchmarking)
-endif()
 
 #-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TESTING)

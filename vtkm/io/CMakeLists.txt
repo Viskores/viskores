@@ -83,8 +83,6 @@ vtkm_library(
   TEMPLATE_SOURCES ${template_sources}
 )
 
-# CMAKE 3.12 does not know about PRIVATE TARGET_OBJECTS
-target_link_libraries(vtkm_io PUBLIC vtkm_cont PRIVATE vtkm_lodepng)
 if (VTKm_ENABLE_HDF5_IO)
   target_include_directories(vtkm_io PRIVATE $<BUILD_INTERFACE:${HDF5_INCLUDE_DIR}>)
   target_link_libraries(vtkm_io PRIVATE ${HDF5_HL_LIBRARIES})
@@ -93,6 +91,3 @@ endif()
 add_subdirectory(internal)
 add_subdirectory(reader)
 add_subdirectory(writer)
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

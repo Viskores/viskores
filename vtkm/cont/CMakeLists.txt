@@ -189,7 +189,7 @@ if(VTKm_ENABLE_TESTING_LIBRARY)
     # deprecated behavior expects to only need to include vtkm_cont. As a workaround, add the code
     # to vtkm_cont for now. This should probably be changed back to be in vtkm_cont_testing for the
     # 2.0 release.
-    testing/MakeTestDataSet.cxx
+    testlib/MakeTestDataSet.cxx
     )
 endif()
 
@@ -312,11 +312,6 @@ vtkm_library( NAME vtkm_cont
 
 add_subdirectory(internal)
 add_subdirectory(arg)
-add_subdirectory(serial)
-add_subdirectory(tbb)
-add_subdirectory(openmp)
-add_subdirectory(cuda)
-add_subdirectory(kokkos)
 
 set(backends )
 if(TARGET vtkm::tbb)
@@ -334,12 +329,3 @@ endif()
 
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
 target_link_libraries(vtkm_cont PUBLIC Threads::Threads)
-target_link_libraries(vtkm_cont PUBLIC vtkm_optionparser vtkm_diy vtkm_lcl)
-if(TARGET vtkm_loguru)
-  target_link_libraries(vtkm_cont PRIVATE vtkm_loguru)
-endif()
-
-#-----------------------------------------------------------------------------
-if(VTKm_ENABLE_TESTING_LIBRARY)
-  add_subdirectory(testing)
-endif()
