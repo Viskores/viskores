@@ -8,21 +8,23 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(field_transform_headers
-  CoordinateSystemTransform.h
+  CylindricalCoordinateTransform.h
   FieldToColors.h
   GenerateIds.h
   PointElevation.h
   PointTransform.h
+  SphericalCoordinateTransform.h
   WarpScalar.h
   WarpVector.h
   )
 
 set(field_transform_sources
-  CoordinateSystemTransform.cxx
+  CylindricalCoordinateTransform.cxx
   FieldToColors.cxx
   GenerateIds.cxx
   PointElevation.cxx
   PointTransform.cxx
+  SphericalCoordinateTransform.cxx
   WarpScalar.cxx
   WarpVector.cxx
   )
