@@ -108,6 +108,11 @@ private:
   std::string ThresholdFieldName = "threshold-output";
 };
 } // namespace image_processing
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::image_processing::ImageDifference.") ImageDifference
+  : public vtkm::filter::image_processing::ImageDifference
+{
+  using image_processing::ImageDifference::ImageDifference;
+};
 } // namespace filter
 } // namespace vtkm
 

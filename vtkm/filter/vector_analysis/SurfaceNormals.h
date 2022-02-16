@@ -107,8 +107,13 @@ private:
   std::string CellNormalsName;
   std::string PointNormalsName;
 };
-}
-}
-} // vtkm::filter
+} // namespace vector_analysis
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::SurfaceNormals.") SurfaceNormal
+  : public vtkm::filter::vector_analysis::SurfaceNormals
+{
+  using vector_analysis::SurfaceNormals::SurfaceNormals;
+};
+} // namespace filter
+} // namespace vtkm
 
 #endif // vtk_m_filter_vector_analysis_SurfaceNormal_h

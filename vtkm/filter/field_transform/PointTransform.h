@@ -103,8 +103,13 @@ private:
   vtkm::Matrix<vtkm::FloatDefault, 4, 4> matrix;
   bool ChangeCoordinateSystem = true;
 };
-}
-}
-} // namespace vtkm::filter
+} // namespace field_transform
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::PointTransform.") PointTransform
+  : public vtkm::filter::field_transform::PointTransform
+{
+  using field_transform::PointTransform::PointTransform;
+};
+} // namespace filter
+} // namespace vtkm
 
 #endif // vtk_m_filter_field_transform_PointTransform_h

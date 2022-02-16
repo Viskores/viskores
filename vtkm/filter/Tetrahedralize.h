@@ -28,12 +28,6 @@ inline void Tetrahedralize_deprecated_warning()
   Tetrahedralize_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::geometry_refinement::Tetrahedralize.") Tetrahedralize
-  : public vtkm::filter::geometry_refinement::Tetrahedralize
-{
-  using geometry_refinement::Tetrahedralize::Tetrahedralize;
-};
-
 }
 } // namespace vtkm::filter
 

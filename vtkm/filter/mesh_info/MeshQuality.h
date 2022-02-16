@@ -79,6 +79,11 @@ private:
   CellMetric MyMetric;
 };
 } // namespace mesh_info
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::MeshQuality.") MeshQuality
+  : public vtkm::filter::mesh_info::MeshQuality
+{
+  using mesh_info::MeshQuality::MeshQuality;
+};
 } // namespace filter
 } // namespace vtkm
 

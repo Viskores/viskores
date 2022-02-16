@@ -28,13 +28,6 @@ inline void ExtractStructured_deprecated_warning()
   ExtractStructured_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8,
-                      "Use vtkm::filter::entity_extraction::ExtractStructured.") ExtractStructured
-  : public vtkm::filter::entity_extraction::ExtractStructured
-{
-  using entity_extraction::ExtractStructured::ExtractStructured;
-};
-
 }
 } // namespace vtkm::filter
 

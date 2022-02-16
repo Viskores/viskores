@@ -27,12 +27,6 @@ inline void Gradient_deprecated_warning()
   Gradient_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::Gradient.") Gradient
-  : public vtkm::filter::vector_analysis::Gradient
-{
-  using vector_analysis::Gradient::Gradient;
-};
-
 }
 } // namespace vtkm::filter
 

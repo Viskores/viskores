@@ -26,12 +26,6 @@ inline void Slice_deprecated_warning()
   Slice_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::contour::Slice.") Slice
-  : public vtkm::filter::contour::Slice
-{
-  using contour::Slice::Slice;
-};
-
 }
 } // namespace vtkm::filter
 

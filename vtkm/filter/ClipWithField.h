@@ -27,12 +27,6 @@ inline void ClipWithField_deprecated_warning()
   ClipWithField_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::contour::ClipWithField.") ClipWithField
-  : public vtkm::filter::contour::ClipWithField
-{
-  using contour::ClipWithField::ClipWithField;
-};
-
 }
 } // namespace vtkm::filter
 

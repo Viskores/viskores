@@ -28,12 +28,6 @@ inline void GhostCellRemove_deprecated_warning()
   GhostCellRemove_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::GhostCellRemove.") GhostCellRemove
-  : public vtkm::filter::entity_extraction::GhostCellRemove
-{
-  using entity_extraction::GhostCellRemove::GhostCellRemove;
-};
-
 }
 } // namespace vtkm::filter
 

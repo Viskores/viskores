@@ -26,12 +26,6 @@ inline void Contour_deprecated_warning()
   Contour_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::contour::Contour.") Contour
-  : public vtkm::filter::contour::Contour
-{
-  using contour::Contour::Contour;
-};
-
 }
 } // namespace vtkm::filter
 

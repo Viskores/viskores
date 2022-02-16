@@ -85,6 +85,11 @@ private:
   vtkm::Id ModifiedCount = -1;
 };
 } // namespace field_transform
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::FieldToColors.") FieldToColors
+  : public vtkm::filter::field_transform::FieldToColors
+{
+  using field_transform::FieldToColors::FieldToColors;
+};
 } // namespace filter
 } // namespace vtkm
 

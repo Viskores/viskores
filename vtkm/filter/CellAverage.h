@@ -28,12 +28,6 @@ inline void CellAverage_deprecated_warning()
   CellAverage_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_conversion::CellAverage.") CellAverage
-  : public vtkm::filter::field_conversion::CellAverage
-{
-  using field_conversion::CellAverage::CellAverage;
-};
-
 }
 } // namespace vtkm::filter
 

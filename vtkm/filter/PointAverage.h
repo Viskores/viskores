@@ -28,12 +28,6 @@ inline void PointAverage_deprecated_warning()
   PointAverage_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_conversion::PointAverage.") PointAverage
-  : public vtkm::filter::field_conversion::PointAverage
-{
-  using field_conversion::PointAverage::PointAverage;
-};
-
 }
 } // namespace vtkm::filter
 

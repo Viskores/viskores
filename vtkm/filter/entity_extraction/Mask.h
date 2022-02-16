@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Mask_h
-#define vtk_m_filter_Mask_h
+#ifndef vtk_m_filter_entity_extraction_Mask_h
+#define vtk_m_filter_entity_extraction_Mask_h
 
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
@@ -47,7 +47,12 @@ private:
   bool CompactPoints = false;
 };
 } // namespace entity_extraction
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::Mask.") Mask
+  : public vtkm::filter::entity_extraction::Mask
+{
+  using entity_extraction::Mask::Mask;
+};
 } // namespace filter
 } // namespace vtk
 
-#endif // vtk_m_filter_Mask_h
+#endif // vtk_m_filter_entity_extraction_Mask_h

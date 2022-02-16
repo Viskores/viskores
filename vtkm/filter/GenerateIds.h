@@ -28,12 +28,6 @@ inline void GenerateIds_deprecated_warning()
   GenerateIds_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::GenerateIds.") GenerateIds
-  : public vtkm::filter::field_transform::GenerateIds
-{
-  using field_transform::GenerateIds::GenerateIds;
-};
-
 }
 } // namespace vtkm::filter
 

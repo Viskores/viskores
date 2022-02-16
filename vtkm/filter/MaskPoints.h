@@ -28,12 +28,6 @@ inline void MaskPoints_deprecated_warning()
   MaskPoints_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::MaskPoints.") MaskPoints
-  : public vtkm::filter::entity_extraction::MaskPoints
-{
-  using entity_extraction::MaskPoints::MaskPoints;
-};
-
 }
 } // namespace vtkm::filter
 

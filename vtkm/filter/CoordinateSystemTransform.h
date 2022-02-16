@@ -28,12 +28,6 @@ inline void CoordinateSystemTransform_deprecated_warning()
   CoordinateSystemTransform_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::CoordinateSystemTransform.")
-  CoordinateSystemTransform : public vtkm::filter::field_transform::CoordinateSystemTransform
-{
-  using field_transform::CoordinateSystemTransform::CoordinateSystemTransform;
-};
-
 }
 } // namespace vtkm::filter
 

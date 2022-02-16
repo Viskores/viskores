@@ -11,7 +11,7 @@
 #define vtk_m_filter_SurfaceNormal_h
 
 #include <vtkm/Deprecated.h>
-#include <vtkm/filter/vector_analysis/SurfaceNormal.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
 namespace vtkm
 {
@@ -27,12 +27,6 @@ inline void SurfaceNormal_deprecated_warning()
 {
   SurfaceNormal_deprecated();
 }
-
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::SurfaceNormal.") SurfaceNormal
-  : public vtkm::filter::vector_analysis::SurfaceNormal
-{
-  using vector_analysis::SurfaceNormal::SurfaceNormal;
-};
 
 }
 } // namespace vtkm::filter
