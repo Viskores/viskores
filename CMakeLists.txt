@@ -97,6 +97,7 @@ vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
 vtkm_option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
 vtkm_option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
+vtkm_option(VTKm_ENABLE_TUTORIALS "Build tutorials" OFF)
 if (NOT DEFINED VTKm_ENABLE_TESTING)
     if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
       vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
@@ -408,3 +409,8 @@ endif()
 #-----------------------------------------------------------------------------
 # Build examples
 add_subdirectory(examples)
+
+# Tutorial examples
+if(VTKm_ENABLE_TUTORIALS)
+  add_subdirectory(tutorial)
+endif()
