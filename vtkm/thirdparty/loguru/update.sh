@@ -8,7 +8,7 @@ readonly name="loguru"
 readonly ownership="Loguru Upstream <kwrobot@kitware.com>"
 readonly subtree="vtkm/thirdparty/$name/vtkm$name"
 readonly repo="https://gitlab.kitware.com/third-party/$name.git"
-readonly tag="for/vtk-m"
+readonly tag="for/vtk-m-20220217"
 readonly paths="
 loguru.hpp
 loguru.cpp
