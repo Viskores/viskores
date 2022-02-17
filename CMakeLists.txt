@@ -146,6 +146,9 @@ vtkm_option(VTKm_NO_ASSERT_HIP "Disable assertions for HIP devices." ON)
 # installed.
 vtkm_option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no headers" OFF)
 
+# Install examples projects
+cmake_dependent_option(VTKm_INSTALL_EXAMPLES "Install examples" OFF "NOT VTKm_ENABLE_EXAMPLES" ON)
+
 # VTK-m is setup by default not to export symbols unless explicitly stated.
 # We prefer to only export symbols of a small set of user facing classes,
 # rather than exporting all symbols. This flag is added so that consumers
@@ -410,6 +413,12 @@ endif()
 # Build examples
 add_subdirectory(examples)
 
+if (VTKm_INSTALL_EXAMPLES)
+  include(GNUInstallDirs)
+  install(DIRECTORY examples DESTINATION ${CMAKE_INSTALL_DOCDIR} REGEX examples/CMakeLists.txt EXCLUDE)
+endif()
+
+#-----------------------------------------------------------------------------
 # Tutorial examples
 if(VTKm_ENABLE_TUTORIALS)
   add_subdirectory(tutorial)
