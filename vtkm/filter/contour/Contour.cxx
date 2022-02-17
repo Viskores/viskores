@@ -16,8 +16,7 @@
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/contour/worklet/Contour.h>
-
-#include <vtkm/filter/vector_analysis/worklet/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
 namespace vtkm
 {
@@ -152,15 +151,15 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
   {
     if (!generateHighQualityNormals)
     {
-      Vec3HandleType faceNormals;
-      vtkm::worklet::FacetedSurfaceNormals faceted;
-      faceted.Run(outputCells, vertices, faceNormals);
-
-      vtkm::worklet::SmoothSurfaceNormals smooth;
-      smooth.Run(outputCells, faceNormals, normals);
+      vtkm::filter::vector_analysis::SurfaceNormals surfaceNormals;
+      surfaceNormals.SetPointNormalsName(this->NormalArrayName);
+      surfaceNormals.SetGeneratePointNormals(true);
+      output = surfaceNormals.Execute(output);
     }
-
-    output.AddField(vtkm::cont::make_FieldPoint(this->NormalArrayName, normals));
+    else
+    {
+      output.AddField(vtkm::cont::make_FieldPoint(this->NormalArrayName, normals));
+    }
   }
 
   if (this->AddInterpolationEdgeIds)
