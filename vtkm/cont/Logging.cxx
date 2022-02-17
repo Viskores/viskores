@@ -121,13 +121,15 @@ void InitLogging(int& argc, char* argv[], const std::string& loggingFlag)
 
 
 #ifdef VTKM_ENABLE_LOGGING
-  loguru::set_verbosity_to_name_callback(&verbosityToNameCallback);
-  loguru::set_name_to_verbosity_callback(&nameToVerbosityCallback);
+  if (!Initialized)
+  {
+    loguru::set_verbosity_to_name_callback(&verbosityToNameCallback);
+    loguru::set_name_to_verbosity_callback(&nameToVerbosityCallback);
 
-  // Set the default log level to warning
-  SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
-  loguru::init(argc, argv, loggingFlag.c_str());
-
+    // Set the default log level to warning
+    SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
+    loguru::init(argc, argv, loggingFlag.c_str());
+  }
 #else  // VTKM_ENABLE_LOGGING
   (void)argc;
   (void)argv;
