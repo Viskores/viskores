@@ -36,7 +36,7 @@
 
 #include <math.h>
 
-#ifdef VTKM_GCC
+#if defined(VTKM_GCC) && !defined(__APPLE__)
 #include <fenv.h>
 #endif
 
@@ -118,7 +118,7 @@ namespace testing
 inline void FloatingPointExceptionTrapEnable()
 {
   // Turn on floating point exception trapping where available
-#ifdef VTKM_GCC
+#if defined(VTKM_GCC) && !defined(__APPLE__)
   feenableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
 #endif
 }
@@ -126,7 +126,7 @@ inline void FloatingPointExceptionTrapEnable()
 inline void FloatingPointExceptionTrapDisable()
 {
   // Turn on floating point exception trapping where available
-#ifdef VTKM_GCC
+#if defined(VTKM_GCC) && !defined(__APPLE__)
   fedisableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
 #endif
 }
