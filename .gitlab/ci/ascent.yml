@@ -15,6 +15,10 @@ test:ascent_gcc_cuda:
     - .ascent_test
     - .run_ecp_ci
     - .cmake_test_artifacts
+  needs:
+    - build:ascent_gcc_cuda
+  dependencies:
+    - build:ascent_gcc_cuda
 
 .ascent_gcc_cuda:
   variables:
@@ -26,14 +30,13 @@ test:ascent_gcc_cuda:
     CCACHE_NOHASHDIR: "true"
 
     CMAKE_BUILD_TYPE: RelWithDebInfo
-    CMAKE_GENERATOR: Unix Makefiles
+    CMAKE_GENERATOR: Ninja
     CUSTOM_CI_BUILDS_DIR: "/gpfs/wolf/proj-shared/csc331/vtk-m/ci/runtime"
-    FF_ENABLE_JOB_CLEANUP: "true"
 
     CC: gcc
     CXX: g++
     CUDAHOSTCXX: g++
-    JOB_MODULES: gcc/8.1.1 spectrum-mpi lsf-tools cuda/11.2.0
+    JOB_MODULES: git cmake ninja gcc/10.2.0 spectrum-mpi lsf-tools cuda/11.4.2
     VTKM_SETTINGS: cuda+ascent+ccache
 
 .ascent_build:
@@ -71,7 +74,6 @@ test:ascent_gcc_cuda:
 .ascent_test:
   stage: test
   variables:
-    GITLAB_CI_EMULATION: "true"
     SCHEDULER_PARAMETERS: -P CSC331 -W 1:00 -nnodes 1 -alloc_flags gpudefault
     CTEST_MAX_PARALLELISM: 8
     # Tests errors to address due to different env/arch in Ascent
@@ -89,7 +91,7 @@ test:ascent_gcc_cuda:
   before_script:
     # Prep the environment
     - module purge
-    - module load git cmake ${JOB_MODULES}
+    - module load ${JOB_MODULES}
 
   script:
     - "jsrun -n1 -r1 -a1 -g1 -c7 ctest -VV -S .gitlab/ci/ctest_test.cmake || test_output=$?"
