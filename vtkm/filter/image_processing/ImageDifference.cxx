@@ -124,7 +124,7 @@ VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(const vtkm::cont::DataS
              "Difference within threshold: "
                << this->ImageDiffWithinThreshold
                << ", for pixels outside threshold: " << errorPixels.GetNumberOfValues()
-               << ", with a total number of pixesl: " << thresholdOutput.GetNumberOfValues()
+               << ", with a total number of pixels: " << thresholdOutput.GetNumberOfValues()
                << ", and an allowable pixel error ratio: " << this->AllowedPixelErrorRatio
                << ", with a total summed threshold error: "
                << vtkm::cont::Algorithm::Reduce(errorPixels, static_cast<FloatDefault>(0)));

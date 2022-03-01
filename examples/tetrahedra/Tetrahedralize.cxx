@@ -12,7 +12,7 @@
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
-#include <vtkm/filter/Tetrahedralize.h>
+#include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
   vtkm::io::VTKDataSetReader reader(infilename);
   vtkm::cont::DataSet input = reader.ReadDataSet();
 
-  vtkm::filter::Tetrahedralize tetrahedralizeFilter;
+  vtkm::filter::geometry_refinement::Tetrahedralize tetrahedralizeFilter;
   vtkm::cont::DataSet output = tetrahedralizeFilter.Execute(input);
 
   vtkm::io::VTKDataSetWriter writer(outfilename);

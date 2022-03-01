@@ -28,6 +28,7 @@ void RenderTests()
   vtkm::cont::testing::MakeTestDataSet maker;
 
   vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.AllowedPixelErrorRatio = 0.002f;
   testOptions.Mapper = vtkm::rendering::testing::MapperType::Connectivity;
   testOptions.AllowAnyDevice = false;
   testOptions.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;

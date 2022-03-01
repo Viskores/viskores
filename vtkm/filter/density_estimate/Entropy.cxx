@@ -7,7 +7,6 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/CreateResult.h>
 #include <vtkm/filter/density_estimate/Entropy.h>
 #include <vtkm/filter/density_estimate/worklet/FieldEntropy.h>
 

@@ -15,7 +15,7 @@
 #include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/filter/Streamline.h>
-#include <vtkm/filter/Tube.h>
+#include <vtkm/filter/geometry_refinement/Tube.h>
 
 #include <vtkm/rendering/testing/RenderTest.h>
 #include <vtkm/rendering/testing/Testing.h>
@@ -53,7 +53,7 @@ void TestStreamline()
 
   // The streamline by itself doesn't generate renderable geometry, so surround the
   // streamlines in tubes.
-  vtkm::filter::Tube tube;
+  vtkm::filter::geometry_refinement::Tube tube;
   tube.SetCapping(true);
   tube.SetNumberOfSides(3);
   tube.SetRadius(static_cast<vtkm::FloatDefault>(0.2));

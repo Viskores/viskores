@@ -61,6 +61,7 @@ foreach(option IN LISTS options)
 
   elseif(examples STREQUAL option)
     set(VTKm_ENABLE_EXAMPLES "ON" CACHE STRING "")
+    set(VTKm_INSTALL_EXAMPLES "ON" CACHE STRING "")
 
   elseif(docs STREQUAL option)
     set(VTKm_ENABLE_DOCUMENTATION "ON" CACHE STRING "")
@@ -142,6 +143,10 @@ foreach(option IN LISTS options)
   endif()
 
 endforeach()
+
+# Compile tutorials on all builders. The code is small and basic. And since
+# it is the tutorial, it should work really well.
+set(VTKm_ENABLE_TUTORIALS "ON" CACHE STRING "")
 
 set(CTEST_USE_LAUNCHERS "ON" CACHE STRING "")
 

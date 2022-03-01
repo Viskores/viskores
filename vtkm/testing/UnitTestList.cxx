@@ -178,6 +178,16 @@ void TestLists()
                              vtkm::List<TestClass<11>>,
                              vtkm::List<TestClass<21>, TestClass<22>>>{});
 
+  std::cout << "ListFill" << std::endl;
+  CheckList(vtkm::List<int, int, int, int, int>{}, vtkm::ListFill<int, 5>{});
+
+  std::cout << "ListTransform" << std::endl;
+  CheckList(EvenList{}, vtkm::ListTransform<SimpleCount, DoubleTransform>{});
+
+  std::cout << "ListRemoveIf" << std::endl;
+  CheckList(vtkm::List<TestClass<1>, TestClass<3>>{},
+            vtkm::ListRemoveIf<SimpleCount, EvenPredicate>{});
+
   std::cout << "ListIntersect" << std::endl;
   CheckList(vtkm::List<TestClass<3>, TestClass<5>>{},
             vtkm::ListIntersect<
@@ -188,13 +198,6 @@ void TestLists()
   CheckList(vtkm::List<TestClass<1>, TestClass<2>>{},
             vtkm::ListIntersect<vtkm::ListUniversal, vtkm::List<TestClass<1>, TestClass<2>>>{});
 
-  std::cout << "ListTransform" << std::endl;
-  CheckList(EvenList{}, vtkm::ListTransform<SimpleCount, DoubleTransform>{});
-
-  std::cout << "ListRemoveIf" << std::endl;
-  CheckList(vtkm::List<TestClass<1>, TestClass<3>>{},
-            vtkm::ListRemoveIf<SimpleCount, EvenPredicate>{});
-
   std::cout << "ListSize" << std::endl;
   VTKM_TEST_ASSERT(vtkm::ListSize<vtkm::ListEmpty>::value == 0);
   VTKM_TEST_ASSERT(vtkm::ListSize<vtkm::List<TestClass<2>>>::value == 1);
@@ -202,10 +205,13 @@ void TestLists()
 
   std::cout << "ListCross" << std::endl;
   CheckList(vtkm::List<vtkm::List<TestClass<31>, TestClass<11>>,
+                       vtkm::List<TestClass<31>, TestClass<12>>,
                        vtkm::List<TestClass<32>, TestClass<11>>,
-                       vtkm::List<TestClass<33>, TestClass<11>>>{},
+                       vtkm::List<TestClass<32>, TestClass<12>>,
+                       vtkm::List<TestClass<33>, TestClass<11>>,
+                       vtkm::List<TestClass<33>, TestClass<12>>>{},
             vtkm::ListCross<vtkm::List<TestClass<31>, TestClass<32>, TestClass<33>>,
-                            vtkm::List<TestClass<11>>>{});
+                            vtkm::List<TestClass<11>, TestClass<12>>>{});
 
   std::cout << "ListAt" << std::endl;
   CheckSame(TestClass<2>{}, vtkm::ListAt<EvenList, 0>{});

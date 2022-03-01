@@ -45,9 +45,14 @@ set(deprecated_headers
   PointElevation.h
   PointTransform.h
   Slice.h
+  SplitSharpEdges.h
   SurfaceNormal.h
+  Tetrahedralize.h
   Threshold.h
   ThresholdPoints.h
+  Triangulate.h
+  Tube.h
+  VertexClustering.h
   VectorMagnitude.h
   WarpScalar.h
   WarpVector.h
@@ -62,6 +67,7 @@ set(deprecated_headers
 vtkm_declare_headers(${deprecated_headers})
 
 set(common_headers
+  CreateResult.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -73,7 +79,6 @@ set(common_headers
   FilterTraits.h
   PolicyBase.h
   PolicyDefault.h
-  TaskQueue.h
   Instantiations.h
   )
 
@@ -95,8 +100,6 @@ set(extra_headers
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   ContourTreeUniform.h
-  CreateResult.h
-  FieldSelection.h
   Lagrangian.h
   LagrangianStructures.h
   MIRFilter.h
@@ -104,13 +107,8 @@ set(extra_headers
   Pathline.h
   PathParticle.h
   Probe.h
-  SplitSharpEdges.h
   Streamline.h
   StreamSurface.h
-  Tetrahedralize.h
-  Triangulate.h
-  Tube.h
-  VertexClustering.h
   )
 
 set(extra_header_template_sources
@@ -125,13 +123,8 @@ set(extra_header_template_sources
   Pathline.hxx
   PathParticle.hxx
   Probe.hxx
-  SplitSharpEdges.hxx
   Streamline.hxx
   StreamSurface.hxx
-  Tetrahedralize.hxx
-  Triangulate.hxx
-  Tube.hxx
-  VertexClustering.hxx
   )
 
 set(extra_sources_device
@@ -140,10 +133,12 @@ set(extra_sources_device
   )
 
 set(core_headers
+  FieldSelection.h
   NewFilter.h
   NewFilterField.h
   MapFieldMergeAverage.h
   MapFieldPermutation.h
+  TaskQueue.h
   )
 set(core_sources
   NewFilterField.cxx
@@ -203,6 +198,7 @@ add_subdirectory(internal)
 add_subdirectory(particleadvection)
 add_subdirectory(field_conversion)
 add_subdirectory(field_transform)
+add_subdirectory(geometry_refinement)
 add_subdirectory(mesh_info)
 add_subdirectory(vector_analysis)
 add_subdirectory(zfp)

@@ -13,7 +13,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/VTKDataSetReader.h>
 
-#include <vtkm/filter/SplitSharpEdges.h>
+#include <vtkm/filter/geometry_refinement/SplitSharpEdges.h>
 #include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
 #include <vtkm/rendering/testing/RenderTest.h>
@@ -30,7 +30,7 @@ void TestSplitSharpEdges()
   vtkm::io::VTKDataSetReader reader(pathname);
   auto dataSet = reader.ReadDataSet();
 
-  vtkm::filter::SplitSharpEdges splitSharpEdges;
+  vtkm::filter::geometry_refinement::SplitSharpEdges splitSharpEdges;
   splitSharpEdges.SetFeatureAngle(89.0);
   splitSharpEdges.SetActiveField("Normals", vtkm::cont::Field::Association::CELL_SET);
 

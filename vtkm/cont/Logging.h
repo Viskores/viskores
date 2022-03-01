@@ -17,27 +17,8 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
-#ifdef VTKM_ENABLE_LOGGING
-
-// disable MSVC warnings in loguru.hpp
-#ifdef VTKM_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4722)
-#endif // VTKM_MSVC
-
-#define LOGURU_EXPORT VTKM_CONT_EXPORT
-#define LOGURU_WITH_STREAMS 1
-#define LOGURU_SCOPE_TIME_PRECISION 6
-#include <vtkm/thirdparty/loguru/vtkmloguru/loguru.hpp>
-
-#ifdef VTKM_MSVC
-#pragma warning(pop)
-#endif // VTKM_MSVC
-
-#else // VTKM_ENABLE_LOGGING
 #include <iostream>
-#endif // VTKM_ENABLE_LOGGING
-
+#include <sstream>
 #include <string>
 #include <typeindex>
 #include <typeinfo>
@@ -208,17 +189,23 @@
 
 #if defined(VTKM_ENABLE_LOGGING)
 
-#define VTKM_LOG_S(level, ...) VLOG_S(static_cast<loguru::Verbosity>(level)) << __VA_ARGS__
-#define VTKM_LOG_F(level, ...) VLOG_F(static_cast<loguru::Verbosity>(level), __VA_ARGS__)
 #define VTKM_LOG_IF_S(level, cond, ...) \
-  VLOG_IF_S(static_cast<loguru::Verbosity>(level), cond) << __VA_ARGS__
+  vtkm::cont::LogCondStream(level, cond, __FILE__, __LINE__) << __VA_ARGS__
+
 #define VTKM_LOG_IF_F(level, cond, ...) \
-  VLOG_IF_F(static_cast<loguru::Verbosity>(level), cond, __VA_ARGS__)
-#define VTKM_LOG_SCOPE(level, ...) VLOG_SCOPE_F(static_cast<loguru::Verbosity>(level), __VA_ARGS__)
-#define VTKM_LOG_SCOPE_FUNCTION(level) \
-  VTKM_LOG_SCOPE(static_cast<loguru::Verbosity>(level), __func__)
-#define VTKM_LOG_ERROR_CONTEXT(desc, data) ERROR_CONTEXT(desc, data)
+  vtkm::cont::LogCond(level, cond, __FILE__, __LINE__, __VA_ARGS__)
+
+#define VTKM_LOG_S(level, ...) VTKM_LOG_IF_S(level, true, __VA_ARGS__)
+#define VTKM_LOG_F(level, ...) VTKM_LOG_IF_F(level, true, __VA_ARGS__)
+
+#define VTKM_LOG_SCOPE(level, ...) vtkm::cont::LogScope(level, __FILE__, __LINE__, __VA_ARGS__)
+
+#define VTKM_LOG_SCOPE_FUNCTION(level) VTKM_LOG_SCOPE(level, __func__)
 #define VTKM_LOG_ALWAYS_S(level, ...) VTKM_LOG_S(level, __VA_ARGS__)
+
+// VTKM_LOG_ERROR_CONTEXT is disabled as it is deprecated
+#define VTKM_LOG_ERROR_CONTEXT(desc, data)
+
 
 // Convenience macros:
 
@@ -352,6 +339,7 @@ enum class LogLevel
   UserVerboseLast = 2047
 };
 
+
 /**
  * This shouldn't be called directly -- prefer calling vtkm::cont::Initialize,
  * which takes care of logging as well as other initializations.
@@ -379,10 +367,16 @@ void InitLogging();
 /**
  * Set the range of log levels that will be printed to stderr. All levels
  * with an enum value less-than-or-equal-to \a level will be printed.
+ * @{
  */
 VTKM_CONT_EXPORT
 VTKM_CONT
+void SetStderrLogLevel(const char* verbosity);
+
+VTKM_CONT_EXPORT
+VTKM_CONT
 void SetStderrLogLevel(vtkm::cont::LogLevel level);
+/**@}*/
 
 /**
  * Get the active highest log level that will be printed to stderr.
@@ -486,6 +480,76 @@ inline VTKM_CONT std::string TypeToString(const T&)
   return TypeToString(typeid(T));
 }
 /**@}*/
+
+#ifdef VTKM_ENABLE_LOGGING
+
+/**
+ * \brief Conditionally logs a message with a printf-like format.
+ *
+ * \param level  Desired LogLevel value for the log message.
+ * \param cond   When false this function is no-op.
+ * \param format Printf like format string.
+ */
+VTKM_CONT_EXPORT
+VTKM_CONT
+void LogCond(LogLevel level, bool cond, const char* file, unsigned line, const char* format...);
+
+/**
+ * \brief Logs a scoped message with a printf-like format.
+ *
+ * The indentation level will be determined based on its LogLevel and it will
+ * print out its wall time upon exiting its scope.
+ *
+ * \param level  Desired LogLevel value for the log message.
+ * \param cond   When false this function is no-op.
+ * \param format Printf like format string.
+ */
+VTKM_CONT_EXPORT
+VTKM_CONT
+void LogScope(LogLevel level, const char* file, unsigned line, const char* format...);
+
+/**
+ * \brief Conditionally logs a message with a stream-like interface.
+ *
+ * Messages are flushed to output by the destructor.
+ */
+struct VTKM_CONT_EXPORT LogCondStream
+{
+  VTKM_CONT
+  LogCondStream(LogLevel level, bool cond, const char* file, int line)
+    : Level(level)
+    , Condition(cond)
+    , File(file)
+    , Line(line)
+  {
+  }
+
+  VTKM_CONT
+  ~LogCondStream() noexcept(false);
+
+  template <typename T>
+  VTKM_CONT LogCondStream& operator<<(const T& in)
+  {
+    SStream << in;
+    return *this;
+  }
+
+  VTKM_CONT
+  LogCondStream& operator<<(std::ostream& (*f)(std::ostream&))
+  {
+    f(SStream);
+    return *this;
+  }
+
+private:
+  LogLevel Level;
+  bool Condition;
+  const char* File;
+  int Line;
+  std::ostringstream SStream;
+};
+#endif // VTKM_ENABLE_LOGGING
+
 }
 } // end namespace vtkm::cont
 

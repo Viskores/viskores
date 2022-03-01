@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/Tube.h>
+#include <vtkm/filter/geometry_refinement/Tube.h>
 
 namespace
 {
@@ -64,7 +64,7 @@ void TestTubeFilters()
   ds.AddPointField("pointVar", ptVar);
   ds.AddCellField("cellVar", cellVar);
 
-  vtkm::filter::Tube tubeFilter;
+  vtkm::filter::geometry_refinement::Tube tubeFilter;
   tubeFilter.SetCapping(true);
   tubeFilter.SetNumberOfSides(3);
   tubeFilter.SetRadius(static_cast<vtkm::FloatDefault>(0.2));

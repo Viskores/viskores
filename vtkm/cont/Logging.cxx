@@ -18,6 +18,10 @@
 #pragma warning(disable : 4722)
 #endif // VTKM_MSVC
 
+#define LOGURU_USE_ANONYMOUS_NAMESPACE
+#define LOGURU_WITH_STREAMS 1
+#define LOGURU_SCOPE_TIME_PRECISION 6
+
 #include <vtkm/thirdparty/loguru/vtkmloguru/loguru.cpp>
 
 #ifdef VTKM_MSVC
@@ -121,13 +125,15 @@ void InitLogging(int& argc, char* argv[], const std::string& loggingFlag)
 
 
 #ifdef VTKM_ENABLE_LOGGING
-  loguru::set_verbosity_to_name_callback(&verbosityToNameCallback);
-  loguru::set_name_to_verbosity_callback(&nameToVerbosityCallback);
+  if (!Initialized)
+  {
+    loguru::set_verbosity_to_name_callback(&verbosityToNameCallback);
+    loguru::set_name_to_verbosity_callback(&nameToVerbosityCallback);
 
-  // Set the default log level to warning
-  SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
-  loguru::init(argc, argv, loggingFlag.c_str());
-
+    // Set the default log level to warning
+    SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
+    loguru::init(argc, argv, loggingFlag.c_str());
+  }
 #else  // VTKM_ENABLE_LOGGING
   (void)argc;
   (void)argv;
@@ -144,6 +150,16 @@ void InitLogging()
   char dummy[1] = { '\0' };
   char* argv[2] = { dummy, nullptr };
   InitLogging(argc, argv);
+}
+
+VTKM_CONT
+void SetStderrLogLevel(const char* verbosity)
+{
+#ifdef VTKM_ENABLE_LOGGING
+  loguru::g_stderr_verbosity = loguru::get_verbosity_from_name(verbosity);
+#else  // VTKM_ENABLE_LOGGING
+  (void)verbosity;
+#endif // VTKM_ENABLE_LOGGING
 }
 
 VTKM_CONT
@@ -316,6 +332,55 @@ VTKM_CONT std::string TypeToString(const std::type_index& t)
   return t.name();
 #endif // VTKM_ENABLE_LOGGING
 }
+
+#ifdef VTKM_ENABLE_LOGGING
+VTKM_CONT
+int getVerbosityByLevel(LogLevel level)
+{
+  return static_cast<loguru::Verbosity>(level);
+}
+
+VTKM_CONT
+void LogScope(LogLevel level, const char* file, unsigned line, const char* format...)
+{
+  auto verbosity = getVerbosityByLevel(level);
+
+  if (verbosity > loguru::current_verbosity_cutoff())
+  {
+    loguru::LogScopeRAII();
+  }
+  else
+  {
+    va_list args;
+    va_start(args, format);
+    loguru::LogScopeRAII(verbosity, file, line, format, args);
+    va_end(args);
+  }
+}
+
+VTKM_CONT
+void LogCond(LogLevel level, bool cond, const char* file, unsigned line, const char* format...)
+{
+  if (cond)
+  {
+    auto verbosity = getVerbosityByLevel(level);
+
+    if (verbosity <= loguru::current_verbosity_cutoff())
+    {
+      va_list args;
+      va_start(args, format);
+      loguru::vlog(verbosity, file, line, format, args);
+      va_end(args);
+    }
+  }
+}
+
+VTKM_CONT
+LogCondStream::~LogCondStream() noexcept(false)
+{
+  LogCond(this->Level, this->Condition, this->File, this->Line, this->SStream.str().c_str());
+}
+#endif // VTKM_ENABLE_LOGGING
 
 }
 } // end namespace vtkm::cont

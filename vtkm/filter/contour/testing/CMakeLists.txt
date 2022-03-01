@@ -18,6 +18,7 @@ set(libraries
   vtkm_filter_clean_grid
   vtkm_filter_contour
   vtkm_filter_field_transform
+  vtkm_filter_geometry_refinement
   vtkm_io
   vtkm_source
 )

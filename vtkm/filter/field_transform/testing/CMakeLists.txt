@@ -20,6 +20,7 @@ set(unit_tests
 
 set(libraries
   vtkm_filter_field_transform
+  vtkm_filter_vector_analysis
   vtkm_source)
 
 if (VTKm_ENABLE_RENDERING)
@@ -35,6 +36,5 @@ endif()
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
-  ALL_BACKENDS # renderer requires device compiler
   USE_VTKM_JOB_POOL
 )

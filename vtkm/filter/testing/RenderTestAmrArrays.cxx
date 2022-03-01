@@ -49,6 +49,7 @@ void TestAmrArraysExecute(int dim, int numberOfLevels, int cellsPerDimension)
   //  result.PrintSummary(std::cout);
 
   vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.AllowedPixelErrorRatio = 0.001f;
   testOptions.ColorTable = vtkm::cont::ColorTable("inferno");
   testOptions.EnableAnnotations = false;
   vtkm::rendering::testing::RenderTest(
