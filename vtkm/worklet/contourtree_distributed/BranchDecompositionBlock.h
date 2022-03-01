@@ -50,21 +50,12 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
-#define vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
+#ifndef vtk_m_worklet_contourtree_distributed_branchdecompositionblock_h
+#define vtk_m_worklet_contourtree_distributed_branchdecompositionblock_h
 
-#include <vtkm/Types.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalAugmenter.h>
+#include <vtkm/worklet/contourtree/Types.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <vtkm/worklet/contourtree_distributed/HierarchicalVolumetricBranchDecomposer.h>
 
 namespace vtkm
 {
@@ -72,69 +63,45 @@ namespace worklet
 {
 namespace contourtree_distributed
 {
-template <typename FieldType>
-struct DistributedContourTreeBlockData
+
+template <typename ContourTreeDataFieldType>
+struct BranchDecompositionBlock
 {
-  // Block metadata
-  int GlobalBlockId;     // Global DIY id of this block
-  vtkm::Id LocalBlockNo; // Local block id on this rank
-  vtkm::Id3 BlockOrigin; // Origin of the data block
-  vtkm::Id3 BlockSize;   // Extends of the data block
+  BranchDecompositionBlock(
+    vtkm::Id localBlockNo,
+    int globalBlockId,
+    const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
+      hierarchicalContourTree)
+    : LocalBlockNo(localBlockNo)
+    , GlobalBlockId(globalBlockId)
+    , HierarchicalContourTree(hierarchicalContourTree)
+  {
+    // Import/alias for readability
+    using vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    const vtkm::Id nSupernodes = HierarchicalContourTree.Supernodes.GetNumberOfValues();
+    //VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Allocating " << nSupernodes << " valies in BranchRoots");
+    BranchRoots.AllocateAndFill(nSupernodes, NO_SUCH_ELEMENT);
+  }
 
-  // Fan in data
-  std::vector<vtkm::worklet::contourtree_augmented::ContourTree> ContourTrees;
-  std::vector<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>> ContourTreeMeshes;
-  std::vector<vtkm::worklet::contourtree_distributed::InteriorForest> InteriorForests;
+  // Block metadata TODO/FIXME: Check whether really needed
+  vtkm::Id LocalBlockNo;
+  int GlobalBlockId;
 
-  // Fan out data
-  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> HierarchicalTree;
-
-  // Augmentation phase
-  vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType> HierarchicalAugmenter;
-  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> AugmentedTree;
+  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
+    HierarchicalContourTree;
+  vtkm::worklet::contourtree_distributed::HierarchicalVolumetricBranchDecomposer<
+    ContourTreeDataFieldType>
+    HierarchicalVolumetricBranchDecomposer;
+  vtkm::cont::ArrayHandle<vtkm::Id> BranchRoots;
 
   // Destroy function allowing DIY to own blocks and clean them up after use
   static void Destroy(void* b)
   {
-    delete static_cast<DistributedContourTreeBlockData<FieldType>*>(b);
+    delete static_cast<BranchDecompositionBlock<ContourTreeDataFieldType>*>(b);
   }
 };
+
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
-
-
-namespace vtkmdiy
-{
-
-// Struct to serialize ContourTreeMesh objects (i.e., load/save) needed in parralle for DIY
-template <typename FieldType>
-struct Serialization<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>>
-{
-  static void save(vtkmdiy::BinaryBuffer& bb,
-                   const vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& ctm)
-  {
-    vtkmdiy::save(bb, ctm.NumVertices);
-    vtkmdiy::save(bb, ctm.SortedValues);
-    vtkmdiy::save(bb, ctm.GlobalMeshIndex);
-    vtkmdiy::save(bb, ctm.NeighborConnectivity);
-    vtkmdiy::save(bb, ctm.NeighborOffsets);
-    vtkmdiy::save(bb, ctm.MaxNeighbors);
-  }
-
-  static void load(vtkmdiy::BinaryBuffer& bb,
-                   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& ctm)
-  {
-    vtkmdiy::load(bb, ctm.NumVertices);
-    vtkmdiy::load(bb, ctm.SortedValues);
-    vtkmdiy::load(bb, ctm.GlobalMeshIndex);
-    vtkmdiy::load(bb, ctm.NeighborConnectivity);
-    vtkmdiy::load(bb, ctm.NeighborOffsets);
-    vtkmdiy::load(bb, ctm.MaxNeighbors);
-  }
-};
-
-} // namespace mangled_vtkmdiy_namespace
-
-
 #endif

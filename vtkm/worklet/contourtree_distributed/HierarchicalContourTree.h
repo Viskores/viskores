@@ -75,6 +75,7 @@
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
+#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcBetweenNodes.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcForUnknownNode.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/InitalizeSuperchildrenWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/PermuteComparator.h>
@@ -186,6 +187,13 @@ public:
                                                  this->Hyperarcs,
                                                  this->RegularNodeGlobalIds,
                                                  this->DataValues);
+  }
+
+  /// routine to create a FindSuperArcBetweenNodes object that we can use as an input for worklets to call the function
+  VTKM_CONT
+  FindSuperArcBetweenNodes GetFindSuperArcBetweenNodes() const
+  {
+    return FindSuperArcBetweenNodes(this->Superarcs);
   }
 
   ///  routine to initialize the hierarchical tree with the top level tree

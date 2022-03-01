@@ -292,8 +292,9 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
                                                      // work when only using boundary extrema
                                                      !useMarchingCubes,
                                                      useMarchingCubes,
-                                                     false,
-                                                     false,
+                                                     false, // no augmentationa
+                                                     false, // no branch decmompostion
+                                                     false, // no save dot
                                                      vtkm::cont::LogLevel::UserVerboseLast,
                                                      vtkm::cont::LogLevel::UserVerboseLast);
   filter.SetActiveField(fieldName);

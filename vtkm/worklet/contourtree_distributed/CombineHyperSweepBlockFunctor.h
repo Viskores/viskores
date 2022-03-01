@@ -123,7 +123,7 @@ struct CobmineHyperSweepBlockFunctor
         // TODO/FIXME: Is there a way to do an in-place transform without a temporary array?
         vtkm::cont::Algorithm::Transform(
           intrinsicVolumeView, incomingIntrinsicVolume, tempSum, vtkm::Sum());
-        vtkm::cont::Algorithm::Copy(tempSum, intrinsicVolumeView);
+        vtkm::cont::ArrayCopy(tempSum, intrinsicVolumeView);
 
         auto dependentVolumeView =
           make_ArrayHandleView(b->DependentVolume, 0, numSupernodesToProcess);
@@ -132,7 +132,7 @@ struct CobmineHyperSweepBlockFunctor
         // TODO/FIXME: Is there a way to do an in-place transform without a temporary array?
         vtkm::cont::Algorithm::Transform(
           dependentVolumeView, incomingDependentVolume, tempSum, vtkm::Sum());
-        vtkm::cont::Algorithm::Copy(tempSum, dependentVolumeView);
+        vtkm::cont::ArrayCopy(tempSum, dependentVolumeView);
       }
     }
 
@@ -156,9 +156,9 @@ struct CobmineHyperSweepBlockFunctor
         // without copy. enqueue does not accept ArrayHandleView as input as it
         // is not trivially copyable
         vtkm::cont::ArrayHandle<vtkm::Id> sendIntrinsicVolume;
-        vtkm::cont::Algorithm::Copy(intrinsicVolumeView, sendIntrinsicVolume);
+        vtkm::cont::ArrayCopy(intrinsicVolumeView, sendIntrinsicVolume);
         vtkm::cont::ArrayHandle<vtkm::Id> sendDependentVolume;
-        vtkm::cont::Algorithm::Copy(dependentVolumeView, sendDependentVolume);
+        vtkm::cont::ArrayCopy(dependentVolumeView, sendDependentVolume);
 
         // Send necessary data portions
         rp.enqueue(target, sendIntrinsicVolume);

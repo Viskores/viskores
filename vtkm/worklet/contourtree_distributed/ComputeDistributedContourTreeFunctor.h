@@ -177,11 +177,11 @@ public:
         // save the corresponding .gv file for the contour tree mesh
         std::string contourTreeMeshFileName = std::string("Rank_") +
           std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-          std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" +
+          std::to_string(static_cast<int>(block->LocalBlockNo)) + "_Round_" +
           std::to_string(rp.round()) + "_Partner_" + std::to_string(ingid) +
           std::string("_Step_0_Combined_Mesh.gv");
         std::string contourTreeMeshLabel = std::string("Block ") +
-          std::to_string(static_cast<int>(block->BlockIndex)) + " Round " +
+          std::to_string(static_cast<int>(block->LocalBlockNo)) + " Round " +
           std::to_string(rp.round()) + " Partner " + std::to_string(ingid) +
           std::string(" Step 0 Combined Mesh");
         std::string contourTreeMeshString =

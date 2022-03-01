@@ -50,20 +50,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
-#define vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
+#ifndef vtk_m_worklet_contourtree_distributed_find_superarc_between_nodes_h
+#define vtk_m_worklet_contourtree_distributed_find_superarc_between_nodes_h
 
 #include <vtkm/Types.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalAugmenter.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
 
 
 namespace vtkm
@@ -72,69 +63,80 @@ namespace worklet
 {
 namespace contourtree_distributed
 {
-template <typename FieldType>
-struct DistributedContourTreeBlockData
+
+
+/// Device implementation of FindSuperArcBetweenNodes for the HierarchicalContourTree
+/// Used in the hierarchical branch decomposition
+class FindSuperArcBetweenNodesDeviceData
 {
-  // Block metadata
-  int GlobalBlockId;     // Global DIY id of this block
-  vtkm::Id LocalBlockNo; // Local block id on this rank
-  vtkm::Id3 BlockOrigin; // Origin of the data block
-  vtkm::Id3 BlockSize;   // Extends of the data block
+public:
+  using IndicesPortalType =
+    typename vtkm::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
 
-  // Fan in data
-  std::vector<vtkm::worklet::contourtree_augmented::ContourTree> ContourTrees;
-  std::vector<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>> ContourTreeMeshes;
-  std::vector<vtkm::worklet::contourtree_distributed::InteriorForest> InteriorForests;
-
-  // Fan out data
-  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> HierarchicalTree;
-
-  // Augmentation phase
-  vtkm::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType> HierarchicalAugmenter;
-  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> AugmentedTree;
-
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b)
+  VTKM_CONT
+  FindSuperArcBetweenNodesDeviceData(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& superarcs)
   {
-    delete static_cast<DistributedContourTreeBlockData<FieldType>*>(b);
+    // Prepare the arrays for input and store the array portals
+    // so that they can be used inside a workelt
+    this->SuperarcsPortal = superarcs.PrepareForInput(device, token);
   }
+
+  // routine to find the superarc from one node to another
+  // it will always be the same ID as one of them if it exists
+  // if not, it will be NO_SUCH_ELEMENT
+  VTKM_EXEC
+  vtkm::Id FindSuperArcBetweenNodes(vtkm::Id firstSupernode, vtkm::Id secondSupernode) const
+  { // FindSuperArcBetweenNodes()
+    // if the second is the target of the first's superarc
+    if (vtkm::worklet::contourtree_augmented::MaskedIndex(
+          this->SuperarcsPortal.Get(firstSupernode)) == secondSupernode)
+    {
+      return firstSupernode;
+    }
+    // flip and test the other way
+    if (vtkm::worklet::contourtree_augmented::MaskedIndex(
+          this->SuperarcsPortal.Get(secondSupernode)) == firstSupernode)
+    {
+      return secondSupernode;
+    }
+    // otherwise it fails
+    return vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+  } // FindSuperArcBetweenNodes()
+
+private:
+  // Array portals needed by FindSuperArcBetweenNodes
+  IndicesPortalType SuperarcsPortal;
 };
+
+
+/// ExecutionObject to generate a device object to use FindSuperArcBetweenNodes for the HierarchicalContourTree
+class FindSuperArcBetweenNodes : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  /// constructor
+  VTKM_CONT
+  FindSuperArcBetweenNodes(const vtkm::worklet::contourtree_augmented::IdArrayType& superarcs)
+    : Superarcs(superarcs)
+  {
+  }
+
+  VTKM_CONT FindSuperArcBetweenNodesDeviceData
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
+  {
+    return FindSuperArcBetweenNodesDeviceData(device, token, this->Superarcs);
+  }
+
+private:
+  // Array portals needed by FindSuperArcBetweenNodes
+  vtkm::worklet::contourtree_augmented::IdArrayType Superarcs;
+};
+
+
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
-
-
-namespace vtkmdiy
-{
-
-// Struct to serialize ContourTreeMesh objects (i.e., load/save) needed in parralle for DIY
-template <typename FieldType>
-struct Serialization<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>>
-{
-  static void save(vtkmdiy::BinaryBuffer& bb,
-                   const vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& ctm)
-  {
-    vtkmdiy::save(bb, ctm.NumVertices);
-    vtkmdiy::save(bb, ctm.SortedValues);
-    vtkmdiy::save(bb, ctm.GlobalMeshIndex);
-    vtkmdiy::save(bb, ctm.NeighborConnectivity);
-    vtkmdiy::save(bb, ctm.NeighborOffsets);
-    vtkmdiy::save(bb, ctm.MaxNeighbors);
-  }
-
-  static void load(vtkmdiy::BinaryBuffer& bb,
-                   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& ctm)
-  {
-    vtkmdiy::load(bb, ctm.NumVertices);
-    vtkmdiy::load(bb, ctm.SortedValues);
-    vtkmdiy::load(bb, ctm.GlobalMeshIndex);
-    vtkmdiy::load(bb, ctm.NeighborConnectivity);
-    vtkmdiy::load(bb, ctm.NeighborOffsets);
-    vtkmdiy::load(bb, ctm.MaxNeighbors);
-  }
-};
-
-} // namespace mangled_vtkmdiy_namespace
-
 
 #endif

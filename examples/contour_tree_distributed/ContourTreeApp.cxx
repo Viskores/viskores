@@ -76,6 +76,7 @@
 #include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalVolumetricBranchDecomposer.h>
 #include <vtkm/worklet/contourtree_distributed/TreeCompiler.h>
 
 // clang-format off
@@ -203,6 +204,19 @@ int main(int argc, char* argv[])
     augmentHierarchicalTree = true;
   }
 
+  bool computeHierarchicalVolumetricBranchDecomposition = false;
+  if (parser.hasOption("--computeVolumeBranchDecomposition"))
+  {
+    computeHierarchicalVolumetricBranchDecomposition = true;
+    if (!augmentHierarchicalTree)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "Warning: --computeVolumeBranchDecomposition only "
+                 "allowed augmentation. Enabling --augmentHierarchicalTree option.");
+      augmentHierarchicalTree = true;
+    }
+  }
+
   bool useBoundaryExtremaOnly = true;
   if (parser.hasOption("--useFullBoundary"))
   {
@@ -261,7 +275,7 @@ int main(int argc, char* argv[])
   {
     if (rank == 0)
     {
-      std::cout << "ContourTreeAugmented <options> <fileName>" << std::endl;
+      std::cout << "ContourTreeDistributed <options> <fileName>" << std::endl;
       std::cout << std::endl;
       std::cout << "<fileName>       Name of the input data file." << std::endl;
       std::cout << "The file is expected to be ASCII with either: " << std::endl;
@@ -284,6 +298,9 @@ int main(int argc, char* argv[])
                 << std::endl;
       std::cout << "                 and when using only boundary extrema." << std::endl;
       std::cout << "--augmentHierarchicalTree Augment the hierarchical tree." << std::endl;
+      std::cout << "--computeVolumeBranchDecomposition Compute the volume branch decomposition. "
+                << std::endl;
+      std::cout << "                 Requries --augmentHierarchicalTree to be set." << std::endl;
       std::cout << "--preSplitFiles  Input data is already pre-split into blocks." << std::endl;
       std::cout << "--saveDot        Save DOT files of the distributed contour tree " << std::endl
                 << "                 computation (Default=False). " << std::endl;
@@ -311,6 +328,9 @@ int main(int argc, char* argv[])
                  << "    mc=" << useMarchingCubes << std::endl
                  << "    useFullBoundary=" << !useBoundaryExtremaOnly << std::endl
                  << "    saveDot=" << saveDotFiles << std::endl
+                 << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
+                 << "    computeVolumetricBranchDecomposition="
+                 << computeHierarchicalVolumetricBranchDecomposition << std::endl
                  << "    saveOutputData=" << saveOutputData << std::endl
                  << "    forwardSummary=" << forwardSummary << std::endl
                  << "    nblocks=" << numBlocks << std::endl);
@@ -842,17 +862,19 @@ int main(int argc, char* argv[])
   prevTime = currTime;
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::ContourTreeUniformDistributed filter(blocksPerDim,
-                                                     globalSize,
-                                                     localBlockIndices,
-                                                     localBlockOrigins,
-                                                     localBlockSizes,
-                                                     useBoundaryExtremaOnly,
-                                                     useMarchingCubes,
-                                                     augmentHierarchicalTree,
-                                                     saveDotFiles,
-                                                     timingsLogLevel,
-                                                     treeLogLevel);
+  vtkm::filter::ContourTreeUniformDistributed filter(
+    blocksPerDim,
+    globalSize,
+    localBlockIndices,
+    localBlockOrigins,
+    localBlockSizes,
+    useBoundaryExtremaOnly,
+    useMarchingCubes,
+    augmentHierarchicalTree,
+    computeHierarchicalVolumetricBranchDecomposition,
+    saveDotFiles,
+    timingsLogLevel,
+    treeLogLevel);
   filter.SetActiveField("values");
 
   // Execute the contour tree analysis
@@ -872,35 +894,53 @@ int main(int argc, char* argv[])
   {
     if (augmentHierarchicalTree)
     {
-      for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+      if (computeHierarchicalVolumetricBranchDecomposition)
       {
-        auto ds = result.GetPartition(ds_no);
-        vtkm::worklet::contourtree_augmented::IdArrayType supernodes;
-        ds.GetField("Supernodes").GetData().AsArrayHandle(supernodes);
-        vtkm::worklet::contourtree_augmented::IdArrayType superarcs;
-        ds.GetField("Superarcs").GetData().AsArrayHandle(superarcs);
-        vtkm::worklet::contourtree_augmented::IdArrayType regularNodeGlobalIds;
-        ds.GetField("RegularNodeGlobalIds").GetData().AsArrayHandle(regularNodeGlobalIds);
-        vtkm::Id totalVolume = globalSize[0] * globalSize[1] * globalSize[2];
-        vtkm::worklet::contourtree_augmented::IdArrayType intrinsicVolume;
-        ds.GetField("IntrinsicVolume").GetData().AsArrayHandle(intrinsicVolume);
-        vtkm::worklet::contourtree_augmented::IdArrayType dependentVolume;
-        ds.GetField("DependentVolume").GetData().AsArrayHandle(dependentVolume);
+        for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+        {
+          auto ds = result.GetPartition(ds_no);
+          std::string branchDecompositionFileName = std::string("BranchDecomposition_Rank_") +
+            std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+            std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
 
-        std::string dumpVolumesString =
-          vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ValueType>::DumpVolumes(
-            supernodes,
-            superarcs,
-            regularNodeGlobalIds,
-            totalVolume,
-            intrinsicVolume,
-            dependentVolume);
+          std::ofstream treeStream(branchDecompositionFileName.c_str());
+          treeStream
+            << vtkm::worklet::contourtree_distributed::HierarchicalVolumetricBranchDecomposer<
+                 ValueType>::PrintBranches(ds);
+        }
+      }
+      else
+      {
+        for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+        {
+          auto ds = result.GetPartition(ds_no);
+          vtkm::worklet::contourtree_augmented::IdArrayType supernodes;
+          ds.GetField("Supernodes").GetData().AsArrayHandle(supernodes);
+          vtkm::worklet::contourtree_augmented::IdArrayType superarcs;
+          ds.GetField("Superarcs").GetData().AsArrayHandle(superarcs);
+          vtkm::worklet::contourtree_augmented::IdArrayType regularNodeGlobalIds;
+          ds.GetField("RegularNodeGlobalIds").GetData().AsArrayHandle(regularNodeGlobalIds);
+          vtkm::Id totalVolume = globalSize[0] * globalSize[1] * globalSize[2];
+          vtkm::worklet::contourtree_augmented::IdArrayType intrinsicVolume;
+          ds.GetField("IntrinsicVolume").GetData().AsArrayHandle(intrinsicVolume);
+          vtkm::worklet::contourtree_augmented::IdArrayType dependentVolume;
+          ds.GetField("DependentVolume").GetData().AsArrayHandle(dependentVolume);
 
-        std::string volumesFileName = std::string("TreeWithVolumes_Rank_") +
-          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-          std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
-        std::ofstream treeStream(volumesFileName.c_str());
-        treeStream << dumpVolumesString;
+          std::string dumpVolumesString =
+            vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ValueType>::DumpVolumes(
+              supernodes,
+              superarcs,
+              regularNodeGlobalIds,
+              totalVolume,
+              intrinsicVolume,
+              dependentVolume);
+
+          std::string volumesFileName = std::string("TreeWithVolumes_Rank_") +
+            std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+            std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
+          std::ofstream treeStream(volumesFileName.c_str());
+          treeStream << dumpVolumesString;
+        }
       }
     }
     else

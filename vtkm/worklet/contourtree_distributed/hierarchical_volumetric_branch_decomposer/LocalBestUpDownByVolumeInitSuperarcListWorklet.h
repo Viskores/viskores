@@ -38,24 +38,16 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_hypersweepblock_h
-#define vtk_m_worklet_contourtree_distributed_hypersweepblock_h
+#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_localbestupdownbyvolume_init_superarc_list_worklet_h
+#define vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_localbestupdownbyvolume_init_superarc_list_worklet_h
 
-#include <vtkm/Types.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
@@ -63,49 +55,48 @@ namespace worklet
 {
 namespace contourtree_distributed
 {
-
-template <typename ContourTreeDataFieldType>
-struct HyperSweepBlock
+namespace hierarchical_volumetric_branch_decomposer
 {
-  HyperSweepBlock(
-    const vtkm::Id localBlockNo,
-    const int globalBlockId,
-    const vtkm::Id3& origin,
-    const vtkm::Id3& size,
-    const vtkm::Id3& globalSize,
-    const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-      hierarchicalContourTree)
-    : LocalBlockNo(localBlockNo)
-    , GlobalBlockId(globalBlockId)
-    , Origin(origin)
-    , Size(size)
-    , GlobalSize(globalSize)
-    , HierarchicalContourTree(hierarchicalContourTree)
+
+class LocalBestUpDownByVolumeInitSuperarcListWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn hierarchicalTreeSuperarcs, FieldOut superarcList);
+  using ExecutionSignature = _2(InputIndex, _1);
+  using InputDomain = _1;
+
+  VTKM_EXEC vtkm::worklet::contourtree_augmented::EdgePair operator()(
+    vtkm::Id superarc, // InputIndex in [0, hierarchicalTree.Superarcs.GetNumberOfValues() - 1]
+    vtkm::Id hierarchicalTreeSuperarc // hierarchicalTree.Superarcs[superarc]
+  ) const
   {
-  }
+    using vtkm::worklet::contourtree_augmented::EdgePair;
+    using vtkm::worklet::contourtree_augmented::IsAscending;
+    using vtkm::worklet::contourtree_augmented::MaskedIndex;
 
-  // Mesh information
-  vtkm::Id LocalBlockNo;
-  int GlobalBlockId;
-  vtkm::Id3 Origin;
-  vtkm::Id3 Size;
-  vtkm::Id3 GlobalSize;
+    if (IsAscending(hierarchicalTreeSuperarc))
+    {
+      return EdgePair(superarc, MaskedIndex(hierarchicalTreeSuperarc));
+    }
+    else
+    {
+      return EdgePair(MaskedIndex(hierarchicalTreeSuperarc), superarc);
+    }
 
-  // Hierarchical contour tree for this block
-  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-    HierarchicalContourTree;
+    /* // This worklet implements the follwing loop
+        for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
+        { // per superarc
+        if (isAscending(hierarchicalTree.superarcs[superarc]))
+          superarcList[superarc] = Edge(superarc, maskedIndex(hierarchicalTree.superarcs[superarc]));
+        else
+          superarcList[superarc] = Edge(maskedIndex(hierarchicalTree.superarcs[superarc]), superarc);
+        } // per superarc
+     */
+  } // operator()()
 
-  // Computed values
-  vtkm::cont::ArrayHandle<vtkm::Id> IntrinsicVolume;
-  vtkm::cont::ArrayHandle<vtkm::Id> DependentVolume;
+}; // LocalBestUpDownByVolumeInitSuperarcListWorklet
 
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b)
-  {
-    delete static_cast<HyperSweepBlock<ContourTreeDataFieldType>*>(b);
-  }
-};
-
+} // namespace hierarchical_augmenter
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
