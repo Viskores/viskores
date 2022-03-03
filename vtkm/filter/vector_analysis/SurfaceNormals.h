@@ -108,7 +108,7 @@ private:
   std::string PointNormalsName;
 };
 } // namespace vector_analysis
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::SurfaceNormals.") SurfaceNormal
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::SurfaceNormals.") SurfaceNormals
   : public vtkm::filter::vector_analysis::SurfaceNormals
 {
   using vector_analysis::SurfaceNormals::SurfaceNormals;
