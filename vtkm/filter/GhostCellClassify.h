@@ -28,12 +28,6 @@ inline void GhostCellClassify_deprecated_warning()
   GhostCellClassify_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::GhostCellClassify.") GhostCellClassify
-  : public vtkm::filter::mesh_info::GhostCellClassify
-{
-  using mesh_info::GhostCellClassify::GhostCellClassify;
-};
-
 }
 } // namespace vtkm::filter
 

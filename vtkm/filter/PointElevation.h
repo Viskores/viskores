@@ -28,12 +28,6 @@ inline void PointElevation_deprecated_warning()
   PointElevation_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::PointElevation.") PointElevation
-  : public vtkm::filter::field_transform::PointElevation
-{
-  using field_transform::PointElevation::PointElevation;
-};
-
 }
 } // namespace vtkm::filter
 

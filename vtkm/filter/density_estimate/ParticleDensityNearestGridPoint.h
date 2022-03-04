@@ -50,6 +50,12 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace density_estimate
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::ParticleDensityNearestGridPoint.")
+  ParticleDensityNearestGridPoint
+  : public vtkm::filter::density_estimate::ParticleDensityNearestGridPoint
+{
+  using density_estimate::ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint;
+};
 } // namespace filter
 } // namespace vtkm
 #endif //vtk_m_filter_density_estimate_ParticleDensityNGP_h

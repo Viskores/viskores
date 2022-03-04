@@ -20,6 +20,7 @@ namespace filter
 {
 namespace connected_components
 {
+
 /// \brief Finds groups of cells that are connected together through their topology.
 ///
 /// Finds and labels groups of cells that are connected together through their topology.
@@ -37,8 +38,16 @@ private:
   VTKM_CONT
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
-}
-}
-}
+
+} // namespace connected_components
+
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::connected_components::CellSetConnectivity.")
+  CellSetConnectivity : public vtkm::filter::connected_components::CellSetConnectivity
+{
+  using connected_components::CellSetConnectivity::CellSetConnectivity;
+};
+
+} // namespace filter
+} // namespace vtkm
 
 #endif //vtk_m_filter_connected_components_CellSetConnectivity_h

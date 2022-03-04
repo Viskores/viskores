@@ -28,12 +28,6 @@ inline void VectorMagnitude_deprecated_warning()
   VectorMagnitude_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::VectorMagnitude.") VectorMagnitude
-  : public vtkm::filter::vector_analysis::VectorMagnitude
-{
-  using vector_analysis::VectorMagnitude::VectorMagnitude;
-};
-
 }
 } // namespace vtkm::filter
 

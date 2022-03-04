@@ -27,12 +27,6 @@ inline void MeshQuality_deprecated_warning()
   MeshQuality_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::MeshQuality.") MeshQuality
-  : public vtkm::filter::mesh_info::MeshQuality
-{
-  using mesh_info::MeshQuality::MeshQuality;
-};
-
 }
 } // namespace vtkm::filter
 

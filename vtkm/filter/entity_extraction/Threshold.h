@@ -60,6 +60,11 @@ private:
   bool ReturnAllInRange = false;
 };
 } // namespace entity_extraction
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::Threshold.") Threshold
+  : public vtkm::filter::entity_extraction::Threshold
+{
+  using entity_extraction::Threshold::Threshold;
+};
 } // namespace filter
 } // namespace vtkm
 

@@ -122,8 +122,13 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 
-}
-}
-} // namespace vtkm::filter::vector_analysis
+} // namespace vector_analysis
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::CrossProduct.") CrossProduct
+  : public vtkm::filter::vector_analysis::CrossProduct
+{
+  using vector_analysis::CrossProduct::CrossProduct;
+};
+} // namespace filter
+} // namespace vtkm
 
 #endif // vtk_m_filter_vector_analysis_CrossProduct_h

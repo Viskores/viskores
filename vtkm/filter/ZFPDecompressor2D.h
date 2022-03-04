@@ -28,12 +28,6 @@ inline void ZFPDecompressor2D_deprecated_warning()
   ZFPDecompressor2D_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::zfp::ZFPDecompressor2D.") ZFPDecompressor2D
-  : public vtkm::filter::zfp::ZFPDecompressor2D
-{
-  using zfp::ZFPDecompressor2D::ZFPDecompressor2D;
-};
-
 }
 } // namespace vtkm::filter
 

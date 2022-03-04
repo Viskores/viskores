@@ -26,12 +26,6 @@ inline void CleanGrid_deprecated_warning()
   CleanGrid_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::clean_grid::CleanGrid.") CleanGrid
-  : public vtkm::filter::clean_grid::CleanGrid
-{
-  using clean_grid::CleanGrid::CleanGrid;
-};
-
 }
 } // namespace vtkm::filter
 

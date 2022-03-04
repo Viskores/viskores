@@ -28,12 +28,6 @@ inline void ClipWithImplicitFunction_deprecated_warning()
   ClipWithImplicitFunction_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::contour::ClipWithImplicitFunction.")
-  ClipWithImplicitFunction : public vtkm::filter::contour::ClipWithImplicitFunction
-{
-  using contour::ClipWithImplicitFunction::ClipWithImplicitFunction;
-};
-
 }
 } // namespace vtkm::filter
 

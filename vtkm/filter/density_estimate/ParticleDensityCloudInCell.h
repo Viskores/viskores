@@ -50,6 +50,11 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace density_estimate
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::ParticleDensityCloudInCell.")
+  ParticleDensityCloudInCell : public vtkm::filter::density_estimate::ParticleDensityCloudInCell
+{
+  using density_estimate::ParticleDensityCloudInCell::ParticleDensityCloudInCell;
+};
 } // namespace filter
 } // namespace vtkm
 

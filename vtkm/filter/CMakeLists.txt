@@ -46,7 +46,7 @@ set(deprecated_headers
   PointTransform.h
   Slice.h
   SplitSharpEdges.h
-  SurfaceNormal.h
+  SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
   ThresholdPoints.h

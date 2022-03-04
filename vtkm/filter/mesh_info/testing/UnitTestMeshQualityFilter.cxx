@@ -196,157 +196,157 @@ int TestMeshQuality()
   std::vector<vtkm::cont::DataSet> inputs;
 
   expectedValues.push_back(FloatVec{ 0, 0, 1, 1.333333333f, 4, 4 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::VOLUME);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Volume);
   metricName.emplace_back("volume");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 3, 4, 0, 0, 0, 0 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::AREA);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Area);
   metricName.emplace_back("area");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 3, 1 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::AREA);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Area);
   metricName.emplace_back("area");
   inputs.push_back(singleTypeInput);
 
   expectedValues.push_back(FloatVec{ 1.164010f, 1.118034f, 1.648938f, 0, 0, 1.1547f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::ASPECT_RATIO);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::AspectRatio);
   metricName.emplace_back("aspectRatio");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 1.164010f, 2.47582f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::ASPECT_RATIO);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::AspectRatio);
   metricName.emplace_back("aspectRatio");
   inputs.push_back(singleTypeInput);
 
   expectedValues.push_back(FloatVec{ 0, 0, 1.52012f, 0, 0, 0 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::ASPECT_GAMMA);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::AspectGama);
   metricName.emplace_back("aspectGamma");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 1.058475f, 2.25f, 1.354007f, 0, 0, 1.563472f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::CONDITION);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Condition);
   metricName.emplace_back("condition");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 1.058475f, 2.02073f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::CONDITION);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Condition);
   metricName.emplace_back("condition");
   inputs.push_back(singleTypeInput);
 
   expectedValues.push_back(FloatVec{ 45, 45, -1, -1, -1, -1 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MIN_ANGLE);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MinAngle);
   metricName.emplace_back("minAngle");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 45, 18.4348f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MIN_ANGLE);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MinAngle);
   metricName.emplace_back("minAngle");
   inputs.push_back(singleTypeInput);
 
   expectedValues.push_back(FloatVec{ 71.56505f, 135, -1, -1, -1, -1 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MAX_ANGLE);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MaxAngle);
   metricName.emplace_back("maxAngle");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 71.56505f, 116.565f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MAX_ANGLE);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MaxAngle);
   metricName.emplace_back("maxAngle");
   inputs.push_back(singleTypeInput);
 
   expectedValues.push_back(FloatVec{ -1, -1, -1, -1, -1, 1.73205f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MIN_DIAGONAL);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MinDiagonal);
   metricName.emplace_back("minDiagonal");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ -1, -1, -1, -1, -1, 4.3589f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MAX_DIAGONAL);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::MaxDiagonal);
   metricName.emplace_back("maxDiagonal");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 0, 2, 6, 0, 0, 4 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::JACOBIAN);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Jacobian);
   metricName.emplace_back("jacobian");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 0.816497f, 0.707107f, 0.408248f, -2, -2, 0.57735f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::SCALED_JACOBIAN);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::ScaledJacobian);
   metricName.emplace_back("scaledJacobian");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 0.816497f, 0.365148f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::SCALED_JACOBIAN);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::ScaledJacobian);
   metricName.emplace_back("scaledJacobian");
   inputs.push_back(singleTypeInput);
 
   expectedValues.push_back(FloatVec{ -1, 8.125f, -1, -1, -1, 2.62484f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::ODDY);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Oddy);
   metricName.emplace_back("oddy");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ -1, 0.620174f, -1, -1, -1, 0.397360f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::DIAGONAL_RATIO);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::DiagonalRatio);
   metricName.emplace_back("diagonalRatio");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 0.944755f, 0.444444f, 0.756394f, -1, -1, 0.68723f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::SHAPE);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Shape);
   metricName.emplace_back("shape");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 0.944755f, 0.494872f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::SHAPE);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Shape);
   metricName.emplace_back("shape");
   inputs.push_back(singleTypeInput);
 
   expectedValues.push_back(FloatVec{ -1, 0.707107f, -1, -1, -1, 0.57735f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::SHEAR);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Shear);
   metricName.emplace_back("shear");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ -1, 0.447214f, -1, -1, -1, 0.57735f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::SKEW);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Skew);
   metricName.emplace_back("skew");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ -1, (float)0.392232, -1, -1, -1, (float)0.688247 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::STRETCH);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Stretch);
   metricName.emplace_back("stretch");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ -1, 0.5, -1, -1, -1, 0 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::TAPER);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Taper);
   metricName.emplace_back("taper");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ -1, 1, -1, -1, -1, -1 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::WARPAGE);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Warpage);
   metricName.emplace_back("warpage");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ -1, -1, -1, -1, -1, 0.707107f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::DIMENSION);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::Dimension);
   metricName.emplace_back("dimension");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 0.151235f, 0.085069f, 0.337149f, -1, -1, 0.185378f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::RELATIVE_SIZE_SQUARED);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::RelativeSizeSquared);
   metricName.emplace_back("relativeSizeSquared");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 0.444444f, 0.25f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::RELATIVE_SIZE_SQUARED);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::RelativeSizeSquared);
   metricName.emplace_back("relativeSizeSquared");
   inputs.push_back(singleTypeInput);
 
   expectedValues.push_back(FloatVec{ 0.142880f, 0.037809f, 0.255017f, -1, -1, 0.127397f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::SHAPE_AND_SIZE);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::ShapeAndSize);
   metricName.emplace_back("shapeAndSize");
   inputs.push_back(explicitInput);
 
   expectedValues.push_back(FloatVec{ 0.419891f, 0.123718f });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::SHAPE_AND_SIZE);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::ShapeAndSize);
   metricName.emplace_back("shapeAndSize");
   inputs.push_back(singleTypeInput);
 

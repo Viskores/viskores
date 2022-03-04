@@ -28,12 +28,6 @@ inline void FieldToColors_deprecated_warning()
   FieldToColors_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::FieldToColors.") FieldToColors
-  : public vtkm::filter::field_transform::FieldToColors
-{
-  using field_transform::FieldToColors::FieldToColors;
-};
-
 }
 } // namespace vtkm::filter
 

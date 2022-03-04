@@ -28,12 +28,6 @@ inline void CellSetConnectivity_deprecated_warning()
   CellSetConnectivity_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::connected_components::CellSetConnectivity.")
-  CellSetConnectivity : public vtkm::filter::connected_components::CellSetConnectivity
-{
-  using connected_components::CellSetConnectivity::CellSetConnectivity;
-};
-
 }
 } // namespace vtkm::filter
 

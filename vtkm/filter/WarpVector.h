@@ -27,12 +27,6 @@ inline void WarpVector_deprecated_warning()
   WarpVector_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::WarpVector.") WarpVector
-  : public vtkm::filter::field_transform::WarpVector
-{
-  using field_transform::WarpVector::WarpVector;
-};
-
 }
 } // namespace vtkm::filter
 

@@ -62,6 +62,11 @@ private:
   vtkm::FloatDefault Scale;
 };
 } // namespace field_transform
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::WarpVector.") WarpVector
+  : public vtkm::filter::field_transform::WarpVector
+{
+  using field_transform::WarpVector::WarpVector;
+};
 } // namespace filter
 } // namespace vtkm
 #endif // vtk_m_filter_field_transform_WarpVector_h

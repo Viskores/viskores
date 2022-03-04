@@ -28,12 +28,6 @@ inline void ExternalFaces_deprecated_warning()
   ExternalFaces_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::ExternalFaces.") ExternalFaces
-  : public vtkm::filter::entity_extraction::ExternalFaces
-{
-  using entity_extraction::ExternalFaces::ExternalFaces;
-};
-
 }
 } // namespace vtkm::filter
 

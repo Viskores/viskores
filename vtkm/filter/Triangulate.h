@@ -28,12 +28,6 @@ inline void Triangulate_deprecated_warning()
   Triangulate_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::geometry_refinement::Triangulate.") Triangulate
-  : public vtkm::filter::geometry_refinement::Triangulate
-{
-  using geometry_refinement::Triangulate::Triangulate;
-};
-
 }
 } // namespace vtkm::filter
 

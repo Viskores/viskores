@@ -27,12 +27,6 @@ inline void NDEntropy_deprecated_warning()
   NDEntropy_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::NDEntropy.") NDEntropy
-  : public vtkm::filter::density_estimate::NDEntropy
-{
-  using density_estimate::NDEntropy::NDEntropy;
-};
-
 }
 } // namespace vtkm::filter
 

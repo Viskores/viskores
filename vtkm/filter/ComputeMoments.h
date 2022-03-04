@@ -28,12 +28,6 @@ inline void ComputeMoments_deprecated_warning()
   ComputeMoments_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::image_processing::ComputeMoments.") ComputeMoments
-  : public vtkm::filter::image_processing::ComputeMoments
-{
-  using image_processing::ComputeMoments::ComputeMoments;
-};
-
 }
 } // namespace vtkm::filter
 
