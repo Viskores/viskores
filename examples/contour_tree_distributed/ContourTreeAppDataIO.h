@@ -79,8 +79,11 @@
 
 
 #ifdef ENABLE_HDFIO
-#include "H5Cpp.h"
-using namespace H5;
+// #include "H5Cpp.h"
+#include "hdf5.h"
+//using namespace H5;
+
+#include <mpi.h>
 
 
 /// Convert a 3D index of a cube to rank index
@@ -98,8 +101,12 @@ vtkm::Id3 to3DIndex(vtkm::Id idx, vtkm::Id3 dims)
   res[2] = idx / (dims[0] * dims[1]);
   idx -= (res[2] * dims[0] * dims[1]);
   // Swap index 0 and 1
-  res[0] = idx / dims[0];
-  res[1] = idx % dims[0];
+  //    res[0] = idx / dims[0];
+  //    res[1] = idx % dims[0];
+  // Don't swap index here, because this function is used with the original
+  // HDF5 layout and the 3D index is swapped later on
+  res[1] = idx / dims[0];
+  res[0] = idx % dims[0];
   return res;
 }
 
@@ -128,7 +135,7 @@ bool read3DHDF5File(const int& mpi_rank,
                     const std::string& filename,
                     const std::string& dataset_name,
                     const int& blocksPerRank,
-                    const vtkm::Id3& blocksPerDim,
+                    vtkm::Id3& blocksPerDim,
                     const vtkm::Id3& selectSize,
                     std::vector<vtkm::Float32>::size_type& nDims,
                     vtkm::cont::PartitionedDataSet& useDataSet,
@@ -163,13 +170,14 @@ bool read3DHDF5File(const int& mpi_rank,
 
   herr_t status;
   //Set up file access property list with parallel I/O access
-  //hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
-  //MPI_Comm comm  = MPI_COMM_WORLD;
-  //MPI_Info info  = MPI_INFO_NULL;
-  //H5Pset_fapl_mpio(plist_id, comm, info);
+  hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
+  MPI_Comm comm = MPI_COMM_WORLD;
+  MPI_Info info = MPI_INFO_NULL;
+  H5Pset_fapl_mpio(plist_id, comm, info);
 
   // Open the file and the dataset
-  hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT); //  plist_id);//
+  //hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT); //  plist_id);//
+  hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, plist_id); //
   hid_t dataset = H5Dopen(file, dataset_name.c_str(), H5P_DEFAULT);
   // Get filespace for rank and dimension
   hid_t filespace = H5Dget_space(dataset);
@@ -192,11 +200,13 @@ bool read3DHDF5File(const int& mpi_rank,
   // define the hyperslap
   hsize_t count[3];  // size of the hyperslab in the file
   hsize_t offset[3]; // hyperslab offset in the file
+
   // Compute the origin and count
   vtkm::Id3 blockSize(std::floor(vtkm::Id(globalSize[0] / blocksPerDim[0])),
                       std::floor(vtkm::Id(globalSize[1] / blocksPerDim[1])),
                       std::floor(vtkm::Id(globalSize[2] / blocksPerDim[2])));
   vtkm::Id3 blockIndex = to3DIndex(mpi_rank, blocksPerDim);
+
   // compute the offset and count for the block for this rank
   offset[0] = blockSize[0] * blockIndex[0];
   offset[1] = blockSize[1] * blockIndex[1];
@@ -239,6 +249,7 @@ bool read3DHDF5File(const int& mpi_rank,
   vtkm::Id3 blockOrigin = vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
                                      static_cast<vtkm::Id>(offset[1]),
                                      static_cast<vtkm::Id>(offset[2]) };
+
   // Define the hyperslap to read the data into memory
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, offset, NULL, count, NULL);
   // Define the memory space for reading
@@ -321,6 +332,7 @@ bool read3DHDF5File(const int& mpi_rank,
   ds.AddPointField("values", values);
   // and add to partition
   useDataSet.AppendPartition(ds);
+
   // Original order
   //localBlockIndicesPortal.Set(blockNo, blockIndex);
   //localBlockOriginsPortal.Set(blockNo, blockOrigin);
@@ -332,6 +344,19 @@ bool read3DHDF5File(const int& mpi_rank,
   // dims[0] -> col; dims[1] -> row, dims[2] ->slice
   // Swap the dimensions to match the pre-split file reader
   globalSize = vtkm::Id3(globalSize[1], globalSize[0], globalSize[2]);
+  // Swap also the blocks per dimension accordingly
+  blocksPerDim = vtkm::Id3(blocksPerDim[1], blocksPerDim[0], blocksPerDim[2]);
+
+  // Log information of the (first) local data block
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+             "" << std::setw(42) << std::left << "blockSize"
+                << ":" << localBlockSizesPortal.Get(0) << std::endl
+                << std::setw(42) << std::left << "blockOrigin=" << localBlockOriginsPortal.Get(0)
+                << std::endl
+                << std::setw(42) << std::left << "blockIndices=" << localBlockIndicesPortal.Get(0)
+                << std::endl
+                << std::setw(42) << std::left << "globalSize=" << globalSize << std::endl);
+
   // Finished data read
   currTime = totalTime.GetElapsedTime();
   dataReadTime = currTime - prevTime;

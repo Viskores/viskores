@@ -100,7 +100,7 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #include <utility>
 #include <vector>
 
-using ValueType = vtkm::Float64;
+using ValueType = vtkm::Float32;
 
 #define SINGLE_FILE_STDOUT_STDERR
 
@@ -441,6 +441,30 @@ int main(int argc, char* argv[])
     return 255;
   }
 
+  VTKM_LOG_S(exampleLogLevel,
+             std::endl
+               << "    ------------ Settings -----------" << std::endl
+               << "    filename=" << filename << std::endl
+               << "    preSplitFiles=" << preSplitFiles << std::endl
+               << "    device=" << device.GetName() << std::endl
+               << "    mc=" << useMarchingCubes << std::endl
+               << "    useFullBoundary=" << !useBoundaryExtremaOnly << std::endl
+               << "    saveDot=" << saveDotFiles << std::endl
+               << "    saveOutputData=" << saveOutputData << std::endl
+               << "    forwardSummary=" << forwardSummary << std::endl
+               << "    numBlocks=" << numBlocks << std::endl
+               << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
+               << "    numRanks=" << size << std::endl
+               << "    rank=" << rank << std::endl
+#ifdef ENABLE_HDFIO
+               << "    dataset=" << dataset_name << " (HDF5 only)" << std::endl
+               << "    blocksPerDim=" << blocksPerDimIn[0] << "," << blocksPerDimIn[1] << ","
+               << blocksPerDimIn[2] << " (HDF5 only)" << std::endl
+               << "    selectSize=" << selectSize[0] << "," << selectSize[1] << "," << selectSize[2]
+               << " (HDF5 only)" << std::endl
+#endif
+  );
+
   // Measure our time for startup
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 startUpTime = currTime - prevTime;
@@ -505,7 +529,7 @@ int main(int argc, char* argv[])
 #ifdef ENABLE_HDFIO
       blocksPerDim = blocksPerDimIn;
       readOk = read3DHDF5File<ValueType>(
-        // inputs
+        // inputs (blocksPerDim is being modified to swap dimension to fit we re-ordering of dimension)
         rank,
         filename,
         dataset_name,
@@ -589,6 +613,19 @@ int main(int argc, char* argv[])
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 dataReadSyncTime = currTime - prevTime;
   prevTime = currTime;
+
+  // Log information of the (first) local data block
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+             "" << std::setw(42) << std::left << "blockSize"
+                << ":" << localBlockSizesPortal.Get(0) << std::endl
+                << std::setw(42) << std::left << "blockOrigin=" << localBlockOriginsPortal.Get(0)
+                << std::endl
+                << std::setw(42) << std::left << "blockIndices=" << localBlockIndicesPortal.Get(0)
+                << std::endl
+                << std::setw(42) << std::left << "blocksPerDim=" << blocksPerDim << std::endl
+                << std::setw(42) << std::left << "globalSize=" << globalSize << std::endl
+
+  );
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
   vtkm::filter::ContourTreeUniformDistributed filter(blocksPerDim,
