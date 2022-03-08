@@ -66,6 +66,11 @@ using Or = typename detail::OrImpl<T1, T2>::type;
 template <typename T>
 using Not = typename detail::NotImpl<T>::type;
 
+/// A single argument template that becomes its argument. Useful for passing an identity to
+/// transformations.
+template <typename T>
+using Identity = T;
+
 }
 }
 } // namespace vtkm::internal::meta

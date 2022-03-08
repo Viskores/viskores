@@ -871,18 +871,48 @@ using ListReduce = typename detail::ListReduceImpl<internal::AsList<List>, Opera
 /// (such as `std::true_type` and `std::false_type`. Resolves to `std::true_type` if all the types
 /// are true, `std::false_type` otherwise. If the list is empty, resolves to `std::true_type`.
 ///
-template <typename List>
-using ListAll = vtkm::ListReduce<List, vtkm::internal::meta::And, std::true_type>;
+/// `ListAll` also accepts an optional second argument that is a template that is a predicate
+/// applied to each item in the input list before checking for the `value` type.
+///
+/// ```cpp
+/// using NumberList1 = vtkm::List<int, char>;
+/// using NumberList2 = vtkm::List<int, float>;
+///
+/// // Resolves to std::true_type
+/// using AllInt1 = vtkm::ListAll<NumberList1, std::is_integral>;
+///
+/// // Resolves to std::false_type (because float is not integral)
+/// using AllInt2 = vtkm::ListAll<NumberList2, std::is_integral>;
+/// ```
+///
+template <typename List, template <typename> class Predicate = vtkm::internal::meta::Identity>
+using ListAll =
+  vtkm::ListReduce<vtkm::ListTransform<List, Predicate>, vtkm::internal::meta::And, std::true_type>;
 
 /// \brief Determines whether any of the types in the list are "true."
 ///
-/// `ListAll` expects a `vtkm::List` with types that have a `value` that is either true or false
+/// `ListAny` expects a `vtkm::List` with types that have a `value` that is either true or false
 /// (such as `std::true_type` and `std::false_type`. Resolves to `std::true_type` if any of the
 /// types are true, `std::false_type` otherwise. If the list is empty, resolves to
 /// `std::false_type`.
 ///
-template <typename List>
-using ListAny = vtkm::ListReduce<List, vtkm::internal::meta::Or, std::false_type>;
+/// `ListAny` also accepts an optional second argument that is a template that is a predicate
+/// applied to each item in the input list before checking for the `value` type.
+///
+/// ```cpp
+/// using NumberList1 = vtkm::List<int, float>;
+/// using NumberList2 = vtkm::List<float, double>;
+///
+/// // Resolves to std::true_type
+/// using AnyInt1 = vtkm::ListAny<NumberList1, std::is_integral>;
+///
+/// // Resolves to std::false_type
+/// using AnyInt2 = vtkm::ListAny<NumberList2, std::is_integral>;
+/// ```
+///
+template <typename List, template <typename> class Predicate = vtkm::internal::meta::Identity>
+using ListAny =
+  vtkm::ListReduce<vtkm::ListTransform<List, Predicate>, vtkm::internal::meta::Or, std::false_type>;
 
 #undef VTKM_CHECK_LIST_SIZE
 

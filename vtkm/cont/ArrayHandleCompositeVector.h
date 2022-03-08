@@ -32,7 +32,7 @@ namespace compvec
 
 template <typename... PortalList>
 using AllPortalsAreWritable =
-  vtkm::ListAll<vtkm::List<vtkm::internal::PortalSupportsSets<PortalList>...>>;
+  vtkm::ListAll<vtkm::List<PortalList...>, vtkm::internal::PortalSupportsSets>;
 
 // GetValueType: ---------------------------------------------------------------
 // Determines the output `ValueType` of the set of `ArrayHandle` objects. For example, if the input

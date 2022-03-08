@@ -535,7 +535,7 @@ private:
     //check & convert code when we already know all the types. This results
     //in smaller executables and libraries.
     using ParamTypes = typename ParameterInterface::ParameterSig;
-    using HasDynamicTypes = vtkm::ListAny<vtkm::ListTransform<ParamTypes, detail::IsDynamicType>>;
+    using HasDynamicTypes = vtkm::ListAny<ParamTypes, detail::IsDynamicType>;
 
     this->StartInvokeDynamic(HasDynamicTypes(), std::forward<Args>(args)...);
   }

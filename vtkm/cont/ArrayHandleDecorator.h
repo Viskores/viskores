@@ -109,8 +109,7 @@ namespace decor
 // Ensures that all types in variadic container ArrayHandleList are subclasses
 // of ArrayHandleBase.
 template <typename ArrayHandleList>
-using AllAreArrayHandles =
-  vtkm::ListAll<vtkm::ListTransform<ArrayHandleList, vtkm::cont::internal::ArrayHandleCheck>>;
+using AllAreArrayHandles = vtkm::ListAll<ArrayHandleList, vtkm::cont::internal::ArrayHandleCheck>;
 
 namespace detail
 {
@@ -249,8 +248,7 @@ GetReadPortalType<typename std::decay<ArrayT>::type> ReadPortal(const ArrayT& ar
 // Equivalent to std::true_type if *any* portal in PortalList can be written to.
 // If all are read-only, std::false_type is used instead.
 template <typename PortalList>
-using AnyPortalIsWritable =
-  vtkm::ListAny<vtkm::ListTransform<PortalList, vtkm::internal::PortalSupportsSets>>;
+using AnyPortalIsWritable = vtkm::ListAny<PortalList, vtkm::internal::PortalSupportsSets>;
 
 // Set to std::true_type if DecoratorImplT::CreateInverseFunctor can be called
 // with the supplied portals, or std::false_type otherwise.
