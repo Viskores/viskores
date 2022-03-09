@@ -56,7 +56,6 @@ set(headers
   ArrayPortalUniformPointCoordinates.h
   ArrayPortalValueReference.h
   Assume.h
-  brigand.hpp
   ConfigureFor32.h
   ConfigureFor64.h
   ConnectivityStructuredInternals.h
@@ -68,6 +67,7 @@ set(headers
   IndexTag.h
   IndicesExtrude.h
   Invocation.h
+  Meta.h
   Unreachable.h
   VariantImpl.h
   VariantImplDetail.h

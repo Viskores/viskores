@@ -126,13 +126,11 @@ using IsWritableArrayHandle =
 ///
 template <typename T>
 struct ArrayHandleCheck
+  : std::is_base_of<vtkm::cont::internal::ArrayHandleBase, std::decay_t<T>>::type
 {
-  using U = typename std::remove_pointer<T>::type;
-  using type = typename std::is_base_of<::vtkm::cont::internal::ArrayHandleBase, U>::type;
 };
 
-#define VTKM_IS_ARRAY_HANDLE(T) \
-  VTKM_STATIC_ASSERT(::vtkm::cont::internal::ArrayHandleCheck<T>::type::value)
+#define VTKM_IS_ARRAY_HANDLE(T) VTKM_STATIC_ASSERT(::vtkm::cont::internal::ArrayHandleCheck<T>{})
 
 } // namespace internal
 

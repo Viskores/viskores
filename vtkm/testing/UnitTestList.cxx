@@ -18,7 +18,7 @@ namespace
 {
 
 template <int N>
-struct TestClass
+struct TestClass : std::integral_constant<int, N>
 {
 };
 
@@ -60,6 +60,14 @@ template <typename T>
 struct EvenPredicate;
 template <int N>
 struct EvenPredicate<TestClass<N>> : std::integral_constant<bool, (N % 2) == 0>
+{
+};
+
+template <typename T>
+using OddPredicate = vtkm::internal::meta::Not<EvenPredicate<T>>;
+
+template <typename T1, typename T2>
+struct AddOperator : TestClass<T1::value + T2::value>
 {
 };
 
@@ -275,6 +283,36 @@ void TestLists()
   VTKM_TEST_ASSERT(!vtkm::ListHas<RepeatList, TestClass<0>>::value);
   VTKM_TEST_ASSERT(vtkm::ListHas<RepeatList, TestClass<1>>::value);
   VTKM_TEST_ASSERT(vtkm::ListHas<RepeatList, TestClass<14>>::value);
+
+  std::cout << "ListReduce" << std::endl;
+  using Zero = std::integral_constant<int, 0>;
+  VTKM_TEST_ASSERT((vtkm::ListReduce<SimpleCount, AddOperator, Zero>::value == 10));
+  VTKM_TEST_ASSERT((vtkm::ListReduce<EvenList, AddOperator, Zero>::value == 20));
+  VTKM_TEST_ASSERT((vtkm::ListReduce<LongList, AddOperator, Zero>::value == 105));
+  VTKM_TEST_ASSERT((vtkm::ListReduce<RepeatList, AddOperator, Zero>::value == 27));
+
+  std::cout << "ListAll" << std::endl;
+  VTKM_TEST_ASSERT(
+    (vtkm::ListAll<vtkm::ListTransform<SimpleCount, EvenPredicate>>::value == false));
+  VTKM_TEST_ASSERT((vtkm::ListAll<vtkm::ListTransform<EvenList, EvenPredicate>>::value == true));
+  VTKM_TEST_ASSERT((vtkm::ListAll<vtkm::ListTransform<LongList, EvenPredicate>>::value == false));
+  VTKM_TEST_ASSERT((vtkm::ListAll<vtkm::List<>>::value == true));
+  VTKM_TEST_ASSERT((vtkm::ListAll<SimpleCount, EvenPredicate>::value == false));
+  VTKM_TEST_ASSERT((vtkm::ListAll<EvenList, EvenPredicate>::value == true));
+  VTKM_TEST_ASSERT((vtkm::ListAll<LongList, EvenPredicate>::value == false));
+  VTKM_TEST_ASSERT((vtkm::ListAll<vtkm::List<>, EvenPredicate>::value == true));
+
+  std::cout << "ListAny" << std::endl;
+  VTKM_TEST_ASSERT((vtkm::ListAny<vtkm::ListTransform<SimpleCount, EvenPredicate>>::value == true));
+  VTKM_TEST_ASSERT((vtkm::ListAny<vtkm::ListTransform<EvenList, EvenPredicate>>::value == true));
+  VTKM_TEST_ASSERT((vtkm::ListAny<vtkm::ListTransform<EvenList, OddPredicate>>::value == false));
+  VTKM_TEST_ASSERT((vtkm::ListAny<vtkm::ListTransform<LongList, EvenPredicate>>::value == true));
+  VTKM_TEST_ASSERT((vtkm::ListAny<vtkm::List<>>::value == false));
+  VTKM_TEST_ASSERT((vtkm::ListAny<SimpleCount, EvenPredicate>::value == true));
+  VTKM_TEST_ASSERT((vtkm::ListAny<EvenList, EvenPredicate>::value == true));
+  VTKM_TEST_ASSERT((vtkm::ListAny<EvenList, OddPredicate>::value == false));
+  VTKM_TEST_ASSERT((vtkm::ListAny<LongList, EvenPredicate>::value == true));
+  VTKM_TEST_ASSERT((vtkm::ListAny<vtkm::List<>, EvenPredicate>::value == false));
 }
 
 } // anonymous namespace

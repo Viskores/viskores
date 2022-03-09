@@ -18,8 +18,6 @@
 #include <vtkm/Tuple.h>
 #include <vtkm/VecTraits.h>
 
-#include <vtkm/internal/brigand.hpp>
-
 #include <vtkmstd/integer_sequence.h>
 
 #include <type_traits>
@@ -34,8 +32,7 @@ namespace compvec
 
 template <typename... PortalList>
 using AllPortalsAreWritable =
-  typename brigand::all<brigand::list<PortalList...>,
-                        brigand::bind<vtkm::internal::PortalSupportsSets, brigand::_1>>::type;
+  vtkm::ListAll<vtkm::List<PortalList...>, vtkm::internal::PortalSupportsSets>;
 
 // GetValueType: ---------------------------------------------------------------
 // Determines the output `ValueType` of the set of `ArrayHandle` objects. For example, if the input
