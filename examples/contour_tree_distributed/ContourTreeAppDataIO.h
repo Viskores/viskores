@@ -274,6 +274,22 @@ bool read3DHDF5File(const int& mpi_rank,
         }
       }
     }
+    else if (H5Tequal(H5Dget_type(dataset), H5T_NATIVE_FLOAT))
+    {
+      float data_out[count[0]][count[1]][count[2]]; // output buffer
+      status = H5Dread(dataset, H5T_NATIVE_FLOAT, memspace, dataspace, H5P_DEFAULT, data_out);
+      // Copy data to 1D array of the expected ValueType
+      for (vtkm::Id k = 0; k < count[0]; k++)
+      {
+        for (vtkm::Id j = 0; j < count[1]; j++)
+        {
+          for (vtkm::Id i = 0; i < count[2]; i++)
+          {
+            values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
+          }
+        }
+      }
+    }
     else if (H5Tequal(H5Dget_type(dataset), H5T_NATIVE_INT))
     {
       int data_out[count[0]][count[1]][count[2]]; // output buffer
@@ -305,6 +321,11 @@ bool read3DHDF5File(const int& mpi_rank,
           }
         }
       }
+    }
+    else
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Data type not supported by the example HDF5 reader");
+      throw "Data type not supported by the example HDF5 reader";
     }
   }
   // Release HDF5 resources
