@@ -115,6 +115,12 @@ vtkm_library(
   )
 target_link_libraries(vtkm_cont_testing PUBLIC vtkm_cont)
 
+# Supports external code using deprecated functionality. In particular, MakeTestDataSet.cxx
+# now needs symbols compiled in vtkm_cont_testing, but the code may expect to only need
+# to include vtkm_cont. Add this circular link to let this continue to work.
+# THIS SHOULD BE REMOVED FOR THE 2.0 RELEASE!!!!
+target_link_libraries(vtkm_cont INTERFACE vtkm_cont_testing)
+
 if(VTKm_ENABLE_TESTING)
   vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
 
