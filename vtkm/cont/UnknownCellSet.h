@@ -25,7 +25,7 @@ namespace vtkm
 namespace cont
 {
 
-// Forward declaration. Include UncertainCellSet.h if using this.
+// Forward declaration.
 template <typename CellSetList>
 class UncertainCellSet;
 
@@ -508,5 +508,10 @@ struct DynamicCellSetCheck
 } // namespace vtkm::cont
 
 VTKM_DEPRECATED_SUPPRESS_END
+
+// Include the implementation of UncertainCellSet. This should be included because there
+// are methods in UnknownCellSet that produce objects of this type. It has to be included
+// at the end to resolve the circular dependency.
+#include <vtkm/cont/UncertainCellSet.h>
 
 #endif //vtk_m_cont_UnknownCellSet_h
