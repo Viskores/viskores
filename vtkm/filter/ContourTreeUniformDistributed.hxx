@@ -997,20 +997,20 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
       // Create data set from output
       vtkm::cont::Field dataValuesField(
-        "DataValues", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.DataValues);
+        "DataValues", vtkm::cont::Field::Association::WholeMesh, blockHierarchcialTree.DataValues);
       hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(dataValuesField);
       vtkm::cont::Field regularNodeGlobalIdsField("RegularNodeGlobalIds",
-                                                  vtkm::cont::Field::Association::WHOLE_MESH,
+                                                  vtkm::cont::Field::Association::WholeMesh,
                                                   blockHierarchcialTree.RegularNodeGlobalIds);
       hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(regularNodeGlobalIdsField);
       vtkm::cont::Field superarcsField(
-        "Superarcs", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.Superarcs);
+        "Superarcs", vtkm::cont::Field::Association::WholeMesh, blockHierarchcialTree.Superarcs);
       hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(superarcsField);
       vtkm::cont::Field supernodesField(
-        "Supernodes", vtkm::cont::Field::Association::WHOLE_MESH, blockHierarchcialTree.Supernodes);
+        "Supernodes", vtkm::cont::Field::Association::WholeMesh, blockHierarchcialTree.Supernodes);
       hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(supernodesField);
       vtkm::cont::Field superparentsField("Superparents",
-                                          vtkm::cont::Field::Association::WHOLE_MESH,
+                                          vtkm::cont::Field::Association::WholeMesh,
                                           blockHierarchcialTree.Superparents);
       hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(superparentsField);
 
@@ -1177,10 +1177,10 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     hierarchical_hyper_sweep_master.foreach (
       [&](HyperSweepBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
         vtkm::cont::Field intrinsicVolumeField(
-          "IntrinsicVolume", vtkm::cont::Field::Association::WHOLE_MESH, b->IntrinsicVolume);
+          "IntrinsicVolume", vtkm::cont::Field::Association::WholeMesh, b->IntrinsicVolume);
         hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(intrinsicVolumeField);
         vtkm::cont::Field dependentVolumeField(
-          "DependentVolume", vtkm::cont::Field::Association::WHOLE_MESH, b->DependentVolume);
+          "DependentVolume", vtkm::cont::Field::Association::WholeMesh, b->DependentVolume);
         hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(dependentVolumeField);
 #ifdef DEBUG_PRINT
         VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->GlobalBlockId);

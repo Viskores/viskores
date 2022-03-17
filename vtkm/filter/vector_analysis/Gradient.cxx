@@ -111,8 +111,8 @@ vtkm::cont::DataSet Gradient::DoExecute(const vtkm::cont::DataSet& inputDataSet)
   }
 
   vtkm::cont::Field::Association fieldAssociation(this->ComputePointGradient
-                                                    ? vtkm::cont::Field::Association::POINTS
-                                                    : vtkm::cont::Field::Association::CELL_SET);
+                                                    ? vtkm::cont::Field::Association::Points
+                                                    : vtkm::cont::Field::Association::Cells);
 
   outputDataSet.AddField(vtkm::cont::Field{ outputName, fieldAssociation, gradientArray });
 

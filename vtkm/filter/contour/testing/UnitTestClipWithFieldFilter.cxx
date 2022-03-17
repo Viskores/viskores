@@ -57,7 +57,7 @@ void TestClipExplicit()
   vtkm::filter::contour::ClipWithField clip;
   clip.SetClipValue(0.5);
   clip.SetActiveField("scalars");
-  clip.SetFieldsToPass("scalars", vtkm::cont::Field::Association::POINTS);
+  clip.SetFieldsToPass("scalars", vtkm::cont::Field::Association::Points);
 
   const vtkm::cont::DataSet outputData = clip.Execute(ds);
 
@@ -93,7 +93,7 @@ void TestClipVolume()
   vtkm::filter::contour::ClipWithField clip;
   clip.SetClipValue(0.0);
   clip.SetActiveField("pointvar");
-  clip.SetFieldsToPass("pointvar", vtkm::cont::Field::Association::POINTS);
+  clip.SetFieldsToPass("pointvar", vtkm::cont::Field::Association::Points);
 
   const vtkm::cont::DataSet outputData = clip.Execute(ds);
 }

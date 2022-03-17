@@ -62,7 +62,7 @@ vtkm::cont::DataSet Amr::GenerateDataSet(unsigned int level, unsigned int amrInd
   vtkm::cont::DataSet wavelet = waveletSource.Execute();
 
   vtkm::filter::field_conversion::CellAverage cellAverage;
-  cellAverage.SetActiveField("RTData", vtkm::cont::Field::Association::POINTS);
+  cellAverage.SetActiveField("RTData", vtkm::cont::Field::Association::Points);
   cellAverage.SetOutputFieldName("RTDataCells");
   return cellAverage.Execute(wavelet);
 }

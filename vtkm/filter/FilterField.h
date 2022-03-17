@@ -46,7 +46,7 @@ public:
   VTKM_CONT
   void SetActiveField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->ActiveFieldName = name;
     this->ActiveFieldAssociation = association;

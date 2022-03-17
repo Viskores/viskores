@@ -110,7 +110,7 @@ public:
 
     switch (fieldType)
     {
-      case vtkm::cont::Field::Association::POINTS:
+      case vtkm::cont::Field::Association::Points:
       {
         using ThresholdWorklet = ThresholdByPointField<UnaryPredicate>;
         vtkm::cont::ArrayHandle<bool> passFlags;
@@ -125,7 +125,7 @@ public:
 
         break;
       }
-      case vtkm::cont::Field::Association::CELL_SET:
+      case vtkm::cont::Field::Association::Cells:
       {
         vtkm::cont::Algorithm::CopyIf(vtkm::cont::ArrayHandleIndex(field.GetNumberOfValues()),
                                       field,

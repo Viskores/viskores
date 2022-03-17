@@ -35,7 +35,7 @@ void NewFilterField::ResizeIfNeeded(size_t index_st)
     this->ActiveCoordinateSystemIndices.resize(index_st + 1);
     for (std::size_t i = oldSize; i <= index_st; ++i)
     {
-      this->ActiveFieldAssociation[i] = cont::Field::Association::ANY;
+      this->ActiveFieldAssociation[i] = cont::Field::Association::Any;
       this->UseCoordinateSystemAsField[i] = false;
       this->ActiveCoordinateSystemIndices[i] = 0;
     }

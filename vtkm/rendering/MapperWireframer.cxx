@@ -265,7 +265,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
 
     actualCoords = vtkm::cont::CoordinateSystem("coords", newCoords);
     actualField = vtkm::cont::Field(
-      inScalarField.GetName(), vtkm::cont::Field::Association::POINTS, newScalars);
+      inScalarField.GetName(), vtkm::cont::Field::Association::Points, newScalars);
 
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     vtkm::cont::ArrayHandle<vtkm::Id> conn;

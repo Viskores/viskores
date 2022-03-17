@@ -35,7 +35,7 @@ public:
   VTKM_CONT
   void SetActiveField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->SetActiveField(0, name, association);
   }
@@ -43,7 +43,7 @@ public:
   void SetActiveField(
     vtkm::IdComponent index,
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     auto index_st = static_cast<std::size_t>(index);
     ResizeIfNeeded(index_st);
@@ -253,7 +253,7 @@ protected:
   {
     return this->CreateResultField(inDataSet,
                                    vtkm::cont::Field{ resultFieldName,
-                                                      vtkm::cont::Field::Association::POINTS,
+                                                      vtkm::cont::Field::Association::Points,
                                                       resultFieldArray });
   }
 
@@ -278,7 +278,7 @@ protected:
   {
     return this->CreateResultField(inDataSet,
                                    vtkm::cont::Field{ resultFieldName,
-                                                      vtkm::cont::Field::Association::CELL_SET,
+                                                      vtkm::cont::Field::Association::Cells,
                                                       resultFieldArray });
   }
 

@@ -40,7 +40,7 @@ public:
   VTKM_CONT
   void SetNormalField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->NormalFieldName = name;
     this->NormalFieldAssociation = association;
@@ -60,7 +60,7 @@ public:
   VTKM_CONT
   void SetScalarFactorField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->ScalarFactorFieldName = name;
     this->ScalarFactorFieldAssociation = association;
@@ -81,9 +81,9 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
   std::string NormalFieldName = "normal";
-  vtkm::cont::Field::Association NormalFieldAssociation = vtkm::cont::Field::Association::ANY;
+  vtkm::cont::Field::Association NormalFieldAssociation = vtkm::cont::Field::Association::Any;
   std::string ScalarFactorFieldName = "scalarfactor";
-  vtkm::cont::Field::Association ScalarFactorFieldAssociation = vtkm::cont::Field::Association::ANY;
+  vtkm::cont::Field::Association ScalarFactorFieldAssociation = vtkm::cont::Field::Association::Any;
   vtkm::FloatDefault ScaleAmount;
 };
 } // namespace field_transform

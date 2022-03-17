@@ -321,10 +321,10 @@ vtkm::cont::Field MergeField(const vtkm::cont::PartitionedDataSet& partitionedDa
   vtkm::Id totalSize = 0;
   switch (referenceField.GetAssociation())
   {
-    case vtkm::cont::Field::Association::POINTS:
+    case vtkm::cont::Field::Association::Points:
       totalSize = numPointsTotal;
       break;
-    case vtkm::cont::Field::Association::CELL_SET:
+    case vtkm::cont::Field::Association::Cells:
       totalSize = numCellsTotal;
       break;
     default:
@@ -350,10 +350,10 @@ vtkm::cont::Field MergeField(const vtkm::cont::PartitionedDataSet& partitionedDa
                               << referenceField.GetName());
       switch (referenceField.GetAssociation())
       {
-        case vtkm::cont::Field::Association::POINTS:
+        case vtkm::cont::Field::Association::Points:
           partitionSize = partition.GetNumberOfPoints();
           break;
-        case vtkm::cont::Field::Association::CELL_SET:
+        case vtkm::cont::Field::Association::Cells:
           partitionSize = partition.GetNumberOfCells();
           break;
         default:

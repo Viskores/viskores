@@ -58,7 +58,7 @@ static void TwoDimUniformTest()
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::Cells.");
   }
 
   try
@@ -152,7 +152,7 @@ static void ThreeDimUniformTest()
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::Cells.");
   }
 
   try

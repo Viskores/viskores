@@ -31,7 +31,7 @@ public:
   VTKM_CONT
   void SetPrimaryField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->SetActiveField(name, association);
   }
@@ -79,7 +79,7 @@ public:
   VTKM_CONT
   void SetSecondaryField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->SetActiveField(1, name, association);
   }
