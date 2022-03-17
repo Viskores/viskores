@@ -92,7 +92,7 @@ inline bool execute(ComponentInputMode,
                     const S& samples,
                     U& output,
                     vtkm::VecTraitsTagSingleComponent)
-{ //is a scalar array so ignore COMPONENT mode
+{ //is a scalar array so ignore InputMode::Component
   return vtkm::cont::ColorTableMap(input, samples, output);
 }
 
@@ -143,26 +143,26 @@ vtkm::cont::DataSet FieldToColors::DoExecute(const vtkm::cont::DataSet& input)
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
 
-    if (this->OutputMode == RGBA)
+    if (this->OutputModeType == OutputMode::RGBA)
     {
       vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> result;
 
       bool ran = false;
-      switch (this->InputMode)
+      switch (this->InputModeType)
       {
-        case SCALAR:
+        case InputMode::Scalar:
         {
           ran = execute(
             ScalarInputMode{}, this->Component, concrete, this->SamplesRGBA, result, IsVec{});
           break;
         }
-        case MAGNITUDE:
+        case InputMode::Magnitude:
         {
           ran = execute(
             MagnitudeInputMode{}, this->Component, concrete, this->SamplesRGBA, result, IsVec{});
           break;
         }
-        case COMPONENT:
+        case InputMode::Component:
         {
           ran = execute(
             ComponentInputMode{}, this->Component, concrete, this->SamplesRGBA, result, IsVec{});
@@ -181,21 +181,21 @@ vtkm::cont::DataSet FieldToColors::DoExecute(const vtkm::cont::DataSet& input)
       vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> result;
 
       bool ran = false;
-      switch (this->InputMode)
+      switch (this->InputModeType)
       {
-        case SCALAR:
+        case InputMode::Scalar:
         {
           ran = execute(
             ScalarInputMode{}, this->Component, concrete, this->SamplesRGB, result, IsVec{});
           break;
         }
-        case MAGNITUDE:
+        case InputMode::Magnitude:
         {
           ran = execute(
             MagnitudeInputMode{}, this->Component, concrete, this->SamplesRGB, result, IsVec{});
           break;
         }
-        case COMPONENT:
+        case InputMode::Component:
         {
           ran = execute(
             ComponentInputMode{}, this->Component, concrete, this->SamplesRGB, result, IsVec{});

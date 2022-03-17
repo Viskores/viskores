@@ -65,24 +65,24 @@ public:
   }
   const vtkm::cont::ColorTable& GetColorTable() const { return this->Table; }
 
-  void SetMappingMode(FieldToColorsInputMode mode) { this->InputMode = mode; }
-  void SetMappingToScalar() { this->InputMode = FieldToColorsInputMode::SCALAR; }
-  void SetMappingToMagnitude() { this->InputMode = FieldToColorsInputMode::MAGNITUDE; }
-  void SetMappingToComponent() { this->InputMode = FieldToColorsInputMode::COMPONENT; }
-  FieldToColorsInputMode GetMappingMode() const { return this->InputMode; }
-  bool IsMappingScalar() const { return this->InputMode == FieldToColorsInputMode::SCALAR; }
-  bool IsMappingMagnitude() const { return this->InputMode == FieldToColorsInputMode::MAGNITUDE; }
-  bool IsMappingComponent() const { return this->InputMode == FieldToColorsInputMode::COMPONENT; }
+  void SetMappingMode(InputMode mode) { this->InputModeType = mode; }
+  void SetMappingToScalar() { this->InputModeType = InputMode::Scalar; }
+  void SetMappingToMagnitude() { this->InputModeType = InputMode::Magnitude; }
+  void SetMappingToComponent() { this->InputModeType = InputMode::Component; }
+  InputMode GetMappingMode() const { return this->InputModeType; }
+  bool IsMappingScalar() const { return this->InputModeType == InputMode::Scalar; }
+  bool IsMappingMagnitude() const { return this->InputModeType == InputMode::Magnitude; }
+  bool IsMappingComponent() const { return this->InputModeType == InputMode::Component; }
 
   void SetMappingComponent(vtkm::IdComponent comp) { this->Component = comp; }
   vtkm::IdComponent GetMappingComponent() const { return this->Component; }
 
-  void SetOutputMode(FieldToColorsOutputMode mode) { this->OutputMode = mode; }
-  void SetOutputToRGB() { this->OutputMode = FieldToColorsOutputMode::RGB; }
-  void SetOutputToRGBA() { this->OutputMode = FieldToColorsOutputMode::RGBA; }
-  FieldToColorsOutputMode GetOutputMode() const { return this->OutputMode; }
-  bool IsOutputRGB() const { return this->OutputMode == FieldToColorsOutputMode::RGB; }
-  bool IsOutputRGBA() const { return this->OutputMode == FieldToColorsOutputMode::RGBA; }
+  void SetOutputMode(OutputMode mode) { this->OutputModeType = mode; }
+  void SetOutputToRGB() { this->OutputModeType = OutputMode::RGB; }
+  void SetOutputToRGBA() { this->OutputModeType = OutputMode::RGBA; }
+  OutputMode GetOutputMode() const { return this->OutputModeType; }
+  bool IsOutputRGB() const { return this->OutputModeType == OutputMode::RGB; }
+  bool IsOutputRGBA() const { return this->OutputModeType == OutputMode::RGBA; }
 
 
   void SetNumberOfSamplingPoints(vtkm::Int32 count);
@@ -92,8 +92,8 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
   vtkm::cont::ColorTable Table;
-  FieldToColorsInputMode InputMode = SCALAR;
-  FieldToColorsOutputMode OutputMode = RGBA;
+  InputMode InputModeType = InputMode::Scalar;
+  OutputMode OutputModeType = OutputMode::RGBA;
   vtkm::cont::ColorTableSamplesRGB SamplesRGB;
   vtkm::cont::ColorTableSamplesRGBA SamplesRGBA;
   vtkm::IdComponent Component = 0;
