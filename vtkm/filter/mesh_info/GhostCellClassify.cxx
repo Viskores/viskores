@@ -35,7 +35,7 @@ public:
   VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary, vtkm::UInt8& value) const
   {
     const bool notOnBoundary = boundary.IsRadiusInXBoundary(this->NumLayers);
-    value = (notOnBoundary) ? vtkm::CellClassification::NORMAL : vtkm::CellClassification::GHOST;
+    value = (notOnBoundary) ? vtkm::CellClassification::Normal : vtkm::CellClassification::Ghost;
   }
 
 private:
@@ -57,7 +57,7 @@ public:
   {
     const bool notOnBoundary = boundary.IsRadiusInXBoundary(this->NumLayers) &&
       boundary.IsRadiusInYBoundary(this->NumLayers);
-    value = (notOnBoundary) ? vtkm::CellClassification::NORMAL : vtkm::CellClassification::GHOST;
+    value = (notOnBoundary) ? vtkm::CellClassification::Normal : vtkm::CellClassification::Ghost;
   }
 
 private:
@@ -78,7 +78,7 @@ public:
   VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary, vtkm::UInt8& value) const
   {
     const bool notOnBoundary = boundary.IsRadiusInBoundary(this->NumLayers);
-    value = (notOnBoundary) ? vtkm::CellClassification::NORMAL : vtkm::CellClassification::GHOST;
+    value = (notOnBoundary) ? vtkm::CellClassification::Normal : vtkm::CellClassification::Ghost;
   }
 
 private:

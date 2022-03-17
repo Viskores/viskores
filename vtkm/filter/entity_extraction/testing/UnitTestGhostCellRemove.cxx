@@ -29,8 +29,8 @@ vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostCellArray(vtkm::Id nx,
   if (nz > 0)
     numCells *= nz;
 
-  constexpr vtkm::UInt8 normalCell = vtkm::CellClassification::NORMAL;
-  constexpr vtkm::UInt8 duplicateCell = vtkm::CellClassification::GHOST;
+  constexpr vtkm::UInt8 normalCell = vtkm::CellClassification::Normal;
+  constexpr vtkm::UInt8 duplicateCell = vtkm::CellClassification::Ghost;
 
   vtkm::cont::ArrayHandle<vtkm::UInt8> ghosts;
   ghosts.Allocate(numCells);
@@ -252,7 +252,7 @@ void TestGhostCellRemove()
           if (rt == "all")
             ghostCellRemoval.RemoveAllGhost();
           else if (rt == "byType")
-            ghostCellRemoval.RemoveByType(vtkm::CellClassification::GHOST);
+            ghostCellRemoval.RemoveByType(vtkm::CellClassification::Ghost);
 
           auto output = ghostCellRemoval.Execute(ds);
           vtkm::Id numCells = output.GetNumberOfCells();

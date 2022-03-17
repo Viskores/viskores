@@ -146,7 +146,7 @@ private:
   VTKM_EXEC bool InGhostCell(const vtkm::Id& cellId) const
   {
     if (this->HaveGhostCells && cellId != -1)
-      return GhostCells.Get(cellId) == vtkm::CellClassification::GHOST;
+      return GhostCells.Get(cellId) == vtkm::CellClassification::Ghost;
 
     return false;
   }
