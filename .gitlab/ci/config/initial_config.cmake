@@ -58,6 +58,7 @@ foreach(option IN LISTS options)
 
   elseif(no_testing STREQUAL option)
     set(VTKm_ENABLE_TESTING "OFF" CACHE STRING "")
+    set(VTKm_ENABLE_TESTING_LIBRARY "OFF" CACHE STRING "")
 
   elseif(examples STREQUAL option)
     set(VTKm_ENABLE_EXAMPLES "ON" CACHE STRING "")

@@ -36,3 +36,21 @@ test:centos8_sanitizer:
     - build:centos8_sanitizer
   needs:
     - build:centos8_sanitizer
+
+
+# Build on centos8 without tests
+# Uses gcc 8.2.1
+build:centos8:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .centos8
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    CMAKE_GENERATOR: "Unix Makefiles"
+    VTKM_SETTINGS: "serial+no_testing"
