@@ -32,7 +32,7 @@ void TestSplitSharpEdges()
 
   vtkm::filter::geometry_refinement::SplitSharpEdges splitSharpEdges;
   splitSharpEdges.SetFeatureAngle(89.0);
-  splitSharpEdges.SetActiveField("Normals", vtkm::cont::Field::Association::CELL_SET);
+  splitSharpEdges.SetActiveField("Normals", vtkm::cont::Field::Association::Cells);
 
   auto result = splitSharpEdges.Execute(dataSet);
   result.PrintSummary(std::cout);

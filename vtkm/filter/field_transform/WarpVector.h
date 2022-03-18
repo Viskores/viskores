@@ -40,7 +40,7 @@ public:
   VTKM_CONT
   void SetVectorField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->VectorFieldName = name;
     this->VectorFieldAssociation = association;
@@ -58,7 +58,7 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
   std::string VectorFieldName = "normal";
-  vtkm::cont::Field::Association VectorFieldAssociation = vtkm::cont::Field::Association::ANY;
+  vtkm::cont::Field::Association VectorFieldAssociation = vtkm::cont::Field::Association::Any;
   vtkm::FloatDefault Scale;
 };
 } // namespace field_transform

@@ -220,7 +220,7 @@ public:
           std::string fieldName = std::string("index") + std::string(p, '0') + std::string(q, '1');
 
           vtkm::cont::Field momentsField(
-            fieldName, vtkm::cont::Field::Association::POINTS, moments);
+            fieldName, vtkm::cont::Field::Association::Points, moments);
           output.AddField(momentsField);
         }
       }
@@ -255,7 +255,7 @@ public:
               std::string(q, '1') + std::string(r, '2');
 
             vtkm::cont::Field momentsField(
-              fieldName, vtkm::cont::Field::Association::POINTS, moments);
+              fieldName, vtkm::cont::Field::Association::Points, moments);
             output.AddField(momentsField);
           }
         }

@@ -215,7 +215,7 @@ VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(const vtkm::cont::DataSet& in
 
   vtkm::cont::DataSet output;
   output.AddField(
-    { this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, binArray });
+    { this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, binArray });
 
   // The output is a "summary" of the input, no need to map fields
   return output;
@@ -265,7 +265,7 @@ VTKM_CONT void Histogram::PostExecute(const vtkm::cont::PartitionedDataSet&,
 
   vtkm::cont::DataSet output;
   vtkm::cont::Field rfield(
-    this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, helper.ReduceAll());
+    this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, helper.ReduceAll());
   output.AddField(rfield);
 
   result = vtkm::cont::PartitionedDataSet(output);

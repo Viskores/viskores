@@ -317,7 +317,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
                                 << "\t Total error: " << totalError);
 
     saved.AddField(vtkm::cont::Field(
-      this->GetOutputFieldName(), vtkm::cont::Field::Association::CELL_SET, prevMat));
+      this->GetOutputFieldName(), vtkm::cont::Field::Association::Cells, prevMat));
 
     vtkm::cont::ArrayCopy(pointIDs, this->MIRIDs);
     vtkm::cont::ArrayCopy(pointWeights, this->MIRWeights);

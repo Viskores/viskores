@@ -17,7 +17,7 @@ namespace
 vtkm::cont::Field makePointField()
 {
   return vtkm::cont::Field(
-    "foo", vtkm::cont::Field::Association::POINTS, vtkm::cont::ArrayHandle<vtkm::Float32>());
+    "foo", vtkm::cont::Field::Association::Points, vtkm::cont::ArrayHandle<vtkm::Float32>());
 }
 
 void TestFieldTypesUnknown()

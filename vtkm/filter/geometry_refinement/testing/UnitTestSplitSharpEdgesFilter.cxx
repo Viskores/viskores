@@ -129,7 +129,7 @@ void TestSplitSharpEdgesFilterSplitEveryEdge(
   // Split every edge
   vtkm::FloatDefault featureAngle = 89.0;
   splitSharpEdgesFilter.SetFeatureAngle(featureAngle);
-  splitSharpEdgesFilter.SetActiveField("Normals", vtkm::cont::Field::Association::CELL_SET);
+  splitSharpEdgesFilter.SetActiveField("Normals", vtkm::cont::Field::Association::Cells);
   vtkm::cont::DataSet result = splitSharpEdgesFilter.Execute(simpleCubeWithSN);
 
   auto newCoords = result.GetCoordinateSystem().GetDataAsMultiplexer();
@@ -163,7 +163,7 @@ void TestSplitSharpEdgesFilterNoSplit(
   // Do nothing
   vtkm::FloatDefault featureAngle = 91.0;
   splitSharpEdgesFilter.SetFeatureAngle(featureAngle);
-  splitSharpEdgesFilter.SetActiveField("Normals", vtkm::cont::Field::Association::CELL_SET);
+  splitSharpEdgesFilter.SetActiveField("Normals", vtkm::cont::Field::Association::Cells);
   vtkm::cont::DataSet result = splitSharpEdgesFilter.Execute(simpleCubeWithSN);
 
   auto newCoords = result.GetCoordinateSystem().GetDataAsMultiplexer();
@@ -228,7 +228,7 @@ void TestWithStructuredData()
 
   // Cut a contour:
   vtkm::filter::contour::Contour contour;
-  contour.SetActiveField("RTData", vtkm::cont::Field::Association::POINTS);
+  contour.SetActiveField("RTData", vtkm::cont::Field::Association::Points);
   contour.SetNumberOfIsoValues(1);
   contour.SetIsoValue(192);
   contour.SetMergeDuplicatePoints(true);
@@ -239,14 +239,14 @@ void TestWithStructuredData()
 
   // Compute cell normals:
   vtkm::filter::field_conversion::CellAverage cellNormals;
-  cellNormals.SetActiveField("normals", vtkm::cont::Field::Association::POINTS);
+  cellNormals.SetActiveField("normals", vtkm::cont::Field::Association::Points);
   dataSet = cellNormals.Execute(dataSet);
 
   // Split sharp edges:
   std::cout << dataSet.GetNumberOfCells() << std::endl;
   std::cout << dataSet.GetNumberOfPoints() << std::endl;
   vtkm::filter::geometry_refinement::SplitSharpEdges split;
-  split.SetActiveField("normals", vtkm::cont::Field::Association::CELL_SET);
+  split.SetActiveField("normals", vtkm::cont::Field::Association::Cells);
   dataSet = split.Execute(dataSet);
 }
 

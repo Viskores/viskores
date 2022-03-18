@@ -128,11 +128,11 @@ void BenchGradient(::benchmark::State& state, int options)
       throw vtkm::cont::ErrorInternal("A requested gradient output is "
                                       "incompatible with scalar input.");
     }
-    filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
   }
   else
   {
-    filter.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+    filter.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::Points);
   }
 
   filter.SetComputeGradient(static_cast<bool>(options & Gradient));
@@ -186,7 +186,7 @@ void BenchThreshold(::benchmark::State& state)
   // Lookup the point scalar range
   const auto range = []() -> vtkm::Range {
     auto ptScalarField =
-      InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+      InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::Points);
     return ptScalarField.GetRange().ReadPortal().Get(0);
   }();
 
@@ -195,7 +195,7 @@ void BenchThreshold(::benchmark::State& state)
   vtkm::Float64 mid = range.Center();
 
   vtkm::filter::entity_extraction::Threshold filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
 
@@ -221,7 +221,7 @@ void BenchThresholdPoints(::benchmark::State& state)
   // Lookup the point scalar range
   const auto range = []() -> vtkm::Range {
     auto ptScalarField =
-      InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+      InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::Points);
     return ptScalarField.GetRange().ReadPortal().Get(0);
   }();
 
@@ -230,7 +230,7 @@ void BenchThresholdPoints(::benchmark::State& state)
   vtkm::Float64 mid = range.Center();
 
   vtkm::filter::entity_extraction::ThresholdPoints filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
   filter.SetCompactPoints(compactPoints);
@@ -254,7 +254,7 @@ void BenchCellAverage(::benchmark::State& state)
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
   vtkm::filter::field_conversion::CellAverage filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
@@ -275,7 +275,7 @@ void BenchPointAverage(::benchmark::State& state)
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
   vtkm::filter::field_conversion::PointAverage filter;
-  filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
+  filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::Cells);
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
@@ -297,8 +297,8 @@ void BenchWarpScalar(::benchmark::State& state)
 
   vtkm::filter::field_transform::WarpScalar filter{ 2. };
   filter.SetUseCoordinateSystemAsField(true);
-  filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
-  filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::Points);
+  filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::Points);
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
@@ -320,7 +320,7 @@ void BenchWarpVector(::benchmark::State& state)
 
   vtkm::filter::field_transform::WarpVector filter{ 2. };
   filter.SetUseCoordinateSystemAsField(true);
-  filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::Points);
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
@@ -347,12 +347,12 @@ void BenchContour(::benchmark::State& state)
   const bool fastNormals = static_cast<bool>(state.range(4));
 
   vtkm::filter::contour::Contour filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
 
   // Set up some equally spaced contours, with the min/max slightly inside the
   // scalar range:
   const vtkm::Range scalarRange = []() -> vtkm::Range {
-    auto field = InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    auto field = InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::Points);
     return field.GetRange().ReadPortal().Get(0);
   }();
   const auto step = scalarRange.Length() / static_cast<vtkm::Float64>(numIsoVals + 1);
@@ -627,7 +627,7 @@ void FindFields()
     for (vtkm::Id i = 0; i < InputDataSet.GetNumberOfFields(); ++i)
     {
       auto field = InputDataSet.GetField(i);
-      if (field.GetAssociation() == vtkm::cont::Field::Association::POINTS &&
+      if (field.GetAssociation() == vtkm::cont::Field::Association::Points &&
           NumberOfComponents::Check(field) == 1)
       {
         PointScalarsName = field.GetName();
@@ -642,7 +642,7 @@ void FindFields()
     for (vtkm::Id i = 0; i < InputDataSet.GetNumberOfFields(); ++i)
     {
       auto field = InputDataSet.GetField(i);
-      if (field.GetAssociation() == vtkm::cont::Field::Association::CELL_SET &&
+      if (field.GetAssociation() == vtkm::cont::Field::Association::Cells &&
           NumberOfComponents::Check(field) == 1)
       {
         CellScalarsName = field.GetName();
@@ -657,7 +657,7 @@ void FindFields()
     for (vtkm::Id i = 0; i < InputDataSet.GetNumberOfFields(); ++i)
     {
       auto field = InputDataSet.GetField(i);
-      if (field.GetAssociation() == vtkm::cont::Field::Association::POINTS &&
+      if (field.GetAssociation() == vtkm::cont::Field::Association::Points &&
           NumberOfComponents::Check(field) == 3)
       {
         PointVectorsName = field.GetName();
@@ -683,7 +683,7 @@ void CreateMissingFields()
     vtkm::worklet::DispatcherMapField<PointVectorGenerator> dispatch(worklet);
     dispatch.Invoke(points, pvecs);
     InputDataSet.AddField(
-      vtkm::cont::Field("GeneratedPointVectors", vtkm::cont::Field::Association::POINTS, pvecs));
+      vtkm::cont::Field("GeneratedPointVectors", vtkm::cont::Field::Association::Points, pvecs));
     PointVectorsName = "GeneratedPointVectors";
     std::cerr << "[CreateFields] Generated point vectors '" << PointVectorsName
               << "' from coordinate data.\n";
@@ -694,11 +694,11 @@ void CreateMissingFields()
     if (!CellScalarsName.empty())
     { // Generate from found cell field:
       vtkm::filter::field_conversion::PointAverage avg;
-      avg.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
+      avg.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::Cells);
       avg.SetOutputFieldName("GeneratedPointScalars");
       auto outds = avg.Execute(InputDataSet);
       InputDataSet.AddField(
-        outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::POINTS));
+        outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::Points));
       PointScalarsName = "GeneratedPointScalars";
       std::cerr << "[CreateFields] Generated point scalars '" << PointScalarsName
                 << "' from cell scalars, '" << CellScalarsName << "'.\n";
@@ -708,11 +708,11 @@ void CreateMissingFields()
       // Compute the magnitude of the vectors:
       VTKM_ASSERT(!PointVectorsName.empty());
       vtkm::filter::vector_analysis::VectorMagnitude mag;
-      mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+      mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::Points);
       mag.SetOutputFieldName("GeneratedPointScalars");
       auto outds = mag.Execute(InputDataSet);
       InputDataSet.AddField(
-        outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::POINTS));
+        outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::Points));
       PointScalarsName = "GeneratedPointScalars";
       std::cerr << "[CreateFields] Generated point scalars '" << PointScalarsName
                 << "' from point vectors, '" << PointVectorsName << "'.\n";
@@ -723,11 +723,11 @@ void CreateMissingFields()
   { // Attempt to construct them from a point field:
     VTKM_ASSERT(!PointScalarsName.empty());
     vtkm::filter::field_conversion::CellAverage avg;
-    avg.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    avg.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
     avg.SetOutputFieldName("GeneratedCellScalars");
     auto outds = avg.Execute(InputDataSet);
     InputDataSet.AddField(
-      outds.GetField("GeneratedCellScalars", vtkm::cont::Field::Association::CELL_SET));
+      outds.GetField("GeneratedCellScalars", vtkm::cont::Field::Association::Cells));
     CellScalarsName = "GeneratedCellScalars";
     std::cerr << "[CreateFields] Generated cell scalars '" << CellScalarsName
               << "' from point scalars, '" << PointScalarsName << "'.\n";

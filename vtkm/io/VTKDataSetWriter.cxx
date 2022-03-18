@@ -315,7 +315,7 @@ void WritePointFields(std::ostream& out,
   {
     const vtkm::cont::Field field = dataSet.GetField(f);
 
-    if (field.GetAssociation() != vtkm::cont::Field::Association::POINTS)
+    if (field.GetAssociation() != vtkm::cont::Field::Association::Points)
     {
       continue;
     }

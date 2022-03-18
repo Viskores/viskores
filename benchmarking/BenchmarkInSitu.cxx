@@ -120,7 +120,7 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
 
   // Generate Perln Noise Gradient point vector field
   vtkm::filter::vector_analysis::Gradient gradientFilter;
-  gradientFilter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  gradientFilter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
   gradientFilter.SetComputePointGradient(true);
   gradientFilter.SetOutputFieldName(PointVectorsName);
   gradientFilter.SetFieldsToPass(
@@ -294,7 +294,7 @@ void BenchContour(::benchmark::State& state)
   inputGenTimer.Stop();
 
   vtkm::filter::contour::Contour filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
   filter.SetMergeDuplicatePoints(true);
   filter.SetGenerateNormals(true);
   filter.SetComputeFastNormalsForStructured(true);
