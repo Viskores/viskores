@@ -171,6 +171,27 @@ VTKM_CONT Histogram::Histogram()
 
 VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(const vtkm::cont::DataSet& input)
 {
+  const auto& fieldArray = this->GetFieldFromDataSet(input).GetData();
+
+  if (!this->InExecutePartitions)
+  {
+    // Handle initialization that would be done in PreExecute if the data set had partitions.
+    if (this->Range.IsNonEmpty())
+    {
+      this->ComputedRange = this->Range;
+    }
+    else
+    {
+      auto handle = vtkm::cont::FieldRangeGlobalCompute(
+        input, this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+      if (handle.GetNumberOfValues() != 1)
+      {
+        throw vtkm::cont::ErrorFilterExecution("expecting scalar field.");
+      }
+      this->ComputedRange = handle.ReadPortal().Get(0);
+    }
+  }
+
   vtkm::cont::ArrayHandle<vtkm::Id> binArray;
 
   auto resolveType = [&](const auto& concrete) {
@@ -178,24 +199,16 @@ VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(const vtkm::cont::DataSet& in
     T delta;
 
     vtkm::worklet::FieldHistogram worklet;
-    if (this->ComputedRange.IsNonEmpty())
-    {
-      worklet.Run(concrete,
-                  this->NumberOfBins,
-                  static_cast<T>(this->ComputedRange.Min),
-                  static_cast<T>(this->ComputedRange.Max),
-                  delta,
-                  binArray);
-    }
-    else
-    {
-      worklet.Run(concrete, this->NumberOfBins, this->ComputedRange, delta, binArray);
-    }
+    worklet.Run(concrete,
+                this->NumberOfBins,
+                static_cast<T>(this->ComputedRange.Min),
+                static_cast<T>(this->ComputedRange.Max),
+                delta,
+                binArray);
 
     this->BinDelta = static_cast<vtkm::Float64>(delta);
   };
 
-  const auto& fieldArray = this->GetFieldFromDataSet(input).GetData();
   fieldArray
     .CastAndCallForTypesWithFloatFallback<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(
       resolveType);
@@ -234,12 +247,14 @@ VTKM_CONT void Histogram::PreExecute(const vtkm::cont::PartitionedDataSet& input
     }
     this->ComputedRange = handle.ReadPortal().Get(0);
   }
+  this->InExecutePartitions = true;
 }
 
 //-----------------------------------------------------------------------------
 VTKM_CONT void Histogram::PostExecute(const vtkm::cont::PartitionedDataSet&,
                                       vtkm::cont::PartitionedDataSet& result)
 {
+  this->InExecutePartitions = false;
   // iterate and compute histogram for each local block.
   detail::DistributedHistogram helper(result.GetNumberOfPartitions());
   for (vtkm::Id cc = 0; cc < result.GetNumberOfPartitions(); ++cc)
