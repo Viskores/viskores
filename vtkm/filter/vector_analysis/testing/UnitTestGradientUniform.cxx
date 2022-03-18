@@ -68,6 +68,7 @@ void TestCellGradientUniform3DWithVectorField()
   //we need to add Vec3 array to the dataset
   vtkm::filter::vector_analysis::Gradient gradient;
   gradient.SetOutputFieldName("vec_gradient");
+  gradient.SetComputeDivergence(true);
   gradient.SetComputeVorticity(true);
   gradient.SetComputeQCriterion(true);
   gradient.SetActiveField("vec_pointvar");
@@ -77,30 +78,32 @@ void TestCellGradientUniform3DWithVectorField()
   VTKM_TEST_ASSERT(result.HasCellField("vec_gradient"), "Result field missing.");
 
   //verify that the vorticity and qcriterion fields DO exist
-  VTKM_TEST_ASSERT(result.HasField("Vorticity") == true, "vec gradients should generate vorticity");
-  VTKM_TEST_ASSERT(result.HasField("QCriterion") == true,
-                   "vec gradients should generate qcriterion");
+  VTKM_TEST_ASSERT(result.HasField("Divergence"));
+  VTKM_TEST_ASSERT(result.HasField("Vorticity"));
+  VTKM_TEST_ASSERT(result.HasField("QCriterion"));
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_64, 3>> resultArrayHandle;
-  result.GetCellField("vec_gradient").GetData().AsArrayHandle(resultArrayHandle);
-  vtkm::Vec<vtkm::Vec3f_64, 3> expected[4] = {
-    { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.125, 60.125, 60.125 } },
-    { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.125, 60.125, 60.125 } },
-    { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.175, 60.175, 60.175 } },
-    { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.175, 60.175, 60.175 } }
-  };
-  for (int i = 0; i < 4; ++i)
-  {
-    vtkm::Vec<vtkm::Vec3f_64, 3> e = expected[i];
-    vtkm::Vec<vtkm::Vec3f_64, 3> r = resultArrayHandle.ReadPortal().Get(i);
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(
+    result.GetCellField("vec_gradient").GetData(),
+    vtkm::cont::make_ArrayHandle<vtkm::Vec<vtkm::Vec3f_64, 3>>(
+      { { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.125, 60.125, 60.125 } },
+        { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.125, 60.125, 60.125 } },
+        { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.175, 60.175, 60.175 } },
+        { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.175, 60.175, 60.175 } } })));
 
-    VTKM_TEST_ASSERT(test_equal(e[0], r[0]),
-                     "Wrong result for vec field CellGradient filter on 3D uniform data");
-    VTKM_TEST_ASSERT(test_equal(e[1], r[1]),
-                     "Wrong result for vec field CellGradient filter on 3D uniform data");
-    VTKM_TEST_ASSERT(test_equal(e[2], r[2]),
-                     "Wrong result for vec field CellGradient filter on 3D uniform data");
-  }
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(
+    result.GetCellField("Divergence").GetData(),
+    vtkm::cont::make_ArrayHandle<vtkm::Float64>({ 100.225, 100.225, 100.275, 100.275 })));
+
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(
+    result.GetCellField("Vorticity").GetData(),
+    vtkm::cont::make_ArrayHandle<vtkm::Vec3f_64>({ { -30.05, 50.1, -20.05 },
+                                                   { -30.05, 50.1, -20.05 },
+                                                   { -30.1, 50.15, -20.05 },
+                                                   { -30.1, 50.15, -20.05 } })));
+
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(
+    result.GetCellField("QCriterion").GetData(),
+    vtkm::cont::make_ArrayHandle<vtkm::Float64>({ -5022.53, -5022.53, -5027.54, -5027.54 })));
 }
 
 
