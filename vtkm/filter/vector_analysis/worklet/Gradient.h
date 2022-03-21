@@ -64,9 +64,16 @@ struct DeducedPointGrad
 
   template <typename CellSetType>
   void operator()(const CellSetType& cellset) const
-#ifdef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
-    ;
+#ifndef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
+  {
+    this->Go(cellset);
+  }
 #else
+    ;
+#endif
+
+  template <typename CellSetType>
+  void Go(const CellSetType& cellset) const
   {
     vtkm::worklet::DispatcherMapTopology<PointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -75,12 +82,8 @@ struct DeducedPointGrad
                       *this->Field,
                       *this->Result);
   }
-#endif
 
-  void operator()(const vtkm::cont::CellSetStructured<3>& cellset) const
-#ifdef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
-    ;
-#else
+  void Go(const vtkm::cont::CellSetStructured<3>& cellset) const
   {
     vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -88,14 +91,10 @@ struct DeducedPointGrad
                       *this->Field,
                       *this->Result);
   }
-#endif
 
   template <typename PermIterType>
-  void operator()(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>,
-                                                       PermIterType>& cellset) const
-#ifdef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
-    ;
-#else
+  void Go(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>, PermIterType>&
+            cellset) const
   {
     vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -103,12 +102,8 @@ struct DeducedPointGrad
                       *this->Field,
                       *this->Result);
   }
-#endif
 
-  void operator()(const vtkm::cont::CellSetStructured<2>& cellset) const
-#ifdef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
-    ;
-#else
+  void Go(const vtkm::cont::CellSetStructured<2>& cellset) const
   {
     vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -116,14 +111,10 @@ struct DeducedPointGrad
                       *this->Field,
                       *this->Result);
   }
-#endif
 
   template <typename PermIterType>
-  void operator()(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>,
-                                                       PermIterType>& cellset) const
-#ifdef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
-    ;
-#else
+  void Go(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>, PermIterType>&
+            cellset) const
   {
     vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -131,7 +122,6 @@ struct DeducedPointGrad
                       *this->Field,
                       *this->Result);
   }
-#endif
 
 
   const CoordinateSystem* const Points;
