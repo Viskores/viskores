@@ -547,78 +547,98 @@ function(vtkm_library)
 
 endfunction(vtkm_library)
 
-#-----------------------------------------------------------------------------
-# Produce _instantiation-files_ given a filter.
-#
-# This function will parse the header file of a given filter and for each of
-# the extern template found on it, it will produce its corresponding
-# _instantiation-files_.  Those produced `instantiation-files` are stored in
-# the build directory and are not versioned.
-#
-# Usage:
-#   vtkm_add_instantiations(
-#     instantiations_list
-#     FILTER <name>
-#     [ INSTANTIATIONS_FILE <path> ]
-#     )
-#
-# instantiations_list: Output variable which contain the path of the newly
-# produced _instantiation-files_.
-#
-# FILTER: The name of the filter of which we wish to produce those
-# instantiations from.
-#
-# INSTANTIATIONS_FILE: _Optional_ parameter with the relative path of the file
-# which contains the extern template instantiations.  When omitted,
-# `vtkm_add_instantiations` will default to `${FILTER}.h`.
-#
+#[==[
+-----------------------------------------------------------------------------
+Produce _instantiation-files_ given a filter.
+
+VTK-m makes use of a lot of headers. It is often the case when building a
+library that you have to compile several instantiations of the template to
+cover all the types expected. However, when you try to do this in a single
+cxx file, you can end up with some very long compiles, especially when
+using a GPU device compiler. In this case, it is helpful to split up the
+instantiations across multiple files.
+
+This function will parse a given header file and look for pairs of
+`VTKM_INSTANTIATION_BEGIN` and `VTKM_INSTANTIATION_END`. (These are defined
+in `vtkm/internal/Instantiations.h`.) Between these two macros there should
+be the definition of a single extern template instantiation. The definition
+needs to fully qualify the namespace of all symbols. The declaration
+typically looks something like this.
+
+```cpp
+VTKM_INSTANTIATION_BEGIN
+extern template vtkm::cont::ArrayHandle<vtkm::Float32> vtkm::filter::foo::RunFooWorklet(
+  const vtkm::cont::CellSetExplicit<>& inCells,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_32>& inField);
+VTKM_INSTANTIATION_END
+```
+
+For each one of these found, a source file will be produced that compiles
+the template for the given instantiation. Those produced files are stored
+in the build directory and are not versioned.
+
+Usage:
+   vtkm_add_instantiations(
+     instantiations_list
+     INSTANTIATIONS_FILE <path>
+     [ TEMPLATE_SOURCE <path> ]
+     )
+
+instantiations_list: Output variable which contain the path of the newly
+produced _instantiation-files_.
+
+INSTANTIATIONS_FILE: Parameter with the relative path of the file that
+contains the extern template instantiations.
+
+TEMPLATE_SOURCE: _Optional_ parameter with the relative path to the header
+file that contains the implementation of the template. If not given, the
+template source is set to be the same as the INSTANTIATIONS_FILE.
+#]==]
 function(vtkm_add_instantiations instantiations_list)
   # Parse and validate parameters
-  set(oneValueArgs FILTER INSTANTIATIONS_FILE)
+  set(oneValueArgs INSTANTIATIONS_FILE TEMPLATE_SOURCE)
   cmake_parse_arguments(VTKm_instantiations "" "${oneValueArgs}" "" ${ARGN})
 
-  if(NOT VTKm_instantiations_FILTER)
-    message(FATAL_ERROR "vtkm_add_instantiations needs a valid FILTER parameter")
+  if(NOT VTKm_instantiations_INSTANTIATIONS_FILE)
+    message(FATAL_ERROR "vtkm_add_instantiations needs a valid INSTANTIATIONS_FILE parameter")
   endif()
 
-  set(filter ${VTKm_instantiations_FILTER})
-  set(file_header "${filter}.h")
+  set(instantiations_file ${VTKm_instantiations_INSTANTIATIONS_FILE})
 
-  set(file_template_source "${filter}.h")
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${filter}.hxx")
-    set(file_template_source "${filter}.hxx")
+  if(VTKm_instantiations_TEMPLATE_SOURCE)
+    set(file_template_source ${VTKm_instantiations_TEMPLATE_SOURCE})
+  else()
+    set(file_template_source ${instantiations_file})
   endif()
 
   # Extract explicit instantiations
-  set(instantiations_file ${file_header})
-  if(VTKm_instantiations_INSTANTIATIONS_FILE)
-    set(instantiations_file ${VTKm_instantiations_INSTANTIATIONS_FILE})
-  endif()
   _vtkm_extract_instantiations(instantiations ${instantiations_file})
 
   # Compute relative path of header files
-  file(RELATIVE_PATH INSTANTIATION_FILTER_HEADER
-    ${VTKm_SOURCE_DIR}
-    "${CMAKE_CURRENT_SOURCE_DIR}/${file_header}"
-    )
-
-  file(RELATIVE_PATH INSTANTIATION_FILTER_TEMPLATE_SOURCE
+  file(RELATIVE_PATH INSTANTIATION_TEMPLATE_SOURCE
     ${VTKm_SOURCE_DIR}
     "${CMAKE_CURRENT_SOURCE_DIR}/${file_template_source}"
     )
+
+  # Make a guard macro name so that the TEMPLATE_SOURCE can determine if it is compiling
+  # the instances (if necessary).
+  get_filename_component(instantations_name "${instantiations_file}" NAME_WE)
+  set(INSTANTIATION_INC_GUARD "vtkm_${instantations_name}Instantiation")
 
   # Generate instatiation file in the build directory
   set(counter 0)
   foreach(instantiation IN LISTS instantiations)
     string(REPLACE "$" ";" instantiation ${instantiation})
-    set(INSTANTIATION_FILTER_METHOD    "${instantiation}")
-    set(INSTANTIATION_FILTER_INC_GUARD "vtkm_filter_${filter}Instantiation${counter}_cxx")
+    set(INSTANTIATION_DECLARATION "${instantiation}")
 
     # Create instantiation in build directory
-    set(instantiation_path "${CMAKE_CURRENT_BINARY_DIR}/${filter}Instantiation${counter}.cxx")
-    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/InstantiationTemplate.cxx.in"
+    set(instantiation_path
+      "${CMAKE_CURRENT_BINARY_DIR}/${instantations_name}Instantiation${counter}.cxx"
+      )
+    configure_file("${VTKm_SOURCE_DIR}/CMake/InstantiationTemplate.cxx.in"
       ${instantiation_path}
-      @ONLY)
+      @ONLY
+      )
 
     # Return value
     list(APPEND _instantiations_list ${instantiation_path})
