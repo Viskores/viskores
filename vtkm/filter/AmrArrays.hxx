@@ -54,7 +54,7 @@ struct GenerateGhostTypeWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
         (Dim == 3 && boundsIntersection.Volume() > 0.5 * boundsCell.Volume()))
     {
       //      std::cout<<boundsCell<<" is (partly) contained in "<<BoundsChild<<" "<<boundsIntersection<<" "<<boundsIntersection.Area()<<std::endl;
-      ghostArray = ghostArray + vtkm::CellClassification::BLANKED;
+      ghostArray = ghostArray + vtkm::CellClassification::Blanked;
     }
   }
 

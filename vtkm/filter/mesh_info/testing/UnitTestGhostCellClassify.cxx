@@ -116,7 +116,7 @@ void TestStructured()
 
         vtkm::Id numNormalCells = 0;
         auto portal = ghostArray.ReadPortal();
-        constexpr vtkm::UInt8 normalCell = vtkm::CellClassification::NORMAL;
+        constexpr vtkm::UInt8 normalCell = vtkm::CellClassification::Normal;
         for (vtkm::Id i = 0; i < numCells; i++)
           if (portal.Get(i) == normalCell)
             numNormalCells++;

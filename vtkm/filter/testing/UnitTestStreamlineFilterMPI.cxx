@@ -106,9 +106,9 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
         {
           //Mark the inner cell as ghost.
           if (i == 4 && j == 4 && k == 4)
-            ghosts[idx] = vtkm::CellClassification::GHOST;
+            ghosts[idx] = vtkm::CellClassification::Ghost;
           else
-            ghosts[idx] = vtkm::CellClassification::NORMAL;
+            ghosts[idx] = vtkm::CellClassification::Normal;
           idx++;
         }
     dsOuter.AddCellField("vtkmGhostCells", ghosts);
