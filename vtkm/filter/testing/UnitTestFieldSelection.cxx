@@ -26,7 +26,7 @@ void TestFieldSelection()
 
   {
     std::cout << "field selection with select all,  everything should be true." << std::endl;
-    vtkm::filter::FieldSelection selection(vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::filter::FieldSelection selection(vtkm::filter::FieldSelection::Mode::All);
     VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == true, "field selection failed.");
     VTKM_TEST_ASSERT(selection.IsFieldSelected("bar", vtkm::cont::Field::Association::Points) ==
                        true,
@@ -35,7 +35,7 @@ void TestFieldSelection()
 
   {
     std::cout << "field selection with select none,  everything should be false." << std::endl;
-    vtkm::filter::FieldSelection selection(vtkm::filter::FieldSelection::MODE_NONE);
+    vtkm::filter::FieldSelection selection(vtkm::filter::FieldSelection::Mode::None);
     VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == false, "field selection failed.");
     VTKM_TEST_ASSERT(selection.IsFieldSelected("bar", vtkm::cont::Field::Association::Points) ==
                        false,
@@ -148,7 +148,7 @@ void TestFieldSelection()
     vtkm::filter::FieldSelection selection(
       { pair_type{ "foo", vtkm::cont::Field::Association::Any },
         pair_type{ "bar", vtkm::cont::Field::Association::Cells } },
-      vtkm::filter::FieldSelection::MODE_EXCLUDE);
+      vtkm::filter::FieldSelection::Mode::Exclude);
     VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == false, "field selection failed.");
     VTKM_TEST_ASSERT(selection.IsFieldSelected("foo", vtkm::cont::Field::Association::Points) ==
                        false,

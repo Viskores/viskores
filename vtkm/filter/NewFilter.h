@@ -260,7 +260,7 @@ public:
 
   VTKM_CONT
   void SetFieldsToPass(const vtkm::filter::FieldSelection& fieldsToPass,
-                       vtkm::filter::FieldSelection::ModeEnum mode)
+                       vtkm::filter::FieldSelection::Mode mode)
   {
     this->FieldsToPass = fieldsToPass;
     this->FieldsToPass.SetMode(mode);
@@ -270,7 +270,7 @@ public:
   void SetFieldsToPass(
     const std::string& fieldname,
     vtkm::cont::Field::Association association,
-    vtkm::filter::FieldSelection::ModeEnum mode = vtkm::filter::FieldSelection::MODE_SELECT)
+    vtkm::filter::FieldSelection::Mode mode = vtkm::filter::FieldSelection::Mode::Select)
   {
     this->SetFieldsToPass({ fieldname, association }, mode);
   }
@@ -438,7 +438,7 @@ private:
     }
   }
 
-  vtkm::filter::FieldSelection FieldsToPass = vtkm::filter::FieldSelection::MODE_ALL;
+  vtkm::filter::FieldSelection FieldsToPass = vtkm::filter::FieldSelection::Mode::All;
   bool RunFilterWithMultipleThreads = false;
 };
 }

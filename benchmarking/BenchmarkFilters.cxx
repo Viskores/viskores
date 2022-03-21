@@ -969,7 +969,7 @@ void InitDataSet(int& argc, char** argv)
   std::cerr
     << "[InitDataSet] Create UnstructuredInputDataSet from Tetrahedralized InputDataSet...\n";
   vtkm::filter::geometry_refinement::Tetrahedralize tet;
-  tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
+  tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::Mode::All));
   UnstructuredInputDataSet = tet.Execute(InputDataSet);
 
   if (tetra)

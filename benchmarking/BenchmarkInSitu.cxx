@@ -124,7 +124,7 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
   gradientFilter.SetComputePointGradient(true);
   gradientFilter.SetOutputFieldName(PointVectorsName);
   gradientFilter.SetFieldsToPass(
-    vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
+    vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::Mode::All));
   if (isMultiBlock)
   {
     partitionedInputDataSet = gradientFilter.Execute(partitionedInputDataSet);
@@ -139,7 +139,7 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
   {
     vtkm::filter::geometry_refinement::Tetrahedralize destructizer;
     destructizer.SetFieldsToPass(
-      vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
+      vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::Mode::All));
     if (isMultiBlock)
     {
       partitionedInputDataSet = destructizer.Execute(partitionedInputDataSet);

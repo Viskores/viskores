@@ -12,6 +12,7 @@
 
 #include <initializer_list>
 #include <set>
+#include <vtkm/Deprecated.h>
 #include <vtkm/Pair.h>
 #include <vtkm/cont/Field.h>
 
@@ -28,17 +29,25 @@ namespace filter
 class FieldSelection
 {
 public:
-  enum ModeEnum
+  enum struct Mode
   {
-    MODE_NONE,
-    MODE_ALL,
-    MODE_SELECT,
-    MODE_EXCLUDE
+    None,
+    All,
+    Select,
+    Exclude
   };
+  VTKM_DEPRECATED(1.8, "Use FieldSelection::Mode::None.")
+  static constexpr Mode MODE_NONE = Mode::None;
+  VTKM_DEPRECATED(1.8, "Use FieldSelection::Mode::All.") static constexpr Mode MODE_ALL = Mode::All;
+  VTKM_DEPRECATED(1.8, "Use FieldSelection::Mode::Select.")
+  static constexpr Mode MODE_SELECT = Mode::Select;
+  VTKM_DEPRECATED(1.8, "Use FieldSelection::Mode::Exclude.")
+  static constexpr Mode MODE_EXCLUDE = Mode::Exclude;
+  using ModeEnum VTKM_DEPRECATED(1.8, "Use FieldSelection::Mode.") = Mode;
 
   VTKM_CONT
-  FieldSelection(ModeEnum mode = MODE_SELECT)
-    : Mode(mode)
+  FieldSelection(Mode mode = Mode::Select)
+    : ModeType(mode)
   {
   }
 
@@ -47,8 +56,8 @@ public:
   /// FieldSelection("field_name");
   /// \endcode
   VTKM_CONT
-  FieldSelection(const std::string& field, ModeEnum mode = MODE_SELECT)
-    : Mode(mode)
+  FieldSelection(const std::string& field, Mode mode = Mode::Select)
+    : ModeType(mode)
   {
     this->AddField(field, vtkm::cont::Field::Association::Any);
   }
@@ -58,8 +67,8 @@ public:
   /// FieldSelection("field_name");
   /// \endcode
   VTKM_CONT
-  FieldSelection(const char* field, ModeEnum mode = MODE_SELECT)
-    : Mode(mode)
+  FieldSelection(const char* field, Mode mode = Mode::Select)
+    : ModeType(mode)
   {
     this->AddField(field, vtkm::cont::Field::Association::Any);
   }
@@ -71,8 +80,8 @@ public:
   VTKM_CONT
   FieldSelection(const std::string& field,
                  vtkm::cont::Field::Association association,
-                 ModeEnum mode = MODE_SELECT)
-    : Mode(mode)
+                 Mode mode = Mode::Select)
+    : ModeType(mode)
   {
     this->AddField(field, association);
   }
@@ -82,8 +91,8 @@ public:
   /// FieldSelection({"field_one", "field_two"});
   /// \endcode
   VTKM_CONT
-  FieldSelection(std::initializer_list<std::string> fields, ModeEnum mode = MODE_SELECT)
-    : Mode(mode)
+  FieldSelection(std::initializer_list<std::string> fields, Mode mode = Mode::Select)
+    : ModeType(mode)
   {
     for (const std::string& afield : fields)
     {
@@ -102,8 +111,8 @@ public:
   VTKM_CONT
   FieldSelection(
     std::initializer_list<std::pair<std::string, vtkm::cont::Field::Association>> fields,
-    ModeEnum mode = MODE_SELECT)
-    : Mode(mode)
+    Mode mode = Mode::Select)
+    : ModeType(mode)
   {
     for (const auto& item : fields)
     {
@@ -122,8 +131,8 @@ public:
   VTKM_CONT
   FieldSelection(
     std::initializer_list<vtkm::Pair<std::string, vtkm::cont::Field::Association>> fields,
-    ModeEnum mode = MODE_SELECT)
-    : Mode(mode)
+    Mode mode = Mode::Select)
+    : ModeType(mode)
   {
     for (const auto& item : fields)
     {
@@ -135,24 +144,24 @@ public:
   // but we don't want any of them compiled for devices (like CUDA), so we have
   // to explicitly mark them as VTKM_CONT.
   VTKM_CONT FieldSelection(const FieldSelection& src)
-    : Mode(src.Mode)
+    : ModeType(src.ModeType)
     , Fields(src.Fields)
   {
   }
   VTKM_CONT FieldSelection(FieldSelection&& rhs)
-    : Mode(rhs.Mode)
+    : ModeType(rhs.ModeType)
     , Fields(std::move(rhs.Fields))
   {
   }
   VTKM_CONT FieldSelection& operator=(const FieldSelection& src)
   {
-    this->Mode = src.Mode;
+    this->ModeType = src.ModeType;
     this->Fields = src.Fields;
     return *this;
   }
   VTKM_CONT FieldSelection& operator=(FieldSelection&& rhs)
   {
-    this->Mode = rhs.Mode;
+    this->ModeType = rhs.ModeType;
     this->Fields = std::move(rhs.Fields);
     return *this;
   }
@@ -170,19 +179,19 @@ public:
     const std::string& name,
     vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any) const
   {
-    switch (this->Mode)
+    switch (this->ModeType)
     {
-      case MODE_NONE:
+      case Mode::None:
         return false;
 
-      case MODE_ALL:
+      case Mode::All:
         return true;
 
-      case MODE_SELECT:
+      case Mode::Select:
       default:
         return this->HasField(name, association);
 
-      case MODE_EXCLUDE:
+      case Mode::Exclude:
         return !this->HasField(name, association);
     }
   }
@@ -242,11 +251,11 @@ public:
   void ClearFields() { this->Fields.clear(); }
 
   VTKM_CONT
-  ModeEnum GetMode() const { return this->Mode; }
-  void SetMode(ModeEnum val) { this->Mode = val; }
+  Mode GetMode() const { return this->ModeType; }
+  void SetMode(Mode val) { this->ModeType = val; }
 
 private:
-  ModeEnum Mode; ///< mode
+  Mode ModeType; ///< mode
 
   struct Field
   {
