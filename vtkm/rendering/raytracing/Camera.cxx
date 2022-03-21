@@ -759,7 +759,7 @@ VTKM_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds b
   createTimer.Start();
   logger->OpenLogEntry("ray_camera");
 
-  bool ortho = this->CameraView.GetMode() == vtkm::rendering::Camera::MODE_2D;
+  bool ortho = this->CameraView.GetMode() == vtkm::rendering::Camera::Mode::TwoD;
   this->UpdateDimensions(rays, boundingBox, ortho);
   this->WriteSettingsToLog();
   vtkm::cont::Timer timer;

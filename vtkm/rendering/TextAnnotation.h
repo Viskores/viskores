@@ -16,6 +16,8 @@
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 
+#include <vtkm/Deprecated.h>
+
 namespace vtkm
 {
 namespace rendering
@@ -24,18 +26,24 @@ namespace rendering
 class VTKM_RENDERING_EXPORT TextAnnotation
 {
 public:
-  enum HorizontalAlignment
+  enum struct HorizontalAlignment
   {
     Left,
     HCenter,
     Right
   };
-  enum VerticalAlignment
+  enum struct VerticalAlignment
   {
     Bottom,
     VCenter,
     Top
   };
+  static constexpr HorizontalAlignment Left = HorizontalAlignment::Left;
+  static constexpr HorizontalAlignment HCenter = HorizontalAlignment::HCenter;
+  static constexpr HorizontalAlignment Right = HorizontalAlignment::Right;
+  static constexpr VerticalAlignment Bottom = VerticalAlignment::Bottom;
+  static constexpr VerticalAlignment VCenter = VerticalAlignment::VCenter;
+  static constexpr VerticalAlignment Top = VerticalAlignment::Top;
 
 protected:
   std::string Text;
