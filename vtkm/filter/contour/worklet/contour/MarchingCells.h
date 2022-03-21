@@ -18,6 +18,7 @@
 #include <vtkm/exec/ParametricCoordinates.h>
 
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
@@ -360,7 +361,7 @@ void MergeDuplicates(const vtkm::cont::Invoker& invoker,
                      vtkm::cont::ArrayHandle<vtkm::Id>& connectivity)
 {
   vtkm::cont::ArrayHandle<KeyType> input_keys;
-  vtkm::cont::ArrayCopy(original_keys, input_keys);
+  vtkm::cont::ArrayCopyDevice(original_keys, input_keys);
   vtkm::worklet::Keys<KeyType> keys(input_keys);
   input_keys.ReleaseResources();
 
