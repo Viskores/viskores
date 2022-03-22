@@ -577,6 +577,14 @@ For each one of these found, a source file will be produced that compiles
 the template for the given instantiation. Those produced files are stored
 in the build directory and are not versioned.
 
+_Important note_: The `extern template` should not be of an inline function
+or method. If the function or method is inline, then a compiler might compile
+ts own instance of the template regardless of the known export, which defeats
+the purpose of making the instances. In particular, if the `extern template`
+is referring to a method, make sure the implementation for that method is
+defined _outside_ of the class. Implementations defined inside of a class are
+implicitly considered inline.
+
 Usage:
    vtkm_add_instantiations(
      instantiations_list
