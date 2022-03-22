@@ -63,14 +63,7 @@ struct DeducedPointGrad
   }
 
   template <typename CellSetType>
-  void operator()(const CellSetType& cellset) const
-#ifndef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
-  {
-    this->Go(cellset);
-  }
-#else
-    ;
-#endif
+  void operator()(const CellSetType& cellset) const;
 
   template <typename CellSetType>
   void Go(const CellSetType& cellset) const
@@ -131,6 +124,17 @@ struct DeducedPointGrad
 private:
   void operator=(const DeducedPointGrad<CoordinateSystem, T, S>&) = delete;
 };
+
+#ifndef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
+// Declare the methods that get instances outside of the class so that they are not inline.
+// If they are inline, the compiler may decide to compile them anyway.
+template <typename CoordinateSystem, typename T, typename S>
+template <typename CellSetType>
+void DeducedPointGrad<CoordinateSystem, T, S>::operator()(const CellSetType& cellset) const
+{
+  this->Go(cellset);
+}
+#endif
 
 } //namespace gradient
 
@@ -246,17 +250,25 @@ public:
   static vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
                                                       const CoordinateSystem& coords,
                                                       const vtkm::cont::ArrayHandle<T, S>& field,
-                                                      GradientOutputFields<T>& extraOutput)
-#ifdef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
-    ;
-#else
-  {
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::gradient::CellGradient> dispatcher;
-    dispatcher.Invoke(cells, coords, field, extraOutput);
-    return extraOutput.Gradient;
-  }
-#endif
+                                                      GradientOutputFields<T>& extraOutput);
 };
+
+#ifndef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
+// Declare the methods that get instances outside of the class so that they are not inline.
+// If they are inline, the compiler may decide to compile them anyway.
+template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
+vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> CellGradient::Run(
+  const CellSetType& cells,
+  const CoordinateSystem& coords,
+  const vtkm::cont::ArrayHandle<T, S>& field,
+  GradientOutputFields<T>& extraOutput)
+{
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::gradient::CellGradient> dispatcher;
+  dispatcher.Invoke(cells, coords, field, extraOutput);
+  return extraOutput.Gradient;
+}
+#endif
+
 }
 } // namespace vtkm::worklet
 
