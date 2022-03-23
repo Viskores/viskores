@@ -13,6 +13,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -27,21 +28,21 @@
 
 #include <vtkm/cont/internal/OptionParser.h>
 
-#include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/Contour.h>
-#include <vtkm/filter/ExternalFaces.h>
 #include <vtkm/filter/FieldSelection.h>
-#include <vtkm/filter/Gradient.h>
-#include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/Tetrahedralize.h>
-#include <vtkm/filter/Threshold.h>
-#include <vtkm/filter/ThresholdPoints.h>
-#include <vtkm/filter/Triangulate.h>
-#include <vtkm/filter/VectorMagnitude.h>
-#include <vtkm/filter/VertexClustering.h>
-#include <vtkm/filter/WarpScalar.h>
-#include <vtkm/filter/WarpVector.h>
+#include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
+#include <vtkm/filter/entity_extraction/Threshold.h>
+#include <vtkm/filter/entity_extraction/ThresholdPoints.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
+#include <vtkm/filter/field_conversion/PointAverage.h>
+#include <vtkm/filter/field_transform/WarpScalar.h>
+#include <vtkm/filter/field_transform/WarpVector.h>
+#include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
+#include <vtkm/filter/geometry_refinement/Triangulate.h>
+#include <vtkm/filter/geometry_refinement/VertexClustering.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
+#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 
@@ -84,8 +85,18 @@ namespace
 vtkm::cont::InitializeResult Config;
 
 // The input dataset we'll use on the filters:
-static vtkm::cont::DataSet InputDataSet;
-static vtkm::cont::DataSet UnstructuredInputDataSet;
+vtkm::cont::DataSet* InputDataSet;
+vtkm::cont::DataSet* UnstructuredInputDataSet;
+vtkm::cont::DataSet& GetInputDataSet()
+{
+  return *InputDataSet;
+}
+
+vtkm::cont::DataSet& GetUnstructuredInputDataSet()
+{
+  return *UnstructuredInputDataSet;
+}
+
 // The point scalars to use:
 static std::string PointScalarsName;
 // The cell scalars to use:
@@ -97,9 +108,9 @@ bool FileAsInput = false;
 
 bool InputIsStructured()
 {
-  return InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>() ||
-    InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<2>>() ||
-    InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<1>>();
+  return GetInputDataSet().GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>() ||
+    GetInputDataSet().GetCellSet().IsType<vtkm::cont::CellSetStructured<2>>() ||
+    GetInputDataSet().GetCellSet().IsType<vtkm::cont::CellSetStructured<1>>();
 }
 
 enum GradOpts : int
@@ -117,7 +128,7 @@ void BenchGradient(::benchmark::State& state, int options)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::Gradient filter;
+  vtkm::filter::vector_analysis::Gradient filter;
 
   if (options & ScalarInput)
   {
@@ -127,11 +138,11 @@ void BenchGradient(::benchmark::State& state, int options)
       throw vtkm::cont::ErrorInternal("A requested gradient output is "
                                       "incompatible with scalar input.");
     }
-    filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
   }
   else
   {
-    filter.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+    filter.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::Points);
   }
 
   filter.SetComputeGradient(static_cast<bool>(options & Gradient));
@@ -150,11 +161,13 @@ void BenchGradient(::benchmark::State& state, int options)
   }
 
   vtkm::cont::Timer timer{ device };
+  //vtkm::cont::DataSet input = static_cast<bool>(options & Structured) ? GetInputDataSet() : GetUnstructuredInputDataSet();
+
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(GetInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
