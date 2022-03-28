@@ -480,7 +480,18 @@ template <std::size_t NumCases>
 struct VariantCases
 {
   template <typename Functor, typename UnionType, typename... Args>
-  VTK_M_DEVICE static inline auto CastAndCall(
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
     vtkm::IdComponent index,
     Functor&& f,
     UnionType& storage,
@@ -567,7 +578,18 @@ template<>
 struct VariantCases<2>
 {
   template <typename Functor, typename UnionType, typename... Args>
-  VTK_M_DEVICE static inline auto CastAndCall(
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
     vtkm::IdComponent index,
     Functor&& f,
     UnionType& storage,
@@ -598,7 +620,18 @@ template<>
 struct VariantCases<3>
 {
   template <typename Functor, typename UnionType, typename... Args>
-  VTK_M_DEVICE static inline auto CastAndCall(
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
     vtkm::IdComponent index,
     Functor&& f,
     UnionType& storage,
@@ -635,7 +668,18 @@ template<>
 struct VariantCases<4>
 {
   template <typename Functor, typename UnionType, typename... Args>
-  VTK_M_DEVICE static inline auto CastAndCall(
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
     vtkm::IdComponent index,
     Functor&& f,
     UnionType& storage,
@@ -678,7 +722,18 @@ template<>
 struct VariantCases<5>
 {
   template <typename Functor, typename UnionType, typename... Args>
-  VTK_M_DEVICE static inline auto CastAndCall(
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
     vtkm::IdComponent index,
     Functor&& f,
     UnionType& storage,
@@ -727,7 +782,18 @@ template<>
 struct VariantCases<6>
 {
   template <typename Functor, typename UnionType, typename... Args>
-  VTK_M_DEVICE static inline auto CastAndCall(
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
     vtkm::IdComponent index,
     Functor&& f,
     UnionType& storage,
@@ -782,7 +848,18 @@ template<>
 struct VariantCases<7>
 {
   template <typename Functor, typename UnionType, typename... Args>
-  VTK_M_DEVICE static inline auto CastAndCall(
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
     vtkm::IdComponent index,
     Functor&& f,
     UnionType& storage,
@@ -843,7 +920,18 @@ template<>
 struct VariantCases<8>
 {
   template <typename Functor, typename UnionType, typename... Args>
-  VTK_M_DEVICE static inline auto CastAndCall(
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
     vtkm::IdComponent index,
     Functor&& f,
     UnionType& storage,
