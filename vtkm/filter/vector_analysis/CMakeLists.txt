@@ -22,6 +22,11 @@ set(vector_analysis_sources_device
   VectorMagnitude.cxx
   )
 
+vtkm_add_instantiations(instantiation_files
+  INSTANTIATIONS_FILE worklet/Gradient.h
+  )
+list(APPEND vector_analysis_sources_device ${instantiation_files})
+
 vtkm_library(
   NAME vtkm_filter_vector_analysis
   HEADERS ${vector_analysis_headers}

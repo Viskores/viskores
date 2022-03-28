@@ -23,6 +23,21 @@
 #include <vtkm/filter/vector_analysis/worklet/gradient/Transpose.h>
 #include <vtkm/filter/vector_analysis/worklet/gradient/Vorticity.h>
 
+// Required for instantiations
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
+#include <vtkm/cont/ArrayHandleSOA.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/UnknownCellSet.h>
+#include <vtkm/internal/Instantiations.h>
+
+#ifndef vtkm_GradientInstantiation
+// Turn this on to check to see if all the instances of the gradient worklet are covered
+// in external instances. If they are not, you will get a compile error.
+//#define VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
+#endif
+
 namespace vtkm
 {
 namespace worklet
@@ -48,7 +63,10 @@ struct DeducedPointGrad
   }
 
   template <typename CellSetType>
-  void operator()(const CellSetType& cellset) const
+  void operator()(const CellSetType& cellset) const;
+
+  template <typename CellSetType>
+  void Go(const CellSetType& cellset) const
   {
     vtkm::worklet::DispatcherMapTopology<PointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -58,7 +76,7 @@ struct DeducedPointGrad
                       *this->Result);
   }
 
-  void operator()(const vtkm::cont::CellSetStructured<3>& cellset) const
+  void Go(const vtkm::cont::CellSetStructured<3>& cellset) const
   {
     vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -68,8 +86,8 @@ struct DeducedPointGrad
   }
 
   template <typename PermIterType>
-  void operator()(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>,
-                                                       PermIterType>& cellset) const
+  void Go(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>, PermIterType>&
+            cellset) const
   {
     vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -78,7 +96,7 @@ struct DeducedPointGrad
                       *this->Result);
   }
 
-  void operator()(const vtkm::cont::CellSetStructured<2>& cellset) const
+  void Go(const vtkm::cont::CellSetStructured<2>& cellset) const
   {
     vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -88,8 +106,8 @@ struct DeducedPointGrad
   }
 
   template <typename PermIterType>
-  void operator()(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>,
-                                                       PermIterType>& cellset) const
+  void Go(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>, PermIterType>&
+            cellset) const
   {
     vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -106,6 +124,17 @@ struct DeducedPointGrad
 private:
   void operator=(const DeducedPointGrad<CoordinateSystem, T, S>&) = delete;
 };
+
+#ifndef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
+// Declare the methods that get instances outside of the class so that they are not inline.
+// If they are inline, the compiler may decide to compile them anyway.
+template <typename CoordinateSystem, typename T, typename S>
+template <typename CellSetType>
+void DeducedPointGrad<CoordinateSystem, T, S>::operator()(const CellSetType& cellset) const
+{
+  this->Go(cellset);
+}
+#endif
 
 } //namespace gradient
 
@@ -202,15 +231,6 @@ public:
   template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
                                                const CoordinateSystem& coords,
-                                               const vtkm::cont::ArrayHandle<T, S>& field)
-  {
-    vtkm::worklet::GradientOutputFields<T> extraOutput(true, false, false, false);
-    return this->Run(cells, coords, field, extraOutput);
-  }
-
-  template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
-                                               const CoordinateSystem& coords,
                                                const vtkm::cont::ArrayHandle<T, S>& field,
                                                GradientOutputFields<T>& extraOutput)
   {
@@ -227,25 +247,380 @@ class CellGradient
 {
 public:
   template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
-                                               const CoordinateSystem& coords,
-                                               const vtkm::cont::ArrayHandle<T, S>& field)
-  {
-    vtkm::worklet::GradientOutputFields<T> extra(true, false, false, false);
-    return this->Run(cells, coords, field, extra);
-  }
-
-  template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
-                                               const CoordinateSystem& coords,
-                                               const vtkm::cont::ArrayHandle<T, S>& field,
-                                               GradientOutputFields<T>& extraOutput)
-  {
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::gradient::CellGradient> dispatcher;
-    dispatcher.Invoke(cells, coords, field, extraOutput);
-    return extraOutput.Gradient;
-  }
+  static vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
+                                                      const CoordinateSystem& coords,
+                                                      const vtkm::cont::ArrayHandle<T, S>& field,
+                                                      GradientOutputFields<T>& extraOutput);
 };
+
+#ifndef VTKM_GRADIENT_CHECK_WORKLET_INSTANCES
+// Declare the methods that get instances outside of the class so that they are not inline.
+// If they are inline, the compiler may decide to compile them anyway.
+template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
+vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> CellGradient::Run(
+  const CellSetType& cells,
+  const CoordinateSystem& coords,
+  const vtkm::cont::ArrayHandle<T, S>& field,
+  GradientOutputFields<T>& extraOutput)
+{
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::gradient::CellGradient> dispatcher;
+  dispatcher.Invoke(cells, coords, field, extraOutput);
+  return extraOutput.Gradient;
+}
+#endif
+
 }
 } // namespace vtkm::worklet
+
+//==============================================================================
+//---------------------------------------------------------------------------
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Float32,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetStructured<3>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Float64,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetStructured<3>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetStructured<3>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetStructured<3>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagSOA>::operator()(const vtkm::cont::CellSetStructured<3>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagSOA>::operator()(const vtkm::cont::CellSetStructured<3>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic>>::
+operator()(const vtkm::cont::CellSetStructured<3>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic>>::
+operator()(const vtkm::cont::CellSetStructured<3>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f,
+  vtkm::cont::StorageTagUniformPoints>::operator()(const vtkm::cont::CellSetStructured<3>&) const;
+VTKM_INSTANTIATION_END
+
+
+//---------------------------------------------------------------------------
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Float32,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetStructured<2>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Float64,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetStructured<2>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetStructured<2>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetStructured<2>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagSOA>::operator()(const vtkm::cont::CellSetStructured<2>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagSOA>::operator()(const vtkm::cont::CellSetStructured<2>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic>>::
+operator()(const vtkm::cont::CellSetStructured<2>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic>>::
+operator()(const vtkm::cont::CellSetStructured<2>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f,
+  vtkm::cont::StorageTagUniformPoints>::operator()(const vtkm::cont::CellSetStructured<2>&) const;
+VTKM_INSTANTIATION_END
+
+
+//---------------------------------------------------------------------------
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Float32,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetExplicit<>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Float64,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetExplicit<>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetExplicit<>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetExplicit<>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagSOA>::operator()(const vtkm::cont::CellSetExplicit<>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagSOA>::operator()(const vtkm::cont::CellSetExplicit<>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic>>::
+operator()(const vtkm::cont::CellSetExplicit<>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic>>::
+operator()(const vtkm::cont::CellSetExplicit<>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f,
+  vtkm::cont::StorageTagUniformPoints>::operator()(const vtkm::cont::CellSetExplicit<>&) const;
+VTKM_INSTANTIATION_END
+
+
+//---------------------------------------------------------------------------
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Float32,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetSingleType<>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Float64,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetSingleType<>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetSingleType<>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagBasic>::operator()(const vtkm::cont::CellSetSingleType<>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagSOA>::operator()(const vtkm::cont::CellSetSingleType<>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagSOA>::operator()(const vtkm::cont::CellSetSingleType<>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_32,
+  vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic>>::
+operator()(const vtkm::cont::CellSetSingleType<>&) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f_64,
+  vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic>>::
+operator()(const vtkm::cont::CellSetSingleType<>&) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::gradient::DeducedPointGrad<
+  vtkm::cont::CoordinateSystem,
+  vtkm::Vec3f,
+  vtkm::cont::StorageTagUniformPoints>::operator()(const vtkm::cont::CellSetSingleType<>&) const;
+VTKM_INSTANTIATION_END
+
+
+
+//==============================================================================
+//---------------------------------------------------------------------------
+VTKM_INSTANTIATION_BEGIN
+extern template vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>
+vtkm::worklet::CellGradient::Run(
+  const vtkm::cont::UnknownCellSet&,
+  const vtkm::cont::CoordinateSystem&,
+  const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>&,
+  GradientOutputFields<vtkm::Float32>&);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>
+vtkm::worklet::CellGradient::Run(
+  const vtkm::cont::UnknownCellSet&,
+  const vtkm::cont::CoordinateSystem&,
+  const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>&,
+  GradientOutputFields<vtkm::Float64>&);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_32, 3>>
+vtkm::worklet::CellGradient::Run(
+  const vtkm::cont::UnknownCellSet&,
+  const vtkm::cont::CoordinateSystem&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_32, vtkm::cont::StorageTagBasic>&,
+  GradientOutputFields<vtkm::Vec3f_32>&);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_64, 3>>
+vtkm::worklet::CellGradient::Run(
+  const vtkm::cont::UnknownCellSet&,
+  const vtkm::cont::CoordinateSystem&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_64, vtkm::cont::StorageTagBasic>&,
+  GradientOutputFields<vtkm::Vec3f_64>&);
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_32, 3>>
+vtkm::worklet::CellGradient::Run(
+  const vtkm::cont::UnknownCellSet&,
+  const vtkm::cont::CoordinateSystem&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_32, vtkm::cont::StorageTagSOA>&,
+  GradientOutputFields<vtkm::Vec3f_32>&);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_64, 3>>
+vtkm::worklet::CellGradient::Run(
+  const vtkm::cont::UnknownCellSet&,
+  const vtkm::cont::CoordinateSystem&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_64, vtkm::cont::StorageTagSOA>&,
+  GradientOutputFields<vtkm::Vec3f_64>&);
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_32, 3>>
+vtkm::worklet::CellGradient::Run(
+  const vtkm::cont::UnknownCellSet&,
+  const vtkm::cont::CoordinateSystem&,
+  const vtkm::cont::ArrayHandle<
+    vtkm::Vec3f_32,
+    vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic>>&,
+  GradientOutputFields<vtkm::Vec3f_32>&);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_64, 3>>
+vtkm::worklet::CellGradient::Run(
+  const vtkm::cont::UnknownCellSet&,
+  const vtkm::cont::CoordinateSystem&,
+  const vtkm::cont::ArrayHandle<
+    vtkm::Vec3f_64,
+    vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic>>&,
+  GradientOutputFields<vtkm::Vec3f_64>&);
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f, 3>> vtkm::worklet::CellGradient::Run(
+  const vtkm::cont::UnknownCellSet&,
+  const vtkm::cont::CoordinateSystem&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>&,
+  GradientOutputFields<vtkm::Vec3f>&);
+VTKM_INSTANTIATION_END
+
 #endif

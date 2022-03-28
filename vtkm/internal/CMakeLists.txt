@@ -66,6 +66,7 @@ set(headers
   FunctionInterfaceDetailPre.h
   IndexTag.h
   IndicesExtrude.h
+  Instantiations.h
   Invocation.h
   Meta.h
   Unreachable.h
