@@ -373,8 +373,6 @@ function(vtkm_add_target_information uses_vtkm_target)
     set_target_properties(${targets} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     set_target_properties(${targets} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
   endif()
-  # CUDA_ARCHITECTURES added in CMake 3.18
-  set_target_properties(${targets} PROPERTIES CUDA_ARCHITECTURES OFF)
 
   if(VTKm_TI_DROP_UNUSED_SYMBOLS)
     foreach(target IN LISTS targets)

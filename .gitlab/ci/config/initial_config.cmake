@@ -98,8 +98,10 @@ foreach(option IN LISTS options)
   elseif(volta STREQUAL option)
     set(VTKm_CUDA_Architecture "volta" CACHE STRING "")
 
+  # From turing we set the architecture using the cannonical
+  # CMAKE_CUDA_ARCHITECTURES
   elseif(turing STREQUAL option)
-    set(VTKm_CUDA_Architecture "turing" CACHE STRING "")
+    set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING "")
 
   elseif(hip STREQUAL option)
     if(CMAKE_VERSION VERSION_LESS_EQUAL 3.20)
@@ -165,7 +167,7 @@ if(SCCACHE_COMMAND)
 
   # Use VTKm_CUDA_Architecture to determine if we need CUDA sccache setup
   # since this will also capture when kokkos is being used with CUDA backing
-  if(DEFINED VTKm_CUDA_Architecture)
+  if(DEFINED VTKm_CUDA_Architecture OR DEFINED CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
   endif()
 endif()
