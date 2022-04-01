@@ -20,6 +20,10 @@ set(headers
   ConnectivityTracer.h
   CylinderExtractor.h
   CylinderIntersector.h
+  GlyphExtractor.h
+  GlyphExtractorVector.h
+  GlyphIntersector.h
+  GlyphIntersectorVector.h
   Logger.h
   MeshConnectivityBuilder.h
   MeshConnectivityContainers.h
