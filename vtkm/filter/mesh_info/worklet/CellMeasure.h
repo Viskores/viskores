@@ -72,8 +72,13 @@ private:
 #pragma warning(disable : 4068) //unknown pragma
 #endif
 #ifdef __NVCC__
+
 #pragma push
+#if (CUDART_VERSION >= 11050)
+#pragma nv_diag_suppress = code_is_unreachable
+#else
 #pragma diag_suppress = code_is_unreachable
+#endif
 #endif
     using vtkm::filter::mesh_info::IntegrationType;
 
