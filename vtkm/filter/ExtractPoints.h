@@ -28,12 +28,6 @@ inline void ExtractPoints_deprecated_warning()
   ExtractPoints_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::ExtractPoints.") ExtractPoints
-  : public vtkm::filter::entity_extraction::ExtractPoints
-{
-  using entity_extraction::ExtractPoints::ExtractPoints;
-};
-
 }
 } // namespace vtkm::filter
 

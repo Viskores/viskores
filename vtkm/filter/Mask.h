@@ -26,12 +26,6 @@ inline void Mask_deprecated_warning()
   Mask_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::Mask.") Mask
-  : public vtkm::filter::entity_extraction::Mask
-{
-  using entity_extraction::Mask::Mask;
-};
-
 }
 } // namespace vtkm::filter
 

@@ -76,8 +76,14 @@ private:
   vtkm::Float64 BinDelta = 0;
   vtkm::Range ComputedRange;
   vtkm::Range Range;
+  bool InExecutePartitions = false;
 };
 } // namespace density_estimate
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::Histogram.") Histogram
+  : public vtkm::filter::density_estimate::Histogram
+{
+  using density_estimate::Histogram::Histogram;
+};
 } // namespace filter
 } // namespace vtkm
 

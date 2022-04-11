@@ -72,8 +72,13 @@ private:
 #pragma warning(disable : 4068) //unknown pragma
 #endif
 #ifdef __NVCC__
+
 #pragma push
+#if (CUDART_VERSION >= 11050)
+#pragma nv_diag_suppress = code_is_unreachable
+#else
 #pragma diag_suppress = code_is_unreachable
+#endif
 #endif
     using vtkm::filter::mesh_info::IntegrationType;
 
@@ -84,19 +89,19 @@ private:
         // Fall through to return 0 measure.
         break;
       case 1:
-        if (this->measure & IntegrationType::ArcLength)
+        if ((this->measure & IntegrationType::ArcLength) == IntegrationType::ArcLength)
         {
           return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), ec);
         }
         break;
       case 2:
-        if (this->measure & IntegrationType::Area)
+        if ((this->measure & IntegrationType::Area) == IntegrationType::Area)
         {
           return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), ec);
         }
         break;
       case 3:
-        if (this->measure & IntegrationType::Volume)
+        if ((this->measure & IntegrationType::Volume) == IntegrationType::Volume)
         {
           return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), ec);
         }

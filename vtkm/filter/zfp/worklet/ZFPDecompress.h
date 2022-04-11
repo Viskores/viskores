@@ -17,7 +17,6 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/AtomicArray.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/filter/zfp/worklet/zfp/ZFPDecode3.h>
 #include <vtkm/filter/zfp/worklet/zfp/ZFPTools.h>
 #include <vtkm/worklet/DispatcherMapField.h>

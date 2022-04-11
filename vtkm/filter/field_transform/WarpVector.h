@@ -40,7 +40,7 @@ public:
   VTKM_CONT
   void SetVectorField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->VectorFieldName = name;
     this->VectorFieldAssociation = association;
@@ -58,10 +58,15 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
   std::string VectorFieldName = "normal";
-  vtkm::cont::Field::Association VectorFieldAssociation = vtkm::cont::Field::Association::ANY;
+  vtkm::cont::Field::Association VectorFieldAssociation = vtkm::cont::Field::Association::Any;
   vtkm::FloatDefault Scale;
 };
 } // namespace field_transform
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::WarpVector.") WarpVector
+  : public vtkm::filter::field_transform::WarpVector
+{
+  using field_transform::WarpVector::WarpVector;
+};
 } // namespace filter
 } // namespace vtkm
 #endif // vtk_m_filter_field_transform_WarpVector_h

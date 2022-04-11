@@ -70,7 +70,7 @@ public:
   VTKM_CONT
   void SetPrimaryField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->SetActiveField(name, association);
   }
@@ -86,7 +86,7 @@ public:
   VTKM_CONT
   void SetSecondaryField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->SetActiveField(1, name, association);
   }
@@ -108,6 +108,11 @@ private:
   std::string ThresholdFieldName = "threshold-output";
 };
 } // namespace image_processing
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::image_processing::ImageDifference.") ImageDifference
+  : public vtkm::filter::image_processing::ImageDifference
+{
+  using image_processing::ImageDifference::ImageDifference;
+};
 } // namespace filter
 } // namespace vtkm
 

@@ -35,8 +35,13 @@ private:
   std::vector<vtkm::Id> NumOfBins;
   std::vector<std::string> FieldNames;
 };
-}
-}
-} // namespace vtkm::filter
+} // namespace density_estimate
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::NDEntropy.") NDEntropy
+  : public vtkm::filter::density_estimate::NDEntropy
+{
+  using density_estimate::NDEntropy::NDEntropy;
+};
+} // namespace filter
+} // namespace vtkm
 
 #endif //vtk_m_filter_density_estimate_NDEntropy_h

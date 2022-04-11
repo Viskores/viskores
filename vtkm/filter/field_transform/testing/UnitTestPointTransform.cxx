@@ -66,11 +66,11 @@ void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
                             const vtkm::Matrix<vtkm::FloatDefault, 4, 4>& matrix)
 {
   //verify the result
-  VTKM_TEST_ASSERT(result.HasField(fieldName, vtkm::cont::Field::Association::POINTS),
+  VTKM_TEST_ASSERT(result.HasField(fieldName, vtkm::cont::Field::Association::Points),
                    "Output field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> resultArrayHandle;
-  result.GetField(fieldName, vtkm::cont::Field::Association::POINTS)
+  result.GetField(fieldName, vtkm::cont::Field::Association::Points)
     .GetData()
     .AsArrayHandle(resultArrayHandle);
 

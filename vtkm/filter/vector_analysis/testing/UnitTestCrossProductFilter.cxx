@@ -143,18 +143,18 @@ void TestCrossProduct()
       std::cout << "  Both vectors as normal fields" << std::endl;
       vtkm::filter::vector_analysis::CrossProduct filter;
       filter.SetPrimaryField("vec1");
-      filter.SetSecondaryField("vec2", vtkm::cont::Field::Association::POINTS);
+      filter.SetSecondaryField("vec2", vtkm::cont::Field::Association::Points);
 
       // Check to make sure the fields are reported as correct.
       VTKM_TEST_ASSERT(filter.GetPrimaryFieldName() == "vec1", "Bad field name.");
-      VTKM_TEST_ASSERT(filter.GetPrimaryFieldAssociation() == vtkm::cont::Field::Association::ANY,
+      VTKM_TEST_ASSERT(filter.GetPrimaryFieldAssociation() == vtkm::cont::Field::Association::Any,
                        "Bad field association.");
       VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == false,
                        "Bad use coordinates.");
 
       VTKM_TEST_ASSERT(filter.GetSecondaryFieldName() == "vec2", "Bad field name.");
       VTKM_TEST_ASSERT(filter.GetSecondaryFieldAssociation() ==
-                         vtkm::cont::Field::Association::POINTS,
+                         vtkm::cont::Field::Association::Points,
                        "Bad field association.");
       VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == false,
                        "Bad use coordinates.");
@@ -175,7 +175,7 @@ void TestCrossProduct()
                        "Bad use coordinates.");
 
       VTKM_TEST_ASSERT(filter.GetSecondaryFieldName() == "vec2", "Bad field name.");
-      VTKM_TEST_ASSERT(filter.GetSecondaryFieldAssociation() == vtkm::cont::Field::Association::ANY,
+      VTKM_TEST_ASSERT(filter.GetSecondaryFieldAssociation() == vtkm::cont::Field::Association::Any,
                        "Bad field association.");
       VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == false,
                        "Bad use coordinates.");
@@ -193,7 +193,7 @@ void TestCrossProduct()
 
       // Check to make sure the fields are reported as correct.
       VTKM_TEST_ASSERT(filter.GetPrimaryFieldName() == "vec1", "Bad field name.");
-      VTKM_TEST_ASSERT(filter.GetPrimaryFieldAssociation() == vtkm::cont::Field::Association::ANY,
+      VTKM_TEST_ASSERT(filter.GetPrimaryFieldAssociation() == vtkm::cont::Field::Association::Any,
                        "Bad field association.");
       VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == false,
                        "Bad use coordinates.");

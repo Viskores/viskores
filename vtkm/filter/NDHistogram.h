@@ -28,12 +28,6 @@ inline void NDHistogram_deprecated_warning()
   NDHistogram_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::NDHistogram.") NDHistogram
-  : public vtkm::filter::density_estimate::NDHistogram
-{
-  using density_estimate::NDHistogram::NDHistogram;
-};
-
 }
 } // namespace vtkm::filter
 

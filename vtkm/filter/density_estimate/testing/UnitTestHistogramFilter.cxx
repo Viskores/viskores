@@ -220,26 +220,23 @@ vtkm::cont::DataSet MakeTestDataSet()
 
   // Set point scalars
   dataSet.AddField(vtkm::cont::make_Field(
-    "p_poisson", vtkm::cont::Field::Association::POINTS, poisson, nVerts, vtkm::CopyFlag::On));
+    "p_poisson", vtkm::cont::Field::Association::Points, poisson, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "p_normal", vtkm::cont::Field::Association::POINTS, normal, nVerts, vtkm::CopyFlag::On));
+    "p_normal", vtkm::cont::Field::Association::Points, normal, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "p_chiSquare", vtkm::cont::Field::Association::POINTS, chiSquare, nVerts, vtkm::CopyFlag::On));
+    "p_chiSquare", vtkm::cont::Field::Association::Points, chiSquare, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "p_uniform", vtkm::cont::Field::Association::POINTS, uniform, nVerts, vtkm::CopyFlag::On));
+    "p_uniform", vtkm::cont::Field::Association::Points, uniform, nVerts, vtkm::CopyFlag::On));
 
   // Set cell scalars
   dataSet.AddField(vtkm::cont::make_Field(
-    "c_poisson", vtkm::cont::Field::Association::CELL_SET, poisson, nCells, vtkm::CopyFlag::On));
+    "c_poisson", vtkm::cont::Field::Association::Cells, poisson, nCells, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "c_normal", vtkm::cont::Field::Association::CELL_SET, normal, nCells, vtkm::CopyFlag::On));
-  dataSet.AddField(vtkm::cont::make_Field("c_chiSquare",
-                                          vtkm::cont::Field::Association::CELL_SET,
-                                          chiSquare,
-                                          nCells,
-                                          vtkm::CopyFlag::On));
+    "c_normal", vtkm::cont::Field::Association::Cells, normal, nCells, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "c_uniform", vtkm::cont::Field::Association::CELL_SET, poisson, nCells, vtkm::CopyFlag::On));
+    "c_chiSquare", vtkm::cont::Field::Association::Cells, chiSquare, nCells, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "c_uniform", vtkm::cont::Field::Association::Cells, poisson, nCells, vtkm::CopyFlag::On));
 
   vtkm::cont::CellSetStructured<dimension> cellSet;
 

@@ -48,7 +48,7 @@ public:
 
   VTKM_CONT
   bool HasField(const std::string& name,
-                vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const
+                vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const
   {
     bool found = false;
     this->FindFieldIndex(name, assoc, found);
@@ -59,7 +59,7 @@ public:
   bool HasCellField(const std::string& name) const
   {
     bool found = false;
-    this->FindFieldIndex(name, vtkm::cont::Field::Association::CELL_SET, found);
+    this->FindFieldIndex(name, vtkm::cont::Field::Association::Cells, found);
     return found;
   }
 
@@ -67,7 +67,7 @@ public:
   bool HasPointField(const std::string& name) const
   {
     bool found = false;
-    this->FindFieldIndex(name, vtkm::cont::Field::Association::POINTS, found);
+    this->FindFieldIndex(name, vtkm::cont::Field::Association::Points, found);
     return found;
   }
 
@@ -77,7 +77,7 @@ public:
   VTKM_CONT
   vtkm::Id GetFieldIndex(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const;
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const;
 
   /// Returns the field that matches the provided name and association
   /// Will throw an exception if no match is found
@@ -85,7 +85,7 @@ public:
   VTKM_CONT
   const vtkm::cont::Field& GetField(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const
   {
     return this->GetField(this->GetFieldIndex(name, assoc));
   }
@@ -93,7 +93,7 @@ public:
   VTKM_CONT
   vtkm::cont::Field& GetField(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any)
   {
     return this->GetField(this->GetFieldIndex(name, assoc));
   }
@@ -105,13 +105,13 @@ public:
   VTKM_CONT
   const vtkm::cont::Field& GetCellField(const std::string& name) const
   {
-    return this->GetField(name, vtkm::cont::Field::Association::CELL_SET);
+    return this->GetField(name, vtkm::cont::Field::Association::Cells);
   }
 
   VTKM_CONT
   vtkm::cont::Field& GetCellField(const std::string& name)
   {
-    return this->GetField(name, vtkm::cont::Field::Association::CELL_SET);
+    return this->GetField(name, vtkm::cont::Field::Association::Cells);
   }
   //@}
 
@@ -121,13 +121,13 @@ public:
   VTKM_CONT
   const vtkm::cont::Field& GetPointField(const std::string& name) const
   {
-    return this->GetField(name, vtkm::cont::Field::Association::POINTS);
+    return this->GetField(name, vtkm::cont::Field::Association::Points);
   }
 
   VTKM_CONT
   vtkm::cont::Field& GetPointField(const std::string& name)
   {
-    return this->GetField(name, vtkm::cont::Field::Association::POINTS);
+    return this->GetField(name, vtkm::cont::Field::Association::Points);
   }
   //@}
 
@@ -148,14 +148,14 @@ public:
   VTKM_CONT void AddPointField(const std::string& fieldName, const std::vector<T>& field)
   {
     this->AddField(
-      make_Field(fieldName, vtkm::cont::Field::Association::POINTS, field, vtkm::CopyFlag::On));
+      make_Field(fieldName, vtkm::cont::Field::Association::Points, field, vtkm::CopyFlag::On));
   }
 
   template <typename T>
   VTKM_CONT void AddPointField(const std::string& fieldName, const T* field, const vtkm::Id& n)
   {
     this->AddField(
-      make_Field(fieldName, vtkm::cont::Field::Association::POINTS, field, n, vtkm::CopyFlag::On));
+      make_Field(fieldName, vtkm::cont::Field::Association::Points, field, n, vtkm::CopyFlag::On));
   }
 
   //Cell centered field
@@ -176,14 +176,14 @@ public:
   VTKM_CONT void AddCellField(const std::string& fieldName, const std::vector<T>& field)
   {
     this->AddField(
-      make_Field(fieldName, vtkm::cont::Field::Association::CELL_SET, field, vtkm::CopyFlag::On));
+      make_Field(fieldName, vtkm::cont::Field::Association::Cells, field, vtkm::CopyFlag::On));
   }
 
   template <typename T>
   VTKM_CONT void AddCellField(const std::string& fieldName, const T* field, const vtkm::Id& n)
   {
-    this->AddField(make_Field(
-      fieldName, vtkm::cont::Field::Association::CELL_SET, field, n, vtkm::CopyFlag::On));
+    this->AddField(
+      make_Field(fieldName, vtkm::cont::Field::Association::Cells, field, n, vtkm::CopyFlag::On));
   }
 
 
@@ -286,8 +286,8 @@ private:
     bool operator()(const T& a, const T& b) const
     {
       if (a.first == b.first)
-        return a.second < b.second && a.second != vtkm::cont::Field::Association::ANY &&
-          b.second != vtkm::cont::Field::Association::ANY;
+        return a.second < b.second && a.second != vtkm::cont::Field::Association::Any &&
+          b.second != vtkm::cont::Field::Association::Any;
 
       return a.first < b.first;
     }

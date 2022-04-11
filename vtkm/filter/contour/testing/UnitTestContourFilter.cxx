@@ -43,7 +43,7 @@ public:
     mc.SetGenerateNormals(true);
     mc.SetIsoValue(0, 0.5);
     mc.SetActiveField("tangle");
-    mc.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
+    mc.SetFieldsToPass(vtkm::filter::FieldSelection::Mode::None);
 
     auto result = mc.Execute(dataSet);
     {
@@ -103,7 +103,7 @@ public:
     //we use FlyingEdges we now which does point merging for free
     //so we should see the number of points not change
     mc.SetMergeDuplicatePoints(false);
-    mc.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_ALL);
+    mc.SetFieldsToPass(vtkm::filter::FieldSelection::Mode::All);
     result = mc.Execute(dataSet);
     {
       vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();

@@ -27,12 +27,6 @@ inline void Threshold_deprecated_warning()
   Threshold_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::Threshold.") Threshold
-  : public vtkm::filter::entity_extraction::Threshold
-{
-  using entity_extraction::Threshold::Threshold;
-};
-
 }
 } // namespace vtkm::filter
 

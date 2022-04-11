@@ -9,7 +9,8 @@
 //============================================================================
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/field_transform/CoordinateSystemTransform.h>
+#include <vtkm/filter/field_transform/CylindricalCoordinateTransform.h>
+#include <vtkm/filter/field_transform/SphericalCoordinateTransform.h>
 
 #include <vector>
 

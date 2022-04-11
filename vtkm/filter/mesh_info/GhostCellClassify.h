@@ -24,6 +24,11 @@ class VTKM_FILTER_MESH_INFO_EXPORT GhostCellClassify : public vtkm::filter::NewF
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
 };
 } // namespace mesh_info
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::GhostCellClassify.") GhostCellClassify
+  : public vtkm::filter::mesh_info::GhostCellClassify
+{
+  using mesh_info::GhostCellClassify::GhostCellClassify;
+};
 } // namespace filter
 } // namespace vtkm
 

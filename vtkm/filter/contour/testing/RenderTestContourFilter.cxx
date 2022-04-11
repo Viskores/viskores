@@ -33,18 +33,15 @@ void TestContourFilterWedge()
   vtkm::cont::DataSet dataSet = reader.ReadDataSet();
 
   vtkm::filter::contour::Contour contour;
-  contour.SetIsoValue(0, 1);
+  contour.SetIsoValues({ -1, 0, 1 });
   contour.SetActiveField("gyroid");
   contour.SetFieldsToPass({ "gyroid", "cellvar" });
-  contour.SetMergeDuplicatePoints(false);
+  contour.SetMergeDuplicatePoints(true);
   auto result = contour.Execute(dataSet);
 
   result.PrintSummary(std::cout);
 
   vtkm::rendering::testing::RenderTestOptions testOptions;
-  testOptions.Colors = { { 0.20f, 0.80f, 0.20f } };
-  testOptions.EnableAnnotations = false;
-  testOptions.DataViewPadding = 0.08;
   vtkm::rendering::testing::RenderTest(result, "gyroid", "filter/contour-wedge.png", testOptions);
 }
 
@@ -60,7 +57,7 @@ void TestContourFilterUniform()
   vtkm::filter::contour::Contour contour;
   contour.SetGenerateNormals(false);
   contour.SetMergeDuplicatePoints(true);
-  contour.SetIsoValue(0, 100.0);
+  contour.SetIsoValues({ 50, 100, 150 });
   contour.SetActiveField(fieldName);
   contour.SetFieldsToPass(fieldName);
   vtkm::cont::DataSet result = contour.Execute(inputData);
@@ -69,8 +66,6 @@ void TestContourFilterUniform()
 
   //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
   vtkm::rendering::testing::RenderTestOptions testOptions;
-  testOptions.Colors = { { 0.20f, 0.80f, 0.20f } };
-  testOptions.EnableAnnotations = false;
   vtkm::rendering::testing::RenderTest(
     result, "pointvar", "filter/contour-uniform.png", testOptions);
 }

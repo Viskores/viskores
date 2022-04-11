@@ -9,6 +9,9 @@
 //============================================================================
 
 // This tests deprecated code until it is deleted.
+#include <vtkm/Deprecated.h>
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 #include <vtkm/TypeListTag.h>
 
@@ -18,8 +21,6 @@
 
 #include <set>
 #include <string>
-
-VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace
 {

@@ -31,7 +31,7 @@ public:
   VTKM_CONT
   void SetPrimaryField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->SetActiveField(name, association);
   }
@@ -79,7 +79,7 @@ public:
   VTKM_CONT
   void SetSecondaryField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->SetActiveField(1, name, association);
   }
@@ -122,6 +122,11 @@ private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace vector_analysis
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::DotProduct.") DotProduct
+  : public vtkm::filter::vector_analysis::DotProduct
+{
+  using vector_analysis::DotProduct::DotProduct;
+};
 } // namespace filter
 } // namespace vtkm
 

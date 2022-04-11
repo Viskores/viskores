@@ -28,13 +28,6 @@ inline void ParticleDensityNearestGridPoint_deprecated_warning()
   ParticleDensityNearestGridPoint_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::ParticleDensityNearestGridPoint.")
-  ParticleDensityNearestGridPoint
-  : public vtkm::filter::density_estimate::ParticleDensityNearestGridPoint
-{
-  using density_estimate::ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint;
-};
-
 }
 } // namespace vtkm::filter
 

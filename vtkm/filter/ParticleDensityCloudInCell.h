@@ -28,12 +28,6 @@ inline void ParticleDensityCloudInCell_deprecated_warning()
   ParticleDensityCloudInCell_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::ParticleDensityCloudInCell.")
-  ParticleDensityCloudInCell : public vtkm::filter::density_estimate::ParticleDensityCloudInCell
-{
-  using density_estimate::ParticleDensityCloudInCell::ParticleDensityCloudInCell;
-};
-
 }
 } // namespace vtkm::filter
 

@@ -126,12 +126,12 @@ public:
       vtkm::VecVariable<vtkm::Id, 8> ptIndices;
       vtkm::VecVariable<vtkm::Vec3f, 8> fieldValues;
 
-      if (this->Field.GetAssociation() == vtkm::cont::Field::Association::POINTS)
+      if (this->Field.GetAssociation() == vtkm::cont::Field::Association::Points)
       {
         this->InterpolationHelper.GetCellInfo(cellId, cellShape, nVerts, ptIndices);
         this->Field.GetValue(ptIndices, nVerts, parametric, cellShape, out);
       }
-      else if (this->Field.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
+      else if (this->Field.GetAssociation() == vtkm::cont::Field::Association::Cells)
       {
         this->Field.GetValue(cellId, out);
       }
@@ -146,7 +146,7 @@ private:
   VTKM_EXEC bool InGhostCell(const vtkm::Id& cellId) const
   {
     if (this->HaveGhostCells && cellId != -1)
-      return GhostCells.Get(cellId) == vtkm::CellClassification::GHOST;
+      return GhostCells.Get(cellId) == vtkm::CellClassification::Ghost;
 
     return false;
   }

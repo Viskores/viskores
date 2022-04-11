@@ -28,12 +28,6 @@ inline void PointTransform_deprecated_warning()
   PointTransform_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::PointTransform.") PointTransform
-  : public vtkm::filter::field_transform::PointTransform
-{
-  using field_transform::PointTransform::PointTransform;
-};
-
 }
 } // namespace vtkm::filter
 

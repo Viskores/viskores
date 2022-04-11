@@ -10,13 +10,28 @@
 #ifndef vtk_m_cont_StorageListTag_h
 #define vtk_m_cont_StorageListTag_h
 
-// Everything in this header file is deprecated and movded to StorageList.h.
+// Everything in this header file is deprecated and moved to StorageList.h.
+#include <vtkm/Deprecated.h>
+
+struct VTKM_DEPRECATED(
+  1.6,
+  "TypeListTag.h is deprecated. Include TypeList.h and use vtkm::TypeList* instead.")
+  VTKmTypeListTagHeaderDeprecationWarning
+{
+};
+
+inline VTKmTypeListTagHeaderDeprecationWarning IssueVTKmTypeListTagHeaderDeprecationWarning()
+{
+  return {};
+}
 
 #ifndef VTKM_DEFAULT_STORAGE_LIST_TAG
 #define VTKM_DEFAULT_STORAGE_LIST_TAG ::vtkm::cont::detail::StorageListTagDefault
 #endif
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 #include <vtkm/ListTag.h>
+VTKM_DEPRECATED_SUPPRESS_END
 
 #include <vtkm/cont/StorageList.h>
 

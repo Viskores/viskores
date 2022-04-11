@@ -28,12 +28,6 @@ inline void VertexClustering_deprecated_warning()
   VertexClustering_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8,
-                      "Use vtkm::filter::geometry_refinement::VertexClustering.") VertexClustering
-  : public vtkm::filter::geometry_refinement::VertexClustering
-{
-  using geometry_refinement::VertexClustering::VertexClustering;
-};
 
 }
 } // namespace vtkm::filter

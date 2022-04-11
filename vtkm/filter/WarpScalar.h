@@ -27,12 +27,6 @@ inline void WarpScalar_deprecated_warning()
   WarpScalar_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::WarpScalar.") WarpScalar
-  : public vtkm::filter::field_transform::WarpScalar
-{
-  using field_transform::WarpScalar::WarpScalar;
-};
-
 }
 } // namespace vtkm::filter
 

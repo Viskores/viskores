@@ -28,12 +28,6 @@ inline void ThresholdPoints_deprecated_warning()
   ThresholdPoints_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::ThresholdPoints.") ThresholdPoints
-  : public vtkm::filter::entity_extraction::ThresholdPoints
-{
-  using entity_extraction::ThresholdPoints::ThresholdPoints;
-};
-
 }
 } // namespace vtkm::filter
 

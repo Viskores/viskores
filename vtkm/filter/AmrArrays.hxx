@@ -54,7 +54,7 @@ struct GenerateGhostTypeWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
         (Dim == 3 && boundsIntersection.Volume() > 0.5 * boundsCell.Volume()))
     {
       //      std::cout<<boundsCell<<" is (partly) contained in "<<BoundsChild<<" "<<boundsIntersection<<" "<<boundsIntersection.Area()<<std::endl;
-      ghostArray = ghostArray + vtkm::CellClassification::BLANKED;
+      ghostArray = ghostArray + vtkm::CellClassification::Blanked;
     }
   }
 
@@ -223,7 +223,7 @@ void AmrArrays::ComputeGenerateGhostType()
       vtkm::cont::CellSetStructured<Dim> cellset;
       partition.GetCellSet().AsCellSet(cellset);
       vtkm::cont::ArrayHandle<vtkm::UInt8> ghostField;
-      if (!partition.HasField("vtkGhostType", vtkm::cont::Field::Association::CELL_SET))
+      if (!partition.HasField("vtkGhostType", vtkm::cont::Field::Association::Cells))
       {
         vtkm::cont::ArrayCopy(
           vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(0, partition.GetNumberOfCells()),

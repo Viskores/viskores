@@ -41,7 +41,7 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
-  vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
+  vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any);
 
 template <typename TypeList>
 VTKM_DEPRECATED(1.6, "FieldRangeGlobalCompute no longer supports TypeList.")
@@ -73,7 +73,7 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
-  vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
+  vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any);
 
 template <typename TypeList>
 VTKM_DEPRECATED(1.6, "FieldRangeGlobalCompute no longer supports TypeList.")

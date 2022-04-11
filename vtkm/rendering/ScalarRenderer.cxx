@@ -204,10 +204,10 @@ vtkm::cont::DataSet ScalarRenderer::Result::ToDataSet()
   for (size_t i = 0; i < fieldSize; ++i)
   {
     result.AddField(
-      vtkm::cont::Field(ScalarNames[i], vtkm::cont::Field::Association::CELL_SET, Scalars[i]));
+      vtkm::cont::Field(ScalarNames[i], vtkm::cont::Field::Association::Cells, Scalars[i]));
   }
 
-  result.AddField(vtkm::cont::Field("depth", vtkm::cont::Field::Association::CELL_SET, Depths));
+  result.AddField(vtkm::cont::Field("depth", vtkm::cont::Field::Association::Cells, Depths));
 
   return result;
 }

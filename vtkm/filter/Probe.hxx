@@ -75,7 +75,7 @@ VTKM_CONT inline bool Probe::MapFieldOntoOutput(vtkm::cont::DataSet& result,
     {
       // output field should be associated with points
       outField = vtkm::cont::Field(
-        field.GetName(), vtkm::cont::Field::Association::POINTS, outField.GetData());
+        field.GetName(), vtkm::cont::Field::Association::Points, outField.GetData());
       result.AddField(outField);
       return true;
     }

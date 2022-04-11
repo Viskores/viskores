@@ -90,10 +90,10 @@ vtkm::cont::DataSet GetTestDataSet()
     }
   }
   vtkm::cont::DataSet ds = dsb.Create(points, shapes, numberofInd, connections);
-  ds.AddField(vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::CELL_SET, offsets));
-  ds.AddField(vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::CELL_SET, lengths));
-  ds.AddField(vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WHOLE_MESH, ids));
-  ds.AddField(vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WHOLE_MESH, vfs));
+  ds.AddField(vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::Cells, offsets));
+  ds.AddField(vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::Cells, lengths));
+  ds.AddField(vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WholeMesh, ids));
+  ds.AddField(vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WholeMesh, vfs));
 
   return ds;
 }
@@ -197,12 +197,12 @@ void TestMIRVenn250()
 
   invoker(MetaDataPopulate{}, offset, backArr, cirAArr, cirBArr, cirCArr, matIds, matVFs);
 
-  data.AddField(vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::CELL_SET, offset));
-  data.AddField(vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::CELL_SET, length));
+  data.AddField(vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::Cells, offset));
+  data.AddField(vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::Cells, length));
   data.AddField(
-    vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WHOLE_MESH, matIds));
+    vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WholeMesh, matIds));
   data.AddField(
-    vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WHOLE_MESH, matVFs));
+    vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WholeMesh, matVFs));
 
   vtkm::filter::MIRFilter mir;
   mir.SetIDWholeSetName("scatter_ids");

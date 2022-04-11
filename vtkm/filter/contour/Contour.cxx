@@ -165,7 +165,7 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
   if (this->AddInterpolationEdgeIds)
   {
     vtkm::cont::Field interpolationEdgeIdsField(InterpolationEdgeIdsArrayName,
-                                                vtkm::cont::Field::Association::POINTS,
+                                                vtkm::cont::Field::Association::Points,
                                                 worklet.GetInterpolationEdgeIds());
     output.AddField(interpolationEdgeIdsField);
   }

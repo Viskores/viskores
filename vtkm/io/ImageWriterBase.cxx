@@ -62,7 +62,7 @@ void ImageWriterBase::WriteDataSet(const vtkm::cont::DataSet& dataSet,
     for (vtkm::Id fieldId = 0; fieldId < numFields; ++fieldId)
     {
       colorField = dataSet.GetField(fieldId);
-      if ((colorField.GetAssociation() == vtkm::cont::Field::Association::POINTS) &&
+      if ((colorField.GetAssociation() == vtkm::cont::Field::Association::Points) &&
           (colorField.GetData().IsType<ColorArrayType>()))
       {
         foundField = true;

@@ -28,12 +28,6 @@ inline void ImageDifference_deprecated_warning()
   ImageDifference_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::image_processing::ImageDifference.") ImageDifference
-  : public vtkm::filter::image_processing::ImageDifference
-{
-  using image_processing::ImageDifference::ImageDifference;
-};
-
 }
 } // namespace vtkm::filter
 

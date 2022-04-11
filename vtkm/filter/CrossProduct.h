@@ -29,12 +29,6 @@ inline void CrossProduct_deprecated_warning()
   CrossProduct_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::CrossProduct.") CrossProduct
-  : public vtkm::filter::vector_analysis::CrossProduct
-{
-  using vector_analysis::CrossProduct::CrossProduct;
-};
-
 }
 } // namespace vtkm::filter
 

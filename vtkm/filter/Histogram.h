@@ -27,12 +27,6 @@ inline void Histogram_deprecated_warning()
   Histogram_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::Histogram.") Histogram
-  : public vtkm::filter::density_estimate::Histogram
-{
-  using density_estimate::Histogram::Histogram;
-};
-
 }
 } // namespace vtkm::filter
 

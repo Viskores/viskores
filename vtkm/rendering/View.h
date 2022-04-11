@@ -20,6 +20,7 @@
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/TextAnnotation.h>
 
+#include <functional>
 #include <memory>
 
 namespace vtkm

@@ -137,7 +137,7 @@ public:
 
   template <typename T, typename Storage>
   VTKM_CONT CoordinateSystem(std::string name, const ArrayHandle<T, Storage>& data)
-    : Superclass(name, Association::POINTS, data)
+    : Superclass(name, Association::Points, data)
   {
   }
 

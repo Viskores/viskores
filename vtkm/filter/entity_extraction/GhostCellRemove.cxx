@@ -309,7 +309,7 @@ namespace entity_extraction
 VTKM_CONT GhostCellRemove::GhostCellRemove()
 {
   this->SetActiveField("vtkmGhostCells");
-  this->SetFieldsToPass("vtkmGhostCells", vtkm::filter::FieldSelection::MODE_EXCLUDE);
+  this->SetFieldsToPass("vtkmGhostCells", vtkm::filter::FieldSelection::Mode::Exclude);
 }
 
 //-----------------------------------------------------------------------------
@@ -339,7 +339,7 @@ VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataS
       extract.SetSampleRate(sample);
       if (this->GetRemoveGhostField())
         extract.SetFieldsToPass(this->GetActiveFieldName(),
-                                vtkm::filter::FieldSelection::MODE_EXCLUDE);
+                                vtkm::filter::FieldSelection::Mode::Exclude);
 
       auto output = extract.Execute(input);
       return output;

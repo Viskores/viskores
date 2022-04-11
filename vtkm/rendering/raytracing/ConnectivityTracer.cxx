@@ -232,7 +232,7 @@ void ConnectivityTracer::SetEnergyData(const vtkm::cont::Field& absorption,
                                        const vtkm::cont::CoordinateSystem& coords,
                                        const vtkm::cont::Field& emission)
 {
-  bool isSupportedField = absorption.GetAssociation() == vtkm::cont::Field::Association::CELL_SET;
+  bool isSupportedField = absorption.GetAssociation() == vtkm::cont::Field::Association::Cells;
   if (!isSupportedField)
     throw vtkm::cont::ErrorBadValue("Absorption Field '" + absorption.GetName() +
                                     "' not accociated with cells");
@@ -243,9 +243,9 @@ void ConnectivityTracer::SetEnergyData(const vtkm::cont::Field& absorption,
   // Check for emission
   HasEmission = false;
 
-  if (emission.GetAssociation() != vtkm::cont::Field::Association::ANY)
+  if (emission.GetAssociation() != vtkm::cont::Field::Association::Any)
   {
-    if (emission.GetAssociation() != vtkm::cont::Field::Association::CELL_SET)
+    if (emission.GetAssociation() != vtkm::cont::Field::Association::Cells)
       throw vtkm::cont::ErrorBadValue("Emission Field '" + emission.GetName() +
                                       "' not accociated with cells");
     HasEmission = true;

@@ -16,7 +16,9 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/internal/brigand.hpp>
+#include <vtkm/List.h>
+
+#include <vtkm/internal/Meta.h>
 
 #include <benchmark/benchmark.h>
 
@@ -265,9 +267,9 @@
     static ::benchmark::internal::Function* GetFunction() { return BenchFunc<Ts...>; }               \
   };                                                                                                 \
   } /* end anon namespace */                                                                         \
-  int BENCHMARK_PRIVATE_NAME(BenchFunc) = vtkm::bench::detail::GenerateTemplateBenchmarks<           \
-    brigand::bind<VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)>,                                           \
-    TypeList>::Register(#BenchFunc, ApplyFunctor)
+  int BENCHMARK_PRIVATE_NAME(BenchFunc) =                                                            \
+    vtkm::bench::detail::GenerateTemplateBenchmarks<VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc),          \
+                                                    TypeList>::Register(#BenchFunc, ApplyFunctor)
 
 // Internal use only:
 #define VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc) \
@@ -286,17 +288,14 @@ static inline void NullApply(::benchmark::internal::Benchmark*) {}
 /// instead.
 // TypeLists could be expanded to compute cross products if we ever have that
 // need.
-template <typename BoundBench, typename TypeLists>
-struct GenerateTemplateBenchmarks;
-
 template <template <typename...> class BenchType, typename TypeList>
-struct GenerateTemplateBenchmarks<brigand::bind<BenchType>, TypeList>
+struct GenerateTemplateBenchmarks
 {
 private:
   template <typename T>
   using MakeBenchType = BenchType<T>;
 
-  using Benchmarks = brigand::transform<TypeList, brigand::bind<MakeBenchType, brigand::_1>>;
+  using Benchmarks = vtkm::ListTransform<TypeList, MakeBenchType>;
 
   template <typename ApplyFunctor>
   struct RegisterImpl
@@ -305,7 +304,7 @@ private:
     ApplyFunctor Apply;
 
     template <typename P>
-    void operator()(brigand::type_<BenchType<P>>) const
+    void operator()(vtkm::internal::meta::Type<BenchType<P>>) const
     {
       std::ostringstream name;
       name << this->BenchName << "<" << vtkm::cont::TypeToString<P>() << ">";
@@ -323,8 +322,8 @@ public:
   template <typename ApplyFunctor>
   static int Register(const std::string& benchName, ApplyFunctor&& apply)
   {
-    brigand::for_each<Benchmarks>(
-      RegisterImpl<ApplyFunctor>{ benchName, std::forward<ApplyFunctor>(apply) });
+    vtkm::ListForEach(RegisterImpl<ApplyFunctor>{ benchName, std::forward<ApplyFunctor>(apply) },
+                      vtkm::ListTransform<Benchmarks, vtkm::internal::meta::Type>{});
     return 0;
   }
 };

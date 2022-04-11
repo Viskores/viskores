@@ -96,7 +96,7 @@ public:
 
 private:
   // data member
-  vtkm::filter::mesh_info::CellMetric Metric{ vtkm::filter::mesh_info::CellMetric::EMPTY };
+  vtkm::filter::mesh_info::CellMetric Metric{ vtkm::filter::mesh_info::CellMetric::None };
   vtkm::FloatDefault AverageArea{};
   vtkm::FloatDefault AverageVolume{};
 
@@ -116,92 +116,92 @@ private:
       vtkm::ErrorCode ec{ vtkm::ErrorCode::Success };
       switch (this->Metric)
       {
-        case vtkm::filter::mesh_info::CellMetric::AREA:
+        case vtkm::filter::mesh_info::CellMetric::Area:
           metricValue = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, ec);
           if (dims != 2)
             metricValue = 0.;
           break;
-        case vtkm::filter::mesh_info::CellMetric::ASPECT_GAMMA:
+        case vtkm::filter::mesh_info::CellMetric::AspectGama:
           metricValue =
             vtkm::worklet::cellmetrics::CellAspectGammaMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::ASPECT_RATIO:
+        case vtkm::filter::mesh_info::CellMetric::AspectRatio:
           metricValue =
             vtkm::worklet::cellmetrics::CellAspectRatioMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::CONDITION:
+        case vtkm::filter::mesh_info::CellMetric::Condition:
           metricValue =
             vtkm::worklet::cellmetrics::CellConditionMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::DIAGONAL_RATIO:
+        case vtkm::filter::mesh_info::CellMetric::DiagonalRatio:
           metricValue =
             vtkm::worklet::cellmetrics::CellDiagonalRatioMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::DIMENSION:
+        case vtkm::filter::mesh_info::CellMetric::Dimension:
           metricValue =
             vtkm::worklet::cellmetrics::CellDimensionMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::JACOBIAN:
+        case vtkm::filter::mesh_info::CellMetric::Jacobian:
           metricValue =
             vtkm::worklet::cellmetrics::CellJacobianMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::MAX_ANGLE:
+        case vtkm::filter::mesh_info::CellMetric::MaxAngle:
           metricValue =
             vtkm::worklet::cellmetrics::CellMaxAngleMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::MAX_DIAGONAL:
+        case vtkm::filter::mesh_info::CellMetric::MaxDiagonal:
           metricValue =
             vtkm::worklet::cellmetrics::CellMaxDiagonalMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::MIN_ANGLE:
+        case vtkm::filter::mesh_info::CellMetric::MinAngle:
           metricValue =
             vtkm::worklet::cellmetrics::CellMinAngleMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::MIN_DIAGONAL:
+        case vtkm::filter::mesh_info::CellMetric::MinDiagonal:
           metricValue =
             vtkm::worklet::cellmetrics::CellMinDiagonalMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::ODDY:
+        case vtkm::filter::mesh_info::CellMetric::Oddy:
           metricValue = vtkm::worklet::cellmetrics::CellOddyMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::RELATIVE_SIZE_SQUARED:
+        case vtkm::filter::mesh_info::CellMetric::RelativeSizeSquared:
           metricValue = vtkm::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
             numPts, pts, static_cast<OutType>(average), tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::SHAPE_AND_SIZE:
+        case vtkm::filter::mesh_info::CellMetric::ShapeAndSize:
           metricValue = vtkm::worklet::cellmetrics::CellShapeAndSizeMetric<OutType>(
             numPts, pts, static_cast<OutType>(average), tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::SCALED_JACOBIAN:
+        case vtkm::filter::mesh_info::CellMetric::ScaledJacobian:
           metricValue =
             vtkm::worklet::cellmetrics::CellScaledJacobianMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::SHAPE:
+        case vtkm::filter::mesh_info::CellMetric::Shape:
           metricValue = vtkm::worklet::cellmetrics::CellShapeMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::SHEAR:
+        case vtkm::filter::mesh_info::CellMetric::Shear:
           metricValue = vtkm::worklet::cellmetrics::CellShearMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::SKEW:
+        case vtkm::filter::mesh_info::CellMetric::Skew:
           metricValue = vtkm::worklet::cellmetrics::CellSkewMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::STRETCH:
+        case vtkm::filter::mesh_info::CellMetric::Stretch:
           metricValue =
             vtkm::worklet::cellmetrics::CellStretchMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::TAPER:
+        case vtkm::filter::mesh_info::CellMetric::Taper:
           metricValue = vtkm::worklet::cellmetrics::CellTaperMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::VOLUME:
+        case vtkm::filter::mesh_info::CellMetric::Volume:
           metricValue = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, ec);
           if (dims != 3)
             metricValue = 0.;
           break;
-        case vtkm::filter::mesh_info::CellMetric::WARPAGE:
+        case vtkm::filter::mesh_info::CellMetric::Warpage:
           metricValue =
             vtkm::worklet::cellmetrics::CellWarpageMetric<OutType>(numPts, pts, tag, ec);
           break;
-        case vtkm::filter::mesh_info::CellMetric::EMPTY:
+        case vtkm::filter::mesh_info::CellMetric::None:
           break;
         default:
           //Only call metric function if a metric is specified for this shape type

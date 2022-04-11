@@ -27,11 +27,6 @@ inline void DotProduct_deprecated_warning()
   DotProduct_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::DotProduct.") DotProduct
-  : public vtkm::filter::vector_analysis::DotProduct
-{
-  using vector_analysis::DotProduct::DotProduct;
-};
 
 }
 } // namespace vtkm::filter

@@ -28,12 +28,6 @@ inline void ImageMedian_deprecated_warning()
   ImageMedian_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::image_processing::ImageMedian.") ImageMedian
-  : public vtkm::filter::image_processing::ImageMedian
-{
-  using image_processing::ImageMedian::ImageMedian;
-};
-
 }
 } // namespace vtkm::filter
 

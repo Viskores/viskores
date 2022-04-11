@@ -34,6 +34,7 @@ set(deprecated_headers
   ImageConnectivity.h
   ImageDifference.h
   ImageMedian.h
+  Instantiations.h
   Mask.h
   MaskPoints.h
   MeshQuality.h
@@ -46,7 +47,7 @@ set(deprecated_headers
   PointTransform.h
   Slice.h
   SplitSharpEdges.h
-  SurfaceNormal.h
+  SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
   ThresholdPoints.h
@@ -79,7 +80,6 @@ set(common_headers
   FilterTraits.h
   PolicyBase.h
   PolicyDefault.h
-  Instantiations.h
   )
 
 vtkm_declare_headers(${common_headers})

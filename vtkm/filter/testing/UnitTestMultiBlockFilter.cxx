@@ -106,7 +106,7 @@ void TestMultiBlockFilter()
     clip.SetRunMultiThreadedFilter(doThreading);
     clip.SetClipValue(0.0);
     clip.SetActiveField("tangle");
-    clip.SetFieldsToPass("tangle", vtkm::cont::Field::Association::POINTS);
+    clip.SetFieldsToPass("tangle", vtkm::cont::Field::Association::Points);
     auto result = clip.Execute(pds);
     VTKM_TEST_ASSERT(result.GetNumberOfPartitions() == pds.GetNumberOfPartitions());
     results.push_back(result);
@@ -122,7 +122,7 @@ void TestMultiBlockFilter()
     mc.SetGenerateNormals(true);
     mc.SetIsoValue(0, 0.5);
     mc.SetActiveField("tangle");
-    mc.SetFieldsToPass("tangle", vtkm::cont::Field::Association::POINTS);
+    mc.SetFieldsToPass("tangle", vtkm::cont::Field::Association::Points);
     auto result = mc.Execute(pds);
     VTKM_TEST_ASSERT(result.GetNumberOfPartitions() == pds.GetNumberOfPartitions());
     results.push_back(result);

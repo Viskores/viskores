@@ -26,12 +26,6 @@ inline void Entropy_deprecated_warning()
   Entropy_deprecated();
 }
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::Entropy.") Entropy
-  : public vtkm::filter::density_estimate::Entropy
-{
-  using density_estimate::Entropy::Entropy;
-};
-
 }
 } // namespace vtkm::filter
 

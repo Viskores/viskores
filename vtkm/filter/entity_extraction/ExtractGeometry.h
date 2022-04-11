@@ -80,8 +80,13 @@ private:
   bool ExtractOnlyBoundaryCells = false;
   vtkm::ImplicitFunctionGeneral Function;
 };
-}
-}
-} // namespace vtkm::filter
+} // namespace entity_extraction
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::ExtractGeometry.") ExtractGeometry
+  : public vtkm::filter::entity_extraction::ExtractGeometry
+{
+  using entity_extraction::ExtractGeometry::ExtractGeometry;
+};
+} // namespace filter
+} // namespace vtkm
 
 #endif // vtk_m_fulter_entity_extraction_ExtractGeometry_h
