@@ -23,31 +23,30 @@ namespace
 
 void RenderTests()
 {
-  using M = vtkm::rendering::MapperPoint;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
-
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::cont::ColorTable colorTable("inferno");
 
-  M mapper;
-  std::cout << "Testing uniform delta raduis\n";
-  mapper.SetRadiusDelta(4.0f);
-  vtkm::rendering::testing::Render<M, C, V3>(
-    mapper, maker.Make3DUniformDataSet1(), "pointvar", colorTable, "points_vr_reg3D.pnm");
+  vtkm::rendering::testing::RenderTestOptions options;
+  options.Mapper = vtkm::rendering::testing::MapperType::Point;
+  options.AllowAnyDevice = false;
+  options.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;
+
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DUniformDataSet1(), "pointvar", "rendering/point/regular3D.png", options);
+
+  options.UseVariableRadius = true;
+  options.RadiusDelta = 4.0f;
+  options.Radius = 0.25f;
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DUniformDataSet1(), "pointvar", "rendering/point/variable_regular3D.png", options);
 
   // restore defaults
-  mapper.SetRadiusDelta(0.5f);
-  mapper.UseVariableRadius(false);
+  options.RadiusDelta = 0.5f;
+  options.UseVariableRadius = false;
 
-  mapper.SetRadius(0.2f);
-  vtkm::rendering::testing::Render<M, C, V3>(
-    mapper, maker.Make3DUniformDataSet1(), "pointvar", colorTable, "points_reg3D.pnm");
-
-  mapper.UseCells();
-  mapper.SetRadius(1.f);
-  vtkm::rendering::testing::Render<M, C, V3>(
-    mapper, maker.Make3DExplicitDataSet7(), "cellvar", colorTable, "spheres.pnm");
+  options.RenderCells = true;
+  options.Radius = 1.f;
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DExplicitDataSet7(), "cellvar", "rendering/point/cells.png", options);
 }
 
 } //namespace

@@ -10,7 +10,6 @@
 
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -43,7 +42,7 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::Cells.");
   }
 
   try
@@ -61,21 +60,21 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
   if (dim == 1)
   {
     vtkm::cont::CellSetStructured<1> cellSet;
-    ds.GetCellSet().CopyTo(cellSet);
+    ds.GetCellSet().AsCellSet(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_LINE, "Wrong element type");
   }
   else if (dim == 2)
   {
     vtkm::cont::CellSetStructured<2> cellSet;
-    ds.GetCellSet().CopyTo(cellSet);
+    ds.GetCellSet().AsCellSet(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD, "Wrong element type");
   }
   else if (dim == 3)
   {
     vtkm::cont::CellSetStructured<3> cellSet;
-    ds.GetCellSet().CopyTo(cellSet);
+    ds.GetCellSet().AsCellSet(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_HEXAHEDRON, "Wrong element type");
   }

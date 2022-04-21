@@ -53,6 +53,8 @@ namespace source
  * - `MaximumValue`: 255
  * - `Frequency`: { 60, 30, 40 }
  * - `Magnitude`: { 10, 18, 5 }
+ *
+ *  If the extent has zero length in the z-direction, a 2D dataset is generated.
  */
 class VTKM_SOURCE_EXPORT Wavelet final : public vtkm::source::Source
 {
@@ -61,6 +63,8 @@ public:
   Wavelet(vtkm::Id3 minExtent = { -10 }, vtkm::Id3 maxExtent = { 10 });
 
   VTKM_CONT void SetCenter(const vtkm::Vec<FloatDefault, 3>& center) { this->Center = center; }
+
+  VTKM_CONT void SetOrigin(const vtkm::Vec<FloatDefault, 3>& origin) { this->Origin = origin; }
 
   VTKM_CONT void SetSpacing(const vtkm::Vec<FloatDefault, 3>& spacing) { this->Spacing = spacing; }
 
@@ -94,10 +98,15 @@ public:
   vtkm::cont::DataSet Execute() const;
 
 private:
-  vtkm::cont::Field GeneratePointField(const vtkm::cont::CellSetStructured<3>& cellset,
+  template <vtkm::IdComponent Dim>
+  vtkm::cont::Field GeneratePointField(const vtkm::cont::CellSetStructured<Dim>& cellset,
                                        const std::string& name) const;
 
+  template <vtkm::IdComponent Dim>
+  vtkm::cont::DataSet GenerateDataSet(vtkm::cont::CoordinateSystem coords) const;
+
   vtkm::Vec3f Center;
+  vtkm::Vec3f Origin;
   vtkm::Vec3f Spacing;
   vtkm::Vec3f Frequency;
   vtkm::Vec3f Magnitude;

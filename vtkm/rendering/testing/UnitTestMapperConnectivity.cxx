@@ -25,26 +25,24 @@ namespace
 
 void RenderTests()
 {
-  try
-  {
-    vtkm::cont::testing::MakeTestDataSet maker;
-    vtkm::cont::ColorTable colorTable("inferno");
-    using M = vtkm::rendering::MapperConnectivity;
-    using C = vtkm::rendering::CanvasRayTracer;
-    using V3 = vtkm::rendering::View3D;
+  vtkm::cont::testing::MakeTestDataSet maker;
 
-    vtkm::rendering::testing::Render<M, C, V3>(
-      maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
-    vtkm::rendering::testing::Render<M, C, V3>(
-      maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
-    vtkm::rendering::testing::Render<M, C, V3>(
-      maker.Make3DExplicitDataSetZoo(), "pointvar", colorTable, "explicit3D.pnm");
-  }
-  catch (const std::exception& e)
-  {
-    std::cout << vtkm::rendering::raytracing::Logger::GetInstance()->GetStream().str() << "\n";
-    std::cout << e.what() << "\n";
-  }
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.AllowedPixelErrorRatio = 0.002f;
+  testOptions.Mapper = vtkm::rendering::testing::MapperType::Connectivity;
+  testOptions.AllowAnyDevice = false;
+  testOptions.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;
+
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DRegularDataSet0(), "pointvar", "rendering/connectivity/regular3D.png", testOptions);
+  vtkm::rendering::testing::RenderTest(maker.Make3DRectilinearDataSet0(),
+                                       "pointvar",
+                                       "rendering/connectivity/rectilinear3D.png",
+                                       testOptions);
+  vtkm::rendering::testing::RenderTest(maker.Make3DExplicitDataSetZoo(),
+                                       "pointvar",
+                                       "rendering/connectivity/explicit3D.png",
+                                       testOptions);
 }
 
 } //namespace

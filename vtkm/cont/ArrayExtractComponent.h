@@ -19,6 +19,8 @@
 #include <vtkm/VecFlat.h>
 #include <vtkm/VecTraits.h>
 
+#include <vtkmstd/integer_sequence.h>
+
 #include <vtkm/cont/vtkm_cont_export.h>
 
 namespace vtkm
@@ -66,8 +68,14 @@ ArrayExtractComponentFallback(const vtkm::cont::ArrayHandle<T, S>& src,
   return vtkm::cont::ArrayHandleStride<BaseComponentType>(dest, numValues, 1, 0);
 }
 
+// Used as a superclass for ArrayHandleComponentImpls that are inefficient (and should be
+// avoided).
+struct ArrayExtractComponentImplInefficient
+{
+};
+
 template <typename S>
-struct ArrayExtractComponentImpl
+struct ArrayExtractComponentImpl : ArrayExtractComponentImplInefficient
 {
   template <typename T>
   vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(
@@ -85,23 +93,52 @@ template <>
 struct ArrayExtractComponentImpl<vtkm::cont::StorageTagStride>
 {
   template <typename T>
-  vtkm::cont::ArrayHandleStride<T> operator()(
+  vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(
     const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagStride>& src,
     vtkm::IdComponent componentIndex,
-    vtkm::CopyFlag vtkmNotUsed(allowCopy)) const
+    vtkm::CopyFlag allowCopy) const
   {
-    VTKM_ASSERT(componentIndex == 0);
-    return src;
+    return this->DoExtract(
+      src, componentIndex, allowCopy, typename vtkm::VecTraits<T>::HasMultipleComponents{});
   }
 
-  template <typename T, vtkm::IdComponent N>
-  auto operator()(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, vtkm::cont::StorageTagStride>& src,
-                  vtkm::IdComponent componentIndex,
-                  vtkm::CopyFlag allowCopy) const
-    -> decltype((*this)(vtkm::cont::ArrayHandleStride<T>{}, componentIndex, allowCopy))
+private:
+  template <typename T>
+  auto DoExtract(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagStride>& src,
+                 vtkm::IdComponent componentIndex,
+                 vtkm::CopyFlag vtkmNotUsed(allowCopy),
+                 vtkm::VecTraitsTagSingleComponent) const
   {
+    VTKM_ASSERT(componentIndex == 0);
+    using VTraits = vtkm::VecTraits<T>;
+    using TBase = typename VTraits::BaseComponentType;
+    VTKM_STATIC_ASSERT(VTraits::NUM_COMPONENTS == 1);
+
+    vtkm::cont::ArrayHandleStride<T> array(src);
+
+    // Note, we are initializing the result in this strange way for cases where type
+    // T has a single component but does not equal its own BaseComponentType. A vtkm::Vec
+    // of size 1 fits into this category.
+    return vtkm::cont::ArrayHandleStride<TBase>(array.GetBuffers()[1],
+                                                array.GetNumberOfValues(),
+                                                array.GetStride(),
+                                                array.GetOffset(),
+                                                array.GetModulo(),
+                                                array.GetDivisor());
+  }
+
+  template <typename VecType>
+  auto DoExtract(const vtkm::cont::ArrayHandle<VecType, vtkm::cont::StorageTagStride>& src,
+                 vtkm::IdComponent componentIndex,
+                 vtkm::CopyFlag allowCopy,
+                 vtkm::VecTraitsTagMultipleComponents) const
+  {
+    using VTraits = vtkm::VecTraits<VecType>;
+    using T = typename VTraits::ComponentType;
+    constexpr vtkm::IdComponent N = VTraits::NUM_COMPONENTS;
+
     constexpr vtkm::IdComponent subStride = vtkm::internal::TotalNumComponents<T>::value;
-    vtkm::cont::ArrayHandleStride<vtkm::Vec<T, N>> array(src);
+    vtkm::cont::ArrayHandleStride<VecType> array(src);
     vtkm::cont::ArrayHandleStride<T> tmpIn(array.GetBuffers()[1],
                                            array.GetNumberOfValues(),
                                            array.GetStride() * N,
@@ -130,6 +167,46 @@ struct ArrayExtractComponentImpl<vtkm::cont::StorageTagBasic>
       allowCopy);
   }
 };
+
+namespace detail
+{
+
+template <std::size_t, typename Super>
+struct ForwardSuper : Super
+{
+};
+
+template <typename sequence, typename... Supers>
+struct SharedSupersImpl;
+
+template <std::size_t... Indices, typename... Supers>
+struct SharedSupersImpl<vtkmstd::index_sequence<Indices...>, Supers...>
+  : ForwardSuper<Indices, Supers>...
+{
+};
+
+} // namespace detail
+
+// `ArrayExtractComponentImpl`s that modify the behavior from other storage types might
+// want to inherit from the `ArrayExtractComponentImpl`s of these storage types. However,
+// if the template specifies multiple storage types, two of the same might be specified,
+// and it is illegal in C++ to directly inherit from the same type twice. This special
+// superclass accepts a variable amout of superclasses. Inheriting from this will inherit
+// from all these superclasses, and duplicates are allowed.
+template <typename... Supers>
+using DuplicatedSuperclasses =
+  detail::SharedSupersImpl<vtkmstd::make_index_sequence<sizeof...(Supers)>, Supers...>;
+
+template <typename... StorageTags>
+using ArrayExtractComponentImplInherit =
+  DuplicatedSuperclasses<vtkm::cont::internal::ArrayExtractComponentImpl<StorageTags>...>;
+
+/// \brief Resolves to true if ArrayHandleComponent of the array handle would be inefficient.
+///
+template <typename ArrayHandleType>
+using ArrayExtractComponentIsInefficient = typename std::is_base_of<
+  vtkm::cont::internal::ArrayExtractComponentImplInefficient,
+  vtkm::cont::internal::ArrayExtractComponentImpl<typename ArrayHandleType::StorageTag>>::type;
 
 } // namespace internal
 

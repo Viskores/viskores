@@ -80,7 +80,7 @@ if(VTKm_ENABLE_CUDA)
     message(FATAL_ERROR "VTK-m CUDA support requires version 9.2+")
   endif()
 
- if (NOT TARGET vtkm::cuda)
+  if(NOT TARGET vtkm::cuda)
     add_library(vtkm_cuda INTERFACE)
     add_library(vtkm::cuda ALIAS vtkm_cuda)
     set_target_properties(vtkm_cuda PROPERTIES EXPORT_NAME vtkm::cuda)
@@ -108,146 +108,162 @@ if(VTKm_ENABLE_CUDA)
       target_compile_features(vtkm_cuda INTERFACE cxx_std_14)
     endif()
 
-    # add the -gencode flags so that all cuda code
-    # way compiled properly
+    # If we have specified CMAKE_CUDA_ARCHITECTURES and CMake >= 3.18 we are
+    # done setting up vtkm_cuda.
+    if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES OR CMAKE_VERSION VERSION_LESS 3.18)
 
-    #---------------------------------------------------------------------------
-    # Populates CMAKE_CUDA_FLAGS with the best set of flags to compile for a
-    # given GPU architecture. The majority of developers should leave the
-    # option at the default of 'native' which uses system introspection to
-    # determine the smallest numerous of virtual and real architectures it
-    # should target.
-    #
-    # The option of 'all' is provided for people generating libraries that
-    # will deployed to any number of machines, it will compile all CUDA code
-    # for all major virtual architectures, guaranteeing that the code will run
-    # anywhere.
-    #
-    # The option 'none' is provided so that when being built as part of another
-    # project, its own custom flags can be used.
-    #
-    # 1 - native
-    #   - Uses system introspection to determine compile flags
-    # 2 - fermi
-    #   - Uses: --generate-code=arch=compute_20,code=sm_20
-    # 3 - kepler
-    #   - Uses: --generate-code=arch=compute_30,code=sm_30
-    #   - Uses: --generate-code=arch=compute_35,code=sm_35
-    # 4 - maxwell
-    #   - Uses: --generate-code=arch=compute_50,code=sm_50
-    # 5 - pascal
-    #   - Uses: --generate-code=arch=compute_60,code=sm_60
-    # 6 - volta
-    #   - Uses: --generate-code=arch=compute_70,code=sm_70
-    # 7 - turing
-    #   - Uses: --generate-code=arch=compute_75,code=sm_75
-    # 8 - ampere
-    #   - Uses: --generate-code=arch=compute_80,code=sm_80
-    #   - Uses: --generate-code=arch=compute_86,code=sm_86
-    # 8 - all
-    #   - Uses: --generate-code=arch=compute_30,code=sm_30
-    #   - Uses: --generate-code=arch=compute_35,code=sm_35
-    #   - Uses: --generate-code=arch=compute_50,code=sm_50
-    #   - Uses: --generate-code=arch=compute_60,code=sm_60
-    #   - Uses: --generate-code=arch=compute_70,code=sm_70
-    #   - Uses: --generate-code=arch=compute_75,code=sm_75
-    #   - Uses: --generate-code=arch=compute_80,code=sm_80
-    #   - Uses: --generate-code=arch=compute_86,code=sm_86
-    # 8 - none
-    #
+      # Recommend user to use CMAKE_CUDA_ARCHITECTURES instead
+      if(DEFINED VTKm_CUDA_Architecture AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+        message(DEPRECATION "VTKm_CUDA_Architecture used, use CMAKE_CUDA_ARCHITECTURES instead in CMake >= 3.18")
+      endif()
 
-    #specify the property
-    set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
-    set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta turing ampere all none)
+      # We disable CMAKE_CUDA_ARCHITECTURES since we add the arch manually
+      set(CMAKE_CUDA_ARCHITECTURES OFF)
 
-    #detect what the property is set too
-    if(VTKm_CUDA_Architecture STREQUAL "native")
+      # add the -gencode flags so that all cuda code
+      # way compiled properly
 
-      if(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT)
-        #Use the cached value
-        set(arch_flags ${VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT})
-      else()
+      #---------------------------------------------------------------------------
+      # When using CMAKE >= 3.18 use instead CMAKE_CUDA_ARCHITECTURES since it
+      # is the canonical way to specify archs in modern CMAKE.
+      #
+      # Populates CMAKE_CUDA_FLAGS with the best set of flags to compile for a
+      # given GPU architecture. The majority of developers should leave the
+      # option at the default of 'native' which uses system introspection to
+      # determine the smallest numerous of virtual and real architectures it
+      # should target.
+      #
+      # The option of 'all' is provided for people generating libraries that
+      # will deployed to any number of machines, it will compile all CUDA code
+      # for all major virtual architectures, guaranteeing that the code will run
+      # anywhere.
+      #
+      # The option 'none' is provided so that when being built as part of another
+      # project, its own custom flags can be used.
+      #
+      # 1 - native
+      #   - Uses system introspection to determine compile flags
+      # 2 - fermi
+      #   - Uses: --generate-code=arch=compute_20,code=sm_20
+      # 3 - kepler
+      #   - Uses: --generate-code=arch=compute_30,code=sm_30
+      #   - Uses: --generate-code=arch=compute_35,code=sm_35
+      # 4 - maxwell
+      #   - Uses: --generate-code=arch=compute_50,code=sm_50
+      # 5 - pascal
+      #   - Uses: --generate-code=arch=compute_60,code=sm_60
+      # 6 - volta
+      #   - Uses: --generate-code=arch=compute_70,code=sm_70
+      # 7 - turing
+      #   - Uses: --generate-code=arch=compute_75,code=sm_75
+      # 8 - ampere
+      #   - Uses: --generate-code=arch=compute_80,code=sm_80
+      #   - Uses: --generate-code=arch=compute_86,code=sm_86
+      # 8 - all
+      #   - Uses: --generate-code=arch=compute_30,code=sm_30
+      #   - Uses: --generate-code=arch=compute_35,code=sm_35
+      #   - Uses: --generate-code=arch=compute_50,code=sm_50
+      #   - Uses: --generate-code=arch=compute_60,code=sm_60
+      #   - Uses: --generate-code=arch=compute_70,code=sm_70
+      #   - Uses: --generate-code=arch=compute_75,code=sm_75
+      #   - Uses: --generate-code=arch=compute_80,code=sm_80
+      #   - Uses: --generate-code=arch=compute_86,code=sm_86
+      # 8 - none
+      #
 
-        #run execute_process to do auto_detection
-        if(CMAKE_GENERATOR MATCHES "Visual Studio")
-          set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
-        elseif(CUDA_HOST_COMPILER)
-          set(args "-ccbin" "${CUDA_HOST_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
+      #specify the property
+      set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
+      set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta turing ampere all none)
+
+      #detect what the property is set too
+      if(VTKm_CUDA_Architecture STREQUAL "native")
+
+        if(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT)
+          #Use the cached value
+          set(arch_flags ${VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT})
         else()
-          set(args "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
-        endif()
 
-        execute_process(
-                COMMAND ${CMAKE_CUDA_COMPILER} ${args}
-                RESULT_VARIABLE ran_properly
-                OUTPUT_VARIABLE run_output
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+          #run execute_process to do auto_detection
+          if(CMAKE_GENERATOR MATCHES "Visual Studio")
+            set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
+          elseif(CUDA_HOST_COMPILER)
+            set(args "-ccbin" "${CUDA_HOST_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
+          else()
+            set(args "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
+          endif()
 
-        if(ran_properly EQUAL 0)
-          #find the position of the "--generate-code" output. With some compilers such as
-          #msvc we get compile output plus run output. So we need to strip out just the
-          #run output
-          string(FIND "${run_output}" "--generate-code" position)
-          string(SUBSTRING "${run_output}" ${position} -1 run_output)
+          execute_process(
+                  COMMAND ${CMAKE_CUDA_COMPILER} ${args}
+                  RESULT_VARIABLE ran_properly
+                  OUTPUT_VARIABLE run_output
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-          set(arch_flags ${run_output})
-          set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
-                  "device type(s) for cuda[native]")
-        else()
-          message(FATAL_ERROR "Error detecting architecture flags for CUDA. Please set VTKm_CUDA_Architecture manually.")
+          if(ran_properly EQUAL 0)
+            #find the position of the "--generate-code" output. With some compilers such as
+            #msvc we get compile output plus run output. So we need to strip out just the
+            #run output
+            string(FIND "${run_output}" "--generate-code" position)
+            string(SUBSTRING "${run_output}" ${position} -1 run_output)
+
+            set(arch_flags ${run_output})
+            set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
+                    "device type(s) for cuda[native]")
+          else()
+            message(FATAL_ERROR "Error detecting architecture flags for CUDA. Please set VTKm_CUDA_Architecture manually.")
+          endif()
         endif()
       endif()
+
+      if(VTKm_CUDA_Architecture STREQUAL "fermi")
+        set(arch_flags --generate-code=arch=compute_20,code=sm_20)
+      elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
+        set(arch_flags --generate-code=arch=compute_30,code=sm_30
+                       --generate-code=arch=compute_35,code=sm_35)
+      elseif(VTKm_CUDA_Architecture STREQUAL "maxwell")
+        set(arch_flags --generate-code=arch=compute_50,code=sm_50)
+      elseif(VTKm_CUDA_Architecture STREQUAL "pascal")
+        set(arch_flags --generate-code=arch=compute_60,code=sm_60
+                       --generate-code=arch=compute_61,code=sm_61)
+      elseif(VTKm_CUDA_Architecture STREQUAL "volta")
+        set(arch_flags --generate-code=arch=compute_70,code=sm_70)
+      elseif(VTKm_CUDA_Architecture STREQUAL "turing")
+        set(arch_flags --generate-code=arch=compute_75,code=sm_75)
+      elseif(VTKm_CUDA_Architecture STREQUAL "ampere")
+        set(arch_flags --generate-code=arch=compute_80,code=sm_80
+                       --generate-code=arch=compute_86,code=sm_86)
+      elseif(VTKm_CUDA_Architecture STREQUAL "all")
+        set(arch_flags --generate-code=arch=compute_30,code=sm_30
+                       --generate-code=arch=compute_35,code=sm_35
+                       --generate-code=arch=compute_50,code=sm_50
+                       --generate-code=arch=compute_60,code=sm_60
+                       --generate-code=arch=compute_70,code=sm_70
+                       --generate-code=arch=compute_75,code=sm_75
+                       --generate-code=arch=compute_80,code=sm_80
+                       --generate-code=arch=compute_86,code=sm_86)
+      endif()
+
+      string(REPLACE ";" " " arch_flags "${arch_flags}")
+
+      if(POLICY CMP0105)
+        cmake_policy(GET CMP0105 policy_105_enabled)
+      endif()
+
+      if(policy_105_enabled STREQUAL "NEW")
+        target_compile_options(vtkm_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${arch_flags}>)
+        target_link_options(vtkm_cuda INTERFACE $<DEVICE_LINK:${arch_flags}>)
+      else()
+        # Before 3.18 we had to use CMAKE_CUDA_FLAGS as we had no way
+        # to propagate flags to the device link step
+        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
+      endif()
+
+      # This needs to be lower-case for the property to be properly exported
+      # CMake 3.15 we can add `cuda_architecture_flags` to the EXPORT_PROPERTIES
+      # target property to have this automatically exported for us
+      set(VTKm_CUDA_Architecture_Flags "${arch_flags}")
+      set_target_properties(vtkm_cuda PROPERTIES cuda_architecture_flags "${arch_flags}")
+      unset(arch_flags)
     endif()
-
-    if(VTKm_CUDA_Architecture STREQUAL "fermi")
-      set(arch_flags --generate-code=arch=compute_20,code=sm_20)
-    elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
-      set(arch_flags --generate-code=arch=compute_30,code=sm_30
-                     --generate-code=arch=compute_35,code=sm_35)
-    elseif(VTKm_CUDA_Architecture STREQUAL "maxwell")
-      set(arch_flags --generate-code=arch=compute_50,code=sm_50)
-    elseif(VTKm_CUDA_Architecture STREQUAL "pascal")
-      set(arch_flags --generate-code=arch=compute_60,code=sm_60)
-    elseif(VTKm_CUDA_Architecture STREQUAL "volta")
-      set(arch_flags --generate-code=arch=compute_70,code=sm_70)
-    elseif(VTKm_CUDA_Architecture STREQUAL "turing")
-      set(arch_flags --generate-code=arch=compute_75,code=sm_75)
-    elseif(VTKm_CUDA_Architecture STREQUAL "ampere")
-      set(arch_flags --generate-code=arch=compute_80,code=sm_80
-                     --generate-code=arch=compute_86,code=sm_86)
-    elseif(VTKm_CUDA_Architecture STREQUAL "all")
-      set(arch_flags --generate-code=arch=compute_30,code=sm_30
-                     --generate-code=arch=compute_35,code=sm_35
-                     --generate-code=arch=compute_50,code=sm_50
-                     --generate-code=arch=compute_60,code=sm_60
-                     --generate-code=arch=compute_70,code=sm_70
-                     --generate-code=arch=compute_75,code=sm_75
-                     --generate-code=arch=compute_80,code=sm_80
-                     --generate-code=arch=compute_86,code=sm_86)
-    endif()
-
-    string(REPLACE ";" " " arch_flags "${arch_flags}")
-
-    if(POLICY CMP0105)
-      cmake_policy(GET CMP0105 policy_105_enabled)
-    endif()
-
-    if(policy_105_enabled STREQUAL "NEW")
-      set(CMAKE_CUDA_ARCHITECTURES OFF)
-      target_compile_options(vtkm_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${arch_flags}>)
-      target_link_options(vtkm_cuda INTERFACE $<DEVICE_LINK:${arch_flags}>)
-    else()
-      # Before 3.18 we had to use CMAKE_CUDA_FLAGS as we had no way
-      # to propagate flags to the device link step
-      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
-    endif()
-
-    # This needs to be lower-case for the property to be properly exported
-    # CMake 3.15 we can add `cuda_architecture_flags` to the EXPORT_PROPERTIES
-    # target property to have this automatically exported for us
-    set(VTKm_CUDA_Architecture_Flags "${arch_flags}")
-    set_target_properties(vtkm_cuda PROPERTIES cuda_architecture_flags "${arch_flags}")
-    unset(arch_flags)
   endif()
 endif()
 

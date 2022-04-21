@@ -7,46 +7,28 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
 #ifndef vtk_m_filter_CellAverage_h
 #define vtk_m_filter_CellAverage_h
 
-#include <vtkm/filter/vtkm_filter_common_export.h>
-
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/filter/FilterField.h>
-#include <vtkm/worklet/CellAverage.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
 
 namespace vtkm
 {
 namespace filter
 {
-/// \brief  Point to cell interpolation filter.
-///
-/// CellAverage is a filter that transforms point data (i.e., data
-/// specified at cell points) into cell data (i.e., data specified per cell).
-/// The method of transformation is based on averaging the data
-/// values of all points used by particular cell.
-///
-class VTKM_FILTER_COMMON_EXPORT CellAverage : public vtkm::filter::FilterField<CellAverage>
+
+VTKM_DEPRECATED(
+  1.8,
+  "Use vtkm/filter/field_conversion/CellAverage.h instead of vtkm/filter/CellAverage.h.")
+inline void CellAverage_deprecated() {}
+
+inline void CellAverage_deprecated_warning()
 {
-public:
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                          const vtkm::filter::FieldMetadata& fieldMeta,
-                                          vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  CellAverage_deprecated();
+}
 
-private:
-  vtkm::worklet::CellAverage Worklet;
-};
-
-#ifndef vtkm_filter_CellAverage_cxx
-VTKM_FILTER_COMMON_EXPORT_EXECUTE_METHOD(CellAverage);
-#endif
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/CellAverage.hxx>
-
-#endif // vtk_m_filter_CellAverage_h
+#endif //vtk_m_filter_CellAverage_h

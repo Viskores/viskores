@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
@@ -90,62 +91,64 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
 
 void RenderTests()
 {
-  using M = vtkm::rendering::MapperWireframer;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
-  using V2 = vtkm::rendering::View2D;
-  using V1 = vtkm::rendering::View1D;
 
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::cont::ColorTable colorTable("samsel fire");
 
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "rendering/wireframer/wf_reg3D.png");
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(maker.Make3DRectilinearDataSet0(),
-                                                              "pointvar",
-                                                              colorTable,
-                                                              "rendering/wireframer/wf_rect3D.png");
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V2>(
-    Make2DExplicitDataSet(), "cellVar", colorTable, "rendering/wireframer/wf_lines2D.png");
+  {
+    vtkm::rendering::testing::RenderTestOptions testOptions;
+    testOptions.Mapper = vtkm::rendering::testing::MapperType::Wireframer;
+    testOptions.Colors = { vtkm::rendering::Color::black };
+    testOptions.AllowAnyDevice = false;
+
+    vtkm::rendering::testing::RenderTest(
+      maker.Make3DRegularDataSet0(), "pointvar", "rendering/wireframer/wf_reg3D.png", testOptions);
+    vtkm::rendering::testing::RenderTest(maker.Make3DRectilinearDataSet0(),
+                                         "pointvar",
+                                         "rendering/wireframer/wf_rect3D.png",
+                                         testOptions);
+    testOptions.ViewDimension = 2;
+    vtkm::rendering::testing::RenderTest(
+      Make2DExplicitDataSet(), "cellVar", "rendering/wireframer/wf_lines2D.png", testOptions);
+  }
 
   // These tests are very fickle on multiple machines and on different devices
   // Need to boost the maximum number of allowable error pixels manually
   {
-    C canvas(512, 512);
-    M mapper;
-    vtkm::rendering::Scene scene;
-    auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
-      Make3DUniformDataSet(), "pointvar", canvas, mapper, scene, colorTable);
-    VTKM_TEST_ASSERT(test_equal_images(view, "rendering/wireframer/wf_uniform3D.png", 0, 0, 0.05f));
-  }
-  {
-    C canvas(512, 512);
-    M mapper;
-    vtkm::rendering::Scene scene;
-    auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
-      maker.Make3DExplicitDataSet4(), "pointvar", canvas, mapper, scene, colorTable);
-    VTKM_TEST_ASSERT(test_equal_images(view, "rendering/wireframer/wf_expl3D.png", 0, 0, 0.005f));
+    vtkm::rendering::testing::RenderTestOptions testOptions;
+    testOptions.Mapper = vtkm::rendering::testing::MapperType::Wireframer;
+    testOptions.Colors = { vtkm::rendering::Color::black };
+    testOptions.AllowedPixelErrorRatio = 0.05f;
+    testOptions.AllowAnyDevice = false;
+    vtkm::rendering::testing::RenderTest(
+      Make3DUniformDataSet(), "pointvar", "rendering/wireframer/wf_uniform3D.png", testOptions);
+    vtkm::rendering::testing::RenderTest(maker.Make3DExplicitDataSet4(),
+                                         "pointvar",
+                                         "rendering/wireframer/wf_expl3D.png",
+                                         testOptions);
   }
 
   //
   // Test the 1D cell set line plot with multiple lines
   //
-  std::vector<std::string> fields;
-  fields.push_back("pointvar");
-  fields.push_back("pointvar2");
-  std::vector<vtkm::rendering::Color> colors;
-  colors.push_back(vtkm::rendering::Color(1.f, 0.f, 0.f));
-  colors.push_back(vtkm::rendering::Color(0.f, 1.f, 0.f));
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V1>(
-    maker.Make1DUniformDataSet0(), fields, colors, "rendering/wireframer/wf_lines1D.png");
-  //test log y
-  vtkm::rendering::Color red = vtkm::rendering::Color::red;
-  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V1>(
-    maker.Make1DUniformDataSet1(),
-    "pointvar",
-    red,
-    "rendering/wireframer/wf_linesLogY1D.png",
-    true);
+  {
+    vtkm::rendering::testing::RenderTestOptions testOptions;
+    testOptions.ViewDimension = 1;
+    testOptions.Mapper = vtkm::rendering::testing::MapperType::Wireframer;
+    testOptions.Colors = { vtkm::rendering::Color::red, vtkm::rendering::Color::green };
+    testOptions.AllowAnyDevice = false;
+
+    vtkm::cont::DataSet dataSet0 = maker.Make1DUniformDataSet0();
+    vtkm::rendering::testing::RenderTest({ { dataSet0, "pointvar" }, { dataSet0, "pointvar2" } },
+                                         "rendering/wireframer/wf_lines1D.png",
+                                         testOptions);
+
+    //test log y and title
+    testOptions.LogY = true;
+    testOptions.Title = "1D Test Plot";
+    vtkm::cont::DataSet dataSet1 = maker.Make1DUniformDataSet1();
+    vtkm::rendering::testing::RenderTest(
+      dataSet1, "pointvar", "rendering/wireframer/wf_linesLogY1D.png", testOptions);
+  }
 }
 
 } //namespace

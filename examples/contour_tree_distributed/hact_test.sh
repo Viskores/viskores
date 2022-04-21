@@ -24,12 +24,12 @@ rm ${filename}
 
 echo "Running HACT"
 n_parts=$(($2*$2))
-echo mpirun -np 4  ./ContourTree_Distributed -d Any --numBlocks=${n_parts} ${fileroot}_part_%d_of_${n_parts}.txt
 mpirun -np 4  ./ContourTree_Distributed --vtkm-device Any --preSplitFiles --saveTreeCompilerData --numBlocks=${n_parts} ${fileroot}_part_%d_of_${n_parts}.txt
 rm ${fileroot}_part_*_of_${n_parts}.txt
 
 echo "Compiling Outputs"
 ./TreeCompiler TreeCompilerOutput_*.dat | sort > outsort${fileroot}_$2x$2.txt
+rm TreeCompilerOutput_*.dat
 
 echo "Diffing"
 diff outsort${fileroot}_$2x$2.txt ${GTCT_DIR}/outsort${fileroot}.txt

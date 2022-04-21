@@ -86,7 +86,7 @@ test:ubuntu2004_hip_kokkos:
   extends:
     - .ubuntu2004_hip_kokkos
     - .cmake_test_linux
-    - .run_automatically
+    - .run_scheduled
   variables:
     CTEST_TIMEOUT: "30"
   dependencies:

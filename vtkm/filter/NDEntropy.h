@@ -10,41 +10,24 @@
 #ifndef vtk_m_filter_NDEntropy_h
 #define vtk_m_filter_NDEntropy_h
 
-#include <vtkm/filter/FilterDataSet.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/filter/density_estimate/NDEntropy.h>
 
 namespace vtkm
 {
 namespace filter
 {
-/// \brief Calculate the entropy of input N-Dims fields
-///
-/// This filter calculate the entropy of input N-Dims fields.
-///
-class NDEntropy : public vtkm::filter::FilterDataSet<NDEntropy>
+
+VTKM_DEPRECATED(1.8,
+                "Use vtkm/filter/density_estimate/NDEntropy.h instead of vtkm/filter/NDEntropy.h.")
+inline void NDEntropy_deprecated() {}
+
+inline void NDEntropy_deprecated_warning()
 {
-public:
-  VTKM_CONT
-  NDEntropy();
+  NDEntropy_deprecated();
+}
 
-  VTKM_CONT
-  void AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins);
-
-  template <typename Policy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData,
-                                          vtkm::filter::PolicyBase<Policy> policy);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                    const vtkm::cont::Field& field,
-                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
-
-private:
-  std::vector<vtkm::Id> NumOfBins;
-  std::vector<std::string> FieldNames;
-};
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/NDEntropy.hxx>
 
 #endif //vtk_m_filter_NDEntropy_h

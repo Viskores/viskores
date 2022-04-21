@@ -69,7 +69,7 @@ namespace detail
 struct CastAndCallCellLocatorChooserFunctor
 {
   template <typename CellLocatorType, typename Functor, typename... Args>
-  void CallFunctorWithLocator(const vtkm::cont::DynamicCellSet& cellSet,
+  void CallFunctorWithLocator(const vtkm::cont::UnknownCellSet& cellSet,
                               const vtkm::cont::CoordinateSystem& coordinateSystem,
                               Functor&& functor,
                               Args&&... args) const
@@ -126,12 +126,11 @@ struct CastAndCallCellLocatorChooserFunctor
 ///
 /// Any additional args are passed to the functor.
 ///
-template <typename CellSetList, typename Functor, typename... Args>
-VTKM_CONT void CastAndCallCellLocatorChooser(
-  const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
-  const vtkm::cont::CoordinateSystem& coordinateSystem,
-  Functor&& functor,
-  Args&&... args)
+template <typename CellSetType, typename Functor, typename... Args>
+VTKM_CONT void CastAndCallCellLocatorChooser(const CellSetType& cellSet,
+                                             const vtkm::cont::CoordinateSystem& coordinateSystem,
+                                             Functor&& functor,
+                                             Args&&... args)
 {
   vtkm::cont::CastAndCall(cellSet,
                           detail::CastAndCallCellLocatorChooserFunctor{},

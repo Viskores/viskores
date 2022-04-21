@@ -15,6 +15,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/rendering/raytracing/MeshConnectivityBuilder.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -298,16 +299,16 @@ public:
   Quadralizer() {}
 
   VTKM_CONT
-  void Run(const vtkm::cont::DynamicCellSet& cellset,
+  void Run(const vtkm::cont::UnknownCellSet& cellset,
            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 5>>& outputIndices,
            vtkm::Id& output)
   {
     vtkm::cont::Invoker invoke;
 
-    if (cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
+    if (cellset.CanConvert<vtkm::cont::CellSetStructured<3>>())
     {
       vtkm::cont::CellSetStructured<3> cellSetStructured3D =
-        cellset.Cast<vtkm::cont::CellSetStructured<3>>();
+        cellset.AsCellSet<vtkm::cont::CellSetStructured<3>>();
       const vtkm::Id numCells = cellSetStructured3D.GetNumberOfCells();
 
       vtkm::cont::ArrayHandleIndex cellIdxs(numCells);
@@ -316,10 +317,10 @@ public:
 
       output = numCells * QUAD_PER_CSS;
     }
-    else if (cellset.IsSameType(vtkm::cont::CellSetStructured<2>()))
+    else if (cellset.CanConvert<vtkm::cont::CellSetStructured<2>>())
     {
       vtkm::cont::CellSetStructured<2> cellSetStructured2D =
-        cellset.Cast<vtkm::cont::CellSetStructured<2>>();
+        cellset.AsCellSet<vtkm::cont::CellSetStructured<2>>();
       const vtkm::Id numCells = cellSetStructured2D.GetNumberOfCells();
 
       vtkm::cont::ArrayHandleIndex cellIdxs(numCells);

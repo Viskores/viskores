@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <vtkm/Range.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/testing/Testing.h>
 
@@ -132,6 +133,22 @@ void TestRange()
   VTKM_TEST_ASSERT(unionRange.Contains(10), "Contains fail");
   VTKM_TEST_ASSERT(unionRange.Contains(17), "Contains fail");
   VTKM_TEST_ASSERT(unionRange.Contains(25), "Contains fail");
+
+  std::cout << "Try VecTraits." << std::endl;
+  using VTraits = vtkm::VecTraits<vtkm::Range>;
+  VTKM_TEST_ASSERT(VTraits::NUM_COMPONENTS == 2);
+  vtkm::Range simpleRange(2.0, 4.0);
+  VTKM_TEST_ASSERT(VTraits::GetNumberOfComponents(simpleRange) == 2);
+  VTKM_TEST_ASSERT(VTraits::GetComponent(simpleRange, 0) == 2.0);
+  VTKM_TEST_ASSERT(VTraits::GetComponent(simpleRange, 1) == 4.0);
+  vtkm::Vec2f_64 simpleRangeCopy;
+  VTraits::CopyInto(simpleRange, simpleRangeCopy);
+  VTKM_TEST_ASSERT(simpleRangeCopy == vtkm::Vec2f_64{ 2.0, 4.0 });
+  VTraits::SetComponent(simpleRange, 0, 1.0);
+  VTraits::SetComponent(simpleRange, 1, 2.0);
+  VTKM_TEST_ASSERT(!simpleRange.Contains(0.0));
+  VTKM_TEST_ASSERT(simpleRange.Contains(1.5));
+  VTKM_TEST_ASSERT(!simpleRange.Contains(3.0));
 }
 
 } // anonymous namespace

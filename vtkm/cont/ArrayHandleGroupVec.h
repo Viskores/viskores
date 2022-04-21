@@ -147,6 +147,15 @@ public:
     return componentsSize / NUM_COMPONENTS;
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+                             const ValueType&,
+                             vtkm::Id,
+                             vtkm::Id,
+                             vtkm::cont::Token&)
+  {
+    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleGroupVec.");
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
@@ -240,9 +249,12 @@ VTKM_CONT vtkm::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS> make_
 namespace internal
 {
 
+// Superclass will inherit the ArrayExtractComponentImplInefficient property if
+// the sub-storage is inefficient (thus making everything inefficient).
 template <typename ComponentsStorageTag, vtkm::IdComponent NUM_COMPONENTS>
 struct ArrayExtractComponentImpl<
   vtkm::cont::StorageTagGroupVec<ComponentsStorageTag, NUM_COMPONENTS>>
+  : vtkm::cont::internal::ArrayExtractComponentImpl<ComponentsStorageTag>
 {
   template <typename T>
   vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(

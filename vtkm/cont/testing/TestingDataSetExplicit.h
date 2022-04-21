@@ -63,15 +63,15 @@ private:
 
     // test various field-getting methods and associations
     const vtkm::cont::Field& f1 = ds.GetField("pointvar");
-    VTKM_TEST_ASSERT(f1.GetAssociation() == vtkm::cont::Field::Association::POINTS,
-                     "Association of 'pointvar' was not Association::POINTS");
+    VTKM_TEST_ASSERT(f1.GetAssociation() == vtkm::cont::Field::Association::Points,
+                     "Association of 'pointvar' was not Association::Points");
     try
     {
       ds.GetCellField("cellvar");
     }
     catch (...)
     {
-      VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
+      VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::Cells.");
     }
 
     try
@@ -90,7 +90,7 @@ private:
 
     // test cell-to-point connectivity
     vtkm::cont::CellSetExplicit<> cellset;
-    ds.GetCellSet().CopyTo(cellset);
+    ds.GetCellSet().AsCellSet(cellset);
 
     vtkm::Id connectivitySize = 7;
     vtkm::Id numPoints = 5;

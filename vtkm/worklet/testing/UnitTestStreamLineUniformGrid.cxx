@@ -131,7 +131,7 @@ void TestStreamLineUniformGrid()
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
   inDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
   inDataSet.AddField(
-    vtkm::cont::Field("vecData", vtkm::cont::Field::Association::POINTS, fieldArray));
+    vtkm::cont::Field("vecData", vtkm::cont::Field::Association::Points, fieldArray));
 
   vtkm::cont::CellSetStructured<3> inCellSet;
   inCellSet.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));
@@ -144,7 +144,7 @@ void TestStreamLineUniformGrid()
 
   // Check output
   vtkm::cont::CellSetExplicit<> outCellSet;
-  outDataSet.GetCellSet().CopyTo(outCellSet);
+  outDataSet.GetCellSet().AsCellSet(outCellSet);
   auto coordArray = outDataSet.GetCoordinateSystem(0).GetData();
 
   vtkm::Id numberOfCells = outCellSet.GetNumberOfCells();

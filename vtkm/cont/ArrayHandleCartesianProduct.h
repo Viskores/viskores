@@ -248,6 +248,25 @@ public:
             Storage3::GetNumberOfValues(Buffers3(buffers)));
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const vtkm::Vec<T, 3>& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token)
+  {
+    if ((startIndex != 0) || (endIndex != GetNumberOfValues(buffers)))
+    {
+      throw vtkm::cont::ErrorBadValue(
+        "Fill for ArrayHandleCartesianProduct can only be used to fill entire array.");
+    }
+    Storage1::Fill(
+      Buffers1(buffers), fillValue[0], 0, Storage1::GetNumberOfValues(Buffers1(buffers)), token);
+    Storage2::Fill(
+      Buffers2(buffers), fillValue[1], 0, Storage2::GetNumberOfValues(Buffers2(buffers)), token);
+    Storage3::Fill(
+      Buffers3(buffers), fillValue[2], 0, Storage3::GetNumberOfValues(Buffers3(buffers)), token);
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
@@ -360,8 +379,11 @@ VTKM_CONT
 namespace internal
 {
 
+// Superclass will inherit the ArrayExtractComponentImplInefficient property if any
+// of the sub-storage are inefficient (thus making everything inefficient).
 template <typename... STs>
 struct ArrayExtractComponentImpl<vtkm::cont::StorageTagCartesianProduct<STs...>>
+  : vtkm::cont::internal::ArrayExtractComponentImplInherit<STs...>
 {
   template <typename T>
   vtkm::cont::ArrayHandleStride<T> AdjustStrideForComponent(

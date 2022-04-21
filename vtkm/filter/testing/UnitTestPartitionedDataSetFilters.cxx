@@ -13,14 +13,13 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/exec/ConnectivityStructured.h>
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CellAverage.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
 
 
 template <typename T>
@@ -110,7 +109,7 @@ void TestPartitionedDataSetFilters()
   vtkm::cont::PartitionedDataSet partitions;
 
   partitions = PartitionedDataSetBuilder<vtkm::FloatDefault>(partitionNum, "pointvar");
-  vtkm::filter::CellAverage cellAverage;
+  vtkm::filter::field_conversion::CellAverage cellAverage;
   cellAverage.SetOutputFieldName("average");
   cellAverage.SetActiveField("pointvar");
   result = cellAverage.Execute(partitions);

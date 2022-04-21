@@ -132,7 +132,7 @@ struct DoTestWorklet
     vtkm::cont::DataSet dataSet3D = testDataSet.Make3DUniformDataSet0();
 
     vtkm::cont::CellSetStructured<3> cellSet =
-      dataSet3D.GetCellSet().Cast<vtkm::cont::CellSetStructured<3>>();
+      dataSet3D.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<3>>();
 
     vtkm::cont::Invoker invoker;
     invoker(WorkletType{}, cellSet, dataSet3D.GetCoordinateSystem());
@@ -153,7 +153,7 @@ struct DoTestWorklet<TestWorkletMapTopoSelect>
       std::vector<vtkm::IdComponent>(static_cast<std::size_t>(dataSet3D.GetNumberOfPoints()), 0));
 
     vtkm::cont::CellSetStructured<3> cellSet =
-      dataSet3D.GetCellSet().Cast<vtkm::cont::CellSetStructured<3>>();
+      dataSet3D.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<3>>();
 
     vtkm::cont::Invoker invoker;
     invoker(TestWorkletMapTopoSelect{},

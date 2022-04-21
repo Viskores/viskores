@@ -128,6 +128,13 @@ inline void PrintSeparatingBar(vtkm::Id howMany, std::ostream& outStream = std::
 } // PrintSeparatingBar()
 
 
+// routine to print out a single index
+inline void PrintIndexType(vtkm::Id index, std::ostream& outStream = std::cout)
+{ // PrintIndexType
+  outStream << std::setw(PRINT_WIDTH - 6) << MaskedIndex(index) << " " << FlagString(index);
+} // PrintIndexType
+
+
 // routine to print out a single value
 template <typename T>
 inline void PrintDataType(T value, std::ostream& outStream = std::cout)
@@ -136,11 +143,13 @@ inline void PrintDataType(T value, std::ostream& outStream = std::cout)
 } // PrintDataType
 
 
-// routine to print out a single index
-inline void PrintIndexType(vtkm::Id index, std::ostream& outStream = std::cout)
-{ // PrintIndexType
-  outStream << std::setw(PRINT_WIDTH - 6) << MaskedIndex(index) << " " << FlagString(index);
-} // PrintIndexType
+// Specialization of PrintDataType for vtkm::Id to use PrintIndexType instead so we can properly
+// print Id arrays using the PrintArrayHandle function, e.g,. to pint permutted Id arrays.
+template <>
+inline void PrintDataType<vtkm::Id>(vtkm::Id value, std::ostream& outStream)
+{
+  PrintIndexType(value, outStream);
+}
 
 
 // header line
@@ -161,6 +170,32 @@ inline void PrintHeader(vtkm::Id howMany, std::ostream& outStream = std::cout)
   PrintSeparatingBar(howMany, outStream);
 } // PrintHeader()
 
+
+// base routines for reading & writing host vectors
+template <typename ARRAYTYPE>
+inline void PrintArrayHandle(std::string label,
+                             const ARRAYTYPE& dVec,
+                             vtkm::Id nValues,
+                             std::ostream& outStream)
+{ // PrintArrayHandle()
+  // -1 means full size
+  if (nValues == -1)
+  {
+    nValues = dVec.GetNumberOfValues();
+  }
+
+  // print the label
+  PrintLabel(label, outStream);
+
+  // now print the data
+  auto portal = dVec.ReadPortal();
+  for (vtkm::Id entry = 0; entry < nValues; entry++)
+  {
+    PrintDataType(portal.Get(entry), outStream);
+  }
+  // and an std::endl
+  outStream << std::endl;
+} // PrintArrayHandle()
 
 // base routines for reading & writing host vectors
 template <typename T, typename StorageType>

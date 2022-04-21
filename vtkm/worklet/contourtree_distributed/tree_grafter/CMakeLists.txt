@@ -32,6 +32,7 @@ set(headers
   CopyNewNodesSetSuperparentsWorklet.h
   CopyFirstSupernodePerIterationWorklet.h
   CopyFirstHypernodePerIterationWorklet.h
+  CalculateAttachementCounterWorklet.h
 )
 
 vtkm_declare_headers(${headers})

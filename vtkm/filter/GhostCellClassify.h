@@ -10,46 +10,25 @@
 #ifndef vtk_m_filter_GhostCellClassify_h
 #define vtk_m_filter_GhostCellClassify_h
 
-#include <vtkm/filter/FilterDataSet.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/filter/mesh_info/GhostCellClassify.h>
 
 namespace vtkm
 {
 namespace filter
 {
 
-struct VTKM_DEPRECATED(1.6,
-                       "GhostCellClassifyPolicy no longer has an effect.") GhostCellClassifyPolicy
-  : vtkm::filter::PolicyBase<GhostCellClassifyPolicy>
+VTKM_DEPRECATED(
+  1.8,
+  "Use vtkm/filter/mesh_info/GhostCellClassify.h instead of vtkm/filter/GhostCellClassify.h.")
+inline void GhostCellClassify_deprecated() {}
+
+inline void GhostCellClassify_deprecated_warning()
 {
-  using FieldTypeList = vtkm::List<vtkm::UInt8>;
-};
+  GhostCellClassify_deprecated();
+}
 
-class GhostCellClassify : public vtkm::filter::FilterDataSet<GhostCellClassify>
-{
-public:
-  using SupportedTypes = vtkm::List<vtkm::UInt8>;
-
-  VTKM_CONT
-  GhostCellClassify();
-
-  template <typename Policy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData,
-                                          vtkm::filter::PolicyBase<Policy> policy);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                    const vtkm::cont::Field& field,
-                                    const vtkm::filter::PolicyBase<DerivedPolicy>&)
-  {
-    result.AddField(field);
-    return true;
-  }
-
-private:
-};
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/GhostCellClassify.hxx>
 
 #endif //vtk_m_filter_GhostCellClassify_h

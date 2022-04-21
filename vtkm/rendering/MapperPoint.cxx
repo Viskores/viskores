@@ -106,7 +106,7 @@ void MapperPoint::UseVariableRadius(bool useVariableRadius)
   this->Internals->UseVariableRadius = useVariableRadius;
 }
 
-void MapperPoint::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
+void MapperPoint::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                               const vtkm::cont::CoordinateSystem& coords,
                               const vtkm::cont::Field& scalarField,
                               const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),

@@ -11,7 +11,7 @@
 ##=============================================================================
 
 # We need this CMake versions for tests
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.18)
 
 # Read the files from the build directory that contain
 # host information ( name, parallel level, etc )
@@ -26,17 +26,27 @@ set(test_exclusions
   $ENV{CTEST_EXCLUSIONS}
 )
 
+string(REPLACE " " ";" test_exclusions "${test_exclusions}")
 string(REPLACE ";" "|" test_exclusions "${test_exclusions}")
 if (test_exclusions)
   set(test_exclusions "(${test_exclusions})")
 endif ()
 
+if (CMAKE_VERSION VERSION_GREATER 3.21.0)
+  set(junit_args OUTPUT_JUNIT "${CTEST_BINARY_DIRECTORY}/junit.xml")
+endif()
+
+set(PARALLEL_LEVEL "10")
+if (DEFINED ENV{CTEST_MAX_PARALLELISM})
+  set(PARALLEL_LEVEL $ENV{CTEST_MAX_PARALLELISM})
+endif()
+
 ctest_test(APPEND
-  PARALLEL_LEVEL "10"
+  PARALLEL_LEVEL ${PARALLEL_LEVEL}
   RETURN_VALUE test_result
   EXCLUDE "${test_exclusions}"
   REPEAT "UNTIL_PASS:3"
-  OUTPUT_JUNIT "${CTEST_BINARY_DIRECTORY}/junit.xml"
+  ${junit_args}
   )
   message(STATUS "ctest_test RETURN_VALUE: ${test_result}")
 

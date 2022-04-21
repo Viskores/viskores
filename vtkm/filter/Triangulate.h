@@ -7,42 +7,28 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
 #ifndef vtk_m_filter_Triangulate_h
 #define vtk_m_filter_Triangulate_h
 
-#include <vtkm/filter/FilterDataSet.h>
-#include <vtkm/worklet/Triangulate.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/filter/geometry_refinement/Triangulate.h>
 
 namespace vtkm
 {
 namespace filter
 {
 
-class Triangulate : public vtkm::filter::FilterDataSet<Triangulate>
+VTKM_DEPRECATED(
+  1.8,
+  "Use vtkm/filter/geometry_refinement/Triangulate.h instead of vtkm/filter/Triangulate.h.")
+inline void Triangulate_deprecated() {}
+
+inline void Triangulate_deprecated_warning()
 {
-public:
-  VTKM_CONT
-  Triangulate();
+  Triangulate_deprecated();
+}
 
-  template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          vtkm::filter::PolicyBase<DerivedPolicy> policy);
-
-  // Map new field onto the resulting dataset after running the filter
-  template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                    const vtkm::cont::Field& field,
-                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
-
-private:
-  vtkm::worklet::Triangulate Worklet;
-};
 }
 } // namespace vtkm::filter
 
-#ifndef vtk_m_filter_Triangulate_hxx
-#include <vtkm/filter/Triangulate.hxx>
-#endif
-
-#endif // vtk_m_filter_Triangulate_h
+#endif //vtk_m_filter_Triangulate_h

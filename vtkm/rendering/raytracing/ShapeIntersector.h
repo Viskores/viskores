@@ -11,7 +11,6 @@
 #define vtk_m_rendering_raytracing_Shape_Intersector_h
 
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 

@@ -219,6 +219,36 @@ void TryVector()
   TryVector1(MakeInputArray<vtkm::Vec3f>(0));
 }
 
+void TryFill()
+{
+  std::cout << "Trying fill." << std::endl;
+
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> array0;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> array1;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> array2;
+
+  auto composite = vtkm::cont::make_ArrayHandleCompositeVector(array0, array1, array2);
+
+  const vtkm::Vec3f testValue = TestValue(0, vtkm::Vec3f{});
+
+  composite.AllocateAndFill(ARRAY_SIZE, testValue);
+
+  auto portal0 = array0.ReadPortal();
+  auto portal1 = array1.ReadPortal();
+  auto portal2 = array2.ReadPortal();
+
+  VTKM_TEST_ASSERT(portal0.GetNumberOfValues() == ARRAY_SIZE);
+  VTKM_TEST_ASSERT(portal1.GetNumberOfValues() == ARRAY_SIZE);
+  VTKM_TEST_ASSERT(portal2.GetNumberOfValues() == ARRAY_SIZE);
+
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+  {
+    VTKM_TEST_ASSERT(portal0.Get(index) == testValue[0]);
+    VTKM_TEST_ASSERT(portal1.Get(index) == testValue[1]);
+    VTKM_TEST_ASSERT(portal2.Get(index) == testValue[2]);
+  }
+}
+
 void TrySpecialArrays()
 {
   std::cout << "Trying special arrays." << std::endl;
@@ -250,6 +280,8 @@ void TestCompositeVector()
   TryScalarArray<4>();
 
   TryVector();
+
+  TryFill();
 
   TrySpecialArrays();
 }

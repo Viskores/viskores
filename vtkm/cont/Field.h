@@ -33,10 +33,14 @@ class VTKM_CONT_EXPORT Field
 public:
   enum struct Association
   {
-    ANY,
-    WHOLE_MESH,
-    POINTS,
-    CELL_SET
+    Any,
+    WholeMesh,
+    Points,
+    Cells,
+    ANY VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Any.") = Any,
+    WHOLE_MESH VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::WholeMesh.") = WholeMesh,
+    POINTS VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Points.") = Points,
+    CELL_SET VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Cells.") = Cells
   };
 
   VTKM_CONT
@@ -61,9 +65,9 @@ public:
   VTKM_CONT Field& operator=(const vtkm::cont::Field& src);
   VTKM_CONT Field& operator=(vtkm::cont::Field&& src) noexcept;
 
-  VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::CELL_SET; }
-  VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::POINTS; }
-  VTKM_CONT bool IsFieldGlobal() const { return this->FieldAssociation == Association::WHOLE_MESH; }
+  VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::Cells; }
+  VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::Points; }
+  VTKM_CONT bool IsFieldGlobal() const { return this->FieldAssociation == Association::WholeMesh; }
 
   /// Returns true if the array of the field has a value type that matches something in
   /// `VTKM_FIELD_TYPE_LIST` and a storage that matches something in `VTKM_FIELD_STORAGE_LIST`.
@@ -165,7 +169,7 @@ public:
 private:
   std::string Name; ///< name of field
 
-  Association FieldAssociation = Association::ANY;
+  Association FieldAssociation = Association::Any;
   vtkm::cont::UnknownArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag = true;
@@ -246,21 +250,21 @@ vtkm::cont::Field make_Field(std::string name,
 template <typename T, typename S>
 vtkm::cont::Field make_FieldPoint(std::string name, const vtkm::cont::ArrayHandle<T, S>& data)
 {
-  return vtkm::cont::Field(name, vtkm::cont::Field::Association::POINTS, data);
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::Points, data);
 }
 
 /// Convenience function to build point fields from vtkm::cont::UnknownArrayHandle
 inline vtkm::cont::Field make_FieldPoint(std::string name,
                                          const vtkm::cont::UnknownArrayHandle& data)
 {
-  return vtkm::cont::Field(name, vtkm::cont::Field::Association::POINTS, data);
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::Points, data);
 }
 
 /// Convenience function to build cell fields from vtkm::cont::ArrayHandle
 template <typename T, typename S>
 vtkm::cont::Field make_FieldCell(std::string name, const vtkm::cont::ArrayHandle<T, S>& data)
 {
-  return vtkm::cont::Field(name, vtkm::cont::Field::Association::CELL_SET, data);
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::Cells, data);
 }
 
 
@@ -268,7 +272,7 @@ vtkm::cont::Field make_FieldCell(std::string name, const vtkm::cont::ArrayHandle
 inline vtkm::cont::Field make_FieldCell(std::string name,
                                         const vtkm::cont::UnknownArrayHandle& data)
 {
-  return vtkm::cont::Field(name, vtkm::cont::Field::Association::CELL_SET, data);
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::Cells, data);
 }
 
 } // namespace cont

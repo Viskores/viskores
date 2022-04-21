@@ -132,6 +132,7 @@ std::string BoundaryTree::Print()
   resultStream << "Boundary-Restricted Augmented Contour Tree" << std::endl;
   resultStream << "==========================================" << std::endl;
   // fill it up
+  // We use regular ReadPortal here since we need access to all values anyways
   auto superarcsPortal = this->Superarcs.ReadPortal();
   auto vertexIndexPortal = this->VertexIndex.ReadPortal();
   for (vtkm::Id node = 0; node < superarcsPortal.GetNumberOfValues(); node++)
@@ -171,6 +172,7 @@ std::string BoundaryTree::PrintGlobalDot(const char* label,
     blockOrigin, blockSize, globalSize);
 
   // loop through all nodes
+  // We use regular ReadPortal here since we need access to most values anyways
   auto vertexIndexPortal = this->VertexIndex.ReadPortal();
   auto superarcsPortal = this->Superarcs.ReadPortal();
   auto sortOrderPortal = mesh.SortOrder.ReadPortal();
@@ -226,6 +228,7 @@ std::string BoundaryTree::PrintGlobalDot(
   resultStream << "\tlabel=\"" << label << "\"\n\tlabelloc=t\n\tfontsize=30\n" << std::endl;
 
   // loop through all nodes
+  // We use regular ReadPortal here since we need access to all values anyways
   auto vertexIndexPortal = this->VertexIndex.ReadPortal();
   auto globalMeshIndexPortal = mesh.GlobalMeshIndex.ReadPortal();
   auto sortedValuesPortal = mesh.SortedValues.ReadPortal();

@@ -1,4 +1,3 @@
-
 Gitlab CI
 ===============
 
@@ -17,8 +16,8 @@ Gitlab CI
     - How to add a new tester
     - How to update an existing docker image
 
-4. ECP OSTI CI
-    - Issues
+4. ECP Continuous Integration
+   - OLCF Ascent testing machine
 
 # Kitware Gitlab CI
 
@@ -258,3 +257,55 @@ sudo docker login --username=<docker_hub_name>
 cd .gitlab/ci/docker
 sudo ./update_all.sh 20201230
 ```
+
+# ECP Continuous Integration
+
+## OLCF Ascent testing machine
+
+VTK-m provides CI builds that run at the OLCF Ascent testing cluster.  OLCF
+Ascent is a scaled down version of OLCF Summit which replicates the same
+provisions of software and architecture found at OLCF Summit, this is very
+useful for us since we are allowed to periodically and automatically branches of
+VTK-m. This is a significant leap compared to our previous workflow in which we
+would have someone to manually test at OLCF Summit every few months.
+
+The ECP Gitlab continuous integration infrastructure differs from the Kitware
+Gitlab CI infrastructure at the following points:
+
+- Kitare Gitlab CI uses the `docker` executer as the _backend_ for its
+  `Gitlab-Runner` daemon whereas ECP Gitlab CI uses the Jacamar CI executer as
+  the _backend_ for the `Gitlab-Runner` daemon.
+
+- ECP Gitlab VTK-m project is a mirror Gitlab project of the main Kitware Gitlab
+  VTK-m repository.
+
+- The runners provided by the ECP Gitlab CI reside inside the OLCF Ascent
+  cluster.
+
+Jacamar CI allows us to implicitly launch jobs using the HPC job scheduler LSF.
+Jacamar-CI also connects the LSF job with the GitLab project which allows us to
+control its state, monitor its output, and access its artifacts. Below is a brief
+diagram describing the relations between the GitLab CI instance and the job.
+
+![Jacamar CI with LSF](./batch_lsf.png)
+
+Our Ascent Pipeline is composed of two stages:
+
+1. The build stage, which builds VTK-m and runs in the batch nodes
+2. The test stage, which runs VTK-m unit tests and runs at the compute nodes.
+
+Due to the isolated environment in which LFS jobs run at Ascent, we are not able
+to access to our `sccache` file server as we do in our other CI builds, thus,
+for this very site we provide a local installation of `ccache`. This it turns
+out to provided similar hit ratios as `sscache`, since we do not have any other
+CI site that runs a _Power9_ architecture.
+
+Lastly, builds and tests status are reported to our VTK-m CDashboard and are
+displayed in the same groups as Kitware Gitlab's builds.
+
+As for the flavor being currently tested at ECP Ascent is VTK-m with CUDA and
+GCC8.
+
+For a view of only ascent jobs refer to the following [link][cdash-ascent].
+
+[cdash-ascent]: https://open.cdash.org/index.php?project=VTKM&filtercount=1&showfilters=1&field1=site&compare1=63&value1=ascent

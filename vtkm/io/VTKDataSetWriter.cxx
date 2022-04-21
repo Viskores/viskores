@@ -315,7 +315,7 @@ void WritePointFields(std::ostream& out,
   {
     const vtkm::cont::Field field = dataSet.GetField(f);
 
-    if (field.GetAssociation() != vtkm::cont::Field::Association::POINTS)
+    if (field.GetAssociation() != vtkm::cont::Field::Association::Points)
     {
       continue;
     }
@@ -516,36 +516,37 @@ void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet, vtkm::io::File
       break;
   }
 
-  vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = dataSet.GetCellSet();
   if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
   {
     WriteDataSetAsUnstructured(
-      out, dataSet, cellSet.Cast<vtkm::cont::CellSetExplicit<>>(), fileType);
+      out, dataSet, cellSet.AsCellSet<vtkm::cont::CellSetExplicit<>>(), fileType);
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<1>>())
   {
     WriteDataSetAsStructured(
-      out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<1>>(), fileType);
+      out, dataSet, cellSet.AsCellSet<vtkm::cont::CellSetStructured<1>>(), fileType);
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
   {
     WriteDataSetAsStructured(
-      out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<2>>(), fileType);
+      out, dataSet, cellSet.AsCellSet<vtkm::cont::CellSetStructured<2>>(), fileType);
   }
   else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
   {
     WriteDataSetAsStructured(
-      out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<3>>(), fileType);
+      out, dataSet, cellSet.AsCellSet<vtkm::cont::CellSetStructured<3>>(), fileType);
   }
   else if (cellSet.IsType<vtkm::cont::CellSetSingleType<>>())
   {
     // these function just like explicit cell sets
     WriteDataSetAsUnstructured(
-      out, dataSet, cellSet.Cast<vtkm::cont::CellSetSingleType<>>(), fileType);
+      out, dataSet, cellSet.AsCellSet<vtkm::cont::CellSetSingleType<>>(), fileType);
   }
   else if (cellSet.IsType<vtkm::cont::CellSetExtrude>())
   {
-    WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetExtrude>(), fileType);
+    WriteDataSetAsUnstructured(
+      out, dataSet, cellSet.AsCellSet<vtkm::cont::CellSetExtrude>(), fileType);
   }
   else
   {

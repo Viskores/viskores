@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -278,7 +279,7 @@ struct DecoratorTests
     auto ah1 = vtkm::cont::make_ArrayHandleCounting(ValueType{ 0 }, ValueType{ 2 }, ARRAY_SIZE);
     auto ah2 = vtkm::cont::make_ArrayHandleConstant(ValueType{ ARRAY_SIZE }, ARRAY_SIZE);
     vtkm::cont::ArrayHandle<ValueType> ah3;
-    vtkm::cont::Algorithm::Fill(ah3, ValueType{ ARRAY_SIZE / 2 }, ARRAY_SIZE);
+    ah3.AllocateAndFill(ARRAY_SIZE, ValueType{ ARRAY_SIZE / 2 });
 
     auto ah3Const = vtkm::cont::make_ArrayHandleConstant(ValueType{ ARRAY_SIZE / 2 }, ARRAY_SIZE);
 
@@ -331,8 +332,8 @@ struct DecoratorTests
       }
 
       // Copy a constant array into the decorator. This should modify ah3Copy.
-      vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleConstant(ValueType{ 25 }, ARRAY_SIZE),
-                            ahDecor);
+      vtkm::cont::ArrayCopyDevice(vtkm::cont::make_ArrayHandleConstant(ValueType{ 25 }, ARRAY_SIZE),
+                                  ahDecor);
 
       { // Accessing portal should give all 25s:
         auto portalDecor = ahDecor.ReadPortal();
@@ -390,7 +391,7 @@ struct DecoratorTests
     }
 
     vtkm::cont::ArrayHandle<ValueType> copiedInExec;
-    vtkm::cont::ArrayCopy(decorArray, copiedInExec);
+    vtkm::cont::ArrayCopyDevice(decorArray, copiedInExec);
     {
       auto copiedPortal = copiedInExec.ReadPortal();
       auto countPortal = ahCount.ReadPortal();

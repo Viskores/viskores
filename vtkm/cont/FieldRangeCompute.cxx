@@ -9,7 +9,9 @@
 //============================================================================
 #include <vtkm/cont/FieldRangeCompute.h>
 
-#include <vtkm/cont/Algorithm.h>
+#include <algorithm>
+#include <numeric>
+#include <vector>
 
 namespace vtkm
 {

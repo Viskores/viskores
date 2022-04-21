@@ -14,7 +14,19 @@ set(unit_tests
   UnitTestWaveletSource.cxx
  )
 
+set(libraries
+  vtkm_source
+  )
+
+if (VTKm_ENABLE_RENDERING)
+  list(APPEND libraries vtkm_rendering_testing vtkm_filter_contour)
+
+  list(APPEND unit_tests
+    RenderTestPerlinNoise.cxx
+    )
+endif()
+
 vtkm_unit_tests(
   SOURCES ${unit_tests}
-  LIBRARIES vtkm_source
+  LIBRARIES ${libraries}
 )

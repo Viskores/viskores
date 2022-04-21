@@ -11,7 +11,6 @@
 #ifndef vtk_m_rendering_Texture2D_h
 #define vtk_m_rendering_Texture2D_h
 
-#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 
@@ -65,7 +64,7 @@ public:
     // We do not know the lifetime of the underlying data source of input `data`. Since it might
     // be from a shallow copy of the data source, we make a deep copy of the input data and keep
     // it's portal. The copy operation is very fast.
-    vtkm::cont::Algorithm::Copy(data, Data);
+    this->Data.DeepCopyFrom(data);
   }
 
   VTKM_CONT

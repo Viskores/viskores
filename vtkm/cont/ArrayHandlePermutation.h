@@ -140,6 +140,15 @@ public:
     return IndexStorage::GetNumberOfValues(IndexBuffers(buffers));
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+                             const T&,
+                             vtkm::Id,
+                             vtkm::Id,
+                             vtkm::cont::Token&)
+  {
+    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandlePermutation.");
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
@@ -206,6 +215,10 @@ class ArrayHandlePermutation
   // template argument is not a valid ArrayHandle type.
   VTKM_IS_ARRAY_HANDLE(IndexArrayHandleType);
   VTKM_IS_ARRAY_HANDLE(ValueArrayHandleType);
+
+  VTKM_STATIC_ASSERT_MSG(
+    (std::is_same<vtkm::Id, typename IndexArrayHandleType::ValueType>::value),
+    "Permutation array in ArrayHandlePermutation must have vtkm::Id value type.");
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(

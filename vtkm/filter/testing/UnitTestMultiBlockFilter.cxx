@@ -13,10 +13,10 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/CleanGrid.h>
-#include <vtkm/filter/ClipWithField.h>
-#include <vtkm/filter/Contour.h>
-#include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/clean_grid/CleanGrid.h>
+#include <vtkm/filter/contour/ClipWithField.h>
+#include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/source/Tangle.h>
@@ -102,11 +102,11 @@ void TestMultiBlockFilter()
   std::vector<bool> flags = { false, true };
   for (const auto doThreading : flags)
   {
-    vtkm::filter::ClipWithField clip;
+    vtkm::filter::contour::ClipWithField clip;
     clip.SetRunMultiThreadedFilter(doThreading);
     clip.SetClipValue(0.0);
     clip.SetActiveField("tangle");
-    clip.SetFieldsToPass("tangle", vtkm::cont::Field::Association::POINTS);
+    clip.SetFieldsToPass("tangle", vtkm::cont::Field::Association::Points);
     auto result = clip.Execute(pds);
     VTKM_TEST_ASSERT(result.GetNumberOfPartitions() == pds.GetNumberOfPartitions());
     results.push_back(result);
@@ -117,12 +117,12 @@ void TestMultiBlockFilter()
   results.clear();
   for (const auto doThreading : flags)
   {
-    vtkm::filter::Contour mc;
+    vtkm::filter::contour::Contour mc;
     mc.SetRunMultiThreadedFilter(doThreading);
     mc.SetGenerateNormals(true);
     mc.SetIsoValue(0, 0.5);
     mc.SetActiveField("tangle");
-    mc.SetFieldsToPass("tangle", vtkm::cont::Field::Association::POINTS);
+    mc.SetFieldsToPass("tangle", vtkm::cont::Field::Association::Points);
     auto result = mc.Execute(pds);
     VTKM_TEST_ASSERT(result.GetNumberOfPartitions() == pds.GetNumberOfPartitions());
     results.push_back(result);
@@ -133,7 +133,7 @@ void TestMultiBlockFilter()
   results.clear();
   for (const auto doThreading : flags)
   {
-    vtkm::filter::CleanGrid clean;
+    vtkm::filter::clean_grid::CleanGrid clean;
     clean.SetRunMultiThreadedFilter(doThreading);
     clean.SetCompactPointFields(true);
     clean.SetMergePoints(true);
@@ -147,7 +147,7 @@ void TestMultiBlockFilter()
   results.clear();
   for (const auto doThreading : flags)
   {
-    vtkm::filter::Gradient grad;
+    vtkm::filter::vector_analysis::Gradient grad;
     grad.SetRunMultiThreadedFilter(doThreading);
     grad.SetComputePointGradient(true);
     grad.SetActiveField("tangle");

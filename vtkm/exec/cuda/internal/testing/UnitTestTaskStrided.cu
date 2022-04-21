@@ -32,7 +32,12 @@
 // Eg: TestExecObject::TestExecObject, MyOutputToInputMapPortal::Get,
 //     TestWorkletProxy::operator()
 #pragma push
+#if (CUDART_VERSION >= 11050)
+#pragma nv_diag_suppress 177
+#else
 #pragma diag_suppress 177
+#endif
+
 #endif
 
 namespace

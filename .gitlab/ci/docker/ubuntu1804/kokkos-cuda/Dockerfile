@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.0-devel-ubuntu18.04
+FROM nvidia/cuda:11.6.1-devel-ubuntu18.04
 LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@kitware.com>"
 
 # Base dependencies for building VTK-m projects

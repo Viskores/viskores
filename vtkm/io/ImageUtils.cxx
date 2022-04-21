@@ -19,6 +19,8 @@
 #include <vtkm/io/ImageWriterPNG.h>
 #include <vtkm/io/ImageWriterPNM.h>
 
+#include <vtkm/cont/ErrorBadValue.h>
+
 #include <memory>
 
 namespace vtkm
@@ -48,7 +50,7 @@ vtkm::cont::DataSet ReadImageFile(const std::string& fullPath, const std::string
   std::ifstream check(fullPath.c_str());
   if (!check.good())
   {
-    throw vtkm::cont::ErrorExecution("File does not exist: " + fullPath);
+    throw vtkm::cont::ErrorBadValue("File does not exist: " + fullPath);
   }
 
   std::unique_ptr<vtkm::io::ImageReaderBase> reader;

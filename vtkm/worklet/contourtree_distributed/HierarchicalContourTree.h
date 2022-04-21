@@ -68,7 +68,10 @@
 #ifndef vtk_m_worklet_contourtree_distributed_hierarchical_contour_tree_h
 #define vtk_m_worklet_contourtree_distributed_hierarchical_contour_tree_h
 
+#define VOLUME_PRINT_WIDTH 8
+
 #include <vtkm/Types.h>
+#include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
@@ -141,6 +144,9 @@ public:
   // how many rounds of fan-in were used to construct it
   vtkm::Id NumRounds;
 
+  // use for debugging? -> This makes more sense in hyper sweeper?
+  // vtkm::Id NumOwnedRegularVertices;
+
   // The following arrays store the numbers of reg/super/hyper nodes at each level of the hierarchy
   // They are filled in from the top down, and are fundamentally CPU side control variables
   // They will be needed for hypersweeps.
@@ -160,7 +166,7 @@ public:
 
   /// routine to create a FindRegularByGlobal object that we can use as an input for worklets to call the function
   VTKM_CONT
-  FindRegularByGlobal GetFindRegularByGlobal()
+  FindRegularByGlobal GetFindRegularByGlobal() const
   {
     return FindRegularByGlobal(this->RegularNodeSortOrder, this->RegularNodeGlobalIds);
   }
@@ -216,7 +222,17 @@ public:
 
   /// debug routine
   VTKM_CONT
-  std::string DebugPrint(const char* message, const char* fileName, long lineNum) const;
+  std::string DebugPrint(std::string message, const char* fileName, long lineNum) const;
+
+  // modified version of dumpSuper() that also gives volume counts
+  VTKM_CONT
+  static std::string DumpVolumes(
+    const vtkm::worklet::contourtree_augmented::IdArrayType& supernodes,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& superarcs,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& regularNodeGlobalIds,
+    vtkm::Id totalVolume,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& intrinsicVolume,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume);
 
 private:
   /// Used internally to Invoke worklets
@@ -225,6 +241,7 @@ private:
 
 template <typename FieldType>
 HierarchicalContourTree<FieldType>::HierarchicalContourTree()
+//: NumOwnedRegularVertices(static_cast<vtkm::Id>(0))
 { // constructor
   NumRegularNodesInRound.ReleaseResources();
   NumSupernodesInRound.ReleaseResources();
@@ -247,24 +264,31 @@ void HierarchicalContourTree<FieldType>::Initialize(
     auto tempZeroArray = vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, this->NumRounds + 1);
     vtkm::cont::Algorithm::Copy(tempZeroArray, this->NumIterations);
     vtkm::cont::Algorithm::Copy(tempZeroArray, this->NumRegularNodesInRound);
-    this->NumRegularNodesInRound.WritePortal().Set(this->NumRounds, tree.Nodes.GetNumberOfValues());
+    vtkm::worklet::contourtree_augmented::IdArraySetValue(
+      this->NumRounds, tree.Nodes.GetNumberOfValues(), this->NumRegularNodesInRound);
     vtkm::cont::Algorithm::Copy(tempZeroArray, this->NumSupernodesInRound);
-    this->NumSupernodesInRound.WritePortal().Set(this->NumRounds,
-                                                 tree.Supernodes.GetNumberOfValues());
+    vtkm::worklet::contourtree_augmented::IdArraySetValue(
+      this->NumRounds, tree.Supernodes.GetNumberOfValues(), this->NumSupernodesInRound);
     vtkm::cont::Algorithm::Copy(tempZeroArray, this->NumHypernodesInRound);
-    this->NumHypernodesInRound.WritePortal().Set(this->NumRounds,
-                                                 tree.Hypernodes.GetNumberOfValues());
+    vtkm::worklet::contourtree_augmented::IdArraySetValue(
+      this->NumRounds, tree.Hypernodes.GetNumberOfValues(), this->NumHypernodesInRound);
   }
-  // copy the iterations of the top level hypersweep - this is +2: one because we are counting inclusively, the second because we need an
-  // extra one at the end to compute sizes with deltas
-  this->NumIterations.WritePortal().Set(this->NumRounds, tree.NumIterations);
-  this->FirstSupernodePerIteration.resize(static_cast<std::size_t>(this->NumRounds + 1));
-  this->FirstSupernodePerIteration[static_cast<std::size_t>(this->NumRounds)].Allocate(
-    this->NumIterations.ReadPortal().Get(this->NumRounds) + 2);
-  this->FirstHypernodePerIteration.resize(static_cast<std::size_t>(this->NumRounds + 1));
-  this->FirstHypernodePerIteration[static_cast<std::size_t>(this->NumRounds)].Allocate(
-    this->NumIterations.ReadPortal().Get(this->NumRounds) + 2);
-
+  // copy the iterations of the top level hypersweep - this is +1: one because we are counting inclusively
+  // HAC JAN 15, 2020: In order to make this consistent with grafting rounds for hybrid hypersweeps, we add one to the logical number of
+  // iterations instead of the prior version which stored an extra extra element (ie +2)
+  // WARNING! WARNING! WARNING!  This is a departure from the treatment in the contour tree, where the last iteration to the NULL root was
+  // treated as an implicit round.
+  {
+    vtkm::Id tempSizeVal = vtkm::cont::ArrayGetValue(this->NumRounds, this->NumIterations) + 1;
+    vtkm::worklet::contourtree_augmented::IdArraySetValue(
+      this->NumRounds, tree.NumIterations + 1, this->NumIterations);
+    this->FirstSupernodePerIteration.resize(static_cast<std::size_t>(this->NumRounds + 1));
+    this->FirstSupernodePerIteration[static_cast<std::size_t>(this->NumRounds)].Allocate(
+      tempSizeVal);
+    this->FirstHypernodePerIteration.resize(static_cast<std::size_t>(this->NumRounds + 1));
+    this->FirstHypernodePerIteration[static_cast<std::size_t>(this->NumRounds)].Allocate(
+      tempSizeVal);
+  }
   // now copy in the details. Use CopySubRagnge to ensure that the Copy does not shrink the size
   // of the array as the arrays are in this case allocated above to the approbriate size
   vtkm::cont::Algorithm::CopySubRange(
@@ -371,18 +395,18 @@ std::string HierarchicalContourTree<FieldType>::RegularString(const vtkm::Id reg
   {
     resultStream << "Regular ID: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(regularId, resultStream);
-    resultStream << "  Value: " << this->DataValues.ReadPortal().Get(regularId);
+    resultStream << "  Value: " << vtkm::cont::ArrayGetValue(regularId, this->DataValues);
     resultStream << " Global ID: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->RegularNodeGlobalIds.ReadPortal().Get(regularId), resultStream);
+      vtkm::cont::ArrayGetValue(regularId, this->RegularNodeGlobalIds), resultStream);
     resultStream << " Regular ID: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(regularId, resultStream);
     resultStream << " SNode ID: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Regular2Supernode.ReadPortal().Get(regularId), resultStream);
+      vtkm::cont::ArrayGetValue(regularId, this->Regular2Supernode), resultStream);
     resultStream << "Superparents: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Superparents.ReadPortal().Get(regularId));
+      vtkm::cont::ArrayGetValue(regularId, this->Superparents));
   }
   return resultStream.str();
 } // RegularString()
@@ -400,43 +424,32 @@ std::string HierarchicalContourTree<FieldType>::SuperString(const vtkm::Id super
   }
   else
   {
+    vtkm::Id unmaskedSuperId = vtkm::worklet::contourtree_augmented::MaskedIndex(superId);
+    vtkm::Id tempSupernodeOfSuperId = vtkm::cont::ArrayGetValue(unmaskedSuperId, this->Supernodes);
     resultStream << "Super ID:   ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(superId, resultStream);
     resultStream << "  Value: "
-                 << this->DataValues.ReadPortal().Get(this->Supernodes.ReadPortal().Get(
-                      vtkm::worklet::contourtree_augmented::MaskedIndex(superId)));
+                 << vtkm::cont::ArrayGetValue(tempSupernodeOfSuperId, this->DataValues);
     resultStream << " Global ID: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->RegularNodeGlobalIds.ReadPortal().Get(this->Supernodes.ReadPortal().Get(
-        vtkm::worklet::contourtree_augmented::MaskedIndex(superId))),
-      resultStream);
+      vtkm::cont::ArrayGetValue(tempSupernodeOfSuperId, this->RegularNodeGlobalIds), resultStream);
     resultStream << " Regular Id: ";
-    vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Supernodes.ReadPortal().Get(vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
-      resultStream);
+    vtkm::worklet::contourtree_augmented::PrintIndexType(tempSupernodeOfSuperId, resultStream);
     resultStream << " Superarc:    ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Superarcs.ReadPortal().Get(vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
-      resultStream);
+      vtkm::cont::ArrayGetValue(unmaskedSuperId, this->Superarcs), resultStream);
     resultStream << " HNode ID: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Super2Hypernode.ReadPortal().Get(
-        vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
-      resultStream);
+      vtkm::cont::ArrayGetValue(unmaskedSuperId, this->Super2Hypernode), resultStream);
     resultStream << " Hyperparent:   ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Hyperparents.ReadPortal().Get(
-        vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
-      resultStream);
+      vtkm::cont::ArrayGetValue(unmaskedSuperId, this->Hyperparents), resultStream);
     resultStream << " Round: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->WhichRound.ReadPortal().Get(vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
-      resultStream);
+      vtkm::cont::ArrayGetValue(unmaskedSuperId, this->WhichRound), resultStream);
     resultStream << " Iteration: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->WhichIteration.ReadPortal().Get(
-        vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
-      resultStream);
+      vtkm::cont::ArrayGetValue(unmaskedSuperId, this->WhichIteration), resultStream);
   }
   return resultStream.str();
 } // SuperString()
@@ -454,34 +467,24 @@ std::string HierarchicalContourTree<FieldType>::HyperString(const vtkm::Id hyper
   }
   else
   {
+    vtkm::Id unmaskedHyperId = vtkm::worklet::contourtree_augmented::MaskedIndex(hyperId);
+    vtkm::Id hypernodeOfHyperId = vtkm::cont::ArrayGetValue(unmaskedHyperId, this->Hypernodes);
+    vtkm::Id supernodeOfHyperId = vtkm::cont::ArrayGetValue(hypernodeOfHyperId, this->Supernodes);
     resultStream << "Hyper Id:    ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(hyperId, resultStream);
-    resultStream << "  Value: "
-                 << this->DataValues.ReadPortal().Get(
-                      this->Supernodes.ReadPortal().Get(this->Hypernodes.ReadPortal().Get(
-                        vtkm::worklet::contourtree_augmented::MaskedIndex(hyperId))));
+    resultStream << "  Value: " << vtkm::cont::ArrayGetValue(supernodeOfHyperId, this->DataValues);
     resultStream << " Global ID: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->RegularNodeGlobalIds.ReadPortal().Get(
-        this->Supernodes.ReadPortal().Get(this->Hypernodes.ReadPortal().Get(
-          vtkm::worklet::contourtree_augmented::MaskedIndex(hyperId)))),
-      resultStream);
+      vtkm::cont::ArrayGetValue(supernodeOfHyperId, this->RegularNodeGlobalIds), resultStream);
     resultStream << " Regular ID: ";
-    vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Supernodes.ReadPortal().Get(this->Hypernodes.ReadPortal().Get(
-        vtkm::worklet::contourtree_augmented::MaskedIndex(hyperId))),
-      resultStream);
+    vtkm::worklet::contourtree_augmented::PrintIndexType(supernodeOfHyperId, resultStream);
     resultStream << " Super ID: ";
-    vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Hypernodes.ReadPortal().Get(vtkm::worklet::contourtree_augmented::MaskedIndex(hyperId)),
-      resultStream);
+    vtkm::worklet::contourtree_augmented::PrintIndexType(hypernodeOfHyperId, resultStream);
     resultStream << " Hyperarc: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Hyperarcs.ReadPortal().Get(vtkm::worklet::contourtree_augmented::MaskedIndex(hyperId)),
-      resultStream);
+      vtkm::cont::ArrayGetValue(unmaskedHyperId, this->Hyperarcs), resultStream);
     resultStream << " Superchildren: "
-                 << this->Superchildren.ReadPortal().Get(
-                      vtkm::worklet::contourtree_augmented::MaskedIndex(hyperId));
+                 << vtkm::cont::ArrayGetValue(unmaskedHyperId, this->Superchildren);
   }
   return resultStream.str();
 } // HyperString()
@@ -496,11 +499,11 @@ std::string HierarchicalContourTree<FieldType>::ProbeHyperPath(const vtkm::Id re
   resultStream << "Node:        " << this->RegularString(regularId) << std::endl;
 
   // find the superparent
-  vtkm::Id superparent = this->Superparents.ReadPortal().Get(regularId);
+  vtkm::Id superparent = vtkm::cont::ArrayGetValue(regularId, this->Superparents);
   resultStream << "Superparent: " << SuperString(superparent) << std::endl;
 
   // and the hyperparent
-  vtkm::Id hyperparent = this->Hyperparents.ReadPortal().Get(superparent);
+  vtkm::Id hyperparent = vtkm::cont::ArrayGetValue(superparent, this->Hyperparents);
 
   // now trace the path inwards: terminate on last round when we have null hyperarc
   vtkm::Id length = 0;
@@ -514,7 +517,7 @@ std::string HierarchicalContourTree<FieldType>::ProbeHyperPath(const vtkm::Id re
     resultStream << "Hyperparent: " << this->HyperString(hyperparent) << std::endl;
 
     // retrieve the target of the hyperarc
-    vtkm::Id hypertarget = this->Hyperarcs.ReadPortal().Get(hyperparent);
+    vtkm::Id hypertarget = vtkm::cont::ArrayGetValue(hyperparent, this->Hyperarcs);
 
     resultStream << "Hypertarget: "
                  << SuperString(vtkm::worklet::contourtree_augmented::MaskedIndex(hypertarget))
@@ -531,11 +534,11 @@ std::string HierarchicalContourTree<FieldType>::ProbeHyperPath(const vtkm::Id re
     } // root or attachment point
     else
     { // ordinary supernode
-      hyperparent = this->Hyperparents.ReadPortal().Get(maskedHypertarget);
+      hyperparent = vtkm::cont::ArrayGetValue(maskedHypertarget, this->Hyperparents);
     } // ordinary supernode
 
     // now take the new superparent's hyperparent/hypertarget
-    hypertarget = this->Hyperarcs.ReadPortal().Get(hyperparent);
+    hypertarget = vtkm::cont::ArrayGetValue(hyperparent, this->Hyperarcs);
   } // loop inwards
 
   resultStream << "Probe Complete" << std::endl << std::endl;
@@ -550,9 +553,7 @@ std::string HierarchicalContourTree<FieldType>::ProbeSuperPath(const vtkm::Id re
 {
   std::stringstream resultStream;
   // find the superparent
-  vtkm::Id superparent = this->Superparents.ReadPortal().Get(regularId);
-  auto superarcsPortal = this->Superarcs.ReadPortal();
-  auto whichRoundPortal = this->WhichRound.ReadPortal();
+  vtkm::Id superparent = vtkm::cont::ArrayGetValue(regularId, this->Superparents);
   // now trace the path inwards: terminate on last round when we have null hyperarc
   vtkm::Id length = 0;
   while (true)
@@ -563,7 +564,7 @@ std::string HierarchicalContourTree<FieldType>::ProbeSuperPath(const vtkm::Id re
       break;
     }
     // retrieve the target of the superarc
-    vtkm::Id supertarget = superarcsPortal.Get(superparent);
+    vtkm::Id supertarget = vtkm::cont::ArrayGetValue(superparent, this->Superarcs);
 
     resultStream << "Superparent: " << this->SuperString(superparent) << std::endl;
     resultStream << "Supertarget: "
@@ -574,7 +575,7 @@ std::string HierarchicalContourTree<FieldType>::ProbeSuperPath(const vtkm::Id re
     // mask the supertarget
     vtkm::Id maskedSupertarget = vtkm::worklet::contourtree_augmented::MaskedIndex(supertarget);
     // and retrieve it's supertarget
-    vtkm::Id nextSupertarget = superarcsPortal.Get(maskedSupertarget);
+    vtkm::Id nextSupertarget = vtkm::cont::ArrayGetValue(maskedSupertarget, this->Superarcs);
     vtkm::Id maskedNextSupertarget =
       vtkm::worklet::contourtree_augmented::MaskedIndex(nextSupertarget);
     resultStream << "Next target: " << this->SuperString(nextSupertarget) << std::endl;
@@ -583,7 +584,7 @@ std::string HierarchicalContourTree<FieldType>::ProbeSuperPath(const vtkm::Id re
     if (vtkm::worklet::contourtree_augmented::NoSuchElement(nextSupertarget))
     { // root or attachment point
       // test round: if it's the last one, only the root has a null edge
-      if (whichRoundPortal.Get(maskedNextSupertarget) == this->NumRounds)
+      if (vtkm::cont::ArrayGetValue(maskedNextSupertarget, this->WhichRound) == this->NumRounds)
         // we're done
         break;
       else // attachment point
@@ -629,6 +630,7 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
 
   outstream << "\t// Supernodes\n";
   // loop through all supernodes
+  // We use regular ReadPortals here since this requires access to many values anyways
   auto supernodesPortal = this->Supernodes.ReadPortal();
   auto hypernodesPortal = this->Hypernodes.ReadPortal();
   auto hyperparentsPortal = this->Hyperparents.ReadPortal();
@@ -754,7 +756,7 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
 
 /// debug routine
 template <typename FieldType>
-std::string HierarchicalContourTree<FieldType>::DebugPrint(const char* message,
+std::string HierarchicalContourTree<FieldType>::DebugPrint(std::string message,
                                                            const char* fileName,
                                                            long lineNum) const
 { // DebugPrint
@@ -814,6 +816,7 @@ std::string HierarchicalContourTree<FieldType>::DebugPrint(const char* message,
     "nSupernodes In Round", this->NumSupernodesInRound, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
     "nHypernodes In Round", this->NumHypernodesInRound, -1, resultStream);
+  //resultStream << "Owned Regular Vertices: " << this->NumOwnedRegularVertices << std::endl;
   vtkm::worklet::contourtree_augmented::PrintHeader(this->NumIterations.GetNumberOfValues(),
                                                     resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
@@ -856,6 +859,84 @@ std::string HierarchicalContourTree<FieldType>::PrintTreeStats() const
 
   return resultStream.str();
 } // PrintTreeStats
+
+
+// modified version of dumpSuper() that also gives volume counts
+template <typename FieldType>
+std::string HierarchicalContourTree<FieldType>::DumpVolumes(
+  const vtkm::worklet::contourtree_augmented::IdArrayType& supernodes,
+  const vtkm::worklet::contourtree_augmented::IdArrayType& superarcs,
+  const vtkm::worklet::contourtree_augmented::IdArrayType& regularNodeGlobalIds,
+  vtkm::Id totalVolume,
+  const vtkm::worklet::contourtree_augmented::IdArrayType& intrinsicVolume,
+  const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume)
+{ // DumpVolumes()
+  // a local string stream to build the output
+  std::stringstream outStream;
+
+  // header info
+  outStream << "============" << std::endl;
+  outStream << "Contour Tree" << std::endl;
+
+  // loop through all superarcs.
+  // We use regular ReadPortals here since this requires access to many values anyways
+  auto supernodesPortal = supernodes.ReadPortal();
+  auto regularNodeGlobalIdsPortal = regularNodeGlobalIds.ReadPortal();
+  auto superarcsPortal = superarcs.ReadPortal();
+  auto intrinsicVolumePortal = intrinsicVolume.ReadPortal();
+  auto dependentVolumePortal = dependentVolume.ReadPortal();
+  for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
+  { // per supernode
+    // convert all the way down to global regular IDs
+    vtkm::Id fromRegular = supernodesPortal.Get(supernode);
+    vtkm::Id fromGlobal = regularNodeGlobalIdsPortal.Get(fromRegular);
+
+    // retrieve the superarc target
+    vtkm::Id toSuper = superarcsPortal.Get(supernode);
+
+    // if it is NO_SUCH_ELEMENT, it is the root or an attachment point
+    // for an augmented tree, it can only be the root
+    // in any event, we don't want to print them
+    if (vtkm::worklet::contourtree_augmented::NoSuchElement(toSuper))
+    {
+      continue;
+    }
+    // now break out the ascending flag & the underlying ID
+    bool superarcAscends = vtkm::worklet::contourtree_augmented::IsAscending(toSuper);
+    toSuper = vtkm::worklet::contourtree_augmented::MaskedIndex(toSuper);
+    vtkm::Id toRegular = supernodesPortal.Get(toSuper);
+    vtkm::Id toGlobal = regularNodeGlobalIdsPortal.Get(toRegular);
+
+    // compute the weights
+    vtkm::Id weight = dependentVolumePortal.Get(supernode);
+    // -1 because the validation output does not count the supernode for the superarc
+    vtkm::Id arcWeight = intrinsicVolumePortal.Get(supernode) - 1;
+    vtkm::Id counterWeight = totalVolume - weight + arcWeight;
+
+    // orient with high end first
+    if (superarcAscends)
+    { // ascending superarc
+      outStream << "H: " << std::setw(VOLUME_PRINT_WIDTH) << toGlobal;
+      outStream << " L: " << std::setw(VOLUME_PRINT_WIDTH) << fromGlobal;
+      outStream << " VH: " << std::setw(VOLUME_PRINT_WIDTH) << weight;
+      outStream << " VR: " << std::setw(VOLUME_PRINT_WIDTH) << arcWeight;
+      outStream << " VL: " << std::setw(VOLUME_PRINT_WIDTH) << counterWeight;
+      outStream << std::endl;
+    } // ascending superarc
+    else
+    { // descending superarc
+      outStream << "H: " << std::setw(VOLUME_PRINT_WIDTH) << fromGlobal;
+      outStream << " L: " << std::setw(VOLUME_PRINT_WIDTH) << toGlobal;
+      outStream << " VH: " << std::setw(VOLUME_PRINT_WIDTH) << counterWeight;
+      outStream << " VR: " << std::setw(VOLUME_PRINT_WIDTH) << arcWeight;
+      outStream << " VL: " << std::setw(VOLUME_PRINT_WIDTH) << weight;
+      outStream << std::endl;
+    } // descending superarc
+
+  } // per supernode
+  // return the string
+  return outStream.str();
+} // DumpVolumes()
 
 
 } // namespace contourtree_distributed

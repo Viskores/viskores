@@ -138,6 +138,10 @@ public:
         internal::ArrayPortalCounting<CountingValueType>(start, step, length)))
   {
   }
+
+  VTKM_CONT CountingValueType GetStart() const { return this->ReadPortal().GetStart(); }
+
+  VTKM_CONT CountingValueType GetStep() const { return this->ReadPortal().GetStep(); }
 };
 
 /// A convenience function for creating an ArrayHandleCounting. It takes the

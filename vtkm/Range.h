@@ -14,6 +14,7 @@
 #include <vtkm/Assert.h>
 #include <vtkm/Math.h>
 #include <vtkm/Types.h>
+#include <vtkm/VecTraits.h>
 
 namespace vtkm
 {
@@ -153,6 +154,14 @@ struct Range
     return unionRange;
   }
 
+  /// \b Return the intersection of this and another range.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Range Intersection(const vtkm::Range& otherRange) const
+  {
+    return vtkm::Range(vtkm::Max(this->Min, otherRange.Min), vtkm::Min(this->Max, otherRange.Max));
+  }
+
   /// \b Operator for union
   ///
   VTKM_EXEC_CONT
@@ -177,6 +186,65 @@ inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Rang
 {
   return stream << "[" << range.Min << ".." << range.Max << "]";
 } // Declared inside of vtkm namespace so that the operator work with ADL lookup
+
+template <>
+struct VTKM_NEVER_EXPORT VecTraits<vtkm::Range>
+{
+  using ComponentType = vtkm::Float64;
+  using BaseComponentType = vtkm::Float64;
+
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 2;
+  static constexpr vtkm::IdComponent GetNumberOfComponents(const vtkm::Range&)
+  {
+    return NUM_COMPONENTS;
+  }
+  using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
+  using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
+
+  VTKM_EXEC_CONT
+  static const ComponentType& GetComponent(const vtkm::Range& range, vtkm::IdComponent component)
+  {
+    VTKM_ASSERT((component == 0) || (component == 1));
+    return (component == 0) ? range.Min : range.Max;
+  }
+  VTKM_EXEC_CONT
+  static ComponentType& GetComponent(vtkm::Range& range, vtkm::IdComponent component)
+  {
+    VTKM_ASSERT((component == 0) || (component == 1));
+    return (component == 0) ? range.Min : range.Max;
+  }
+
+  VTKM_EXEC_CONT
+  static void SetComponent(vtkm::Range& range, vtkm::IdComponent component, ComponentType value)
+  {
+    VTKM_ASSERT((component == 0) || (component == 1));
+    if (component == 0)
+    {
+      range.Min = value;
+    }
+    else
+    {
+      range.Max = value;
+    }
+  }
+
+  template <typename NewComponentType>
+  using ReplaceComponentType = vtkm::Vec<NewComponentType, NUM_COMPONENTS>;
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType = vtkm::Vec<NewComponentType, NUM_COMPONENTS>;
+
+  template <vtkm::IdComponent destSize>
+  VTKM_EXEC_CONT static void CopyInto(const vtkm::Range& src,
+                                      vtkm::Vec<ComponentType, destSize>& dest)
+  {
+    const vtkm::IdComponent maxComponent = (destSize < NUM_COMPONENTS) ? destSize : NUM_COMPONENTS;
+    for (vtkm::IdComponent component = 0; component < maxComponent; ++component)
+    {
+      dest[component] = GetComponent(src, component);
+    }
+  }
+};
+
 } // namespace vtkm
 
 

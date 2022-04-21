@@ -41,6 +41,12 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # I am seeing these for the Kokkos builds, and I don't want to fight the
   # compiler flags there, so I'm just going to suppress those.
   ".*nvlink warning.*SM Arch.*not found in.*"
+
+  # Disable warnings about third party libraries.
+  # Normally compilers do not generate warnings for includes using -isystem,
+  # however, that is not always the case, specially in exotic systems such as
+  # OLCF Ascent/Summit
+  ".*vtkm/thirdparty.*"
 )
 
 list(APPEND CTEST_CUSTOM_WARNING_MATCH

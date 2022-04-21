@@ -13,6 +13,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -27,21 +28,21 @@
 
 #include <vtkm/cont/internal/OptionParser.h>
 
-#include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/Contour.h>
-#include <vtkm/filter/ExternalFaces.h>
 #include <vtkm/filter/FieldSelection.h>
-#include <vtkm/filter/Gradient.h>
-#include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/Tetrahedralize.h>
-#include <vtkm/filter/Threshold.h>
-#include <vtkm/filter/ThresholdPoints.h>
-#include <vtkm/filter/Triangulate.h>
-#include <vtkm/filter/VectorMagnitude.h>
-#include <vtkm/filter/VertexClustering.h>
-#include <vtkm/filter/WarpScalar.h>
-#include <vtkm/filter/WarpVector.h>
+#include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
+#include <vtkm/filter/entity_extraction/Threshold.h>
+#include <vtkm/filter/entity_extraction/ThresholdPoints.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
+#include <vtkm/filter/field_conversion/PointAverage.h>
+#include <vtkm/filter/field_transform/WarpScalar.h>
+#include <vtkm/filter/field_transform/WarpVector.h>
+#include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
+#include <vtkm/filter/geometry_refinement/Triangulate.h>
+#include <vtkm/filter/geometry_refinement/VertexClustering.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
+#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 
@@ -84,8 +85,18 @@ namespace
 vtkm::cont::InitializeResult Config;
 
 // The input dataset we'll use on the filters:
-static vtkm::cont::DataSet InputDataSet;
-static vtkm::cont::DataSet UnstructuredInputDataSet;
+vtkm::cont::DataSet* InputDataSet;
+vtkm::cont::DataSet* UnstructuredInputDataSet;
+vtkm::cont::DataSet& GetInputDataSet()
+{
+  return *InputDataSet;
+}
+
+vtkm::cont::DataSet& GetUnstructuredInputDataSet()
+{
+  return *UnstructuredInputDataSet;
+}
+
 // The point scalars to use:
 static std::string PointScalarsName;
 // The cell scalars to use:
@@ -97,9 +108,9 @@ bool FileAsInput = false;
 
 bool InputIsStructured()
 {
-  return InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>() ||
-    InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<2>>() ||
-    InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<1>>();
+  return GetInputDataSet().GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>() ||
+    GetInputDataSet().GetCellSet().IsType<vtkm::cont::CellSetStructured<2>>() ||
+    GetInputDataSet().GetCellSet().IsType<vtkm::cont::CellSetStructured<1>>();
 }
 
 enum GradOpts : int
@@ -117,7 +128,7 @@ void BenchGradient(::benchmark::State& state, int options)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::Gradient filter;
+  vtkm::filter::vector_analysis::Gradient filter;
 
   if (options & ScalarInput)
   {
@@ -127,11 +138,11 @@ void BenchGradient(::benchmark::State& state, int options)
       throw vtkm::cont::ErrorInternal("A requested gradient output is "
                                       "incompatible with scalar input.");
     }
-    filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
   }
   else
   {
-    filter.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+    filter.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::Points);
   }
 
   filter.SetComputeGradient(static_cast<bool>(options & Gradient));
@@ -150,11 +161,13 @@ void BenchGradient(::benchmark::State& state, int options)
   }
 
   vtkm::cont::Timer timer{ device };
+  //vtkm::cont::DataSet input = static_cast<bool>(options & Structured) ? GetInputDataSet() : GetUnstructuredInputDataSet();
+
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(GetInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -185,7 +198,7 @@ void BenchThreshold(::benchmark::State& state)
   // Lookup the point scalar range
   const auto range = []() -> vtkm::Range {
     auto ptScalarField =
-      InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+      GetInputDataSet().GetField(PointScalarsName, vtkm::cont::Field::Association::Points);
     return ptScalarField.GetRange().ReadPortal().Get(0);
   }();
 
@@ -193,8 +206,8 @@ void BenchThreshold(::benchmark::State& state)
   vtkm::Float64 quarter = range.Length() / 4.;
   vtkm::Float64 mid = range.Center();
 
-  vtkm::filter::Threshold filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  vtkm::filter::entity_extraction::Threshold filter;
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
 
@@ -203,7 +216,7 @@ void BenchThreshold(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(GetInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -220,7 +233,7 @@ void BenchThresholdPoints(::benchmark::State& state)
   // Lookup the point scalar range
   const auto range = []() -> vtkm::Range {
     auto ptScalarField =
-      InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+      GetInputDataSet().GetField(PointScalarsName, vtkm::cont::Field::Association::Points);
     return ptScalarField.GetRange().ReadPortal().Get(0);
   }();
 
@@ -228,8 +241,8 @@ void BenchThresholdPoints(::benchmark::State& state)
   vtkm::Float64 quarter = range.Length() / 4.;
   vtkm::Float64 mid = range.Center();
 
-  vtkm::filter::ThresholdPoints filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  vtkm::filter::entity_extraction::ThresholdPoints filter;
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
   filter.SetCompactPoints(compactPoints);
@@ -239,7 +252,7 @@ void BenchThresholdPoints(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(GetInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -252,15 +265,15 @@ void BenchCellAverage(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::CellAverage filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  vtkm::filter::field_conversion::CellAverage filter;
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(GetInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -273,15 +286,15 @@ void BenchPointAverage(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::PointAverage filter;
-  filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
+  vtkm::filter::field_conversion::PointAverage filter;
+  filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::Cells);
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(GetInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -294,17 +307,17 @@ void BenchWarpScalar(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::WarpScalar filter{ 2. };
+  vtkm::filter::field_transform::WarpScalar filter{ 2. };
   filter.SetUseCoordinateSystemAsField(true);
-  filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
-  filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::Points);
+  filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::Points);
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(GetInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -317,16 +330,16 @@ void BenchWarpVector(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::WarpVector filter{ 2. };
+  vtkm::filter::field_transform::WarpVector filter{ 2. };
   filter.SetUseCoordinateSystemAsField(true);
-  filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::Points);
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(GetInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -345,13 +358,14 @@ void BenchContour(::benchmark::State& state)
   const bool normals = static_cast<bool>(state.range(3));
   const bool fastNormals = static_cast<bool>(state.range(4));
 
-  vtkm::filter::Contour filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  vtkm::filter::contour::Contour filter;
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
 
   // Set up some equally spaced contours, with the min/max slightly inside the
   // scalar range:
   const vtkm::Range scalarRange = []() -> vtkm::Range {
-    auto field = InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    auto field =
+      GetInputDataSet().GetField(PointScalarsName, vtkm::cont::Field::Association::Points);
     return field.GetRange().ReadPortal().Get(0);
   }();
   const auto step = scalarRange.Length() / static_cast<vtkm::Float64>(numIsoVals + 1);
@@ -370,7 +384,7 @@ void BenchContour(::benchmark::State& state)
 
   vtkm::cont::Timer timer{ device };
 
-  vtkm::cont::DataSet input = isStructured ? InputDataSet : UnstructuredInputDataSet;
+  vtkm::cont::DataSet input = isStructured ? GetInputDataSet() : GetUnstructuredInputDataSet();
 
   for (auto _ : state)
   {
@@ -412,7 +426,7 @@ void BenchExternalFaces(::benchmark::State& state)
   const vtkm::cont::DeviceAdapterId device = Config.Device;
   const bool compactPoints = static_cast<bool>(state.range(0));
 
-  vtkm::filter::ExternalFaces filter;
+  vtkm::filter::entity_extraction::ExternalFaces filter;
   filter.SetCompactPoints(compactPoints);
 
   vtkm::cont::Timer timer{ device };
@@ -420,7 +434,7 @@ void BenchExternalFaces(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(GetInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -439,14 +453,14 @@ void BenchTetrahedralize(::benchmark::State& state)
     state.SkipWithError("Tetrahedralize Filter requires structured data.");
   }
 
-  vtkm::filter::Tetrahedralize filter;
+  vtkm::filter::geometry_refinement::Tetrahedralize filter;
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(GetInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -466,7 +480,7 @@ void BenchVertexClustering(::benchmark::State& state)
     state.SkipWithError("VertexClustering Filter requires unstructured data (use --tetra).");
   }
 
-  vtkm::filter::VertexClustering filter;
+  vtkm::filter::geometry_refinement::VertexClustering filter;
   filter.SetNumberOfDivisions({ numDivs });
 
   vtkm::cont::Timer timer{ device };
@@ -475,7 +489,7 @@ void BenchVertexClustering(::benchmark::State& state)
     (void)_;
 
     timer.Start();
-    auto result = filter.Execute(UnstructuredInputDataSet);
+    auto result = filter.Execute(GetUnstructuredInputDataSet());
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -540,12 +554,12 @@ void BenchReverseConnectivityGen(::benchmark::State& state)
     state.SkipWithError("ReverseConnectivityGen requires unstructured data (--use tetra).");
   }
 
-  auto cellset = UnstructuredInputDataSet.GetCellSet();
+  auto cellset = GetUnstructuredInputDataSet().GetCellSet();
   PrepareForInput functor;
   for (auto _ : state)
   {
     (void)_;
-    cellset.CastAndCall(functor);
+    vtkm::cont::CastAndCall(cellset, functor);
     state.SetIterationTime(functor.Timer.GetElapsedTime());
   }
 }
@@ -623,10 +637,10 @@ void FindFields()
 {
   if (PointScalarsName.empty())
   {
-    for (vtkm::Id i = 0; i < InputDataSet.GetNumberOfFields(); ++i)
+    for (vtkm::Id i = 0; i < GetInputDataSet().GetNumberOfFields(); ++i)
     {
-      auto field = InputDataSet.GetField(i);
-      if (field.GetAssociation() == vtkm::cont::Field::Association::POINTS &&
+      auto field = GetInputDataSet().GetField(i);
+      if (field.GetAssociation() == vtkm::cont::Field::Association::Points &&
           NumberOfComponents::Check(field) == 1)
       {
         PointScalarsName = field.GetName();
@@ -638,10 +652,10 @@ void FindFields()
 
   if (CellScalarsName.empty())
   {
-    for (vtkm::Id i = 0; i < InputDataSet.GetNumberOfFields(); ++i)
+    for (vtkm::Id i = 0; i < GetInputDataSet().GetNumberOfFields(); ++i)
     {
-      auto field = InputDataSet.GetField(i);
-      if (field.GetAssociation() == vtkm::cont::Field::Association::CELL_SET &&
+      auto field = GetInputDataSet().GetField(i);
+      if (field.GetAssociation() == vtkm::cont::Field::Association::Cells &&
           NumberOfComponents::Check(field) == 1)
       {
         CellScalarsName = field.GetName();
@@ -653,10 +667,10 @@ void FindFields()
 
   if (PointVectorsName.empty())
   {
-    for (vtkm::Id i = 0; i < InputDataSet.GetNumberOfFields(); ++i)
+    for (vtkm::Id i = 0; i < GetInputDataSet().GetNumberOfFields(); ++i)
     {
-      auto field = InputDataSet.GetField(i);
-      if (field.GetAssociation() == vtkm::cont::Field::Association::POINTS &&
+      auto field = GetInputDataSet().GetField(i);
+      if (field.GetAssociation() == vtkm::cont::Field::Association::Points &&
           NumberOfComponents::Check(field) == 3)
       {
         PointVectorsName = field.GetName();
@@ -673,7 +687,7 @@ void CreateMissingFields()
   if (PointVectorsName.empty())
   {
     // Construct them from the coordinates:
-    auto coords = InputDataSet.GetCoordinateSystem();
+    auto coords = GetInputDataSet().GetCoordinateSystem();
     auto bounds = coords.GetBounds();
     auto points = coords.GetData();
     vtkm::cont::ArrayHandle<vtkm::Vec3f> pvecs;
@@ -681,8 +695,8 @@ void CreateMissingFields()
     PointVectorGenerator worklet(bounds);
     vtkm::worklet::DispatcherMapField<PointVectorGenerator> dispatch(worklet);
     dispatch.Invoke(points, pvecs);
-    InputDataSet.AddField(
-      vtkm::cont::Field("GeneratedPointVectors", vtkm::cont::Field::Association::POINTS, pvecs));
+    GetInputDataSet().AddField(
+      vtkm::cont::Field("GeneratedPointVectors", vtkm::cont::Field::Association::Points, pvecs));
     PointVectorsName = "GeneratedPointVectors";
     std::cerr << "[CreateFields] Generated point vectors '" << PointVectorsName
               << "' from coordinate data.\n";
@@ -692,12 +706,12 @@ void CreateMissingFields()
   {
     if (!CellScalarsName.empty())
     { // Generate from found cell field:
-      vtkm::filter::PointAverage avg;
-      avg.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
+      vtkm::filter::field_conversion::PointAverage avg;
+      avg.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::Cells);
       avg.SetOutputFieldName("GeneratedPointScalars");
-      auto outds = avg.Execute(InputDataSet);
-      InputDataSet.AddField(
-        outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::POINTS));
+      auto outds = avg.Execute(GetInputDataSet());
+      GetInputDataSet().AddField(
+        outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::Points));
       PointScalarsName = "GeneratedPointScalars";
       std::cerr << "[CreateFields] Generated point scalars '" << PointScalarsName
                 << "' from cell scalars, '" << CellScalarsName << "'.\n";
@@ -706,12 +720,12 @@ void CreateMissingFields()
     {
       // Compute the magnitude of the vectors:
       VTKM_ASSERT(!PointVectorsName.empty());
-      vtkm::filter::VectorMagnitude mag;
-      mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+      vtkm::filter::vector_analysis::VectorMagnitude mag;
+      mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::Points);
       mag.SetOutputFieldName("GeneratedPointScalars");
-      auto outds = mag.Execute(InputDataSet);
-      InputDataSet.AddField(
-        outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::POINTS));
+      auto outds = mag.Execute(GetInputDataSet());
+      GetInputDataSet().AddField(
+        outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::Points));
       PointScalarsName = "GeneratedPointScalars";
       std::cerr << "[CreateFields] Generated point scalars '" << PointScalarsName
                 << "' from point vectors, '" << PointVectorsName << "'.\n";
@@ -721,12 +735,12 @@ void CreateMissingFields()
   if (CellScalarsName.empty())
   { // Attempt to construct them from a point field:
     VTKM_ASSERT(!PointScalarsName.empty());
-    vtkm::filter::CellAverage avg;
-    avg.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    vtkm::filter::field_conversion::CellAverage avg;
+    avg.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
     avg.SetOutputFieldName("GeneratedCellScalars");
-    auto outds = avg.Execute(InputDataSet);
-    InputDataSet.AddField(
-      outds.GetField("GeneratedCellScalars", vtkm::cont::Field::Association::CELL_SET));
+    auto outds = avg.Execute(GetInputDataSet());
+    GetInputDataSet().AddField(
+      outds.GetField("GeneratedCellScalars", vtkm::cont::Field::Association::Cells));
     CellScalarsName = "GeneratedCellScalars";
     std::cerr << "[CreateFields] Generated cell scalars '" << CellScalarsName
               << "' from point scalars, '" << PointScalarsName << "'.\n";
@@ -949,7 +963,8 @@ void InitDataSet(int& argc, char** argv)
   {
     std::cerr << "[InitDataSet] Loading file: " << filename << "\n";
     vtkm::io::VTKDataSetReader reader(filename);
-    InputDataSet = reader.ReadDataSet();
+    InputDataSet = new vtkm::cont::DataSet;
+    *InputDataSet = reader.ReadDataSet();
     FileAsInput = true;
   }
   else
@@ -959,7 +974,8 @@ void InitDataSet(int& argc, char** argv)
     vtkm::source::Wavelet source;
     source.SetExtent({ 0 }, { waveletDim - 1 });
 
-    InputDataSet = source.Execute();
+    InputDataSet = new vtkm::cont::DataSet;
+    *InputDataSet = source.Execute();
   }
 
   FindFields();
@@ -967,13 +983,14 @@ void InitDataSet(int& argc, char** argv)
 
   std::cerr
     << "[InitDataSet] Create UnstructuredInputDataSet from Tetrahedralized InputDataSet...\n";
-  vtkm::filter::Tetrahedralize tet;
-  tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
-  UnstructuredInputDataSet = tet.Execute(InputDataSet);
+  vtkm::filter::geometry_refinement::Tetrahedralize tet;
+  tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::Mode::All));
+  UnstructuredInputDataSet = new vtkm::cont::DataSet;
+  *UnstructuredInputDataSet = tet.Execute(GetInputDataSet());
 
   if (tetra)
   {
-    InputDataSet = UnstructuredInputDataSet;
+    GetInputDataSet() = GetUnstructuredInputDataSet();
   }
 
   inputGenTimer.Stop();
@@ -1003,10 +1020,12 @@ int main(int argc, char* argv[])
 
   const std::string dataSetSummary = []() -> std::string {
     std::ostringstream out;
-    InputDataSet.PrintSummary(out);
+    GetInputDataSet().PrintSummary(out);
     return out.str();
   }();
 
   // handle benchmarking related args and run benchmarks:
   VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, args.data(), dataSetSummary);
+  delete InputDataSet;
+  delete UnstructuredInputDataSet;
 }

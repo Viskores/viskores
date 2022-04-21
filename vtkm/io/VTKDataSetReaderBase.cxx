@@ -252,7 +252,7 @@ void VTKDataSetReaderBase::ReadPoints()
   this->DataFile->Stream >> numPoints >> dataType >> std::ws;
 
   vtkm::cont::UnknownArrayHandle points =
-    this->DoReadArrayVariant(vtkm::cont::Field::Association::POINTS, dataType, numPoints, 3);
+    this->DoReadArrayVariant(vtkm::cont::Field::Association::Points, dataType, numPoints, 3);
 
   this->DataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", points));
 }
@@ -293,19 +293,26 @@ void VTKDataSetReaderBase::ReadCells(vtkm::cont::ArrayHandle<vtkm::Id>& connecti
     this->DataFile->Stream >> tag >> dataType >> std::ws;
     internal::parseAssert(tag == "OFFSETS");
     auto offsets =
-      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, dataType, offsetsSize, 1);
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::Any, dataType, offsetsSize, 1);
     offsets.CastAndCallForTypes<vtkm::List<vtkm::Int64, vtkm::Int32>,
                                 vtkm::List<vtkm::cont::StorageTagBasic>>(
       [&](const auto& offsetsAH) {
-        vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleOffsetsToNumComponents(
-                                vtkm::cont::make_ArrayHandleCast(offsetsAH, vtkm::Id{})),
-                              numIndices);
+        // Convert on host. There will be several other passes of this array on the host anyway.
+        numIndices.Allocate(offsetsSize - 1);
+        auto offsetPortal = offsetsAH.ReadPortal();
+        auto numIndicesPortal = numIndices.WritePortal();
+        for (vtkm::Id cellIndex = 0; cellIndex < offsetsSize - 1; ++cellIndex)
+        {
+          numIndicesPortal.Set(cellIndex,
+                               static_cast<vtkm::IdComponent>(offsetPortal.Get(cellIndex + 1) -
+                                                              offsetPortal.Get(cellIndex)));
+        }
       });
 
     this->DataFile->Stream >> tag >> dataType >> std::ws;
     internal::parseAssert(tag == "CONNECTIVITY");
     auto conn =
-      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, dataType, connSize, 1);
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::Any, dataType, connSize, 1);
     vtkm::cont::ArrayCopyShallowIfPossible(conn, connectivity);
   }
 }
@@ -336,7 +343,7 @@ void VTKDataSetReaderBase::ReadAttributes()
     return;
   }
 
-  vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY;
+  vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any;
   std::size_t size;
 
   std::string tag;
@@ -345,11 +352,11 @@ void VTKDataSetReaderBase::ReadAttributes()
   {
     if (tag == "POINT_DATA")
     {
-      association = vtkm::cont::Field::Association::POINTS;
+      association = vtkm::cont::Field::Association::Points;
     }
     else if (tag == "CELL_DATA")
     {
-      association = vtkm::cont::Field::Association::CELL_SET;
+      association = vtkm::cont::Field::Association::Cells;
     }
     else if (tag == "FIELD") // can see field in this position also
     {
@@ -491,11 +498,11 @@ void VTKDataSetReaderBase::AddField(const std::string& name,
   {
     switch (association)
     {
-      case vtkm::cont::Field::Association::POINTS:
-      case vtkm::cont::Field::Association::WHOLE_MESH:
+      case vtkm::cont::Field::Association::Points:
+      case vtkm::cont::Field::Association::WholeMesh:
         this->DataSet.AddField(vtkm::cont::Field(name, association, data));
         break;
-      case vtkm::cont::Field::Association::CELL_SET:
+      case vtkm::cont::Field::Association::Cells:
         this->DataSet.AddField(vtkm::cont::Field(name, association, data));
         break;
       default:
@@ -710,7 +717,7 @@ public:
   {
     std::vector<T> buffer(this->NumElements);
     this->Reader->ReadArray(buffer);
-    if ((this->Association != vtkm::cont::Field::Association::CELL_SET) ||
+    if ((this->Association != vtkm::cont::Field::Association::Cells) ||
         (this->Reader->GetCellsPermutation().GetNumberOfValues() < 1))
     {
       *this->Data = CreateUnknownArrayHandle(buffer);

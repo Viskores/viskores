@@ -81,12 +81,12 @@
     - .docker_image
 
 .ubuntu1804_cuda: &ubuntu1804_cuda
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11.1-20201016"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11.6-20220407"
   extends:
     - .docker_image
 
 .ubuntu1804_cuda_kokkos: &ubuntu1804_cuda_kokkos
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20210916"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20220407"
   extends:
     - .docker_image
 
@@ -120,19 +120,21 @@
 
 .run_scheduled: &run_scheduled
   rules:
-    - if: '$CI_MERGE_REQUEST_ID'
-      when: manual
     - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_TAG'
       when: on_success
     - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_PIPELINE_SOURCE == "schedule"'
       when: on_success
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m"'
-      when: manual
     - when: never
 
 .run_master: &run_master
   rules:
     - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_BRANCH == "master"'
+      when: on_success
+    - when: never
+
+.run_ecp_ci: &run_ecp_ci
+  rules:
+    - if: '$CI_PROJECT_PATH == "ecpcitest/vtk-m"'
       when: on_success
     - when: never
 
@@ -174,6 +176,41 @@ stages:
   script:
     - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
     - sccache --show-stats
+  extends:
+    - .cmake_build_artifacts
+
+.cmake_test_linux: &cmake_test_linux
+  stage: test
+  timeout:  50 minutes
+  interruptible: true
+  before_script:
+    - *install_cmake
+  script:
+    - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
+  extends:
+    - .cmake_test_artifacts
+
+.cmake_memcheck_linux: &cmake_memcheck_linux
+  stage: test
+  timeout:  2 hours
+  interruptible: true
+  before_script:
+    - *install_cmake
+  script:
+    - "ctest -VV -S .gitlab/ci/ctest_memcheck.cmake"
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      # The generated regression testing images
+      - build/*.png
+      - build/*.pnm
+      - build/*.pmm
+    reports:
+      junit:
+        - build/junit.xml
+
+.cmake_build_artifacts: &cmake_build_artifacts
   artifacts:
     expire_in: 24 hours
     when: always
@@ -202,14 +239,7 @@ stages:
       # CDash files.
       - build/DartConfiguration.tcl
 
-.cmake_test_linux: &cmake_test_linux
-  stage: test
-  timeout:  50 minutes
-  interruptible: true
-  before_script:
-    - *install_cmake
-  script:
-    - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
+.cmake_test_artifacts: &cmake_test_artifacts
   artifacts:
     expire_in: 24 hours
     when: always
@@ -231,25 +261,6 @@ stages:
       junit:
         - build/junit.xml
 
-.cmake_memcheck_linux: &cmake_memcheck_linux
-  stage: test
-  timeout:  2 hours
-  interruptible: true
-  before_script:
-    - *install_cmake
-  script:
-    - "ctest -VV -S .gitlab/ci/ctest_memcheck.cmake"
-  artifacts:
-    expire_in: 24 hours
-    when: always
-    paths:
-      # The generated regression testing images
-      - build/*.png
-      - build/*.pnm
-      - build/*.pmm
-    reports:
-      junit:
-        - build/junit.xml
 
 include:
   - local: '/.gitlab/ci/centos7.yml'
@@ -260,3 +271,4 @@ include:
   - local: '/.gitlab/ci/ubuntu1804.yml'
   - local: '/.gitlab/ci/ubuntu2004.yml'
   - local: '/.gitlab/ci/windows10.yml'
+  - local: '/.gitlab/ci/ascent.yml'

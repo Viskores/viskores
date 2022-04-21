@@ -158,6 +158,15 @@ public:
     return OffsetsStorage::GetNumberOfValues(OffsetsBuffers(buffers)) - 1;
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+                             const vtkm::VecFromPortal<ComponentsPortal>&,
+                             vtkm::Id,
+                             vtkm::Id,
+                             vtkm::cont::Token&)
+  {
+    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleGroupVecVariable.");
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)

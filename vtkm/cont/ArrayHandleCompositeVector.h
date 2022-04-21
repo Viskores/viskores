@@ -18,8 +18,6 @@
 #include <vtkm/Tuple.h>
 #include <vtkm/VecTraits.h>
 
-#include <vtkm/internal/brigand.hpp>
-
 #include <vtkmstd/integer_sequence.h>
 
 #include <type_traits>
@@ -34,8 +32,7 @@ namespace compvec
 
 template <typename... PortalList>
 using AllPortalsAreWritable =
-  typename brigand::all<brigand::list<PortalList...>,
-                        brigand::bind<vtkm::internal::PortalSupportsSets, brigand::_1>>::type;
+  vtkm::ListAll<vtkm::List<PortalList...>, vtkm::internal::PortalSupportsSets>;
 
 // GetValueType: ---------------------------------------------------------------
 // Determines the output `ValueType` of the set of `ArrayHandle` objects. For example, if the input
@@ -227,6 +224,8 @@ template <typename T, typename... StorageTags>
 class Storage<vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags))>,
               vtkm::cont::StorageTagCompositeVec<StorageTags...>>
 {
+  using ValueType = vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags))>;
+
   template <typename S>
   using StorageFor = vtkm::cont::internal::Storage<T, S>;
 
@@ -253,18 +252,6 @@ public:
     typename StorageFor<StorageTags>::WritePortalType...>;
 
 private:
-  // Hoop to jump through to use Storage::ResizeBuffer in an initializer list.
-  template <typename StorageType>
-  static bool ResizeBuffersCallthrough(StorageType,
-                                       vtkm::Id numValues,
-                                       vtkm::cont::internal::Buffer* buffers,
-                                       vtkm::CopyFlag preserve,
-                                       vtkm::cont::Token& token)
-  {
-    StorageType::ResizeBuffers(numValues, buffers, preserve, token);
-    return false; // Return value does not matter. Hopefully just thrown away by compiler.
-  }
-
   template <std::size_t... Is>
   static void ResizeBuffersImpl(vtkmstd::index_sequence<Is...>,
                                 vtkm::Id numValues,
@@ -272,11 +259,27 @@ private:
                                 vtkm::CopyFlag preserve,
                                 vtkm::cont::Token& token)
   {
-    auto init_list = { ResizeBuffersCallthrough(vtkm::tuple_element_t<Is, StorageTuple>{},
-                                                numValues,
-                                                Buffers<Is>(buffers),
-                                                preserve,
-                                                token)... };
+    auto init_list = { (vtkm::tuple_element_t<Is, StorageTuple>::ResizeBuffers(
+                          numValues, Buffers<Is>(buffers), preserve, token),
+                        false)... };
+    (void)init_list;
+  }
+
+  template <std::size_t... Is>
+  static void FillImpl(vtkmstd::index_sequence<Is...>,
+                       vtkm::cont::internal::Buffer* buffers,
+                       const ValueType& fillValue,
+                       vtkm::Id startIndex,
+                       vtkm::Id endIndex,
+                       vtkm::cont::Token& token)
+  {
+    auto init_list = { (
+      vtkm::tuple_element_t<Is, StorageTuple>::Fill(Buffers<Is>(buffers),
+                                                    fillValue[static_cast<vtkm::IdComponent>(Is)],
+                                                    startIndex,
+                                                    endIndex,
+                                                    token),
+      false)... };
     (void)init_list;
   }
 
@@ -317,6 +320,15 @@ public:
                                       vtkm::cont::Token& token)
   {
     ResizeBuffersImpl(IndexList{}, numValues, buffers, preserve, token);
+  }
+
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const ValueType& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token)
+  {
+    FillImpl(IndexList{}, buffers, fillValue, startIndex, endIndex, token);
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
@@ -492,16 +504,19 @@ struct ExtractComponentCompositeVecFunctor
 
 } // namespace detail
 
+// Superclass will inherit the ArrayExtractComponentImplInefficient property if any
+// of the sub-storage are inefficient (thus making everything inefficient).
 template <typename... StorageTags>
 struct ArrayExtractComponentImpl<StorageTagCompositeVec<StorageTags...>>
+  : vtkm::cont::internal::ArrayExtractComponentImplInherit<StorageTags...>
 {
-  template <typename T, vtkm::IdComponent NUM_COMPONENTS>
-  typename detail::ExtractComponentCompositeVecFunctor<T>::ResultArray operator()(
-    const vtkm::cont::ArrayHandle<vtkm::Vec<T, NUM_COMPONENTS>,
-                                  vtkm::cont::StorageTagCompositeVec<StorageTags...>>& src,
+  template <typename VecT>
+  auto operator()(
+    const vtkm::cont::ArrayHandle<VecT, vtkm::cont::StorageTagCompositeVec<StorageTags...>>& src,
     vtkm::IdComponent componentIndex,
     vtkm::CopyFlag allowCopy) const
   {
+    using T = typename vtkm::VecTraits<VecT>::ComponentType;
     vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<T, StorageTags>...> array(src);
     constexpr vtkm::IdComponent NUM_SUB_COMPONENTS = vtkm::VecFlat<T>::NUM_COMPONENTS;
 

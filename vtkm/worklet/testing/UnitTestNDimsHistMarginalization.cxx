@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/filter/density_estimate/worklet/NDimsHistogram.h>
 #include <vtkm/worklet/NDimsHistMarginalization.h>
-#include <vtkm/worklet/NDimsHistogram.h>
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -165,11 +165,11 @@ vtkm::cont::DataSet MakeTestDataSet()
 
   // Set point scalars
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldA", vtkm::cont::Field::Association::POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
+    "fieldA", vtkm::cont::Field::Association::Points, fieldA, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldB", vtkm::cont::Field::Association::POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
+    "fieldB", vtkm::cont::Field::Association::Points, fieldB, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldC", vtkm::cont::Field::Association::POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
+    "fieldC", vtkm::cont::Field::Association::Points, fieldC, nVerts, vtkm::CopyFlag::On));
 
   return dataSet;
 }

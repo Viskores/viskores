@@ -11,6 +11,7 @@
 set(headers
   Algorithm.h
   ArrayCopy.h
+  ArrayCopyDevice.h
   ArrayExtractComponent.h
   ArrayGetValues.h
   ArrayHandle.h
@@ -86,7 +87,7 @@ set(headers
   DeviceAdapterList.h
   DeviceAdapterListTag.h
   DeviceAdapterTag.h
-  DynamicCellSet.h
+  DynamicCellSet.h # Deprecated, replaced by Unknown/UncertainCellSet.h
   EnvironmentTracker.h
   Error.h
   ErrorBadAllocation.h
@@ -105,6 +106,7 @@ set(headers
   Initialize.h
   Invoker.h
   Logging.h
+  MergePartitionedDataSet.h
   ParticleArrayCopy.h
   PartitionedDataSet.h
   PointLocatorUniformGrid.h
@@ -121,8 +123,10 @@ set(headers
   TryExecute.h
   SerializableTypeString.h
   UncertainArrayHandle.h
+  UncertainCellSet.h
   UnknownArrayHandle.h
-  VariantArrayHandle.h
+  UnknownCellSet.h
+  VariantArrayHandle.h # Deprecated, replaces with Unknown/UncertainArrayHandle.h
   )
 
 set(template_sources
@@ -138,13 +142,28 @@ set(sources
   ArrayHandleSOA.cxx
   ArrayHandleStride.cxx
   ArrayHandleUniformPointCoordinates.cxx
+  AssignerPartitionedDataSet.cxx
   BitField.cxx
+  BoundsCompute.cxx
+  BoundsGlobalCompute.cxx
+  CellLocatorGeneral.cxx
+  CellLocatorRectilinearGrid.cxx
+  CellLocatorUniformGrid.cxx
+  CellSet.cxx
+  CellSetStructured.cxx
   ColorTablePresets.cxx
+  CoordinateSystem.cxx
+  DataSet.cxx
+  DataSetBuilderCurvilinear.cxx
+  DataSetBuilderExplicit.cxx
+  DataSetBuilderRectilinear.cxx
+  DataSetBuilderUniform.cxx
   DeviceAdapterTag.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
-  internal/Buffer.cxx
+  FieldRangeCompute.cxx
+  FieldRangeGlobalCompute.cxx
   internal/DeviceAdapterMemoryManager.cxx
   internal/DeviceAdapterMemoryManagerShared.cxx
   internal/RuntimeDeviceConfiguration.cxx
@@ -153,9 +172,12 @@ set(sources
   Initialize.cxx
   Logging.cxx
   RuntimeDeviceTracker.cxx
+  PartitionedDataSet.cxx
   Storage.cxx
   Token.cxx
   TryExecute.cxx
+  UnknownArrayHandle.cxx
+  UnknownCellSet.cxx
   )
 
 # This list of sources has code that uses devices and so might need to be
@@ -164,34 +186,20 @@ set(device_sources
   ArrayCopy.cxx
   ArrayGetValues.cxx
   ArrayRangeCompute.cxx
-  AssignerPartitionedDataSet.cxx
-  BoundsCompute.cxx
-  BoundsGlobalCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
-  CellLocatorGeneral.cxx
-  CellLocatorRectilinearGrid.cxx
   CellLocatorTwoLevel.cxx
-  CellLocatorUniformGrid.cxx
-  CellSet.cxx
   CellSetExplicit.cxx
   CellSetExtrude.cxx
-  CellSetStructured.cxx
   ColorTable.cxx
   ConvertNumComponentsToOffsets.cxx
-  CoordinateSystem.cxx
-  DataSet.cxx
-  DataSetBuilderCurvilinear.cxx
-  DataSetBuilderExplicit.cxx
-  DataSetBuilderRectilinear.cxx
-  DataSetBuilderUniform.cxx
   Field.cxx
-  FieldRangeCompute.cxx
-  FieldRangeGlobalCompute.cxx
-  PartitionedDataSet.cxx
+  internal/ArrayCopyUnknown.cxx
+  internal/Buffer.cxx
+  internal/MapArrayPermutation.cxx
+  MergePartitionedDataSet.cxx
   PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
   Timer.cxx
-  UnknownArrayHandle.cxx
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)

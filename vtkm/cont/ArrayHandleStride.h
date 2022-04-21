@@ -11,6 +11,7 @@
 #define vtk_m_cont_ArrayHandleStride_h
 
 #include <vtkm/cont/ArrayHandleBasic.h>
+#include <vtkm/cont/ErrorBadType.h>
 
 #include <vtkm/internal/ArrayPortalBasic.h>
 
@@ -172,6 +173,15 @@ public:
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
     return GetInfo(buffers).NumberOfValues;
+  }
+
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+                             const T&,
+                             vtkm::Id,
+                             vtkm::Id,
+                             vtkm::cont::Token&)
+  {
+    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleStride.");
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
