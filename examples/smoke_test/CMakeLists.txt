@@ -14,10 +14,6 @@ include(CTest)
 
 find_package(VTKm REQUIRED)
 
-if (VTKm_VERSION VERSION_LESS 1.7)
-  message(FATAL_ERROR "Requires VTK-m 1.7 or newer")
-endif()
-
 add_executable(smoke_test smoke_test.cxx)
 target_link_libraries(smoke_test PRIVATE vtkm_source)
 
