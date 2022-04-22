@@ -40,10 +40,14 @@ class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT ParticleDensityNearestGridPoint
 public:
   using Superclass = ParticleDensityBase;
 
+  ParticleDensityNearestGridPoint() = default;
+
+  VTKM_DEPRECATED(1.9, "Use default constructor and `Set*` accessors.")
   ParticleDensityNearestGridPoint(const vtkm::Id3& dimension,
                                   const vtkm::Vec3f& origin,
                                   const vtkm::Vec3f& spacing);
 
+  VTKM_DEPRECATED(1.9, "Use default constructor and `Set*` accessors.")
   ParticleDensityNearestGridPoint(const vtkm::Id3& dimension, const vtkm::Bounds& bounds);
 
 private:

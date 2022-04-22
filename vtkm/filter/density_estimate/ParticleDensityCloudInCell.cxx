@@ -75,14 +75,17 @@ namespace density_estimate
 VTKM_CONT ParticleDensityCloudInCell::ParticleDensityCloudInCell(const vtkm::Id3& dimension,
                                                                  const vtkm::Vec3f& origin,
                                                                  const vtkm::Vec3f& spacing)
-  : Superclass(dimension, origin, spacing)
 {
+  this->SetDimension(dimension);
+  this->SetOrigin(origin);
+  this->SetSpacing(spacing);
 }
 
 VTKM_CONT ParticleDensityCloudInCell::ParticleDensityCloudInCell(const Id3& dimension,
                                                                  const vtkm::Bounds& bounds)
-  : Superclass(dimension, bounds)
 {
+  this->SetDimension(dimension);
+  this->SetBounds(bounds);
 }
 
 VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(const cont::DataSet& input)

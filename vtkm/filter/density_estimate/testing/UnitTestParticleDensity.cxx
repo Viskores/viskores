@@ -42,11 +42,15 @@ void TestNGP()
     vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(N, 0xd1ce), mass);
   dataSet.AddCellField("mass", mass);
 
-  auto cellDims = vtkm::Id3{ 3, 3, 3 };
-  vtkm::filter::density_estimate::ParticleDensityNearestGridPoint filter{
-    cellDims, { 0.f, 0.f, 0.f }, vtkm::Vec3f{ 1.f / 3.f, 1.f / 3.f, 1.f / 3.f }
-  };
+  vtkm::Id3 cellDims = { 3, 3, 3 };
+  vtkm::Bounds bounds = { { 0, 1 }, { 0, 1 }, { 0, 1 } };
+  vtkm::filter::density_estimate::ParticleDensityNearestGridPoint filter;
+  filter.SetDimension(cellDims);
+  filter.SetBounds(bounds);
   filter.SetActiveField("mass");
+  VTKM_TEST_ASSERT(test_equal(filter.GetBounds(), bounds));
+  VTKM_TEST_ASSERT(test_equal(filter.GetOrigin(), vtkm::make_Vec(0, 0, 0)));
+  VTKM_TEST_ASSERT(test_equal(filter.GetSpacing(), vtkm::make_Vec(0.33333, 0.33333, 0.33333)));
   auto density = filter.Execute(dataSet);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> field;
@@ -93,10 +97,17 @@ void TestCIC()
                               mass);
   dataSet.AddCellField("mass", mass);
 
-  auto cellDims = vtkm::Id3{ 3, 3, 3 };
-  vtkm::filter::density_estimate::ParticleDensityCloudInCell filter{
-    cellDims, { 0.f, 0.f, 0.f }, vtkm::Vec3f{ 1.f / 3.f, 1.f / 3.f, 1.f / 3.f }
-  };
+  vtkm::Id3 cellDims = { 3, 3, 3 };
+  vtkm::Vec3f origin = { 0.f, 0.f, 0.f };
+  vtkm::Vec3f spacing = { 1.f / 3.f, 1.f / 3.f, 1.f / 3.f };
+  vtkm::Bounds bounds = { { 0, 1 }, { 0, 1 }, { 0, 1 } };
+  vtkm::filter::density_estimate::ParticleDensityCloudInCell filter;
+  filter.SetDimension(cellDims);
+  filter.SetOrigin(origin);
+  filter.SetSpacing(spacing);
+  VTKM_TEST_ASSERT(test_equal(filter.GetOrigin(), origin));
+  VTKM_TEST_ASSERT(test_equal(filter.GetSpacing(), spacing));
+  VTKM_TEST_ASSERT(test_equal(filter.GetBounds(), bounds));
   filter.SetActiveField("mass");
   auto density = filter.Execute(dataSet);
 
