@@ -60,8 +60,8 @@
 //=======================================================================================
 
 
-#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_superarc_volumetric_comparator_indirect_globalid_comparator_h
-#define vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_superarc_volumetric_comparator_indirect_globalid_comparator_h
+#ifndef vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_superarc_volumetric_comparator_indirect_globalid_comparator_h
+#define vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_superarc_volumetric_comparator_indirect_globalid_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -71,7 +71,7 @@ namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_distributed
+namespace scalar_topology
 {
 namespace hierarchical_volumetric_branch_decomposer
 {
@@ -240,7 +240,7 @@ private:
 }; // SuperArcVolumetricComparatorIndirectGlobalIdComparator
 
 } // namespace hierarchical_volumetric_branch_decomposer
-} // namespace contourtree_distributed
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm
 

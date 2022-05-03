@@ -50,34 +50,48 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_not_no_such_element_predicate_h
-#define vtk_m_worklet_contourtree_augmented_not_no_such_element_predicate_h
+#ifndef vtk_m_worklet_contourtree_distributed_branchdecompositionblock_h
+#define vtk_m_worklet_contourtree_distributed_branchdecompositionblock_h
 
-#include <vtkm/Types.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+// Contour tree includes
+#include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_augmented
+namespace scalar_topology
 {
 
-//Simple functor to subset a VTKm ArrayHandle
-class NotNoSuchElementPredicate
+struct BranchDecompositionBlock
 {
-public:
-  VTKM_EXEC_CONT
-  NotNoSuchElementPredicate() {}
+  static vtkm::cont::ArrayHandleGroupVecVariable<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                                 vtkm::cont::ArrayHandle<vtkm::Id>>
+  CreateFirstsupernodePerIterationArrayHandle(
+    const vtkm::cont::DataSet& hierarchicalContourTreeDataSet);
 
-  VTKM_EXEC_CONT
-  bool operator()(const vtkm::Id& vertexId) const { return !NoSuchElement(vertexId); }
+  BranchDecompositionBlock(vtkm::Id localBlockNo,
+                           int globalBlockId,
+                           const vtkm::cont::DataSet& hierarchicalTreeDataSet);
 
-private:
+  // Block metadata
+  vtkm::Id LocalBlockNo;
+  int GlobalBlockId; // TODO/FIXME: Check whether really needed. Possibly only during debugging
+
+  // Data from hierarchical tree needed during reduction
+  vtkm::cont::ArrayHandleGroupVecVariable<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                          vtkm::cont::ArrayHandle<vtkm::Id>>
+    FirstSupernodePerIteration;
+
+  // Decomposer used during reduction and output data set
+  HierarchicalVolumetricBranchDecomposer VolumetricBranchDecomposer;
+  vtkm::cont::ArrayHandle<vtkm::Id> BranchRoots;
+
+  // Destroy function allowing DIY to own blocks and clean them up after use
+  static void Destroy(void* b) { delete static_cast<BranchDecompositionBlock*>(b); }
 };
 
-} // namespace contourtree_augmented
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm
-
 #endif

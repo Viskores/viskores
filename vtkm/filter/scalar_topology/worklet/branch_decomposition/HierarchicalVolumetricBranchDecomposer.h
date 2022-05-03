@@ -116,24 +116,27 @@
 //=======================================================================================
 
 
-#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_h
-#define vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_h
+#ifndef vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_h
+#define vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_h
 
 #include <iomanip>
 #include <string>
 
+// Contour tree includes, not yet moved into new filter structure
 #include <vtkm/worklet/contourtree_augmented/NotNoSuchElementPredicate.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
+#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
+#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcBetweenNodes.h>
 
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_volumetric_branch_decomposer/CollapseBranchesPointerDoublingWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_volumetric_branch_decomposer/CollapseBranchesWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_volumetric_branch_decomposer/LocalBestUpDownByVolumeBestUpDownEdgeWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_volumetric_branch_decomposer/LocalBestUpDownByVolumeInitSuperarcListWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_volumetric_branch_decomposer/LocalBestUpDownByVolumeWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_volumetric_branch_decomposer/SuperArcVolumetricComparatorIndirectGlobalIdComparator.h>
+// Worklets
+#include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/CollapseBranchesPointerDoublingWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/CollapseBranchesWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/LocalBestUpDownByVolumeBestUpDownEdgeWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/LocalBestUpDownByVolumeInitSuperarcListWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/LocalBestUpDownByVolumeWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/SuperArcVolumetricComparatorIndirectGlobalIdComparator.h>
 
 #ifdef DEBUG_PRINT
 #define DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER
@@ -143,11 +146,10 @@ namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_distributed
+namespace scalar_topology
 {
 
 /// Facture class for augmenting the hierarchical contour tree to enable computations of measures, e.g., volumne
-template <typename FieldType>
 class HierarchicalVolumetricBranchDecomposer
 { // class HierarchicalVolumetricBranchDecomposer
 public:
@@ -161,11 +163,6 @@ public:
   /// working arrays - kept at class level to simplify debug print
   vtkm::worklet::contourtree_augmented::IdArrayType UpVolume;
   vtkm::worklet::contourtree_augmented::IdArrayType DownVolume;
-
-  /// Because we want to use array allocation in main, we need a default constructor
-  /// Unfortunately, that means we have problems with references, and the workaround is to have
-  /// the references passed to the individual functions
-  HierarchicalVolumetricBranchDecomposer<FieldType>(){};
 
   /// routines to compute branch decomposition by volume
   /// WARNING: we now have two types of hierarchical tree sharing a data structure:
@@ -194,23 +191,22 @@ public:
   /// routine that determines the best upwards/downwards edges at each vertex
   /// Unlike the local version, the best might only be stored on another rank
   /// so we will compute the locally best up or down, then swap until all ranks choose the same best
-
-  void LocalBestUpDownByVolume(
-    const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>*
-      hierarchicalTree,
-    const vtkm::cont::ArrayHandle<vtkm::Id>& intrinsicValues,
-    const vtkm::cont::ArrayHandle<vtkm::Id>& dependentValues,
-    vtkm::Id totalVolume);
+  void LocalBestUpDownByVolume(const vtkm::cont::DataSet& hierarchicalTreeDataSet,
+                               const vtkm::cont::ArrayHandle<vtkm::Id>& intrinsicValues,
+                               const vtkm::cont::ArrayHandle<vtkm::Id>& dependentValues,
+                               vtkm::Id totalVolume);
 
   /// routine to compute the local set of superarcs that root at a given one
-  void CollapseBranches(const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<
-                          FieldType>* hierarchicalTree,
+  void CollapseBranches(const vtkm::cont::DataSet& hierarchicalTreeDataSet,
                         vtkm::worklet::contourtree_augmented::IdArrayType& branchRoot);
 
-  //    routine to print branches
-  std::string PrintBranches(const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<
-                              FieldType>* hierarchicalTree,
-                            const vtkm::worklet::contourtree_augmented::IdArrayType& branchRoot);
+  /// routines to print branches
+  template <typename IdArrayHandleType, typename DataValueArrayHandleType>
+  static std::string PrintBranches(const IdArrayHandleType& hierarchicalTreeSuperarcsAH,
+                                   const IdArrayHandleType& hierarchicalTreeSupernodesAH,
+                                   const IdArrayHandleType& hierarchicalTreeRegularNodeGlobalIdsAH,
+                                   const DataValueArrayHandleType& hierarchicalTreeDataValuesAH,
+                                   const IdArrayHandleType& branchRootAH);
   static std::string PrintBranches(const vtkm::cont::DataSet& ds);
 
   /// debug routine
@@ -223,30 +219,38 @@ private:
 }; // class HierarchicalVolumetricBranchDecomposer
 
 
-template <typename FieldType>
-void HierarchicalVolumetricBranchDecomposer<FieldType>::LocalBestUpDownByVolume(
-  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>*
-    hierarchicalTree,
+inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
+  const vtkm::cont::DataSet& hierarchicalTreeDataSet,
   const vtkm::cont::ArrayHandle<vtkm::Id>& intrinsicValues,
   const vtkm::cont::ArrayHandle<vtkm::Id>& dependentValues,
   vtkm::Id totalVolume)
 {
+  // Get required arrays for hierarchical tree form data set
+  auto hierarchicalTreeSupernodes = hierarchicalTreeDataSet.GetField("Supernodes")
+                                      .GetData()
+                                      .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+  auto hierarchicalTreeSuperarcs = hierarchicalTreeDataSet.GetField("Superarcs")
+                                     .GetData()
+                                     .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+  auto hierarchicalTreeRegularNodeGlobalIds =
+    hierarchicalTreeDataSet.GetField("RegularNodeGlobalIds")
+      .GetData()
+      .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+
   // LocalBestUpDownByVolume
   // STAGE I:   Allocate memory for our arrays
-  vtkm::Id nSupernodes = hierarchicalTree->Supernodes.GetNumberOfValues();
+  vtkm::Id nSupernodes = hierarchicalTreeSupernodes.GetNumberOfValues();
   // WARNING: This differs from the non-hierarchical version by using the full size *WITH* virtual superarcs
-  vtkm::Id nSuperarcs = hierarchicalTree->Superarcs.GetNumberOfValues();
+  vtkm::Id nSuperarcs = hierarchicalTreeSuperarcs.GetNumberOfValues();
 
   // set up a list of superarcs as Edges for reference in our comparator
   vtkm::worklet::contourtree_augmented::EdgePairArray superarcList;
   superarcList.Allocate(nSuperarcs);
-  VTKM_ASSERT(hierarchicalTree->Superarcs.GetNumberOfValues() == superarcList.GetNumberOfValues());
-  this->Invoke(vtkm::worklet::contourtree_distributed::hierarchical_volumetric_branch_decomposer::
+  this->Invoke(vtkm::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
                  LocalBestUpDownByVolumeInitSuperarcListWorklet{}, // the worklet
-               hierarchicalTree->Superarcs,                        // input
+               hierarchicalTreeSuperarcs,                          // input
                superarcList                                        // output
   );
-
 
 #ifdef DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER
   {
@@ -265,7 +269,7 @@ void HierarchicalVolumetricBranchDecomposer<FieldType>::LocalBestUpDownByVolume(
   // and fill it up with index values [0, 1, 2 ... nSuperarcs-1] while simultaneously stream compacting the
   // values by keeping only those indices where the hierarchicalTree->Superarcs is not NoSuchElement.
   vtkm::cont::Algorithm::CopyIf(vtkm::cont::ArrayHandleIndex(nSuperarcs), //input
-                                hierarchicalTree->Superarcs,              // stencil
+                                hierarchicalTreeSuperarcs,                // stencil
                                 actualSuperarcs,                          // output target array
                                 vtkm::worklet::contourtree_augmented::NotNoSuchElementPredicate{});
   // NOTE: The behavior here is slightly different from the original implementation, as the original code
@@ -307,12 +311,12 @@ void HierarchicalVolumetricBranchDecomposer<FieldType>::LocalBestUpDownByVolume(
   // given that we have already suppressed the non-virtual superarcs
   // however, in this case, we need to use the actualSuperarcs array instead of the main array
   {
-    vtkm::worklet::contourtree_distributed::hierarchical_volumetric_branch_decomposer::
+    vtkm::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
       LocalBestUpDownByVolumeBestUpDownEdgeWorklet bestUpDownEdgeWorklet(totalVolume);
     // permut input and output arrays here so we can use FieldIn and FieldOut to
     // avoid the use of WholeArray access in the worklet
-    auto permutedHierarchicalTreeSuperarcs = vtkm::cont::make_ArrayHandlePermutation(
-      actualSuperarcs, hierarchicalTree->Superarcs); // input
+    auto permutedHierarchicalTreeSuperarcs =
+      vtkm::cont::make_ArrayHandlePermutation(actualSuperarcs, hierarchicalTreeSuperarcs); // input
     auto permutedDependetValues =
       vtkm::cont::make_ArrayHandlePermutation(actualSuperarcs, dependentValues); // input
     auto permutedIntrinsicValues =
@@ -348,10 +352,10 @@ void HierarchicalVolumetricBranchDecomposer<FieldType>::LocalBestUpDownByVolume(
   // NB:  We reuse the actual superarcs list here - this works because we have indexed the volumes on the underlying superarc ID
   // NB 2: Notice that we only sort the "actual" ones - this is to avoid unnecessary resize() calls in vtkm later on
   {
-    vtkm::worklet::contourtree_distributed::hierarchical_volumetric_branch_decomposer::
+    vtkm::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
       SuperArcVolumetricComparatorIndirectGlobalIdComparator
         SuperArcVolumetricComparatorIndirectGlobalIdComparator(
-          this->UpVolume, superarcList, hierarchicalTree->RegularNodeGlobalIds, false);
+          this->UpVolume, superarcList, hierarchicalTreeRegularNodeGlobalIds, false);
     vtkm::cont::Algorithm::Sort(actualSuperarcs,
                                 SuperArcVolumetricComparatorIndirectGlobalIdComparator);
   }
@@ -373,15 +377,15 @@ void HierarchicalVolumetricBranchDecomposer<FieldType>::LocalBestUpDownByVolume(
   {
     auto permutedUpVolume =
       vtkm::cont::make_ArrayHandlePermutation(actualSuperarcs, this->UpVolume);
-    this->Invoke(vtkm::worklet::contourtree_distributed::hierarchical_volumetric_branch_decomposer::
+    this->Invoke(vtkm::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
                    LocalBestUpDownByVolumeWorklet<true>{ nActualSuperarcs },
-                 actualSuperarcs,                        // input
-                 superarcList,                           // input
-                 permutedUpVolume,                       // input
-                 hierarchicalTree->RegularNodeGlobalIds, // input
-                 hierarchicalTree->Supernodes,           // input
-                 this->BestDownSupernode,                // output
-                 this->BestDownVolume                    // output
+                 actualSuperarcs,                      // input
+                 superarcList,                         // input
+                 permutedUpVolume,                     // input
+                 hierarchicalTreeRegularNodeGlobalIds, // input
+                 hierarchicalTreeSupernodes,           // input
+                 this->BestDownSupernode,              // output
+                 this->BestDownVolume                  // output
     );
   }
 #ifdef DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER
@@ -391,10 +395,10 @@ void HierarchicalVolumetricBranchDecomposer<FieldType>::LocalBestUpDownByVolume(
 
   // II B 3.  Repeat for lower vertex
   {
-    vtkm::worklet::contourtree_distributed::hierarchical_volumetric_branch_decomposer::
+    vtkm::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
       SuperArcVolumetricComparatorIndirectGlobalIdComparator
         SuperArcVolumetricComparatorIndirectGlobalIdComparator(
-          this->DownVolume, superarcList, hierarchicalTree->RegularNodeGlobalIds, true);
+          this->DownVolume, superarcList, hierarchicalTreeRegularNodeGlobalIds, true);
     vtkm::cont::Algorithm::Sort(actualSuperarcs,
                                 SuperArcVolumetricComparatorIndirectGlobalIdComparator);
   }
@@ -417,15 +421,15 @@ void HierarchicalVolumetricBranchDecomposer<FieldType>::LocalBestUpDownByVolume(
   {
     auto permutedDownVolume =
       vtkm::cont::make_ArrayHandlePermutation(actualSuperarcs, this->DownVolume);
-    this->Invoke(vtkm::worklet::contourtree_distributed::hierarchical_volumetric_branch_decomposer::
+    this->Invoke(vtkm::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
                    LocalBestUpDownByVolumeWorklet<false>{ nActualSuperarcs },
-                 actualSuperarcs,                        // input
-                 superarcList,                           // input
-                 permutedDownVolume,                     // input
-                 hierarchicalTree->RegularNodeGlobalIds, // input
-                 hierarchicalTree->Supernodes,           // input
-                 this->BestUpSupernode,                  // output
-                 this->BestUpVolume                      // output
+                 actualSuperarcs,                      // input
+                 superarcList,                         // input
+                 permutedDownVolume,                   // input
+                 hierarchicalTreeRegularNodeGlobalIds, // input
+                 hierarchicalTreeSupernodes,           // input
+                 this->BestUpSupernode,                // output
+                 this->BestUpVolume                    // output
     );
   }
 
@@ -435,32 +439,57 @@ void HierarchicalVolumetricBranchDecomposer<FieldType>::LocalBestUpDownByVolume(
 #endif
 } // LocalBestUpDownByVolume
 
-template <typename FieldType>
-void HierarchicalVolumetricBranchDecomposer<FieldType>::CollapseBranches(
-  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>*
-    hierarchicalTree,
+
+inline void HierarchicalVolumetricBranchDecomposer::CollapseBranches(
+  const vtkm::cont::DataSet& hierarchicalTreeDataSet,
   vtkm::worklet::contourtree_augmented::IdArrayType& branchRoot)
 { // CollapseBranches
+  // Get required arrays for hierarchical tree form data set
+  auto hierarchicalTreeSupernodes = hierarchicalTreeDataSet.GetField("Supernodes")
+                                      .GetData()
+                                      .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+  auto hierarchicalTreeSuperarcs = hierarchicalTreeDataSet.GetField("Superarcs")
+                                     .GetData()
+                                     .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+  auto hierarchicalTreeRegularNodeGlobalIds =
+    hierarchicalTreeDataSet.GetField("RegularNodeGlobalIds")
+      .GetData()
+      .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+  auto hierarchicalTreeRegularNodeSortOrder =
+    hierarchicalTreeDataSet.GetField("RegularNodeSortOrder")
+      .GetData()
+      .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+  auto hierarchicalTreeRegular2Supernode = hierarchicalTreeDataSet.GetField("Regular2Supernode")
+                                             .GetData()
+                                             .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+  auto hierarchicalTreeWhichRound = hierarchicalTreeDataSet.GetField("WhichRound")
+                                      .GetData()
+                                      .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+
   // initialise the superarcs to be their own branch roots
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              "Initializing branch root with " << branchRoot.GetNumberOfValues() << " values.");
-  vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleIndex(branchRoot.GetNumberOfValues()),
-                              branchRoot);
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleIndex(branchRoot.GetNumberOfValues()), branchRoot);
 
   VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Convert to superarc ID.");
   //    For each supernode, convert the best up into a superarc ID
   {
-    vtkm::worklet::contourtree_distributed::hierarchical_volumetric_branch_decomposer::
-      CollapseBranchesWorklet collapseBranchesWorklet;
-    auto findRegularByGlobal = hierarchicalTree->GetFindRegularByGlobal();
-    auto findSuperArcBetweenNodes = hierarchicalTree->GetFindSuperArcBetweenNodes();
-    this->Invoke(collapseBranchesWorklet,             // the worklet
-                 this->BestUpSupernode,               // input
-                 this->BestDownSupernode,             // input
-                 findRegularByGlobal,                 // input ExecutionObject
-                 findSuperArcBetweenNodes,            // input ExecutionObject
-                 hierarchicalTree->Regular2Supernode, // input
-                 hierarchicalTree->WhichRound,        // input
+    vtkm::worklet::contourtree_distributed::FindRegularByGlobal findRegularByGlobal{
+      hierarchicalTreeRegularNodeSortOrder, hierarchicalTreeRegularNodeGlobalIds
+    };
+    vtkm::worklet::contourtree_distributed::FindSuperArcBetweenNodes findSuperArcBetweenNodes{
+      hierarchicalTreeSuperarcs
+    };
+
+    using vtkm::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
+      CollapseBranchesWorklet;
+    this->Invoke(CollapseBranchesWorklet{},         // the worklet
+                 this->BestUpSupernode,             // input
+                 this->BestDownSupernode,           // input
+                 findRegularByGlobal,               // input ExecutionObject
+                 findSuperArcBetweenNodes,          // input ExecutionObject
+                 hierarchicalTreeRegular2Supernode, // input
+                 hierarchicalTreeWhichRound,        // input
                  branchRoot);
   }
 
@@ -477,112 +506,43 @@ void HierarchicalVolumetricBranchDecomposer<FieldType>::CollapseBranches(
   for (vtkm::Id iteration = 0; iteration < nLogSteps; iteration++)
   { // per iteration
     // loop through the vertices, updating
-    vtkm::worklet::contourtree_distributed::hierarchical_volumetric_branch_decomposer::
-      CollapseBranchesPointerDoublingWorklet collapseBranchesPointerDoublingWorklet;
-    this->Invoke(collapseBranchesPointerDoublingWorklet, branchRoot);
+    using vtkm::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
+      CollapseBranchesPointerDoublingWorklet;
+    this->Invoke(CollapseBranchesPointerDoublingWorklet{}, branchRoot);
   } // per iteration
-
 } // CollapseBranches
 
 
-//      routine to print branches
-template <typename FieldType>
-std::string HierarchicalVolumetricBranchDecomposer<FieldType>::PrintBranches(
-  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>*
-    hierarchicalTree,
-  const vtkm::worklet::contourtree_augmented::IdArrayType& branchRoot)
-{ // PrintBranches
-  // we want to dump out the branches as viewed by this rank.
-  // most of the processing will be external, so we keep this simple.
-  // For each end of the superarc, we print out value & global ID prefixed by global ID of the branch root
-  // The external processing will then sort them to construct segments (as usual) in the array
-  // then a post-process can find the first and last in each segment & print out the branch
-  // In order for the sort to work lexicographically, we need to print out in the following order:
-  //            I       Branch Root Global ID
-  //            II      Supernode Value
-  //            III     Supernode Global ID
-  std::stringstream resultStream;
-  // loop through the individual superarcs
-  auto hierarchicalTreeSuperarcsPortal = hierarchicalTree->Superarcs.ReadPortal();
-  auto hierarchicalTreeSupernodesPortal = hierarchicalTree->Supernodes.ReadPortal();
-  auto hierarchicalTreeRegularNodeGlobalIdsPortal =
-    hierarchicalTree->RegularNodeGlobalIds.ReadPortal();
-  auto hierarchicalTreeDataValuesPortal = hierarchicalTree->DataValues.ReadPortal();
-  auto branchRootPortal = branchRoot.ReadPortal();
+// PrintBranches
+// we want to dump out the branches as viewed by this rank.
+// most of the processing will be external, so we keep this simple.
+// For each end of the superarc, we print out value & global ID prefixed by global ID of the branch root
+// The external processing will then sort them to construct segments (as usual) in the array
+// then a post-process can find the first and last in each segment & print out the branch
+// In order for the sort to work lexicographically, we need to print out in the following order:
+//            I       Branch Root Global ID
+//            II      Supernode Value
+//            III     Supernode Global ID
 
-  for (vtkm::Id superarc = 0; superarc < hierarchicalTree->Superarcs.GetNumberOfValues();
-       superarc++)
-  { // per superarc
-    // explicit test for root superarc / attachment points
-    if (vtkm::worklet::contourtree_augmented::NoSuchElement(
-          hierarchicalTreeSuperarcsPortal.Get(superarc)))
-    {
-      continue;
-    }
-
-    // now retrieve the branch root's global ID
-    vtkm::Id branchRootSuperId = branchRootPortal.Get(superarc);
-    vtkm::Id branchRootRegularId = hierarchicalTreeSupernodesPortal.Get(branchRootSuperId);
-    vtkm::Id branchRootGlobalId =
-      hierarchicalTreeRegularNodeGlobalIdsPortal.Get(branchRootRegularId);
-
-    // now retrieve the global ID & value for each end & output them
-    vtkm::Id superFromRegularId = hierarchicalTreeSupernodesPortal.Get(superarc);
-    vtkm::Id superFromGlobalId = hierarchicalTreeRegularNodeGlobalIdsPortal.Get(superFromRegularId);
-    FieldType superFromValue = hierarchicalTreeDataValuesPortal.Get(superFromRegularId);
-    resultStream << branchRootGlobalId << "\t" << superFromValue << "\t" << superFromGlobalId
-                 << std::endl;
-
-    // now retrieve the global ID & value for each end & output them
-    vtkm::Id superToRegularId = vtkm::worklet::contourtree_augmented::MaskedIndex(
-      hierarchicalTreeSuperarcsPortal.Get(superarc));
-    vtkm::Id superToGlobalId = hierarchicalTreeRegularNodeGlobalIdsPortal.Get(superToRegularId);
-    FieldType superToValue = hierarchicalTreeDataValuesPortal.Get(superToRegularId);
-    resultStream << branchRootGlobalId << "\t" << superToValue << "\t" << superToGlobalId
-                 << std::endl;
-  } // per superarc
-  return resultStream.str();
-} // PrintBranches
-
-//      routine to print branches
-template <typename FieldType>
-std::string HierarchicalVolumetricBranchDecomposer<FieldType>::PrintBranches(
-  const vtkm::cont::DataSet& ds)
-{ // PrintBranches
-  // we want to dump out the branches as viewed by this rank.
-  // most of the processing will be external, so we keep this simple.
-  // For each end of the superarc, we print out value & global ID prefixed by global ID of the branch root
-  // The external processing will then sort them to construct segments (as usual) in the array
-  // then a post-process can find the first and last in each segment & print out the branch
-  // In order for the sort to work lexicographically, we need to print out in the following order:
-  //            I       Branch Root Global ID
-  //            II      Supernode Value
-  //            III     Supernode Global ID
-  std::stringstream resultStream;
-  // loop through the individual superarcs
-
-
-  auto hierarchicalTreeSuperarcsAH =
-    ds.GetField("Superarcs").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+// Note the following is a template to be called via cast-and-call
+template <typename IdArrayHandleType, typename DataValueArrayHandleType>
+std::string HierarchicalVolumetricBranchDecomposer::PrintBranches(
+  const IdArrayHandleType& hierarchicalTreeSuperarcsAH,
+  const IdArrayHandleType& hierarchicalTreeSupernodesAH,
+  const IdArrayHandleType& hierarchicalTreeRegularNodeGlobalIdsAH,
+  const DataValueArrayHandleType& hierarchicalTreeDataValuesAH,
+  const IdArrayHandleType& branchRootAH)
+{
   auto hierarchicalTreeSuperarcsPortal = hierarchicalTreeSuperarcsAH.ReadPortal();
   vtkm::Id nSuperarcs = hierarchicalTreeSuperarcsAH.GetNumberOfValues();
-  auto hierarchicalTreeSupernodesPortal = ds.GetField("Supernodes")
-                                            .GetData()
-                                            .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
-                                            .ReadPortal();
+  auto hierarchicalTreeSupernodesPortal = hierarchicalTreeSupernodesAH.ReadPortal();
   auto hierarchicalTreeRegularNodeGlobalIdsPortal =
-    ds.GetField("RegularNodeGlobalIds")
-      .GetData()
-      .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
-      .ReadPortal();
-  auto hierarchicalTreeDataValuesPortal = ds.GetField("DataValues")
-                                            .GetData()
-                                            .AsArrayHandle<vtkm::cont::ArrayHandle<FieldType>>()
-                                            .ReadPortal();
-  auto branchRootPortal = ds.GetField("BranchRoots")
-                            .GetData()
-                            .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
-                            .ReadPortal();
+    hierarchicalTreeRegularNodeGlobalIdsAH.ReadPortal();
+  auto hierarchicalTreeDataValuesPortal = hierarchicalTreeDataValuesAH.ReadPortal();
+  auto branchRootPortal = branchRootAH.ReadPortal();
+
+  std::stringstream resultStream;
+  // loop through the individual superarcs
 
   for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
   { // per superarc
@@ -602,7 +562,7 @@ std::string HierarchicalVolumetricBranchDecomposer<FieldType>::PrintBranches(
     // now retrieve the global ID & value for each end & output them
     vtkm::Id superFromRegularId = hierarchicalTreeSupernodesPortal.Get(superarc);
     vtkm::Id superFromGlobalId = hierarchicalTreeRegularNodeGlobalIdsPortal.Get(superFromRegularId);
-    FieldType superFromValue = hierarchicalTreeDataValuesPortal.Get(superFromRegularId);
+    vtkm::Float64 superFromValue = hierarchicalTreeDataValuesPortal.Get(superFromRegularId);
     resultStream << branchRootGlobalId << "\t" << superFromValue << "\t" << superFromGlobalId
                  << std::endl;
 
@@ -610,18 +570,51 @@ std::string HierarchicalVolumetricBranchDecomposer<FieldType>::PrintBranches(
     vtkm::Id superToRegularId = vtkm::worklet::contourtree_augmented::MaskedIndex(
       hierarchicalTreeSuperarcsPortal.Get(superarc));
     vtkm::Id superToGlobalId = hierarchicalTreeRegularNodeGlobalIdsPortal.Get(superToRegularId);
-    FieldType superToValue = hierarchicalTreeDataValuesPortal.Get(superToRegularId);
+    vtkm::Float64 superToValue = hierarchicalTreeDataValuesPortal.Get(superToRegularId);
     resultStream << branchRootGlobalId << "\t" << superToValue << "\t" << superToGlobalId
                  << std::endl;
   } // per superarc
+
   return resultStream.str();
 } // PrintBranches
 
+inline std::string HierarchicalVolumetricBranchDecomposer::PrintBranches(
+  const vtkm::cont::DataSet& ds)
+{
+  auto hierarchicalTreeSuperarcsAH =
+    ds.GetField("Superarcs").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+  auto hierarchicalTreeSupernodesAH =
+    ds.GetField("Supernodes").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+
+  auto hierarchicalTreeRegularNodeGlobalIdsAH =
+    ds.GetField("RegularNodeGlobalIds")
+      .GetData()
+      .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+
+  auto hierarchicalTreeDataValuesData = ds.GetField("DataValues").GetData();
+
+  auto branchRootAH =
+    ds.GetField("BranchRoots").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+
+  std::string result;
+
+  hierarchicalTreeDataValuesData.CastAndCallForTypes<TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(
+    [&](const auto& hierarchicalTreeDataValuesAH) {
+      result = PrintBranches(hierarchicalTreeSuperarcsAH,
+                             hierarchicalTreeSupernodesAH,
+                             hierarchicalTreeRegularNodeGlobalIdsAH,
+                             hierarchicalTreeDataValuesAH,
+                             branchRootAH);
+    });
+
+  return result;
+} // PrintBranches
+
+
 // debug routine
-template <typename FieldType>
-std::string HierarchicalVolumetricBranchDecomposer<FieldType>::DebugPrint(std::string message,
-                                                                          const char* fileName,
-                                                                          long lineNum)
+inline std::string HierarchicalVolumetricBranchDecomposer::DebugPrint(std::string message,
+                                                                      const char* fileName,
+                                                                      long lineNum)
 { // DebugPrint()
   std::stringstream resultStream;
   resultStream << "----------------------------------------" << std::endl;
@@ -650,7 +643,7 @@ std::string HierarchicalVolumetricBranchDecomposer<FieldType>::DebugPrint(std::s
   return resultStream.str();
 } // DebugPrint()
 
-} // namespace contourtree_distributed
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm
 

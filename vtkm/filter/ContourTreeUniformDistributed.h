@@ -119,7 +119,6 @@ public:
     bool useBoundaryExtremaOnly = true,
     bool useMarchingCubes = false,
     bool augmentHierarchicalTree = false,
-    bool computeHierarchicalVolumetricBranchDecomposition = false,
     bool saveDotFiles = false,
     vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
     vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info);
@@ -173,14 +172,6 @@ public:
     std::stringstream& timingsStream,
     std::vector<vtkm::cont::DataSet>& hierarchicalTreeOutputDataSet);
 
-  template <typename FieldType>
-  VTKM_CONT void ComputeBranchDecomposition(vtkmdiy::Master& inputContourTreeMaster,
-                                            vtkmdiy::DynamicAssigner& assigner,
-                                            vtkmdiy::RegularSwapPartners& partners,
-                                            const FieldType&, // dummy parameter to get the type
-                                            std::stringstream& timingsStream,
-                                            std::vector<vtkm::cont::DataSet>& outputDataSet);
-
   ///
   /// Internal helper function that implements the actual functionality of PostExecute
   ///
@@ -204,9 +195,6 @@ private:
 
   /// Augment hierarchical tree
   bool AugmentHierarchicalTree;
-
-  /// Compute the hierarchical volumetric branch decomposition
-  bool ComputeHierarchicalVolumetricBranchDecomposition;
 
   /// Save dot files for all tree computations
   bool SaveDotFiles;

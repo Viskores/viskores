@@ -72,11 +72,12 @@
 #include <vtkm/io/BOVDataSetReader.h>
 
 #include <vtkm/filter/ContourTreeUniformDistributed.h>
+#include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
+#include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalVolumetricBranchDecomposer.h>
 #include <vtkm/worklet/contourtree_distributed/TreeCompiler.h>
 
 // clang-format off
@@ -862,19 +863,17 @@ int main(int argc, char* argv[])
   prevTime = currTime;
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::ContourTreeUniformDistributed filter(
-    blocksPerDim,
-    globalSize,
-    localBlockIndices,
-    localBlockOrigins,
-    localBlockSizes,
-    useBoundaryExtremaOnly,
-    useMarchingCubes,
-    augmentHierarchicalTree,
-    computeHierarchicalVolumetricBranchDecomposition,
-    saveDotFiles,
-    timingsLogLevel,
-    treeLogLevel);
+  vtkm::filter::ContourTreeUniformDistributed filter(blocksPerDim,
+                                                     globalSize,
+                                                     localBlockIndices,
+                                                     localBlockOrigins,
+                                                     localBlockSizes,
+                                                     useBoundaryExtremaOnly,
+                                                     useMarchingCubes,
+                                                     augmentHierarchicalTree,
+                                                     saveDotFiles,
+                                                     timingsLogLevel,
+                                                     treeLogLevel);
   filter.SetActiveField("values");
 
   // Execute the contour tree analysis
@@ -896,17 +895,20 @@ int main(int argc, char* argv[])
     {
       if (computeHierarchicalVolumetricBranchDecomposition)
       {
+        vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter(
+          blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
+        auto bd_result = bd_filter.Execute(result);
+
         for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
         {
-          auto ds = result.GetPartition(ds_no);
+          auto ds = bd_result.GetPartition(ds_no);
           std::string branchDecompositionFileName = std::string("BranchDecomposition_Rank_") +
             std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
             std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
 
           std::ofstream treeStream(branchDecompositionFileName.c_str());
-          treeStream
-            << vtkm::worklet::contourtree_distributed::HierarchicalVolumetricBranchDecomposer<
-                 ValueType>::PrintBranches(ds);
+          treeStream << vtkm::worklet::scalar_topology::HierarchicalVolumetricBranchDecomposer::
+              PrintBranches(ds);
         }
       }
       else

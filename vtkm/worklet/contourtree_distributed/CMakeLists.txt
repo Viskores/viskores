@@ -11,15 +11,12 @@
 set(headers
   BoundaryTree.h
   BoundaryTreeMaker.h
-  BranchDecompositionBlock.h
   CombineHyperSweepBlockFunctor.h
-  ComputeDistributedBranchDecompositionFunctor.h
   ComputeDistributedContourTreeFunctor.h
   ContourTreeBlockData.h
   DistributedContourTreeBlockData.h
   HierarchicalAugmenter.h
   HierarchicalAugmenterFunctor.h
-  HierarchicalVolumetricBranchDecomposer.h
   HierarchicalContourTree.h
   HierarchicalHyperSweeper.h
   HyperSweepBlock.h
@@ -39,4 +36,3 @@ add_subdirectory(tree_grafter)
 add_subdirectory(hierarchical_contour_tree)
 add_subdirectory(hierarchical_hyper_sweeper)
 add_subdirectory(hierarchical_augmenter)
-add_subdirectory(hierarchical_volumetric_branch_decomposer)

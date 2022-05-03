@@ -50,33 +50,34 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_not_no_such_element_predicate_h
-#define vtk_m_worklet_contourtree_augmented_not_no_such_element_predicate_h
+#ifndef vtk_m_worklet_contourtree_distributed__h
+#define vtk_m_worklet_contourtree_distributed__h
 
-#include <vtkm/Types.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/BranchDecompositionBlock.h>
+
+// clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/diy/diy.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+// clang-format on
+
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_augmented
+namespace scalar_topology
 {
 
-//Simple functor to subset a VTKm ArrayHandle
-class NotNoSuchElementPredicate
+struct ComputeDistributedBranchDecompositionFunctor
 {
-public:
-  VTKM_EXEC_CONT
-  NotNoSuchElementPredicate() {}
-
-  VTKM_EXEC_CONT
-  bool operator()(const vtkm::Id& vertexId) const { return !NoSuchElement(vertexId); }
-
-private:
+  void operator()(vtkm::worklet::scalar_topology::BranchDecompositionBlock* b,
+                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
+                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
+  ) const;
 };
 
-} // namespace contourtree_augmented
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm
 

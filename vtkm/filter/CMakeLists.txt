@@ -199,6 +199,7 @@ add_subdirectory(geometry_refinement)
 add_subdirectory(mesh_info)
 add_subdirectory(multi_block)
 add_subdirectory(resampling)
+add_subdirectory(scalar_topology)
 add_subdirectory(vector_analysis)
 add_subdirectory(zfp)
 

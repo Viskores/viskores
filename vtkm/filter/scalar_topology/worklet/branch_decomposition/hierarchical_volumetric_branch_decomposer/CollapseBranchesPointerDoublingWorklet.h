@@ -38,45 +38,56 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_not_no_such_element_predicate_h
-#define vtk_m_worklet_contourtree_augmented_not_no_such_element_predicate_h
+#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_collapse_branches_pointer_doubling_worklet_h
+#define vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_collapse_branches_pointer_doubling_worklet_h
 
-#include <vtkm/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_augmented
+namespace scalar_topology
+{
+namespace hierarchical_volumetric_branch_decomposer
 {
 
-//Simple functor to subset a VTKm ArrayHandle
-class NotNoSuchElementPredicate
+class CollapseBranchesPointerDoublingWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
+  /// Control signature for the worklet
+  using ControlSignature = void(WholeArrayInOut branchRoot);
+  using ExecutionSignature = void(InputIndex, _1);
+  using InputDomain = _1;
+
+  /// Default Constructor
   VTKM_EXEC_CONT
-  NotNoSuchElementPredicate() {}
+  CollapseBranchesPointerDoublingWorklet() {}
 
-  VTKM_EXEC_CONT
-  bool operator()(const vtkm::Id& vertexId) const { return !NoSuchElement(vertexId); }
+  /// operator() of the workelt
+  template <typename InOutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id superarc,
+                            const InOutFieldPortalType& branchRootPortal) const
+  {
+    vtkm::Id branchRootVal1 = branchRootPortal.Get(superarc);
+    vtkm::Id branchRootVal2 = branchRootPortal.Get(branchRootPortal.Get(superarc));
+    if (branchRootVal1 != branchRootVal2)
+    {
+      branchRootPortal.Set(superarc, branchRootVal2);
+    }
+  } // operator()()
 
-private:
-};
 
-} // namespace contourtree_augmented
+}; // CollapseBranchesPointerDoublingWorklet
+
+} // namespace hierarchical_volumetric_branch_decomposer
+} // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
 

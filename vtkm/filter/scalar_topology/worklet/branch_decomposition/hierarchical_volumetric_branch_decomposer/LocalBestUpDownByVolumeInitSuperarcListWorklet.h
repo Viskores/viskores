@@ -43,8 +43,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_localbestupdownbyvolume_init_superarc_list_worklet_h
-#define vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_localbestupdownbyvolume_init_superarc_list_worklet_h
+#ifndef vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_localbestupdownbyvolume_init_superarc_list_worklet_h
+#define vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_localbestupdownbyvolume_init_superarc_list_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -53,7 +53,7 @@ namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_distributed
+namespace scalar_topology
 {
 namespace hierarchical_volumetric_branch_decomposer
 {
@@ -96,8 +96,8 @@ public:
 
 }; // LocalBestUpDownByVolumeInitSuperarcListWorklet
 
-} // namespace hierarchical_augmenter
-} // namespace contourtree_distributed
+} // namespace hierarchical_volumetric_branch_decomposer
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm
 

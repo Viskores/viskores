@@ -38,57 +38,62 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
+//
+//  This code is an extension of the algorithm presented in the paper:
+//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
+//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
+//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
+//  (LDAV), October 2016, Baltimore, Maryland.
+//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_collapse_branches_pointer_doubling_worklet_h
-#define vtk_m_worklet_contourtree_distributed_hierarchical_volumetric_branch_decomposer_collapse_branches_pointer_doubling_worklet_h
+#include <vtkm/filter/scalar_topology/BranchDecompositionBlock.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+// Contour tree includes, not ye moved to new filter design
+#include <vtkm/worklet/contourtree/Types.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_distributed
-{
-namespace hierarchical_volumetric_branch_decomposer
+namespace scalar_topology
 {
 
-class CollapseBranchesPointerDoublingWorklet : public vtkm::worklet::WorkletMapField
+vtkm::cont::ArrayHandleGroupVecVariable<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                        vtkm::cont::ArrayHandle<vtkm::Id>>
+BranchDecompositionBlock::CreateFirstsupernodePerIterationArrayHandle(
+  const vtkm::cont::DataSet& hierarchicalContourTreeDataSet)
 {
-public:
-  /// Control signature for the worklet
-  using ControlSignature = void(WholeArrayInOut branchRoot);
-  using ExecutionSignature = void(InputIndex, _1);
-  using InputDomain = _1;
+  vtkm::cont::ArrayHandle<vtkm::Id> FirstSupernodePerIterationComponents;
+  vtkm::cont::ArrayHandle<vtkm::Id> FirstSupernodePerIterationOffsets;
 
-  /// Default Constructor
-  VTKM_EXEC_CONT
-  CollapseBranchesPointerDoublingWorklet() {}
+  vtkm::cont::ArrayCopyShallowIfPossible(
+    hierarchicalContourTreeDataSet.GetField("FirstSupernodePerIterationComponents").GetData(),
+    FirstSupernodePerIterationComponents);
+  vtkm::cont::ArrayCopyShallowIfPossible(
+    hierarchicalContourTreeDataSet.GetField("FirstSupernodePerIterationOffsets").GetData(),
+    FirstSupernodePerIterationOffsets);
+  return vtkm::cont::make_ArrayHandleGroupVecVariable(FirstSupernodePerIterationComponents,
+                                                      FirstSupernodePerIterationOffsets);
+}
 
-  /// operator() of the workelt
-  template <typename InOutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id superarc,
-                            const InOutFieldPortalType& branchRootPortal) const
-  {
-    vtkm::Id branchRootVal1 = branchRootPortal.Get(superarc);
-    vtkm::Id branchRootVal2 = branchRootPortal.Get(branchRootPortal.Get(superarc));
-    if (branchRootVal1 != branchRootVal2)
-    {
-      branchRootPortal.Set(superarc, branchRootVal2);
-    }
-  } // operator()()
+BranchDecompositionBlock::BranchDecompositionBlock(
+  vtkm::Id localBlockNo,
+  int globalBlockId,
+  const vtkm::cont::DataSet& hierarchicalTreeDataSet)
+  : LocalBlockNo(localBlockNo)
+  , GlobalBlockId(globalBlockId)
+  , FirstSupernodePerIteration(CreateFirstsupernodePerIterationArrayHandle(hierarchicalTreeDataSet))
+{
+  vtkm::Id nSupernodes =
+    hierarchicalTreeDataSet.GetField("Supernodes").GetData().GetNumberOfValues();
+  this->BranchRoots.AllocateAndFill(nSupernodes,
+                                    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+}
 
-
-}; // CollapseBranchesPointerDoublingWorklet
-
-} // namespace hierarchical_augmenter
-} // namespace contourtree_distributed
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm
-
-#endif

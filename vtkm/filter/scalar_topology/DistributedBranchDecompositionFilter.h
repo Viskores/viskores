@@ -38,70 +38,45 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
-//  The PPP2 algorithm and software were jointly developed by
-//  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
-//  Oliver Ruebel (LBNL)
-//==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_branchdecompositionblock_h
-#define vtk_m_worklet_contourtree_distributed_branchdecompositionblock_h
+#ifndef vtk_m_filter_contour_tree_DistributedBranchDecompositionFilter_h
+#define vtk_m_filter_contour_tree_DistributedBranchDecompositionFilter_h
 
-#include <vtkm/worklet/contourtree/Types.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalVolumetricBranchDecomposer.h>
+#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
+
+#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
-namespace contourtree_distributed
+namespace scalar_topology
 {
+/// \brief Compute branch decompostion from distributed contour tree
 
-template <typename ContourTreeDataFieldType>
-struct BranchDecompositionBlock
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT DistributedBranchDecompositionFilter
+  : public vtkm::filter::NewFilter
 {
-  BranchDecompositionBlock(
-    vtkm::Id localBlockNo,
-    int globalBlockId,
-    const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-      hierarchicalContourTree)
-    : LocalBlockNo(localBlockNo)
-    , GlobalBlockId(globalBlockId)
-    , HierarchicalContourTree(hierarchicalContourTree)
-  {
-    // Import/alias for readability
-    using vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
-    const vtkm::Id nSupernodes = HierarchicalContourTree.Supernodes.GetNumberOfValues();
-    //VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Allocating " << nSupernodes << " valies in BranchRoots");
-    BranchRoots.AllocateAndFill(nSupernodes, NO_SUCH_ELEMENT);
-  }
+public:
+  VTKM_CONT DistributedBranchDecompositionFilter(
+    vtkm::Id3 blocksPerDim,
+    vtkm::Id3 globalSize,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes);
 
-  // Block metadata TODO/FIXME: Check whether really needed
-  vtkm::Id LocalBlockNo;
-  int GlobalBlockId;
+private:
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
 
-  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-    HierarchicalContourTree;
-  vtkm::worklet::contourtree_distributed::HierarchicalVolumetricBranchDecomposer<
-    ContourTreeDataFieldType>
-    HierarchicalVolumetricBranchDecomposer;
-  vtkm::cont::ArrayHandle<vtkm::Id> BranchRoots;
-
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b)
-  {
-    delete static_cast<BranchDecompositionBlock<ContourTreeDataFieldType>*>(b);
-  }
+  /// Information about the spatial decomposition
+  vtkm::worklet::contourtree_distributed::SpatialDecomposition MultiBlockSpatialDecomposition;
 };
 
-} // namespace contourtree_distributed
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm
+
 #endif

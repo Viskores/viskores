@@ -125,7 +125,7 @@ public:
 
 
 // prints the contents of the BRACT for comparison with sweep and merge
-std::string BoundaryTree::Print()
+inline std::string BoundaryTree::Print()
 { // Print
   // Use string steam to record text so the user can print it however they like
   std::stringstream resultStream;
@@ -270,7 +270,7 @@ std::string BoundaryTree::PrintGlobalDot(
 } //PrintGlobalDot
 
 // debug routine
-void BoundaryTree::PrintContent(std::ostream& outStream) const
+inline void BoundaryTree::PrintContent(std::ostream& outStream) const
 {
   vtkm::worklet::contourtree_augmented::PrintHeader(this->VertexIndex.GetNumberOfValues(),
                                                     outStream);
