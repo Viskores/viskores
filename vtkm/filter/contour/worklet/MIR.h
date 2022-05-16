@@ -42,7 +42,7 @@
 #include <vtkm/worklet/WorkletReduceByKey.h>
 
 #include <vtkm/filter/contour/worklet/clip/ClipTables.h>
-#include <vtkm/worklet/mir/MIRTables.h>
+#include <vtkm/filter/contour/worklet/mir/MIRTables.h>
 
 namespace vtkm
 {

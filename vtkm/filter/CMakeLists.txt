@@ -38,6 +38,7 @@ set(deprecated_headers
   Mask.h
   MaskPoints.h
   MeshQuality.h
+#  MIRFilter.h
   NDEntropy.h
   NDHistogram.h
   ParticleDensityCloudInCell.h
@@ -102,7 +103,6 @@ set(extra_headers
   ContourTreeUniform.h
   Lagrangian.h
   LagrangianStructures.h
-  MIRFilter.h
   ParticleAdvection.h
   Pathline.h
   PathParticle.h
@@ -118,7 +118,6 @@ set(extra_header_template_sources
   ContourTreeUniform.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
-  MIRFilter.hxx
   ParticleAdvection.hxx
   Pathline.hxx
   PathParticle.hxx

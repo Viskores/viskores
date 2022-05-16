@@ -12,6 +12,7 @@ set(contour_headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   Contour.h
+  MIRFilter.h
   Slice.h
 )
 
@@ -19,6 +20,7 @@ set(contour_sources_device
   ClipWithField.cxx
   ClipWithImplicitFunction.cxx
   Contour.cxx
+  MIRFilter.cxx
   Slice.cxx
 )
 

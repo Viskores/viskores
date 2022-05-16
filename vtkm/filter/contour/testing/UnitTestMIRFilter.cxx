@@ -8,14 +8,15 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/filter/MIRFilter.h>
-
+#include <vtkm/filter/contour/MIRFilter.h>
 #include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <stdio.h>
 
@@ -204,7 +205,7 @@ void TestMIRVenn250()
   data.AddField(
     vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WholeMesh, matVFs));
 
-  vtkm::filter::MIRFilter mir;
+  vtkm::filter::contour::MIRFilter mir;
   mir.SetIDWholeSetName("scatter_ids");
   mir.SetPositionCellSetName("scatter_pos");
   mir.SetLengthCellSetName("scatter_len");
@@ -229,7 +230,7 @@ void TestMIRSynthetic()
 {
   vtkm::cont::DataSet ds = GetTestDataSet();
 
-  vtkm::filter::MIRFilter mir;
+  vtkm::filter::contour::MIRFilter mir;
   mir.SetIDWholeSetName("scatter_ids");
   mir.SetPositionCellSetName("scatter_pos");
   mir.SetLengthCellSetName("scatter_len");

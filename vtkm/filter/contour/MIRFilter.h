@@ -11,15 +11,14 @@
 #ifndef vtkm_m_filter_MIRFilter_h
 #define vtkm_m_filter_MIRFilter_h
 
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandlePermutation.h>
-
-#include <vtkm/filter/FilterDataSet.h>
-#include <vtkm/filter/FilterDataSetWithField.h>
+#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/contour/vtkm_filter_contour_export.h>
 
 namespace vtkm
 {
 namespace filter
+{
+namespace contour
 {
 /// @brief Calculates and subdivides a mesh based on the material interface reconstruction algorithm.
 ///
@@ -49,7 +48,7 @@ namespace filter
 ///     total error % of the entire dataset is less than the specified amount (defaults to 1.0, returns after first iteration). Finally,
 ///     the error scaling and scaling decay allows for setting how much the cell VFs should react to the delta between target and calculated cell VFs.
 ///     the error scaling will decay by the decay variable every iteration (multiplicitively).
-class MIRFilter : public vtkm::filter::FilterDataSet<MIRFilter>
+class VTKM_FILTER_CONTOUR_EXPORT MIRFilter : public vtkm::filter::NewFilterField
 {
 public:
   /// @brief Sets the name of the offset/position cellset field in the dataset passed to the filter
@@ -69,61 +68,9 @@ public:
   /// @brief Sets the output cell-set field name for the filter
   VTKM_CONT void SetOutputFieldName(std::string name) { this->OutputFieldName = name; }
 
-  template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          vtkm::filter::PolicyBase<DerivedPolicy>);
-
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input1,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy>)
-  {
-    (void)result;
-    (void)input1;
-    (void)fieldMeta;
-
-    if (fieldMeta.GetName().compare(this->pos_name) == 0 ||
-        fieldMeta.GetName().compare(this->len_name) == 0 ||
-        fieldMeta.GetName().compare(this->id_name) == 0 ||
-        fieldMeta.GetName().compare(this->vf_name) == 0)
-    {
-      // Remember, we will map the field manually...
-      // Technically, this will be for all of them...thus ignore it
-      return false;
-    }
-    vtkm::cont::ArrayHandle<T> output;
-    if (fieldMeta.IsPointField())
-    {
-      this->ProcessPointField(input1, output);
-    }
-    else if (fieldMeta.IsCellField())
-    {
-      this->ProcessCellField(input1, output);
-    }
-    else
-    {
-      return false;
-    }
-    result.AddField(fieldMeta.AsField(output));
-    return true;
-  }
-
 private:
-  // Linear storage requirement, scales with size of point output
-  template <typename T, typename StorageType, typename StorageType2>
-  VTKM_CONT void ProcessPointField(const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                   vtkm::cont::ArrayHandle<T, StorageType2>& output);
-
-  // NOTE: The below assumes that MIR will not change the cell values when subdividing.
-  template <typename T, typename StorageType, typename StorageType2>
-  VTKM_CONT void ProcessCellField(const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                  vtkm::cont::ArrayHandle<T, StorageType2>& output)
-  {
-    // Use a temporary permutation array to simplify the mapping:
-    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->filterCellInterp, input);
-    vtkm::cont::ArrayCopy(tmp, output);
-  }
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
+  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
 
   std::string pos_name;
   std::string len_name;
@@ -138,12 +85,8 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 8>> MIRWeights;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 8>> MIRIDs;
 };
-}
-
-}
-
-#ifndef vtk_m_filter_MIRFilter_hxx
-#include <vtkm/filter/MIRFilter.hxx>
-#endif
+} // namespace contour
+} // namespace filter
+} // namespace vtkm
 
 #endif

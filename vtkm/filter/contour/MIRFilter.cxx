@@ -8,38 +8,23 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_MIRFilter_hxx
-#define vtk_m_filter_MIRFilter_hxx
-
-#include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/cont/Timer.h>
 
-#include <vtkm/exec/FunctorBase.h>
-
-#include <vtkm/filter/contour/worklet/clip/ClipTables.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/DispatcherReduceByKey.h>
-#include <vtkm/worklet/Keys.h>
-#include <vtkm/worklet/MIR.h>
-#include <vtkm/worklet/ScatterCounting.h>
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
-#include <vtkm/worklet/WorkletReduceByKey.h>
+#include <vtkm/filter/MapFieldPermutation.h>
+#include <vtkm/filter/contour/MIRFilter.h>
+#include <vtkm/filter/contour/worklet/MIR.h>
 
 #include <vtkm/filter/mesh_info/worklet/MeshQuality.h>
+
+#include <vtkm/worklet/Keys.h>
+#include <vtkm/worklet/ScatterCounting.h>
 
 namespace vtkm
 {
@@ -50,31 +35,50 @@ namespace vtkm
  */
 namespace filter
 {
+namespace contour
+{
+VTKM_CONT bool MIRFilter::DoMapField(vtkm::cont::DataSet& result, const vtkm::cont::Field& field)
+{
+  if (field.GetName().compare(this->pos_name) == 0 ||
+      field.GetName().compare(this->len_name) == 0 || field.GetName().compare(this->id_name) == 0 ||
+      field.GetName().compare(this->vf_name) == 0)
+  {
+    // Remember, we will map the field manually...
+    // Technically, this will be for all of them...thus ignore it
+    return false;
+  }
 
-template <typename T, typename StorageType, typename StorageType2>
-inline VTKM_CONT void MIRFilter::ProcessPointField(
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  vtkm::cont::ArrayHandle<T, StorageType2>& output)
-{
-  vtkm::worklet::DestructPointWeightList destructWeightList;
-  this->Invoke(destructWeightList, this->MIRIDs, this->MIRWeights, input, output);
+  if (field.IsFieldPoint())
+  {
+    auto resolve = [&](const auto& concrete) {
+      using T = typename std::decay_t<decltype(concrete)>::ValueType;
+      vtkm::cont::ArrayHandle<T> outputArray;
+      vtkm::worklet::DestructPointWeightList destructWeightList;
+      this->Invoke(destructWeightList, this->MIRIDs, this->MIRWeights, concrete, outputArray);
+      result.AddPointField(field.GetName(), outputArray);
+    };
+    field.GetData()
+      .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
+        resolve);
+  }
+  else if (field.IsFieldCell())
+  {
+    return vtkm::filter::MapFieldPermutation(field, this->filterCellInterp, result);
+  }
+  else
+  {
+    return false;
+  }
+
+  return false;
 }
+
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
-  const vtkm::cont::DataSet& input,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& input)
 {
-  //{
-  //(void)input;
-  //(void)policy;
   vtkm::worklet::CheckFor2D cellCheck;
   vtkm::cont::ArrayHandle<vtkm::Id> count2D, count3D, countBad;
-  this->Invoke(cellCheck,
-               vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this),
-               count2D,
-               count3D,
-               countBad);
+  this->Invoke(cellCheck, input.GetCellSet(), count2D, count3D, countBad);
   vtkm::Id c2 = vtkm::cont::Algorithm::Reduce(count2D, vtkm::Id(0));
   vtkm::Id c3 = vtkm::cont::Algorithm::Reduce(count3D, vtkm::Id(0));
   vtkm::Id cB = vtkm::cont::Algorithm::Reduce(countBad, vtkm::Id(0));
@@ -102,10 +106,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
   vtkm::worklet::MeshQuality getVol;
   getVol.SetMetric(c3 > 0 ? vtkm::filter::mesh_info::CellMetric::Volume
                           : vtkm::filter::mesh_info::CellMetric::Area);
-  this->Invoke(getVol,
-               vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this),
-               inputCoords.GetData(),
-               avgSizeTot);
+  this->Invoke(getVol, input.GetCellSet(), inputCoords.GetData(), avgSizeTot);
   // First, load up all fields...
   vtkm::cont::Field or_pos = input.GetField(this->pos_name);
   vtkm::cont::Field or_len = input.GetField(this->len_name);
@@ -306,10 +307,7 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
     vtkm::cont::ArrayCopy(vfsOut, vfsdata);
     // Clean up the cells by calculating their volumes, and then calculate the relative error for each cell.
     // Note that the total error needs to be rescaled by the number of cells to get the % error.
-    totalError =
-      totalError /
-      vtkm::Float64(
-        vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this).GetNumberOfCells());
+    totalError = totalError / vtkm::Float64(input.GetCellSet().GetNumberOfCells());
     this->error_scaling *= this->scaling_decay;
 
     VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -323,11 +321,9 @@ inline VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(
     vtkm::cont::ArrayCopy(pointWeights, this->MIRWeights);
   } while ((++currentIterationNum <= this->max_iter) && totalError >= this->max_error);
 
-
+  // FIXME: where and how should we call DoMapeField?
   return saved;
 }
-}
-}
-
-
-#endif
+} // namespace contour
+} // namespace filter
+} // namespace vtkm
