@@ -419,10 +419,6 @@ protected:
   VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData);
 
-private:
-  VTKM_CONT
-  virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
-
   template <typename FieldMapper>
   VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input,
                                      vtkm::cont::DataSet& output,
@@ -437,6 +433,11 @@ private:
       }
     }
   }
+
+private:
+  VTKM_CONT
+  virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
+
 
   vtkm::filter::FieldSelection FieldsToPass = vtkm::filter::FieldSelection::Mode::All;
   bool RunFilterWithMultipleThreads = false;

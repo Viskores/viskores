@@ -17,6 +17,7 @@
 
 #include <vtkm/filter/vector_analysis/Gradient.h>
 
+#include <functional>
 
 namespace
 {

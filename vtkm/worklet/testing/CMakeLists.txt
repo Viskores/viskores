@@ -29,7 +29,6 @@ set(unit_tests
   UnitTestNormalize.cxx
   UnitTestNDimsHistMarginalization.cxx
   UnitTestParticleAdvection.cxx
-  UnitTestProbe.cxx
   UnitTestScalarsToColors.cxx
   UnitTestScatterAndMask.cxx
   UnitTestScatterCounting.cxx

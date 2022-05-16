@@ -7,13 +7,13 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/Probe.h>
+#include "vtkm/filter/resampling/Probe.h"
 
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/testing/Testing.h>
+#include "vtkm/cont/ArrayCopy.h"
+#include "vtkm/cont/DataSetBuilderUniform.h"
+#include "vtkm/cont/testing/Testing.h"
 
-#include <vtkm/worklet/CellDeepCopy.h>
+#include "vtkm/worklet/CellDeepCopy.h"
 
 namespace
 {
@@ -153,7 +153,7 @@ private:
     auto input = ConvertDataSetUniformToExplicit(MakeInputDataSet());
     auto geometry = MakeGeometryDataSet();
 
-    vtkm::filter::Probe probe;
+    vtkm::filter::resampling::Probe probe;
     probe.SetGeometry(geometry);
     probe.SetFieldsToPass({ "pointdata", "celldata" });
     auto output = probe.Execute(input);
@@ -175,7 +175,7 @@ private:
     auto input = MakeInputDataSet();
     auto geometry = ConvertDataSetUniformToExplicit(MakeGeometryDataSet());
 
-    vtkm::filter::Probe probe;
+    vtkm::filter::resampling::Probe probe;
     probe.SetGeometry(geometry);
     probe.SetFieldsToPass({ "pointdata", "celldata" });
     auto output = probe.Execute(input);
@@ -197,7 +197,7 @@ private:
     auto input = ConvertDataSetUniformToExplicit(MakeInputDataSet());
     auto geometry = ConvertDataSetUniformToExplicit(MakeGeometryDataSet());
 
-    vtkm::filter::Probe probe;
+    vtkm::filter::resampling::Probe probe;
     probe.SetGeometry(geometry);
     probe.SetFieldsToPass({ "pointdata", "celldata" });
     auto output = probe.Execute(input);
