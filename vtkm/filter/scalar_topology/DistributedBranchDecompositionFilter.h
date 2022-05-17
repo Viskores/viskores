@@ -39,13 +39,13 @@
 //
 //=============================================================================
 
-#ifndef vtk_m_filter_contour_tree_DistributedBranchDecompositionFilter_h
-#define vtk_m_filter_contour_tree_DistributedBranchDecompositionFilter_h
+#ifndef vtk_m_filter_scalar_topology_DistributedBranchDecompositionFilter_h
+#define vtk_m_filter_scalar_topology_DistributedBranchDecompositionFilter_h
 
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
-#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
+#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
 
 namespace vtkm
 {
@@ -67,12 +67,12 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes);
 
 private:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&) override;
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData) override;
 
   /// Information about the spatial decomposition
-  vtkm::worklet::contourtree_distributed::SpatialDecomposition MultiBlockSpatialDecomposition;
+  vtkm::filter::scalar_topology::internal::SpatialDecomposition MultiBlockSpatialDecomposition;
 };
 
 } // namespace scalar_topology

@@ -868,12 +868,12 @@ int main(int argc, char* argv[])
                                                      localBlockIndices,
                                                      localBlockOrigins,
                                                      localBlockSizes,
-                                                     useBoundaryExtremaOnly,
-                                                     useMarchingCubes,
-                                                     augmentHierarchicalTree,
-                                                     saveDotFiles,
                                                      timingsLogLevel,
                                                      treeLogLevel);
+  filter.SetUseBoundaryExtremaOnly(useBoundaryExtremaOnly);
+  filter.SetUseMarchingCubes(useMarchingCubes);
+  filter.SetAugmentHierarchicalTree(augmentHierarchicalTree);
+  filter.SetSaveDotFiles(saveDotFiles);
   filter.SetActiveField("values");
 
   // Execute the contour tree analysis
@@ -907,8 +907,9 @@ int main(int argc, char* argv[])
             std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
 
           std::ofstream treeStream(branchDecompositionFileName.c_str());
-          treeStream << vtkm::worklet::scalar_topology::HierarchicalVolumetricBranchDecomposer::
-              PrintBranches(ds);
+          treeStream
+            << vtkm::filter::scalar_topology::HierarchicalVolumetricBranchDecomposer::PrintBranches(
+                 ds);
         }
       }
       else

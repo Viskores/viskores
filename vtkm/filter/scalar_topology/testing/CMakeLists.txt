@@ -9,3 +9,20 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
 ##=============================================================================
+
+set(unit_tests
+  UnitTestDistributedBranchDecompositionFilter.cxx
+  )
+
+set(libraries
+  vtkm_filter_scalar_topology
+  vtkm_io
+  vtkm_source
+  )
+
+vtkm_unit_tests(
+  SOURCES ${unit_tests}
+  LIBRARIES ${libraries}
+  ALL_BACKENDS # uses vtkm::cont::Algorithm
+  USE_VTKM_JOB_POOL
+)

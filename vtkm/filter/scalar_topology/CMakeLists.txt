@@ -8,19 +8,14 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(scalar_topology_headers
-  BranchDecompositionBlock.h
-  ComputeDistributedBranchDecompositionFunctor.h
   DistributedBranchDecompositionFilter.h
   )
 
 set(scalar_topology_sources
-  BranchDecompositionBlock.cxx
-  ComputeDistributedBranchDecompositionFunctor.cxx
+  internal/BranchDecompositionBlock.cxx
+  internal/ComputeDistributedBranchDecompositionFunctor.cxx
   DistributedBranchDecompositionFilter.cxx
   )
-
-# TODO/FIXME: Is the following line needed
-# set_source_files_properties(DistributedBranchDecompositionFilter.cxx PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 
 vtkm_library(
   NAME vtkm_filter_scalar_topology
@@ -29,18 +24,13 @@ vtkm_library(
   USE_VTKM_JOB_POOL
 )
 
-# TODO/FIXME: Are the following lines needed
-# set_property(TARGET
-#  vtkm_filter_scalar_topology
-#  PROPERTY UNITY_BUILD_MODE GROUP
-# )
-
 target_link_libraries(vtkm_filter_scalar_topology PUBLIC vtkm_worklet vtkm_filter_core)
 if (VTKm_ENABLE_MPI)
   target_link_libraries(vtkm_filter_scalar_topology PUBLIC MPI::MPI_CXX)
 endif ()
 target_link_libraries(vtkm_filter PUBLIC INTERFACE vtkm_filter_scalar_topology)
 
+add_subdirectory(internal)
 add_subdirectory(worklet)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -

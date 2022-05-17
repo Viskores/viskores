@@ -10,6 +10,8 @@
 
 set(headers
   TestingContourTreeUniformDistributedFilter.h
+  VolumeHelper.h
+  SuperArcHelper.h
 )
 
 set(unit_tests

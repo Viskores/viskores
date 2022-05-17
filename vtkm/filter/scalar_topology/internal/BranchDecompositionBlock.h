@@ -50,26 +50,23 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_branchdecompositionblock_h
-#define vtk_m_worklet_contourtree_distributed_branchdecompositionblock_h
+#ifndef vtk_m_filter_scalar_topology_internal_BranchDecompositionBlock_h
+#define vtk_m_filter_scalar_topology_internal_BranchDecompositionBlock_h
 
-// Contour tree includes
+#include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
 namespace scalar_topology
+{
+namespace internal
 {
 
 struct BranchDecompositionBlock
 {
-  static vtkm::cont::ArrayHandleGroupVecVariable<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                                 vtkm::cont::ArrayHandle<vtkm::Id>>
-  CreateFirstsupernodePerIterationArrayHandle(
-    const vtkm::cont::DataSet& hierarchicalContourTreeDataSet);
-
   BranchDecompositionBlock(vtkm::Id localBlockNo,
                            int globalBlockId,
                            const vtkm::cont::DataSet& hierarchicalTreeDataSet);
@@ -91,7 +88,8 @@ struct BranchDecompositionBlock
   static void Destroy(void* b) { delete static_cast<BranchDecompositionBlock*>(b); }
 };
 
+} // namespace internal
 } // namespace scalar_topology
-} // namespace worklet
+} // namespace filter
 } // namespace vtkm
 #endif

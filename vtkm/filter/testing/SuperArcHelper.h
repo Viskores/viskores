@@ -38,57 +38,97 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
+//
+//  This code is an extension of the algorithm presented in the paper:
+//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
+//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
+//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
+//  (LDAV), October 2016, Baltimore, Maryland.
+//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_CollapseBranchesPointerDoublingWorklet_h
-#define vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_CollapseBranchesPointerDoublingWorklet_h
+#ifndef _vtk_m_filter_testing_SuperArchHelper_h_
+#define _vtk_m_filter_testing_SuperArchHelper_h_
 
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <algorithm>
+#include <vtkm/Types.h>
 
 namespace vtkm
 {
 namespace filter
 {
-namespace scalar_topology
+namespace testing
 {
-namespace hierarchical_volumetric_branch_decomposer
+namespace contourtree_uniform_distributed
 {
 
-class CollapseBranchesPointerDoublingWorklet : public vtkm::worklet::WorkletMapField
+class SuperArcHelper
 {
 public:
-  /// Control signature for the worklet
-  using ControlSignature = void(WholeArrayInOut branchRoot);
-  using ExecutionSignature = void(InputIndex, _1);
-  using InputDomain = _1;
+  std::vector<vtkm::Id3> branches;
+  void Parse(const std::string& str);
+  void Print(std::ostream& out) const;
+  void Load(const std::string& filename);
+  bool static Compare(const vtkm::Id3& LHS, const vtkm::Id3& RHS);
+};
 
-  /// Default Constructor
-  VTKM_EXEC_CONT
-  CollapseBranchesPointerDoublingWorklet() {}
+inline bool SuperArcHelper::Compare(const vtkm::Id3& LHS, const vtkm::Id3& RHS)
+{
+  std::vector<vtkm::Id> v1{ LHS[0], LHS[1], LHS[2] };
+  std::vector<vtkm::Id> v2{ RHS[0], RHS[1], RHS[2] };
 
-  /// operator() of the workelt
-  template <typename InOutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id superarc,
-                            const InOutFieldPortalType& branchRootPortal) const
+  return std::lexicographical_compare(v1.begin(), v1.end(), v2.begin(), v2.end());
+}
+
+inline void SuperArcHelper::Parse(const std::string& str)
+{
+  std::stringstream in(str);
+
+  while (!in.eof())
   {
-    vtkm::Id branchRootVal1 = branchRootPortal.Get(superarc);
-    vtkm::Id branchRootVal2 = branchRootPortal.Get(branchRootPortal.Get(superarc));
-    if (branchRootVal1 != branchRootVal2)
+    vtkm::Id3 branch;
+
+    in >> branch[0] >> branch[1] >> branch[2];
+
+    if (in.fail())
+      break;
+
+    if (std::find(this->branches.begin(), this->branches.end(), branch) == this->branches.end())
     {
-      branchRootPortal.Set(superarc, branchRootVal2);
+      this->branches.push_back(branch);
     }
-  } // operator()()
+  }
 
+  std::sort(this->branches.begin(), this->branches.end(), Compare);
+}
 
-}; // CollapseBranchesPointerDoublingWorklet
+inline void SuperArcHelper::Print(std::ostream& out) const
+{
+  for (auto it = std::begin(branches); it != std::end(branches); ++it)
+  {
+    vtkm::Id3 branch(*it);
 
-} // namespace hierarchical_volumetric_branch_decomposer
-} // namespace contourtree_distributed
-} // namespace worklet
-} // namespace vtkm
+    out << branch[0] << '\t' << branch[1] << '\t' << branch[2] << std::endl;
+  }
+}
+
+inline void SuperArcHelper::Load(const std::string& filename)
+{
+  this->branches.clear();
+
+  std::ifstream in(filename);
+  std::stringstream buffer;
+
+  buffer << in.rdbuf();
+  this->Parse(buffer.str());
+}
+
+}
+}
+}
+} // vtkm::filter::testing::contourtree_uniform_distributed
 
 #endif

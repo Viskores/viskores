@@ -50,7 +50,7 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include <vtkm/filter/scalar_topology/ComputeDistributedBranchDecompositionFunctor.h>
+#include <vtkm/filter/scalar_topology/internal/ComputeDistributedBranchDecompositionFunctor.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/FindBestSupernodeWorklet.h>
 
 #include <vtkm/Types.h>
@@ -61,13 +61,15 @@
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
 namespace scalar_topology
 {
+namespace internal
+{
 
 void ComputeDistributedBranchDecompositionFunctor::operator()(
-  vtkm::worklet::scalar_topology::BranchDecompositionBlock* b,
+  BranchDecompositionBlock* b,
   const vtkmdiy::ReduceProxy& rp,     // communication proxy
   const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
 ) const
@@ -195,9 +197,12 @@ void ComputeDistributedBranchDecompositionFunctor::operator()(
       auto bestDownSupernodeView =
         make_ArrayHandleView(branchDecomposer.BestDownSupernode, 0, prefixLength);
 
-      // TODO/FIXME: Check if it is possible to send a portion of the arrays
-      // without copy. enqueue does not accept ArrayHandleView as input as it
-      // is not trivially copyable
+      // TODO/FIXME: Currently a copy is required, as ArrayHandleView does not
+      // have a serialization function (and even serializing it would not avoid
+      // sending portions outside the "view"). At the moment, copying the data
+      // inside its view to an extra array seems to be the best approach. Possibly
+      // revisit this, if vtk-m adds additional functions that can help avoiding the
+      // extra copy.
       vtkm::cont::ArrayHandle<vtkm::Id> sendBestUpVolume;
       vtkm::cont::Algorithm::Copy(bestUpVolumeView, sendBestUpVolume);
       vtkm::cont::ArrayHandle<vtkm::Id> sendBestUpSupernode;
@@ -215,6 +220,7 @@ void ComputeDistributedBranchDecompositionFunctor::operator()(
   }
 }
 
+} // namespace internal
 } // namespace scalar_topology
-} // namespace worklet
+} // namespace filter
 } // namespace vtkm

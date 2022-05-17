@@ -116,8 +116,8 @@
 //=======================================================================================
 
 
-#ifndef vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_h
-#define vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_h
+#ifndef vtk_m_filter_scalar_topology_worklet_HierarchicalVolumetricBranchDecomposer_h
+#define vtk_m_filter_scalar_topology_worklet_HierarchicalVolumetricBranchDecomposer_h
 
 #include <iomanip>
 #include <string>
@@ -144,7 +144,7 @@
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
 namespace scalar_topology
 {
@@ -467,11 +467,8 @@ inline void HierarchicalVolumetricBranchDecomposer::CollapseBranches(
                                       .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
 
   // initialise the superarcs to be their own branch roots
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-             "Initializing branch root with " << branchRoot.GetNumberOfValues() << " values.");
   vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleIndex(branchRoot.GetNumberOfValues()), branchRoot);
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Convert to superarc ID.");
   //    For each supernode, convert the best up into a superarc ID
   {
     vtkm::worklet::contourtree_distributed::FindRegularByGlobal findRegularByGlobal{
@@ -493,7 +490,6 @@ inline void HierarchicalVolumetricBranchDecomposer::CollapseBranches(
                  branchRoot);
   }
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Pointer doubling.");
   // OK.  We've now initialized it, and can use pointer-doubling
   // Compute the number of log steps required
   vtkm::Id nLogSteps = 1;
@@ -506,7 +502,7 @@ inline void HierarchicalVolumetricBranchDecomposer::CollapseBranches(
   for (vtkm::Id iteration = 0; iteration < nLogSteps; iteration++)
   { // per iteration
     // loop through the vertices, updating
-    using vtkm::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
+    using vtkm::filter::scalar_topology::hierarchical_volumetric_branch_decomposer::
       CollapseBranchesPointerDoublingWorklet;
     this->Invoke(CollapseBranchesPointerDoublingWorklet{}, branchRoot);
   } // per iteration
@@ -562,7 +558,8 @@ std::string HierarchicalVolumetricBranchDecomposer::PrintBranches(
     // now retrieve the global ID & value for each end & output them
     vtkm::Id superFromRegularId = hierarchicalTreeSupernodesPortal.Get(superarc);
     vtkm::Id superFromGlobalId = hierarchicalTreeRegularNodeGlobalIdsPortal.Get(superFromRegularId);
-    vtkm::Float64 superFromValue = hierarchicalTreeDataValuesPortal.Get(superFromRegularId);
+    typename DataValueArrayHandleType::ValueType superFromValue =
+      hierarchicalTreeDataValuesPortal.Get(superFromRegularId);
     resultStream << branchRootGlobalId << "\t" << superFromValue << "\t" << superFromGlobalId
                  << std::endl;
 
@@ -570,7 +567,8 @@ std::string HierarchicalVolumetricBranchDecomposer::PrintBranches(
     vtkm::Id superToRegularId = vtkm::worklet::contourtree_augmented::MaskedIndex(
       hierarchicalTreeSuperarcsPortal.Get(superarc));
     vtkm::Id superToGlobalId = hierarchicalTreeRegularNodeGlobalIdsPortal.Get(superToRegularId);
-    vtkm::Float64 superToValue = hierarchicalTreeDataValuesPortal.Get(superToRegularId);
+    typename DataValueArrayHandleType::ValueType superToValue =
+      hierarchicalTreeDataValuesPortal.Get(superToRegularId);
     resultStream << branchRootGlobalId << "\t" << superToValue << "\t" << superToGlobalId
                  << std::endl;
   } // per superarc
@@ -644,7 +642,7 @@ inline std::string HierarchicalVolumetricBranchDecomposer::DebugPrint(std::strin
 } // DebugPrint()
 
 } // namespace scalar_topology
-} // namespace worklet
+} // namespace filter
 } // namespace vtkm
 
 

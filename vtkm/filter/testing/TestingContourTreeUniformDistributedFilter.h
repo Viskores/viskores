@@ -62,9 +62,14 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/ContourTreeUniformDistributed.h>
 #include <vtkm/filter/MapFieldPermutation.h>
+#include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
+#include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
+#include <vtkm/filter/testing/SuperArcHelper.h>
+#include <vtkm/filter/testing/VolumeHelper.h>
 #include <vtkm/io/ErrorIO.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_distributed/BranchCompiler.h>
 #include <vtkm/worklet/contourtree_distributed/TreeCompiler.h>
 
 namespace vtkm
@@ -232,11 +237,13 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   std::string fieldName,
   bool useMarchingCubes,
   int numberOfBlocks,
-  int rank = 0,
-  int numberOfRanks = 1)
+  int rank,
+  int numberOfRanks,
+  bool augmentHierarchicalTree,
+  bool computeHierarchicalVolumetricBranchDecomposition,
+  vtkm::Id3& globalSize)
 {
   // Get dimensions of data set
-  vtkm::Id3 globalSize;
   vtkm::cont::CastAndCall(
     ds.GetCellSet(), vtkm::worklet::contourtree_augmented::GetPointDimensions(), globalSize);
 
@@ -265,6 +272,7 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   localBlockIndices.Allocate(blocksOnThisRank);
   localBlockOrigins.Allocate(blocksOnThisRank);
   localBlockSizes.Allocate(blocksOnThisRank);
+
   auto localBlockIndicesPortal = localBlockIndices.WritePortal();
   auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
   auto localBlockSizesPortal = localBlockSizes.WritePortal();
@@ -286,18 +294,25 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
                                                      localBlockIndices,
                                                      localBlockOrigins,
                                                      localBlockSizes,
-                                                     // Freudenthal: Only use boundary extrema
-                                                     // MC: use all points on boundary
-                                                     // TODO/FIXME: Figure out why MC does not
-                                                     // work when only using boundary extrema
-                                                     !useMarchingCubes,
-                                                     useMarchingCubes,
-                                                     false, // no augmentationa
-                                                     false, // no save dot
                                                      vtkm::cont::LogLevel::UserVerboseLast,
                                                      vtkm::cont::LogLevel::UserVerboseLast);
+
+  filter.SetUseMarchingCubes(useMarchingCubes);
+  // Freudenthal: Only use boundary extrema; MC: use all points on boundary
+  // TODO/FIXME: Figure out why MC does not work when only using boundary extrema
+  filter.SetUseBoundaryExtremaOnly(!useMarchingCubes);
+  filter.SetAugmentHierarchicalTree(augmentHierarchicalTree);
   filter.SetActiveField(fieldName);
   auto result = filter.Execute(pds);
+
+  if (computeHierarchicalVolumetricBranchDecomposition)
+  {
+    using vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter;
+
+    DistributedBranchDecompositionFilter bd_filter(
+      blocksPerAxis, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
+    result = bd_filter.Execute(result);
+  }
 
   if (numberOfRanks == 1)
   {
@@ -363,6 +378,29 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
       return vtkm::cont::PartitionedDataSet{};
     }
   }
+}
+
+inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
+  const vtkm::cont::DataSet& ds,
+  std::string fieldName,
+  bool useMarchingCubes,
+  int numberOfBlocks,
+  int rank = 0,
+  int numberOfRanks = 1,
+  bool augmentHierarchicalTree = false,
+  bool computeHierarchicalVolumetricBranchDecomposition = false)
+{
+  vtkm::Id3 globalSize;
+
+  return RunContourTreeDUniformDistributed(ds,
+                                           fieldName,
+                                           useMarchingCubes,
+                                           numberOfBlocks,
+                                           rank,
+                                           numberOfRanks,
+                                           augmentHierarchicalTree,
+                                           computeHierarchicalVolumetricBranchDecomposition,
+                                           globalSize);
 }
 
 inline void TestContourTreeUniformDistributed8x9(int nBlocks, int rank = 0, int size = 1)
@@ -536,7 +574,9 @@ inline void TestContourTreeFile(std::string ds_filename,
                                 int nBlocks,
                                 bool marchingCubes = false,
                                 int rank = 0,
-                                int size = 1)
+                                int size = 1,
+                                bool augmentHierarchicalTree = false,
+                                bool computeHierarchicalVolumetricBranchDecomposition = false)
 {
   if (rank == 0)
   {
@@ -561,37 +601,130 @@ inline void TestContourTreeFile(std::string ds_filename,
     VTKM_TEST_FAIL(message.c_str());
   }
 
+  vtkm::Id3 globalSize;
+
   vtkm::cont::PartitionedDataSet result =
-    RunContourTreeDUniformDistributed(ds, fieldName, marchingCubes, nBlocks, rank, size);
+    RunContourTreeDUniformDistributed(ds,
+                                      fieldName,
+                                      marchingCubes,
+                                      nBlocks,
+                                      rank,
+                                      size,
+                                      augmentHierarchicalTree,
+                                      computeHierarchicalVolumetricBranchDecomposition,
+                                      globalSize);
 
   if (rank == 0)
   {
-    vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
-    for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
-    {
-      treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
-    }
-    treeCompiler.ComputeSuperarcs();
+    if (!augmentHierarchicalTree && computeHierarchicalVolumetricBranchDecomposition)
+      augmentHierarchicalTree = true;
 
-    std::vector<vtkm::worklet::contourtree_distributed::Edge> groundTruthSuperarcs =
-      ReadGroundTruthContourTree(gtct_filename);
-    if (groundTruthSuperarcs.size() < 50)
+    if (augmentHierarchicalTree)
     {
-      std::cout << "Computed Contour Tree" << std::endl;
-      treeCompiler.PrintSuperarcs();
+      if (computeHierarchicalVolumetricBranchDecomposition)
+      {
+        SuperArcHelper helper;
 
-      // Print the expected contour tree
-      std::cout << "Expected Contour Tree" << std::endl;
-      vtkm::worklet::contourtree_distributed::TreeCompiler::PrintSuperarcArray(
-        groundTruthSuperarcs);
+        for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+        {
+          auto lds = result.GetPartition(ds_no);
+
+          using vtkm::filter::scalar_topology::HierarchicalVolumetricBranchDecomposer;
+          helper.Parse(HierarchicalVolumetricBranchDecomposer::PrintBranches(lds));
+        }
+
+        std::stringstream out;
+
+        helper.Print(out);
+
+        std::stringstream in(out.str());
+        vtkm::worklet::contourtree_distributed::BranchCompiler compiler1, compiler2;
+
+        compiler1.Parse(in);
+        compiler2.Load(gtct_filename);
+
+        if (compiler1.branches != compiler2.branches)
+        {
+          std::cout << "Computed Branch Decomposition/BranchCompiler" << std::endl;
+          compiler1.Print(std::cout);
+          std::cout << "Expected Branch Decomposition/BranchCompiler" << std::endl;
+          compiler2.Print(std::cout);
+          VTKM_TEST_FAIL("Branch Decomposition/BranchCompiler FAILED");
+        }
+      }
+      else
+      {
+        VolumeHelper volumeHelper1, volumeHelper2;
+
+        for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+        {
+          auto lds = result.GetPartition(ds_no);
+          vtkm::worklet::contourtree_augmented::IdArrayType supernodes;
+          lds.GetField("Supernodes").GetData().AsArrayHandle(supernodes);
+          vtkm::worklet::contourtree_augmented::IdArrayType superarcs;
+          lds.GetField("Superarcs").GetData().AsArrayHandle(superarcs);
+          vtkm::worklet::contourtree_augmented::IdArrayType regularNodeGlobalIds;
+          lds.GetField("RegularNodeGlobalIds").GetData().AsArrayHandle(regularNodeGlobalIds);
+          vtkm::Id totalVolume = globalSize[0] * globalSize[1] * globalSize[2];
+          vtkm::worklet::contourtree_augmented::IdArrayType intrinsicVolume;
+          lds.GetField("IntrinsicVolume").GetData().AsArrayHandle(intrinsicVolume);
+          vtkm::worklet::contourtree_augmented::IdArrayType dependentVolume;
+          lds.GetField("DependentVolume").GetData().AsArrayHandle(dependentVolume);
+
+          std::string dumpVolumesString =
+            vtkm::worklet::contourtree_distributed::HierarchicalContourTree<
+              vtkm::Float32>::DumpVolumes(supernodes,
+                                          superarcs,
+                                          regularNodeGlobalIds,
+                                          totalVolume,
+                                          intrinsicVolume,
+                                          dependentVolume);
+
+          volumeHelper1.Parse(dumpVolumesString);
+        }
+
+        volumeHelper2.Load(gtct_filename);
+
+        if (volumeHelper1.volumes != volumeHelper2.volumes)
+        {
+          std::cout << "Computed AugmentHierarchicalTree:" << std::endl;
+          volumeHelper1.Print(std::cout);
+          std::cout << "Expected AugmentHierarchicalTree:" << std::endl;
+          volumeHelper2.Print(std::cout);
+
+          VTKM_TEST_FAIL("AugmentHierarchicalTree FAILED");
+        }
+      }
     }
     else
     {
-      std::cout << "Not printing computed and expected contour tree due to size." << std::endl;
-    }
+      vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
+      for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+      {
+        treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
+      }
+      treeCompiler.ComputeSuperarcs();
 
-    VTKM_TEST_ASSERT(treeCompiler.superarcs == groundTruthSuperarcs,
-                     "Test failed for data set " + ds_filename);
+      std::vector<vtkm::worklet::contourtree_distributed::Edge> groundTruthSuperarcs =
+        ReadGroundTruthContourTree(gtct_filename);
+      if (groundTruthSuperarcs.size() < 50)
+      {
+        std::cout << "Computed Contour Tree" << std::endl;
+        treeCompiler.PrintSuperarcs();
+
+        // Print the expected contour tree
+        std::cout << "Expected Contour Tree" << std::endl;
+        vtkm::worklet::contourtree_distributed::TreeCompiler::PrintSuperarcArray(
+          groundTruthSuperarcs);
+      }
+      else
+      {
+        std::cout << "Not printing computed and expected contour tree due to size." << std::endl;
+      }
+
+      VTKM_TEST_ASSERT(treeCompiler.superarcs == groundTruthSuperarcs,
+                       "Test failed for data set " + ds_filename);
+    }
   }
 }
 

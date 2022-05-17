@@ -70,6 +70,14 @@ public:
     TestContourTreeUniformDistributed8x9(4);
     TestContourTreeUniformDistributed8x9(8);
     TestContourTreeUniformDistributed8x9(16);
+    TestContourTreeUniformDistributed5x6x7(2, false);
+    TestContourTreeUniformDistributed5x6x7(4, false);
+    TestContourTreeUniformDistributed5x6x7(8, false);
+    TestContourTreeUniformDistributed5x6x7(16, false);
+    TestContourTreeUniformDistributed5x6x7(2, true);
+    TestContourTreeUniformDistributed5x6x7(4, true);
+    TestContourTreeUniformDistributed5x6x7(8, true);
+    TestContourTreeUniformDistributed5x6x7(16, true);
     TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
                         "var",
                         Testing::RegressionImagePath("vanc.ct_txt"),
@@ -86,14 +94,24 @@ public:
                         "var",
                         Testing::RegressionImagePath("vanc.ct_txt"),
                         16);
-    TestContourTreeUniformDistributed5x6x7(2, false);
-    TestContourTreeUniformDistributed5x6x7(4, false);
-    TestContourTreeUniformDistributed5x6x7(8, false);
-    TestContourTreeUniformDistributed5x6x7(16, false);
-    TestContourTreeUniformDistributed5x6x7(2, true);
-    TestContourTreeUniformDistributed5x6x7(4, true);
-    TestContourTreeUniformDistributed5x6x7(8, true);
-    TestContourTreeUniformDistributed5x6x7(16, true);
+    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
+                        "var",
+                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
+                        2,
+                        false,
+                        0,
+                        1,
+                        true,
+                        false);
+    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
+                        "var",
+                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
+                        4,
+                        false,
+                        0,
+                        1,
+                        true,
+                        false);
   }
 };
 }

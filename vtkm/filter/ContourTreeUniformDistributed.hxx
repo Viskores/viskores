@@ -64,6 +64,7 @@
 #include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
 
 // distributed contour tree includes
+#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
 #include <vtkm/worklet/contourtree_distributed/BoundaryTree.h>
 #include <vtkm/worklet/contourtree_distributed/BoundaryTreeMaker.h>
 #include <vtkm/worklet/contourtree_distributed/CombineHyperSweepBlockFunctor.h>
@@ -75,7 +76,6 @@
 #include <vtkm/worklet/contourtree_distributed/HyperSweepBlock.h>
 #include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
-#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
 #include <vtkm/worklet/contourtree_distributed/TreeGrafter.h>
 
 // DIY includes
@@ -195,9 +195,8 @@ void SaveHierarchicalTreeDot(
 
 } // end namespace contourtree_distributed_detail
 
-
 //-----------------------------------------------------------------------------
-// Main constructor
+// Deprecated constructor
 //-----------------------------------------------------------------------------
 ContourTreeUniformDistributed::ContourTreeUniformDistributed(
   vtkm::Id3 blocksPerDim,
@@ -216,6 +215,37 @@ ContourTreeUniformDistributed::ContourTreeUniformDistributed(
   , UseMarchingCubes(useMarchingCubes)
   , AugmentHierarchicalTree(augmentHierarchicalTree)
   , SaveDotFiles(saveDotFiles)
+  , TimingsLogLevel(timingsLogLevel)
+  , TreeLogLevel(treeLogLevel)
+  , MultiBlockSpatialDecomposition(blocksPerDim,
+                                   globalSize,
+                                   localBlockIndices,
+                                   localBlockOrigins,
+                                   localBlockSizes)
+  , LocalMeshes(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+  , LocalContourTrees(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+  , LocalBoundaryTrees(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+  , LocalInteriorForests(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+{
+  this->SetOutputFieldName("resultData");
+}
+
+//-----------------------------------------------------------------------------
+// Main constructor
+//-----------------------------------------------------------------------------
+ContourTreeUniformDistributed::ContourTreeUniformDistributed(
+  vtkm::Id3 blocksPerDim,
+  vtkm::Id3 globalSize,
+  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
+  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
+  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
+  vtkm::cont::LogLevel timingsLogLevel,
+  vtkm::cont::LogLevel treeLogLevel)
+  : vtkm::filter::FilterField<ContourTreeUniformDistributed>()
+  , UseBoundaryExtremaOnly(true)
+  , UseMarchingCubes(false)
+  , AugmentHierarchicalTree(false)
+  , SaveDotFiles(false)
   , TimingsLogLevel(timingsLogLevel)
   , TreeLogLevel(treeLogLevel)
   , MultiBlockSpatialDecomposition(blocksPerDim,
@@ -511,7 +541,7 @@ inline VTKM_CONT void ContourTreeUniformDistributed::PreExecute(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  if (vtkm::worklet::contourtree_distributed::SpatialDecomposition::GetGlobalNumberOfBlocks(
+  if (vtkm::filter::scalar_topology::internal::SpatialDecomposition::GetGlobalNumberOfBlocks(
         input) != this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks())
   {
     throw vtkm::cont::ErrorFilterExecution(
@@ -637,7 +667,6 @@ inline VTKM_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
   vtkm::cont::Timer timer;
   timer.Start();
 
-  // ******** 5. Compute associated metric (volume) ********
   using HyperSweepBlock = vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>;
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   vtkmdiy::Master hierarchical_hyper_sweep_master(comm,
@@ -1197,7 +1226,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     timer.Start();
   }
 
-  // ******** 5. Create output data set ********
+  // ******** 4. Create output data set ********
   std::vector<vtkm::cont::DataSet> hierarchicalTreeOutputDataSet(master.size());
   master.foreach ([&](DistributedContourTreeBlockData* blockData,
                       const vtkmdiy::Master::ProxyWithLink&) {
@@ -1255,7 +1284,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                  << blockData->HierarchicalTree.PrintTreeStats() << std::endl);
   }); // master.foreach
 
-  // 3.1 Log total augmentation time
+  // Log total tree computation and augmentation time
   timingsStream << "    " << std::setw(38) << std::left << "Create Output Data"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();

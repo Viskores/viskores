@@ -50,21 +50,26 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include <vtkm/filter/scalar_topology/BranchDecompositionBlock.h>
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
 
 // Contour tree includes, not ye moved to new filter design
 #include <vtkm/worklet/contourtree/Types.h>
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
 namespace scalar_topology
 {
+namespace internal
+{
 
+namespace
+{ // anonymous namespace to restrict defition to this translation unit
 vtkm::cont::ArrayHandleGroupVecVariable<vtkm::cont::ArrayHandle<vtkm::Id>,
                                         vtkm::cont::ArrayHandle<vtkm::Id>>
-BranchDecompositionBlock::CreateFirstsupernodePerIterationArrayHandle(
+CreateFirstsupernodePerIterationArrayHandle(
   const vtkm::cont::DataSet& hierarchicalContourTreeDataSet)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> FirstSupernodePerIterationComponents;
@@ -79,6 +84,7 @@ BranchDecompositionBlock::CreateFirstsupernodePerIterationArrayHandle(
   return vtkm::cont::make_ArrayHandleGroupVecVariable(FirstSupernodePerIterationComponents,
                                                       FirstSupernodePerIterationOffsets);
 }
+} // anonymous namespace to restrict defition to this translation unit
 
 BranchDecompositionBlock::BranchDecompositionBlock(
   vtkm::Id localBlockNo,
@@ -94,6 +100,7 @@ BranchDecompositionBlock::BranchDecompositionBlock(
                                     vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
 }
 
+} // namespace internal
 } // namespace scalar_topology
-} // namespace worklet
+} // namespace filter
 } // namespace vtkm

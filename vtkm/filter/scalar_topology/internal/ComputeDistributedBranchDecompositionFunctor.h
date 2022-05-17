@@ -38,16 +38,29 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
+//
+//  This code is an extension of the algorithm presented in the paper:
+//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
+//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
+//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
+//  (LDAV), October 2016, Baltimore, Maryland.
+//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_CollapseBranchesPointerDoublingWorklet_h
-#define vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_CollapseBranchesPointerDoublingWorklet_h
+#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
 
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
+
+// clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/diy/diy.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+// clang-format on
+
 
 namespace vtkm
 {
@@ -55,40 +68,20 @@ namespace filter
 {
 namespace scalar_topology
 {
-namespace hierarchical_volumetric_branch_decomposer
+namespace internal
 {
 
-class CollapseBranchesPointerDoublingWorklet : public vtkm::worklet::WorkletMapField
+struct ComputeDistributedBranchDecompositionFunctor
 {
-public:
-  /// Control signature for the worklet
-  using ControlSignature = void(WholeArrayInOut branchRoot);
-  using ExecutionSignature = void(InputIndex, _1);
-  using InputDomain = _1;
+  void operator()(BranchDecompositionBlock* b,
+                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
+                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
+  ) const;
+};
 
-  /// Default Constructor
-  VTKM_EXEC_CONT
-  CollapseBranchesPointerDoublingWorklet() {}
-
-  /// operator() of the workelt
-  template <typename InOutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id superarc,
-                            const InOutFieldPortalType& branchRootPortal) const
-  {
-    vtkm::Id branchRootVal1 = branchRootPortal.Get(superarc);
-    vtkm::Id branchRootVal2 = branchRootPortal.Get(branchRootPortal.Get(superarc));
-    if (branchRootVal1 != branchRootVal2)
-    {
-      branchRootPortal.Set(superarc, branchRootVal2);
-    }
-  } // operator()()
-
-
-}; // CollapseBranchesPointerDoublingWorklet
-
-} // namespace hierarchical_volumetric_branch_decomposer
-} // namespace contourtree_distributed
-} // namespace worklet
+} // namespace internal
+} // namespace scalar_topology
+} // namespace filter
 } // namespace vtkm
 
 #endif

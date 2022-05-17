@@ -50,35 +50,96 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed__h
-#define vtk_m_worklet_contourtree_distributed__h
+#ifndef _vtk_m_filter_testing_VolumeHelper_h_
+#define _vtk_m_filter_testing_VolumeHelper_h_
 
-#include <vtkm/filter/scalar_topology/BranchDecompositionBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <algorithm>
+#include <vtkm/Types.h>
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
-namespace scalar_topology
+namespace testing
+{
+namespace contourtree_uniform_distributed
 {
 
-struct ComputeDistributedBranchDecompositionFunctor
+class VolumeHelper
 {
-  void operator()(vtkm::worklet::scalar_topology::BranchDecompositionBlock* b,
-                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
-                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const;
+public:
+  typedef std::tuple<vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id> Volume;
+  std::vector<Volume> volumes;
+  void Parse(const std::string& str);
+  void Load(const std::string& filename);
+  void Print(std::ostream& out) const;
 };
 
-} // namespace scalar_topology
-} // namespace worklet
-} // namespace vtkm
+inline void VolumeHelper::Parse(const std::string& str)
+{
+  std::stringstream in(str);
+  std::string temp;
+
+  in >> temp;
+  in >> temp;
+  in >> temp;
+
+  while (!in.eof())
+  {
+    std::vector<vtkm::Id> ids;
+
+    for (int i = 0; i < 5; ++i)
+    {
+      vtkm::Id id;
+
+      in >> temp;
+      in >> id;
+      ids.push_back(id);
+    }
+
+    if (in.fail())
+      break;
+
+    Volume vol{ ids[0], ids[1], ids[2], ids[3], ids[4] };
+    if (std::find(this->volumes.begin(), this->volumes.end(), vol) == this->volumes.end())
+    {
+      this->volumes.push_back(vol);
+    }
+  }
+
+  std::sort(this->volumes.begin(), this->volumes.end());
+}
+
+inline void VolumeHelper::Print(std::ostream& out) const
+{
+  out << "============" << std::endl << "Contour Tree" << std::endl;
+
+  for (auto it = std::begin(this->volumes); it != std::end(this->volumes); ++it)
+  {
+    Volume volume(*it);
+
+    out << "H: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<0>(volume)
+        << " L: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<1>(volume)
+        << " VH: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<2>(volume)
+        << " VR: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<3>(volume)
+        << " VL: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<4>(volume) << std::endl;
+  }
+}
+
+inline void VolumeHelper::Load(const std::string& filename)
+{
+  this->volumes.clear();
+
+  std::ifstream in(filename);
+  std::stringstream buffer;
+
+  buffer << in.rdbuf();
+  this->Parse(buffer.str());
+}
+
+}
+}
+}
+} // vtkm::filter::testing::contourtree_uniform_distributed
 
 #endif

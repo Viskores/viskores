@@ -8,9 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/scalar_topology/BranchDecompositionBlock.h>
-#include <vtkm/filter/scalar_topology/ComputeDistributedBranchDecompositionFunctor.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
+#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
+#include <vtkm/filter/scalar_topology/internal/ComputeDistributedBranchDecompositionFunctor.h>
 
 // vtkm includes
 #include <vtkm/cont/Timer.h>
@@ -49,12 +50,11 @@ VTKM_CONT DistributedBranchDecompositionFilter::DistributedBranchDecompositionFi
 }
 
 VTKM_CONT vtkm::cont::DataSet DistributedBranchDecompositionFilter::DoExecute(
-  const vtkm::cont::DataSet& input)
+  const vtkm::cont::DataSet&)
 {
-  // TODO/FIXME: Is there a better way to do this?
-  return input; // Dummy function, not used
+  throw vtkm::cont::ErrorFilterExecution(
+    "DistributedBranchDecompositionFilter expects PartitionedDataSet as input.");
 }
-
 
 VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
@@ -71,7 +71,8 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
   int rank = comm.rank();
   int size = comm.size();
 
-  using BranchDecompositionBlock = vtkm::worklet::scalar_topology::BranchDecompositionBlock;
+  using BranchDecompositionBlock =
+    vtkm::filter::scalar_topology::internal::BranchDecompositionBlock;
   vtkmdiy::Master branch_decomposition_master(comm,
                                               1,  // Use 1 thread, VTK-M will do the treading
                                               -1, // All blocks in memory
@@ -227,10 +228,11 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
 
   // Reduce
   // partners for merge over regular block grid
-  vtkmdiy::reduce(branch_decomposition_master,
-                  assigner,
-                  partners,
-                  vtkm::worklet::scalar_topology::ComputeDistributedBranchDecompositionFunctor{});
+  vtkmdiy::reduce(
+    branch_decomposition_master,
+    assigner,
+    partners,
+    vtkm::filter::scalar_topology::internal::ComputeDistributedBranchDecompositionFunctor{});
 
   timingsStream << "    " << std::setw(60) << std::left
                 << "Exchanging best up/down supernode and volume"

@@ -977,39 +977,29 @@ void HierarchicalContourTree<FieldType>::ConvertSTLVecOfHandlesToVTKMComponentsA
 
   for (vtkm::Id i = 0; i < static_cast<vtkm::Id>(inputVec.size()); ++i)
   {
-    numComponentsWritePortal.Set(i, inputVec[i].GetNumberOfValues());
+    numComponentsWritePortal.Set(i,
+                                 static_cast<vtkm::IdComponent>(inputVec[i].GetNumberOfValues()));
   }
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-             "ConvertSTLVecOfHandlesToVTKMComponentsAndOffsetsArray: Converting to offsets");
   // Convert to offsets and store in output array
   vtkm::Id componentsArraySize;
   vtkm::cont::ConvertNumComponentsToOffsets(numComponents, outputOffsets, componentsArraySize);
 
   // Copy data to components array
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-             "ConvertSTLVecOfHandlesToVTKMComponentsAndOffsetsArray: Copying");
   auto outputOffsetsReadPortal = outputOffsets.ReadPortal();
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Allocating to " << componentsArraySize);
   outputComponents.Allocate(componentsArraySize);
   auto numComponentsReadPortal = numComponents.ReadPortal();
   for (vtkm::Id i = 0; i < static_cast<vtkm::Id>(inputVec.size()); ++i)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               "Creating view from " << outputOffsetsReadPortal.Get(i) << " size "
-                                     << numComponentsReadPortal.Get(i));
     auto outputView = vtkm::cont::make_ArrayHandleView(
       outputComponents, outputOffsetsReadPortal.Get(i), numComponentsReadPortal.Get(i));
     vtkm::cont::ArrayCopy(inputVec[i], outputView);
   }
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-             "ConvertSTLVecOfHandlesToVTKMComponentsAndOffsetsArray: Exit");
 }
 
 template <typename FieldType>
 void HierarchicalContourTree<FieldType>::AddToVTKMDataSet(vtkm::cont::DataSet& ds) const
 {
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "AddToVTKMDataSet");
   // Create data set from output
   vtkm::cont::Field regularNodeGlobalIdsField(
     "RegularNodeGlobalIds", vtkm::cont::Field::Association::WholeMesh, this->RegularNodeGlobalIds);
@@ -1045,8 +1035,6 @@ void HierarchicalContourTree<FieldType>::AddToVTKMDataSet(vtkm::cont::DataSet& d
     "WhichIteration", vtkm::cont::Field::Association::WholeMesh, this->WhichIteration);
   ds.AddField(whichIterationField);
   // TODO/FIXME: See what other fields we need to add
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-             "Calling ConvertSTLVecOfHandlesToVTKMComponentsAndOffsetsArray");
   vtkm::worklet::contourtree_augmented::IdArrayType firstSupernodePerIterationComponents;
   vtkm::cont::ArrayHandle<vtkm::Id> firstSupernodePerIterationOffsets;
   ConvertSTLVecOfHandlesToVTKMComponentsAndOffsetsArray(FirstSupernodePerIteration,

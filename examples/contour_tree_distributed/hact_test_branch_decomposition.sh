@@ -35,8 +35,8 @@ cat outsort${fileroot}_$2x$2.txt | ./BranchCompiler | sort > bcompile${fileroot}
 rm BranchDecomposition_Rank_*.txt outsort${fileroot}_$2x$2.txt
 
 echo "Diffing"
-echo diff bcompile${fileroot}_$2x$2.txt ${GTCT_DIR}/branch_decomposition_volume_${fileroot}.txt
-diff bcompile${fileroot}_$2x$2.txt ${GTCT_DIR}/branch_decomposition_volume_${fileroot}.txt
+echo diff bcompile${fileroot}_$2x$2.txt ${GTCT_DIR}/branch_decomposition_volume_hybrid_${fileroot}.txt
+diff bcompile${fileroot}_$2x$2.txt ${GTCT_DIR}/branch_decomposition_volume_hybrid_${fileroot}.txt
 
 if test $? -eq 0; then echo "${GREEN}Pass${NC}"; rm bcompile${fileroot}_$2x$2.txt; else echo "${RED}FAIL${NC}"; fi;
 

@@ -59,9 +59,8 @@
 //
 //=======================================================================================
 
-
-#ifndef vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_superarc_volumetric_comparator_indirect_globalid_comparator_h
-#define vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_superarc_volumetric_comparator_indirect_globalid_comparator_h
+#ifndef vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_SuperarcVolumetricComparatorIndirectGlobalIdComparator_h
+#define vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_SuperarcVolumetricComparatorIndirectGlobalIdComparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -75,7 +74,6 @@ namespace scalar_topology
 {
 namespace hierarchical_volumetric_branch_decomposer
 {
-
 
 /// Implementation of the comparator for the SuperArcVolumetricComparatorIndirectGlobalId ExecutionObject
 class SuperArcVolumetricComparatorIndirectGlobalIdComparatorImpl

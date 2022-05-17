@@ -56,12 +56,12 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
 #include <vtkm/worklet/contourtree_distributed/BoundaryTree.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
 #include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
-#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
 
 #include <vtkm/filter/FilterField.h>
 
@@ -110,6 +110,9 @@ public:
   /// @param[in] treeLogLevel Set the vtkm::cont:LogLevel to be used to record metadata information
   ///                         about the various trees computed as part of the hierarchical contour tree compute
   VTKM_CONT
+  VTKM_DEPRECATED(1.8,
+                  "ContourTreeUniformDistributed no longer requires flags as part of constructor. "
+                  "Use appropriate Set<X> methods.")
   ContourTreeUniformDistributed(
     vtkm::Id3 blocksPerDim, // TODO/FIXME: Possibly pass SpatialDecomposition object instead
     vtkm::Id3 globalSize,
@@ -122,6 +125,41 @@ public:
     bool saveDotFiles = false,
     vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
     vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info);
+
+  VTKM_CONT
+  ContourTreeUniformDistributed(
+    vtkm::Id3 blocksPerDim, // TODO/FIXME: Possibly pass SpatialDecomposition object instead
+    vtkm::Id3 globalSize,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
+    vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
+    vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info);
+
+  VTKM_CONT void SetUseBoundaryExtremaOnly(bool useBoundaryExtremaOnly)
+  {
+    this->UseBoundaryExtremaOnly = useBoundaryExtremaOnly;
+  }
+
+  VTKM_CONT bool GetUseBoundaryExtremaOnly() { return this->UseBoundaryExtremaOnly; }
+
+  VTKM_CONT void SetUseMarchingCubes(bool useMarchingCubes)
+  {
+    this->UseMarchingCubes = useMarchingCubes;
+  }
+
+  VTKM_CONT bool GetUseMarchingCubes() { return this->UseMarchingCubes; }
+
+  VTKM_CONT void SetAugmentHierarchicalTree(bool augmentHierarchicalTree)
+  {
+    this->AugmentHierarchicalTree = augmentHierarchicalTree;
+  }
+
+  VTKM_CONT bool GetAugmentHierarchicalTree() { return this->AugmentHierarchicalTree; }
+
+  VTKM_CONT void SetSaveDotFiles(bool saveDotFiles) { this->SaveDotFiles = saveDotFiles; }
+
+  VTKM_CONT bool GetSaveDotFiles() { return this->SaveDotFiles; }
 
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::PartitionedDataSet PrepareForExecution(
@@ -206,7 +244,7 @@ private:
   vtkm::cont::LogLevel TreeLogLevel = vtkm::cont::LogLevel::Info;
 
   /// Information about the spatial decomposition
-  vtkm::worklet::contourtree_distributed::SpatialDecomposition MultiBlockSpatialDecomposition;
+  vtkm::filter::scalar_topology::internal::SpatialDecomposition MultiBlockSpatialDecomposition;
 
   /// Intermediate results (one per local data block)...
   /// ... local mesh information needed at end of fan out

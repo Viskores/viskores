@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_spatialdecomposition_h
-#define vtk_m_worklet_contourtree_distributed_spatialdecomposition_h
+#ifndef vtk_m_filter_scalar_topology_internal_SpatialDecomposition_h
+#define vtk_m_filter_scalar_topology_internal_SpatialDecomposition_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/BoundsCompute.h>
@@ -69,9 +69,11 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
-namespace contourtree_distributed
+namespace scalar_topology
+{
+namespace internal
 {
 
 // --- Helper class to store the spatial decomposition defined by the PartitionedDataSet input data
@@ -162,8 +164,9 @@ public:
 };
 
 
-} // namespace contourtree_distributed
-} // namespace worklet
+} // internal
+} // namespace scalar_topology
+} // namespace filter
 } // namespace vtkm
 
 #endif

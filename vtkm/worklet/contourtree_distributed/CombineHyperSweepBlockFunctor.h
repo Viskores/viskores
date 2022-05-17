@@ -119,20 +119,15 @@ struct CobmineHyperSweepBlockFunctor
         VTKM_ASSERT(incomingIntrinsicVolume.GetNumberOfValues() ==
                     intrinsicVolumeView.GetNumberOfValues());
 
-        vtkm::cont::ArrayHandle<vtkm::Id> tempSum;
-        // TODO/FIXME: Is there a way to do an in-place transform without a temporary array?
         vtkm::cont::Algorithm::Transform(
-          intrinsicVolumeView, incomingIntrinsicVolume, tempSum, vtkm::Sum());
-        vtkm::cont::ArrayCopy(tempSum, intrinsicVolumeView);
+          intrinsicVolumeView, incomingIntrinsicVolume, intrinsicVolumeView, vtkm::Sum());
 
         auto dependentVolumeView =
           make_ArrayHandleView(b->DependentVolume, 0, numSupernodesToProcess);
         VTKM_ASSERT(incomingDependentVolume.GetNumberOfValues() ==
                     dependentVolumeView.GetNumberOfValues());
-        // TODO/FIXME: Is there a way to do an in-place transform without a temporary array?
         vtkm::cont::Algorithm::Transform(
-          dependentVolumeView, incomingDependentVolume, tempSum, vtkm::Sum());
-        vtkm::cont::ArrayCopy(tempSum, dependentVolumeView);
+          dependentVolumeView, incomingDependentVolume, dependentVolumeView, vtkm::Sum());
       }
     }
 
@@ -152,9 +147,12 @@ struct CobmineHyperSweepBlockFunctor
           make_ArrayHandleView(b->IntrinsicVolume, 0, numSupernodesToProcess);
         auto dependentVolumeView =
           make_ArrayHandleView(b->DependentVolume, 0, numSupernodesToProcess);
-        // TODO/FIXME: Check if it is possible to send a portion of the arrays
-        // without copy. enqueue does not accept ArrayHandleView as input as it
-        // is not trivially copyable
+        // TODO/FIXME: Currently a copy is required, as ArrayHandleView does not
+        // have a serialization function (and even serializing it would not avoid
+        // sending portions outside the "view"). At the moment, copying the data
+        // inside its view to an extra array seems to be the best approach. Possibly
+        // revisit this, if vtk-m adds additional functions that can help avoiding the
+        // extra copy.
         vtkm::cont::ArrayHandle<vtkm::Id> sendIntrinsicVolume;
         vtkm::cont::ArrayCopy(intrinsicVolumeView, sendIntrinsicVolume);
         vtkm::cont::ArrayHandle<vtkm::Id> sendDependentVolume;

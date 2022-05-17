@@ -65,67 +65,13 @@
 //
 //=======================================================================================
 
-#include <iostream>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_distributed/BranchCompiler.h>
 
 int main()
 { // main()
-  // variables tracking the best & worst so far for this extent
-  vtkm::Id currentBranch = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
-  // this is slightly tricky, since we don't know the range of the data type
-  // yet, but we can initialize to 0 for both floats and integers, then test on
-  // current branch
-  vtkm::Float64 highValue = 0;
-  vtkm::Float64 lowValue = 0;
-  vtkm::Id highEnd = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
-  vtkm::Id lowEnd = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+  vtkm::worklet::contourtree_distributed::BranchCompiler compiler;
 
-  // values to read in
-  vtkm::Id nextBranch;
-  vtkm::Float64 nextValue;
-  vtkm::Id nextSupernode;
-
-  while (true)
-  { // until stream goes bad
-    // read the next triple
-    std::cin >> nextBranch >> nextValue >> nextSupernode;
-
-    // test in the middle before processing
-    if (std::cin.eof())
-      break;
-
-    // test to see if the branch is different from the current one
-    if (nextBranch != currentBranch)
-    { // new branch
-      // special test for initial one
-      if (!vtkm::worklet::contourtree_augmented::NoSuchElement(currentBranch))
-        printf("%12llu  %12llu\n", highEnd, lowEnd);
-
-      // set the high & low value ends to this one
-      highValue = nextValue;
-      lowValue = nextValue;
-      highEnd = nextSupernode;
-      lowEnd = nextSupernode;
-
-      // and reset the branch ID
-      currentBranch = nextBranch;
-    } // new branch
-    else
-    { // existing branch
-      // test value with simulation of simplicity
-      if ((nextValue > highValue) || ((nextValue == highValue) && (nextSupernode > highEnd)))
-      { // new high end
-        highEnd = nextSupernode;
-        highValue = nextValue;
-      } // new high end
-      // test value with simulation of simplicity
-      else if ((nextValue < lowValue) || ((nextValue == lowValue) && (nextSupernode < lowEnd)))
-      { // new low end
-        lowEnd = nextSupernode;
-        lowValue = nextValue;
-      } // new low end
-    }   // existing branch
-  }     // until stream goes bad
-
-  printf("%12llu  %12llu\n", highEnd, lowEnd);
+  compiler.Parse(std::cin);
+  compiler.Print(std::cout);
+  return 0;
 } // main()

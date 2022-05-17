@@ -43,8 +43,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_combine_branch_decomposers_worklet_h
-#define vtk_m_worklet_scalar_topology_hierarchical_volumetric_branch_decomposer_combine_branch_decomposers_worklet_h
+#ifndef vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_FindBestSupernodeWorklet_h
+#define vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_FindBestSupernodeWorklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 
