@@ -20,4 +20,5 @@ vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
   USE_VTKM_JOB_POOL
+  ALL_AKENDS # uses CellDeepCopy
 )

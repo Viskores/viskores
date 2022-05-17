@@ -7,13 +7,13 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include "vtkm/filter/resampling/Probe.h"
+#include <vtkm/filter/resampling/Probe.h>
 
-#include "vtkm/cont/ArrayCopy.h"
-#include "vtkm/cont/DataSetBuilderUniform.h"
-#include "vtkm/cont/testing/Testing.h"
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/testing/Testing.h>
 
-#include "vtkm/worklet/CellDeepCopy.h"
+#include <vtkm/worklet/CellDeepCopy.h>
 
 namespace
 {
