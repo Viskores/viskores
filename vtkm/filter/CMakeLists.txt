@@ -38,7 +38,7 @@ set(deprecated_headers
   Mask.h
   MaskPoints.h
   MeshQuality.h
-#  MIRFilter.h
+  MIRFilter.h
   NDEntropy.h
   NDHistogram.h
   ParticleDensityCloudInCell.h
