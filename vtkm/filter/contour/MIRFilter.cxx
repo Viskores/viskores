@@ -60,6 +60,7 @@ VTKM_CONT bool MIRFilter::DoMapField(vtkm::cont::DataSet& result, const vtkm::co
     field.GetData()
       .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
         resolve);
+    return true;
   }
   else if (field.IsFieldCell())
   {
