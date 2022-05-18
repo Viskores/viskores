@@ -45,6 +45,7 @@ set(deprecated_headers
   PointAverage.h
   PointElevation.h
   PointTransform.h
+  Probe.h
   Slice.h
   SplitSharpEdges.h
   SurfaceNormals.h
@@ -106,7 +107,6 @@ set(extra_headers
   ParticleAdvection.h
   Pathline.h
   PathParticle.h
-  Probe.h
   Streamline.h
   StreamSurface.h
   )
@@ -122,7 +122,6 @@ set(extra_header_template_sources
   ParticleAdvection.hxx
   Pathline.hxx
   PathParticle.hxx
-  Probe.hxx
   Streamline.hxx
   StreamSurface.hxx
   )
@@ -200,6 +199,7 @@ add_subdirectory(field_conversion)
 add_subdirectory(field_transform)
 add_subdirectory(geometry_refinement)
 add_subdirectory(mesh_info)
+add_subdirectory(resampling)
 add_subdirectory(vector_analysis)
 add_subdirectory(zfp)
 

@@ -25,7 +25,6 @@ set(unit_tests
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx
-  UnitTestProbe.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestStreamSurfaceFilter.cxx
 )
