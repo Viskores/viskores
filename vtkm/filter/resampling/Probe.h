@@ -31,8 +31,7 @@ public:
   void SetGeometry(const vtkm::cont::DataSet& geometry)
   {
     this->Geometry = vtkm::cont::DataSet();
-    this->Geometry.SetCellSet(geometry.GetCellSet());
-    this->Geometry.AddCoordinateSystem(geometry.GetCoordinateSystem());
+    this->Geometry.CopyStructure(geometry);
   }
 
   VTKM_CONT

@@ -419,6 +419,7 @@ protected:
   VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData);
 
+private:
   template <typename FieldMapper>
   VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input,
                                      vtkm::cont::DataSet& output,
@@ -434,7 +435,6 @@ protected:
     }
   }
 
-private:
   VTKM_CONT
   virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
 

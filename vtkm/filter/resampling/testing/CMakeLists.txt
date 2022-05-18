@@ -13,6 +13,7 @@ set(unit_tests
   )
 
 set(libraries
+  vtkm_filter_clean_grid
   vtkm_filter_resampling
   )
 
@@ -20,5 +21,4 @@ vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
   USE_VTKM_JOB_POOL
-  ALL_BACKENDS # uses CellDeepCopy
 )

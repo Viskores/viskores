@@ -7,11 +7,12 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/resampling/Probe.h>
-
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
+
+#include <vtkm/filter/clean_grid/CleanGrid.h>
+#include <vtkm/filter/resampling/Probe.h>
 
 #include <vtkm/worklet/CellDeepCopy.h>
 
@@ -46,22 +47,9 @@ vtkm::cont::DataSet MakeGeometryDataSet()
 
 vtkm::cont::DataSet ConvertDataSetUniformToExplicit(const vtkm::cont::DataSet& uds)
 {
-  vtkm::cont::DataSet eds;
-  vtkm::cont::CellSetExplicit<> cs;
-  vtkm::worklet::CellDeepCopy::Run(uds.GetCellSet(), cs);
-  eds.SetCellSet(cs);
-
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> points;
-  vtkm::cont::ArrayCopy(uds.GetCoordinateSystem().GetData(), points);
-  eds.AddCoordinateSystem(
-    vtkm::cont::CoordinateSystem(uds.GetCoordinateSystem().GetName(), points));
-
-  for (vtkm::IdComponent i = 0; i < uds.GetNumberOfFields(); ++i)
-  {
-    eds.AddField(uds.GetField(i));
-  }
-
-  return eds;
+  vtkm::filter::clean_grid::CleanGrid toUnstructured;
+  toUnstructured.SetMergePoints(true);
+  return toUnstructured.Execute(uds);
 }
 
 const std::vector<vtkm::Float32>& GetExpectedPointData()

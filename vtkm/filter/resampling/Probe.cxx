@@ -26,15 +26,12 @@ vtkm::cont::DataSet Probe::DoExecute(const vtkm::cont::DataSet& input)
               input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
               this->Geometry.GetCoordinateSystem().GetData());
 
-  auto output = this->Geometry;
-  auto hpf = worklet.GetHiddenPointsField();
-  auto hcf = worklet.GetHiddenCellsField(output.GetCellSet());
-
-  output.AddField(vtkm::cont::make_FieldPoint("HIDDEN", hpf));
-  output.AddField(vtkm::cont::make_FieldCell("HIDDEN", hcf));
-
   auto mapper = [&](auto& outDataSet, const auto& f) { this->DoMapField(outDataSet, f, worklet); };
-  this->MapFieldsOntoOutput(input, output, mapper);
+  auto output = this->CreateResult(
+    input, this->Geometry.GetCellSet(), this->Geometry.GetCoordinateSystems(), mapper);
+  output.AddField(vtkm::cont::make_FieldPoint("HIDDEN", worklet.GetHiddenPointsField()));
+  output.AddField(
+    vtkm::cont::make_FieldCell("HIDDEN", worklet.GetHiddenCellsField(output.GetCellSet())));
 
   return output;
 }
@@ -52,8 +49,9 @@ bool Probe::DoMapField(vtkm::cont::DataSet& result,
         concrete, vtkm::cont::internal::CastInvalidValue<T>(this->InvalidValue));
       result.AddPointField(field.GetName(), outputArray);
     };
-    // FIXME: what kind of CastAndCall do we need?
-    CastAndCall(field.GetData(), resolve);
+    field.GetData()
+      .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
+        resolve);
     return true;
   }
   else if (field.IsFieldCell())
