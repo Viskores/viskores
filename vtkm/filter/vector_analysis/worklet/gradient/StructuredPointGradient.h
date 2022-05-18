@@ -89,34 +89,34 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
     if (boundary.IsRadiusInXBoundary(1))
     {
       auto dx = inputField.GetUnchecked(1, 0, 0) - inputField.GetUnchecked(-1, 0, 0);
-      outputGradient[0] = static_cast<OT>(dx * (r[0] * 0.5f));
+      outputGradient[0] = static_cast<OT>((dx * 0.5f) / r[0]);
     }
     else
     {
       auto dx = inputField.Get(1, 0, 0) - inputField.Get(-1, 0, 0);
-      outputGradient[0] = static_cast<OT>(dx * r[0]);
+      outputGradient[0] = static_cast<OT>(dx / r[0]);
     }
 
     if (boundary.IsRadiusInYBoundary(1))
     {
       auto dy = inputField.GetUnchecked(0, 1, 0) - inputField.GetUnchecked(0, -1, 0);
-      outputGradient[1] = static_cast<OT>(dy * r[1] * 0.5f);
+      outputGradient[1] = static_cast<OT>((dy * 0.5f) / r[1]);
     }
     else
     {
       auto dy = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
-      outputGradient[1] = static_cast<OT>(dy * (r[1]));
+      outputGradient[1] = static_cast<OT>(dy / (r[1]));
     }
 
     if (boundary.IsRadiusInZBoundary(1))
     {
       auto dz = inputField.GetUnchecked(0, 0, 1) - inputField.GetUnchecked(0, 0, -1);
-      outputGradient[2] = static_cast<OT>(dz * r[2] * 0.5f);
+      outputGradient[2] = static_cast<OT>((dz * 0.5f) / r[2]);
     }
     else
     {
       auto dz = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
-      outputGradient[2] = static_cast<OT>(dz * (r[2]));
+      outputGradient[2] = static_cast<OT>(dz / (r[2]));
     }
 #if (defined(VTKM_CUDA) && defined(VTKM_GCC))
 #pragma GCC diagnostic pop

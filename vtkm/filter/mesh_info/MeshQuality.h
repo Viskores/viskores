@@ -34,7 +34,7 @@ namespace mesh_info
 enum struct CellMetric
 {
   Area,
-  AspectGama,
+  AspectGamma,
   AspectRatio,
   Condition,
   DiagonalRatio,
@@ -132,8 +132,8 @@ enum struct VTKM_DEPRECATED(1.8 "Use vtkm::filter::mesh_info::CellMetric.") Cell
   EMPTY
 };
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::MeshQuality.") MeshQuality
-  : public vtkm::filter::mesh_info::MeshQuality
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::MeshQuality.")
+  VTKM_FILTER_MESH_INFO_EXPORT MeshQuality : public vtkm::filter::mesh_info::MeshQuality
 {
   VTKM_DEPRECATED_SUPPRESS_BEGIN
   static vtkm::filter::mesh_info::CellMetric ConvertCellMetric(

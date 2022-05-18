@@ -121,7 +121,7 @@ private:
           if (dims != 2)
             metricValue = 0.;
           break;
-        case vtkm::filter::mesh_info::CellMetric::AspectGama:
+        case vtkm::filter::mesh_info::CellMetric::AspectGamma:
           metricValue =
             vtkm::worklet::cellmetrics::CellAspectGammaMetric<OutType>(numPts, pts, tag, ec);
           break;

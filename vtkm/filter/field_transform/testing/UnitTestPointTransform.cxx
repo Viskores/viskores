@@ -102,10 +102,11 @@ void TestPointTransformTranslation(const vtkm::cont::DataSet& ds, const vtkm::Ve
 
   filter.SetOutputFieldName("translation");
   filter.SetTranslation(trans);
+  VTKM_TEST_ASSERT(filter.GetChangeCoordinateSystem() == true);
   vtkm::cont::DataSet result = filter.Execute(ds);
 
   ValidatePointTransform(
-    ds.GetCoordinateSystem(), "translation", result, Transform3DTranslate(trans));
+    ds.GetCoordinateSystem(), "translation", result, vtkm::Transform3DTranslate(trans));
 }
 
 void TestPointTransformScale(const vtkm::cont::DataSet& ds, const vtkm::Vec3f& scale)
@@ -114,9 +115,10 @@ void TestPointTransformScale(const vtkm::cont::DataSet& ds, const vtkm::Vec3f& s
 
   filter.SetOutputFieldName("scale");
   filter.SetScale(scale);
+  filter.SetChangeCoordinateSystem(true);
   vtkm::cont::DataSet result = filter.Execute(ds);
 
-  ValidatePointTransform(ds.GetCoordinateSystem(), "scale", result, Transform3DScale(scale));
+  ValidatePointTransform(ds.GetCoordinateSystem(), "scale", result, vtkm::Transform3DScale(scale));
 }
 
 void TestPointTransformRotation(const vtkm::cont::DataSet& ds,
@@ -130,7 +132,19 @@ void TestPointTransformRotation(const vtkm::cont::DataSet& ds,
   vtkm::cont::DataSet result = filter.Execute(ds);
 
   ValidatePointTransform(
-    ds.GetCoordinateSystem(), "rotation", result, Transform3DRotate(angle, axis));
+    ds.GetCoordinateSystem(), "rotation", result, vtkm::Transform3DRotate(angle, axis));
+}
+
+void TestPointTransformGeneral(const vtkm::cont::DataSet& ds,
+                               const vtkm::Matrix<vtkm::FloatDefault, 4, 4>& transform)
+{
+  vtkm::filter::field_transform::PointTransform filter;
+
+  auto fieldName = filter.GetOutputFieldName();
+  filter.SetTransform(transform);
+  vtkm::cont::DataSet result = filter.Execute(ds);
+
+  ValidatePointTransform(ds.GetCoordinateSystem(), fieldName, result, transform);
 }
 }
 
@@ -190,6 +204,14 @@ void TestPointTransform()
   for (auto& angle : angles)
     for (auto& axe : axes)
       TestPointTransformRotation(ds, angle, axe);
+
+  //Test general
+  auto transform = vtkm::Transform3DTranslate(vtkm::Vec3f{ 1, 1, 1 });
+  transform =
+    vtkm::MatrixMultiply(transform, vtkm::Transform3DScale(static_cast<vtkm::FloatDefault>(1.5f)));
+  transform = vtkm::MatrixMultiply(transform,
+                                   vtkm::Transform3DRotateX(static_cast<vtkm::FloatDefault>(90.f)));
+  TestPointTransformGeneral(ds, transform);
 }
 
 

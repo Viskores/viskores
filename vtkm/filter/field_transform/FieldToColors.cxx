@@ -105,7 +105,7 @@ VTKM_CONT FieldToColors::FieldToColors(const vtkm::cont::ColorTable& table)
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void FieldToColors::SetNumberOfSamplingPoints(vtkm::Int32 count)
+VTKM_CONT void FieldToColors::SetNumberOfSamplingPoints(vtkm::Int32 count)
 {
   if (this->SampleCount != count && count > 0)
   {

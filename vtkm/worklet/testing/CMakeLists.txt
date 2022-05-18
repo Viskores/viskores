@@ -29,7 +29,6 @@ set(unit_tests
   UnitTestNormalize.cxx
   UnitTestNDimsHistMarginalization.cxx
   UnitTestParticleAdvection.cxx
-  UnitTestProbe.cxx
   UnitTestScalarsToColors.cxx
   UnitTestScatterAndMask.cxx
   UnitTestScatterCounting.cxx
@@ -52,13 +51,6 @@ set(unit_tests
   UnitTestWorkletReduceByKey.cxx
   UnitTestWaveletCompressor.cxx
  )
-
-if(HIP IN_LIST Kokkos_DEVICES)
-  list(REMOVE_ITEM unit_tests
-       UnitTestParticleAdvection.cxx # Taking too long to compile with HIPCC
-       UnitTestScalarsToColors.cxx # Failing: incorrect results
-  )
-endif()
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}

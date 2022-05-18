@@ -34,7 +34,7 @@ namespace
 //the output dataset fields
 const std::map<CellMetric, std::string> MetricNames = {
   { CellMetric::Area, "area" },
-  { CellMetric::AspectGama, "aspectGamma" },
+  { CellMetric::AspectGamma, "aspectGamma" },
   { CellMetric::AspectRatio, "aspectRatio" },
   { CellMetric::Condition, "condition" },
   { CellMetric::DiagonalRatio, "diagonalRatio" },
@@ -144,7 +144,7 @@ vtkm::filter::mesh_info::CellMetric MeshQuality::ConvertCellMetric(
     case vtkm::filter::CellMetric::AREA:
       return vtkm::filter::mesh_info::CellMetric::Area;
     case vtkm::filter::CellMetric::ASPECT_GAMMA:
-      return vtkm::filter::mesh_info::CellMetric::AspectGama;
+      return vtkm::filter::mesh_info::CellMetric::AspectGamma;
     case vtkm::filter::CellMetric::ASPECT_RATIO:
       return vtkm::filter::mesh_info::CellMetric::AspectRatio;
     case vtkm::filter::CellMetric::CONDITION:

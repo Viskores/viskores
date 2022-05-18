@@ -25,13 +25,13 @@ VTKM_CONT PointTransform::PointTransform()
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void PointTransform::SetChangeCoordinateSystem(bool flag)
+VTKM_CONT void PointTransform::SetChangeCoordinateSystem(bool flag)
 {
   this->ChangeCoordinateSystem = flag;
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT bool PointTransform::GetChangeCoordinateSystem() const
+VTKM_CONT bool PointTransform::GetChangeCoordinateSystem() const
 {
   return this->ChangeCoordinateSystem;
 }

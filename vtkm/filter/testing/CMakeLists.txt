@@ -25,20 +25,9 @@ set(unit_tests
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx
-  UnitTestProbe.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestStreamSurfaceFilter.cxx
 )
-
-#Taking too long to compile with HIPCC
-if(HIP IN_LIST Kokkos_DEVICES)
-  list(REMOVE_ITEM unit_tests
-       UnitTestLagrangianFilter.cxx
-       UnitTestLagrangianStructuresFilter.cxx
-       UnitTestStreamlineFilter.cxx
-       UnitTestStreamSurfaceFilter.cxx
-  )
-endif()
 
 set(libraries
   vtkm_filter
