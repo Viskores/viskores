@@ -14,8 +14,6 @@
 #include <vtkm/filter/clean_grid/CleanGrid.h>
 #include <vtkm/filter/resampling/Probe.h>
 
-#include <vtkm/worklet/CellDeepCopy.h>
-
 namespace
 {
 
