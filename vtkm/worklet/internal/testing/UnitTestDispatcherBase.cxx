@@ -12,6 +12,8 @@
 
 #include <vtkm/worklet/internal/WorkletBase.h>
 
+#include <vtkm/cont/internal/Buffer.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
@@ -111,45 +113,44 @@ namespace arg
 {
 
 template <>
-struct TypeCheck<TestTypeCheckTag, std::vector<vtkm::Id>>
+struct TypeCheck<TestTypeCheckTag, vtkm::cont::internal::Buffer>
 {
   static constexpr bool value = true;
 };
 
 template <typename Device>
-struct Transport<TestTransportTagIn, std::vector<vtkm::Id>, Device>
+struct Transport<TestTransportTagIn, vtkm::cont::internal::Buffer, Device>
 {
   using ExecObjectType = TestExecObjectIn;
 
   VTKM_CONT
-  ExecObjectType operator()(const std::vector<vtkm::Id>& contData,
-                            const std::vector<vtkm::Id>&,
+  ExecObjectType operator()(const vtkm::cont::internal::Buffer& contData,
+                            const vtkm::cont::internal::Buffer&,
                             vtkm::Id inputRange,
                             vtkm::Id outputRange,
-                            vtkm::cont::Token&) const
+                            vtkm::cont::Token& token) const
   {
     VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
     VTKM_TEST_ASSERT(outputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
-    return ExecObjectType(contData.data());
+    return reinterpret_cast<const vtkm::Id*>(contData.ReadPointerDevice(Device{}, token));
   }
 };
 
 template <typename Device>
-struct Transport<TestTransportTagOut, std::vector<vtkm::Id>, Device>
+struct Transport<TestTransportTagOut, vtkm::cont::internal::Buffer, Device>
 {
   using ExecObjectType = TestExecObjectOut;
 
   VTKM_CONT
-  ExecObjectType operator()(const std::vector<vtkm::Id>& contData,
-                            const std::vector<vtkm::Id>&,
+  ExecObjectType operator()(const vtkm::cont::internal::Buffer& contData,
+                            const vtkm::cont::internal::Buffer&,
                             vtkm::Id inputRange,
                             vtkm::Id outputRange,
-                            vtkm::cont::Token&) const
+                            vtkm::cont::Token& token) const
   {
     VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
     VTKM_TEST_ASSERT(outputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
-    auto ptr = const_cast<vtkm::Id*>(contData.data());
-    return ExecObjectType(ptr);
+    return reinterpret_cast<vtkm::Id*>(contData.WritePointerDevice(Device{}, token));
   }
 };
 }
@@ -283,15 +284,13 @@ public:
 };
 
 
-template <typename T>
-inline vtkm::Id SchedulingRange(const std::vector<T>& inputDomain)
+inline vtkm::Id SchedulingRange(const vtkm::cont::internal::Buffer& inputDomain)
 {
-  return static_cast<vtkm::Id>(inputDomain.size());
+  return static_cast<vtkm::Id>(inputDomain.GetNumberOfBytes() / sizeof(vtkm::Id));
 }
-template <typename T>
-inline vtkm::Id SchedulingRange(const std::vector<T>* const inputDomain)
+inline vtkm::Id SchedulingRange(const vtkm::cont::internal::Buffer* inputDomain)
 {
-  return static_cast<vtkm::Id>(inputDomain->size());
+  return static_cast<vtkm::Id>(inputDomain->GetNumberOfBytes() / sizeof(vtkm::Id));
 }
 
 template <typename WorkletType>
@@ -345,28 +344,41 @@ void TestBasicInvoke()
 {
   std::cout << "Test basic invoke" << std::endl;
   std::cout << "  Set up data." << std::endl;
-  std::vector<vtkm::Id> inputArray(ARRAY_SIZE);
-  std::vector<vtkm::Id> outputArray(ARRAY_SIZE);
+  vtkm::cont::internal::Buffer inputBuffer;
+  vtkm::cont::internal::Buffer outputBuffer;
   TestExecObjectType execObject;
   execObject.Value = EXPECTED_EXEC_OBJECT_VALUE;
 
-  std::size_t i = 0;
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++, i++)
   {
-    inputArray[i] = TestValue(index, vtkm::Id());
-    outputArray[i] = static_cast<vtkm::Id>(0xDEADDEAD);
+    vtkm::cont::Token token;
+    inputBuffer.SetNumberOfBytes(
+      static_cast<vtkm::BufferSizeType>(ARRAY_SIZE * sizeof(vtkm::Id)), vtkm::CopyFlag::Off, token);
+    outputBuffer.SetNumberOfBytes(
+      static_cast<vtkm::BufferSizeType>(ARRAY_SIZE * sizeof(vtkm::Id)), vtkm::CopyFlag::Off, token);
+    auto inputArray = reinterpret_cast<vtkm::Id*>(inputBuffer.WritePointerHost(token));
+    auto outputArray = reinterpret_cast<vtkm::Id*>(outputBuffer.WritePointerHost(token));
+    std::size_t i = 0;
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++, i++)
+    {
+      inputArray[i] = TestValue(index, vtkm::Id());
+      outputArray[i] = static_cast<vtkm::Id>(0xDEADDEAD);
+    }
   }
 
   std::cout << "  Create and run dispatcher." << std::endl;
   TestDispatcher<TestWorklet> dispatcher;
-  dispatcher.Invoke(inputArray, execObject, &outputArray);
+  dispatcher.Invoke(inputBuffer, execObject, &outputBuffer);
 
   std::cout << "  Check output of invoke." << std::endl;
-  i = 0;
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++, i++)
   {
-    VTKM_TEST_ASSERT(outputArray[i] == TestValue(index, vtkm::Id()) + 1000,
-                     "Got bad value from testing.");
+    vtkm::cont::Token token;
+    auto outputArray = reinterpret_cast<const vtkm::Id*>(outputBuffer.ReadPointerHost(token));
+    std::size_t i = 0;
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++, i++)
+    {
+      VTKM_TEST_ASSERT(outputArray[i] == TestValue(index, vtkm::Id()) + 1000,
+                       "Got bad value from testing.");
+    }
   }
 }
 
@@ -374,23 +386,32 @@ void TestInvokeWithError()
 {
   std::cout << "Test invoke with error raised" << std::endl;
   std::cout << "  Set up data." << std::endl;
-  std::vector<vtkm::Id> inputArray(ARRAY_SIZE);
-  std::vector<vtkm::Id> outputArray(ARRAY_SIZE);
+  vtkm::cont::internal::Buffer inputBuffer;
+  vtkm::cont::internal::Buffer outputBuffer;
   TestExecObjectType execObject;
   execObject.Value = EXPECTED_EXEC_OBJECT_VALUE;
 
-  std::size_t i = 0;
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++, ++i)
   {
-    inputArray[i] = TestValue(index, vtkm::Id());
-    outputArray[i] = static_cast<vtkm::Id>(0xDEADDEAD);
+    vtkm::cont::Token token;
+    inputBuffer.SetNumberOfBytes(
+      static_cast<vtkm::BufferSizeType>(ARRAY_SIZE * sizeof(vtkm::Id)), vtkm::CopyFlag::Off, token);
+    outputBuffer.SetNumberOfBytes(
+      static_cast<vtkm::BufferSizeType>(ARRAY_SIZE * sizeof(vtkm::Id)), vtkm::CopyFlag::Off, token);
+    auto inputArray = reinterpret_cast<vtkm::Id*>(inputBuffer.WritePointerHost(token));
+    auto outputArray = reinterpret_cast<vtkm::Id*>(outputBuffer.WritePointerHost(token));
+    std::size_t i = 0;
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++, i++)
+    {
+      inputArray[i] = TestValue(index, vtkm::Id());
+      outputArray[i] = static_cast<vtkm::Id>(0xDEADDEAD);
+    }
   }
 
   try
   {
     std::cout << "  Create and run dispatcher that raises error." << std::endl;
     TestDispatcher<TestErrorWorklet> dispatcher;
-    dispatcher.Invoke(&inputArray, execObject, outputArray);
+    dispatcher.Invoke(&inputBuffer, execObject, outputBuffer);
     VTKM_TEST_FAIL("Exception not thrown.");
   }
   catch (vtkm::cont::ErrorExecution& error)

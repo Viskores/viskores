@@ -32,7 +32,6 @@ set(headers
   NDimsHistMarginalization.h
   Normalize.h
   ParticleAdvection.h
-  Probe.h
   ScalarsToColors.h
   ScatterCounting.h
   ScatterIdentity.h

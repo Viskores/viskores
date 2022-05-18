@@ -9,7 +9,16 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestDispatcherBase.cxx
+  UnitTestProbe.cxx
   )
 
-vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
+set(libraries
+  vtkm_filter_clean_grid
+  vtkm_filter_resampling
+  )
+
+vtkm_unit_tests(
+  SOURCES ${unit_tests}
+  LIBRARIES ${libraries}
+  USE_VTKM_JOB_POOL
+)
