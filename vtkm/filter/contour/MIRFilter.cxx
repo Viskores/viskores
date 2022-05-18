@@ -321,8 +321,11 @@ VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& in
     vtkm::cont::ArrayCopy(pointWeights, this->MIRWeights);
   } while ((++currentIterationNum <= this->max_iter) && totalError >= this->max_error);
 
-  // FIXME: where and how should we call DoMapeField?
-  return saved;
+  auto mapper = [&](auto& outDataSet, const auto& f) { this->DoMapField(outDataSet, f); };
+  auto output = this->CreateResult(input, saved.GetCellSet(), saved.GetCoordinateSystems(), mapper);
+  output.AddField(saved.GetField(this->GetOutputFieldName()));
+
+  return output;
 }
 } // namespace contour
 } // namespace filter
