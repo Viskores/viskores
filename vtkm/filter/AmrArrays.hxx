@@ -18,6 +18,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/BoundsCompute.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 
@@ -25,6 +26,8 @@ namespace vtkm
 {
 namespace worklet
 {
+
+// this worklet sets the blanked bit to one if the cell has an overlap with a cell in one of its children
 template <vtkm::IdComponent Dim>
 struct GenerateGhostTypeWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
 {
@@ -54,12 +57,26 @@ struct GenerateGhostTypeWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
         (Dim == 3 && boundsIntersection.Volume() > 0.5 * boundsCell.Volume()))
     {
       //      std::cout<<boundsCell<<" is (partly) contained in "<<BoundsChild<<" "<<boundsIntersection<<" "<<boundsIntersection.Area()<<std::endl;
-      ghostArray = ghostArray + vtkm::CellClassification::Blanked;
+      ghostArray = ghostArray | vtkm::CellClassification::Blanked;
     }
   }
 
   vtkm::Bounds BoundsChild;
 };
+
+// this worklet sets the blanked bit to zero,
+// it discards all old information on blanking whil keeping the other bits, e.g., for ghost cells
+struct ResetGhostTypeWorklet : vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn ghostArrayIn, FieldOut ghostArrayOut);
+  using ExecutionSignature = void(_1, _2);
+  using InputDomain = _1;
+  VTKM_EXEC void operator()(UInt8 ghostArrayIn, UInt8& ghostArrayOut) const
+  {
+    ghostArrayOut = ghostArrayIn & ~vtkm::CellClassification::Blanked;
+  }
+};
+
 } // worklet
 } // vtkm
 
@@ -104,10 +121,6 @@ void AmrArrays::ComputeGenerateParentChildInformation()
     spacings.insert(uniformCoords.GetSpacing()[0]);
   }
   std::set<FloatDefault, std::greater<FloatDefault>>::iterator itr;
-  //  for (itr = spacings.begin(); itr != spacings.end(); itr++)
-  //  {
-  //    std::cout << *itr << "\n";
-  //  }
 
   /// contains the partitionIds of each level and blockId
   this->PartitionIds.resize(spacings.size());
@@ -128,7 +141,6 @@ void AmrArrays::ComputeGenerateParentChildInformation()
       }
     }
     this->PartitionIds.at(index).push_back(p);
-    //    std::cout <<p<<" "<< index << "\n";
   }
 
   // compute parent and child relations
@@ -179,12 +191,6 @@ void AmrArrays::ComputeGenerateParentChildInformation()
           //                    << boundsParent << " " << boundsChild << " " << boundsIntersection << " "
           //          << boundsIntersection.Area() << " " << boundsIntersection.Volume() << std::endl;
         }
-        //        else
-        //        {
-        //          std::cout << " does not overlap with level " << l + 1 << " block  " << bChild << " "
-        //                    << boundsParent << " " << boundsChild << " " << boundsIntersection << " "
-        //                    << boundsIntersection.Area() << " " << boundsIntersection.Volume() << std::endl;
-        //        }
       }
     }
   }
@@ -225,35 +231,39 @@ void AmrArrays::ComputeGenerateGhostType()
       vtkm::cont::ArrayHandle<vtkm::UInt8> ghostField;
       if (!partition.HasField("vtkGhostType", vtkm::cont::Field::Association::Cells))
       {
-        vtkm::cont::ArrayCopy(
-          vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(0, partition.GetNumberOfCells()),
-          ghostField);
+        ghostField.AllocateAndFill(partition.GetNumberOfCells(), 0);
       }
-      // leave field unchanged if it is the highest level
-      if (l < this->PartitionIds.size() - 1)
+      else
       {
-        auto pointField = partition.GetCoordinateSystem().GetDataAsMultiplexer();
-
-        for (unsigned int bChild = 0;
-             bChild < this->ChildrenIdsVector.at(this->PartitionIds.at(l).at(bParent)).size();
-             bChild++)
-        {
-          vtkm::Bounds boundsChild =
-            this->AmrDataSet
-              .GetPartition(
-                this->ChildrenIdsVector.at(this->PartitionIds.at(l).at(bParent)).at(bChild))
-              .GetCoordinateSystem()
-              .GetBounds();
-          //          std::cout<<" is (partly) contained in level "<<l + 1<<" block "<<bChild<<" which is partition "<<this->ChildrenIdsVector.at(this->PartitionIds.at(l).at(bParent)).at(bChild)<<" with bounds "<<boundsChild<<std::endl;
-
-          vtkm::cont::Invoker invoke;
-          invoke(vtkm::worklet::GenerateGhostTypeWorklet<Dim>{ boundsChild },
-                 cellset,
-                 pointField,
-                 ghostField);
-        }
+        vtkm::cont::Invoker invoke;
+        invoke(vtkm::worklet::ResetGhostTypeWorklet{},
+               partition.GetField("vtkGhostType", vtkm::cont::Field::Association::Cells)
+                 .GetData()
+                 .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>>(),
+               ghostField);
       }
       partition.AddCellField("vtkGhostType", ghostField);
+
+      auto pointField = partition.GetCoordinateSystem().GetDataAsMultiplexer();
+
+      for (unsigned int bChild = 0;
+           bChild < this->ChildrenIdsVector.at(this->PartitionIds.at(l).at(bParent)).size();
+           bChild++)
+      {
+        vtkm::Bounds boundsChild =
+          this->AmrDataSet
+            .GetPartition(
+              this->ChildrenIdsVector.at(this->PartitionIds.at(l).at(bParent)).at(bChild))
+            .GetCoordinateSystem()
+            .GetBounds();
+        //        std::cout<<" is (partly) contained in level "<<l + 1<<" block "<<bChild<<" which is partition "<<this->ChildrenIdsVector.at(this->PartitionIds.at(l).at(bParent)).at(bChild)<<" with bounds "<<boundsChild<<std::endl;
+
+        vtkm::cont::Invoker invoke;
+        invoke(vtkm::worklet::GenerateGhostTypeWorklet<Dim>{ boundsChild },
+               cellset,
+               pointField,
+               ghostField);
+      }
       this->AmrDataSet.ReplacePartition(this->PartitionIds.at(l).at(bParent), partition);
     }
   }
