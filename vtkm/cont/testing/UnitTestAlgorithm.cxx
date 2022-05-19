@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/BinaryOperators.h>
 #include <vtkm/cont/Algorithm.h>
 
 #include <vtkm/TypeTraits.h>
@@ -173,6 +174,41 @@ void SynchronizeTest()
   vtkm::cont::Algorithm::Synchronize();
 }
 
+template <typename ArrayHandle1T, typename ArrayHandle2T>
+void AssertArrayHandlesEqual(const ArrayHandle1T& ah1, const ArrayHandle2T& ah2)
+{
+  VTKM_ASSERT(ah1.GetNumberOfValues() == ah2.GetNumberOfValues());
+  auto rp1 = ah1.ReadPortal();
+  auto rp2 = ah2.ReadPortal();
+
+  for (vtkm::Id i = 0; i < ah1.GetNumberOfValues(); ++i)
+  {
+    VTKM_ASSERT(rp1.Get(i) == rp2.Get(i));
+  }
+}
+
+void TransformTest()
+{
+  auto transformInput = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 3, 5, 7, 9, 11, 13, 15 });
+  auto transformInputOutput =
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 2, 4, 8, 10, 12, 14, 16 });
+  auto transformExpectedResult =
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 5, 9, 15, 19, 23, 27, 31 });
+
+  // Test simple call on two different arrays
+  std::cout << "Testing Transform for summing arrays" << std::endl;
+  vtkm::cont::ArrayHandle<vtkm::Id> transformOutput;
+  vtkm::cont::Algorithm::Transform(
+    transformInput, transformInputOutput, transformOutput, vtkm::Sum{});
+  AssertArrayHandlesEqual(transformOutput, transformExpectedResult);
+
+  // Test using an array as both input and output
+  std::cout << "Testing Transform with array for both input and output" << std::endl;
+  vtkm::cont::Algorithm::Transform(
+    transformInputOutput, transformInput, transformInputOutput, vtkm::Sum{});
+  AssertArrayHandlesEqual(transformInputOutput, transformExpectedResult);
+}
+
 void UniqueTest()
 {
   vtkm::cont::ArrayHandle<vtkm::Id> input;
@@ -194,6 +230,7 @@ void TestAll()
   ScheduleTest();
   SortTest();
   SynchronizeTest();
+  TransformTest();
   UniqueTest();
 }
 
