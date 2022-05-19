@@ -70,7 +70,11 @@ public:
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
+  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
+                            const vtkm::cont::Field& field,
+                            const vtkm::cont::ArrayHandle<vtkm::Id>& filterCellInterp,
+                            const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 8>>& MIRWeights,
+                            const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 8>> MIRIDs);
 
   std::string pos_name;
   std::string len_name;
@@ -81,9 +85,6 @@ private:
   vtkm::Float64 scaling_decay = vtkm::Float64(1.0);
   vtkm::IdComponent max_iter = vtkm::IdComponent(0);
   vtkm::Float64 error_scaling = vtkm::Float64(0.0);
-  vtkm::cont::ArrayHandle<vtkm::Id> filterCellInterp;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 8>> MIRWeights;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 8>> MIRIDs;
 };
 } // namespace contour
 class VTKM_DEPRECATED(1.8, "Use vtkm::filter::contour::MIRFilter.") MIRFilter

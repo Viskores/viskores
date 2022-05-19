@@ -37,7 +37,12 @@ namespace filter
 {
 namespace contour
 {
-VTKM_CONT bool MIRFilter::DoMapField(vtkm::cont::DataSet& result, const vtkm::cont::Field& field)
+VTKM_CONT bool MIRFilter::DoMapField(
+  vtkm::cont::DataSet& result,
+  const vtkm::cont::Field& field,
+  const vtkm::cont::ArrayHandle<vtkm::Id>& filterCellInterp,
+  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 8>>& MIRWeights,
+  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 8>> MIRIDs)
 {
   if (field.GetName().compare(this->pos_name) == 0 ||
       field.GetName().compare(this->len_name) == 0 || field.GetName().compare(this->id_name) == 0 ||
@@ -54,7 +59,7 @@ VTKM_CONT bool MIRFilter::DoMapField(vtkm::cont::DataSet& result, const vtkm::co
       using T = typename std::decay_t<decltype(concrete)>::ValueType;
       vtkm::cont::ArrayHandle<T> outputArray;
       vtkm::worklet::DestructPointWeightList destructWeightList;
-      this->Invoke(destructWeightList, this->MIRIDs, this->MIRWeights, concrete, outputArray);
+      this->Invoke(destructWeightList, MIRIDs, MIRWeights, concrete, outputArray);
       result.AddPointField(field.GetName(), outputArray);
     };
     field.GetData()
@@ -64,7 +69,7 @@ VTKM_CONT bool MIRFilter::DoMapField(vtkm::cont::DataSet& result, const vtkm::co
   }
   else if (field.IsFieldCell())
   {
-    return vtkm::filter::MapFieldPermutation(field, this->filterCellInterp, result);
+    return vtkm::filter::MapFieldPermutation(field, filterCellInterp, result);
   }
   else
   {
@@ -147,6 +152,11 @@ VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& in
   vtkm::worklet::ConstructCellWeightList constructReverseInformation;
   vtkm::cont::ArrayHandleIndex pointCounter(input.GetNumberOfPoints());
   this->Invoke(constructReverseInformation, pointCounter, pointIDs, pointWeights);
+
+  vtkm::cont::ArrayHandle<vtkm::Id> filterCellInterp;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 8>> MIRWeights;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 8>> MIRIDs;
+
   do
   {
     saved = vtkm::cont::DataSet();
@@ -318,11 +328,13 @@ VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& in
     saved.AddField(vtkm::cont::Field(
       this->GetOutputFieldName(), vtkm::cont::Field::Association::Cells, prevMat));
 
-    vtkm::cont::ArrayCopy(pointIDs, this->MIRIDs);
-    vtkm::cont::ArrayCopy(pointWeights, this->MIRWeights);
+    vtkm::cont::ArrayCopy(pointIDs, MIRIDs);
+    vtkm::cont::ArrayCopy(pointWeights, MIRWeights);
   } while ((++currentIterationNum <= this->max_iter) && totalError >= this->max_error);
 
-  auto mapper = [&](auto& outDataSet, const auto& f) { this->DoMapField(outDataSet, f); };
+  auto mapper = [&](auto& outDataSet, const auto& f) {
+    this->DoMapField(outDataSet, f, filterCellInterp, MIRWeights, MIRIDs);
+  };
   auto output = this->CreateResult(input, saved.GetCellSet(), saved.GetCoordinateSystems(), mapper);
   output.AddField(saved.GetField(this->GetOutputFieldName()));
 
