@@ -67,7 +67,7 @@ private:
   vtkm::cont::PartitionedDataSet AmrDataSet;
 
   /// per level
-  /// contains the index where the PartitionIds start for each level
+  /// contains the partitionIds of each level and blockId
   std::vector<std::vector<vtkm::Id>> PartitionIds;
 
   /// per partitionId
