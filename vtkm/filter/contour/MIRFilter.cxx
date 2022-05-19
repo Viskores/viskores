@@ -75,8 +75,6 @@ VTKM_CONT bool MIRFilter::DoMapField(
   {
     return false;
   }
-
-  return false;
 }
 
 //-----------------------------------------------------------------------------
