@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtkm_m_filter_MIRFilter_h
-#define vtkm_m_filter_MIRFilter_h
+#ifndef vtkm_m_filter_contour_MIRFilter_h
+#define vtkm_m_filter_contour_MIRFilter_h
 
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/contour/vtkm_filter_contour_export.h>
@@ -86,7 +86,12 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 8>> MIRIDs;
 };
 } // namespace contour
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::contour::MIRFilter.") MIRFilter
+  : public vtkm::filter::contour::MIRFilter
+{
+  using contour::MIRFilter::MIRFilter;
+};
 } // namespace filter
 } // namespace vtkm
 
-#endif
+#endif // vtkm_m_filter_contour_MIRFilter_h
