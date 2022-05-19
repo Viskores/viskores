@@ -52,12 +52,7 @@
       #
       # Note: this also captures our CIState.cmake file
       - build/CMakeCache.txt
-      - build/*.cmake
-      - build/*/*.cmake
-      - build/*/*/*.cmake
-      - build/*/*/*/*.cmake
-      - build/*/*/*/*/*.cmake
-      - build/*/*/*/*/*/*.cmake
+      - build/**/*.cmake
       - build/Testing/
 
       # CDash files.

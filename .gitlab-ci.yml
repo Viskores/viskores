@@ -228,12 +228,7 @@ stages:
       #
       # Note: this also captures our CIState.cmake file
       - build/CMakeCache.txt
-      - build/*.cmake
-      - build/*/*.cmake
-      - build/*/*/*.cmake
-      - build/*/*/*/*.cmake
-      - build/*/*/*/*/*.cmake
-      - build/*/*/*/*/*/*.cmake
+      - build/**/*.cmake
       - build/Testing/
 
       # CDash files.
@@ -245,18 +240,9 @@ stages:
     when: always
     paths:
       # The generated regression testing images
-      - build/*.png
-      - build/*.pnm
-      - build/*.pmm
-      - build/*/*.png
-      - build/*/*.pnm
-      - build/*/*.pmm
-      - build/*/*/*.png
-      - build/*/*/*.pnm
-      - build/*/*/*.pmm
-      - build/*/*/*/*.png
-      - build/*/*/*/*.pnm
-      - build/*/*/*/*.pmm
+      - build/**/*.png
+      - build/**/*.pnm
+      - build/**/*.pmm
     reports:
       junit:
         - build/junit.xml
