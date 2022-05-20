@@ -12,6 +12,7 @@ set(unit_tests
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourFilter.cxx
   UnitTestContourFilterNormals.cxx
+  UnitTestMIRFilter.cxx
 )
 
 set(libraries

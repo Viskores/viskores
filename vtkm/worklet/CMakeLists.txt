@@ -29,7 +29,6 @@ set(headers
   MaskIndices.h
   MaskNone.h
   MaskSelect.h
-  MIR.h
   NDimsHistMarginalization.h
   Normalize.h
   ParticleAdvection.h
@@ -82,7 +81,6 @@ add_subdirectory(contourtree_augmented)
 add_subdirectory(contourtree_distributed)
 add_subdirectory(cosmotools)
 add_subdirectory(lcs)
-add_subdirectory(mir)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
 add_subdirectory(wavelets)

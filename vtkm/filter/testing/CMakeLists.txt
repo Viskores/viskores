@@ -22,7 +22,6 @@ set(unit_tests
   UnitTestLagrangianStructuresFilter.cxx
   UnitTestMapFieldMergeAverage.cxx
   UnitTestMapFieldPermutation.cxx
-  UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx
   UnitTestStreamlineFilter.cxx
