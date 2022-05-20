@@ -24,9 +24,25 @@ namespace vtkm
 namespace cont
 {
 
+VTKM_CONT_EXPORT VTKM_CONT std::string& GlobalGhostCellFieldName() noexcept;
+
+VTKM_CONT_EXPORT VTKM_CONT const std::string& GetGlobalGhostCellFieldName() noexcept;
+
+VTKM_CONT_EXPORT VTKM_CONT void SetGlobalGhostCellFieldName(const std::string& name) noexcept;
+
 class VTKM_CONT_EXPORT DataSet
 {
 public:
+  DataSet() = default;
+
+  DataSet(vtkm::cont::DataSet&&) = default;
+
+  DataSet(const vtkm::cont::DataSet&) = default;
+
+  vtkm::cont::DataSet& operator=(vtkm::cont::DataSet&&) = default;
+
+  vtkm::cont::DataSet& operator=(const vtkm::cont::DataSet&) = default;
+
   VTKM_CONT void Clear();
 
   /// Get the number of cells contained in this DataSet
@@ -57,6 +73,32 @@ public:
   bool HasCellField(const std::string& name) const
   {
     return (this->GetFieldIndex(name, vtkm::cont::Field::Association::Cells) != -1);
+  }
+
+  VTKM_CONT
+  bool HasGhostCellField() const
+  {
+    if (this->GhostCellName)
+    {
+      return this->HasCellField(*this->GhostCellName);
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  VTKM_CONT
+  const std::string& GetGhostCellFieldName() const
+  {
+    if (this->HasGhostCellField())
+    {
+      return *this->GhostCellName;
+    }
+    else
+    {
+      throw vtkm::cont::ErrorBadValue("No Ghost Cell Field Name");
+    }
   }
 
   VTKM_CONT
@@ -100,6 +142,23 @@ public:
   vtkm::cont::Field& GetCellField(const std::string& name)
   {
     return this->GetField(name, vtkm::cont::Field::Association::Cells);
+  }
+  //@}
+
+  /// Returns the first cell field that matches the provided name.
+  /// Will throw an exception if no match is found
+  //@{
+  VTKM_CONT
+  const vtkm::cont::Field& GetGhostCellField() const
+  {
+    if (this->HasGhostCellField())
+    {
+      return this->GetCellField(*(this->GhostCellName));
+    }
+    else
+    {
+      throw vtkm::cont::ErrorBadValue("No Ghost Cell Field");
+    }
   }
   //@}
 
@@ -151,6 +210,25 @@ public:
   void AddCellField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
   {
     this->AddField(make_FieldCell(fieldName, field));
+  }
+
+  VTKM_CONT
+  void AddGhostCellField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
+  {
+    this->GhostCellName.reset(new std::string(fieldName));
+    this->AddField(make_FieldCell(fieldName, field));
+  }
+
+  VTKM_CONT
+  void AddGhostCellField(const vtkm::cont::UnknownArrayHandle& field)
+  {
+    this->AddGhostCellField(GetGlobalGhostCellFieldName(), field);
+  }
+
+  VTKM_CONT
+  void AddGhostCellField(const vtkm::cont::Field& field)
+  {
+    this->AddGhostCellField(field.GetName(), field.GetData());
   }
 
   template <typename T, typename Storage>
@@ -284,6 +362,7 @@ private:
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
   std::map<FieldCompare::Key, vtkm::cont::Field, FieldCompare> Fields;
   vtkm::cont::UnknownCellSet CellSet;
+  std::shared_ptr<std::string> GhostCellName;
 };
 
 } // namespace cont
