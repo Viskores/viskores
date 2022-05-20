@@ -9,7 +9,7 @@
 ##============================================================================
 
 set(deprecated_headers
-#  AmrArrays.h
+  AmrArrays.h
   CellAverage.h
   CellMeasures.h
   CellSetConnectivity.h
