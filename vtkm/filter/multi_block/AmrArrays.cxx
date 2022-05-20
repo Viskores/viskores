@@ -7,13 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_AmrArrays_hxx
-#define vtk_m_filter_AmrArrays_hxx
-
 #include <vtkm/CellClassification.h>
 #include <vtkm/RangeId.h>
-#include <vtkm/RangeId2.h>
-#include <vtkm/RangeId3.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -21,6 +16,7 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/filter/multi_block/AmrArrays.h>
 
 namespace vtkm
 {
@@ -84,9 +80,8 @@ namespace vtkm
 {
 namespace filter
 {
-
-inline VTKM_CONT AmrArrays::AmrArrays() {}
-
+namespace multi_block
+{
 VTKM_CONT
 void AmrArrays::GenerateParentChildInformation()
 {
@@ -300,10 +295,8 @@ void AmrArrays::GenerateIndexArrays()
   }
 }
 
-template <typename DerivedPolicy>
-vtkm::cont::PartitionedDataSet AmrArrays::PrepareForExecution(
-  const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+vtkm::cont::PartitionedDataSet AmrArrays::DoExecutePartitions(
+  const vtkm::cont::PartitionedDataSet& input)
 {
   this->AmrDataSet = input;
   this->GenerateParentChildInformation();
@@ -311,7 +304,6 @@ vtkm::cont::PartitionedDataSet AmrArrays::PrepareForExecution(
   this->GenerateIndexArrays();
   return this->AmrDataSet;
 }
-
-}
-}
-#endif
+} // namespace multi_block
+} // namespace filter
+} // namespace vtkm

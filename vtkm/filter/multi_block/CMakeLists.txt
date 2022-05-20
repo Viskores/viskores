@@ -7,34 +7,25 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
-
-set(headers
-  Amr.h
-  Oscillator.h
-  Source.h
-  Tangle.h
-  Wavelet.h
-  PerlinNoise.h
+set(multi_block_headers
+  AmrArrays.h
   )
 
-set(device_sources
-  Amr.cxx
-  Oscillator.cxx
-  Source.cxx
-  Tangle.cxx
-  Wavelet.cxx
-  PerlinNoise.cxx
+set(multi_block_sources
+  AmrArrays.cxx
   )
 
-vtkm_library(NAME vtkm_source
-  SOURCES ${sources}
-  DEVICE_SOURCES ${device_sources}
-  HEADERS ${headers}
-  )
+vtkm_library(
+  NAME vtkm_filter_multi_block
+  HEADERS ${multi_block_headers}
+  DEVICE_SOURCES ${multi_block_sources}
+  USE_VTKM_JOB_POOL
+)
 
-target_link_libraries(vtkm_source PUBLIC vtkm_cont vtkm_filter_field_conversion vtkm_filter_multi_block)
+target_link_libraries(vtkm_filter_multi_block PUBLIC vtkm_worklet vtkm_filter_core)
+target_link_libraries(vtkm_filter PUBLIC INTERFACE vtkm_filter_multi_block)
 
-#-----------------------------------------------------------------------------
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 if (VTKm_ENABLE_TESTING)
   add_subdirectory(testing)
 endif ()

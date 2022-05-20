@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(deprecated_headers
+#  AmrArrays.h
   CellAverage.h
   CellMeasures.h
   CellSetConnectivity.h
@@ -98,7 +99,6 @@ set(common_header_template_sources
 vtkm_declare_headers(${common_header_template_sources})
 
 set(extra_headers
-  AmrArrays.h
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   ContourTreeUniform.h
@@ -112,7 +112,6 @@ set(extra_headers
   )
 
 set(extra_header_template_sources
-  AmrArrays.hxx
   ContourTreeUniformAugmented.hxx
   ContourTreeUniformDistributed.hxx
   ContourTreeUniform.hxx
@@ -198,6 +197,7 @@ add_subdirectory(field_conversion)
 add_subdirectory(field_transform)
 add_subdirectory(geometry_refinement)
 add_subdirectory(mesh_info)
+add_subdirectory(multi_block)
 add_subdirectory(resampling)
 add_subdirectory(vector_analysis)
 add_subdirectory(zfp)

@@ -10,8 +10,8 @@
 
 
 #include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/filter/AmrArrays.h>
 #include <vtkm/filter/field_conversion/CellAverage.h>
+#include <vtkm/filter/multi_block/AmrArrays.h>
 #include <vtkm/source/Amr.h>
 #include <vtkm/source/Wavelet.h>
 
@@ -101,7 +101,7 @@ vtkm::cont::PartitionedDataSet Amr::Execute() const
   }
 
   // Generate helper arrays
-  vtkm::filter::AmrArrays amrArrays;
+  vtkm::filter::multi_block::AmrArrays amrArrays;
   amrDataSet = amrArrays.Execute(amrDataSet);
 
   return amrDataSet;
