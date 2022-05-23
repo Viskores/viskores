@@ -18,6 +18,10 @@ set(headers
   Messenger.h
   ParticleAdvectionAlgorithm.h
   ParticleMessenger.h
+  DSI.h
+  ABA.h
+  PAV.h
+  ParticleAdvectionTypes.h
 )
 
 #-----------------------------------------------------------------------------

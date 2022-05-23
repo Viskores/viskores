@@ -23,11 +23,13 @@ namespace particleadvection
 {
 
 VTKM_CONT
-ParticleMessenger::ParticleMessenger(vtkmdiy::mpi::communicator& comm,
-                                     const vtkm::filter::particleadvection::BoundsMap& boundsMap,
-                                     int msgSz,
-                                     int numParticles,
-                                     int numBlockIds)
+template <typename ParticleType>
+ParticleMessenger<ParticleType>::ParticleMessenger(
+  vtkmdiy::mpi::communicator& comm,
+  const vtkm::filter::particleadvection::BoundsMap& boundsMap,
+  int msgSz,
+  int numParticles,
+  int numBlockIds)
   : Messenger(comm)
 #ifdef VTKM_ENABLE_MPI
   , BoundsMap(boundsMap)
@@ -43,7 +45,9 @@ ParticleMessenger::ParticleMessenger(vtkmdiy::mpi::communicator& comm,
 #endif
 }
 
-std::size_t ParticleMessenger::CalcParticleBufferSize(std::size_t nParticles, std::size_t nBlockIds)
+template <typename ParticleType>
+std::size_t ParticleMessenger<ParticleType>::CalcParticleBufferSize(std::size_t nParticles,
+                                                                    std::size_t nBlockIds)
 {
   constexpr std::size_t pSize = sizeof(vtkm::Vec3f) // Pos
     + sizeof(vtkm::Id)                              // ID
@@ -53,10 +57,10 @@ std::size_t ParticleMessenger::CalcParticleBufferSize(std::size_t nParticles, st
 
 #ifndef NDEBUG
   vtkmdiy::MemoryBuffer buff;
-  vtkm::Particle p;
+  ParticleType p;
   vtkmdiy::save(buff, p);
 
-  //If this assert fires, vtkm::Particle changed
+  //If this assert fires, ParticleType changed
   //and pSize should be updated.
   VTKM_ASSERT(pSize == buff.size());
 #endif
@@ -64,10 +68,10 @@ std::size_t ParticleMessenger::CalcParticleBufferSize(std::size_t nParticles, st
   return
     // rank
     sizeof(int)
-    //std::vector<vtkm::Particle> p;
+    //std::vector<ParticleType> p;
     //p.size()
     + sizeof(std::size_t)
-    //nParticles of vtkm::Particle
+    //nParticles of ParticleType
     + nParticles * pSize
     // std::vector<vtkm::Id> blockIDs for each particle.
     // blockIDs.size() for each particle
@@ -77,11 +81,12 @@ std::size_t ParticleMessenger::CalcParticleBufferSize(std::size_t nParticles, st
 }
 
 VTKM_CONT
-void ParticleMessenger::SerialExchange(
-  const std::vector<vtkm::Particle>& outData,
+template <typename ParticleType>
+void ParticleMessenger<ParticleType>::SerialExchange(
+  const std::vector<ParticleType>& outData,
   const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
   vtkm::Id vtkmNotUsed(numLocalTerm),
-  std::vector<vtkm::Particle>& inData,
+  std::vector<ParticleType>& inData,
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
   bool vtkmNotUsed(blockAndWait)) const
 {
@@ -94,11 +99,12 @@ void ParticleMessenger::SerialExchange(
 }
 
 VTKM_CONT
-void ParticleMessenger::Exchange(
-  const std::vector<vtkm::Particle>& outData,
+template <typename ParticleType>
+void ParticleMessenger<ParticleType>::Exchange(
+  const std::vector<ParticleType>& outData,
   const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
   vtkm::Id numLocalTerm,
-  std::vector<vtkm::Particle>& inData,
+  std::vector<ParticleType>& inData,
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
   vtkm::Id& numTerminateMessages,
   bool blockAndWait)
@@ -154,7 +160,8 @@ void ParticleMessenger::Exchange(
 #ifdef VTKM_ENABLE_MPI
 
 VTKM_CONT
-void ParticleMessenger::RegisterMessages(int msgSz, int nParticles, int numBlockIds)
+template <typename ParticleType>
+void ParticleMessenger<ParticleType>::RegisterMessages(int msgSz, int nParticles, int numBlockIds)
 {
   //Determine buffer size for msg and particle tags.
   std::size_t messageBuffSz = CalcMessageBufferSize(msgSz + 1);
@@ -169,7 +176,8 @@ void ParticleMessenger::RegisterMessages(int msgSz, int nParticles, int numBlock
 }
 
 VTKM_CONT
-void ParticleMessenger::SendMsg(int dst, const std::vector<int>& msg)
+template <typename ParticleType>
+void ParticleMessenger<ParticleType>::SendMsg(int dst, const std::vector<int>& msg)
 {
   vtkmdiy::MemoryBuffer buff;
 
@@ -180,7 +188,8 @@ void ParticleMessenger::SendMsg(int dst, const std::vector<int>& msg)
 }
 
 VTKM_CONT
-void ParticleMessenger::SendAllMsg(const std::vector<int>& msg)
+template <typename ParticleType>
+void ParticleMessenger<ParticleType>::SendAllMsg(const std::vector<int>& msg)
 {
   for (int i = 0; i < this->GetNumRanks(); i++)
     if (i != this->GetRank())
@@ -188,9 +197,10 @@ void ParticleMessenger::SendAllMsg(const std::vector<int>& msg)
 }
 
 VTKM_CONT
-bool ParticleMessenger::RecvAny(std::vector<MsgCommType>* msgs,
-                                std::vector<ParticleRecvCommType>* recvParticles,
-                                bool blockAndWait)
+template <typename ParticleType>
+bool ParticleMessenger<ParticleType>::RecvAny(std::vector<MsgCommType>* msgs,
+                                              std::vector<ParticleRecvCommType>* recvParticles,
+                                              bool blockAndWait)
 {
   std::set<int> tags;
   if (msgs)

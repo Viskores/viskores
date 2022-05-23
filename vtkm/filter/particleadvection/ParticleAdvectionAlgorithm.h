@@ -22,6 +22,8 @@ namespace filter
 namespace particleadvection
 {
 
+#if 0
+
 using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
 using TDSIType = vtkm::filter::particleadvection::TemporalDataSetIntegrator;
 
@@ -142,7 +144,7 @@ public:
   }
 };
 
-
+#endif
 
 }
 }

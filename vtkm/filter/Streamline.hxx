@@ -35,11 +35,13 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet StreamlineBase<ParticleType>::Pr
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  using AlgorithmType = vtkm::filter::particleadvection::StreamlineAlgorithm;
-  using ThreadedAlgorithmType = vtkm::filter::particleadvection::StreamlineThreadedAlgorithm;
-  using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
+  //  using AlgorithmType = vtkm::filter::particleadvection::StreamlineAlgorithm;
+  //  using ThreadedAlgorithmType = vtkm::filter::particleadvection::StreamlineThreadedAlgorithm;
+  //  using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
 
   this->ValidateOptions();
+  return input;
+#if 0
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
   auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 
@@ -49,6 +51,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet StreamlineBase<ParticleType>::Pr
   else
     return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
       boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+#endif
 }
 
 }

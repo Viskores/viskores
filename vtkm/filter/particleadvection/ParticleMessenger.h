@@ -30,13 +30,14 @@ namespace filter
 namespace particleadvection
 {
 
+template <typename ParticleType>
 class VTKM_FILTER_EXTRA_EXPORT ParticleMessenger : public vtkm::filter::particleadvection::Messenger
 {
   //sendRank, message
   using MsgCommType = std::pair<int, std::vector<int>>;
 
   //particle + blockIDs.
-  using ParticleCommType = std::pair<vtkm::Particle, std::vector<vtkm::Id>>;
+  using ParticleCommType = std::pair<ParticleType, std::vector<vtkm::Id>>;
 
   //sendRank, vector of ParticleCommType.
   using ParticleRecvCommType = std::pair<int, std::vector<ParticleCommType>>;
@@ -49,10 +50,10 @@ public:
                               int numBlockIds = 2);
   VTKM_CONT ~ParticleMessenger() {}
 
-  VTKM_CONT void Exchange(const std::vector<vtkm::Particle>& outData,
+  VTKM_CONT void Exchange(const std::vector<ParticleType>& outData,
                           const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
                           vtkm::Id numLocalTerm,
-                          std::vector<vtkm::Particle>& inData,
+                          std::vector<ParticleType>& inData,
                           std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
                           vtkm::Id& numTerminateMessages,
                           bool blockAndWait = false);
@@ -98,10 +99,10 @@ protected:
 #endif
 
   VTKM_CONT void SerialExchange(
-    const std::vector<vtkm::Particle>& outData,
+    const std::vector<ParticleType>& outData,
     const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
     vtkm::Id numLocalTerm,
-    std::vector<vtkm::Particle>& inData,
+    std::vector<ParticleType>& inData,
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
     bool blockAndWait) const;
 
@@ -111,8 +112,10 @@ protected:
 
 #ifdef VTKM_ENABLE_MPI
 VTKM_CONT
+template <typename ParticleType>
 template <typename P, template <typename, typename> class Container, typename Allocator>
-inline void ParticleMessenger::SendParticles(int dst, const Container<P, Allocator>& c)
+inline void ParticleMessenger<ParticleType>::SendParticles(int dst,
+                                                           const Container<P, Allocator>& c)
 {
   if (dst == this->GetRank())
   {
@@ -129,8 +132,9 @@ inline void ParticleMessenger::SendParticles(int dst, const Container<P, Allocat
 }
 
 VTKM_CONT
+template <typename ParticleType>
 template <typename P, template <typename, typename> class Container, typename Allocator>
-inline void ParticleMessenger::SendParticles(
+inline void ParticleMessenger<ParticleType>::SendParticles(
   const std::unordered_map<int, Container<P, Allocator>>& m)
 {
   for (const auto& mit : m)
@@ -142,5 +146,6 @@ inline void ParticleMessenger::SendParticles(
 }
 } // namespace vtkm::filter::particleadvection
 
+#include <vtkm/filter/particleadvection/ParticleMessenger.cxx>
 
 #endif

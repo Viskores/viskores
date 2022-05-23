@@ -15,6 +15,7 @@
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
+#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm
 {
@@ -48,6 +49,17 @@ public:
   }
 
   VTKM_CONT
+  void SetSolverRK4()
+  {
+    this->SolverType = vtkm::filter::particleadvection::IntegrationSolverType::RK4_TYPE;
+  }
+  VTKM_CONT
+  void SetSolverEuler()
+  {
+    this->SolverType = vtkm::filter::particleadvection::IntegrationSolverType::EULER_TYPE;
+  }
+
+  VTKM_CONT
   void SetSeeds(vtkm::cont::ArrayHandle<ParticleType>& seeds) { this->Seeds = seeds; }
 
   VTKM_CONT
@@ -71,14 +83,19 @@ public:
 protected:
   VTKM_CONT virtual void ValidateOptions() const;
 
+  /*
   VTKM_CONT std::vector<vtkm::filter::particleadvection::DataSetIntegrator>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
                            const vtkm::filter::particleadvection::BoundsMap& boundsMap) const;
+  */
 
   vtkm::Id NumberOfSteps;
-  vtkm::FloatDefault StepSize;
+  vtkm::filter::particleadvection::ParticleAdvectionResultType ResultType;
   vtkm::cont::ArrayHandle<ParticleType> Seeds;
+  vtkm::filter::particleadvection::IntegrationSolverType SolverType;
+  vtkm::FloatDefault StepSize;
   bool UseThreadedAlgorithm;
+  vtkm::filter::particleadvection::VectorFieldType VecFieldType;
 
 private:
 };

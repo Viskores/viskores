@@ -105,6 +105,7 @@ set(extra_headers
   LagrangianStructures.h
   MIRFilter.h
   ParticleAdvection.h
+  ParticleAdvection2.h
   Pathline.h
   PathParticle.h
   Streamline.h
@@ -120,6 +121,7 @@ set(extra_header_template_sources
   LagrangianStructures.hxx
   MIRFilter.hxx
   ParticleAdvection.hxx
+  ParticleAdvection2.hxx
   Pathline.hxx
   PathParticle.hxx
   Streamline.hxx
@@ -128,7 +130,7 @@ set(extra_header_template_sources
 
 set(extra_sources_device
   particleadvection/Messenger.cxx
-  particleadvection/ParticleMessenger.cxx
+  #particleadvection/ParticleMessenger.cxx
   )
 
 set(core_headers

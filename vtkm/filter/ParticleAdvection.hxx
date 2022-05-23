@@ -36,11 +36,13 @@ ParticleAdvectionBase<ParticleType>::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
-  using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;
-  using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
+  //  using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
+  //  using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;
+  //  using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
 
   this->ValidateOptions();
+  return input;
+#if 0
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
   auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 
@@ -50,6 +52,7 @@ ParticleAdvectionBase<ParticleType>::PrepareForExecution(
   else
     return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
       boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+#endif
 }
 
 }

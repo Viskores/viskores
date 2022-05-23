@@ -14,6 +14,7 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/particleadvection/EulerIntegrator.h>
 #include <vtkm/worklet/particleadvection/RK4Integrator.h>
 #include <vtkm/worklet/particleadvection/Stepper.h>
 #include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>

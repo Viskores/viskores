@@ -22,6 +22,7 @@ template <typename Derived, typename ParticleType>
 inline VTKM_CONT FilterParticleAdvection<Derived, ParticleType>::FilterParticleAdvection()
   : vtkm::filter::FilterDataSetWithField<Derived>()
   , NumberOfSteps(0)
+  , SolverType(vtkm::filter::particleadvection::RK4_TYPE)
   , StepSize(0)
   , UseThreadedAlgorithm(false)
 {
@@ -40,6 +41,7 @@ void FilterParticleAdvection<Derived, ParticleType>::ValidateOptions() const
     throw vtkm::cont::ErrorFilterExecution("Step size not specified.");
 }
 
+/*
 template <typename Derived, typename ParticleType>
 std::vector<vtkm::filter::particleadvection::DataSetIntegrator>
 FilterParticleAdvection<Derived, ParticleType>::CreateDataSetIntegrators(
@@ -66,6 +68,7 @@ FilterParticleAdvection<Derived, ParticleType>::CreateDataSetIntegrators(
 
   return dsi;
 }
+  */
 
 //-----------------------------------------------------------------------------
 template <typename Derived, typename ParticleType>

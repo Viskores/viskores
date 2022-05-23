@@ -22,6 +22,7 @@ namespace filter
 namespace particleadvection
 {
 
+#if 0
 template <typename DataSetIntegratorType, typename ResultType>
 class VTKM_ALWAYS_EXPORT AdvectorBaseThreadedAlgorithm
   : public AdvectorBaseAlgorithm<DataSetIntegratorType, ResultType>
@@ -181,6 +182,7 @@ protected:
   std::condition_variable WorkerActivateCondition;
   std::unordered_map<vtkm::Id, std::vector<ResultType>> WorkerResults;
 };
+#endif
 
 }
 }

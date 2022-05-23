@@ -33,32 +33,37 @@ namespace internal
 {
 
 //Helper class to store the different result types.
-template <typename ResultType>
+//template <typename ResultType>
+template <template <typename> class ResultType, typename ParticleType>
 class ResultHelper;
 
 //Specialization for ParticleAdvectionResult
-using PAType = vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>;
+//using PAType = vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>;
 
-template <>
-class ResultHelper<PAType>
+template <typename ParticleType>
+class ResultHelper<vtkm::worklet::ParticleAdvectionResult, ParticleType>
 {
+  using PAType = vtkm::worklet::ParticleAdvectionResult<ParticleType>;
+
 public:
   static void Store(std::map<vtkm::Id, std::vector<PAType>>& results,
                     const PAType& res,
                     vtkm::Id blockId,
                     const std::vector<vtkm::Id>& indices)
   {
+    std::cout << "Store: indices= " << indices.size() << std::endl;
     if (indices.empty())
       return;
 
     //Selected out the terminated particles and store them.
-    vtkm::cont::ArrayHandle<vtkm::Particle> termParticles;
+    vtkm::cont::ArrayHandle<ParticleType> termParticles;
     auto indicesAH = vtkm::cont::make_ArrayHandle(indices, vtkm::CopyFlag::Off);
     auto perm = vtkm::cont::make_ArrayHandlePermutation(indicesAH, res.Particles);
 
     vtkm::cont::Algorithm::Copy(perm, termParticles);
     PAType termRes(termParticles);
     results[blockId].push_back(termRes);
+    std::cout << "Store: " << results.size() << std::endl;
   }
 
   static vtkm::cont::PartitionedDataSet GetOutput(
@@ -71,7 +76,7 @@ public:
       if (nResults == 0)
         continue;
 
-      std::vector<vtkm::cont::ArrayHandle<vtkm::Particle>> allParticles;
+      std::vector<vtkm::cont::ArrayHandle<ParticleType>> allParticles;
       allParticles.reserve(static_cast<std::size_t>(nResults));
 
       for (const auto& res : it.second)
@@ -102,11 +107,13 @@ public:
 };
 
 //Specialization for StreamlineResult
-using SLType = vtkm::worklet::StreamlineResult<vtkm::Particle>;
+//using SLType = vtkm::worklet::StreamlineResult<vtkm::Particle>;
 
-template <>
-class ResultHelper<SLType>
+template <typename ParticleType>
+class ResultHelper<vtkm::worklet::StreamlineResult, ParticleType>
 {
+  using SLType = vtkm::worklet::StreamlineResult<ParticleType>;
+
 public:
   static void Store(std::map<vtkm::Id, std::vector<SLType>>& results,
                     const SLType& res,
@@ -204,6 +211,7 @@ public:
 };
 };
 
+
 template <typename DataSetIntegratorType, typename AlgorithmType>
 vtkm::cont::PartitionedDataSet RunAlgo(const vtkm::filter::particleadvection::BoundsMap& boundsMap,
                                        const std::vector<DataSetIntegratorType>& dsi,
@@ -220,6 +228,7 @@ vtkm::cont::PartitionedDataSet RunAlgo(const vtkm::filter::particleadvection::Bo
   return algo.GetOutput();
 }
 
+#if 0
 //
 // Base class for particle advector
 //
@@ -299,7 +308,9 @@ public:
 
   vtkm::cont::PartitionedDataSet GetOutput() const
   {
-    return internal::ResultHelper<ResultType>::GetOutput(this->Results);
+    std::cout<<" ************************** "<<__FILE__<<" "<<__LINE__<<std::endl;
+    //return internal::ResultHelper<ResultType, vtkm::Particle>::GetOutput(this->Results);
+    return vtkm::cont::PartitionedDataSet();
   }
 
 protected:
@@ -501,7 +512,7 @@ protected:
   }
 
 
-  vtkm::Id UpdateResult(ResultType& res, vtkm::Id blockId)
+  vtkm::Id UpdateResult(ResultType& res, vtkm::Id /*blockId*/)
   {
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> idsMapI, idsMapA;
     std::vector<vtkm::Particle> A, I;
@@ -516,7 +527,8 @@ protected:
     if (numTerm > 0)
       this->UpdateTerminated(res.Particles, termIdx);
 
-    internal::ResultHelper<ResultType>::Store(this->Results, res, blockId, termIdx);
+    std::cout<<" ************************** "<<__FILE__<<" "<<__LINE__<<std::endl;
+    //internal::ResultHelper<ResultType, vtkm::Particle>::Store(this->Results, res, blockId, termIdx);
 
     return numTerm;
   }
@@ -552,6 +564,7 @@ protected:
   vtkm::Id TotalNumParticles;
   vtkm::Id TotalNumTerminatedParticles;
 };
+#endif
 
 }
 }
