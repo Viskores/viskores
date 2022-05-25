@@ -180,6 +180,18 @@ set(sources
   UnknownCellSet.cxx
   )
 
+if(VTKm_ENABLE_TESTING_LIBRARY)
+  list(APPEND sources
+    # This file should really be part of the vtkm_cont_testing library (in the testing
+    # subdirectory) It supports external code using deprecated functionality. In particular,
+    # testing/MakeTestDataSet.h now needs symbols compiled in MakeTestDataSet.cxx, but the
+    # deprecated behavior expects to only need to include vtkm_cont. As a workaround, add the code
+    # to vtkm_cont for now. This should probably be changed back to be in vtkm_cont_testing for the
+    # 2.0 release.
+    testing/MakeTestDataSet.cxx
+    )
+endif()
+
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
