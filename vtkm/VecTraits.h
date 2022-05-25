@@ -498,6 +498,7 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::VecCConst<T>>
 
 namespace internal
 {
+
 /// Used for overriding VecTraits for basic scalar types.
 ///
 template <typename ScalarType>
@@ -539,6 +540,44 @@ struct VTKM_NEVER_EXPORT VecTraitsBasic
     dest[0] = src;
   }
 };
+
+namespace detail
+{
+
+template <typename T, typename = vtkm::HasVecTraits<T>>
+struct VTKM_NEVER_EXPORT SafeVecTraitsImpl;
+
+template <typename T>
+struct VTKM_NEVER_EXPORT SafeVecTraitsImpl<T, std::true_type> : vtkm::VecTraits<T>
+{
+};
+
+template <typename T>
+struct VTKM_NEVER_EXPORT SafeVecTraitsImpl<T, std::false_type> : vtkm::internal::VecTraitsBasic<T>
+{
+};
+
+} // namespace detail
+
+/// \brief A version of VecTraits that will be available for any type.
+///
+/// The `VecTraits` template is only defined for types that have a specific specialization
+/// for it. That means if you use `VecTraits` in a template, that template will likely
+/// fail to build for types that are not defined for `VecTraits`.
+///
+/// To use `VecTraits` in a class that should support all types, not just those with
+/// defined `VecTraits`, you can use this "safe" version. `SafeVecTraits` is the same as
+/// `VecTraits` if the latter is defined. If the `VecTraits` are not defined, then
+/// `SafeVecTraits` treats the type as a simple scalar value.
+///
+/// This template ensures that it will work reasonably well for all types. But be careful
+/// as if `VecTraits` is later defined, the template is likely to change.
+///
+template <typename T>
+struct VTKM_NEVER_EXPORT SafeVecTraits : detail::SafeVecTraitsImpl<T>
+{
+};
+
 } // namespace internal
 
 /// \brief VecTraits for Pair types
@@ -554,7 +593,7 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Pair<T, U>>
 {
 };
 
-} // anonymous namespace
+} // namespace vtkm
 
 #define VTKM_BASIC_TYPE_VECTOR(type)                                                     \
   namespace vtkm                                                                         \

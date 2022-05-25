@@ -37,7 +37,7 @@ namespace internal
 // is defined rather than where it is resolved. This causes problems when extracting
 // components of, say, an ArrayHandleMultiplexer holding an ArrayHandleSOA.
 template <typename T, typename S>
-vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType>
+vtkm::cont::ArrayHandleStride<typename vtkm::internal::SafeVecTraits<T>::BaseComponentType>
 ArrayExtractComponentFallback(const vtkm::cont::ArrayHandle<T, S>& src,
                               vtkm::IdComponent componentIndex,
                               vtkm::CopyFlag allowCopy)
@@ -53,7 +53,7 @@ ArrayExtractComponentFallback(const vtkm::cont::ArrayHandle<T, S>& src,
                                      << vtkm::cont::TypeToString<vtkm::cont::ArrayHandle<T, S>>()
                                      << " requires an inefficient memory copy.");
 
-  using BaseComponentType = typename vtkm::VecTraits<T>::BaseComponentType;
+  using BaseComponentType = typename vtkm::internal::SafeVecTraits<T>::BaseComponentType;
   vtkm::Id numValues = src.GetNumberOfValues();
   vtkm::cont::ArrayHandleBasic<BaseComponentType> dest;
   dest.Allocate(numValues);
@@ -78,10 +78,10 @@ template <typename S>
 struct ArrayExtractComponentImpl : ArrayExtractComponentImplInefficient
 {
   template <typename T>
-  vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(
-    const vtkm::cont::ArrayHandle<T, S>& src,
-    vtkm::IdComponent componentIndex,
-    vtkm::CopyFlag allowCopy) const
+  vtkm::cont::ArrayHandleStride<typename vtkm::internal::SafeVecTraits<T>::BaseComponentType>
+  operator()(const vtkm::cont::ArrayHandle<T, S>& src,
+             vtkm::IdComponent componentIndex,
+             vtkm::CopyFlag allowCopy) const
   {
     // This is the slow "default" implementation. ArrayHandle implementations should provide
     // more efficient overloads where applicable.
@@ -93,13 +93,15 @@ template <>
 struct ArrayExtractComponentImpl<vtkm::cont::StorageTagStride>
 {
   template <typename T>
-  vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(
-    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagStride>& src,
-    vtkm::IdComponent componentIndex,
-    vtkm::CopyFlag allowCopy) const
+  vtkm::cont::ArrayHandleStride<typename vtkm::internal::SafeVecTraits<T>::BaseComponentType>
+  operator()(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagStride>& src,
+             vtkm::IdComponent componentIndex,
+             vtkm::CopyFlag allowCopy) const
   {
-    return this->DoExtract(
-      src, componentIndex, allowCopy, typename vtkm::VecTraits<T>::HasMultipleComponents{});
+    return this->DoExtract(src,
+                           componentIndex,
+                           allowCopy,
+                           typename vtkm::internal::SafeVecTraits<T>::HasMultipleComponents{});
   }
 
 private:
@@ -110,7 +112,7 @@ private:
                  vtkm::VecTraitsTagSingleComponent) const
   {
     VTKM_ASSERT(componentIndex == 0);
-    using VTraits = vtkm::VecTraits<T>;
+    using VTraits = vtkm::internal::SafeVecTraits<T>;
     using TBase = typename VTraits::BaseComponentType;
     VTKM_STATIC_ASSERT(VTraits::NUM_COMPONENTS == 1);
 
@@ -133,7 +135,7 @@ private:
                  vtkm::CopyFlag allowCopy,
                  vtkm::VecTraitsTagMultipleComponents) const
   {
-    using VTraits = vtkm::VecTraits<VecType>;
+    using VTraits = vtkm::internal::SafeVecTraits<VecType>;
     using T = typename VTraits::ComponentType;
     constexpr vtkm::IdComponent N = VTraits::NUM_COMPONENTS;
 
@@ -252,10 +254,10 @@ using ArrayExtractComponentIsInefficient = typename std::is_base_of<
 /// `vtkm::cont::internal::ArrayExtractComponentImpl`.
 ///
 template <typename T, typename S>
-vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> ArrayExtractComponent(
-  const vtkm::cont::ArrayHandle<T, S>& src,
-  vtkm::IdComponent componentIndex,
-  vtkm::CopyFlag allowCopy = vtkm::CopyFlag::On)
+vtkm::cont::ArrayHandleStride<typename vtkm::internal::SafeVecTraits<T>::BaseComponentType>
+ArrayExtractComponent(const vtkm::cont::ArrayHandle<T, S>& src,
+                      vtkm::IdComponent componentIndex,
+                      vtkm::CopyFlag allowCopy = vtkm::CopyFlag::On)
 {
   return internal::ArrayExtractComponentImpl<S>{}(src, componentIndex, allowCopy);
 }

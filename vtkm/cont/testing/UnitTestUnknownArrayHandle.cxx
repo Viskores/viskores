@@ -43,27 +43,6 @@ struct UnusualType
   operator T() const { return this->X; }
 };
 
-} // anonymous namespace
-
-namespace vtkm
-{
-
-// UnknownArrayHandle requires its value type to have a defined VecTraits
-// class. One of the tests is to use an "unusual" array.
-// Make an implementation here. Because I am lazy, this is only a partial
-// implementation.
-template <>
-struct VecTraits<UnusualType> : VecTraits<UnusualType::T>
-{
-  using ComponentType = UnusualType;
-  using BaseComponentType = UnusualType;
-};
-
-} // namespace vtkm
-
-namespace
-{
-
 const vtkm::Id ARRAY_SIZE = 10;
 
 struct CheckFunctor
