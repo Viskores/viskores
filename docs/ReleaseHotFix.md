@@ -8,8 +8,8 @@ Release HotFix
 You have created a branch from master branch and you have a MR request targeting
 the __master__ branch.
 
-You can bring this commit to __release__ by adding to any empty line of the MR
-description box the following directive.
+You can bring this commit to __release__ by adding the following line to
+the bottom of the MR description.
 
 ```
 Backport: release
