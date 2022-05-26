@@ -12,7 +12,6 @@
 #include <vtkm/cont/Initialize.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
