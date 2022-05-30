@@ -17,7 +17,12 @@ found in the below sub-sections.
    - Otherwise, the most recent release-specific branch to which this hotfix
      applies.
    - Lastly, if none of above, BASE.
-4. At the bottom of the description of the merge-request add: `Backport: branch_name`
+4. (If needed) If the hotfix is a backport (cherry-picked) of an existing merge-requests,
+   add a cross-reference each of the existing merge-request with the format of `!1234`
+   inside the description of the newly created merge-request.
+   - Cherry-pick each of the relevant commits of the existing merge-requests using
+     `git cherry-pick -x XXYYZZ`. 
+5. At the bottom of the description of the merge-request add: `Backport: branch_name`
    directive for each of the branches that exists between BASE (inclusive) and
    the branch that we target our merge-request (exclusive).
 
