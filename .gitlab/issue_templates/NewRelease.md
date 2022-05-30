@@ -41,20 +41,18 @@ git commit -m 'Add release notes for @VERSION@@RC@'
 -->
 
   - [ ] Update the version (not in patch releases) and date in the LICENSE.md
-        file.
+        file `git add LICENSE.md`.
   - [ ] Create update version commit:
 
 ```
-# Create branch
-git checkout -b update-to-v@VERSION@@RC@
 echo @VERSION@@RC@ > version.txt
 
 # Create commit with the following template
-# Nth is counted by the number of tags
+# Nth is counted by the number of final release tags
 git commit -m '@VERSION@@RC@ is our Nth official release of VTK-m.
 
 The major changes to VTK-m from (previous release) can be found in:
-  docs/changelog/@VERSION@/release-notes.md' version.txt'
+  docs/changelog/@VERSION@/release-notes.md' version.txt
 ```
 
   - [ ] `git tag -a -m 'VTKm @VERSION@@RC@' v@VERSION@@RC@ HEAD`
@@ -79,7 +77,7 @@ The major changes to VTK-m from (previous release) can be found in:
 
 ---
 
-# Annex 
+# Annex
 
 ## Generate change log
 Construct a `docs/changelog/@VERSION@/` folder.
