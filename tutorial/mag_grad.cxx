@@ -28,29 +28,30 @@ struct ComputeMagnitude : vtkm::worklet::WorkletMapField
   }
 };
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/NewFilterField.h>
 
-class FieldMagnitude : public vtkm::filter::FilterField<FieldMagnitude>
+class FieldMagnitude : public vtkm::filter::NewFilterField
 {
 public:
   using SupportedTypes = vtkm::List<vtkm::Vec3f>;
 
-  template <typename ArrayHandleType, typename Policy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet,
-                                          const ArrayHandleType& inField,
-                                          const vtkm::filter::FieldMetadata& fieldMetadata,
-                                          vtkm::filter::PolicyBase<Policy>)
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet) override
   {
+    const auto& inField = this->GetFieldFromDataSet(inDataSet);
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> outField;
-    this->Invoke(ComputeMagnitude{}, inField, outField);
+
+    auto resolveType = [&](const auto& concrete) {
+      this->Invoke(ComputeMagnitude{}, concrete, outField);
+    };
+    this->CastAndCallVecField<3>(inField, resolveType);
 
     std::string outFieldName = this->GetOutputFieldName();
     if (outFieldName == "")
     {
-      outFieldName = fieldMetadata.GetName() + "_magnitude";
+      outFieldName = inField.GetName() + "_magnitude";
     }
 
-    return vtkm::filter::CreateResult(inDataSet, outField, outFieldName, fieldMetadata);
+    return this->CreateResultFieldCell(inDataSet, outFieldName, outField);
   }
 };
 
