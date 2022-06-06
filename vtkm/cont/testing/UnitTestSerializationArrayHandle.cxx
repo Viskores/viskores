@@ -150,6 +150,19 @@ struct TestArrayHandleBasic
   }
 };
 
+struct TestArrayHandleBasicEmpty
+{
+  template <typename T>
+  void operator()(T) const
+  {
+    vtkm::cont::ArrayHandle<T> array;
+    array.Allocate(0);
+    RunTest(array);
+    RunTest(MakeTestUnknownArrayHandle(array));
+    RunTest(MakeTestUncertainArrayHandle(array));
+  }
+};
+
 struct TestArrayHandleSOA
 {
   template <typename T>
@@ -371,6 +384,12 @@ void TestArrayHandleSerialization()
   vtkm::testing::Testing::TryTypes(TestArrayHandleBasic(), TestTypesList());
   vtkm::testing::Testing::TryTypes(
     TestArrayHandleBasic(), vtkm::List<char, long, long long, unsigned long, unsigned long long>());
+
+  std::cout << "Testing empty ArrayHandleBasic\n";
+  vtkm::testing::Testing::TryTypes(TestArrayHandleBasicEmpty(), TestTypesList());
+  vtkm::testing::Testing::TryTypes(
+    TestArrayHandleBasicEmpty(),
+    vtkm::List<char, long, long long, unsigned long, unsigned long long>());
 
   std::cout << "Testing ArrayHandleSOA\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesListVec());
