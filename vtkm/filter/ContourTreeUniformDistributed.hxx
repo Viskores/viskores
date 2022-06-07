@@ -64,6 +64,7 @@
 #include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
 
 // distributed contour tree includes
+#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
 #include <vtkm/worklet/contourtree_distributed/BoundaryTree.h>
 #include <vtkm/worklet/contourtree_distributed/BoundaryTreeMaker.h>
 #include <vtkm/worklet/contourtree_distributed/CombineHyperSweepBlockFunctor.h>
@@ -75,7 +76,6 @@
 #include <vtkm/worklet/contourtree_distributed/HyperSweepBlock.h>
 #include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
-#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
 #include <vtkm/worklet/contourtree_distributed/TreeGrafter.h>
 
 // DIY includes
@@ -195,9 +195,8 @@ void SaveHierarchicalTreeDot(
 
 } // end namespace contourtree_distributed_detail
 
-
 //-----------------------------------------------------------------------------
-// Main constructor
+// Deprecated constructor
 //-----------------------------------------------------------------------------
 ContourTreeUniformDistributed::ContourTreeUniformDistributed(
   vtkm::Id3 blocksPerDim,
@@ -216,6 +215,37 @@ ContourTreeUniformDistributed::ContourTreeUniformDistributed(
   , UseMarchingCubes(useMarchingCubes)
   , AugmentHierarchicalTree(augmentHierarchicalTree)
   , SaveDotFiles(saveDotFiles)
+  , TimingsLogLevel(timingsLogLevel)
+  , TreeLogLevel(treeLogLevel)
+  , MultiBlockSpatialDecomposition(blocksPerDim,
+                                   globalSize,
+                                   localBlockIndices,
+                                   localBlockOrigins,
+                                   localBlockSizes)
+  , LocalMeshes(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+  , LocalContourTrees(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+  , LocalBoundaryTrees(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+  , LocalInteriorForests(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+{
+  this->SetOutputFieldName("resultData");
+}
+
+//-----------------------------------------------------------------------------
+// Main constructor
+//-----------------------------------------------------------------------------
+ContourTreeUniformDistributed::ContourTreeUniformDistributed(
+  vtkm::Id3 blocksPerDim,
+  vtkm::Id3 globalSize,
+  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
+  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
+  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
+  vtkm::cont::LogLevel timingsLogLevel,
+  vtkm::cont::LogLevel treeLogLevel)
+  : vtkm::filter::FilterField<ContourTreeUniformDistributed>()
+  , UseBoundaryExtremaOnly(true)
+  , UseMarchingCubes(false)
+  , AugmentHierarchicalTree(false)
+  , SaveDotFiles(false)
   , TimingsLogLevel(timingsLogLevel)
   , TreeLogLevel(treeLogLevel)
   , MultiBlockSpatialDecomposition(blocksPerDim,
@@ -511,7 +541,7 @@ inline VTKM_CONT void ContourTreeUniformDistributed::PreExecute(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  if (vtkm::worklet::contourtree_distributed::SpatialDecomposition::GetGlobalNumberOfBlocks(
+  if (vtkm::filter::scalar_topology::internal::SpatialDecomposition::GetGlobalNumberOfBlocks(
         input) != this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks())
   {
     throw vtkm::cont::ErrorFilterExecution(
@@ -624,6 +654,209 @@ inline VTKM_CONT void ContourTreeUniformDistributed::PostExecute(
                << ": " << timer.GetElapsedTime() << " seconds");
 }
 
+template <typename FieldType>
+inline VTKM_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
+  vtkmdiy::Master& inputContourTreeMaster,
+  vtkmdiy::DynamicAssigner& assigner,
+  vtkmdiy::RegularSwapPartners& partners,
+  const FieldType&, // dummy parameter to get the type
+  std::stringstream& timingsStream,
+  std::vector<vtkm::cont::DataSet>& hierarchicalTreeOutputDataSet)
+{
+  // TODO/FIXME: CONSIDER MOVING CONTENTS OF THIS METHOD TO SEPARATE FILTER
+  vtkm::cont::Timer timer;
+  timer.Start();
+
+  using HyperSweepBlock = vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>;
+  auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkmdiy::Master hierarchical_hyper_sweep_master(comm,
+                                                  1,  // Use 1 thread, VTK-M will do the treading
+                                                  -1, // All blocks in memory
+                                                  0,  // No create function
+                                                  HyperSweepBlock::Destroy);
+
+  // Log the time to create the DIY master for the hyper sweep
+  timingsStream << "    " << std::setw(38) << std::left << "Create DIY Master (Hypersweep)"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
+  // Copy data from hierarchical tree computation to initialize volume computation
+  using DistributedContourTreeBlockData =
+    vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>;
+  inputContourTreeMaster.foreach (
+    [&](DistributedContourTreeBlockData* currInBlock, const vtkmdiy::Master::ProxyWithLink&) {
+      vtkm::Id blockNo = currInBlock->LocalBlockNo;
+      // The block size and origin may be modified during the FanIn so we need to use the
+      // size and origin from the original decomposition instead of looking it up in the currInBlock
+      auto currBlockSize =
+        this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(blockNo);
+      auto currBlockOrigin =
+        this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(blockNo);
+
+      // NOTE: Use dummy link to make DIY happy. The dummy link is never used, since all
+      //       communication is via RegularDecomposer, which sets up its own links. No need
+      //       to keep the pointer, as DIY will "own" it and delete it when no longer needed.
+      // NOTE: Since we passed a "Destroy" function to DIY master, it will own the local data
+      //       blocks and delete them when done.
+      hierarchical_hyper_sweep_master.add(
+        currInBlock->GlobalBlockId,
+        new HyperSweepBlock(blockNo,
+                            currInBlock->GlobalBlockId,
+                            currBlockOrigin,
+                            currBlockSize,
+                            this->MultiBlockSpatialDecomposition.GlobalSize,
+                            *currInBlock->HierarchicalAugmenter.AugmentedTree),
+        new vtkmdiy::Link());
+    });
+
+  // Log time to copy the data to the HyperSweepBlock data objects
+  timingsStream << "    " << std::setw(38) << std::left << "Initialize Hypersweep Data"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
+  vtkmdiy::fix_links(hierarchical_hyper_sweep_master, assigner);
+
+  // Record time to fix the links
+  timingsStream << "    " << std::setw(38) << std::left << "Fix DIY Links (Hypersweep)"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
+  hierarchical_hyper_sweep_master.foreach ([&](HyperSweepBlock* b,
+                                               const vtkmdiy::Master::ProxyWithLink&) {
+    std::stringstream localHypersweepTimingsStream;
+    vtkm::cont::Timer localHypersweepTimer;
+    localHypersweepTimer.Start();
+
+    // Create HyperSweeper
+#ifdef DEBUG_PRINT
+    VTKM_LOG_S(this->TreeLogLevel, "Block " << b->GlobalBlockId);
+    VTKM_LOG_S(this->TreeLogLevel,
+               b->HierarchicalContourTree.DebugPrint(
+                 "Before initializing HierarchicalHyperSweeper", __FILE__, __LINE__));
+#endif
+    // Create the HierarchicalHypersweeper
+    vtkm::worklet::contourtree_distributed::HierarchicalHyperSweeper<vtkm::Id, FieldType>
+      hyperSweeper(
+        b->GlobalBlockId, b->HierarchicalContourTree, b->IntrinsicVolume, b->DependentVolume);
+    // Log the time
+    localHypersweepTimingsStream << "    Create Hypersweeper (block=" << b->LocalBlockNo
+                                 << ") : " << localHypersweepTimer.GetElapsedTime() << " seconds"
+                                 << std::endl;
+    localHypersweepTimer.Start();
+
+    // Create mesh and initialize vertex counts
+    vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler idRelabeler{ b->Origin,
+                                                                             b->Size,
+                                                                             b->GlobalSize };
+
+    if (b->GlobalSize[2] <= 1)
+    {
+      vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation2DFreudenthal mesh(
+        vtkm::Id2{ b->Size[0], b->Size[1] });
+      hyperSweeper.InitializeIntrinsicVertexCount(
+        b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
+    }
+    else
+    {
+      // For getting owned vertices, it does not make a difference if we are using marching cubes or not.
+      vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation3DFreudenthal mesh(b->Size);
+      hyperSweeper.InitializeIntrinsicVertexCount(
+        b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
+    }
+
+#ifdef DEBUG_PRINT
+    VTKM_LOG_S(this->TreeLogLevel, "Block " << b->GlobalBlockId);
+    VTKM_LOG_S(this->TreeLogLevel,
+               b->HierarchicalContourTree.DebugPrint(
+                 "After initializing intrinsic vertex count", __FILE__, __LINE__));
+    std::ostringstream volumeStream;
+    vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
+                                                      volumeStream);
+    vtkm::worklet::contourtree_augmented::PrintIndices(
+      "Intrinsic Volume", b->IntrinsicVolume, -1, volumeStream);
+    vtkm::worklet::contourtree_augmented::PrintIndices(
+      "Dependent Volume", b->DependentVolume, -1, volumeStream);
+    VTKM_LOG_S(this->TreeLogLevel, volumeStream.str());
+    VTKM_LOG_S(this->TreeLogLevel, "FLUSH" << std::endl << std::flush);
+#endif
+    // Initialize dependentVolume by copy from intrinsicVolume
+    vtkm::cont::Algorithm::Copy(b->IntrinsicVolume, b->DependentVolume);
+
+    // Log the time
+    localHypersweepTimingsStream << "    Initalize Vertex Counts (block=" << b->LocalBlockNo
+                                 << ") : " << localHypersweepTimer.GetElapsedTime() << " seconds"
+                                 << std::endl;
+    localHypersweepTimer.Start();
+
+    // Perform the local hypersweep
+    hyperSweeper.LocalHyperSweep();
+
+#ifdef DEBUG_PRINT
+    VTKM_LOG_S(this->TreeLogLevel, "Block " << b->GlobalBlockId);
+    VTKM_LOG_S(this->TreeLogLevel,
+               b->HierarchicalContourTree.DebugPrint("After local hypersweep", __FILE__, __LINE__));
+#endif
+    // Log the local hypersweep time
+    localHypersweepTimingsStream << "    Local Hypersweep (block=" << b->LocalBlockNo
+                                 << ") : " << localHypersweepTimer.GetElapsedTime() << " seconds"
+                                 << std::endl;
+    localHypersweepTimer.Start();
+
+    // Log the timing stats we collected
+    VTKM_LOG_S(this->TimingsLogLevel,
+               std::endl
+                 << "    ------------ Compute Local Hypersweep (block=" << b->LocalBlockNo
+                 << ")  ------------" << std::endl
+                 << localHypersweepTimingsStream.str());
+  });
+
+  // Log time for performing the local hypersweep
+  timingsStream << "    " << std::setw(38) << std::left << "Compute Local Hypersweep"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
+  // Reduce
+  // partners for merge over regular block grid
+  vtkmdiy::reduce(
+    hierarchical_hyper_sweep_master,
+    assigner,
+    partners,
+    vtkm::worklet::contourtree_distributed::CobmineHyperSweepBlockFunctor<FieldType>{});
+
+  // Log time to merge hypersweep results
+  timingsStream << "    " << std::setw(38) << std::left << "Merge Hypersweep Results"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
+  // Print & add to output data set
+  //std::vector<vtkm::cont::DataSet> hierarchicalTreeAndVolumeOutputDataSet(localDataBlocks.size());
+  hierarchical_hyper_sweep_master.foreach (
+    [&](HyperSweepBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
+      vtkm::cont::Field intrinsicVolumeField(
+        "IntrinsicVolume", vtkm::cont::Field::Association::WholeMesh, b->IntrinsicVolume);
+      hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(intrinsicVolumeField);
+      vtkm::cont::Field dependentVolumeField(
+        "DependentVolume", vtkm::cont::Field::Association::WholeMesh, b->DependentVolume);
+      hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(dependentVolumeField);
+#ifdef DEBUG_PRINT
+      VTKM_LOG_S(this->TreeLogLevel, "Block " << b->GlobalBlockId);
+      VTKM_LOG_S(
+        this->TreeLogLevel,
+        b->HierarchicalContourTree.DebugPrint("Called from DumpVolumes", __FILE__, __LINE__));
+      std::ostringstream volumeStream;
+      vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
+                                                        volumeStream);
+      vtkm::worklet::contourtree_augmented::PrintIndices(
+        "Intrinsic Volume", b->IntrinsicVolume, -1, volumeStream);
+      vtkm::worklet::contourtree_augmented::PrintIndices(
+        "Dependent Volume", b->DependentVolume, -1, volumeStream);
+      VTKM_LOG_S(this->TreeLogLevel, volumeStream.str());
+#endif
+      // Log the time for adding hypersweep data to the output dataset
+      timingsStream << "    " << std::setw(38) << std::left << "Create Output Data (Hypersweep)"
+                    << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+    });
+}
 
 //-----------------------------------------------------------------------------
 template <typename FieldType, typename StorageType, typename DerivedPolicy>
@@ -653,10 +886,11 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                          1,  // Use 1 thread, VTK-M will do the treading
                          -1, // All blocks in memory
                          0,  // No create function (since all blocks in memory)
-                         DistributedContourTreeBlockData::destroy);
+                         DistributedContourTreeBlockData::Destroy);
 
   // ... and record time for creating the DIY master
-  timingsStream << "    " << std::setw(38) << std::left << "Create DIY Master"
+  timingsStream << "    " << std::setw(38) << std::left
+                << "Create DIY Master (Distributed Contour Tree)"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
@@ -745,7 +979,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     // NOTE: Use dummy link to make DIY happy. The dummy link is never used, since all
     //       communication is via RegularDecomposer, which sets up its own links. No need
     //       to keep the pointer, as DIY will "own" it and delete it when no longer needed.
-    // NOTE: Since we passed a "destroy" function to DIY master, it will own the local data
+    // NOTE: Since we passed a "Destroy" function to DIY master, it will own the local data
     //       blocks and delete them when done.
     master.add(vtkmdiyLocalBlockGids[bi], newBlock, new vtkmdiy::Link);
   } // for
@@ -782,12 +1016,12 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
              b->ContourTreeMeshes.back(),
              worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
     }); // master.for_each
-  }     // // if(SaveDotFiles)
 
-  // Record time for saving debug data
-  timingsStream << "    " << std::setw(38) << std::left << "Save block data for debug"
-                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
-  timer.Start();
+    // Record time for saving debug data
+    timingsStream << "    " << std::setw(38) << std::left << "Save block data for debug"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+    timer.Start();
+  } // if(SaveDotFiles)
 
   // 1.2 Set up DIY for binary reduction
   // 1.2.1 Define the decomposition of the domain into regular blocks
@@ -819,7 +1053,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   vtkmdiy::fix_links(master, assigner);
 
   // Record time to fix the links
-  timingsStream << "    " << std::setw(38) << std::left << "Fix DIY Links"
+  timingsStream << "    " << std::setw(38) << std::left
+                << "Fix DIY Links (Distributed Contour Tree)"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
@@ -944,6 +1179,15 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
+  // Add a barrier to make the interpretation of timings easier. In this way ranks that
+  // finish early in the Fan Out wait here rather than waiting later some time during augmentation
+  // or in post execute where we can't easily measure the impact of this wait. Adding the
+  // barrier should not have a significant impact on performance as the wait would happen later on anyways.
+  comm.barrier();
+  timingsStream << "    " << std::setw(38) << std::left << "Post Fan Out Barrier"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
   // ******** 3. Augment the hierarchical tree if requested ********
   if (this->AugmentHierarchicalTree)
   {
@@ -957,18 +1201,18 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     timer.Start();
 
-    vtkmdiy::reduce(
-      master,
-      assigner,
-      partners,
-      vtkm::worklet::contourtree_distributed::HierarchicalAugmenterFunctor<FieldType>{});
+    vtkmdiy::reduce(master,
+                    assigner,
+                    partners,
+                    vtkm::worklet::contourtree_distributed::HierarchicalAugmenterFunctor<FieldType>{
+                      this->TimingsLogLevel });
     // Clear all swap data as it is no longer needed
     master.foreach (
       [](DistributedContourTreeBlockData* blockData, const vtkmdiy::Master::ProxyWithLink&) {
         blockData->HierarchicalAugmenter.ReleaseSwapArrays();
       });
 
-    timingsStream << "    " << std::setw(38) << std::left << "Retrieve In Attachment Points"
+    timingsStream << "    " << std::setw(38) << std::left << "Compute/Exchange Attachment Points"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     timer.Start();
 
@@ -984,221 +1228,72 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   // ******** 4. Create output data set ********
   std::vector<vtkm::cont::DataSet> hierarchicalTreeOutputDataSet(master.size());
-  master.foreach (
-    [&](DistributedContourTreeBlockData* blockData, const vtkmdiy::Master::ProxyWithLink&) {
-      std::stringstream createOutdataTimingsStream;
-      vtkm::cont::Timer iterationTimer;
-      iterationTimer.Start();
+  master.foreach ([&](DistributedContourTreeBlockData* blockData,
+                      const vtkmdiy::Master::ProxyWithLink&) {
+    std::stringstream createOutdataTimingsStream;
+    vtkm::cont::Timer iterationTimer;
+    iterationTimer.Start();
 
-      // Use the augmented tree if available or otherwise use the unaugmented hierarchical tree from the current block
-      auto blockHierarchcialTree = this->AugmentHierarchicalTree
-        ? (*blockData->HierarchicalAugmenter.AugmentedTree)
-        : blockData->HierarchicalTree;
+    // Use the augmented tree if available or otherwise use the unaugmented hierarchical tree from the current block
+    const auto& blockHierarchcialTree = this->AugmentHierarchicalTree
+      ? (*blockData->HierarchicalAugmenter.AugmentedTree)
+      : blockData->HierarchicalTree;
 
-      // Create data set from output
-      vtkm::cont::Field dataValuesField(
-        "DataValues", vtkm::cont::Field::Association::WholeMesh, blockHierarchcialTree.DataValues);
-      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(dataValuesField);
-      vtkm::cont::Field regularNodeGlobalIdsField("RegularNodeGlobalIds",
-                                                  vtkm::cont::Field::Association::WholeMesh,
-                                                  blockHierarchcialTree.RegularNodeGlobalIds);
-      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(regularNodeGlobalIdsField);
-      vtkm::cont::Field superarcsField(
-        "Superarcs", vtkm::cont::Field::Association::WholeMesh, blockHierarchcialTree.Superarcs);
-      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(superarcsField);
-      vtkm::cont::Field supernodesField(
-        "Supernodes", vtkm::cont::Field::Association::WholeMesh, blockHierarchcialTree.Supernodes);
-      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(supernodesField);
-      vtkm::cont::Field superparentsField("Superparents",
-                                          vtkm::cont::Field::Association::WholeMesh,
-                                          blockHierarchcialTree.Superparents);
-      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(superparentsField);
+    // Add the information to the output data set
+    blockHierarchcialTree.AddToVTKMDataSet(hierarchicalTreeOutputDataSet[blockData->LocalBlockNo]);
 
-      // Copy cell set from input data set. This is mainly to ensure that the output data set
-      // has a defined cell set. Without one, serialization for DIY does not work properly.
-      // Having the extents of the input data set may also help in other use cases.
-      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].SetCellSet(
-        input.GetPartition(blockData->LocalBlockNo).GetCellSet());
+    // Copy cell set from input data set. This is mainly to ensure that the output data set
+    // has a defined cell set. Without one, serialization for DIY does not work properly.
+    // Having the extents of the input data set may also help in other use cases.
+    hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].SetCellSet(
+      input.GetPartition(blockData->LocalBlockNo).GetCellSet());
 
-      // Log the time for each of the iterations of the fan out loop
-      createOutdataTimingsStream << "    Fan Out Create Output Dataset (block="
-                                 << blockData->LocalBlockNo
+    // Log the time for each of the iterations of the fan out loop
+    createOutdataTimingsStream << "    Create Output Dataset (block=" << blockData->LocalBlockNo
+                               << ") : " << iterationTimer.GetElapsedTime() << " seconds"
+                               << std::endl;
+    iterationTimer.Start();
+
+    // save the corresponding .gv file
+    if (this->SaveDotFiles)
+    {
+      auto nRounds = blockData->ContourTrees.size() - 1;
+      vtkm::filter::contourtree_distributed_detail::SaveHierarchicalTreeDot(
+        blockData, rank, nRounds);
+
+      createOutdataTimingsStream << "    Save Dot (block=" << blockData->LocalBlockNo
                                  << ") : " << iterationTimer.GetElapsedTime() << " seconds"
                                  << std::endl;
       iterationTimer.Start();
+    } // if(this->SaveDotFiles)
 
-      // save the corresponding .gv file
-      if (this->SaveDotFiles)
-      {
-        auto nRounds = blockData->ContourTrees.size() - 1;
-        vtkm::filter::contourtree_distributed_detail::SaveHierarchicalTreeDot(
-          blockData, rank, nRounds);
+    // Log the timing stats we collected
+    VTKM_LOG_S(this->TimingsLogLevel,
+               std::endl
+                 << "    ------------ Create Output Data (block=" << blockData->LocalBlockNo
+                 << ")  ------------" << std::endl
+                 << createOutdataTimingsStream.str());
 
-        createOutdataTimingsStream << "    Fan Out Save Dot (block=" << blockData->LocalBlockNo
-                                   << ") : " << iterationTimer.GetElapsedTime() << " seconds"
-                                   << std::endl;
-        iterationTimer.Start();
-      } // if(this->SaveDotFiles)
+    // Log the stats from the hierarchical contour tree
+    VTKM_LOG_S(this->TreeLogLevel,
+               std::endl
+                 << "    ------------ Hierarchical Tree Construction Stats ------------"
+                 << std::endl
+                 << std::setw(42) << std::left << "    LocalBlockNo"
+                 << ": " << blockData->LocalBlockNo << std::endl
+                 << blockData->HierarchicalTree.PrintTreeStats() << std::endl);
+  }); // master.foreach
 
-      // Log the timing stats we collected
-      VTKM_LOG_S(this->TimingsLogLevel,
-                 std::endl
-                   << "    ------------ Create Output Data (block=" << blockData->LocalBlockNo
-                   << ")  ------------" << std::endl
-                   << createOutdataTimingsStream.str());
-
-      // Log the stats from the hierarchical contour tree
-      VTKM_LOG_S(this->TreeLogLevel,
-                 std::endl
-                   << "    ------------ Hierarchical Tree Construction Stats ------------"
-                   << std::endl
-                   << std::setw(42) << std::left << "    LocalBlockNo"
-                   << ": " << blockData->LocalBlockNo << std::endl
-                   << blockData->HierarchicalTree.PrintTreeStats() << std::endl);
-    }); // master.foreach
-
-  // 3.1 Log total augmentation time
+  // Log total tree computation and augmentation time
   timingsStream << "    " << std::setw(38) << std::left << "Create Output Data"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
-  // BEGIN: CONSIDER MOVING TO SEPARATE FILTER
-  // ******** 5. Compute associated metric (volume) ********
   if (this->AugmentHierarchicalTree)
   {
-    using HyperSweepBlock = vtkm::worklet::contourtree_distributed::HyperSweepBlock<FieldType>;
-    vtkmdiy::Master hierarchical_hyper_sweep_master(comm,
-                                                    1,  // Use 1 thread, VTK-M will do the treading
-                                                    -1, // All blocks in memory
-                                                    0,  // No create function
-                                                    HyperSweepBlock::destroy);
-
-    // Copy data from hierarchical tree computation to initialize volume computation
-    master.foreach ([&](DistributedContourTreeBlockData* currInBlock,
-                        const vtkmdiy::Master::ProxyWithLink&) {
-      vtkm::Id blockNo = currInBlock->LocalBlockNo;
-      // The block size and origin may be modified during the FanIn so we need to use the
-      // size and origin from the original decomposition instead of looking it up in the currInBlock
-      auto currBlockSize =
-        this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(blockNo);
-      auto currBlockOrigin =
-        this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(blockNo);
-
-      // NOTE: Use dummy link to make DIY happy. The dummy link is never used, since all
-      //       communication is via RegularDecomposer, which sets up its own links. No need
-      //       to keep the pointer, as DIY will "own" it and delete it when no longer needed.
-      // NOTE: Since we passed a "destroy" function to DIY master, it will own the local data
-      //       blocks and delete them when done.
-      hierarchical_hyper_sweep_master.add(
-        currInBlock->GlobalBlockId,
-        new HyperSweepBlock(blockNo,
-                            currInBlock->GlobalBlockId,
-                            currBlockOrigin,
-                            currBlockSize,
-                            spatialDecomp.GlobalSize,
-                            *currInBlock->HierarchicalAugmenter.AugmentedTree),
-        new vtkmdiy::Link());
-    });
-
-    vtkmdiy::fix_links(hierarchical_hyper_sweep_master, assigner);
-
-    hierarchical_hyper_sweep_master.foreach (
-      [](HyperSweepBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
-    // Create HyperSweeper
-#ifdef DEBUG_PRINT
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->GlobalBlockId);
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                   b->HierarchicalContourTree.DebugPrint(
-                     "Before initializing HierarchicalHyperSweeper", __FILE__, __LINE__));
-#endif
-        vtkm::worklet::contourtree_distributed::HierarchicalHyperSweeper<vtkm::Id, FieldType>
-          hyperSweeper(
-            b->GlobalBlockId, b->HierarchicalContourTree, b->IntrinsicVolume, b->DependentVolume);
-
-        // Create mesh and initialize vertex counts
-        vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler idRelabeler{ b->Origin,
-                                                                                 b->Size,
-                                                                                 b->GlobalSize };
-
-        if (b->GlobalSize[2] <= 1)
-        {
-          vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation2DFreudenthal mesh(
-            vtkm::Id2{ b->Size[0], b->Size[1] });
-          hyperSweeper.InitializeIntrinsicVertexCount(
-            b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
-        }
-        else
-        {
-          // For getting owned vertices, it does not make a difference if we are using marching cubes or not.
-          vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation3DFreudenthal mesh(b->Size);
-          hyperSweeper.InitializeIntrinsicVertexCount(
-            b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
-        }
-
-#ifdef DEBUG_PRINT
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->GlobalBlockId);
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                   b->HierarchicalContourTree.DebugPrint(
-                     "After initializing intrinsic vertex count", __FILE__, __LINE__));
-        std::ostringstream volumeStream;
-        vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
-                                                          volumeStream);
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-          "Intrinsic Volume", b->IntrinsicVolume, -1, volumeStream);
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-          "Dependent Volume", b->DependentVolume, -1, volumeStream);
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, volumeStream.str());
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "FLUSH" << std::endl << std::flush);
-#endif
-        // Initialize dependentVolume by copy from intrinsicVolume
-        vtkm::cont::Algorithm::Copy(b->IntrinsicVolume, b->DependentVolume);
-
-        // Perform the local hypersweep
-        hyperSweeper.LocalHyperSweep();
-
-#ifdef DEBUG_PRINT
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->GlobalBlockId);
-        VTKM_LOG_S(
-          vtkm::cont::LogLevel::Info,
-          b->HierarchicalContourTree.DebugPrint("After local hypersweep", __FILE__, __LINE__));
-#endif
-      });
-
-    // Reduce
-    // partners for merge over regular block grid
-    vtkmdiy::reduce(
-      hierarchical_hyper_sweep_master,
-      assigner,
-      partners,
-      vtkm::worklet::contourtree_distributed::CobmineHyperSweepBlockFunctor<FieldType>{});
-
-    // Print & add to output data set
-    //std::vector<vtkm::cont::DataSet> hierarchicalTreeAndVolumeOutputDataSet(localDataBlocks.size());
-    hierarchical_hyper_sweep_master.foreach (
-      [&](HyperSweepBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
-        vtkm::cont::Field intrinsicVolumeField(
-          "IntrinsicVolume", vtkm::cont::Field::Association::WholeMesh, b->IntrinsicVolume);
-        hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(intrinsicVolumeField);
-        vtkm::cont::Field dependentVolumeField(
-          "DependentVolume", vtkm::cont::Field::Association::WholeMesh, b->DependentVolume);
-        hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(dependentVolumeField);
-#ifdef DEBUG_PRINT
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Block " << b->GlobalBlockId);
-        VTKM_LOG_S(
-          vtkm::cont::LogLevel::Info,
-          b->HierarchicalContourTree.DebugPrint("Called from DumpVolumes", __FILE__, __LINE__));
-        std::ostringstream volumeStream;
-        vtkm::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
-                                                          volumeStream);
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-          "Intrinsic Volume", b->IntrinsicVolume, -1, volumeStream);
-        vtkm::worklet::contourtree_augmented::PrintIndices(
-          "Dependent Volume", b->DependentVolume, -1, volumeStream);
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info, volumeStream.str());
-#endif
-      });
-  } // end if(this->AugmentHierarchicalTree)
-  // END: THIS SHOULD GO INTO A SEPARATE FILTER
+    this->ComputeVolumeMetric(
+      master, assigner, partners, FieldType{}, timingsStream, hierarchicalTreeOutputDataSet);
+  }
 
   VTKM_LOG_S(this->TimingsLogLevel,
              std::endl

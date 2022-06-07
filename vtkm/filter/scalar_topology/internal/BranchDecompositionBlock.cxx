@@ -50,73 +50,57 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include "TestingContourTreeUniformDistributedFilter.h"
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
+
+// Contour tree includes, not ye moved to new filter design
+#include <vtkm/worklet/contourtree/Types.h>
+
+namespace vtkm
+{
+namespace filter
+{
+namespace scalar_topology
+{
+namespace internal
+{
 
 namespace
+{ // anonymous namespace to restrict defition to this translation unit
+vtkm::cont::ArrayHandleGroupVecVariable<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                        vtkm::cont::ArrayHandle<vtkm::Id>>
+CreateFirstsupernodePerIterationArrayHandle(
+  const vtkm::cont::DataSet& hierarchicalContourTreeDataSet)
 {
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeFile;
-using vtkm::filter::testing::contourtree_uniform_distributed::
-  TestContourTreeUniformDistributed5x6x7;
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
+  vtkm::cont::ArrayHandle<vtkm::Id> FirstSupernodePerIterationComponents;
+  vtkm::cont::ArrayHandle<vtkm::Id> FirstSupernodePerIterationOffsets;
 
-class TestContourTreeUniformDistributedFilter
+  vtkm::cont::ArrayCopyShallowIfPossible(
+    hierarchicalContourTreeDataSet.GetField("FirstSupernodePerIterationComponents").GetData(),
+    FirstSupernodePerIterationComponents);
+  vtkm::cont::ArrayCopyShallowIfPossible(
+    hierarchicalContourTreeDataSet.GetField("FirstSupernodePerIterationOffsets").GetData(),
+    FirstSupernodePerIterationOffsets);
+  return vtkm::cont::make_ArrayHandleGroupVecVariable(FirstSupernodePerIterationComponents,
+                                                      FirstSupernodePerIterationOffsets);
+}
+} // anonymous namespace to restrict defition to this translation unit
+
+BranchDecompositionBlock::BranchDecompositionBlock(
+  vtkm::Id localBlockNo,
+  int globalBlockId,
+  const vtkm::cont::DataSet& hierarchicalTreeDataSet)
+  : LocalBlockNo(localBlockNo)
+  , GlobalBlockId(globalBlockId)
+  , FirstSupernodePerIteration(CreateFirstsupernodePerIterationArrayHandle(hierarchicalTreeDataSet))
 {
-public:
-  void operator()() const
-  {
-    using vtkm::cont::testing::Testing;
-    TestContourTreeUniformDistributed8x9(2);
-    // TestContourTreeUniformDistributed8x9(3); CRASH???
-    TestContourTreeUniformDistributed8x9(4);
-    TestContourTreeUniformDistributed8x9(8);
-    TestContourTreeUniformDistributed8x9(16);
-    TestContourTreeUniformDistributed5x6x7(2, false);
-    TestContourTreeUniformDistributed5x6x7(4, false);
-    TestContourTreeUniformDistributed5x6x7(8, false);
-    TestContourTreeUniformDistributed5x6x7(16, false);
-    TestContourTreeUniformDistributed5x6x7(2, true);
-    TestContourTreeUniformDistributed5x6x7(4, true);
-    TestContourTreeUniformDistributed5x6x7(8, true);
-    TestContourTreeUniformDistributed5x6x7(16, true);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        2);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        4);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        8);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        16);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        2,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        4,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-  }
-};
+  vtkm::Id nSupernodes =
+    hierarchicalTreeDataSet.GetField("Supernodes").GetData().GetNumberOfValues();
+  this->BranchRoots.AllocateAndFill(nSupernodes,
+                                    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
 }
 
-int UnitTestContourTreeUniformDistributedFilter(int argc, char* argv[])
-{
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributedFilter(), argc, argv);
-}
+} // namespace internal
+} // namespace scalar_topology
+} // namespace filter
+} // namespace vtkm

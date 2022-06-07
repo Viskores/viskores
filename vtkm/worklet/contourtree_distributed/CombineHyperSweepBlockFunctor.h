@@ -91,7 +91,8 @@ struct CobmineHyperSweepBlockFunctor
 
     for (const int ingid : incoming)
     {
-      auto roundNo = rp.round() - 1;
+      auto roundNo = rp.round() - 1; // We are processing incoming data from the previous round
+
       // NOTE/IMPORTANT: In each round we should have only one swap partner (despite for-loop here).
       // If that assumption does not hold, it will break things.
       // NOTE/IMPORTANT: This assumption only holds if the number of blocks is a power of two.
@@ -115,20 +116,18 @@ struct CobmineHyperSweepBlockFunctor
 
         auto intrinsicVolumeView =
           make_ArrayHandleView(b->IntrinsicVolume, 0, numSupernodesToProcess);
-        auto incomingIntrinsicVolumeView =
-          make_ArrayHandleView(incomingIntrinsicVolume, 0, numSupernodesToProcess);
-        vtkm::cont::ArrayHandle<vtkm::Id> tempSum;
+        VTKM_ASSERT(incomingIntrinsicVolume.GetNumberOfValues() ==
+                    intrinsicVolumeView.GetNumberOfValues());
+
         vtkm::cont::Algorithm::Transform(
-          intrinsicVolumeView, incomingIntrinsicVolumeView, tempSum, vtkm::Sum());
-        vtkm::cont::Algorithm::Copy(tempSum, intrinsicVolumeView);
+          intrinsicVolumeView, incomingIntrinsicVolume, intrinsicVolumeView, vtkm::Sum());
 
         auto dependentVolumeView =
           make_ArrayHandleView(b->DependentVolume, 0, numSupernodesToProcess);
-        auto incomingDependentVolumeView =
-          make_ArrayHandleView(incomingDependentVolume, 0, numSupernodesToProcess);
+        VTKM_ASSERT(incomingDependentVolume.GetNumberOfValues() ==
+                    dependentVolumeView.GetNumberOfValues());
         vtkm::cont::Algorithm::Transform(
-          dependentVolumeView, incomingDependentVolumeView, tempSum, vtkm::Sum());
-        vtkm::cont::Algorithm::Copy(tempSum, dependentVolumeView);
+          dependentVolumeView, incomingDependentVolume, dependentVolumeView, vtkm::Sum());
       }
     }
 
@@ -140,8 +139,28 @@ struct CobmineHyperSweepBlockFunctor
 #ifdef DEBUG_PRINT_COMBINED_BLOCK_IDS
         rp.enqueue(target, b->GlobalBlockId);
 #endif
-        rp.enqueue(target, b->IntrinsicVolume);
-        rp.enqueue(target, b->DependentVolume);
+
+        // Create views for data we need to send
+        vtkm::Id numSupernodesToProcess = vtkm::cont::ArrayGetValue(
+          0, b->HierarchicalContourTree.FirstSupernodePerIteration[rp.round()]);
+        auto intrinsicVolumeView =
+          make_ArrayHandleView(b->IntrinsicVolume, 0, numSupernodesToProcess);
+        auto dependentVolumeView =
+          make_ArrayHandleView(b->DependentVolume, 0, numSupernodesToProcess);
+        // TODO/FIXME: Currently a copy is required, as ArrayHandleView does not
+        // have a serialization function (and even serializing it would not avoid
+        // sending portions outside the "view"). At the moment, copying the data
+        // inside its view to an extra array seems to be the best approach. Possibly
+        // revisit this, if vtk-m adds additional functions that can help avoiding the
+        // extra copy.
+        vtkm::cont::ArrayHandle<vtkm::Id> sendIntrinsicVolume;
+        vtkm::cont::ArrayCopy(intrinsicVolumeView, sendIntrinsicVolume);
+        vtkm::cont::ArrayHandle<vtkm::Id> sendDependentVolume;
+        vtkm::cont::ArrayCopy(dependentVolumeView, sendDependentVolume);
+
+        // Send necessary data portions
+        rp.enqueue(target, sendIntrinsicVolume);
+        rp.enqueue(target, sendDependentVolume);
       }
     }
   }

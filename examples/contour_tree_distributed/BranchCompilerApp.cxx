@@ -2,10 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
-//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -39,75 +49,29 @@
 //
 //=============================================================================
 //
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
+// COMMENTS:
 //
-//  The PPP2 algorithm and software were jointly developed by
-//  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
-//  Oliver Ruebel (LBNL)
-//==============================================================================
+// Input is assumed to be a sequence of lines of the form:
+//	I	Global ID of branch root
+//	II	Value of supernode
+//	III	Global ID of supernode
+//
+//	All lines are assumed to have been sorted already.  Because of how the
+//      Unix sort utility operates (textual sort), the most we can assume is that all
+//      supernodes corresponding to a given branch root are sorted together.
+//
+//	We therefore do simple stream processing, identifying new branches by
+//      the changes in root ID.
+//
+//=======================================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_hypersweepblock_h
-#define vtk_m_worklet_contourtree_distributed_hypersweepblock_h
+#include <vtkm/worklet/contourtree_distributed/BranchCompiler.h>
 
-#include <vtkm/Types.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+int main()
+{ // main()
+  vtkm::worklet::contourtree_distributed::BranchCompiler compiler;
 
-namespace vtkm
-{
-namespace worklet
-{
-namespace contourtree_distributed
-{
-
-template <typename ContourTreeDataFieldType>
-struct HyperSweepBlock
-{
-  HyperSweepBlock(
-    const vtkm::Id localBlockNo,
-    const int globalBlockId,
-    const vtkm::Id3& origin,
-    const vtkm::Id3& size,
-    const vtkm::Id3& globalSize,
-    const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-      hierarchicalContourTree)
-    : LocalBlockNo(localBlockNo)
-    , GlobalBlockId(globalBlockId)
-    , Origin(origin)
-    , Size(size)
-    , GlobalSize(globalSize)
-    , HierarchicalContourTree(hierarchicalContourTree)
-  {
-  }
-
-  // Mesh information
-  vtkm::Id LocalBlockNo;
-  int GlobalBlockId;
-  vtkm::Id3 Origin;
-  vtkm::Id3 Size;
-  vtkm::Id3 GlobalSize;
-
-  // Hierarchical contour tree for this block
-  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-    HierarchicalContourTree;
-
-  // Computed values
-  vtkm::cont::ArrayHandle<vtkm::Id> IntrinsicVolume;
-  vtkm::cont::ArrayHandle<vtkm::Id> DependentVolume;
-
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b)
-  {
-    delete static_cast<HyperSweepBlock<ContourTreeDataFieldType>*>(b);
-  }
-};
-
-} // namespace contourtree_distributed
-} // namespace worklet
-} // namespace vtkm
-
-#endif
+  compiler.Parse(std::cin);
+  compiler.Print(std::cout);
+  return 0;
+} // main()

@@ -24,9 +24,9 @@ set(headers
   MergeBlockFunctor.h
   MultiBlockContourTreeHelper.h
   PrintGraph.h
-  SpatialDecomposition.h
   TreeCompiler.h
   TreeGrafter.h
+  BranchCompiler.h
 )
 
 vtkm_declare_headers(${headers})

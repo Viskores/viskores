@@ -53,7 +53,7 @@
 #ifndef vtk_m_worklet_contourtree_distributed_multiblockcontourtreehelper_h
 #define vtk_m_worklet_contourtree_distributed_multiblockcontourtreehelper_h
 
-#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
+#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
 
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
@@ -198,7 +198,7 @@ public:
     }
   }
 
-  SpatialDecomposition MultiBlockSpatialDecomposition;
+  vtkm::filter::scalar_topology::internal::SpatialDecomposition MultiBlockSpatialDecomposition;
   std::vector<vtkm::worklet::contourtree_augmented::ContourTree> LocalContourTrees;
   std::vector<vtkm::worklet::contourtree_augmented::IdArrayType> LocalSortOrders;
 }; // end MultiBlockContourTreeHelper

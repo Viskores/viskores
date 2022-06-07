@@ -9,11 +9,9 @@
 ##============================================================================
 
 set(headers
-  FindRegularByGlobal.h
-  FindSuperArcForUnknownNode.h
-  FindSuperArcBetweenNodes.h
-  PermuteComparator.h
-  InitalizeSuperchildrenWorklet.h
-)
+  HierarchicalVolumetricBranchDecomposer.h
+  )
+#-----------------------------------------------------------------------------
+add_subdirectory(hierarchical_volumetric_branch_decomposer)
 
 vtkm_declare_headers(${headers})

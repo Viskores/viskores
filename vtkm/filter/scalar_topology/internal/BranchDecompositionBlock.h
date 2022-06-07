@@ -50,73 +50,46 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include "TestingContourTreeUniformDistributedFilter.h"
+#ifndef vtk_m_filter_scalar_topology_internal_BranchDecompositionBlock_h
+#define vtk_m_filter_scalar_topology_internal_BranchDecompositionBlock_h
 
-namespace
-{
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeFile;
-using vtkm::filter::testing::contourtree_uniform_distributed::
-  TestContourTreeUniformDistributed5x6x7;
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
+#include <vtkm/cont/ArrayHandleGroupVecVariable.h>
+#include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 
-class TestContourTreeUniformDistributedFilter
+namespace vtkm
 {
-public:
-  void operator()() const
-  {
-    using vtkm::cont::testing::Testing;
-    TestContourTreeUniformDistributed8x9(2);
-    // TestContourTreeUniformDistributed8x9(3); CRASH???
-    TestContourTreeUniformDistributed8x9(4);
-    TestContourTreeUniformDistributed8x9(8);
-    TestContourTreeUniformDistributed8x9(16);
-    TestContourTreeUniformDistributed5x6x7(2, false);
-    TestContourTreeUniformDistributed5x6x7(4, false);
-    TestContourTreeUniformDistributed5x6x7(8, false);
-    TestContourTreeUniformDistributed5x6x7(16, false);
-    TestContourTreeUniformDistributed5x6x7(2, true);
-    TestContourTreeUniformDistributed5x6x7(4, true);
-    TestContourTreeUniformDistributed5x6x7(8, true);
-    TestContourTreeUniformDistributed5x6x7(16, true);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        2);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        4);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        8);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        16);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        2,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        4,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-  }
+namespace filter
+{
+namespace scalar_topology
+{
+namespace internal
+{
+
+struct BranchDecompositionBlock
+{
+  BranchDecompositionBlock(vtkm::Id localBlockNo,
+                           int globalBlockId,
+                           const vtkm::cont::DataSet& hierarchicalTreeDataSet);
+
+  // Block metadata
+  vtkm::Id LocalBlockNo;
+  int GlobalBlockId; // TODO/FIXME: Check whether really needed. Possibly only during debugging
+
+  // Data from hierarchical tree needed during reduction
+  vtkm::cont::ArrayHandleGroupVecVariable<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                          vtkm::cont::ArrayHandle<vtkm::Id>>
+    FirstSupernodePerIteration;
+
+  // Decomposer used during reduction and output data set
+  HierarchicalVolumetricBranchDecomposer VolumetricBranchDecomposer;
+  vtkm::cont::ArrayHandle<vtkm::Id> BranchRoots;
+
+  // Destroy function allowing DIY to own blocks and clean them up after use
+  static void Destroy(void* b) { delete static_cast<BranchDecompositionBlock*>(b); }
 };
-}
 
-int UnitTestContourTreeUniformDistributedFilter(int argc, char* argv[])
-{
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributedFilter(), argc, argv);
-}
+} // namespace internal
+} // namespace scalar_topology
+} // namespace filter
+} // namespace vtkm
+#endif

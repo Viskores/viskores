@@ -50,73 +50,96 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include "TestingContourTreeUniformDistributedFilter.h"
+#ifndef _vtk_m_filter_testing_VolumeHelper_h_
+#define _vtk_m_filter_testing_VolumeHelper_h_
 
-namespace
+#include <algorithm>
+#include <vtkm/Types.h>
+
+namespace vtkm
 {
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeFile;
-using vtkm::filter::testing::contourtree_uniform_distributed::
-  TestContourTreeUniformDistributed5x6x7;
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
+namespace filter
+{
+namespace testing
+{
+namespace contourtree_uniform_distributed
+{
 
-class TestContourTreeUniformDistributedFilter
+class VolumeHelper
 {
 public:
-  void operator()() const
-  {
-    using vtkm::cont::testing::Testing;
-    TestContourTreeUniformDistributed8x9(2);
-    // TestContourTreeUniformDistributed8x9(3); CRASH???
-    TestContourTreeUniformDistributed8x9(4);
-    TestContourTreeUniformDistributed8x9(8);
-    TestContourTreeUniformDistributed8x9(16);
-    TestContourTreeUniformDistributed5x6x7(2, false);
-    TestContourTreeUniformDistributed5x6x7(4, false);
-    TestContourTreeUniformDistributed5x6x7(8, false);
-    TestContourTreeUniformDistributed5x6x7(16, false);
-    TestContourTreeUniformDistributed5x6x7(2, true);
-    TestContourTreeUniformDistributed5x6x7(4, true);
-    TestContourTreeUniformDistributed5x6x7(8, true);
-    TestContourTreeUniformDistributed5x6x7(16, true);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        2);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        4);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        8);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        16);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        2,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        4,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-  }
+  typedef std::tuple<vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id> Volume;
+  std::vector<Volume> volumes;
+  void Parse(const std::string& str);
+  void Load(const std::string& filename);
+  void Print(std::ostream& out) const;
 };
+
+inline void VolumeHelper::Parse(const std::string& str)
+{
+  std::stringstream in(str);
+  std::string temp;
+
+  in >> temp;
+  in >> temp;
+  in >> temp;
+
+  while (!in.eof())
+  {
+    std::vector<vtkm::Id> ids;
+
+    for (int i = 0; i < 5; ++i)
+    {
+      vtkm::Id id;
+
+      in >> temp;
+      in >> id;
+      ids.push_back(id);
+    }
+
+    if (in.fail())
+      break;
+
+    Volume vol{ ids[0], ids[1], ids[2], ids[3], ids[4] };
+    if (std::find(this->volumes.begin(), this->volumes.end(), vol) == this->volumes.end())
+    {
+      this->volumes.push_back(vol);
+    }
+  }
+
+  std::sort(this->volumes.begin(), this->volumes.end());
 }
 
-int UnitTestContourTreeUniformDistributedFilter(int argc, char* argv[])
+inline void VolumeHelper::Print(std::ostream& out) const
 {
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributedFilter(), argc, argv);
+  out << "============" << std::endl << "Contour Tree" << std::endl;
+
+  for (auto it = std::begin(this->volumes); it != std::end(this->volumes); ++it)
+  {
+    Volume volume(*it);
+
+    out << "H: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<0>(volume)
+        << " L: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<1>(volume)
+        << " VH: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<2>(volume)
+        << " VR: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<3>(volume)
+        << " VL: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<4>(volume) << std::endl;
+  }
 }
+
+inline void VolumeHelper::Load(const std::string& filename)
+{
+  this->volumes.clear();
+
+  std::ifstream in(filename);
+  std::stringstream buffer;
+
+  buffer << in.rdbuf();
+  this->Parse(buffer.str());
+}
+
+}
+}
+}
+} // vtkm::filter::testing::contourtree_uniform_distributed
+
+#endif

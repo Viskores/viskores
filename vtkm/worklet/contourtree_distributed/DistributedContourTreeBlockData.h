@@ -94,7 +94,7 @@ struct DistributedContourTreeBlockData
   vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> AugmentedTree;
 
   // Destroy function allowing DIY to own blocks and clean them up after use
-  static void destroy(void* b)
+  static void Destroy(void* b)
   {
     delete static_cast<DistributedContourTreeBlockData<FieldType>*>(b);
   }

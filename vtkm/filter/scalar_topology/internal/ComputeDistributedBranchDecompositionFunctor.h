@@ -50,73 +50,38 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include "TestingContourTreeUniformDistributedFilter.h"
+#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
 
-namespace
-{
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeFile;
-using vtkm::filter::testing::contourtree_uniform_distributed::
-  TestContourTreeUniformDistributed5x6x7;
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
+#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
 
-class TestContourTreeUniformDistributedFilter
+// clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/diy/diy.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+// clang-format on
+
+
+namespace vtkm
 {
-public:
-  void operator()() const
-  {
-    using vtkm::cont::testing::Testing;
-    TestContourTreeUniformDistributed8x9(2);
-    // TestContourTreeUniformDistributed8x9(3); CRASH???
-    TestContourTreeUniformDistributed8x9(4);
-    TestContourTreeUniformDistributed8x9(8);
-    TestContourTreeUniformDistributed8x9(16);
-    TestContourTreeUniformDistributed5x6x7(2, false);
-    TestContourTreeUniformDistributed5x6x7(4, false);
-    TestContourTreeUniformDistributed5x6x7(8, false);
-    TestContourTreeUniformDistributed5x6x7(16, false);
-    TestContourTreeUniformDistributed5x6x7(2, true);
-    TestContourTreeUniformDistributed5x6x7(4, true);
-    TestContourTreeUniformDistributed5x6x7(8, true);
-    TestContourTreeUniformDistributed5x6x7(16, true);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        2);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        4);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        8);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        16);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        2,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        4,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-  }
+namespace filter
+{
+namespace scalar_topology
+{
+namespace internal
+{
+
+struct ComputeDistributedBranchDecompositionFunctor
+{
+  void operator()(BranchDecompositionBlock* b,
+                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
+                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
+  ) const;
 };
-}
 
-int UnitTestContourTreeUniformDistributedFilter(int argc, char* argv[])
-{
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributedFilter(), argc, argv);
-}
+} // namespace internal
+} // namespace scalar_topology
+} // namespace filter
+} // namespace vtkm
+
+#endif

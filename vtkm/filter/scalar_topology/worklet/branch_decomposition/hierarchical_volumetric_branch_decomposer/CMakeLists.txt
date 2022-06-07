@@ -9,11 +9,13 @@
 ##============================================================================
 
 set(headers
-  FindRegularByGlobal.h
-  FindSuperArcForUnknownNode.h
-  FindSuperArcBetweenNodes.h
-  PermuteComparator.h
-  InitalizeSuperchildrenWorklet.h
+  CollapseBranchesPointerDoublingWorklet.h
+  CollapseBranchesWorklet.h
+  FindBestSupernodeWorklet.h
+  LocalBestUpDownByVolumeBestUpDownEdgeWorklet.h
+  LocalBestUpDownByVolumeInitSuperarcListWorklet.h
+  LocalBestUpDownByVolumeWorklet.h
+  SuperArcVolumetricComparatorIndirectGlobalIdComparator.h
 )
 
 vtkm_declare_headers(${headers})

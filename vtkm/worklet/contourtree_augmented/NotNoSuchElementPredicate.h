@@ -53,6 +53,7 @@
 #ifndef vtk_m_worklet_contourtree_augmented_not_no_such_element_predicate_h
 #define vtk_m_worklet_contourtree_augmented_not_no_such_element_predicate_h
 
+#include <vtkm/Types.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm

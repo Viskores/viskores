@@ -56,6 +56,7 @@
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
+#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
 #include <vtkm/worklet/ContourTreeUniformAugmented.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
@@ -67,7 +68,6 @@ VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
 #include <vtkm/worklet/contourtree_distributed/ContourTreeBlockData.h>
-#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
 #include <vtkm/worklet/contourtree_distributed/MergeBlockFunctor.h>
 
 #include <memory>
@@ -338,7 +338,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
 
   // Compute the gids for our local blocks
   using RegularDecomposer = vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds>;
-  const vtkm::worklet::contourtree_distributed::SpatialDecomposition& spatialDecomp =
+  const vtkm::filter::scalar_topology::internal::SpatialDecomposition& spatialDecomp =
     this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition;
   const auto numDims = spatialDecomp.NumberOfDimensions();
 

@@ -71,10 +71,13 @@
 #define VOLUME_PRINT_WIDTH 8
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
+#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcBetweenNodes.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcForUnknownNode.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/InitalizeSuperchildrenWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/PermuteComparator.h>
@@ -161,6 +164,8 @@ public:
   vtkm::worklet::contourtree_augmented::IdArrayType NumIterations;
 
   /// vectors tracking the segments used in each iteration of the hypersweep
+  // TODO/FIXME: Consider using ArrayHandleGroupVecVariable instead of an STL vector
+  // of ArrayHandles. (Though that may be a bit tricky with dynamic resizing.)
   std::vector<vtkm::worklet::contourtree_augmented::IdArrayType> FirstSupernodePerIteration;
   std::vector<vtkm::worklet::contourtree_augmented::IdArrayType> FirstHypernodePerIteration;
 
@@ -186,6 +191,13 @@ public:
                                                  this->Hyperarcs,
                                                  this->RegularNodeGlobalIds,
                                                  this->DataValues);
+  }
+
+  /// routine to create a FindSuperArcBetweenNodes object that we can use as an input for worklets to call the function
+  VTKM_CONT
+  FindSuperArcBetweenNodes GetFindSuperArcBetweenNodes() const
+  {
+    return FindSuperArcBetweenNodes(this->Superarcs);
   }
 
   ///  routine to initialize the hierarchical tree with the top level tree
@@ -233,6 +245,20 @@ public:
     vtkm::Id totalVolume,
     const vtkm::worklet::contourtree_augmented::IdArrayType& intrinsicVolume,
     const vtkm::worklet::contourtree_augmented::IdArrayType& dependentVolume);
+
+  // Helper function to convert an STL vector of VTK-m arrays into components and
+  // group arrays (for packing into a vtkm::cont::DataSet and using with an
+  // ArrayHandleGroupVecVariable for access)
+  // TODO/FIXME: Ultimately, we should get rid of the STL arrays and use an
+  // ArrayHandleGroupVecVariable in this class.
+  VTKM_CONT
+  static void ConvertSTLVecOfHandlesToVTKMComponentsAndOffsetsArray(
+    const std::vector<vtkm::worklet::contourtree_augmented::IdArrayType>& inputVec,
+    vtkm::worklet::contourtree_augmented::IdArrayType& outputComponents,
+    vtkm::cont::ArrayHandle<vtkm::Id>& outputOffsets);
+
+  VTKM_CONT
+  void AddToVTKMDataSet(vtkm::cont::DataSet& ds) const;
 
 private:
   /// Used internally to Invoke worklets
@@ -938,9 +964,99 @@ std::string HierarchicalContourTree<FieldType>::DumpVolumes(
   return outStream.str();
 } // DumpVolumes()
 
+template <typename FieldType>
+void HierarchicalContourTree<FieldType>::ConvertSTLVecOfHandlesToVTKMComponentsAndOffsetsArray(
+  const std::vector<vtkm::worklet::contourtree_augmented::IdArrayType>& inputVec,
+  vtkm::worklet::contourtree_augmented::IdArrayType& outputComponents,
+  vtkm::cont::ArrayHandle<vtkm::Id>& outputOffsets)
+{
+  // Compute num components vector
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> numComponents;
+  numComponents.Allocate(inputVec.size());
+  auto numComponentsWritePortal = numComponents.WritePortal();
+
+  for (vtkm::Id i = 0; i < static_cast<vtkm::Id>(inputVec.size()); ++i)
+  {
+    numComponentsWritePortal.Set(i,
+                                 static_cast<vtkm::IdComponent>(inputVec[i].GetNumberOfValues()));
+  }
+
+  // Convert to offsets and store in output array
+  vtkm::Id componentsArraySize;
+  vtkm::cont::ConvertNumComponentsToOffsets(numComponents, outputOffsets, componentsArraySize);
+
+  // Copy data to components array
+  auto outputOffsetsReadPortal = outputOffsets.ReadPortal();
+  outputComponents.Allocate(componentsArraySize);
+  auto numComponentsReadPortal = numComponents.ReadPortal();
+  for (vtkm::Id i = 0; i < static_cast<vtkm::Id>(inputVec.size()); ++i)
+  {
+    auto outputView = vtkm::cont::make_ArrayHandleView(
+      outputComponents, outputOffsetsReadPortal.Get(i), numComponentsReadPortal.Get(i));
+    vtkm::cont::ArrayCopy(inputVec[i], outputView);
+  }
+}
+
+template <typename FieldType>
+void HierarchicalContourTree<FieldType>::AddToVTKMDataSet(vtkm::cont::DataSet& ds) const
+{
+  // Create data set from output
+  vtkm::cont::Field regularNodeGlobalIdsField(
+    "RegularNodeGlobalIds", vtkm::cont::Field::Association::WholeMesh, this->RegularNodeGlobalIds);
+  ds.AddField(regularNodeGlobalIdsField);
+  vtkm::cont::Field dataValuesField(
+    "DataValues", vtkm::cont::Field::Association::WholeMesh, this->DataValues);
+  ds.AddField(dataValuesField);
+  vtkm::cont::Field regularNodeSortOrderField(
+    "RegularNodeSortOrder", vtkm::cont::Field::Association::WholeMesh, this->RegularNodeSortOrder);
+  ds.AddField(regularNodeSortOrderField);
+  vtkm::cont::Field regular2SupernodeField(
+    "Regular2Supernode", vtkm::cont::Field::Association::WholeMesh, this->Regular2Supernode);
+  ds.AddField(regular2SupernodeField);
+  vtkm::cont::Field superparentsField(
+    "Superparents", vtkm::cont::Field::Association::WholeMesh, this->Superparents);
+  ds.AddField(superparentsField);
+  vtkm::cont::Field supernodesField(
+    "Supernodes", vtkm::cont::Field::Association::WholeMesh, this->Supernodes);
+  ds.AddField(supernodesField);
+  vtkm::cont::Field superarcsField(
+    "Superarcs", vtkm::cont::Field::Association::WholeMesh, this->Superarcs);
+  ds.AddField(superarcsField);
+  vtkm::cont::Field hyperparentsField(
+    "Hyperparents", vtkm::cont::Field::Association::WholeMesh, this->Hyperparents);
+  ds.AddField(hyperparentsField);
+  vtkm::cont::Field super2HypernodeField(
+    "Super2Hypernode", vtkm::cont::Field::Association::WholeMesh, this->Super2Hypernode);
+  ds.AddField(super2HypernodeField);
+  vtkm::cont::Field whichRoundField(
+    "WhichRound", vtkm::cont::Field::Association::WholeMesh, this->WhichRound);
+  ds.AddField(whichRoundField);
+  vtkm::cont::Field whichIterationField(
+    "WhichIteration", vtkm::cont::Field::Association::WholeMesh, this->WhichIteration);
+  ds.AddField(whichIterationField);
+  // TODO/FIXME: See what other fields we need to add
+  vtkm::worklet::contourtree_augmented::IdArrayType firstSupernodePerIterationComponents;
+  vtkm::cont::ArrayHandle<vtkm::Id> firstSupernodePerIterationOffsets;
+  ConvertSTLVecOfHandlesToVTKMComponentsAndOffsetsArray(FirstSupernodePerIteration,
+                                                        firstSupernodePerIterationComponents,
+                                                        firstSupernodePerIterationOffsets);
+  vtkm::cont::Field firstSupernodePerIterationComponentsField(
+    "FirstSupernodePerIterationComponents",
+    vtkm::cont::Field::Association::WholeMesh,
+    firstSupernodePerIterationComponents);
+  ds.AddField(firstSupernodePerIterationComponentsField);
+  vtkm::cont::Field firstSupernodePerIterationOffsetsField(
+    "FirstSupernodePerIterationOffsets",
+    vtkm::cont::Field::Association::WholeMesh,
+    firstSupernodePerIterationOffsets);
+  ds.AddField(firstSupernodePerIterationOffsetsField);
+  // TODO/FIXME: It seems we may only need the counts for the first iteration, so check, which
+  // information we actually need.
+}
 
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
+
 
 #endif

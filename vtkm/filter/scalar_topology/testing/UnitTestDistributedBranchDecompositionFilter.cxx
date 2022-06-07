@@ -50,73 +50,59 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include "TestingContourTreeUniformDistributedFilter.h"
+#include "vtkm/filter/testing/TestingContourTreeUniformDistributedFilter.h"
 
 namespace
 {
+using vtkm::cont::testing::Testing;
 using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeFile;
-using vtkm::filter::testing::contourtree_uniform_distributed::
-  TestContourTreeUniformDistributed5x6x7;
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
 
-class TestContourTreeUniformDistributedFilter
+class TestDistributedBranchDecompositionFilter
 {
 public:
   void operator()() const
   {
-    using vtkm::cont::testing::Testing;
-    TestContourTreeUniformDistributed8x9(2);
-    // TestContourTreeUniformDistributed8x9(3); CRASH???
-    TestContourTreeUniformDistributed8x9(4);
-    TestContourTreeUniformDistributed8x9(8);
-    TestContourTreeUniformDistributed8x9(16);
-    TestContourTreeUniformDistributed5x6x7(2, false);
-    TestContourTreeUniformDistributed5x6x7(4, false);
-    TestContourTreeUniformDistributed5x6x7(8, false);
-    TestContourTreeUniformDistributed5x6x7(16, false);
-    TestContourTreeUniformDistributed5x6x7(2, true);
-    TestContourTreeUniformDistributed5x6x7(4, true);
-    TestContourTreeUniformDistributed5x6x7(8, true);
-    TestContourTreeUniformDistributed5x6x7(16, true);
     TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
                         "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        2);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        4);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        8);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        16);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
+                        Testing::RegressionImagePath("vanc.branch_compile.ct_txt"),
                         2,
                         false,
                         0,
                         1,
                         true,
-                        false);
+                        true);
     TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
                         "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
+                        Testing::RegressionImagePath("vanc.branch_compile.ct_txt"),
                         4,
                         false,
                         0,
                         1,
                         true,
-                        false);
+                        true);
+    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
+                        "var",
+                        Testing::RegressionImagePath("vanc.branch_compile.ct_txt"),
+                        8,
+                        false,
+                        0,
+                        1,
+                        true,
+                        true);
+    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
+                        "var",
+                        Testing::RegressionImagePath("vanc.branch_compile.ct_txt"),
+                        16,
+                        false,
+                        0,
+                        1,
+                        true,
+                        true);
   }
 };
 }
 
-int UnitTestContourTreeUniformDistributedFilter(int argc, char* argv[])
+int UnitTestDistributedBranchDecompositionFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributedFilter(), argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestDistributedBranchDecompositionFilter(), argc, argv);
 }

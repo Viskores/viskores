@@ -9,11 +9,14 @@
 ##============================================================================
 
 set(headers
-  FindRegularByGlobal.h
-  FindSuperArcForUnknownNode.h
-  FindSuperArcBetweenNodes.h
-  PermuteComparator.h
-  InitalizeSuperchildrenWorklet.h
-)
+  BranchDecompositionBlock.h
+  ComputeDistributedBranchDecompositionFunctor.h
+  SpatialDecomposition.h
+  )
+#-----------------------------------------------------------------------------
+
+# Note: The C++ source files BranchDecompositionBlock.cxx and
+# ComputeDistributedBranchDecompositionFunctor.cxx are added to the scalar
+# topology library in the CMakeLists.txt in our parent directory.
 
 vtkm_declare_headers(${headers})

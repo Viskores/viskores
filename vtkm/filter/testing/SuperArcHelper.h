@@ -50,73 +50,85 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include "TestingContourTreeUniformDistributedFilter.h"
+#ifndef _vtk_m_filter_testing_SuperArchHelper_h_
+#define _vtk_m_filter_testing_SuperArchHelper_h_
 
-namespace
+#include <algorithm>
+#include <vtkm/Types.h>
+
+namespace vtkm
 {
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeFile;
-using vtkm::filter::testing::contourtree_uniform_distributed::
-  TestContourTreeUniformDistributed5x6x7;
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
+namespace filter
+{
+namespace testing
+{
+namespace contourtree_uniform_distributed
+{
 
-class TestContourTreeUniformDistributedFilter
+class SuperArcHelper
 {
 public:
-  void operator()() const
-  {
-    using vtkm::cont::testing::Testing;
-    TestContourTreeUniformDistributed8x9(2);
-    // TestContourTreeUniformDistributed8x9(3); CRASH???
-    TestContourTreeUniformDistributed8x9(4);
-    TestContourTreeUniformDistributed8x9(8);
-    TestContourTreeUniformDistributed8x9(16);
-    TestContourTreeUniformDistributed5x6x7(2, false);
-    TestContourTreeUniformDistributed5x6x7(4, false);
-    TestContourTreeUniformDistributed5x6x7(8, false);
-    TestContourTreeUniformDistributed5x6x7(16, false);
-    TestContourTreeUniformDistributed5x6x7(2, true);
-    TestContourTreeUniformDistributed5x6x7(4, true);
-    TestContourTreeUniformDistributed5x6x7(8, true);
-    TestContourTreeUniformDistributed5x6x7(16, true);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        2);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        4);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        8);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        16);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        2,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        4,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-  }
+  std::vector<vtkm::Id3> branches;
+  void Parse(const std::string& str);
+  void Print(std::ostream& out) const;
+  void Load(const std::string& filename);
+  bool static Compare(const vtkm::Id3& LHS, const vtkm::Id3& RHS);
 };
+
+inline bool SuperArcHelper::Compare(const vtkm::Id3& LHS, const vtkm::Id3& RHS)
+{
+  std::vector<vtkm::Id> v1{ LHS[0], LHS[1], LHS[2] };
+  std::vector<vtkm::Id> v2{ RHS[0], RHS[1], RHS[2] };
+
+  return std::lexicographical_compare(v1.begin(), v1.end(), v2.begin(), v2.end());
 }
 
-int UnitTestContourTreeUniformDistributedFilter(int argc, char* argv[])
+inline void SuperArcHelper::Parse(const std::string& str)
 {
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributedFilter(), argc, argv);
+  std::stringstream in(str);
+
+  while (!in.eof())
+  {
+    vtkm::Id3 branch;
+
+    in >> branch[0] >> branch[1] >> branch[2];
+
+    if (in.fail())
+      break;
+
+    if (std::find(this->branches.begin(), this->branches.end(), branch) == this->branches.end())
+    {
+      this->branches.push_back(branch);
+    }
+  }
+
+  std::sort(this->branches.begin(), this->branches.end(), Compare);
 }
+
+inline void SuperArcHelper::Print(std::ostream& out) const
+{
+  for (auto it = std::begin(branches); it != std::end(branches); ++it)
+  {
+    vtkm::Id3 branch(*it);
+
+    out << branch[0] << '\t' << branch[1] << '\t' << branch[2] << std::endl;
+  }
+}
+
+inline void SuperArcHelper::Load(const std::string& filename)
+{
+  this->branches.clear();
+
+  std::ifstream in(filename);
+  std::stringstream buffer;
+
+  buffer << in.rdbuf();
+  this->Parse(buffer.str());
+}
+
+}
+}
+}
+} // vtkm::filter::testing::contourtree_uniform_distributed
+
+#endif

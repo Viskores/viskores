@@ -8,12 +8,4 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(headers
-  FindRegularByGlobal.h
-  FindSuperArcForUnknownNode.h
-  FindSuperArcBetweenNodes.h
-  PermuteComparator.h
-  InitalizeSuperchildrenWorklet.h
-)
-
-vtkm_declare_headers(${headers})
+add_subdirectory(branch_decomposition)

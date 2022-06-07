@@ -38,74 +38,55 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_hypersweepblock_h
-#define vtk_m_worklet_contourtree_distributed_hypersweepblock_h
+#ifndef vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_CollapseBranchesPointerDoublingWorklet_h
+#define vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_CollapseBranchesPointerDoublingWorklet_h
 
-#include <vtkm/Types.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
-namespace contourtree_distributed
+namespace scalar_topology
+{
+namespace hierarchical_volumetric_branch_decomposer
 {
 
-template <typename ContourTreeDataFieldType>
-struct HyperSweepBlock
+class CollapseBranchesPointerDoublingWorklet : public vtkm::worklet::WorkletMapField
 {
-  HyperSweepBlock(
-    const vtkm::Id localBlockNo,
-    const int globalBlockId,
-    const vtkm::Id3& origin,
-    const vtkm::Id3& size,
-    const vtkm::Id3& globalSize,
-    const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-      hierarchicalContourTree)
-    : LocalBlockNo(localBlockNo)
-    , GlobalBlockId(globalBlockId)
-    , Origin(origin)
-    , Size(size)
-    , GlobalSize(globalSize)
-    , HierarchicalContourTree(hierarchicalContourTree)
+public:
+  /// Control signature for the worklet
+  using ControlSignature = void(WholeArrayInOut branchRoot);
+  using ExecutionSignature = void(InputIndex, _1);
+  using InputDomain = _1;
+
+  /// Default Constructor
+  VTKM_EXEC_CONT
+  CollapseBranchesPointerDoublingWorklet() {}
+
+  /// operator() of the workelt
+  template <typename InOutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id superarc,
+                            const InOutFieldPortalType& branchRootPortal) const
   {
-  }
+    vtkm::Id branchRootVal1 = branchRootPortal.Get(superarc);
+    vtkm::Id branchRootVal2 = branchRootPortal.Get(branchRootPortal.Get(superarc));
+    if (branchRootVal1 != branchRootVal2)
+    {
+      branchRootPortal.Set(superarc, branchRootVal2);
+    }
+  } // operator()()
 
-  // Mesh information
-  vtkm::Id LocalBlockNo;
-  int GlobalBlockId;
-  vtkm::Id3 Origin;
-  vtkm::Id3 Size;
-  vtkm::Id3 GlobalSize;
 
-  // Hierarchical contour tree for this block
-  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-    HierarchicalContourTree;
+}; // CollapseBranchesPointerDoublingWorklet
 
-  // Computed values
-  vtkm::cont::ArrayHandle<vtkm::Id> IntrinsicVolume;
-  vtkm::cont::ArrayHandle<vtkm::Id> DependentVolume;
-
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b)
-  {
-    delete static_cast<HyperSweepBlock<ContourTreeDataFieldType>*>(b);
-  }
-};
-
+} // namespace hierarchical_volumetric_branch_decomposer
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm

@@ -50,73 +50,93 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include "TestingContourTreeUniformDistributedFilter.h"
+#ifndef vtk_m_worklet_contourtree_distributed_find_superarc_between_nodes_h
+#define vtk_m_worklet_contourtree_distributed_find_superarc_between_nodes_h
 
-namespace
+#include <vtkm/Types.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
+
+
+namespace vtkm
 {
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeFile;
-using vtkm::filter::testing::contourtree_uniform_distributed::
-  TestContourTreeUniformDistributed5x6x7;
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
+namespace worklet
+{
+namespace contourtree_distributed
+{
 
-class TestContourTreeUniformDistributedFilter
+
+/// Device implementation of FindSuperArcBetweenNodes for the HierarchicalContourTree
+/// Used in the hierarchical branch decomposition
+class FindSuperArcBetweenNodesDeviceData
 {
 public:
-  void operator()() const
-  {
-    using vtkm::cont::testing::Testing;
-    TestContourTreeUniformDistributed8x9(2);
-    // TestContourTreeUniformDistributed8x9(3); CRASH???
-    TestContourTreeUniformDistributed8x9(4);
-    TestContourTreeUniformDistributed8x9(8);
-    TestContourTreeUniformDistributed8x9(16);
-    TestContourTreeUniformDistributed5x6x7(2, false);
-    TestContourTreeUniformDistributed5x6x7(4, false);
-    TestContourTreeUniformDistributed5x6x7(8, false);
-    TestContourTreeUniformDistributed5x6x7(16, false);
-    TestContourTreeUniformDistributed5x6x7(2, true);
-    TestContourTreeUniformDistributed5x6x7(4, true);
-    TestContourTreeUniformDistributed5x6x7(8, true);
-    TestContourTreeUniformDistributed5x6x7(16, true);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        2);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        4);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        8);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        16);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        2,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        4,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-  }
-};
-}
+  using IndicesPortalType =
+    typename vtkm::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
 
-int UnitTestContourTreeUniformDistributedFilter(int argc, char* argv[])
+  VTKM_CONT
+  FindSuperArcBetweenNodesDeviceData(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token,
+    const vtkm::worklet::contourtree_augmented::IdArrayType& superarcs)
+  {
+    // Prepare the arrays for input and store the array portals
+    // so that they can be used inside a workelt
+    this->SuperarcsPortal = superarcs.PrepareForInput(device, token);
+  }
+
+  // routine to find the superarc from one node to another
+  // it will always be the same ID as one of them if it exists
+  // if not, it will be NO_SUCH_ELEMENT
+  VTKM_EXEC
+  vtkm::Id FindSuperArcBetweenNodes(vtkm::Id firstSupernode, vtkm::Id secondSupernode) const
+  { // FindSuperArcBetweenNodes()
+    // if the second is the target of the first's superarc
+    if (vtkm::worklet::contourtree_augmented::MaskedIndex(
+          this->SuperarcsPortal.Get(firstSupernode)) == secondSupernode)
+    {
+      return firstSupernode;
+    }
+    // flip and test the other way
+    if (vtkm::worklet::contourtree_augmented::MaskedIndex(
+          this->SuperarcsPortal.Get(secondSupernode)) == firstSupernode)
+    {
+      return secondSupernode;
+    }
+    // otherwise it fails
+    return vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+  } // FindSuperArcBetweenNodes()
+
+private:
+  // Array portals needed by FindSuperArcBetweenNodes
+  IndicesPortalType SuperarcsPortal;
+};
+
+
+/// ExecutionObject to generate a device object to use FindSuperArcBetweenNodes for the HierarchicalContourTree
+class FindSuperArcBetweenNodes : public vtkm::cont::ExecutionObjectBase
 {
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributedFilter(), argc, argv);
-}
+public:
+  /// constructor
+  VTKM_CONT
+  FindSuperArcBetweenNodes(const vtkm::worklet::contourtree_augmented::IdArrayType& superarcs)
+    : Superarcs(superarcs)
+  {
+  }
+
+  VTKM_CONT FindSuperArcBetweenNodesDeviceData
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
+  {
+    return FindSuperArcBetweenNodesDeviceData(device, token, this->Superarcs);
+  }
+
+private:
+  // Array portals needed by FindSuperArcBetweenNodes
+  vtkm::worklet::contourtree_augmented::IdArrayType Superarcs;
+};
+
+
+} // namespace contourtree_distributed
+} // namespace worklet
+} // namespace vtkm
+
+#endif

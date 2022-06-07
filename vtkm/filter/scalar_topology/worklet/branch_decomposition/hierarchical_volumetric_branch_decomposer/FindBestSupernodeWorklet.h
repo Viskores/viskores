@@ -38,75 +38,59 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_hypersweepblock_h
-#define vtk_m_worklet_contourtree_distributed_hypersweepblock_h
+#ifndef vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_FindBestSupernodeWorklet_h
+#define vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_FindBestSupernodeWorklet_h
 
-#include <vtkm/Types.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_distributed
+namespace scalar_topology
+{
+namespace hierarchical_volumetric_branch_decomposer
 {
 
-template <typename ContourTreeDataFieldType>
-struct HyperSweepBlock
+// Note: We use a template bool paramter for the tiebreak role choice instead of a variable
+// so that the if statement can be optimized at compile time and we have fewer tests inside
+// the worklet.
+template <bool tieBreakGreaterThan>
+class FindBestSupernodeWorklet : public vtkm::worklet::WorkletMapField
 {
-  HyperSweepBlock(
-    const vtkm::Id localBlockNo,
-    const int globalBlockId,
-    const vtkm::Id3& origin,
-    const vtkm::Id3& size,
-    const vtkm::Id3& globalSize,
-    const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-      hierarchicalContourTree)
-    : LocalBlockNo(localBlockNo)
-    , GlobalBlockId(globalBlockId)
-    , Origin(origin)
-    , Size(size)
-    , GlobalSize(globalSize)
-    , HierarchicalContourTree(hierarchicalContourTree)
+public:
+  using ControlSignature = void(FieldIn incomingBestVolume,
+                                FieldIn incomingBestSupernode,
+                                FieldInOut bestVolume,
+                                FieldInOut bestSupernode);
+  using ExecutionSignature = void(_1, _2, _3, _4);
+
+  VTKM_EXEC void operator()(vtkm::Id incomingBestVolume,
+                            vtkm::Id incomingBestSupernode,
+                            vtkm::Id& bestVolume,
+                            vtkm::Id& bestSupernode) const
   {
-  }
+    // this is the same test as the SuperArcVolumetricComparator, hard-coded since we're not
+    // dealing with an array here
+    if ((incomingBestVolume > bestVolume) ||
+        // don't forget the tiebreak rule
+        ((incomingBestVolume == bestVolume) &&
+         (tieBreakGreaterThan ? (incomingBestSupernode > bestSupernode)
+                              : (incomingBestSupernode < bestSupernode))))
+    { // new one is better
+      bestVolume = incomingBestVolume;
+      bestSupernode = incomingBestSupernode;
+    } // new one is better
+  }   // operator()()
+};    // FindBestSupernodeWorklet
 
-  // Mesh information
-  vtkm::Id LocalBlockNo;
-  int GlobalBlockId;
-  vtkm::Id3 Origin;
-  vtkm::Id3 Size;
-  vtkm::Id3 GlobalSize;
-
-  // Hierarchical contour tree for this block
-  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-    HierarchicalContourTree;
-
-  // Computed values
-  vtkm::cont::ArrayHandle<vtkm::Id> IntrinsicVolume;
-  vtkm::cont::ArrayHandle<vtkm::Id> DependentVolume;
-
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b)
-  {
-    delete static_cast<HyperSweepBlock<ContourTreeDataFieldType>*>(b);
-  }
-};
-
-} // namespace contourtree_distributed
+} // namespace hierarchical_volumetric_branch_decomposer
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm
 

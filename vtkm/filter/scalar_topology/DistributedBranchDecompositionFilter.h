@@ -38,75 +38,44 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
-//  The PPP2 algorithm and software were jointly developed by
-//  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
-//  Oliver Ruebel (LBNL)
-//==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_hypersweepblock_h
-#define vtk_m_worklet_contourtree_distributed_hypersweepblock_h
+#ifndef vtk_m_filter_scalar_topology_DistributedBranchDecompositionFilter_h
+#define vtk_m_filter_scalar_topology_DistributedBranchDecompositionFilter_h
 
-#include <vtkm/Types.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
+
+#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
-namespace contourtree_distributed
+namespace scalar_topology
 {
+/// \brief Compute branch decompostion from distributed contour tree
 
-template <typename ContourTreeDataFieldType>
-struct HyperSweepBlock
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT DistributedBranchDecompositionFilter
+  : public vtkm::filter::NewFilter
 {
-  HyperSweepBlock(
-    const vtkm::Id localBlockNo,
-    const int globalBlockId,
-    const vtkm::Id3& origin,
-    const vtkm::Id3& size,
-    const vtkm::Id3& globalSize,
-    const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-      hierarchicalContourTree)
-    : LocalBlockNo(localBlockNo)
-    , GlobalBlockId(globalBlockId)
-    , Origin(origin)
-    , Size(size)
-    , GlobalSize(globalSize)
-    , HierarchicalContourTree(hierarchicalContourTree)
-  {
-  }
+public:
+  VTKM_CONT DistributedBranchDecompositionFilter(
+    vtkm::Id3 blocksPerDim,
+    vtkm::Id3 globalSize,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes);
 
-  // Mesh information
-  vtkm::Id LocalBlockNo;
-  int GlobalBlockId;
-  vtkm::Id3 Origin;
-  vtkm::Id3 Size;
-  vtkm::Id3 GlobalSize;
+private:
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&) override;
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
 
-  // Hierarchical contour tree for this block
-  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-    HierarchicalContourTree;
-
-  // Computed values
-  vtkm::cont::ArrayHandle<vtkm::Id> IntrinsicVolume;
-  vtkm::cont::ArrayHandle<vtkm::Id> DependentVolume;
-
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b)
-  {
-    delete static_cast<HyperSweepBlock<ContourTreeDataFieldType>*>(b);
-  }
+  /// Information about the spatial decomposition
+  vtkm::filter::scalar_topology::internal::SpatialDecomposition MultiBlockSpatialDecomposition;
 };
 
-} // namespace contourtree_distributed
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm
 
