@@ -8,12 +8,14 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(scalar_topology_headers
+  ContourTreeUniform.h
   DistributedBranchDecompositionFilter.h
   )
 
 set(scalar_topology_sources
   internal/BranchDecompositionBlock.cxx
   internal/ComputeDistributedBranchDecompositionFunctor.cxx
+  ContourTreeUniform.cxx
   DistributedBranchDecompositionFilter.cxx
   )
 

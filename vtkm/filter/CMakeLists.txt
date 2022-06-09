@@ -18,6 +18,7 @@ set(deprecated_headers
   ClipWithImplicitFunction.h
   ComputeMoments.h
   Contour.h
+  ContourTreeUniform.h
   CoordinateSystemTransform.h
   CrossProduct.h
   DotProduct.h
@@ -101,7 +102,6 @@ vtkm_declare_headers(${common_header_template_sources})
 set(extra_headers
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
-  ContourTreeUniform.h
   Lagrangian.h
   LagrangianStructures.h
   ParticleAdvection.h
@@ -114,7 +114,6 @@ set(extra_headers
 set(extra_header_template_sources
   ContourTreeUniformAugmented.hxx
   ContourTreeUniformDistributed.hxx
-  ContourTreeUniform.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
   ParticleAdvection.hxx

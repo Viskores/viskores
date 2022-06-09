@@ -9,3 +9,4 @@
 ##============================================================================
 
 add_subdirectory(branch_decomposition)
+add_subdirectory(contourtree)
