@@ -14,6 +14,8 @@
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperConnectivity.h>
 #include <vtkm/rendering/MapperCylinder.h>
+#include <vtkm/rendering/MapperGlyphScalar.h>
+#include <vtkm/rendering/MapperGlyphVector.h>
 #include <vtkm/rendering/MapperPoint.h>
 #include <vtkm/rendering/MapperQuad.h>
 #include <vtkm/rendering/MapperRayTracer.h>
@@ -113,6 +115,38 @@ void SetupMapper(vtkm::rendering::MapperPoint& mapper,
   if (options.RenderCells)
   {
     mapper.UseCells();
+  }
+}
+
+void SetupMapper(vtkm::rendering::MapperGlyphScalar& mapper,
+                 const vtkm::rendering::testing::RenderTestOptions& options)
+{
+  mapper.SetGlyphType(options.GlyphType);
+  mapper.SetScaleByValue(options.UseVariableRadius);
+  if (options.Radius >= 0)
+  {
+    mapper.SetBaseSize(options.Radius);
+  }
+  mapper.SetScaleDelta(0.5);
+  if (options.RenderCells)
+  {
+    mapper.SetUseCells();
+  }
+}
+
+void SetupMapper(vtkm::rendering::MapperGlyphVector& mapper,
+                 const vtkm::rendering::testing::RenderTestOptions& options)
+{
+  mapper.SetGlyphType(options.GlyphType);
+  mapper.SetScaleByValue(options.UseVariableRadius);
+  if (options.Radius >= 0)
+  {
+    mapper.SetBaseSize(options.Radius);
+  }
+  mapper.SetScaleDelta(0.5);
+  if (options.RenderCells)
+  {
+    mapper.SetUseCells();
   }
 }
 
@@ -221,6 +255,12 @@ void DoRenderTest(vtkm::rendering::CanvasRayTracer& canvas,
       break;
     case vtkm::rendering::testing::MapperType::Wireframer:
       mapper = MakeMapper<vtkm::rendering::MapperWireframer>(options);
+      break;
+    case vtkm::rendering::testing::MapperType::GlyphScalar:
+      mapper = MakeMapper<vtkm::rendering::MapperGlyphScalar>(options);
+      break;
+    case vtkm::rendering::testing::MapperType::GlyphVector:
+      mapper = MakeMapper<vtkm::rendering::MapperGlyphVector>(options);
       break;
   }
   DoRenderTest(canvas, *mapper, dataSetsFields, outputFile, options);

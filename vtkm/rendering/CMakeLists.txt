@@ -35,12 +35,16 @@ set(headers
   Cylinderizer.h
   DecodePNG.h # deprecated
   EncodePNG.h # deprecated
+  GlyphType.h
   LineRenderer.h
   LineRendererBatcher.h
   MatrixHelpers.h
   Scene.h
   Mapper.h
   MapperCylinder.h
+  MapperGlyphBase.h
+  MapperGlyphScalar.h
+  MapperGlyphVector.h
   MapperPoint.h
   MapperQuad.h
   MapperRayTracer.h
@@ -103,6 +107,9 @@ set(device_sources
   ConnectivityProxy.cxx
   LineRendererBatcher.cxx
   MapperCylinder.cxx
+  MapperGlyphBase.cxx
+  MapperGlyphScalar.cxx
+  MapperGlyphVector.cxx
   MapperPoint.cxx
   MapperQuad.cxx
   MapperRayTracer.cxx
@@ -119,6 +126,10 @@ set(device_sources
   raytracing/ConnectivityTracer.cxx
   raytracing/CylinderExtractor.cxx
   raytracing/CylinderIntersector.cxx
+  raytracing/GlyphExtractor.cxx
+  raytracing/GlyphExtractorVector.cxx
+  raytracing/GlyphIntersector.cxx
+  raytracing/GlyphIntersectorVector.cxx
   raytracing/MeshConnectivityBuilder.cxx
   raytracing/QuadExtractor.cxx
   raytracing/QuadIntersector.cxx

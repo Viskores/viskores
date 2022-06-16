@@ -26,6 +26,8 @@ set(unit_tests
   UnitTestMapperWireframer.cxx
   UnitTestMapperVolume.cxx
   UnitTestScalarRenderer.cxx
+  UnitTestMapperGlyphScalar.cxx
+  UnitTestMapperGlyphVector.cxx
 )
 
 set(library_sources
