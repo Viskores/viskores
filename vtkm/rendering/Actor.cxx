@@ -83,8 +83,6 @@ Actor::Actor(const vtkm::cont::UnknownCellSet& cells,
 void Actor::Init(const vtkm::cont::CoordinateSystem& coordinates,
                  const vtkm::cont::Field& scalarField)
 {
-  VTKM_ASSERT(scalarField.GetData().GetNumberOfComponentsFlat() == 1);
-
   scalarField.GetRange(&this->Internals->ScalarRange);
   this->Internals->SpatialBounds = coordinates.GetBounds();
 }

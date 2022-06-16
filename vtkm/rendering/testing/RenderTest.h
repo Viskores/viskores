@@ -19,6 +19,7 @@
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
+#include <vtkm/rendering/GlyphType.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/TextAnnotationScreen.h>
@@ -49,7 +50,9 @@ enum struct MapperType
   Point,
   Quad,
   Volume,
-  Wireframer
+  Wireframer,
+  GlyphScalar,
+  GlyphVector
 };
 
 struct RenderTestOptions
@@ -102,7 +105,8 @@ struct RenderTestOptions
   // use the best available device for rendering.
   bool AllowAnyDevice = true;
 
-  // Special options for some glyph-like mappers
+  // Special options for some glyph and glyph-like mappers
+  vtkm::rendering::GlyphType GlyphType = vtkm::rendering::GlyphType::Cube;
   bool UseVariableRadius = false;
   vtkm::Float32 Radius = -1.0f;
   vtkm::Float32 RadiusDelta = 0.5f;
