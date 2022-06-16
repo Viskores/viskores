@@ -33,7 +33,7 @@ if (test_exclusions)
 endif ()
 
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
-  set(junit_args OUTPUT_JUNIT "${CTEST_BINARY_DIRECTORY}/unit_test_junit_stats.xml")
+  set(junit_args OUTPUT_JUNIT "${CTEST_BINARY_DIRECTORY}/junit.xml")
 endif()
 
 set(PARALLEL_LEVEL "10")

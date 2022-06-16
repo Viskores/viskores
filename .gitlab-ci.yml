@@ -206,9 +206,9 @@ stages:
       - build/*.png
       - build/*.pnm
       - build/*.pmm
-      - build/unit_test_junit_stats.xml
+      - build/junit.xml
     reports:
-      junit: build/unit_test_junit_stats.xml
+      junit: build/junit.xml
 
 .cmake_build_artifacts: &cmake_build_artifacts
   artifacts:
@@ -240,9 +240,9 @@ stages:
       - build/**/*.png
       - build/**/*.pnm
       - build/**/*.pmm
-      - build/unit_test_junit_stats.xml
+      - build/junit.xml
     reports:
-      junit: build/unit_test_junit_stats.xml
+      junit: build/junit.xml
 
 
 include:
