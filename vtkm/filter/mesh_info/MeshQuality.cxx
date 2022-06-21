@@ -20,6 +20,7 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/mesh_info/MeshQuality.h>
+#include <vtkm/filter/mesh_info/MeshQualityArea.h>
 #include <vtkm/filter/mesh_info/worklet/MeshQuality.h>
 
 namespace vtkm
@@ -67,6 +68,24 @@ VTKM_CONT MeshQuality::MeshQuality(CellMetric metric)
 
 VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& input)
 {
+  std::unique_ptr<vtkm::filter::NewFilterField> implementation;
+  switch (this->MyMetric)
+  {
+    case vtkm::filter::mesh_info::CellMetric::Area:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityArea);
+      break;
+    default:
+      implementation.reset(); // Eventually will go away
+      break;
+  }
+
+  if (implementation) // Eventually will not need this condition
+  {
+    implementation->SetOutputFieldName(this->GetOutputFieldName());
+    implementation->SetActiveCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+    return implementation->Execute(input);
+  }
+
   const auto& field = this->GetFieldFromDataSet(input);
   if (!field.IsFieldPoint())
   {

@@ -11,12 +11,14 @@ set(mesh_info_headers
   CellMeasures.h
   GhostCellClassify.h
   MeshQuality.h
+  MeshQualityArea.h
   )
 
 set(mesh_info_sources
   CellMeasures.cxx
   GhostCellClassify.cxx
   MeshQuality.cxx
+  MeshQualityArea.cxx
   )
 
 vtkm_library(
