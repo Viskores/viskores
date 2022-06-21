@@ -40,7 +40,6 @@
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellShapeAndSizeMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellShapeMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellShearMetric.h>
-#include <vtkm/filter/mesh_info/worklet/cellmetrics/CellSkewMetric.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
@@ -173,9 +172,6 @@ private:
           break;
         case vtkm::filter::mesh_info::CellMetric::Shear:
           metricValue = vtkm::worklet::cellmetrics::CellShearMetric<OutType>(numPts, pts, tag, ec);
-          break;
-        case vtkm::filter::mesh_info::CellMetric::Skew:
-          metricValue = vtkm::worklet::cellmetrics::CellSkewMetric<OutType>(numPts, pts, tag, ec);
           break;
         case vtkm::filter::mesh_info::CellMetric::None:
           break;
