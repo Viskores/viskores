@@ -13,6 +13,7 @@ set(mesh_info_headers
   MeshQuality.h
   MeshQualityArea.h
   MeshQualityShape.h
+  MeshQualityShapeAndSize.h
   MeshQualityShear.h
   MeshQualitySkew.h
   MeshQualityStretch.h
@@ -27,6 +28,7 @@ set(mesh_info_sources
   MeshQuality.cxx
   MeshQualityArea.cxx
   MeshQualityShape.cxx
+  MeshQualityShapeAndSize.cxx
   MeshQualityShear.cxx
   MeshQualitySkew.cxx
   MeshQualityStretch.cxx

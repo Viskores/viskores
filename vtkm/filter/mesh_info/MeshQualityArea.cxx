@@ -22,6 +22,8 @@
 
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/cont/Algorithm.h>
+
 #include <vtkm/ErrorCode.h>
 
 #include <vtkm/exec/CellMeasure.h>
@@ -102,6 +104,40 @@ MeshQualityArea::MeshQualityArea()
 {
   this->SetUseCoordinateSystemAsField(true);
   this->SetOutputFieldName("area");
+}
+
+vtkm::Float64 MeshQualityArea::ComputeTotalArea(const vtkm::cont::DataSet& input)
+{
+  vtkm::cont::Field areaField;
+  if (input.HasCellField(this->GetOutputFieldName()))
+  {
+    areaField = input.GetCellField(this->GetOutputFieldName());
+  }
+  else
+  {
+    vtkm::cont::DataSet areaData = this->Execute(input);
+    areaField = areaData.GetCellField(this->GetOutputFieldName());
+  }
+
+  vtkm::Float64 totalArea = 0;
+  auto resolveType = [&](const auto& concrete) {
+    totalArea = vtkm::cont::Algorithm::Reduce(concrete, vtkm::Float64{ 0 });
+  };
+  this->CastAndCallScalarField(areaField, resolveType);
+  return totalArea;
+}
+
+vtkm::Float64 MeshQualityArea::ComputeAverageArea(const vtkm::cont::DataSet& input)
+{
+  vtkm::Id numCells = input.GetNumberOfCells();
+  if (numCells > 0)
+  {
+    return this->ComputeTotalArea(input) / static_cast<vtkm::Float64>(numCells);
+  }
+  else
+  {
+    return 1;
+  }
 }
 
 vtkm::cont::DataSet MeshQualityArea::DoExecute(const vtkm::cont::DataSet& input)

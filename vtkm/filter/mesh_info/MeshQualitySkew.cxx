@@ -56,7 +56,7 @@ MeshQualitySkew::MeshQualitySkew()
 vtkm::cont::DataSet MeshQualitySkew::DoExecute(const vtkm::cont::DataSet& input)
 {
   vtkm::cont::UnknownArrayHandle outArray =
-    SkewWorklet::Run(input, this->GetFieldFromDataSet(input));
+    SkewWorklet{}.Run(input, this->GetFieldFromDataSet(input));
 
   return this->CreateResultFieldCell(input, this->GetOutputFieldName(), outArray);
 }

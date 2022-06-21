@@ -35,6 +35,15 @@ class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityVolume : public vtkm::filter::NewF
 public:
   MeshQualityVolume();
 
+  /// \brief Computes the volume of all polyhedral cells and returns the total area.
+  vtkm::Float64 ComputeTotalVolume(const vtkm::cont::DataSet& input);
+
+  /// \brief Computes the average volume of cells.
+  ///
+  /// This method first computes the total volume of all cells and then divides that by the
+  /// number of cells in the dataset.
+  vtkm::Float64 ComputeAverageVolume(const vtkm::cont::DataSet& input);
+
 private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };

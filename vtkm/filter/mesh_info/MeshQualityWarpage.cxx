@@ -56,7 +56,7 @@ MeshQualityWarpage::MeshQualityWarpage()
 vtkm::cont::DataSet MeshQualityWarpage::DoExecute(const vtkm::cont::DataSet& input)
 {
   vtkm::cont::UnknownArrayHandle outArray =
-    WarpageWorklet::Run(input, this->GetFieldFromDataSet(input));
+    WarpageWorklet{}.Run(input, this->GetFieldFromDataSet(input));
 
   return this->CreateResultFieldCell(input, this->GetOutputFieldName(), outArray);
 }

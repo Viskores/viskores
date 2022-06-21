@@ -56,7 +56,7 @@ MeshQualityShear::MeshQualityShear()
 vtkm::cont::DataSet MeshQualityShear::DoExecute(const vtkm::cont::DataSet& input)
 {
   vtkm::cont::UnknownArrayHandle outArray =
-    ShearWorklet::Run(input, this->GetFieldFromDataSet(input));
+    ShearWorklet{}.Run(input, this->GetFieldFromDataSet(input));
 
   return this->CreateResultFieldCell(input, this->GetOutputFieldName(), outArray);
 }

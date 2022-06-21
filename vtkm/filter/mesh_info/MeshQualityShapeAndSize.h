@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_filter_mesh_info_MeshQualityArea_h
-#define vtk_m_filter_mesh_info_MeshQualityArea_h
+#ifndef vtk_m_filter_mesh_info_MeshQualityShapeAndSize_h
+#define vtk_m_filter_mesh_info_MeshQualityShapeAndSize_h
 
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
@@ -30,19 +30,10 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityArea : public vtkm::filter::NewFilterField
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityShapeAndSize : public vtkm::filter::NewFilterField
 {
 public:
-  MeshQualityArea();
-
-  /// \brief Computes the area of all polygonal cells and returns the total area.
-  vtkm::Float64 ComputeTotalArea(const vtkm::cont::DataSet& input);
-
-  /// \brief Computes the average area of cells.
-  ///
-  /// This method first computes the total area of all cells and then divides that by the
-  /// number of cells in the dataset.
-  vtkm::Float64 ComputeAverageArea(const vtkm::cont::DataSet& input);
+  MeshQualityShapeAndSize();
 
 private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
@@ -52,4 +43,4 @@ private:
 } // namespace filter
 } // namespace vtkm
 
-#endif //vtk_m_filter_mesh_info_MeshQualityArea_h
+#endif //vtk_m_filter_mesh_info_MeshQualityShapeAndSize_h

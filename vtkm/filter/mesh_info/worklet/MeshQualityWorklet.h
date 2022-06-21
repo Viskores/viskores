@@ -79,8 +79,8 @@ struct MeshQualityWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
     }
   }
 
-  VTKM_CONT static vtkm::cont::UnknownArrayHandle Run(const vtkm::cont::DataSet& input,
-                                                      const vtkm::cont::Field& field)
+  VTKM_CONT vtkm::cont::UnknownArrayHandle Run(const vtkm::cont::DataSet& input,
+                                               const vtkm::cont::Field& field) const
   {
     if (!field.IsFieldPoint())
     {
@@ -94,7 +94,7 @@ struct MeshQualityWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
     auto resolveType = [&](const auto& concrete) {
       using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
       vtkm::cont::ArrayHandle<T> result;
-      invoke(Derived{}, input.GetCellSet(), concrete, result);
+      invoke(*reinterpret_cast<const Derived*>(this), input.GetCellSet(), concrete, result);
       outArray = result;
     };
     field.GetData()

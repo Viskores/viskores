@@ -56,7 +56,7 @@ MeshQualityTaper::MeshQualityTaper()
 vtkm::cont::DataSet MeshQualityTaper::DoExecute(const vtkm::cont::DataSet& input)
 {
   vtkm::cont::UnknownArrayHandle outArray =
-    TaperWorklet::Run(input, this->GetFieldFromDataSet(input));
+    TaperWorklet{}.Run(input, this->GetFieldFromDataSet(input));
 
   return this->CreateResultFieldCell(input, this->GetOutputFieldName(), outArray);
 }

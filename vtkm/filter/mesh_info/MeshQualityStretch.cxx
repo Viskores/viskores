@@ -56,7 +56,7 @@ MeshQualityStretch::MeshQualityStretch()
 vtkm::cont::DataSet MeshQualityStretch::DoExecute(const vtkm::cont::DataSet& input)
 {
   vtkm::cont::UnknownArrayHandle outArray =
-    StretchWorklet::Run(input, this->GetFieldFromDataSet(input));
+    StretchWorklet{}.Run(input, this->GetFieldFromDataSet(input));
 
   return this->CreateResultFieldCell(input, this->GetOutputFieldName(), outArray);
 }

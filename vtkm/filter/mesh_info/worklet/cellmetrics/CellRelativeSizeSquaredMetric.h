@@ -40,7 +40,7 @@
 #include <vtkm/Matrix.h>
 #include <vtkm/VecTraits.h>
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/exec/FunctorBase.h>
+#include <vtkm/exec/CellMeasure.h>
 
 #define UNUSED(expr) (void)(expr);
 

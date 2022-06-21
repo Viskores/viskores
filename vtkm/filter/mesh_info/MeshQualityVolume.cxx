@@ -22,6 +22,8 @@
 
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/cont/Algorithm.h>
+
 #include <vtkm/ErrorCode.h>
 
 #include <vtkm/exec/CellMeasure.h>
@@ -91,6 +93,40 @@ MeshQualityVolume::MeshQualityVolume()
 {
   this->SetUseCoordinateSystemAsField(true);
   this->SetOutputFieldName("volume");
+}
+
+vtkm::Float64 MeshQualityVolume::ComputeTotalVolume(const vtkm::cont::DataSet& input)
+{
+  vtkm::cont::Field volumeField;
+  if (input.HasCellField(this->GetOutputFieldName()))
+  {
+    volumeField = input.GetCellField(this->GetOutputFieldName());
+  }
+  else
+  {
+    vtkm::cont::DataSet volumeData = this->Execute(input);
+    volumeField = volumeData.GetCellField(this->GetOutputFieldName());
+  }
+
+  vtkm::Float64 totalVolume = 0;
+  auto resolveType = [&](const auto& concrete) {
+    totalVolume = vtkm::cont::Algorithm::Reduce(concrete, vtkm::Float64{ 0 });
+  };
+  this->CastAndCallScalarField(volumeField, resolveType);
+  return totalVolume;
+}
+
+vtkm::Float64 MeshQualityVolume::ComputeAverageVolume(const vtkm::cont::DataSet& input)
+{
+  vtkm::Id numCells = input.GetNumberOfCells();
+  if (numCells > 0)
+  {
+    return this->ComputeTotalVolume(input) / static_cast<vtkm::Float64>(numCells);
+  }
+  else
+  {
+    return 1;
+  }
 }
 
 vtkm::cont::DataSet MeshQualityVolume::DoExecute(const vtkm::cont::DataSet& input)

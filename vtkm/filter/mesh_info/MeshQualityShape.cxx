@@ -56,7 +56,7 @@ MeshQualityShape::MeshQualityShape()
 vtkm::cont::DataSet MeshQualityShape::DoExecute(const vtkm::cont::DataSet& input)
 {
   vtkm::cont::UnknownArrayHandle outArray =
-    ShapeWorklet::Run(input, this->GetFieldFromDataSet(input));
+    ShapeWorklet{}.Run(input, this->GetFieldFromDataSet(input));
 
   return this->CreateResultFieldCell(input, this->GetOutputFieldName(), outArray);
 }
