@@ -37,7 +37,6 @@
 #include <vtkm/ErrorCode.h>
 #include <vtkm/VecTraits.h>
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/exec/FunctorBase.h>
 
 #define UNUSED(expr) (void)(expr);
 

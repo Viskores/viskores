@@ -22,6 +22,7 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/mesh_info/MeshQuality.h>
 #include <vtkm/filter/mesh_info/MeshQualityArea.h>
+#include <vtkm/filter/mesh_info/MeshQualityStretch.h>
 #include <vtkm/filter/mesh_info/MeshQualityTaper.h>
 #include <vtkm/filter/mesh_info/MeshQualityVolume.h>
 #include <vtkm/filter/mesh_info/MeshQualityWarpage.h>
@@ -77,6 +78,9 @@ VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& 
   {
     case vtkm::filter::mesh_info::CellMetric::Area:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityArea);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Stretch:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityStretch);
       break;
     case vtkm::filter::mesh_info::CellMetric::Taper:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityTaper);
