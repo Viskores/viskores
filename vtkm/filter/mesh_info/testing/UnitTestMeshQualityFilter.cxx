@@ -147,8 +147,10 @@ bool TestMeshQualityFilter(const vtkm::cont::DataSet& input,
   {
     output = filter.Execute(input);
   }
-  catch (vtkm::cont::ErrorExecution&)
+  catch (vtkm::cont::ErrorExecution& error)
   {
+    std::cout << "Metric '" << outputname << "' threw execution exception " << error.GetMessage()
+              << std::endl;
     return true;
   }
 

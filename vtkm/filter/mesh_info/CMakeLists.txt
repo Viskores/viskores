@@ -12,6 +12,7 @@ set(mesh_info_headers
   GhostCellClassify.h
   MeshQuality.h
   MeshQualityArea.h
+  MeshQualityShape.h
   MeshQualityShear.h
   MeshQualitySkew.h
   MeshQualityStretch.h
@@ -25,6 +26,7 @@ set(mesh_info_sources
   GhostCellClassify.cxx
   MeshQuality.cxx
   MeshQualityArea.cxx
+  MeshQualityShape.cxx
   MeshQualityShear.cxx
   MeshQualitySkew.cxx
   MeshQualityStretch.cxx
