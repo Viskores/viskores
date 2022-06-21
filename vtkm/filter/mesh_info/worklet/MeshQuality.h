@@ -43,7 +43,6 @@
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellSkewMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellStretchMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellTaperMetric.h>
-#include <vtkm/filter/mesh_info/worklet/cellmetrics/CellWarpageMetric.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
@@ -186,10 +185,6 @@ private:
           break;
         case vtkm::filter::mesh_info::CellMetric::Taper:
           metricValue = vtkm::worklet::cellmetrics::CellTaperMetric<OutType>(numPts, pts, tag, ec);
-          break;
-        case vtkm::filter::mesh_info::CellMetric::Warpage:
-          metricValue =
-            vtkm::worklet::cellmetrics::CellWarpageMetric<OutType>(numPts, pts, tag, ec);
           break;
         case vtkm::filter::mesh_info::CellMetric::None:
           break;

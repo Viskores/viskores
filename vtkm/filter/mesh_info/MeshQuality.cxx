@@ -23,6 +23,7 @@
 #include <vtkm/filter/mesh_info/MeshQuality.h>
 #include <vtkm/filter/mesh_info/MeshQualityArea.h>
 #include <vtkm/filter/mesh_info/MeshQualityVolume.h>
+#include <vtkm/filter/mesh_info/MeshQualityWarpage.h>
 #include <vtkm/filter/mesh_info/worklet/MeshQuality.h>
 
 namespace vtkm
@@ -78,6 +79,9 @@ VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& 
       break;
     case vtkm::filter::mesh_info::CellMetric::Volume:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityVolume);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Warpage:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityWarpage);
       break;
     default:
       implementation.reset(); // Eventually will go away

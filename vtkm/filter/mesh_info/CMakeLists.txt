@@ -13,6 +13,7 @@ set(mesh_info_headers
   MeshQuality.h
   MeshQualityArea.h
   MeshQualityVolume.h
+  MeshQualityWarpage.h
   )
 
 set(mesh_info_sources
@@ -21,6 +22,7 @@ set(mesh_info_sources
   MeshQuality.cxx
   MeshQualityArea.cxx
   MeshQualityVolume.cxx
+  MeshQualityWarpage.cxx
   )
 
 vtkm_library(

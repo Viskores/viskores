@@ -46,9 +46,13 @@ struct AreaWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
     if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
     {
       if (numPoints == 3)
+      {
         thisId = vtkm::CELL_SHAPE_TRIANGLE;
+      }
       else if (numPoints == 4)
+      {
         thisId = vtkm::CELL_SHAPE_QUAD;
+      }
     }
     switch (thisId)
     {

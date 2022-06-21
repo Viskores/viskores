@@ -32,6 +32,10 @@
  * used components for subsequent use in metrics.
  */
 
+#include <vtkm/Math.h>
+#include <vtkm/Types.h>
+#include <vtkm/VectorAnalysis.h>
+
 /**
  * Returns the L0 vector, as defined by the verdict manual.
  *
