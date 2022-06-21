@@ -18,9 +18,11 @@
 //  this software.
 //=========================================================================
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/mesh_info/MeshQuality.h>
 #include <vtkm/filter/mesh_info/MeshQualityArea.h>
+#include <vtkm/filter/mesh_info/MeshQualityVolume.h>
 #include <vtkm/filter/mesh_info/worklet/MeshQuality.h>
 
 namespace vtkm
@@ -74,6 +76,9 @@ VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& 
     case vtkm::filter::mesh_info::CellMetric::Area:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityArea);
       break;
+    case vtkm::filter::mesh_info::CellMetric::Volume:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityVolume);
+      break;
     default:
       implementation.reset(); // Eventually will go away
       break;
@@ -99,35 +104,29 @@ VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& 
   if (this->MyMetric == CellMetric::RelativeSizeSquared ||
       this->MyMetric == CellMetric::ShapeAndSize)
   {
-    vtkm::worklet::MeshQuality subWorklet;
-    vtkm::FloatDefault totalArea;
-    vtkm::FloatDefault totalVolume;
-
-    auto resolveType = [&](const auto& concrete) {
-      // use std::decay to remove const ref from the decltype of concrete.
-      using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
-      vtkm::cont::ArrayHandle<T> array;
-
-      subWorklet.SetMetric(CellMetric::Area);
-      this->Invoke(subWorklet, inputCellSet, concrete, array);
-      totalArea = (vtkm::FloatDefault)vtkm::cont::Algorithm::Reduce(array, T{});
-
-      subWorklet.SetMetric(CellMetric::Volume);
-      this->Invoke(subWorklet, inputCellSet, concrete, array);
-      totalVolume = (vtkm::FloatDefault)vtkm::cont::Algorithm::Reduce(array, T{});
-    };
-    this->CastAndCallVecField<3>(field, resolveType);
-
-    vtkm::FloatDefault averageArea = 1.;
-    vtkm::FloatDefault averageVolume = 1.;
     vtkm::Id numCells = inputCellSet.GetNumberOfCells();
     if (numCells > 0)
     {
-      averageArea = totalArea / static_cast<vtkm::FloatDefault>(numCells);
-      averageVolume = totalVolume / static_cast<vtkm::FloatDefault>(numCells);
+      vtkm::cont::ArrayHandle<vtkm::FloatDefault> areaArray;
+      vtkm::filter::mesh_info::MeshQualityArea areaFilter;
+      vtkm::cont::Field areaField = areaFilter.Execute(input).GetField("area");
+      vtkm::cont::ArrayCopyShallowIfPossible(areaField.GetData(), areaArray);
+      vtkm::FloatDefault totalArea = vtkm::cont::Algorithm::Reduce(areaArray, vtkm::FloatDefault{});
+      qualityWorklet.SetAverageArea(totalArea / static_cast<vtkm::FloatDefault>(numCells));
+
+      vtkm::cont::ArrayHandle<vtkm::FloatDefault> volumeArray;
+      vtkm::filter::mesh_info::MeshQualityVolume volumeFilter;
+      vtkm::cont::Field volumeField = volumeFilter.Execute(input).GetField("volume");
+      vtkm::cont::ArrayCopyShallowIfPossible(volumeField.GetData(), volumeArray);
+      vtkm::FloatDefault totalVolume =
+        vtkm::cont::Algorithm::Reduce(volumeArray, vtkm::FloatDefault{});
+      qualityWorklet.SetAverageVolume(totalVolume / static_cast<vtkm::FloatDefault>(numCells));
     }
-    qualityWorklet.SetAverageArea(averageArea);
-    qualityWorklet.SetAverageVolume(averageVolume);
+    else
+    {
+      qualityWorklet.SetAverageArea(1);
+      qualityWorklet.SetAverageVolume(1);
+    }
   }
 
   vtkm::cont::UnknownArrayHandle outArray;

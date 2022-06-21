@@ -116,11 +116,6 @@ private:
       vtkm::ErrorCode ec{ vtkm::ErrorCode::Success };
       switch (this->Metric)
       {
-        case vtkm::filter::mesh_info::CellMetric::Area:
-          metricValue = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, ec);
-          if (dims != 2)
-            metricValue = 0.;
-          break;
         case vtkm::filter::mesh_info::CellMetric::AspectGamma:
           metricValue =
             vtkm::worklet::cellmetrics::CellAspectGammaMetric<OutType>(numPts, pts, tag, ec);
@@ -191,11 +186,6 @@ private:
           break;
         case vtkm::filter::mesh_info::CellMetric::Taper:
           metricValue = vtkm::worklet::cellmetrics::CellTaperMetric<OutType>(numPts, pts, tag, ec);
-          break;
-        case vtkm::filter::mesh_info::CellMetric::Volume:
-          metricValue = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, ec);
-          if (dims != 3)
-            metricValue = 0.;
           break;
         case vtkm::filter::mesh_info::CellMetric::Warpage:
           metricValue =
