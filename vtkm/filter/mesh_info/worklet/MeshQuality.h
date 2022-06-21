@@ -36,7 +36,6 @@
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellMinDiagonalMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellOddyMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellRelativeSizeSquaredMetric.h>
-#include <vtkm/filter/mesh_info/worklet/cellmetrics/CellScaledJacobianMetric.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
@@ -155,10 +154,6 @@ private:
         case vtkm::filter::mesh_info::CellMetric::RelativeSizeSquared:
           metricValue = vtkm::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
             numPts, pts, static_cast<OutType>(average), tag, ec);
-          break;
-        case vtkm::filter::mesh_info::CellMetric::ScaledJacobian:
-          metricValue =
-            vtkm::worklet::cellmetrics::CellScaledJacobianMetric<OutType>(numPts, pts, tag, ec);
           break;
         case vtkm::filter::mesh_info::CellMetric::None:
           break;
