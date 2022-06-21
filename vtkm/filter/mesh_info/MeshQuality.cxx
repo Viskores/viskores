@@ -22,6 +22,7 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/mesh_info/MeshQuality.h>
 #include <vtkm/filter/mesh_info/MeshQualityArea.h>
+#include <vtkm/filter/mesh_info/MeshQualityShear.h>
 #include <vtkm/filter/mesh_info/MeshQualitySkew.h>
 #include <vtkm/filter/mesh_info/MeshQualityStretch.h>
 #include <vtkm/filter/mesh_info/MeshQualityTaper.h>
@@ -79,6 +80,9 @@ VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& 
   {
     case vtkm::filter::mesh_info::CellMetric::Area:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityArea);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Shear:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityShear);
       break;
     case vtkm::filter::mesh_info::CellMetric::Skew:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualitySkew);
