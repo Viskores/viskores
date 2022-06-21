@@ -33,7 +33,6 @@
  */
 
 #include <vtkm/Math.h>
-#include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 
 /**

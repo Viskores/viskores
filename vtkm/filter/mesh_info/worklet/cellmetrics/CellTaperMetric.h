@@ -32,11 +32,14 @@
 #include "TypeOfCellQuadrilateral.h"
 #include "TypeOfCellTetrahedral.h"
 #include "TypeOfCellTriangle.h"
-#include "vtkm/CellShape.h"
-#include "vtkm/CellTraits.h"
-#include "vtkm/VecTraits.h"
-#include "vtkm/VectorAnalysis.h"
-#include "vtkm/exec/FunctorBase.h"
+#include <vtkm/CellShape.h>
+#include <vtkm/CellTraits.h>
+#include <vtkm/ErrorCode.h>
+#include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
+#include <vtkm/exec/FunctorBase.h>
+
+#define UNUSED(expr) (void)(expr);
 
 namespace vtkm
 {
