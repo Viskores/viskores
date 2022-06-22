@@ -37,12 +37,11 @@
  * metric)
  */
 
-#include "vtkm/CellShape.h"
-#include "vtkm/CellTraits.h"
-#include "vtkm/VecTraits.h"
-#include "vtkm/VectorAnalysis.h"
-#include "vtkm/exec/FunctorBase.h"
-//#include "vtkm/exec/CellMeasure.h"
+#include <vtkm/CellShape.h>
+#include <vtkm/CellTraits.h>
+#include <vtkm/ErrorCode.h>
+#include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
 
 #define UNUSED(expr) (void)(expr);
 

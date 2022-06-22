@@ -28,7 +28,6 @@
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellAspectRatioMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellConditionMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellDiagonalRatioMetric.h>
-#include <vtkm/filter/mesh_info/worklet/cellmetrics/CellDimensionMetric.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
@@ -115,10 +114,6 @@ private:
         case vtkm::filter::mesh_info::CellMetric::DiagonalRatio:
           metricValue =
             vtkm::worklet::cellmetrics::CellDiagonalRatioMetric<OutType>(numPts, pts, tag, ec);
-          break;
-        case vtkm::filter::mesh_info::CellMetric::Dimension:
-          metricValue =
-            vtkm::worklet::cellmetrics::CellDimensionMetric<OutType>(numPts, pts, tag, ec);
           break;
         case vtkm::filter::mesh_info::CellMetric::None:
           break;
