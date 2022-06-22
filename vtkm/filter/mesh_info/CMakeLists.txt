@@ -12,6 +12,7 @@ set(mesh_info_headers
   GhostCellClassify.h
   MeshQuality.h
   MeshQualityArea.h
+  MeshQualityMaxAngle.h
   MeshQualityMaxDiagonal.h
   MeshQualityMinAngle.h
   MeshQualityMinDiagonal.h
@@ -33,6 +34,7 @@ set(mesh_info_sources
   GhostCellClassify.cxx
   MeshQuality.cxx
   MeshQualityArea.cxx
+  MeshQualityMaxAngle.cxx
   MeshQualityMaxDiagonal.cxx
   MeshQualityMinAngle.cxx
   MeshQualityMinDiagonal.cxx

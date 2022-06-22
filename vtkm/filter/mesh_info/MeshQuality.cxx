@@ -22,6 +22,7 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/mesh_info/MeshQuality.h>
 #include <vtkm/filter/mesh_info/MeshQualityArea.h>
+#include <vtkm/filter/mesh_info/MeshQualityMaxAngle.h>
 #include <vtkm/filter/mesh_info/MeshQualityMaxDiagonal.h>
 #include <vtkm/filter/mesh_info/MeshQualityMinAngle.h>
 #include <vtkm/filter/mesh_info/MeshQualityMinDiagonal.h>
@@ -88,6 +89,9 @@ VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& 
   {
     case vtkm::filter::mesh_info::CellMetric::Area:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityArea);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::MaxAngle:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityMaxAngle);
       break;
     case vtkm::filter::mesh_info::CellMetric::MaxDiagonal:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityMaxDiagonal);

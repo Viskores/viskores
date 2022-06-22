@@ -30,7 +30,6 @@
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellDiagonalRatioMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellDimensionMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellJacobianMetric.h>
-#include <vtkm/filter/mesh_info/worklet/cellmetrics/CellMaxAngleMetric.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
@@ -125,10 +124,6 @@ private:
         case vtkm::filter::mesh_info::CellMetric::Jacobian:
           metricValue =
             vtkm::worklet::cellmetrics::CellJacobianMetric<OutType>(numPts, pts, tag, ec);
-          break;
-        case vtkm::filter::mesh_info::CellMetric::MaxAngle:
-          metricValue =
-            vtkm::worklet::cellmetrics::CellMaxAngleMetric<OutType>(numPts, pts, tag, ec);
           break;
         case vtkm::filter::mesh_info::CellMetric::None:
           break;
