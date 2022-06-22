@@ -12,6 +12,7 @@ set(mesh_info_headers
   GhostCellClassify.h
   MeshQuality.h
   MeshQualityArea.h
+  MeshQualityMinDiagonal.h
   MeshQualityOddy.h
   MeshQualityRelativeSizeSquared.h
   MeshQualityScaledJacobian.h
@@ -30,6 +31,7 @@ set(mesh_info_sources
   GhostCellClassify.cxx
   MeshQuality.cxx
   MeshQualityArea.cxx
+  MeshQualityMinDiagonal.cxx
   MeshQualityOddy.cxx
   MeshQualityRelativeSizeSquared.cxx
   MeshQualityScaledJacobian.cxx

@@ -21,7 +21,7 @@
 #define vtk_m_worklet_cellmetrics_Min_Diagonal_h
 
 /*
-* Mesh quality metric functions that compute the Oddy of mesh cells.
+* Mesh quality metric functions that compute the MinDiagonal of mesh cells.
 ** These metric computations are adapted from the VTK implementation of the Verdict library,
 * which provides a set of mesh/cell metrics for evaluating the geometric qualities of regions
 * of mesh spaces.
@@ -33,11 +33,11 @@
 #include "TypeOfCellQuadrilateral.h"
 #include "TypeOfCellTetrahedral.h"
 #include "TypeOfCellTriangle.h"
-#include "vtkm/CellShape.h"
-#include "vtkm/CellTraits.h"
-#include "vtkm/VecTraits.h"
-#include "vtkm/VectorAnalysis.h"
-#include "vtkm/exec/FunctorBase.h"
+#include <vtkm/CellShape.h>
+#include <vtkm/CellTraits.h>
+#include <vtkm/ErrorCode.h>
+#include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
 
 #define UNUSED(expr) (void)(expr);
 
