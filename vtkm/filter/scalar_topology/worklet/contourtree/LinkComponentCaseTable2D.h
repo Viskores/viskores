@@ -54,65 +54,29 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
+#ifndef vtkm_worklet_contourtree_link_component_case_table_2d_h
+#define vtkm_worklet_contourtree_link_component_case_table_2d_h
 
-#include <vtkm/filter/scalar_topology/ContourTreeUniform.h>
+#include <vtkm/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree/Mesh2D_DEM_Triangulation_Macros.h>
 
-#include <fstream>
-#include <vector>
-
-// Compute and render an isosurface for a uniform grid example
-int main(int argc, char* argv[])
+namespace vtkm
 {
-  std::cout << "ContourTreeMesh2D Example" << std::endl;
+namespace worklet
+{
+namespace contourtree
+{
 
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
-  if (argc != 2)
-  {
-    std::cout << "Usage: "
-              << "$ " << argv[0] << " [-d device] input_file" << std::endl;
-    std::cout << "File is expected to be ASCII with xdim ydim integers " << std::endl;
-    std::cout << "followed by vector data last dimension varying fastest" << std::endl;
-    return 0;
-  }
+const vtkm::IdComponent neighbourOffsets3D[N_INCIDENT_EDGES * 2] = { 0, 1,  1,  1,  1,  0,
+                                                                     0, -1, -1, -1, -1, 0 };
 
-  // open input file
-  std::ifstream inFile(argv[1]);
-  if (inFile.bad())
-    return 0;
-
-  // read size of mesh
-  vtkm::Id2 vdims;
-  inFile >> vdims[0];
-  inFile >> vdims[1];
-  std::size_t numVertices = static_cast<std::size_t>(vdims[0] * vdims[1]);
-
-  // read data
-  std::vector<vtkm::Float32> values(numVertices);
-  for (std::size_t vertex = 0; vertex < numVertices; vertex++)
-  {
-    inFile >> values[vertex];
-  }
-  inFile.close();
-
-  // build the input dataset
-  vtkm::cont::DataSetBuilderUniform dsb;
-  vtkm::cont::DataSet inDataSet = dsb.Create(vdims);
-
-  inDataSet.AddPointField("values", values);
-
-  // Convert 2D mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::scalar_topology::ContourTreeMesh2D filter;
-  filter.SetActiveField("values");
-  // Output data set is pairs of saddle and peak vertex IDs
-  vtkm::cont::DataSet output = filter.Execute(inDataSet);
-  vtkm::cont::Field resultField = output.GetField("saddlePeak");
-  ;
-  vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-  resultField.GetData().AsArrayHandle(saddlePeak);
-
-  return 0;
+const vtkm::UInt8 linkComponentCaseTable[64] = { 0,  1,  2,  2,  4,  5,  4,  4,  8,  9,  10, 10, 8,
+                                                 9,  8,  8,  16, 17, 18, 18, 20, 21, 20, 20, 16, 17,
+                                                 18, 18, 16, 17, 16, 16, 32, 32, 34, 32, 36, 36, 36,
+                                                 32, 40, 40, 42, 40, 40, 40, 40, 32, 32, 32, 34, 32,
+                                                 36, 36, 36, 32, 32, 32, 34, 32, 32, 32, 32, 32 };
 }
+}
+}
+
+#endif

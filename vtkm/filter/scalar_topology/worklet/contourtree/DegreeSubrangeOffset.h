@@ -54,65 +54,48 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
+#ifndef vtkm_worklet_contourtree_degree_subrange_offset_h
+#define vtkm_worklet_contourtree_degree_subrange_offset_h
 
-#include <vtkm/filter/scalar_topology/ContourTreeUniform.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
-#include <fstream>
-#include <vector>
-
-// Compute and render an isosurface for a uniform grid example
-int main(int argc, char* argv[])
+namespace vtkm
 {
-  std::cout << "ContourTreeMesh2D Example" << std::endl;
+namespace worklet
+{
+namespace contourtree
+{
 
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
-  if (argc != 2)
+// Worklet
+class DegreeSubrangeOffset : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn sortID,          // (input) index into sort vector
+                                WholeArrayIn sortVector, // (input)
+                                WholeArrayOut degree);   // (output)
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  // Constructor
+  VTKM_EXEC_CONT
+  DegreeSubrangeOffset() {}
+
+  template <typename InFieldPortalType, typename OutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& sortID,
+                            const InFieldPortalType& sortVector,
+                            const OutFieldPortalType& degree) const
   {
-    std::cout << "Usage: "
-              << "$ " << argv[0] << " [-d device] input_file" << std::endl;
-    std::cout << "File is expected to be ASCII with xdim ydim integers " << std::endl;
-    std::cout << "followed by vector data last dimension varying fastest" << std::endl;
-    return 0;
+    vtkm::Id superID = sortVector.Get(sortID);
+    vtkm::Id prevSuper = sortVector.Get(sortID - 1);
+
+    // if they don't match, we've found a boundary
+    if (superID != prevSuper)
+      degree.Set(superID, sortID);
   }
-
-  // open input file
-  std::ifstream inFile(argv[1]);
-  if (inFile.bad())
-    return 0;
-
-  // read size of mesh
-  vtkm::Id2 vdims;
-  inFile >> vdims[0];
-  inFile >> vdims[1];
-  std::size_t numVertices = static_cast<std::size_t>(vdims[0] * vdims[1]);
-
-  // read data
-  std::vector<vtkm::Float32> values(numVertices);
-  for (std::size_t vertex = 0; vertex < numVertices; vertex++)
-  {
-    inFile >> values[vertex];
-  }
-  inFile.close();
-
-  // build the input dataset
-  vtkm::cont::DataSetBuilderUniform dsb;
-  vtkm::cont::DataSet inDataSet = dsb.Create(vdims);
-
-  inDataSet.AddPointField("values", values);
-
-  // Convert 2D mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::scalar_topology::ContourTreeMesh2D filter;
-  filter.SetActiveField("values");
-  // Output data set is pairs of saddle and peak vertex IDs
-  vtkm::cont::DataSet output = filter.Execute(inDataSet);
-  vtkm::cont::Field resultField = output.GetField("saddlePeak");
-  ;
-  vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-  resultField.GetData().AsArrayHandle(saddlePeak);
-
-  return 0;
+}; // DegreeSubrangeOffset
 }
+}
+}
+
+#endif

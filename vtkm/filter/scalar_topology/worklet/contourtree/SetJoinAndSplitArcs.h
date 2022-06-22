@@ -54,65 +54,62 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
+#ifndef vtkm_worklet_contourtree_set_join_and_split_arcs_h
+#define vtkm_worklet_contourtree_set_join_and_split_arcs_h
 
-#include <vtkm/filter/scalar_topology/ContourTreeUniform.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
-#include <fstream>
-#include <vector>
-
-// Compute and render an isosurface for a uniform grid example
-int main(int argc, char* argv[])
+namespace vtkm
 {
-  std::cout << "ContourTreeMesh2D Example" << std::endl;
+namespace worklet
+{
+namespace contourtree
+{
 
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
-  if (argc != 2)
+// Worklet for doing regular to candidate
+class SetJoinAndSplitArcs : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn regularID,              // (input)
+                                WholeArrayIn joinMergeArcs,     // (input)
+                                WholeArrayIn splitMergeArcs,    // (input)
+                                WholeArrayIn regularToCritical, // (input)
+                                FieldOut joinArc,               // (output)
+                                FieldOut splitArc);             // (output)
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
+  using InputDomain = _1;
+
+  // Constructor
+  VTKM_EXEC_CONT
+  SetJoinAndSplitArcs() {}
+
+  template <typename InFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& regularID,
+                            const InFieldPortalType& joinMergeArcs,
+                            const InFieldPortalType& splitMergeArcs,
+                            const InFieldPortalType& regularToCritical,
+                            vtkm::Id& joinArc,
+                            vtkm::Id& splitArc) const
   {
-    std::cout << "Usage: "
-              << "$ " << argv[0] << " [-d device] input_file" << std::endl;
-    std::cout << "File is expected to be ASCII with xdim ydim integers " << std::endl;
-    std::cout << "followed by vector data last dimension varying fastest" << std::endl;
-    return 0;
+    // use it to grab join arc target
+    vtkm::Id joinTo = joinMergeArcs.Get(regularID);
+    // and set the join arc
+    if (joinTo == NO_VERTEX_ASSIGNED)
+      joinArc = NO_VERTEX_ASSIGNED;
+    else
+      joinArc = regularToCritical.Get(joinTo);
+    // now grab split arc target
+    vtkm::Id splitTo = splitMergeArcs.Get(regularID);
+    // and set the split arc
+    if (splitTo == NO_VERTEX_ASSIGNED)
+      splitArc = NO_VERTEX_ASSIGNED;
+    else
+      splitArc = regularToCritical.Get(splitTo);
   }
-
-  // open input file
-  std::ifstream inFile(argv[1]);
-  if (inFile.bad())
-    return 0;
-
-  // read size of mesh
-  vtkm::Id2 vdims;
-  inFile >> vdims[0];
-  inFile >> vdims[1];
-  std::size_t numVertices = static_cast<std::size_t>(vdims[0] * vdims[1]);
-
-  // read data
-  std::vector<vtkm::Float32> values(numVertices);
-  for (std::size_t vertex = 0; vertex < numVertices; vertex++)
-  {
-    inFile >> values[vertex];
-  }
-  inFile.close();
-
-  // build the input dataset
-  vtkm::cont::DataSetBuilderUniform dsb;
-  vtkm::cont::DataSet inDataSet = dsb.Create(vdims);
-
-  inDataSet.AddPointField("values", values);
-
-  // Convert 2D mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::scalar_topology::ContourTreeMesh2D filter;
-  filter.SetActiveField("values");
-  // Output data set is pairs of saddle and peak vertex IDs
-  vtkm::cont::DataSet output = filter.Execute(inDataSet);
-  vtkm::cont::Field resultField = output.GetField("saddlePeak");
-  ;
-  vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-  resultField.GetData().AsArrayHandle(saddlePeak);
-
-  return 0;
+}; // SetJoinAndSplitArcs
 }
+}
+}
+
+#endif

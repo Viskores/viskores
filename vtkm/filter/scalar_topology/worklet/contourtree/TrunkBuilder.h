@@ -54,65 +54,65 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
+//=======================================================================================
+//
+// COMMENTS:
+//
+// This functor is applied to all remaining active vertices. The remaining maximum is the
+// chain maximum of all vertices, and is set to prune to NO_VERTEX_ASSIGNED (the global
+// root). All others are set to prune to it.
+//
+// Any vector needed by the functor for lookup purposes will be passed as a parameter to
+// the constructor and saved, with the actual function call being the operator ()
+//
+// Vectors marked I/O are intrinsically risky unless there is an algorithmic guarantee
+// that the read/writes are completely independent - which for our case actually occurs
+// The I/O vectors should therefore be justified in comments both here & in caller
+//
+//=======================================================================================
 
-#include <vtkm/filter/scalar_topology/ContourTreeUniform.h>
+#ifndef vtkm_worklet_contourtree_trunk_builder_h
+#define vtkm_worklet_contourtree_trunk_builder_h
 
-#include <fstream>
-#include <vector>
+#include <vtkm/filter/scalar_topology/worklet/contourtree/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
-// Compute and render an isosurface for a uniform grid example
-int main(int argc, char* argv[])
+namespace vtkm
 {
-  std::cout << "ContourTreeMesh2D Example" << std::endl;
+namespace worklet
+{
+namespace contourtree
+{
 
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
-  if (argc != 2)
+// Worklet for setting initial chain maximum value
+class TrunkBuilder : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn vertexID,           // (input) index into active vertices
+                                WholeArrayIn chainExtremum, // (input) chain extemum for vertices
+                                WholeArrayOut prunesTo);    // (output) where a vertex prunes to
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  // Constructor
+  VTKM_EXEC_CONT
+  TrunkBuilder() {}
+
+  template <typename InFieldPortalType, typename OutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& vertexID,
+                            const InFieldPortalType& chainExtremum,
+                            const OutFieldPortalType& prunesTo) const
   {
-    std::cout << "Usage: "
-              << "$ " << argv[0] << " [-d device] input_file" << std::endl;
-    std::cout << "File is expected to be ASCII with xdim ydim integers " << std::endl;
-    std::cout << "followed by vector data last dimension varying fastest" << std::endl;
-    return 0;
+    // the chain max of everyone prunes to the global minimum
+    vtkm::Id chainExt = chainExtremum.Get(vertexID);
+    if (vertexID == chainExt)
+      prunesTo.Set(vertexID, NO_VERTEX_ASSIGNED);
+    else
+      prunesTo.Set(vertexID, chainExt);
   }
-
-  // open input file
-  std::ifstream inFile(argv[1]);
-  if (inFile.bad())
-    return 0;
-
-  // read size of mesh
-  vtkm::Id2 vdims;
-  inFile >> vdims[0];
-  inFile >> vdims[1];
-  std::size_t numVertices = static_cast<std::size_t>(vdims[0] * vdims[1]);
-
-  // read data
-  std::vector<vtkm::Float32> values(numVertices);
-  for (std::size_t vertex = 0; vertex < numVertices; vertex++)
-  {
-    inFile >> values[vertex];
-  }
-  inFile.close();
-
-  // build the input dataset
-  vtkm::cont::DataSetBuilderUniform dsb;
-  vtkm::cont::DataSet inDataSet = dsb.Create(vdims);
-
-  inDataSet.AddPointField("values", values);
-
-  // Convert 2D mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::scalar_topology::ContourTreeMesh2D filter;
-  filter.SetActiveField("values");
-  // Output data set is pairs of saddle and peak vertex IDs
-  vtkm::cont::DataSet output = filter.Execute(inDataSet);
-  vtkm::cont::Field resultField = output.GetField("saddlePeak");
-  ;
-  vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-  resultField.GetData().AsArrayHandle(saddlePeak);
-
-  return 0;
+}; // TrunkBuilder
 }
+}
+}
+
+#endif

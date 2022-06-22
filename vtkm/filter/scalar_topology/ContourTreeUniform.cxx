@@ -54,65 +54,86 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
-
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/scalar_topology/ContourTreeUniform.h>
+#include <vtkm/filter/scalar_topology/worklet/ContourTreeUniform.h>
 
-#include <fstream>
-#include <vector>
-
-// Compute and render an isosurface for a uniform grid example
-int main(int argc, char* argv[])
+namespace vtkm
 {
-  std::cout << "ContourTreeMesh2D Example" << std::endl;
-
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
-  if (argc != 2)
-  {
-    std::cout << "Usage: "
-              << "$ " << argv[0] << " [-d device] input_file" << std::endl;
-    std::cout << "File is expected to be ASCII with xdim ydim integers " << std::endl;
-    std::cout << "followed by vector data last dimension varying fastest" << std::endl;
-    return 0;
-  }
-
-  // open input file
-  std::ifstream inFile(argv[1]);
-  if (inFile.bad())
-    return 0;
-
-  // read size of mesh
-  vtkm::Id2 vdims;
-  inFile >> vdims[0];
-  inFile >> vdims[1];
-  std::size_t numVertices = static_cast<std::size_t>(vdims[0] * vdims[1]);
-
-  // read data
-  std::vector<vtkm::Float32> values(numVertices);
-  for (std::size_t vertex = 0; vertex < numVertices; vertex++)
-  {
-    inFile >> values[vertex];
-  }
-  inFile.close();
-
-  // build the input dataset
-  vtkm::cont::DataSetBuilderUniform dsb;
-  vtkm::cont::DataSet inDataSet = dsb.Create(vdims);
-
-  inDataSet.AddPointField("values", values);
-
-  // Convert 2D mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::scalar_topology::ContourTreeMesh2D filter;
-  filter.SetActiveField("values");
-  // Output data set is pairs of saddle and peak vertex IDs
-  vtkm::cont::DataSet output = filter.Execute(inDataSet);
-  vtkm::cont::Field resultField = output.GetField("saddlePeak");
-  ;
-  vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-  resultField.GetData().AsArrayHandle(saddlePeak);
-
-  return 0;
+namespace filter
+{
+namespace scalar_topology
+{
+//-----------------------------------------------------------------------------
+ContourTreeMesh2D::ContourTreeMesh2D()
+{
+  this->SetOutputFieldName("saddlePeak");
 }
+
+//-----------------------------------------------------------------------------
+vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(const vtkm::cont::DataSet& input)
+{
+  const auto& field = this->GetFieldFromDataSet(input);
+  if (!field.IsFieldPoint())
+  {
+    throw vtkm::cont::ErrorFilterExecution("ContourTreeMesh2D expects point field input.");
+  }
+
+  // Collect sizing information from the dataset
+  vtkm::cont::CellSetStructured<2> cellSet;
+  input.GetCellSet().AsCellSet(cellSet);
+
+  vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
+  vtkm::Id nRows = pointDimensions[0];
+  vtkm::Id nCols = pointDimensions[1];
+
+  vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
+
+  auto resolveType = [&](const auto& concrete) {
+    vtkm::worklet::ContourTreeMesh2D worklet;
+    worklet.Run(concrete, nRows, nCols, saddlePeak);
+  };
+  this->CastAndCallScalarField(field, resolveType);
+
+  return this->CreateResultField(
+    input, this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, saddlePeak);
+}
+
+//-----------------------------------------------------------------------------
+ContourTreeMesh3D::ContourTreeMesh3D()
+{
+  this->SetOutputFieldName("saddlePeak");
+}
+
+//-----------------------------------------------------------------------------
+vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(const vtkm::cont::DataSet& input)
+{
+  const auto& field = this->GetFieldFromDataSet(input);
+  if (!field.IsFieldPoint())
+  {
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
+  }
+
+  // Collect sizing information from the dataset
+  vtkm::cont::CellSetStructured<3> cellSet;
+  input.GetCellSet().AsCellSet(cellSet);
+
+  vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
+  vtkm::Id nRows = pointDimensions[0];
+  vtkm::Id nCols = pointDimensions[1];
+  vtkm::Id nSlices = pointDimensions[2];
+
+  vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
+
+  auto resolveType = [&](const auto& concrete) {
+    vtkm::worklet::ContourTreeMesh3D worklet;
+    worklet.Run(concrete, nRows, nCols, nSlices, saddlePeak);
+  };
+  this->CastAndCallScalarField(field, resolveType);
+
+  return this->CreateResultField(
+    input, this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, saddlePeak);
+}
+} // namespace scalar_topology
+} // namespace filter
+} // namespace vtkm

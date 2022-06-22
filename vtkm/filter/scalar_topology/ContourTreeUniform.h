@@ -54,65 +54,63 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
+#ifndef vtk_m_filter_scalar_topology_ContourTreeUniform_h
+#define vtk_m_filter_scalar_topology_ContourTreeUniform_h
 
-#include <vtkm/filter/scalar_topology/ContourTreeUniform.h>
+#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
-#include <fstream>
-#include <vector>
-
-// Compute and render an isosurface for a uniform grid example
-int main(int argc, char* argv[])
+namespace vtkm
 {
-  std::cout << "ContourTreeMesh2D Example" << std::endl;
+namespace filter
+{
+namespace scalar_topology
+{
+/// \brief Construct the ContourTree for a 2D Mesh
+///
+/// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and
+/// peak of contour
+/// Based on the algorithm presented in the paper:
+//  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeMesh2D : public vtkm::filter::NewFilterField
+{
+public:
+  VTKM_CONT
+  ContourTreeMesh2D();
 
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
-  if (argc != 2)
-  {
-    std::cout << "Usage: "
-              << "$ " << argv[0] << " [-d device] input_file" << std::endl;
-    std::cout << "File is expected to be ASCII with xdim ydim integers " << std::endl;
-    std::cout << "followed by vector data last dimension varying fastest" << std::endl;
-    return 0;
-  }
+private:
+  /// Output field
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
+};
 
-  // open input file
-  std::ifstream inFile(argv[1]);
-  if (inFile.bad())
-    return 0;
+/// \brief Construct the ContourTree for a 3D Mesh
+///
+/// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and
+/// peak of contour
+/// Based on the algorithm presented in the paper:
+//  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeMesh3D : public vtkm::filter::NewFilterField
+{
+public:
+  VTKM_CONT
+  ContourTreeMesh3D();
 
-  // read size of mesh
-  vtkm::Id2 vdims;
-  inFile >> vdims[0];
-  inFile >> vdims[1];
-  std::size_t numVertices = static_cast<std::size_t>(vdims[0] * vdims[1]);
+private:
+  /// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
+};
+} // namespace scalar_topology
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::scalar_topology::ContourTree2D.") ContourTree2D
+  : public vtkm::filter::scalar_topology::ContourTreeMesh2D
+{
+  using scalar_topology::ContourTreeMesh2D::ContourTreeMesh2D;
+};
+class VTKM_DEPRECATED(1.8, "Use vtkm::filter::scalar_topology::ContourTree3D.") ContourTree3D
+  : public vtkm::filter::scalar_topology::ContourTreeMesh3D
+{
+  using scalar_topology::ContourTreeMesh3D::ContourTreeMesh3D;
+};
+} // namespace filter
+} // namespace vtkm
 
-  // read data
-  std::vector<vtkm::Float32> values(numVertices);
-  for (std::size_t vertex = 0; vertex < numVertices; vertex++)
-  {
-    inFile >> values[vertex];
-  }
-  inFile.close();
-
-  // build the input dataset
-  vtkm::cont::DataSetBuilderUniform dsb;
-  vtkm::cont::DataSet inDataSet = dsb.Create(vdims);
-
-  inDataSet.AddPointField("values", values);
-
-  // Convert 2D mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::scalar_topology::ContourTreeMesh2D filter;
-  filter.SetActiveField("values");
-  // Output data set is pairs of saddle and peak vertex IDs
-  vtkm::cont::DataSet output = filter.Execute(inDataSet);
-  vtkm::cont::Field resultField = output.GetField("saddlePeak");
-  ;
-  vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-  resultField.GetData().AsArrayHandle(saddlePeak);
-
-  return 0;
-}
+#endif // vtk_m_filter_scalar_topology_ContourTreeUniform_h

@@ -53,9 +53,6 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
 
-// Contour tree includes, not ye moved to new filter design
-#include <vtkm/worklet/contourtree/Types.h>
-
 namespace vtkm
 {
 namespace filter

@@ -50,7 +50,7 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include "vtkm/filter/testing/TestingContourTreeUniformDistributedFilter.h"
+#include <vtkm/filter/testing/TestingContourTreeUniformDistributedFilter.h>
 
 namespace
 {

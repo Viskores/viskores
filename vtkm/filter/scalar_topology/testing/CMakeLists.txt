@@ -11,6 +11,7 @@
 ##=============================================================================
 
 set(unit_tests
+  UnitTestContourTreeUniformFilter.cxx
   UnitTestDistributedBranchDecompositionFilter.cxx
   )
 
