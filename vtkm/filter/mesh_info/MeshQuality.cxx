@@ -22,6 +22,7 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/mesh_info/MeshQuality.h>
 #include <vtkm/filter/mesh_info/MeshQualityArea.h>
+#include <vtkm/filter/mesh_info/MeshQualityAspectGamma.h>
 #include <vtkm/filter/mesh_info/MeshQualityAspectRatio.h>
 #include <vtkm/filter/mesh_info/MeshQualityCondition.h>
 #include <vtkm/filter/mesh_info/MeshQualityDiagonalRatio.h>
@@ -42,7 +43,6 @@
 #include <vtkm/filter/mesh_info/MeshQualityTaper.h>
 #include <vtkm/filter/mesh_info/MeshQualityVolume.h>
 #include <vtkm/filter/mesh_info/MeshQualityWarpage.h>
-#include <vtkm/filter/mesh_info/worklet/MeshQuality.h>
 
 namespace vtkm
 {
@@ -94,6 +94,9 @@ VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& 
   {
     case vtkm::filter::mesh_info::CellMetric::Area:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityArea);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::AspectGamma:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityAspectGamma);
       break;
     case vtkm::filter::mesh_info::CellMetric::AspectRatio:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityAspectRatio);
@@ -155,69 +158,16 @@ VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& 
     case vtkm::filter::mesh_info::CellMetric::Warpage:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityWarpage);
       break;
-    default:
-      implementation.reset(); // Eventually will go away
-      break;
+    case vtkm::filter::mesh_info::CellMetric::None:
+      // Nothing to do
+      return input;
   }
 
-  if (implementation) // Eventually will not need this condition
-  {
-    implementation->SetOutputFieldName(this->GetOutputFieldName());
-    implementation->SetActiveCoordinateSystem(this->GetActiveCoordinateSystemIndex());
-    return implementation->Execute(input);
-  }
+  VTKM_ASSERT(implementation);
 
-  const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
-  {
-    throw vtkm::cont::ErrorBadValue("Active field for MeshQuality must be point coordinates. "
-                                    "But the active field is not a point field.");
-  }
-
-  vtkm::cont::UnknownCellSet inputCellSet = input.GetCellSet();
-  vtkm::worklet::MeshQuality qualityWorklet;
-
-  if (this->MyMetric == CellMetric::RelativeSizeSquared ||
-      this->MyMetric == CellMetric::ShapeAndSize)
-  {
-    vtkm::Id numCells = inputCellSet.GetNumberOfCells();
-    if (numCells > 0)
-    {
-      vtkm::cont::ArrayHandle<vtkm::FloatDefault> areaArray;
-      vtkm::filter::mesh_info::MeshQualityArea areaFilter;
-      vtkm::cont::Field areaField = areaFilter.Execute(input).GetField("area");
-      vtkm::cont::ArrayCopyShallowIfPossible(areaField.GetData(), areaArray);
-      vtkm::FloatDefault totalArea = vtkm::cont::Algorithm::Reduce(areaArray, vtkm::FloatDefault{});
-      qualityWorklet.SetAverageArea(totalArea / static_cast<vtkm::FloatDefault>(numCells));
-
-      vtkm::cont::ArrayHandle<vtkm::FloatDefault> volumeArray;
-      vtkm::filter::mesh_info::MeshQualityVolume volumeFilter;
-      vtkm::cont::Field volumeField = volumeFilter.Execute(input).GetField("volume");
-      vtkm::cont::ArrayCopyShallowIfPossible(volumeField.GetData(), volumeArray);
-      vtkm::FloatDefault totalVolume =
-        vtkm::cont::Algorithm::Reduce(volumeArray, vtkm::FloatDefault{});
-      qualityWorklet.SetAverageVolume(totalVolume / static_cast<vtkm::FloatDefault>(numCells));
-    }
-    else
-    {
-      qualityWorklet.SetAverageArea(1);
-      qualityWorklet.SetAverageVolume(1);
-    }
-  }
-
-  vtkm::cont::UnknownArrayHandle outArray;
-
-  //Invoke the MeshQuality worklet
-  auto resolveType = [&](const auto& concrete) {
-    using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
-    vtkm::cont::ArrayHandle<T> result;
-    qualityWorklet.SetMetric(this->MyMetric);
-    this->Invoke(qualityWorklet, inputCellSet, concrete, result);
-    outArray = result;
-  };
-  this->CastAndCallVecField<3>(field, resolveType);
-
-  return this->CreateResultFieldCell(input, this->GetOutputFieldName(), outArray);
+  implementation->SetOutputFieldName(this->GetOutputFieldName());
+  implementation->SetActiveCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+  return implementation->Execute(input);
 }
 } // namespace mesh_info
 } // namespace filter

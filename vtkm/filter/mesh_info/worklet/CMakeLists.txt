@@ -10,7 +10,6 @@
 
 set(headers
   CellMeasure.h
-  MeshQuality.h
   MeshQualityWorklet.h
   )
 
