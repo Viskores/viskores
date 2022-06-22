@@ -34,7 +34,6 @@
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellMaxDiagonalMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellMinAngleMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellMinDiagonalMetric.h>
-#include <vtkm/filter/mesh_info/worklet/cellmetrics/CellOddyMetric.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
@@ -145,9 +144,6 @@ private:
         case vtkm::filter::mesh_info::CellMetric::MinDiagonal:
           metricValue =
             vtkm::worklet::cellmetrics::CellMinDiagonalMetric<OutType>(numPts, pts, tag, ec);
-          break;
-        case vtkm::filter::mesh_info::CellMetric::Oddy:
-          metricValue = vtkm::worklet::cellmetrics::CellOddyMetric<OutType>(numPts, pts, tag, ec);
           break;
         case vtkm::filter::mesh_info::CellMetric::None:
           break;
