@@ -12,6 +12,7 @@ set(mesh_info_headers
   GhostCellClassify.h
   MeshQuality.h
   MeshQualityArea.h
+  MeshQualityAspectRatio.h
   MeshQualityCondition.h
   MeshQualityDiagonalRatio.h
   MeshQualityDimension.h
@@ -38,6 +39,7 @@ set(mesh_info_sources
   GhostCellClassify.cxx
   MeshQuality.cxx
   MeshQualityArea.cxx
+  MeshQualityAspectRatio.cxx
   MeshQualityCondition.cxx
   MeshQualityDiagonalRatio.cxx
   MeshQualityDimension.cxx

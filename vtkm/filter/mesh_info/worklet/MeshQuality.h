@@ -25,7 +25,6 @@
 #include <vtkm/exec/CellMeasure.h>
 #include <vtkm/filter/mesh_info/MeshQuality.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellAspectGammaMetric.h>
-#include <vtkm/filter/mesh_info/worklet/cellmetrics/CellAspectRatioMetric.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
@@ -100,10 +99,6 @@ private:
         case vtkm::filter::mesh_info::CellMetric::AspectGamma:
           metricValue =
             vtkm::worklet::cellmetrics::CellAspectGammaMetric<OutType>(numPts, pts, tag, ec);
-          break;
-        case vtkm::filter::mesh_info::CellMetric::AspectRatio:
-          metricValue =
-            vtkm::worklet::cellmetrics::CellAspectRatioMetric<OutType>(numPts, pts, tag, ec);
           break;
         case vtkm::filter::mesh_info::CellMetric::None:
           break;
