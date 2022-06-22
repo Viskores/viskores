@@ -35,7 +35,6 @@
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellMinAngleMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellMinDiagonalMetric.h>
 #include <vtkm/filter/mesh_info/worklet/cellmetrics/CellOddyMetric.h>
-#include <vtkm/filter/mesh_info/worklet/cellmetrics/CellRelativeSizeSquaredMetric.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
@@ -101,7 +100,6 @@ private:
 
     //Only compute the metric for 2D and 3D shapes; return 0 otherwise
     OutType metricValue = OutType(0.0);
-    vtkm::FloatDefault average = (dims == 2 ? this->AverageArea : this->AverageVolume);
 
     if (dims > 0)
     {
@@ -150,10 +148,6 @@ private:
           break;
         case vtkm::filter::mesh_info::CellMetric::Oddy:
           metricValue = vtkm::worklet::cellmetrics::CellOddyMetric<OutType>(numPts, pts, tag, ec);
-          break;
-        case vtkm::filter::mesh_info::CellMetric::RelativeSizeSquared:
-          metricValue = vtkm::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
-            numPts, pts, static_cast<OutType>(average), tag, ec);
           break;
         case vtkm::filter::mesh_info::CellMetric::None:
           break;

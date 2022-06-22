@@ -22,6 +22,7 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/mesh_info/MeshQuality.h>
 #include <vtkm/filter/mesh_info/MeshQualityArea.h>
+#include <vtkm/filter/mesh_info/MeshQualityRelativeSizeSquared.h>
 #include <vtkm/filter/mesh_info/MeshQualityScaledJacobian.h>
 #include <vtkm/filter/mesh_info/MeshQualityShape.h>
 #include <vtkm/filter/mesh_info/MeshQualityShapeAndSize.h>
@@ -83,6 +84,9 @@ VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& 
   {
     case vtkm::filter::mesh_info::CellMetric::Area:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityArea);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::RelativeSizeSquared:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityRelativeSizeSquared);
       break;
     case vtkm::filter::mesh_info::CellMetric::ScaledJacobian:
       implementation.reset(new vtkm::filter::mesh_info::MeshQualityScaledJacobian);
