@@ -64,7 +64,7 @@ void MapperConnectivity::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                                      const vtkm::cont::Field& scalarField,
                                      const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
                                      const vtkm::rendering::Camera& camera,
-                                     const vtkm::Range& vtkmNotUsed(scalarRange))
+                                     const vtkm::Range& scalarRange)
 {
   vtkm::rendering::ConnectivityProxy tracerProxy(cellset, coords, scalarField);
   if (SampleDistance == -1.f)
@@ -78,6 +78,7 @@ void MapperConnectivity::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
     constexpr vtkm::Float64 defaultSamples = 200.;
     SampleDistance = static_cast<vtkm::Float32>(length / defaultSamples);
   }
+  tracerProxy.SetScalarRange(scalarRange);
   tracerProxy.SetSampleDistance(SampleDistance);
   tracerProxy.SetColorMap(ColorMap);
   tracerProxy.Trace(camera, CanvasRT);
