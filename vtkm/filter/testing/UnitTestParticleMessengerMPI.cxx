@@ -23,7 +23,7 @@ using MCommType = std::pair<int, std::vector<int>>;
 using PCommType = std::pair<vtkm::Particle, std::vector<vtkm::Id>>;
 using PRecvCommType = std::pair<int, std::vector<PCommType>>;
 
-class TestMessenger : public vtkm::filter::particleadvection::ParticleMessenger
+class TestMessenger : public vtkm::filter::particleadvection::ParticleMessenger<vtkm::Particle>
 {
 public:
   TestMessenger(vtkmdiy::mpi::communicator& comm,
