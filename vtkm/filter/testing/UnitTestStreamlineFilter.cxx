@@ -65,7 +65,6 @@ void TestStreamline()
                                      vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
     vtkm::filter::ParticleAdvection2 streamline;
-
     streamline.SetStepSize(0.1f);
     streamline.SetNumberOfSteps(20);
     streamline.SetSeeds(seedArray);
@@ -584,7 +583,7 @@ void TestStreamlineFilters()
   vtkm::filter::ParticleAdvection2 filter;
   TestStreamline();
 
-  /*
+
   std::vector<bool> flags = { true, false };
   std::vector<FilterType> fTypes = { FilterType::PARTICLE_ADVECTION,
                                      FilterType::STREAMLINE,
@@ -601,7 +600,7 @@ void TestStreamlineFilters()
 
   TestStreamline();
   TestPathline();
-
+  /*
   for (auto useSL : flags)
     TestAMRStreamline(useSL);
 

@@ -30,7 +30,8 @@ enum VectorFieldType
 
 enum ParticleAdvectionResultType
 {
-  PARTICLE_ADVECT_TYPE = 0,
+  UNKNOWN_TYPE = -1,
+  PARTICLE_ADVECT_TYPE,
   STREAMLINE_TYPE,
 };
 

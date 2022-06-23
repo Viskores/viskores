@@ -48,8 +48,13 @@ public:
 
   vtkm::cont::PartitionedDataSet GetOutput()
   {
+    vtkm::cont::PartitionedDataSet output;
+
+    for (const auto& b : this->Blocks)
+      output.AppendPartition(b.GetOutput<ParticleType>());
+
     std::cout << "GetOutput: " << __FILE__ << " " << __LINE__ << std::endl;
-    auto output = internal::ResultHelper<ResultType, ParticleType>::GetOutput(this->Results);
+    //auto output = internal::ResultHelper<ResultType, ParticleType>::GetOutput(this->Results);
     output.PrintSummary(std::cout);
 
     return output;
@@ -100,15 +105,17 @@ public:
 
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
-      std::cout << __FILE__ << " " << __LINE__ << std::endl;
       std::vector<ParticleType> v;
       vtkm::Id numTerm = 0, blockId = -1;
-      if (GetActiveParticles(v, blockId))
+      if (this->GetActiveParticles(v, blockId))
       {
-        const auto& block = this->GetDataSet(blockId);
-        ResultType<ParticleType> r;
-        block.Advect(v, this->StepSize, this->NumberOfSteps, r);
-        numTerm = this->UpdateResult(r, blockId);
+        //make this a pointer to avoid the copy?
+        auto& block = this->GetDataSet(blockId);
+        //block.Advect(v, this->StepSize, this->NumberOfSteps, r);
+        DSIStuff<ParticleType> stuff(this->BoundsMap, this->ParticleBlockIDsMap);
+        block.Advect(v, this->StepSize, this->NumberOfSteps, stuff);
+        numTerm = this->UpdateResult(stuff);
+        //numTerm = this->UpdateResult(r, blockId);
         std::cout << " Advect: " << v.size() << " NT= " << numTerm << std::endl;
       }
 
@@ -138,9 +145,9 @@ public:
     this->TotalNumParticles = static_cast<vtkm::Id>(total);
   }
 
-  const DSI& GetDataSet(vtkm::Id id) const
+  DSI& GetDataSet(vtkm::Id id)
   {
-    for (const auto& it : this->Blocks)
+    for (auto& it : this->Blocks)
       if (it.GetID() == id)
         return it;
     throw vtkm::cont::ErrorFilterExecution("Bad block");
@@ -231,6 +238,7 @@ public:
       this->ParticleBlockIDsMap[it.first] = it.second;
   }
 
+  /*
   void UpdateTerminated(const vtkm::cont::ArrayHandle<ParticleType>& particles,
                         const std::vector<vtkm::Id>& idxTerm)
   {
@@ -238,7 +246,9 @@ public:
     for (const auto& idx : idxTerm)
       this->ParticleBlockIDsMap.erase(portal.Get(idx).ID);
   }
+  */
 
+  /*
   void ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
                          std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMapA,
                          std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMapI,
@@ -319,10 +329,28 @@ public:
     //Make sure we didn't miss anything. Every particle goes into a single bucket.
     VTKM_ASSERT(static_cast<std::size_t>(n) == (A.size() + I.size() + termIdx.size()));
   }
+  */
 
+  vtkm::Id UpdateResult(const DSIStuff<ParticleType>& stuff)
+  {
+    this->UpdateActive(stuff.A, stuff.IdMapA);
+    this->UpdateInactive(stuff.I, stuff.IdMapI);
+
+    vtkm::Id numTerm = static_cast<vtkm::Id>(stuff.TermID.size());
+    //Update terminated particles.
+    if (numTerm > 0)
+    {
+      for (const auto& id : stuff.TermID)
+        this->ParticleBlockIDsMap.erase(id);
+    }
+
+    return numTerm;
+  }
+
+  /*
   vtkm::Id UpdateResult(ResultType<ParticleType>& res, vtkm::Id blockId)
   {
-    std::cout << "UpdateResult: blockId= " << blockId << std::endl;
+    std::cout<<"UpdateResult: blockId= "<<blockId<<std::endl;
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> idsMapI, idsMapA;
     std::vector<ParticleType> A, I;
     std::vector<vtkm::Id> termIdx;
@@ -340,6 +368,7 @@ public:
 
     return numTerm;
   }
+  */
 
   virtual bool GetBlockAndWait(const vtkm::Id& numLocalTerm)
   {

@@ -29,6 +29,7 @@ namespace filter
 inline VTKM_CONT ParticleAdvection2::ParticleAdvection2()
   : vtkm::filter::FilterParticleAdvection<ParticleAdvection2, vtkm::Particle>()
 {
+  this->ResultType = vtkm::filter::particleadvection::PARTICLE_ADVECT_TYPE;
 }
 
 //-----------------------------------------------------------------------------
@@ -56,21 +57,17 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection2::PrepareForEx
     if (!ds.HasPointField(activeField) && !ds.HasCellField(activeField))
       throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-    dsi.push_back(DSIType(ds, blockId, activeField, this->SolverType, this->VecFieldType));
+    dsi.push_back(
+      DSIType(ds, blockId, activeField, this->SolverType, this->VecFieldType, this->ResultType));
   }
 
-  std::vector<vtkm::Particle> seeds;
-  seeds.push_back(this->Seeds.ReadPortal().Get(0));
-  seeds.push_back(this->Seeds.ReadPortal().Get(1));
-  seeds.push_back(this->Seeds.ReadPortal().Get(2));
-  std::cout << "SEEDS= " << seeds[0].Pos << " " << seeds[1].Pos << " " << seeds[2].Pos << std::endl;
-
-  //this->SeedArray = this->Seeds;
-  //vtkm::cont::UncertainArrayHandle<vtkm::List<vtkm::Particle>, vtkm::cont::StorageListBasic> arr;
-  //arr = this->Seeds;
-
-  vtkm::filter::particleadvection::PAV pav(boundsMap, dsi, this->UseThreadedAlgorithm);
-  return pav.Execute(this->NumberOfSteps, this->StepSize, this->Seeds);
+  this->SeedArray = this->Seeds;
+  vtkm::filter::particleadvection::PAV pav(
+    boundsMap,
+    dsi,
+    this->UseThreadedAlgorithm,
+    vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE);
+  return pav.Execute(this->NumberOfSteps, this->StepSize, this->SeedArray);
 
 #if 0
   //std::vector<DSIType> ddsi;
@@ -95,6 +92,20 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection2::PrepareForEx
       boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
   */
 #endif
+}
+
+VTKM_CONT vtkm::cont::DataSet ParticleAdvection3::DoExecute(const vtkm::cont::DataSet& inData)
+{
+  std::cout << "Meow DS" << std::endl;
+  auto result = this->DoExecutePartitions(inData);
+  return result.GetPartition(0);
+}
+
+VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection3::DoExecutePartitions(
+  const vtkm::cont::PartitionedDataSet& inData)
+{
+  std::cout << "Meow pDS" << std::endl;
+  return inData;
 }
 
 }

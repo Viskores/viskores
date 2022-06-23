@@ -19,12 +19,31 @@
 #include <vtkm/worklet/particleadvection/RK4Integrator.h>
 #include <vtkm/worklet/particleadvection/Stepper.h>
 
+#include <vtkm/exec/internal/Variant.h>
+
 namespace vtkm
 {
 namespace filter
 {
 namespace particleadvection
 {
+
+template <typename ParticleType>
+struct DSIStuff
+{
+  DSIStuff(const vtkm::filter::particleadvection::BoundsMap& boundsMap,
+           const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& particleBlockIDsMap)
+    : BoundsMap(boundsMap)
+    , ParticleBlockIDsMap(particleBlockIDsMap)
+  {
+  }
+
+  std::vector<ParticleType> A, I;
+  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> IdMapA, IdMapI;
+  std::vector<vtkm::Id> TermID;
+  const vtkm::filter::particleadvection::BoundsMap BoundsMap;
+  const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
+};
 
 class DSI
 {
@@ -33,10 +52,13 @@ public:
       vtkm::Id id,
       const std::string& fieldNm,
       vtkm::filter::particleadvection::IntegrationSolverType solverType,
-      vtkm::filter::particleadvection::VectorFieldType vecFieldType)
+      vtkm::filter::particleadvection::VectorFieldType vecFieldType,
+      vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
+    : Rank(this->Comm.rank())
   {
     this->SolverType = solverType;
     this->VecFieldType = vecFieldType;
+    this->ResType = resultType;
     this->DataSet = ds;
     this->Id = id;
     this->FieldName = fieldNm;
@@ -47,12 +69,19 @@ public:
   VTKM_CONT vtkm::Id GetID() const { return this->Id; }
   VTKM_CONT void SetCopySeedFlag(bool val) { this->CopySeedArray = val; }
 
-  //template <typename ParticleType, typename ResultType>
-  template <typename ParticleType, template <typename> class ResultType>
+
+  template <typename ParticleType>
   VTKM_CONT void Advect(std::vector<ParticleType>& v,
                         vtkm::FloatDefault stepSize, //move these to member data(?)
                         vtkm::Id maxSteps,
-                        ResultType<ParticleType>& result) const;
+                        DSIStuff<ParticleType>& stuff);
+
+  template <typename ParticleType>
+  VTKM_CONT vtkm::cont::DataSet GetOutput() const;
+
+protected:
+  template <typename ParticleType, template <typename> class ResultType>
+  VTKM_CONT void UpdateResult(ResultType<ParticleType>& result, DSIStuff<ParticleType>& stuff);
 
   template <typename ArrayType>
   VTKM_CONT void GetVelocityField(
@@ -69,6 +98,7 @@ public:
   VTKM_CONT void GetElectroMagneticField(
     vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>& elecMagField) const
   {
+    std::cout << "FIX ME: need fieldname2" << std::endl;
     ArrayType arr1, arr2;
     vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(this->FieldName).GetData(), arr1);
     vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(this->FieldName).GetData(),
@@ -79,14 +109,31 @@ public:
       vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>(arr1, arr2, assoc);
   }
 
-  //private:
+  template <typename ParticleType>
+  VTKM_CONT void ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
+                                   DSIStuff<ParticleType>& stuff) const;
+
+  template <typename ParticleType, template <typename> class ResultType>
+  VTKM_CONT vtkm::cont::DataSet ResultToDataSet() const;
+
+  vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkm::Id Rank;
   vtkm::cont::DataSet DataSet;
   vtkm::Id Id;
   std::string FieldName;
   vtkm::filter::particleadvection::IntegrationSolverType SolverType;
   vtkm::filter::particleadvection::VectorFieldType VecFieldType;
+  vtkm::filter::particleadvection::ParticleAdvectionResultType ResType =
+    vtkm::filter::particleadvection::UNKNOWN_TYPE;
   bool CopySeedArray = false;
-  //Add results array?
+
+  using ResultVariantType =
+    vtkm::exec::internal::Variant<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>,
+                                  vtkm::worklet::StreamlineResult<vtkm::Particle>,
+                                  vtkm::worklet::ParticleAdvectionResult<vtkm::ChargedParticle>,
+                                  vtkm::worklet::StreamlineResult<vtkm::ChargedParticle>>;
+
+  std::vector<ResultVariantType> Results;
 };
 
 }

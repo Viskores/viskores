@@ -13,6 +13,8 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/filter/FilterParticleAdvection.h>
+#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm
 {
@@ -34,6 +36,19 @@ public:
     const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
+
+  vtkm::cont::UnknownArrayHandle SeedArray;
+};
+
+class ParticleAdvection3 : public vtkm::filter::NewFilterField
+{
+public:
+  //  VTKM_CONT ParticleAdvection3() {}
+
+protected:
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
 
   vtkm::cont::UnknownArrayHandle SeedArray;
 };

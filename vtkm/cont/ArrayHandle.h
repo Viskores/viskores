@@ -831,9 +831,9 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
   std::ostream& out,
   vtkm::VecTraitsTagMultipleComponents)
 {
-  using Traits = vtkm::VecTraits<T>;
+  using Traits = vtkm::internal::SafeVecTraits<T>;
   using ComponentType = typename Traits::ComponentType;
-  using IsVecOfVec = typename vtkm::VecTraits<ComponentType>::HasMultipleComponents;
+  using IsVecOfVec = typename vtkm::internal::SafeVecTraits<ComponentType>::HasMultipleComponents;
   vtkm::IdComponent numComponents = Traits::GetNumberOfComponents(value);
   out << "(";
   printSummary_ArrayHandle_Value(Traits::GetComponent(value, 0), out, IsVecOfVec());
@@ -853,10 +853,10 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
 {
   out << "{";
   printSummary_ArrayHandle_Value(
-    value.first, out, typename vtkm::VecTraits<T1>::HasMultipleComponents());
+    value.first, out, typename vtkm::internal::SafeVecTraits<T1>::HasMultipleComponents());
   out << ",";
   printSummary_ArrayHandle_Value(
-    value.second, out, typename vtkm::VecTraits<T2>::HasMultipleComponents());
+    value.second, out, typename vtkm::internal::SafeVecTraits<T2>::HasMultipleComponents());
   out << "}";
 }
 
@@ -872,7 +872,7 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 {
   using ArrayType = vtkm::cont::ArrayHandle<T, StorageT>;
   using PortalType = typename ArrayType::ReadPortalType;
-  using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
+  using IsVec = typename vtkm::internal::SafeVecTraits<T>::HasMultipleComponents;
 
   vtkm::Id sz = array.GetNumberOfValues();
 
