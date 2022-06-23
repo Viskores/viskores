@@ -51,7 +51,7 @@ public:
     vtkm::cont::PartitionedDataSet output;
 
     for (const auto& b : this->Blocks)
-      output.AppendPartition(b.GetOutput<ParticleType>());
+      output.AppendPartition(b.template GetOutput<ParticleType>());
 
     std::cout << "GetOutput: " << __FILE__ << " " << __LINE__ << std::endl;
     //auto output = internal::ResultHelper<ResultType, ParticleType>::GetOutput(this->Results);
