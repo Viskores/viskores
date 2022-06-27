@@ -24,6 +24,16 @@ RUN apt update && \
 
 
 
+# Provide CCACHE
+ENV CCACHE_DIR "/ccache"
+ENV PATH "/opt/ccache/bin:${PATH}"
+ARG CCACHE_VERSION=4.6.1
+RUN mkdir /opt/ccache/ && \
+    curl -L https://github.com/ccache/ccache/releases/download/v$CCACHE_VERSION/ccache-$CCACHE_VERSION-linux-x86_64.tar.xz | tar -vxJ && \
+    make -C ccache-$CCACHE_VERSION-linux-x86_64 install prefix=/opt/ccache && \
+    rm -rf ccache-$CCACHE_VERSION-linux-x86_64 && \
+    ccache -z && ccache -s
+
 # Provide CMake
 ARG CMAKE_VERSION=3.21.1
 RUN mkdir /opt/cmake/ && \

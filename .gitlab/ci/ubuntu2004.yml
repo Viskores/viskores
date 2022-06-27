@@ -72,10 +72,20 @@ build:ubuntu2004_hip_kokkos:
     - .run_scheduled
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
-    VTKM_SETTINGS: "benchmarks+kokkos+hip+no_virtual+no_rendering"
+    VTKM_SETTINGS: "benchmarks+kokkos+hip+no_virtual+no_rendering+ccache"
     CMAKE_PREFIX_PATH: "/opt/rocm/lib/cmake"
-    CTEST_MAX_PARALLELISM: "1"
-  timeout: 12 hours
+
+    CCACHE_BASEDIR: "$CI_PROJECT_DIR"
+
+    # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
+    CCACHE_IGNOREOPTIONS: "-isystem=*"
+    CCACHE_COMPILERCHECK: "content"
+    CCACHE_NOHASHDIR: "true"
+    CCACHE_RESHARE: "true"
+  after_script:
+    - ccache -v -s
+    - ccache -z
+  timeout: 10 hours
 
 test:ubuntu2004_hip_kokkos:
   tags:
