@@ -21,31 +21,44 @@ git submodule update --recursive --init
 ## Create update branch
 
   - [ ] Create update branch `git checkout -b update-to-v@VERSION@`
-<!-- if @RC@ == "-rc1"
+<!-- if @RC@ == "-rc1"-->
   - [ ] Bring as a second parent the history of master (Solve conflicts always
         taking master's version)
 ```
 	git merge --no-ff origin/master
 ```
--->
+<!-- endif -->
 
-<!-- Do we have new release notes?
+<!-- if not a patch release -->
+  - [ ] Update the major and minor version in `version.txt`:
+```
+echo "@MAJOR@.@MINOR@.9999" > version.txt
+git add version.txt`
+```
+<!-- endif -->
+
+  - [ ] Update the version (not in patch releases) and date in the LICENSE.md
+        file `git add LICENSE.md`.
+  - [ ] Create commit that updates the License (and version.txt if modified):
+```
+git commit -m 'release: update version and License'
+```
+
+<!-- Do we have new release notes? -->
   - [ ] Craft or update [changelog](#generate-change-log)
         `docs/changelog/@VERSION@/release-notes.md` file.
   - [ ] Create release notes commit.
 ```
 git add docs/changelog/@VERSION@/release-notes.md
 git rm docs/changelog/*.md
-git commit -m 'Add release notes for @VERSION@@RC@'
+git commit -m 'release: @VERSION@@RC@ release notes'
 ```
--->
-
-  - [ ] Update the version (not in patch releases) and date in the LICENSE.md
-        file `git add LICENSE.md`.
+<!-- endif -->
   - [ ] Create update version commit:
 
 ```
 echo @VERSION@@RC@ > version.txt
+git add version.txt
 
 # Create commit with the following template
 # Nth is counted by the number of final release tags
@@ -59,6 +72,13 @@ The major changes to VTK-m from (previous release) can be found in:
   - Integrate changes to `release` branch
     - [ ] Create a MR using the [release-mr script][1]
           (see [notes](#notes-about-update-mr)).
+<!-- if not patch release -->
+    - [ ] Add (or ensure) at the bottom of the description of the merge request:
+          `Backport: master:HEAD~1`
+<!-- elseif patch release -->
+    - [ ] Remove (or ensure) that at the bottom of the description of the merge
+          request there is no `Backport` instruction.
+<!-- endif -->
     - [ ] Get +1
     - [ ] `Do: merge`
   - Push tags
@@ -74,6 +94,10 @@ The major changes to VTK-m from (previous release) can be found in:
   - [ ] Tag new version of the [VTK-m User Guide][2].
 <!-- endif -->
   - [ ] Post an [Email Announcements](#email-announcements) VTK-m mailing list.
+<!-- if not patch release -->
+  - [ ] Ensure that the content of `version.txt` in master is
+        `[@MAJOR@ @MINOR@](@MAJOR@.@MINOR@.9999)`.
+<!-- endif release -->
 
 ---
 
@@ -154,6 +178,16 @@ to the relevant `release-notes` section.
 
 Lastly, `update-mr` can be used multiple times with different commit in the same
 branch.
+
+## Notes about version.txt
+
+Master and release branch do not share the same version.txt scheme. In the
+release branch the patch and release-candidate version is observed whereas in
+master the patch field is fixed to _9999_ indicating that each of its commit is
+a developing release.
+
+- Master:  `@MAJOR@.@MINOR@.9999`
+- Release: `@MAJOR@.@MINOR@.@PATCH@@RC@`
 
 ## Email Announcements
 
