@@ -9,14 +9,14 @@
 ##============================================================================
 
 set(headers
-        Branch.h
-        PiecewiseLinearFunction.h
-        SuperArcVolumetricComparator.h
-        SuperNodeBranchComparator.h
-        PointerDoubling.h
-        HypersweepWorklets.h
-        SetTriangleSuperarcId.h
- )
+  Branch.h
+  PiecewiseLinearFunction.h
+  SuperArcVolumetricComparator.h
+  SuperNodeBranchComparator.h
+  PointerDoubling.h
+  HypersweepWorklets.h
+  SetTriangleSuperarcId.h
+  )
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})

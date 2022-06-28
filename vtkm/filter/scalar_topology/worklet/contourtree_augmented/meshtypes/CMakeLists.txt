@@ -8,14 +8,14 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(headers
-        DataSetMeshTriangulation2DFreudenthal.h
-        DataSetMeshTriangulation3DFreudenthal.h
-        DataSetMeshTriangulation3DMarchingCubes.h
-        ContourTreeMesh.h
-        MeshStructureFreudenthal2D.h
-        MeshStructureFreudenthal3D.h
-        MeshStructureMarchingCubes.h
-        MeshStructureContourTreeMesh.h
+  DataSetMeshTriangulation2DFreudenthal.h
+  DataSetMeshTriangulation3DFreudenthal.h
+  DataSetMeshTriangulation3DMarchingCubes.h
+  ContourTreeMesh.h
+  MeshStructureFreudenthal2D.h
+  MeshStructureFreudenthal3D.h
+  MeshStructureMarchingCubes.h
+  MeshStructureContourTreeMesh.h
   )
 
 #----------------------------------------------------------------------------
@@ -28,10 +28,10 @@ vtkm_declare_headers(${headers})
 
 #-----------------------------------------------------------------------------
 set(extra_headers
-        freudenthal_2D/Types.h
-        freudenthal_3D/Types.h
-        marchingcubes_3D/Types.h
-    )
+  freudenthal_2D/Types.h
+  freudenthal_3D/Types.h
+  marchingcubes_3D/Types.h
+  )
 
 #we do the following to work around a couple of issues.
 #1. vtkm_declare_headers will do a flat install into the current respective

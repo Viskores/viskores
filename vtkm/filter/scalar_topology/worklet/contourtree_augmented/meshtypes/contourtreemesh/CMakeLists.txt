@@ -61,21 +61,21 @@
 ##==============================================================================
 
 set(headers
-        AddToArrayElementsWorklet.h
-        ApplyLookupTableDecorator.h
-        ArcComparator.h
-        ArcValidDecorator.h
-        CombinedSimulatedSimplicityIndexComparator.h
-        CombinedVectorDifferentFromNext.h
-        CopyIntoCombinedArrayWorklet.h
-        CopyIntoCombinedNeighborsWorklet.h
-        CopyNeighborsToPackedArray.h
-        FindDuplicateInOtherWorklet.h
-        GetArcFromDecorator.h
-        InitToCombinedSortOrderArraysWorklet.h
-        MergeSortedListsWithoutDuplicatesWorklet.h
-        ReplaceArcNumWithToVertexWorklet.h
- )
+  AddToArrayElementsWorklet.h
+  ApplyLookupTableDecorator.h
+  ArcComparator.h
+  ArcValidDecorator.h
+  CombinedSimulatedSimplicityIndexComparator.h
+  CombinedVectorDifferentFromNext.h
+  CopyIntoCombinedArrayWorklet.h
+  CopyIntoCombinedNeighborsWorklet.h
+  CopyNeighborsToPackedArray.h
+  FindDuplicateInOtherWorklet.h
+  GetArcFromDecorator.h
+  InitToCombinedSortOrderArraysWorklet.h
+  MergeSortedListsWithoutDuplicatesWorklet.h
+  ReplaceArcNumWithToVertexWorklet.h
+  )
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})

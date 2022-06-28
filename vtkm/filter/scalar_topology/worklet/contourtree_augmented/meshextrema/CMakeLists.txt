@@ -8,9 +8,9 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(headers
-        SetStarts.h
-        PointerDoubling.h
-)
+  SetStarts.h
+  PointerDoubling.h
+  )
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})

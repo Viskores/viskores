@@ -8,13 +8,13 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(headers
-        MeshBoundary2D.h
-        MeshBoundary3D.h
-        MeshBoundaryContourTreeMesh.h
-        ComputeMeshBoundary2D.h
-        ComputeMeshBoundary3D.h
-        ComputeMeshBoundaryContourTreeMesh.h
-)
+  MeshBoundary2D.h
+  MeshBoundary3D.h
+  MeshBoundaryContourTreeMesh.h
+  ComputeMeshBoundary2D.h
+  ComputeMeshBoundary3D.h
+  ComputeMeshBoundaryContourTreeMesh.h
+  )
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})
