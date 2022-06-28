@@ -21,7 +21,7 @@
 #include <vtkm/filter/contour/MIRFilter.h>
 #include <vtkm/filter/contour/worklet/MIR.h>
 
-#include <vtkm/filter/mesh_info/worklet/MeshQuality.h>
+#include <vtkm/filter/mesh_info/MeshQuality.h>
 
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/ScatterCounting.h>
@@ -106,11 +106,12 @@ VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& in
 
   const vtkm::cont::CoordinateSystem inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
-  vtkm::cont::ArrayHandle<vtkm::Float64> avgSizeTot;
-  vtkm::worklet::MeshQuality getVol;
-  getVol.SetMetric(c3 > 0 ? vtkm::filter::mesh_info::CellMetric::Volume
-                          : vtkm::filter::mesh_info::CellMetric::Area);
-  this->Invoke(getVol, input.GetCellSet(), inputCoords.GetData(), avgSizeTot);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> avgSizeTot;
+  vtkm::filter::mesh_info::MeshQuality getVol(c3 > 0 ? vtkm::filter::mesh_info::CellMetric::Volume
+                                                     : vtkm::filter::mesh_info::CellMetric::Area);
+  getVol.SetOutputFieldName("size");
+  vtkm::cont::ArrayCopyShallowIfPossible(getVol.Execute(input).GetCellField("size").GetData(),
+                                         avgSizeTot);
   // First, load up all fields...
   vtkm::cont::Field or_pos = input.GetField(this->pos_name);
   vtkm::cont::Field or_len = input.GetField(this->len_name);
@@ -275,7 +276,8 @@ VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& in
 
     // Hacking workaround to not clone an entire dataset.
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> avgSize;
-    this->Invoke(getVol, saved.GetCellSet(), saved.GetCoordinateSystem(0).GetData(), avgSize);
+    vtkm::cont::ArrayCopyShallowIfPossible(getVol.Execute(saved).GetCellField("size").GetData(),
+                                           avgSize);
 
     vtkm::worklet::CalcError_C calcErrC;
     vtkm::worklet::Keys<vtkm::Id> cellKeys(cellLookback);

@@ -18,9 +18,31 @@
 //  this software.
 //=========================================================================
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/mesh_info/MeshQuality.h>
-#include <vtkm/filter/mesh_info/worklet/MeshQuality.h>
+#include <vtkm/filter/mesh_info/MeshQualityArea.h>
+#include <vtkm/filter/mesh_info/MeshQualityAspectGamma.h>
+#include <vtkm/filter/mesh_info/MeshQualityAspectRatio.h>
+#include <vtkm/filter/mesh_info/MeshQualityCondition.h>
+#include <vtkm/filter/mesh_info/MeshQualityDiagonalRatio.h>
+#include <vtkm/filter/mesh_info/MeshQualityDimension.h>
+#include <vtkm/filter/mesh_info/MeshQualityJacobian.h>
+#include <vtkm/filter/mesh_info/MeshQualityMaxAngle.h>
+#include <vtkm/filter/mesh_info/MeshQualityMaxDiagonal.h>
+#include <vtkm/filter/mesh_info/MeshQualityMinAngle.h>
+#include <vtkm/filter/mesh_info/MeshQualityMinDiagonal.h>
+#include <vtkm/filter/mesh_info/MeshQualityOddy.h>
+#include <vtkm/filter/mesh_info/MeshQualityRelativeSizeSquared.h>
+#include <vtkm/filter/mesh_info/MeshQualityScaledJacobian.h>
+#include <vtkm/filter/mesh_info/MeshQualityShape.h>
+#include <vtkm/filter/mesh_info/MeshQualityShapeAndSize.h>
+#include <vtkm/filter/mesh_info/MeshQualityShear.h>
+#include <vtkm/filter/mesh_info/MeshQualitySkew.h>
+#include <vtkm/filter/mesh_info/MeshQualityStretch.h>
+#include <vtkm/filter/mesh_info/MeshQualityTaper.h>
+#include <vtkm/filter/mesh_info/MeshQualityVolume.h>
+#include <vtkm/filter/mesh_info/MeshQualityWarpage.h>
 
 namespace vtkm
 {
@@ -67,63 +89,85 @@ VTKM_CONT MeshQuality::MeshQuality(CellMetric metric)
 
 VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& input)
 {
-  const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
+  std::unique_ptr<vtkm::filter::NewFilterField> implementation;
+  switch (this->MyMetric)
   {
-    throw vtkm::cont::ErrorBadValue("Active field for MeshQuality must be point coordinates. "
-                                    "But the active field is not a point field.");
+    case vtkm::filter::mesh_info::CellMetric::Area:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityArea);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::AspectGamma:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityAspectGamma);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::AspectRatio:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityAspectRatio);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Condition:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityCondition);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::DiagonalRatio:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityDiagonalRatio);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Dimension:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityDimension);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Jacobian:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityJacobian);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::MaxAngle:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityMaxAngle);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::MaxDiagonal:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityMaxDiagonal);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::MinAngle:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityMinAngle);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::MinDiagonal:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityMinDiagonal);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Oddy:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityOddy);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::RelativeSizeSquared:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityRelativeSizeSquared);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::ScaledJacobian:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityScaledJacobian);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Shape:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityShape);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::ShapeAndSize:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityShapeAndSize);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Shear:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityShear);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Skew:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualitySkew);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Stretch:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityStretch);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Taper:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityTaper);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Volume:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityVolume);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::Warpage:
+      implementation.reset(new vtkm::filter::mesh_info::MeshQualityWarpage);
+      break;
+    case vtkm::filter::mesh_info::CellMetric::None:
+      // Nothing to do
+      return input;
   }
 
-  vtkm::cont::UnknownCellSet inputCellSet = input.GetCellSet();
-  vtkm::worklet::MeshQuality qualityWorklet;
+  VTKM_ASSERT(implementation);
 
-  if (this->MyMetric == CellMetric::RelativeSizeSquared ||
-      this->MyMetric == CellMetric::ShapeAndSize)
-  {
-    vtkm::worklet::MeshQuality subWorklet;
-    vtkm::FloatDefault totalArea;
-    vtkm::FloatDefault totalVolume;
-
-    auto resolveType = [&](const auto& concrete) {
-      // use std::decay to remove const ref from the decltype of concrete.
-      using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
-      vtkm::cont::ArrayHandle<T> array;
-
-      subWorklet.SetMetric(CellMetric::Area);
-      this->Invoke(subWorklet, inputCellSet, concrete, array);
-      totalArea = (vtkm::FloatDefault)vtkm::cont::Algorithm::Reduce(array, T{});
-
-      subWorklet.SetMetric(CellMetric::Volume);
-      this->Invoke(subWorklet, inputCellSet, concrete, array);
-      totalVolume = (vtkm::FloatDefault)vtkm::cont::Algorithm::Reduce(array, T{});
-    };
-    this->CastAndCallVecField<3>(field, resolveType);
-
-    vtkm::FloatDefault averageArea = 1.;
-    vtkm::FloatDefault averageVolume = 1.;
-    vtkm::Id numCells = inputCellSet.GetNumberOfCells();
-    if (numCells > 0)
-    {
-      averageArea = totalArea / static_cast<vtkm::FloatDefault>(numCells);
-      averageVolume = totalVolume / static_cast<vtkm::FloatDefault>(numCells);
-    }
-    qualityWorklet.SetAverageArea(averageArea);
-    qualityWorklet.SetAverageVolume(averageVolume);
-  }
-
-  vtkm::cont::UnknownArrayHandle outArray;
-
-  //Invoke the MeshQuality worklet
-  auto resolveType = [&](const auto& concrete) {
-    using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
-    vtkm::cont::ArrayHandle<T> result;
-    qualityWorklet.SetMetric(this->MyMetric);
-    this->Invoke(qualityWorklet, inputCellSet, concrete, result);
-    outArray = result;
-  };
-  this->CastAndCallVecField<3>(field, resolveType);
-
-  return this->CreateResultFieldCell(input, this->GetOutputFieldName(), outArray);
+  implementation->SetOutputFieldName(this->GetOutputFieldName());
+  implementation->SetActiveCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+  return implementation->Execute(input);
 }
 } // namespace mesh_info
 } // namespace filter

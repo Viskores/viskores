@@ -19,6 +19,10 @@
 //============================================================================
 #ifndef vtk_m_worklet_cellmetrics_TypeOfCellTetrahedral
 #define vtk_m_worklet_cellmetrics_TypeOfCellTetrahedral
+
+#include <vtkm/Math.h>
+#include <vtkm/VectorAnalysis.h>
+
 /**
  * Returns the L0 vector, as defined by the verdict manual.
  *
