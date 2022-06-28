@@ -595,7 +595,8 @@ public:
   VTKM_CONT VTKM_DEPRECATED(1.6, "BitField now uses a Buffer to store data.")
     ArrayHandle<vtkm::WordTypeDefault, StorageTagBasic> GetData() const
   {
-    return vtkm::cont::ArrayHandle<vtkm::WordTypeDefault, StorageTagBasic>(&this->Buffer);
+    return vtkm::cont::ArrayHandle<vtkm::WordTypeDefault, StorageTagBasic>(
+      std::vector<vtkm::cont::internal::Buffer>(1, this->Buffer));
   }
 
   /// Return the number of bits stored by this BitField.

@@ -775,7 +775,7 @@ vtkm::BufferSizeType Buffer::GetNumberOfBytes() const
 
 void Buffer::SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes,
                               vtkm::CopyFlag preserve,
-                              vtkm::cont::Token& token)
+                              vtkm::cont::Token& token) const
 {
   LockType lock = this->Internals->GetLock();
   detail::BufferHelper::SetNumberOfBytes(this->Internals, lock, numberOfBytes, preserve, token);
@@ -1050,7 +1050,7 @@ vtkm::cont::internal::BufferInfo Buffer::GetHostBufferInfo() const
   return this->Internals->GetHostBuffer(lock);
 }
 
-vtkm::cont::internal::TransferredBuffer Buffer::TakeHostBufferOwnership()
+vtkm::cont::internal::TransferredBuffer Buffer::TakeHostBufferOwnership() const
 {
   // A Token should not be declared within the scope of a lock. when the token goes out of scope
   // it will attempt to acquire the lock, which is undefined behavior of the thread already has
@@ -1067,7 +1067,7 @@ vtkm::cont::internal::TransferredBuffer Buffer::TakeHostBufferOwnership()
 }
 
 vtkm::cont::internal::TransferredBuffer Buffer::TakeDeviceBufferOwnership(
-  vtkm::cont::DeviceAdapterId device)
+  vtkm::cont::DeviceAdapterId device) const
 {
   if (device.IsValueValid())
   {

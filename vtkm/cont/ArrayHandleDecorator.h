@@ -24,6 +24,7 @@
 #include <vtkmstd/integer_sequence.h>
 
 
+#include <numeric>
 #include <type_traits>
 #include <utility>
 
@@ -306,35 +307,22 @@ using GetWritePortalList =
                                    std::declval<vtkm::cont::DeviceAdapterId>(),
                                    std::declval<vtkm::cont::Token&>())))...>;
 
-template <vtkm::IdComponent I, typename ArrayTupleType>
-struct BufferIndexImpl
-{
-  static constexpr vtkm::IdComponent Value()
-  {
-    return BufferIndexImpl<I - 1, ArrayTupleType>::Value() +
-      vtkm::TupleElement<I - 1, ArrayTupleType>::GetNumberOfBuffers();
-  }
-};
-template <typename ArrayTupleType>
-struct BufferIndexImpl<0, ArrayTupleType>
-{
-  static constexpr vtkm::IdComponent Value()
-  {
-    // One buffer reserved for metadata.
-    return 1;
-  }
-};
-
-template <typename DecoratorImplT>
+template <typename DecoratorImplT, std::size_t NumArrays>
 struct DecoratorMetaData
 {
   DecoratorImplT Implementation;
   vtkm::Id NumberOfValues = 0;
+  std::array<std::size_t, NumArrays + 1> BufferOffsets;
 
-  DecoratorMetaData(const DecoratorImplT& implementation, vtkm::Id numValues)
+  template <typename... ArrayTs>
+  DecoratorMetaData(const DecoratorImplT& implementation,
+                    vtkm::Id numValues,
+                    const ArrayTs... arrays)
     : Implementation(implementation)
     , NumberOfValues(numValues)
   {
+    auto numBuffers = { std::size_t{ 1 }, arrays.GetBuffers().size()... };
+    std::partial_sum(numBuffers.begin(), numBuffers.end(), this->BufferOffsets.begin());
   }
 
   DecoratorMetaData() = default;
@@ -363,26 +351,22 @@ struct DecoratorStorageTraits
   // size_t integral constants that index ArrayTs:
   using IndexList = vtkmstd::make_index_sequence<sizeof...(ArrayTs)>;
 
-  // Returns the index into the buffers array for the array at the given index.
-  template <vtkm::IdComponent I>
-  static constexpr vtkm::IdComponent BufferIndex()
+  using MetaData = DecoratorMetaData<DecoratorImplT, sizeof...(ArrayTs)>;
+
+  static MetaData& GetMetaData(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return BufferIndexImpl<I, ArrayTupleType>::Value();
+    return buffers[0].GetMetaData<MetaData>();
   }
 
   // Converts a buffers array to the ArrayHandle at the given index.
   template <vtkm::IdComponent I>
   static vtkm::TupleElement<I, ArrayTupleType> BuffersToArray(
-    const vtkm::cont::internal::Buffer* buffers)
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return vtkm::TupleElement<I, ArrayTupleType>(buffers + BufferIndex<I>());
-  }
-
-  using MetaData = DecoratorMetaData<DecoratorImplT>;
-
-  static MetaData& GetMetaData(const vtkm::cont::internal::Buffer* buffers)
-  {
-    return buffers[0].GetMetaData<MetaData>();
+    const MetaData& metaData = GetMetaData(buffers);
+    std::vector<vtkm::cont::internal::Buffer> subBuffers(
+      buffers.begin() + metaData.BufferOffsets[I], buffers.begin() + metaData.BufferOffsets[I + 1]);
+    return vtkm::TupleElement<I, ArrayTupleType>(std::move(subBuffers));
   }
 
   // true_type/false_type depending on whether the decorator supports Allocate:
@@ -440,7 +424,7 @@ struct DecoratorStorageTraits
   // Static dispatch for calling AllocateSourceArrays on supported implementations:
   VTKM_CONT [[noreturn]] static void CallAllocate(std::false_type,
                                                   vtkm::Id,
-                                                  vtkm::cont::internal::Buffer*,
+                                                  const std::vector<vtkm::cont::internal::Buffer>&,
                                                   vtkm::CopyFlag,
                                                   vtkm::cont::Token&,
                                                   ArrayTs...)
@@ -450,7 +434,7 @@ struct DecoratorStorageTraits
 
   VTKM_CONT static void CallAllocate(std::true_type,
                                      vtkm::Id newSize,
-                                     vtkm::cont::internal::Buffer* buffers,
+                                     const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                      vtkm::CopyFlag preserve,
                                      vtkm::cont::Token& token,
                                      ArrayTs... arrays)
@@ -463,11 +447,12 @@ struct DecoratorStorageTraits
 
   // Portal construction methods. These actually create portals.
   template <std::size_t... Indices>
-  VTKM_CONT static WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::Id numValues,
-                                                     vtkmstd::index_sequence<Indices...>,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::Id numValues,
+    vtkmstd::index_sequence<Indices...>,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return CreatePortalDecorator<WritePortalType>(
       numValues,
@@ -476,11 +461,12 @@ struct DecoratorStorageTraits
   }
 
   template <std::size_t... Indices>
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::Id numValues,
-                                                   vtkmstd::index_sequence<Indices...>,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::Id numValues,
+    vtkmstd::index_sequence<Indices...>,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return CreatePortalDecorator<ReadPortalType>(
       numValues,
@@ -489,11 +475,12 @@ struct DecoratorStorageTraits
   }
 
   template <std::size_t... Indices>
-  VTKM_CONT static void AllocateSourceArrays(vtkm::Id numValues,
-                                             vtkm::cont::internal::Buffer* buffers,
-                                             vtkm::CopyFlag preserve,
-                                             vtkm::cont::Token& token,
-                                             vtkmstd::index_sequence<Indices...>)
+  VTKM_CONT static void AllocateSourceArrays(
+    vtkm::Id numValues,
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::CopyFlag preserve,
+    vtkm::cont::Token& token,
+    vtkmstd::index_sequence<Indices...>)
   {
     CallAllocate(
       IsAllocatable{}, numValues, buffers, preserve, token, BuffersToArray<Indices>(buffers)...);
@@ -519,18 +506,14 @@ public:
   using ReadPortalType = typename Traits::ReadPortalType;
   using WritePortalType = typename Traits::WritePortalType;
 
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
-  {
-    return Traits::template BufferIndex<static_cast<vtkm::IdComponent>(sizeof...(ArrayTs))>();
-  }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return Traits::GetMetaData(buffers).NumberOfValues;
   }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
@@ -545,17 +528,19 @@ public:
     }
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return Traits::CreateReadPortal(
       buffers, GetNumberOfValues(buffers), IndexList{}, device, token);
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return Traits::CreateWritePortal(
       buffers, GetNumberOfValues(buffers), IndexList{}, device, token);
@@ -564,7 +549,13 @@ public:
   VTKM_CONT static std::vector<vtkm::cont::internal::Buffer>
   CreateBuffers(const DecoratorImplT& implementation, vtkm::Id numValues, const ArrayTs&... arrays)
   {
-    return vtkm::cont::internal::CreateBuffers(MetaData(implementation, numValues), arrays...);
+    return vtkm::cont::internal::CreateBuffers(MetaData(implementation, numValues, arrays...),
+                                               arrays...);
+  }
+
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers()
+  {
+    return CreateBuffers(DecoratorImplT{}, 0, ArrayTs{}...);
   }
 };
 

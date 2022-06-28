@@ -163,19 +163,18 @@ public:
   using ReadPortalType = vtkm::internal::ArrayPortalStrideRead<T>;
   using WritePortalType = vtkm::internal::ArrayPortalStrideWrite<T>;
 
-  VTKM_CONT static StrideInfo& GetInfo(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static StrideInfo& GetInfo(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<StrideInfo>();
   }
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 2; }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return GetInfo(buffers).NumberOfValues;
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>&,
                              const T&,
                              vtkm::Id,
                              vtkm::Id,
@@ -184,32 +183,35 @@ public:
     throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleStride.");
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return ReadPortalType(reinterpret_cast<const T*>(buffers[1].ReadPointerDevice(device, token)),
                           GetInfo(buffers));
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return WritePortalType(reinterpret_cast<T*>(buffers[1].WritePointerDevice(device, token)),
                            GetInfo(buffers));
   }
 
   static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
-    const vtkm::cont::internal::Buffer& sourceBuffer,
-    vtkm::internal::ArrayStrideInfo&& info)
+    const vtkm::cont::internal::Buffer& sourceBuffer = vtkm::cont::internal::Buffer{},
+    vtkm::internal::ArrayStrideInfo&& info = vtkm::internal::ArrayStrideInfo{})
   {
     return vtkm::cont::internal::CreateBuffers(info, sourceBuffer);
   }
 
-  static vtkm::cont::ArrayHandleBasic<T> GetBasicArray(const vtkm::cont::internal::Buffer* buffers)
+  static vtkm::cont::ArrayHandleBasic<T> GetBasicArray(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>(buffers + 1);
+    return vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>({ buffers[1] });
   }
 };
 

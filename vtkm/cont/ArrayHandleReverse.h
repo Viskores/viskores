@@ -128,25 +128,26 @@ public:
   using ReadPortalType = ArrayPortalReverse<typename ArrayHandleType::ReadPortalType>;
   using WritePortalType = ArrayPortalReverse<typename ArrayHandleType::WritePortalType>;
 
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers()
   {
-    return SourceStorage::GetNumberOfBuffers();
+    return SourceStorage::CreateBuffers();
   }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
     SourceStorage::ResizeBuffers(numValues, buffers, preserve, token);
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return SourceStorage::GetNumberOfValues(buffers);
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>& buffers,
                              const T& fillValue,
                              vtkm::Id startIndex,
                              vtkm::Id endIndex,
@@ -156,16 +157,18 @@ public:
     SourceStorage::Fill(buffers, fillValue, numValues - endIndex, numValues - startIndex, token);
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return ReadPortalType(SourceStorage::CreateReadPortal(buffers, device, token));
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return WritePortalType(SourceStorage::CreateWritePortal(buffers, device, token));
   }
