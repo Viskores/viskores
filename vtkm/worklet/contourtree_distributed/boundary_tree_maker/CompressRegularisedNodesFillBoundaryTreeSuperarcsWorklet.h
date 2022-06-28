@@ -53,8 +53,8 @@
 #ifndef vtk_m_worklet_contourtree_distributed_boundary_tree_maker_compress_regularised_nodes_fill_bract_superarcs_worklet_h
 #define vtk_m_worklet_contourtree_distributed_boundary_tree_maker_compress_regularised_nodes_fill_bract_superarcs_worklet_h
 
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {

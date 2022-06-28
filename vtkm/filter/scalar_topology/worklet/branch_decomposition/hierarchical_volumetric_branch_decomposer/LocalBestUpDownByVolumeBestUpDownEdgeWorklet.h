@@ -46,8 +46,8 @@
 #ifndef vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_LocalBestUpDownByVolumeBestUpDownEdgeWorklet_h
 #define vtk_m_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_LocalBestUpDownByVolumeBestUpDownEdgeWorklet_h
 
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {

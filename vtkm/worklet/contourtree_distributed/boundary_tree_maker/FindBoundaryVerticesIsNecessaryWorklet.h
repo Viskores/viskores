@@ -53,8 +53,8 @@
 #ifndef vtk_m_worklet_contourtree_distributed_bract_maker_find_boundary_vertices_is_necessary_h
 #define vtk_m_worklet_contourtree_distributed_bract_maker_find_boundary_vertices_is_necessary_h
 
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {

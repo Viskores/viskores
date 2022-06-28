@@ -73,9 +73,9 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/worklet/contourtree_augmented/ContourTree.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcBetweenNodes.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcForUnknownNode.h>

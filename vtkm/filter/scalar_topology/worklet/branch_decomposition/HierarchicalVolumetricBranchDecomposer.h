@@ -123,9 +123,6 @@
 #include <string>
 
 // Contour tree includes, not yet moved into new filter structure
-#include <vtkm/worklet/contourtree_augmented/NotNoSuchElementPredicate.h>
-#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcBetweenNodes.h>
@@ -137,6 +134,9 @@
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/LocalBestUpDownByVolumeInitSuperarcListWorklet.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/LocalBestUpDownByVolumeWorklet.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/SuperArcVolumetricComparatorIndirectGlobalIdComparator.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/NotNoSuchElementPredicate.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 #ifdef DEBUG_PRINT
 #define DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER

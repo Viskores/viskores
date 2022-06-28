@@ -15,7 +15,6 @@ set(headers
 )
 
 set(unit_tests
-  UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx

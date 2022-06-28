@@ -58,10 +58,9 @@
 
 // single-node augmented contour tree includes
 #include <vtkm/filter/ContourTreeUniformDistributed.h>
-#include <vtkm/worklet/ContourTreeUniformAugmented.h>
-#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/DataSetMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
 
 // distributed contour tree includes
 #include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>

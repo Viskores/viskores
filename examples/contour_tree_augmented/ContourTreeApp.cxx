@@ -71,11 +71,11 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/io/BOVDataSetReader.h>
 
-#include <vtkm/filter/ContourTreeUniformAugmented.h>
-#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
-#include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/processcontourtree/Branch.h>
+#include <vtkm/filter/scalar_topology/ContourTreeUniformAugmented.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ProcessContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/processcontourtree/Branch.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -644,7 +644,8 @@ int main(int argc, char* argv[])
   prevTime = currTime;
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::ContourTreeAugmented filter(useMarchingCubes, computeRegularStructure);
+  vtkm::filter::scalar_topology::ContourTreeAugmented filter(useMarchingCubes,
+                                                             computeRegularStructure);
 
 #ifdef WITH_MPI
   filter.SetSpatialDecomposition(

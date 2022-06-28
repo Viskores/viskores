@@ -55,7 +55,8 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/Error.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/ContourTreeUniformAugmented.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
 

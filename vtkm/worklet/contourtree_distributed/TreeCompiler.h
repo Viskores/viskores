@@ -59,7 +59,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {

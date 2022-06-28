@@ -55,8 +55,8 @@
 
 #include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
 
-#include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/BoundsCompute.h>
@@ -64,7 +64,7 @@
 //#include <vtkm/cont/AssignerPartitionedDataSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
 
 namespace vtkm
 {

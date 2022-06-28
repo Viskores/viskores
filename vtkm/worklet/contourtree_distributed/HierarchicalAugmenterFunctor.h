@@ -54,7 +54,7 @@
 #define vtk_m_worklet_contourtree_distributed_hierarchicalaugmenterfunctor_h
 
 #include <vtkm/Types.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
 

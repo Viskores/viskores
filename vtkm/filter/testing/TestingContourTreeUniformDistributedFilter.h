@@ -64,11 +64,11 @@
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/filter/testing/SuperArcHelper.h>
 #include <vtkm/filter/testing/VolumeHelper.h>
 #include <vtkm/io/ErrorIO.h>
 #include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/BranchCompiler.h>
 #include <vtkm/worklet/contourtree_distributed/TreeCompiler.h>
 

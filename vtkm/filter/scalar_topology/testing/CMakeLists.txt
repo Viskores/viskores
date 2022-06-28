@@ -12,6 +12,7 @@
 
 set(unit_tests
   UnitTestContourTreeUniformFilter.cxx
+  UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestDistributedBranchDecompositionFilter.cxx
   )
 

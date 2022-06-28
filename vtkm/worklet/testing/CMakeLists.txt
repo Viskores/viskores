@@ -17,7 +17,6 @@ set(unit_tests
   UnitTestAverageByKey.cxx
   UnitTestBoundingIntervalHierarchy.cxx
   UnitTestCellDeepCopy.cxx
-  UnitTestContourTreeUniformAugmented.cxx
   UnitTestContourTreeUniformDistributed.cxx
   UnitTestCosmoTools.cxx
   UnitTestDescriptiveStatistics.cxx

@@ -56,7 +56,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 
 namespace vtkm

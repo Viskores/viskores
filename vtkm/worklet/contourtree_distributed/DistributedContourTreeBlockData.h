@@ -54,8 +54,8 @@
 #define vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
 
 #include <vtkm/Types.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalAugmenter.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
 

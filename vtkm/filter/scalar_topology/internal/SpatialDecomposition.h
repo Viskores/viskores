@@ -59,7 +59,7 @@
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
