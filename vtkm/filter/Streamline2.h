@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ParticleAdvection2_h
-#define vtk_m_filter_ParticleAdvection2_h
+#ifndef vtk_m_filter_Streamline2_h
+#define vtk_m_filter_Streamline2_h
 
 #include <vtkm/Particle.h>
 #include <vtkm/filter/FilterParticleAdvection.h>
@@ -25,11 +25,10 @@ namespace filter
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
 
-class ParticleAdvection2
-  : public vtkm::filter::FilterParticleAdvection<ParticleAdvection2, vtkm::Particle>
+class Streamline2 : public vtkm::filter::FilterParticleAdvection<Streamline2, vtkm::Particle>
 {
 public:
-  VTKM_CONT ParticleAdvection2();
+  VTKM_CONT Streamline2();
 
   template <typename DerivedPolicy>
   vtkm::cont::PartitionedDataSet PrepareForExecution(
@@ -39,10 +38,10 @@ public:
   vtkm::cont::UnknownArrayHandle SeedArray;
 };
 
-class ParticleAdvection3 : public vtkm::filter::NewFilterField
+class Streamline3 : public vtkm::filter::NewFilterField
 {
 public:
-  //  VTKM_CONT ParticleAdvection3() {}
+  //  VTKM_CONT Streamline3() {}
 
 protected:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
@@ -55,8 +54,8 @@ protected:
 }
 } // namespace vtkm::filter
 
-#ifndef vtk_m_filter_ParticleAdvection2_hxx
-#include <vtkm/filter/ParticleAdvection2.hxx>
+#ifndef vtk_m_filter_Streamline2_hxx
+#include <vtkm/filter/Streamline2.hxx>
 #endif
 
-#endif // vtk_m_filter_ParticleAdvection2_h
+#endif // vtk_m_filter_Streamline2_h

@@ -66,14 +66,46 @@ public:
 }
 #endif
 
-template <typename ParticleType>
-VTKM_CONT vtkm::cont::DataSet DSI::GetOutput() const
+//template <typename ParticleType>
+void
+//DSI<ParticleType>::Meow() const
+DSI::Meow(const char* func, const int& lineNum) const
 {
-  vtkm::cont::DataSet ds;
+  if (this->Results.empty())
+  {
+    //std::cout<<"   no results!"<<std::endl;
+    return;
+  }
 
+  std::cout << " ******************************";
+  std::cout << func << " " << lineNum << " ";
+  using RType = vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>;
+
+  //const auto& R0 = this->Results[0]->Get<RType>();
+  //const auto& P0 = R0.Particles.ReadPortal().Get(0);
+  //RType* r = static_cast<RType*>(this->Results[0]);
+  //const auto& P0 = r->Particles.ReadPortal().Get(0);
+  const auto& P0 = this->Results[0].Get<RType>().Particles.ReadPortal().Get(0);
+  std::cout << "   PT0=  " << P0.Pos << std::endl;
+
+  //std::cout<<"   PT0=  "<<P0.Pos<<std::endl;
+
+  /*
+  auto& R0 = this->Results[0].Get<RType>();
+  auto P0 = R0.Particles.ReadPortal().Get(0);
+  std::cout<<"   PT0=  "<<P0.Pos<<std::endl;
+  auto ppp = R0.Particles;
+  std::cout<<"   ptrs: RP= "<<(void*)&(R0)<<" pPtr= "<<(void*)&ppp<<std::endl;
+  */
+}
+
+template <typename ParticleType>
+VTKM_CONT bool DSI::GetOutput(vtkm::cont::DataSet& ds) const
+{
   std::size_t nResults = this->Results.size();
   if (nResults == 0)
-    return ds;
+    return false;
+
 
   std::cout << "Check the variant type!" << std::endl;
 
@@ -83,13 +115,13 @@ VTKM_CONT vtkm::cont::DataSet DSI::GetOutput() const
 
     std::vector<vtkm::cont::ArrayHandle<ParticleType>> allParticles;
     allParticles.reserve(nResults);
-
-    //Get all the particles and put them into a single ArrayHandle: pts
     for (const auto& vres : this->Results)
       allParticles.push_back(vres.Get<RType>().Particles);
 
     vtkm::cont::ArrayHandle<vtkm::Vec3f> pts;
     vtkm::cont::ParticleArrayCopy(allParticles, pts);
+    std::cout << "DSI::GetOutput() pts= ";
+    vtkm::cont::printSummary_ArrayHandle(pts, std::cout);
 
     vtkm::Id numPoints = pts.GetNumberOfValues();
     if (numPoints > 0)
@@ -108,12 +140,12 @@ VTKM_CONT vtkm::cont::DataSet DSI::GetOutput() const
   }
   else if (this->ResType == STREAMLINE_TYPE)
   {
-    using ResultType = vtkm::worklet::StreamlineResult<ParticleType>;
+    using RType = vtkm::worklet::StreamlineResult<ParticleType>;
 
     //Easy case with one result.
     if (nResults == 1)
     {
-      const auto& res = this->Results[0].Get<ResultType>();
+      const auto& res = this->Results[0].Get<RType>();
       ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", res.Positions));
       ds.SetCellSet(res.PolyLines);
     }
@@ -123,7 +155,7 @@ VTKM_CONT vtkm::cont::DataSet DSI::GetOutput() const
       vtkm::Id totalNumCells = 0, totalNumPts = 0;
       for (std::size_t i = 0; i < nResults; i++)
       {
-        const auto& res = this->Results[i].Get<ResultType>();
+        const auto& res = this->Results[i].Get<RType>();
         if (i == 0)
           posOffsets[i] = 0;
         else
@@ -138,7 +170,7 @@ VTKM_CONT vtkm::cont::DataSet DSI::GetOutput() const
       appendPts.Allocate(totalNumPts);
       for (std::size_t i = 0; i < nResults; i++)
       {
-        const auto& res = this->Results[i].Get<ResultType>();
+        const auto& res = this->Results[i].Get<RType>();
         // copy all values into appendPts starting at offset.
         vtkm::cont::Algorithm::CopySubRange(
           res.Positions, 0, res.Positions.GetNumberOfValues(), appendPts, posOffsets[i]);
@@ -150,7 +182,7 @@ VTKM_CONT vtkm::cont::DataSet DSI::GetOutput() const
       std::size_t off = 0;
       for (std::size_t i = 0; i < nResults; i++)
       {
-        const auto& res = this->Results[i].Get<ResultType>();
+        const auto& res = this->Results[i].Get<RType>();
         vtkm::Id nCells = res.PolyLines.GetNumberOfCells();
         for (vtkm::Id j = 0; j < nCells; j++)
           numPtsPerCell[off++] = static_cast<vtkm::Id>(res.PolyLines.GetNumberOfPointsInCell(j));
@@ -181,14 +213,73 @@ VTKM_CONT vtkm::cont::DataSet DSI::GetOutput() const
     throw vtkm::cont::ErrorFilterExecution("Unsupported ParticleAdvectionResultType");
   }
 
-  return ds;
+  return true;
 }
 
+namespace internal
+{
+using ResultVariantType =
+  vtkm::cont::internal::Variant<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>,
+                                vtkm::worklet::ParticleAdvectionResult<vtkm::ChargedParticle>,
+                                vtkm::worklet::StreamlineResult<vtkm::Particle>,
+                                vtkm::worklet::StreamlineResult<vtkm::ChargedParticle>>;
+
+template <template <typename> class ResultType, typename ParticleType>
+class ResultHelper
+{
+public:
+  static void Store(const vtkm::worklet::ParticleAdvectionResult<ParticleType>& res,
+                    std::vector<ResultVariantType>& results)
+  {
+    results.push_back(res);
+  }
+};
+
+
+/*
+template <typename ParticleType>
+class ResultHelper<vtkm::worklet::ParticleAdvectionResult, ParticleType>
+{
+public:
+  static void Store(const vtkm::worklet::ParticleAdvectionResult<ParticleType>>& res,
+                    std::vector<ResultVariantType>& results)
+  {
+    results.push_back(res);
+  }
+};
+  */
+};
+
 template <typename ParticleType, template <typename> class ResultType>
-VTKM_CONT void DSI::UpdateResult(ResultType<ParticleType>& result, DSIStuff<ParticleType>& stuff)
+VTKM_CONT void DSI::UpdateResult(const ResultType<ParticleType>& result,
+                                 DSIStuff<ParticleType>& stuff)
 {
   this->ClassifyParticles(result.Particles, stuff);
-  this->Results.push_back(result);
+
+  //this->Meow(__PRETTY_FUNCTION__, __LINE__);
+
+  //template this for PA and SL
+  if (this->ResType == vtkm::filter::particleadvection::PARTICLE_ADVECT_TYPE)
+  {
+    if (stuff.TermIdx.empty())
+      return;
+
+    using ResType = vtkm::worklet::ParticleAdvectionResult<ParticleType>;
+    auto indicesAH = vtkm::cont::make_ArrayHandle(stuff.TermIdx, vtkm::CopyFlag::Off);
+    auto termPerm = vtkm::cont::make_ArrayHandlePermutation(indicesAH, result.Particles);
+
+    vtkm::cont::ArrayHandle<ParticleType> termParticles;
+    vtkm::cont::Algorithm::Copy(termPerm, termParticles);
+
+    ResType termRes(termParticles);
+    this->Results.push_back(termRes);
+  }
+  else if (this->ResType == vtkm::filter::particleadvection::STREAMLINE_TYPE)
+  {
+    this->Results.push_back(result);
+  }
+
+  //this->Meow(__PRETTY_FUNCTION__, __LINE__);
 }
 
 template <typename ParticleType>
@@ -198,6 +289,7 @@ VTKM_CONT void DSI::ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType
   stuff.A.clear();
   stuff.I.clear();
   stuff.TermID.clear();
+  stuff.TermIdx.clear();
   stuff.IdMapI.clear();
   stuff.IdMapA.clear();
 
@@ -207,9 +299,13 @@ VTKM_CONT void DSI::ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType
   for (vtkm::Id i = 0; i < n; i++)
   {
     auto p = portal.Get(i);
+    std::cout << "****** ClassifyParticles: " << p.Pos << " ID= " << p.ID << std::endl;
 
     if (p.Status.CheckTerminate())
+    {
+      stuff.TermIdx.push_back(i);
       stuff.TermID.push_back(p.ID);
+    }
     else
     {
       const auto& it = stuff.ParticleBlockIDsMap.find(p.ID);
@@ -229,6 +325,7 @@ VTKM_CONT void DSI::ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType
       if (newIDs.empty()) //No blocks, we're done.
       {
         p.Status.SetTerminate();
+        stuff.TermIdx.push_back(i);
         stuff.TermID.push_back(p.ID);
       }
       else
@@ -267,7 +364,8 @@ VTKM_CONT void DSI::ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType
 
   //Make sure we didn't miss anything. Every particle goes into a single bucket.
   VTKM_ASSERT(static_cast<std::size_t>(n) ==
-              (stuff.A.size() + stuff.I.size() + stuff.TermID.size()));
+              (stuff.A.size() + stuff.I.size() + stuff.TermIdx.size()));
+  VTKM_ASSERT(stuff.TermIdx.size() == stuff.TermID.size());
 }
 
 template <typename ParticleType>
@@ -303,9 +401,8 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
       if (this->ResType == PARTICLE_ADVECT_TYPE)
       {
         vtkm::worklet::ParticleAdvection Worklet;
-        auto r = Worklet.Run(stepper, seedArray, maxSteps);
-        this->UpdateResult(r, stuff);
-        // /*result =*/ Worklet.Run(stepper, seedArray, maxSteps);
+        auto result = Worklet.Run(stepper, seedArray, maxSteps);
+        this->UpdateResult(result, stuff);
       }
       else
       {

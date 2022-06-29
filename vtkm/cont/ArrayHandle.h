@@ -371,7 +371,10 @@ public:
   /// with CUDA), then the automatically generated destructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  VTKM_CONT ~ArrayHandle() {}
+  VTKM_CONT ~ArrayHandle()
+  {
+    //    std::cout<<"ArrayHandle dtor: "<<(void*)this<<std::endl;
+  }
 
   /// \brief Copies an ArrayHandle
   ///

@@ -7,11 +7,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_ParticleAdvection2_hxx
-#define vtk_m_filter_ParticleAdvection2_hxx
+#ifndef vtk_m_filter_Streamline2_hxx
+#define vtk_m_filter_Streamline2_hxx
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/ParticleAdvection2.h>
+#include <vtkm/filter/Streamline2.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionAlgorithm.h>
@@ -26,20 +26,20 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT ParticleAdvection2::ParticleAdvection2()
-  : vtkm::filter::FilterParticleAdvection<ParticleAdvection2, vtkm::Particle>()
+inline VTKM_CONT Streamline2::Streamline2()
+  : vtkm::filter::FilterParticleAdvection<Streamline2, vtkm::Particle>()
 {
-  this->ResultType = vtkm::filter::particleadvection::PARTICLE_ADVECT_TYPE;
+  this->ResultType = vtkm::filter::particleadvection::STREAMLINE_TYPE;
 }
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection2::PrepareForExecution(
+inline VTKM_CONT vtkm::cont::PartitionedDataSet Streamline2::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  //  using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
-  //  using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;
+  //  using AlgorithmType = vtkm::filter::particleadvection::StreamlineAlgorithm;
+  //  using ThreadedAlgorithmType = vtkm::filter::particleadvection::StreamlineThreadedAlgorithm;
   using DSIType = vtkm::filter::particleadvection::DSI;
 
   this->ValidateOptions();
@@ -63,10 +63,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection2::PrepareForEx
 
   this->SeedArray = this->Seeds;
   vtkm::filter::particleadvection::PAV pav(
-    boundsMap,
-    dsi,
-    this->UseThreadedAlgorithm,
-    vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE);
+    boundsMap, dsi, this->UseThreadedAlgorithm, this->ResultType);
   return pav.Execute(this->NumberOfSteps, this->StepSize, this->SeedArray);
 
 #if 0
@@ -94,14 +91,14 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection2::PrepareForEx
 #endif
 }
 
-VTKM_CONT vtkm::cont::DataSet ParticleAdvection3::DoExecute(const vtkm::cont::DataSet& inData)
+VTKM_CONT vtkm::cont::DataSet Streamline3::DoExecute(const vtkm::cont::DataSet& inData)
 {
   std::cout << "Meow DS" << std::endl;
   auto result = this->DoExecutePartitions(inData);
   return result.GetPartition(0);
 }
 
-VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection3::DoExecutePartitions(
+VTKM_CONT vtkm::cont::PartitionedDataSet Streamline3::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& inData)
 {
   std::cout << "Meow pDS" << std::endl;

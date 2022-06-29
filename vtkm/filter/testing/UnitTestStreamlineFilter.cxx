@@ -15,7 +15,9 @@
 #include <vtkm/filter/PathParticle.h>
 #include <vtkm/filter/Pathline.h>
 #include <vtkm/filter/Streamline.h>
+#include <vtkm/filter/Streamline2.h>
 #include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 namespace
@@ -64,7 +66,8 @@ void TestStreamline()
                                      vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
                                      vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-    vtkm::filter::ParticleAdvection2 streamline;
+    vtkm::filter::Streamline streamline;
+
     streamline.SetStepSize(0.1f);
     streamline.SetNumberOfSteps(20);
     streamline.SetSeeds(seedArray);
@@ -76,8 +79,8 @@ void TestStreamline()
     VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                      "Wrong number of coordinate systems in the output dataset");
 
-    //    vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-    //    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
+    vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
+    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
 
     vtkm::cont::UnknownCellSet dcells = output.GetCellSet();
     VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
@@ -293,7 +296,7 @@ void TestAMRStreamline(bool useSL)
     }
     else
     {
-      vtkm::filter::ParticleAdvection filter;
+      vtkm::filter::ParticleAdvection2 filter;
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
       filter.SetSeeds(seedArray);
@@ -370,12 +373,24 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
                                                vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
+    if (idx == 0)
+    {
+      for (int j = 0; j < pds.GetNumberOfPartitions(); j++)
+      {
+        auto ds_j = pds.GetPartition(j);
+        std::string nm = "ds_" + std::to_string(j) + ".vtk";
+        vtkm::io::VTKDataSetWriter wrt(nm);
+        wrt.WriteDataSet(ds_j);
+      }
+    }
+
+
     if (fType == FilterType::STREAMLINE || fType == FilterType::PATHLINE)
     {
       vtkm::cont::PartitionedDataSet out;
       if (fType == FilterType::STREAMLINE)
       {
-        vtkm::filter::Streamline streamline;
+        vtkm::filter::Streamline2 streamline;
         streamline.SetStepSize(0.1f);
         streamline.SetNumberOfSteps(100000);
         streamline.SetSeeds(seedArray);
@@ -399,6 +414,9 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         pathline.SetActiveField(fieldName);
         out = pathline.Execute(pds);
       }
+
+      //std::cout<<"Num IN DS= "<<pds.GetNumberOfPartitions()<<std::endl;
+      //out.PrintSummary(std::cout);
 
       for (vtkm::Id i = 0; i < num; i++)
       {
@@ -439,7 +457,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
       vtkm::cont::PartitionedDataSet out;
       if (fType == FilterType::PARTICLE_ADVECTION)
       {
-        vtkm::filter::ParticleAdvection particleAdvection;
+        vtkm::filter::ParticleAdvection2 particleAdvection;
 
         particleAdvection.SetStepSize(0.1f);
         particleAdvection.SetNumberOfSteps(100000);
@@ -465,6 +483,12 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         out = pathParticle.Execute(pds);
       }
 
+
+      std::cout << "*************************************************************" << std::endl;
+      std::cout << "*************************************************************" << std::endl;
+      std::cout << "*************************************************************" << std::endl;
+      std::cout << "DS.NumP()= " << out.GetNumberOfPartitions()
+                << " pds.NumP()= " << pds.GetNumberOfPartitions() << std::endl;
       VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
       auto ds = out.GetPartition(0);
       //Validate the result is correct.
@@ -551,7 +575,7 @@ void TestStreamlineFile(const std::string& fname,
   }
   else
   {
-    vtkm::filter::ParticleAdvection particleAdvection;
+    vtkm::filter::ParticleAdvection2 particleAdvection;
     particleAdvection.SetStepSize(stepSize);
     particleAdvection.SetNumberOfSteps(maxSteps);
     particleAdvection.SetSeeds(seedArray);
@@ -579,28 +603,25 @@ void TestStreamlineFile(const std::string& fname,
 
 void TestStreamlineFilters()
 {
-
-  vtkm::filter::ParticleAdvection2 filter;
-  TestStreamline();
-
-
   std::vector<bool> flags = { true, false };
   std::vector<FilterType> fTypes = { FilterType::PARTICLE_ADVECTION,
                                      FilterType::STREAMLINE,
                                      FilterType::PATHLINE,
                                      FilterType::PATH_PARTICLE };
+
+  fTypes = { FilterType::PARTICLE_ADVECTION, FilterType::STREAMLINE };
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)
       for (auto ft : fTypes)
-      {
         TestPartitionedDataSet(n, useGhost, ft);
-      }
   }
+
+  return;
 
   TestStreamline();
   TestPathline();
-  /*
+
   for (auto useSL : flags)
     TestAMRStreamline(useSL);
 
@@ -646,7 +667,6 @@ void TestStreamlineFilters()
 
   for (auto useSL : flags)
     TestStreamlineFile(amrWindFile, amrWindPts, amrWindStep, 10000, amrWindEndPts, useSL);
-*/
 }
 }
 

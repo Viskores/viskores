@@ -28,13 +28,15 @@ template <template <typename> class ResultType, typename ParticleType>
 class ABA
 {
 public:
-  ABA(const vtkm::filter::particleadvection::BoundsMap& bm, const std::vector<DSI>& blocks)
+  ABA(const vtkm::filter::particleadvection::BoundsMap& bm, std::vector<DSI*>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumRanks(this->Comm.size())
     , Rank(this->Comm.rank())
   {
   }
+
+  void Meow(const char* func, const int& lineNum) const { this->Blocks[0]->Meow(func, lineNum); }
 
   void Execute(vtkm::Id numSteps,
                vtkm::FloatDefault stepSize,
@@ -51,11 +53,14 @@ public:
     vtkm::cont::PartitionedDataSet output;
 
     for (const auto& b : this->Blocks)
-      output.AppendPartition(b.template GetOutput<ParticleType>());
+    {
+      vtkm::cont::DataSet ds;
+      if (b->template GetOutput<ParticleType>(ds))
+        output.AppendPartition(ds);
+    }
 
-    std::cout << "GetOutput: " << __FILE__ << " " << __LINE__ << std::endl;
-    //auto output = internal::ResultHelper<ResultType, ParticleType>::GetOutput(this->Results);
-    output.PrintSummary(std::cout);
+    //std::cout<<"GetOutput: "<<__FILE__<<" "<<__LINE__<<std::endl;
+    //output.PrintSummary(std::cout);
 
     return output;
   }
@@ -110,12 +115,10 @@ public:
       if (this->GetActiveParticles(v, blockId))
       {
         //make this a pointer to avoid the copy?
-        auto& block = this->GetDataSet(blockId);
-        //block.Advect(v, this->StepSize, this->NumberOfSteps, r);
+        auto block = this->GetDataSet(blockId);
         DSIStuff<ParticleType> stuff(this->BoundsMap, this->ParticleBlockIDsMap);
-        block.Advect(v, this->StepSize, this->NumberOfSteps, stuff);
+        block->Advect(v, this->StepSize, this->NumberOfSteps, stuff);
         numTerm = this->UpdateResult(stuff);
-        //numTerm = this->UpdateResult(r, blockId);
         std::cout << " Advect: " << v.size() << " NT= " << numTerm << std::endl;
       }
 
@@ -127,6 +130,7 @@ public:
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
   }
+
 
   virtual void ClearParticles()
   {
@@ -145,11 +149,12 @@ public:
     this->TotalNumParticles = static_cast<vtkm::Id>(total);
   }
 
-  DSI& GetDataSet(vtkm::Id id)
+  DSI* GetDataSet(vtkm::Id id)
   {
     for (auto& it : this->Blocks)
-      if (it.GetID() == id)
+      if (it->GetID() == id)
         return it;
+
     throw vtkm::cont::ErrorFilterExecution("Bad block");
   }
 
@@ -388,7 +393,7 @@ public:
 
   //Member data
   std::vector<ParticleType> Active;
-  std::vector<DSI> Blocks;
+  std::vector<DSI*> Blocks;
   vtkm::filter::particleadvection::BoundsMap BoundsMap;
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   std::vector<ParticleType> Inactive;
@@ -406,5 +411,6 @@ public:
 }
 }
 
+//#include <vtkm/filter/particleadvection/ABA.hxx>
 
 #endif //vtk_m_filter_ABA_h
