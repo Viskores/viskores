@@ -13,6 +13,7 @@
 #include <vtkm/filter/ParticleAdvection.h>
 #include <vtkm/filter/ParticleAdvection2.h>
 #include <vtkm/filter/PathParticle.h>
+#include <vtkm/filter/PathParticle2.h>
 #include <vtkm/filter/Pathline.h>
 #include <vtkm/filter/Pathline2.h>
 #include <vtkm/filter/Streamline.h>
@@ -472,7 +473,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         auto pds2 = allPDs2[idx];
         AddVectorFields(pds2, fieldName, vecX);
 
-        vtkm::filter::PathParticle pathParticle;
+        vtkm::filter::PathParticle2 pathParticle;
         pathParticle.SetPreviousTime(0);
         pathParticle.SetNextTime(1000);
         pathParticle.SetNextDataSet(pds2);
@@ -610,7 +611,8 @@ void TestStreamlineFilters()
                                      FilterType::PATHLINE,
                                      FilterType::PATH_PARTICLE };
 
-  fTypes = { FilterType::PARTICLE_ADVECTION, FilterType::STREAMLINE };
+  //fTypes = {FilterType::PARTICLE_ADVECTION,FilterType::STREAMLINE};
+  //fTypes = {FilterType::PATH_PARTICLE};
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)

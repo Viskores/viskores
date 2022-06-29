@@ -109,6 +109,7 @@ set(extra_headers
   Pathline.h
   Pathline2.h
   PathParticle.h
+  PathParticle2.h
   Streamline.h
   Streamline2.h
   StreamSurface.h
@@ -127,6 +128,7 @@ set(extra_header_template_sources
   Pathline.hxx
   Pathline2.hxx
   PathParticle.hxx
+  PathParticle2.hxx
   Streamline.hxx
   Streamline2.hxx
   StreamSurface.hxx

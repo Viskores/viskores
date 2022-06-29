@@ -7,11 +7,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_Pathline2_hxx
-#define vtk_m_filter_Pathline2_hxx
+#ifndef vtk_m_filter_PathParticle2_hxx
+#define vtk_m_filter_PathParticle2_hxx
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/Pathline2.h>
+#include <vtkm/filter/PathParticle2.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionAlgorithm.h>
@@ -26,15 +26,15 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT Pathline2::Pathline2()
-  : vtkm::filter::FilterTemporalParticleAdvection<Pathline2, vtkm::Particle>()
+inline VTKM_CONT PathParticle2::PathParticle2()
+  : vtkm::filter::FilterTemporalParticleAdvection<PathParticle2, vtkm::Particle>()
 {
-  this->ResultType = vtkm::filter::particleadvection::STREAMLINE_TYPE;
+  this->ResultType = vtkm::filter::particleadvection::PARTICLE_ADVECT_TYPE;
 }
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline2::PrepareForExecution(
+inline VTKM_CONT vtkm::cont::PartitionedDataSet PathParticle2::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
@@ -91,14 +91,14 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline2::PrepareForExecution(
 #endif
 }
 
-VTKM_CONT vtkm::cont::DataSet Pathline3::DoExecute(const vtkm::cont::DataSet& inData)
+VTKM_CONT vtkm::cont::DataSet PathParticle3::DoExecute(const vtkm::cont::DataSet& inData)
 {
   std::cout << "Meow DS" << std::endl;
   auto result = this->DoExecutePartitions(inData);
   return result.GetPartition(0);
 }
 
-VTKM_CONT vtkm::cont::PartitionedDataSet Pathline3::DoExecutePartitions(
+VTKM_CONT vtkm::cont::PartitionedDataSet PathParticle3::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& inData)
 {
   std::cout << "Meow pDS" << std::endl;
