@@ -14,6 +14,7 @@
 #include <vtkm/filter/ParticleAdvection2.h>
 #include <vtkm/filter/PathParticle.h>
 #include <vtkm/filter/Pathline.h>
+#include <vtkm/filter/Pathline2.h>
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/filter/Streamline2.h>
 #include <vtkm/io/VTKDataSetReader.h>
@@ -403,7 +404,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         auto pds2 = allPDs2[idx];
         AddVectorFields(pds2, fieldName, vecX);
 
-        vtkm::filter::Pathline pathline;
+        vtkm::filter::Pathline2 pathline;
         pathline.SetPreviousTime(0);
         pathline.SetNextTime(1000);
         pathline.SetNextDataSet(pds2);
@@ -415,8 +416,8 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         out = pathline.Execute(pds);
       }
 
-      //std::cout<<"Num IN DS= "<<pds.GetNumberOfPartitions()<<std::endl;
-      //out.PrintSummary(std::cout);
+      std::cout << "Num IN DS= " << pds.GetNumberOfPartitions() << std::endl;
+      out.PrintSummary(std::cout);
 
       for (vtkm::Id i = 0; i < num; i++)
       {

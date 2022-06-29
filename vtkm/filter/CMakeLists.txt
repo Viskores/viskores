@@ -107,6 +107,7 @@ set(extra_headers
   ParticleAdvection.h
   ParticleAdvection2.h
   Pathline.h
+  Pathline2.h
   PathParticle.h
   Streamline.h
   Streamline2.h
@@ -124,6 +125,7 @@ set(extra_header_template_sources
   ParticleAdvection.hxx
   ParticleAdvection2.hxx
   Pathline.hxx
+  Pathline2.hxx
   PathParticle.hxx
   Streamline.hxx
   Streamline2.hxx

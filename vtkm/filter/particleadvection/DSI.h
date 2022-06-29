@@ -21,8 +21,6 @@
 
 #include <vtkm/cont/internal/Variant.h>
 
-#include <variant>
-
 namespace vtkm
 {
 namespace filter
