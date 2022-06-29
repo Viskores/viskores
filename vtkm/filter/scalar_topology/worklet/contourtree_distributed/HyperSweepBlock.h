@@ -55,7 +55,7 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalContourTree.h>
 
 namespace vtkm
 {

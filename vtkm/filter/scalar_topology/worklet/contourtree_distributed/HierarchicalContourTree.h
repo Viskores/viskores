@@ -76,11 +76,11 @@
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcBetweenNodes.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcForUnknownNode.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/InitalizeSuperchildrenWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/PermuteComparator.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcBetweenNodes.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcForUnknownNode.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_contour_tree/InitalizeSuperchildrenWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_contour_tree/PermuteComparator.h>
 
 namespace vtkm
 {

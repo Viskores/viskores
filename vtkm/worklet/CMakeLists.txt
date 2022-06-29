@@ -74,7 +74,6 @@ set(sources_device
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(colorconversion)
-add_subdirectory(contourtree_distributed)
 add_subdirectory(cosmotools)
 add_subdirectory(lcs)
 add_subdirectory(splatkernels)

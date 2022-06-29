@@ -61,8 +61,8 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
-#include <vtkm/worklet/contourtree_distributed/ContourTreeBlockData.h>
-#include <vtkm/worklet/contourtree_distributed/MergeBlockFunctor.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/ContourTreeBlockData.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/MergeBlockFunctor.h>
 
 #include <memory>
 

@@ -60,7 +60,7 @@
 #include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
-#include <vtkm/worklet/contourtree_distributed/MultiBlockContourTreeHelper.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/MultiBlockContourTreeHelper.h>
 
 #include <memory>
 

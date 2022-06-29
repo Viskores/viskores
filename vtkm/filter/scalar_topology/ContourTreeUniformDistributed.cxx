@@ -50,32 +50,29 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_ContourTreeUniformDistributed_hxx
-#define vtk_m_filter_ContourTreeUniformDistributed_hxx
-
 // vtkm includes
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/Timer.h>
 
 // single-node augmented contour tree includes
-#include <vtkm/filter/ContourTreeUniformDistributed.h>
+#include <vtkm/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/DataSetMesh.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
 
 // distributed contour tree includes
 #include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
-#include <vtkm/worklet/contourtree_distributed/BoundaryTree.h>
-#include <vtkm/worklet/contourtree_distributed/BoundaryTreeMaker.h>
-#include <vtkm/worklet/contourtree_distributed/CombineHyperSweepBlockFunctor.h>
-#include <vtkm/worklet/contourtree_distributed/ComputeDistributedContourTreeFunctor.h>
-#include <vtkm/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalAugmenter.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalAugmenterFunctor.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
-#include <vtkm/worklet/contourtree_distributed/HyperSweepBlock.h>
-#include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
-#include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
-#include <vtkm/worklet/contourtree_distributed/TreeGrafter.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/BoundaryTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/BoundaryTreeMaker.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/CombineHyperSweepBlockFunctor.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/ComputeDistributedContourTreeFunctor.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalAugmenterFunctor.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HyperSweepBlock.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/InteriorForest.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/PrintGraph.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/TreeGrafter.h>
 
 // DIY includes
 // clang-format off
@@ -89,45 +86,14 @@ namespace vtkm
 {
 namespace filter
 {
-
+namespace scalar_topology
+{
 //-----------------------------------------------------------------------------
 // Helper structs needed to support approbriate type discovery as part
 // of pre- and post-execute
 //-----------------------------------------------------------------------------
 namespace contourtree_distributed_detail
 {
-struct ComputeLocalTree
-{
-  template <typename T, typename Storage, typename DerivedPolicy>
-  void operator()(const vtkm::cont::ArrayHandle<T, Storage>& field,
-                  ContourTreeUniformDistributed* self,
-                  const vtkm::Id blockIndex,
-                  const vtkm::cont::DataSet& inputData,
-                  const vtkm::filter::FieldMetadata& fieldMeta,
-                  vtkm::filter::PolicyBase<DerivedPolicy> policy)
-  {
-    self->ComputeLocalTree(blockIndex, inputData, field, fieldMeta, policy);
-  }
-};
-
-//----Helper struct to call DoPostExecute. This is used to be able to
-//    wrap the PostExecute work in a functor so that we can use VTK-M's
-//    vtkm::cont::CastAndCall to infer the FieldType template parameters
-struct PostExecuteCaller
-{
-  template <typename T, typename S, typename DerivedPolicy>
-  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>&,
-                            ContourTreeUniformDistributed* self,
-                            const vtkm::cont::PartitionedDataSet& input,
-                            vtkm::cont::PartitionedDataSet& output,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy) const
-  {
-    vtkm::cont::ArrayHandle<T, S> dummy;
-    self->DoPostExecute(input, output, fieldMeta, dummy, policy);
-  }
-};
-
 /// Helper function for saving the content of the tree for debugging
 template <typename FieldType>
 void SaveAfterFanInResults(
@@ -209,8 +175,7 @@ ContourTreeUniformDistributed::ContourTreeUniformDistributed(
   bool saveDotFiles,
   vtkm::cont::LogLevel timingsLogLevel,
   vtkm::cont::LogLevel treeLogLevel)
-  : vtkm::filter::FilterField<ContourTreeUniformDistributed>()
-  , UseBoundaryExtremaOnly(useBoundaryExtremaOnly)
+  : UseBoundaryExtremaOnly(useBoundaryExtremaOnly)
   , UseMarchingCubes(useMarchingCubes)
   , AugmentHierarchicalTree(augmentHierarchicalTree)
   , SaveDotFiles(saveDotFiles)
@@ -240,8 +205,7 @@ ContourTreeUniformDistributed::ContourTreeUniformDistributed(
   const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
   vtkm::cont::LogLevel timingsLogLevel,
   vtkm::cont::LogLevel treeLogLevel)
-  : vtkm::filter::FilterField<ContourTreeUniformDistributed>()
-  , UseBoundaryExtremaOnly(true)
+  : UseBoundaryExtremaOnly(true)
   , UseMarchingCubes(false)
   , AugmentHierarchicalTree(false)
   , SaveDotFiles(false)
@@ -265,25 +229,17 @@ ContourTreeUniformDistributed::ContourTreeUniformDistributed(
 // Functions used in PrepareForExecution() to compute the local contour
 // tree for the data blocks processed by this rank.
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
+template <typename T, typename StorageType>
 void ContourTreeUniformDistributed::ComputeLocalTree(
   const vtkm::Id blockIndex,
   const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+  const vtkm::cont::ArrayHandle<T, StorageType>& fieldArray)
 {
-  // Check that the field is Ok
-  if (fieldMeta.IsPointField() == false)
-  {
-    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
-  }
-
   // Get mesh size
   vtkm::Id3 meshSize;
   const auto& cells = input.GetCellSet();
-  vtkm::filter::ApplyPolicyCellSet(cells, policy, *this)
-    .CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(), meshSize);
+  cells.CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED>(
+    vtkm::worklet::contourtree_augmented::GetPointDimensions(), meshSize);
 
   // Create the mesh we need for the contour tree computation so that we have access to it
   // afterwards to compute the BRACT for each data block as well
@@ -293,39 +249,30 @@ void ContourTreeUniformDistributed::ComputeLocalTree(
       vtkm::Id2{ meshSize[0], meshSize[1] });
     this->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
     auto meshBoundaryExecObject = mesh.GetMeshBoundaryExecutionObject();
-    this->ComputeLocalTreeImpl(
-      blockIndex, input, field, fieldMeta, policy, mesh, meshBoundaryExecObject);
+    this->ComputeLocalTreeImpl(blockIndex, input, fieldArray, mesh, meshBoundaryExecObject);
   }
   else if (this->UseMarchingCubes) // 3D marching cubes mesh
   {
     vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation3DMarchingCubes mesh(meshSize);
     this->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
     auto meshBoundaryExecObject = mesh.GetMeshBoundaryExecutionObject();
-    this->ComputeLocalTreeImpl(
-      blockIndex, input, field, fieldMeta, policy, mesh, meshBoundaryExecObject);
+    this->ComputeLocalTreeImpl(blockIndex, input, fieldArray, mesh, meshBoundaryExecObject);
   }
   else // Regular 3D mesh
   {
     vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation3DFreudenthal mesh(meshSize);
     this->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
     auto meshBoundaryExecObject = mesh.GetMeshBoundaryExecutionObject();
-    this->ComputeLocalTreeImpl(
-      blockIndex, input, field, fieldMeta, policy, mesh, meshBoundaryExecObject);
+    this->ComputeLocalTreeImpl(blockIndex, input, fieldArray, mesh, meshBoundaryExecObject);
   }
 } // ContourTreeUniformDistributed::ComputeLocalTree
 
 //-----------------------------------------------------------------------------
-template <typename T,
-          typename StorageType,
-          typename DerivedPolicy,
-          typename MeshType,
-          typename MeshBoundaryExecType>
+template <typename T, typename StorageType, typename MeshType, typename MeshBoundaryExecType>
 void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
   const vtkm::Id blockIndex,
   const vtkm::cont::DataSet&, // input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata&,      // fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy>, // policy,
   MeshType& mesh,
   MeshBoundaryExecType& meshBoundaryExecObject)
 {
@@ -522,6 +469,16 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
 } // ContourTreeUniformDistributed::ComputeLocalTreeImpl
 
 
+vtkm::cont::DataSet ContourTreeUniformDistributed::DoExecute(const vtkm::cont::DataSet& input)
+{
+  vtkm::cont::PartitionedDataSet output = this->Execute(vtkm::cont::PartitionedDataSet(input));
+  if (output.GetNumberOfPartitions() > 1)
+  {
+    throw vtkm::cont::ErrorFilterExecution("Expecting at most 1 block.");
+  }
+  return output.GetNumberOfPartitions() == 1 ? output.GetPartition(0) : vtkm::cont::DataSet();
+}
+
 //-----------------------------------------------------------------------------
 // Main execution phases of the filter
 //
@@ -535,10 +492,8 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
 //   --> DoPostExecute
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT void ContourTreeUniformDistributed::PreExecute(
-  const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+VTKM_CONT void ContourTreeUniformDistributed::PreExecute(
+  const vtkm::cont::PartitionedDataSet& input)
 {
   if (vtkm::filter::scalar_topology::internal::SpatialDecomposition::GetGlobalNumberOfBlocks(
         input) != this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks())
@@ -554,31 +509,28 @@ inline VTKM_CONT void ContourTreeUniformDistributed::PreExecute(
   }
 }
 
-
-template <typename DerivedPolicy>
-vtkm::cont::PartitionedDataSet ContourTreeUniformDistributed::PrepareForExecution(
-  const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+vtkm::cont::PartitionedDataSet ContourTreeUniformDistributed::DoExecutePartitions(
+  const vtkm::cont::PartitionedDataSet& input)
 {
   // Time execution
   vtkm::cont::Timer timer;
   timer.Start();
 
+  this->PreExecute(input);
+
   // Compute the local contour tree, boundary tree, and interior forest for each local data block
   for (vtkm::Id blockNo = 0; blockNo < input.GetNumberOfPartitions(); ++blockNo)
   {
-    auto dataset = input.GetPartition(blockNo);
-    auto field = dataset.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
-    vtkm::filter::FieldMetadata metaData(field);
+    const auto& dataset = input.GetPartition(blockNo);
+    const auto& field =
+      dataset.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+    if (!field.IsFieldPoint())
+    {
+      throw vtkm::cont::ErrorFilterExecution("Point field expected.");
+    }
 
-    vtkm::filter::FilterTraits<ContourTreeUniformDistributed> traits;
-    vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, traits),
-                            vtkm::filter::contourtree_distributed_detail::ComputeLocalTree{},
-                            this,
-                            blockNo,
-                            dataset,
-                            metaData,
-                            policy);
+    this->CastAndCallScalarField(
+      field, [&](const auto concrete) { this->ComputeLocalTree(blockNo, dataset, concrete); });
   }
 
   // Log sizes of the local contour trees, boundary trees, and interior forests
@@ -614,18 +566,20 @@ vtkm::cont::PartitionedDataSet ContourTreeUniformDistributed::PrepareForExecutio
                << "    " << std::setw(38) << std::left << "Contour Tree Filter PrepareForExecution"
                << ": " << timer.GetElapsedTime() << " seconds");
 
-  return input; // TODO/FIXME: What to return?
+  vtkm::cont::PartitionedDataSet result;
+  this->PostExecute(input, result);
+
+  return result;
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT void ContourTreeUniformDistributed::PostExecute(
+VTKM_CONT void ContourTreeUniformDistributed::PostExecute(
   const vtkm::cont::PartitionedDataSet& input,
-  vtkm::cont::PartitionedDataSet& result,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::cont::PartitionedDataSet& result)
 {
   vtkm::cont::Timer timer;
   timer.Start();
+
   // We are running in parallel and need to merge the contour tree in PostExecute
   // TODO/FIXME: This filter should only be used in a parallel setting with more
   // than one block. Is there a better way to enforce this? thrown an exception
@@ -634,18 +588,15 @@ inline VTKM_CONT void ContourTreeUniformDistributed::PostExecute(
   {
     return;
   }
+
   auto field = // TODO/FIXME: Correct for more than one block per rank?
     input.GetPartition(0).GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
-  vtkm::filter::FieldMetadata metaData(field);
 
-  vtkm::filter::FilterTraits<ContourTreeUniformDistributed> traits;
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, traits),
-                          vtkm::filter::contourtree_distributed_detail::PostExecuteCaller{},
-                          this,
-                          input,
-                          result,
-                          metaData,
-                          policy);
+  auto PostExecuteCaller = [&](const auto& concrete) {
+    using T = typename std::decay_t<decltype(concrete)>::ValueType;
+    this->DoPostExecute<T>(input, result);
+  };
+  this->CastAndCallScalarField(field, PostExecuteCaller);
 
   VTKM_LOG_S(this->TimingsLogLevel,
              std::endl
@@ -858,13 +809,10 @@ inline VTKM_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
 }
 
 //-----------------------------------------------------------------------------
-template <typename FieldType, typename StorageType, typename DerivedPolicy>
+template <typename FieldType>
 VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   const vtkm::cont::PartitionedDataSet& input,
-  vtkm::cont::PartitionedDataSet& result,
-  const vtkm::filter::FieldMetadata&,                     // dummy parameter for field meta data
-  const vtkm::cont::ArrayHandle<FieldType, StorageType>&, // dummy parameter to get the type
-  vtkm::filter::PolicyBase<DerivedPolicy>)                // dummy parameter for policy
+  vtkm::cont::PartitionedDataSet& result)
 {
   vtkm::cont::Timer timer;
   timer.Start();
@@ -1109,7 +1057,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     // save the corresponding .gv file
     if (this->SaveDotFiles)
     {
-      vtkm::filter::contourtree_distributed_detail::SaveHierarchicalTreeDot(
+      vtkm::filter::scalar_topology::contourtree_distributed_detail::SaveHierarchicalTreeDot(
         blockData, rank, nRounds);
     } // if(this->SaveDotFiles)
 
@@ -1131,7 +1079,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       // save the corresponding .gv file
       if (this->SaveDotFiles)
       {
-        vtkm::filter::contourtree_distributed_detail::SaveHierarchicalTreeDot(
+        vtkm::filter::scalar_topology::contourtree_distributed_detail::SaveHierarchicalTreeDot(
           blockData, rank, nRounds);
       } // if(this->SaveDotFiles)
       // Log the time for each of the iterations of the fan out loop
@@ -1257,7 +1205,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     if (this->SaveDotFiles)
     {
       auto nRounds = blockData->ContourTrees.size() - 1;
-      vtkm::filter::contourtree_distributed_detail::SaveHierarchicalTreeDot(
+      vtkm::filter::scalar_topology::contourtree_distributed_detail::SaveHierarchicalTreeDot(
         blockData, rank, nRounds);
 
       createOutdataTimingsStream << "    Save Dot (block=" << blockData->LocalBlockNo
@@ -1302,7 +1250,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   result = vtkm::cont::PartitionedDataSet(hierarchicalTreeOutputDataSet);
 } // DoPostExecute
 
+} // namespace scalar_topology
 } // namespace filter
 } // namespace vtkm::filter
-
-#endif

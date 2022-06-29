@@ -57,8 +57,8 @@
 #include <vtkm/cont/Error.h>
 #include <vtkm/filter/scalar_topology/worklet/ContourTreeUniformAugmented.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
-#include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/PrintGraph.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE

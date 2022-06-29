@@ -8,14 +8,7 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(headers
-  TestingContourTreeUniformDistributedFilter.h
-  VolumeHelper.h
-  SuperArcHelper.h
-)
-
 set(unit_tests
-  UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestLagrangianFilter.cxx
@@ -72,7 +65,6 @@ vtkm_unit_tests(
 #if MPI is enabled.
 if (VTKm_ENABLE_MPI)
   set(mpi_unit_tests
-    UnitTestContourTreeUniformDistributedFilterMPI.cxx
     UnitTestParticleMessengerMPI.cxx
     UnitTestStreamlineFilterMPI.cxx
   )

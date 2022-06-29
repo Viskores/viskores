@@ -56,8 +56,6 @@
 #include <iostream> // std::cout
 #include <sstream>  // std::stringstrea
 #include <string>   // std::string
-#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
-#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 
 namespace vtkm

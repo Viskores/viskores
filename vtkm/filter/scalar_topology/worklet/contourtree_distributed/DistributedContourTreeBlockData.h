@@ -56,8 +56,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalAugmenter.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalAugmenter.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalContourTree.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE

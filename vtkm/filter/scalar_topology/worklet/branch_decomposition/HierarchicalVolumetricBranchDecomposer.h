@@ -123,9 +123,9 @@
 #include <string>
 
 // Contour tree includes, not yet moved into new filter structure
-#include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
-#include <vtkm/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcBetweenNodes.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/PrintGraph.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_contour_tree/FindRegularByGlobal.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_contour_tree/FindSuperArcBetweenNodes.h>
 
 // Worklets
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/CollapseBranchesPointerDoublingWorklet.h>
