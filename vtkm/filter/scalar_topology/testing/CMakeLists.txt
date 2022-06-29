@@ -13,6 +13,7 @@
 set(unit_tests
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
+  UnitTestContourTreeUniformAugmentedWorklet.cxx
   UnitTestDistributedBranchDecompositionFilter.cxx
   )
 
@@ -25,6 +26,6 @@ set(libraries
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
-  ALL_BACKENDS # uses vtkm::cont::Algorithm
+  ALL_BACKENDS # includes Worklet unit test and uses vtkm::cont::Algorithm
   USE_VTKM_JOB_POOL
 )
