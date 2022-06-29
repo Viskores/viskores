@@ -79,9 +79,9 @@
 
 #include <iomanip>
 #include <string>
-#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
 #include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
 #include <vtkm/worklet/contourtree_distributed/hierarchical_hyper_sweeper/ComputeSuperarcDependentWeightsWorklet.h>

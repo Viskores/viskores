@@ -56,9 +56,9 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
-#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
-#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/DataSetMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_distributed/CombineHyperSweepBlockFunctor.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>

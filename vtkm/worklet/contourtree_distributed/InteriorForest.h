@@ -60,8 +60,8 @@
 #define vtk_m_worklet_contourtree_distributed_interior_forest_h
 
 #include <vtkm/Types.h>
-#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 #include <sstream>
 #include <string>

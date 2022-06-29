@@ -9,6 +9,7 @@
 ##============================================================================
 set(scalar_topology_headers
   ContourTreeUniform.h
+  ContourTreeUniformAugmented.h
   DistributedBranchDecompositionFilter.h
   )
 
@@ -16,6 +17,7 @@ set(scalar_topology_sources
   internal/BranchDecompositionBlock.cxx
   internal/ComputeDistributedBranchDecompositionFunctor.cxx
   ContourTreeUniform.cxx
+  ContourTreeUniformAugmented.cxx
   DistributedBranchDecompositionFilter.cxx
   )
 

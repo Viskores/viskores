@@ -57,8 +57,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
-#include <vtkm/worklet/contourtree_augmented/ContourTree.h>
-#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/DataSetMesh.h>
 #include <vtkm/worklet/contourtree_distributed/BoundaryTree.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
 #include <vtkm/worklet/contourtree_distributed/InteriorForest.h>

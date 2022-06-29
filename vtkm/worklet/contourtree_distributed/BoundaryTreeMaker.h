@@ -54,10 +54,10 @@
 #define vtk_m_worklet_contourtree_distributed_boundary_tree_maker_h
 
 // augmented contour tree includes
-#include <vtkm/worklet/contourtree_augmented/ContourTree.h>
-#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
 
 // distibuted contour tree includes
 #include <vtkm/worklet/contourtree_distributed/BoundaryTree.h>

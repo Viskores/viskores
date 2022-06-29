@@ -53,8 +53,8 @@
 #ifndef vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_transfer_weights_update_rhe_worklet_h
 #define vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_transfer_weights_update_rhe_worklet_h
 
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {

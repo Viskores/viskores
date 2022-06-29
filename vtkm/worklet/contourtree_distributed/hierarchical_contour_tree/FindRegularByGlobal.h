@@ -54,7 +54,7 @@
 #define vtk_m_worklet_contourtree_distributed_find_regular_by_global_device_data_h
 
 #include <vtkm/Types.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 
 namespace vtkm

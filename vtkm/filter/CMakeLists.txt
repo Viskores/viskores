@@ -19,6 +19,7 @@ set(deprecated_headers
   ComputeMoments.h
   Contour.h
   ContourTreeUniform.h
+  ContourTreeUniformAugmented.h
   CoordinateSystemTransform.h
   CrossProduct.h
   DotProduct.h
@@ -100,7 +101,6 @@ set(common_header_template_sources
 vtkm_declare_headers(${common_header_template_sources})
 
 set(extra_headers
-  ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   Lagrangian.h
   LagrangianStructures.h
@@ -112,7 +112,6 @@ set(extra_headers
   )
 
 set(extra_header_template_sources
-  ContourTreeUniformAugmented.hxx
   ContourTreeUniformDistributed.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx

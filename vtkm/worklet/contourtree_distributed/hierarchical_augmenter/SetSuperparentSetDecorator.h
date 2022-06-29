@@ -47,7 +47,7 @@
 #define vtk_m_worklet_contourtree_distributed_hierarchical_augmenter_set_superparent_set_decorator_h
 
 #include <vtkm/Types.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {

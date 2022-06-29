@@ -13,7 +13,6 @@ set(headers
   BoundaryTypes.h
   AveragePointNeighborhood.h
   CellDeepCopy.h
-  ContourTreeUniformAugmented.h
   CosmoTools.h
   DispatcherMapField.h
   DispatcherMapTopology.h
@@ -75,7 +74,6 @@ set(sources_device
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(colorconversion)
-add_subdirectory(contourtree_augmented)
 add_subdirectory(contourtree_distributed)
 add_subdirectory(cosmotools)
 add_subdirectory(lcs)

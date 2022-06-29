@@ -53,7 +53,7 @@
 #ifndef vtk_m_worklet_contourtree_distributed_tree_grafter_new_hypernode_predicate_h
 #define vtk_m_worklet_contourtree_distributed_tree_grafter_new_hypernode_predicate_h
 
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
