@@ -60,17 +60,17 @@
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/ContourTreeUniformDistributed.h>
 #include <vtkm/filter/MapFieldPermutation.h>
+#include <vtkm/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
+#include <vtkm/filter/scalar_topology/testing/SuperArcHelper.h>
+#include <vtkm/filter/scalar_topology/testing/VolumeHelper.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
-#include <vtkm/filter/testing/SuperArcHelper.h>
-#include <vtkm/filter/testing/VolumeHelper.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/BranchCompiler.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/TreeCompiler.h>
 #include <vtkm/io/ErrorIO.h>
 #include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/worklet/contourtree_distributed/BranchCompiler.h>
-#include <vtkm/worklet/contourtree_distributed/TreeCompiler.h>
 
 namespace vtkm
 {
@@ -289,13 +289,14 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   }
 
   // Run the contour tree analysis
-  vtkm::filter::ContourTreeUniformDistributed filter(blocksPerAxis,
-                                                     globalSize,
-                                                     localBlockIndices,
-                                                     localBlockOrigins,
-                                                     localBlockSizes,
-                                                     vtkm::cont::LogLevel::UserVerboseLast,
-                                                     vtkm::cont::LogLevel::UserVerboseLast);
+  vtkm::filter::scalar_topology::ContourTreeUniformDistributed filter(
+    blocksPerAxis,
+    globalSize,
+    localBlockIndices,
+    localBlockOrigins,
+    localBlockSizes,
+    vtkm::cont::LogLevel::UserVerboseLast,
+    vtkm::cont::LogLevel::UserVerboseLast);
 
   filter.SetUseMarchingCubes(useMarchingCubes);
   // Freudenthal: Only use boundary extrema; MC: use all points on boundary
@@ -324,9 +325,7 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   {
     // Mutiple ranks -> Some assembly required. Collect data
     // on rank 0, all other ranks return empty data sets
-    using FieldTypeList =
-      vtkm::ListAppend<vtkm::filter::ContourTreeUniformDistributed::SupportedTypes,
-                       vtkm::List<vtkm::Id>>;
+    using FieldTypeList = vtkm::ListAppend<vtkm::TypeListScalarAll, vtkm::List<vtkm::Id>>;
     using DataSetWrapper =
       vtkm::cont::SerializableDataSet<FieldTypeList, vtkm::cont::CellSetListStructured>;
 
@@ -364,7 +363,7 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
           for (vtkm::Id currReceiveDataSetNo = 0; currReceiveDataSetNo < numberOfDataSetsToReceive;
                ++currReceiveDataSetNo)
           {
-            auto sds = vtkm::filter::MakeSerializableDataSet(filter);
+            vtkm::cont::SerializableDataSet<> sds;
             p.dequeue({ receiveFromRank, receiveFromRank }, sds);
             combined_result.AppendPartition(sds.DataSet);
           }

@@ -60,37 +60,37 @@
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
 
 // distibuted contour tree includes
-#include <vtkm/worklet/contourtree_distributed/BoundaryTree.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
-#include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/BoundaryTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/InteriorForest.h>
 
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/AddTerminalFlagsToUpDownNeighboursWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryWithNecessaryInteriorSupernodesAppendNecessarySupernodesWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/BoundaryTreeNodeComparator.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/BoundaryVerticesPerSuperArcWorklets.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesCopyNecessaryRegularNodesWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesFindNewSuperarcsWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesResolveRootWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesTransferVerticesWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/ContourTreeNodeHyperArcComparator.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindBoundaryTreeSuperarcsSuperarcToWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindBoundaryVerticesIsNecessaryWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindNecessaryInteriorSetSuperparentNecessaryWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindNecessaryInteriorSupernodesFindNodesWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/HyperarcComparator.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/IdentifyRegularisedSupernodesStepOneWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/IdentifyRegularisedSupernodesStepTwoWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/NoSuchElementFunctor.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/PointerDoubleUpDownNeighboursWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsComputeGroupTotalsWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsSubtractDependentCountsWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsTransferCumulativeCountsWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsTransferDependentCountsWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/SetInteriorForestWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/SetUpAndDownNeighboursWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/SumFunctor.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/AddTerminalFlagsToUpDownNeighboursWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryWithNecessaryInteriorSupernodesAppendNecessarySupernodesWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/BoundaryTreeNodeComparator.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/BoundaryVerticesPerSuperArcWorklets.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesCopyNecessaryRegularNodesWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesFindNewSuperarcsWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesResolveRootWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesTransferVerticesWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/ContourTreeNodeHyperArcComparator.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/FindBoundaryTreeSuperarcsSuperarcToWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/FindBoundaryVerticesIsNecessaryWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/FindNecessaryInteriorSetSuperparentNecessaryWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/FindNecessaryInteriorSupernodesFindNodesWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/HyperarcComparator.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/IdentifyRegularisedSupernodesStepOneWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/IdentifyRegularisedSupernodesStepTwoWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/NoSuchElementFunctor.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PointerDoubleUpDownNeighboursWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsComputeGroupTotalsWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsSubtractDependentCountsWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsTransferCumulativeCountsWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsTransferDependentCountsWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/SetInteriorForestWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/SetUpAndDownNeighboursWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/SumFunctor.h>
 
 
 // vtkm includes

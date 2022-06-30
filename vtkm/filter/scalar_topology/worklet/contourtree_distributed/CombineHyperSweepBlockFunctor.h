@@ -56,7 +56,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/worklet/contourtree_distributed/HyperSweepBlock.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HyperSweepBlock.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE

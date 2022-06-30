@@ -100,9 +100,9 @@
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_distributed/BoundaryTree.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
-#include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/BoundaryTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/InteriorForest.h>
 
 namespace vtkm
 {
