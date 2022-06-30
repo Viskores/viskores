@@ -54,17 +54,46 @@ public:
       vtkm::filter::particleadvection::IntegrationSolverType solverType,
       vtkm::filter::particleadvection::VectorFieldType vecFieldType,
       vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
-    : Rank(this->Comm.rank())
+    : Data(ds)
+    , FieldName(fieldNm)
+    , Id(id)
+    , SolverType(solverType)
+    , Rank(this->Comm.rank())
+    , ResType(resultType)
+    , VecFieldType(vecFieldType)
   {
-    this->SolverType = solverType;
-    this->VecFieldType = vecFieldType;
-    this->ResType = resultType;
-    this->DataSet = ds;
-    this->Id = id;
-    this->FieldName = fieldNm;
-
     //check that things are valid.
   }
+
+  DSI(const vtkm::cont::DataSet& ds1,
+      const vtkm::cont::DataSet& ds2,
+      vtkm::FloatDefault t1,
+      vtkm::FloatDefault t2,
+      vtkm::Id id,
+      const std::string& fieldNm,
+      vtkm::filter::particleadvection::IntegrationSolverType solverType,
+      vtkm::filter::particleadvection::VectorFieldType vecFieldType,
+      vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
+    : FieldName(fieldNm)
+    , Id(id)
+    , SolverType(solverType)
+    , Rank(this->Comm.rank())
+    , ResType(resultType)
+    , VecFieldType(vecFieldType)
+  {
+    std::cout << "****** Create Unsteady DSI." << std::endl;
+    this->Data = UnsteadyStateDataType(ds1, ds2, t1, t2);
+  }
+
+  VTKM_CONT bool IsSteadyState() const
+  {
+    return this->Data.GetIndex() == this->Data.GetIndexOf<SteadyStateDataType>();
+  }
+  VTKM_CONT bool IsUnsteadyState() const
+  {
+    return this->Data.GetIndex() == this->Data.GetIndexOf<UnsteadyStateDataType>();
+  }
+
 
   VTKM_CONT vtkm::Id GetID() const { return this->Id; }
   VTKM_CONT void SetCopySeedFlag(bool val) { this->CopySeedArray = val; }
@@ -86,12 +115,33 @@ public:
                               DSIStuff<ParticleType>& stuff);
 
   template <typename ArrayType>
-  VTKM_CONT void GetVelocityField(
+  VTKM_CONT void GetSteadyStateVelocityField(
     vtkm::worklet::particleadvection::VelocityField<ArrayType>& velocityField) const
   {
-    auto assoc = this->DataSet.GetField(this->FieldName).GetAssociation();
+    VTKM_ASSERT(this->Data.GetIndex() == this->Data.GetIndexOf<SteadyStateDataType>());
+    const auto& data = this->Data.Get<SteadyStateDataType>();
+    this->GetVelocityField(data, velocityField);
+  }
+
+  template <typename ArrayType>
+  VTKM_CONT void GetUnsteadyStateVelocityField(
+    vtkm::worklet::particleadvection::VelocityField<ArrayType>& velocityField1,
+    vtkm::worklet::particleadvection::VelocityField<ArrayType>& velocityField2) const
+  {
+    VTKM_ASSERT(this->Data.GetIndex() == this->Data.GetIndexOf<UnsteadyStateDataType>());
+    const auto& data = this->Data.Get<UnsteadyStateDataType>();
+    this->GetVelocityField(data.DataSet1, velocityField1);
+    this->GetVelocityField(data.DataSet2, velocityField2);
+  }
+
+  template <typename ArrayType>
+  VTKM_CONT void GetVelocityField(
+    const vtkm::cont::DataSet& ds,
+    vtkm::worklet::particleadvection::VelocityField<ArrayType>& velocityField) const
+  {
+    auto assoc = ds.GetField(this->FieldName).GetAssociation();
     ArrayType arr;
-    vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(this->FieldName).GetData(), arr);
+    vtkm::cont::ArrayCopyShallowIfPossible(ds.GetField(this->FieldName).GetData(), arr);
 
     velocityField = vtkm::worklet::particleadvection::VelocityField<ArrayType>(arr, assoc);
   }
@@ -101,14 +151,14 @@ public:
     vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>& elecMagField) const
   {
     std::cout << "FIX ME: need fieldname2" << std::endl;
+    /*
     ArrayType arr1, arr2;
     vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(this->FieldName).GetData(), arr1);
-    vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(this->FieldName).GetData(),
-                                           arr2); //fieldname 2
+    vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(this->FieldName).GetData(), arr2);       //fieldname 2
     auto assoc = this->DataSet.GetField(this->FieldName).GetAssociation();
 
-    elecMagField =
-      vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>(arr1, arr2, assoc);
+    elecMagField = vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>(arr1, arr2, assoc);
+    */
   }
 
   //template <typename ParticleType>
@@ -118,12 +168,8 @@ public:
   VTKM_CONT void ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
                                    DSIStuff<ParticleType>& stuff) const;
 
-  template <typename ParticleType, template <typename> class ResultType>
-  VTKM_CONT vtkm::cont::DataSet ResultToDataSet() const;
-
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   vtkm::Id Rank;
-  vtkm::cont::DataSet DataSet;
   vtkm::Id Id;
   std::string FieldName;
   vtkm::filter::particleadvection::IntegrationSolverType SolverType;
@@ -132,14 +178,47 @@ public:
     vtkm::filter::particleadvection::UNKNOWN_TYPE;
   bool CopySeedArray = false;
 
+  /*
+  struct SteadyStateDataType
+  {
+    SteadyStateDataType(const vtkm::cont::DataSet& ds) : DataSet(ds) {}
+    vtkm::cont::DataSet DataSet;
+  };
+  */
 
-  using ResultType =
+  using SteadyStateDataType = vtkm::cont::DataSet;
+  struct UnsteadyStateDataType
+  {
+    UnsteadyStateDataType(const vtkm::cont::DataSet& ds1,
+                          const vtkm::cont::DataSet& ds2,
+                          vtkm::FloatDefault t1,
+                          vtkm::FloatDefault t2)
+      : DataSet1(ds1)
+      , DataSet2(ds2)
+      , Time1(t1)
+      , Time2(t2)
+    {
+    }
+
+    vtkm::cont::DataSet DataSet1;
+    vtkm::cont::DataSet DataSet2;
+    vtkm::FloatDefault Time1;
+    vtkm::FloatDefault Time2;
+  };
+
+  using DSType = vtkm::cont::internal::Variant<SteadyStateDataType, UnsteadyStateDataType>;
+
+  vtkm::cont::internal::Variant<SteadyStateDataType, UnsteadyStateDataType> Data;
+
+
+  using RType =
     vtkm::cont::internal::Variant<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>,
                                   vtkm::worklet::ParticleAdvectionResult<vtkm::ChargedParticle>,
                                   vtkm::worklet::StreamlineResult<vtkm::Particle>,
                                   vtkm::worklet::StreamlineResult<vtkm::ChargedParticle>>;
-  std::vector<ResultType> Results;
+  std::vector<RType> Results;
 };
+
 
 }
 }

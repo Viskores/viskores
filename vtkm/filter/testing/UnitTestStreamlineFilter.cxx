@@ -68,7 +68,7 @@ void TestStreamline()
                                      vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
                                      vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-    vtkm::filter::Streamline streamline;
+    vtkm::filter::Streamline2 streamline;
 
     streamline.SetStepSize(0.1f);
     streamline.SetNumberOfSteps(20);
@@ -87,6 +87,12 @@ void TestStreamline()
     vtkm::cont::UnknownCellSet dcells = output.GetCellSet();
     VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
   }
+}
+
+void DumpDS(const vtkm::cont::DataSet& ds, const std::string& fname)
+{
+  vtkm::io::VTKDataSetWriter wrt(fname);
+  wrt.WriteDataSet(ds);
 }
 
 void TestPathline()
@@ -127,7 +133,7 @@ void TestPathline()
       vtkm::Id numExpectedPoints;
       if (fType == 0)
       {
-        vtkm::filter::Pathline filt;
+        vtkm::filter::Pathline2 filt;
         filt.SetActiveField(var);
         filt.SetStepSize(stepSize);
         filt.SetNumberOfSteps(numSteps);
@@ -137,10 +143,15 @@ void TestPathline()
         filt.SetNextDataSet(ds2);
         output = filt.Execute(ds1);
         numExpectedPoints = 33;
+        /*
+        DumpDS(output, "pathline.vtk");
+        DumpDS(ds1, "ds1.vtk");
+        DumpDS(ds2, "ds2.vtk");
+        */
       }
       else
       {
-        vtkm::filter::PathParticle filt;
+        vtkm::filter::PathParticle2 filt;
         filt.SetActiveField(var);
         filt.SetStepSize(stepSize);
         filt.SetNumberOfSteps(numSteps);
@@ -226,7 +237,7 @@ void TestAMRStreamline(bool useSL)
 
     if (useSL)
     {
-      vtkm::filter::Streamline filter;
+      vtkm::filter::Streamline2 filter;
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
       filter.SetSeeds(seedArray);
@@ -374,18 +385,6 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
     seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
                                                vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
-
-    if (idx == 0)
-    {
-      for (int j = 0; j < pds.GetNumberOfPartitions(); j++)
-      {
-        auto ds_j = pds.GetPartition(j);
-        std::string nm = "ds_" + std::to_string(j) + ".vtk";
-        vtkm::io::VTKDataSetWriter wrt(nm);
-        wrt.WriteDataSet(ds_j);
-      }
-    }
-
 
     if (fType == FilterType::STREAMLINE || fType == FilterType::PATHLINE)
     {
@@ -568,7 +567,7 @@ void TestStreamlineFile(const std::string& fname,
   vtkm::cont::DataSet output;
   if (useSL)
   {
-    vtkm::filter::Streamline streamline;
+    vtkm::filter::Streamline2 streamline;
     streamline.SetStepSize(stepSize);
     streamline.SetNumberOfSteps(maxSteps);
     streamline.SetSeeds(seedArray);
@@ -612,7 +611,7 @@ void TestStreamlineFilters()
                                      FilterType::PATH_PARTICLE };
 
   //fTypes = {FilterType::PARTICLE_ADVECTION,FilterType::STREAMLINE};
-  //fTypes = {FilterType::PATH_PARTICLE};
+  //fTypes = {FilterType::PATHLINE};
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)
@@ -620,13 +619,13 @@ void TestStreamlineFilters()
         TestPartitionedDataSet(n, useGhost, ft);
   }
 
-  return;
-
   TestStreamline();
   TestPathline();
 
   for (auto useSL : flags)
     TestAMRStreamline(useSL);
+
+  return;
 
   //Fusion test.
   std::vector<vtkm::Vec3f> fusionPts, fusionEndPts;

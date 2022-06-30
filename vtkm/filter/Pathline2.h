@@ -36,6 +36,15 @@ public:
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   vtkm::cont::UnknownArrayHandle SeedArray;
+
+  void SetPreviousTime(vtkm::FloatDefault t1) { this->Time1 = t1; }
+  void SetNextTime(vtkm::FloatDefault t2) { this->Time2 = t2; }
+  void SetNextDataSet(const vtkm::cont::DataSet& ds) { this->DataSet2 = { ds }; }
+  void SetNextDataSet(const vtkm::cont::PartitionedDataSet& pds) { this->DataSet2 = pds; }
+
+  vtkm::cont::PartitionedDataSet DataSet2;
+  vtkm::FloatDefault Time1;
+  vtkm::FloatDefault Time2;
 };
 
 class Pathline3 : public vtkm::filter::NewFilterField

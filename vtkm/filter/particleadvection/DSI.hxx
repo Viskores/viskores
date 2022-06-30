@@ -17,6 +17,88 @@ namespace filter
 {
 namespace particleadvection
 {
+
+namespace internal
+{
+template <typename GridEvalType,
+          typename WorkletType,
+          template <typename>
+          class ResultType,
+          typename ParticleType,
+          template <typename>
+          class IntType>
+class AdvectHelper;
+
+using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
+using GridEvType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+using TempGridEvType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
+
+
+//Steady state
+template <typename WorkletType,
+          template <typename>
+          class ResultType,
+          typename ParticleType,
+          template <typename>
+          class IntType>
+class AdvectHelper<GridEvType, WorkletType, ResultType, ParticleType, IntType>
+{
+public:
+  static void Advect(const FieldType& velField,
+                     const vtkm::cont::DataSet& ds,
+                     //const vtkm::filter::particleadvection::DSI::SteadyStateDataType& data,
+                     vtkm::cont::ArrayHandle<ParticleType>& seedArray,
+                     vtkm::FloatDefault stepSize,
+                     vtkm::Id maxSteps,
+                     ResultType<ParticleType>& result)
+
+  {
+    std::cout << "ADVECT HELPER!!!!!!!" << std::endl;
+    using StepperType = vtkm::worklet::particleadvection::Stepper<IntType<GridEvType>, GridEvType>;
+
+    GridEvType eval(ds, velField);
+    StepperType stepper(eval, stepSize);
+
+    WorkletType worklet;
+    result = worklet.Run(stepper, seedArray, maxSteps);
+  }
+};
+
+
+//unSteady state
+template <typename WorkletType,
+          template <typename>
+          class ResultType,
+          typename ParticleType,
+          template <typename>
+          class IntType>
+class AdvectHelper<TempGridEvType, WorkletType, ResultType, ParticleType, IntType>
+{
+public:
+  static void Advect(const FieldType& velField1,
+                     const FieldType& velField2,
+                     const vtkm::filter::particleadvection::DSI::UnsteadyStateDataType& data,
+                     vtkm::cont::ArrayHandle<ParticleType>& seedArray,
+                     vtkm::FloatDefault stepSize,
+                     vtkm::Id maxSteps,
+                     ResultType<ParticleType>& result)
+
+  {
+    std::cout << "TEMP ADVECT HELPER!!!!!!!" << std::endl;
+    using StepperType =
+      vtkm::worklet::particleadvection::Stepper<IntType<TempGridEvType>, TempGridEvType>;
+
+    TempGridEvType eval(data.DataSet1, data.Time1, velField1, data.DataSet2, data.Time2, velField2);
+    StepperType stepper(eval, stepSize);
+
+    WorkletType worklet;
+    result = worklet.Run(stepper, seedArray, maxSteps);
+  }
+};
+
+}
+
 #if 0
 namespace internal
 {
@@ -79,13 +161,13 @@ DSI::Meow(const char* func, const int& lineNum) const
 
   std::cout << " ******************************";
   std::cout << func << " " << lineNum << " ";
-  using RType = vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>;
+  using ResType = vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>;
 
   //const auto& R0 = this->Results[0]->Get<RType>();
   //const auto& P0 = R0.Particles.ReadPortal().Get(0);
   //RType* r = static_cast<RType*>(this->Results[0]);
   //const auto& P0 = r->Particles.ReadPortal().Get(0);
-  const auto& P0 = this->Results[0].Get<RType>().Particles.ReadPortal().Get(0);
+  const auto& P0 = this->Results[0].Get<ResType>().Particles.ReadPortal().Get(0);
   std::cout << "   PT0=  " << P0.Pos << std::endl;
 
   //std::cout<<"   PT0=  "<<P0.Pos<<std::endl;
@@ -111,12 +193,12 @@ VTKM_CONT bool DSI::GetOutput(vtkm::cont::DataSet& ds) const
 
   if (this->ResType == PARTICLE_ADVECT_TYPE)
   {
-    using RType = vtkm::worklet::ParticleAdvectionResult<ParticleType>;
+    using ResType = vtkm::worklet::ParticleAdvectionResult<ParticleType>;
 
     std::vector<vtkm::cont::ArrayHandle<ParticleType>> allParticles;
     allParticles.reserve(nResults);
     for (const auto& vres : this->Results)
-      allParticles.push_back(vres.Get<RType>().Particles);
+      allParticles.push_back(vres.Get<ResType>().Particles);
 
     vtkm::cont::ArrayHandle<vtkm::Vec3f> pts;
     vtkm::cont::ParticleArrayCopy(allParticles, pts);
@@ -140,12 +222,12 @@ VTKM_CONT bool DSI::GetOutput(vtkm::cont::DataSet& ds) const
   }
   else if (this->ResType == STREAMLINE_TYPE)
   {
-    using RType = vtkm::worklet::StreamlineResult<ParticleType>;
+    using ResType = vtkm::worklet::StreamlineResult<ParticleType>;
 
     //Easy case with one result.
     if (nResults == 1)
     {
-      const auto& res = this->Results[0].Get<RType>();
+      const auto& res = this->Results[0].Get<ResType>();
       ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", res.Positions));
       ds.SetCellSet(res.PolyLines);
     }
@@ -155,7 +237,7 @@ VTKM_CONT bool DSI::GetOutput(vtkm::cont::DataSet& ds) const
       vtkm::Id totalNumCells = 0, totalNumPts = 0;
       for (std::size_t i = 0; i < nResults; i++)
       {
-        const auto& res = this->Results[i].Get<RType>();
+        const auto& res = this->Results[i].Get<ResType>();
         if (i == 0)
           posOffsets[i] = 0;
         else
@@ -170,7 +252,7 @@ VTKM_CONT bool DSI::GetOutput(vtkm::cont::DataSet& ds) const
       appendPts.Allocate(totalNumPts);
       for (std::size_t i = 0; i < nResults; i++)
       {
-        const auto& res = this->Results[i].Get<RType>();
+        const auto& res = this->Results[i].Get<ResType>();
         // copy all values into appendPts starting at offset.
         vtkm::cont::Algorithm::CopySubRange(
           res.Positions, 0, res.Positions.GetNumberOfValues(), appendPts, posOffsets[i]);
@@ -182,7 +264,7 @@ VTKM_CONT bool DSI::GetOutput(vtkm::cont::DataSet& ds) const
       std::size_t off = 0;
       for (std::size_t i = 0; i < nResults; i++)
       {
-        const auto& res = this->Results[i].Get<RType>();
+        const auto& res = this->Results[i].Get<ResType>();
         vtkm::Id nCells = res.PolyLines.GetNumberOfCells();
         for (vtkm::Id j = 0; j < nCells; j++)
           numPtsPerCell[off++] = static_cast<vtkm::Id>(res.PolyLines.GetNumberOfPointsInCell(j));
@@ -382,18 +464,117 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
 
   std::cout << "DSI::Advect() " << v.size() << std::endl;
 
+
+  //Assume all RK4.
+  if (this->VecFieldType == VELOCITY_FIELD_TYPE)
+  {
+    using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
+    if (this->IsSteadyState())
+    {
+      const auto& data = this->Data.Get<SteadyStateDataType>();
+      using GridEvType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+      FieldType velField;
+      this->GetSteadyStateVelocityField(velField);
+
+      if (this->ResType == PARTICLE_ADVECT_TYPE)
+      {
+        using AHType = internal::AdvectHelper<GridEvType,
+                                              vtkm::worklet::ParticleAdvection,
+                                              vtkm::worklet::ParticleAdvectionResult,
+                                              ParticleType,
+                                              vtkm::worklet::particleadvection::RK4Integrator>;
+        vtkm::worklet::ParticleAdvectionResult<ParticleType> result;
+        AHType::Advect(velField, data, seedArray, stepSize, maxSteps, result);
+        this->UpdateResult(result, stuff);
+      }
+      else
+      {
+        using AHType = internal::AdvectHelper<GridEvType,
+                                              vtkm::worklet::Streamline,
+                                              vtkm::worklet::StreamlineResult,
+                                              ParticleType,
+                                              vtkm::worklet::particleadvection::RK4Integrator>;
+        vtkm::worklet::StreamlineResult<ParticleType> result;
+        AHType::Advect(velField, data, seedArray, stepSize, maxSteps, result);
+        this->UpdateResult(result, stuff);
+      }
+    }
+    else if (this->IsUnsteadyState())
+    {
+      const auto& data = this->Data.Get<UnsteadyStateDataType>();
+      using GridEvType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
+
+      FieldType velField1, velField2;
+      this->GetUnsteadyStateVelocityField(velField1, velField2);
+
+      if (this->ResType == PARTICLE_ADVECT_TYPE)
+      {
+        using AHType = internal::AdvectHelper<GridEvType,
+                                              vtkm::worklet::ParticleAdvection,
+                                              vtkm::worklet::ParticleAdvectionResult,
+                                              ParticleType,
+                                              vtkm::worklet::particleadvection::RK4Integrator>;
+        vtkm::worklet::ParticleAdvectionResult<ParticleType> result;
+
+        AHType::Advect(velField1, velField2, data, seedArray, stepSize, maxSteps, result);
+        this->UpdateResult(result, stuff);
+      }
+      else
+      {
+        using AHType = internal::AdvectHelper<GridEvType,
+                                              vtkm::worklet::Streamline,
+                                              vtkm::worklet::StreamlineResult,
+                                              ParticleType,
+                                              vtkm::worklet::particleadvection::RK4Integrator>;
+        vtkm::worklet::StreamlineResult<ParticleType> result;
+
+        AHType::Advect(velField1, velField2, data, seedArray, stepSize, maxSteps, result);
+        this->UpdateResult(result, stuff);
+      }
+    }
+    else
+      throw vtkm::cont::ErrorFilterExecution("Unsupported Data Type in DSI");
+  }
+
+
+#if 0
   if (this->SolverType == IntegrationSolverType::RK4_TYPE)
   {
     if (this->VecFieldType == VELOCITY_FIELD_TYPE) //vtkm::Particle, VelocityField
     {
       using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
-      using GridEvType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-      using RK4_Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvType>;
-      using StepperType = vtkm::worklet::particleadvection::Stepper<RK4_Type, GridEvType>;
+      //using GridEvType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+      using GridEvType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
 
       FieldType velField;
       this->GetVelocityField(velField);
 
+      if (this->ResType == PARTICLE_ADVECT_TYPE)
+      {
+        using AHType = internal::AdvectHelper<GridEvType,
+                                              vtkm::worklet::ParticleAdvection,
+                                              vtkm::worklet::ParticleAdvectionResult,
+                                              ParticleType,
+                                              vtkm::worklet::particleadvection::RK4Integrator>;
+        vtkm::worklet::ParticleAdvectionResult<ParticleType> result;
+        //AHType::Advect(velField, this->DataSet, seedArray, stepSize, maxSteps, result);
+        AHType::Advect(velField, velField, this->DataSet, this->DataSet, 0.0, 1.0, seedArray, stepSize, maxSteps, result);
+        this->UpdateResult(result, stuff);
+      }
+      else
+      {
+        using AHType = internal::AdvectHelper<GridEvType,
+                                              vtkm::worklet::Streamline,
+                                              vtkm::worklet::StreamlineResult,
+                                              ParticleType,
+                                              vtkm::worklet::particleadvection::RK4Integrator>;
+        vtkm::worklet::StreamlineResult<ParticleType> result;
+        //AHType::Advect(velField, this->DataSet, seedArray, stepSize, maxSteps, result);
+        AHType::Advect(velField, velField, this->DataSet, this->DataSet, 0.0, 1.0, seedArray, stepSize, maxSteps, result);
+        this->UpdateResult(result, stuff);
+      }
+
+      /*
       GridEvType eval(this->DataSet, velField);
       StepperType stepper(eval, stepSize);
 
@@ -411,6 +592,7 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
         this->UpdateResult(r, stuff);
         //Put results in unknown array??
       }
+      */
     }
     else if (this->VecFieldType == ELECTRO_MAGNETIC_FIELD_TYPE) //vtkm::ChargedParticle
     {
@@ -456,12 +638,14 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
 
       GridEvType eval(this->DataSet, velField);
       StepperType stepper(eval, stepSize);
-      //      vtkm::worklet::ParticleAdvection Worklet;
-      //      result = Worklet.Run(stepper, seedArray, maxSteps);
+//      vtkm::worklet::ParticleAdvection Worklet;
+//      result = Worklet.Run(stepper, seedArray, maxSteps);
       //Put results in unknown array??
     }
   }
+#endif
 }
+
 
 }
 }

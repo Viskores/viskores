@@ -24,11 +24,11 @@ namespace filter
 namespace particleadvection
 {
 
-template <template <typename> class ResultType, typename ParticleType>
+template <typename DSIType, template <typename> class ResultType, typename ParticleType>
 class ABA
 {
 public:
-  ABA(const vtkm::filter::particleadvection::BoundsMap& bm, std::vector<DSI*>& blocks)
+  ABA(const vtkm::filter::particleadvection::BoundsMap& bm, std::vector<DSIType*>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumRanks(this->Comm.size())
@@ -393,7 +393,7 @@ public:
 
   //Member data
   std::vector<ParticleType> Active;
-  std::vector<DSI*> Blocks;
+  std::vector<DSIType*> Blocks;
   vtkm::filter::particleadvection::BoundsMap BoundsMap;
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   std::vector<ParticleType> Inactive;

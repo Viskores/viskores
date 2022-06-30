@@ -38,8 +38,6 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet PathParticle2::PrepareForExecuti
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  //  using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
-  //  using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;
   using DSIType = vtkm::filter::particleadvection::DSI;
 
   this->ValidateOptions();
@@ -53,42 +51,27 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet PathParticle2::PrepareForExecuti
   for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {
     vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
-    auto ds = input.GetPartition(i);
-    if (!ds.HasPointField(activeField) && !ds.HasCellField(activeField))
+    auto ds1 = input.GetPartition(i);
+    auto ds2 = this->DataSet2.GetPartition(i);
+    if ((!ds1.HasPointField(activeField) && !ds1.HasCellField(activeField)) ||
+        (!ds2.HasPointField(activeField) && !ds2.HasCellField(activeField)))
       throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-    dsi.push_back(new DSIType(
-      ds, blockId, activeField, this->SolverType, this->VecFieldType, this->ResultType));
+    dsi.push_back(new DSIType(ds1,
+                              ds2,
+                              this->Time1,
+                              this->Time2,
+                              blockId,
+                              activeField,
+                              this->SolverType,
+                              this->VecFieldType,
+                              this->ResultType));
   }
 
   this->SeedArray = this->Seeds;
-  vtkm::filter::particleadvection::PAV pav(
+  vtkm::filter::particleadvection::PAV<DSIType> pav(
     boundsMap, dsi, this->UseThreadedAlgorithm, this->ResultType);
   return pav.Execute(this->NumberOfSteps, this->StepSize, this->SeedArray);
-
-#if 0
-  //std::vector<DSIType> ddsi;
-  /*
-  vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
-    boundsMap, ddsi, this->NumberOfSteps, this->StepSize, this->Seeds);
-  */
-
-  vtkm::cont::PartitionedDataSet output;
-  return output;
-
-  /*
-  //using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
-  //std::vector<DSIType> dsi;
-  auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
-
-  if (this->GetUseThreadedAlgorithm())
-    return vtkm::filter::particleadvection::RunAlgo<DSIType, ThreadedAlgorithmType>(
-      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
-  else
-    return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
-      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
-  */
-#endif
 }
 
 VTKM_CONT vtkm::cont::DataSet PathParticle3::DoExecute(const vtkm::cont::DataSet& inData)

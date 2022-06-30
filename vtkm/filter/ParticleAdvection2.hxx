@@ -38,8 +38,9 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection2::PrepareForEx
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  //  using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
-  //  using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;
+  //  return input;
+
+#if 1
   using DSIType = vtkm::filter::particleadvection::DSI;
 
   this->ValidateOptions();
@@ -62,35 +63,9 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection2::PrepareForEx
   }
 
   this->SeedArray = this->Seeds;
-  vtkm::filter::particleadvection::PAV pav(
-    boundsMap,
-    dsi,
-    this->UseThreadedAlgorithm,
-    vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE);
+  vtkm::filter::particleadvection::PAV<DSIType> pav(
+    boundsMap, dsi, this->UseThreadedAlgorithm, this->ResultType);
   return pav.Execute(this->NumberOfSteps, this->StepSize, this->SeedArray);
-
-#if 0
-  //std::vector<DSIType> ddsi;
-  /*
-  vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
-    boundsMap, ddsi, this->NumberOfSteps, this->StepSize, this->Seeds);
-  */
-
-  vtkm::cont::PartitionedDataSet output;
-  return output;
-
-  /*
-  //using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
-  //std::vector<DSIType> dsi;
-  auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
-
-  if (this->GetUseThreadedAlgorithm())
-    return vtkm::filter::particleadvection::RunAlgo<DSIType, ThreadedAlgorithmType>(
-      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
-  else
-    return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
-      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
-  */
 #endif
 }
 

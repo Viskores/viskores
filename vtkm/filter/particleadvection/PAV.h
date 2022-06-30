@@ -22,11 +22,12 @@ namespace filter
 namespace particleadvection
 {
 
+template <typename DSIType>
 class PAV
 {
 public:
   PAV(const vtkm::filter::particleadvection::BoundsMap& bm,
-      const std::vector<DSI*> blocks,
+      const std::vector<DSIType*> blocks,
       const bool& useThreaded,
       const vtkm::filter::particleadvection::ParticleAdvectionResultType& parType)
     : Blocks(blocks)
@@ -63,9 +64,8 @@ private:
       if (this->ResultType ==
           vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
       {
-        using AlgorithmType =
-          vtkm::filter::particleadvection::ABA<vtkm::worklet::ParticleAdvectionResult,
-                                               ParticleType>;
+        using AlgorithmType = vtkm::filter::particleadvection::
+          ABA<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
 
         AlgorithmType algo(this->BoundsMap, this->Blocks);
         algo.Execute(numSteps, stepSize, seeds);
@@ -80,8 +80,8 @@ private:
       }
       else
       {
-        using AlgorithmType =
-          vtkm::filter::particleadvection::ABA<vtkm::worklet::StreamlineResult, ParticleType>;
+        using AlgorithmType = vtkm::filter::particleadvection::
+          ABA<DSIType, vtkm::worklet::StreamlineResult, ParticleType>;
 
         AlgorithmType algo(this->BoundsMap, this->Blocks);
         algo.Execute(numSteps, stepSize, seeds);
@@ -91,8 +91,8 @@ private:
     else
     {
       std::cout << "Change me to threaded ABA" << std::endl;
-      using AlgorithmType =
-        vtkm::filter::particleadvection::ABA<vtkm::worklet::ParticleAdvectionResult, ParticleType>;
+      using AlgorithmType = vtkm::filter::particleadvection::
+        ABA<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
 
       AlgorithmType algo(this->BoundsMap, this->Blocks);
       algo.Execute(numSteps, stepSize, seeds);
@@ -101,7 +101,7 @@ private:
   }
 
 
-  std::vector<DSI*> Blocks;
+  std::vector<DSIType*> Blocks;
   vtkm::filter::particleadvection::BoundsMap BoundsMap;
   ParticleAdvectionResultType ResultType;
   bool UseThreadedAlgorithm;
