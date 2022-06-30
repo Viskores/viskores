@@ -152,20 +152,6 @@ public:
     return vtkm::cont::CellSetPermutation<CellSetType>(this->ValidCellIds, cellSet);
   }
 
-  template <typename ValueType, typename StorageTagIn>
-  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageTagIn>& input)
-  {
-    // Use a temporary permutation array to simplify the mapping:
-    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input);
-
-    // Copy into an array with default storage:
-    vtkm::cont::ArrayHandle<ValueType> result;
-    vtkm::cont::ArrayCopy(tmp, result);
-
-    return result;
-  }
-
   vtkm::cont::ArrayHandle<vtkm::Id> GetValidCellIds() const { return this->ValidCellIds; }
 
 private:
