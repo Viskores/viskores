@@ -256,21 +256,31 @@ struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
   VTK_M_DEVICE VariantConstructorImpl(const VariantConstructorImpl& src) noexcept
     : VariantStorageImpl<Ts...>(vtkm::internal::NullType{})
   {
-    src.CastAndCall(VariantCopyConstructFunctor{}, this->Storage);
+    if (src.IsValid())
+    {
+      src.CastAndCall(VariantCopyConstructFunctor{}, this->Storage);
+    }
     this->Index = src.Index;
   }
 
   VTK_M_DEVICE VariantConstructorImpl& operator=(const VariantConstructorImpl& src) noexcept
   {
-    if (this->GetIndex() == src.GetIndex())
+    if (src.IsValid())
     {
-      src.CastAndCall(detail::VariantCopyFunctor{}, this->Storage);
+      if (this->GetIndex() == src.GetIndex())
+      {
+        src.CastAndCall(detail::VariantCopyFunctor{}, this->Storage);
+      }
+      else
+      {
+        this->Reset();
+        src.CastAndCall(detail::VariantCopyConstructFunctor{}, this->Storage);
+        this->Index = src.Index;
+      }
     }
     else
     {
       this->Reset();
-      src.CastAndCall(detail::VariantCopyConstructFunctor{}, this->Storage);
-      this->Index = src.Index;
     }
     return *this;
   }
