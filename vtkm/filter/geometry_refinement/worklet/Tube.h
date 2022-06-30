@@ -669,30 +669,6 @@ public:
     newCells.Fill(totalTubePts, vtkm::CELL_SHAPE_TRIANGLE, 3, newConnectivity);
   }
 
-  template <typename T, typename StorageType>
-  vtkm::cont::ArrayHandle<T> ProcessPointField(
-    const vtkm::cont::ArrayHandle<T, StorageType>& input) const
-  {
-    vtkm::cont::ArrayHandle<T> output;
-    vtkm::worklet::DispatcherMapField<MapField> mapFieldDisp;
-
-    output.Allocate(this->OutputPointSourceIndex.GetNumberOfValues());
-    mapFieldDisp.Invoke(this->OutputPointSourceIndex, input, output);
-    return output;
-  }
-
-  template <typename T, typename StorageType>
-  vtkm::cont::ArrayHandle<T> ProcessCellField(
-    const vtkm::cont::ArrayHandle<T, StorageType>& input) const
-  {
-    vtkm::cont::ArrayHandle<T> output;
-    vtkm::worklet::DispatcherMapField<MapField> mapFieldDisp;
-
-    output.Allocate(this->OutputCellSourceIndex.GetNumberOfValues());
-    mapFieldDisp.Invoke(this->OutputCellSourceIndex, input, output);
-    return output;
-  }
-
   vtkm::cont::ArrayHandle<vtkm::Id> GetOutputCellSourceIndex() const
   {
     return this->OutputCellSourceIndex;
