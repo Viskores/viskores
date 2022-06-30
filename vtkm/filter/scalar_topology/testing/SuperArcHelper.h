@@ -54,6 +54,7 @@
 #define _vtk_m_filter_testing_SuperArchHelper_h_
 
 #include <algorithm>
+#include <vtkm/TypeList.h>
 
 namespace vtkm
 {

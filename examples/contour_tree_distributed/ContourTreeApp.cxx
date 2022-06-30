@@ -71,7 +71,7 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/io/BOVDataSetReader.h>
 
-#include "vtkm/filter/scalar_topology/ContourTreeUniformDistributed.h"
+#include <vtkm/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
