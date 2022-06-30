@@ -244,12 +244,12 @@ class VTKM_DEPRECATED(1.8, "Use vtkm::filter::scalar_topology::ContourTreeUnifor
                                 const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
                                 const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
                                 const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
-                                bool useBoundaryExtremaOnly,
-                                bool useMarchingCubes,
-                                bool augmentHierarchicalTree,
-                                bool saveDotFiles,
-                                vtkm::cont::LogLevel timingsLogLevel,
-                                vtkm::cont::LogLevel treeLogLevel)
+                                bool useBoundaryExtremaOnly = true,
+                                bool useMarchingCubes = false,
+                                bool augmentHierarchicalTree = false,
+                                bool saveDotFiles = false,
+                                vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
+                                vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info)
     : vtkm::filter::scalar_topology::ContourTreeUniformDistributed(blocksPerDim,
                                                                    globalSize,
                                                                    localBlockIndices,
