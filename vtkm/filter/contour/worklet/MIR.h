@@ -1735,23 +1735,6 @@ public:
     return output;
   }
 
-
-
-
-  template <typename ValueType, typename StorageType>
-  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& fieldData) const
-  {
-    // Use a temporary permutation array to simplify the mapping:
-    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->CellMapOutputToInput, fieldData);
-
-    // Copy into an array with default storage:
-    vtkm::cont::ArrayHandle<ValueType> result;
-    vtkm::cont::ArrayCopy(tmp, result);
-
-    return result;
-  }
-
 private:
   MIRCases::MIRTables MIRTablesInstance;
   vtkm::cont::ArrayHandle<EdgeInterpolation> EdgePointsInterpolation;

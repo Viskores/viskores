@@ -268,21 +268,6 @@ public:
     }
   };
 
-  /// Map the input cell field data to the points of the geometry. Each point gets the value
-  /// associated with its containing cell. For points that fall on cell edges, the containing
-  /// cell is chosen arbitrarily.
-  ///
-  template <typename T, typename Storage>
-  vtkm::cont::ArrayHandle<T> ProcessCellField(const vtkm::cont::ArrayHandle<T, Storage>& field,
-                                              const T& invalidValue) const
-  {
-    vtkm::cont::ArrayHandle<T> result;
-    vtkm::cont::Invoker invoke;
-    invoke(MapCellField<T>(invalidValue), this->CellIds, field, result);
-
-    return result;
-  }
-
   vtkm::cont::ArrayHandle<vtkm::Id> GetCellIds() const { return this->CellIds; }
 
   //============================================================================

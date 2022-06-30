@@ -502,20 +502,6 @@ public:
     }
   }
 
-  template <typename ValueType, typename StorageTag>
-  vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageTag> in) const
-  {
-    // Use a temporary permutation array to simplify the mapping:
-    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->NewPointsIdArray, in);
-
-    // Copy into an array with default storage:
-    vtkm::cont::ArrayHandle<ValueType> result;
-    vtkm::cont::ArrayCopy(tmp, result);
-
-    return result;
-  }
-
   vtkm::cont::ArrayHandle<vtkm::Id> GetNewPointsIdArray() const { return this->NewPointsIdArray; }
 
 private:

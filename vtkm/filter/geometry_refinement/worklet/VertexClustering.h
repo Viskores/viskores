@@ -527,20 +527,6 @@ public:
 #endif
   }
 
-  template <typename ValueType, typename StorageType>
-  vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input) const
-  {
-    return internal::ConcretePermutationArray(this->PointIdMap, input);
-  }
-
-  template <typename ValueType, typename StorageType>
-  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input) const
-  {
-    return internal::ConcretePermutationArray(this->CellIdMap, input);
-  }
-
   vtkm::cont::ArrayHandle<vtkm::Id> GetPointIdMap() const { return this->PointIdMap; }
   vtkm::cont::ArrayHandle<vtkm::Id> GetCellIdMap() const { return this->CellIdMap; }
 

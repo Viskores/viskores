@@ -168,21 +168,6 @@ public:
   }
 
   //----------------------------------------------------------------------------
-  template <typename ValueType, typename StorageType>
-  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& in) const
-  {
-    // Use a temporary permutation array to simplify the mapping:
-    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->SharedState.CellIdMap, in);
-
-    // Copy into an array with default storage:
-    vtkm::cont::ArrayHandle<ValueType> result;
-    vtkm::cont::ArrayCopy(tmp, result);
-
-    return result;
-  }
-
-  //----------------------------------------------------------------------------
   void ReleaseCellMapArrays() { this->SharedState.CellIdMap.ReleaseResources(); }
 
 private:
