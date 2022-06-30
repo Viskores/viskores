@@ -161,40 +161,6 @@ void SaveHierarchicalTreeDot(
 } // end namespace contourtree_distributed_detail
 
 //-----------------------------------------------------------------------------
-// Deprecated constructor
-//-----------------------------------------------------------------------------
-ContourTreeUniformDistributed::ContourTreeUniformDistributed(
-  vtkm::Id3 blocksPerDim,
-  vtkm::Id3 globalSize,
-  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
-  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
-  bool useBoundaryExtremaOnly,
-  bool useMarchingCubes,
-  bool augmentHierarchicalTree,
-  bool saveDotFiles,
-  vtkm::cont::LogLevel timingsLogLevel,
-  vtkm::cont::LogLevel treeLogLevel)
-  : UseBoundaryExtremaOnly(useBoundaryExtremaOnly)
-  , UseMarchingCubes(useMarchingCubes)
-  , AugmentHierarchicalTree(augmentHierarchicalTree)
-  , SaveDotFiles(saveDotFiles)
-  , TimingsLogLevel(timingsLogLevel)
-  , TreeLogLevel(treeLogLevel)
-  , MultiBlockSpatialDecomposition(blocksPerDim,
-                                   globalSize,
-                                   localBlockIndices,
-                                   localBlockOrigins,
-                                   localBlockSizes)
-  , LocalMeshes(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
-  , LocalContourTrees(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
-  , LocalBoundaryTrees(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
-  , LocalInteriorForests(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
-{
-  this->SetOutputFieldName("resultData");
-}
-
-//-----------------------------------------------------------------------------
 // Main constructor
 //-----------------------------------------------------------------------------
 ContourTreeUniformDistributed::ContourTreeUniformDistributed(
