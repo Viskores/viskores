@@ -408,10 +408,7 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
   auto copyFlag = (this->CopySeedArray ? vtkm::CopyFlag::On : vtkm::CopyFlag::Off);
   auto seedArray = vtkm::cont::make_ArrayHandle(v, copyFlag);
 
-  std::cout << "DSI::Advect() " << v.size() << std::endl;
-
-
-  //Assume all RK4.
+  //Velocity field advection.
   if (this->VecFieldType == VELOCITY_FIELD_TYPE)
   {
     using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
