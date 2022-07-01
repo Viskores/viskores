@@ -39,8 +39,16 @@ void* Allocate(std::size_t size)
 
 void Free(void* ptr)
 {
-  GetExecutionSpaceInstance().fence();
-  Kokkos::kokkos_free<ExecutionSpace::memory_space>(ptr);
+  if (Kokkos::is_initialized())
+  {
+    GetExecutionSpaceInstance().fence();
+    Kokkos::kokkos_free<ExecutionSpace::memory_space>(ptr);
+  }
+  else
+  {
+    // It is possible that a Buffer instance might try to free its Kokkos data after
+    // Kokkos has been finalized. If that is the case, silently do nothing.
+  }
 }
 
 void* Reallocate(void* ptr, std::size_t newSize)

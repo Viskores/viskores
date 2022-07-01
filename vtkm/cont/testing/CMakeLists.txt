@@ -80,6 +80,7 @@ set(unit_tests
   UnitTestError.cxx
   UnitTestFieldRangeCompute.cxx
   UnitTestInitialize.cxx
+  UnitTestLateDeallocate.cxx
   UnitTestLogging.cxx
   UnitTestMergePartitionedDataSet.cxx
   UnitTestMoveConstructors.cxx
