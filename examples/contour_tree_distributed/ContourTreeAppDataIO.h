@@ -65,7 +65,7 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/io/BOVDataSetReader.h>
 
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 #include <cstdio>
 #include <fstream>

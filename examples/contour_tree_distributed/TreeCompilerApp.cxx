@@ -61,7 +61,7 @@
 //==============================================================================
 
 #include <stdio.h>
-#include <vtkm/worklet/contourtree_distributed/TreeCompiler.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/TreeCompiler.h>
 
 // main routine
 int main(int argc, char** argv)
