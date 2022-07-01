@@ -74,15 +74,15 @@ public:
       vtkm::filter::particleadvection::IntegrationSolverType solverType,
       vtkm::filter::particleadvection::VectorFieldType vecFieldType,
       vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
-    : FieldName(fieldNm)
+    : Data(UnsteadyStateDataType(ds1, ds2, t1, t2))
+    , FieldName(fieldNm)
     , Id(id)
     , SolverType(solverType)
     , Rank(this->Comm.rank())
     , ResType(resultType)
     , VecFieldType(vecFieldType)
   {
-    std::cout << "****** Create Unsteady DSI." << std::endl;
-    this->Data = UnsteadyStateDataType(ds1, ds2, t1, t2);
+    //check that things are valid.
   }
 
   VTKM_CONT bool IsSteadyState() const

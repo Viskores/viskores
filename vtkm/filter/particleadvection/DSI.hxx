@@ -20,46 +20,60 @@ namespace particleadvection
 
 namespace internal
 {
+
+using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
+using SteadyStateGridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+using UnSteadyStateGridEvalType =
+  vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
+
 template <typename GridEvalType,
           typename WorkletType,
           template <typename>
           class ResultType,
-          typename ParticleType,
-          template <typename>
-          class IntType>
+          typename ParticleType>
 class AdvectHelper;
-
-using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
-using GridEvType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-using TempGridEvType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
 
 
 //Steady state
-template <typename WorkletType,
-          template <typename>
-          class ResultType,
-          typename ParticleType,
-          template <typename>
-          class IntType>
-class AdvectHelper<GridEvType, WorkletType, ResultType, ParticleType, IntType>
+template <typename WorkletType, template <typename> class ResultType, typename ParticleType>
+class AdvectHelper<SteadyStateGridEvalType, WorkletType, ResultType, ParticleType>
 {
 public:
   static void Advect(const FieldType& velField,
                      const vtkm::cont::DataSet& ds,
-                     //const vtkm::filter::particleadvection::DSI::SteadyStateDataType& data,
                      vtkm::cont::ArrayHandle<ParticleType>& seedArray,
                      vtkm::FloatDefault stepSize,
                      vtkm::Id maxSteps,
+                     const IntegrationSolverType& integratorType,
                      ResultType<ParticleType>& result)
 
   {
-    std::cout << "ADVECT HELPER!!!!!!!" << std::endl;
-    using StepperType = vtkm::worklet::particleadvection::Stepper<IntType<GridEvType>, GridEvType>;
+    using AHType =
+      internal::AdvectHelper<SteadyStateGridEvalType, WorkletType, ResultType, ParticleType>;
 
-    GridEvType eval(ds, velField);
+    if (integratorType == IntegrationSolverType::RK4_TYPE)
+      AHType::template DoAdvect<vtkm::worklet::particleadvection::RK4Integrator>(
+        velField, ds, seedArray, stepSize, maxSteps, result);
+    else if (integratorType == IntegrationSolverType::EULER_TYPE)
+      AHType::template DoAdvect<vtkm::worklet::particleadvection::EulerIntegrator>(
+        velField, ds, seedArray, stepSize, maxSteps, result);
+    else
+      throw vtkm::cont::ErrorFilterExecution("Unsupported Integrator type");
+  }
+
+  template <template <typename> class IntType>
+  static void DoAdvect(const FieldType& velField,
+                       const vtkm::cont::DataSet& ds,
+                       vtkm::cont::ArrayHandle<ParticleType>& seedArray,
+                       vtkm::FloatDefault stepSize,
+                       vtkm::Id maxSteps,
+                       ResultType<ParticleType>& result)
+  {
+    using StepperType = vtkm::worklet::particleadvection::Stepper<IntType<SteadyStateGridEvalType>,
+                                                                  SteadyStateGridEvalType>;
+    SteadyStateGridEvalType eval(ds, velField);
     StepperType stepper(eval, stepSize);
-
     WorkletType worklet;
     result = worklet.Run(stepper, seedArray, maxSteps);
   }
@@ -67,13 +81,9 @@ public:
 
 
 //unSteady state
-template <typename WorkletType,
-          template <typename>
-          class ResultType,
-          typename ParticleType,
-          template <typename>
-          class IntType>
-class AdvectHelper<TempGridEvType, WorkletType, ResultType, ParticleType, IntType>
+//GridEvalType = TemporalGridEvaluator
+template <typename WorkletType, template <typename> class ResultType, typename ParticleType>
+class AdvectHelper<UnSteadyStateGridEvalType, WorkletType, ResultType, ParticleType>
 {
 public:
   static void Advect(const FieldType& velField1,
@@ -82,16 +92,38 @@ public:
                      vtkm::cont::ArrayHandle<ParticleType>& seedArray,
                      vtkm::FloatDefault stepSize,
                      vtkm::Id maxSteps,
+                     const IntegrationSolverType& integratorType,
                      ResultType<ParticleType>& result)
 
   {
-    std::cout << "TEMP ADVECT HELPER!!!!!!!" << std::endl;
+    using AHType =
+      internal::AdvectHelper<UnSteadyStateGridEvalType, WorkletType, ResultType, ParticleType>;
+
+    if (integratorType == IntegrationSolverType::RK4_TYPE)
+      AHType::template DoAdvect<vtkm::worklet::particleadvection::RK4Integrator>(
+        velField1, velField2, data, seedArray, stepSize, maxSteps, result);
+    else if (integratorType == IntegrationSolverType::EULER_TYPE)
+      AHType::template DoAdvect<vtkm::worklet::particleadvection::EulerIntegrator>(
+        velField1, velField2, data, seedArray, stepSize, maxSteps, result);
+    else
+      throw vtkm::cont::ErrorFilterExecution("Unsupported Integrator type");
+  }
+
+  template <template <typename> class IntType>
+  static void DoAdvect(const FieldType& velField1,
+                       const FieldType& velField2,
+                       const vtkm::filter::particleadvection::DSI::UnsteadyStateDataType& data,
+                       vtkm::cont::ArrayHandle<ParticleType>& seedArray,
+                       vtkm::FloatDefault stepSize,
+                       vtkm::Id maxSteps,
+                       ResultType<ParticleType>& result)
+  {
     using StepperType =
-      vtkm::worklet::particleadvection::Stepper<IntType<TempGridEvType>, TempGridEvType>;
-
-    TempGridEvType eval(data.DataSet1, data.Time1, velField1, data.DataSet2, data.Time2, velField2);
+      vtkm::worklet::particleadvection::Stepper<IntType<UnSteadyStateGridEvalType>,
+                                                UnSteadyStateGridEvalType>;
+    UnSteadyStateGridEvalType eval(
+      data.DataSet1, data.Time1, velField1, data.DataSet2, data.Time2, velField2);
     StepperType stepper(eval, stepSize);
-
     WorkletType worklet;
     result = worklet.Run(stepper, seedArray, maxSteps);
   }
@@ -99,59 +131,7 @@ public:
 
 }
 
-#if 0
-namespace internal
-{
-//Helper class to store the different result types.
-//template <typename ResultType>
-template <template <typename> class ResultType, typename ParticleType>
-class ResultHelper2;
-
-template <typename ParticleType>
-class ResultHelper2<vtkm::worklet::ParticleAdvectionResult, ParticleType>
-{
-  using PAType = vtkm::worklet::ParticleAdvectionResult<ParticleType>;
-
-public:
-  static void Store(const PAType& result)
-  {
-  }
-
-  static vtkm::cont::DataSet
-  GetOutput()
-  {
-    vtkm::cont::DataSet ds;
-
-    return ds;
-  }
-};
-
-template <typename ParticleType>
-class ResultHelper2<vtkm::worklet::StreamlineResult, ParticleType>
-{
-  using PAType = vtkm::worklet::StreamlineResult<ParticleType>;
-
-public:
-  static void Store(const PAType& result)
-  {
-  }
-
-  static vtkm::cont::DataSet
-  GetOutput()
-  {
-    vtkm::cont::DataSet ds;
-
-    return ds;
-  }
-};
-
-}
-#endif
-
-//template <typename ParticleType>
-void
-//DSI<ParticleType>::Meow() const
-DSI::Meow(const char* func, const int& lineNum) const
+void DSI::Meow(const char* func, const int& lineNum) const
 {
   if (this->Results.empty())
   {
@@ -297,40 +277,6 @@ VTKM_CONT bool DSI::GetOutput(vtkm::cont::DataSet& ds) const
 
   return true;
 }
-
-namespace internal
-{
-using ResultVariantType =
-  vtkm::cont::internal::Variant<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>,
-                                vtkm::worklet::ParticleAdvectionResult<vtkm::ChargedParticle>,
-                                vtkm::worklet::StreamlineResult<vtkm::Particle>,
-                                vtkm::worklet::StreamlineResult<vtkm::ChargedParticle>>;
-
-template <template <typename> class ResultType, typename ParticleType>
-class ResultHelper
-{
-public:
-  static void Store(const vtkm::worklet::ParticleAdvectionResult<ParticleType>& res,
-                    std::vector<ResultVariantType>& results)
-  {
-    results.push_back(res);
-  }
-};
-
-
-/*
-template <typename ParticleType>
-class ResultHelper<vtkm::worklet::ParticleAdvectionResult, ParticleType>
-{
-public:
-  static void Store(const vtkm::worklet::ParticleAdvectionResult<ParticleType>>& res,
-                    std::vector<ResultVariantType>& results)
-  {
-    results.push_back(res);
-  }
-};
-  */
-};
 
 template <typename ParticleType, template <typename> class ResultType>
 VTKM_CONT void DSI::UpdateResult(const ResultType<ParticleType>& result,
@@ -481,10 +427,9 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
         using AHType = internal::AdvectHelper<GridEvType,
                                               vtkm::worklet::ParticleAdvection,
                                               vtkm::worklet::ParticleAdvectionResult,
-                                              ParticleType,
-                                              vtkm::worklet::particleadvection::RK4Integrator>;
+                                              ParticleType>;
         vtkm::worklet::ParticleAdvectionResult<ParticleType> result;
-        AHType::Advect(velField, data, seedArray, stepSize, maxSteps, result);
+        AHType::Advect(velField, data, seedArray, stepSize, maxSteps, this->SolverType, result);
         this->UpdateResult(result, stuff);
       }
       else
@@ -492,10 +437,9 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
         using AHType = internal::AdvectHelper<GridEvType,
                                               vtkm::worklet::Streamline,
                                               vtkm::worklet::StreamlineResult,
-                                              ParticleType,
-                                              vtkm::worklet::particleadvection::RK4Integrator>;
+                                              ParticleType>;
         vtkm::worklet::StreamlineResult<ParticleType> result;
-        AHType::Advect(velField, data, seedArray, stepSize, maxSteps, result);
+        AHType::Advect(velField, data, seedArray, stepSize, maxSteps, this->SolverType, result);
         this->UpdateResult(result, stuff);
       }
     }
@@ -512,11 +456,11 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
         using AHType = internal::AdvectHelper<GridEvType,
                                               vtkm::worklet::ParticleAdvection,
                                               vtkm::worklet::ParticleAdvectionResult,
-                                              ParticleType,
-                                              vtkm::worklet::particleadvection::RK4Integrator>;
+                                              ParticleType>;
         vtkm::worklet::ParticleAdvectionResult<ParticleType> result;
 
-        AHType::Advect(velField1, velField2, data, seedArray, stepSize, maxSteps, result);
+        AHType::Advect(
+          velField1, velField2, data, seedArray, stepSize, maxSteps, this->SolverType, result);
         this->UpdateResult(result, stuff);
       }
       else
@@ -524,11 +468,11 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
         using AHType = internal::AdvectHelper<GridEvType,
                                               vtkm::worklet::Streamline,
                                               vtkm::worklet::StreamlineResult,
-                                              ParticleType,
-                                              vtkm::worklet::particleadvection::RK4Integrator>;
+                                              ParticleType>;
         vtkm::worklet::StreamlineResult<ParticleType> result;
 
-        AHType::Advect(velField1, velField2, data, seedArray, stepSize, maxSteps, result);
+        AHType::Advect(
+          velField1, velField2, data, seedArray, stepSize, maxSteps, this->SolverType, result);
         this->UpdateResult(result, stuff);
       }
     }
