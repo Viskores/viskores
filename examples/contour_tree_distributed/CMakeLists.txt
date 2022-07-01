@@ -78,6 +78,8 @@ if (VTKm_ENABLE_MPI)
   endif()
   if (VTKm_ENABLE_HDF5_IO)
     target_compile_definitions(ContourTree_Distributed PRIVATE "ENABLE_HDFIO")
+    target_include_directories(ContourTree_Distributed PRIVATE ${HDF5_INCLUDE_DIR})
+    target_link_libraries(ContourTree_Distributed ${HDF5_LIBRARIES})
   endif ()
 
   add_executable(TreeCompiler TreeCompilerApp.cxx)
