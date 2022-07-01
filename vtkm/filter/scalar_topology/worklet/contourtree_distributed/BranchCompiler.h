@@ -54,6 +54,7 @@
 #ifndef _BRANCHCOMPILER_H_
 #define _BRANCHCOMPILER_H_
 
+#include <iomanip>
 #include <iostream>
 #include <vector>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
