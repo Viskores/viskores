@@ -239,7 +239,7 @@ def main():
     # Diff and output
     output_lines = gbench.report.generate_difference_report(
         json1, json2, args.display_aggregates_only,
-        args.utest, args.utest_alpha)
+        args.utest, args.utest_alpha, sys.stdout.isatty())
     print(description)
     for ln in output_lines:
         print(ln)
