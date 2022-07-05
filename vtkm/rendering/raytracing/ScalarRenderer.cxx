@@ -39,7 +39,7 @@ public:
   {
   private:
     vtkm::Vec3f_32 LightPosition;
-    vtkm::Vec3f_32 LightAbmient;
+    vtkm::Vec3f_32 LightAmbient;
     vtkm::Vec3f_32 LightDiffuse;
     vtkm::Vec3f_32 LightSpecular;
     vtkm::Float32 SpecularExponent;
@@ -59,9 +59,9 @@ public:
       , MissScalar(missScalar)
     {
       //Set up some default lighting parameters for now
-      LightAbmient[0] = .5f;
-      LightAbmient[1] = .5f;
-      LightAbmient[2] = .5f;
+      LightAmbient[0] = .5f;
+      LightAmbient[1] = .5f;
+      LightAmbient[2] = .5f;
       LightDiffuse[0] = .7f;
       LightDiffuse[1] = .7f;
       LightDiffuse[2] = .7f;
@@ -106,7 +106,7 @@ public:
         vtkm::Pow(vtkm::Max(cosPhi, zero), static_cast<Precision>(SpecularExponent));
 
       Precision shade = vtkm::Min(
-        LightAbmient[0] + LightDiffuse[0] * cosTheta + LightSpecular[0] * specularConstant, one);
+        LightAmbient[0] + LightDiffuse[0] * cosTheta + LightSpecular[0] * specularConstant, one);
       output = shade;
     }
 
