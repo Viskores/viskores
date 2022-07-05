@@ -18,119 +18,6 @@ namespace filter
 namespace particleadvection
 {
 
-namespace internal
-{
-
-using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
-using SteadyStateGridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-using UnSteadyStateGridEvalType =
-  vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
-
-template <typename GridEvalType,
-          typename WorkletType,
-          template <typename>
-          class ResultType,
-          typename ParticleType>
-class AdvectHelper;
-
-
-//Steady state
-template <typename WorkletType, template <typename> class ResultType, typename ParticleType>
-class AdvectHelper<SteadyStateGridEvalType, WorkletType, ResultType, ParticleType>
-{
-public:
-  static void Advect(const FieldType& velField,
-                     const vtkm::cont::DataSet& ds,
-                     vtkm::cont::ArrayHandle<ParticleType>& seedArray,
-                     vtkm::FloatDefault stepSize,
-                     vtkm::Id maxSteps,
-                     const IntegrationSolverType& integratorType,
-                     ResultType<ParticleType>& result)
-
-  {
-    using AHType =
-      internal::AdvectHelper<SteadyStateGridEvalType, WorkletType, ResultType, ParticleType>;
-
-    if (integratorType == IntegrationSolverType::RK4_TYPE)
-      AHType::template DoAdvect<vtkm::worklet::particleadvection::RK4Integrator>(
-        velField, ds, seedArray, stepSize, maxSteps, result);
-    else if (integratorType == IntegrationSolverType::EULER_TYPE)
-      AHType::template DoAdvect<vtkm::worklet::particleadvection::EulerIntegrator>(
-        velField, ds, seedArray, stepSize, maxSteps, result);
-    else
-      throw vtkm::cont::ErrorFilterExecution("Unsupported Integrator type");
-  }
-
-  template <template <typename> class IntType>
-  static void DoAdvect(const FieldType& velField,
-                       const vtkm::cont::DataSet& ds,
-                       vtkm::cont::ArrayHandle<ParticleType>& seedArray,
-                       vtkm::FloatDefault stepSize,
-                       vtkm::Id maxSteps,
-                       ResultType<ParticleType>& result)
-  {
-    using StepperType = vtkm::worklet::particleadvection::Stepper<IntType<SteadyStateGridEvalType>,
-                                                                  SteadyStateGridEvalType>;
-    SteadyStateGridEvalType eval(ds, velField);
-    StepperType stepper(eval, stepSize);
-    WorkletType worklet;
-    result = worklet.Run(stepper, seedArray, maxSteps);
-  }
-};
-
-
-//unSteady state
-//GridEvalType = TemporalGridEvaluator
-template <typename WorkletType, template <typename> class ResultType, typename ParticleType>
-class AdvectHelper<UnSteadyStateGridEvalType, WorkletType, ResultType, ParticleType>
-{
-public:
-  static void Advect(const FieldType& velField1,
-                     const FieldType& velField2,
-                     const vtkm::filter::particleadvection::DSI::UnsteadyStateDataType& data,
-                     vtkm::cont::ArrayHandle<ParticleType>& seedArray,
-                     vtkm::FloatDefault stepSize,
-                     vtkm::Id maxSteps,
-                     const IntegrationSolverType& integratorType,
-                     ResultType<ParticleType>& result)
-
-  {
-    using AHType =
-      internal::AdvectHelper<UnSteadyStateGridEvalType, WorkletType, ResultType, ParticleType>;
-
-    if (integratorType == IntegrationSolverType::RK4_TYPE)
-      AHType::template DoAdvect<vtkm::worklet::particleadvection::RK4Integrator>(
-        velField1, velField2, data, seedArray, stepSize, maxSteps, result);
-    else if (integratorType == IntegrationSolverType::EULER_TYPE)
-      AHType::template DoAdvect<vtkm::worklet::particleadvection::EulerIntegrator>(
-        velField1, velField2, data, seedArray, stepSize, maxSteps, result);
-    else
-      throw vtkm::cont::ErrorFilterExecution("Unsupported Integrator type");
-  }
-
-  template <template <typename> class IntType>
-  static void DoAdvect(const FieldType& velField1,
-                       const FieldType& velField2,
-                       const vtkm::filter::particleadvection::DSI::UnsteadyStateDataType& data,
-                       vtkm::cont::ArrayHandle<ParticleType>& seedArray,
-                       vtkm::FloatDefault stepSize,
-                       vtkm::Id maxSteps,
-                       ResultType<ParticleType>& result)
-  {
-    using StepperType =
-      vtkm::worklet::particleadvection::Stepper<IntType<UnSteadyStateGridEvalType>,
-                                                UnSteadyStateGridEvalType>;
-    UnSteadyStateGridEvalType eval(
-      data.DataSet1, data.Time1, velField1, data.DataSet2, data.Time2, velField2);
-    StepperType stepper(eval, stepSize);
-    WorkletType worklet;
-    result = worklet.Run(stepper, seedArray, maxSteps);
-  }
-};
-
-}
-
 void DSI::Meow(const char* func, const int& lineNum) const
 {
   if (this->Results.empty())
@@ -482,6 +369,62 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
     else if (this->VecFieldType == VectorFieldType::ELECTRO_MAGNETIC_FIELD_TYPE)
     {
       using FieldType = vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>;
+
+      if (this->IsSteadyState())
+      {
+        using GridEvType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+
+        FieldType velField;
+        this->GetSteadyStateElectroMagneticField(velField);
+        if (this->SolverType == IntegrationSolverType::RK4_TYPE)
+        {
+          using RK4_Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvType>;
+          using StepperType = vtkm::worklet::particleadvection::Stepper<RK4_Type, GridEvType>;
+
+          GridEvType eval(this->Data.Get<DSI::SteadyStateDataType>(), velField);
+          StepperType stepper(eval, stepSize);
+
+          result = worklet.Run(stepper, seedArray, maxSteps);
+        }
+        else if (this->SolverType == IntegrationSolverType::EULER_TYPE)
+        {
+          using EulerType = vtkm::worklet::particleadvection::EulerIntegrator<GridEvType>;
+          using StepperType = vtkm::worklet::particleadvection::Stepper<EulerType, GridEvType>;
+
+          GridEvType eval(this->Data.Get<SteadyStateDataType>(), velField);
+          StepperType stepper(eval, stepSize);
+
+          result = worklet.Run(stepper, seedArray, maxSteps);
+        }
+      }
+      else if (this->IsUnsteadyState())
+      {
+        using GridEvType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
+        FieldType velField1, velField2;
+        this->GetUnsteadyStateElectroMagneticField(velField1, velField2);
+        const auto d = this->Data.Get<UnsteadyStateDataType>();
+
+        if (this->SolverType == IntegrationSolverType::RK4_TYPE)
+        {
+          using RK4_Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvType>;
+          using StepperType = vtkm::worklet::particleadvection::Stepper<RK4_Type, GridEvType>;
+
+          GridEvType eval(d.DataSet1, d.Time1, velField1, d.DataSet2, d.Time2, velField2);
+          StepperType stepper(eval, stepSize);
+
+          result = worklet.Run(stepper, seedArray, maxSteps);
+        }
+        else if (this->SolverType == IntegrationSolverType::EULER_TYPE)
+        {
+          using EulerType = vtkm::worklet::particleadvection::EulerIntegrator<GridEvType>;
+          using StepperType = vtkm::worklet::particleadvection::Stepper<EulerType, GridEvType>;
+
+          GridEvType eval(d.DataSet1, d.Time1, velField1, d.DataSet2, d.Time2, velField2);
+          StepperType stepper(eval, stepSize);
+
+          result = worklet.Run(stepper, seedArray, maxSteps);
+        }
+      }
     }
 
     this->UpdateResult(result, stuff);
@@ -562,190 +505,6 @@ VTKM_CONT void DSI::Advect(std::vector<ParticleType>& v,
   }
   else
     throw vtkm::cont::ErrorFilterExecution("Unsupported Data Type in DSI");
-
-#if 0
-  auto result = ahType::Advect(this->VecFieldType,
-                               this->SolverType,
-                               this->IsSteadyState(),
-                               this->ResType);
-
-  //Velocity field advection.
-  if (this->VecFieldType == VectorFieldType::VELOCITY_FIELD_TYPE)
-  {
-    using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
-    if (this->IsSteadyState())
-    {
-      const auto& data = this->Data.Get<SteadyStateDataType>();
-      using GridEvType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-      FieldType velField;
-      this->GetSteadyStateVelocityField(velField);
-
-      if (this->ResType == ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
-      {
-        using AHType = internal::AdvectHelper<GridEvType,
-                                              vtkm::worklet::ParticleAdvection,
-                                              vtkm::worklet::ParticleAdvectionResult,
-                                              ParticleType>;
-        vtkm::worklet::ParticleAdvectionResult<ParticleType> result;
-        AHType::Advect(velField, data, seedArray, stepSize, maxSteps, this->SolverType, result);
-        this->UpdateResult(result, stuff);
-      }
-      else
-      {
-        using AHType = internal::AdvectHelper<GridEvType,
-                                              vtkm::worklet::Streamline,
-                                              vtkm::worklet::StreamlineResult,
-                                              ParticleType>;
-        vtkm::worklet::StreamlineResult<ParticleType> result;
-        AHType::Advect(velField, data, seedArray, stepSize, maxSteps, this->SolverType, result);
-        this->UpdateResult(result, stuff);
-      }
-    }
-    else if (this->IsUnsteadyState())
-    {
-      const auto& data = this->Data.Get<UnsteadyStateDataType>();
-      using GridEvType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
-
-      FieldType velField1, velField2;
-      this->GetUnsteadyStateVelocityField(velField1, velField2);
-
-      if (this->ResType == ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
-      {
-        using AHType = internal::AdvectHelper<GridEvType,
-                                              vtkm::worklet::ParticleAdvection,
-                                              vtkm::worklet::ParticleAdvectionResult,
-                                              ParticleType>;
-        vtkm::worklet::ParticleAdvectionResult<ParticleType> result;
-
-        AHType::Advect(
-          velField1, velField2, data, seedArray, stepSize, maxSteps, this->SolverType, result);
-        this->UpdateResult(result, stuff);
-      }
-      else
-      {
-        using AHType = internal::AdvectHelper<GridEvType,
-                                              vtkm::worklet::Streamline,
-                                              vtkm::worklet::StreamlineResult,
-                                              ParticleType>;
-        vtkm::worklet::StreamlineResult<ParticleType> result;
-
-        AHType::Advect(
-          velField1, velField2, data, seedArray, stepSize, maxSteps, this->SolverType, result);
-        this->UpdateResult(result, stuff);
-      }
-    }
-    else
-      throw vtkm::cont::ErrorFilterExecution("Unsupported Data Type in DSI");
-  }
-#endif
-
-#if 0
-  if (this->SolverType == IntegrationSolverType::RK4_TYPE)
-  {
-    if (this->VecFieldType == VELOCITY_FIELD_TYPE) //vtkm::Particle, VelocityField
-    {
-      using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
-      //using GridEvType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-      using GridEvType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
-
-      FieldType velField;
-      this->GetVelocityField(velField);
-
-      if (this->ResType == PARTICLE_ADVECT_TYPE)
-      {
-        using AHType = internal::AdvectHelper<GridEvType,
-                                              vtkm::worklet::ParticleAdvection,
-                                              vtkm::worklet::ParticleAdvectionResult,
-                                              ParticleType,
-                                              vtkm::worklet::particleadvection::RK4Integrator>;
-        vtkm::worklet::ParticleAdvectionResult<ParticleType> result;
-        //AHType::Advect(velField, this->DataSet, seedArray, stepSize, maxSteps, result);
-        AHType::Advect(velField, velField, this->DataSet, this->DataSet, 0.0, 1.0, seedArray, stepSize, maxSteps, result);
-        this->UpdateResult(result, stuff);
-      }
-      else
-      {
-        using AHType = internal::AdvectHelper<GridEvType,
-                                              vtkm::worklet::Streamline,
-                                              vtkm::worklet::StreamlineResult,
-                                              ParticleType,
-                                              vtkm::worklet::particleadvection::RK4Integrator>;
-        vtkm::worklet::StreamlineResult<ParticleType> result;
-        //AHType::Advect(velField, this->DataSet, seedArray, stepSize, maxSteps, result);
-        AHType::Advect(velField, velField, this->DataSet, this->DataSet, 0.0, 1.0, seedArray, stepSize, maxSteps, result);
-        this->UpdateResult(result, stuff);
-      }
-
-      /*
-      GridEvType eval(this->DataSet, velField);
-      StepperType stepper(eval, stepSize);
-
-      //make this a template
-      if (this->ResType == PARTICLE_ADVECT_TYPE)
-      {
-        vtkm::worklet::ParticleAdvection Worklet;
-        auto result = Worklet.Run(stepper, seedArray, maxSteps);
-        this->UpdateResult(result, stuff);
-      }
-      else
-      {
-        vtkm::worklet::Streamline Worklet;
-        auto r = Worklet.Run(stepper, seedArray, maxSteps);
-        this->UpdateResult(r, stuff);
-        //Put results in unknown array??
-      }
-      */
-    }
-    else if (this->VecFieldType == ELECTRO_MAGNETIC_FIELD_TYPE) //vtkm::ChargedParticle
-    {
-      using FieldType = vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>;
-      using GridEvType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-      using RK4_Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvType>;
-      using StepperType = vtkm::worklet::particleadvection::Stepper<RK4_Type, GridEvType>;
-
-      FieldType velField;
-      this->GetElectroMagneticField(velField);
-
-      GridEvType eval(this->DataSet, velField);
-      StepperType stepper(eval, stepSize);
-
-      if (this->ResType == PARTICLE_ADVECT_TYPE)
-      {
-        vtkm::worklet::ParticleAdvection Worklet;
-        auto r = Worklet.Run(stepper, seedArray, maxSteps);
-        this->UpdateResult(r, stuff);
-        ///*result =*/ auto r = Worklet.Run(stepper, seedArray, maxSteps);
-      }
-      else
-      {
-        vtkm::worklet::Streamline Worklet;
-        auto r = Worklet.Run(stepper, seedArray, maxSteps);
-        this->UpdateResult(r, stuff);
-        ///*result =*/ Worklet.Run(stepper, seedArray, maxSteps);
-      }
-    }
-  }
-
-  else if (this->SolverType == IntegrationSolverType::EULER_TYPE)
-  {
-    if (this->VecFieldType == VELOCITY_FIELD_TYPE) //vtkm::Particle, VelocityField
-    {
-      using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
-      using GridEvType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-      using EulerType = vtkm::worklet::particleadvection::EulerIntegrator<GridEvType>;
-      using StepperType = vtkm::worklet::particleadvection::Stepper<EulerType, GridEvType>;
-
-      FieldType velField;
-      this->GetVelocityField(velField);
-
-      GridEvType eval(this->DataSet, velField);
-      StepperType stepper(eval, stepSize);
-//      vtkm::worklet::ParticleAdvection Worklet;
-//      result = Worklet.Run(stepper, seedArray, maxSteps);
-      //Put results in unknown array??
-    }
-  }
-#endif
 }
 
 

@@ -147,7 +147,7 @@ public:
   }
 
   template <typename ArrayType>
-  VTKM_CONT void GetElectroMagneticField(
+  VTKM_CONT void GetSteadyStateElectroMagneticField(
     vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>& elecMagField) const
   {
     std::cout << "FIX ME: need fieldname2" << std::endl;
@@ -158,6 +158,20 @@ public:
     auto assoc = this->DataSet.GetField(this->FieldName).GetAssociation();
 
     elecMagField = vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>(arr1, arr2, assoc);
+    */
+  }
+
+  template <typename ArrayType>
+  VTKM_CONT void GetUnsteadyStateElectroMagneticField(
+    vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>& emField1,
+    vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>& emField2) const
+  {
+    std::cout << "FIX ME: need fieldname2" << std::endl;
+    /*
+    VTKM_ASSERT(this->Data.GetIndex() == this->Data.GetIndexOf<UnsteadyStateDataType>());
+    const auto& data = this->Data.Get<UnsteadyStateDataType>();
+    this->GetSteadyStateElectroMagneticField(data.DataSet1, emField1);
+    this->GetSteadyStateElectroMagneticField(data.DataSet2, emField2);
     */
   }
 
