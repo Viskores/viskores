@@ -91,7 +91,7 @@ protected:
 
   vtkm::Id NumberOfSteps;
   vtkm::filter::particleadvection::ParticleAdvectionResultType ResultType =
-    vtkm::filter::particleadvection::UNKNOWN_TYPE;
+    vtkm::filter::particleadvection::ParticleAdvectionResultType::UNKNOWN_TYPE;
   vtkm::cont::ArrayHandle<ParticleType> Seeds;
   vtkm::filter::particleadvection::IntegrationSolverType SolverType;
   vtkm::FloatDefault StepSize;

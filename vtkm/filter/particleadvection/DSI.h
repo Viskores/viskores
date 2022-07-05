@@ -175,7 +175,7 @@ public:
   vtkm::filter::particleadvection::IntegrationSolverType SolverType;
   vtkm::filter::particleadvection::VectorFieldType VecFieldType;
   vtkm::filter::particleadvection::ParticleAdvectionResultType ResType =
-    vtkm::filter::particleadvection::UNKNOWN_TYPE;
+    vtkm::filter::particleadvection::ParticleAdvectionResultType::UNKNOWN_TYPE;
   bool CopySeedArray = false;
 
   /*

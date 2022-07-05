@@ -29,7 +29,7 @@ namespace filter
 inline VTKM_CONT Pathline2::Pathline2()
   : vtkm::filter::FilterTemporalParticleAdvection<Pathline2, vtkm::Particle>()
 {
-  this->ResultType = vtkm::filter::particleadvection::STREAMLINE_TYPE;
+  this->ResultType = vtkm::filter::particleadvection::ParticleAdvectionResultType::STREAMLINE_TYPE;
 }
 
 //-----------------------------------------------------------------------------
@@ -42,7 +42,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline2::PrepareForExecution(
 
   this->ValidateOptions();
   //Make sure everything matches up ok.
-  this->VecFieldType = vtkm::filter::particleadvection::VELOCITY_FIELD_TYPE;
+  this->VecFieldType = vtkm::filter::particleadvection::VectorFieldType::VELOCITY_FIELD_TYPE;
 
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
   std::string activeField = this->GetActiveFieldName();

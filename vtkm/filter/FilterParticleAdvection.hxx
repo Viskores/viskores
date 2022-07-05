@@ -22,7 +22,7 @@ template <typename Derived, typename ParticleType>
 inline VTKM_CONT FilterParticleAdvection<Derived, ParticleType>::FilterParticleAdvection()
   : vtkm::filter::FilterDataSetWithField<Derived>()
   , NumberOfSteps(0)
-  , SolverType(vtkm::filter::particleadvection::RK4_TYPE)
+  , SolverType(vtkm::filter::particleadvection::IntegrationSolverType::RK4_TYPE)
   , StepSize(0)
   , UseThreadedAlgorithm(false)
 {

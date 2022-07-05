@@ -16,19 +16,19 @@ namespace filter
 {
 namespace particleadvection
 {
-enum IntegrationSolverType
+enum class IntegrationSolverType
 {
   RK4_TYPE = 0,
   EULER_TYPE,
 };
 
-enum VectorFieldType
+enum class VectorFieldType
 {
   VELOCITY_FIELD_TYPE = 0,
   ELECTRO_MAGNETIC_FIELD_TYPE,
 };
 
-enum ParticleAdvectionResultType
+enum class ParticleAdvectionResultType
 {
   UNKNOWN_TYPE = -1,
   PARTICLE_ADVECT_TYPE,
