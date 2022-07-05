@@ -4,7 +4,7 @@ LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@kitware.com>"
 ENV TZ=America/New_York
 
 # Base dependencies for building VTK-m projects
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
+RUN apt update && DEBIAN_FRONTEND="noninteractive" apt install -y --no-install-recommends \
       cmake \
       curl \
       g++ \
@@ -17,7 +17,10 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-i
       libhdf5-dev \
       mpich \
       ninja-build \
-      software-properties-common
+      python \
+      python3-scipy \
+      software-properties-common && \
+      apt clean
 
 
 

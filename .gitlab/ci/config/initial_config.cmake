@@ -107,6 +107,9 @@ foreach(option IN LISTS options)
       set(VTKm_CUDA_Architecture "turing" CACHE STRING "")
     endif()
 
+  elseif(ampere STREQUAL option)
+    set(CMAKE_CUDA_ARCHITECTURES "80" CACHE STRING "")
+
   elseif(hip STREQUAL option)
     if(CMAKE_VERSION VERSION_LESS_EQUAL 3.20)
       message(FATAL_ERROR "VTK-m requires cmake > 3.20 to enable HIP support")
@@ -154,6 +157,9 @@ foreach(option IN LISTS options)
     else()
       message(FATAL_ERROR "CCACHE version [${CCACHE_VERSION}] is <= 4")
     endif()
+
+  elseif(perftest STREQUAL option)
+    set(VTKm_ENABLE_PERFORMANCE_TESTING "ON" CACHE STRING "")
   endif()
 
 endforeach()
