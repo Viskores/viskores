@@ -13,11 +13,11 @@ include(VTKmWrappers)
 function(vtkm_create_test_executable
   prog_name
   sources
+  device_sources
   libraries
   defines
   is_mpi_test
   use_mpi
-  enable_all_backends
   use_job_pool)
 
   vtkm_diy_use_mpi_push()
@@ -41,23 +41,12 @@ function(vtkm_create_test_executable
 
   #the creation of the test source list needs to occur before the labeling as
   #cuda. This is so that we get the correctly named entry points generated
-  create_test_sourcelist(test_sources ${prog}.cxx ${sources} ${extraArgs})
+  create_test_sourcelist(test_sources ${prog}.cxx ${sources} ${device_sources} ${extraArgs})
 
-  add_executable(${prog} ${prog}.cxx ${sources})
+  add_executable(${prog} ${test_sources})
   vtkm_add_drop_unused_function_flags(${prog})
   target_compile_definitions(${prog} PRIVATE ${defines})
 
-  #determine if we have a device that requires a separate compiler enabled
-  set(device_lang_enabled FALSE)
-  if( (TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda) OR (TARGET vtkm::kokkos_hip))
-    set(device_lang_enabled TRUE)
-  endif()
-
-  #if all backends are enabled, we can use the device compiler to handle all possible backends.
-  set(device_sources)
-  if(device_lang_enabled AND (enable_all_backends OR (TARGET vtkm::kokkos_hip)))
-    set(device_sources ${sources})
-  endif()
   vtkm_add_target_information(${prog} DEVICE_SOURCES ${device_sources})
 
   if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
@@ -83,68 +72,89 @@ endfunction()
 # (package, module, whatever you call it).  Usage:
 #
 # vtkm_unit_tests(
-#   NAME
+#   [ NAME <name> ]
 #   SOURCES <source_list>
-#   LIBRARIES <dependent_library_list>
-#   DEFINES <target_compile_definitions>
-#   TEST_ARGS <argument_list>
-#   MPI
-#   ALL_BACKENDS
-#   USE_VTKM_JOB_POOL
-#   <options>
+#   [ DEVICE_SOURCES <source_list> ]
+#   [ LIBRARIES <dependent_library_list> ]
+#   [ DEFINES <target_compile_definitions> ]
+#   [ TEST_ARGS <argument_list> ]
+#   [ MPI ]
+#   [ BACKEND <device> ]
+#   [ ALL_BACKENDS ]
+#   [ USE_VTKM_JOB_POOL ]
 #   )
 #
-# [LIBRARIES] : extra libraries that this set of tests need to link too
+# NAME : Specify the name of the testing executable. If not specified,
+# UnitTests_<kitname> is used.
 #
-# [DEFINES]   : extra defines that need to be set for all unit test sources
+# SOURCES: A list of the source files. Each file is expected to contain a
+# function with the same name as the source file. For example, if SOURCES
+# contains `UnitTestFoo.cxx`, then `UnitTestFoo.cxx` should contain a
+# function named `UnitTestFoo`. A test with this name is also added to ctest.
 #
-# [LABEL]     : CTest Label to associate to this set of tests
+# LIBRARIES: Extra libraries that this set of tests need to link to.
 #
-# [TEST_ARGS] : arguments that should be passed on the command line to the
-#               test executable
+# DEFINES: Extra defines to be set for all unit test sources.
 #
-# [MPI]       : when specified, the tests should be run in parallel if
-#               MPI is enabled. The tests should also be able to build and run
-#               When MPI is not available, i.e., they should not make explicit
-#               use of MPI and instead completely rely on DIY.
-# [ALL_BACKENDS] : when specified, the tests would test against all enabled
-#                  backends. Otherwise we expect the tests to manage the
-#                  backends at runtime.
+# TEST_ARGS: Arguments that should be passed on the command line to the
+# test executable when executed by ctest.
+#
+# MPI: When specified, the tests should be run in parallel if MPI is enabled.
+# The tests should also be able to build and run when MPI is not available,
+# i.e., they should not make explicit use of MPI and instead completely rely
+# on DIY.
+#
+# BACKEND: When used, a specific backend will be forced for the device.
+# A `--vtkm-device` flag will be given to the command line argument with the
+# specified device. When not used, a backend will be chosen.
+#
+# ALL_BACKENDS: When used, a separate ctest test is created for each device
+# that VTK-m is compiled for. The call will add the `--vtkm-device` flag when
+# running the test to force the test for a particular backend.
 #
 function(vtkm_unit_tests)
   set(options)
   set(global_options ${options} USE_VTKM_JOB_POOL MPI ALL_BACKENDS)
   set(oneValueArgs BACKEND NAME LABEL)
-  set(multiValueArgs SOURCES LIBRARIES DEFINES TEST_ARGS)
+  set(multiValueArgs SOURCES DEVICE_SOURCES LIBRARIES DEFINES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
     "${global_options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
     )
   vtkm_parse_test_options(VTKm_UT_SOURCES "${options}" ${VTKm_UT_SOURCES})
 
-  set(per_device_command_line_arguments "NONE")
-  set(per_device_suffix "")
-  set(per_device_timeout 180)
-  set(per_device_serial FALSE)
+  set(per_device_command_line_arguments)
+  set(per_device_suffix)
+  set(per_device_timeout)
+  set(per_device_serial)
 
-  set(enable_all_backends ${VTKm_UT_ALL_BACKENDS})
-  if(enable_all_backends)
-    set(per_device_command_line_arguments --vtkm-device=serial)
-    set(per_device_suffix "SERIAL")
-    if (VTKm_ENABLE_CUDA)
+  if(NOT VTKm_UT_BACKEND)
+    set(enable_all_backends ${VTKm_UT_ALL_BACKENDS})
+    # If ALL_BACKENDS is specified, add a test for each backend. If it is not
+    # specified, pick a backend to use. Pick the most "specific" backend so
+    # that different CI builds will use different backends. This ensures that
+    # we do not have a test that always drops down to serial.
+    if(VTKm_ENABLE_CUDA AND (enable_all_backends OR NOT per_device_suffix))
       list(APPEND per_device_command_line_arguments --vtkm-device=cuda)
       list(APPEND per_device_suffix "CUDA")
       #CUDA tests generally require more time because of kernel generation.
       list(APPEND per_device_timeout 1500)
       list(APPEND per_device_serial FALSE)
     endif()
-    if (VTKm_ENABLE_TBB)
+    if(VTKm_ENABLE_KOKKOS AND (enable_all_backends OR NOT per_device_suffix))
+      list(APPEND per_device_command_line_arguments --vtkm-device=kokkos)
+      list(APPEND per_device_suffix "KOKKOS")
+      #may require more time because of kernel generation.
+      list(APPEND per_device_timeout 1500)
+      list(APPEND per_device_serial FALSE)
+    endif()
+    if(VTKm_ENABLE_TBB AND (enable_all_backends OR NOT per_device_suffix))
       list(APPEND per_device_command_line_arguments --vtkm-device=tbb)
       list(APPEND per_device_suffix "TBB")
       list(APPEND per_device_timeout 180)
       list(APPEND per_device_serial FALSE)
     endif()
-    if (VTKm_ENABLE_OPENMP)
+    if(VTKm_ENABLE_OPENMP AND (enable_all_backends OR NOT per_device_suffix))
       list(APPEND per_device_command_line_arguments --vtkm-device=openmp)
       list(APPEND per_device_suffix "OPENMP")
       list(APPEND per_device_timeout 180)
@@ -154,13 +164,26 @@ function(vtkm_unit_tests)
       #serially
       list(APPEND per_device_serial TRUE)
     endif()
-    if (VTKm_ENABLE_KOKKOS)
-      list(APPEND per_device_command_line_arguments --vtkm-device=kokkos)
-      list(APPEND per_device_suffix "KOKKOS")
-      #may require more time because of kernel generation.
-      list(APPEND per_device_timeout 1500)
+    if(enable_all_backends OR NOT per_device_suffix)
+      list(APPEND per_device_command_line_arguments --vtkm-device=serial)
+      list(APPEND per_device_suffix "SERIAL")
+      list(APPEND per_device_timeout 180)
       list(APPEND per_device_serial FALSE)
     endif()
+    if(NOT enable_all_backends)
+      # If not enabling all backends, exactly one backend should have been added.
+      list(LENGTH per_device_suffix number_of_devices)
+      if(NOT number_of_devices EQUAL 1)
+        message(FATAL_ERROR "Expected to pick one backend")
+      endif()
+    endif()
+  else()
+    # A specific backend was requested.
+    set(per_device_command_line_arguments --vtkm-device=${VTKm_UT_BACKEND})
+    set(per_device_suffix ${VTKm_UT_BACKEND})
+    set(per_device_timeout 180)
+    # Some devices don't like multiple tests run at the same time.
+    set(per_device_serial TRUE)
   endif()
 
   set(test_prog)
@@ -188,33 +211,33 @@ function(vtkm_unit_tests)
       vtkm_create_test_executable(
         ${test_prog}
         "${VTKm_UT_SOURCES}"
+        "${VTKm_UT_DEVICE_SOURCES}"
         "${VTKm_UT_LIBRARIES}"
         "${VTKm_UT_DEFINES}"
         ON   # is_mpi_test
         ON   # use_mpi
-        ${enable_all_backends}
         ${VTKm_UT_USE_VTKM_JOB_POOL})
     endif()
     if ((NOT VTKm_ENABLE_MPI) OR VTKm_ENABLE_DIY_NOMPI)
       vtkm_create_test_executable(
         ${test_prog}
         "${VTKm_UT_SOURCES}"
+        "${VTKm_UT_DEVICE_SOURCES}"
         "${VTKm_UT_LIBRARIES}"
         "${VTKm_UT_DEFINES}"
         ON   # is_mpi_test
         OFF  # use_mpi
-        ${enable_all_backends}
         ${VTKm_UT_USE_VTKM_JOB_POOL})
     endif()
   else()
     vtkm_create_test_executable(
       ${test_prog}
       "${VTKm_UT_SOURCES}"
+      "${VTKm_UT_DEVICE_SOURCES}"
       "${VTKm_UT_LIBRARIES}"
       "${VTKm_UT_DEFINES}"
       OFF   # is_mpi_test
       OFF   # use_mpi
-      ${enable_all_backends}
       ${VTKm_UT_USE_VTKM_JOB_POOL})
   endif()
 
@@ -225,19 +248,16 @@ function(vtkm_unit_tests)
       #exclusive on the end ( e.g. for(i=0; i < n; ++i))
       break()
     endif()
-    if(per_device_command_line_arguments STREQUAL "NONE")
-      set(device_command_line_argument)
-      set(upper_backend ${per_device_suffix})
-      set(timeout       ${per_device_timeout})
-      set(run_serial    ${per_device_serial})
-    else()
-      list(GET per_device_command_line_arguments ${index} device_command_line_argument)
+    if(enable_all_backends)
       list(GET per_device_suffix  ${index}  upper_backend)
-      list(GET per_device_timeout ${index}  timeout)
-      list(GET per_device_serial  ${index}  run_serial)
+    else()
+      set(upper_backend)
     endif()
+    list(GET per_device_command_line_arguments ${index} device_command_line_argument)
+    list(GET per_device_timeout ${index}  timeout)
+    list(GET per_device_serial  ${index}  run_serial)
 
-    foreach (test ${VTKm_UT_SOURCES})
+    foreach (test ${VTKm_UT_SOURCES} ${VTKm_UT_DEVICE_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
       if(VTKm_UT_MPI)
         if (VTKm_ENABLE_MPI)

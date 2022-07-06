@@ -259,11 +259,8 @@ public:
   template <typename ExecObjectType>
   VTKM_EXEC vtkm::Id operator()(vtkm::Id value, ExecObjectType execObject, vtkm::Id index) const
   {
-#ifndef __HIP__
-    VTKM_TEST_ASSERT(value == TestValue(index, vtkm::Id()), "Got bad value in worklet.");
-    VTKM_TEST_ASSERT(execObject.Value == EXPECTED_EXEC_OBJECT_VALUE,
-                     "Got bad exec object in worklet.");
-#endif
+    VTKM_ASSERT(value == TestValue(index, vtkm::Id()));
+    VTKM_ASSERT(execObject.Value == EXPECTED_EXEC_OBJECT_VALUE);
     return TestValue(index, vtkm::Id()) + 1000;
   }
 };

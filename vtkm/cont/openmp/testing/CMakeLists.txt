@@ -35,7 +35,9 @@ endif()
 vtkm_unit_tests(SOURCES ${unit_tests}
                 LABEL "OPENMP"
                 DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG
-                LIBRARIES vtkm_worklet)
+                LIBRARIES vtkm_worklet
+                BACKEND openmp
+                )
 
 #We need to have all OpenMP tests run serially as they
 #will uses all the system cores, and we will cause a N*N thread

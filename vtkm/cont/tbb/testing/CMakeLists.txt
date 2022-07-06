@@ -35,4 +35,6 @@ endif()
 vtkm_unit_tests(SOURCES ${unit_tests}
                 LABEL "TBB"
                 DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG
-                LIBRARIES vtkm_worklet)
+                LIBRARIES vtkm_worklet
+                BACKEND tbb
+                )

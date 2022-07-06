@@ -44,13 +44,8 @@ public:
   {
   }
 
-  // Copy constructor
-  VTKM_EXEC_CONT ArrayPortalExtractComponent(const ArrayPortalExtractComponent<PortalType>& src)
-    : Portal(src.Portal)
-    , Component(src.Component)
-  {
-  }
-
+  ArrayPortalExtractComponent(const ArrayPortalExtractComponent&) = default;
+  ArrayPortalExtractComponent(ArrayPortalExtractComponent&&) = default;
   ArrayPortalExtractComponent& operator=(const ArrayPortalExtractComponent&) = default;
   ArrayPortalExtractComponent& operator=(ArrayPortalExtractComponent&&) = default;
 

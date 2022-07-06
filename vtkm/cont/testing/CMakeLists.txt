@@ -31,49 +31,30 @@ set(headers
   )
 
 set(unit_tests
-  UnitTestAlgorithm.cxx
-  UnitTestArrayCopy.cxx
   UnitTestArrayExtractComponent.cxx
   UnitTestArrayGetValues.cxx
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayHandleCounting.cxx
-  UnitTestArrayHandleDecorator.cxx
   UnitTestArrayHandleDiscard.cxx
-  UnitTestArrayHandleExtractComponent.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandleOffsetsToNumComponents.cxx
-  UnitTestArrayHandlePermutation.cxx
-  UnitTestArrayHandleRandomStandardNormal.cxx
   UnitTestArrayHandleRandomUniformBits.cxx
-  UnitTestArrayHandleRandomUniformReal.cxx
   UnitTestArrayHandleReverse.cxx
-  UnitTestArrayHandleSwizzle.cxx
   UnitTestArrayHandleThreadSafety.cxx
-  UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleVirtual.cxx
-  UnitTestArrayHandleXGCCoordinates.cxx
   UnitTestArrayPortalToIterators.cxx
-  UnitTestArrayRangeCompute.cxx
-  UnitTestCellLocatorChooser.cxx
-  UnitTestCellLocatorGeneral.cxx
-  UnitTestCellSet.cxx
-  UnitTestCellSetExplicit.cxx
-  UnitTestCellSetExtrude.cxx
-  UnitTestCellSetPermutation.cxx
   UnitTestContTesting.cxx
   UnitTestDataSetBuilderCurvilinear.cxx
   UnitTestDataSetBuilderExplicit.cxx
   UnitTestDataSetBuilderRectilinear.cxx
   UnitTestDataSetBuilderUniform.cxx
   UnitTestDataSetConvertToExpected.cxx
-  UnitTestDataSetPermutation.cxx
   UnitTestDataSetRectilinear.cxx
   UnitTestDataSetUniform.cxx
-  UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceSelectOnThreads.cxx
   UnitTestDynamicCellSet.cxx
@@ -83,7 +64,6 @@ set(unit_tests
   UnitTestLogging.cxx
   UnitTestMergePartitionedDataSet.cxx
   UnitTestMoveConstructors.cxx
-  UnitTestParticleArrayCopy.cxx
   UnitTestPartitionedDataSet.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestRuntimeDeviceNames.cxx
@@ -96,6 +76,29 @@ set(unit_tests
   UnitTestUnknownArrayHandle.cxx
   UnitTestUnknownCellSet.cxx
   UnitTestVariantArrayHandle.cxx
+  )
+
+set(unit_tests_device
+  UnitTestAlgorithm.cxx
+  UnitTestArrayCopy.cxx
+  UnitTestArrayHandleDecorator.cxx
+  UnitTestArrayHandleExtractComponent.cxx
+  UnitTestArrayHandlePermutation.cxx
+  UnitTestArrayHandleRandomStandardNormal.cxx
+  UnitTestArrayHandleRandomUniformReal.cxx
+  UnitTestArrayHandleSwizzle.cxx
+  UnitTestArrayHandleTransform.cxx
+  UnitTestArrayHandleXGCCoordinates.cxx
+  UnitTestArrayRangeCompute.cxx
+  UnitTestCellLocatorChooser.cxx
+  UnitTestCellLocatorGeneral.cxx
+  UnitTestCellSet.cxx
+  UnitTestCellSetExplicit.cxx
+  UnitTestCellSetExtrude.cxx
+  UnitTestCellSetPermutation.cxx
+  UnitTestDataSetPermutation.cxx
+  UnitTestDeviceAdapterAlgorithmDependency.cxx
+  UnitTestParticleArrayCopy.cxx
   )
 
 set(library_sources
@@ -115,7 +118,7 @@ vtkm_library(
 target_link_libraries(vtkm_cont_testing PUBLIC vtkm_cont)
 
 if(VTKm_ENABLE_TESTING)
-  vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
+  vtkm_unit_tests(SOURCES ${unit_tests} DEVICE_SOURCES ${unit_tests_device})
 
 #add distributed tests i.e.test to run with MPI
 #if MPI is enabled.
@@ -124,5 +127,5 @@ if(VTKm_ENABLE_TESTING)
     UnitTestSerializationArrayHandle.cxx
     UnitTestSerializationDataSet.cxx
     )
-  vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
+  vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests})
 endif()

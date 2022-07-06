@@ -15,6 +15,12 @@
 // everything else. Because this test is based of the serial device adapter,
 // make sure that UnitTestDeviceAdapterSerial is working before trying to debug
 // this one.
+
+// It's OK to compile this without the device compiler.
+#ifndef VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG
+#define VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG 1
+#endif
+
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
