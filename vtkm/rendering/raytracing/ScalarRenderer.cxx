@@ -191,7 +191,7 @@ public:
 
     scalar = value;
   }
-}; //class WriteBuffer
+}; //class FilterDepth
 
 template <typename Precision>
 class WriteBuffer : public vtkm::worklet::WorkletMapField
