@@ -172,7 +172,7 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
         newConnectivity.push_back(connPortal.Get(connIdx + 7));
         newConnectivity.push_back(connPortal.Get(connIdx + 6));
         permutationVec.push_back(i);
-        connIdx += 6;
+        connIdx += 8;
         break;
       }
       default:
