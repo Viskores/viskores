@@ -55,8 +55,8 @@ public:
   void AddField(const vtkm::cont::Field& scalarField);
 
   VTKM_CONT
-  void Render(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays,
-              vtkm::Float64 missScalar,
+  void Render(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays,
+              vtkm::Float32 missScalar,
               vtkm::rendering::raytracing::Camera& cam);
 
   VTKM_CONT
