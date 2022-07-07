@@ -101,7 +101,11 @@ foreach(option IN LISTS options)
   # From turing we set the architecture using the cannonical
   # CMAKE_CUDA_ARCHITECTURES
   elseif(turing STREQUAL option)
-    set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING "")
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+      set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING "")
+    else()
+      set(VTKm_CUDA_Architecture "turing" CACHE STRING "")
+    endif()
 
   elseif(hip STREQUAL option)
     if(CMAKE_VERSION VERSION_LESS_EQUAL 3.20)
