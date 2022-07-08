@@ -47,15 +47,21 @@ struct DSIStuff
 
 class DSI
 {
+  using VelocityFieldNameType = std::string;
+  using ElectroMagneticFieldNameType = std::pair<std::string, std::string>;
+  using FieldNameType =
+    vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType>;
+
+
 public:
   DSI(const vtkm::cont::DataSet& ds,
       vtkm::Id id,
-      const std::string& fieldNm,
+      const FieldNameType& fieldName,
       vtkm::filter::particleadvection::IntegrationSolverType solverType,
       vtkm::filter::particleadvection::VectorFieldType vecFieldType,
       vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
     : Data(ds)
-    , FieldName(fieldNm)
+    , FieldName(fieldName)
     , Id(id)
     , SolverType(solverType)
     , VecFieldType(vecFieldType)
@@ -70,7 +76,8 @@ public:
       vtkm::FloatDefault t1,
       vtkm::FloatDefault t2,
       vtkm::Id id,
-      const std::string& fieldNm,
+      const vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType>&
+        fieldNm,
       vtkm::filter::particleadvection::IntegrationSolverType solverType,
       vtkm::filter::particleadvection::VectorFieldType vecFieldType,
       vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
@@ -116,9 +123,14 @@ protected:
   VTKM_CONT void GetSteadyStateVelocityField(
     vtkm::worklet::particleadvection::VelocityField<ArrayType>& velocityField) const
   {
-    VTKM_ASSERT(this->Data.GetIndex() == this->Data.GetIndexOf<SteadyStateDataType>());
-    const auto& data = this->Data.Get<SteadyStateDataType>();
-    this->GetVelocityField(data, velocityField);
+    if (this->Data.GetIndex() == this->Data.GetIndexOf<SteadyStateDataType>())
+    {
+      const auto& ds = this->Data.Get<SteadyStateDataType>();
+      this->GetVelocityField(ds, velocityField);
+    }
+    else
+      throw vtkm::cont::ErrorFilterExecution(
+        "Steady state velocity field vector type not available");
   }
 
   template <typename ArrayType>
@@ -126,10 +138,15 @@ protected:
     vtkm::worklet::particleadvection::VelocityField<ArrayType>& velocityField1,
     vtkm::worklet::particleadvection::VelocityField<ArrayType>& velocityField2) const
   {
-    VTKM_ASSERT(this->Data.GetIndex() == this->Data.GetIndexOf<UnsteadyStateDataType>());
-    const auto& data = this->Data.Get<UnsteadyStateDataType>();
-    this->GetVelocityField(data.DataSet1, velocityField1);
-    this->GetVelocityField(data.DataSet2, velocityField2);
+    if (this->Data.GetIndex() == this->Data.GetIndexOf<UnsteadyStateDataType>())
+    {
+      const auto& data = this->Data.Get<UnsteadyStateDataType>();
+      this->GetVelocityField(data.DataSet1, velocityField1);
+      this->GetVelocityField(data.DataSet2, velocityField2);
+    }
+    else
+      throw vtkm::cont::ErrorFilterExecution(
+        "Unsteady state velocity field vector type not available");
   }
 
   template <typename ArrayType>
@@ -137,26 +154,55 @@ protected:
     const vtkm::cont::DataSet& ds,
     vtkm::worklet::particleadvection::VelocityField<ArrayType>& velocityField) const
   {
-    auto assoc = ds.GetField(this->FieldName).GetAssociation();
-    ArrayType arr;
-    vtkm::cont::ArrayCopyShallowIfPossible(ds.GetField(this->FieldName).GetData(), arr);
+    if (this->FieldName.GetIndex() == this->FieldName.GetIndexOf<VelocityFieldNameType>())
+    {
+      const auto& fieldNm = this->FieldName.Get<VelocityFieldNameType>();
+      auto assoc = ds.GetField(fieldNm).GetAssociation();
+      ArrayType arr;
+      vtkm::cont::ArrayCopyShallowIfPossible(ds.GetField(fieldNm).GetData(), arr);
 
-    velocityField = vtkm::worklet::particleadvection::VelocityField<ArrayType>(arr, assoc);
+      velocityField = vtkm::worklet::particleadvection::VelocityField<ArrayType>(arr, assoc);
+    }
+    else
+      throw vtkm::cont::ErrorFilterExecution("Velocity field vector type not available");
+  }
+
+  template <typename ArrayType>
+  VTKM_CONT void GetElectroMagneticField(
+    const vtkm::cont::DataSet& ds,
+    vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>& elecMagField) const
+  {
+    if (this->FieldName.GetIndex() == this->FieldName.GetIndexOf<ElectroMagneticFieldNameType>())
+    {
+      const auto& fieldNms = this->FieldName.Get<ElectroMagneticFieldNameType>();
+      auto assoc1 = ds.GetField(fieldNms.first).GetAssociation();
+      auto assoc2 = ds.GetField(fieldNms.second).GetAssociation();
+      if (assoc1 != assoc2)
+        throw vtkm::cont::ErrorFilterExecution(
+          "Electro-magnetic vector fields have differing associations");
+
+      ArrayType arr1, arr2;
+      vtkm::cont::ArrayCopyShallowIfPossible(ds.GetField(fieldNms.first).GetData(), arr1);
+      vtkm::cont::ArrayCopyShallowIfPossible(ds.GetField(fieldNms.second).GetData(), arr2);
+
+      elecMagField =
+        vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>(arr1, arr2, assoc1);
+    }
+    else
+      throw vtkm::cont::ErrorFilterExecution("Velocity field vector type not available");
   }
 
   template <typename ArrayType>
   VTKM_CONT void GetSteadyStateElectroMagneticField(
     vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>& elecMagField) const
   {
-    std::cout << "FIX ME: need fieldname2" << std::endl;
-    /*
-    ArrayType arr1, arr2;
-    vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(this->FieldName).GetData(), arr1);
-    vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(this->FieldName).GetData(), arr2);       //fieldname 2
-    auto assoc = this->DataSet.GetField(this->FieldName).GetAssociation();
-
-    elecMagField = vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>(arr1, arr2, assoc);
-    */
+    if (this->Data.GetIndex() == this->Data.GetIndexOf<SteadyStateDataType>())
+    {
+      const auto& ds = this->Data.Get<SteadyStateDataType>();
+      this->GetElectroMagneticField(ds, elecMagField);
+    }
+    else
+      throw vtkm::cont::ErrorFilterExecution("Electro-magnetic vector field type not available");
   }
 
   template <typename ArrayType>
@@ -164,13 +210,14 @@ protected:
     vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>& emField1,
     vtkm::worklet::particleadvection::ElectroMagneticField<ArrayType>& emField2) const
   {
-    std::cout << "FIX ME: need fieldname2" << std::endl;
-    /*
-    VTKM_ASSERT(this->Data.GetIndex() == this->Data.GetIndexOf<UnsteadyStateDataType>());
-    const auto& data = this->Data.Get<UnsteadyStateDataType>();
-    this->GetSteadyStateElectroMagneticField(data.DataSet1, emField1);
-    this->GetSteadyStateElectroMagneticField(data.DataSet2, emField2);
-    */
+    if (this->Data.GetIndex() == this->Data.GetIndexOf<UnsteadyStateDataType>())
+    {
+      this->GetSteadyStateElectroMagneticField(emField1);
+      this->GetSteadyStateElectroMagneticField(emField2);
+    }
+    else
+      throw vtkm::cont::ErrorFilterExecution(
+        "Unsteady state electro-magnetic field vector type not available");
   }
 
   //template <typename ParticleType>
@@ -200,12 +247,11 @@ protected:
     vtkm::FloatDefault Time1;
     vtkm::FloatDefault Time2;
   };
-  using DSType = vtkm::cont::internal::Variant<SteadyStateDataType, UnsteadyStateDataType>;
-
 
   //Data members.
   vtkm::cont::internal::Variant<SteadyStateDataType, UnsteadyStateDataType> Data;
-  std::string FieldName;
+  vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType> FieldName;
+
   vtkm::Id Id;
   vtkm::filter::particleadvection::IntegrationSolverType SolverType;
   vtkm::filter::particleadvection::VectorFieldType VecFieldType;
