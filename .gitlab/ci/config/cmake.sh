@@ -26,7 +26,7 @@ case "$( uname -s )" in
         ;;
     Darwin)
         shatool="shasum -a 256"
-        sha256sum="20dbede1d80c1ac80be2966172f8838c3d899951ac4467372f806b386d42ad3c"
+        sha256sum="9dc2978c4d94a44f71336fa88c15bb0eee47cf44b6ece51b10d1dfae95f82279"
         platform="macos"
         arch="universal"
         ;;
