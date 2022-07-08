@@ -418,6 +418,10 @@ void TestInvokeWithError()
     std::cout << "  Create and run dispatcher that raises error." << std::endl;
     TestDispatcher<TestErrorWorklet> dispatcher;
     dispatcher.Invoke(&inputBuffer, execObject, outputBuffer);
+    // Make sure the invocation finishes by moving data to host. Asynchronous launches
+    // might not throw an error right away.
+    vtkm::cont::Token token;
+    outputBuffer.ReadPointerHost(token);
     VTKM_TEST_FAIL("Exception not thrown.");
   }
   catch (vtkm::cont::ErrorExecution& error)
