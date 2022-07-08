@@ -36,8 +36,6 @@ public:
   {
   }
 
-  void Meow(const char* func, const int& lineNum) const { this->Blocks[0]->Meow(func, lineNum); }
-
   void Execute(vtkm::Id numSteps,
                vtkm::FloatDefault stepSize,
                const vtkm::cont::ArrayHandle<ParticleType>& seeds)

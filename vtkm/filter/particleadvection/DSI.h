@@ -58,9 +58,9 @@ public:
     , FieldName(fieldNm)
     , Id(id)
     , SolverType(solverType)
-    , Rank(this->Comm.rank())
-    , ResType(resultType)
     , VecFieldType(vecFieldType)
+    , ResType(resultType)
+    , Rank(this->Comm.rank())
   {
     //check that things are valid.
   }
@@ -78,9 +78,9 @@ public:
     , FieldName(fieldNm)
     , Id(id)
     , SolverType(solverType)
-    , Rank(this->Comm.rank())
-    , ResType(resultType)
     , VecFieldType(vecFieldType)
+    , ResType(resultType)
+    , Rank(this->Comm.rank())
   {
     //check that things are valid.
   }
@@ -93,7 +93,6 @@ public:
   {
     return this->Data.GetIndex() == this->Data.GetIndexOf<UnsteadyStateDataType>();
   }
-
 
   VTKM_CONT vtkm::Id GetID() const { return this->Id; }
   VTKM_CONT void SetCopySeedFlag(bool val) { this->CopySeedArray = val; }
@@ -108,8 +107,7 @@ public:
   template <typename ParticleType>
   VTKM_CONT bool GetOutput(vtkm::cont::DataSet& ds) const;
 
-  //protected:
-
+protected:
   template <typename ParticleType, template <typename> class ResultType>
   VTKM_CONT void UpdateResult(const ResultType<ParticleType>& result,
                               DSIStuff<ParticleType>& stuff);
@@ -182,23 +180,6 @@ public:
   VTKM_CONT void ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
                                    DSIStuff<ParticleType>& stuff) const;
 
-  vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  vtkm::Id Rank;
-  vtkm::Id Id;
-  std::string FieldName;
-  vtkm::filter::particleadvection::IntegrationSolverType SolverType;
-  vtkm::filter::particleadvection::VectorFieldType VecFieldType;
-  vtkm::filter::particleadvection::ParticleAdvectionResultType ResType =
-    vtkm::filter::particleadvection::ParticleAdvectionResultType::UNKNOWN_TYPE;
-  bool CopySeedArray = false;
-
-  /*
-  struct SteadyStateDataType
-  {
-    SteadyStateDataType(const vtkm::cont::DataSet& ds) : DataSet(ds) {}
-    vtkm::cont::DataSet DataSet;
-  };
-  */
 
   using SteadyStateDataType = vtkm::cont::DataSet;
   struct UnsteadyStateDataType
@@ -219,11 +200,22 @@ public:
     vtkm::FloatDefault Time1;
     vtkm::FloatDefault Time2;
   };
-
   using DSType = vtkm::cont::internal::Variant<SteadyStateDataType, UnsteadyStateDataType>;
 
-  vtkm::cont::internal::Variant<SteadyStateDataType, UnsteadyStateDataType> Data;
 
+  //Data members.
+  vtkm::cont::internal::Variant<SteadyStateDataType, UnsteadyStateDataType> Data;
+  std::string FieldName;
+  vtkm::Id Id;
+  vtkm::filter::particleadvection::IntegrationSolverType SolverType;
+  vtkm::filter::particleadvection::VectorFieldType VecFieldType;
+  vtkm::filter::particleadvection::ParticleAdvectionResultType ResType =
+    vtkm::filter::particleadvection::ParticleAdvectionResultType::UNKNOWN_TYPE;
+
+  vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkm::Id Rank;
+
+  bool CopySeedArray = false;
 
   using RType =
     vtkm::cont::internal::Variant<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>,

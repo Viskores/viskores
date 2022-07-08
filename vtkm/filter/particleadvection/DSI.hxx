@@ -55,7 +55,6 @@ VTKM_CONT bool DSI::GetOutput(vtkm::cont::DataSet& ds) const
   if (nResults == 0)
     return false;
 
-
   std::cout << "Check the variant type!" << std::endl;
 
   if (this->ResType == ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
@@ -171,8 +170,6 @@ VTKM_CONT void DSI::UpdateResult(const ResultType<ParticleType>& result,
 {
   this->ClassifyParticles(result.Particles, stuff);
 
-  //this->Meow(__PRETTY_FUNCTION__, __LINE__);
-
   //template this for PA and SL
   if (this->ResType ==
       vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
@@ -195,8 +192,6 @@ VTKM_CONT void DSI::UpdateResult(const ResultType<ParticleType>& result,
   {
     this->Results.push_back(result);
   }
-
-  //this->Meow(__PRETTY_FUNCTION__, __LINE__);
 }
 
 template <typename ParticleType>

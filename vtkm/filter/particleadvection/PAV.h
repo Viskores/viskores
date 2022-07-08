@@ -69,13 +69,6 @@ private:
 
         AlgorithmType algo(this->BoundsMap, this->Blocks);
         algo.Execute(numSteps, stepSize, seeds);
-        algo.Meow(__PRETTY_FUNCTION__, __LINE__);
-
-        //std::cout<<__FILE__<<" "<<__LINE__<<std::endl;
-        //using RType = vtkm::worklet::ParticleAdvectionResult<ParticleType>;
-        //auto p0 = this->Blocks[0].Results[0].Get<RType>().Particles.ReadPortal().Get(0);
-        //std::cout<<__FILE__<<" "<<__LINE__<<" pt= "<<p0.Pos<<std::endl;
-
         return algo.GetOutput();
       }
       else
