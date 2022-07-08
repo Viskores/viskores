@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestOpenMPArrayHandle.cxx
   UnitTestOpenMPArrayHandleFancy.cxx
   UnitTestOpenMPArrayHandleMultiplexer.cxx
   UnitTestOpenMPBitField.cxx

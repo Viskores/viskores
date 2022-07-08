@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestKokkosArrayHandle.cxx
   UnitTestKokkosArrayHandleFancy.cxx
   UnitTestKokkosArrayHandleMultiplexer.cxx
   UnitTestKokkosBitField.cxx

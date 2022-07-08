@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestSerialArrayHandle.cxx
   UnitTestSerialArrayHandleFancy.cxx
   UnitTestSerialArrayHandleMultiplexer.cxx
   UnitTestSerialBitField.cxx
