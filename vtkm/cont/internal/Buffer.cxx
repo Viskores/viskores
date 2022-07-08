@@ -91,10 +91,6 @@ struct BufferState
   {
     if (this->Info.GetSize() != newSize)
     {
-      if (this->Pinned)
-      {
-        throw vtkm::cont::ErrorBadAllocation("Attempted to reallocate a pinned buffer.");
-      }
       this->Info.Reallocate(newSize);
     }
   }
