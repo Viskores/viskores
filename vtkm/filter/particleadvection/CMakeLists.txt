@@ -19,6 +19,7 @@ set(headers
   ParticleAdvectionAlgorithm.h
   ParticleMessenger.h
   DSI.h
+  DSI.hxx
   ABA.h
   PAV.h
   ParticleAdvectionTypes.h
