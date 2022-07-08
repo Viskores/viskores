@@ -65,7 +65,7 @@
 //
 //=======================================================================================
 
-#include <vtkm/worklet/contourtree_distributed/BranchCompiler.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/BranchCompiler.h>
 
 int main()
 { // main()
