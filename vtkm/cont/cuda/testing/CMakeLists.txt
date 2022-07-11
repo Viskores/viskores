@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestCudaBitField.cu
   UnitTestCudaCellLocatorRectilinearGrid.cu
   UnitTestCudaCellLocatorTwoLevel.cu
   UnitTestCudaCellLocatorUniformGrid.cu

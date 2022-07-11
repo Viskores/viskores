@@ -98,6 +98,7 @@ set(unit_tests_device
   UnitTestArrayHandleXGCCoordinates.cxx
   UnitTestArrayHandleZip.cxx
   UnitTestArrayRangeCompute.cxx
+  UnitTestBitField.cxx
   UnitTestCellLocatorChooser.cxx
   UnitTestCellLocatorGeneral.cxx
   UnitTestCellSet.cxx

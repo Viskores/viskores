@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestKokkosBitField.cxx
   UnitTestKokkosCellLocatorRectilinearGrid.cxx
   UnitTestKokkosCellLocatorTwoLevel.cxx
   UnitTestKokkosCellLocatorUniformGrid.cxx
