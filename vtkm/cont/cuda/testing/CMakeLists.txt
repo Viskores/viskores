@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestCudaComputeRange.cu
-  UnitTestCudaColorTable.cu
   UnitTestCudaDataSetExplicit.cu
   UnitTestCudaDataSetSingleType.cu
   UnitTestCudaDeviceAdapter.cu

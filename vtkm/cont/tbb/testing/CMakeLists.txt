@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestTBBColorTable.cxx
   UnitTestTBBComputeRange.cxx
   UnitTestTBBDataSetExplicit.cxx
   UnitTestTBBDataSetSingleType.cxx

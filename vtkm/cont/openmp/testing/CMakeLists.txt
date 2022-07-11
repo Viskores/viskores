@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestOpenMPColorTable.cxx
   UnitTestOpenMPComputeRange.cxx
   UnitTestOpenMPDataSetExplicit.cxx
   UnitTestOpenMPDataSetSingleType.cxx

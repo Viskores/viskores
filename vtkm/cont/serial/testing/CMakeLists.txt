@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestSerialComputeRange.cxx
-  UnitTestSerialColorTable.cxx
   UnitTestSerialDataSetExplicit.cxx
   UnitTestSerialDataSetSingleType.cxx
   UnitTestSerialDeviceAdapter.cxx

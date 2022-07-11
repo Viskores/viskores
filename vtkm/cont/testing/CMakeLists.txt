@@ -12,7 +12,6 @@ set(headers
   ExplicitTestData.h
   MakeTestDataSet.h
   Testing.h
-  TestingColorTable.h
   TestingComputeRange.h
   TestingDeviceAdapter.h
   TestingDataSetExplicit.h
@@ -105,6 +104,7 @@ set(unit_tests_device
   UnitTestCellSetExplicit.cxx
   UnitTestCellSetExtrude.cxx
   UnitTestCellSetPermutation.cxx
+  UnitTestColorTable.cxx
   UnitTestDataSetPermutation.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestParticleArrayCopy.cxx

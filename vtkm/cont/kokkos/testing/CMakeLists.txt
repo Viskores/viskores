@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestKokkosComputeRange.cxx
-  UnitTestKokkosColorTable.cxx
   UnitTestKokkosDataSetExplicit.cxx
   UnitTestKokkosDataSetSingleType.cxx
   UnitTestKokkosDeviceAdapter.cxx
