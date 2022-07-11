@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestTBBArrayHandleFancy.cxx
-  UnitTestTBBArrayHandleMultiplexer.cxx
   UnitTestTBBBitField.cxx
   UnitTestTBBCellLocatorRectilinearGrid.cxx
   UnitTestTBBCellLocatorTwoLevel.cxx

@@ -12,7 +12,6 @@ set(headers
   ExplicitTestData.h
   MakeTestDataSet.h
   Testing.h
-  TestingArrayHandleMultiplexer.h
   TestingCellLocatorRectilinearGrid.h
   TestingCellLocatorTwoLevel.h
   TestingCellLocatorUniformGrid.h
@@ -84,6 +83,7 @@ set(unit_tests_device
   UnitTestArrayHandle.cxx
   UnitTestArrayHandleDecorator.cxx
   UnitTestArrayHandleExtractComponent.cxx
+  UnitTestArrayHandleMultiplexer.cxx
   UnitTestArrayHandlePermutation.cxx
   UnitTestArrayHandleRandomStandardNormal.cxx
   UnitTestArrayHandleRandomUniformReal.cxx

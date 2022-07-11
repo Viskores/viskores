@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestSerialArrayHandleFancy.cxx
-  UnitTestSerialArrayHandleMultiplexer.cxx
   UnitTestSerialBitField.cxx
   UnitTestSerialCellLocatorRectilinearGrid.cxx
   UnitTestSerialCellLocatorTwoLevel.cxx

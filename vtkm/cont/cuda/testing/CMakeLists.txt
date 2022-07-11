@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestCudaArrayHandleFancy.cu
-  UnitTestCudaArrayHandleMultiplexer.cu
   UnitTestCudaBitField.cu
   UnitTestCudaCellLocatorRectilinearGrid.cu
   UnitTestCudaCellLocatorTwoLevel.cu
