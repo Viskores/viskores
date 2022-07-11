@@ -9,8 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestKokkosDataSetExplicit.cxx
-  UnitTestKokkosDataSetSingleType.cxx
   UnitTestKokkosDeviceAdapter.cxx
   UnitTestKokkosImplicitFunction.cxx
   UnitTestKokkosPointLocatorSparseGrid.cxx

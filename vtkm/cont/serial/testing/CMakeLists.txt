@@ -9,8 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestSerialDataSetExplicit.cxx
-  UnitTestSerialDataSetSingleType.cxx
   UnitTestSerialDeviceAdapter.cxx
   UnitTestSerialImplicitFunction.cxx
   UnitTestSerialPointLocatorSparseGrid.cxx

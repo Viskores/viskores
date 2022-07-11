@@ -9,8 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestTBBDataSetExplicit.cxx
-  UnitTestTBBDataSetSingleType.cxx
   UnitTestTBBDeviceAdapter.cxx
   UnitTestTBBImplicitFunction.cxx
   UnitTestTBBPointLocatorSparseGrid.cxx

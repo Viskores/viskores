@@ -9,8 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestOpenMPDataSetExplicit.cxx
-  UnitTestOpenMPDataSetSingleType.cxx
   UnitTestOpenMPDeviceAdapter.cxx
   UnitTestOpenMPImplicitFunction.cxx
   UnitTestOpenMPPointLocatorSparseGrid.cxx

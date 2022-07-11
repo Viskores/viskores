@@ -13,8 +13,6 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingDeviceAdapter.h
-  TestingDataSetExplicit.h
-  TestingDataSetSingleType.h
   TestingImplicitFunction.h
   TestingPointLocatorSparseGrid.h
   TestingRuntimeDeviceConfiguration.h
@@ -44,6 +42,7 @@ set(unit_tests
   UnitTestDataSetBuilderRectilinear.cxx
   UnitTestDataSetBuilderUniform.cxx
   UnitTestDataSetConvertToExpected.cxx
+  UnitTestDataSetExplicit.cxx
   UnitTestDataSetRectilinear.cxx
   UnitTestDataSetUniform.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
@@ -106,6 +105,7 @@ set(unit_tests_device
   UnitTestCellSetPermutation.cxx
   UnitTestColorTable.cxx
   UnitTestDataSetPermutation.cxx
+  UnitTestDataSetSingleType.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestParticleArrayCopy.cxx
   )

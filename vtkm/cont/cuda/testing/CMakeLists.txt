@@ -9,8 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestCudaDataSetExplicit.cu
-  UnitTestCudaDataSetSingleType.cu
   UnitTestCudaDeviceAdapter.cu
   UnitTestCudaImplicitFunction.cu
   UnitTestCudaIterators.cu
