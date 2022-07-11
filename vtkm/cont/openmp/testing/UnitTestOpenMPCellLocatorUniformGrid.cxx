@@ -13,7 +13,7 @@
 int UnitTestOpenMPCellLocatorUniformGrid(int argc, char* argv[])
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorUniformGrid<vtkm::cont::DeviceAdapterTagSerial>(), argc, argv);
+    TestingCellLocatorUniformGrid<vtkm::cont::DeviceAdapterTagOpenMP>(), argc, argv);
 }

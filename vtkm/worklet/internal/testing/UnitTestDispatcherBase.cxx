@@ -21,6 +21,29 @@ namespace
 
 static constexpr vtkm::Id ARRAY_SIZE = 10;
 
+struct TestTypeCheckTag
+{
+};
+struct TestTransportTagIn
+{
+};
+struct TestTransportTagOut
+{
+};
+struct TestFetchTagInput
+{
+};
+struct TestFetchTagOutput
+{
+};
+
+} // anonymous namespace
+
+// not anonymous because nvcc sometimes complains about "unused" methods (that
+// are definitely being used)
+namespace ut_db
+{
+
 struct TestExecObjectIn
 {
   VTKM_EXEC_CONT
@@ -87,23 +110,7 @@ struct TestExecObjectTypeBad
   }
 };
 
-struct TestTypeCheckTag
-{
-};
-struct TestTransportTagIn
-{
-};
-struct TestTransportTagOut
-{
-};
-struct TestFetchTagInput
-{
-};
-struct TestFetchTagOutput
-{
-};
-
-} // anonymous namespace
+} // namespace ut_db
 
 namespace vtkm
 {
@@ -121,7 +128,7 @@ struct TypeCheck<TestTypeCheckTag, vtkm::cont::internal::Buffer>
 template <typename Device>
 struct Transport<TestTransportTagIn, vtkm::cont::internal::Buffer, Device>
 {
-  using ExecObjectType = TestExecObjectIn;
+  using ExecObjectType = ut_db::TestExecObjectIn;
 
   VTKM_CONT
   ExecObjectType operator()(const vtkm::cont::internal::Buffer& contData,
@@ -139,7 +146,7 @@ struct Transport<TestTransportTagIn, vtkm::cont::internal::Buffer, Device>
 template <typename Device>
 struct Transport<TestTransportTagOut, vtkm::cont::internal::Buffer, Device>
 {
-  using ExecObjectType = TestExecObjectOut;
+  using ExecObjectType = ut_db::TestExecObjectOut;
 
   VTKM_CONT
   ExecObjectType operator()(const vtkm::cont::internal::Buffer& contData,
@@ -165,12 +172,12 @@ namespace internal
 {
 
 template <>
-struct DynamicTransformTraits<TestExecObjectType>
+struct DynamicTransformTraits<ut_db::TestExecObjectType>
 {
   using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
 template <>
-struct DynamicTransformTraits<TestExecObjectTypeBad>
+struct DynamicTransformTraits<ut_db::TestExecObjectTypeBad>
 {
   using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
@@ -186,31 +193,33 @@ namespace arg
 {
 
 template <>
-struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault, TestExecObjectIn>
+struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault, ut_db::TestExecObjectIn>
 {
   using ValueType = vtkm::Id;
 
   VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic indices,
-                 const TestExecObjectIn& execObject) const
+                 const ut_db::TestExecObjectIn& execObject) const
   {
     return execObject.Array[indices.GetInputIndex()];
   }
 
   VTKM_EXEC
-  void Store(const vtkm::exec::arg::ThreadIndicesBasic, const TestExecObjectIn&, ValueType) const
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic,
+             const ut_db::TestExecObjectIn&,
+             ValueType) const
   {
     // No-op
   }
 };
 
 template <>
-struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, TestExecObjectOut>
+struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, ut_db::TestExecObjectOut>
 {
   using ValueType = vtkm::Id;
 
   VTKM_EXEC
-  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic&, const TestExecObjectOut&) const
+  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic&, const ut_db::TestExecObjectOut&) const
   {
     // No-op
     return ValueType();
@@ -218,7 +227,7 @@ struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, TestExecObje
 
   VTKM_EXEC
   void Store(const vtkm::exec::arg::ThreadIndicesBasic& indices,
-             const TestExecObjectOut& execObject,
+             const ut_db::TestExecObjectOut& execObject,
              ValueType value) const
   {
     execObject.Array[indices.GetOutputIndex()] = value;
@@ -259,11 +268,8 @@ public:
   template <typename ExecObjectType>
   VTKM_EXEC vtkm::Id operator()(vtkm::Id value, ExecObjectType execObject, vtkm::Id index) const
   {
-#ifndef __HIP__
-    VTKM_TEST_ASSERT(value == TestValue(index, vtkm::Id()), "Got bad value in worklet.");
-    VTKM_TEST_ASSERT(execObject.Value == EXPECTED_EXEC_OBJECT_VALUE,
-                     "Got bad exec object in worklet.");
-#endif
+    VTKM_ASSERT(value == TestValue(index, vtkm::Id()));
+    VTKM_ASSERT(execObject.Value == EXPECTED_EXEC_OBJECT_VALUE);
     return TestValue(index, vtkm::Id()) + 1000;
   }
 };
@@ -346,7 +352,7 @@ void TestBasicInvoke()
   std::cout << "  Set up data." << std::endl;
   vtkm::cont::internal::Buffer inputBuffer;
   vtkm::cont::internal::Buffer outputBuffer;
-  TestExecObjectType execObject;
+  ut_db::TestExecObjectType execObject;
   execObject.Value = EXPECTED_EXEC_OBJECT_VALUE;
 
   {
@@ -388,7 +394,7 @@ void TestInvokeWithError()
   std::cout << "  Set up data." << std::endl;
   vtkm::cont::internal::Buffer inputBuffer;
   vtkm::cont::internal::Buffer outputBuffer;
-  TestExecObjectType execObject;
+  ut_db::TestExecObjectType execObject;
   execObject.Value = EXPECTED_EXEC_OBJECT_VALUE;
 
   {
@@ -412,6 +418,10 @@ void TestInvokeWithError()
     std::cout << "  Create and run dispatcher that raises error." << std::endl;
     TestDispatcher<TestErrorWorklet> dispatcher;
     dispatcher.Invoke(&inputBuffer, execObject, outputBuffer);
+    // Make sure the invocation finishes by moving data to host. Asynchronous launches
+    // might not throw an error right away.
+    vtkm::cont::Token token;
+    outputBuffer.ReadPointerHost(token);
     VTKM_TEST_FAIL("Exception not thrown.");
   }
   catch (vtkm::cont::ErrorExecution& error)
@@ -428,7 +438,7 @@ void TestInvokeWithBadDynamicType()
 
   std::vector<vtkm::Id> inputArray(ARRAY_SIZE);
   std::vector<vtkm::Id> outputArray(ARRAY_SIZE);
-  TestExecObjectTypeBad execObject;
+  ut_db::TestExecObjectTypeBad execObject;
   TestDispatcher<TestWorklet> dispatcher;
 
   try

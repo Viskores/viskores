@@ -12,9 +12,9 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
-#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/Invoker.h>
 
-#include <vtkm/exec/FunctorBase.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -33,17 +33,14 @@ struct DoubleIndexFunctor
 
 using DoubleIndexArrayType = vtkm::cont::ArrayHandleImplicit<DoubleIndexFunctor>;
 
-template <typename PermutedPortalType>
-struct CheckPermutationFunctor : vtkm::exec::FunctorBase
+struct CheckPermutationWorklet : vtkm::worklet::WorkletMapField
 {
-  PermutedPortalType PermutedPortal;
+  using ControlSignature = void(FieldIn permutationArray);
+  using ExecutionSignature = void(WorkIndex, _1);
 
-  VTKM_EXEC
-  void operator()(vtkm::Id index) const
+  template <typename T>
+  VTKM_EXEC void operator()(vtkm::Id index, const T& value) const
   {
-    using T = typename PermutedPortalType::ValueType;
-    T value = this->PermutedPortal.Get(index);
-
     vtkm::Id permutedIndex = 2 * index;
     T expectedValue = TestValue(permutedIndex, T());
 
@@ -54,46 +51,16 @@ struct CheckPermutationFunctor : vtkm::exec::FunctorBase
   }
 };
 
-template <typename PermutedArrayHandleType, typename Device>
-VTKM_CONT CheckPermutationFunctor<typename PermutedArrayHandleType::ReadPortalType>
-make_CheckPermutationFunctor(const PermutedArrayHandleType& permutedArray,
-                             Device,
-                             vtkm::cont::Token& token)
+struct InPlacePermutationWorklet : vtkm::worklet::WorkletMapField
 {
-  using PermutedPortalType = typename PermutedArrayHandleType::ReadPortalType;
-  CheckPermutationFunctor<PermutedPortalType> functor;
-  functor.PermutedPortal = permutedArray.PrepareForInput(Device(), token);
-  return functor;
-}
+  using ControlSignature = void(FieldInOut permutationArray);
 
-template <typename PermutedPortalType>
-struct InPlacePermutationFunctor : vtkm::exec::FunctorBase
-{
-  PermutedPortalType PermutedPortal;
-
-  VTKM_EXEC
-  void operator()(vtkm::Id index) const
+  template <typename T>
+  VTKM_EXEC void operator()(T& value) const
   {
-    using T = typename PermutedPortalType::ValueType;
-    T value = this->PermutedPortal.Get(index);
-
     value = value + T(1000);
-
-    this->PermutedPortal.Set(index, value);
   }
 };
-
-template <typename PermutedArrayHandleType, typename Device>
-VTKM_CONT InPlacePermutationFunctor<typename PermutedArrayHandleType::WritePortalType>
-make_InPlacePermutationFunctor(PermutedArrayHandleType& permutedArray,
-                               Device,
-                               vtkm::cont::Token& token)
-{
-  using PermutedPortalType = typename PermutedArrayHandleType::WritePortalType;
-  InPlacePermutationFunctor<PermutedPortalType> functor;
-  functor.PermutedPortal = permutedArray.PrepareForInPlace(Device(), token);
-  return functor;
-}
 
 template <typename PortalType>
 VTKM_CONT void CheckInPlaceResult(PortalType portal)
@@ -119,30 +86,19 @@ VTKM_CONT void CheckInPlaceResult(PortalType portal)
   }
 }
 
-template <typename PermutedPortalType>
-struct OutputPermutationFunctor : vtkm::exec::FunctorBase
+struct OutputPermutationWorklet : vtkm::worklet::WorkletMapField
 {
-  PermutedPortalType PermutedPortal;
+  // Note: Using a FieldOut for the input domain is rare (and mostly discouraged),
+  // but it works as long as the array is allocated to the size desired.
+  using ControlSignature = void(FieldOut permutationArray);
+  using ExecutionSignature = void(WorkIndex, _1);
 
-  VTKM_EXEC
-  void operator()(vtkm::Id index) const
+  template <typename T>
+  VTKM_EXEC void operator()(vtkm::Id index, T& value) const
   {
-    using T = typename PermutedPortalType::ValueType;
-    this->PermutedPortal.Set(index, TestValue(static_cast<vtkm::Id>(index), T()));
+    value = TestValue(static_cast<vtkm::Id>(index), T());
   }
 };
-
-template <typename PermutedArrayHandleType, typename Device>
-VTKM_CONT OutputPermutationFunctor<typename PermutedArrayHandleType::WritePortalType>
-make_OutputPermutationFunctor(PermutedArrayHandleType& permutedArray,
-                              Device,
-                              vtkm::cont::Token& token)
-{
-  using PermutedPortalType = typename PermutedArrayHandleType::WritePortalType;
-  OutputPermutationFunctor<PermutedPortalType> functor;
-  functor.PermutedPortal = permutedArray.PrepareForOutput(ARRAY_SIZE, Device(), token);
-  return functor;
-}
 
 template <typename PortalType>
 VTKM_CONT void CheckOutputResult(PortalType portal)
@@ -176,9 +132,6 @@ struct PermutationTests
   using ValueArrayType = vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>;
   using PermutationArrayType = vtkm::cont::ArrayHandlePermutation<IndexArrayType, ValueArrayType>;
 
-  using Device = vtkm::cont::DeviceAdapterTagSerial;
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-
   ValueArrayType MakeValueArray() const
   {
     // Allocate a buffer and set initial values
@@ -209,23 +162,18 @@ struct PermutationTests
     VTKM_TEST_ASSERT(permutationArray.ReadPortal().GetNumberOfValues() == ARRAY_SIZE,
                      "Permutation portal wrong size.");
 
-    vtkm::cont::Token token;
+    vtkm::cont::Invoker invoke;
 
     std::cout << "Test initial values in execution environment" << std::endl;
-    Algorithm::Schedule(make_CheckPermutationFunctor(permutationArray, Device(), token),
-                        ARRAY_SIZE);
+    invoke(CheckPermutationWorklet{}, permutationArray);
 
     std::cout << "Try in place operation" << std::endl;
-    Algorithm::Schedule(make_InPlacePermutationFunctor(permutationArray, Device(), token),
-                        ARRAY_SIZE);
-    token.DetachFromAll();
+    invoke(InPlacePermutationWorklet{}, permutationArray);
     CheckInPlaceResult(valueArray.WritePortal());
     CheckInPlaceResult(valueArray.ReadPortal());
 
     std::cout << "Try output operation" << std::endl;
-    Algorithm::Schedule(make_OutputPermutationFunctor(permutationArray, Device(), token),
-                        ARRAY_SIZE);
-    token.DetachFromAll();
+    invoke(OutputPermutationWorklet{}, permutationArray);
     CheckOutputResult(valueArray.ReadPortal());
     CheckOutputResult(valueArray.WritePortal());
   }
