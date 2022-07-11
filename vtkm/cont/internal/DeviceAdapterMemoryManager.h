@@ -274,7 +274,7 @@ VTKM_CONT inline void StdVectorReallocater(void*& memory,
   using vector_type = std::vector<T, Allocator>;
   vector_type* vector = reinterpret_cast<vector_type*>(container);
   VTKM_ASSERT(vector->empty() || (memory == vector->data()));
-  VTKM_ASSERT(oldSize == static_cast<vtkm::BufferSizeType>(vector->size()));
+  VTKM_ASSERT(oldSize == static_cast<vtkm::BufferSizeType>(vector->size() * sizeof(T)));
 
   vector->resize(static_cast<std::size_t>(newSize));
   memory = vector->data();
