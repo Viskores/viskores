@@ -54,8 +54,6 @@
 #ifndef vtk_m_worklet_contourtree_augmented_types_h
 #define vtk_m_worklet_contourtree_augmented_types_h
 
-#include <type_traits>
-
 #include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/Algorithm.h>
@@ -147,12 +145,9 @@ inline bool NoFlagsSet(vtkm::Id flaggedIndex)
 
 
 // Debug helper function: Assert that an index array has no element with any flags set
-VTKM_CONT
-template <typename AH>
-inline void AssertArrayHandleNoFlagsSet(const AH& ah)
+template <typename S>
+VTKM_CONT inline void AssertArrayHandleNoFlagsSet(const vtkm::cont::ArrayHandle<vtkm::Id, S>& ah)
 {
-  static_assert(std::is_same<typename AH::ValueType, vtkm::Id>::value,
-                "AssertArrayHandleNoFlagsSet needs index array handle as input");
 #ifndef VTKM_NO_ASSERT
   auto rp = ah.ReadPortal();
   for (vtkm::Id i = 0; i < ah.GetNumberOfValues(); ++i)
