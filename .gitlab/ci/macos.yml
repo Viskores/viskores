@@ -1,0 +1,67 @@
+# Ad-hoc build that runs in macos machines
+build:macos_xcode13:
+  tags: [vtk-m, macos, xcode-13.3]
+  extends:
+    - .macos_xcode13
+    - .cmake_build_macos
+    - .run_automatically
+
+test:macos_xcode13:
+  tags: [vtk-m, macos, xcode-13.3]
+  extends:
+    - .macos_xcode13
+    - .cmake_test_macos
+    - .run_automatically
+  needs:
+    - build:macos_xcode13
+  dependencies:
+    - build:macos_xcode13
+
+.macos_xcode13:
+  variables:
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    CMAKE_GENERATOR: Ninja
+
+    CC: gcc
+    CXX: g++
+    DEVELOPER_DIR: "/Applications/Xcode_13.3.app/Contents/Developer"
+    VTKM_SETTINGS: "64bit_floats+shared+ccache"
+
+.cmake_build_macos:
+  stage: build
+  interruptible: true
+  variables:
+    CCACHE_BASEDIR: "$CI_PROJECT_DIR"
+    CCACHE_DIR: "$CI_PROJECT_DIR/ccache"
+
+    # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
+    CCACHE_IGNOREOPTIONS: "-isystem=*"
+    CCACHE_COMPILERCHECK: "content"
+    CCACHE_NOHASHDIR: "true"
+    CCACHE_RESHARE: "true"
+  before_script:
+    - .gitlab/ci/config/cmake.sh
+    - export PATH=$PWD/.gitlab/cmake/bin:$PATH
+    - "cmake --version"
+    - "cmake -V -P .gitlab/ci/config/fetch_vtkm_tags.cmake"
+    - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
+    - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
+  script:
+    - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
+  after_script:
+    - ccache -v -s
+    - ccache -z
+  extends:
+    - .cmake_build_artifacts
+
+.cmake_test_macos:
+  stage: test
+  interruptible: true
+  before_script:
+    - .gitlab/ci/config/cmake.sh
+    - export PATH=$PWD/.gitlab/cmake/bin:$PATH
+    - cmake --version
+  script:
+    - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
+  extends:
+    - .cmake_test_artifacts
