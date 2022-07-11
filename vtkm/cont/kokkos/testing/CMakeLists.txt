@@ -9,9 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestKokkosCellLocatorRectilinearGrid.cxx
-  UnitTestKokkosCellLocatorTwoLevel.cxx
-  UnitTestKokkosCellLocatorUniformGrid.cxx
   UnitTestKokkosComputeRange.cxx
   UnitTestKokkosColorTable.cxx
   UnitTestKokkosDataSetExplicit.cxx

@@ -9,9 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestTBBCellLocatorRectilinearGrid.cxx
-  UnitTestTBBCellLocatorTwoLevel.cxx
-  UnitTestTBBCellLocatorUniformGrid.cxx
   UnitTestTBBColorTable.cxx
   UnitTestTBBComputeRange.cxx
   UnitTestTBBDataSetExplicit.cxx

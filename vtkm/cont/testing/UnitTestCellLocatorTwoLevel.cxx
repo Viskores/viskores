@@ -7,8 +7,6 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_cont_testing_TestingCellLocatorTwoLevel_h
-#define vtk_m_cont_testing_TestingCellLocatorTwoLevel_h
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorTwoLevel.h>
@@ -219,13 +217,8 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
   }
 }
 
-} // anonymous
-
-template <typename DeviceAdapter>
 void TestingCellLocatorTwoLevel()
 {
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
-
   vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(nullptr));
   std::cout << "Seed: " << seed << std::endl;
   RandomGenerator.seed(seed);
@@ -234,4 +227,9 @@ void TestingCellLocatorTwoLevel()
   TestCellLocator(vtkm::Id2(18), 512); // 2D dataset
 }
 
-#endif // vtk_m_cont_testing_TestingCellLocatorTwoLevel_h
+} // anonymous
+
+int UnitTestCellLocatorTwoLevel(int argc, char* argv[])
+{
+  return vtkm::cont::testing::Testing::Run(TestingCellLocatorTwoLevel, argc, argv);
+}

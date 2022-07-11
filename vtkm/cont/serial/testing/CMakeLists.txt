@@ -9,9 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestSerialCellLocatorRectilinearGrid.cxx
-  UnitTestSerialCellLocatorTwoLevel.cxx
-  UnitTestSerialCellLocatorUniformGrid.cxx
   UnitTestSerialComputeRange.cxx
   UnitTestSerialColorTable.cxx
   UnitTestSerialDataSetExplicit.cxx

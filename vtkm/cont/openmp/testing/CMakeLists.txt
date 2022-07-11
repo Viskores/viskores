@@ -9,9 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestOpenMPCellLocatorRectilinearGrid.cxx
-  UnitTestOpenMPCellLocatorTwoLevel.cxx
-  UnitTestOpenMPCellLocatorUniformGrid.cxx
   UnitTestOpenMPColorTable.cxx
   UnitTestOpenMPComputeRange.cxx
   UnitTestOpenMPDataSetExplicit.cxx

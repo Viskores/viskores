@@ -9,9 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestCudaCellLocatorRectilinearGrid.cu
-  UnitTestCudaCellLocatorTwoLevel.cu
-  UnitTestCudaCellLocatorUniformGrid.cu
   UnitTestCudaComputeRange.cu
   UnitTestCudaColorTable.cu
   UnitTestCudaDataSetExplicit.cu

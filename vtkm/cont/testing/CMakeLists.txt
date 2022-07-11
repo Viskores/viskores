@@ -12,9 +12,6 @@ set(headers
   ExplicitTestData.h
   MakeTestDataSet.h
   Testing.h
-  TestingCellLocatorRectilinearGrid.h
-  TestingCellLocatorTwoLevel.h
-  TestingCellLocatorUniformGrid.h
   TestingColorTable.h
   TestingComputeRange.h
   TestingDeviceAdapter.h
@@ -101,6 +98,9 @@ set(unit_tests_device
   UnitTestBitField.cxx
   UnitTestCellLocatorChooser.cxx
   UnitTestCellLocatorGeneral.cxx
+  UnitTestCellLocatorRectilinearGrid.cxx
+  UnitTestCellLocatorTwoLevel.cxx
+  UnitTestCellLocatorUniformGrid.cxx
   UnitTestCellSet.cxx
   UnitTestCellSetExplicit.cxx
   UnitTestCellSetExtrude.cxx
@@ -124,7 +124,7 @@ vtkm_library(
   DEVICE_SOURCES ${library_sources_device}
   HEADERS ${headers}
   )
-target_link_libraries(vtkm_cont_testing PUBLIC vtkm_cont)
+target_link_libraries(vtkm_cont_testing PUBLIC vtkm_cont vtkm_worklet)
 
 if(VTKm_ENABLE_TESTING)
   vtkm_unit_tests(SOURCES ${unit_tests} DEVICE_SOURCES ${unit_tests_device})
