@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestCudaComputeRange.cu
   UnitTestCudaDataSetExplicit.cu
   UnitTestCudaDataSetSingleType.cu
   UnitTestCudaDeviceAdapter.cu

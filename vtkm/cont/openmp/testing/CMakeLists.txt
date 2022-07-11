@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestOpenMPComputeRange.cxx
   UnitTestOpenMPDataSetExplicit.cxx
   UnitTestOpenMPDataSetSingleType.cxx
   UnitTestOpenMPDeviceAdapter.cxx

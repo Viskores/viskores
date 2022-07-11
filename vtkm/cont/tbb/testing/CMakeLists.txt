@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestTBBComputeRange.cxx
   UnitTestTBBDataSetExplicit.cxx
   UnitTestTBBDataSetSingleType.cxx
   UnitTestTBBDeviceAdapter.cxx

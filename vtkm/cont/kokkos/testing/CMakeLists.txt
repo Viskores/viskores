@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestKokkosComputeRange.cxx
   UnitTestKokkosDataSetExplicit.cxx
   UnitTestKokkosDataSetSingleType.cxx
   UnitTestKokkosDeviceAdapter.cxx

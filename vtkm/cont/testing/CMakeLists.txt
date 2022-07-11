@@ -12,7 +12,6 @@ set(headers
   ExplicitTestData.h
   MakeTestDataSet.h
   Testing.h
-  TestingComputeRange.h
   TestingDeviceAdapter.h
   TestingDataSetExplicit.h
   TestingDataSetSingleType.h
@@ -38,6 +37,7 @@ set(unit_tests
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleVirtual.cxx
   UnitTestArrayPortalToIterators.cxx
+  UnitTestComputeRange.cxx
   UnitTestContTesting.cxx
   UnitTestDataSetBuilderCurvilinear.cxx
   UnitTestDataSetBuilderExplicit.cxx

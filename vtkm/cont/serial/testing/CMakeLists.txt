@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestSerialComputeRange.cxx
   UnitTestSerialDataSetExplicit.cxx
   UnitTestSerialDataSetSingleType.cxx
   UnitTestSerialDeviceAdapter.cxx
