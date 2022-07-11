@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestTBBArrayHandleFancy.cxx
   UnitTestTBBBitField.cxx
   UnitTestTBBCellLocatorRectilinearGrid.cxx
   UnitTestTBBCellLocatorTwoLevel.cxx

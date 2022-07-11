@@ -20,7 +20,6 @@ set(headers
   TestingDeviceAdapter.h
   TestingDataSetExplicit.h
   TestingDataSetSingleType.h
-  TestingFancyArrayHandles.h
   TestingImplicitFunction.h
   TestingPointLocatorSparseGrid.h
   TestingRuntimeDeviceConfiguration.h
@@ -33,10 +32,8 @@ set(unit_tests
   UnitTestArrayGetValues.cxx
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
-  UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayHandleCounting.cxx
   UnitTestArrayHandleDiscard.cxx
-  UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandleOffsetsToNumComponents.cxx
   UnitTestArrayHandleRandomUniformBits.cxx
@@ -81,15 +78,25 @@ set(unit_tests_device
   UnitTestAlgorithm.cxx
   UnitTestArrayCopy.cxx
   UnitTestArrayHandle.cxx
+  UnitTestArrayHandleConcatenate.cxx
+  UnitTestArrayHandleConstant.cxx
+  UnitTestArrayHandleCast.cxx
   UnitTestArrayHandleDecorator.cxx
   UnitTestArrayHandleExtractComponent.cxx
+  UnitTestArrayHandleGroupVec.cxx
+  UnitTestArrayHandleGroupVecVariable.cxx
+  UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleMultiplexer.cxx
   UnitTestArrayHandlePermutation.cxx
   UnitTestArrayHandleRandomStandardNormal.cxx
   UnitTestArrayHandleRandomUniformReal.cxx
+  UnitTestArrayHandleRecombineVec.cxx
+  UnitTestArrayHandleSOA.cxx
   UnitTestArrayHandleSwizzle.cxx
   UnitTestArrayHandleTransform.cxx
+  UnitTestArrayHandleView.cxx
   UnitTestArrayHandleXGCCoordinates.cxx
+  UnitTestArrayHandleZip.cxx
   UnitTestArrayRangeCompute.cxx
   UnitTestCellLocatorChooser.cxx
   UnitTestCellLocatorGeneral.cxx
