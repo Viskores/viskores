@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestSerialDeviceAdapter.cxx
-  UnitTestSerialImplicitFunction.cxx
   UnitTestSerialPointLocatorSparseGrid.cxx
   )
 

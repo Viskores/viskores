@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestCudaDeviceAdapter.cu
-  UnitTestCudaImplicitFunction.cu
   UnitTestCudaIterators.cu
   UnitTestCudaMathEdgeCases.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu

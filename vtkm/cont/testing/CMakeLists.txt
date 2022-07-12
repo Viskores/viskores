@@ -13,7 +13,6 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingDeviceAdapter.h
-  TestingImplicitFunction.h
   TestingPointLocatorSparseGrid.h
   TestingRuntimeDeviceConfiguration.h
   TestingSerialization.h
@@ -107,6 +106,7 @@ set(unit_tests_device
   UnitTestDataSetPermutation.cxx
   UnitTestDataSetSingleType.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
+  UnitTestImplicitFunction.cxx
   UnitTestParticleArrayCopy.cxx
   )
 

@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestOpenMPDeviceAdapter.cxx
-  UnitTestOpenMPImplicitFunction.cxx
   UnitTestOpenMPPointLocatorSparseGrid.cxx
   UnitTestOpenMPRuntimeDeviceConfiguration.cxx
   )
