@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestTBBDeviceAdapter.cxx
-  UnitTestTBBPointLocatorSparseGrid.cxx
   UnitTestTBBRuntimeDeviceConfiguration.cxx
   )
 

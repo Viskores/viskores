@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestKokkosDeviceAdapter.cxx
-  UnitTestKokkosPointLocatorSparseGrid.cxx
   UnitTestKokkosRuntimeDeviceConfiguration.cxx
   )
 

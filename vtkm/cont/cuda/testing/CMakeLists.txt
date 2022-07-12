@@ -13,7 +13,6 @@ set(unit_tests
   UnitTestCudaIterators.cu
   UnitTestCudaMathEdgeCases.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
-  UnitTestCudaPointLocatorSparseGrid.cu
   UnitTestCudaRuntimeDeviceConfiguration.cu
   )
 

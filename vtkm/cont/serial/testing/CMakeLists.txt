@@ -10,7 +10,6 @@
 
 set(unit_tests
   UnitTestSerialDeviceAdapter.cxx
-  UnitTestSerialPointLocatorSparseGrid.cxx
   )
 
 if (NOT VTKm_NO_DEPRECATED_VIRTUAL)

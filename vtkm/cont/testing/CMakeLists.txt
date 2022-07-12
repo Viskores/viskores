@@ -13,7 +13,6 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingDeviceAdapter.h
-  TestingPointLocatorSparseGrid.h
   TestingRuntimeDeviceConfiguration.h
   TestingSerialization.h
   TestingVirtualObjectHandle.h
@@ -108,6 +107,7 @@ set(unit_tests_device
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestImplicitFunction.cxx
   UnitTestParticleArrayCopy.cxx
+  UnitTestPointLocatorSparseGrid.cxx
   )
 
 set(library_sources
