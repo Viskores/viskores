@@ -170,60 +170,61 @@ class XGCCoordinatesStorageImpl
   using SourceStorage = Storage<T, StorageTagBasic>; // only allow input AH to use StorageTagBasic
   using MetaData = XGCCoordinatesMetaData;
 
-  static MetaData& GetMetaData(const vtkm::cont::internal::Buffer* buffers)
+  static MetaData& GetMetaData(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<MetaData>();
   }
 
   // Used to skip the metadata buffer and return only actual data buffers
-  template <typename Buffs>
-  VTKM_CONT constexpr static Buffs* SourceBuffers(Buffs* buffers)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> SourceBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return buffers + 1;
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + 1, buffers.end());
   }
 
 public:
   using ReadPortalType =
     vtkm::internal::ArrayPortalXGCCoordinates<typename SourceStorage::ReadPortalType>;
 
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
-  {
-    return SourceStorage::GetNumberOfBuffers() + 1; // To account for metadata
-  }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return GetNumberOfValuesPerPlane(buffers) * GetNumberOfPlanesOwned(buffers);
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfValuesPerPlane(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValuesPerPlane(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return SourceStorage::GetNumberOfValues(SourceBuffers(buffers)) / 2;
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfPlanes(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfPlanes(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return GetMetaData(buffers).NumberOfPlanes;
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfPlanesOwned(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfPlanesOwned(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return GetMetaData(buffers).NumberOfPlanesOwned;
   }
 
-  VTKM_CONT static vtkm::Id GetPlaneStartId(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetPlaneStartId(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return GetMetaData(buffers).PlaneStartId;
   }
 
-  VTKM_CONT static bool GetUseCylindrical(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static bool GetUseCylindrical(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return GetMetaData(buffers).UseCylindrical;
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return ReadPortalType(SourceStorage::CreateReadPortal(SourceBuffers(buffers), device, token),
                           GetNumberOfPlanes(buffers),
@@ -233,7 +234,7 @@ public:
   }
 
   VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
-    vtkm::cont::ArrayHandle<T> array,
+    const vtkm::cont::ArrayHandle<T>& array,
     vtkm::Id numberOfPlanes,
     vtkm::Id numberOfPlanesOwned,
     vtkm::Id planeStartId,
@@ -243,8 +244,13 @@ public:
       MetaData(numberOfPlanes, numberOfPlanesOwned, planeStartId, useCylindrical), array);
   }
 
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers()
+  {
+    return CreateBuffers(vtkm::cont::ArrayHandle<T>{}, 0, 0, 0, false);
+  }
+
   VTKM_CONT static vtkm::cont::ArrayHandle<T> GetArrayHandle(
-    const vtkm::cont::internal::Buffer* buffers)
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return vtkm::cont::ArrayHandle<T>(SourceBuffers(buffers));
   }

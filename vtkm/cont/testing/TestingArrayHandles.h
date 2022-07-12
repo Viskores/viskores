@@ -601,7 +601,7 @@ private:
           Algorithm::Schedule(functor, ARRAY_SIZE * 2);
         }
 
-        transferredMemory = copyOfHandle.GetBuffers()->TakeHostBufferOwnership();
+        transferredMemory = copyOfHandle.GetBuffers()[0].TakeHostBufferOwnership();
 
         VTKM_TEST_ASSERT(copyOfHandle.GetNumberOfValues() == ARRAY_SIZE * 2,
                          "Array not allocated correctly.");
