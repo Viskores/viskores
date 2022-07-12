@@ -13,12 +13,6 @@ set(unit_tests
   UnitTestKokkosRuntimeDeviceConfiguration.cxx
   )
 
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(unit_tests ${unit_tests}
-    UnitTestKokkosVirtualObjectHandle.cxx
-    )
-endif()
-
 vtkm_unit_tests(SOURCES ${unit_tests} LABEL "KOKKOS" LIBRARIES vtkm_worklet BACKEND kokkos)
 
 if (TARGET vtkm::kokkos_cuda)

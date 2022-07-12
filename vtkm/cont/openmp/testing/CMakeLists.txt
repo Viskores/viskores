@@ -13,12 +13,6 @@ set(unit_tests
   UnitTestOpenMPRuntimeDeviceConfiguration.cxx
   )
 
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(unit_tests ${unit_tests}
-    UnitTestOpenMPVirtualObjectHandle.cxx
-    )
-endif()
-
 vtkm_unit_tests(SOURCES ${unit_tests}
                 LABEL "OPENMP"
                 DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG

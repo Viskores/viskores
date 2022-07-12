@@ -15,7 +15,6 @@ set(headers
   TestingDeviceAdapter.h
   TestingRuntimeDeviceConfiguration.h
   TestingSerialization.h
-  TestingVirtualObjectHandle.h
   )
 
 set(unit_tests
@@ -109,6 +108,12 @@ set(unit_tests_device
   UnitTestParticleArrayCopy.cxx
   UnitTestPointLocatorSparseGrid.cxx
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  list(APPEND unit_tests_device
+    UnitTestVirtualObjectHandle.cxx
+    )
+endif()
 
 set(library_sources
   TestEqualArrayHandles.cxx
