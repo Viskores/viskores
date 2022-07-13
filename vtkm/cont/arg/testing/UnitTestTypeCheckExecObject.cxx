@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+// This test does not really need a device compiler
+#define VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG
+
 #include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
 #include <vtkm/cont/ArrayHandle.h>
