@@ -38,12 +38,34 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
+//
+//  This code is an extension of the algorithm presented in the paper:
+//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
+//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
+//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
+//  (LDAV), October 2016, Baltimore, Maryland.
+//
+//  The PPP2 algorithm and software were jointly developed by
+//  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
+//  Oliver Ruebel (LBNL)
+//==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_DistributedBranchDecompositionFilter_h
-#define vtk_m_filter_scalar_topology_DistributedBranchDecompositionFilter_h
+#ifndef vtk_m_filter_scalar_topology_internal_ComputeBlockIndices_h_
+#define vtk_m_filter_scalar_topology_internal_ComputeBlockIndices_h_
 
-#include <vtkm/filter/NewFilterField.h>
-#include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
+#include <vector>
+
+#include <vtkm/Types.h>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/PartitionedDataSet.h>
+
+// DIY includes
+// clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/diy/Configure.h>
+#include <vtkm/thirdparty/diy/diy.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+// clang-format on
 
 namespace vtkm
 {
@@ -51,27 +73,26 @@ namespace filter
 {
 namespace scalar_topology
 {
-/// \brief Compute branch decompostion from distributed contour tree
-
-class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT DistributedBranchDecompositionFilter
-  : public vtkm::filter::NewFilter
+namespace internal
 {
-public:
-  VTKM_CONT DistributedBranchDecompositionFilter() = default;
-  VTKM_CONT DistributedBranchDecompositionFilter(vtkm::Id3,
-                                                 vtkm::Id3,
-                                                 const vtkm::cont::ArrayHandle<vtkm::Id3>&,
-                                                 const vtkm::cont::ArrayHandle<vtkm::Id3>&,
-                                                 const vtkm::cont::ArrayHandle<vtkm::Id3>&);
 
-private:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&) override;
-  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
-    const vtkm::cont::PartitionedDataSet& inData) override;
-};
+using DiscreteBoundsDivisionVector =
+  vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds>::DivisionsVector;
 
+VTKM_CONT vtkmdiy::DiscreteBounds ComputeBlockIndices(const vtkm::cont::PartitionedDataSet& input,
+                                                      DiscreteBoundsDivisionVector& diyDivisions,
+                                                      std::vector<int>& diyLocalBlockGids);
+
+VTKM_CONT vtkmdiy::DiscreteBounds ComputeBlockIndices(
+  const vtkm::cont::PartitionedDataSet& input,
+  vtkm::Id3 blocksPerDim,
+  const vtkm::cont::ArrayHandle<vtkm::Id3>& blockIndices,
+  DiscreteBoundsDivisionVector& diyDivisions,
+  std::vector<int>& diyLocalBlockGids);
+
+} // namespace internal
 } // namespace scalar_topology
-} // namespace worklet
+} // namespace filter
 } // namespace vtkm
 
 #endif

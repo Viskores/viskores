@@ -114,19 +114,24 @@ public:
   ///
   /// Note: Only used when running on a multi-block dataset.
   /// @param[in] blocksPerDim  Number of data blocks used in each data dimension
-  /// @param[in] globalSize  Global extends of the input mesh (i.e., number of mesh points in each dimension)
   /// @param[in] localBlockIndices  Array with the (x,y,z) index of each local data block with
   ///                               with respect to blocksPerDim
-  /// @param[in] localBlockOrigins  Array with the (x,y,z) origin (with regard to mesh index) of each
-  ///                               local data block
-  /// @param[in] localBlockSizes    Array with the sizes (i.e., extends in number of mesh points) of each
-  ///                               local data block
   VTKM_CONT
+  void SetBlockIndices(vtkm::Id3 blocksPerDim,
+                       const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices);
+
+  VTKM_CONT
+  VTKM_DEPRECATED(1.9,
+                  "Set PointSize, GlobalPointOrigin, and GlobalPointSize in CellSetStructured and "
+                  "optionally use SetBlockIndices.")
   void SetSpatialDecomposition(vtkm::Id3 blocksPerDim,
-                               vtkm::Id3 globalSize,
+                               vtkm::Id3,
                                const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes);
+                               const vtkm::cont::ArrayHandle<vtkm::Id3>&,
+                               const vtkm::cont::ArrayHandle<vtkm::Id3>&)
+  {
+    SetBlockIndices(blocksPerDim, localBlockIndices);
+  }
 
   //@{
   /// Get the contour tree computed by the filter

@@ -328,6 +328,47 @@ struct GetPointDimensions
   }
 };
 
+
+struct GetLocalAndGlobalPointDimensions
+{
+  void operator()(const vtkm::cont::CellSetStructured<2>& cells,
+                  vtkm::Id3& pointDimensions,
+                  vtkm::Id3& globalPointDimensions,
+                  vtkm::Id3& globalPointIndexStart) const
+  {
+    vtkm::Id2 pointDimensions2D = cells.GetPointDimensions();
+    pointDimensions[0] = pointDimensions2D[0];
+    pointDimensions[1] = pointDimensions2D[1];
+    pointDimensions[2] = 1;
+    vtkm::Id2 globalPointDimensions2D = cells.GetGlobalPointDimensions();
+    globalPointDimensions[0] = globalPointDimensions2D[0];
+    globalPointDimensions[1] = globalPointDimensions2D[1];
+    globalPointDimensions[2] = 1;
+    vtkm::Id2 pointIndexStart2D = cells.GetGlobalPointIndexStart();
+    globalPointIndexStart[0] = pointIndexStart2D[0];
+    globalPointIndexStart[1] = pointIndexStart2D[1];
+    globalPointIndexStart[2] = 0;
+  }
+  void operator()(const vtkm::cont::CellSetStructured<3>& cells,
+                  vtkm::Id3& pointDimensions,
+                  vtkm::Id3& globalPointDimensions,
+                  vtkm::Id3& globalPointIndexStart) const
+  {
+    pointDimensions = cells.GetPointDimensions();
+    globalPointDimensions = cells.GetGlobalPointDimensions();
+    globalPointIndexStart = cells.GetGlobalPointIndexStart();
+  }
+  //@}
+
+
+  ///  Raise ErrorBadValue if the input cell set is not a vtkm::cont::CellSetStructured<2> or <3>
+  template <typename T>
+  void operator()(const T&, vtkm::Id3&, vtkm::Id3&, vtkm::Id3&) const
+  {
+    throw vtkm::cont::ErrorBadValue("Expected 2D or 3D structured cell cet! ");
+  }
+};
+
 } // namespace contourtree_augmented
 } // worklet
 } // vtkm
