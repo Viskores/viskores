@@ -11,10 +11,10 @@
 #include <vtkm/cont/arg/TransportTagCellSetIn.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/exec/FunctorBase.h>
-
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -49,8 +49,10 @@ struct TestKernel : public vtkm::exec::FunctorBase
 };
 
 template <typename Device>
-void TransportWholeCellSetIn(Device)
+bool TransportWholeCellSetIn(Device device)
 {
+  std::cout << "Trying CellSetIn transport with " << device.GetName() << std::endl;
+
   //build a fake cell set
   const int nVerts = 5;
   vtkm::cont::CellSetExplicit<> contObject;
@@ -78,12 +80,14 @@ void TransportWholeCellSetIn(Device)
   kernel.CellSet = transport(contObject, nullptr, 1, 1, token);
 
   vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, 1);
+
+  return true;
 }
 
 void UnitTestCellSetIn()
 {
-  std::cout << "Trying CellSetIn transport with serial device." << std::endl;
-  TransportWholeCellSetIn(vtkm::cont::DeviceAdapterTagSerial());
+  VTKM_TEST_ASSERT(
+    vtkm::cont::TryExecute([](auto device) { return TransportWholeCellSetIn(device); }));
 }
 
 } // Anonymous namespace
