@@ -114,9 +114,22 @@ public:
       {
         //make this a pointer to avoid the copy?
         auto block = this->GetDataSet(blockId);
+
+        /*
         DSIStuff<ParticleType> stuff(this->BoundsMap, this->ParticleBlockIDsMap);
         block->Advect(v, this->StepSize, this->NumberOfSteps, stuff);
         numTerm = this->UpdateResult(stuff);
+        std::cout << " Advect: " << v.size() << " NT= " << numTerm << std::endl;
+        */
+
+
+        //DSIStuff<ParticleType> b(v, this->BoundsMap, this->ParticleBlockIDsMap);
+        //DSIStuffType bb = b;
+        DSIStuffType bb = DSIStuff<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
+        block->ADVECT(bb, this->StepSize, this->NumberOfSteps);
+
+        //DSIStuff<ParticleType> bbb = bb.Get<DSIStuff<ParticleType>>();
+        numTerm = this->UpdateResult(bb.Get<DSIStuff<ParticleType>>());
         std::cout << " Advect: " << v.size() << " NT= " << numTerm << std::endl;
       }
 

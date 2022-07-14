@@ -41,7 +41,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Streamline2::PrepareForExecution
   //  return input;
 
 #if 1
-  using DSIType = vtkm::filter::particleadvection::DSI;
+  using DSIType = vtkm::filter::particleadvection::SteadyStateDSI;
 
   this->ValidateOptions();
   //Make sure everything matches up ok.

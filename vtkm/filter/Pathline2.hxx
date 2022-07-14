@@ -38,7 +38,9 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline2::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  using DSIType = vtkm::filter::particleadvection::DSI;
+//  return input;
+#if 1
+  using DSIType = vtkm::filter::particleadvection::UnsteadyStateDSI;
 
   this->ValidateOptions();
   //Make sure everything matches up ok.
@@ -72,6 +74,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline2::PrepareForExecution(
   vtkm::filter::particleadvection::PAV<DSIType> pav(
     boundsMap, dsi, this->UseThreadedAlgorithm, this->ResultType);
   return pav.Execute(this->NumberOfSteps, this->StepSize, this->SeedArray);
+#endif
 }
 
 VTKM_CONT vtkm::cont::DataSet Pathline3::DoExecute(const vtkm::cont::DataSet& inData)
