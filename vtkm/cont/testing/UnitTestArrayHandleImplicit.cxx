@@ -10,7 +10,10 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
+
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/VecTraits.h>
 
@@ -32,6 +35,18 @@ struct IndexSquared
   }
 };
 
+struct PassThrough : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2);
+
+  template <typename InValue, typename OutValue>
+  VTKM_EXEC void operator()(const InValue& inValue, OutValue& outValue) const
+  {
+    outValue = inValue;
+  }
+};
+
 struct ImplicitTests
 {
   template <typename ValueType>
@@ -44,7 +59,7 @@ struct ImplicitTests
 
     ImplicitHandle implicit = vtkm::cont::make_ArrayHandleImplicit(functor, ARRAY_SIZE);
 
-    //verify that the control portal works
+    std::cout << "verify that the control portal works" << std::endl;
     auto implicitPortal = implicit.ReadPortal();
     for (int i = 0; i < ARRAY_SIZE; ++i)
     {
@@ -53,7 +68,7 @@ struct ImplicitTests
       VTKM_TEST_ASSERT(v == correct_value, "Implicit Handle Failed");
     }
 
-    //verify that the execution portal works
+    std::cout << "verify that the execution portal works" << std::endl;
     vtkm::cont::Token token;
     using Device = vtkm::cont::DeviceAdapterTagSerial;
     using CEPortal = typename ImplicitHandle::ReadPortalType;
@@ -63,6 +78,18 @@ struct ImplicitTests
       const ValueType v = execPortal.Get(i);
       const ValueType correct_value = functor(i);
       VTKM_TEST_ASSERT(v == correct_value, "Implicit Handle Failed");
+    }
+
+    std::cout << "verify that the array handle works in a worklet on the device" << std::endl;
+    vtkm::cont::Invoker invoke;
+    vtkm::cont::ArrayHandle<ValueType> result;
+    invoke(PassThrough{}, implicit, result);
+    auto resultPortal = result.ReadPortal();
+    for (int i = 0; i < ARRAY_SIZE; ++i)
+    {
+      const ValueType value = resultPortal.Get(i);
+      const ValueType correctValue = functor(i);
+      VTKM_TEST_ASSERT(test_equal(value, correctValue));
     }
   }
 };

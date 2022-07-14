@@ -9,28 +9,9 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestOpenMPArrayHandle.cxx
-  UnitTestOpenMPArrayHandleFancy.cxx
-  UnitTestOpenMPArrayHandleMultiplexer.cxx
-  UnitTestOpenMPBitField.cxx
-  UnitTestOpenMPCellLocatorRectilinearGrid.cxx
-  UnitTestOpenMPCellLocatorTwoLevel.cxx
-  UnitTestOpenMPCellLocatorUniformGrid.cxx
-  UnitTestOpenMPColorTable.cxx
-  UnitTestOpenMPComputeRange.cxx
-  UnitTestOpenMPDataSetExplicit.cxx
-  UnitTestOpenMPDataSetSingleType.cxx
   UnitTestOpenMPDeviceAdapter.cxx
-  UnitTestOpenMPImplicitFunction.cxx
-  UnitTestOpenMPPointLocatorSparseGrid.cxx
   UnitTestOpenMPRuntimeDeviceConfiguration.cxx
   )
-
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(unit_tests ${unit_tests}
-    UnitTestOpenMPVirtualObjectHandle.cxx
-    )
-endif()
 
 vtkm_unit_tests(SOURCES ${unit_tests}
                 LABEL "OPENMP"

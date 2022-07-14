@@ -894,13 +894,15 @@ struct TestValueImpl<std::string>
 /// returned by vtkm::testing::TestValue.
 ///
 template <typename PortalType>
-static inline VTKM_CONT void CheckPortal(const PortalType& portal)
+static inline VTKM_CONT void CheckPortal(
+  const PortalType& portal,
+  typename PortalType::ValueType offset = typename PortalType::ValueType(0))
 {
   using ValueType = typename PortalType::ValueType;
 
   for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
   {
-    ValueType expectedValue = TestValue(index, ValueType());
+    ValueType expectedValue = TestValue(index, ValueType()) + offset;
     ValueType foundValue = portal.Get(index);
     if (!test_equal(expectedValue, foundValue))
     {

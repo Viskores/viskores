@@ -75,6 +75,51 @@ VTKM_CONT void CheckControlPortals(const OriginalArrayHandleType& originalArray,
   }
 }
 
+struct ValueScale
+{
+  ValueScale()
+    : Factor(1.0)
+  {
+  }
+
+  ValueScale(vtkm::Float64 factor)
+    : Factor(factor)
+  {
+  }
+
+  template <typename ValueType>
+  VTKM_EXEC_CONT ValueType operator()(const ValueType& v) const
+  {
+    using Traits = vtkm::VecTraits<ValueType>;
+    using TTraits = vtkm::TypeTraits<ValueType>;
+    using ComponentType = typename Traits::ComponentType;
+
+    ValueType result = TTraits::ZeroInitialization();
+    for (vtkm::IdComponent i = 0; i < Traits::GetNumberOfComponents(v); ++i)
+    {
+      vtkm::Float64 vi = static_cast<vtkm::Float64>(Traits::GetComponent(v, i));
+      vtkm::Float64 ri = vi * this->Factor;
+      Traits::SetComponent(result, i, static_cast<ComponentType>(ri));
+    }
+    return result;
+  }
+
+private:
+  vtkm::Float64 Factor;
+};
+
+struct PassThrough : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2);
+
+  template <typename InValue, typename OutValue>
+  VTKM_EXEC void operator()(const InValue& inValue, OutValue& outValue) const
+  {
+    outValue = inValue;
+  }
+};
+
 template <typename InputValueType>
 struct TransformTests
 {
@@ -107,19 +152,13 @@ struct TransformTests
 
     std::cout << "Test a transform handle with a normal handle as the values" << std::endl;
     //we are going to connect the two handles up, and than fill
-    //the values and make the transform sees the new values in the handle
+    //the values and make sure the transform sees the new values in the handle
     vtkm::cont::ArrayHandle<InputValueType> input;
     TransformHandle thandle(input, functor);
 
     using Portal = typename vtkm::cont::ArrayHandle<InputValueType>::WritePortalType;
     input.Allocate(ARRAY_SIZE);
-    {
-      Portal portal = input.WritePortal();
-      for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
-      {
-        portal.Set(index, TestValue(index, InputValueType()));
-      }
-    }
+    SetPortal(input.WritePortal());
 
     CheckControlPortals(input, thandle);
 
@@ -139,6 +178,33 @@ struct TransformTests
 
     std::cout << "  Verify that the execution portal works" << std::endl;
     invoke(CheckTransformWorklet{}, input, thandle);
+
+    std::cout << "Write to a transformed array with an inverse transform" << std::endl;
+    {
+      ValueScale scaleUp(2.0);
+      ValueScale scaleDown(1.0 / 2.0);
+
+      input.Allocate(ARRAY_SIZE);
+      SetPortal(input.WritePortal());
+
+      vtkm::cont::ArrayHandle<InputValueType> output;
+      auto transformed = vtkm::cont::make_ArrayHandleTransform(output, scaleUp, scaleDown);
+
+      invoke(PassThrough{}, input, transformed);
+
+      //verify that the control portal works
+      auto outputPortal = output.ReadPortal();
+      auto transformedPortal = transformed.ReadPortal();
+      for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+      {
+        const InputValueType result_v = outputPortal.Get(i);
+        const InputValueType correct_value = scaleDown(TestValue(i, InputValueType()));
+        const InputValueType control_value = transformedPortal.Get(i);
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(scaleUp(result_v), control_value),
+                         "Transform Handle Control Failed");
+      }
+    }
   }
 };
 
