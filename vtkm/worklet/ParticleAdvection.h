@@ -55,44 +55,12 @@ struct ParticleAdvectionResult
   ParticleAdvectionResult()
     : Particles()
   {
-    std::cout << "PAR ctor0  ptr= " << (void*)this << " pPtr= " << (void*)&(this->Particles)
-              << std::endl;
   }
 
   ParticleAdvectionResult(const vtkm::cont::ArrayHandle<ParticleType>& p)
     : Particles(p)
   {
-    std::cout << "PAR ctor1  ptr= " << (void*)this << " pPtr= " << (void*)&(this->Particles)
-              << std::endl;
   }
-
-  /*
-  ParticleAdvectionResult(const vtkm::worklet::ParticleAdvectionResult<ParticleType>& pr)
-    : Particles(pr.Particles)
-  {
-    std::cout<<"PAR ctor2  ptr= "<<(void*)this<<" pPtr= "<<(void*)&(this->Particles)<<std::endl;
-  }
-
-
-  ~ParticleAdvectionResult()
-  {
-    std::cout<<"**** Tossing a PAResult= "<<(void*)this<<" pPtr= "<<(void*)(&this->Particles)<<std::endl;
-  }
-
-  vtkm::worklet::ParticleAdvectionResult<ParticleType>&
-  operator=(const vtkm::worklet::ParticleAdvectionResult<ParticleType>& src)
-  {
-    this->Particles = src.Particles;
-    return *this;
-  }
-
-  vtkm::worklet::ParticleAdvectionResult<ParticleType>&
-  operator=(const vtkm::worklet::ParticleAdvectionResult<ParticleType>&& src)
-  {
-    this->Particles = src.Particles;
-    return *this;
-  }
-  */
 
   vtkm::cont::ArrayHandle<ParticleType> Particles;
 };

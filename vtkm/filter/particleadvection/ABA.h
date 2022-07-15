@@ -114,22 +114,10 @@ public:
       {
         //make this a pointer to avoid the copy?
         auto block = this->GetDataSet(blockId);
-
-        /*
-        DSIStuff<ParticleType> stuff(this->BoundsMap, this->ParticleBlockIDsMap);
-        block->Advect(v, this->StepSize, this->NumberOfSteps, stuff);
-        numTerm = this->UpdateResult(stuff);
-        std::cout << " Advect: " << v.size() << " NT= " << numTerm << std::endl;
-        */
-
-
-        //DSIStuff<ParticleType> b(v, this->BoundsMap, this->ParticleBlockIDsMap);
-        //DSIStuffType bb = b;
-        DSIStuffType bb = DSIStuff<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
-        block->ADVECT(bb, this->StepSize, this->NumberOfSteps);
-
-        //DSIStuff<ParticleType> bbb = bb.Get<DSIStuff<ParticleType>>();
-        numTerm = this->UpdateResult(bb.Get<DSIStuff<ParticleType>>());
+        DSIHelperInfoType bb =
+          DSIHelperInfo<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
+        block->Advect(bb, this->StepSize, this->NumberOfSteps);
+        numTerm = this->UpdateResult(bb.Get<DSIHelperInfo<ParticleType>>());
         std::cout << " Advect: " << v.size() << " NT= " << numTerm << std::endl;
       }
 
@@ -347,7 +335,7 @@ public:
   }
   */
 
-  vtkm::Id UpdateResult(const DSIStuff<ParticleType>& stuff)
+  vtkm::Id UpdateResult(const DSIHelperInfo<ParticleType>& stuff)
   {
     this->UpdateActive(stuff.A, stuff.IdMapA);
     this->UpdateInactive(stuff.I, stuff.IdMapI);
@@ -362,29 +350,6 @@ public:
 
     return numTerm;
   }
-
-  /*
-  vtkm::Id UpdateResult(ResultType<ParticleType>& res, vtkm::Id blockId)
-  {
-    std::cout<<"UpdateResult: blockId= "<<blockId<<std::endl;
-    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> idsMapI, idsMapA;
-    std::vector<ParticleType> A, I;
-    std::vector<vtkm::Id> termIdx;
-    this->ClassifyParticles(res.Particles, idsMapA, idsMapI, A, I, termIdx);
-
-    //Update active, inactive and terminated
-    this->UpdateActive(A, idsMapA);
-    this->UpdateInactive(I, idsMapI);
-
-    vtkm::Id numTerm = static_cast<vtkm::Id>(termIdx.size());
-    if (numTerm > 0)
-      this->UpdateTerminated(res.Particles, termIdx);
-
-    internal::ResultHelper<ResultType, ParticleType>::Store(this->Results, res, blockId, termIdx);
-
-    return numTerm;
-  }
-  */
 
   virtual bool GetBlockAndWait(const vtkm::Id& numLocalTerm)
   {

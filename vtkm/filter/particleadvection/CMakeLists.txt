@@ -19,7 +19,11 @@ set(headers
   ParticleAdvectionAlgorithm.h
   ParticleMessenger.h
   DSI.h
+  DSISteadyState.h
+  DSIUnsteadyState.h
   DSI.hxx
+  DSISteadyState.hxx
+  DSIUnsteadyState.hxx
   ABA.h
   PAV.h
   ParticleAdvectionTypes.h

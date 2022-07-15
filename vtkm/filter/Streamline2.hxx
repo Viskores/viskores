@@ -16,7 +16,7 @@
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionAlgorithm.h>
 
-#include <vtkm/filter/particleadvection/DSI.h>
+#include <vtkm/filter/particleadvection/DSISteadyState.h>
 #include <vtkm/filter/particleadvection/PAV.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
@@ -41,7 +41,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Streamline2::PrepareForExecution
   //  return input;
 
 #if 1
-  using DSIType = vtkm::filter::particleadvection::SteadyStateDSI;
+  using DSIType = vtkm::filter::particleadvection::DSISteadyState;
 
   this->ValidateOptions();
   //Make sure everything matches up ok.
