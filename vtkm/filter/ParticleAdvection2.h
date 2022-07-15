@@ -12,8 +12,8 @@
 #define vtk_m_filter_ParticleAdvection2_h
 
 #include <vtkm/Particle.h>
-#include <vtkm/filter/FilterParticleAdvection.h>
 #include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/NewFilterParticleAdvection.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm
@@ -25,31 +25,18 @@ namespace filter
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
 
-class ParticleAdvection2
-  : public vtkm::filter::FilterParticleAdvection<ParticleAdvection2, vtkm::Particle>
+class ParticleAdvection2 : public vtkm::filter::NewFilterSteadyStateParticleAdvection
 {
 public:
-  VTKM_CONT ParticleAdvection2();
-
-  template <typename DerivedPolicy>
-  vtkm::cont::PartitionedDataSet PrepareForExecution(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  vtkm::cont::UnknownArrayHandle SeedArray;
-};
-
-class ParticleAdvection3 : public vtkm::filter::NewFilterField
-{
-public:
-  //  VTKM_CONT ParticleAdvection3() {}
+  VTKM_CONT ParticleAdvection2()
+    : NewFilterSteadyStateParticleAdvection(
+        vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
+  {
+  }
 
 protected:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData) override;
-
-  vtkm::cont::UnknownArrayHandle SeedArray;
 };
 
 }

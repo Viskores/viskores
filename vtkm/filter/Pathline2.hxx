@@ -25,70 +25,19 @@ namespace vtkm
 namespace filter
 {
 
-//-----------------------------------------------------------------------------
-inline VTKM_CONT Pathline2::Pathline2()
-  : vtkm::filter::FilterTemporalParticleAdvection<Pathline2, vtkm::Particle>()
+VTKM_CONT vtkm::cont::PartitionedDataSet Pathline2::DoExecutePartitions(
+  const vtkm::cont::PartitionedDataSet& input)
 {
-  this->ResultType = vtkm::filter::particleadvection::ParticleAdvectionResultType::STREAMLINE_TYPE;
-}
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline2::PrepareForExecution(
-  const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-//  return input;
-#if 1
   using DSIType = vtkm::filter::particleadvection::DSIUnsteadyState;
-
   this->ValidateOptions();
-  //Make sure everything matches up ok.
-  this->VecFieldType = vtkm::filter::particleadvection::VectorFieldType::VELOCITY_FIELD_TYPE;
 
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
-  std::string activeField = this->GetActiveFieldName();
+  auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 
-  std::vector<DSIType*> dsi;
-  for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
-  {
-    vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
-    auto ds1 = input.GetPartition(i);
-    auto ds2 = this->DataSet2.GetPartition(i);
-    if ((!ds1.HasPointField(activeField) && !ds1.HasCellField(activeField)) ||
-        (!ds2.HasPointField(activeField) && !ds2.HasCellField(activeField)))
-      throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
-
-    dsi.push_back(new DSIType(ds1,
-                              ds2,
-                              this->Time1,
-                              this->Time2,
-                              blockId,
-                              activeField,
-                              this->SolverType,
-                              this->VecFieldType,
-                              this->ResultType));
-  }
-
-  this->SeedArray = this->Seeds;
   vtkm::filter::particleadvection::PAV<DSIType> pav(
     boundsMap, dsi, this->UseThreadedAlgorithm, this->ResultType);
-  return pav.Execute(this->NumberOfSteps, this->StepSize, this->SeedArray);
-#endif
-}
 
-VTKM_CONT vtkm::cont::DataSet Pathline3::DoExecute(const vtkm::cont::DataSet& inData)
-{
-  std::cout << "Meow DS" << std::endl;
-  auto result = this->DoExecutePartitions(inData);
-  return result.GetPartition(0);
-}
-
-VTKM_CONT vtkm::cont::PartitionedDataSet Pathline3::DoExecutePartitions(
-  const vtkm::cont::PartitionedDataSet& inData)
-{
-  std::cout << "Meow pDS" << std::endl;
-  return inData;
+  return pav.Execute(this->NumberOfSteps, this->StepSize, this->Seeds);
 }
 
 }
