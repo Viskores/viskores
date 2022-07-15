@@ -416,9 +416,6 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         out = pathline.Execute(pds);
       }
 
-      std::cout << "Num IN DS= " << pds.GetNumberOfPartitions() << std::endl;
-      out.PrintSummary(std::cout);
-
       for (vtkm::Id i = 0; i < num; i++)
       {
         auto outputDS = out.GetPartition(i);
@@ -485,11 +482,6 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
       }
 
 
-      std::cout << "*************************************************************" << std::endl;
-      std::cout << "*************************************************************" << std::endl;
-      std::cout << "*************************************************************" << std::endl;
-      std::cout << "DS.NumP()= " << out.GetNumberOfPartitions()
-                << " pds.NumP()= " << pds.GetNumberOfPartitions() << std::endl;
       VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
       auto ds = out.GetPartition(0);
       //Validate the result is correct.
@@ -624,8 +616,6 @@ void TestStreamlineFilters()
 
   for (auto useSL : flags)
     TestAMRStreamline(useSL);
-
-  return;
 
   //Fusion test.
   std::vector<vtkm::Vec3f> fusionPts, fusionEndPts;

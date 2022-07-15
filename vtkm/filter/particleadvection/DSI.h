@@ -41,11 +41,12 @@ public:
   {
   }
 
-  std::vector<ParticleType> V, A, I;
-  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> IdMapA, IdMapI;
-  std::vector<vtkm::Id> TermIdx, TermID;
   const vtkm::filter::particleadvection::BoundsMap BoundsMap;
   const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
+
+  std::vector<ParticleType> A, I, V;
+  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> IdMapA, IdMapI;
+  std::vector<vtkm::Id> TermIdx, TermID;
 };
 
 using DSIHelperInfoType = vtkm::cont::internal::Variant<DSIHelperInfo<vtkm::Particle>,
@@ -75,7 +76,7 @@ public:
     , Id(id)
     , SolverType(solverType)
     , VecFieldType(vecFieldType)
-    , ResType(resultType)
+    , AdvectionResType(resultType)
     , Rank(this->Comm.rank())
   {
     //check that things are valid.
@@ -110,9 +111,19 @@ public:
 protected:
   template <typename ParticleType, template <typename> class ResultType>
   VTKM_CONT void UpdateResult(const ResultType<ParticleType>& result,
-                              DSIHelperInfo<ParticleType>& stuff);
+                              DSIHelperInfo<ParticleType>& dsiInfo);
 
 protected:
+  VTKM_CONT bool IsParticleAdvectionResult() const
+  {
+    return this->AdvectionResType == ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE;
+  }
+
+  VTKM_CONT bool IsStreamlineResult() const
+  {
+    return this->AdvectionResType == ParticleAdvectionResultType::STREAMLINE_TYPE;
+  }
+
   VTKM_CONT virtual void DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
                                   vtkm::FloatDefault stepSize,
                                   vtkm::Id maxSteps) = 0;
@@ -123,7 +134,7 @@ protected:
 
   template <typename ParticleType>
   VTKM_CONT void ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
-                                   DSIHelperInfo<ParticleType>& stuff) const;
+                                   DSIHelperInfo<ParticleType>& dsiInfo) const;
 
   //Data members.
   vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType> FieldName;
@@ -131,7 +142,7 @@ protected:
   vtkm::Id Id;
   vtkm::filter::particleadvection::IntegrationSolverType SolverType;
   vtkm::filter::particleadvection::VectorFieldType VecFieldType;
-  vtkm::filter::particleadvection::ParticleAdvectionResultType ResType =
+  vtkm::filter::particleadvection::ParticleAdvectionResultType AdvectionResType =
     vtkm::filter::particleadvection::ParticleAdvectionResultType::UNKNOWN_TYPE;
 
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();

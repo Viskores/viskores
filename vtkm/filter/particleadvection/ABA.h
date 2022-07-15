@@ -57,9 +57,6 @@ public:
         output.AppendPartition(ds);
     }
 
-    //std::cout<<"GetOutput: "<<__FILE__<<" "<<__LINE__<<std::endl;
-    //output.PrintSummary(std::cout);
-
     return output;
   }
 
@@ -71,7 +68,6 @@ public:
 
     vtkm::Id n = seeds.GetNumberOfValues();
     auto portal = seeds.ReadPortal();
-    std::cout << "SetSeeds: n= " << n << std::endl;
 
     std::vector<std::vector<vtkm::Id>> blockIDs;
     std::vector<ParticleType> particles;
@@ -79,9 +75,6 @@ public:
     {
       const ParticleType p = portal.Get(i);
       std::vector<vtkm::Id> ids = this->BoundsMap.FindBlocks(p.Pos);
-      std::cout << "  " << i << " " << p.Pos << " ids= " << ids.size()
-                << " BM= " << this->BoundsMap.GlobalBounds << " "
-                << this->BoundsMap.FindRank(ids[0]) << " " << this->Rank << std::endl;
 
       if (!ids.empty() && this->BoundsMap.FindRank(ids[0]) == this->Rank)
       {
@@ -93,7 +86,6 @@ public:
     this->SetSeedArray(particles, blockIDs);
   }
 
-
   //Advect all the particles.
   virtual void Go()
   {
@@ -103,8 +95,6 @@ public:
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
     this->ComputeTotalNumParticles(nLocal);
     this->TotalNumTerminatedParticles = 0;
-    std::cout << "Go() nParticles= " << nLocal << std::endl;
-    std::cout << "    BM= " << this->BoundsMap.GlobalBounds << std::endl;
 
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
@@ -118,7 +108,6 @@ public:
           DSIHelperInfo<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
         block->Advect(bb, this->StepSize, this->NumberOfSteps);
         numTerm = this->UpdateResult(bb.Get<DSIHelperInfo<ParticleType>>());
-        std::cout << " Advect: " << v.size() << " NT= " << numTerm << std::endl;
       }
 
       vtkm::Id numTermMessages = 0;
@@ -172,7 +161,6 @@ public:
     }
 
     this->Active.insert(this->Active.end(), particles.begin(), particles.end());
-    std::cout << " numActive= " << this->Active.size() << " p= " << particles.size() << std::endl;
   }
 
   virtual bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId)

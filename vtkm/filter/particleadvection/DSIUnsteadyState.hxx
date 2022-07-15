@@ -134,7 +134,7 @@ VTKM_CONT void DSIUnsteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
     FieldType velField1, velField2;
     this->GetVelocityFields(velField1, velField2);
 
-    if (this->ResType == ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
+    if (this->IsParticleAdvectionResult())
     {
       vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> result;
       AHType::Advect(velField1,
@@ -150,7 +150,7 @@ VTKM_CONT void DSIUnsteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
                      result);
       this->UpdateResult(result, b);
     }
-    else if (this->ResType == ParticleAdvectionResultType::STREAMLINE_TYPE)
+    else if (this->IsStreamlineResult())
     {
       vtkm::worklet::StreamlineResult<vtkm::Particle> result;
       AHType::Advect(velField1,
@@ -166,12 +166,16 @@ VTKM_CONT void DSIUnsteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
                      result);
       this->UpdateResult(result, b);
     }
+    else
+      throw vtkm::cont::ErrorFilterExecution("Unsupported result type");
   }
+  else
+    throw vtkm::cont::ErrorFilterExecution("Unsupported vector field type");
 }
 
-VTKM_CONT void DSIUnsteadyState::DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& b,
-                                          vtkm::FloatDefault stepSize,
-                                          vtkm::Id maxSteps)
+VTKM_CONT void DSIUnsteadyState::DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& vtkmNotUsed(b),
+                                          vtkm::FloatDefault vtkmNotUsed(stepSize),
+                                          vtkm::Id vtkmNotUsed(maxSteps))
 {
 }
 
