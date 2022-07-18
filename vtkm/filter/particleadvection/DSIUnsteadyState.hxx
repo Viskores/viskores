@@ -10,6 +10,9 @@
 
 #ifndef vtk_m_filter_particleadvection_DSIUnsteadyState_hxx
 #define vtk_m_filter_particleadvection_DSIUnsteadyState_hxx
+
+#include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
+
 namespace vtkm
 {
 namespace filter
@@ -23,6 +26,9 @@ using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 using VelocityFieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
 using UnsteadyStateGridEvalType =
   vtkm::worklet::particleadvection::TemporalGridEvaluator<VelocityFieldType>;
+
+template <typename GridEvalType, typename ParticleType>
+class AdvectHelper;
 
 template <typename ParticleType>
 class AdvectHelper<UnsteadyStateGridEvalType, ParticleType>
@@ -117,9 +123,9 @@ public:
 
 }
 
-VTKM_CONT void DSIUnsteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
-                                          vtkm::FloatDefault stepSize,
-                                          vtkm::Id maxSteps)
+VTKM_CONT inline void DSIUnsteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
+                                                 vtkm::FloatDefault stepSize,
+                                                 vtkm::Id maxSteps)
 {
   using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
@@ -173,9 +179,10 @@ VTKM_CONT void DSIUnsteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
     throw vtkm::cont::ErrorFilterExecution("Unsupported vector field type");
 }
 
-VTKM_CONT void DSIUnsteadyState::DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& vtkmNotUsed(b),
-                                          vtkm::FloatDefault vtkmNotUsed(stepSize),
-                                          vtkm::Id vtkmNotUsed(maxSteps))
+VTKM_CONT inline void DSIUnsteadyState::DoAdvect(
+  DSIHelperInfo<vtkm::ChargedParticle>& vtkmNotUsed(b),
+  vtkm::FloatDefault vtkmNotUsed(stepSize),
+  vtkm::Id vtkmNotUsed(maxSteps))
 {
 }
 

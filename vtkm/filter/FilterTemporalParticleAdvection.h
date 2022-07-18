@@ -52,7 +52,8 @@ public:
                                                     vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 protected:
-  VTKM_CONT void ValidateOptions(const vtkm::cont::PartitionedDataSet& input) const;
+  VTKM_CONT virtual void ValidateOptions(
+    const vtkm::cont::PartitionedDataSet& input) const override;
   using vtkm::filter::FilterParticleAdvection<Derived, ParticleType>::ValidateOptions;
 
   VTKM_CONT std::vector<vtkm::filter::particleadvection::TemporalDataSetIntegrator>

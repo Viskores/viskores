@@ -12,6 +12,7 @@
 #define vtk_m_filter_particleadvection_DSI_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/EulerIntegrator.h>
@@ -156,8 +157,8 @@ protected:
 }
 }
 
-//#ifndef vtk_m_filter_particleadvection_DSI_hxx
+#ifndef vtk_m_filter_particleadvection_DSI_hxx
 #include <vtkm/filter/particleadvection/DSI.hxx>
-//#endif
+#endif
 
 #endif //vtk_m_filter_particleadvection_DSI_h

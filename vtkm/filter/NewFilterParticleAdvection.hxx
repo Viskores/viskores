@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #ifndef vtk_m_filter_NewFilterParticleAdvection_hxx
-#define vtk_m_filter_FilterParticleAdvection_hxx
+#define vtk_m_filter_NewFilterParticleAdvection_hxx
 
 #include <vtkm/filter/NewFilterParticleAdvection.h>
 

@@ -11,34 +11,33 @@
 #ifndef vtk_m_filter_Pathline_h
 #define vtk_m_filter_Pathline_h
 
-#include <vtkm/filter/FilterTemporalParticleAdvection.h>
+#include <vtkm/Particle.h>
+#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/NewFilterParticleAdvection.h>
+#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm
 {
 namespace filter
 {
-/// \brief generate pathlines from a time sequence of vector fields.
+/// \brief Advect particles in a vector field.
 
 /// Takes as input a vector field and seed locations and generates the
-/// paths taken by the seeds through the vector field.
-template <typename ParticleType>
-class PathlineBase
-  : public vtkm::filter::FilterTemporalParticleAdvection<PathlineBase<ParticleType>, ParticleType>
+/// end points for each seed through the vector field.
+
+class Pathline : public vtkm::filter::NewFilterUnsteadyStateParticleAdvection
 {
 public:
-  VTKM_CONT
-  PathlineBase();
-
-  template <typename DerivedPolicy>
-  vtkm::cont::PartitionedDataSet PrepareForExecution(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT Pathline()
+    : NewFilterUnsteadyStateParticleAdvection(
+        vtkm::filter::particleadvection::ParticleAdvectionResultType::STREAMLINE_TYPE)
+  {
+  }
 
 protected:
-private:
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
 };
-
-using Pathline = PathlineBase<vtkm::Particle>;
 
 }
 } // namespace vtkm::filter

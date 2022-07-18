@@ -105,13 +105,9 @@ set(extra_headers
   LagrangianStructures.h
   MIRFilter.h
   ParticleAdvection.h
-  ParticleAdvection2.h
   Pathline.h
-  Pathline2.h
   PathParticle.h
-  PathParticle2.h
   Streamline.h
-  Streamline2.h
   StreamSurface.h
   )
 
@@ -124,13 +120,9 @@ set(extra_header_template_sources
   LagrangianStructures.hxx
   MIRFilter.hxx
   ParticleAdvection.hxx
-  ParticleAdvection2.hxx
   Pathline.hxx
-  Pathline2.hxx
   PathParticle.hxx
-  PathParticle2.hxx
   Streamline.hxx
-  Streamline2.hxx
   StreamSurface.hxx
   )
 

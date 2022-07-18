@@ -11,6 +11,8 @@
 #ifndef vtk_m_filter_particleadvection_DSI_hxx
 #define vtk_m_filter_particleadvection_DSI_hxx
 
+#include <vtkm/cont/ParticleArrayCopy.h>
+
 namespace vtkm
 {
 namespace filter

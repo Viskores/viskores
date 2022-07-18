@@ -82,7 +82,7 @@ protected:
     return out.GetPartition(0);
   }
 
-  VTKM_CONT virtual void ValidateOptions() const;
+  VTKM_CONT inline void ValidateOptions() const;
 
   vtkm::Id NumberOfSteps;
   vtkm::filter::particleadvection::ParticleAdvectionResultType ResultType =
@@ -108,9 +108,9 @@ public:
   }
 
 protected:
-  VTKM_CONT std::vector<vtkm::filter::particleadvection::DSISteadyState*> CreateDataSetIntegrators(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::particleadvection::BoundsMap& boundsMap) const;
+  VTKM_CONT inline std::vector<vtkm::filter::particleadvection::DSISteadyState*>
+  CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
+                           const vtkm::filter::particleadvection::BoundsMap& boundsMap) const;
 };
 
 class NewFilterUnsteadyStateParticleAdvection : public NewFilterParticleAdvection
@@ -129,7 +129,7 @@ public:
   void SetNextDataSet(const vtkm::cont::PartitionedDataSet& pds) { this->Input2 = pds; }
 
 protected:
-  VTKM_CONT std::vector<vtkm::filter::particleadvection::DSIUnsteadyState*>
+  VTKM_CONT inline std::vector<vtkm::filter::particleadvection::DSIUnsteadyState*>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
                            const vtkm::filter::particleadvection::BoundsMap& boundsMap) const;
 

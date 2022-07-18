@@ -107,9 +107,9 @@ public:
 };
 }
 
-VTKM_CONT void DSISteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
-                                        vtkm::FloatDefault stepSize,
-                                        vtkm::Id maxSteps)
+VTKM_CONT inline void DSISteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
+                                               vtkm::FloatDefault stepSize,
+                                               vtkm::Id maxSteps)
 {
   using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
@@ -145,9 +145,9 @@ VTKM_CONT void DSISteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
     throw vtkm::cont::ErrorFilterExecution("Unsupported vector field type");
 }
 
-VTKM_CONT void DSISteadyState::DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& vtkmNotUsed(b),
-                                        vtkm::FloatDefault vtkmNotUsed(stepSize),
-                                        vtkm::Id vtkmNotUsed(maxSteps))
+VTKM_CONT inline void DSISteadyState::DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& vtkmNotUsed(b),
+                                               vtkm::FloatDefault vtkmNotUsed(stepSize),
+                                               vtkm::Id vtkmNotUsed(maxSteps))
 {
 }
 

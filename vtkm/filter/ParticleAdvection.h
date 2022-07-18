@@ -12,7 +12,9 @@
 #define vtk_m_filter_ParticleAdvection_h
 
 #include <vtkm/Particle.h>
-#include <vtkm/filter/FilterParticleAdvection.h>
+#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/NewFilterParticleAdvection.h>
+#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm
 {
@@ -23,20 +25,20 @@ namespace filter
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
 
-template <typename ParticleType = vtkm::Particle>
-class ParticleAdvectionBase
-  : public vtkm::filter::FilterParticleAdvection<ParticleAdvectionBase<ParticleType>, ParticleType>
+class ParticleAdvection : public vtkm::filter::NewFilterSteadyStateParticleAdvection
 {
 public:
-  VTKM_CONT ParticleAdvectionBase();
+  VTKM_CONT ParticleAdvection()
+    : NewFilterSteadyStateParticleAdvection(
+        vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
+  {
+  }
 
-  template <typename DerivedPolicy>
-  vtkm::cont::PartitionedDataSet PrepareForExecution(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+protected:
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
 };
 
-using ParticleAdvection = ParticleAdvectionBase<vtkm::Particle>;
 }
 } // namespace vtkm::filter
 

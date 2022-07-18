@@ -29,7 +29,7 @@ FilterTemporalParticleAdvection<Derived, ParticleType>::FilterTemporalParticleAd
 
 template <typename Derived, typename ParticleType>
 void FilterTemporalParticleAdvection<Derived, ParticleType>::ValidateOptions(
-  const vtkm::cont::PartitionedDataSet& input) const
+  const vtkm::cont::PartitionedDataSet& input) const override
 {
   this->vtkm::filter::FilterParticleAdvection<Derived, ParticleType>::ValidateOptions();
 

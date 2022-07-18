@@ -11,35 +11,33 @@
 #ifndef vtk_m_filter_PathParticle_h
 #define vtk_m_filter_PathParticle_h
 
-#include <vtkm/filter/FilterTemporalParticleAdvection.h>
+#include <vtkm/Particle.h>
+#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/NewFilterParticleAdvection.h>
+#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm
 {
 namespace filter
 {
-/// \brief Advect particles in a time varying vector field.
+/// \brief Advect particles in a vector field.
 
 /// Takes as input a vector field and seed locations and generates the
-/// paths taken by the seeds through the vector field.
-template <typename ParticleType>
-class PathParticleBase
-  : public vtkm::filter::FilterTemporalParticleAdvection<PathParticleBase<ParticleType>,
-                                                         ParticleType>
+/// end points for each seed through the vector field.
+
+class PathParticle : public vtkm::filter::NewFilterUnsteadyStateParticleAdvection
 {
 public:
-  VTKM_CONT
-  PathParticleBase();
-
-  template <typename DerivedPolicy>
-  vtkm::cont::PartitionedDataSet PrepareForExecution(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT PathParticle()
+    : NewFilterUnsteadyStateParticleAdvection(
+        vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
+  {
+  }
 
 protected:
-private:
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
 };
-
-using PathParticle = PathParticleBase<vtkm::Particle>;
 
 }
 } // namespace vtkm::filter

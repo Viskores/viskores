@@ -11,33 +11,34 @@
 #ifndef vtk_m_filter_Streamline_h
 #define vtk_m_filter_Streamline_h
 
-#include <vtkm/filter/FilterParticleAdvection.h>
+#include <vtkm/Particle.h>
+#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/NewFilterParticleAdvection.h>
+#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm
 {
 namespace filter
 {
-/// \brief Generate streamlines from a vector field.
+/// \brief Advect particles in a vector field.
 
 /// Takes as input a vector field and seed locations and generates the
-/// paths taken by the seeds through the vector field.
-template <typename ParticleType = vtkm::Particle>
-class StreamlineBase
-  : public vtkm::filter::FilterParticleAdvection<StreamlineBase<ParticleType>, ParticleType>
+/// end points for each seed through the vector field.
+
+class Streamline : public vtkm::filter::NewFilterSteadyStateParticleAdvection
 {
 public:
-  VTKM_CONT
-  StreamlineBase();
+  VTKM_CONT Streamline()
+    : NewFilterSteadyStateParticleAdvection(
+        vtkm::filter::particleadvection::ParticleAdvectionResultType::STREAMLINE_TYPE)
+  {
+  }
 
-  template <typename DerivedPolicy>
-  vtkm::cont::PartitionedDataSet PrepareForExecution(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-private:
+protected:
+  VTKM_CONT inline vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
 };
 
-using Streamline = StreamlineBase<vtkm::Particle>;
 }
 } // namespace vtkm::filter
 

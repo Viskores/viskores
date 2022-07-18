@@ -34,13 +34,13 @@ public:
   {
   }
 
-  VTKM_CONT virtual void DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
-                                  vtkm::FloatDefault stepSize,
-                                  vtkm::Id maxSteps) override;
+  VTKM_CONT virtual inline void DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
+                                         vtkm::FloatDefault stepSize,
+                                         vtkm::Id maxSteps) override;
 
-  VTKM_CONT virtual void DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& b,
-                                  vtkm::FloatDefault stepSize,
-                                  vtkm::Id maxSteps) override;
+  VTKM_CONT virtual inline void DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& b,
+                                         vtkm::FloatDefault stepSize,
+                                         vtkm::Id maxSteps) override;
 
 protected:
   template <typename ArrayType>
@@ -60,7 +60,6 @@ protected:
       throw vtkm::cont::ErrorFilterExecution("Velocity field vector type not available");
   }
 
-
 private:
   vtkm::cont::DataSet DataSet;
 };
@@ -69,6 +68,8 @@ private:
 }
 }
 
+#ifndef vtk_m_filter_particleadvection_DSISteadyState_hxx
 #include <vtkm/filter/particleadvection/DSISteadyState.hxx>
+#endif
 
 #endif //vtk_m_filter_particleadvection_DSISteadyState_h

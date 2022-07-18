@@ -13,45 +13,29 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
-#include <vtkm/filter/particleadvection/ParticleAdvectionAlgorithm.h>
+
+#include <vtkm/filter/particleadvection/DSISteadyState.h>
+#include <vtkm/filter/particleadvection/PAV.h>
+#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm
 {
 namespace filter
 {
 
-//-----------------------------------------------------------------------------
-template <typename ParticleType>
-inline VTKM_CONT StreamlineBase<ParticleType>::StreamlineBase()
-  : vtkm::filter::FilterParticleAdvection<StreamlineBase<ParticleType>, ParticleType>()
+VTKM_CONT inline vtkm::cont::PartitionedDataSet Streamline::DoExecutePartitions(
+  const vtkm::cont::PartitionedDataSet& input)
 {
-}
-
-//-----------------------------------------------------------------------------
-template <typename ParticleType>
-template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::PartitionedDataSet StreamlineBase<ParticleType>::PrepareForExecution(
-  const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  //  using AlgorithmType = vtkm::filter::particleadvection::StreamlineAlgorithm;
-  //  using ThreadedAlgorithmType = vtkm::filter::particleadvection::StreamlineThreadedAlgorithm;
-  //  using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
-
+  using DSIType = vtkm::filter::particleadvection::DSISteadyState;
   this->ValidateOptions();
-  return input;
-#if 0
+
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
   auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 
-  if (this->GetUseThreadedAlgorithm())
-    return vtkm::filter::particleadvection::RunAlgo<DSIType, ThreadedAlgorithmType>(
-      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
-  else
-    return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
-      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
-#endif
+  vtkm::filter::particleadvection::PAV<DSIType> pav(
+    boundsMap, dsi, this->UseThreadedAlgorithm, this->ResultType);
+
+  return pav.Execute(this->NumberOfSteps, this->StepSize, this->Seeds);
 }
 
 }

@@ -40,13 +40,13 @@ public:
   {
   }
 
-  VTKM_CONT virtual void DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
-                                  vtkm::FloatDefault stepSize,
-                                  vtkm::Id maxSteps) override;
+  VTKM_CONT virtual inline void DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
+                                         vtkm::FloatDefault stepSize,
+                                         vtkm::Id maxSteps) override;
 
-  VTKM_CONT virtual void DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& b,
-                                  vtkm::FloatDefault stepSize,
-                                  vtkm::Id maxSteps) override;
+  VTKM_CONT virtual inline void DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& b,
+                                         vtkm::FloatDefault stepSize,
+                                         vtkm::Id maxSteps) override;
 
 protected:
   template <typename ArrayType>
@@ -84,6 +84,8 @@ private:
 }
 }
 
+#ifndef vtk_m_filter_particleadvection_DSIUnsteadyState_hxx
 #include <vtkm/filter/particleadvection/DSIUnsteadyState.hxx>
+#endif
 
 #endif //vtk_m_filter_particleadvection_DSIUnsteadyState_h
