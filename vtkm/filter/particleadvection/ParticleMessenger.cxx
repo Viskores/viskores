@@ -49,19 +49,14 @@ template <typename ParticleType>
 std::size_t ParticleMessenger<ParticleType>::CalcParticleBufferSize(std::size_t nParticles,
                                                                     std::size_t nBlockIds)
 {
-  constexpr std::size_t pSize = sizeof(vtkm::Vec3f) // Pos
-    + sizeof(vtkm::Id)                              // ID
-    + sizeof(vtkm::Id)                              // NumSteps
-    + sizeof(vtkm::UInt8)                           // Status
-    + sizeof(vtkm::FloatDefault);                   // Time
+  std::size_t pSize = sizeof(ParticleType);
 
 #ifndef NDEBUG
   vtkmdiy::MemoryBuffer buff;
   ParticleType p;
   vtkmdiy::save(buff, p);
 
-  //If this assert fires, ParticleType changed
-  //and pSize should be updated.
+  //Make sure the buffer size is correct.
   VTKM_ASSERT(pSize == buff.size());
 #endif
 
