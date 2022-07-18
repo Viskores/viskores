@@ -43,6 +43,18 @@ void TestTubeFilters()
   appendPts(dsb, VecType(2, 1, 0), ids);
   dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
 
+  //add some degenerate polylines.
+  //polyline with 1 point.
+  ids.clear();
+  appendPts(dsb, VecType(0, 0, 0), ids);
+  dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
+
+  //polyline with coincident points.
+  ids.clear();
+  appendPts(dsb, VecType(0, 0, 0), ids);
+  appendPts(dsb, VecType(0, 0, 0), ids);
+  dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
+
   vtkm::cont::DataSet ds = dsb.Create();
   std::vector<vtkm::FloatDefault> ptVar, cellVar;
 
@@ -53,13 +65,22 @@ void TestTubeFilters()
   cellVar.push_back(100);
   cellVar.push_back(101);
 
-
   //Polyline 2.
   ptVar.push_back(10);
   ptVar.push_back(11);
   ptVar.push_back(12);
   cellVar.push_back(110);
   cellVar.push_back(111);
+
+  //Add some degenerate polylines.
+  //Polyline 3 (only 1 point)
+  ptVar.push_back(-1);
+  cellVar.push_back(-1);
+  //Polyline 4 (2 coincident points)
+  ptVar.push_back(-1);
+  ptVar.push_back(-1);
+  cellVar.push_back(-1);
+  cellVar.push_back(-1);
 
   ds.AddPointField("pointVar", ptVar);
   ds.AddCellField("cellVar", cellVar);
