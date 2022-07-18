@@ -17,8 +17,6 @@ set(unit_tests
   UnitTestAverageByKey.cxx
   UnitTestBoundingIntervalHierarchy.cxx
   UnitTestCellDeepCopy.cxx
-  UnitTestContourTreeUniform.cxx
-  UnitTestContourTreeUniformAugmented.cxx
   UnitTestContourTreeUniformDistributed.cxx
   UnitTestCosmoTools.cxx
   UnitTestDescriptiveStatistics.cxx
@@ -53,9 +51,8 @@ set(unit_tests
  )
 
 vtkm_unit_tests(
-  SOURCES ${unit_tests}
+  DEVICE_SOURCES ${unit_tests}
   LIBRARIES vtkm_source vtkm_worklet vtkm_filter vtkm_io
-  ALL_BACKENDS
   USE_VTKM_JOB_POOL
   )
 if (TARGET vtkm::cuda)

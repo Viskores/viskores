@@ -10,6 +10,7 @@
 #include <vtkm/cont/CellSetExplicit.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -171,7 +172,10 @@ void TestCellSetExplicit()
 
   // Test a raw PrepareForInput call:
   vtkm::cont::Token token;
-  cellset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, PointTag{}, CellTag{}, token);
+  {
+    vtkm::cont::ScopedRuntimeDeviceTracker deviceScope(vtkm::cont::DeviceAdapterTagSerial{});
+    cellset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, PointTag{}, CellTag{}, token);
+  }
 
   VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(PointTag{}, CellTag{})),
                    "CellToPoint table missing after PrepareForInput.");

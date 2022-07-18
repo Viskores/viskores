@@ -91,10 +91,6 @@ struct BufferState
   {
     if (this->Info.GetSize() != newSize)
     {
-      if (this->Pinned)
-      {
-        throw vtkm::cont::ErrorBadAllocation("Attempted to reallocate a pinned buffer.");
-      }
       this->Info.Reallocate(newSize);
     }
   }
@@ -775,7 +771,7 @@ vtkm::BufferSizeType Buffer::GetNumberOfBytes() const
 
 void Buffer::SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes,
                               vtkm::CopyFlag preserve,
-                              vtkm::cont::Token& token)
+                              vtkm::cont::Token& token) const
 {
   LockType lock = this->Internals->GetLock();
   detail::BufferHelper::SetNumberOfBytes(this->Internals, lock, numberOfBytes, preserve, token);
@@ -1050,7 +1046,7 @@ vtkm::cont::internal::BufferInfo Buffer::GetHostBufferInfo() const
   return this->Internals->GetHostBuffer(lock);
 }
 
-vtkm::cont::internal::TransferredBuffer Buffer::TakeHostBufferOwnership()
+vtkm::cont::internal::TransferredBuffer Buffer::TakeHostBufferOwnership() const
 {
   // A Token should not be declared within the scope of a lock. when the token goes out of scope
   // it will attempt to acquire the lock, which is undefined behavior of the thread already has
@@ -1067,7 +1063,7 @@ vtkm::cont::internal::TransferredBuffer Buffer::TakeHostBufferOwnership()
 }
 
 vtkm::cont::internal::TransferredBuffer Buffer::TakeDeviceBufferOwnership(
-  vtkm::cont::DeviceAdapterId device)
+  vtkm::cont::DeviceAdapterId device) const
 {
   if (device.IsValueValid())
   {
@@ -1164,9 +1160,14 @@ void Serialization<vtkm::cont::internal::Buffer>::save(BinaryBuffer& bb,
   vtkm::BufferSizeType size = obj.GetNumberOfBytes();
   vtkmdiy::save(bb, size);
 
-  vtkm::cont::Token token;
-  const vtkm::UInt8* data = reinterpret_cast<const vtkm::UInt8*>(obj.ReadPointerHost(token));
-  vtkmdiy::save(bb, data, static_cast<std::size_t>(size));
+  if (size)
+  {
+    // NOTE: If size == 0, obj.ReadPointerHost will be a nullptr, and saving that via
+    // vtkmdiy causes test failure on osheim
+    vtkm::cont::Token token;
+    const vtkm::UInt8* data = reinterpret_cast<const vtkm::UInt8*>(obj.ReadPointerHost(token));
+    vtkmdiy::save(bb, data, static_cast<std::size_t>(size));
+  }
 }
 
 void Serialization<vtkm::cont::internal::Buffer>::load(BinaryBuffer& bb,
@@ -1177,8 +1178,11 @@ void Serialization<vtkm::cont::internal::Buffer>::load(BinaryBuffer& bb,
 
   vtkm::cont::Token token;
   obj.SetNumberOfBytes(size, vtkm::CopyFlag::Off, token);
-  vtkm::UInt8* data = reinterpret_cast<vtkm::UInt8*>(obj.WritePointerHost(token));
-  vtkmdiy::load(bb, data, static_cast<std::size_t>(size));
+  if (size)
+  {
+    vtkm::UInt8* data = reinterpret_cast<vtkm::UInt8*>(obj.WritePointerHost(token));
+    vtkmdiy::load(bb, data, static_cast<std::size_t>(size));
+  }
 }
 
 } // namespace diy

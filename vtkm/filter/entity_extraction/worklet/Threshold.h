@@ -191,17 +191,6 @@ public:
     return output;
   }
 
-  template <typename ValueType, typename StorageTag>
-  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageTag>& in) const
-  {
-    vtkm::cont::ArrayHandle<ValueType> result;
-    DispatcherMapField<ThresholdCopy> dispatcher;
-    dispatcher.Invoke(this->ValidCellIds, result, in);
-
-    return result;
-  }
-
   vtkm::cont::ArrayHandle<vtkm::Id> GetValidCellIds() const { return this->ValidCellIds; }
 
 private:

@@ -12,15 +12,15 @@
 
 #include <vtkm/exec/FunctorBase.h>
 
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 #define EXPECTED_NUMBER 42
 
-namespace
+namespace unittesttransportexecobject
 {
 
 struct NotAnExecutionObject
@@ -65,8 +65,10 @@ struct TestKernel : public vtkm::exec::FunctorBase
 };
 
 template <typename Device>
-void TryExecObjectTransport(Device)
+bool TryExecObjectTransport(Device device)
 {
+  std::cout << "Trying ExecObject transport with " << device.GetName() << std::endl;
+
   TestExecutionObject contObject;
   contObject.Number = EXPECTED_NUMBER;
 
@@ -79,6 +81,8 @@ void TryExecObjectTransport(Device)
   kernel.Object = transport(contObject, nullptr, 1, 1, token);
 
   vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, 1);
+
+  return true;
 }
 
 void TestExecObjectTransport()
@@ -98,13 +102,14 @@ void TestExecObjectTransport()
   VTKM_TEST_ASSERT(vtkm::cont::internal::HasPrepareForExecution<TestExecutionObject>::value,
                    "Bad query");
 
-  std::cout << "Trying ExecObject transport with serial device." << std::endl;
-  TryExecObjectTransport(vtkm::cont::DeviceAdapterTagSerial());
+  VTKM_TEST_ASSERT(
+    vtkm::cont::TryExecute([](auto device) { return TryExecObjectTransport(device); }));
 }
 
-} // Anonymous namespace
+} // namespace unittesttransportexecobject
 
 int UnitTestTransportExecObject(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestExecObjectTransport, argc, argv);
+  return vtkm::cont::testing::Testing::Run(
+    unittesttransportexecobject::TestExecObjectTransport, argc, argv);
 }

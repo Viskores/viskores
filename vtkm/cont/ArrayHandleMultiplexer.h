@@ -151,7 +151,8 @@ namespace detail
 struct MultiplexerGetNumberOfValuesFunctor
 {
   template <typename StorageType>
-  VTKM_CONT vtkm::Id operator()(StorageType, const vtkm::cont::internal::Buffer* buffers) const
+  VTKM_CONT vtkm::Id operator()(StorageType,
+                                const std::vector<vtkm::cont::internal::Buffer>& buffers) const
   {
     return StorageType::GetNumberOfValues(buffers);
   }
@@ -162,7 +163,7 @@ struct MultiplexerResizeBuffersFunctor
   template <typename StorageType>
   VTKM_CONT void operator()(StorageType,
                             vtkm::Id numValues,
-                            vtkm::cont::internal::Buffer* buffers,
+                            const std::vector<vtkm::cont::internal::Buffer>& buffers,
                             vtkm::CopyFlag preserve,
                             vtkm::cont::Token& token) const
   {
@@ -174,7 +175,7 @@ struct MultiplexerFillFunctor
 {
   template <typename ValueType, typename StorageType>
   VTKM_CONT void operator()(StorageType,
-                            vtkm::cont::internal::Buffer* buffers,
+                            const std::vector<vtkm::cont::internal::Buffer>& buffers,
                             const ValueType& fillValue,
                             vtkm::Id startIndex,
                             vtkm::Id endIndex,
@@ -189,7 +190,7 @@ struct MultiplexerCreateReadPortalFunctor
 {
   template <typename StorageType>
   VTKM_CONT ReadPortalType operator()(StorageType,
-                                      const vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::cont::DeviceAdapterId device,
                                       vtkm::cont::Token& token) const
   {
@@ -202,7 +203,7 @@ struct MultiplexerCreateWritePortalFunctor
 {
   template <typename StorageType>
   VTKM_CONT WritePortalType operator()(StorageType,
-                                       vtkm::cont::internal::Buffer* buffers,
+                                       const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                        vtkm::cont::DeviceAdapterId device,
                                        vtkm::cont::Token& token) const
   {
@@ -217,7 +218,7 @@ struct MultiplexerArrayHandleVariantFunctor
 
   template <typename StorageTag>
   VTKM_CONT VariantType operator()(vtkm::cont::internal::Storage<T, StorageTag>,
-                                   const vtkm::cont::internal::Buffer* buffers)
+                                   const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return VariantType(vtkm::cont::ArrayHandle<T, StorageTag>(buffers));
   }
@@ -233,15 +234,15 @@ class Storage<ValueType, StorageTagMultiplexer<StorageTags...>>
 
   using StorageVariant = vtkm::cont::internal::Variant<StorageFor<StorageTags>...>;
 
-  VTKM_CONT static StorageVariant Variant(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static StorageVariant Variant(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<StorageVariant>();
   }
 
-  template <typename Buff>
-  VTKM_CONT static Buff* ArrayBuffers(Buff* buffers)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> ArrayBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return buffers + 1;
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + 1, buffers.end());
   }
 
 public:
@@ -250,19 +251,15 @@ public:
   using WritePortalType =
     vtkm::internal::ArrayPortalMultiplexer<typename StorageFor<StorageTags>::WritePortalType...>;
 
-  VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers()
-  {
-    return std::max({ StorageFor<StorageTags>::GetNumberOfBuffers()... }) + 1;
-  }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return Variant(buffers).CastAndCall(detail::MultiplexerGetNumberOfValuesFunctor{},
                                         ArrayBuffers(buffers));
   }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
@@ -270,7 +267,7 @@ public:
       detail::MultiplexerResizeBuffersFunctor{}, numValues, ArrayBuffers(buffers), preserve, token);
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>& buffers,
                              const ValueType& fillValue,
                              vtkm::Id startIndex,
                              vtkm::Id endIndex,
@@ -284,9 +281,10 @@ public:
                                  token);
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return Variant(buffers).CastAndCall(
       detail::MultiplexerCreateReadPortalFunctor<ReadPortalType>{},
@@ -295,9 +293,10 @@ public:
       token);
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return Variant(buffers).CastAndCall(
       detail::MultiplexerCreateWritePortalFunctor<WritePortalType>{},
@@ -306,7 +305,7 @@ public:
       token);
   }
 
-  VTKM_CONT static bool IsValid(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static bool IsValid(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return Variant(buffers).IsValid();
   }
@@ -315,21 +314,17 @@ public:
   VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(const ArrayType& array)
   {
     VTKM_IS_ARRAY_HANDLE(ArrayType);
-    std::vector<vtkm::cont::internal::Buffer> buffers =
-      vtkm::cont::internal::CreateBuffers(StorageVariant{ array.GetStorage() }, array);
+    return vtkm::cont::internal::CreateBuffers(StorageVariant{ array.GetStorage() }, array);
+  }
 
-    // Some arrays will require different numbers of buffers. Make sure we size the buffers
-    // array to accomodate any such one to avoid any troubles.
-    std::size_t numBuffers = static_cast<std::size_t>(GetNumberOfBuffers());
-    VTKM_ASSERT(numBuffers >= buffers.size());
-    buffers.resize(numBuffers);
-
-    return buffers;
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers()
+  {
+    return vtkm::cont::internal::CreateBuffers(StorageVariant{});
   }
 
   VTKM_CONT static
     typename detail::MultiplexerArrayHandleVariantFunctor<ValueType, StorageTags...>::VariantType
-    GetArrayHandleVariant(const vtkm::cont::internal::Buffer* buffers)
+    GetArrayHandleVariant(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return Variant(buffers).CastAndCall(
       detail::MultiplexerArrayHandleVariantFunctor<ValueType, StorageTags...>{},

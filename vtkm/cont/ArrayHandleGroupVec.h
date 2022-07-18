@@ -128,26 +128,27 @@ public:
     vtkm::internal::ArrayPortalGroupVec<typename ComponentsStorage::WritePortalType,
                                         NUM_COMPONENTS>;
 
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers()
   {
-    return ComponentsStorage::GetNumberOfBuffers();
+    return ComponentsStorage::CreateBuffers();
   }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
     ComponentsStorage::ResizeBuffers(NUM_COMPONENTS * numValues, buffers, preserve, token);
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     vtkm::Id componentsSize = ComponentsStorage::GetNumberOfValues(buffers);
     return componentsSize / NUM_COMPONENTS;
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>&,
                              const ValueType&,
                              vtkm::Id,
                              vtkm::Id,
@@ -156,9 +157,10 @@ public:
     throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleGroupVec.");
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     if ((ComponentsStorage::GetNumberOfValues(buffers) % NUM_COMPONENTS) != 0)
     {
@@ -168,9 +170,10 @@ public:
     return ReadPortalType(ComponentsStorage::CreateReadPortal(buffers, device, token));
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     if ((ComponentsStorage::GetNumberOfValues(buffers) % NUM_COMPONENTS) != 0)
     {

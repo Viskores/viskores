@@ -214,6 +214,5 @@ void TestCellLocatorGeneral()
 
 int UnitTestCellLocatorGeneral(int argc, char* argv[])
 {
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(TestCellLocatorGeneral, argc, argv);
 }

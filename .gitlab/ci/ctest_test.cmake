@@ -32,7 +32,7 @@ if (test_exclusions)
   set(test_exclusions "(${test_exclusions})")
 endif ()
 
-if (CMAKE_VERSION VERSION_GREATER 3.21.0)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
   set(junit_args OUTPUT_JUNIT "${CTEST_BINARY_DIRECTORY}/junit.xml")
 endif()
 

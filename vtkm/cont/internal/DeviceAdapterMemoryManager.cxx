@@ -131,7 +131,7 @@ namespace internal
 
 VTKM_CONT void InvalidRealloc(void*&, void*&, vtkm::BufferSizeType, vtkm::BufferSizeType)
 {
-  vtkm::cont::ErrorBadAllocation("User provided memory does not have a reallocater.");
+  throw vtkm::cont::ErrorBadAllocation("User provided memory does not have a reallocater.");
 }
 
 

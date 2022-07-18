@@ -17,6 +17,8 @@
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/Token.h>
 
+#include <array>
+
 namespace vtkm
 {
 namespace internal
@@ -199,26 +201,27 @@ struct ArrayHandleCartesianProductTraits
 template <typename T, typename ST1, typename ST2, typename ST3>
 class Storage<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>
 {
+  struct Info
+  {
+    std::array<std::size_t, 4> BufferOffset;
+  };
+
   using Storage1 = vtkm::cont::internal::Storage<T, ST1>;
   using Storage2 = vtkm::cont::internal::Storage<T, ST2>;
   using Storage3 = vtkm::cont::internal::Storage<T, ST3>;
 
-  template <typename Buffs>
-  VTKM_CONT constexpr static Buffs* Buffers1(Buffs* buffers)
-  {
-    return buffers;
-  }
+  using Array1 = vtkm::cont::ArrayHandle<T, ST1>;
+  using Array2 = vtkm::cont::ArrayHandle<T, ST2>;
+  using Array3 = vtkm::cont::ArrayHandle<T, ST3>;
 
-  template <typename Buffs>
-  VTKM_CONT constexpr static Buffs* Buffers2(Buffs* buffers)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> GetBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    std::size_t subArray)
   {
-    return buffers + Storage1::GetNumberOfBuffers();
-  }
-
-  template <typename Buffs>
-  VTKM_CONT constexpr static Buffs* Buffers3(Buffs* buffers)
-  {
-    return buffers + Storage1::GetNumberOfBuffers() + Storage2::GetNumberOfBuffers();
+    Info info = buffers[0].GetMetaData<Info>();
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() +
+                                                       info.BufferOffset[subArray - 1],
+                                                     buffers.begin() + info.BufferOffset[subArray]);
   }
 
 public:
@@ -235,20 +238,15 @@ public:
                                                 typename Storage2::WritePortalType,
                                                 typename Storage3::WritePortalType>;
 
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return Storage1::GetNumberOfBuffers() + Storage2::GetNumberOfBuffers() +
-      Storage3::GetNumberOfBuffers();
+    return (Storage1::GetNumberOfValues(GetBuffers(buffers, 1)) *
+            Storage2::GetNumberOfValues(GetBuffers(buffers, 2)) *
+            Storage3::GetNumberOfValues(GetBuffers(buffers, 3)));
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
-  {
-    return (Storage1::GetNumberOfValues(Buffers1(buffers)) *
-            Storage2::GetNumberOfValues(Buffers2(buffers)) *
-            Storage3::GetNumberOfValues(Buffers3(buffers)));
-  }
-
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>& buffers,
                              const vtkm::Vec<T, 3>& fillValue,
                              vtkm::Id startIndex,
                              vtkm::Id endIndex,
@@ -259,46 +257,63 @@ public:
       throw vtkm::cont::ErrorBadValue(
         "Fill for ArrayHandleCartesianProduct can only be used to fill entire array.");
     }
-    Storage1::Fill(
-      Buffers1(buffers), fillValue[0], 0, Storage1::GetNumberOfValues(Buffers1(buffers)), token);
-    Storage2::Fill(
-      Buffers2(buffers), fillValue[1], 0, Storage2::GetNumberOfValues(Buffers2(buffers)), token);
-    Storage3::Fill(
-      Buffers3(buffers), fillValue[2], 0, Storage3::GetNumberOfValues(Buffers3(buffers)), token);
+    auto subBuffers = GetBuffers(buffers, 1);
+    Storage1::Fill(subBuffers, fillValue[0], 0, Storage1::GetNumberOfValues(subBuffers), token);
+    subBuffers = GetBuffers(buffers, 2);
+    Storage2::Fill(subBuffers, fillValue[1], 0, Storage2::GetNumberOfValues(subBuffers), token);
+    subBuffers = GetBuffers(buffers, 3);
+    Storage3::Fill(subBuffers, fillValue[2], 0, Storage3::GetNumberOfValues(subBuffers), token);
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
-    return ReadPortalType(Storage1::CreateReadPortal(Buffers1(buffers), device, token),
-                          Storage2::CreateReadPortal(Buffers2(buffers), device, token),
-                          Storage3::CreateReadPortal(Buffers3(buffers), device, token));
+    return ReadPortalType(Storage1::CreateReadPortal(GetBuffers(buffers, 1), device, token),
+                          Storage2::CreateReadPortal(GetBuffers(buffers, 2), device, token),
+                          Storage3::CreateReadPortal(GetBuffers(buffers, 3), device, token));
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
-    return WritePortalType(Storage1::CreateWritePortal(Buffers1(buffers), device, token),
-                           Storage2::CreateWritePortal(Buffers2(buffers), device, token),
-                           Storage3::CreateWritePortal(Buffers3(buffers), device, token));
+    return WritePortalType(Storage1::CreateWritePortal(GetBuffers(buffers, 1), device, token),
+                           Storage2::CreateWritePortal(GetBuffers(buffers, 2), device, token),
+                           Storage3::CreateWritePortal(GetBuffers(buffers, 3), device, token));
   }
 
-  VTKM_CONT static vtkm::cont::ArrayHandle<T, ST1> GetArrayHandle1(
-    const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static Array1 GetArrayHandle1(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return vtkm::cont::ArrayHandle<T, ST1>(Buffers1(buffers));
+    return Array1(GetBuffers(buffers, 1));
   }
-  VTKM_CONT static vtkm::cont::ArrayHandle<T, ST2> GetArrayHandle2(
-    const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static Array2 GetArrayHandle2(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return vtkm::cont::ArrayHandle<T, ST2>(Buffers2(buffers));
+    return Array2(GetBuffers(buffers, 2));
   }
-  VTKM_CONT static vtkm::cont::ArrayHandle<T, ST3> GetArrayHandle3(
-    const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static Array3 GetArrayHandle3(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return vtkm::cont::ArrayHandle<T, ST3>(Buffers3(buffers));
+    return Array3(GetBuffers(buffers, 3));
+  }
+
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
+    const Array1& array1 = Array1{},
+    const Array2& array2 = Array2{},
+    const Array3& array3 = Array3{})
+  {
+    const std::vector<vtkm::cont::internal::Buffer>& buffers1 = array1.GetBuffers();
+    const std::vector<vtkm::cont::internal::Buffer>& buffers2 = array2.GetBuffers();
+    const std::vector<vtkm::cont::internal::Buffer>& buffers3 = array3.GetBuffers();
+
+    Info info;
+    info.BufferOffset[0] = 1;
+    info.BufferOffset[1] = info.BufferOffset[0] + buffers1.size();
+    info.BufferOffset[2] = info.BufferOffset[1] + buffers2.size();
+    info.BufferOffset[3] = info.BufferOffset[2] + buffers3.size();
+
+    return vtkm::cont::internal::CreateBuffers(info, buffers1, buffers2, buffers3);
   }
 };
 } // namespace internal
@@ -335,7 +350,7 @@ public:
   ArrayHandleCartesianProduct(const FirstHandleType& firstArray,
                               const SecondHandleType& secondArray,
                               const ThirdHandleType& thirdArray)
-    : Superclass(vtkm::cont::internal::CreateBuffers(firstArray, secondArray, thirdArray))
+    : Superclass(StorageType::CreateBuffers(firstArray, secondArray, thirdArray))
   {
   }
 

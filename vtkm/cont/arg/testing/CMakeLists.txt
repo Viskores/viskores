@@ -10,16 +10,19 @@
 
 set(unit_tests
   UnitTestControlSignatureTag.cxx
-  UnitTestTransportArrayIn.cxx
-  UnitTestTransportArrayInOut.cxx
-  UnitTestTransportArrayOut.cxx
-  UnitTestTransportCellSetIn.cxx
-  UnitTestTransportExecObject.cxx
-  UnitTestTransportWholeArray.cxx
   UnitTestTypeCheckArray.cxx
   UnitTestTypeCheckCellSet.cxx
   UnitTestTypeCheckExecObject.cxx
   UnitTestTypeCheckKeys.cxx
   )
 
-vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
+set(unit_tests_device
+  UnitTestTransportArrayIn.cxx
+  UnitTestTransportArrayInOut.cxx
+  UnitTestTransportArrayOut.cxx
+  UnitTestTransportCellSetIn.cxx
+  UnitTestTransportExecObject.cxx
+  UnitTestTransportWholeArray.cxx
+  )
+
+vtkm_unit_tests(SOURCES ${unit_tests} DEVICE_SOURCES ${unit_tests_device})

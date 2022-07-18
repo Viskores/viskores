@@ -153,6 +153,112 @@ void TestReadingUnstructuredGridEmpty()
   VTKM_TEST_ASSERT(data.GetNumberOfFields() == 2);
 }
 
+void TestReadingUnstructuredPixels()
+{
+  // VTK has a special pixel cell type that is the same as a quad but with a different
+  // vertex order. The reader must convert pixels to quads. Make sure this is happening
+  // correctly. This file has only axis-aligned pixels.
+  vtkm::cont::DataSet ds =
+    readVTKDataSet(vtkm::cont::testing::Testing::DataPath("unstructured/pixel_cells.vtk"));
+
+  vtkm::cont::CellSetSingleType<> cellSet;
+  ds.GetCellSet().AsCellSet(cellSet);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> coords;
+  ds.GetCoordinateSystem().GetData().AsArrayHandle(coords);
+
+  for (vtkm::Id cellIndex = 0; cellIndex < cellSet.GetNumberOfCells(); ++cellIndex)
+  {
+    VTKM_TEST_ASSERT(cellSet.GetCellShape(cellIndex) == vtkm::CELL_SHAPE_QUAD);
+
+    constexpr vtkm::IdComponent NUM_VERTS = 4;
+    vtkm::Vec<vtkm::Id, NUM_VERTS> pointIndices;
+    cellSet.GetIndices(cellIndex, pointIndices);
+    vtkm::Vec<vtkm::Vec3f, NUM_VERTS> pointCoords;
+    auto coordPortal = coords.ReadPortal();
+    for (vtkm::IdComponent vertIndex = 0; vertIndex < NUM_VERTS; ++vertIndex)
+    {
+      pointCoords[vertIndex] = coordPortal.Get(pointIndices[vertIndex]);
+    }
+
+    VTKM_TEST_ASSERT(pointCoords[0][0] != pointCoords[1][0]);
+    VTKM_TEST_ASSERT(pointCoords[0][1] == pointCoords[1][1]);
+    VTKM_TEST_ASSERT(pointCoords[0][2] == pointCoords[1][2]);
+
+    VTKM_TEST_ASSERT(pointCoords[1][0] == pointCoords[2][0]);
+    VTKM_TEST_ASSERT(pointCoords[1][1] != pointCoords[2][1]);
+    VTKM_TEST_ASSERT(pointCoords[1][2] == pointCoords[2][2]);
+
+    VTKM_TEST_ASSERT(pointCoords[2][0] != pointCoords[3][0]);
+    VTKM_TEST_ASSERT(pointCoords[2][1] == pointCoords[3][1]);
+    VTKM_TEST_ASSERT(pointCoords[2][2] == pointCoords[3][2]);
+
+    VTKM_TEST_ASSERT(pointCoords[3][0] == pointCoords[0][0]);
+    VTKM_TEST_ASSERT(pointCoords[3][1] != pointCoords[0][1]);
+    VTKM_TEST_ASSERT(pointCoords[3][2] == pointCoords[0][2]);
+  }
+}
+
+void TestReadingUnstructuredVoxels()
+{
+  // VTK has a special voxel cell type that is the same as a hexahedron but with a different
+  // vertex order. The reader must convert voxels to hexahedra. Make sure this is happening
+  // correctly. This file has only axis-aligned voxels.
+  vtkm::cont::DataSet ds =
+    readVTKDataSet(vtkm::cont::testing::Testing::DataPath("unstructured/voxel_cells.vtk"));
+
+  vtkm::cont::CellSetSingleType<> cellSet;
+  ds.GetCellSet().AsCellSet(cellSet);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> coords;
+  ds.GetCoordinateSystem().GetData().AsArrayHandle(coords);
+
+  for (vtkm::Id cellIndex = 0; cellIndex < cellSet.GetNumberOfCells(); ++cellIndex)
+  {
+    VTKM_TEST_ASSERT(cellSet.GetCellShape(cellIndex) == vtkm::CELL_SHAPE_HEXAHEDRON);
+
+    constexpr vtkm::IdComponent NUM_VERTS = 8;
+    vtkm::Vec<vtkm::Id, NUM_VERTS> pointIndices;
+    cellSet.GetIndices(cellIndex, pointIndices);
+    vtkm::Vec<vtkm::Vec3f, NUM_VERTS> pointCoords;
+    auto coordPortal = coords.ReadPortal();
+    for (vtkm::IdComponent vertIndex = 0; vertIndex < NUM_VERTS; ++vertIndex)
+    {
+      pointCoords[vertIndex] = coordPortal.Get(pointIndices[vertIndex]);
+    }
+
+    VTKM_TEST_ASSERT(pointCoords[0][0] != pointCoords[1][0]);
+    VTKM_TEST_ASSERT(pointCoords[0][1] == pointCoords[1][1]);
+    VTKM_TEST_ASSERT(pointCoords[0][2] == pointCoords[1][2]);
+
+    VTKM_TEST_ASSERT(pointCoords[1][0] == pointCoords[2][0]);
+    VTKM_TEST_ASSERT(pointCoords[1][1] != pointCoords[2][1]);
+    VTKM_TEST_ASSERT(pointCoords[1][2] == pointCoords[2][2]);
+
+    VTKM_TEST_ASSERT(pointCoords[2][0] != pointCoords[3][0]);
+    VTKM_TEST_ASSERT(pointCoords[2][1] == pointCoords[3][1]);
+    VTKM_TEST_ASSERT(pointCoords[2][2] == pointCoords[3][2]);
+
+    VTKM_TEST_ASSERT(pointCoords[3][0] == pointCoords[0][0]);
+    VTKM_TEST_ASSERT(pointCoords[3][1] != pointCoords[0][1]);
+    VTKM_TEST_ASSERT(pointCoords[3][2] == pointCoords[0][2]);
+
+    VTKM_TEST_ASSERT(pointCoords[0][0] == pointCoords[4][0]);
+    VTKM_TEST_ASSERT(pointCoords[0][1] == pointCoords[4][1]);
+    VTKM_TEST_ASSERT(pointCoords[0][2] != pointCoords[4][2]);
+
+    VTKM_TEST_ASSERT(pointCoords[1][0] == pointCoords[5][0]);
+    VTKM_TEST_ASSERT(pointCoords[1][1] == pointCoords[5][1]);
+    VTKM_TEST_ASSERT(pointCoords[1][2] != pointCoords[5][2]);
+
+    VTKM_TEST_ASSERT(pointCoords[2][0] == pointCoords[6][0]);
+    VTKM_TEST_ASSERT(pointCoords[2][1] == pointCoords[6][1]);
+    VTKM_TEST_ASSERT(pointCoords[2][2] != pointCoords[6][2]);
+
+    VTKM_TEST_ASSERT(pointCoords[3][0] == pointCoords[7][0]);
+    VTKM_TEST_ASSERT(pointCoords[3][1] == pointCoords[7][1]);
+    VTKM_TEST_ASSERT(pointCoords[3][2] != pointCoords[7][2]);
+  }
+}
+
 void TestReadingUnstructuredGridVisIt(Format format)
 {
   VTKM_TEST_ASSERT(format == FORMAT_ASCII);
@@ -521,6 +627,10 @@ void TestReadingVTKDataSet()
   TestReadingUnstructuredGrid(FORMAT_BINARY);
   std::cout << "Test reading VTK UnstructuredGrid with no cells" << std::endl;
   TestReadingUnstructuredGridEmpty();
+  std::cout << "Test reading VTK UnstructuredGrid with pixels" << std::endl;
+  TestReadingUnstructuredPixels();
+  std::cout << "Test reading VTK UnstructuredGrid with voxels" << std::endl;
+  TestReadingUnstructuredVoxels();
 
   std::cout << "Test reading VTK RectilinearGrid file in ASCII" << std::endl;
   TestReadingRectilinearGrid1(FORMAT_ASCII);

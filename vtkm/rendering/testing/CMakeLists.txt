@@ -26,6 +26,8 @@ set(unit_tests
   UnitTestMapperWireframer.cxx
   UnitTestMapperVolume.cxx
   UnitTestScalarRenderer.cxx
+  UnitTestMapperGlyphScalar.cxx
+  UnitTestMapperGlyphVector.cxx
 )
 
 set(library_sources
@@ -42,4 +44,4 @@ vtkm_library(
 target_link_libraries(vtkm_rendering_testing PUBLIC vtkm_cont_testing vtkm_rendering)
 target_link_libraries(vtkm_rendering_testing PRIVATE vtkm_io)
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES vtkm_rendering vtkm_rendering_testing)
+vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES vtkm_rendering vtkm_rendering_testing)

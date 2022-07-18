@@ -9,29 +9,12 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestSerialArrayHandle.cxx
-  UnitTestSerialArrayHandleFancy.cxx
-  UnitTestSerialArrayHandleMultiplexer.cxx
-  UnitTestSerialBitField.cxx
-  UnitTestSerialCellLocatorRectilinearGrid.cxx
-  UnitTestSerialCellLocatorTwoLevel.cxx
-  UnitTestSerialCellLocatorUniformGrid.cxx
-  UnitTestSerialComputeRange.cxx
-  UnitTestSerialColorTable.cxx
-  UnitTestSerialDataSetExplicit.cxx
-  UnitTestSerialDataSetSingleType.cxx
   UnitTestSerialDeviceAdapter.cxx
-  UnitTestSerialImplicitFunction.cxx
-  UnitTestSerialPointLocatorSparseGrid.cxx
   )
-
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(unit_tests ${unit_tests}
-    UnitTestSerialVirtualObjectHandle.cxx
-    )
-endif()
 
 vtkm_unit_tests(SOURCES ${unit_tests}
                 LABEL "SERIAL"
                 DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG
-                LIBRARIES vtkm_worklet)
+                LIBRARIES vtkm_worklet
+                BACKEND serial
+                )

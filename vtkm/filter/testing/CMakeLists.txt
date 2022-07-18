@@ -8,21 +8,13 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(headers
-  TestingContourTreeUniformDistributedFilter.h
-)
-
 set(unit_tests
-  UnitTestContourTreeUniformFilter.cxx
-  UnitTestContourTreeUniformAugmentedFilter.cxx
-  UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestLagrangianStructuresFilter.cxx
   UnitTestMapFieldMergeAverage.cxx
   UnitTestMapFieldPermutation.cxx
-  UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx
   UnitTestStreamlineFilter.cxx
@@ -39,7 +31,6 @@ if (VTKm_ENABLE_RENDERING)
   list(APPEND libraries vtkm_rendering vtkm_rendering_testing)
 
   list(APPEND unit_tests
-    RenderTestAmrArrays.cxx
     RenderTestStreamline.cxx
   )
 endif()
@@ -64,9 +55,8 @@ if ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
 endif()
 
 vtkm_unit_tests(
-  SOURCES ${unit_tests}
+  DEVICE_SOURCES ${unit_tests}
   LIBRARIES ${libraries}
-  ALL_BACKENDS
   USE_VTKM_JOB_POOL
   )
 
@@ -74,14 +64,13 @@ vtkm_unit_tests(
 #if MPI is enabled.
 if (VTKm_ENABLE_MPI)
   set(mpi_unit_tests
-    UnitTestContourTreeUniformDistributedFilterMPI.cxx
     UnitTestParticleMessengerMPI.cxx
     UnitTestStreamlineFilterMPI.cxx
   )
   vtkm_unit_tests(
-    MPI SOURCES ${mpi_unit_tests}
+    MPI
+    DEVICE_SOURCES ${mpi_unit_tests}
     LIBRARIES vtkm_filter vtkm_source vtkm_io
-    ALL_BACKENDS
     USE_VTKM_JOB_POOL
   )
 endif()

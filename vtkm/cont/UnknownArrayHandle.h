@@ -55,12 +55,12 @@ vtkm::Id UnknownAHNumberOfValues(void* mem)
   return arrayHandle->GetNumberOfValues();
 }
 
-template <typename T, typename StaticSize = typename vtkm::VecTraits<T>::IsSizeStatic>
+template <typename T, typename StaticSize = typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic>
 struct UnknownAHNumberOfComponentsImpl;
 template <typename T>
 struct UnknownAHNumberOfComponentsImpl<T, vtkm::VecTraitsTagSizeStatic>
 {
-  static constexpr vtkm::IdComponent Value = vtkm::VecTraits<T>::NUM_COMPONENTS;
+  static constexpr vtkm::IdComponent Value = vtkm::internal::SafeVecTraits<T>::NUM_COMPONENTS;
 };
 template <typename T>
 struct UnknownAHNumberOfComponentsImpl<T, vtkm::VecTraitsTagSizeVariable>
@@ -74,17 +74,24 @@ vtkm::IdComponent UnknownAHNumberOfComponents()
   return UnknownAHNumberOfComponentsImpl<T>::Value;
 }
 
-template <typename T, typename StaticSize = typename vtkm::VecTraits<T>::IsSizeStatic>
+template <typename T,
+          typename = typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic,
+          typename = vtkm::HasVecTraits<T>>
 struct UnknownAHNumberOfComponentsFlatImpl;
 template <typename T>
-struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeStatic>
+struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeStatic, std::true_type>
 {
   static constexpr vtkm::IdComponent Value = vtkm::VecFlat<T>::NUM_COMPONENTS;
 };
 template <typename T>
-struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeVariable>
+struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeVariable, std::true_type>
 {
   static constexpr vtkm::IdComponent Value = 0;
+};
+template <typename T>
+struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeStatic, std::false_type>
+{
+  static constexpr vtkm::IdComponent Value = 1;
 };
 
 template <typename T>
@@ -129,8 +136,7 @@ UnknownAHExtractComponent(void* mem, vtkm::IdComponent componentIndex, vtkm::Cop
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
   auto componentArray = vtkm::cont::ArrayExtractComponent(*arrayHandle, componentIndex, allowCopy);
-  vtkm::cont::internal::Buffer* buffers = componentArray.GetBuffers();
-  return std::vector<vtkm::cont::internal::Buffer>(buffers, buffers + 2);
+  return componentArray.GetBuffers();
 }
 
 template <typename T, typename S>
@@ -306,13 +312,14 @@ std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTag
 template <typename T>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic()
 {
-  return UnknownAHNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceBasic<T>(typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTraitsTagSizeStatic)
 {
-  using FloatT = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>;
+  using FloatT = typename vtkm::internal::SafeVecTraits<T>::template ReplaceBaseComponentType<
+    vtkm::FloatDefault>;
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<FloatT>{});
 }
 template <typename T>
@@ -324,7 +331,8 @@ std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTrai
 template <typename T>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
 {
-  return UnknownAHNewInstanceFloatBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceFloatBasic<T>(
+    typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T, typename S>
@@ -333,7 +341,7 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   , ValueType(typeid(T))
   , StorageType(typeid(S))
   , BaseComponentType(
-      UnknownAHComponentInfo::Make<typename vtkm::VecTraits<T>::BaseComponentType>())
+      UnknownAHComponentInfo::Make<typename vtkm::internal::SafeVecTraits<T>::BaseComponentType>())
   , DeleteFunction(detail::UnknownAHDelete<T, S>)
   , NewInstance(detail::UnknownAHNewInstance<T, S>)
   , NewInstanceBasic(detail::UnknownAHNewInstanceBasic<T>)

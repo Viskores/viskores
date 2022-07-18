@@ -431,6 +431,23 @@ void TestCastAndCall()
   VTKM_TEST_ASSERT(test_equal(result, TestValue(26, vtkm::FloatDefault{})));
 }
 
+void TestCopyInvalid()
+{
+  std::cout << "Test copy invalid variant" << std::endl;
+
+  using VariantType = vtkm::exec::internal::Variant<TypePlaceholder<0>, NonTrivial>;
+
+  VariantType source;
+  source.Reset();
+
+  VariantType destination1(source);
+  VTKM_TEST_ASSERT(!destination1.IsValid());
+
+  VariantType destination2(TypePlaceholder<0>{});
+  destination2 = source;
+  VTKM_TEST_ASSERT(!destination2.IsValid());
+}
+
 struct CountConstructDestruct
 {
   vtkm::Id* Count;
@@ -577,6 +594,7 @@ void RunTest()
   TestTriviallyCopyable();
   TestGet();
   TestCastAndCall();
+  TestCopyInvalid();
   TestCopyDestroy();
   TestEmplace();
   TestConstructDestruct();

@@ -26,6 +26,7 @@
 
 #include <vtkm/cont/internal/ArrayCopyUnknown.h>
 
+#include <cstring>
 #include <sstream>
 
 namespace
@@ -108,7 +109,17 @@ VTKM_CONT bool UnknownArrayHandle::IsValueTypeImpl(std::type_index type) const
   }
 
   // Needs optimization based on platform. OSX cannot compare typeid across translation units?
-  return this->Container->ValueType == type;
+  bool typesEqual = (this->Container->ValueType == type);
+
+  // Could use optimization based on platform. OSX cannot compare typeid across translation
+  // units, so we have to also check the names. (Why doesn't the == operator above do that?)
+  // Are there other platforms that behave similarly?
+  if (!typesEqual)
+  {
+    typesEqual = (std::strcmp(this->Container->ValueType.name(), type.name()) == 0);
+  }
+
+  return typesEqual;
 }
 
 VTKM_CONT bool UnknownArrayHandle::IsStorageTypeImpl(std::type_index type) const
@@ -119,7 +130,17 @@ VTKM_CONT bool UnknownArrayHandle::IsStorageTypeImpl(std::type_index type) const
   }
 
   // Needs optimization based on platform. OSX cannot compare typeid across translation units?
-  return this->Container->StorageType == type;
+  bool typesEqual = (this->Container->StorageType == type);
+
+  // Could use optimization based on platform. OSX cannot compare typeid across translation
+  // units, so we have to also check the names. (Why doesn't the == operator above do that?)
+  // Are there other platforms that behave similarly?
+  if (!typesEqual)
+  {
+    typesEqual = (std::strcmp(this->Container->StorageType.name(), type.name()) == 0);
+  }
+
+  return typesEqual;
 }
 
 VTKM_CONT bool UnknownArrayHandle::IsBaseComponentTypeImpl(
