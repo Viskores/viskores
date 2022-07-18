@@ -12,8 +12,7 @@
 #define vtk_m_filter_PathParticle_h
 
 #include <vtkm/Particle.h>
-#include <vtkm/filter/NewFilterField.h>
-#include <vtkm/filter/NewFilterParticleAdvection.h>
+#include <vtkm/filter/NewFilterParticleAdvectionUnsteadyState.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm
@@ -25,11 +24,11 @@ namespace filter
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
 
-class PathParticle : public vtkm::filter::NewFilterUnsteadyStateParticleAdvection
+class PathParticle : public vtkm::filter::NewFilterParticleAdvectionUnsteadyState
 {
 public:
   VTKM_CONT PathParticle()
-    : NewFilterUnsteadyStateParticleAdvection(
+    : NewFilterParticleAdvectionUnsteadyState(
         vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
   {
   }

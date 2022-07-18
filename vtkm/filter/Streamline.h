@@ -12,8 +12,7 @@
 #define vtk_m_filter_Streamline_h
 
 #include <vtkm/Particle.h>
-#include <vtkm/filter/NewFilterField.h>
-#include <vtkm/filter/NewFilterParticleAdvection.h>
+#include <vtkm/filter/NewFilterParticleAdvectionSteadyState.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm
@@ -25,11 +24,11 @@ namespace filter
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
 
-class Streamline : public vtkm::filter::NewFilterSteadyStateParticleAdvection
+class Streamline : public vtkm::filter::NewFilterParticleAdvectionSteadyState
 {
 public:
   VTKM_CONT Streamline()
-    : NewFilterSteadyStateParticleAdvection(
+    : NewFilterParticleAdvectionSteadyState(
         vtkm::filter::particleadvection::ParticleAdvectionResultType::STREAMLINE_TYPE)
   {
   }

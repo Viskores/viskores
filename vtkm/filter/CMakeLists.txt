@@ -135,6 +135,9 @@ set(core_headers
   FieldSelection.h
   NewFilter.h
   NewFilterField.h
+  NewFilterParticleAdvection.h
+  NewFilterParticleAdvectionSteadyState.h
+  NewFilterParticleAdvectionUnsteadyState.h
   MapFieldMergeAverage.h
   MapFieldPermutation.h
   TaskQueue.h

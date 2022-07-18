@@ -34,7 +34,16 @@ public:
   using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
-  NewFilterParticleAdvection(vtkm::filter::particleadvection::ParticleAdvectionResultType rType);
+  NewFilterParticleAdvection(vtkm::filter::particleadvection::ParticleAdvectionResultType rType)
+    : vtkm::filter::NewFilterField()
+    , NumberOfSteps(0)
+    , ResultType(rType)
+    , SolverType(vtkm::filter::particleadvection::IntegrationSolverType::RK4_TYPE)
+    , StepSize(0)
+    , UseThreadedAlgorithm(false)
+    , VecFieldType(vtkm::filter::particleadvection::VectorFieldType::VELOCITY_FIELD_TYPE)
+  {
+  }
 
   VTKM_CONT
   void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
@@ -82,7 +91,21 @@ protected:
     return out.GetPartition(0);
   }
 
-  VTKM_CONT inline void ValidateOptions() const;
+  VTKM_CONT virtual void ValidateOptions() const
+  {
+    if (this->GetUseCoordinateSystemAsField())
+      throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");
+    if (this->Seeds.GetNumberOfValues() == 0)
+      throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
+    if (this->NumberOfSteps == 0)
+      throw vtkm::cont::ErrorFilterExecution("Number of steps not specified.");
+    if (this->StepSize == 0)
+      throw vtkm::cont::ErrorFilterExecution("Step size not specified.");
+    if (this->NumberOfSteps < 0)
+      throw vtkm::cont::ErrorFilterExecution("NumberOfSteps cannot be negative");
+    if (this->StepSize < 0)
+      throw vtkm::cont::ErrorFilterExecution("StepSize cannot be negative");
+  }
 
   vtkm::Id NumberOfSteps;
   vtkm::filter::particleadvection::ParticleAdvectionResultType ResultType =
@@ -96,53 +119,7 @@ protected:
 private:
 };
 
-
-class NewFilterSteadyStateParticleAdvection : public NewFilterParticleAdvection
-{
-public:
-  VTKM_CONT
-  NewFilterSteadyStateParticleAdvection(
-    vtkm::filter::particleadvection::ParticleAdvectionResultType rType)
-    : NewFilterParticleAdvection(rType)
-  {
-  }
-
-protected:
-  VTKM_CONT inline std::vector<vtkm::filter::particleadvection::DSISteadyState*>
-  CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
-                           const vtkm::filter::particleadvection::BoundsMap& boundsMap) const;
-};
-
-class NewFilterUnsteadyStateParticleAdvection : public NewFilterParticleAdvection
-{
-public:
-  VTKM_CONT
-  NewFilterUnsteadyStateParticleAdvection(
-    vtkm::filter::particleadvection::ParticleAdvectionResultType rType)
-    : NewFilterParticleAdvection(rType)
-  {
-  }
-
-  void SetPreviousTime(vtkm::FloatDefault t1) { this->Time1 = t1; }
-  void SetNextTime(vtkm::FloatDefault t2) { this->Time2 = t2; }
-  void SetNextDataSet(const vtkm::cont::DataSet& ds) { this->Input2 = { ds }; }
-  void SetNextDataSet(const vtkm::cont::PartitionedDataSet& pds) { this->Input2 = pds; }
-
-protected:
-  VTKM_CONT inline std::vector<vtkm::filter::particleadvection::DSIUnsteadyState*>
-  CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
-                           const vtkm::filter::particleadvection::BoundsMap& boundsMap) const;
-
-  vtkm::cont::PartitionedDataSet Input2;
-  vtkm::FloatDefault Time1;
-  vtkm::FloatDefault Time2;
-};
-
 }
 } // namespace vtkm::filter
-
-#ifndef vtk_m_filter_NewFilterParticleAdvection_hxx
-#include <vtkm/filter/NewFilterParticleAdvection.hxx>
-#endif
 
 #endif // vtk_m_filter_NewFilterParticleAdvection_h
