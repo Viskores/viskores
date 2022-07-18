@@ -107,7 +107,7 @@ public:
   vtkm::Id GetTotalNumBlocks() const { return this->TotalNumBlocks; }
   vtkm::Id GetLocalNumBlocks() const { return this->LocalNumBlocks; }
 
-  //private:
+private:
   void Init(const std::vector<vtkm::cont::DataSet>& dataSets)
   {
     vtkm::cont::AssignerPartitionedDataSet assigner(this->LocalNumBlocks);
