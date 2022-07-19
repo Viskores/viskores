@@ -23,7 +23,6 @@ void appendPts(vtkm::cont::DataSetBuilderExplicitIterative& dsb,
   ids.push_back(pid);
 }
 
-
 void TestTubeFilters()
 {
   using VecType = vtkm::Vec3f;
