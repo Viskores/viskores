@@ -10,7 +10,6 @@
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/ParticleAdvection.h>
-#include <vtkm/filter/ParticleAdvection2.h>
 #include <vtkm/filter/Pathline.h>
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/thirdparty/diy/diy.h>

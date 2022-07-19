@@ -25,6 +25,7 @@ set(headers
   DSISteadyState.hxx
   DSIUnsteadyState.hxx
   ABA.h
+  ABAThreaded.h
   PAV.h
   ParticleAdvectionTypes.h
 )
