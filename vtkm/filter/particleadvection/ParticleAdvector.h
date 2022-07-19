@@ -8,13 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particleadvection_PAV_h
-#define vtk_m_filter_particleadvection_PAV_h
+#ifndef vtk_m_filter_particleadvection_ParticleAdvector_h
+#define vtk_m_filter_particleadvection_ParticleAdvector_h
 
-#include <vtkm/filter/particleadvection/ABA.h>
-#include <vtkm/filter/particleadvection/ABAThreaded.h>
+#include <vtkm/filter/particleadvection/AdvectAlgorithm.h>
+#include <vtkm/filter/particleadvection/AdvectAlgorithmThreaded.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/DSI.h>
+#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 
 namespace vtkm
 {
@@ -24,13 +24,13 @@ namespace particleadvection
 {
 
 template <typename DSIType>
-class PAV
+class ParticleAdvector
 {
 public:
-  PAV(const vtkm::filter::particleadvection::BoundsMap& bm,
-      const std::vector<DSIType*> blocks,
-      const bool& useThreaded,
-      const vtkm::filter::particleadvection::ParticleAdvectionResultType& parType)
+  ParticleAdvector(const vtkm::filter::particleadvection::BoundsMap& bm,
+                   const std::vector<DSIType*> blocks,
+                   const bool& useThreaded,
+                   const vtkm::filter::particleadvection::ParticleAdvectionResultType& parType)
     : Blocks(blocks)
     , BoundsMap(bm)
     , ResultType(parType)
@@ -50,7 +50,7 @@ public:
     else if (seeds.IsBaseComponentType<vtkm::ChargedParticle>())
       return this->Execute(numSteps, stepSize, seeds.AsArrayHandle<ChargedParticleArray>());
 
-    throw vtkm::cont::ErrorFilterExecution("Unsupported options in ABA");
+    throw vtkm::cont::ErrorFilterExecution("Unsupported options in AdvectAlgorithm");
   }
 
 private:
@@ -75,14 +75,14 @@ private:
           vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
       {
         using AlgorithmType = vtkm::filter::particleadvection::
-          ABA<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
+          AdvectAlgorithm<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
 
         return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
       }
       else
       {
         using AlgorithmType = vtkm::filter::particleadvection::
-          ABA<DSIType, vtkm::worklet::StreamlineResult, ParticleType>;
+          AdvectAlgorithm<DSIType, vtkm::worklet::StreamlineResult, ParticleType>;
 
         return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
       }
@@ -93,14 +93,14 @@ private:
           vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
       {
         using AlgorithmType = vtkm::filter::particleadvection::
-          ABAThreaded<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
+          AdvectAlgorithmThreaded<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
 
         return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
       }
       else
       {
         using AlgorithmType = vtkm::filter::particleadvection::
-          ABAThreaded<DSIType, vtkm::worklet::StreamlineResult, ParticleType>;
+          AdvectAlgorithmThreaded<DSIType, vtkm::worklet::StreamlineResult, ParticleType>;
 
         return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
       }
@@ -119,4 +119,4 @@ private:
 }
 
 
-#endif //vtk_m_filter_particleadvection_PAV_h
+#endif //vtk_m_filter_particleadvection_ParticleAdvector_h

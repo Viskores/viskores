@@ -8,10 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particleadvection_DSIUnsteadyState_h
-#define vtk_m_filter_particleadvection_DSIUnsteadyState_h
+#ifndef vtk_m_filter_particleadvection_DataSetIntegratorUnsteadyState_h
+#define vtk_m_filter_particleadvection_DataSetIntegratorUnsteadyState_h
 
-#include <vtkm/filter/particleadvection/DSI.h>
+#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 
 namespace vtkm
 {
@@ -20,19 +20,24 @@ namespace filter
 namespace particleadvection
 {
 
-class DSIUnsteadyState : public vtkm::filter::particleadvection::DSI
+class DataSetIntegratorUnsteadyState : public vtkm::filter::particleadvection::DataSetIntegrator
 {
 public:
-  DSIUnsteadyState(const vtkm::cont::DataSet& ds1,
-                   const vtkm::cont::DataSet& ds2,
-                   vtkm::FloatDefault t1,
-                   vtkm::FloatDefault t2,
-                   vtkm::Id id,
-                   const vtkm::filter::particleadvection::DSI::FieldNameType& fieldName,
-                   vtkm::filter::particleadvection::IntegrationSolverType solverType,
-                   vtkm::filter::particleadvection::VectorFieldType vecFieldType,
-                   vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
-    : vtkm::filter::particleadvection::DSI(id, fieldName, solverType, vecFieldType, resultType)
+  DataSetIntegratorUnsteadyState(
+    const vtkm::cont::DataSet& ds1,
+    const vtkm::cont::DataSet& ds2,
+    vtkm::FloatDefault t1,
+    vtkm::FloatDefault t2,
+    vtkm::Id id,
+    const vtkm::filter::particleadvection::DataSetIntegrator::FieldNameType& fieldName,
+    vtkm::filter::particleadvection::IntegrationSolverType solverType,
+    vtkm::filter::particleadvection::VectorFieldType vecFieldType,
+    vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
+    : vtkm::filter::particleadvection::DataSetIntegrator(id,
+                                                         fieldName,
+                                                         solverType,
+                                                         vecFieldType,
+                                                         resultType)
     , DataSet1(ds1)
     , DataSet2(ds2)
     , Time1(t1)
@@ -84,8 +89,8 @@ private:
 }
 }
 
-#ifndef vtk_m_filter_particleadvection_DSIUnsteadyState_hxx
-#include <vtkm/filter/particleadvection/DSIUnsteadyState.hxx>
+#ifndef vtk_m_filter_particleadvection_DataSetIntegratorUnsteadyState_hxx
+#include <vtkm/filter/particleadvection/DataSetIntegratorUnsteadyState.hxx>
 #endif
 
-#endif //vtk_m_filter_particleadvection_DSIUnsteadyState_h
+#endif //vtk_m_filter_particleadvection_DataSetIntegratorUnsteadyState_h

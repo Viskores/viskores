@@ -8,13 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ABAThreaded_h
-#define vtk_m_filter_ABAThreaded_h
+#ifndef vtk_m_filter_AdvectAlgorithmThreaded_h
+#define vtk_m_filter_AdvectAlgorithmThreaded_h
 
 #include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/filter/particleadvection/ABA.h>
+#include <vtkm/filter/particleadvection/AdvectAlgorithm.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/DSI.h>
+#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 #include <vtkm/filter/particleadvection/ParticleMessenger.h>
 
 #include <thread>
@@ -27,11 +27,12 @@ namespace particleadvection
 {
 
 template <typename DSIType, template <typename> class ResultType, typename ParticleType>
-class ABAThreaded : public ABA<DSIType, ResultType, ParticleType>
+class AdvectAlgorithmThreaded : public AdvectAlgorithm<DSIType, ResultType, ParticleType>
 {
 public:
-  ABAThreaded(const vtkm::filter::particleadvection::BoundsMap& bm, std::vector<DSIType*>& blocks)
-    : ABA<DSIType, ResultType, ParticleType>(bm, blocks)
+  AdvectAlgorithmThreaded(const vtkm::filter::particleadvection::BoundsMap& bm,
+                          std::vector<DSIType*>& blocks)
+    : AdvectAlgorithm<DSIType, ResultType, ParticleType>(bm, blocks)
     , Done(false)
     , WorkerActivate(false)
   {
@@ -48,7 +49,7 @@ public:
     this->ComputeTotalNumParticles(nLocal);
 
     std::vector<std::thread> workerThreads;
-    workerThreads.push_back(std::thread(ABAThreaded::Worker, this));
+    workerThreads.push_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
     this->Manage();
 
     //This will only work for 1 thread. For > 1, the Blocks will need a mutex.
@@ -61,7 +62,8 @@ protected:
   bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId) override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
-    bool val = this->ABA<DSIType, ResultType, ParticleType>::GetActiveParticles(particles, blockId);
+    bool val = this->AdvectAlgorithm<DSIType, ResultType, ParticleType>::GetActiveParticles(
+      particles, blockId);
     this->WorkerActivate = val;
     return val;
   }
@@ -72,7 +74,7 @@ protected:
     if (!particles.empty())
     {
       std::lock_guard<std::mutex> lock(this->Mutex);
-      this->ABA<DSIType, ResultType, ParticleType>::UpdateActive(particles, idsMap);
+      this->AdvectAlgorithm<DSIType, ResultType, ParticleType>::UpdateActive(particles, idsMap);
 
       //Let workers know there is new work
       this->WorkerActivateCondition.notify_all();
@@ -93,7 +95,7 @@ protected:
     this->WorkerActivateCondition.notify_all();
   }
 
-  static void Worker(ABAThreaded* algo) { algo->Work(); }
+  static void Worker(AdvectAlgorithmThreaded* algo) { algo->Work(); }
 
   void WorkerWait()
   {
@@ -160,8 +162,9 @@ protected:
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
 
-    return (this->ABA<DSIType, ResultType, ParticleType>::GetBlockAndWait(numLocalTerm) &&
-            !this->WorkerActivate && this->WorkerResults.empty());
+    return (
+      this->AdvectAlgorithm<DSIType, ResultType, ParticleType>::GetBlockAndWait(numLocalTerm) &&
+      !this->WorkerActivate && this->WorkerResults.empty());
   }
 
   void GetWorkerResults(std::unordered_map<vtkm::Id, std::vector<DSIHelperInfoType>>& results)
@@ -187,6 +190,4 @@ protected:
 }
 }
 
-//#include <vtkm/filter/particleadvection/ABA.hxx>
-
-#endif //vtk_m_filter_ABAThreaded_h
+#endif //vtk_m_filter_AdvectAlgorithmThreaded_h

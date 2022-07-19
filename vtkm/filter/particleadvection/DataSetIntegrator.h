@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particleadvection_DSI_h
-#define vtk_m_filter_particleadvection_DSI_h
+#ifndef vtk_m_filter_particleadvection_DataSetIntegrator_h
+#define vtk_m_filter_particleadvection_DataSetIntegrator_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
@@ -53,7 +53,7 @@ public:
 using DSIHelperInfoType = vtkm::cont::internal::Variant<DSIHelperInfo<vtkm::Particle>,
                                                         DSIHelperInfo<vtkm::ChargedParticle>>;
 
-class DSI
+class DataSetIntegrator
 {
 protected:
   using VelocityFieldNameType = std::string;
@@ -68,11 +68,11 @@ protected:
                                   vtkm::worklet::StreamlineResult<vtkm::ChargedParticle>>;
 
 public:
-  DSI(vtkm::Id id,
-      const FieldNameType& fieldName,
-      vtkm::filter::particleadvection::IntegrationSolverType solverType,
-      vtkm::filter::particleadvection::VectorFieldType vecFieldType,
-      vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
+  DataSetIntegrator(vtkm::Id id,
+                    const FieldNameType& fieldName,
+                    vtkm::filter::particleadvection::IntegrationSolverType solverType,
+                    vtkm::filter::particleadvection::VectorFieldType vecFieldType,
+                    vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
     : FieldName(fieldName)
     , Id(id)
     , SolverType(solverType)
@@ -157,8 +157,8 @@ protected:
 }
 }
 
-#ifndef vtk_m_filter_particleadvection_DSI_hxx
-#include <vtkm/filter/particleadvection/DSI.hxx>
+#ifndef vtk_m_filter_particleadvection_DataSetIntegrator_hxx
+#include <vtkm/filter/particleadvection/DataSetIntegrator.hxx>
 #endif
 
-#endif //vtk_m_filter_particleadvection_DSI_h
+#endif //vtk_m_filter_particleadvection_DataSetIntegrator_h

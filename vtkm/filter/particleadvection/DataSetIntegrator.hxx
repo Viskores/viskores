@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particleadvection_DSI_hxx
-#define vtk_m_filter_particleadvection_DSI_hxx
+#ifndef vtk_m_filter_particleadvection_DataSetIntegrator_hxx
+#define vtk_m_filter_particleadvection_DataSetIntegrator_hxx
 
 #include <vtkm/cont/ParticleArrayCopy.h>
 
@@ -21,8 +21,9 @@ namespace particleadvection
 {
 
 template <typename ParticleType>
-VTKM_CONT void DSI::ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
-                                      DSIHelperInfo<ParticleType>& dsiInfo) const
+VTKM_CONT void DataSetIntegrator::ClassifyParticles(
+  const vtkm::cont::ArrayHandle<ParticleType>& particles,
+  DSIHelperInfo<ParticleType>& dsiInfo) const
 {
   dsiInfo.A.clear();
   dsiInfo.I.clear();
@@ -106,8 +107,8 @@ VTKM_CONT void DSI::ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType
 }
 
 template <typename ParticleType, template <typename> class ResultType>
-VTKM_CONT void DSI::UpdateResult(const ResultType<ParticleType>& result,
-                                 DSIHelperInfo<ParticleType>& dsiInfo)
+VTKM_CONT void DataSetIntegrator::UpdateResult(const ResultType<ParticleType>& result,
+                                               DSIHelperInfo<ParticleType>& dsiInfo)
 {
   this->ClassifyParticles(result.Particles, dsiInfo);
 
@@ -131,7 +132,7 @@ VTKM_CONT void DSI::UpdateResult(const ResultType<ParticleType>& result,
 }
 
 template <typename ParticleType>
-VTKM_CONT bool DSI::GetOutput(vtkm::cont::DataSet& ds) const
+VTKM_CONT bool DataSetIntegrator::GetOutput(vtkm::cont::DataSet& ds) const
 {
   std::size_t nResults = this->Results.size();
   if (nResults == 0)
@@ -247,4 +248,4 @@ VTKM_CONT bool DSI::GetOutput(vtkm::cont::DataSet& ds) const
 }
 }
 
-#endif //vtk_m_filter_particleadvection_DSI_hxx
+#endif //vtk_m_filter_particleadvection_DataSetIntegrator_hxx

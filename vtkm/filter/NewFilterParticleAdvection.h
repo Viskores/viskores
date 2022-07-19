@@ -14,9 +14,9 @@
 #include <vtkm/Particle.h>
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/DSI.h>
-#include <vtkm/filter/particleadvection/DSISteadyState.h>
-#include <vtkm/filter/particleadvection/DSIUnsteadyState.h>
+#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
+#include <vtkm/filter/particleadvection/DataSetIntegratorSteadyState.h>
+#include <vtkm/filter/particleadvection/DataSetIntegratorUnsteadyState.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
 
 namespace vtkm

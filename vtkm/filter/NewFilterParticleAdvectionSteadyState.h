@@ -33,11 +33,11 @@ protected:
     this->NewFilterParticleAdvection::ValidateOptions();
   }
 
-  VTKM_CONT std::vector<vtkm::filter::particleadvection::DSISteadyState*> CreateDataSetIntegrators(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
+  VTKM_CONT std::vector<vtkm::filter::particleadvection::DataSetIntegratorSteadyState*>
+  CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
+                           const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
   {
-    using DSIType = vtkm::filter::particleadvection::DSISteadyState;
+    using DSIType = vtkm::filter::particleadvection::DataSetIntegratorSteadyState;
 
     std::string activeField = this->GetActiveFieldName();
 

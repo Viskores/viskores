@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particleadvection_DSISteadyState_hxx
-#define vtk_m_filter_particleadvection_DSISteadyState_hxx
+#ifndef vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_hxx
+#define vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_hxx
 
 namespace vtkm
 {
@@ -107,9 +107,9 @@ public:
 };
 }
 
-VTKM_CONT inline void DSISteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
-                                               vtkm::FloatDefault stepSize,
-                                               vtkm::Id maxSteps)
+VTKM_CONT inline void DataSetIntegratorSteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
+                                                             vtkm::FloatDefault stepSize,
+                                                             vtkm::Id maxSteps)
 {
   using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
@@ -145,9 +145,10 @@ VTKM_CONT inline void DSISteadyState::DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
     throw vtkm::cont::ErrorFilterExecution("Unsupported vector field type");
 }
 
-VTKM_CONT inline void DSISteadyState::DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& vtkmNotUsed(b),
-                                               vtkm::FloatDefault vtkmNotUsed(stepSize),
-                                               vtkm::Id vtkmNotUsed(maxSteps))
+VTKM_CONT inline void DataSetIntegratorSteadyState::DoAdvect(
+  DSIHelperInfo<vtkm::ChargedParticle>& vtkmNotUsed(b),
+  vtkm::FloatDefault vtkmNotUsed(stepSize),
+  vtkm::Id vtkmNotUsed(maxSteps))
 {
 }
 
@@ -155,4 +156,4 @@ VTKM_CONT inline void DSISteadyState::DoAdvect(DSIHelperInfo<vtkm::ChargedPartic
 }
 }
 
-#endif //vtk_m_filter_particleadvection_DSISteadyState_hxx
+#endif //vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_hxx

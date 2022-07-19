@@ -41,11 +41,11 @@ protected:
       throw vtkm::cont::ErrorFilterExecution("PreviousTime must be less than NextTime");
   }
 
-  VTKM_CONT std::vector<vtkm::filter::particleadvection::DSIUnsteadyState*>
+  VTKM_CONT std::vector<vtkm::filter::particleadvection::DataSetIntegratorUnsteadyState*>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
                            const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
   {
-    using DSIType = vtkm::filter::particleadvection::DSIUnsteadyState;
+    using DSIType = vtkm::filter::particleadvection::DataSetIntegratorUnsteadyState;
 
     std::string activeField = this->GetActiveFieldName();
 

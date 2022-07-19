@@ -8,10 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particleadvection_DSISteadyState_h
-#define vtk_m_filter_particleadvection_DSISteadyState_h
+#ifndef vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_h
+#define vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_h
 
-#include <vtkm/filter/particleadvection/DSI.h>
+#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 
 namespace vtkm
 {
@@ -20,16 +20,21 @@ namespace filter
 namespace particleadvection
 {
 
-class DSISteadyState : public vtkm::filter::particleadvection::DSI
+class DataSetIntegratorSteadyState : public vtkm::filter::particleadvection::DataSetIntegrator
 {
 public:
-  DSISteadyState(const vtkm::cont::DataSet& ds,
-                 vtkm::Id id,
-                 const FieldNameType& fieldName,
-                 vtkm::filter::particleadvection::IntegrationSolverType solverType,
-                 vtkm::filter::particleadvection::VectorFieldType vecFieldType,
-                 vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
-    : vtkm::filter::particleadvection::DSI(id, fieldName, solverType, vecFieldType, resultType)
+  DataSetIntegratorSteadyState(
+    const vtkm::cont::DataSet& ds,
+    vtkm::Id id,
+    const FieldNameType& fieldName,
+    vtkm::filter::particleadvection::IntegrationSolverType solverType,
+    vtkm::filter::particleadvection::VectorFieldType vecFieldType,
+    vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
+    : vtkm::filter::particleadvection::DataSetIntegrator(id,
+                                                         fieldName,
+                                                         solverType,
+                                                         vecFieldType,
+                                                         resultType)
     , DataSet(ds)
   {
   }
@@ -68,8 +73,8 @@ private:
 }
 }
 
-#ifndef vtk_m_filter_particleadvection_DSISteadyState_hxx
-#include <vtkm/filter/particleadvection/DSISteadyState.hxx>
+#ifndef vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_hxx
+#include <vtkm/filter/particleadvection/DataSetIntegratorSteadyState.hxx>
 #endif
 
-#endif //vtk_m_filter_particleadvection_DSISteadyState_h
+#endif //vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_h

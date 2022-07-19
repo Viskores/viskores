@@ -8,12 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ABA_h
-#define vtk_m_filter_ABA_h
+#ifndef vtk_m_filter_AdvectAlgorithm_h
+#define vtk_m_filter_AdvectAlgorithm_h
 
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/DSI.h>
+#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 #include <vtkm/filter/particleadvection/ParticleMessenger.h>
 
 
@@ -25,10 +25,11 @@ namespace particleadvection
 {
 
 template <typename DSIType, template <typename> class ResultType, typename ParticleType>
-class ABA
+class AdvectAlgorithm
 {
 public:
-  ABA(const vtkm::filter::particleadvection::BoundsMap& bm, std::vector<DSIType*>& blocks)
+  AdvectAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
+                  std::vector<DSIType*>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumRanks(this->Comm.size())
@@ -137,7 +138,7 @@ public:
     this->TotalNumParticles = static_cast<vtkm::Id>(total);
   }
 
-  DSI* GetDataSet(vtkm::Id id)
+  DataSetIntegrator* GetDataSet(vtkm::Id id)
   {
     for (auto& it : this->Blocks)
       if (it->GetID() == id)
@@ -281,6 +282,4 @@ public:
 }
 }
 
-//#include <vtkm/filter/particleadvection/ABA.hxx>
-
-#endif //vtk_m_filter_ABA_h
+#endif //vtk_m_filter_AdvectAlgorithm_h

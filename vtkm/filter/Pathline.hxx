@@ -15,9 +15,9 @@
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionAlgorithm.h>
 
-#include <vtkm/filter/particleadvection/DSIUnsteadyState.h>
-#include <vtkm/filter/particleadvection/PAV.h>
+#include <vtkm/filter/particleadvection/DataSetIntegratorUnsteadyState.h>
 #include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
+#include <vtkm/filter/particleadvection/ParticleAdvector.h>
 
 namespace vtkm
 {
@@ -27,13 +27,13 @@ namespace filter
 VTKM_CONT vtkm::cont::PartitionedDataSet Pathline::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
 {
-  using DSIType = vtkm::filter::particleadvection::DSIUnsteadyState;
+  using DSIType = vtkm::filter::particleadvection::DataSetIntegratorUnsteadyState;
   this->ValidateOptions();
 
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
   auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 
-  vtkm::filter::particleadvection::PAV<DSIType> pav(
+  vtkm::filter::particleadvection::ParticleAdvector<DSIType> pav(
     boundsMap, dsi, this->UseThreadedAlgorithm, this->ResultType);
 
   return pav.Execute(this->NumberOfSteps, this->StepSize, this->Seeds);
