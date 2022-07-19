@@ -12,6 +12,7 @@
 #define vtk_m_filter_particleadvection_PAV_h
 
 #include <vtkm/filter/particleadvection/ABA.h>
+#include <vtkm/filter/particleadvection/ABAThreaded.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/DSI.h>
 
@@ -53,6 +54,16 @@ public:
   }
 
 private:
+  template <typename AlgorithmType, typename ParticleType>
+  vtkm::cont::PartitionedDataSet RunAlgo(vtkm::Id numSteps,
+                                         vtkm::FloatDefault stepSize,
+                                         const vtkm::cont::ArrayHandle<ParticleType>& seeds)
+  {
+    AlgorithmType algo(this->BoundsMap, this->Blocks);
+    algo.Execute(numSteps, stepSize, seeds);
+    return algo.GetOutput();
+  }
+
   template <typename ParticleType>
   vtkm::cont::PartitionedDataSet Execute(vtkm::Id numSteps,
                                          vtkm::FloatDefault stepSize,
@@ -60,36 +71,39 @@ private:
   {
     if (!this->UseThreadedAlgorithm)
     {
-      //make a templated algorithm execution()
       if (this->ResultType ==
           vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
       {
         using AlgorithmType = vtkm::filter::particleadvection::
           ABA<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
 
-        AlgorithmType algo(this->BoundsMap, this->Blocks);
-        algo.Execute(numSteps, stepSize, seeds);
-        return algo.GetOutput();
+        return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
       }
       else
       {
         using AlgorithmType = vtkm::filter::particleadvection::
           ABA<DSIType, vtkm::worklet::StreamlineResult, ParticleType>;
 
-        AlgorithmType algo(this->BoundsMap, this->Blocks);
-        algo.Execute(numSteps, stepSize, seeds);
-        return algo.GetOutput();
+        return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
       }
     }
     else
     {
-      std::cout << "Change me to threaded ABA" << std::endl;
-      using AlgorithmType = vtkm::filter::particleadvection::
-        ABA<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
+      if (this->ResultType ==
+          vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
+      {
+        using AlgorithmType = vtkm::filter::particleadvection::
+          ABAThreaded<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
 
-      AlgorithmType algo(this->BoundsMap, this->Blocks);
-      algo.Execute(numSteps, stepSize, seeds);
-      return algo.GetOutput();
+        return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
+      }
+      else
+      {
+        using AlgorithmType = vtkm::filter::particleadvection::
+          ABAThreaded<DSIType, vtkm::worklet::StreamlineResult, ParticleType>;
+
+        return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
+      }
     }
   }
 

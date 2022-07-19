@@ -230,99 +230,6 @@ public:
       this->ParticleBlockIDsMap[it.first] = it.second;
   }
 
-  /*
-  void UpdateTerminated(const vtkm::cont::ArrayHandle<ParticleType>& particles,
-                        const std::vector<vtkm::Id>& idxTerm)
-  {
-    auto portal = particles.ReadPortal();
-    for (const auto& idx : idxTerm)
-      this->ParticleBlockIDsMap.erase(portal.Get(idx).ID);
-  }
-  */
-
-  /*
-  void ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
-                         std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMapA,
-                         std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMapI,
-                         std::vector<ParticleType>& A,
-                         std::vector<ParticleType>& I,
-                         std::vector<vtkm::Id>& termIdx) const
-  {
-    A.clear();
-    I.clear();
-    termIdx.clear();
-    idsMapI.clear();
-    idsMapA.clear();
-
-    auto portal = particles.WritePortal();
-    vtkm::Id n = portal.GetNumberOfValues();
-
-    for (vtkm::Id i = 0; i < n; i++)
-    {
-      auto p = portal.Get(i);
-
-      if (p.Status.CheckTerminate())
-        termIdx.push_back(i);
-      else
-      {
-        const auto& it = this->ParticleBlockIDsMap.find(p.ID);
-        VTKM_ASSERT(it != this->ParticleBlockIDsMap.end());
-        auto currBIDs = it->second;
-        VTKM_ASSERT(!currBIDs.empty());
-
-        std::vector<vtkm::Id> newIDs;
-        if (p.Status.CheckSpatialBounds() && !p.Status.CheckTookAnySteps())
-          newIDs.assign(std::next(currBIDs.begin(), 1), currBIDs.end());
-        else
-          newIDs = this->BoundsMap.FindBlocks(p.Pos, currBIDs);
-
-        //reset the particle status.
-        p.Status = vtkm::ParticleStatus();
-
-        if (newIDs.empty()) //No blocks, we're done.
-        {
-          p.Status.SetTerminate();
-          termIdx.push_back(i);
-        }
-        else
-        {
-          //If we have more than blockId, we want to minimize communication
-          //and put any blocks owned by this rank first.
-          if (newIDs.size() > 1)
-          {
-            for (auto idit = newIDs.begin(); idit != newIDs.end(); idit++)
-            {
-              vtkm::Id bid = *idit;
-              if (this->BoundsMap.FindRank(bid) == this->Rank)
-              {
-                newIDs.erase(idit);
-                newIDs.insert(newIDs.begin(), bid);
-                break;
-              }
-            }
-          }
-
-          int dstRank = this->BoundsMap.FindRank(newIDs[0]);
-          if (dstRank == this->Rank)
-          {
-            A.push_back(p);
-            idsMapA[p.ID] = newIDs;
-          }
-          else
-          {
-            I.push_back(p);
-            idsMapI[p.ID] = newIDs;
-          }
-        }
-        portal.Set(i, p);
-      }
-    }
-
-    //Make sure we didn't miss anything. Every particle goes into a single bucket.
-    VTKM_ASSERT(static_cast<std::size_t>(n) == (A.size() + I.size() + termIdx.size()));
-  }
-  */
-
   vtkm::Id UpdateResult(const DSIHelperInfo<ParticleType>& stuff)
   {
     this->UpdateActive(stuff.A, stuff.IdMapA);
@@ -365,7 +272,6 @@ public:
   vtkm::Id NumRanks;
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
   vtkm::Id Rank;
-  std::map<vtkm::Id, std::vector<ResultType<ParticleType>>> Results;
   vtkm::FloatDefault StepSize;
   vtkm::Id TotalNumParticles;
   vtkm::Id TotalNumTerminatedParticles;
