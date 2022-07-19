@@ -73,10 +73,10 @@ void TestTubeFilters()
   cellVar.push_back(111);
 
   //Add some degenerate polylines.
-  //Polyline 3 (only 1 point)
+  //Polyline 3: (only 1 point)
   ptVar.push_back(-1);
   cellVar.push_back(-1);
-  //Polyline 4 (2 coincident points)
+  //Polyline 4: (2 coincident points)
   ptVar.push_back(-1);
   ptVar.push_back(-1);
   cellVar.push_back(-1);
