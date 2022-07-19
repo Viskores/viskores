@@ -9,14 +9,8 @@
 ##============================================================================
 
 set(headers
-  AdvectorBaseAlgorithm.h
-  AdvectorBaseAlgorithm.hxx
-  AdvectorBaseThreadedAlgorithm.h
   BoundsMap.h
-  DataSetIntegrator.h
-  DataSetIntegrator.hxx
   Messenger.h
-  ParticleAdvectionAlgorithm.h
   ParticleMessenger.h
   DSI.h
   DSISteadyState.h

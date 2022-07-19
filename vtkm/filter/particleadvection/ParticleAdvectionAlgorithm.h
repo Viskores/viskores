@@ -11,10 +11,6 @@
 #ifndef vtk_m_filter_particleadvection_ParticleAdvectionAlgorithm_h
 #define vtk_m_filter_particleadvection_ParticleAdvectionAlgorithm_h
 
-#include <vtkm/filter/particleadvection/AdvectorBaseAlgorithm.h>
-#include <vtkm/filter/particleadvection/AdvectorBaseThreadedAlgorithm.h>
-#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
-
 namespace vtkm
 {
 namespace filter

@@ -13,8 +13,6 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/PathParticle.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
-#include <vtkm/filter/particleadvection/ParticleAdvectionAlgorithm.h>
 
 #include <vtkm/filter/particleadvection/DSIUnsteadyState.h>
 #include <vtkm/filter/particleadvection/PAV.h>
