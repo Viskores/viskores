@@ -114,7 +114,6 @@ void TestTubeFilters()
     VTKM_TEST_ASSERT(portal.Get(i) == ptVals[static_cast<std::size_t>(i)],
                      "Wrong value for point field");
 
-
   //Validate the cell field
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellArr;
   output.GetField("cellVar").GetData().AsArrayHandle(cellArr);
