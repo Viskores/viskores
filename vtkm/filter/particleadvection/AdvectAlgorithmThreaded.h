@@ -31,7 +31,7 @@ class AdvectAlgorithmThreaded : public AdvectAlgorithm<DSIType, ResultType, Part
 {
 public:
   AdvectAlgorithmThreaded(const vtkm::filter::particleadvection::BoundsMap& bm,
-                          std::vector<DSIType*>& blocks)
+                          std::vector<std::shared_ptr<DSIType>>& blocks)
     : AdvectAlgorithm<DSIType, ResultType, ParticleType>(bm, blocks)
     , Done(false)
     , WorkerActivate(false)
@@ -39,8 +39,8 @@ public:
     //For threaded algorithm, the particles go out of scope in the Work method.
     //When this happens, they are destructed by the time the Manage thread gets them.
     //Set the copy flag so the std::vector is copied into the ArrayHandle
-    for (auto block : this->Blocks)
-      block->SetCopySeedFlag(true);
+    for (auto& block : this->Blocks)
+      block.get()->SetCopySeedFlag(true);
   }
 
   void Go() override

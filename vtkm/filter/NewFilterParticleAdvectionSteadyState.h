@@ -28,7 +28,8 @@ public:
   }
 
 protected:
-  VTKM_CONT std::vector<vtkm::filter::particleadvection::DataSetIntegratorSteadyState*>
+  VTKM_CONT
+  std::vector<std::shared_ptr<vtkm::filter::particleadvection::DataSetIntegratorSteadyState>>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
                            const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
   {
@@ -36,7 +37,7 @@ protected:
 
     std::string activeField = this->GetActiveFieldName();
 
-    std::vector<DSIType*> dsi;
+    std::vector<std::shared_ptr<DSIType>> dsi;
     for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
     {
       vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
@@ -44,8 +45,8 @@ protected:
       if (!ds.HasPointField(activeField) && !ds.HasCellField(activeField))
         throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-      dsi.push_back(new DSIType(
-        ds, blockId, activeField, this->SolverType, this->VecFieldType, this->ResultType));
+      dsi.push_back(std::shared_ptr<DSIType>(new DSIType(
+        ds, blockId, activeField, this->SolverType, this->VecFieldType, this->ResultType)));
     }
 
     return dsi;

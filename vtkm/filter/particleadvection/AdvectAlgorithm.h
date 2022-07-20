@@ -29,7 +29,7 @@ class AdvectAlgorithm
 {
 public:
   AdvectAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
-                  std::vector<DSIType*>& blocks)
+                  std::vector<std::shared_ptr<DSIType>>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumRanks(this->Comm.size())
@@ -54,7 +54,7 @@ public:
     for (const auto& b : this->Blocks)
     {
       vtkm::cont::DataSet ds;
-      if (b->template GetOutput<ParticleType>(ds))
+      if (b.get()->template GetOutput<ParticleType>(ds))
         output.AppendPartition(ds);
     }
 
@@ -141,8 +141,8 @@ public:
   DataSetIntegrator* GetDataSet(vtkm::Id id)
   {
     for (auto& it : this->Blocks)
-      if (it->GetID() == id)
-        return it;
+      if (it.get()->GetID() == id)
+        return it.get();
 
     throw vtkm::cont::ErrorFilterExecution("Bad block");
   }
@@ -265,7 +265,7 @@ public:
 
   //Member data
   std::vector<ParticleType> Active;
-  std::vector<DSIType*> Blocks;
+  std::vector<std::shared_ptr<DSIType>> Blocks;
   vtkm::filter::particleadvection::BoundsMap BoundsMap;
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   std::vector<ParticleType> Inactive;
