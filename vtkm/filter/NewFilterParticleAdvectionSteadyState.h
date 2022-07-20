@@ -28,11 +28,6 @@ public:
   }
 
 protected:
-  VTKM_CONT virtual void ValidateOptions() const override
-  {
-    this->NewFilterParticleAdvection::ValidateOptions();
-  }
-
   VTKM_CONT std::vector<vtkm::filter::particleadvection::DataSetIntegratorSteadyState*>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
                            const vtkm::filter::particleadvection::BoundsMap& boundsMap) const

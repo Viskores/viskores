@@ -15,9 +15,6 @@ set(headers
   DataSetIntegrator.h
   DataSetIntegratorSteadyState.h
   DataSetIntegratorUnsteadyState.h
-  DataSetIntegrator.hxx
-  DataSetIntegratorSteadyState.hxx
-  DataSetIntegratorUnsteadyState.hxx
   AdvectAlgorithm.h
   AdvectAlgorithmThreaded.h
   ParticleAdvector.h

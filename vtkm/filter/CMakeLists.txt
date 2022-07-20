@@ -128,7 +128,6 @@ set(extra_header_template_sources
 
 set(extra_sources_device
   particleadvection/Messenger.cxx
-  #particleadvection/ParticleMessenger.cxx
   )
 
 set(core_headers
