@@ -15,11 +15,6 @@
 
 namespace vtkm
 {
-namespace worklet
-{
-class Probe;
-}
-
 namespace filter
 {
 namespace resampling
@@ -42,10 +37,6 @@ public:
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
-
-  bool DoMapField(vtkm::cont::DataSet& result,
-                  const vtkm::cont::Field& field,
-                  const vtkm::worklet::Probe& worklet);
 
   vtkm::cont::DataSet Geometry;
 
