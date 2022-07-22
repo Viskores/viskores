@@ -51,6 +51,6 @@ endif()
 add_subdirectory(worklet)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
-#if (VTKm_ENABLE_TESTING)
-#  add_subdirectory(testing)
-#endif ()
+if (VTKm_ENABLE_TESTING)
+  add_subdirectory(testing)
+endif ()

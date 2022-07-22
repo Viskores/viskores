@@ -917,7 +917,7 @@ void TestParticleAdvection()
   TestParticleAdvectionFile(fishFile, fishPts, fishStep, 100, fishEndPts);
 }
 
-int UnitTestParticleAdvection(int argc, char* argv[])
+int UnitTestWorkletParticleAdvection(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestParticleAdvection, argc, argv);
 }

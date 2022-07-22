@@ -189,7 +189,7 @@ void TestTemporalAdvection()
   TestTemporalEvaluators();
 }
 
-int UnitTestTemporalAdvection(int argc, char* argv[])
+int UnitTestWorkletTemporalAdvection(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestTemporalAdvection, argc, argv);
 }

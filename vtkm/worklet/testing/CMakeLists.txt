@@ -28,7 +28,6 @@ set(unit_tests
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
   UnitTestNDimsHistMarginalization.cxx
-  UnitTestParticleAdvection.cxx
   UnitTestScalarsToColors.cxx
   UnitTestScatterAndMask.cxx
   UnitTestScatterCounting.cxx
@@ -37,7 +36,6 @@ set(unit_tests
   UnitTestScatterAndMaskWithTopology.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestStreamSurface.cxx
-  UnitTestTemporalAdvection.cxx
   UnitTestTriangleWinding.cxx
   UnitTestWholeCellSetIn.cxx
   UnitTestWorkletMapField.cxx

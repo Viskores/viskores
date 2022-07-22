@@ -25,7 +25,6 @@ set(unit_tests
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx
-  UnitTestStreamlineFilter.cxx
   UnitTestStreamSurfaceFilter.cxx
 )
 
@@ -75,8 +74,6 @@ vtkm_unit_tests(
 if (VTKm_ENABLE_MPI)
   set(mpi_unit_tests
     UnitTestContourTreeUniformDistributedFilterMPI.cxx
-    UnitTestParticleMessengerMPI.cxx
-    UnitTestStreamlineFilterMPI.cxx
   )
   vtkm_unit_tests(
     MPI SOURCES ${mpi_unit_tests}
