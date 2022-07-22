@@ -10,14 +10,14 @@
 //
 //=============================================================================
 
-#ifndef vtk_m_worklet_particleadvection_RK4Integrator_h
-#define vtk_m_worklet_particleadvection_RK4Integrator_h
+#ifndef vtk_m_filter_flow_worklet_RK4Integrator_h
+#define vtk_m_filter_flow_worklet_RK4Integrator_h
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace particleadvection
+namespace flow
 {
 
 template <typename ExecEvaluatorType>
@@ -112,8 +112,8 @@ public:
   }
 };
 
-} //namespace particleadvection
-} //namespace worklet
-} //namespace vtkm
+}
+}
+} //vtkm::worklet::flow
 
-#endif // vtk_m_worklet_particleadvection_RK4Integrator_h
+#endif // vtk_m_filter_flow_worklet_RK4Integrator_h

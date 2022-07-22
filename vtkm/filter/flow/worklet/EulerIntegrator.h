@@ -10,14 +10,14 @@
 //
 //=============================================================================
 
-#ifndef vtk_m_worklet_particleadvection_EulerIntegrator_h
-#define vtk_m_worklet_particleadvection_EulerIntegrator_h
+#ifndef vtk_m_filter_flow_worklet_EulerIntegrator_h
+#define vtk_m_filter_flow_worklet_EulerIntegrator_h
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace particleadvection
+namespace flow
 {
 
 template <typename EvaluatorType>
@@ -73,8 +73,8 @@ public:
   }
 }; //EulerIntegrator
 
-} //namespace particleadvection
-} //namespace worklet
-} //namespace vtkm
+}
+}
+} //vtkm::worklet::flow
 
-#endif // vtk_m_worklet_particleadvection_EulerIntegrator_h
+#endif // vtk_m_filter_flow_worklet_EulerIntegrator_h

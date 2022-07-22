@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtkm_woklet_particleadvection_field_h
-#define vtkm_woklet_particleadvection_field_h
+#ifndef vtkm_filter_flow_worklet_Field_h
+#define vtkm_filter_flow_worklet_Field_h
 
 #include <vtkm/Types.h>
 
@@ -22,7 +22,7 @@ namespace vtkm
 {
 namespace worklet
 {
-namespace particleadvection
+namespace flow
 {
 
 template <typename FieldArrayType>
@@ -209,7 +209,8 @@ private:
   Association Assoc;
 };
 
-} // namespace particleadvection
-} // namespace worklet
-} // namespace
-#endif //vtkm_woklet_particleadvection_field_h
+}
+}
+} //vtkm::worklet::flow
+
+#endif //vtkm_filter_flow_worklet_Field_h

@@ -10,8 +10,8 @@
 //
 //=============================================================================
 
-#ifndef vtk_m_worklet_particleadvection_Integrator_Status_h
-#define vtk_m_worklet_particleadvection_Integrator_Status_h
+#ifndef vtk_m_filter_flow_worklet_IntegratorStatus_h
+#define vtk_m_filter_flow_worklet_IntegratorStatus_h
 
 #include <iomanip>
 #include <limits>
@@ -21,13 +21,13 @@
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 
-#include <vtkm/worklet/particleadvection/GridEvaluatorStatus.h>
+#include <vtkm/filter/flow/worklet/GridEvaluatorStatus.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace particleadvection
+namespace flow
 {
 
 class IntegratorStatus : public vtkm::Bitset<vtkm::UInt8>
@@ -82,9 +82,9 @@ inline VTKM_CONT std::ostream& operator<<(std::ostream& s, const IntegratorStatu
     << " tm= " << status.CheckTemporalBounds() << " gc= " << status.CheckInGhostCell() << "]";
   return s;
 }
-}
-}
-}
 
+}
+}
+} //vtkm::worklet::flow
 
-#endif // vtk_m_worklet_particleadvection_IntegratorStatus_h
+#endif // vtk_m_filter_flow_worklet_IntegratorStatus_h

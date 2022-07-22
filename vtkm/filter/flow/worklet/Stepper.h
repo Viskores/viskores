@@ -10,8 +10,8 @@
 //
 //=============================================================================
 
-#ifndef vtk_m_worklet_particleadvection_Stepper_h
-#define vtk_m_worklet_particleadvection_Stepper_h
+#ifndef vtk_m_filter_flow_worklet_Stepper_h
+#define vtk_m_filter_flow_worklet_Stepper_h
 
 #include <limits>
 
@@ -22,15 +22,15 @@
 
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/IntegratorStatus.h>
-#include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/filter/flow/worklet/GridEvaluators.h>
+#include <vtkm/filter/flow/worklet/IntegratorStatus.h>
+#include <vtkm/filter/flow/worklet/Particles.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace particleadvection
+namespace flow
 {
 
 template <typename ExecIntegratorType, typename ExecEvaluatorType>
@@ -194,8 +194,8 @@ public:
   }
 };
 
-} //namespace particleadvection
-} //namespace worklet
-} //namespace vtkm
+}
+}
+} //vtkm::worklet::flow
 
-#endif // vtk_m_worklet_particleadvection_Stepper_h
+#endif // vtk_m_filter_flow_worklet_Stepper_h

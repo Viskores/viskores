@@ -45,7 +45,7 @@ public:
 protected:
   template <typename ArrayType>
   VTKM_CONT void GetVelocityField(
-    vtkm::worklet::particleadvection::VelocityField<ArrayType>& velocityField) const
+    vtkm::worklet::flow::VelocityField<ArrayType>& velocityField) const
   {
     if (this->FieldName.GetIndex() == this->FieldName.GetIndexOf<VelocityFieldNameType>())
     {
@@ -54,7 +54,7 @@ protected:
       ArrayType arr;
       vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(fieldNm).GetData(), arr);
 
-      velocityField = vtkm::worklet::particleadvection::VelocityField<ArrayType>(arr, assoc);
+      velocityField = vtkm::worklet::flow::VelocityField<ArrayType>(arr, assoc);
     }
     else
       throw vtkm::cont::ErrorFilterExecution("Velocity field vector type not available");
@@ -68,8 +68,8 @@ private:
 namespace internal
 {
 using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-using VelocityFieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
-using SteadyStateGridEvalType = vtkm::worklet::particleadvection::GridEvaluator<VelocityFieldType>;
+using VelocityFieldType = vtkm::worklet::flow::VelocityField<ArrayType>;
+using SteadyStateGridEvalType = vtkm::worklet::flow::GridEvaluator<VelocityFieldType>;
 
 template <typename GridEvalType, typename ParticleType>
 class AdvectHelper;
@@ -84,20 +84,20 @@ public:
                      vtkm::FloatDefault stepSize,
                      vtkm::Id maxSteps,
                      const IntegrationSolverType& solverType,
-                     vtkm::worklet::ParticleAdvectionResult<ParticleType>& result)
+                     vtkm::worklet::flow::ParticleAdvectionResult<ParticleType>& result)
   {
     if (solverType == IntegrationSolverType::RK4_TYPE)
     {
-      DoAdvect<vtkm::worklet::ParticleAdvection,
-               vtkm::worklet::ParticleAdvectionResult,
-               vtkm::worklet::particleadvection::RK4Integrator>(
+      DoAdvect<vtkm::worklet::flow::ParticleAdvection,
+               vtkm::worklet::flow::ParticleAdvectionResult,
+               vtkm::worklet::flow::RK4Integrator>(
         velField, ds, seedArray, stepSize, maxSteps, result);
     }
     else if (solverType == IntegrationSolverType::EULER_TYPE)
     {
-      DoAdvect<vtkm::worklet::ParticleAdvection,
-               vtkm::worklet::ParticleAdvectionResult,
-               vtkm::worklet::particleadvection::EulerIntegrator>(
+      DoAdvect<vtkm::worklet::flow::ParticleAdvection,
+               vtkm::worklet::flow::ParticleAdvectionResult,
+               vtkm::worklet::flow::EulerIntegrator>(
         velField, ds, seedArray, stepSize, maxSteps, result);
     }
     else
@@ -110,20 +110,20 @@ public:
                      vtkm::FloatDefault stepSize,
                      vtkm::Id maxSteps,
                      const IntegrationSolverType& solverType,
-                     vtkm::worklet::StreamlineResult<ParticleType>& result)
+                     vtkm::worklet::flow::StreamlineResult<ParticleType>& result)
   {
     if (solverType == IntegrationSolverType::RK4_TYPE)
     {
-      DoAdvect<vtkm::worklet::Streamline,
-               vtkm::worklet::StreamlineResult,
-               vtkm::worklet::particleadvection::RK4Integrator>(
+      DoAdvect<vtkm::worklet::flow::Streamline,
+               vtkm::worklet::flow::StreamlineResult,
+               vtkm::worklet::flow::RK4Integrator>(
         velField, ds, seedArray, stepSize, maxSteps, result);
     }
     else if (solverType == IntegrationSolverType::EULER_TYPE)
     {
-      DoAdvect<vtkm::worklet::Streamline,
-               vtkm::worklet::StreamlineResult,
-               vtkm::worklet::particleadvection::EulerIntegrator>(
+      DoAdvect<vtkm::worklet::flow::Streamline,
+               vtkm::worklet::flow::StreamlineResult,
+               vtkm::worklet::flow::EulerIntegrator>(
         velField, ds, seedArray, stepSize, maxSteps, result);
     }
     else
@@ -143,8 +143,7 @@ public:
                        ResultType<ParticleType>& result)
   {
     using StepperType =
-      vtkm::worklet::particleadvection::Stepper<SolverType<SteadyStateGridEvalType>,
-                                                SteadyStateGridEvalType>;
+      vtkm::worklet::flow::Stepper<SolverType<SteadyStateGridEvalType>, SteadyStateGridEvalType>;
 
     WorkletType worklet;
     SteadyStateGridEvalType eval(ds, velField);
@@ -165,7 +164,7 @@ VTKM_CONT inline void DataSetIntegratorSteadyState::DoAdvect(DSIHelperInfo<vtkm:
 
   if (this->VecFieldType == VectorFieldType::VELOCITY_FIELD_TYPE)
   {
-    using FieldType = vtkm::worklet::particleadvection::VelocityField<ArrayType>;
+    using FieldType = vtkm::worklet::flow::VelocityField<ArrayType>;
     FieldType velField;
     this->GetVelocityField(velField);
 
@@ -173,14 +172,14 @@ VTKM_CONT inline void DataSetIntegratorSteadyState::DoAdvect(DSIHelperInfo<vtkm:
 
     if (this->IsParticleAdvectionResult())
     {
-      vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> result;
+      vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> result;
       AHType::Advect(
         velField, this->DataSet, seedArray, stepSize, maxSteps, this->SolverType, result);
       this->UpdateResult(result, b);
     }
     else if (this->IsStreamlineResult())
     {
-      vtkm::worklet::StreamlineResult<vtkm::Particle> result;
+      vtkm::worklet::flow::StreamlineResult<vtkm::Particle> result;
       AHType::Advect(
         velField, this->DataSet, seedArray, stepSize, maxSteps, this->SolverType, result);
       this->UpdateResult(result, b);

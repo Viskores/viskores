@@ -32,7 +32,6 @@ set(headers
   MIR.h
   NDimsHistMarginalization.h
   Normalize.h
-  ParticleAdvection.h
   ScalarsToColors.h
   ScatterCounting.h
   ScatterIdentity.h
@@ -86,7 +85,6 @@ add_subdirectory(mir)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
 add_subdirectory(wavelets)
-add_subdirectory(particleadvection)
 
 vtkm_library(
   NAME vtkm_worklet

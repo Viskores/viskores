@@ -131,7 +131,8 @@ template <typename ParticleType>
 std::size_t ParticleMessenger<ParticleType>::CalcParticleBufferSize(std::size_t nParticles,
                                                                     std::size_t nBlockIds)
 {
-  std::size_t pSize = sizeof(ParticleType);
+  ParticleType pTmp;
+  std::size_t pSize = ParticleType::Sizeof();
 
 #ifndef NDEBUG
   vtkmdiy::MemoryBuffer buff;
@@ -139,6 +140,7 @@ std::size_t ParticleMessenger<ParticleType>::CalcParticleBufferSize(std::size_t 
   vtkmdiy::save(buff, p);
 
   //Make sure the buffer size is correct.
+  //If this fires, then the size of the class has changed.
   VTKM_ASSERT(pSize == buff.size());
 #endif
 

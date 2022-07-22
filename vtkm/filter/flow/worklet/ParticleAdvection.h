@@ -8,18 +8,20 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_worklet_ParticleAdvection_h
-#define vtk_m_worklet_ParticleAdvection_h
+#ifndef vtk_m_filter_flow_worklet_ParticleAdvection_h
+#define vtk_m_filter_flow_worklet_ParticleAdvection_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Invoker.h>
-#include <vtkm/worklet/particleadvection/ParticleAdvectionWorklets.h>
+#include <vtkm/filter/flow/worklet/ParticleAdvectionWorklets.h>
 
 namespace vtkm
 {
 namespace worklet
+{
+namespace flow
 {
 
 namespace detail
@@ -76,8 +78,7 @@ public:
             vtkm::Id MaxSteps,
             ParticleAdvectionResult<ParticleType>& result)
   {
-    vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType, ParticleType>
-      worklet;
+    vtkm::worklet::flow::ParticleAdvectionWorklet<IntegratorType, ParticleType> worklet;
 
     worklet.Run(it, particles, MaxSteps);
     result = ParticleAdvectionResult<ParticleType>(particles);
@@ -89,8 +90,7 @@ public:
     vtkm::cont::ArrayHandle<ParticleType, ParticleStorage>& particles,
     vtkm::Id MaxSteps)
   {
-    vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType, ParticleType>
-      worklet;
+    vtkm::worklet::flow::ParticleAdvectionWorklet<IntegratorType, ParticleType> worklet;
 
     worklet.Run(it, particles, MaxSteps);
     return ParticleAdvectionResult<ParticleType>(particles);
@@ -102,8 +102,7 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Vec3f, PointStorage>& points,
     vtkm::Id MaxSteps)
   {
-    vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType, ParticleType>
-      worklet;
+    vtkm::worklet::flow::ParticleAdvectionWorklet<IntegratorType, ParticleType> worklet;
 
     vtkm::cont::ArrayHandle<ParticleType> particles;
     vtkm::cont::ArrayHandle<vtkm::Id> step, ids;
@@ -161,7 +160,7 @@ public:
     vtkm::cont::ArrayHandle<ParticleType, ParticleStorage>& particles,
     vtkm::Id MaxSteps)
   {
-    vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType, ParticleType> worklet;
+    vtkm::worklet::flow::StreamlineWorklet<IntegratorType, ParticleType> worklet;
 
     vtkm::cont::ArrayHandle<vtkm::Vec3f> positions;
     vtkm::cont::CellSetExplicit<> polyLines;
@@ -171,7 +170,9 @@ public:
     return StreamlineResult<ParticleType>(particles, positions, polyLines);
   }
 };
-}
-}
 
-#endif // vtk_m_worklet_ParticleAdvection_h
+}
+}
+} // vtkm::worklet::flow
+
+#endif // vtk_m_filter_flow_worklet_ParticleAdvection_h

@@ -13,15 +13,15 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/flow/worklet/EulerIntegrator.h>
+#include <vtkm/filter/flow/worklet/Field.h>
+#include <vtkm/filter/flow/worklet/GridEvaluators.h>
+#include <vtkm/filter/flow/worklet/ParticleAdvection.h>
+#include <vtkm/filter/flow/worklet/Particles.h>
+#include <vtkm/filter/flow/worklet/RK4Integrator.h>
+#include <vtkm/filter/flow/worklet/Stepper.h>
 #include <vtkm/filter/mesh_info/GhostCellClassify.h>
 #include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/worklet/ParticleAdvection.h>
-#include <vtkm/worklet/particleadvection/EulerIntegrator.h>
-#include <vtkm/worklet/particleadvection/Field.h>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Particles.h>
-#include <vtkm/worklet/particleadvection/RK4Integrator.h>
-#include <vtkm/worklet/particleadvection/Stepper.h>
 #include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 #include <random>
@@ -142,7 +142,7 @@ public:
   template <typename EvaluatorType>
   VTKM_EXEC void operator()(vtkm::Particle& pointIn,
                             const EvaluatorType& evaluator,
-                            vtkm::worklet::particleadvection::GridEvaluatorStatus& status,
+                            vtkm::worklet::flow::GridEvaluatorStatus& status,
                             vtkm::Vec3f& pointOut) const
   {
     vtkm::VecVariable<vtkm::Vec3f, 2> values;
@@ -159,7 +159,7 @@ void ValidateEvaluator(const EvalType& eval,
 {
   using EvalTester = TestEvaluatorWorklet;
   using EvalTesterDispatcher = vtkm::worklet::DispatcherMapField<EvalTester>;
-  using Status = vtkm::worklet::particleadvection::GridEvaluatorStatus;
+  using Status = vtkm::worklet::flow::GridEvaluatorStatus;
   EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
   vtkm::cont::ArrayHandle<vtkm::Particle> pointsHandle =
@@ -192,7 +192,7 @@ public:
   template <typename Particle, typename IntegratorType>
   VTKM_EXEC void operator()(Particle& pointIn,
                             const IntegratorType integrator,
-                            vtkm::worklet::particleadvection::IntegratorStatus& status,
+                            vtkm::worklet::flow::IntegratorStatus& status,
                             vtkm::Vec3f& pointOut) const
   {
     vtkm::FloatDefault time = 0;
@@ -211,7 +211,7 @@ void ValidateIntegrator(const IntegratorType& integrator,
 {
   using IntegratorTester = TestIntegratorWorklet;
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
-  using Status = vtkm::worklet::particleadvection::IntegratorStatus;
+  using Status = vtkm::worklet::flow::IntegratorStatus;
   IntegratorTesterDispatcher integratorTesterDispatcher;
   auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns, vtkm::CopyFlag::Off);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
@@ -243,7 +243,7 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
 {
   using IntegratorTester = TestIntegratorWorklet;
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
-  using Status = vtkm::worklet::particleadvection::IntegratorStatus;
+  using Status = vtkm::worklet::flow::IntegratorStatus;
 
   IntegratorTesterDispatcher integratorTesterDispatcher;
   auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns, vtkm::CopyFlag::Off);
@@ -269,10 +269,10 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
 void TestEvaluators()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-  using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
+  using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
+  using RK4Type = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
+  using Stepper = vtkm::worklet::flow::Stepper<RK4Type, GridEvalType>;
 
   std::vector<vtkm::Vec3f> vecs;
   vtkm::FloatDefault vals[3] = { -1., 0., 1. };
@@ -364,10 +364,10 @@ void TestEvaluators()
 void TestGhostCellEvaluators()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-  using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
+  using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
+  using RK4Type = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
+  using Stepper = vtkm::worklet::flow::Stepper<RK4Type, GridEvalType>;
 
   constexpr vtkm::Id nX = 6;
   constexpr vtkm::Id nY = 6;
@@ -395,7 +395,7 @@ void TestGhostCellEvaluators()
     vtkm::FloatDefault stepSize = static_cast<vtkm::FloatDefault>(0.1);
     Stepper rk4(gridEval, stepSize);
 
-    vtkm::worklet::ParticleAdvection pa;
+    vtkm::worklet::flow::ParticleAdvection pa;
     std::vector<vtkm::Particle> seeds;
     //Points in a ghost cell.
     seeds.push_back(vtkm::Particle(vtkm::Vec3f(.5, .5, .5), 0));
@@ -426,7 +426,7 @@ void TestGhostCellEvaluators()
 }
 
 void ValidateParticleAdvectionResult(
-  const vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>& res,
+  const vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle>& res,
   vtkm::Id nSeeds,
   vtkm::Id maxSteps)
 {
@@ -446,7 +446,7 @@ void ValidateParticleAdvectionResult(
   }
 }
 
-void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult<vtkm::Particle>& res,
+void ValidateStreamlineResult(const vtkm::worklet::flow::StreamlineResult<vtkm::Particle>& res,
                               vtkm::Id nSeeds,
                               vtkm::Id maxSteps)
 {
@@ -465,8 +465,8 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult<vtkm::Partic
 void TestIntegrators()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+  using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
 
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Bounds bounds(0., 1., 0., 1., .0, .1);
@@ -491,20 +491,20 @@ void TestIntegrators()
     std::vector<vtkm::Particle> points;
     GenerateRandomParticles(points, 3, bounds);
 
-    vtkm::worklet::ParticleAdvection pa;
-    vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
+    vtkm::worklet::flow::ParticleAdvection pa;
+    vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> res;
     {
       auto seeds = vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::On);
-      using IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-      using Stepper = vtkm::worklet::particleadvection::Stepper<IntegratorType, GridEvalType>;
+      using IntegratorType = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
+      using Stepper = vtkm::worklet::flow::Stepper<IntegratorType, GridEvalType>;
       Stepper rk4(eval, stepSize);
       res = pa.Run(rk4, seeds, maxSteps);
       ValidateParticleAdvectionResult(res, nSeeds, maxSteps);
     }
     {
       auto seeds = vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::On);
-      using IntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<GridEvalType>;
-      using Stepper = vtkm::worklet::particleadvection::Stepper<IntegratorType, GridEvalType>;
+      using IntegratorType = vtkm::worklet::flow::EulerIntegrator<GridEvalType>;
+      using Stepper = vtkm::worklet::flow::Stepper<IntegratorType, GridEvalType>;
       Stepper euler(eval, stepSize);
       res = pa.Run(euler, seeds, maxSteps);
       ValidateParticleAdvectionResult(res, nSeeds, maxSteps);
@@ -515,10 +515,10 @@ void TestIntegrators()
 void TestParticleWorkletsWithDataSetTypes()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-  using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
+  using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
+  using RK4Type = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
+  using Stepper = vtkm::worklet::flow::Stepper<RK4Type, GridEvalType>;
   vtkm::FloatDefault stepSize = 0.01f;
 
   const vtkm::Id3 dims(5, 5, 5);
@@ -569,8 +569,8 @@ void TestParticleWorkletsWithDataSetTypes()
       {
         if (i < 2)
         {
-          vtkm::worklet::ParticleAdvection pa;
-          vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
+          vtkm::worklet::flow::ParticleAdvection pa;
+          vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> res;
           if (i == 0)
           {
             auto seeds = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
@@ -585,8 +585,8 @@ void TestParticleWorkletsWithDataSetTypes()
         }
         else
         {
-          vtkm::worklet::Streamline s;
-          vtkm::worklet::StreamlineResult<vtkm::Particle> res;
+          vtkm::worklet::flow::Streamline s;
+          vtkm::worklet::flow::StreamlineResult<vtkm::Particle> res;
           if (i == 2)
           {
             auto seeds = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
@@ -618,10 +618,10 @@ void TestParticleStatus()
   auto dataSets = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
   for (auto& ds : dataSets)
   {
-    using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-    using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-    using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-    using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
+    using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
+    using GridEvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
+    using RK4Type = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
+    using Stepper = vtkm::worklet::flow::Stepper<RK4Type, GridEvalType>;
 
     vtkm::Id maxSteps = 1000;
     vtkm::FloatDefault stepSize = 0.01f;
@@ -631,7 +631,7 @@ void TestParticleStatus()
     GridEvalType eval(ds, velocities);
     Stepper rk4(eval, stepSize);
 
-    vtkm::worklet::ParticleAdvection pa;
+    vtkm::worklet::flow::ParticleAdvection pa;
     std::vector<vtkm::Particle> pts;
     pts.push_back(vtkm::Particle(vtkm::Vec3f(.5, .5, .5), 0));
     pts.push_back(vtkm::Particle(vtkm::Vec3f(-1, -1, -1), 1));
@@ -649,10 +649,10 @@ void TestParticleStatus()
 void TestWorkletsBasic()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-  using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
+  using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
+  using RK4Type = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
+  using Stepper = vtkm::worklet::flow::Stepper<RK4Type, GridEvalType>;
   vtkm::FloatDefault stepSize = 0.01f;
 
   const vtkm::Id3 dims(5, 5, 5);
@@ -711,8 +711,8 @@ void TestWorkletsBasic()
 
       if (w == "particleAdvection")
       {
-        vtkm::worklet::ParticleAdvection pa;
-        vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
+        vtkm::worklet::flow::ParticleAdvection pa;
+        vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> res;
 
         res = pa.Run(rk4, seedsArray, maxSteps);
 
@@ -735,8 +735,8 @@ void TestWorkletsBasic()
       }
       else if (w == "streamline")
       {
-        vtkm::worklet::Streamline s;
-        vtkm::worklet::StreamlineResult<vtkm::Particle> res;
+        vtkm::worklet::flow::Streamline s;
+        vtkm::worklet::flow::StreamlineResult<vtkm::Particle> res;
 
         res = s.Run(rk4, seedsArray, maxSteps);
 
@@ -830,10 +830,10 @@ void TestParticleAdvectionFile(const std::string& fname,
   }
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-  using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
+  using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
+  using RK4Type = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
+  using Stepper = vtkm::worklet::flow::Stepper<RK4Type, GridEvalType>;
 
   VTKM_TEST_ASSERT(ds.HasField("vec"), "Data set missing a field named 'vec'");
   vtkm::cont::Field& field = ds.GetField("vec");
@@ -862,16 +862,16 @@ void TestParticleAdvectionFile(const std::string& fname,
 
     if (i == 0)
     {
-      vtkm::worklet::ParticleAdvection pa;
-      vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
+      vtkm::worklet::flow::ParticleAdvection pa;
+      vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> res;
 
       res = pa.Run(rk4, seedArray, maxSteps);
       ValidateResult(res, maxSteps, endPts);
     }
     else if (i == 1)
     {
-      vtkm::worklet::Streamline s;
-      vtkm::worklet::StreamlineResult<vtkm::Particle> res;
+      vtkm::worklet::flow::Streamline s;
+      vtkm::worklet::flow::StreamlineResult<vtkm::Particle> res;
 
       res = s.Run(rk4, seedArray, maxSteps);
       ValidateResult(res, maxSteps, endPts);

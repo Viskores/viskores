@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_worklet_particle_advection_cell_interpolation_helper
-#define vtk_m_worklet_particle_advection_cell_interpolation_helper
+#ifndef vtk_m_filter_flow_worklet_CellInterpolationHelper_h
+#define vtk_m_filter_flow_worklet_CellInterpolationHelper_h
 
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
@@ -282,4 +282,4 @@ private:
 } //namespace cont
 } //namespace vtkm
 
-#endif //vtk_m_worklet_particle_advection_cell_interpolation_helper
+#endif //vtk_m_filter_flow_worklet_CellInterpolationHelper_h

@@ -8,26 +8,25 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_worklet_particleadvection_TemporalGridEvaluators_h
-#define vtk_m_worklet_particleadvection_TemporalGridEvaluators_h
+#ifndef vtk_m_filter_flow_worklet_TemporalGridEvaluators_h
+#define vtk_m_filter_flow_worklet_TemporalGridEvaluators_h
 
-#include <vtkm/worklet/particleadvection/GridEvaluatorStatus.h>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
+#include <vtkm/filter/flow/worklet/GridEvaluatorStatus.h>
+#include <vtkm/filter/flow/worklet/GridEvaluators.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace particleadvection
+namespace flow
 {
 
 template <typename FieldType>
 class ExecutionTemporalGridEvaluator
 {
 private:
-  using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using ExecutionGridEvaluator =
-    vtkm::worklet::particleadvection::ExecutionGridEvaluator<FieldType>;
+  using GridEvaluator = vtkm::worklet::flow::GridEvaluator<FieldType>;
+  using ExecutionGridEvaluator = vtkm::worklet::flow::ExecutionGridEvaluator<FieldType>;
 
 public:
   VTKM_CONT
@@ -117,7 +116,7 @@ template <typename FieldType>
 class TemporalGridEvaluator : public vtkm::cont::ExecutionObjectBase
 {
 private:
-  using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+  using GridEvaluator = vtkm::worklet::flow::GridEvaluator<FieldType>;
 
 public:
   VTKM_CONT TemporalGridEvaluator() = default;
@@ -178,8 +177,8 @@ private:
   vtkm::FloatDefault TimeTwo;
 };
 
-} // namespace particleadvection
-} // namespace worklet
-} // namespace vtkm
+}
+}
+} //vtkm::worklet::flow
 
-#endif
+#endif // vtk_m_filter_flow_worklet_TemporalGridEvaluators_h

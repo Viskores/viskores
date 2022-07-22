@@ -17,11 +17,11 @@
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/worklet/ParticleAdvection.h>
-#include <vtkm/worklet/particleadvection/Field.h>
-#include <vtkm/worklet/particleadvection/Particles.h>
-#include <vtkm/worklet/particleadvection/Stepper.h>
-#include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
+#include <vtkm/filter/flow/worklet/Field.h>
+#include <vtkm/filter/flow/worklet/ParticleAdvection.h>
+#include <vtkm/filter/flow/worklet/Particles.h>
+#include <vtkm/filter/flow/worklet/Stepper.h>
+#include <vtkm/filter/flow/worklet/TemporalGridEvaluators.h>
 
 template <typename ScalarType>
 vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds, const vtkm::Id3& dims)
@@ -52,7 +52,7 @@ public:
   template <typename EvaluatorType>
   VTKM_EXEC void operator()(vtkm::Particle& pointIn,
                             const EvaluatorType& evaluator,
-                            vtkm::worklet::particleadvection::GridEvaluatorStatus& status,
+                            vtkm::worklet::flow::GridEvaluatorStatus& status,
                             vtkm::Vec3f& pointOut) const
   {
     vtkm::VecVariable<vtkm::Vec3f, 2> values;
@@ -70,7 +70,7 @@ void ValidateEvaluator(const EvalType& eval,
 {
   using EvalTester = TestEvaluatorWorklet;
   using EvalTesterDispatcher = vtkm::worklet::DispatcherMapField<EvalTester>;
-  using Status = vtkm::worklet::particleadvection::GridEvaluatorStatus;
+  using Status = vtkm::worklet::flow::GridEvaluatorStatus;
 
   EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
@@ -149,9 +149,9 @@ void TestTemporalEvaluators()
   using ScalarType = vtkm::FloatDefault;
   using PointType = vtkm::Vec<ScalarType, 3>;
   using FieldHandle = vtkm::cont::ArrayHandle<PointType>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using EvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using TemporalEvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
+  using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
+  using EvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
+  using TemporalEvalType = vtkm::worklet::flow::TemporalGridEvaluator<FieldType>;
 
   // Create Datasets
   vtkm::Id3 dims(5, 5, 5);

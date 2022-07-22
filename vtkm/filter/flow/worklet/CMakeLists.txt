@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(headers
+  ParticleAdvection.h
   CellInterpolationHelper.h
   EulerIntegrator.h
   Field.h

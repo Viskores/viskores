@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_worklet_particleadvection_GridEvaluators_h
-#define vtk_m_worklet_particleadvection_GridEvaluators_h
+#ifndef vtk_m_filter_flow_worklet_GridEvaluators_h
+#define vtk_m_filter_flow_worklet_GridEvaluators_h
 
 #include <vtkm/Bitset.h>
 #include <vtkm/CellClassification.h>
@@ -24,15 +24,15 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
-#include <vtkm/worklet/particleadvection/Field.h>
-#include <vtkm/worklet/particleadvection/GridEvaluatorStatus.h>
+#include <vtkm/filter/flow/worklet/CellInterpolationHelper.h>
+#include <vtkm/filter/flow/worklet/Field.h>
+#include <vtkm/filter/flow/worklet/GridEvaluatorStatus.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace particleadvection
+namespace flow
 {
 
 template <typename FieldType>
@@ -232,8 +232,8 @@ private:
   vtkm::cont::CellLocatorGeneral Locator;
 };
 
-} //namespace particleadvection
-} //namespace worklet
-} //namespace vtkm
+}
+}
+} //vtkm::worklet::flow
 
-#endif // vtk_m_worklet_particleadvection_GridEvaluators_h
+#endif // vtk_m_filter_flow_worklet_GridEvaluators_h

@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_worklet_particleadvection_Particles_h
-#define vtk_m_worklet_particleadvection_Particles_h
+#ifndef vtk_m_filter_flow_worklet_Particles_h
+#define vtk_m_filter_flow_worklet_Particles_h
 
 #include <vtkm/Particle.h>
 #include <vtkm/Types.h>
@@ -17,14 +17,15 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/worklet/particleadvection/IntegratorStatus.h>
+#include <vtkm/filter/flow/worklet/IntegratorStatus.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace particleadvection
+namespace flow
 {
+
 template <typename ParticleType>
 class ParticleExecutionObject
 {
@@ -66,7 +67,7 @@ public:
 
   VTKM_EXEC
   void StatusUpdate(const vtkm::Id& idx,
-                    const vtkm::worklet::particleadvection::IntegratorStatus& status,
+                    const vtkm::worklet::flow::IntegratorStatus& status,
                     vtkm::Id maxSteps)
   {
     ParticleType p(this->GetParticle(idx));
@@ -116,10 +117,11 @@ template <typename ParticleType>
 class Particles : public vtkm::cont::ExecutionObjectBase
 {
 public:
-  VTKM_CONT vtkm::worklet::particleadvection::ParticleExecutionObject<ParticleType>
-  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
+  VTKM_CONT vtkm::worklet::flow::ParticleExecutionObject<ParticleType> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token) const
   {
-    return vtkm::worklet::particleadvection::ParticleExecutionObject<ParticleType>(
+    return vtkm::worklet::flow::ParticleExecutionObject<ParticleType>(
       this->ParticleArray, this->MaxSteps, device, token);
   }
 
@@ -221,10 +223,10 @@ public:
   };
 
 
-  VTKM_CONT vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<ParticleType>
+  VTKM_CONT vtkm::worklet::flow::StateRecordingParticleExecutionObject<ParticleType>
   PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
   {
-    return vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<ParticleType>(
+    return vtkm::worklet::flow::StateRecordingParticleExecutionObject<ParticleType>(
       this->ParticleArray,
       this->HistoryArray,
       this->ValidPointArray,
@@ -276,9 +278,9 @@ protected:
 };
 
 
-} //namespace particleadvection
-} //namespace worklet
-} //namespace vtkm
+}
+}
+} //vtkm::worklet::flow
 
-#endif // vtk_m_worklet_particleadvection_Particles_h
+#endif // vtk_m_filter_flow_worklet_Particles_h
 //============================================================================

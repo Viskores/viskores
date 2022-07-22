@@ -48,7 +48,7 @@ if (VTKm_ENABLE_MPI)
   target_link_libraries(vtkm_filter_flow PUBLIC MPI::MPI_CXX)
 endif()
 
-#add_subdirectory(worklet)
+add_subdirectory(worklet)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 #if (VTKm_ENABLE_TESTING)

@@ -142,6 +142,17 @@ public:
   vtkm::Id NumSteps = 0;
   vtkm::ParticleStatus Status;
   vtkm::FloatDefault Time = 0;
+
+  static size_t Sizeof()
+  {
+    constexpr std::size_t sz = sizeof(vtkm::Vec3f) // Pos
+      + sizeof(vtkm::Id)                           // ID
+      + sizeof(vtkm::Id)                           // NumSteps
+      + sizeof(vtkm::UInt8)                        // Status
+      + sizeof(vtkm::FloatDefault);                // Time
+
+    return sz;
+  }
 };
 
 class ChargedParticle
@@ -251,6 +262,23 @@ private:
     static_cast<vtkm::FloatDefault>(2.99792458e8);
 
   friend struct mangled_diy_namespace::Serialization<vtkm::ChargedParticle>;
+
+public:
+  static size_t Sizeof()
+  {
+    constexpr std::size_t sz = sizeof(vtkm::Vec3f) // Pos
+      + sizeof(vtkm::Id)                           // ID
+      + sizeof(vtkm::Id)                           // NumSteps
+      + sizeof(vtkm::UInt8)                        // Status
+      + sizeof(vtkm::FloatDefault)                 // Time
+      + sizeof(vtkm::FloatDefault)                 //Mass
+      + sizeof(vtkm::FloatDefault)                 //Charge
+      + sizeof(vtkm::FloatDefault)                 //Weighting
+      + sizeof(vtkm::Vec3f)                        //Momentum
+      + sizeof(vtkm::FloatDefault);                //Speed_of_light
+
+    return sz;
+  }
 };
 
 } //namespace vtkm

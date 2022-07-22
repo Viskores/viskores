@@ -74,14 +74,14 @@ private:
       if (this->ResultType == vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE)
       {
         using AlgorithmType = vtkm::filter::flow::
-          AdvectAlgorithm<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
+          AdvectAlgorithm<DSIType, vtkm::worklet::flow::ParticleAdvectionResult, ParticleType>;
 
         return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
       }
       else
       {
         using AlgorithmType = vtkm::filter::flow::
-          AdvectAlgorithm<DSIType, vtkm::worklet::StreamlineResult, ParticleType>;
+          AdvectAlgorithm<DSIType, vtkm::worklet::flow::StreamlineResult, ParticleType>;
 
         return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
       }
@@ -90,15 +90,17 @@ private:
     {
       if (this->ResultType == vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE)
       {
-        using AlgorithmType = vtkm::filter::flow::
-          AdvectAlgorithmThreaded<DSIType, vtkm::worklet::ParticleAdvectionResult, ParticleType>;
+        using AlgorithmType =
+          vtkm::filter::flow::AdvectAlgorithmThreaded<DSIType,
+                                                      vtkm::worklet::flow::ParticleAdvectionResult,
+                                                      ParticleType>;
 
         return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
       }
       else
       {
         using AlgorithmType = vtkm::filter::flow::
-          AdvectAlgorithmThreaded<DSIType, vtkm::worklet::StreamlineResult, ParticleType>;
+          AdvectAlgorithmThreaded<DSIType, vtkm::worklet::flow::StreamlineResult, ParticleType>;
 
         return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
       }

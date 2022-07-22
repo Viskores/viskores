@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_worklet_particleadvection_GridEvaluatorStatus_h
-#define vtk_m_worklet_particleadvection_GridEvaluatorStatus_h
+#ifndef vtk_m_filter_flow_worklet_GridEvaluatorStatus_h
+#define vtk_m_filter_flow_worklet_GridEvaluatorStatus_h
 
 #include <vtkm/Bitset.h>
 #include <vtkm/Types.h>
@@ -26,7 +26,7 @@ namespace vtkm
 {
 namespace worklet
 {
-namespace particleadvection
+namespace flow
 {
 
 class GridEvaluatorStatus : public vtkm::Bitset<vtkm::UInt8>
@@ -62,8 +62,9 @@ private:
   static constexpr vtkm::Id TEMPORAL_BOUNDS_BIT = 2;
   static constexpr vtkm::Id IN_GHOST_CELL_BIT = 3;
 };
+
 }
 }
 }
 
-#endif // vtk_m_worklet_particleadvection_GridEvaluatorStatus_h
+#endif // vtk_m_filter_flow_worklet_GridEvaluatorStatus_h

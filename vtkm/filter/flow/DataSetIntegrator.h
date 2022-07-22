@@ -16,11 +16,11 @@
 #include <vtkm/cont/ParticleArrayCopy.h>
 #include <vtkm/filter/flow/BoundsMap.h>
 #include <vtkm/filter/flow/FlowTypes.h>
-#include <vtkm/worklet/ParticleAdvection.h>
-#include <vtkm/worklet/particleadvection/EulerIntegrator.h>
-#include <vtkm/worklet/particleadvection/IntegratorStatus.h>
-#include <vtkm/worklet/particleadvection/RK4Integrator.h>
-#include <vtkm/worklet/particleadvection/Stepper.h>
+#include <vtkm/filter/flow/worklet/EulerIntegrator.h>
+#include <vtkm/filter/flow/worklet/IntegratorStatus.h>
+#include <vtkm/filter/flow/worklet/ParticleAdvection.h>
+#include <vtkm/filter/flow/worklet/RK4Integrator.h>
+#include <vtkm/filter/flow/worklet/Stepper.h>
 
 #include <vtkm/cont/internal/Variant.h>
 
@@ -63,11 +63,11 @@ protected:
   using FieldNameType =
     vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType>;
 
-  using RType =
-    vtkm::cont::internal::Variant<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>,
-                                  vtkm::worklet::ParticleAdvectionResult<vtkm::ChargedParticle>,
-                                  vtkm::worklet::StreamlineResult<vtkm::Particle>,
-                                  vtkm::worklet::StreamlineResult<vtkm::ChargedParticle>>;
+  using RType = vtkm::cont::internal::Variant<
+    vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle>,
+    vtkm::worklet::flow::ParticleAdvectionResult<vtkm::ChargedParticle>,
+    vtkm::worklet::flow::StreamlineResult<vtkm::Particle>,
+    vtkm::worklet::flow::StreamlineResult<vtkm::ChargedParticle>>;
 
 public:
   DataSetIntegrator(vtkm::Id id,
@@ -250,7 +250,7 @@ VTKM_CONT void DataSetIntegrator::UpdateResult(const ResultType<ParticleType>& r
     if (dsiInfo.TermIdx.empty())
       return;
 
-    using ResType = vtkm::worklet::ParticleAdvectionResult<ParticleType>;
+    using ResType = vtkm::worklet::flow::ParticleAdvectionResult<ParticleType>;
     auto indicesAH = vtkm::cont::make_ArrayHandle(dsiInfo.TermIdx, vtkm::CopyFlag::Off);
     auto termPerm = vtkm::cont::make_ArrayHandlePermutation(indicesAH, result.Particles);
 
@@ -273,7 +273,7 @@ VTKM_CONT bool DataSetIntegrator::GetOutput(vtkm::cont::DataSet& ds) const
 
   if (this->IsParticleAdvectionResult())
   {
-    using ResType = vtkm::worklet::ParticleAdvectionResult<ParticleType>;
+    using ResType = vtkm::worklet::flow::ParticleAdvectionResult<ParticleType>;
 
     std::vector<vtkm::cont::ArrayHandle<ParticleType>> allParticles;
     allParticles.reserve(nResults);
@@ -300,7 +300,7 @@ VTKM_CONT bool DataSetIntegrator::GetOutput(vtkm::cont::DataSet& ds) const
   }
   else if (this->IsStreamlineResult())
   {
-    using ResType = vtkm::worklet::StreamlineResult<ParticleType>;
+    using ResType = vtkm::worklet::flow::StreamlineResult<ParticleType>;
 
     //Easy case with one result.
     if (nResults == 1)

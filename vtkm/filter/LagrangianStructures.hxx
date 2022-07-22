@@ -14,11 +14,11 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/Invoker.h>
-#include <vtkm/worklet/particleadvection/Field.h>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Particles.h>
-#include <vtkm/worklet/particleadvection/RK4Integrator.h>
-#include <vtkm/worklet/particleadvection/Stepper.h>
+#include <vtkm/filter/flow/worklet/Field.h>
+#include <vtkm/filter/flow/worklet/GridEvaluators.h>
+#include <vtkm/filter/flow/worklet/Particles.h>
+#include <vtkm/filter/flow/worklet/RK4Integrator.h>
+#include <vtkm/filter/flow/worklet/Stepper.h>
 
 #include <vtkm/worklet/LagrangianStructures.h>
 
@@ -79,10 +79,10 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   using Structured3DType = vtkm::cont::CellSetStructured<3>;
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<GridEvaluator>;
-  using Stepper = vtkm::worklet::particleadvection::Stepper<IntegratorType, GridEvaluator>;
+  using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
+  using GridEvaluator = vtkm::worklet::flow::GridEvaluator<FieldType>;
+  using IntegratorType = vtkm::worklet::flow::RK4Integrator<GridEvaluator>;
+  using Stepper = vtkm::worklet::flow::Stepper<IntegratorType, GridEvaluator>;
 
   vtkm::FloatDefault stepSize = this->GetStepSize();
   vtkm::Id numberOfSteps = this->GetNumberOfSteps();
@@ -135,8 +135,8 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
     FieldType velocities(field, fieldMeta.GetAssociation());
     GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), velocities);
     Stepper integrator(evaluator, stepSize);
-    vtkm::worklet::ParticleAdvection particles;
-    vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> advectionResult;
+    vtkm::worklet::flow::ParticleAdvection particles;
+    vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> advectionResult;
     vtkm::cont::ArrayHandle<vtkm::Particle> advectionPoints;
     invoke(detail::MakeParticles{}, lcsInputPoints, advectionPoints);
     advectionResult = particles.Run(integrator, advectionPoints, numberOfSteps);

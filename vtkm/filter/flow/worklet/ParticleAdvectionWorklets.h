@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h
-#define vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h
+#ifndef vtk_m_filter_flow_worklet_ParticleAdvectionWorklets_h
+#define vtk_m_filter_flow_worklet_ParticleAdvectionWorklets_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/Algorithm.h>
@@ -22,9 +22,9 @@
 #include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/Particle.h>
+#include <vtkm/filter/flow/worklet/Particles.h>
+#include <vtkm/filter/flow/worklet/Stepper.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/particleadvection/Particles.h>
-#include <vtkm/worklet/particleadvection/Stepper.h>
 
 #ifdef VTKM_CUDA
 #include <vtkm/cont/cuda/internal/ScopedCudaStackSize.h>
@@ -34,7 +34,7 @@ namespace vtkm
 {
 namespace worklet
 {
-namespace particleadvection
+namespace flow
 {
 
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
@@ -106,10 +106,10 @@ public:
            vtkm::Id& MaxSteps)
   {
 
-    using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorklet;
+    using ParticleAdvectWorkletType = vtkm::worklet::flow::ParticleAdvectWorklet;
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-    using ParticleArrayType = vtkm::worklet::particleadvection::Particles<ParticleType>;
+    using ParticleArrayType = vtkm::worklet::flow::Particles<ParticleType>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(particles.GetNumberOfValues());
     //Create and invoke the particle advection.
@@ -186,10 +186,9 @@ public:
            vtkm::cont::CellSetExplicit<>& polyLines)
   {
 
-    using ParticleWorkletDispatchType = typename vtkm::worklet::DispatcherMapField<
-      vtkm::worklet::particleadvection::ParticleAdvectWorklet>;
-    using StreamlineArrayType =
-      vtkm::worklet::particleadvection::StateRecordingParticles<ParticleType>;
+    using ParticleWorkletDispatchType =
+      typename vtkm::worklet::DispatcherMapField<vtkm::worklet::flow::ParticleAdvectWorklet>;
+    using StreamlineArrayType = vtkm::worklet::flow::StateRecordingParticles<ParticleType>;
 
     vtkm::cont::ArrayHandle<vtkm::Id> initialStepsTaken;
 
@@ -238,8 +237,9 @@ public:
     polyLines.Fill(positions.GetNumberOfValues(), cellTypes, connectivity, offsets);
   }
 };
-}
-}
-} // namespace vtkm::worklet::particleadvection
 
-#endif // vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h
+}
+}
+} // namespace vtkm::worklet::flow
+
+#endif // vtk_m_filter_flow_worklet_ParticleAdvectionWorklets_h
