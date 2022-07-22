@@ -29,7 +29,7 @@ namespace flow
 {
 
 template <typename ParticleType>
-class ParticleMessenger : public vtkm::filter::flow::Messenger
+class VTKM_FILTER_FLOW_EXPORT ParticleMessenger : public vtkm::filter::flow::Messenger
 {
   //sendRank, message
   using MsgCommType = std::pair<int, std::vector<int>>;

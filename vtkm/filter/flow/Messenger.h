@@ -13,6 +13,7 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/Serialization.h>
+#include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 #include <vtkm/thirdparty/diy/diy.h>
 
 #include <list>
@@ -31,7 +32,7 @@ namespace filter
 namespace flow
 {
 
-class Messenger
+class VTKM_FILTER_FLOW_EXPORT Messenger
 {
 public:
   VTKM_CONT Messenger(vtkmdiy::mpi::communicator& comm);
@@ -104,9 +105,10 @@ protected:
   static constexpr int Rank = 0;
 #endif
 };
+
 }
 }
-} // namespace vtkm::filter::flow
+} // namespace vtk_m_filter_flow_Messenger_h
 
 
 #endif
