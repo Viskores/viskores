@@ -20,18 +20,21 @@ namespace vtkm
 {
 namespace filter
 {
+namespace flow
+{
+
 /// \brief Advect particles in a vector field.
 
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
 
 class VTKM_FILTER_FLOW_EXPORT PathParticle
-  : public vtkm::filter::NewFilterParticleAdvectionUnsteadyState
+  : public vtkm::filter::flow::NewFilterParticleAdvectionUnsteadyState
 {
 public:
   VTKM_CONT PathParticle()
     : NewFilterParticleAdvectionUnsteadyState(
-        vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
+        vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE)
   {
   }
 
@@ -41,6 +44,7 @@ protected:
 };
 
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::flow
 
 #endif // vtk_m_filter_PathParticle_h

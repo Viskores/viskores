@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_h
-#define vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_h
+#ifndef vtk_m_filter_flow_DataSetIntegratorSteadyState_h
+#define vtk_m_filter_flow_DataSetIntegratorSteadyState_h
 
 #include <vtkm/filter/flow/DataSetIntegrator.h>
 
@@ -17,24 +17,19 @@ namespace vtkm
 {
 namespace filter
 {
-namespace particleadvection
+namespace flow
 {
 
-class DataSetIntegratorSteadyState : public vtkm::filter::particleadvection::DataSetIntegrator
+class DataSetIntegratorSteadyState : public vtkm::filter::flow::DataSetIntegrator
 {
 public:
-  DataSetIntegratorSteadyState(
-    const vtkm::cont::DataSet& ds,
-    vtkm::Id id,
-    const FieldNameType& fieldName,
-    vtkm::filter::particleadvection::IntegrationSolverType solverType,
-    vtkm::filter::particleadvection::VectorFieldType vecFieldType,
-    vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
-    : vtkm::filter::particleadvection::DataSetIntegrator(id,
-                                                         fieldName,
-                                                         solverType,
-                                                         vecFieldType,
-                                                         resultType)
+  DataSetIntegratorSteadyState(const vtkm::cont::DataSet& ds,
+                               vtkm::Id id,
+                               const FieldNameType& fieldName,
+                               vtkm::filter::flow::IntegrationSolverType solverType,
+                               vtkm::filter::flow::VectorFieldType vecFieldType,
+                               vtkm::filter::flow::FlowResultType resultType)
+    : vtkm::filter::flow::DataSetIntegrator(id, fieldName, solverType, vecFieldType, resultType)
     , DataSet(ds)
   {
   }
@@ -208,4 +203,4 @@ VTKM_CONT inline void DataSetIntegratorSteadyState::DoAdvect(
 }
 }
 
-#endif //vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_h
+#endif //vtk_m_filter_flow_DataSetIntegratorSteadyState_h

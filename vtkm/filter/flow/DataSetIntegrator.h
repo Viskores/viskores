@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particleadvection_DataSetIntegrator_h
-#define vtk_m_filter_particleadvection_DataSetIntegrator_h
+#ifndef vtk_m_filter_flow_DataSetIntegrator_h
+#define vtk_m_filter_flow_DataSetIntegrator_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
@@ -28,7 +28,7 @@ namespace vtkm
 {
 namespace filter
 {
-namespace particleadvection
+namespace flow
 {
 
 template <typename ParticleType>
@@ -36,7 +36,7 @@ class DSIHelperInfo
 {
 public:
   DSIHelperInfo(const std::vector<ParticleType>& v,
-                const vtkm::filter::particleadvection::BoundsMap& boundsMap,
+                const vtkm::filter::flow::BoundsMap& boundsMap,
                 const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& particleBlockIDsMap)
     : BoundsMap(boundsMap)
     , ParticleBlockIDsMap(particleBlockIDsMap)
@@ -44,7 +44,7 @@ public:
   {
   }
 
-  const vtkm::filter::particleadvection::BoundsMap BoundsMap;
+  const vtkm::filter::flow::BoundsMap BoundsMap;
   const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
 
   std::vector<ParticleType> A, I, V;
@@ -72,9 +72,9 @@ protected:
 public:
   DataSetIntegrator(vtkm::Id id,
                     const FieldNameType& fieldName,
-                    vtkm::filter::particleadvection::IntegrationSolverType solverType,
-                    vtkm::filter::particleadvection::VectorFieldType vecFieldType,
-                    vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
+                    vtkm::filter::flow::IntegrationSolverType solverType,
+                    vtkm::filter::flow::VectorFieldType vecFieldType,
+                    vtkm::filter::flow::FlowResultType resultType)
     : FieldName(fieldName)
     , Id(id)
     , SolverType(solverType)
@@ -118,12 +118,12 @@ protected:
 
   VTKM_CONT bool IsParticleAdvectionResult() const
   {
-    return this->AdvectionResType == ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE;
+    return this->AdvectionResType == FlowResultType::PARTICLE_ADVECT_TYPE;
   }
 
   VTKM_CONT bool IsStreamlineResult() const
   {
-    return this->AdvectionResType == ParticleAdvectionResultType::STREAMLINE_TYPE;
+    return this->AdvectionResType == FlowResultType::STREAMLINE_TYPE;
   }
 
   VTKM_CONT virtual void DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
@@ -142,10 +142,10 @@ protected:
   vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType> FieldName;
 
   vtkm::Id Id;
-  vtkm::filter::particleadvection::IntegrationSolverType SolverType;
-  vtkm::filter::particleadvection::VectorFieldType VecFieldType;
-  vtkm::filter::particleadvection::ParticleAdvectionResultType AdvectionResType =
-    vtkm::filter::particleadvection::ParticleAdvectionResultType::UNKNOWN_TYPE;
+  vtkm::filter::flow::IntegrationSolverType SolverType;
+  vtkm::filter::flow::VectorFieldType VecFieldType;
+  vtkm::filter::flow::FlowResultType AdvectionResType =
+    vtkm::filter::flow::FlowResultType::UNKNOWN_TYPE;
 
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   vtkm::Id Rank;
@@ -381,4 +381,4 @@ VTKM_CONT bool DataSetIntegrator::GetOutput(vtkm::cont::DataSet& ds) const
 }
 }
 
-#endif //vtk_m_filter_particleadvection_DataSetIntegrator_h
+#endif //vtk_m_filter_flow_DataSetIntegrator_h

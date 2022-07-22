@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_BoundsMap_h
-#define vtk_m_filter_BoundsMap_h
+#ifndef vtk_m_filter_flow_BoundsMap_h
+#define vtk_m_filter_flow_BoundsMap_h
 
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/AssignerPartitionedDataSet.h>
@@ -31,7 +31,7 @@ namespace vtkm
 {
 namespace filter
 {
-namespace particleadvection
+namespace flow
 {
 
 class VTKM_ALWAYS_EXPORT BoundsMap
@@ -176,6 +176,6 @@ private:
 };
 }
 }
-} // namespace vtkm::filter::particleadvection
+} // namespace vtkm::filter::flow
 
-#endif
+#endif //vtk_m_filter_flow_BoundsMap_h

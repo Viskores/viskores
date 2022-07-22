@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_NewFilterParticleAdvection_h
-#define vtk_m_filter_NewFilterParticleAdvection_h
+#ifndef vtk_m_filter_flow_NewFilterParticleAdvection_h
+#define vtk_m_filter_flow_NewFilterParticleAdvection_h
 
 #include <vtkm/Particle.h>
 #include <vtkm/filter/NewFilterField.h>
@@ -23,6 +23,9 @@ namespace vtkm
 {
 namespace filter
 {
+namespace flow
+{
+
 /// \brief base class for advecting particles in a vector field.
 
 /// Takes as input a vector field and seed locations and advects the seeds
@@ -34,14 +37,14 @@ public:
   using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
-  NewFilterParticleAdvection(vtkm::filter::particleadvection::ParticleAdvectionResultType rType)
+  NewFilterParticleAdvection(vtkm::filter::flow::FlowResultType rType)
     //    : vtkm::filter::NewFilterField()
     : NumberOfSteps(0)
     , ResultType(rType)
-    , SolverType(vtkm::filter::particleadvection::IntegrationSolverType::RK4_TYPE)
+    , SolverType(vtkm::filter::flow::IntegrationSolverType::RK4_TYPE)
     , StepSize(0)
     , UseThreadedAlgorithm(false)
-    , VecFieldType(vtkm::filter::particleadvection::VectorFieldType::VELOCITY_FIELD_TYPE)
+    , VecFieldType(vtkm::filter::flow::VectorFieldType::VELOCITY_FIELD_TYPE)
   {
   }
 
@@ -65,14 +68,11 @@ public:
   }
 
   VTKM_CONT
-  void SetSolverRK4()
-  {
-    this->SolverType = vtkm::filter::particleadvection::IntegrationSolverType::RK4_TYPE;
-  }
+  void SetSolverRK4() { this->SolverType = vtkm::filter::flow::IntegrationSolverType::RK4_TYPE; }
   VTKM_CONT
   void SetSolverEuler()
   {
-    this->SolverType = vtkm::filter::particleadvection::IntegrationSolverType::EULER_TYPE;
+    this->SolverType = vtkm::filter::flow::IntegrationSolverType::EULER_TYPE;
   }
 
   VTKM_CONT
@@ -108,18 +108,18 @@ protected:
   }
 
   vtkm::Id NumberOfSteps;
-  vtkm::filter::particleadvection::ParticleAdvectionResultType ResultType =
-    vtkm::filter::particleadvection::ParticleAdvectionResultType::UNKNOWN_TYPE;
+  vtkm::filter::flow::FlowResultType ResultType = vtkm::filter::flow::FlowResultType::UNKNOWN_TYPE;
   vtkm::cont::UnknownArrayHandle Seeds;
-  vtkm::filter::particleadvection::IntegrationSolverType SolverType;
+  vtkm::filter::flow::IntegrationSolverType SolverType;
   vtkm::FloatDefault StepSize;
   bool UseThreadedAlgorithm;
-  vtkm::filter::particleadvection::VectorFieldType VecFieldType;
+  vtkm::filter::flow::VectorFieldType VecFieldType;
 
 private:
 };
 
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::flow
 
-#endif // vtk_m_filter_NewFilterParticleAdvection_h
+#endif // vtk_m_filter_flow_NewFilterParticleAdvection_h

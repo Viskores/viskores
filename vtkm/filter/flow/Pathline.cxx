@@ -10,7 +10,6 @@
 
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/flow/BoundsMap.h>
-#include <vtkm/filter/flow/ParticleAdvectionAlgorithm.h>
 #include <vtkm/filter/flow/Pathline.h>
 
 #include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
@@ -21,21 +20,24 @@ namespace vtkm
 {
 namespace filter
 {
+namespace flow
+{
 
 VTKM_CONT vtkm::cont::PartitionedDataSet Pathline::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
 {
-  using DSIType = vtkm::filter::particleadvection::DataSetIntegratorUnsteadyState;
+  using DSIType = vtkm::filter::flow::DataSetIntegratorUnsteadyState;
   this->ValidateOptions();
 
-  vtkm::filter::particleadvection::BoundsMap boundsMap(input);
+  vtkm::filter::flow::BoundsMap boundsMap(input);
   auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
 
-  vtkm::filter::particleadvection::ParticleAdvector<DSIType> pav(
+  vtkm::filter::flow::ParticleAdvector<DSIType> pav(
     boundsMap, dsi, this->UseThreadedAlgorithm, this->ResultType);
 
   return pav.Execute(this->NumberOfSteps, this->StepSize, this->Seeds);
 }
 
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::flow

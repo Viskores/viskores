@@ -149,13 +149,13 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
 
       if (fType == STREAMLINE)
       {
-        vtkm::filter::Streamline streamline;
+        vtkm::filter::flow::Streamline streamline;
         SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
         out = streamline.Execute(pds);
       }
       else if (fType == PATHLINE)
       {
-        vtkm::filter::Pathline pathline;
+        vtkm::filter::flow::Pathline pathline;
         SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
         //Create timestep 2
         auto pds2 = vtkm::cont::PartitionedDataSet(pds);
@@ -239,7 +239,7 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
     }
     else if (fType == PARTICLE_ADVECTION)
     {
-      vtkm::filter::ParticleAdvection filter;
+      vtkm::filter::flow::ParticleAdvection filter;
       filter.SetUseThreadedAlgorithm(useThreaded);
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
@@ -394,7 +394,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
 
     if (fType == STREAMLINE)
     {
-      vtkm::filter::Streamline streamline;
+      vtkm::filter::flow::Streamline streamline;
       SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
       auto out = streamline.Execute(pds);
 
@@ -403,7 +403,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
     }
     else if (fType == PARTICLE_ADVECTION)
     {
-      vtkm::filter::ParticleAdvection particleAdvection;
+      vtkm::filter::flow::ParticleAdvection particleAdvection;
       SetFilter(particleAdvection, stepSize, numSteps, fieldName, seedArray, useThreaded);
       auto out = particleAdvection.Execute(pds);
 
@@ -421,7 +421,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
       auto pds2 = allPDS2[n];
       AddVectorFields(pds2, fieldName, vecX);
 
-      vtkm::filter::Pathline pathline;
+      vtkm::filter::flow::Pathline pathline;
       SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
 
       pathline.SetPreviousTime(time0);

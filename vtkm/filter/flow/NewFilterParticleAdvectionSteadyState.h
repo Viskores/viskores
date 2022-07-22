@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_NewFilterParticleAdvectionSteadyState_h
-#define vtk_m_filter_NewFilterParticleAdvectionSteadyState_h
+#ifndef vtk_m_filter_flow_NewFilterParticleAdvectionSteadyState_h
+#define vtk_m_filter_flow_NewFilterParticleAdvectionSteadyState_h
 
 #include <vtkm/filter/flow/NewFilterParticleAdvection.h>
 
@@ -17,22 +17,24 @@ namespace vtkm
 {
 namespace filter
 {
+namespace flow
+{
+
 class NewFilterParticleAdvectionSteadyState : public NewFilterParticleAdvection
 {
 public:
   VTKM_CONT
-  NewFilterParticleAdvectionSteadyState(
-    vtkm::filter::particleadvection::ParticleAdvectionResultType rType)
+  NewFilterParticleAdvectionSteadyState(vtkm::filter::flow::FlowResultType rType)
     : NewFilterParticleAdvection(rType)
   {
   }
 
 protected:
-  VTKM_CONT std::vector<vtkm::filter::particleadvection::DataSetIntegratorSteadyState*>
-  CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
-                           const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
+  VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorSteadyState*> CreateDataSetIntegrators(
+    const vtkm::cont::PartitionedDataSet& input,
+    const vtkm::filter::flow::BoundsMap& boundsMap) const
   {
-    using DSIType = vtkm::filter::particleadvection::DataSetIntegratorSteadyState;
+    using DSIType = vtkm::filter::flow::DataSetIntegratorSteadyState;
 
     std::string activeField = this->GetActiveFieldName();
 
@@ -53,6 +55,7 @@ protected:
 };
 
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::flow
 
-#endif // vtk_m_filter_NewFilterParticleAdvectionSteadyState_h
+#endif // vtk_m_filter_flow_NewFilterParticleAdvectionSteadyState_h

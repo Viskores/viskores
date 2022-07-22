@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Messenger_h
-#define vtk_m_filter_Messenger_h
+#ifndef vtk_m_filter_flow_Messenger_h
+#define vtk_m_filter_flow_Messenger_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/Serialization.h>
@@ -28,7 +28,7 @@ namespace vtkm
 {
 namespace filter
 {
-namespace particleadvection
+namespace flow
 {
 
 class Messenger
@@ -106,7 +106,7 @@ protected:
 };
 }
 }
-} // namespace vtkm::filter::particleadvection
+} // namespace vtkm::filter::flow
 
 
 #endif

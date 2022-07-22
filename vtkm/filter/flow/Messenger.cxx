@@ -22,7 +22,7 @@ namespace vtkm
 {
 namespace filter
 {
-namespace particleadvection
+namespace flow
 {
 
 VTKM_CONT
@@ -381,4 +381,4 @@ void Messenger::ProcessReceivedBuffers(std::vector<char*>& incomingBuffers,
 #endif
 }
 }
-} // namespace vtkm::filter::particleadvection
+} // namespace vtkm::filter::flow

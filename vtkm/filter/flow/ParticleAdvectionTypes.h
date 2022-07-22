@@ -7,14 +7,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_particleadvection_ParticleAdvectionTypes_h
-#define vtk_m_filter_particleadvection_ParticleAdvectionTypes_h
+#ifndef vtk_m_filter_flow_ParticleAdvectionTypes_h
+#define vtk_m_filter_flow_ParticleAdvectionTypes_h
 
 namespace vtkm
 {
 namespace filter
 {
-namespace particleadvection
+namespace flow
 {
 enum class IntegrationSolverType
 {
@@ -28,7 +28,7 @@ enum class VectorFieldType
   ELECTRO_MAGNETIC_FIELD_TYPE,
 };
 
-enum class ParticleAdvectionResultType
+enum class FlowResultType
 {
   UNKNOWN_TYPE = -1,
   PARTICLE_ADVECT_TYPE,
@@ -40,4 +40,4 @@ enum class ParticleAdvectionResultType
 }
 
 
-#endif // vtk_m_filter_particleadvection_ParticleAdvectionTypes_h
+#endif // vtk_m_filter_flow_ParticleAdvectionTypes_h

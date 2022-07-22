@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_NewFilterParticleAdvectionUnsteadyState_h
-#define vtk_m_filter_NewFilterParticleAdvectionUnsteadyState_h
+#ifndef vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
+#define vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
 
 #include <vtkm/filter/flow/NewFilterParticleAdvection.h>
 
@@ -17,13 +17,14 @@ namespace vtkm
 {
 namespace filter
 {
+namespace flow
+{
 
 class NewFilterParticleAdvectionUnsteadyState : public NewFilterParticleAdvection
 {
 public:
   VTKM_CONT
-  NewFilterParticleAdvectionUnsteadyState(
-    vtkm::filter::particleadvection::ParticleAdvectionResultType rType)
+  NewFilterParticleAdvectionUnsteadyState(vtkm::filter::flow::FlowResultType rType)
     : NewFilterParticleAdvection(rType)
   {
   }
@@ -44,11 +45,11 @@ protected:
       throw vtkm::cont::ErrorFilterExecution("PreviousTime must be less than NextTime");
   }
 
-  VTKM_CONT std::vector<vtkm::filter::particleadvection::DataSetIntegratorUnsteadyState*>
+  VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorUnsteadyState*>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
-                           const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
+                           const vtkm::filter::flow::BoundsMap& boundsMap) const
   {
-    using DSIType = vtkm::filter::particleadvection::DataSetIntegratorUnsteadyState;
+    using DSIType = vtkm::filter::flow::DataSetIntegratorUnsteadyState;
 
     std::string activeField = this->GetActiveFieldName();
 
@@ -82,6 +83,7 @@ protected:
 };
 
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::flow
 
-#endif // vtk_m_filter_NewFilterParticleAdvectionUnsteadyState_h
+#endif // vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h

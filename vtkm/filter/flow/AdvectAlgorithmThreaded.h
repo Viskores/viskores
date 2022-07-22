@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_AdvectAlgorithmThreaded_h
-#define vtk_m_filter_AdvectAlgorithmThreaded_h
+#ifndef vtk_m_filter_flow_AdvectAlgorithmThreaded_h
+#define vtk_m_filter_flow_AdvectAlgorithmThreaded_h
 
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/filter/flow/AdvectAlgorithm.h>
@@ -23,15 +23,14 @@ namespace vtkm
 {
 namespace filter
 {
-namespace particleadvection
+namespace flow
 {
 
 template <typename DSIType, template <typename> class ResultType, typename ParticleType>
 class AdvectAlgorithmThreaded : public AdvectAlgorithm<DSIType, ResultType, ParticleType>
 {
 public:
-  AdvectAlgorithmThreaded(const vtkm::filter::particleadvection::BoundsMap& bm,
-                          std::vector<DSIType*>& blocks)
+  AdvectAlgorithmThreaded(const vtkm::filter::flow::BoundsMap& bm, std::vector<DSIType*>& blocks)
     : AdvectAlgorithm<DSIType, ResultType, ParticleType>(bm, blocks)
     , Done(false)
     , WorkerActivate(false)
@@ -131,7 +130,7 @@ protected:
 
   void Manage()
   {
-    vtkm::filter::particleadvection::ParticleMessenger<ParticleType> messenger(
+    vtkm::filter::flow::ParticleMessenger<ParticleType> messenger(
       this->Comm, this->BoundsMap, 1, 128);
 
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
@@ -190,4 +189,4 @@ protected:
 }
 }
 
-#endif //vtk_m_filter_AdvectAlgorithmThreaded_h
+#endif //vtk_m_filter_flow_AdvectAlgorithmThreaded_h

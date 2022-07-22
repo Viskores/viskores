@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ParticleAdvection_h
-#define vtk_m_filter_ParticleAdvection_h
+#ifndef vtk_m_filter_flow_ParticleAdvection_h
+#define vtk_m_filter_flow_ParticleAdvection_h
 
 #include <vtkm/Particle.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvectionSteadyState.h>
@@ -20,18 +20,21 @@ namespace vtkm
 {
 namespace filter
 {
+namespace flow
+{
+
 /// \brief Advect particles in a vector field.
 
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
 
 class VTKM_FILTER_FLOW_EXPORT ParticleAdvection
-  : public vtkm::filter::NewFilterParticleAdvectionSteadyState
+  : public vtkm::filter::flow::NewFilterParticleAdvectionSteadyState
 {
 public:
   VTKM_CONT ParticleAdvection()
     : NewFilterParticleAdvectionSteadyState(
-        vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
+        vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE)
   {
   }
 
@@ -41,6 +44,7 @@ protected:
 };
 
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::flow
 
-#endif // vtk_m_filter_ParticleAdvection_h
+#endif // vtk_m_filter_flow_ParticleAdvection_h

@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_particleadvection_DataSetIntegratorUnsteadyState_h
-#define vtk_m_filter_particleadvection_DataSetIntegratorUnsteadyState_h
+#ifndef vtk_m_filter_flow_DataSetIntegratorUnsteadyState_h
+#define vtk_m_filter_flow_DataSetIntegratorUnsteadyState_h
 
 #include <vtkm/filter/flow/DataSetIntegrator.h>
 #include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
@@ -18,10 +18,10 @@ namespace vtkm
 {
 namespace filter
 {
-namespace particleadvection
+namespace flow
 {
 
-class DataSetIntegratorUnsteadyState : public vtkm::filter::particleadvection::DataSetIntegrator
+class DataSetIntegratorUnsteadyState : public vtkm::filter::flow::DataSetIntegrator
 {
 public:
   DataSetIntegratorUnsteadyState(
@@ -30,15 +30,11 @@ public:
     vtkm::FloatDefault t1,
     vtkm::FloatDefault t2,
     vtkm::Id id,
-    const vtkm::filter::particleadvection::DataSetIntegrator::FieldNameType& fieldName,
-    vtkm::filter::particleadvection::IntegrationSolverType solverType,
-    vtkm::filter::particleadvection::VectorFieldType vecFieldType,
-    vtkm::filter::particleadvection::ParticleAdvectionResultType resultType)
-    : vtkm::filter::particleadvection::DataSetIntegrator(id,
-                                                         fieldName,
-                                                         solverType,
-                                                         vecFieldType,
-                                                         resultType)
+    const vtkm::filter::flow::DataSetIntegrator::FieldNameType& fieldName,
+    vtkm::filter::flow::IntegrationSolverType solverType,
+    vtkm::filter::flow::VectorFieldType vecFieldType,
+    vtkm::filter::flow::FlowResultType resultType)
+    : vtkm::filter::flow::DataSetIntegrator(id, fieldName, solverType, vecFieldType, resultType)
     , DataSet1(ds1)
     , DataSet2(ds2)
     , Time1(t1)
@@ -259,4 +255,4 @@ VTKM_CONT inline void DataSetIntegratorUnsteadyState::DoAdvect(
 }
 }
 
-#endif //vtk_m_filter_particleadvection_DataSetIntegratorUnsteadyState_h
+#endif //vtk_m_filter_flow_DataSetIntegratorUnsteadyState_h
