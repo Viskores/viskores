@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_particleadvection_DataSetIntegratorUnsteadyState_h
 #define vtk_m_filter_particleadvection_DataSetIntegratorUnsteadyState_h
 
-#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
+#include <vtkm/filter/flow/DataSetIntegrator.h>
 #include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
 
 namespace vtkm

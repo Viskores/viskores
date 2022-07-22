@@ -8,12 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Pathline_h
-#define vtk_m_filter_Pathline_h
+#ifndef vtk_m_filter_PathParticle_h
+#define vtk_m_filter_PathParticle_h
 
 #include <vtkm/Particle.h>
-#include <vtkm/filter/NewFilterParticleAdvectionUnsteadyState.h>
-#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
+#include <vtkm/filter/flow/NewFilterParticleAdvectionUnsteadyState.h>
+#include <vtkm/filter/flow/ParticleAdvectionTypes.h>
+#include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
 {
@@ -24,12 +25,13 @@ namespace filter
 /// Takes as input a vector field and seed locations and generates the
 /// end points for each seed through the vector field.
 
-class Pathline : public vtkm::filter::NewFilterParticleAdvectionUnsteadyState
+class VTKM_FILTER_FLOW_EXPORT PathParticle
+  : public vtkm::filter::NewFilterParticleAdvectionUnsteadyState
 {
 public:
-  VTKM_CONT Pathline()
+  VTKM_CONT PathParticle()
     : NewFilterParticleAdvectionUnsteadyState(
-        vtkm::filter::particleadvection::ParticleAdvectionResultType::STREAMLINE_TYPE)
+        vtkm::filter::particleadvection::ParticleAdvectionResultType::PARTICLE_ADVECT_TYPE)
   {
   }
 
@@ -41,8 +43,4 @@ protected:
 }
 } // namespace vtkm::filter
 
-#ifndef vtk_m_filter_Pathline_hxx
-#include <vtkm/filter/Pathline.hxx>
-#endif
-
-#endif // vtk_m_filter_Pathline_h
+#endif // vtk_m_filter_PathParticle_h

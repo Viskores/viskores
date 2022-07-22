@@ -12,10 +12,10 @@
 #define vtk_m_filter_AdvectAlgorithmThreaded_h
 
 #include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/filter/particleadvection/AdvectAlgorithm.h>
-#include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
-#include <vtkm/filter/particleadvection/ParticleMessenger.h>
+#include <vtkm/filter/flow/AdvectAlgorithm.h>
+#include <vtkm/filter/flow/BoundsMap.h>
+#include <vtkm/filter/flow/DataSetIntegrator.h>
+#include <vtkm/filter/flow/ParticleMessenger.h>
 
 #include <thread>
 
@@ -31,7 +31,7 @@ class AdvectAlgorithmThreaded : public AdvectAlgorithm<DSIType, ResultType, Part
 {
 public:
   AdvectAlgorithmThreaded(const vtkm::filter::particleadvection::BoundsMap& bm,
-                          std::vector<std::shared_ptr<DSIType>>& blocks)
+                          std::vector<DSIType*>& blocks)
     : AdvectAlgorithm<DSIType, ResultType, ParticleType>(bm, blocks)
     , Done(false)
     , WorkerActivate(false)
@@ -40,7 +40,7 @@ public:
     //When this happens, they are destructed by the time the Manage thread gets them.
     //Set the copy flag so the std::vector is copied into the ArrayHandle
     for (auto& block : this->Blocks)
-      block.get()->SetCopySeedFlag(true);
+      block->SetCopySeedFlag(true);
   }
 
   void Go() override

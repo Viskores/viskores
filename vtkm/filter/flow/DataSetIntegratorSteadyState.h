@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_h
 #define vtk_m_filter_particleadvection_DataSetIntegratorSteadyState_h
 
-#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
+#include <vtkm/filter/flow/DataSetIntegrator.h>
 
 namespace vtkm
 {

@@ -11,8 +11,6 @@
 #ifndef vtk_m_filter_Messenger_h
 #define vtk_m_filter_Messenger_h
 
-#include <vtkm/filter/vtkm_filter_extra_export.h>
-
 #include <vtkm/Types.h>
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/thirdparty/diy/diy.h>
@@ -33,7 +31,7 @@ namespace filter
 namespace particleadvection
 {
 
-class VTKM_FILTER_EXTRA_EXPORT Messenger
+class Messenger
 {
 public:
   VTKM_CONT Messenger(vtkmdiy::mpi::communicator& comm);

@@ -7,26 +7,24 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_ParticleAdvection_hxx
-#define vtk_m_filter_ParticleAdvection_hxx
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/ParticleAdvection.h>
-#include <vtkm/filter/particleadvection/BoundsMap.h>
+#include <vtkm/filter/flow/BoundsMap.h>
+#include <vtkm/filter/flow/PathParticle.h>
 
-#include <vtkm/filter/particleadvection/DataSetIntegratorSteadyState.h>
-#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
-#include <vtkm/filter/particleadvection/ParticleAdvector.h>
+#include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
+#include <vtkm/filter/flow/ParticleAdvectionTypes.h>
+#include <vtkm/filter/flow/ParticleAdvector.h>
 
 namespace vtkm
 {
 namespace filter
 {
 
-VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::DoExecutePartitions(
+VTKM_CONT vtkm::cont::PartitionedDataSet PathParticle::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
 {
-  using DSIType = vtkm::filter::particleadvection::DataSetIntegratorSteadyState;
+  using DSIType = vtkm::filter::particleadvection::DataSetIntegratorUnsteadyState;
   this->ValidateOptions();
 
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
@@ -40,4 +38,3 @@ VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::DoExecutePartitions(
 
 }
 } // namespace vtkm::filter
-#endif

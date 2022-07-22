@@ -10,10 +10,10 @@
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/ParticleAdvection.h>
-#include <vtkm/filter/PathParticle.h>
-#include <vtkm/filter/Pathline.h>
-#include <vtkm/filter/Streamline.h>
+#include <vtkm/filter/flow/ParticleAdvection.h>
+#include <vtkm/filter/flow/PathParticle.h>
+#include <vtkm/filter/flow/Pathline.h>
+#include <vtkm/filter/flow/Streamline.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/worklet/testing/GenerateTestDataSets.h>

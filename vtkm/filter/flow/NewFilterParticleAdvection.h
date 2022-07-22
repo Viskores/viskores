@@ -13,11 +13,11 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/filter/NewFilterField.h>
-#include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
-#include <vtkm/filter/particleadvection/DataSetIntegratorSteadyState.h>
-#include <vtkm/filter/particleadvection/DataSetIntegratorUnsteadyState.h>
-#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
+#include <vtkm/filter/flow/BoundsMap.h>
+#include <vtkm/filter/flow/DataSetIntegrator.h>
+#include <vtkm/filter/flow/DataSetIntegratorSteadyState.h>
+#include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
+#include <vtkm/filter/flow/ParticleAdvectionTypes.h>
 
 namespace vtkm
 {
@@ -35,8 +35,8 @@ public:
 
   VTKM_CONT
   NewFilterParticleAdvection(vtkm::filter::particleadvection::ParticleAdvectionResultType rType)
-    : vtkm::filter::NewFilterField()
-    , NumberOfSteps(0)
+    //    : vtkm::filter::NewFilterField()
+    : NumberOfSteps(0)
     , ResultType(rType)
     , SolverType(vtkm::filter::particleadvection::IntegrationSolverType::RK4_TYPE)
     , StepSize(0)

@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_NewFilterParticleAdvectionUnsteadyState_h
 #define vtk_m_filter_NewFilterParticleAdvectionUnsteadyState_h
 
-#include <vtkm/filter/NewFilterParticleAdvection.h>
+#include <vtkm/filter/flow/NewFilterParticleAdvection.h>
 
 namespace vtkm
 {
@@ -28,10 +28,13 @@ public:
   {
   }
 
-  void SetPreviousTime(vtkm::FloatDefault t1) { this->Time1 = t1; }
-  void SetNextTime(vtkm::FloatDefault t2) { this->Time2 = t2; }
-  void SetNextDataSet(const vtkm::cont::DataSet& ds) { this->Input2 = { ds }; }
-  void SetNextDataSet(const vtkm::cont::PartitionedDataSet& pds) { this->Input2 = pds; }
+  VTKM_CONT void SetPreviousTime(vtkm::FloatDefault t1) { this->Time1 = t1; }
+
+  VTKM_CONT void SetNextTime(vtkm::FloatDefault t2) { this->Time2 = t2; }
+
+  VTKM_CONT void SetNextDataSet(const vtkm::cont::DataSet& ds) { this->Input2 = { ds }; }
+
+  VTKM_CONT void SetNextDataSet(const vtkm::cont::PartitionedDataSet& pds) { this->Input2 = pds; }
 
 protected:
   VTKM_CONT virtual void ValidateOptions() const override
@@ -41,8 +44,7 @@ protected:
       throw vtkm::cont::ErrorFilterExecution("PreviousTime must be less than NextTime");
   }
 
-  VTKM_CONT
-  std::vector<std::shared_ptr<vtkm::filter::particleadvection::DataSetIntegratorUnsteadyState>>
+  VTKM_CONT std::vector<vtkm::filter::particleadvection::DataSetIntegratorUnsteadyState*>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
                            const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
   {
@@ -50,7 +52,7 @@ protected:
 
     std::string activeField = this->GetActiveFieldName();
 
-    std::vector<std::shared_ptr<DSIType>> dsi;
+    std::vector<DSIType*> dsi;
     for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
     {
       vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
@@ -60,15 +62,15 @@ protected:
           (!ds2.HasPointField(activeField) && !ds2.HasCellField(activeField)))
         throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-      dsi.push_back(std::shared_ptr<DSIType>(new DSIType(ds1,
-                                                         ds2,
-                                                         this->Time1,
-                                                         this->Time2,
-                                                         blockId,
-                                                         activeField,
-                                                         this->SolverType,
-                                                         this->VecFieldType,
-                                                         this->ResultType)));
+      dsi.push_back(new DSIType(ds1,
+                                ds2,
+                                this->Time1,
+                                this->Time2,
+                                blockId,
+                                activeField,
+                                this->SolverType,
+                                this->VecFieldType,
+                                this->ResultType));
     }
 
     return dsi;

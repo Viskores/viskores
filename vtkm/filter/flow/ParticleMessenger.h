@@ -11,12 +11,10 @@
 #ifndef vtk_m_filter_ParticleMessenger_h
 #define vtk_m_filter_ParticleMessenger_h
 
-#include <vtkm/filter/vtkm_filter_extra_export.h>
-
 #include <vtkm/Particle.h>
 #include <vtkm/cont/Serialization.h>
-#include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/Messenger.h>
+#include <vtkm/filter/flow/BoundsMap.h>
+#include <vtkm/filter/flow/Messenger.h>
 
 #include <list>
 #include <map>
@@ -31,7 +29,7 @@ namespace particleadvection
 {
 
 template <typename ParticleType>
-class VTKM_FILTER_EXTRA_EXPORT ParticleMessenger : public vtkm::filter::particleadvection::Messenger
+class ParticleMessenger : public vtkm::filter::particleadvection::Messenger
 {
   //sendRank, message
   using MsgCommType = std::pair<int, std::vector<int>>;

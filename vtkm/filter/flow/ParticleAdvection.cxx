@@ -7,23 +7,21 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_Streamline_hxx
-#define vtk_m_filter_Streamline_hxx
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/Streamline.h>
-#include <vtkm/filter/particleadvection/BoundsMap.h>
+#include <vtkm/filter/flow/BoundsMap.h>
+#include <vtkm/filter/flow/ParticleAdvection.h>
 
-#include <vtkm/filter/particleadvection/DataSetIntegratorSteadyState.h>
-#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
-#include <vtkm/filter/particleadvection/ParticleAdvector.h>
+#include <vtkm/filter/flow/DataSetIntegratorSteadyState.h>
+#include <vtkm/filter/flow/ParticleAdvectionTypes.h>
+#include <vtkm/filter/flow/ParticleAdvector.h>
 
 namespace vtkm
 {
 namespace filter
 {
 
-VTKM_CONT inline vtkm::cont::PartitionedDataSet Streamline::DoExecutePartitions(
+VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
 {
   using DSIType = vtkm::filter::particleadvection::DataSetIntegratorSteadyState;
@@ -40,4 +38,3 @@ VTKM_CONT inline vtkm::cont::PartitionedDataSet Streamline::DoExecutePartitions(
 
 }
 } // namespace vtkm::filter
-#endif

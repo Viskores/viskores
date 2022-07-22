@@ -7,17 +7,15 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_Pathline_hxx
-#define vtk_m_filter_Pathline_hxx
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/Pathline.h>
-#include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/ParticleAdvectionAlgorithm.h>
+#include <vtkm/filter/flow/BoundsMap.h>
+#include <vtkm/filter/flow/ParticleAdvectionAlgorithm.h>
+#include <vtkm/filter/flow/Pathline.h>
 
-#include <vtkm/filter/particleadvection/DataSetIntegratorUnsteadyState.h>
-#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
-#include <vtkm/filter/particleadvection/ParticleAdvector.h>
+#include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
+#include <vtkm/filter/flow/ParticleAdvectionTypes.h>
+#include <vtkm/filter/flow/ParticleAdvector.h>
 
 namespace vtkm
 {
@@ -41,4 +39,3 @@ VTKM_CONT vtkm::cont::PartitionedDataSet Pathline::DoExecutePartitions(
 
 }
 } // namespace vtkm::filter
-#endif

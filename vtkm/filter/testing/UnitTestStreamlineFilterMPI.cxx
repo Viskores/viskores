@@ -9,9 +9,9 @@
 //============================================================================
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/ParticleAdvection.h>
-#include <vtkm/filter/Pathline.h>
-#include <vtkm/filter/Streamline.h>
+#include <vtkm/filter/flow/ParticleAdvection.h>
+#include <vtkm/filter/flow/Pathline.h>
+#include <vtkm/filter/flow/Streamline.h>
 #include <vtkm/thirdparty/diy/diy.h>
 #include <vtkm/worklet/testing/GenerateTestDataSets.h>
 

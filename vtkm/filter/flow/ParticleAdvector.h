@@ -11,10 +11,10 @@
 #ifndef vtk_m_filter_particleadvection_ParticleAdvector_h
 #define vtk_m_filter_particleadvection_ParticleAdvector_h
 
-#include <vtkm/filter/particleadvection/AdvectAlgorithm.h>
-#include <vtkm/filter/particleadvection/AdvectAlgorithmThreaded.h>
-#include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
+#include <vtkm/filter/flow/AdvectAlgorithm.h>
+#include <vtkm/filter/flow/AdvectAlgorithmThreaded.h>
+#include <vtkm/filter/flow/BoundsMap.h>
+#include <vtkm/filter/flow/DataSetIntegrator.h>
 
 namespace vtkm
 {
@@ -28,7 +28,7 @@ class ParticleAdvector
 {
 public:
   ParticleAdvector(const vtkm::filter::particleadvection::BoundsMap& bm,
-                   const std::vector<std::shared_ptr<DSIType>> blocks,
+                   const std::vector<DSIType*> blocks,
                    const bool& useThreaded,
                    const vtkm::filter::particleadvection::ParticleAdvectionResultType& parType)
     : Blocks(blocks)
@@ -108,7 +108,7 @@ private:
   }
 
 
-  std::vector<std::shared_ptr<DSIType>> Blocks;
+  std::vector<DSIType*> Blocks;
   vtkm::filter::particleadvection::BoundsMap BoundsMap;
   ParticleAdvectionResultType ResultType;
   bool UseThreadedAlgorithm;

@@ -14,8 +14,8 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
-#include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/ParticleAdvectionTypes.h>
+#include <vtkm/filter/flow/BoundsMap.h>
+#include <vtkm/filter/flow/ParticleAdvectionTypes.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/EulerIntegrator.h>
 #include <vtkm/worklet/particleadvection/IntegratorStatus.h>
