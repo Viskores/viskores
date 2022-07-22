@@ -18,7 +18,6 @@ set(flow_headers
   NewFilterParticleAdvection.h
   NewFilterParticleAdvectionSteadyState.h
   NewFilterParticleAdvectionUnsteadyState.h
-  ParticleAdvectionAlgorithm.h
   ParticleAdvectionTypes.h
   ParticleAdvector.h
   ParticleMessenger.h
