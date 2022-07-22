@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_flow_ParticleAdvectionTypes_h
-#define vtk_m_filter_flow_ParticleAdvectionTypes_h
+#ifndef vtk_m_filter_flow_FlowTypes_h
+#define vtk_m_filter_flow_FlowTypes_h
 
 namespace vtkm
 {
@@ -39,5 +39,4 @@ enum class FlowResultType
 }
 }
 
-
-#endif // vtk_m_filter_flow_ParticleAdvectionTypes_h
+#endif // vtk_m_filter_flow_FlowTypes_h

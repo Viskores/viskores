@@ -13,7 +13,6 @@
 #include <vtkm/filter/flow/Streamline.h>
 
 #include <vtkm/filter/flow/DataSetIntegratorSteadyState.h>
-#include <vtkm/filter/flow/ParticleAdvectionTypes.h>
 #include <vtkm/filter/flow/ParticleAdvector.h>
 
 namespace vtkm

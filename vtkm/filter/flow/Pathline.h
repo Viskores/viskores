@@ -12,8 +12,8 @@
 #define vtk_m_filter_Pathline_h
 
 #include <vtkm/Particle.h>
+#include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvectionUnsteadyState.h>
-#include <vtkm/filter/flow/ParticleAdvectionTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm

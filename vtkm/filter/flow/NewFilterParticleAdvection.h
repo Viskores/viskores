@@ -17,7 +17,7 @@
 #include <vtkm/filter/flow/DataSetIntegrator.h>
 #include <vtkm/filter/flow/DataSetIntegratorSteadyState.h>
 #include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
-#include <vtkm/filter/flow/ParticleAdvectionTypes.h>
+#include <vtkm/filter/flow/FlowTypes.h>
 
 namespace vtkm
 {
