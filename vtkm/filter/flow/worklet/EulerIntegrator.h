@@ -13,6 +13,9 @@
 #ifndef vtk_m_filter_flow_worklet_EulerIntegrator_h
 #define vtk_m_filter_flow_worklet_EulerIntegrator_h
 
+#include <vtkm/filter/flow/worklet/GridEvaluatorStatus.h>
+#include <vtkm/filter/flow/worklet/IntegratorStatus.h>
+
 namespace vtkm
 {
 namespace worklet

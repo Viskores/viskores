@@ -100,7 +100,6 @@ set(extra_headers
   Lagrangian.h
   LagrangianStructures.h
   MIRFilter.h
-  StreamSurface.h
   )
 
 set(extra_header_template_sources
@@ -111,7 +110,6 @@ set(extra_header_template_sources
   Lagrangian.hxx
   LagrangianStructures.hxx
   MIRFilter.hxx
-  StreamSurface.hxx
   )
 
 set(core_headers
