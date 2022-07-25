@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Initialize.h>
-#include <vtkm/filter/Streamline.h>
+#include <vtkm/filter/flow/Streamline.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
   auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
 
   //compute streamlines
-  vtkm::filter::Streamline streamline;
+  vtkm::filter::flow::Streamline streamline;
 
   streamline.SetStepSize(stepSize);
   streamline.SetNumberOfSteps(numSteps);
