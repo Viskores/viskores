@@ -94,7 +94,6 @@ public:
 
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
     this->ComputeTotalNumParticles(nLocal);
-    this->TotalNumTerminatedParticles = 0;
 
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
@@ -272,8 +271,8 @@ public:
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
   vtkm::Id Rank;
   vtkm::FloatDefault StepSize;
-  vtkm::Id TotalNumParticles;
-  vtkm::Id TotalNumTerminatedParticles;
+  vtkm::Id TotalNumParticles = 0;
+  vtkm::Id TotalNumTerminatedParticles = 0;
 };
 
 }
