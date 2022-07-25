@@ -22,6 +22,9 @@ namespace filter
 namespace flow
 {
 
+//vtkm::filter::flow::FlowResultType PathParticle::ResultType = vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE;
+
+
 VTKM_CONT vtkm::cont::PartitionedDataSet PathParticle::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
 {
@@ -29,7 +32,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet PathParticle::DoExecutePartitions(
   this->ValidateOptions();
 
   vtkm::filter::flow::BoundsMap boundsMap(input);
-  auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
+  auto dsi = this->CreateDataSetIntegrators(input, boundsMap, this->ResultType);
 
   vtkm::filter::flow::ParticleAdvector<DSIType> pav(
     boundsMap, dsi, this->UseThreadedAlgorithm, this->ResultType);

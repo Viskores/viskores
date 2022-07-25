@@ -28,7 +28,7 @@ enum class VectorFieldType
   ELECTRO_MAGNETIC_FIELD_TYPE,
 };
 
-enum class FlowResultType
+enum FlowResultType
 {
   UNKNOWN_TYPE = -1,
   PARTICLE_ADVECT_TYPE,

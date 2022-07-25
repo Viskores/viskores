@@ -29,7 +29,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::DoExecutePartitions(
   this->ValidateOptions();
 
   vtkm::filter::flow::BoundsMap boundsMap(input);
-  auto dsi = this->CreateDataSetIntegrators(input, boundsMap);
+  auto dsi = this->CreateDataSetIntegrators(input, boundsMap, this->ResultType);
 
   vtkm::filter::flow::ParticleAdvector<DSIType> pav(
     boundsMap, dsi, this->UseThreadedAlgorithm, this->ResultType);

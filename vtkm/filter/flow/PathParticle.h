@@ -32,15 +32,15 @@ class VTKM_FILTER_FLOW_EXPORT PathParticle
   : public vtkm::filter::flow::NewFilterParticleAdvectionUnsteadyState
 {
 public:
-  VTKM_CONT PathParticle()
-    : NewFilterParticleAdvectionUnsteadyState(
-        vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE)
-  {
-  }
+  VTKM_CONT PathParticle() {}
 
 protected:
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData) override;
+
+private:
+  const vtkm::filter::flow::FlowResultType ResultType =
+    vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE;
 };
 
 }

@@ -24,15 +24,13 @@ class NewFilterParticleAdvectionSteadyState : public NewFilterParticleAdvection
 {
 public:
   VTKM_CONT
-  NewFilterParticleAdvectionSteadyState(vtkm::filter::flow::FlowResultType rType)
-    : NewFilterParticleAdvection(rType)
-  {
-  }
+  NewFilterParticleAdvectionSteadyState() {}
 
 protected:
   VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorSteadyState*> CreateDataSetIntegrators(
     const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::flow::BoundsMap& boundsMap) const
+    const vtkm::filter::flow::BoundsMap& boundsMap,
+    const vtkm::filter::flow::FlowResultType& resultType) const
   {
     using DSIType = vtkm::filter::flow::DataSetIntegratorSteadyState;
 
@@ -46,8 +44,8 @@ protected:
       if (!ds.HasPointField(activeField) && !ds.HasCellField(activeField))
         throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-      dsi.push_back(new DSIType(
-        ds, blockId, activeField, this->SolverType, this->VecFieldType, this->ResultType));
+      dsi.push_back(
+        new DSIType(ds, blockId, activeField, this->SolverType, this->VecFieldType, resultType));
     }
 
     return dsi;

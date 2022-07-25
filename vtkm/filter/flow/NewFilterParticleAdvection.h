@@ -37,16 +37,7 @@ public:
   using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
-  NewFilterParticleAdvection(vtkm::filter::flow::FlowResultType rType)
-    //    : vtkm::filter::NewFilterField()
-    : NumberOfSteps(0)
-    , ResultType(rType)
-    , SolverType(vtkm::filter::flow::IntegrationSolverType::RK4_TYPE)
-    , StepSize(0)
-    , UseThreadedAlgorithm(false)
-    , VecFieldType(vtkm::filter::flow::VectorFieldType::VELOCITY_FIELD_TYPE)
-  {
-  }
+  NewFilterParticleAdvection() {}
 
   VTKM_CONT
   void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
@@ -107,13 +98,14 @@ protected:
       throw vtkm::cont::ErrorFilterExecution("StepSize cannot be negative");
   }
 
-  vtkm::Id NumberOfSteps;
-  vtkm::filter::flow::FlowResultType ResultType = vtkm::filter::flow::FlowResultType::UNKNOWN_TYPE;
+  vtkm::Id NumberOfSteps = 0;
   vtkm::cont::UnknownArrayHandle Seeds;
-  vtkm::filter::flow::IntegrationSolverType SolverType;
-  vtkm::FloatDefault StepSize;
-  bool UseThreadedAlgorithm;
-  vtkm::filter::flow::VectorFieldType VecFieldType;
+  vtkm::filter::flow::IntegrationSolverType SolverType =
+    vtkm::filter::flow::IntegrationSolverType::RK4_TYPE;
+  vtkm::FloatDefault StepSize = 0;
+  bool UseThreadedAlgorithm = false;
+  vtkm::filter::flow::VectorFieldType VecFieldType =
+    vtkm::filter::flow::VectorFieldType::VELOCITY_FIELD_TYPE;
 
 private:
 };

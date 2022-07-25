@@ -24,10 +24,7 @@ class NewFilterParticleAdvectionUnsteadyState : public NewFilterParticleAdvectio
 {
 public:
   VTKM_CONT
-  NewFilterParticleAdvectionUnsteadyState(vtkm::filter::flow::FlowResultType rType)
-    : NewFilterParticleAdvection(rType)
-  {
-  }
+  NewFilterParticleAdvectionUnsteadyState() {}
 
   VTKM_CONT void SetPreviousTime(vtkm::FloatDefault t1) { this->Time1 = t1; }
 
@@ -47,7 +44,8 @@ protected:
 
   VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorUnsteadyState*>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
-                           const vtkm::filter::flow::BoundsMap& boundsMap) const
+                           const vtkm::filter::flow::BoundsMap& boundsMap,
+                           const vtkm::filter::flow::FlowResultType& resultType) const
   {
     using DSIType = vtkm::filter::flow::DataSetIntegratorUnsteadyState;
 
@@ -71,7 +69,7 @@ protected:
                                 activeField,
                                 this->SolverType,
                                 this->VecFieldType,
-                                this->ResultType));
+                                resultType));
     }
 
     return dsi;
