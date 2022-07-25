@@ -107,6 +107,10 @@ set(extra_header_template_sources
   LagrangianStructures.hxx
   )
 
+set(extra_sources_device
+  LagrangianDummy.cxx
+  )
+
 set(core_headers
   FieldSelection.h
   NewFilter.h
@@ -134,16 +138,30 @@ vtkm_library(
 
 add_library(vtkm_filter INTERFACE)
 
+vtkm_library(
+  NAME vtkm_filter_extra
+  TEMPLATE_SOURCES ${extra_header_template_sources}
+  HEADERS ${extra_headers}
+  DEVICE_SOURCES ${extra_sources_device}
+  USE_VTKM_JOB_POOL
+)
+
 set_target_properties(
   vtkm_filter_core
+  vtkm_filter_extra
   PROPERTIES
   UNITY_BUILD ON
   UNITY_BUILD_MODE BATCH
 )
 
 target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont vtkm_worklet)
+target_link_libraries(vtkm_filter_extra PUBLIC vtkm_cont vtkm_worklet)
+if (VTKm_ENABLE_MPI)
+  target_link_libraries(vtkm_filter_extra PUBLIC MPI::MPI_CXX)
+endif()
 
 target_link_libraries(vtkm_filter PUBLIC INTERFACE
+  vtkm_filter_extra
   vtkm_filter_core
   )
 

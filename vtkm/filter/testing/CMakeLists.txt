@@ -21,6 +21,7 @@ set(unit_tests
 
 set(libraries
   vtkm_filter
+  vtkm_filter_extra
   vtkm_io
   vtkm_source
 )
