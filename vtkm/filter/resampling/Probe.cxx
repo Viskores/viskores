@@ -26,14 +26,14 @@ namespace
 bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::cont::Field& field,
                 const vtkm::worklet::Probe& worklet,
-                vtkm::Float64 InvalidValue)
+                vtkm::Float64 invalidValue)
 {
   if (field.IsFieldPoint())
   {
     auto resolve = [&](const auto& concrete) {
       using T = typename std::decay_t<decltype(concrete)>::ValueType;
       vtkm::cont::ArrayHandle<T> outputArray = worklet.ProcessPointField(
-        concrete, vtkm::cont::internal::CastInvalidValue<T>(InvalidValue));
+        concrete, vtkm::cont::internal::CastInvalidValue<T>(invalidValue));
       result.AddPointField(field.GetName(), outputArray);
     };
     field.GetData()
@@ -44,7 +44,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
   else if (field.IsFieldCell())
   {
     vtkm::cont::Field outField;
-    if (vtkm::filter::MapFieldPermutation(field, worklet.GetCellIds(), outField, InvalidValue))
+    if (vtkm::filter::MapFieldPermutation(field, worklet.GetCellIds(), outField, invalidValue))
     {
       // output field should be associated with points
       outField = vtkm::cont::Field(
