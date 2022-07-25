@@ -25,6 +25,7 @@ set(flow_headers
   Pathline.h
   PathParticle.h
   Streamline.h
+  StreamSurface.h
   )
 
 set(flow_sources
@@ -33,6 +34,7 @@ set(flow_sources
   Pathline.cxx
   PathParticle.cxx
   Streamline.cxx
+  StreamSurface.cxx
   )
 
 vtkm_library(

@@ -10,9 +10,9 @@
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/flow/worklet/StreamSurface.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/StreamSurface.h>
 
 namespace
 {
@@ -53,7 +53,7 @@ void TestSameNumPolylines()
   dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
 
   vtkm::cont::DataSet ds = dsb.Create();
-  vtkm::worklet::StreamSurface streamSurfaceWorklet;
+  vtkm::worklet::flow::StreamSurface streamSurfaceWorklet;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
   streamSurfaceWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(), newPoints, newCells);
@@ -111,7 +111,7 @@ void TestUnequalNumPolylines(int unequalType)
   dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
 
   vtkm::cont::DataSet ds = dsb.Create();
-  vtkm::worklet::StreamSurface streamSurfaceWorklet;
+  vtkm::worklet::flow::StreamSurface streamSurfaceWorklet;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newPoints;
   vtkm::cont::CellSetSingleType<> newCells;
   streamSurfaceWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(), newPoints, newCells);
@@ -124,7 +124,7 @@ void TestUnequalNumPolylines(int unequalType)
                    "Wrong number of cells in StreamSurface worklet");
 }
 
-void TestStreamSurface()
+void TestStreamSurfaceWorklet()
 {
   std::cout << "Testing Stream Surface Worklet" << std::endl;
   TestSameNumPolylines();
@@ -134,7 +134,7 @@ void TestStreamSurface()
 }
 }
 
-int UnitTestStreamSurface(int argc, char* argv[])
+int UnitTestStreamSurfaceWorklet(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestStreamSurface, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestStreamSurfaceWorklet, argc, argv);
 }

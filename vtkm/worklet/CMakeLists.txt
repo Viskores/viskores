@@ -40,7 +40,6 @@ set(headers
   StableSortIndices.h
   DescriptiveStatistics.h
   StreamLineUniformGrid.h
-  StreamSurface.h
   TriangleWinding.h
   WaveletCompressor.h
   WorkletMapField.h

@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/StreamSurface.h>
+#include <vtkm/filter/flow/StreamSurface.h>
 
 namespace
 {
@@ -44,7 +44,7 @@ void TestStreamSurface()
                                    vtkm::Particle(vtkm::Vec3f(.1f, 3.0f, .3f), 2),
                                    vtkm::Particle(vtkm::Vec3f(.1f, 3.5f, .2f), 3) });
 
-  vtkm::filter::StreamSurface streamSrf;
+  vtkm::filter::flow::StreamSurface streamSrf;
 
   streamSrf.SetStepSize(0.1f);
   streamSrf.SetNumberOfSteps(20);

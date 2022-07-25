@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_worklet_streamsurface_h
-#define vtk_m_worklet_streamsurface_h
+#ifndef vtk_m_filter_flow_worklet_streamsurface_h
+#define vtk_m_filter_flow_worklet_streamsurface_h
 
 #include <typeinfo>
 #include <vtkm/VectorAnalysis.h>
@@ -23,6 +23,8 @@
 namespace vtkm
 {
 namespace worklet
+{
+namespace flow
 {
 
 class StreamSurface
@@ -276,7 +278,9 @@ public:
 
 private:
 };
-}
-}
 
-#endif //  vtk_m_worklet_streamsurface_h
+}
+}
+} //vtkm::worklet::flow
+
+#endif //  vtk_m_filter_flow_worklet_streamsurface_h

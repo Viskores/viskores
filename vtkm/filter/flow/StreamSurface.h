@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_flow_Streamline_h
-#define vtk_m_filter_flow_Streamline_h
+#ifndef vtk_m_filter_flow_StreamSurface_h
+#define vtk_m_filter_flow_StreamSurface_h
 
 #include <vtkm/Particle.h>
 #include <vtkm/filter/flow/FlowTypes.h>
@@ -23,27 +23,26 @@ namespace filter
 namespace flow
 {
 
-/// \brief Advect particles in a vector field.
+/// \brief generate streamlines from a vector field.
 
 /// Takes as input a vector field and seed locations and generates the
-/// end points for each seed through the vector field.
+/// paths taken by the seeds through the vector field.
 
-class VTKM_FILTER_FLOW_EXPORT Streamline
+class VTKM_FILTER_FLOW_EXPORT StreamSurface
   : public vtkm::filter::flow::NewFilterParticleAdvectionSteadyState
 {
 public:
-  VTKM_CONT Streamline()
+  VTKM_CONT StreamSurface()
     : NewFilterParticleAdvectionSteadyState(vtkm::filter::flow::FlowResultType::STREAMLINE_TYPE)
   {
   }
 
 protected:
-  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
-    const vtkm::cont::PartitionedDataSet& inData) override;
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
 };
 
 }
 }
 } // namespace vtkm::filter::flow
 
-#endif // vtk_m_filter_flow_Streamline_h
+#endif // vtk_m_filter_flow_StreamSurface_h

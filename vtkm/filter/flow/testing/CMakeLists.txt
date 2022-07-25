@@ -12,6 +12,8 @@ set(unit_tests
 UnitTestStreamlineFilter.cxx
 UnitTestWorkletParticleAdvection.cxx
 UnitTestWorkletTemporalAdvection.cxx
+UnitTestStreamSurfaceFilter.cxx
+UnitTestStreamSurfaceWorklet.cxx
   )
 
 set(libraries

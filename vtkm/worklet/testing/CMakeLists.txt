@@ -35,7 +35,6 @@ set(unit_tests
   UnitTestSplatKernels.cxx
   UnitTestScatterAndMaskWithTopology.cxx
   UnitTestStreamLineUniformGrid.cxx
-  UnitTestStreamSurface.cxx
   UnitTestTriangleWinding.cxx
   UnitTestWholeCellSetIn.cxx
   UnitTestWorkletMapField.cxx

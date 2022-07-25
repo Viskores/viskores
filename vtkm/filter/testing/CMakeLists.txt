@@ -25,7 +25,6 @@ set(unit_tests
   UnitTestMIRFilter.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx
-  UnitTestStreamSurfaceFilter.cxx
 )
 
 set(libraries
@@ -54,8 +53,6 @@ if ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
   set(large_kernel_sources
     RegressionTestStreamline.cxx
     UnitTestLagrangianFilter.cxx
-    UnitTestStreamlineFilter.cxx
-    UnitTestStreamSurfaceFilter.cxx
     )
   set_source_files_properties(${large_kernel_sources} PROPERTIES
     COMPILE_OPTIONS "-Xptxas;--disable-optimizer-constants"

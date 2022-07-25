@@ -21,6 +21,7 @@ set(headers
   ParticleAdvectionWorklets.h
   RK4Integrator.h
   TemporalGridEvaluators.h
+  StreamSurface.h
   )
 
 #-----------------------------------------------------------------------------
