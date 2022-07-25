@@ -9,8 +9,12 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestCellSetConnectivityFilter.cxx
   UnitTestImageConnectivityFilter.cxx
+  )
+
+set(unit_tests_device
+  UnitTestCellSetConnectivityFilter.cxx # uses vtkm::cont::Algorithm
+  UnitTestGraphConnectivityWorklet.cxx
   )
 
 set(libraries
@@ -21,7 +25,7 @@ set(libraries
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
+  DEVICE_SOURCES ${unit_tests_device}
   LIBRARIES ${libraries}
-  ALL_BACKENDS # uses vtkm::cont::Algorithm
   USE_VTKM_JOB_POOL
 )

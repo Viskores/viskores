@@ -109,15 +109,27 @@ class Storage<T, vtkm::cont::StorageTagPermutation<IndexStorageTag, ValueStorage
   using IndexStorage = vtkm::cont::internal::Storage<vtkm::Id, IndexStorageTag>;
   using ValueStorage = vtkm::cont::internal::Storage<T, ValueStorageTag>;
 
-  template <typename Buff>
-  VTKM_CONT constexpr static Buff* IndexBuffers(Buff* buffers)
+  using IndexArray = vtkm::cont::ArrayHandle<vtkm::Id, IndexStorageTag>;
+  using ValueArray = vtkm::cont::ArrayHandle<T, ValueStorageTag>;
+
+  struct Info
   {
-    return buffers;
+    std::size_t ValueBufferOffset;
+  };
+
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> IndexBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    Info info = buffers[0].GetMetaData<Info>();
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + 1,
+                                                     buffers.begin() + info.ValueBufferOffset);
   }
-  template <typename Buff>
-  VTKM_CONT constexpr static Buff* ValueBuffers(Buff* buffers)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> ValueBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return buffers + IndexStorage::GetNumberOfBuffers();
+    Info info = buffers[0].GetMetaData<Info>();
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + info.ValueBufferOffset,
+                                                     buffers.end());
   }
 
 public:
@@ -130,17 +142,13 @@ public:
     vtkm::internal::ArrayPortalPermutation<typename IndexStorage::ReadPortalType,
                                            typename ValueStorage::WritePortalType>;
 
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
-  {
-    return (IndexStorage::GetNumberOfBuffers() + ValueStorage::GetNumberOfBuffers());
-  }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return IndexStorage::GetNumberOfValues(IndexBuffers(buffers));
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>&,
                              const T&,
                              vtkm::Id,
                              vtkm::Id,
@@ -149,33 +157,44 @@ public:
     throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandlePermutation.");
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return ReadPortalType(IndexStorage::CreateReadPortal(IndexBuffers(buffers), device, token),
                           ValueStorage::CreateReadPortal(ValueBuffers(buffers), device, token));
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     // Note: the index portal is always a read-only portal.
     return WritePortalType(IndexStorage::CreateReadPortal(IndexBuffers(buffers), device, token),
                            ValueStorage::CreateWritePortal(ValueBuffers(buffers), device, token));
   }
 
-  VTKM_CONT static vtkm::cont::ArrayHandle<vtkm::Id, IndexStorageTag> GetIndexArray(
-    const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
+    const IndexArray& indexArray = IndexArray{},
+    const ValueArray& valueArray = ValueArray{})
   {
-    return vtkm::cont::ArrayHandle<vtkm::Id, IndexStorageTag>(IndexBuffers(buffers));
+    Info info;
+    info.ValueBufferOffset = 1 + indexArray.GetBuffers().size();
+    return vtkm::cont::internal::CreateBuffers(info, indexArray, valueArray);
   }
 
-  VTKM_CONT static vtkm::cont::ArrayHandle<T, ValueStorageTag> GetValueArray(
-    const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static IndexArray GetIndexArray(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return vtkm::cont::ArrayHandle<T, ValueStorageTag>(ValueBuffers(buffers));
+    return IndexArray(IndexBuffers(buffers));
+  }
+
+  VTKM_CONT static ValueArray GetValueArray(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    return ValueArray(ValueBuffers(buffers));
   }
 };
 
@@ -236,7 +255,7 @@ public:
   VTKM_CONT
   ArrayHandlePermutation(const IndexArrayHandleType& indexArray,
                          const ValueArrayHandleType& valueArray)
-    : Superclass(vtkm::cont::internal::CreateBuffers(indexArray, valueArray))
+    : Superclass(StorageType::CreateBuffers(indexArray, valueArray))
   {
   }
 

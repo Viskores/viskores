@@ -355,18 +355,10 @@ struct StorageTagRecombineVec
 namespace detail
 {
 
-// Note: Normally a decorating ArrayHandle holds the buffers of the arrays it is decorating
-// in its list of arrays. However, the numbers of buffers is expected to be compile-time static
-// and ArrayHandleRecombineVec needs to set the number of buffers at runtime. We cheat around
-// this by stuffing the decorated buffers in the metadata. To make sure deep copies work
-// right, a copy of the metadata results in a deep copy of the contained buffers. The
-// vtkm::cont::internal::Buffer holding the metadata is not supposed to copy the metadata
-// except for a deep copy (and when it is first set). If this behavior changes, there could
-// be a performance degredation.
 struct RecombineVecMetaData
 {
   mutable std::vector<vtkm::cont::internal::Buffer> PortalBuffers;
-  std::vector<std::vector<vtkm::cont::internal::Buffer>> ArrayBuffers;
+  std::vector<std::size_t> ArrayBufferOffsets;
 
   RecombineVecMetaData() = default;
 
@@ -374,17 +366,7 @@ struct RecombineVecMetaData
 
   RecombineVecMetaData& operator=(const RecombineVecMetaData& src)
   {
-    this->ArrayBuffers.resize(src.ArrayBuffers.size());
-    for (std::size_t arrayIndex = 0; arrayIndex < src.ArrayBuffers.size(); ++arrayIndex)
-    {
-      this->ArrayBuffers[arrayIndex].resize(src.ArrayBuffers[arrayIndex].size());
-      for (std::size_t bufferIndex = 0; bufferIndex < src.ArrayBuffers[arrayIndex].size();
-           ++bufferIndex)
-      {
-        this->ArrayBuffers[arrayIndex][bufferIndex].DeepCopyFrom(
-          src.ArrayBuffers[arrayIndex][bufferIndex]);
-      }
-    }
+    this->ArrayBufferOffsets = src.ArrayBufferOffsets;
 
     this->PortalBuffers.clear();
     // Intentionally not copying portals. Portals will be recreated from proper array when requsted.
@@ -414,13 +396,15 @@ class Storage<vtkm::internal::RecombineVec<ReadWritePortal>,
   VTKM_STATIC_ASSERT(
     (std::is_same<ReadWritePortal, detail::RecombinedPortalType<ComponentType>>::value));
 
-  template <typename Buff>
-  VTKM_CONT static Buff* BuffersForComponent(Buff* buffers, vtkm::IdComponent componentIndex)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> BuffersForComponent(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::IdComponent componentIndex)
   {
-    return buffers[0]
-      .template GetMetaData<detail::RecombineVecMetaData>()
-      .ArrayBuffers[componentIndex]
-      .data();
+    auto& metaData = buffers[0].GetMetaData<detail::RecombineVecMetaData>();
+    std::size_t index = static_cast<std::size_t>(componentIndex);
+    return std::vector<vtkm::cont::internal::Buffer>(
+      buffers.begin() + metaData.ArrayBufferOffsets[index],
+      buffers.begin() + metaData.ArrayBufferOffsets[index + 1]);
   }
 
 public:
@@ -429,20 +413,20 @@ public:
   using ReadPortalType = vtkm::internal::ArrayPortalRecombineVec<ReadWritePortal>;
   using WritePortalType = vtkm::internal::ArrayPortalRecombineVec<ReadWritePortal>;
 
-  VTKM_CONT static vtkm::IdComponent NumberOfComponents(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::IdComponent NumberOfComponents(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return static_cast<vtkm::IdComponent>(
-      buffers[0].GetMetaData<detail::RecombineVecMetaData>().ArrayBuffers.size());
+      buffers[0].GetMetaData<detail::RecombineVecMetaData>().ArrayBufferOffsets.size() - 1);
   }
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return SourceStorage::GetNumberOfValues(BuffersForComponent(buffers, 0));
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>&,
                              const vtkm::internal::RecombineVec<ReadWritePortal>&,
                              vtkm::Id,
                              vtkm::Id,
@@ -451,9 +435,10 @@ public:
     throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleRecombineVec.");
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     vtkm::IdComponent numComponents = NumberOfComponents(buffers);
 
@@ -488,9 +473,10 @@ public:
       numComponents);
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     vtkm::IdComponent numComponents = NumberOfComponents(buffers);
 
@@ -525,19 +511,28 @@ public:
       numComponents);
   }
 
-  VTKM_CONT static ArrayType ArrayForComponent(const vtkm::cont::internal::Buffer* buffers,
-                                               vtkm::IdComponent componentIndex)
+  VTKM_CONT static ArrayType ArrayForComponent(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::IdComponent componentIndex)
   {
     return ArrayType(BuffersForComponent(buffers, componentIndex));
   }
 
-  VTKM_CONT static void AppendComponent(vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers()
+  {
+    detail::RecombineVecMetaData metaData;
+    metaData.ArrayBufferOffsets.push_back(1);
+    return vtkm::cont::internal::CreateBuffers(metaData);
+  }
+
+  VTKM_CONT static void AppendComponent(std::vector<vtkm::cont::internal::Buffer>& buffers,
                                         const ArrayType& array)
   {
-    std::vector<vtkm::cont::internal::Buffer> arrayBuffers(
-      array.GetBuffers(), array.GetBuffers() + SourceStorage::GetNumberOfBuffers());
-    buffers[0].GetMetaData<detail::RecombineVecMetaData>().ArrayBuffers.push_back(
-      std::move(arrayBuffers));
+    // Add buffers of new array to our list of buffers.
+    buffers.insert(buffers.end(), array.GetBuffers().begin(), array.GetBuffers().end());
+    // Update metadata for new offset to end.
+    buffers[0].GetMetaData<detail::RecombineVecMetaData>().ArrayBufferOffsets.push_back(
+      buffers.size());
   }
 };
 
@@ -588,7 +583,9 @@ public:
   void AppendComponentArray(
     const vtkm::cont::ArrayHandle<ComponentType, vtkm::cont::StorageTagStride>& array)
   {
-    StorageType::AppendComponent(this->GetBuffers(), array);
+    std::vector<vtkm::cont::internal::Buffer> buffers = this->GetBuffers();
+    StorageType::AppendComponent(buffers, array);
+    this->SetBuffers(std::move(buffers));
   }
 };
 

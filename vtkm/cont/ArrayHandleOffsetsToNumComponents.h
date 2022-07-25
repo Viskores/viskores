@@ -71,12 +71,13 @@ public:
   using ReadPortalType =
     vtkm::internal::ArrayPortalOffsetsToNumComponents<typename OffsetsStorage::ReadPortalType>;
 
-  VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers()
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers()
   {
-    return OffsetsStorage::GetNumberOfBuffers();
+    return OffsetsStorage::CreateBuffers();
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     vtkm::Id numOffsets = OffsetsStorage::GetNumberOfValues(buffers);
     if (numOffsets < 1)
@@ -87,9 +88,10 @@ public:
     return numOffsets - 1;
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     VTKM_ASSERT(OffsetsStorage::GetNumberOfValues(buffers) > 0);
     return ReadPortalType(OffsetsStorage::CreateReadPortal(buffers, device, token));

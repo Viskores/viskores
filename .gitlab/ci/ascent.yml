@@ -79,14 +79,6 @@ test:ascent_gcc_cuda:
     # Tests errors to address due to different env/arch in Ascent
     # Refer to issue: https://gitlab.kitware.com/vtk/vtk-m/-/issues/652
     CTEST_EXCLUSIONS: >-
-      UnitTestMathSERIAL
-      UnitTestMathCUDA
-      UnitTestSerialDeviceAdapter
-      UnitTestAverageByKeySERIAL
-      UnitTestKeysSERIAL
-      UnitTestWorkletReduceByKeySERIAL
-      RegressionTestAmrArraysSERIAL
-      RegressionTestAmrArraysCUDA
 
   before_script:
     # Prep the environment

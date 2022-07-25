@@ -843,7 +843,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestDifferenceOfProducts() const
   {
-#if defined FP_FAST_FMA && !defined __HIP__
+#if defined FP_FAST_FMA && !defined __HIP__ && !defined _ARCH_PPC && !defined _ARCH_PPC64
     // Example taken from:
     // https://pharr.org/matt/blog/2019/11/03/difference-of-floats.html
     vtkm::Float32 a = 33962.035f;
@@ -882,7 +882,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(vtkm::IsNan(roots[1]),
                      "Roots should be Nan for a quadratic with complex roots.");
 
-#if defined FP_FAST_FMA && !defined __HIP__
+#if defined FP_FAST_FMA && !defined __HIP__ && !defined _ARCH_PPC && !defined _ARCH_PPC64
     // Wikipedia example:
     // x² + 200x - 0.000015 = 0 has roots
     // -200.000000075, 7.5e-8

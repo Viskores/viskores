@@ -79,19 +79,6 @@ public:
     throw vtkm::cont::ErrorBadType("CellSetStructured<1> can't be tetrahedralized");
   }
 
-  // Using the saved input to output cells, expand cell data
-  template <typename ValueType, typename StorageType>
-  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input) const
-  {
-    vtkm::cont::ArrayHandle<ValueType> output;
-
-    vtkm::worklet::DispatcherMapField<DistributeCellData> dispatcher(this->OutCellScatter);
-    dispatcher.Invoke(input, output);
-
-    return output;
-  }
-
   DistributeCellData::ScatterType GetOutCellScatter() const { return this->OutCellScatter; }
 
 private:

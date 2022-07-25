@@ -42,12 +42,18 @@ if (test_exclusions)
   set(test_exclusions "(${test_exclusions})")
 endif ()
 
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
+  set(junit_args OUTPUT_JUNIT "${CTEST_BINARY_DIRECTORY}/junit.xml")
+endif()
+
 # reduced parallel level so we don't exhaust system resources
 ctest_memcheck(
   PARALLEL_LEVEL "4"
   RETURN_VALUE test_result
   EXCLUDE "${test_exclusions}"
-  DEFECT_COUNT defects)
+  DEFECT_COUNT defects
+  ${junit_args}
+  )
 
 ctest_submit(PARTS Memcheck BUILD_ID build_id)
   message(STATUS "Memcheck submission build_id: ${build_id}")

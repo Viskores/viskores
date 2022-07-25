@@ -82,10 +82,13 @@ public:
   using ReadPortalType = vtkm::cont::internal::ArrayPortalBitField<BitPortalConstType>;
   using WritePortalType = vtkm::cont::internal::ArrayPortalBitField<BitPortalType>;
 
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers()
+  {
+    return std::vector<vtkm::cont::internal::Buffer>(1);
+  }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numberOfBits,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
@@ -102,20 +105,23 @@ public:
     buffers[0].GetMetaData<vtkm::cont::internal::BitFieldMetaData>().NumberOfBits = numberOfBits;
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
+    VTKM_ASSERT(buffers.size() == 1);
     vtkm::Id numberOfBits =
       buffers[0].GetMetaData<vtkm::cont::internal::BitFieldMetaData>().NumberOfBits;
     VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= numberOfBits);
     return numberOfBits;
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>& buffers,
                              bool fillValue,
                              vtkm::Id startBit,
                              vtkm::Id endBit,
                              vtkm::cont::Token& token)
   {
+    VTKM_ASSERT(buffers.size() == 1);
     constexpr vtkm::BufferSizeType wordTypeSize =
       static_cast<vtkm::BufferSizeType>(sizeof(WordType));
     constexpr vtkm::BufferSizeType wordNumBits = wordTypeSize * CHAR_BIT;
@@ -141,10 +147,12 @@ public:
     }
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
+    VTKM_ASSERT(buffers.size() == 1);
     vtkm::Id numberOfBits = GetNumberOfValues(buffers);
     VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= numberOfBits);
 
@@ -152,10 +160,12 @@ public:
       BitPortalConstType(buffers[0].ReadPointerDevice(device, token), numberOfBits));
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
+    VTKM_ASSERT(buffers.size() == 1);
     vtkm::Id numberOfBits = GetNumberOfValues(buffers);
     VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= numberOfBits);
 

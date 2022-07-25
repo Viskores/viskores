@@ -100,21 +100,20 @@ class StorageDeprecated
 
   using ArrayType = vtkm::cont::internal::ArrayHandleDeprecated<T, StorageTag>;
 
-  VTKM_CONT static ArrayType GetArray(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static ArrayType GetArray(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<ArrayType>();
   }
 
 public:
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return GetArray(buffers).GetNumberOfValues();
   }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
@@ -129,9 +128,10 @@ public:
     }
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     if (device == vtkm::cont::DeviceAdapterTagUndefined{})
     {
@@ -153,10 +153,11 @@ public:
   }
 
 private:
-  VTKM_CONT static WritePortalType CreateWritePortalImpl(vtkm::cont::internal::Buffer* buffers,
-                                                         vtkm::cont::DeviceAdapterId device,
-                                                         vtkm::cont::Token& token,
-                                                         std::true_type)
+  VTKM_CONT static WritePortalType CreateWritePortalImpl(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token,
+    std::true_type)
   {
     if (device == vtkm::cont::DeviceAdapterTagUndefined{})
     {
@@ -177,10 +178,11 @@ private:
     }
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortalImpl(vtkm::cont::internal::Buffer*,
-                                                         vtkm::cont::DeviceAdapterId,
-                                                         vtkm::cont::Token&,
-                                                         std::false_type)
+  VTKM_CONT static WritePortalType CreateWritePortalImpl(
+    const std::vector<vtkm::cont::internal::Buffer>&,
+    vtkm::cont::DeviceAdapterId,
+    vtkm::cont::Token&,
+    std::false_type)
   {
     throw vtkm::cont::ErrorBadType("Attempted to get a writable portal to a read-only array.");
   }
@@ -188,32 +190,33 @@ private:
   using SupportsWrite = vtkm::internal::PortalSupportsSets<WritePortalType>;
 
 public:
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return CreateWritePortalImpl(buffers, device, token, SupportsWrite{});
   }
 };
 
-#define VTKM_STORAGE_OLD_STYLE                                                             \
-public:                                                                                    \
-  using HasOldBridge = std::true_type;                                                     \
-  using ReadPortalType = PortalConstType;                                                  \
-  using WritePortalType = PortalType;                                                      \
-                                                                                           \
-private:                                                                                   \
-  using StorageDeprecated =                                                                \
-    vtkm::cont::internal::StorageDeprecated<Storage, ReadPortalType, WritePortalType>;     \
-                                                                                           \
-public:                                                                                    \
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers) \
-  {                                                                                        \
-    return StorageDeprecated::GetNumberOfValues(buffers);                                  \
-  }                                                                                        \
-  static constexpr auto& GetNumberOfBuffers = StorageDeprecated::GetNumberOfBuffers;       \
-  static constexpr auto& ResizeBuffers = StorageDeprecated::ResizeBuffers;                 \
-  static constexpr auto& CreateReadPortal = StorageDeprecated::CreateReadPortal;           \
+#define VTKM_STORAGE_OLD_STYLE                                                         \
+public:                                                                                \
+  using HasOldBridge = std::true_type;                                                 \
+  using ReadPortalType = PortalConstType;                                              \
+  using WritePortalType = PortalType;                                                  \
+                                                                                       \
+private:                                                                               \
+  using StorageDeprecated =                                                            \
+    vtkm::cont::internal::StorageDeprecated<Storage, ReadPortalType, WritePortalType>; \
+                                                                                       \
+public:                                                                                \
+  VTKM_CONT static vtkm::Id GetNumberOfValues(                                         \
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)                          \
+  {                                                                                    \
+    return StorageDeprecated::GetNumberOfValues(buffers);                              \
+  }                                                                                    \
+  static constexpr auto& ResizeBuffers = StorageDeprecated::ResizeBuffers;             \
+  static constexpr auto& CreateReadPortal = StorageDeprecated::CreateReadPortal;       \
   static constexpr auto& CreateWritePortal = StorageDeprecated::CreateWritePortal
 
 }

@@ -206,9 +206,9 @@ stages:
       - build/*.png
       - build/*.pnm
       - build/*.pmm
+      - build/junit.xml
     reports:
-      junit:
-        - build/junit.xml
+      junit: build/junit.xml
 
 .cmake_build_artifacts: &cmake_build_artifacts
   artifacts:
@@ -223,17 +223,9 @@ stages:
       - build/config/
 
       # CTest and CMake install files.
-      # XXX(globbing): Can be simplified with support from
-      # https://gitlab.com/gitlab-org/gitlab-runner/issues/4840
-      #
       # Note: this also captures our CIState.cmake file
       - build/CMakeCache.txt
-      - build/*.cmake
-      - build/*/*.cmake
-      - build/*/*/*.cmake
-      - build/*/*/*/*.cmake
-      - build/*/*/*/*/*.cmake
-      - build/*/*/*/*/*/*.cmake
+      - build/**/*.cmake
       - build/Testing/
 
       # CDash files.
@@ -245,30 +237,22 @@ stages:
     when: always
     paths:
       # The generated regression testing images
-      - build/*.png
-      - build/*.pnm
-      - build/*.pmm
-      - build/*/*.png
-      - build/*/*.pnm
-      - build/*/*.pmm
-      - build/*/*/*.png
-      - build/*/*/*.pnm
-      - build/*/*/*.pmm
-      - build/*/*/*/*.png
-      - build/*/*/*/*.pnm
-      - build/*/*/*/*.pmm
+      - build/**/*.png
+      - build/**/*.pnm
+      - build/**/*.pmm
+      - build/junit.xml
     reports:
-      junit:
-        - build/junit.xml
+      junit: build/junit.xml
 
 
 include:
+  - local: '/.gitlab/ci/ascent.yml'
   - local: '/.gitlab/ci/centos7.yml'
   - local: '/.gitlab/ci/centos8.yml'
   - local: '/.gitlab/ci/doxygen.yml'
+  - local: '/.gitlab/ci/macos.yml'
   - local: '/.gitlab/ci/rhel8.yml'
   - local: '/.gitlab/ci/ubuntu1604.yml'
   - local: '/.gitlab/ci/ubuntu1804.yml'
   - local: '/.gitlab/ci/ubuntu2004.yml'
   - local: '/.gitlab/ci/windows10.yml'
-  - local: '/.gitlab/ci/ascent.yml'

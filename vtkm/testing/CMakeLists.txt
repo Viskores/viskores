@@ -65,5 +65,9 @@ if(VTKm_ENABLE_TESTING)
 
   vtkm_unit_tests(SOURCES ${unit_tests})
 
-  vtkm_unit_tests(NAME UnitTests_vtkm_testing_device SOURCES ${unit_tests_device} ALL_BACKENDS)
+  vtkm_unit_tests(
+    NAME UnitTests_vtkm_testing_device
+    DEVICE_SOURCES ${unit_tests_device}
+    ALL_BACKENDS
+    )
 endif()

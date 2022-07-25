@@ -55,14 +55,14 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
-#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_distributed/CombineHyperSweepBlockFunctor.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
-#include <vtkm/worklet/contourtree_distributed/HyperSweepBlock.h>
-#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
+#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/DataSetMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/CombineHyperSweepBlockFunctor.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HyperSweepBlock.h>
 #include <vtkm/worklet/testing/TestingContourTreeUniformDistributedLoadArrays.h>
 
 // clang-format off
@@ -175,7 +175,7 @@ void TestHierarchicalHyperSweeper()
   };
 
   // Create spatial decomposition
-  vtkm::worklet::contourtree_distributed::SpatialDecomposition spatialDecomp(
+  vtkm::filter::scalar_topology::internal::SpatialDecomposition spatialDecomp(
     blocksPerDim,
     globalSize,
     vtkm::cont::make_ArrayHandle(blockIndices, numBlocks, vtkm::CopyFlag::Off),

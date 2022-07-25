@@ -59,22 +59,19 @@ struct CopyReverseCellCount : public vtkm::worklet::WorkletVisitPointsWithCells
   typedef _2 ExecutionSignature(CellShape, CellCount, CellIndices, _3);
 
   template <typename CellIndicesType, typename OutVec>
-  VTKM_EXEC vtkm::Int32 operator()(vtkm::CellShapeTagVertex shape,
+  VTKM_EXEC vtkm::Int32 operator()(vtkm::CellShapeTagVertex,
                                    vtkm::IdComponent count,
                                    CellIndicesType&& cellIndices,
                                    OutVec& outIndices) const
   {
     cellIndices.CopyInto(outIndices);
-    if (shape.Id == vtkm::CELL_SHAPE_VERTEX)
+
+    bool valid = true;
+    for (vtkm::IdComponent i = 0; i < count; ++i)
     {
-      bool valid = true;
-      for (vtkm::IdComponent i = 0; i < count; ++i)
-      {
-        valid = valid && cellIndices[i] >= 0;
-      }
-      return (valid && count == cellIndices.GetNumberOfComponents()) ? count : -1;
+      valid = valid && cellIndices[i] >= 0;
     }
-    return -1;
+    return (valid && count == cellIndices.GetNumberOfComponents()) ? count : -1;
   }
 };
 
@@ -86,22 +83,19 @@ struct CopyReverseCellCountScatter : public vtkm::worklet::WorkletVisitPointsWit
   using ScatterType = vtkm::worklet::ScatterPermutation<vtkm::cont::StorageTagCounting>;
 
   template <typename CellIndicesType, typename OutVec>
-  VTKM_EXEC vtkm::Int32 operator()(vtkm::CellShapeTagVertex shape,
+  VTKM_EXEC vtkm::Int32 operator()(vtkm::CellShapeTagVertex,
                                    vtkm::IdComponent count,
                                    CellIndicesType&& cellIndices,
                                    OutVec& outIndices) const
   {
     cellIndices.CopyInto(outIndices);
-    if (shape.Id == vtkm::CELL_SHAPE_VERTEX)
+
+    bool valid = true;
+    for (vtkm::IdComponent i = 0; i < count; ++i)
     {
-      bool valid = true;
-      for (vtkm::IdComponent i = 0; i < count; ++i)
-      {
-        valid = valid && cellIndices[i] >= 0;
-      }
-      return (valid && count == cellIndices.GetNumberOfComponents()) ? count : -1;
+      valid = valid && cellIndices[i] >= 0;
     }
-    return -1;
+    return (valid && count == cellIndices.GetNumberOfComponents()) ? count : -1;
   }
 };
 

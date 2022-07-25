@@ -314,7 +314,7 @@ public:
   /// Constructs an empty ArrayHandle.
   ///
   VTKM_CONT ArrayHandle()
-    : Buffers(static_cast<std::size_t>(StorageType::GetNumberOfBuffers()))
+    : Buffers(StorageType::CreateBuffers())
   {
   }
 
@@ -349,17 +349,10 @@ public:
   VTKM_CONT ArrayHandle(const std::vector<vtkm::cont::internal::Buffer>& buffers)
     : Buffers(buffers)
   {
-    VTKM_ASSERT(static_cast<vtkm::IdComponent>(this->Buffers.size()) == this->GetNumberOfBuffers());
   }
 
   VTKM_CONT ArrayHandle(std::vector<vtkm::cont::internal::Buffer>&& buffers) noexcept
     : Buffers(std::move(buffers))
-  {
-    VTKM_ASSERT(static_cast<vtkm::IdComponent>(this->Buffers.size()) == this->GetNumberOfBuffers());
-  }
-
-  VTKM_CONT ArrayHandle(const vtkm::cont::internal::Buffer* buffers)
-    : Buffers(buffers, buffers + StorageType::GetNumberOfBuffers())
   {
   }
   ///@}
@@ -423,9 +416,10 @@ public:
     return true; // different valuetype and/or storage
   }
 
-  VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers()
+  VTKM_DEPRECATED(1.9, "Use the size of the std::vector returned from GetBuffers.")
+  VTKM_CONT constexpr vtkm::IdComponent GetNumberOfBuffers()
   {
-    return StorageType::GetNumberOfBuffers();
+    return static_cast<vtkm::IdComponent>(this->GetBuffers().size());
   }
 
   /// Get the storage.
@@ -779,9 +773,15 @@ public:
     }
   }
 
-  /// Returns the internal `Buffer` structures that hold the data.
+  /// \brief Returns the internal `Buffer` structures that hold the data.
   ///
-  VTKM_CONT vtkm::cont::internal::Buffer* GetBuffers() const { return this->Buffers.data(); }
+  /// Note that great care should be taken when modifying buffers outside of the ArrayHandle.
+  ///
+  VTKM_CONT const std::vector<vtkm::cont::internal::Buffer>& GetBuffers() const
+  {
+    return this->Buffers;
+  }
+  VTKM_CONT std::vector<vtkm::cont::internal::Buffer>& GetBuffers() { return this->Buffers; }
 
 private:
   mutable std::vector<vtkm::cont::internal::Buffer> Buffers;
@@ -792,11 +792,13 @@ protected:
     this->Buffers[static_cast<std::size_t>(index)] = buffer;
   }
 
-  // BufferContainer must be an iteratable container of Buffer objects.
-  template <typename BufferContainer>
-  VTKM_CONT void SetBuffers(const BufferContainer& buffers)
+  VTKM_CONT void SetBuffers(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    std::copy(buffers.begin(), buffers.end(), this->Iterators->Buffers.begin());
+    this->Buffers = buffers;
+  }
+  VTKM_CONT void SetBuffers(std::vector<vtkm::cont::internal::Buffer>&& buffers)
+  {
+    this->Buffers = std::move(buffers);
   }
 };
 
@@ -918,6 +920,25 @@ namespace internal
 namespace detail
 {
 
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>&);
+template <typename T, typename S, typename... Args>
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                        const vtkm::cont::ArrayHandle<T, S>& array,
+                                        const Args&... args);
+template <typename... Args>
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                        const vtkm::cont::internal::Buffer& buffer,
+                                        const Args&... args);
+
+template <typename... Args>
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                        const std::vector<vtkm::cont::internal::Buffer>& addbuffs,
+                                        const Args&... args);
+template <typename Arg0, typename... Args>
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                        const Arg0& arg0,
+                                        const Args&... args);
+
 VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>&)
 {
   // Nothing left to add.
@@ -928,9 +949,7 @@ VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer
                                         const vtkm::cont::ArrayHandle<T, S>& array,
                                         const Args&... args)
 {
-  vtkm::cont::internal::Buffer* arrayBuffers = array.GetBuffers();
-  buffers.insert(buffers.end(), arrayBuffers, arrayBuffers + array.GetNumberOfBuffers());
-  CreateBuffersImpl(buffers, args...);
+  CreateBuffersImpl(buffers, array.GetBuffers(), args...);
 }
 
 template <typename... Args>
@@ -950,11 +969,6 @@ VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer
   buffers.insert(buffers.end(), addbuffs.begin(), addbuffs.end());
   CreateBuffersImpl(buffers, args...);
 }
-
-template <typename Arg0, typename... Args>
-VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>& buffers,
-                                        const Arg0& arg0,
-                                        const Args&... args);
 
 template <typename T, typename S, typename... Args>
 VTKM_CONT inline void CreateBuffersResolveArrays(std::vector<vtkm::cont::internal::Buffer>& buffers,
@@ -1004,7 +1018,7 @@ VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer
 ///   - `ArrayHandle`: The buffers from the `ArrayHandle` are added to the list.
 ///   - `Buffer`: A copy of the buffer is added to the list.
 ///   - `std::vector<Buffer>`: A copy of all buffers in this vector are added to the list.
-///   - Anything else: A buffer with the given object attached as metadata is
+///   - Anything else: A buffer with the given object attached as metadata is added to the list.
 ///
 template <typename... Args>
 VTKM_CONT inline std::vector<vtkm::cont::internal::Buffer> CreateBuffers(const Args&... args)

@@ -143,6 +143,12 @@ class Storage<T, StorageTagView<ST>>
   using ArrayHandleType = typename detail::ViewTypeArg<T, ST>::ArrayHandle;
   using SourceStorage = Storage<T, ST>;
 
+  static std::vector<vtkm::cont::internal::Buffer> SourceBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + 1, buffers.end());
+  }
+
 public:
   VTKM_STORAGE_NO_RESIZE;
 
@@ -150,25 +156,23 @@ public:
   using WritePortalType =
     vtkm::internal::ArrayPortalView<typename ArrayHandleType::WritePortalType>;
 
-  VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers()
-  {
-    return SourceStorage::GetNumberOfBuffers() + 1;
-  }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<vtkm::internal::ViewIndices>().NumberOfValues;
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     vtkm::internal::ViewIndices indices = buffers[0].GetMetaData<vtkm::internal::ViewIndices>();
-    return ReadPortalType(SourceStorage::CreateReadPortal(buffers + 1, device, token), indices);
+    return ReadPortalType(SourceStorage::CreateReadPortal(SourceBuffers(buffers), device, token),
+                          indices);
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>& buffers,
                              const T& fillValue,
                              vtkm::Id startIndex,
                              vtkm::Id endIndex,
@@ -179,30 +183,36 @@ public:
     vtkm::Id adjustedEndIndex = (endIndex < indices.NumberOfValues)
       ? endIndex + indices.StartIndex
       : indices.NumberOfValues + indices.StartIndex;
-    SourceStorage::Fill(buffers + 1, fillValue, adjustedStartIndex, adjustedEndIndex, token);
+    SourceStorage::Fill(
+      SourceBuffers(buffers), fillValue, adjustedStartIndex, adjustedEndIndex, token);
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     vtkm::internal::ViewIndices indices = buffers[0].GetMetaData<vtkm::internal::ViewIndices>();
-    return WritePortalType(SourceStorage::CreateWritePortal(buffers + 1, device, token), indices);
+    return WritePortalType(SourceStorage::CreateWritePortal(SourceBuffers(buffers), device, token),
+                           indices);
   }
 
-  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer>
-  CreateBuffers(vtkm::Id startIndex, vtkm::Id numValues, const ArrayHandleType& array)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
+    vtkm::Id startIndex = 0,
+    vtkm::Id numValues = 0,
+    const ArrayHandleType& array = ArrayHandleType{})
   {
     return vtkm::cont::internal::CreateBuffers(vtkm::internal::ViewIndices(startIndex, numValues),
                                                array);
   }
 
-  VTKM_CONT static ArrayHandleType GetSourceArray(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static ArrayHandleType GetSourceArray(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return ArrayHandleType(buffers + 1);
+    return ArrayHandleType(SourceBuffers(buffers));
   }
 
-  VTKM_CONT static vtkm::Id GetStartIndex(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetStartIndex(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<vtkm::internal::ViewIndices>().StartIndex;
   }

@@ -118,25 +118,30 @@ public:
   ///
   using WritePortalType = vtkm::internal::ArrayPortalBasicWrite<T>;
 
-  /// \brief Returns the number of buffers required for this storage.
+  /// \brief Create the buffers for an empty array.
   ///
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers();
+  /// This is used by the `ArrayHandle` base class when constructed with no arguments.
+  /// A convenience subclass may construct the buffers in a different way based on
+  /// some provided objects.
+  ///
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers();
 
   /// \brief Resizes the array by changing the size of the buffers.
   ///
   /// Can also modify any metadata attached to the buffers.
   ///
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token);
 
   /// \brief Returns the number of entries allocated in the array.
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers);
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers);
 
   /// \brief Fills the array with the given value starting and ending at the given indices.
   ///
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>& buffers,
                              const ValueType& fillValue,
                              vtkm::Id startIndex,
                              vtkm::Id endIndex,
@@ -144,15 +149,17 @@ public:
 
   /// \brief Create a read-only portal on the specified device.
   ///
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token);
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token);
 
   /// \brief Create a read/write portal on the specified device.
   ///
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
 };
 #endif // VTKM_DOXYGEN_ONLY
 
@@ -175,22 +182,24 @@ struct StorageTraits<vtkm::cont::internal::Storage<T, S>>
   using Tag = S;
 };
 
-#define VTKM_STORAGE_NO_RESIZE                                                                     \
-  VTKM_CONT static void ResizeBuffers(                                                             \
-    vtkm::Id numValues, vtkm::cont::internal::Buffer* buffers, vtkm::CopyFlag, vtkm::cont::Token&) \
-  {                                                                                                \
-    vtkm::cont::internal::detail::StorageNoResizeImpl(                                             \
-      GetNumberOfValues(buffers),                                                                  \
-      numValues,                                                                                   \
-      vtkm::cont::TypeToString<typename vtkm::cont::internal::StorageTraits<Storage>::Tag>());     \
-  }                                                                                                \
+#define VTKM_STORAGE_NO_RESIZE                                                                  \
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,                                       \
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers, \
+                                      vtkm::CopyFlag,                                           \
+                                      vtkm::cont::Token&)                                       \
+  {                                                                                             \
+    vtkm::cont::internal::detail::StorageNoResizeImpl(                                          \
+      GetNumberOfValues(buffers),                                                               \
+      numValues,                                                                                \
+      vtkm::cont::TypeToString<typename vtkm::cont::internal::StorageTraits<Storage>::Tag>());  \
+  }                                                                                             \
   using ResizeBuffersEatComma = void
 
 #define VTKM_STORAGE_NO_WRITE_PORTAL                                                           \
   using WritePortalType = vtkm::internal::ArrayPortalDummy<                                    \
     typename vtkm::cont::internal::StorageTraits<Storage>::ValueType>;                         \
   VTKM_CONT static void Fill(                                                                  \
-    vtkm::cont::internal::Buffer*,                                                             \
+    const std::vector<vtkm::cont::internal::Buffer>&,                                          \
     const typename vtkm::cont::internal::StorageTraits<Storage>::ValueType&,                   \
     vtkm::Id,                                                                                  \
     vtkm::Id,                                                                                  \
@@ -201,7 +210,9 @@ struct StorageTraits<vtkm::cont::internal::Storage<T, S>>
       vtkm::cont::TypeToString<typename vtkm::cont::internal::StorageTraits<Storage>::Tag>()); \
   }                                                                                            \
   VTKM_CONT static WritePortalType CreateWritePortal(                                          \
-    vtkm::cont::internal::Buffer*, vtkm::cont::DeviceAdapterId, vtkm::cont::Token&)            \
+    const std::vector<vtkm::cont::internal::Buffer>&,                                          \
+    vtkm::cont::DeviceAdapterId,                                                               \
+    vtkm::cont::Token&)                                                                        \
   {                                                                                            \
     throw vtkm::cont::ErrorBadAllocation(                                                      \
       "Cannot write to arrays with storage type of " +                                         \

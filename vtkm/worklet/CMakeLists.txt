@@ -13,8 +13,6 @@ set(headers
   BoundaryTypes.h
   AveragePointNeighborhood.h
   CellDeepCopy.h
-  ContourTreeUniform.h
-  ContourTreeUniformAugmented.h
   CosmoTools.h
   DispatcherMapField.h
   DispatcherMapTopology.h
@@ -29,7 +27,6 @@ set(headers
   MaskIndices.h
   MaskNone.h
   MaskSelect.h
-  MIR.h
   NDimsHistMarginalization.h
   Normalize.h
   ScalarsToColors.h
@@ -75,12 +72,8 @@ set(sources_device
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(colorconversion)
-add_subdirectory(contourtree)
-add_subdirectory(contourtree_augmented)
-add_subdirectory(contourtree_distributed)
 add_subdirectory(cosmotools)
 add_subdirectory(lcs)
-add_subdirectory(mir)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
 add_subdirectory(wavelets)

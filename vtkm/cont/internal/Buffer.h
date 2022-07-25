@@ -123,7 +123,7 @@ public:
   ///
   VTKM_CONT void SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes,
                                   vtkm::CopyFlag preserve,
-                                  vtkm::cont::Token& token);
+                                  vtkm::cont::Token& token) const;
 
 private:
   VTKM_CONT bool MetaDataIsType(const std::string& type) const;
@@ -302,13 +302,13 @@ public:
   /// \brief Transfer ownership of the Host `BufferInfo` from this buffer
   /// to the caller. This is used to allow memory owned by VTK-m to be
   /// transferred to an owner whose lifespan is longer
-  VTKM_CONT vtkm::cont::internal::TransferredBuffer TakeHostBufferOwnership();
+  VTKM_CONT vtkm::cont::internal::TransferredBuffer TakeHostBufferOwnership() const;
 
   /// \brief Transfer ownership of the device `BufferInfo` from this buffer
   /// to the caller. This is used to allow memory owned by VTK-m to be
   /// transferred to an owner whose lifespan is longer
   VTKM_CONT vtkm::cont::internal::TransferredBuffer TakeDeviceBufferOwnership(
-    vtkm::cont::DeviceAdapterId device);
+    vtkm::cont::DeviceAdapterId device) const;
 
   /// \brief Fill up the buffer with particular values.
   ///

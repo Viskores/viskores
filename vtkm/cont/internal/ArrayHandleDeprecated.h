@@ -72,10 +72,10 @@ public:
                          "Storage implementation declare VTKM_STORAGE_OLD_STYLE at the bottom "
                          "of its implementation.");
   VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers() { return 1; }
-  VTKM_CONT vtkm::cont::internal::Buffer* GetBuffers() const
+  VTKM_CONT std::vector<vtkm::cont::internal::Buffer> GetBuffers() const
   {
     this->BufferAsStorageWrapper.SetMetaData(*this);
-    return &this->BufferAsStorageWrapper;
+    return std::vector<vtkm::cont::internal::Buffer>(1, this->BufferAsStorageWrapper);
   }
 
   VTKM_CONT ArrayHandleDeprecated(const vtkm::cont::internal::Buffer* buffers)

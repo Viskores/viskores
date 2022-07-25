@@ -58,7 +58,7 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Initialize.h>
 
-#include <vtkm/filter/ContourTreeUniform.h>
+#include <vtkm/filter/scalar_topology/ContourTreeUniform.h>
 
 #include <fstream>
 #include <vector>
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
   inDataSet.AddPointField("values", values);
 
   // Convert 3D mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::ContourTreeMesh3D filter;
+  vtkm::filter::scalar_topology::ContourTreeMesh3D filter;
   filter.SetActiveField("values");
   // Output data set is pairs of saddle and peak vertex IDs
   vtkm::cont::DataSet output = filter.Execute(inDataSet);

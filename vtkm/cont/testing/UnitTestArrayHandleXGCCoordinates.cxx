@@ -138,6 +138,5 @@ int TestArrayHandleXGCCoordinates()
 
 int UnitTestArrayHandleXGCCoordinates(int argc, char* argv[])
 {
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(TestArrayHandleXGCCoordinates, argc, argv);
 }

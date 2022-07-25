@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(deprecated_headers
+  AmrArrays.h
   CellAverage.h
   CellMeasures.h
   CellSetConnectivity.h
@@ -17,6 +18,9 @@ set(deprecated_headers
   ClipWithImplicitFunction.h
   ComputeMoments.h
   Contour.h
+  ContourTreeUniform.h
+  ContourTreeUniformAugmented.h
+  ContourTreeUniformDistributed.h
   CoordinateSystemTransform.h
   CrossProduct.h
   DotProduct.h
@@ -38,6 +42,7 @@ set(deprecated_headers
   Mask.h
   MaskPoints.h
   MeshQuality.h
+  MIRFilter.h
   NDEntropy.h
   NDHistogram.h
   ParticleDensityCloudInCell.h
@@ -93,23 +98,13 @@ set(common_header_template_sources
 vtkm_declare_headers(${common_header_template_sources})
 
 set(extra_headers
-  AmrArrays.h
-  ContourTreeUniformAugmented.h
-  ContourTreeUniformDistributed.h
-  ContourTreeUniform.h
   Lagrangian.h
   LagrangianStructures.h
-  MIRFilter.h
   )
 
 set(extra_header_template_sources
-  AmrArrays.hxx
-  ContourTreeUniformAugmented.hxx
-  ContourTreeUniformDistributed.hxx
-  ContourTreeUniform.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
-  MIRFilter.hxx
   )
 
 set(core_headers
@@ -166,7 +161,9 @@ add_subdirectory(field_conversion)
 add_subdirectory(field_transform)
 add_subdirectory(geometry_refinement)
 add_subdirectory(mesh_info)
+add_subdirectory(multi_block)
 add_subdirectory(resampling)
+add_subdirectory(scalar_topology)
 add_subdirectory(vector_analysis)
 add_subdirectory(zfp)
 

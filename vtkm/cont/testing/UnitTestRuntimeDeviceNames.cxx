@@ -10,10 +10,7 @@
 
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <vtkm/cont/testing/Testing.h>
 

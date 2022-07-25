@@ -47,17 +47,9 @@
       - build/config/
 
       # CTest and CMake install files.
-      # XXX(globbing): Can be simplified with support from
-      # https://gitlab.com/gitlab-org/gitlab-runner/issues/4840
-      #
       # Note: this also captures our CIState.cmake file
       - build/CMakeCache.txt
-      - build/*.cmake
-      - build/*/*.cmake
-      - build/*/*/*.cmake
-      - build/*/*/*/*.cmake
-      - build/*/*/*/*/*.cmake
-      - build/*/*/*/*/*/*.cmake
+      - build/**/*.cmake
       - build/Testing/
 
       # CDash files.

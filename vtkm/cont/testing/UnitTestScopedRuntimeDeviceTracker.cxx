@@ -10,11 +10,7 @@
 
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
-//include all backends
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -90,6 +86,9 @@ void verify_srdt_support(vtkm::cont::DeviceAdapterId tag,
 
 void VerifyScopedRuntimeDeviceTracker()
 {
+  // This test requires all valid devices to be on.
+  vtkm::cont::GetRuntimeDeviceTracker().Reset();
+
   std::array<bool, VTKM_MAX_DEVICE_ADAPTER_ID> all_off;
   std::array<bool, VTKM_MAX_DEVICE_ADAPTER_ID> all_on;
   std::array<bool, VTKM_MAX_DEVICE_ADAPTER_ID> defaults;

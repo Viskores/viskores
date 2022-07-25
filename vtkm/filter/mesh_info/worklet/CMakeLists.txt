@@ -10,7 +10,7 @@
 
 set(headers
   CellMeasure.h
-  MeshQuality.h
+  MeshQualityWorklet.h
   )
 
 vtkm_declare_headers(${headers})

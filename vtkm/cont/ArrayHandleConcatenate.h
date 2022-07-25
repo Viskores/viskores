@@ -169,16 +169,26 @@ class Storage<T, StorageTagConcatenate<ST1, ST2>>
   using ArrayHandleType1 = typename detail::ConcatinateTypeArg<T, ST1>::ArrayHandle;
   using ArrayHandleType2 = typename detail::ConcatinateTypeArg<T, ST2>::ArrayHandle;
 
-  template <typename Buff>
-  VTKM_CONT static Buff* Buffers1(Buff* buffers)
+  struct Info
   {
-    return buffers;
+    std::size_t NumBuffers1;
+    std::size_t NumBuffers2;
+  };
+
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> Buffers1(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    Info info = buffers[0].GetMetaData<Info>();
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + 1,
+                                                     buffers.begin() + 1 + info.NumBuffers1);
   }
 
-  template <typename Buff>
-  VTKM_CONT static Buff* Buffers2(Buff* buffers)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> Buffers2(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return buffers + SourceStorage1::GetNumberOfBuffers();
+    Info info = buffers[0].GetMetaData<Info>();
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + 1 + info.NumBuffers1,
+                                                     buffers.end());
   }
 
 public:
@@ -191,18 +201,14 @@ public:
     vtkm::internal::ArrayPortalConcatenate<typename SourceStorage1::WritePortalType,
                                            typename SourceStorage2::WritePortalType>;
 
-  VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers()
-  {
-    return (SourceStorage1::GetNumberOfBuffers() + SourceStorage2::GetNumberOfBuffers());
-  }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return (SourceStorage1::GetNumberOfValues(Buffers1(buffers)) +
             SourceStorage2::GetNumberOfValues(Buffers2(buffers)));
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>& buffers,
                              const T& fillValue,
                              vtkm::Id startIndex,
                              vtkm::Id endIndex,
@@ -225,35 +231,42 @@ public:
     }
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return ReadPortalType(SourceStorage1::CreateReadPortal(Buffers1(buffers), device, token),
                           SourceStorage2::CreateReadPortal(Buffers2(buffers), device, token));
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return WritePortalType(SourceStorage1::CreateWritePortal(Buffers1(buffers), device, token),
                            SourceStorage2::CreateWritePortal(Buffers2(buffers), device, token));
   }
 
-  VTKM_CONT static auto CreateBuffers(const ArrayHandleType1& array1,
-                                      const ArrayHandleType2& array2)
+  VTKM_CONT static auto CreateBuffers(const ArrayHandleType1& array1 = ArrayHandleType1{},
+                                      const ArrayHandleType2& array2 = ArrayHandleType2{})
     -> decltype(vtkm::cont::internal::CreateBuffers())
   {
-    return vtkm::cont::internal::CreateBuffers(array1, array2);
+    Info info;
+    info.NumBuffers1 = array1.GetBuffers().size();
+    info.NumBuffers2 = array2.GetBuffers().size();
+    return vtkm::cont::internal::CreateBuffers(info, array1, array2);
   }
 
-  VTKM_CONT static const ArrayHandleType1 GetArray1(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static const ArrayHandleType1 GetArray1(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return ArrayHandleType1(Buffers1(buffers));
   }
 
-  VTKM_CONT static const ArrayHandleType2 GetArray2(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static const ArrayHandleType2 GetArray2(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return ArrayHandleType2(Buffers2(buffers));
   }

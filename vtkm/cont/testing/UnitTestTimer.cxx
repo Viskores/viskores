@@ -60,6 +60,12 @@ void CheckTime(const vtkm::cont::Timer& timer, vtkm::Float64 expectedTime)
 
 void DoTimerCheck(vtkm::cont::Timer& timer)
 {
+  // Before starting the timer, synchronize the device. Some timers do not record
+  // the start time as the time `Start` is called. Rather, if operations are still
+  // pending on the device, the timer will start recording after those operations
+  // complete. To make sure there are no pending operations, call `Synchronize`.
+  timer.Synchronize();
+
   std::cout << "  Starting timer\n";
   timer.Start();
   VTKM_TEST_ASSERT(timer.Started(), "Timer fails to track started status");
