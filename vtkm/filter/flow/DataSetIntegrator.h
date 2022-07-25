@@ -104,7 +104,8 @@ public:
       this->DoAdvect(bb, stepSize, maxSteps);
     }
 
-    //b.CastAndCall([&] (auto& concrete) { this->DoAdvect(concrete, stepSize, maxSteps); });
+    //Cast the DSIHelperInfo<ParticleType> to the concrete type and call DoAdvect.
+    b.CastAndCall([&](auto& concrete) { this->DoAdvect(concrete, stepSize, maxSteps); });
   }
 
   template <typename ParticleType>
