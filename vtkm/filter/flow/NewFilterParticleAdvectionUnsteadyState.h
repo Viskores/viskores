@@ -23,9 +23,6 @@ namespace flow
 class NewFilterParticleAdvectionUnsteadyState : public NewFilterParticleAdvection
 {
 public:
-  VTKM_CONT
-  NewFilterParticleAdvectionUnsteadyState() {}
-
   VTKM_CONT void SetPreviousTime(vtkm::FloatDefault t1) { this->Time1 = t1; }
 
   VTKM_CONT void SetNextTime(vtkm::FloatDefault t2) { this->Time2 = t2; }

@@ -32,8 +32,6 @@ class VTKM_FILTER_FLOW_EXPORT ParticleAdvection
   : public vtkm::filter::flow::NewFilterParticleAdvectionSteadyState
 {
 public:
-  VTKM_CONT ParticleAdvection() {}
-
 protected:
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData) override;

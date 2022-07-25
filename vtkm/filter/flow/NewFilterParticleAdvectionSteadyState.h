@@ -23,9 +23,6 @@ namespace flow
 class NewFilterParticleAdvectionSteadyState : public NewFilterParticleAdvection
 {
 public:
-  VTKM_CONT
-  NewFilterParticleAdvectionSteadyState() {}
-
 protected:
   VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorSteadyState*> CreateDataSetIntegrators(
     const vtkm::cont::PartitionedDataSet& input,

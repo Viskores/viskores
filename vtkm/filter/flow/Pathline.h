@@ -32,8 +32,6 @@ class VTKM_FILTER_FLOW_EXPORT Pathline
   : public vtkm::filter::flow::NewFilterParticleAdvectionUnsteadyState
 {
 public:
-  VTKM_CONT Pathline() {}
-
 protected:
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData) override;

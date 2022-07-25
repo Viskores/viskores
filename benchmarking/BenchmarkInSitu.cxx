@@ -25,9 +25,9 @@
 
 #include <vtkm/cont/internal/OptionParser.h>
 
-#include <vtkm/filter/Streamline.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/contour/Slice.h>
+#include <vtkm/filter/flow/Streamline.h>
 #include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
 #include <vtkm/filter/geometry_refinement/Tube.h>
 #include <vtkm/filter/vector_analysis/Gradient.h>
@@ -423,7 +423,7 @@ void AddField(vtkm::cont::PartitionedDataSet& input,
 }
 
 template <typename DataSetType>
-DataSetType RunStreamlinesHelper(vtkm::filter::Streamline& filter, const DataSetType& input)
+DataSetType RunStreamlinesHelper(vtkm::filter::flow::Streamline& filter, const DataSetType& input)
 {
   auto dataSetBounds = vtkm::cont::BoundsCompute(input);
   vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
@@ -457,7 +457,7 @@ void BenchStreamlines(::benchmark::State& state)
   BuildInputDataSet(cycle, isStructured, isMultiBlock, DataSetDim);
   inputGenTimer.Stop();
 
-  vtkm::filter::Streamline streamline;
+  vtkm::filter::flow::Streamline streamline;
   streamline.SetStepSize(0.1f);
   streamline.SetNumberOfSteps(1000);
   streamline.SetActiveField(PointVectorsName);
