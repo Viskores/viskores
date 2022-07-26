@@ -12,6 +12,7 @@
 #define vtk_m_filter_flow_NewFilterParticleAdvectionSteadyState_h
 
 #include <vtkm/filter/flow/NewFilterParticleAdvection.h>
+#include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
 {
@@ -20,7 +21,8 @@ namespace filter
 namespace flow
 {
 
-class NewFilterParticleAdvectionSteadyState : public NewFilterParticleAdvection
+class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvectionSteadyState
+  : public NewFilterParticleAdvection
 {
 public:
 protected:

@@ -18,6 +18,7 @@
 #include <vtkm/filter/flow/DataSetIntegratorSteadyState.h>
 #include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
 #include <vtkm/filter/flow/FlowTypes.h>
+#include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
 {
@@ -31,7 +32,7 @@ namespace flow
 /// Takes as input a vector field and seed locations and advects the seeds
 /// through the flow field.
 
-class NewFilterParticleAdvection : public vtkm::filter::NewFilterField
+class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvection : public vtkm::filter::NewFilterField
 {
 public:
   using SupportedTypes = vtkm::TypeListFieldVec3;
