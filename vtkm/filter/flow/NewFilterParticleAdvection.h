@@ -35,11 +35,6 @@ namespace flow
 class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvection : public vtkm::filter::NewFilterField
 {
 public:
-  using SupportedTypes = vtkm::TypeListFieldVec3;
-
-  VTKM_CONT
-  NewFilterParticleAdvection() {}
-
   VTKM_CONT
   void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
 
@@ -89,6 +84,9 @@ protected:
       throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");
     if (this->Seeds.GetNumberOfValues() == 0)
       throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
+    if (!this->Seeds.IsBaseComponentType<vtkm::Particle>() &&
+        this->Seeds.IsBaseComponentType<vtkm::ChargedParticle>())
+      throw vtkm::cont::ErrorFilterExecution("Unsupported particle type in seed array.");
     if (this->NumberOfSteps == 0)
       throw vtkm::cont::ErrorFilterExecution("Number of steps not specified.");
     if (this->StepSize == 0)

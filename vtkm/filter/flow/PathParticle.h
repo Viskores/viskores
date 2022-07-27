@@ -32,11 +32,10 @@ class VTKM_FILTER_FLOW_EXPORT PathParticle
   : public vtkm::filter::flow::NewFilterParticleAdvectionUnsteadyState
 {
 public:
-protected:
+private:
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData) override;
 
-private:
   const vtkm::filter::flow::FlowResultType ResultType =
     vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE;
 };

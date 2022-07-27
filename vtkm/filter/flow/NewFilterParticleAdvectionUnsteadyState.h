@@ -75,8 +75,8 @@ protected:
   }
 
   vtkm::cont::PartitionedDataSet Input2;
-  vtkm::FloatDefault Time1;
-  vtkm::FloatDefault Time2;
+  vtkm::FloatDefault Time1 = -1;
+  vtkm::FloatDefault Time2 = -1;
 };
 
 }
