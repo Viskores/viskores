@@ -21,7 +21,7 @@ set(libraries
   )
 
 
-if ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
+#if ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
 #CUDA architecture has a limited amount of memory available for constants.The CUDA
 #compiler uses this space to hold constants for some optimizations.However, for large
 #kernels, the number of constants needed might be larger than the constant space
@@ -29,16 +29,16 @@ if ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
 #the - Xptxas-- disable - optimizer - constants flags.
 #TODO : Find a more elegant way to do this.Either figure out a way around this problem
 # or add more general flags to vtkm_library / vtkm_unit_tests for sources with "large" kernels.
-  set(large_kernel_sources
-    UnitTestStreamlineFilter.cxx
-    UnitTestStreamSurfaceFilter.cxx
-    UnitTestWorkletParticleAdvection.cxx
-    UnitTestWorkletTemporalAdvection.cxx
-    )
-  set_source_files_properties(${large_kernel_sources} PROPERTIES
-    COMPILE_OPTIONS "-Xptxas;--disable-optimizer-constants"
-    )
-endif()
+#  set(large_kernel_sources
+#    UnitTestStreamlineFilter.cxx
+#    UnitTestStreamSurfaceFilter.cxx
+#    UnitTestWorkletParticleAdvection.cxx
+#    UnitTestWorkletTemporalAdvection.cxx
+#    )
+#  set_source_files_properties(${large_kernel_sources} PROPERTIES
+#    COMPILE_OPTIONS "--disable-optimizer-constants"
+#    )
+#endif()
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
