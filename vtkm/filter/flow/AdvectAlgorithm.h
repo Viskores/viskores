@@ -28,7 +28,7 @@ template <typename DSIType, template <typename> class ResultType, typename Parti
 class AdvectAlgorithm
 {
 public:
-  AdvectAlgorithm(const vtkm::filter::flow::BoundsMap& bm, std::vector<DSIType*>& blocks)
+  AdvectAlgorithm(const vtkm::filter::flow::BoundsMap& bm, std::vector<DSIType>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumRanks(this->Comm.size())
@@ -46,14 +46,14 @@ public:
     this->Go();
   }
 
-  vtkm::cont::PartitionedDataSet GetOutput()
+  vtkm::cont::PartitionedDataSet GetOutput() const
   {
     vtkm::cont::PartitionedDataSet output;
 
     for (const auto& b : this->Blocks)
     {
       vtkm::cont::DataSet ds;
-      if (b->template GetOutput<ParticleType>(ds))
+      if (b.template GetOutput<ParticleType>(ds))
         output.AppendPartition(ds);
     }
 
@@ -102,10 +102,10 @@ public:
       if (this->GetActiveParticles(v, blockId))
       {
         //make this a pointer to avoid the copy?
-        auto block = this->GetDataSet(blockId);
+        auto& block = this->GetDataSet(blockId);
         DSIHelperInfoType bb =
           DSIHelperInfo<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
-        block->Advect(bb, this->StepSize, this->NumberOfSteps);
+        block.Advect(bb, this->StepSize, this->NumberOfSteps);
         numTerm = this->UpdateResult(bb.Get<DSIHelperInfo<ParticleType>>());
       }
 
@@ -136,10 +136,10 @@ public:
     this->TotalNumParticles = static_cast<vtkm::Id>(total);
   }
 
-  DataSetIntegrator* GetDataSet(vtkm::Id id)
+  DataSetIntegrator& GetDataSet(vtkm::Id id)
   {
     for (auto& it : this->Blocks)
-      if (it->GetID() == id)
+      if (it.GetID() == id)
         return it;
 
     throw vtkm::cont::ErrorFilterExecution("Bad block");
@@ -262,7 +262,7 @@ public:
 
   //Member data
   std::vector<ParticleType> Active;
-  std::vector<DSIType*> Blocks;
+  std::vector<DSIType> Blocks;
   vtkm::filter::flow::BoundsMap BoundsMap;
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   std::vector<ParticleType> Inactive;

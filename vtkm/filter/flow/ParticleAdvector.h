@@ -28,7 +28,7 @@ class ParticleAdvector
 {
 public:
   ParticleAdvector(const vtkm::filter::flow::BoundsMap& bm,
-                   const std::vector<DSIType*> blocks,
+                   const std::vector<DSIType>& blocks,
                    const bool& useThreaded,
                    const vtkm::filter::flow::FlowResultType& parType)
     : Blocks(blocks)
@@ -108,7 +108,7 @@ private:
   }
 
 
-  std::vector<DSIType*> Blocks;
+  std::vector<DSIType> Blocks;
   vtkm::filter::flow::BoundsMap BoundsMap;
   FlowResultType ResultType;
   bool UseThreadedAlgorithm;

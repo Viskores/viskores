@@ -26,7 +26,7 @@ class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvectionSteadyState
 {
 public:
 protected:
-  VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorSteadyState*> CreateDataSetIntegrators(
+  VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorSteadyState> CreateDataSetIntegrators(
     const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::flow::BoundsMap& boundsMap,
     const vtkm::filter::flow::FlowResultType& resultType) const
@@ -35,7 +35,7 @@ protected:
 
     std::string activeField = this->GetActiveFieldName();
 
-    std::vector<DSIType*> dsi;
+    std::vector<DSIType> dsi;
     for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
     {
       vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
@@ -44,7 +44,7 @@ protected:
         throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
       dsi.push_back(
-        new DSIType(ds, blockId, activeField, this->SolverType, this->VecFieldType, resultType));
+        DSIType(ds, blockId, activeField, this->SolverType, this->VecFieldType, resultType));
     }
 
     return dsi;

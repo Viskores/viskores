@@ -41,7 +41,7 @@ protected:
       throw vtkm::cont::ErrorFilterExecution("PreviousTime must be less than NextTime");
   }
 
-  VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorUnsteadyState*>
+  VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorUnsteadyState>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
                            const vtkm::filter::flow::BoundsMap& boundsMap,
                            const vtkm::filter::flow::FlowResultType& resultType) const
@@ -50,7 +50,7 @@ protected:
 
     std::string activeField = this->GetActiveFieldName();
 
-    std::vector<DSIType*> dsi;
+    std::vector<DSIType> dsi;
     for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
     {
       vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
@@ -60,15 +60,15 @@ protected:
           (!ds2.HasPointField(activeField) && !ds2.HasCellField(activeField)))
         throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-      dsi.push_back(new DSIType(ds1,
-                                ds2,
-                                this->Time1,
-                                this->Time2,
-                                blockId,
-                                activeField,
-                                this->SolverType,
-                                this->VecFieldType,
-                                resultType));
+      dsi.push_back(DSIType(ds1,
+                            ds2,
+                            this->Time1,
+                            this->Time2,
+                            blockId,
+                            activeField,
+                            this->SolverType,
+                            this->VecFieldType,
+                            resultType));
     }
 
     return dsi;

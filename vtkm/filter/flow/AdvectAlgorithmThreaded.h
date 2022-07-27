@@ -30,7 +30,7 @@ template <typename DSIType, template <typename> class ResultType, typename Parti
 class AdvectAlgorithmThreaded : public AdvectAlgorithm<DSIType, ResultType, ParticleType>
 {
 public:
-  AdvectAlgorithmThreaded(const vtkm::filter::flow::BoundsMap& bm, std::vector<DSIType*>& blocks)
+  AdvectAlgorithmThreaded(const vtkm::filter::flow::BoundsMap& bm, std::vector<DSIType>& blocks)
     : AdvectAlgorithm<DSIType, ResultType, ParticleType>(bm, blocks)
     , Done(false)
     , WorkerActivate(false)
@@ -39,7 +39,7 @@ public:
     //When this happens, they are destructed by the time the Manage thread gets them.
     //Set the copy flag so the std::vector is copied into the ArrayHandle
     for (auto& block : this->Blocks)
-      block->SetCopySeedFlag(true);
+      block.SetCopySeedFlag(true);
   }
 
   void Go() override
@@ -117,10 +117,10 @@ protected:
       vtkm::Id blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
-        const auto& block = this->GetDataSet(blockId);
+        auto& block = this->GetDataSet(blockId);
         DSIHelperInfoType bb =
           DSIHelperInfo<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
-        block->Advect(bb, this->StepSize, this->NumberOfSteps);
+        block.Advect(bb, this->StepSize, this->NumberOfSteps);
         this->UpdateWorkerResult(blockId, bb);
       }
       else
