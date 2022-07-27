@@ -48,7 +48,7 @@ public:
     this->ComputeTotalNumParticles(nLocal);
 
     std::vector<std::thread> workerThreads;
-    workerThreads.push_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
+    workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
     this->Manage();
 
     //This will only work for 1 thread. For > 1, the Blocks will need a mutex.
@@ -106,7 +106,7 @@ protected:
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
     auto& it = this->WorkerResults[blockId];
-    it.push_back(b);
+    it.emplace_back(b);
   }
 
   void Work()

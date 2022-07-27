@@ -96,7 +96,7 @@ public:
       for (auto& it : this->BlockBounds)
       {
         if (blockId != ignoreBlock && it.Contains(p))
-          blockIDs.push_back(blockId);
+          blockIDs.emplace_back(blockId);
         blockId++;
       }
     }
@@ -117,7 +117,7 @@ private:
     vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
     assigner.local_gids(Comm.rank(), ids);
     for (const auto& i : ids)
-      this->LocalIDs.push_back(static_cast<vtkm::Id>(i));
+      this->LocalIDs.emplace_back(static_cast<vtkm::Id>(i));
 
     for (vtkm::Id id = 0; id < this->TotalNumBlocks; id++)
       this->BlockToRankMap[id] = assigner.rank(static_cast<int>(id));

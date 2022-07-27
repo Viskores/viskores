@@ -85,6 +85,8 @@ public:
     //check that things are valid.
   }
 
+  virtual ~DataSetIntegrator() {}
+
   VTKM_CONT vtkm::Id GetID() const { return this->Id; }
   VTKM_CONT void SetCopySeedFlag(bool val) { this->CopySeedArray = val; }
 
@@ -175,8 +177,8 @@ VTKM_CONT void DataSetIntegrator::ClassifyParticles(
 
     if (p.Status.CheckTerminate())
     {
-      dsiInfo.TermIdx.push_back(i);
-      dsiInfo.TermID.push_back(p.ID);
+      dsiInfo.TermIdx.emplace_back(i);
+      dsiInfo.TermID.emplace_back(p.ID);
     }
     else
     {
@@ -197,8 +199,8 @@ VTKM_CONT void DataSetIntegrator::ClassifyParticles(
       if (newIDs.empty()) //No blocks, we're done.
       {
         p.Status.SetTerminate();
-        dsiInfo.TermIdx.push_back(i);
-        dsiInfo.TermID.push_back(p.ID);
+        dsiInfo.TermIdx.emplace_back(i);
+        dsiInfo.TermID.emplace_back(p.ID);
       }
       else
       {
@@ -221,12 +223,12 @@ VTKM_CONT void DataSetIntegrator::ClassifyParticles(
         int dstRank = dsiInfo.BoundsMap.FindRank(newIDs[0]);
         if (dstRank == this->Rank)
         {
-          dsiInfo.A.push_back(p);
+          dsiInfo.A.emplace_back(p);
           dsiInfo.IdMapA[p.ID] = newIDs;
         }
         else
         {
-          dsiInfo.I.push_back(p);
+          dsiInfo.I.emplace_back(p);
           dsiInfo.IdMapI[p.ID] = newIDs;
         }
       }
@@ -259,10 +261,10 @@ VTKM_CONT void DataSetIntegrator::UpdateResult(const ResultType<ParticleType>& r
     vtkm::cont::Algorithm::Copy(termPerm, termParticles);
 
     ResType termRes(termParticles);
-    this->Results.push_back(termRes);
+    this->Results.emplace_back(termRes);
   }
   else if (this->IsStreamlineResult())
-    this->Results.push_back(result);
+    this->Results.emplace_back(result);
 }
 
 template <typename ParticleType>
@@ -279,7 +281,7 @@ VTKM_CONT bool DataSetIntegrator::GetOutput(vtkm::cont::DataSet& ds) const
     std::vector<vtkm::cont::ArrayHandle<ParticleType>> allParticles;
     allParticles.reserve(nResults);
     for (const auto& vres : this->Results)
-      allParticles.push_back(vres.Get<ResType>().Particles);
+      allParticles.emplace_back(vres.Get<ResType>().Particles);
 
     vtkm::cont::ArrayHandle<vtkm::Vec3f> pts;
     vtkm::cont::ParticleArrayCopy(allParticles, pts);

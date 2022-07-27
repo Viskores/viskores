@@ -43,7 +43,7 @@ protected:
       if (!ds.HasPointField(activeField) && !ds.HasCellField(activeField))
         throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-      dsi.push_back(
+      dsi.emplace_back(
         DSIType(ds, blockId, activeField, this->SolverType, this->VecFieldType, resultType));
     }
 

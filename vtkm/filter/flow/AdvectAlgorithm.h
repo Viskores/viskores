@@ -78,8 +78,8 @@ public:
 
       if (!ids.empty() && this->BoundsMap.FindRank(ids[0]) == this->Rank)
       {
-        particles.push_back(p);
-        blockIDs.push_back(ids);
+        particles.emplace_back(p);
+        blockIDs.emplace_back(ids);
       }
     }
 
@@ -176,7 +176,7 @@ public:
       auto p = *it;
       if (blockId == this->ParticleBlockIDsMap[p.ID][0])
       {
-        particles.push_back(p);
+        particles.emplace_back(p);
         it = this->Active.erase(it);
       }
       else

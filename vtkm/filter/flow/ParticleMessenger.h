@@ -172,7 +172,7 @@ void ParticleMessenger<ParticleType>::SerialExchange(
   for (auto& p : outData)
   {
     const auto& bids = outBlockIDsMap.find(p.ID)->second;
-    inData.push_back(p);
+    inData.emplace_back(p);
     inDataBlockIDsMap[p.ID] = bids;
   }
 }
@@ -204,7 +204,7 @@ void ParticleMessenger<ParticleType>::Exchange(
   {
     const auto& bids = outBlockIDsMap.find(p.ID)->second;
     int dstRank = this->BoundsMap.FindRank(bids[0]);
-    sendData[dstRank].push_back(std::make_pair(p, bids));
+    sendData[dstRank].emplace_back(std::make_pair(p, bids));
   }
 
   //Do all the sends first.
@@ -223,7 +223,7 @@ void ParticleMessenger<ParticleType>::Exchange(
       {
         const auto& p = v.first;
         const auto& bids = v.second;
-        inData.push_back(p);
+        inData.emplace_back(p);
         inDataBlockIDsMap[p.ID] = bids;
       }
 
@@ -309,7 +309,7 @@ bool ParticleMessenger<ParticleType>::RecvAny(std::vector<MsgCommType>* msgs,
       std::vector<int> m;
       vtkmdiy::load(buff.second, sendRank);
       vtkmdiy::load(buff.second, m);
-      msgs->push_back(std::make_pair(sendRank, m));
+      msgs->emplace_back(std::make_pair(sendRank, m));
     }
     else if (buff.first == ParticleMessenger::PARTICLE_TAG)
     {
@@ -318,7 +318,7 @@ bool ParticleMessenger<ParticleType>::RecvAny(std::vector<MsgCommType>* msgs,
 
       vtkmdiy::load(buff.second, sendRank);
       vtkmdiy::load(buff.second, particles);
-      recvParticles->push_back(std::make_pair(sendRank, particles));
+      recvParticles->emplace_back(std::make_pair(sendRank, particles));
     }
   }
 

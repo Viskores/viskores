@@ -60,15 +60,15 @@ protected:
           (!ds2.HasPointField(activeField) && !ds2.HasCellField(activeField)))
         throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-      dsi.push_back(DSIType(ds1,
-                            ds2,
-                            this->Time1,
-                            this->Time2,
-                            blockId,
-                            activeField,
-                            this->SolverType,
-                            this->VecFieldType,
-                            resultType));
+      dsi.emplace_back(DSIType(ds1,
+                               ds2,
+                               this->Time1,
+                               this->Time2,
+                               blockId,
+                               activeField,
+                               this->SolverType,
+                               this->VecFieldType,
+                               resultType));
     }
 
     return dsi;

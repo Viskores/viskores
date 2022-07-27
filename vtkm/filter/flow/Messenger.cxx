@@ -80,7 +80,7 @@ void Messenger::CleanupRequests(int tag)
   for (const auto& i : this->RecvBuffers)
   {
     if (tag == TAG_ANY || tag == i.first.second)
-      delKeys.push_back(i.first);
+      delKeys.emplace_back(i.first);
   }
 
   if (!delKeys.empty())
@@ -150,9 +150,9 @@ void Messenger::CheckRequests(const std::map<RequestTagPair, char*>& buffers,
   {
     if (tagsToCheck.empty() || tagsToCheck.find(it.first.second) != tagsToCheck.end())
     {
-      req.push_back(it.first.first);
-      copy.push_back(it.first.first);
-      tags.push_back(it.first.second);
+      req.emplace_back(it.first.first);
+      copy.emplace_back(it.first.first);
+      tags.emplace_back(it.first.second);
     }
   }
 
@@ -176,7 +176,7 @@ void Messenger::CheckRequests(const std::map<RequestTagPair, char*>& buffers,
   //Add the req/tag to the return vector.
   reqTags.reserve(static_cast<std::size_t>(num));
   for (int i = 0; i < num; i++)
-    reqTags.push_back(RequestTagPair(copy[indices[i]], tags[indices[i]]));
+    reqTags.emplace_back(RequestTagPair(copy[indices[i]], tags[indices[i]]));
 }
 
 bool Messenger::PacketCompare(const char* a, const char* b)
@@ -300,7 +300,7 @@ bool Messenger::RecvData(const std::set<int>& tags,
     if (it == this->RecvBuffers.end())
       throw vtkm::cont::ErrorFilterExecution("receive buffer not found");
 
-    incomingBuffers.push_back(it->second);
+    incomingBuffers.emplace_back(it->second);
     this->RecvBuffers.erase(it);
   }
 
@@ -329,7 +329,7 @@ void Messenger::ProcessReceivedBuffers(std::vector<char*>& incomingBuffers,
       entry.first = header.tag;
       entry.second.save_binary((char*)(buff + sizeof(header)), header.dataSz);
       entry.second.reset();
-      buffers.push_back(std::move(entry));
+      buffers.emplace_back(std::move(entry));
 
       delete[] buff;
     }
@@ -344,12 +344,12 @@ void Messenger::ProcessReceivedBuffers(std::vector<char*>& incomingBuffers,
       if (i2 == this->RecvPackets.end())
       {
         std::list<char*> l;
-        l.push_back(buff);
+        l.emplace_back(buff);
         this->RecvPackets[k] = l;
       }
       else
       {
-        i2->second.push_back(buff);
+        i2->second.emplace_back(buff);
 
         // The last packet came in, merge into one MemStream.
         if (i2->second.size() == header.numPackets)
@@ -370,7 +370,7 @@ void Messenger::ProcessReceivedBuffers(std::vector<char*>& incomingBuffers,
           }
 
           entry.second.reset();
-          buffers.push_back(std::move(entry));
+          buffers.emplace_back(std::move(entry));
           this->RecvPackets.erase(i2);
         }
       }
