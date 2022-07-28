@@ -8,12 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/flow/BoundsMap.h>
 #include <vtkm/filter/flow/Streamline.h>
-
-#include <vtkm/filter/flow/DataSetIntegratorSteadyState.h>
-#include <vtkm/filter/flow/ParticleAdvector.h>
 
 namespace vtkm
 {
@@ -21,6 +16,11 @@ namespace filter
 {
 namespace flow
 {
+
+VTKM_CONT vtkm::filter::flow::FlowResultType Streamline::GetResultType() const
+{
+  return vtkm::filter::flow::FlowResultType::STREAMLINE_TYPE;
+}
 
 }
 }

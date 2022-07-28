@@ -8,12 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/flow/BoundsMap.h>
 #include <vtkm/filter/flow/PathParticle.h>
-
-#include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
-#include <vtkm/filter/flow/ParticleAdvector.h>
 
 namespace vtkm
 {
@@ -21,6 +16,11 @@ namespace filter
 {
 namespace flow
 {
+
+VTKM_CONT vtkm::filter::flow::FlowResultType PathParticle::GetResultType() const
+{
+  return vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE;
+}
 
 }
 }

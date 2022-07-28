@@ -31,9 +31,6 @@ namespace flow
 class VTKM_FILTER_FLOW_EXPORT StreamSurface
   : public vtkm::filter::flow::NewFilterParticleAdvectionSteadyState
 {
-public:
-  VTKM_CONT StreamSurface() {}
-
 protected:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
 };

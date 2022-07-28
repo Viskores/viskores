@@ -31,10 +31,7 @@ class VTKM_FILTER_FLOW_EXPORT Pathline
   : public vtkm::filter::flow::NewFilterParticleAdvectionUnsteadyState
 {
 private:
-  VTKM_CONT vtkm::filter::flow::FlowResultType GetResultType() const override
-  {
-    return vtkm::filter::flow::FlowResultType::STREAMLINE_TYPE;
-  }
+  VTKM_CONT vtkm::filter::flow::FlowResultType GetResultType() const override;
 };
 
 }

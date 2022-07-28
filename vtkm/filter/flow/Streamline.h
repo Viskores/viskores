@@ -30,10 +30,8 @@ namespace flow
 class VTKM_FILTER_FLOW_EXPORT Streamline
   : public vtkm::filter::flow::NewFilterParticleAdvectionSteadyState
 {
-  VTKM_CONT vtkm::filter::flow::FlowResultType GetResultType() const override
-  {
-    return vtkm::filter::flow::FlowResultType::STREAMLINE_TYPE;
-  }
+private:
+  VTKM_CONT vtkm::filter::flow::FlowResultType GetResultType() const override;
 };
 
 }
