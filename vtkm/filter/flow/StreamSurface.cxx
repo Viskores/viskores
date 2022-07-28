@@ -10,6 +10,7 @@
 
 #include <vtkm/filter/flow/StreamSurface.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/flow/worklet/Field.h>
