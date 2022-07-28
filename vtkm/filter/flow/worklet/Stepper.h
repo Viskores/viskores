@@ -13,18 +13,11 @@
 #ifndef vtk_m_filter_flow_worklet_Stepper_h
 #define vtk_m_filter_flow_worklet_Stepper_h
 
-#include <limits>
-
-#include <vtkm/Bitset.h>
-#include <vtkm/TypeTraits.h>
-#include <vtkm/Types.h>
-#include <vtkm/VectorAnalysis.h>
-
-#include <vtkm/cont/DataSet.h>
-
 #include <vtkm/filter/flow/worklet/GridEvaluators.h>
 #include <vtkm/filter/flow/worklet/IntegratorStatus.h>
 #include <vtkm/filter/flow/worklet/Particles.h>
+
+#include <limits>
 
 namespace vtkm
 {

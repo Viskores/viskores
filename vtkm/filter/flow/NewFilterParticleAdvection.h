@@ -94,6 +94,11 @@ protected:
       throw vtkm::cont::ErrorFilterExecution("StepSize cannot be negative");
   }
 
+  VTKM_CONT virtual vtkm::filter::flow::FlowResultType GetResultType() const
+  {
+    return vtkm::filter::flow::FlowResultType::UNKNOWN_TYPE;
+  }
+
   vtkm::Id NumberOfSteps = 0;
   vtkm::cont::UnknownArrayHandle Seeds;
   vtkm::filter::flow::IntegrationSolverType SolverType =

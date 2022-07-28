@@ -11,19 +11,12 @@
 #ifndef vtk_m_filter_flow_worklet_ParticleAdvectionWorklets_h
 #define vtk_m_filter_flow_worklet_ParticleAdvectionWorklets_h
 
-#include <vtkm/Types.h>
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCast.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/Particle.h>
 #include <vtkm/filter/flow/worklet/Particles.h>
-#include <vtkm/filter/flow/worklet/Stepper.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #ifdef VTKM_CUDA

@@ -11,11 +11,7 @@
 #ifndef vtk_m_filter_flow_worklet_Particles_h
 #define vtk_m_filter_flow_worklet_Particles_h
 
-#include <vtkm/Particle.h>
-#include <vtkm/Types.h>
 #include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/filter/flow/worklet/IntegratorStatus.h>
 

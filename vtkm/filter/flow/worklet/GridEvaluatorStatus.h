@@ -12,15 +12,6 @@
 #define vtk_m_filter_flow_worklet_GridEvaluatorStatus_h
 
 #include <vtkm/Bitset.h>
-#include <vtkm/Types.h>
-#include <vtkm/VectorAnalysis.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellLocatorRectilinearGrid.h>
-#include <vtkm/cont/CellLocatorTwoLevel.h>
-#include <vtkm/cont/CellLocatorUniformGrid.h>
-#include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapter.h>
 
 namespace vtkm
 {

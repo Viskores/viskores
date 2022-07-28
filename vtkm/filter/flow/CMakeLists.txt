@@ -32,10 +32,6 @@ set(flow_sources
   Messenger.cxx
   NewFilterParticleAdvectionSteadyState.cxx
   NewFilterParticleAdvectionUnsteadyState.cxx
-  ParticleAdvection.cxx
-  Pathline.cxx
-  PathParticle.cxx
-  Streamline.cxx
   StreamSurface.cxx
   )
 

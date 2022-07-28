@@ -50,6 +50,10 @@ protected:
                            const vtkm::filter::flow::BoundsMap& boundsMap,
                            const vtkm::filter::flow::FlowResultType& resultType) const;
 
+private:
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
+
   vtkm::cont::PartitionedDataSet Input2;
   vtkm::FloatDefault Time1 = -1;
   vtkm::FloatDefault Time2 = -1;

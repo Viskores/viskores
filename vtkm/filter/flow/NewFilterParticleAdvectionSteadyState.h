@@ -29,12 +29,15 @@ class DataSetIntegratorSteadyState;
 class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvectionSteadyState
   : public NewFilterParticleAdvection
 {
-public:
 protected:
   VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorSteadyState> CreateDataSetIntegrators(
     const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::flow::BoundsMap& boundsMap,
     const vtkm::filter::flow::FlowResultType& resultType) const;
+
+private:
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
 };
 
 }
