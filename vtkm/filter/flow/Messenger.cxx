@@ -8,11 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/flow/Messenger.h>
+
 #include <iostream>
 #include <sstream>
 #include <string.h>
-#include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/flow/Messenger.h>
 
 #ifdef VTKM_ENABLE_MPI
 #include <vtkm/thirdparty/diy/mpi-cast.h>

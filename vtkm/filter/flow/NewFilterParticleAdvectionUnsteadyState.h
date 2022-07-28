@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
 #define vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
 
+#include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvection.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
@@ -60,15 +61,15 @@ protected:
           (!ds2.HasPointField(activeField) && !ds2.HasCellField(activeField)))
         throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-      dsi.emplace_back(DSIType(ds1,
-                               ds2,
-                               this->Time1,
-                               this->Time2,
-                               blockId,
-                               activeField,
-                               this->SolverType,
-                               this->VecFieldType,
-                               resultType));
+      dsi.emplace_back(ds1,
+                       ds2,
+                       this->Time1,
+                       this->Time2,
+                       blockId,
+                       activeField,
+                       this->SolverType,
+                       this->VecFieldType,
+                       resultType);
     }
 
     return dsi;

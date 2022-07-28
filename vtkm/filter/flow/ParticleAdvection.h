@@ -11,7 +11,6 @@
 #ifndef vtk_m_filter_flow_ParticleAdvection_h
 #define vtk_m_filter_flow_ParticleAdvection_h
 
-#include <vtkm/Particle.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvectionSteadyState.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>

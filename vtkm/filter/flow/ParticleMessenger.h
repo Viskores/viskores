@@ -12,9 +12,9 @@
 #define vtk_m_filter_flow_ParticleMessenger_h
 
 #include <vtkm/Particle.h>
-#include <vtkm/cont/Serialization.h>
 #include <vtkm/filter/flow/BoundsMap.h>
 #include <vtkm/filter/flow/Messenger.h>
+#include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 #include <list>
 #include <map>

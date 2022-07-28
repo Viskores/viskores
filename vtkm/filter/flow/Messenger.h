@@ -12,7 +12,6 @@
 #define vtk_m_filter_flow_Messenger_h
 
 #include <vtkm/Types.h>
-#include <vtkm/cont/Serialization.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 #include <vtkm/thirdparty/diy/diy.h>
 

@@ -12,12 +12,8 @@
 #define vtk_m_filter_flow_NewFilterParticleAdvection_h
 
 #include <vtkm/Particle.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/NewFilterField.h>
-#include <vtkm/filter/flow/BoundsMap.h>
-#include <vtkm/filter/flow/DataSetIntegrator.h>
-#include <vtkm/filter/flow/DataSetIntegratorSteadyState.h>
-#include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
-#include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
