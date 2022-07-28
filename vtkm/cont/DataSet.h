@@ -50,25 +50,19 @@ public:
   bool HasField(const std::string& name,
                 vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const
   {
-    bool found = false;
-    this->FindFieldIndex(name, assoc, found);
-    return found;
+    return (this->GetFieldIndex(name, assoc) != -1);
   }
 
   VTKM_CONT
   bool HasCellField(const std::string& name) const
   {
-    bool found = false;
-    this->FindFieldIndex(name, vtkm::cont::Field::Association::Cells, found);
-    return found;
+    return (this->GetFieldIndex(name, vtkm::cont::Field::Association::Cells) != -1);
   }
 
   VTKM_CONT
   bool HasPointField(const std::string& name) const
   {
-    bool found = false;
-    this->FindFieldIndex(name, vtkm::cont::Field::Association::Points, found);
-    return found;
+    return (this->GetFieldIndex(name, vtkm::cont::Field::Association::Points) != -1);
   }
 
 
@@ -85,18 +79,12 @@ public:
   VTKM_CONT
   const vtkm::cont::Field& GetField(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const
-  {
-    return this->GetField(this->GetFieldIndex(name, assoc));
-  }
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const;
 
   VTKM_CONT
   vtkm::cont::Field& GetField(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any)
-  {
-    return this->GetField(this->GetFieldIndex(name, assoc));
-  }
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any);
   //@}
 
   /// Returns the first cell field that matches the provided name.
@@ -296,11 +284,6 @@ private:
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
   std::map<FieldCompare::Key, vtkm::cont::Field, FieldCompare> Fields;
   vtkm::cont::UnknownCellSet CellSet;
-
-  VTKM_CONT
-  vtkm::Id FindFieldIndex(const std::string& name,
-                          vtkm::cont::Field::Association association,
-                          bool& found) const;
 };
 
 } // namespace cont

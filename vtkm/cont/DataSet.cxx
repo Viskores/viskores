@@ -59,16 +59,35 @@ vtkm::cont::Field& DataSet::GetField(vtkm::Id index)
 
 vtkm::Id DataSet::GetFieldIndex(const std::string& name, vtkm::cont::Field::Association assoc) const
 {
-  bool found;
-  vtkm::Id index = this->FindFieldIndex(name, assoc, found);
-  if (found)
+  const auto it = this->Fields.find({ name, assoc });
+  if (it != this->Fields.end())
   {
-    return index;
+    return static_cast<vtkm::Id>(std::distance(this->Fields.begin(), it));
   }
-  else
+  return -1;
+}
+
+const vtkm::cont::Field& DataSet::GetField(const std::string& name,
+                                           vtkm::cont::Field::Association assoc) const
+{
+  auto idx = this->GetFieldIndex(name, assoc);
+  if (idx == -1)
   {
     throw vtkm::cont::ErrorBadValue("No field with requested name: " + name);
   }
+
+  return this->GetField(idx);
+}
+
+vtkm::cont::Field& DataSet::GetField(const std::string& name, vtkm::cont::Field::Association assoc)
+{
+  auto idx = this->GetFieldIndex(name, assoc);
+  if (idx == -1)
+  {
+    throw vtkm::cont::ErrorBadValue("No field with requested name: " + name);
+  }
+
+  return this->GetField(idx);
 }
 
 const vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(vtkm::Id index) const
@@ -148,21 +167,6 @@ void DataSet::PrintSummary(std::ostream& out) const
   }
 
   out.flush();
-}
-
-vtkm::Id DataSet::FindFieldIndex(const std::string& name,
-                                 vtkm::cont::Field::Association association,
-                                 bool& found) const
-{
-  const auto it = this->Fields.find({ name, association });
-  if (it != this->Fields.end())
-  {
-    found = true;
-    return static_cast<vtkm::Id>(std::distance(this->Fields.begin(), it));
-  }
-
-  found = false;
-  return -1;
 }
 
 VTKM_CONT void DataSet::AddField(const Field& field)
