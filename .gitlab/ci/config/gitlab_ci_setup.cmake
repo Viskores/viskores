@@ -81,7 +81,7 @@ endif()
 # In Ninja, we do not need to specify parallelism unless we need to restrict
 # the number of threads.
 if(CTEST_CMAKE_GENERATOR STREQUAL "Ninja" AND DEFINED ENV{CTEST_MAX_PARALLELISM})
-  set(CTEST_BUILD_FLAGS "-j$ENV{CTEST_MAX_PARALLELISM}")
+  set(CTEST_BUILD_FLAGS "--verbose -j$ENV{CTEST_MAX_PARALLELISM}")
 endif()
 
 if(DEFINED ENV{CTEST_MEMORYCHECK_TYPE})
