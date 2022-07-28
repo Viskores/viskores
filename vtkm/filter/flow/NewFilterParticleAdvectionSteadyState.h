@@ -11,7 +11,8 @@
 #ifndef vtk_m_filter_flow_NewFilterParticleAdvectionSteadyState_h
 #define vtk_m_filter_flow_NewFilterParticleAdvectionSteadyState_h
 
-#include <vtkm/filter/flow/DataSetIntegratorSteadyState.h>
+#include <vtkm/filter/flow/BoundsMap.h>
+#include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvection.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
@@ -22,6 +23,9 @@ namespace filter
 namespace flow
 {
 
+// Forward declaration
+class DataSetIntegratorSteadyState;
+
 class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvectionSteadyState
   : public NewFilterParticleAdvection
 {
@@ -30,25 +34,7 @@ protected:
   VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorSteadyState> CreateDataSetIntegrators(
     const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::flow::BoundsMap& boundsMap,
-    const vtkm::filter::flow::FlowResultType& resultType) const
-  {
-    using DSIType = vtkm::filter::flow::DataSetIntegratorSteadyState;
-
-    std::string activeField = this->GetActiveFieldName();
-
-    std::vector<DSIType> dsi;
-    for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
-    {
-      vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
-      auto ds = input.GetPartition(i);
-      if (!ds.HasPointField(activeField) && !ds.HasCellField(activeField))
-        throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
-
-      dsi.emplace_back(ds, blockId, activeField, this->SolverType, this->VecFieldType, resultType);
-    }
-
-    return dsi;
-  }
+    const vtkm::filter::flow::FlowResultType& resultType) const;
 };
 
 }

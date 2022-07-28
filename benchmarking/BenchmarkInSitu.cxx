@@ -15,6 +15,7 @@
 
 #include <vtkm/ImplicitFunction.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/BoundsCompute.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/FieldRangeCompute.h>

@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/CellClassification.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/flow/ParticleAdvection.h>

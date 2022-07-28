@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
 #define vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
 
-#include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
+#include <vtkm/filter/flow/BoundsMap.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvection.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
@@ -21,6 +21,9 @@ namespace filter
 {
 namespace flow
 {
+
+// Forward declaration
+class DataSetIntegratorUnsteadyState;
 
 class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvectionUnsteadyState
   : public NewFilterParticleAdvection
@@ -45,35 +48,7 @@ protected:
   VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorUnsteadyState>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
                            const vtkm::filter::flow::BoundsMap& boundsMap,
-                           const vtkm::filter::flow::FlowResultType& resultType) const
-  {
-    using DSIType = vtkm::filter::flow::DataSetIntegratorUnsteadyState;
-
-    std::string activeField = this->GetActiveFieldName();
-
-    std::vector<DSIType> dsi;
-    for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
-    {
-      vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
-      auto ds1 = input.GetPartition(i);
-      auto ds2 = this->Input2.GetPartition(i);
-      if ((!ds1.HasPointField(activeField) && !ds1.HasCellField(activeField)) ||
-          (!ds2.HasPointField(activeField) && !ds2.HasCellField(activeField)))
-        throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
-
-      dsi.emplace_back(ds1,
-                       ds2,
-                       this->Time1,
-                       this->Time2,
-                       blockId,
-                       activeField,
-                       this->SolverType,
-                       this->VecFieldType,
-                       resultType);
-    }
-
-    return dsi;
-  }
+                           const vtkm::filter::flow::FlowResultType& resultType) const;
 
   vtkm::cont::PartitionedDataSet Input2;
   vtkm::FloatDefault Time1 = -1;

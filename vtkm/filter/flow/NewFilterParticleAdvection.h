@@ -14,6 +14,7 @@
 #include <vtkm/Particle.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
