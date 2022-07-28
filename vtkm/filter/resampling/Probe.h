@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_Probe_h
-#define vtk_m_filter_Probe_h
+#ifndef vtk_m_filter_resampling_Probe_h
+#define vtk_m_filter_resampling_Probe_h
 
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/resampling/vtkm_filter_resampling_export.h>
@@ -62,4 +62,4 @@ class VTKM_DEPRECATED(1.8, "Use vtkm::filter::resampling::Probe.") Probe
 } // namespace filter
 } // namespace vtkm
 
-#endif // vtk_m_filter_Probe_h
+#endif // vtk_m_filter_resampling_Probe_h
