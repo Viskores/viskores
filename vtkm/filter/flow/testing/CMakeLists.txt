@@ -20,27 +20,6 @@ set(libraries
   vtkm_filter_flow
   )
 
-
-if ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
-#CUDA architecture has a limited amount of memory available for constants.The CUDA
-#compiler uses this space to hold constants for some optimizations.However, for large
-#kernels, the number of constants needed might be larger than the constant space
-#available.For these conditions, you have to disable this form of optimization with
-#the - Xptxas-- disable - optimizer - constants flags.
-#TODO : Find a more elegant way to do this.Either figure out a way around this problem
-# or add more general flags to vtkm_library / vtkm_unit_tests for sources with "large" kernels.
-  set(flow_large_kernel_sources
-    UnitTestStreamlineFilter.cxx
-    UnitTestStreamSurfaceFilter.cxx
-    UnitTestStreamSurfaceWorklet.cxx
-    UnitTestWorkletParticleAdvection.cxx
-    UnitTestWorkletTemporalAdvection.cxx
-    )
-  set_source_files_properties(${flow_large_kernel_sources} PROPERTIES
-    COMPILE_OPTIONS "-Xptxas;--disable-optimizer-constants"
-    )
-endif()
-
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries} vtkm_filter vtkm_io
