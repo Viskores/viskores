@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Initialize.h>

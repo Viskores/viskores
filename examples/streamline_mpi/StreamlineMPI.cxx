@@ -8,6 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/AssignerPartitionedDataSet.h>
 #include <vtkm/cont/DataSet.h>

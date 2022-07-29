@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvectionUnsteadyState.h>
 #include <vtkm/filter/flow/internal/DataSetIntegratorUnsteadyState.h>
