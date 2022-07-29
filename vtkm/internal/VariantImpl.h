@@ -510,7 +510,6 @@ public:
   template <typename Functor, typename... Args>
   VTK_M_DEVICE auto CastAndCall(Functor&& f, Args&&... args) const
     noexcept(noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
-      -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
     return detail::VariantCastAndCallImpl<sizeof...(Ts)>(
@@ -518,9 +517,9 @@ public:
   }
 
   template <typename Functor, typename... Args>
-  VTK_M_DEVICE auto CastAndCall(Functor&& f, Args&&... args) noexcept(
-    noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
-    -> decltype(f(std::declval<TypeAt<0>&>(), args...))
+  VTK_M_DEVICE auto CastAndCall(Functor&& f,
+                                Args&&... args) noexcept(noexcept(f(std::declval<TypeAt<0>&>(),
+                                                                    args...)))
   {
     VTKM_ASSERT(this->IsValid());
     return detail::VariantCastAndCallImpl<sizeof...(Ts)>(

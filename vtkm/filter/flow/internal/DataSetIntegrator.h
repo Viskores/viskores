@@ -97,19 +97,8 @@ public:
                       vtkm::FloatDefault stepSize, //move these to member data(?)
                       vtkm::Id maxSteps)
   {
-    if (b.GetIndex() == b.GetIndexOf<DSIHelperInfo<vtkm::Particle>>())
-    {
-      auto& bb = b.Get<DSIHelperInfo<vtkm::Particle>>();
-      this->DoAdvect(bb, stepSize, maxSteps);
-    }
-    else if (b.GetIndex() == b.GetIndexOf<DSIHelperInfo<vtkm::ChargedParticle>>())
-    {
-      auto& bb = b.Get<DSIHelperInfo<vtkm::ChargedParticle>>();
-      this->DoAdvect(bb, stepSize, maxSteps);
-    }
-
     //Cast the DSIHelperInfo<ParticleType> to the concrete type and call DoAdvect.
-    //b.CastAndCall([&](auto& concrete) { this->DoAdvect(concrete, stepSize, maxSteps); });
+    b.CastAndCall([&](auto& concrete) { this->DoAdvect(concrete, stepSize, maxSteps); });
   }
 
   template <typename ParticleType>
@@ -380,7 +369,6 @@ VTKM_CONT bool DataSetIntegrator::GetOutput(vtkm::cont::DataSet& ds) const
 
   return true;
 }
-
 
 }
 }
