@@ -444,6 +444,8 @@ void TestCastAndCall()
 
   variant1.CastAndCall(TestFunctorModify{}, 1);
   VTKM_TEST_ASSERT(variant1.Get<1>().Value == 2, "Variant object not updated.");
+
+  variant1.CastAndCall([](auto& object) { ++object.Value; });
 }
 
 void TestCopyInvalid()
