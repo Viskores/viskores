@@ -8,12 +8,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/AssignerPartitionedDataSet.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/PartitionedDataSet.h>
+#include <vtkm/filter/flow/ParticleAdvection.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
@@ -21,12 +23,6 @@
 #include <mpi.h>
 #include <vtkm/thirdparty/diy/diy.h>
 #include <vtkm/thirdparty/diy/mpi-cast.h>
-
-
-#include <vtkm/filter/flow/BoundsMap.h>
-#include <vtkm/filter/flow/ParticleAdvection.h>
-#include <vtkm/filter/flow/ParticleMessenger.h>
-
 
 void LoadData(std::string& fname, std::vector<vtkm::cont::DataSet>& dataSets, int rank, int nRanks)
 {
