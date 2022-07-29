@@ -8,12 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_flow_ParticleMessenger_h
-#define vtk_m_filter_flow_ParticleMessenger_h
+#ifndef vtk_m_filter_flow_internal_ParticleMessenger_h
+#define vtk_m_filter_flow_internal_ParticleMessenger_h
 
 #include <vtkm/Particle.h>
-#include <vtkm/filter/flow/BoundsMap.h>
-#include <vtkm/filter/flow/Messenger.h>
+#include <vtkm/filter/flow/internal/BoundsMap.h>
+#include <vtkm/filter/flow/internal/Messenger.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 #include <list>
@@ -27,9 +27,11 @@ namespace filter
 {
 namespace flow
 {
+namespace internal
+{
 
 template <typename ParticleType>
-class VTKM_FILTER_FLOW_EXPORT ParticleMessenger : public vtkm::filter::flow::Messenger
+class VTKM_FILTER_FLOW_EXPORT ParticleMessenger : public vtkm::filter::flow::internal::Messenger
 {
   //sendRank, message
   using MsgCommType = std::pair<int, std::vector<int>>;
@@ -42,7 +44,7 @@ class VTKM_FILTER_FLOW_EXPORT ParticleMessenger : public vtkm::filter::flow::Mes
 
 public:
   VTKM_CONT ParticleMessenger(vtkmdiy::mpi::communicator& comm,
-                              const vtkm::filter::flow::BoundsMap& bm,
+                              const vtkm::filter::flow::internal::BoundsMap& bm,
                               int msgSz = 1,
                               int numParticles = 128,
                               int numBlockIds = 2);
@@ -88,7 +90,7 @@ protected:
   VTKM_CONT bool RecvAny(std::vector<MsgCommType>* msgs,
                          std::vector<ParticleRecvCommType>* recvParticles,
                          bool blockAndWait);
-  const vtkm::filter::flow::BoundsMap& BoundsMap;
+  const vtkm::filter::flow::internal::BoundsMap& BoundsMap;
 
 #endif
 
@@ -107,11 +109,12 @@ protected:
 
 VTKM_CONT
 template <typename ParticleType>
-ParticleMessenger<ParticleType>::ParticleMessenger(vtkmdiy::mpi::communicator& comm,
-                                                   const vtkm::filter::flow::BoundsMap& boundsMap,
-                                                   int msgSz,
-                                                   int numParticles,
-                                                   int numBlockIds)
+ParticleMessenger<ParticleType>::ParticleMessenger(
+  vtkmdiy::mpi::communicator& comm,
+  const vtkm::filter::flow::internal::BoundsMap& boundsMap,
+  int msgSz,
+  int numParticles,
+  int numBlockIds)
   : Messenger(comm)
 #ifdef VTKM_ENABLE_MPI
   , BoundsMap(boundsMap)
@@ -356,8 +359,10 @@ inline void ParticleMessenger<ParticleType>::SendParticles(
       this->SendParticles(mit.first, mit.second);
 }
 #endif
-}
-}
-} // namespace vtkm::filter::flow
 
-#endif
+}
+}
+}
+} // vtkm::filter::flow::internal
+
+#endif // vtk_m_filter_flow_internal_ParticleMessenger_h

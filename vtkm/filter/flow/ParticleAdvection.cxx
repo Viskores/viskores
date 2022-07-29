@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/filter/flow/ParticleAdvection.h>
 
 namespace vtkm

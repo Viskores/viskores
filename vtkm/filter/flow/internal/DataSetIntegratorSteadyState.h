@@ -8,10 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_flow_DataSetIntegratorSteadyState_h
-#define vtk_m_filter_flow_DataSetIntegratorSteadyState_h
+#ifndef vtk_m_filter_flow_internal_DataSetIntegratorSteadyState_h
+#define vtk_m_filter_flow_internal_DataSetIntegratorSteadyState_h
 
-#include <vtkm/filter/flow/DataSetIntegrator.h>
+#include <vtkm/filter/flow/internal/DataSetIntegrator.h>
 
 namespace vtkm
 {
@@ -19,8 +19,10 @@ namespace filter
 {
 namespace flow
 {
+namespace internal
+{
 
-class DataSetIntegratorSteadyState : public vtkm::filter::flow::DataSetIntegrator
+class DataSetIntegratorSteadyState : public vtkm::filter::flow::internal::DataSetIntegrator
 {
 public:
   DataSetIntegratorSteadyState(const vtkm::cont::DataSet& ds,
@@ -29,7 +31,11 @@ public:
                                vtkm::filter::flow::IntegrationSolverType solverType,
                                vtkm::filter::flow::VectorFieldType vecFieldType,
                                vtkm::filter::flow::FlowResultType resultType)
-    : vtkm::filter::flow::DataSetIntegrator(id, fieldName, solverType, vecFieldType, resultType)
+    : vtkm::filter::flow::internal::DataSetIntegrator(id,
+                                                      fieldName,
+                                                      solverType,
+                                                      vecFieldType,
+                                                      resultType)
     , DataSet(ds)
   {
   }
@@ -201,5 +207,6 @@ VTKM_CONT inline void DataSetIntegratorSteadyState::DoAdvect(
 }
 }
 }
+} //vtkm::filter::flow::internal
 
-#endif //vtk_m_filter_flow_DataSetIntegratorSteadyState_h
+#endif //vtk_m_filter_flow_internal_DataSetIntegratorSteadyState_h

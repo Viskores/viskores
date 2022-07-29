@@ -8,14 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_flow_AdvectAlgorithm_h
-#define vtk_m_filter_flow_AdvectAlgorithm_h
+#ifndef vtk_m_filter_flow_internal_AdvectAlgorithm_h
+#define vtk_m_filter_flow_internal_AdvectAlgorithm_h
 
 #include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/filter/flow/BoundsMap.h>
-#include <vtkm/filter/flow/DataSetIntegrator.h>
-#include <vtkm/filter/flow/ParticleMessenger.h>
-
+#include <vtkm/filter/flow/internal/BoundsMap.h>
+#include <vtkm/filter/flow/internal/DataSetIntegrator.h>
+#include <vtkm/filter/flow/internal/ParticleMessenger.h>
 
 namespace vtkm
 {
@@ -23,12 +22,14 @@ namespace filter
 {
 namespace flow
 {
+namespace internal
+{
 
 template <typename DSIType, template <typename> class ResultType, typename ParticleType>
 class AdvectAlgorithm
 {
 public:
-  AdvectAlgorithm(const vtkm::filter::flow::BoundsMap& bm, std::vector<DSIType>& blocks)
+  AdvectAlgorithm(const vtkm::filter::flow::internal::BoundsMap& bm, std::vector<DSIType>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumRanks(this->Comm.size())
@@ -89,7 +90,7 @@ public:
   //Advect all the particles.
   virtual void Go()
   {
-    vtkm::filter::flow::ParticleMessenger<ParticleType> messenger(
+    vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
       this->Comm, this->BoundsMap, 1, 128);
 
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
@@ -186,7 +187,7 @@ public:
     return !particles.empty();
   }
 
-  virtual void Communicate(vtkm::filter::flow::ParticleMessenger<ParticleType>& messenger,
+  virtual void Communicate(vtkm::filter::flow::internal::ParticleMessenger<ParticleType>& messenger,
                            vtkm::Id numLocalTerminations,
                            vtkm::Id& numTermMessages)
   {
@@ -263,7 +264,7 @@ public:
   //Member data
   std::vector<ParticleType> Active;
   std::vector<DSIType> Blocks;
-  vtkm::filter::flow::BoundsMap BoundsMap;
+  vtkm::filter::flow::internal::BoundsMap BoundsMap;
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   std::vector<ParticleType> Inactive;
   vtkm::Id NumberOfSteps;
@@ -278,5 +279,6 @@ public:
 }
 }
 }
+} //vtkm::filter::flow::internal
 
-#endif //vtk_m_filter_flow_AdvectAlgorithm_h
+#endif //vtk_m_filter_flow_internal_AdvectAlgorithm_h

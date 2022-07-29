@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/flow/ParticleMessenger.h>
+#include <vtkm/filter/flow/internal/ParticleMessenger.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
 
@@ -23,11 +23,11 @@ using MCommType = std::pair<int, std::vector<int>>;
 using PCommType = std::pair<vtkm::Particle, std::vector<vtkm::Id>>;
 using PRecvCommType = std::pair<int, std::vector<PCommType>>;
 
-class TestMessenger : public vtkm::filter::flow::ParticleMessenger<vtkm::Particle>
+class TestMessenger : public vtkm::filter::flow::internal::ParticleMessenger<vtkm::Particle>
 {
 public:
   TestMessenger(vtkmdiy::mpi::communicator& comm,
-                const vtkm::filter::flow::BoundsMap& bm,
+                const vtkm::filter::flow::internal::BoundsMap& bm,
                 int msgSz = 1,
                 int numParticles = 1,
                 int numBlockIds = 1)
@@ -120,7 +120,7 @@ void TestParticleMessenger()
   //Only works for 2 or more ranks.
   if (comm.size() == 1)
     return;
-  vtkm::filter::flow::BoundsMap boundsMap;
+  vtkm::filter::flow::internal::BoundsMap boundsMap;
 
   int maxMsgSz = 100;
   int maxNumParticles = 128;
@@ -244,7 +244,7 @@ void TestBufferSizes()
 {
   //Make sure the buffer sizes are correct.
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  vtkm::filter::flow::BoundsMap boundsMap;
+  vtkm::filter::flow::internal::BoundsMap boundsMap;
 
   std::vector<int> mSzs = { 1, 2, 3, 4, 5 };
   std::vector<int> numPs = { 1, 2, 3, 4, 5 };

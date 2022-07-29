@@ -8,11 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/flow/NewFilterParticleAdvectionUnsteadyState.h>
-
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/filter/flow/DataSetIntegratorUnsteadyState.h>
-#include <vtkm/filter/flow/ParticleAdvector.h>
+#include <vtkm/filter/flow/NewFilterParticleAdvectionUnsteadyState.h>
+#include <vtkm/filter/flow/internal/DataSetIntegratorUnsteadyState.h>
+#include <vtkm/filter/flow/internal/ParticleAdvector.h>
 
 namespace vtkm
 {
@@ -21,13 +20,13 @@ namespace filter
 namespace flow
 {
 
-VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorUnsteadyState>
+VTKM_CONT std::vector<vtkm::filter::flow::internal::DataSetIntegratorUnsteadyState>
 NewFilterParticleAdvectionUnsteadyState::CreateDataSetIntegrators(
   const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::flow::BoundsMap& boundsMap,
+  const vtkm::filter::flow::internal::BoundsMap& boundsMap,
   const vtkm::filter::flow::FlowResultType& resultType) const
 {
-  using DSIType = vtkm::filter::flow::DataSetIntegratorUnsteadyState;
+  using DSIType = vtkm::filter::flow::internal::DataSetIntegratorUnsteadyState;
 
   std::string activeField = this->GetActiveFieldName();
 
@@ -59,13 +58,13 @@ VTKM_CONT vtkm::cont::PartitionedDataSet
 NewFilterParticleAdvectionUnsteadyState::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
 {
-  using DSIType = vtkm::filter::flow::DataSetIntegratorUnsteadyState;
+  using DSIType = vtkm::filter::flow::internal::DataSetIntegratorUnsteadyState;
   this->ValidateOptions();
 
-  vtkm::filter::flow::BoundsMap boundsMap(input);
+  vtkm::filter::flow::internal::BoundsMap boundsMap(input);
   auto dsi = this->CreateDataSetIntegrators(input, boundsMap, this->GetResultType());
 
-  vtkm::filter::flow::ParticleAdvector<DSIType> pav(
+  vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(
     boundsMap, dsi, this->UseThreadedAlgorithm, this->GetResultType());
 
   return pav.Execute(this->NumberOfSteps, this->StepSize, this->Seeds);

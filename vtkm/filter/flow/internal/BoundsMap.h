@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_flow_BoundsMap_h
-#define vtk_m_filter_flow_BoundsMap_h
+#ifndef vtk_m_filter_flow_internal_BoundsMap_h
+#define vtk_m_filter_flow_internal_BoundsMap_h
 
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/AssignerPartitionedDataSet.h>
@@ -32,6 +32,8 @@ namespace vtkm
 namespace filter
 {
 namespace flow
+{
+namespace internal
 {
 
 class VTKM_ALWAYS_EXPORT BoundsMap
@@ -174,8 +176,10 @@ private:
   std::vector<vtkm::Bounds> BlockBounds;
   vtkm::Bounds GlobalBounds;
 };
-}
-}
-} // namespace vtkm::filter::flow
 
-#endif //vtk_m_filter_flow_BoundsMap_h
+}
+}
+}
+} // namespace vtkm::filter::flow::internal
+
+#endif //vtk_m_filter_flow_internal_BoundsMap_h

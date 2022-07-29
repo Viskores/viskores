@@ -8,19 +8,10 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(flow_headers
-  AdvectAlgorithm.h
-  AdvectAlgorithmThreaded.h
-  BoundsMap.h
-  DataSetIntegrator.h
-  DataSetIntegratorSteadyState.h
-  DataSetIntegratorUnsteadyState.h
-  Messenger.h
+  FlowTypes.h
   NewFilterParticleAdvection.h
   NewFilterParticleAdvectionSteadyState.h
   NewFilterParticleAdvectionUnsteadyState.h
-  FlowTypes.h
-  ParticleAdvector.h
-  ParticleMessenger.h
   ParticleAdvection.h
   Pathline.h
   PathParticle.h
@@ -29,7 +20,7 @@ set(flow_headers
   )
 
 set(flow_sources
-  Messenger.cxx
+  internal/Messenger.cxx
   NewFilterParticleAdvectionSteadyState.cxx
   NewFilterParticleAdvectionUnsteadyState.cxx
   ParticleAdvection.cxx
@@ -52,6 +43,7 @@ if (VTKm_ENABLE_MPI)
   target_link_libraries(vtkm_filter_flow PUBLIC MPI::MPI_CXX)
 endif()
 
+add_subdirectory(internal)
 add_subdirectory(worklet)
 
 #-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -

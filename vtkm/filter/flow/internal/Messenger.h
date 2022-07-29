@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_flow_Messenger_h
-#define vtk_m_filter_flow_Messenger_h
+#ifndef vtk_m_filter_flow_internal_Messenger_h
+#define vtk_m_filter_flow_internal_Messenger_h
 
 #include <vtkm/Types.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
@@ -29,6 +29,8 @@ namespace vtkm
 namespace filter
 {
 namespace flow
+{
+namespace internal
 {
 
 class VTKM_FILTER_FLOW_EXPORT Messenger
@@ -107,7 +109,7 @@ protected:
 
 }
 }
-} // namespace vtk_m_filter_flow_Messenger_h
+}
+} // vtkm::filter::flow::internal
 
-
-#endif
+#endif // vtk_m_filter_flow_internal_Messenger_h

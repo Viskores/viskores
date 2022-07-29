@@ -8,11 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/flow/StreamSurface.h>
-
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/flow/StreamSurface.h>
 #include <vtkm/filter/flow/worklet/Field.h>
 #include <vtkm/filter/flow/worklet/GridEvaluators.h>
 #include <vtkm/filter/flow/worklet/ParticleAdvection.h>

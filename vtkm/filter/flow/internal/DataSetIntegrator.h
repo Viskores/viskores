@@ -8,14 +8,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_flow_DataSetIntegrator_h
-#define vtk_m_filter_flow_DataSetIntegrator_h
+#ifndef vtk_m_filter_flow_internal_DataSetIntegrator_h
+#define vtk_m_filter_flow_internal_DataSetIntegrator_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
-#include <vtkm/filter/flow/BoundsMap.h>
 #include <vtkm/filter/flow/FlowTypes.h>
+#include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/worklet/EulerIntegrator.h>
 #include <vtkm/filter/flow/worklet/IntegratorStatus.h>
 #include <vtkm/filter/flow/worklet/ParticleAdvection.h>
@@ -30,13 +30,15 @@ namespace filter
 {
 namespace flow
 {
+namespace internal
+{
 
 template <typename ParticleType>
 class DSIHelperInfo
 {
 public:
   DSIHelperInfo(const std::vector<ParticleType>& v,
-                const vtkm::filter::flow::BoundsMap& boundsMap,
+                const vtkm::filter::flow::internal::BoundsMap& boundsMap,
                 const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& particleBlockIDsMap)
     : BoundsMap(boundsMap)
     , ParticleBlockIDsMap(particleBlockIDsMap)
@@ -44,7 +46,7 @@ public:
   {
   }
 
-  const vtkm::filter::flow::BoundsMap BoundsMap;
+  const vtkm::filter::flow::internal::BoundsMap BoundsMap;
   const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
 
   std::vector<ParticleType> A, I, V;
@@ -383,5 +385,6 @@ VTKM_CONT bool DataSetIntegrator::GetOutput(vtkm::cont::DataSet& ds) const
 }
 }
 }
+} //vtkm::filter::flow::internal
 
-#endif //vtk_m_filter_flow_DataSetIntegrator_h
+#endif //vtk_m_filter_flow_internal_DataSetIntegrator_h

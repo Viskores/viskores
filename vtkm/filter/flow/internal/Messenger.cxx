@@ -9,7 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/flow/Messenger.h>
+#include <vtkm/filter/flow/internal/Messenger.h>
 
 #include <iostream>
 #include <sstream>
@@ -24,6 +24,8 @@ namespace vtkm
 namespace filter
 {
 namespace flow
+{
+namespace internal
 {
 
 VTKM_CONT
@@ -380,6 +382,8 @@ void Messenger::ProcessReceivedBuffers(std::vector<char*>& incomingBuffers,
 }
 
 #endif
+
 }
 }
-} // namespace vtkm::filter::flow
+}
+} // vtkm::filter::flow::internal

@@ -11,9 +11,11 @@
 #ifndef vtk_m_filter_flow_NewFilterParticleAdvectionSteadyState_h
 #define vtk_m_filter_flow_NewFilterParticleAdvectionSteadyState_h
 
-#include <vtkm/filter/flow/BoundsMap.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvection.h>
+#include <vtkm/filter/flow/internal/BoundsMap.h>
+#include <vtkm/filter/flow/internal/DataSetIntegratorSteadyState.h>
+
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
@@ -30,10 +32,10 @@ class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvectionSteadyState
   : public NewFilterParticleAdvection
 {
 protected:
-  VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorSteadyState> CreateDataSetIntegrators(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::flow::BoundsMap& boundsMap,
-    const vtkm::filter::flow::FlowResultType& resultType) const;
+  VTKM_CONT std::vector<vtkm::filter::flow::internal::DataSetIntegratorSteadyState>
+  CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
+                           const vtkm::filter::flow::internal::BoundsMap& boundsMap,
+                           const vtkm::filter::flow::FlowResultType& resultType) const;
 
 private:
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(

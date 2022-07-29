@@ -8,10 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_flow_DataSetIntegratorUnsteadyState_h
-#define vtk_m_filter_flow_DataSetIntegratorUnsteadyState_h
+#ifndef vtk_m_filter_flow_internal_DataSetIntegratorUnsteadyState_h
+#define vtk_m_filter_flow_internal_DataSetIntegratorUnsteadyState_h
 
-#include <vtkm/filter/flow/DataSetIntegrator.h>
+#include <vtkm/filter/flow/internal/DataSetIntegrator.h>
 #include <vtkm/filter/flow/worklet/TemporalGridEvaluators.h>
 
 namespace vtkm
@@ -20,8 +20,10 @@ namespace filter
 {
 namespace flow
 {
+namespace internal
+{
 
-class DataSetIntegratorUnsteadyState : public vtkm::filter::flow::DataSetIntegrator
+class DataSetIntegratorUnsteadyState : public vtkm::filter::flow::internal::DataSetIntegrator
 {
 public:
   DataSetIntegratorUnsteadyState(
@@ -30,11 +32,15 @@ public:
     vtkm::FloatDefault t1,
     vtkm::FloatDefault t2,
     vtkm::Id id,
-    const vtkm::filter::flow::DataSetIntegrator::FieldNameType& fieldName,
+    const vtkm::filter::flow::internal::DataSetIntegrator::FieldNameType& fieldName,
     vtkm::filter::flow::IntegrationSolverType solverType,
     vtkm::filter::flow::VectorFieldType vecFieldType,
     vtkm::filter::flow::FlowResultType resultType)
-    : vtkm::filter::flow::DataSetIntegrator(id, fieldName, solverType, vecFieldType, resultType)
+    : vtkm::filter::flow::internal::DataSetIntegrator(id,
+                                                      fieldName,
+                                                      solverType,
+                                                      vecFieldType,
+                                                      resultType)
     , DataSet1(ds1)
     , DataSet2(ds2)
     , Time1(t1)
@@ -252,5 +258,6 @@ VTKM_CONT inline void DataSetIntegratorUnsteadyState::DoAdvect(
 }
 }
 }
+} //vtkm::filter::flow::internal
 
-#endif //vtk_m_filter_flow_DataSetIntegratorUnsteadyState_h
+#endif //vtk_m_filter_flow_internal_DataSetIntegratorUnsteadyState_h

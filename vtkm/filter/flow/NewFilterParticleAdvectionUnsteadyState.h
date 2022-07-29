@@ -11,8 +11,10 @@
 #ifndef vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
 #define vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
 
-#include <vtkm/filter/flow/BoundsMap.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvection.h>
+#include <vtkm/filter/flow/internal/BoundsMap.h>
+#include <vtkm/filter/flow/internal/DataSetIntegratorUnsteadyState.h>
+
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
@@ -45,9 +47,9 @@ protected:
       throw vtkm::cont::ErrorFilterExecution("PreviousTime must be less than NextTime");
   }
 
-  VTKM_CONT std::vector<vtkm::filter::flow::DataSetIntegratorUnsteadyState>
+  VTKM_CONT std::vector<vtkm::filter::flow::internal::DataSetIntegratorUnsteadyState>
   CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
-                           const vtkm::filter::flow::BoundsMap& boundsMap,
+                           const vtkm::filter::flow::internal::BoundsMap& boundsMap,
                            const vtkm::filter::flow::FlowResultType& resultType) const;
 
 private:
