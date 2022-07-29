@@ -19,7 +19,7 @@
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
 
-#include <vtkm/filter/Contour.h>
+#include <vtkm/filter/contour/Contour.h>
 
 // This example creates a simple data set and uses VTK-m's rendering engine to render an image and
 // write that image to a file. It then computes an isosurface on the input data set and renders
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
   view.SaveAs("volume.png");
 
   // Compute an isosurface:
-  vtkm::filter::Contour filter;
+  vtkm::filter::contour::Contour filter;
   // [min, max] of the tangle field is [-0.887, 24.46]:
   filter.SetIsoValue(3.0);
   filter.SetActiveField(fieldName);

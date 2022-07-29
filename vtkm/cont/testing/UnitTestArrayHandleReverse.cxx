@@ -88,11 +88,26 @@ void TestArrayHandleReverseScanInclusiveByKey()
   std::cout << std::endl;
 }
 
+void TestArrayHandleReverseFill()
+{
+  vtkm::cont::ArrayHandle<vtkm::Id> handle;
+  auto reverse = vtkm::cont::make_ArrayHandleReverse(handle);
+
+  reverse.AllocateAndFill(ARRAY_SIZE, 20, vtkm::CopyFlag::Off);
+  VTKM_TEST_ASSERT(reverse.GetNumberOfValues() == ARRAY_SIZE);
+  auto portal = reverse.ReadPortal();
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+  {
+    VTKM_TEST_ASSERT(portal.Get(index) == 20);
+  }
+}
+
 void TestArrayHandleReverse()
 {
   TestArrayHandleReverseRead();
   TestArrayHandleReverseWrite();
   TestArrayHandleReverseScanInclusiveByKey();
+  TestArrayHandleReverseFill();
 }
 
 }; // namespace UnitTestArrayHandleReverseNamespace

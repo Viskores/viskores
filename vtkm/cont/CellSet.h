@@ -65,7 +65,7 @@ template <typename T>
 struct CellSetCheck
 {
   using U = typename std::remove_pointer<T>::type;
-  using type = typename std::is_base_of<vtkm::cont::CellSet, U>;
+  using type = typename std::is_base_of<vtkm::cont::CellSet, U>::type;
 };
 
 #define VTKM_IS_CELL_SET(T) VTKM_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value)

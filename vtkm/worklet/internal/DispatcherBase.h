@@ -10,6 +10,7 @@
 #ifndef vtk_m_worklet_internal_DispatcherBase_h
 #define vtk_m_worklet_internal_DispatcherBase_h
 
+#include <vtkm/List.h>
 #include <vtkm/StaticAssert.h>
 
 #include <vtkm/internal/FunctionInterface.h>
@@ -26,26 +27,14 @@
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
-#include <vtkm/internal/brigand.hpp>
-
 #include <vtkm/internal/DecayHelpers.h>
 
 #include <vtkm/worklet/internal/WorkletBase.h>
 
+#include <vtkmstd/integer_sequence.h>
 #include <vtkmstd/is_trivial.h>
 
 #include <sstream>
-
-namespace vtkm
-{
-namespace cont
-{
-
-// Forward declaration.
-template <typename CellSetList>
-class DynamicCellSetBase;
-}
-}
 
 namespace vtkm
 {
@@ -142,57 +131,63 @@ inline T&& as_ref(T&& t)
 
 
 template <typename T, bool noError>
-struct ReportTypeOnError;
-template <typename T>
-struct ReportTypeOnError<T, true> : std::true_type
+struct ReportTypeOnError : std::integral_constant<bool, noError>
 {
 };
 
 template <int Value, bool noError>
-struct ReportValueOnError;
-template <int Value>
-struct ReportValueOnError<Value, true> : std::true_type
+struct ReportValueOnError : std::integral_constant<bool, noError>
 {
 };
 
-// Is designed as a brigand fold operation.
-template <typename Type, typename State>
-struct DetermineIfHasDynamicParameter
+template <typename Type>
+struct IsDynamicTypeImpl
 {
   using T = vtkm::internal::remove_pointer_and_decay<Type>;
   using DynamicTag = typename vtkm::cont::internal::DynamicTransformTraits<T>::DynamicTag;
-  using isDynamic =
+  using type =
     typename std::is_same<DynamicTag, vtkm::cont::internal::DynamicTransformTagCastAndCall>::type;
-
-  using type = std::integral_constant<bool, (State::value || isDynamic::value)>;
 };
+template <typename T>
+using IsDynamicType = typename IsDynamicTypeImpl<T>::type;
 
-
-// Is designed as a brigand fold operation.
-template <typename WorkletType>
-struct DetermineHasCorrectParameters
+template <typename SigTagList, typename ParamList, typename IndexSequence>
+struct ZipControlParamImpl;
+template <typename... SigTags, typename... Params, vtkm::IdComponent... Indices>
+struct ZipControlParamImpl<vtkm::List<SigTags...>,
+                           vtkm::List<Params...>,
+                           vtkmstd::integer_sequence<vtkm::IdComponent, Indices...>>
 {
-  template <typename Type, typename State, typename SigTypes>
-  struct Functor
-  {
-    //T is the type of the Param at the current index
-    //State if the index to use to fetch the control signature tag
-    using ControlSignatureTag = typename brigand::at_c<SigTypes, State::value>;
-    using TypeCheckTag = typename ControlSignatureTag::TypeCheckTag;
+  VTKM_STATIC_ASSERT(sizeof...(SigTags) == sizeof...(Params));
+  VTKM_STATIC_ASSERT(sizeof...(SigTags) == sizeof...(Indices));
 
-    using T = typename std::remove_pointer<Type>::type;
+  using type = vtkm::List<
+    vtkm::List<SigTags, Params, std::integral_constant<vtkm::IdComponent, (Indices + 1)>>...>;
+};
+template <typename SigTagList, typename ParamList, typename IndexSequence>
+using ZipControlParam = typename ZipControlParamImpl<SigTagList, ParamList, IndexSequence>::type;
+
+template <typename WorkletType>
+struct ControlArgumentValidator
+{
+  template <typename SigTag, typename Param, vtkm::IdComponent Index>
+  void operator()(vtkm::List<SigTag, Param, std::integral_constant<vtkm::IdComponent, Index>>) const
+  {
+    using T = std::remove_pointer_t<Param>;
+    using TypeCheckTag = typename SigTag::TypeCheckTag;
     static constexpr bool isCorrect = vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value;
 
-    // If you get an error on the line below, that means that your code has called the
-    // Invoke method on a dispatcher, and one of the arguments of the Invoke is the wrong
-    // type. Each argument of Invoke corresponds to a tag in the arguments of the
-    // ControlSignature of the worklet. If there is a mismatch, then you get an error here
-    // (instead of where you called the dispatcher). For example, if the worklet has a
-    // control signature as ControlSignature(CellSetIn, ...) and the first argument passed
-    // to Invoke is an ArrayHandle, you will get an error here because you cannot use an
-    // ArrayHandle in place of a CellSetIn argument. (You need to use a CellSet.) See a few
-    // lines later for some diagnostics to help you trace where the error occurred.
-    VTKM_READ_THE_SOURCE_CODE_FOR_HELP(isCorrect);
+    static_assert(
+      isCorrect,
+      "If you get an error here, that means that your code has invoked a worklet,"
+      " and one of the arguments of the Invoke is the wrong type. Each argument of the invoke"
+      " corresponds to a tag in the arguments of the ControlSignature of the worklet. If there"
+      " is a mismatch, then you get an error here (instead of where you called invoke). For"
+      " example, if the worklet has a control signature as ControlSignature(CellSetIn, ...) and"
+      " the first argument passed to the invoke is an ArrayHandle, you will get an error here"
+      " because you cannot use an ArrayHandle in place of a CellSetIn argument. (You need to use"
+      " a CellSet.) If the compiler supports it, the next few errors on the following lines of"
+      " code will give information about where the error actually occurred.");
 
     // If you are getting the error described above, the following lines will give you some
     // diagnostics (in the form of compile errors). Each one will result in a compile error
@@ -202,20 +197,16 @@ struct DetermineHasCorrectParameters
     // type/value being reported. (Note that some compilers report better types than others. If
     // your compiler is giving unhelpful types like "T" or "WorkletType", you may need to try a
     // different compiler.)
-    static_assert(ReportTypeOnError<T, isCorrect>::value, "Type passed to Invoke");
-    static_assert(ReportTypeOnError<WorkletType, isCorrect>::value, "Worklet being invoked.");
-    static_assert(ReportValueOnError<State::value, isCorrect>::value, "Index of Invoke parameter");
-    static_assert(ReportTypeOnError<TypeCheckTag, isCorrect>::value, "Type check tag used");
-
-    // This final static_assert gives a human-readable error message. Ideally, this would be
-    // placed first, but some compilers will suppress further errors when a static_assert
-    // fails, so you would not see the other diagnostic error messages.
-    static_assert(isCorrect,
-                  "The type of one of the arguments to the dispatcher's Invoke method is "
-                  "incompatible with the corresponding tag in the worklet's ControlSignature.");
-
-    using type = std::integral_constant<std::size_t, State::value + 1>;
-  };
+    static_assert(ReportTypeOnError<WorkletType, isCorrect>::value,
+                  "The first template argument to ReportTypeOnError is the worklet being invoked");
+    static_assert(ReportValueOnError<Index, isCorrect>::value,
+                  "The first template argument to ReportTypeOnError is the index of Invoke "
+                  "parameter (starting at index 1)");
+    static_assert(ReportTypeOnError<T, isCorrect>::value,
+                  "The first template argument to ReportTypeOnError is the type passed to Invoke");
+    static_assert(ReportTypeOnError<TypeCheckTag, isCorrect>::value,
+                  "The first template argument to ReportTypeOnError is the type check tag used");
+  }
 };
 
 // Checks that an argument in a ControlSignature is a valid control signature
@@ -352,6 +343,18 @@ private:
   void operator=(const DispatcherBaseTransportFunctor&) = delete;
 };
 
+// Should this functionality be added to List.h? Should there be the general ability to
+// remove some number of items from the beginning or end of a list?
+template <typename L>
+struct ListRemoveFirstImpl;
+template <typename T, typename... Ts>
+struct ListRemoveFirstImpl<vtkm::List<T, Ts...>>
+{
+  using type = vtkm::List<Ts...>;
+};
+template <typename L>
+using ListRemoveFirst = typename ListRemoveFirstImpl<L>::type;
+
 //forward declares
 template <std::size_t LeftToProcess>
 struct for_each_dynamic_arg;
@@ -390,7 +393,7 @@ inline void convert_arg(vtkm::cont::internal::DynamicTransformTagStatic,
                         const Trampoline& trampoline,
                         Args&&... args)
 { //This is a static array, so just push it to the back
-  using popped_sig = brigand::pop_front<ContParams>;
+  using popped_sig = ListRemoveFirst<ContParams>;
   for_each_dynamic_arg<LeftToProcess - 1>()(
     trampoline, popped_sig(), std::forward<Args>(args)..., std::forward<T>(t));
 }
@@ -406,8 +409,8 @@ inline void convert_arg(vtkm::cont::internal::DynamicTransformTagCastAndCall,
                         const Trampoline& trampoline,
                         Args&&... args)
 { //This is something dynamic so cast and call
-  using tag_check = typename brigand::at_c<ContParams, 0>::TypeCheckTag;
-  using popped_sig = brigand::pop_front<ContParams>;
+  using tag_check = typename vtkm::ListAt<ContParams, 0>::TypeCheckTag;
+  using popped_sig = ListRemoveFirst<ContParams>;
 
   not_nullptr(t, LeftToProcess, 1);
   vtkm::cont::CastAndCall(as_ref(t),
@@ -459,7 +462,7 @@ struct PlaceholderValidator
 
   // An overload operator to detect possible out of bound placeholder
   template <int N>
-  void operator()(brigand::type_<vtkm::placeholders::Arg<N>>) const
+  void operator()(vtkm::internal::meta::Type<vtkm::placeholders::Arg<N>>) const
   {
     static_assert(N <= MaxIndexAllowed,
                   "An argument in the execution signature"
@@ -470,7 +473,7 @@ struct PlaceholderValidator
   }
 
   template <typename DerivedType>
-  void operator()(brigand::type_<DerivedType>) const
+  void operator()(vtkm::internal::meta::Type<DerivedType>) const
   {
   }
 };
@@ -522,7 +525,8 @@ private:
     // Check if the placeholders defined in the execution environment exceed the max bound
     // defined in the control environment by throwing a nice compile error.
     using ComponentSig = typename ExecutionInterface::ComponentSig;
-    brigand::for_each<ComponentSig>(PlaceholderValidator<NUM_INVOKE_PARAMS>{});
+    vtkm::ListForEach(PlaceholderValidator<NUM_INVOKE_PARAMS>{},
+                      vtkm::ListTransform<ComponentSig, vtkm::internal::meta::Type>{});
 
     //We need to determine if we have the need to do any dynamic
     //transforms. This is fairly simple of a query. We just need to check
@@ -531,10 +535,7 @@ private:
     //check & convert code when we already know all the types. This results
     //in smaller executables and libraries.
     using ParamTypes = typename ParameterInterface::ParameterSig;
-    using HasDynamicTypes =
-      brigand::fold<ParamTypes,
-                    std::false_type,
-                    detail::DetermineIfHasDynamicParameter<brigand::_element, brigand::_state>>;
+    using HasDynamicTypes = vtkm::ListAny<ParamTypes, detail::IsDynamicType>;
 
     this->StartInvokeDynamic(HasDynamicTypes(), std::forward<Args>(args)...);
   }
@@ -564,18 +565,13 @@ private:
     using ParamTypes = typename ParameterInterface::ParameterSig;
     using ContSigTypes = typename vtkm::internal::detail::FunctionSigInfo<
       typename WorkletType::ControlSignature>::Parameters;
-
-    //isAllValid will throw a compile error if everything doesn't match
-    using isAllValid = brigand::fold<
+    using ParamZip = detail::ZipControlParam<
+      ContSigTypes,
       ParamTypes,
-      std::integral_constant<std::size_t, 0>,
-      typename detail::DetermineHasCorrectParameters<WorkletType>::
-        template Functor<brigand::_element, brigand::_state, brigand::pin<ContSigTypes>>>;
+      vtkmstd::make_integer_sequence<vtkm::IdComponent, vtkm::ListSize<ParamTypes>::value>>;
 
-    //this warning exists so that we don't get a warning from not using isAllValid
-    using expectedLen = std::integral_constant<std::size_t, sizeof...(Args)>;
-    static_assert(isAllValid::value == expectedLen::value,
-                  "All arguments failed the TypeCheck pass");
+    // This will cause compile errors if there is an argument mismatch.
+    vtkm::ListForEach(detail::ControlArgumentValidator<WorkletType>{}, ParamZip{});
 
     auto fi =
       vtkm::internal::make_FunctionInterface<void, vtkm::internal::remove_cvref<Args>...>(args...);

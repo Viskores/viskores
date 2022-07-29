@@ -23,24 +23,24 @@ namespace cont
 void CellLocatorRectilinearGrid::Build()
 {
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
-  vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
+  vtkm::cont::UnknownCellSet cellSet = this->GetCellSet();
 
   if (!coords.GetData().IsType<RectilinearType>())
     throw vtkm::cont::ErrorBadType("Coordinates are not rectilinear type.");
 
-  if (cellSet.IsSameType(Structured2DType()))
+  if (cellSet.CanConvert<Structured2DType>())
   {
     this->Is3D = false;
     vtkm::Vec<vtkm::Id, 2> celldims =
-      cellSet.Cast<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+      cellSet.AsCellSet<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
     this->PlaneSize = celldims[0] * celldims[1];
     this->RowSize = celldims[0];
   }
-  else if (cellSet.IsSameType(Structured3DType()))
+  else if (cellSet.CanConvert<Structured3DType>())
   {
     this->Is3D = true;
     vtkm::Vec<vtkm::Id, 3> celldims =
-      cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+      cellSet.AsCellSet<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
     this->PlaneSize = celldims[0] * celldims[1];
     this->RowSize = celldims[0];
   }
@@ -62,7 +62,7 @@ vtkm::exec::CellLocatorRectilinearGrid CellLocatorRectilinearGrid::PrepareForExe
   {
     return ExecObjType(this->PlaneSize,
                        this->RowSize,
-                       this->GetCellSet().template Cast<Structured3DType>(),
+                       this->GetCellSet().AsCellSet<Structured3DType>(),
                        this->GetCoordinates().GetData().template AsArrayHandle<RectilinearType>(),
                        device,
                        token);
@@ -71,7 +71,7 @@ vtkm::exec::CellLocatorRectilinearGrid CellLocatorRectilinearGrid::PrepareForExe
   {
     return ExecObjType(this->PlaneSize,
                        this->RowSize,
-                       this->GetCellSet().template Cast<Structured2DType>(),
+                       this->GetCellSet().AsCellSet<Structured2DType>(),
                        this->GetCoordinates().GetData().template AsArrayHandle<RectilinearType>(),
                        device,
                        token);

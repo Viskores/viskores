@@ -170,19 +170,19 @@ void TestCellSetPermutation()
 
   std::cout << "Testing CellSetStructured<2>\n";
   dataset = maker.Make2DUniformDataSet1();
-  RunTests(dataset.GetCellSet().Cast<vtkm::cont::CellSetStructured<2>>());
+  RunTests(dataset.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<2>>());
 
   std::cout << "Testing CellSetStructured<3>\n";
   dataset = maker.Make3DUniformDataSet1();
-  RunTests(dataset.GetCellSet().Cast<vtkm::cont::CellSetStructured<3>>());
+  RunTests(dataset.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<3>>());
 
   std::cout << "Testing CellSetExplicit\n";
   dataset = maker.Make3DExplicitDataSetPolygonal();
-  RunTests(dataset.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>());
+  RunTests(dataset.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>());
 
   std::cout << "Testing CellSetSingleType\n";
   dataset = maker.Make3DExplicitDataSetCowNose();
-  RunTests(dataset.GetCellSet().Cast<vtkm::cont::CellSetSingleType<>>());
+  RunTests(dataset.GetCellSet().AsCellSet<vtkm::cont::CellSetSingleType<>>());
 }
 
 } // anonymous namespace

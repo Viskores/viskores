@@ -59,7 +59,7 @@ void TestReadingBOVDataSet()
 
   auto const& field = ds.GetField("var");
   // I'm pretty sure that all .bov files have their fields associated with points . . .
-  VTKM_TEST_ASSERT(field.GetAssociation() == vtkm::cont::Field::Association::POINTS,
+  VTKM_TEST_ASSERT(field.GetAssociation() == vtkm::cont::Field::Association::Points,
                    "The field should be associated with points.");
 }
 

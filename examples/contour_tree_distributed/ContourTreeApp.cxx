@@ -75,6 +75,7 @@
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
 #include <vtkm/worklet/contourtree_distributed/TreeCompiler.h>
 
 // clang-format off
@@ -86,14 +87,16 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <mpi.h>
 
+#include <cstdio>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <cstdio>
 #include <string>
 #include <utility>
 #include <vector>
+
+using ValueType = vtkm::Float64;
 
 #define SINGLE_FILE_STDOUT_STDERR
 
@@ -194,6 +197,12 @@ int main(int argc, char* argv[])
   ParseCL parser;
   parser.parse(argc, argv);
   std::string filename = parser.getOptions().back();
+  bool augmentHierarchicalTree = false;
+  if (parser.hasOption("--augmentHierarchicalTree"))
+  {
+    augmentHierarchicalTree = true;
+  }
+
   bool useBoundaryExtremaOnly = true;
   if (parser.hasOption("--useFullBoundary"))
   {
@@ -222,10 +231,10 @@ int main(int argc, char* argv[])
   {
     saveDotFiles = true;
   }
-  bool saveTreeCompilerData = false;
-  if (parser.hasOption("--saveTreeCompilerData"))
+  bool saveOutputData = false;
+  if (parser.hasOption("--saveOutputData"))
   {
-    saveTreeCompilerData = true;
+    saveOutputData = true;
   }
   bool forwardSummary = false;
   if (parser.hasOption("--forwardSummary"))
@@ -270,19 +279,21 @@ int main(int argc, char* argv[])
                 << std::endl;
       std::cout << "--mc             Use marching cubes connectivity (Default=False)." << std::endl;
       std::cout << "--useFullBoundary Use the full boundary during. Typically only useful"
-                << std::endl;
-      std::cout << "                 to compare the performance between using the full boundary"
+                << std::endl
+                << "                  to compare the performance between using the full boundary"
                 << std::endl;
       std::cout << "                 and when using only boundary extrema." << std::endl;
+      std::cout << "--augmentHierarchicalTree Augment the hierarchical tree." << std::endl;
       std::cout << "--preSplitFiles  Input data is already pre-split into blocks." << std::endl;
-      std::cout << "--saveDot        Save DOT files of the distributed contour tree "
-                << "computation (Default=False). " << std::endl;
-      std::cout << "--saveTreeCompilerData  Save data files needed for the tree compiler"
+      std::cout << "--saveDot        Save DOT files of the distributed contour tree " << std::endl
+                << "                 computation (Default=False). " << std::endl;
+      std::cout << "--saveOutputData  Save data files with hierarchical tree or volume data"
                 << std::endl;
       std::cout << "--numBlocks      Number of blocks to use during computation "
                 << "(Default=number of MPI ranks.)" << std::endl;
-      std::cout << "--forwardSummary Forward the summary timings also to the per-rank "
-                << "log files. Default is to round-robin print the summary instead" << std::endl;
+      std::cout << "--forwardSummary Forward the summary timings also to the per-rank " << std::endl
+                << "                 log files. Default is to round-robin print the " << std::endl
+                << "                 summary instead" << std::endl;
       std::cout << std::endl;
     }
     MPI_Finalize();
@@ -300,7 +311,7 @@ int main(int argc, char* argv[])
                  << "    mc=" << useMarchingCubes << std::endl
                  << "    useFullBoundary=" << !useBoundaryExtremaOnly << std::endl
                  << "    saveDot=" << saveDotFiles << std::endl
-                 << "    saveTreeCompilerData=" << saveTreeCompilerData << std::endl
+                 << "    saveOutputData=" << saveOutputData << std::endl
                  << "    forwardSummary=" << forwardSummary << std::endl
                  << "    nblocks=" << numBlocks << std::endl);
   }
@@ -532,7 +543,6 @@ int main(int argc, char* argv[])
       }
 
       // Read data
-      using ValueType = vtkm::Float64;
       std::vector<ValueType> values(numVertices);
       if (filename.compare(filename.length() - 5, 5, ".bdem") == 0)
       {
@@ -618,7 +628,6 @@ int main(int argc, char* argv[])
     vtkm::cont::DataSet inDataSet;
     // Currently FloatDefualt would be fine, but it could cause problems if we ever
     // read binary files here.
-    using ValueType = vtkm::Float64;
     std::vector<ValueType> values;
     std::vector<vtkm::Id> dims;
 
@@ -637,8 +646,8 @@ int main(int argc, char* argv[])
       // in the values vector and copy the dimensions in the dims vector
       vtkm::Id3 pointDimensions;
       auto cellSet = inDataSet.GetCellSet();
-      cellSet.CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(),
-                          pointDimensions);
+      vtkm::cont::CastAndCall(
+        cellSet, vtkm::worklet::contourtree_augmented::GetPointDimensions(), pointDimensions);
       std::cout << "Point dimensions are " << pointDimensions << std::endl;
       dims.resize(3);
       dims[0] = pointDimensions[0];
@@ -840,6 +849,7 @@ int main(int argc, char* argv[])
                                                      localBlockSizes,
                                                      useBoundaryExtremaOnly,
                                                      useMarchingCubes,
+                                                     augmentHierarchicalTree,
                                                      saveDotFiles,
                                                      timingsLogLevel,
                                                      treeLogLevel);
@@ -858,42 +868,63 @@ int main(int argc, char* argv[])
   vtkm::Float64 postFilterSyncTime = currTime - prevTime;
   prevTime = currTime;
 
-  /*
-  std::cout << "Result dataset has " << result.GetNumberOfPartitions() << " partitions" << std::endl;
-
-  for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+  if (saveOutputData)
   {
-    auto ds = result.GetPartition(ds_no);
-    for (vtkm::Id f_no = 0; f_no < ds.GetNumberOfFields(); ++f_no)
+    if (augmentHierarchicalTree)
     {
-      auto field = ds.GetField(f_no);
-      std::cout << field.GetName() << ": ";
-      PrintArrayContents(field.GetData());
-      std::cout << std::endl;
+      for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+      {
+        auto ds = result.GetPartition(ds_no);
+        vtkm::worklet::contourtree_augmented::IdArrayType supernodes;
+        ds.GetField("Supernodes").GetData().AsArrayHandle(supernodes);
+        vtkm::worklet::contourtree_augmented::IdArrayType superarcs;
+        ds.GetField("Superarcs").GetData().AsArrayHandle(superarcs);
+        vtkm::worklet::contourtree_augmented::IdArrayType regularNodeGlobalIds;
+        ds.GetField("RegularNodeGlobalIds").GetData().AsArrayHandle(regularNodeGlobalIds);
+        vtkm::Id totalVolume = globalSize[0] * globalSize[1] * globalSize[2];
+        vtkm::worklet::contourtree_augmented::IdArrayType intrinsicVolume;
+        ds.GetField("IntrinsicVolume").GetData().AsArrayHandle(intrinsicVolume);
+        vtkm::worklet::contourtree_augmented::IdArrayType dependentVolume;
+        ds.GetField("DependentVolume").GetData().AsArrayHandle(dependentVolume);
+
+        std::string dumpVolumesString =
+          vtkm::worklet::contourtree_distributed::HierarchicalContourTree<ValueType>::DumpVolumes(
+            supernodes,
+            superarcs,
+            regularNodeGlobalIds,
+            totalVolume,
+            intrinsicVolume,
+            dependentVolume);
+
+        std::string volumesFileName = std::string("TreeWithVolumes_Rank_") +
+          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+          std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
+        std::ofstream treeStream(volumesFileName.c_str());
+        treeStream << dumpVolumesString;
+      }
+    }
+    else
+    {
+      for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+      {
+        vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
+        treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
+        char fname[256];
+        std::snprintf(fname,
+                      sizeof(fname),
+                      "TreeCompilerOutput_Rank%d_Block%d.dat",
+                      rank,
+                      static_cast<int>(ds_no));
+        FILE* out_file = std::fopen(fname, "wb");
+        treeCompiler.WriteBinary(out_file);
+        std::fclose(out_file);
+      }
     }
   }
-  */
 
-  if (saveTreeCompilerData)
-  {
-    for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
-    {
-      vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
-      treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
-      char fname[256];
-      std::snprintf(fname,
-                    sizeof(fname),
-                    "TreeCompilerOutput_Rank%d_Block%d.dat",
-                    rank,
-                    static_cast<int>(ds_no));
-      FILE* out_file = std::fopen(fname, "wb");
-      treeCompiler.WriteBinary(out_file);
-      std::fclose(out_file);
-    }
-  }
 
   currTime = totalTime.GetElapsedTime();
-  vtkm::Float64 saveTreeCompilerDataTime = currTime - prevTime;
+  vtkm::Float64 saveOutputDataTime = currTime - prevTime;
   prevTime = currTime;
 
   std::cout << std::flush;
@@ -942,7 +973,7 @@ int main(int argc, char* argv[])
                << std::setw(42) << std::left << "    Post filter Sync"
                << ": " << postFilterSyncTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Save Tree Compiler Data"
-               << ": " << saveTreeCompilerDataTime << " seconds" << std::endl
+               << ": " << saveOutputDataTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Total Time"
                << ": " << currTime << " seconds");
 

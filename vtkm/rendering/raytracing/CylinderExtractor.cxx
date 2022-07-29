@@ -212,7 +212,7 @@ public:
 } //namespace detail
 
 
-void CylinderExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells,
+void CylinderExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells,
                                      const vtkm::Float32 radius)
 {
   vtkm::Id numOfSegments;
@@ -222,7 +222,7 @@ void CylinderExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells,
   this->SetUniformRadius(radius);
 }
 
-void CylinderExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells,
+void CylinderExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells,
                                      const vtkm::cont::Field& field,
                                      const vtkm::Float32 minRadius,
                                      const vtkm::Float32 maxRadius)
@@ -243,7 +243,7 @@ void CylinderExtractor::SetUniformRadius(const vtkm::Float32 radius)
   vtkm::cont::Algorithm::Copy(radiusHandle, Radii);
 }
 
-void CylinderExtractor::SetCylinderIdsFromCells(const vtkm::cont::DynamicCellSet& cells)
+void CylinderExtractor::SetCylinderIdsFromCells(const vtkm::cont::UnknownCellSet& cells)
 {
   vtkm::Id numCells = cells.GetNumberOfCells();
   if (numCells == 0)
@@ -253,9 +253,9 @@ void CylinderExtractor::SetCylinderIdsFromCells(const vtkm::cont::DynamicCellSet
   //
   // look for points in the cell set
   //
-  if (cells.IsSameType(vtkm::cont::CellSetExplicit<>()))
+  if (cells.CanConvert<vtkm::cont::CellSetExplicit<>>())
   {
-    auto cellsExplicit = cells.Cast<vtkm::cont::CellSetExplicit<>>();
+    auto cellsExplicit = cells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
     vtkm::cont::ArrayHandle<vtkm::Id> points;
     vtkm::worklet::DispatcherMapTopology<detail::CountSegments>(detail::CountSegments())

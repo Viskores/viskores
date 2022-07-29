@@ -75,8 +75,8 @@ void TryArray(const vtkm::cont::ArrayHandle<T, S>& inputArray)
   vtkm::cont::printSummary_ArrayHandle(inputArray, std::cout);
 
   vtkm::cont::Field::Association association =
-    ((sizeof(T) < 8) ? vtkm::cont::Field::Association::POINTS
-                     : vtkm::cont::Field::Association::CELL_SET);
+    ((sizeof(T) < 8) ? vtkm::cont::Field::Association::Points
+                     : vtkm::cont::Field::Association::Cells);
 
   vtkm::cont::Field inputField("my-array", association, inputArray);
 

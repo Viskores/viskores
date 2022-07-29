@@ -50,7 +50,7 @@ public:
                                       const std::vector<T>& field)
   {
     dataSet.AddField(
-      make_Field(fieldName, vtkm::cont::Field::Association::POINTS, field, vtkm::CopyFlag::On));
+      make_Field(fieldName, vtkm::cont::Field::Association::Points, field, vtkm::CopyFlag::On));
   }
 
   template <typename T>
@@ -60,7 +60,7 @@ public:
                                       const vtkm::Id& n)
   {
     dataSet.AddField(
-      make_Field(fieldName, vtkm::cont::Field::Association::POINTS, field, n, vtkm::CopyFlag::On));
+      make_Field(fieldName, vtkm::cont::Field::Association::Points, field, n, vtkm::CopyFlag::On));
   }
 
   //Cell centered field
@@ -86,7 +86,7 @@ public:
                                      const std::vector<T>& field)
   {
     dataSet.AddField(
-      make_Field(fieldName, vtkm::cont::Field::Association::CELL_SET, field, vtkm::CopyFlag::On));
+      make_Field(fieldName, vtkm::cont::Field::Association::Cells, field, vtkm::CopyFlag::On));
   }
 
   template <typename T>
@@ -95,8 +95,8 @@ public:
                                      const T* field,
                                      const vtkm::Id& n)
   {
-    dataSet.AddField(make_Field(
-      fieldName, vtkm::cont::Field::Association::CELL_SET, field, n, vtkm::CopyFlag::On));
+    dataSet.AddField(
+      make_Field(fieldName, vtkm::cont::Field::Association::Cells, field, n, vtkm::CopyFlag::On));
   }
 };
 }

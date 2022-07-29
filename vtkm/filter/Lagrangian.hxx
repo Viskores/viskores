@@ -121,11 +121,12 @@ inline VTKM_CONT Lagrangian::Lagrangian()
 //-----------------------------------------------------------------------------
 inline void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
 {
-  vtkm::cont::DynamicCellSet cell_set = input.GetCellSet();
+  vtkm::cont::UnknownCellSet cell_set = input.GetCellSet();
 
-  if (cell_set.IsSameType(vtkm::cont::CellSetStructured<1>()))
+  if (cell_set.CanConvert<vtkm::cont::CellSetStructured<1>>())
   {
-    vtkm::cont::CellSetStructured<1> cell_set1 = cell_set.Cast<vtkm::cont::CellSetStructured<1>>();
+    vtkm::cont::CellSetStructured<1> cell_set1 =
+      cell_set.AsCellSet<vtkm::cont::CellSetStructured<1>>();
     vtkm::Id dims1 = cell_set1.GetPointDimensions();
     this->SeedRes[0] = dims1;
     if (this->cust_res)
@@ -133,9 +134,10 @@ inline void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
       this->SeedRes[0] = dims1 / this->x_res;
     }
   }
-  else if (cell_set.IsSameType(vtkm::cont::CellSetStructured<2>()))
+  else if (cell_set.CanConvert<vtkm::cont::CellSetStructured<2>>())
   {
-    vtkm::cont::CellSetStructured<2> cell_set2 = cell_set.Cast<vtkm::cont::CellSetStructured<2>>();
+    vtkm::cont::CellSetStructured<2> cell_set2 =
+      cell_set.AsCellSet<vtkm::cont::CellSetStructured<2>>();
     vtkm::Id2 dims2 = cell_set2.GetPointDimensions();
     this->SeedRes[0] = dims2[0];
     this->SeedRes[1] = dims2[1];
@@ -145,9 +147,10 @@ inline void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
       this->SeedRes[1] = dims2[1] / this->y_res;
     }
   }
-  else if (cell_set.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  else if (cell_set.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {
-    vtkm::cont::CellSetStructured<3> cell_set3 = cell_set.Cast<vtkm::cont::CellSetStructured<3>>();
+    vtkm::cont::CellSetStructured<3> cell_set3 =
+      cell_set.AsCellSet<vtkm::cont::CellSetStructured<3>>();
     vtkm::Id3 dims3 = cell_set3.GetPointDimensions();
     this->SeedRes[0] = dims3[0];
     this->SeedRes[1] = dims3[1];
@@ -265,7 +268,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::cont::ArrayCopy(BasisParticles, basisParticleArray);
 
   cycle += 1;
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();

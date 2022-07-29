@@ -34,12 +34,12 @@ public:
   //
   // Extract all vertex shapes with constant radius
   //
-  void ExtractCells(const vtkm::cont::DynamicCellSet& cells, vtkm::Float32 radius);
+  void ExtractCells(const vtkm::cont::UnknownCellSet& cells, vtkm::Float32 radius);
 
   //
   // Extract all vertex elements with radius based on scalar values
   //
-  void ExtractCells(const vtkm::cont::DynamicCellSet& cells,
+  void ExtractCells(const vtkm::cont::UnknownCellSet& cells,
                     const vtkm::cont::Field& field,
                     const vtkm::Float32 minRadius,
                     const vtkm::Float32 maxRadius);
@@ -57,7 +57,7 @@ protected:
                         const vtkm::cont::Field& field);
 
   //  void SetPointIdsFromCoords(const vtkm::cont::CoordinateSystem& coords);
-  void SetCylinderIdsFromCells(const vtkm::cont::DynamicCellSet& cells);
+  void SetCylinderIdsFromCells(const vtkm::cont::UnknownCellSet& cells);
 
 }; // class ShapeIntersector
 }

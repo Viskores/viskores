@@ -144,6 +144,12 @@ GetScalarFieldArray(const vtkm::cont::Field& field)
 {
   return field.GetData().ResetTypes(ScalarRenderingTypes{}, VTKM_DEFAULT_STORAGE_LIST{});
 }
+
+VTKM_CONT inline vtkm::cont::UncertainArrayHandle<Vec3RenderingTypes, VTKM_DEFAULT_STORAGE_LIST>
+GetVec3FieldArray(const vtkm::cont::Field& field)
+{
+  return field.GetData().ResetTypes(Vec3RenderingTypes{}, VTKM_DEFAULT_STORAGE_LIST{});
+}
 }
 }
 } //namespace vtkm::rendering::raytracing

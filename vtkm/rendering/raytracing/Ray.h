@@ -13,9 +13,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/rendering/raytracing/ChannelBuffer.h>
-#include <vtkm/rendering/raytracing/Worklets.h>
 
 #include <vector>
 

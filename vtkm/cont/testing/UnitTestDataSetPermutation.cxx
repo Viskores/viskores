@@ -11,12 +11,13 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/worklet/CellAverage.h>
+#include <vtkm/filter/field_conversion/worklet/CellAverage.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace
@@ -92,7 +93,7 @@ void TestDataSet_Explicit()
 
   //get the cellset single type from the dataset
   vtkm::cont::CellSetSingleType<> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   //verify that we can create a subset of a singlset
   using SubsetType = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetSingleType<>>;
@@ -127,7 +128,7 @@ void TestDataSet_Structured2D()
     vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1 });
 
   vtkm::cont::CellSetStructured<2> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   //verify that we can create a subset of a 2d UniformDataSet
   vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>> subset;
@@ -160,7 +161,7 @@ void TestDataSet_Structured3D()
     vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1 });
 
   vtkm::cont::CellSetStructured<3> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   //verify that we can create a subset of a 2d UniformDataSet
   vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>> subset;

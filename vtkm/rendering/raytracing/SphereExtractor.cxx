@@ -181,13 +181,13 @@ void SphereExtractor::ExtractCoordinates(const vtkm::cont::CoordinateSystem& coo
   this->SetVaryingRadius(minRadius, maxRadius, field);
 }
 
-void SphereExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells,
+void SphereExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells,
                                    const vtkm::Float32 radius)
 {
   this->SetPointIdsFromCells(cells);
   this->SetUniformRadius(radius);
 }
-void SphereExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells,
+void SphereExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells,
                                    const vtkm::cont::Field& field,
                                    const vtkm::Float32 minRadius,
                                    const vtkm::Float32 maxRadius)
@@ -212,7 +212,7 @@ void SphereExtractor::SetPointIdsFromCoords(const vtkm::cont::CoordinateSystem& 
   vtkm::worklet::DispatcherMapField<detail::Iterator>(detail::Iterator()).Invoke(this->PointIds);
 }
 
-void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::DynamicCellSet& cells)
+void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::UnknownCellSet& cells)
 {
   using SingleType = vtkm::cont::CellSetSingleType<>;
   vtkm::Id numCells = cells.GetNumberOfCells();
@@ -223,9 +223,9 @@ void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::DynamicCellSet& cel
   //
   // look for points in the cell set
   //
-  if (cells.IsSameType(vtkm::cont::CellSetExplicit<>()))
+  if (cells.CanConvert<vtkm::cont::CellSetExplicit<>>())
   {
-    auto cellsExplicit = cells.Cast<vtkm::cont::CellSetExplicit<>>();
+    auto cellsExplicit = cells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
     vtkm::cont::ArrayHandle<vtkm::Id> points;
     vtkm::worklet::DispatcherMapTopology<detail::CountPoints>(detail::CountPoints())
@@ -241,9 +241,9 @@ void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::DynamicCellSet& cel
     vtkm::worklet::DispatcherMapTopology<detail::Pointify>(detail::Pointify())
       .Invoke(cellsExplicit, cellOffsets, this->PointIds);
   }
-  else if (cells.IsSameType(SingleType()))
+  else if (cells.CanConvert<SingleType>())
   {
-    SingleType pointCells = cells.Cast<SingleType>();
+    SingleType pointCells = cells.AsCellSet<SingleType>();
     vtkm::UInt8 shape_id = pointCells.GetCellShape(0);
     if (shape_id == vtkm::CELL_SHAPE_VERTEX)
     {

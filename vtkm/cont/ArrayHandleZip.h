@@ -181,6 +181,16 @@ public:
     return numValues;
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const ValueType& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token)
+  {
+    FirstStorage::Fill(FirstArrayBuffers(buffers), fillValue.first, startIndex, endIndex, token);
+    SecondStorage::Fill(SecondArrayBuffers(buffers), fillValue.second, startIndex, endIndex, token);
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
@@ -197,6 +207,15 @@ public:
     return WritePortalType(
       FirstStorage::CreateWritePortal(FirstArrayBuffers(buffers), device, token),
       SecondStorage::CreateWritePortal(SecondArrayBuffers(buffers), device, token));
+  }
+
+  vtkm::cont::ArrayHandle<T1, ST1> GetFirstArray(const vtkm::cont::internal::Buffer* buffers)
+  {
+    return { FirstArrayBuffers(buffers) };
+  }
+  vtkm::cont::ArrayHandle<T2, ST2> GetSecondArray(const vtkm::cont::internal::Buffer* buffers)
+  {
+    return { SecondArrayBuffers(buffers) };
   }
 };
 } // namespace internal
@@ -227,6 +246,15 @@ public:
   ArrayHandleZip(const FirstHandleType& firstArray, const SecondHandleType& secondArray)
     : Superclass(vtkm::cont::internal::CreateBuffers(firstArray, secondArray))
   {
+  }
+
+  FirstHandleType GetFirstArray() const
+  {
+    return this->GetStorage().GetFirstArray(this->GetBuffers());
+  }
+  SecondHandleType GetSecondArray() const
+  {
+    return this->GetStorage().GetSecondArray(this->GetBuffers());
   }
 };
 

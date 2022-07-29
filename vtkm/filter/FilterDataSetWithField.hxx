@@ -33,7 +33,7 @@ inline VTKM_CONT FilterDataSetWithField<Derived>::FilterDataSetWithField()
   : OutputFieldName()
   , CoordinateSystemIndex(0)
   , ActiveFieldName()
-  , ActiveFieldAssociation(vtkm::cont::Field::Association::ANY)
+  , ActiveFieldAssociation(vtkm::cont::Field::Association::Any)
   , UseCoordinateSystemAsField(false)
 {
 }

@@ -7,65 +7,30 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_CoordinateSystemTransform_h
+#define vtk_m_filter_CoordinateSystemTransform_h
 
-#ifndef vtk_m_filter_CoordianteSystemTransform_h
-#define vtk_m_filter_CoordianteSystemTransform_h
-
-#include <vtkm/filter/FilterField.h>
-#include <vtkm/worklet/CoordinateSystemTransform.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/filter/field_transform/CylindricalCoordinateTransform.h>
+#include <vtkm/filter/field_transform/SphericalCoordinateTransform.h>
 
 namespace vtkm
 {
 namespace filter
 {
-/// \brief
-///
-/// Generate a coordinate transformation on coordiantes from a dataset.
-class CylindricalCoordinateTransform
-  : public vtkm::filter::FilterField<CylindricalCoordinateTransform>
+
+VTKM_DEPRECATED(1.8,
+                "Use vtkm/filter/field_transform/CylindricalCoordinateTransform.h or "
+                "vtkm/filter/field_transform/SphericalCoordinateTransform.h instead of "
+                "vtkm/filter/CoordinateSystemTransform.h.")
+inline void CoordinateSystemTransform_deprecated() {}
+
+inline void CoordinateSystemTransform_deprecated_warning()
 {
-public:
-  using SupportedTypes = vtkm::TypeListFieldVec3;
+  CoordinateSystemTransform_deprecated();
+}
 
-  VTKM_CONT
-  CylindricalCoordinateTransform() = default;
-
-  VTKM_CONT void SetCartesianToCylindrical() { Worklet.SetCartesianToCylindrical(); }
-  VTKM_CONT void SetCylindricalToCartesian() { Worklet.SetCylindricalToCartesian(); }
-
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                          const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-private:
-  vtkm::worklet::CylindricalCoordinateTransform Worklet;
-};
-
-class SphericalCoordinateTransform : public vtkm::filter::FilterField<SphericalCoordinateTransform>
-{
-public:
-  using SupportedTypes = vtkm::TypeListFieldVec3;
-
-  VTKM_CONT
-  SphericalCoordinateTransform() = default;
-
-  VTKM_CONT void SetCartesianToSpherical() { Worklet.SetCartesianToSpherical(); }
-  VTKM_CONT void SetSphericalToCartesian() { Worklet.SetSphericalToCartesian(); }
-
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&,
-                                          const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                          const vtkm::filter::FieldMetadata&,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-private:
-  vtkm::worklet::SphericalCoordinateTransform Worklet;
-};
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/CoordinateSystemTransform.hxx>
-
-#endif // vtk_m_filter_CoordianteSystemTransform_h
+#endif //vtk_m_filter_CoordinateSystemTransform_h

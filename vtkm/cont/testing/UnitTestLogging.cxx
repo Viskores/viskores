@@ -45,6 +45,8 @@ void Scopes(int level = 0)
   }
 }
 
+// VTKM_LOG_ERROR_CONTEXT is no longer implemented as it is
+// deprecated
 void ErrorContext()
 {
   // These variables are only logged if a crash occurs.

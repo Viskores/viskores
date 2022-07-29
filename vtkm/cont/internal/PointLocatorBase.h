@@ -14,7 +14,6 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL

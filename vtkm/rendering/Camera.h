@@ -13,6 +13,7 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/Bounds.h>
+#include <vtkm/Deprecated.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/Range.h>
@@ -92,14 +93,18 @@ class VTKM_RENDERING_EXPORT Camera
   };
 
 public:
-  enum ModeEnum
+  enum struct Mode
   {
-    MODE_2D,
-    MODE_3D
+    TwoD,
+    ThreeD,
   };
+  using ModeEnum VTKM_DEPRECATED(1.8, "Use Camaera::Mode") = Mode;
+  VTKM_DEPRECATED(1.8, "Use Camera::Mode::TwoD.") static constexpr Mode MODE_2D = Mode::TwoD;
+  VTKM_DEPRECATED(1.8, "Use Camera::Mode::ThreeD.") static constexpr Mode MODE_3D = Mode::ThreeD;
+
   VTKM_CONT
-  Camera(ModeEnum vtype = Camera::MODE_3D)
-    : Mode(vtype)
+  Camera(Mode vtype = Camera::Mode::ThreeD)
+    : ModeType(vtype)
     , NearPlane(0.01f)
     , FarPlane(1000.0f)
     , ViewportLeft(-1.0f)
@@ -128,13 +133,13 @@ public:
   /// positioned anywhere and pointing at any place in 3D.
   ///
   VTKM_CONT
-  vtkm::rendering::Camera::ModeEnum GetMode() const { return this->Mode; }
+  vtkm::rendering::Camera::Mode GetMode() const { return this->ModeType; }
   VTKM_CONT
-  void SetMode(vtkm::rendering::Camera::ModeEnum mode) { this->Mode = mode; }
+  void SetMode(vtkm::rendering::Camera::Mode mode) { this->ModeType = mode; }
   VTKM_CONT
-  void SetModeTo3D() { this->SetMode(vtkm::rendering::Camera::MODE_3D); }
+  void SetModeTo3D() { this->SetMode(vtkm::rendering::Camera::Mode::ThreeD); }
   VTKM_CONT
-  void SetModeTo2D() { this->SetMode(vtkm::rendering::Camera::MODE_2D); }
+  void SetModeTo2D() { this->SetMode(vtkm::rendering::Camera::Mode::TwoD); }
 
   /// \brief The clipping range of the camera.
   ///
@@ -541,7 +546,7 @@ public:
   void Print() const;
 
 private:
-  ModeEnum Mode;
+  Mode ModeType;
   Camera3DStruct Camera3D;
   Camera2DStruct Camera2D;
 

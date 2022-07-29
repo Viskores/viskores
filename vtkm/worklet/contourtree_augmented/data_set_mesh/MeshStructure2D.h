@@ -54,6 +54,7 @@
 #define vtk_m_worklet_contourtree_augmented_data_set_mesh_execution_object_mesh_2d_h
 
 #include <vtkm/Types.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
 
 namespace vtkm
 {
@@ -80,19 +81,47 @@ public:
   {
   }
 
-  // number of mesh vertices
+  /// Get the number of mesh vertices
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfVertices() const { return (this->MeshSize[0] * this->MeshSize[1]); }
 
+  /// Get the (x,y) position of the vertex based on its index
   VTKM_EXEC
   inline vtkm::Id2 VertexPos(vtkm::Id v) const
   {
     return vtkm::Id2{ v % this->MeshSize[0], v / this->MeshSize[0] };
   }
 
-  //vertex ID - row * ncols + col
+  ///vertex ID - row * ncols + col
   VTKM_EXEC
   inline vtkm::Id VertexId(vtkm::Id2 pos) const { return pos[1] * this->MeshSize[0] + pos[0]; }
+
+  /// determine if the vertex is owned by this mesh block or not
+  /// The function returns NO_SUCH_ELEMENT if the vertex is not owned by the block and
+  /// otherwise it returns global id of the vertex as determined via the IdRelabeler
+  VTKM_EXEC_CONT
+  inline vtkm::Id GetVertexOwned(const vtkm::Id& meshIndex,
+                                 const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler&
+                                   localToGlobalIdRelabeler) const
+  {
+    // Get the vertex position
+    vtkm::Id2 pos = this->VertexPos(meshIndex);
+    // now test - the low ID boundary belongs to this block
+    // the high ID boundary belongs to the next block if there is one
+    if (((pos[1] == this->MeshSize[1] - 1) &&
+         (pos[1] + localToGlobalIdRelabeler.LocalBlockOrigin[1] !=
+          localToGlobalIdRelabeler.GlobalSize[1] - 1)) ||
+        ((pos[0] == this->MeshSize[0] - 1) &&
+         (pos[0] + localToGlobalIdRelabeler.LocalBlockOrigin[0] !=
+          localToGlobalIdRelabeler.GlobalSize[0] - 1)))
+    {
+      return vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    }
+    else
+    {
+      return localToGlobalIdRelabeler(meshIndex);
+    }
+  }
 
   vtkm::Id2 MeshSize;
 

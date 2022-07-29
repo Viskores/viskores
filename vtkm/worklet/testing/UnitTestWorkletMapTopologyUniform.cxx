@@ -11,8 +11,8 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/worklet/CellAverage.h>
-#include <vtkm/worklet/PointAverage.h>
+#include <vtkm/filter/field_conversion/worklet/CellAverage.h>
+#include <vtkm/filter/field_conversion/worklet/PointAverage.h>
 
 #include <vtkm/Math.h>
 

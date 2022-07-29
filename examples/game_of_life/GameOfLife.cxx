@@ -112,10 +112,10 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
 
     //get the coordinate system we are using for the 2D area
-    const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+    const vtkm::cont::UnknownCellSet cells = input.GetCellSet();
 
     //get the previous state of the game
-    input.GetField("state", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(prevstate);
+    input.GetField("state", vtkm::cont::Field::Association::Points).GetData().CopyTo(prevstate);
 
     //Update the game state
     this->Invoke(
@@ -200,7 +200,7 @@ struct RenderGameOfLife
     vtkm::Int32 arraySize = (vtkm::Int32)data.GetNumberOfPoints();
 
     UploadData task(&this->ColorState,
-                    data.GetField("colors", vtkm::cont::Field::Association::POINTS));
+                    data.GetField("colors", vtkm::cont::Field::Association::Points));
     vtkm::cont::TryExecute(task);
 
     vtkm::Float32 mvp[16] = { 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f,
@@ -332,7 +332,7 @@ int main(int argc, char** argv)
   vtkm::cont::DataSet data = builder.Create(vtkm::Id2(x, y));
 
   auto stateField =
-    vtkm::cont::make_Field("state", vtkm::cont::Field::Association::POINTS, input_state);
+    vtkm::cont::make_Field("state", vtkm::cont::Field::Association::Points, input_state);
   data.AddField(stateField);
 
   GameOfLife filter;

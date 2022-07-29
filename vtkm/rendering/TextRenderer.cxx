@@ -13,8 +13,6 @@
 #include <vtkm/Transform3D.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/rendering/TextRendererBatcher.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {

@@ -102,6 +102,42 @@ struct Bounds
     return (this->X.Contains(point[0]) && this->Y.Contains(point[1]) && this->Z.Contains(point[2]));
   }
 
+  /// \b Returns the volume of the bounds.
+  ///
+  /// \c Volume computes the product of the lengths of the ranges in each dimension. If the bounds
+  /// are empty, 0 is returned.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Float64 Volume() const
+  {
+    if (this->IsNonEmpty())
+    {
+      return (this->X.Length() * this->Y.Length() * this->Z.Length());
+    }
+    else
+    {
+      return 0.0;
+    }
+  }
+
+  /// \b Returns the area of the bounds in the X-Y-plane.
+  ///
+  /// \c Area computes the product of the lengths of the ranges in dimensions X and Y. If the bounds
+  /// are empty, 0 is returned.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Float64 Area() const
+  {
+    if (this->IsNonEmpty())
+    {
+      return (this->X.Length() * this->Y.Length());
+    }
+    else
+    {
+      return 0.0;
+    }
+  }
+
   /// \b Returns the center of the range.
   ///
   /// \c Center computes the point at the middle of the bounds. If the bounds
@@ -152,6 +188,16 @@ struct Bounds
     return unionBounds;
   }
 
+  /// \b Return the intersection of this and another range.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Bounds Intersection(const vtkm::Bounds& otherBounds) const
+  {
+    return vtkm::Bounds(this->X.Intersection(otherBounds.X),
+                        this->Y.Intersection(otherBounds.Y),
+                        this->Z.Intersection(otherBounds.Z));
+  }
+
   /// \b Operator for union
   ///
   VTKM_EXEC_CONT
@@ -172,10 +218,97 @@ struct Bounds
 
 /// Helper function for printing bounds during testing
 ///
-static inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Bounds& bounds)
+inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Bounds& bounds)
 {
   return stream << "{ X:" << bounds.X << ", Y:" << bounds.Y << ", Z:" << bounds.Z << " }";
 }
+
+template <>
+struct VTKM_NEVER_EXPORT VecTraits<vtkm::Bounds>
+{
+  using ComponentType = vtkm::Range;
+  using BaseComponentType = vtkm::VecTraits<vtkm::Range>::BaseComponentType;
+
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 3;
+  static constexpr vtkm::IdComponent GetNumberOfComponents(const vtkm::Bounds&)
+  {
+    return NUM_COMPONENTS;
+  }
+  using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
+  using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
+
+  VTKM_EXEC_CONT
+  static const ComponentType& GetComponent(const vtkm::Bounds& bounds, vtkm::IdComponent component)
+  {
+    VTKM_ASSERT((component >= 0) || (component < 3));
+    switch (component)
+    {
+      case 0:
+        return bounds.X;
+      case 1:
+        return bounds.Y;
+      case 2:
+        return bounds.Z;
+      default:
+        // Should never reach here
+        return bounds.X;
+    }
+  }
+  VTKM_EXEC_CONT
+  static ComponentType& GetComponent(vtkm::Bounds& bounds, vtkm::IdComponent component)
+  {
+    VTKM_ASSERT((component >= 0) || (component < 3));
+    switch (component)
+    {
+      case 0:
+        return bounds.X;
+      case 1:
+        return bounds.Y;
+      case 2:
+        return bounds.Z;
+      default:
+        // Should never reach here
+        return bounds.X;
+    }
+  }
+
+  VTKM_EXEC_CONT
+  static void SetComponent(vtkm::Bounds& bounds,
+                           vtkm::IdComponent component,
+                           const ComponentType& value)
+  {
+    VTKM_ASSERT((component >= 0) || (component < 3));
+    switch (component)
+    {
+      case 0:
+        bounds.X = value;
+        break;
+      case 1:
+        bounds.Y = value;
+        break;
+      case 2:
+        bounds.Z = value;
+        break;
+    }
+  }
+
+  template <typename NewComponentType>
+  using ReplaceComponentType = vtkm::Vec<NewComponentType, NUM_COMPONENTS>;
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType =
+    vtkm::Vec<NewComponentType, NUM_COMPONENTS * vtkm::VecTraits<vtkm::Range>::NUM_COMPONENTS>;
+
+  template <vtkm::IdComponent destSize>
+  VTKM_EXEC_CONT static void CopyInto(const vtkm::Bounds& src,
+                                      vtkm::Vec<ComponentType, destSize>& dest)
+  {
+    const vtkm::IdComponent maxComponent = (destSize < NUM_COMPONENTS) ? destSize : NUM_COMPONENTS;
+    for (vtkm::IdComponent component = 0; component < maxComponent; ++component)
+    {
+      dest[component] = GetComponent(src, component);
+    }
+  }
+};
 
 } // namespace vtkm
 

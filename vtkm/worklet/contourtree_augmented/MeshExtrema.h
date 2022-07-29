@@ -59,9 +59,9 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/Invoker.h>
-#include <vtkm/worklet/contourtree_augmented/PointerDoubling.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_augmented/meshextrema/PointerDoubling.h>
 #include <vtkm/worklet/contourtree_augmented/meshextrema/SetStarts.h>
 
 
@@ -134,7 +134,7 @@ inline void MeshExtrema::BuildRegularChains(bool isMaximal)
   IdArrayType& extrema = isMaximal ? Peaks : Pits;
 
   // Create the PointerDoubling worklet and corresponding dispatcher
-  vtkm::worklet::contourtree_augmented::PointerDoubling pointerDoubler;
+  vtkm::worklet::contourtree_augmented::mesh_extrema_inc::PointerDoubling pointerDoubler;
 
   // Iterate to perform pointer-doubling to build chains to extrema (i.e., maxima or minima)
   // depending on whether we are computing a JoinTree or a SplitTree

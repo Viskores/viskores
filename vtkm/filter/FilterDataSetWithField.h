@@ -13,7 +13,6 @@
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 
@@ -47,7 +46,7 @@ public:
   VTKM_CONT
   void SetActiveField(
     const std::string& name,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     this->ActiveFieldName = name;
     this->ActiveFieldAssociation = association;
@@ -70,10 +69,10 @@ public:
   //@}
 
   //From the field we can extract the association component
-  // Association::ANY -> unable to map
-  // Association::WHOLE_MESH -> (I think this is points)
-  // Association::POINTS -> map using point mapping
-  // Association::CELL_SET -> how do we map this?
+  // Association::Any -> unable to map
+  // Association::WholeMesh -> (I think this is points)
+  // Association::Points -> map using point mapping
+  // Association::Cells -> how do we map this?
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                     const vtkm::cont::Field& field,

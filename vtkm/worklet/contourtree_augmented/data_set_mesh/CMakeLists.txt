@@ -8,11 +8,12 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(headers
+  GetOwnedVerticesByGlobalIdWorklet.h
+  IdRelabeler.h
   MeshStructure2D.h
   MeshStructure3D.h
   SimulatedSimplicityComperator.h
   SortIndices.h
-  IdRelabeler.h
   )
 
 #-----------------------------------------------------------------------------

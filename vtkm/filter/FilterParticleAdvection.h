@@ -25,7 +25,7 @@ namespace filter
 /// Takes as input a vector field and seed locations and advects the seeds
 /// through the flow field.
 
-template <class Derived>
+template <class Derived, typename ParticleType>
 class FilterParticleAdvection : public vtkm::filter::FilterDataSetWithField<Derived>
 {
 public:
@@ -41,14 +41,14 @@ public:
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(const std::vector<vtkm::Particle>& seeds,
+  void SetSeeds(const std::vector<ParticleType>& seeds,
                 vtkm::CopyFlag copyFlag = vtkm::CopyFlag::On)
   {
     this->Seeds = vtkm::cont::make_ArrayHandle(seeds, copyFlag);
   }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds) { this->Seeds = seeds; }
+  void SetSeeds(vtkm::cont::ArrayHandle<ParticleType>& seeds) { this->Seeds = seeds; }
 
   VTKM_CONT
   bool GetUseThreadedAlgorithm() { return this->UseThreadedAlgorithm; }
@@ -71,14 +71,13 @@ public:
 protected:
   VTKM_CONT virtual void ValidateOptions() const;
 
-  using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
-  VTKM_CONT std::vector<DSIType> CreateDataSetIntegrators(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::particleadvection::BoundsMap& boundsMap) const;
+  VTKM_CONT std::vector<vtkm::filter::particleadvection::DataSetIntegrator>
+  CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
+                           const vtkm::filter::particleadvection::BoundsMap& boundsMap) const;
 
   vtkm::Id NumberOfSteps;
   vtkm::FloatDefault StepSize;
-  vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
+  vtkm::cont::ArrayHandle<ParticleType> Seeds;
   bool UseThreadedAlgorithm;
 
 private:

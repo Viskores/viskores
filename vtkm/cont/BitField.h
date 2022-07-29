@@ -546,6 +546,8 @@ public:
   using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayBitField::ReadPortalType instead.") =
     detail::BitPortalConst;
 
+  using WordTypePreferred = vtkm::AtomicTypePreferred;
+
   template <typename Device>
   struct ExecutionTypes
   {
@@ -620,6 +622,53 @@ public:
   {
     vtkm::cont::Token token;
     this->Allocate(numberOfBits, preserve, token);
+  }
+
+  /// Allocate the requested number of bits and fill with the requested bit or word.
+  template <typename ValueType>
+  VTKM_CONT void AllocateAndFill(vtkm::Id numberOfBits,
+                                 ValueType value,
+                                 vtkm::cont::Token& token) const
+  {
+    this->Allocate(numberOfBits, vtkm::CopyFlag::Off, token);
+    this->Fill(value, token);
+  }
+  template <typename ValueType>
+  VTKM_CONT void AllocateAndFill(vtkm::Id numberOfBits, ValueType value) const
+  {
+    vtkm::cont::Token token;
+    this->AllocateAndFill(numberOfBits, value, token);
+  }
+
+private:
+  VTKM_CONT void FillImpl(const void* word,
+                          vtkm::BufferSizeType wordSize,
+                          vtkm::cont::Token& token) const;
+
+public:
+  /// Set subsequent words to the given word of bits.
+  template <typename WordType>
+  VTKM_CONT void Fill(WordType word, vtkm::cont::Token& token) const
+  {
+    this->FillImpl(&word, static_cast<vtkm::BufferSizeType>(sizeof(WordType)), token);
+  }
+  template <typename WordType>
+  VTKM_CONT void Fill(WordType word) const
+  {
+    vtkm::cont::Token token;
+    this->Fill(word, token);
+  }
+
+  /// Set all the bits to the given value
+  VTKM_CONT void Fill(bool value, vtkm::cont::Token& token) const
+  {
+    using WordType = WordTypePreferred;
+    this->Fill(value ? ~WordType{ 0 } : WordType{ 0 }, token);
+  }
+  VTKM_CONT void Fill(bool value) const
+  {
+    vtkm::cont::Token token;
+    this->Fill(value, token);
   }
 
   /// Shrink the bit field to the requested number of bits.

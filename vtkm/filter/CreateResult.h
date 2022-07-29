@@ -16,6 +16,9 @@
 
 #include <vtkm/filter/FieldMetadata.h>
 
+// Once all the filters move to the NewFilter base classes, this header should
+// be deprecated.
+
 namespace vtkm
 {
 namespace filter

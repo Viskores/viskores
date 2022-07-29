@@ -17,12 +17,11 @@
 #error FunctionInterfaceDetailPre.h must be included from FunctionInterface.h
 #endif
 
+#include <vtkm/List.h>
 #include <vtkm/Types.h>
 #include <vtkm/internal/IndexTag.h>
 
 #include <type_traits>
-
-#include <vtkm/internal/brigand.hpp>
 
 #define VTKM_MAX_FUNCTION_PARAMETERS 20
 
@@ -600,8 +599,8 @@ struct FunctionSigInfo<R(ArgTypes...)>
   using ArityType = std::integral_constant<int, static_cast<int>(Arity)>;
 
   using ResultType = R;
-  using Components = brigand::list<R, ArgTypes...>;
-  using Parameters = brigand::list<ArgTypes...>;
+  using Components = vtkm::List<R, ArgTypes...>;
+  using Parameters = vtkm::List<ArgTypes...>;
 };
 
 template <int, typename>
@@ -609,7 +608,7 @@ struct AtType;
 template <int Index, typename R, typename... ArgTypes>
 struct AtType<Index, R(ArgTypes...)>
 {
-  using type = brigand::at_c<brigand::list<R, ArgTypes...>, Index>;
+  using type = vtkm::ListAt<vtkm::List<R, ArgTypes...>, Index>;
 };
 
 //============================================================================

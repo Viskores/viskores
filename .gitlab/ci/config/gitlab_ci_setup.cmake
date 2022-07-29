@@ -38,6 +38,7 @@ string(TOLOWER ${CTEST_BUILD_CONFIGURATION} build_type)
 set(CTEST_BUILD_NAME "${build_type}+$ENV{VTKM_SETTINGS}")
 
 set(site_name "$ENV{CI_JOB_NAME}")
+string(REPLACE "docs:" "docs_" site_name "${site_name}")
 string(REPLACE "build" "" site_name "${site_name}")
 string(REPLACE "test" "" site_name "${site_name}")
 string(REPLACE ":" "" site_name "${site_name}")

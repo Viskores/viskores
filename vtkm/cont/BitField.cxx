@@ -70,6 +70,13 @@ void BitField::Allocate(vtkm::Id numberOfBits,
   this->Buffer.GetMetaData<internal::BitFieldMetaData>().NumberOfBits = numberOfBits;
 }
 
+void BitField::FillImpl(const void* word,
+                        vtkm::BufferSizeType wordSize,
+                        vtkm::cont::Token& token) const
+{
+  this->Buffer.Fill(word, wordSize, 0, this->Buffer.GetNumberOfBytes(), token);
+}
+
 void BitField::ReleaseResourcesExecution()
 {
   this->Buffer.ReleaseDeviceResources();

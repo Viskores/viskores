@@ -28,6 +28,7 @@ set(headers
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
   KXSort.h
+  MapArrayPermutation.h
   OptionParser.h
   OptionParserArguments.h
   ParallelRadixSort.h

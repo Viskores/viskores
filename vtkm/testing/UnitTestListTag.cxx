@@ -134,7 +134,7 @@ struct TestListTagRemoveIfBackward : vtkm::ListTagRemoveIf<TestListTagBackward4,
 };
 
 template <int N, int M>
-std::pair<int, int> test_number(brigand::list<TestClass<N>, TestClass<M>>)
+std::pair<int, int> test_number(vtkm::List<TestClass<N>, TestClass<M>>)
 {
   return std::make_pair(N, M);
 }
@@ -193,9 +193,8 @@ void CheckContains(TestClass<N>, TestListTagUniversal, const std::vector<int>&)
 {
   //Use intersect to verify at compile time that ListTag contains TestClass<N>
   using intersectWith = vtkm::ListTagBase<TestClass<N>>;
-  using intersectResult = vtkm::internal::ListTagAsBrigandList<
-    vtkm::ListTagIntersect<intersectWith, TestListTagUniversal>>;
-  constexpr bool intersectContains = (brigand::size<intersectResult>::value != 0);
+  using intersectResult = vtkm::ListTagIntersect<intersectWith, TestListTagUniversal>;
+  constexpr bool intersectContains = (vtkm::ListSize<intersectResult>::value != 0);
   constexpr bool listContains = vtkm::ListContains<TestListTagUniversal, TestClass<N>>::value;
 
   VTKM_TEST_ASSERT(intersectContains == listContains, "ListTagIntersect check failed.");

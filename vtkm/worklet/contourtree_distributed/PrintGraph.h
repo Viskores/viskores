@@ -1013,7 +1013,7 @@ template <typename FieldType>
 // template <typename FieldType, typename VectorType>
 std::string HierarchicalContourTreeDotGraphPrint(
   const std::string& label, // the label to use as title for the graph
-  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>&
+  const vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>&
     hierarchicalTree, // the hierarchical contour tree itself
   const vtkm::Id showMask = vtkm::worklet::contourtree_distributed::
     SHOW_HIERARCHICAL_STANDARD) // mask with flags for what elements to show

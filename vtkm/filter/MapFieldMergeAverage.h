@@ -17,7 +17,7 @@
 
 #include <vtkm/worklet/Keys.h>
 
-#include <vtkm/filter/vtkm_filter_common_export.h>
+#include <vtkm/filter/vtkm_filter_core_export.h>
 
 namespace vtkm
 {
@@ -41,7 +41,7 @@ namespace filter
 /// `true`, then the results in `outputField` are valid. If it is `false`, then `outputField`
 /// should not be used.
 ///
-VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldMergeAverage(
+VTKM_FILTER_CORE_EXPORT VTKM_CONT bool MapFieldMergeAverage(
   const vtkm::cont::Field& inputField,
   const vtkm::worklet::internal::KeysBase& keys,
   vtkm::cont::Field& outputField);
@@ -63,7 +63,7 @@ VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldMergeAverage(
 /// `true`, then `outputData` has the merged field. If it is `false`, then the field is not
 /// placed in `outputData`.
 ///
-VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldMergeAverage(
+VTKM_FILTER_CORE_EXPORT VTKM_CONT bool MapFieldMergeAverage(
   const vtkm::cont::Field& inputField,
   const vtkm::worklet::internal::KeysBase& keys,
   vtkm::cont::DataSet& outputData);

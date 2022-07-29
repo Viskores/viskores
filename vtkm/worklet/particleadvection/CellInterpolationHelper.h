@@ -17,8 +17,8 @@
 
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/exec/CellInterpolate.h>
 
 /*
@@ -195,31 +195,31 @@ public:
   CellInterpolationHelper() = default;
 
   VTKM_CONT
-  CellInterpolationHelper(const vtkm::cont::DynamicCellSet& cellSet)
+  CellInterpolationHelper(const vtkm::cont::UnknownCellSet& cellSet)
   {
-    if (cellSet.IsSameType(Structured2DType()))
+    if (cellSet.CanConvert<Structured2DType>())
     {
       this->Is3D = false;
       vtkm::Id2 cellDims =
-        cellSet.Cast<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+        cellSet.AsCellSet<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
       vtkm::Id2 pointDims =
-        cellSet.Cast<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
+        cellSet.AsCellSet<Structured2DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
       this->CellDims = vtkm::Id3(cellDims[0], cellDims[1], 0);
       this->PointDims = vtkm::Id3(pointDims[0], pointDims[1], 1);
       this->Type = vtkm::exec::CellInterpolationHelper::HelperType::STRUCTURED;
     }
-    else if (cellSet.IsSameType(Structured3DType()))
+    else if (cellSet.CanConvert<Structured3DType>())
     {
       this->Is3D = true;
       this->CellDims =
-        cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+        cellSet.AsCellSet<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
       this->PointDims =
-        cellSet.Cast<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
+        cellSet.AsCellSet<Structured3DType>().GetSchedulingRange(vtkm::TopologyElementTagPoint());
       this->Type = vtkm::exec::CellInterpolationHelper::HelperType::STRUCTURED;
     }
-    else if (cellSet.IsSameType(SingleExplicitType()))
+    else if (cellSet.CanConvert<SingleExplicitType>())
     {
-      SingleExplicitType CellSet = cellSet.Cast<SingleExplicitType>();
+      SingleExplicitType CellSet = cellSet.AsCellSet<SingleExplicitType>();
       const auto cellShapes =
         CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
       const auto numIndices =
@@ -230,9 +230,9 @@ public:
                                                   vtkm::TopologyElementTagPoint());
       this->Type = vtkm::exec::CellInterpolationHelper::HelperType::EXPSINGLE;
     }
-    else if (cellSet.IsSameType(ExplicitType()))
+    else if (cellSet.CanConvert<ExplicitType>())
     {
-      vtkm::cont::CellSetExplicit<> CellSet = cellSet.Cast<vtkm::cont::CellSetExplicit<>>();
+      vtkm::cont::CellSetExplicit<> CellSet = cellSet.AsCellSet<vtkm::cont::CellSetExplicit<>>();
       Shape =
         CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
       Offset =

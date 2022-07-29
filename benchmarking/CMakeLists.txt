@@ -71,4 +71,5 @@ endif()
 
 if(TARGET vtkm_rendering)
   add_benchmark(NAME BenchmarkRayTracing FILE BenchmarkRayTracing.cxx LIBS vtkm_rendering vtkm_source)
+  add_benchmark(NAME BenchmarkInSitu FILE BenchmarkInSitu.cxx LIBS vtkm_rendering vtkm_source vtkm_filter vtkm_io)
 endif()

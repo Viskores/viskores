@@ -115,8 +115,15 @@ endif()
 # replace this with setting `cuda_architecture_flags` as part of the
 # EXPORT_PROPERTIES of the vtkm_cuda target
 if(VTKm_ENABLE_CUDA AND VTKM_FROM_INSTALL_DIR)
-  set_target_properties(vtkm::cuda PROPERTIES cuda_architecture_flags "@VTKm_CUDA_Architecture_Flags@")
-  set_target_properties(vtkm::cuda PROPERTIES requires_static_builds TRUE)
+
+  set_target_properties(vtkm::cuda PROPERTIES
+
+    # Canonical way of setting CUDA arch
+    CUDA_ARCHITECTURES      "@CMAKE_CUDA_ARCHITECTURES@"
+
+    # Legacy way of setting CUDA arch
+    cuda_architecture_flags "@VTKm_CUDA_Architecture_Flags@"
+    requires_static_builds TRUE)
 
   # If VTK-m is built with 3.18+ and the consumer is < 3.18 we need to drop
   # these properties as they break the VTK-m cuda flag logic

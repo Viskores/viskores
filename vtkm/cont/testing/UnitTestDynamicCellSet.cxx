@@ -8,6 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/Deprecated.h>
+
+// This is testing a deprecated functionality. Remove this test once VariantArrayHandle
+// is completely removed from VTK-m.
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 #include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -100,7 +106,7 @@ void CheckDynamicCellSet(const CellSetType& cellSet,
 }
 
 template <typename CellSetType, typename CellSetList>
-void TryNewInstance(CellSetType, vtkm::cont::DynamicCellSetBase<CellSetList>& originalCellSet)
+void TryNewInstance(CellSetType, vtkm::cont::DynamicCellSetBase<CellSetList> originalCellSet)
 {
   vtkm::cont::DynamicCellSetBase<CellSetList> newCellSet = originalCellSet.NewInstance();
 
@@ -111,13 +117,19 @@ void TryNewInstance(CellSetType, vtkm::cont::DynamicCellSetBase<CellSetList>& or
 }
 
 template <typename CellSetType, typename CellSetList>
-void TryCellSet(CellSetType cellSet, vtkm::cont::DynamicCellSetBase<CellSetList>& dynamicCellSet)
+void TryCellSet(CellSetType cellSet, vtkm::cont::DynamicCellSetBase<CellSetList> dynamicCellSet)
 {
   CheckDynamicCellSet(cellSet, dynamicCellSet);
 
   CheckDynamicCellSet(cellSet, dynamicCellSet.ResetCellSetList(vtkm::List<CellSetType>()));
 
   TryNewInstance(cellSet, dynamicCellSet);
+}
+
+template <typename CellSetType>
+void TryCellSet(CellSetType cellSet, vtkm::cont::DynamicCellSet dynamicCellSet)
+{
+  TryCellSet(cellSet, dynamicCellSet.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>());
 }
 
 template <typename CellSetType>
@@ -163,3 +175,5 @@ int UnitTestDynamicCellSet(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestDynamicCellSet, argc, argv);
 }
+
+VTKM_DEPRECATED_SUPPRESS_END

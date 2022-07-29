@@ -11,6 +11,17 @@
 #define vtk_m_TypeListTag_h
 
 // Everything in this header file is deprecated and movded to TypeList.h.
+#include <vtkm/Deprecated.h>
+
+struct VTKM_DEPRECATED(1.6, "TypeListTag.h is deprecated. Include TypeList.h and use vtkm::TypeList* instead.")
+VTKmTypeListTagHeaderDeprecationWarning
+{
+};
+
+inline VTKmTypeListTagHeaderDeprecationWarning IssueVTKmTypeListTagHeaderDeprecationWarning()
+{
+  return {};
+}
 
 #ifndef VTKM_DEFAULT_TYPE_LIST_TAG
 #define VTKM_DEFAULT_TYPE_LIST_TAG ::vtkm::internal::TypeListTagDefault

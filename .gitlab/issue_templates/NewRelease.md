@@ -20,6 +20,7 @@ git submodule update --recursive --init
 ```
 ## Create update branch
 
+  - [ ] Create update branch `git checkout -b update-to-v@VERSION@`
 <!-- if @RC@ == "-rc1"
   - [ ] Bring as a second parent the history of master (Solve conflicts always
         taking master's version)
@@ -30,16 +31,17 @@ git submodule update --recursive --init
 
 <!-- Do we have new release notes?
   - [ ] Craft or update [changelog](#generate-change-log)
-        `docs/changelog/@MAJOR@.@MINOR@/release-notes.md` file.
+        `docs/changelog/@VERSION@/release-notes.md` file.
   - [ ] Create release notes commit.
 ```
-git add docs/changelog/@MAJOR@.@MINOR@/release-notes.md
+git add docs/changelog/@VERSION@/release-notes.md
 git rm docs/changelog/*.md
 git commit -m 'Add release notes for @VERSION@@RC@'
 ```
 -->
 
-  - [ ] Update the version and date in the LICENSE.md file.
+  - [ ] Update the version (not in patch releases) and date in the LICENSE.md
+        file.
   - [ ] Create update version commit:
 
 ```
@@ -52,8 +54,7 @@ echo @VERSION@@RC@ > version.txt
 git commit -m '@VERSION@@RC@ is our Nth official release of VTK-m.
 
 The major changes to VTK-m from (previous release) can be found in:
-  docs/changelog/@MAJOR@.@MINOR@/release-notes.md' version.txt
-
+  docs/changelog/@VERSION@/release-notes.md' version.txt'
 ```
 
   - [ ] `git tag -a -m 'VTKm @VERSION@@RC@' v@VERSION@@RC@ HEAD`
@@ -69,9 +70,11 @@ The major changes to VTK-m from (previous release) can be found in:
  - [ ] Update Spack package: https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/vtk-m/package.py
 
 ## Post-release
-  - [ ] Copy the contents of docs/changelog/@MAJOR@.@MINOR@/release-notes.md to
+  - [ ] Copy the contents of docs/changelog/@VERSION@/release-notes.md to
         the GitLab release.
+<!-- if not patch release -->
   - [ ] Tag new version of the [VTK-m User Guide][2].
+<!-- endif -->
   - [ ] Post an [Email Announcements](#email-announcements) VTK-m mailing list.
 
 ---
@@ -79,14 +82,26 @@ The major changes to VTK-m from (previous release) can be found in:
 # Annex 
 
 ## Generate change log
-Construct a `docs/changelog/@MAJOR@.@MINOR@/` folder.
-Construct a `docs/changelog/@MAJOR@.@MINOR@/release-notes.md` file
+Construct a `docs/changelog/@VERSION@/` folder.
+Construct a `docs/changelog/@VERSION@/release-notes.md` file
 
 Use the following template for `release-notes.md`:
 
 ```md
 VTK-m N Release Notes
 =======================
+
+<!-- if is a patch release -->
+
+| Merge request description                                           | Merge request id |
+| ------------------------------------------------------------------- | ---------------- |
+| Update the link to register with the VTK-m dashboard                | !2629            |
+.
+.
+.
+| CMAKE: CUDA ampere generate sm_80/86                                | !2688            |
+
+<!-- else -->
 
 # Table of Contents
 1. [Core](#Core)
@@ -98,7 +113,7 @@ VTK-m N Release Notes
 6. [Build](#Build)
 7. [Other](#Other)
 
-
+<!-- endif -->
 # Core
 
 ## Core change 1 ##
@@ -169,8 +184,17 @@ over 100000 merge requests, and 100000 entries to the changelog .
 
 Below are all the entries in the changelog, with more details at (
 https://gitlab.kitware.com/vtk/vtk-m/-/tags/v@VERSION@) or in the vtkm
-repository at `docs/@MAJOR@.@MINOR@/release-notes.md`
+repository at `docs/@VERSION@/release-notes.md`
 
+<!-- if is a patch release -->
+
+- Update the link to register with the VTK-m dashboard
+.
+.
+.
+- CMAKE: CUDA ampere generate sm_80/86
+
+<!-- else -->
 1. Core
     - Core change 1
 2. ArrayHandle
@@ -179,6 +203,7 @@ repository at `docs/@MAJOR@.@MINOR@/release-notes.md`
 5. Worklets and Filters
 6. Build
 7. Other
+<!-- endif -->
 ```
 
 /cc @ben.boeckel

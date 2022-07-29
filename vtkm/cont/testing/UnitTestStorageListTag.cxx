@@ -9,14 +9,14 @@
 //============================================================================
 
 // This tests deprecated code until it is deleted.
+#include <vtkm/Deprecated.h>
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 #include <vtkm/cont/StorageListTag.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vector>
-
-VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace
 {

@@ -13,7 +13,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/GhostCellClassify.h>
+#include <vtkm/filter/mesh_info/GhostCellClassify.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/EulerIntegrator.h>

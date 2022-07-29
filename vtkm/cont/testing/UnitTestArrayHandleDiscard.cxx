@@ -107,10 +107,18 @@ struct Test
     handle.PrepareForOutput(ARRAY_SIZE, DeviceTag(), token);
   }
 
+  void TestFill()
+  {
+    DiscardHandle array;
+    array.AllocateAndFill(ARRAY_SIZE, ValueType{ 0 });
+    VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE);
+  }
+
   void operator()()
   {
     TestReduceByKey();
     TestPrepareExceptions();
+    TestFill();
   }
 };
 

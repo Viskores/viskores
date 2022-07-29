@@ -26,16 +26,16 @@ namespace rendering
 class VTKM_RENDERING_EXPORT Actor
 {
 public:
-  Actor(const vtkm::cont::DynamicCellSet& cells,
+  Actor(const vtkm::cont::UnknownCellSet& cells,
         const vtkm::cont::CoordinateSystem& coordinates,
         const vtkm::cont::Field& scalarField);
 
-  Actor(const vtkm::cont::DynamicCellSet& cells,
+  Actor(const vtkm::cont::UnknownCellSet& cells,
         const vtkm::cont::CoordinateSystem& coordinates,
         const vtkm::cont::Field& scalarField,
         const vtkm::cont::ColorTable& colorTable);
 
-  Actor(const vtkm::cont::DynamicCellSet& cells,
+  Actor(const vtkm::cont::UnknownCellSet& cells,
         const vtkm::cont::CoordinateSystem& coordinates,
         const vtkm::cont::Field& scalarField,
         const vtkm::rendering::Color& color);
@@ -44,7 +44,7 @@ public:
               vtkm::rendering::Canvas& canvas,
               const vtkm::rendering::Camera& camera) const;
 
-  const vtkm::cont::DynamicCellSet& GetCells() const;
+  const vtkm::cont::UnknownCellSet& GetCells() const;
 
   const vtkm::cont::CoordinateSystem& GetCoordinates() const;
 

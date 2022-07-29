@@ -179,7 +179,7 @@ struct VariantStorageImpl
       -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
-    return detail::VariantCastAndCallImpl(
+    return detail::VariantCastAndCallImpl<sizeof...(Ts)>(
       this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 
@@ -189,7 +189,7 @@ struct VariantStorageImpl
     -> decltype(f(std::declval<TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
-    return detail::VariantCastAndCallImpl(
+    return detail::VariantCastAndCallImpl<sizeof...(Ts)>(
       this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 };
@@ -503,7 +503,7 @@ public:
       -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
-    return detail::VariantCastAndCallImpl(
+    return detail::VariantCastAndCallImpl<sizeof...(Ts)>(
       this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 
@@ -513,7 +513,7 @@ public:
     -> decltype(f(std::declval<TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
-    return detail::VariantCastAndCallImpl(
+    return detail::VariantCastAndCallImpl<sizeof...(Ts)>(
       this->GetIndex(), std::forward<Functor>(f), this->Storage, std::forward<Args>(args)...);
   }
 

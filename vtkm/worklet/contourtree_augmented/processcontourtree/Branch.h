@@ -55,6 +55,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/PiecewiseLinearFunction.h>
 
 #include <cmath>
@@ -116,9 +117,9 @@ public:
 private:
   // Private default constructore to ensure that branch decomposition can only be created from a contour tree or loaded from storate (via static methods)
   Branch()
-    : Extremum((vtkm::Id)NO_SUCH_ELEMENT)
+    : Extremum((vtkm::Id)vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT)
     , ExtremumVal(0)
-    , Saddle((vtkm::Id)NO_SUCH_ELEMENT)
+    , Saddle((vtkm::Id)vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT)
     , SaddleVal(0)
     , Volume(0)
     , Parent(nullptr)

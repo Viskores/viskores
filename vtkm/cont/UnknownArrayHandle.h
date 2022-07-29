@@ -33,27 +33,8 @@ namespace cont
 namespace detail
 {
 
-#ifdef VTKM_GCC
-// On rare occasion, we have seen errors like this:
-//   `_ZN4vtkm4cont6detailL27UnknownAHNumberOfComponentsIxEEiv' referenced in section
-//   `.data.rel.ro.local' of CMakeFiles/UnitTests_vtkm_cont_testing.dir/UnitTestCellSet.cxx.o:
-//   defined in discarded section
-//   `.text._ZN4vtkm4cont6detailL27UnknownAHNumberOfComponentsIxEEiv[_ZN4vtkm4cont14ArrayGetValuesINS0_15StorageTagBasicExNS0_18StorageTagCountingES2_EEvRKNS0_11ArrayHandleIxT_EERKNS4_IT0_T1_EERNS4_IS9_T2_EE]'
-//   of CMakeFiles/UnitTests_vtkm_cont_testing.dir/UnitTestCellSet.cxx.o
-// I don't know what circumstances exactly lead up to this, but it appears that the compiler is
-// being overly aggressive with removing unused symbols. In this instance, it seems to have removed
-// a function actually being used. This might be a bug in the compiler (I happen to have seen it in
-// gcc 8.3, 9.4, and 11.0), or it could be caused by a link-time optimizer. The problem should be
-// able to be solved by explictly saying that this templated method is being used. (I can't think
-// of any circumstances where this template would be instantiated but not used.) If the compiler
-// knows this is being used, it should know all the templated methods internal are also used.
-#define VTKM_FORCE_USED __attribute__((used))
-#else
-#define VTKM_FORCE_USED
-#endif
-
 template <typename T, typename S>
-VTKM_FORCE_USED static void UnknownAHDelete(void* mem)
+void UnknownAHDelete(void* mem)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -61,13 +42,13 @@ VTKM_FORCE_USED static void UnknownAHDelete(void* mem)
 }
 
 template <typename T, typename S>
-VTKM_FORCE_USED static void* UnknownAHNewInstance()
+void* UnknownAHNewInstance()
 {
   return new vtkm::cont::ArrayHandle<T, S>;
 }
 
 template <typename T, typename S>
-VTKM_FORCE_USED static vtkm::Id UnknownAHNumberOfValues(void* mem)
+vtkm::Id UnknownAHNumberOfValues(void* mem)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -88,7 +69,7 @@ struct UnknownAHNumberOfComponentsImpl<T, vtkm::VecTraitsTagSizeVariable>
 };
 
 template <typename T>
-VTKM_FORCE_USED static vtkm::IdComponent UnknownAHNumberOfComponents()
+vtkm::IdComponent UnknownAHNumberOfComponents()
 {
   return UnknownAHNumberOfComponentsImpl<T>::Value;
 }
@@ -107,16 +88,16 @@ struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeVariable>
 };
 
 template <typename T>
-VTKM_FORCE_USED static vtkm::IdComponent UnknownAHNumberOfComponentsFlat()
+vtkm::IdComponent UnknownAHNumberOfComponentsFlat()
 {
   return UnknownAHNumberOfComponentsFlatImpl<T>::Value;
 }
 
 template <typename T, typename S>
-VTKM_FORCE_USED static void UnknownAHAllocate(void* mem,
-                                              vtkm::Id numValues,
-                                              vtkm::CopyFlag preserve,
-                                              vtkm::cont::Token& token)
+void UnknownAHAllocate(void* mem,
+                       vtkm::Id numValues,
+                       vtkm::CopyFlag preserve,
+                       vtkm::cont::Token& token)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -124,7 +105,7 @@ VTKM_FORCE_USED static void UnknownAHAllocate(void* mem,
 }
 
 template <typename T, typename S>
-VTKM_FORCE_USED static void UnknownAHShallowCopy(const void* sourceMem, void* destinationMem)
+void UnknownAHShallowCopy(const void* sourceMem, void* destinationMem)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   const AH* source = reinterpret_cast<const AH*>(sourceMem);
@@ -133,7 +114,16 @@ VTKM_FORCE_USED static void UnknownAHShallowCopy(const void* sourceMem, void* de
 }
 
 template <typename T, typename S>
-VTKM_FORCE_USED static std::vector<vtkm::cont::internal::Buffer>
+void UnknownAHDeepCopy(const void* sourceMem, void* destinationMem)
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  const AH* source = reinterpret_cast<const AH*>(sourceMem);
+  AH* destination = reinterpret_cast<AH*>(destinationMem);
+  destination->DeepCopyFrom(*source);
+}
+
+template <typename T, typename S>
+std::vector<vtkm::cont::internal::Buffer>
 UnknownAHExtractComponent(void* mem, vtkm::IdComponent componentIndex, vtkm::CopyFlag allowCopy)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
@@ -144,7 +134,7 @@ UnknownAHExtractComponent(void* mem, vtkm::IdComponent componentIndex, vtkm::Cop
 }
 
 template <typename T, typename S>
-VTKM_FORCE_USED static void UnknownAHReleaseResources(void* mem)
+void UnknownAHReleaseResources(void* mem)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -152,7 +142,7 @@ VTKM_FORCE_USED static void UnknownAHReleaseResources(void* mem)
 }
 
 template <typename T, typename S>
-VTKM_FORCE_USED static void UnknownAHReleaseResourcesExecution(void* mem)
+void UnknownAHReleaseResourcesExecution(void* mem)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -160,7 +150,7 @@ VTKM_FORCE_USED static void UnknownAHReleaseResourcesExecution(void* mem)
 }
 
 template <typename T, typename S>
-VTKM_FORCE_USED static void UnknownAHPrintSummary(void* mem, std::ostream& out, bool full)
+void UnknownAHPrintSummary(void* mem, std::ostream& out, bool full)
 {
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
@@ -243,6 +233,9 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   using ShallowCopyType = void(const void*, void*);
   ShallowCopyType* ShallowCopy;
 
+  using DeepCopyType = void(const void*, void*);
+  DeepCopyType* DeepCopy;
+
   using ExtractComponentType = std::vector<vtkm::cont::internal::Buffer>(void*,
                                                                          vtkm::IdComponent,
                                                                          vtkm::CopyFlag);
@@ -300,47 +293,42 @@ private:
 };
 
 template <typename T>
-VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(
-  vtkm::VecTraitsTagSizeStatic)
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTagSizeStatic)
 {
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<T>{});
 }
 template <typename T>
-VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(
-  vtkm::VecTraitsTagSizeVariable)
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTagSizeVariable)
 {
   throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
                                  vtkm::cont::TypeToString<T>());
 }
 template <typename T>
-VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic()
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic()
 {
   return UnknownAHNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T>
-VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(
-  vtkm::VecTraitsTagSizeStatic)
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTraitsTagSizeStatic)
 {
   using FloatT = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>;
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<FloatT>{});
 }
 template <typename T>
-VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(
-  vtkm::VecTraitsTagSizeVariable)
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTraitsTagSizeVariable)
 {
   throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
                                  vtkm::cont::TypeToString<T>());
 }
 template <typename T>
-VTKM_FORCE_USED static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
 {
   return UnknownAHNewInstanceFloatBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T, typename S>
-VTKM_FORCE_USED inline UnknownAHContainer::UnknownAHContainer(
-  const vtkm::cont::ArrayHandle<T, S>& array)
+inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array)
   : ArrayHandlePointer(new vtkm::cont::ArrayHandle<T, S>(array))
   , ValueType(typeid(T))
   , StorageType(typeid(S))
@@ -355,6 +343,7 @@ VTKM_FORCE_USED inline UnknownAHContainer::UnknownAHContainer(
   , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T>)
   , Allocate(detail::UnknownAHAllocate<T, S>)
   , ShallowCopy(detail::UnknownAHShallowCopy<T, S>)
+  , DeepCopy(detail::UnknownAHDeepCopy<T, S>)
   , ExtractComponent(detail::UnknownAHExtractComponent<T, S>)
   , ReleaseResources(detail::UnknownAHReleaseResources<T, S>)
   , ReleaseResourcesExecution(detail::UnknownAHReleaseResourcesExecution<T, S>)
@@ -415,15 +404,12 @@ class VTKM_CONT_EXPORT UnknownArrayHandle
 
 public:
   VTKM_CONT UnknownArrayHandle() = default;
-  UnknownArrayHandle(const UnknownArrayHandle&) = default;
 
   template <typename T, typename S>
   VTKM_CONT UnknownArrayHandle(const vtkm::cont::ArrayHandle<T, S>& array)
     : Container(detail::UnknownAHContainer::Make(array))
   {
   }
-
-  UnknownArrayHandle& operator=(const vtkm::cont::UnknownArrayHandle&) = default;
 
   /// \brief Returns whether an array is stored in this `UnknownArrayHandle`.
   ///
@@ -523,7 +509,17 @@ public:
     return this->IsBaseComponentTypeImpl(detail::UnknownAHComponentInfo::Make<BaseComponentType>());
   }
 
-  /// Returns true if this array matches the ArrayHandleType template argument.
+  /// \brief Returns true if this array matches the ArrayHandleType template argument.
+  ///
+  /// Note that `UnknownArrayHandle` has some special handling for `ArrayHandleCast` and
+  /// `ArrayHandleMultiplexer`. If you stored an array of one of these types into an
+  /// `UnknownArrayHandle`, the type of the underlying array will change and `IsType`
+  /// will fail. However, you can still get the array back out as that type using
+  /// `AsArrayHandle`.
+  ///
+  /// Use the `CanConvert` method instead to determine if the `UnknownArrayHandle`
+  /// contains an array that "matches" the array of a given type. Under most
+  /// circumstances, you should prefer `CanConvert` over `IsType`.
   ///
   template <typename ArrayHandleType>
   VTKM_CONT bool IsType() const
@@ -614,7 +610,7 @@ public:
   ///@{
   /// Returns this array cast appropriately and stored in the given `ArrayHandle` type.
   /// Throws an `ErrorBadType` if the stored array cannot be stored in the given array type.
-  /// Use the `IsType` method to determine if the array can be returned with the given type.
+  /// Use the `CanConvert` method to determine if the array can be returned with the given type.
   ///
   template <typename T, typename S>
   VTKM_CONT void AsArrayHandle(vtkm::cont::ArrayHandle<T, S>& array) const
@@ -840,6 +836,22 @@ public:
   template <typename TypeList, typename StorageList, typename Functor, typename... Args>
   VTKM_CONT void CastAndCallForTypes(Functor&& functor, Args&&... args) const;
 
+  /// \brief Call a functor using the underlying array type with a float cast fallback.
+  ///
+  /// `CastAndCallForTypesWithFloatFallback` attempts to cast the held array to a specific
+  /// value type, and then calls the given functor with the cast array. You must specify
+  /// the `TypeList` and `StorageList` as template arguments.
+  ///
+  /// After the functor argument you may add any number of arguments that will be
+  /// passed to the functor after the converted `ArrayHandle`.
+  ///
+  /// If the underlying array does not match any of the requested array types, the
+  /// array is copied to a new `ArrayHandleBasic` with `FloatDefault` components
+  /// in its value and attempts to cast to those types.
+  ///
+  template <typename TypeList, typename StorageList, typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallForTypesWithFloatFallback(Functor&& functor, Args&&... args) const;
+
   /// \brief Call a functor on an array extracted from the components.
   ///
   /// `CastAndCallWithExtractedArray` behaves similarly to `CastAndCallForTypes`.
@@ -959,7 +971,7 @@ VTKM_CONT bool UnknownArrayHandle::CanConvert() const
 namespace detail
 {
 
-struct UnknownArrayHandleMultplexerCastTry
+struct UnknownArrayHandleMultiplexerCastTry
 {
   template <typename T, typename S, typename... Ss>
   VTKM_CONT void operator()(
@@ -995,7 +1007,7 @@ void UnknownArrayHandle::AsArrayHandle(
 {
   bool converted = false;
   vtkm::ListForEach(
-    detail::UnknownArrayHandleMultplexerCastTry{}, vtkm::List<Ss...>{}, *this, array, converted);
+    detail::UnknownArrayHandleMultiplexerCastTry{}, vtkm::List<Ss...>{}, *this, array, converted);
 
   if (!converted)
   {
@@ -1085,6 +1097,38 @@ inline void UnknownArrayHandle::CastAndCallForTypes(Functor&& f, Args&&... args)
   }
 }
 
+template <typename TypeList, typename StorageTagList, typename Functor, typename... Args>
+VTKM_CONT void UnknownArrayHandle::CastAndCallForTypesWithFloatFallback(Functor&& functor,
+                                                                        Args&&... args) const
+{
+  using crossProduct = internal::ListAllArrayTypes<TypeList, StorageTagList>;
+
+  bool called = false;
+  vtkm::ListForEach(detail::UnknownArrayHandleTry{},
+                    crossProduct{},
+                    std::forward<Functor>(functor),
+                    called,
+                    *this,
+                    std::forward<Args>(args)...);
+  if (!called)
+  {
+    // Copy to a float array and try again
+    vtkm::cont::UnknownArrayHandle floatArray = this->NewInstanceFloatBasic();
+    floatArray.DeepCopyFrom(*this);
+    vtkm::ListForEach(detail::UnknownArrayHandleTry{},
+                      crossProduct{},
+                      std::forward<Functor>(functor),
+                      called,
+                      floatArray,
+                      std::forward<Args>(args)...);
+  }
+  if (!called)
+  {
+    // throw an exception
+    VTKM_LOG_CAST_FAIL(*this, TypeList);
+    internal::ThrowCastAndCallException(*this, typeid(TypeList));
+  }
+}
 
 //=============================================================================
 // Free function casting helpers

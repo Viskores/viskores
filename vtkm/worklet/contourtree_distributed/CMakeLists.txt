@@ -11,10 +11,15 @@
 set(headers
   BoundaryTree.h
   BoundaryTreeMaker.h
+  CombineHyperSweepBlockFunctor.h
   ComputeDistributedContourTreeFunctor.h
   ContourTreeBlockData.h
   DistributedContourTreeBlockData.h
+  HierarchicalAugmenter.h
+  HierarchicalAugmenterFunctor.h
   HierarchicalContourTree.h
+  HierarchicalHyperSweeper.h
+  HyperSweepBlock.h
   InteriorForest.h
   MergeBlockFunctor.h
   MultiBlockContourTreeHelper.h
@@ -29,3 +34,5 @@ vtkm_declare_headers(${headers})
 add_subdirectory(boundary_tree_maker)
 add_subdirectory(tree_grafter)
 add_subdirectory(hierarchical_contour_tree)
+add_subdirectory(hierarchical_hyper_sweeper)
+add_subdirectory(hierarchical_augmenter)

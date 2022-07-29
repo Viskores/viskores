@@ -513,7 +513,7 @@ private:
     vtkm::Id subsetWidth = width;
     vtkm::Id subsetHeight = height;
 
-    bool ortho2d = Camera.GetMode() == vtkm::rendering::Camera::MODE_2D;
+    bool ortho2d = Camera.GetMode() == vtkm::rendering::Camera::Mode::TwoD;
     if (ortho2d)
     {
       vtkm::Float32 vl, vr, vb, vt;

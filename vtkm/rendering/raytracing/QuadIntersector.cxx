@@ -353,7 +353,7 @@ public:
 }; //class CalculateNormals
 
 template <typename Precision>
-class GetScalar : public vtkm::worklet::WorkletMapField
+class GetLerpedScalar : public vtkm::worklet::WorkletMapField
 {
 private:
   Precision MinScalar;
@@ -361,8 +361,11 @@ private:
   bool Normalize;
 
 public:
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
+
   VTKM_CONT
-  GetScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
+  GetLerpedScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
     : MinScalar(minScalar)
   {
     Normalize = true;
@@ -379,8 +382,66 @@ public:
       this->InvDeltaScalar = 1.f / (maxScalar - MinScalar);
     }
   }
-  typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  template <typename ScalarPortalType, typename IndicesPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
+                            const Precision& u,
+                            const Precision& v,
+                            Precision& scalar,
+                            const ScalarPortalType& scalars,
+                            const IndicesPortalType& indicesPortal) const
+  {
+    if (hitIndex < 0)
+      return;
+
+    vtkm::Vec<vtkm::Id, 5> pointId = indicesPortal.Get(hitIndex);
+
+    Precision aScalar = Precision(scalars.Get(pointId[1]));
+    Precision bScalar = Precision(scalars.Get(pointId[2]));
+    Precision cScalar = Precision(scalars.Get(pointId[3]));
+    Precision dScalar = Precision(scalars.Get(pointId[4]));
+
+    Precision uP = 1.0f - u;
+    Precision vP = 1.0f - v;
+    scalar = uP * vP * aScalar + u * vP * bScalar + u * v * cScalar + uP * v * dScalar;
+
+    if (Normalize)
+    {
+      scalar = (scalar - MinScalar) * this->InvDeltaScalar;
+    }
+  }
+}; //class GetLerpedScalar
+
+template <typename Precision>
+class GetNodalScalar : public vtkm::worklet::WorkletMapField
+{
+private:
+  Precision MinScalar;
+  Precision InvDeltaScalar;
+  bool Normalize;
+
+public:
+  using ControlSignature = void(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3, _4);
+
+  VTKM_CONT
+  GetNodalScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
+    : MinScalar(minScalar)
+  {
+    Normalize = true;
+    if (minScalar >= maxScalar)
+    {
+      // support the scalar renderer
+      Normalize = false;
+      this->InvDeltaScalar = Precision(0.f);
+    }
+    else
+    {
+      //Make sure the we don't divide by zero on
+      //something like an iso-surface
+      this->InvDeltaScalar = 1.f / (maxScalar - MinScalar);
+    }
+  }
+
   template <typename ScalarPortalType, typename IndicesPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
                             Precision& scalar,
@@ -390,7 +451,6 @@ public:
     if (hitIndex < 0)
       return;
 
-    //TODO: this should be interpolated?
     vtkm::Vec<vtkm::Id, 5> pointId = indicesPortal.Get(hitIndex);
 
     scalar = Precision(scalars.Get(pointId[0]));
@@ -399,7 +459,7 @@ public:
       scalar = (scalar - MinScalar) * this->InvDeltaScalar;
     }
   }
-}; //class GetScalar
+}; //class GetNodalScalar
 
 } // namespace detail
 
@@ -450,12 +510,28 @@ void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
   vtkm::worklet::DispatcherMapField<detail::CalculateNormals>(detail::CalculateNormals())
     .Invoke(rays.HitIdx, rays.Dir, rays.NormalX, rays.NormalY, rays.NormalZ, CoordsHandle, QuadIds);
 
-  vtkm::worklet::DispatcherMapField<detail::GetScalar<Precision>>(
-    detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-    .Invoke(rays.HitIdx,
-            rays.Scalar,
-            vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
-            QuadIds);
+  if (scalarField.IsFieldPoint())
+  {
+    vtkm::worklet::DispatcherMapField<detail::GetLerpedScalar<Precision>>(
+      detail::GetLerpedScalar<Precision>(vtkm::Float32(scalarRange.Min),
+                                         vtkm::Float32(scalarRange.Max)))
+      .Invoke(rays.HitIdx,
+              rays.U,
+              rays.V,
+              rays.Scalar,
+              vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
+              QuadIds);
+  }
+  else
+  {
+    vtkm::worklet::DispatcherMapField<detail::GetNodalScalar<Precision>>(
+      detail::GetNodalScalar<Precision>(vtkm::Float32(scalarRange.Min),
+                                        vtkm::Float32(scalarRange.Max)))
+      .Invoke(rays.HitIdx,
+              rays.Scalar,
+              vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
+              QuadIds);
+  }
 }
 
 void QuadIntersector::IntersectionData(Ray<vtkm::Float32>& rays,

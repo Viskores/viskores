@@ -146,6 +146,16 @@ public:
     return SourceStorage::GetNumberOfValues(buffers);
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const T& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token)
+  {
+    vtkm::Id numValues = GetNumberOfValues(buffers);
+    SourceStorage::Fill(buffers, fillValue, numValues - endIndex, numValues - startIndex, token);
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
@@ -207,8 +217,11 @@ VTKM_CONT ArrayHandleReverse<HandleType> make_ArrayHandleReverse(const HandleTyp
 namespace internal
 {
 
+// Superclass will inherit the ArrayExtractComponentImplInefficient property if
+// the sub-storage is inefficient (thus making everything inefficient).
 template <typename StorageTag>
 struct ArrayExtractComponentImpl<vtkm::cont::StorageTagReverse<StorageTag>>
+  : vtkm::cont::internal::ArrayExtractComponentImpl<StorageTag>
 {
   template <typename T>
   using StrideArrayType =

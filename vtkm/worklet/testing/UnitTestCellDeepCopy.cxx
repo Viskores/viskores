@@ -25,7 +25,7 @@ vtkm::cont::CellSetExplicit<> CreateCellSet()
   vtkm::cont::testing::MakeTestDataSet makeData;
   vtkm::cont::DataSet data = makeData.Make3DExplicitDataSet0();
   vtkm::cont::CellSetExplicit<> cellSet;
-  data.GetCellSet().CopyTo(cellSet);
+  data.GetCellSet().AsCellSet(cellSet);
   return cellSet;
 }
 

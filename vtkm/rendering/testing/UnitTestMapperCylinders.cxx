@@ -23,46 +23,41 @@ namespace
 
 void RenderTests()
 {
-  typedef vtkm::rendering::MapperCylinder M;
-  typedef vtkm::rendering::CanvasRayTracer C;
-  typedef vtkm::rendering::View3D V3;
-  typedef vtkm::rendering::View2D V2;
-
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::cont::ColorTable colorTable("inferno");
 
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "rt_reg3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rt_rect3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "rt_expl3D.pnm");
+  vtkm::rendering::testing::RenderTestOptions options;
+  options.Mapper = vtkm::rendering::testing::MapperType::Cylinder;
+  options.AllowAnyDevice = false;
+  options.ColorTable = vtkm::cont::ColorTable::Preset::Inferno;
 
-  vtkm::rendering::testing::Render<M, C, V2>(
-    maker.Make2DUniformDataSet1(), "pointvar", colorTable, "uni2D.pnm");
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DRegularDataSet0(), "pointvar", "rendering/cylinder/regular3D.png", options);
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DRectilinearDataSet0(), "pointvar", "rendering/cylinder/rectilinear3D.png", options);
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DExplicitDataSet4(), "pointvar", "rendering/cylinder/explicit-hex.png", options);
 
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet8(), "cellvar", colorTable, "cylinder.pnm");
+  options.ViewDimension = 2;
+  vtkm::rendering::testing::RenderTest(
+    maker.Make2DUniformDataSet1(), "pointvar", "rendering/cylinder/uniform2D.png", options);
+
+  options.ViewDimension = 3;
+  options.CameraAzimuth = 0;
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DExplicitDataSet8(), "cellvar", "rendering/cylinder/explicit-lines.png", options);
 
   //hexahedron, wedge, pyramid, tetrahedron
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet5(), "cellvar", colorTable, "rt_hex3d.pnm");
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DExplicitDataSet5(), "cellvar", "rendering/cylinder/explicit-zoo.png", options);
 
-  M mapper;
+  options.CylinderRadius = 0.1f;
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DExplicitDataSet8(), "cellvar", "rendering/cylinder/static-radius.png", options);
 
-  mapper.SetRadius(0.1f);
-  vtkm::rendering::testing::Render<M, C, V3>(
-    mapper, maker.Make3DExplicitDataSet8(), "cellvar", colorTable, "cyl_static_radius.pnm");
-
-  mapper.UseVariableRadius(true);
-  mapper.SetRadiusDelta(2.0f);
-  vtkm::rendering::testing::Render<M, C, V3>(
-    mapper, maker.Make3DExplicitDataSet8(), "cellvar", colorTable, "cyl_var_radius.pnm");
-
-  //test to make sure can reset
-  mapper.UseVariableRadius(false);
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet8(), "cellvar", colorTable, "cylinder2.pnm");
+  options.CylinderUseVariableRadius = true;
+  options.CylinderRadius = 2.0f;
+  vtkm::rendering::testing::RenderTest(
+    maker.Make3DExplicitDataSet8(), "cellvar", "rendering/cylinder/variable-radius.png", options);
 }
 
 } //namespace

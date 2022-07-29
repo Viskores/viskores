@@ -53,14 +53,16 @@ foreach(option IN LISTS options)
   elseif(no_rendering STREQUAL option)
     set(VTKm_ENABLE_RENDERING "OFF" CACHE STRING "")
 
-  elseif(no_virtual STREQUAL option)
-    set(VTKm_NO_DEPRECATED_VIRTUAL "ON" CACHE STRING "")
+  elseif(use_virtuals STREQUAL option)
+    set(VTKm_NO_DEPRECATED_VIRTUAL "OFF" CACHE STRING "")
 
   elseif(no_testing STREQUAL option)
-    set(VTKm_ENABLE_TESTING OFF CACHE BOOL "")
+    set(VTKm_ENABLE_TESTING "OFF" CACHE STRING "")
+    set(VTKm_ENABLE_TESTING_LIBRARY "OFF" CACHE STRING "")
 
   elseif(examples STREQUAL option)
     set(VTKm_ENABLE_EXAMPLES "ON" CACHE STRING "")
+    set(VTKm_INSTALL_EXAMPLES "ON" CACHE STRING "")
 
   elseif(docs STREQUAL option)
     set(VTKm_ENABLE_DOCUMENTATION "ON" CACHE STRING "")
@@ -96,8 +98,10 @@ foreach(option IN LISTS options)
   elseif(volta STREQUAL option)
     set(VTKm_CUDA_Architecture "volta" CACHE STRING "")
 
+  # From turing we set the architecture using the cannonical
+  # CMAKE_CUDA_ARCHITECTURES
   elseif(turing STREQUAL option)
-    set(VTKm_CUDA_Architecture "turing" CACHE STRING "")
+    set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING "")
 
   elseif(hip STREQUAL option)
     if(CMAKE_VERSION VERSION_LESS_EQUAL 3.20)
@@ -108,9 +112,44 @@ foreach(option IN LISTS options)
     set(CMAKE_CXX_COMPILER "/opt/rocm/llvm/bin/clang++" CACHE FILEPATH "")
     set(VTKm_ENABLE_KOKKOS_HIP ON CACHE STRING "")
     set(CMAKE_HIP_ARCHITECTURES "gfx900" CACHE STRING "")
+
+  elseif(ascent STREQUAL option)
+    set(CMAKE_C_FLAGS "-mcpu=power9" CACHE STRING "")
+    set(CMAKE_CXX_FLAGS "-mcpu=power9" CACHE STRING "")
+
+  elseif(ccache STREQUAL option)
+    find_program(CCACHE_COMMAND NAMES ccache REQUIRED)
+
+    set(CCACHE_VERSION "NotFound")
+    execute_process(
+      COMMAND ${CCACHE_COMMAND} "--version"
+      OUTPUT_VARIABLE CCACHE_VERSION
+      ECHO_ERROR_VARIABLE
+      )
+
+    string(REGEX REPLACE "\n" " " CCACHE_VERSION ${CCACHE_VERSION})
+    string(REGEX REPLACE "^.*ccache version ([.0-9]*).*$" "\\1"
+      CCACHE_VERSION ${CCACHE_VERSION})
+
+    # We need a recent version of ccache in order to ignore -isystem while
+    # hashing keys for the building cache.
+    if(${CCACHE_VERSION} VERSION_GREATER_EQUAL 4)
+      set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_COMMAND}" CACHE STRING "")
+      set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_COMMAND}" CACHE STRING "")
+
+      if(VTKm_ENABLE_CUDA)
+        set(CMAKE_CUDA_COMPILER_LAUNCHER "${CCACHE_COMMAND}" CACHE STRING "")
+      endif()
+    else()
+      message(FATAL_ERROR "CCACHE version [${CCACHE_VERSION}] is <= 4")
+    endif()
   endif()
 
 endforeach()
+
+# Compile tutorials on all builders. The code is small and basic. And since
+# it is the tutorial, it should work really well.
+set(VTKm_ENABLE_TUTORIALS "ON" CACHE STRING "")
 
 set(CTEST_USE_LAUNCHERS "ON" CACHE STRING "")
 
@@ -128,7 +167,7 @@ if(SCCACHE_COMMAND)
 
   # Use VTKm_CUDA_Architecture to determine if we need CUDA sccache setup
   # since this will also capture when kokkos is being used with CUDA backing
-  if(DEFINED VTKm_CUDA_Architecture)
+  if(DEFINED VTKm_CUDA_Architecture OR DEFINED CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
   endif()
 endif()

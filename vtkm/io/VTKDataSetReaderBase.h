@@ -64,7 +64,7 @@ struct StreamIOType<vtkm::UInt8>
   using Type = vtkm::UInt16;
 };
 
-inline vtkm::cont::DynamicCellSet CreateCellSetStructured(const vtkm::Id3& dim)
+inline vtkm::cont::UnknownCellSet CreateCellSetStructured(const vtkm::Id3& dim)
 {
   if (dim[0] > 1 && dim[1] > 1 && dim[2] > 1)
   {

@@ -103,7 +103,7 @@ void TestMapWorklet()
   vtkm::cont::DataSet data = builder.Make3DUniformDataSet1();
 
   vtkm::cont::CellSetStructured<3> cellSet =
-    data.GetCellSet().Cast<vtkm::cont::CellSetStructured<3>>();
+    data.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<3>>();
   vtkm::Id numPoints = cellSet.GetNumberOfPoints();
 
   vtkm::cont::ArrayHandle<FieldType> inField;

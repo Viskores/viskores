@@ -170,6 +170,20 @@ struct MultiplexerResizeBuffersFunctor
   }
 };
 
+struct MultiplexerFillFunctor
+{
+  template <typename ValueType, typename StorageType>
+  VTKM_CONT void operator()(StorageType,
+                            vtkm::cont::internal::Buffer* buffers,
+                            const ValueType& fillValue,
+                            vtkm::Id startIndex,
+                            vtkm::Id endIndex,
+                            vtkm::cont::Token& token) const
+  {
+    StorageType::Fill(buffers, fillValue, startIndex, endIndex, token);
+  }
+};
+
 template <typename ReadPortalType>
 struct MultiplexerCreateReadPortalFunctor
 {
@@ -256,6 +270,20 @@ public:
       detail::MultiplexerResizeBuffersFunctor{}, numValues, ArrayBuffers(buffers), preserve, token);
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const ValueType& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token)
+  {
+    Variant(buffers).CastAndCall(detail::MultiplexerFillFunctor{},
+                                 ArrayBuffers(buffers),
+                                 fillValue,
+                                 startIndex,
+                                 endIndex,
+                                 token);
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
@@ -317,8 +345,7 @@ namespace detail
 template <typename... ArrayHandleTypes>
 struct ArrayHandleMultiplexerTraits
 {
-  using ArrayHandleType0 =
-    brigand::at<brigand::list<ArrayHandleTypes...>, std::integral_constant<vtkm::IdComponent, 0>>;
+  using ArrayHandleType0 = vtkm::ListAt<vtkm::List<ArrayHandleTypes...>, 0>;
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType0);
   using ValueType = typename ArrayHandleType0::ValueType;
 
@@ -332,7 +359,7 @@ struct ArrayHandleMultiplexerTraits
     VTKM_IS_ARRAY_HANDLE(ArrayHandle);
     VTKM_STATIC_ASSERT((std::is_same<ValueType, typename ArrayHandle::ValueType>::value));
   };
-  using CheckArrayHandle = brigand::list<CheckArrayHandleTransform<ArrayHandleTypes>...>;
+  using CheckArrayHandle = vtkm::List<CheckArrayHandleTransform<ArrayHandleTypes>...>;
 
   // Note that this group of code could be simplified as the pair of lines:
   //   template <typename ArrayHandle>

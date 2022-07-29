@@ -15,7 +15,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 
-#include <vtkm/filter/vtkm_filter_common_export.h>
+#include <vtkm/filter/vtkm_filter_core_export.h>
 
 namespace vtkm
 {
@@ -43,7 +43,7 @@ namespace filter
 /// size of the array), then the resulting outputField will be given `invalidValue` (converted as
 /// best as possible to the correct data type).
 ///
-VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldPermutation(
+VTKM_FILTER_CORE_EXPORT VTKM_CONT bool MapFieldPermutation(
   const vtkm::cont::Field& inputField,
   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
   vtkm::cont::Field& outputField,
@@ -71,7 +71,7 @@ VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldPermutation(
 /// size of the array), then the resulting outputField will be given `invalidValue` (converted as
 /// best as possible to the correct data type).
 ///
-VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldPermutation(
+VTKM_FILTER_CORE_EXPORT VTKM_CONT bool MapFieldPermutation(
   const vtkm::cont::Field& inputField,
   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
   vtkm::cont::DataSet& outputData,

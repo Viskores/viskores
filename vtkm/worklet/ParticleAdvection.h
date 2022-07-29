@@ -32,11 +32,12 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
+  template <typename ParticleType>
   VTKM_EXEC void operator()(const vtkm::Vec3f& pt,
                             const vtkm::Id& id,
                             const vtkm::FloatDefault& time,
                             const vtkm::Id& step,
-                            vtkm::Particle& particle) const
+                            ParticleType& particle) const
   {
     particle.Pos = pt;
     particle.ID = id;

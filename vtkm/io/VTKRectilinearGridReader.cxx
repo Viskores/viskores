@@ -59,7 +59,7 @@ void VTKRectilinearGridReader::Read()
   // In binary mode, we must read the data as they are stored in the file.
   // In text mode we can parse as FloatDefault no matter the precision of the storage.
   X = this->DoReadArrayVariant(
-    vtkm::cont::Field::Association::ANY, fileStorageDataType, numPoints[0], 1);
+    vtkm::cont::Field::Association::Any, fileStorageDataType, numPoints[0], 1);
 
 
   this->DataFile->Stream >> tag >> numPoints[1] >> fileStorageDataType >> std::ws;
@@ -67,14 +67,14 @@ void VTKRectilinearGridReader::Read()
     throw vtkm::io::ErrorIO("Y_COORDINATES tag not found");
 
   Y = this->DoReadArrayVariant(
-    vtkm::cont::Field::Association::ANY, fileStorageDataType, numPoints[1], 1);
+    vtkm::cont::Field::Association::Any, fileStorageDataType, numPoints[1], 1);
 
   this->DataFile->Stream >> tag >> numPoints[2] >> fileStorageDataType >> std::ws;
   if (tag != "Z_COORDINATES")
     throw vtkm::io::ErrorIO("Z_COORDINATES tag not found");
 
   Z = this->DoReadArrayVariant(
-    vtkm::cont::Field::Association::ANY, fileStorageDataType, numPoints[2], 1);
+    vtkm::cont::Field::Association::Any, fileStorageDataType, numPoints[2], 1);
 
 
   if (dim !=

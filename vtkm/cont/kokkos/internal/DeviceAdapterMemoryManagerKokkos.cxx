@@ -34,7 +34,14 @@ void KokkosReallocate(void*& memory,
   VTKM_ASSERT(memory == container);
   if (newSize > oldSize)
   {
-    memory = container = vtkm::cont::kokkos::internal::Reallocate(container, newSize);
+    if (oldSize == 0)
+    {
+      memory = container = vtkm::cont::kokkos::internal::Allocate(newSize);
+    }
+    else
+    {
+      memory = container = vtkm::cont::kokkos::internal::Reallocate(container, newSize);
+    }
   }
 }
 }

@@ -49,7 +49,7 @@ void BenchRayTracing(::benchmark::State& state)
   vtkm::Bounds bounds = dataset.GetCoordinateSystem().GetBounds();
   camera.ResetToBounds(bounds);
 
-  vtkm::cont::DynamicCellSet cellset = dataset.GetCellSet();
+  vtkm::cont::UnknownCellSet cellset = dataset.GetCellSet();
 
   vtkm::rendering::raytracing::TriangleExtractor triExtractor;
   triExtractor.ExtractCells(cellset);

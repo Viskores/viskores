@@ -21,11 +21,13 @@ namespace filter
 
 /// Takes as input a vector field and seed locations and generates the
 /// paths taken by the seeds through the vector field.
-class Streamline : public vtkm::filter::FilterParticleAdvection<Streamline>
+template <typename ParticleType = vtkm::Particle>
+class StreamlineBase
+  : public vtkm::filter::FilterParticleAdvection<StreamlineBase<ParticleType>, ParticleType>
 {
 public:
   VTKM_CONT
-  Streamline();
+  StreamlineBase();
 
   template <typename DerivedPolicy>
   vtkm::cont::PartitionedDataSet PrepareForExecution(
@@ -34,6 +36,8 @@ public:
 
 private:
 };
+
+using Streamline = StreamlineBase<vtkm::Particle>;
 }
 } // namespace vtkm::filter
 

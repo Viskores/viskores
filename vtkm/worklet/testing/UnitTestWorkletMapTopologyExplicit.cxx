@@ -11,8 +11,8 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/worklet/CellAverage.h>
-#include <vtkm/worklet/PointAverage.h>
+#include <vtkm/filter/field_conversion/worklet/CellAverage.h>
+#include <vtkm/filter/field_conversion/worklet/PointAverage.h>
 
 #include <vtkm/Math.h>
 
@@ -82,7 +82,7 @@ static void TestMaxPointOrCell()
   std::cout << "Testing MaxPointOfCell worklet" << std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
-  auto cellset = dataSet.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
+  auto cellset = dataSet.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 

@@ -11,6 +11,7 @@
 #define vtk_m_rendering_ConnectivityProxy_h
 
 #include <memory>
+#include <vtkm/Deprecated.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/Mapper.h>
@@ -31,17 +32,23 @@ class VTKM_RENDERING_EXPORT ConnectivityProxy
 {
 public:
   ConnectivityProxy(vtkm::cont::DataSet& dataset);
-  ConnectivityProxy(const vtkm::cont::DynamicCellSet& cellset,
+  ConnectivityProxy(const vtkm::cont::UnknownCellSet& cellset,
                     const vtkm::cont::CoordinateSystem& coords,
                     const vtkm::cont::Field& scalarField);
   // Do not allow the default constructor
   ConnectivityProxy() = delete;
   ~ConnectivityProxy();
-  enum RenderMode
+  enum struct RenderMode
   {
-    VOLUME_MODE,
-    ENERGY_MODE
+    Volume,
+    Energy,
+    VOLUME_MODE VTKM_DEPRECATED(1.8, "Use Volume.") = Volume,
+    ENERGY_MODE VTKM_DEPRECATED(1.8, "Use Energy.") = Energy
   };
+  VTKM_DEPRECATED(1.8, "Use ConnectivityProxy::RenderMode::Volume")
+  static constexpr RenderMode VOLUME_MODE = RenderMode::Volume;
+  VTKM_DEPRECATED(1.8, "Use ConnectivityProxy::RenderMode::Energy")
+  static constexpr RenderMode ENERGY_MODE = RenderMode::Energy;
 
   void SetRenderMode(RenderMode mode);
   void SetSampleDistance(const vtkm::Float32&);

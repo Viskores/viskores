@@ -60,7 +60,7 @@ void TestStreamSurface()
   vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
   VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 84, "Wrong number of coordinates");
 
-  vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
+  vtkm::cont::UnknownCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 120, "Wrong number of cells");
 }
 }

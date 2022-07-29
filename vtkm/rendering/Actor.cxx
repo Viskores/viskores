@@ -12,6 +12,7 @@
 
 #include <vtkm/Assert.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace vtkm
 {
@@ -20,7 +21,7 @@ namespace rendering
 
 struct Actor::InternalsType
 {
-  vtkm::cont::DynamicCellSet Cells;
+  vtkm::cont::UnknownCellSet Cells;
   vtkm::cont::CoordinateSystem Coordinates;
   vtkm::cont::Field ScalarField;
   vtkm::cont::ColorTable ColorTable;
@@ -29,7 +30,7 @@ struct Actor::InternalsType
   vtkm::Bounds SpatialBounds;
 
   VTKM_CONT
-  InternalsType(const vtkm::cont::DynamicCellSet& cells,
+  InternalsType(const vtkm::cont::UnknownCellSet& cells,
                 const vtkm::cont::CoordinateSystem& coordinates,
                 const vtkm::cont::Field& scalarField,
                 const vtkm::rendering::Color& color)
@@ -41,7 +42,7 @@ struct Actor::InternalsType
   }
 
   VTKM_CONT
-  InternalsType(const vtkm::cont::DynamicCellSet& cells,
+  InternalsType(const vtkm::cont::UnknownCellSet& cells,
                 const vtkm::cont::CoordinateSystem& coordinates,
                 const vtkm::cont::Field& scalarField,
                 const vtkm::cont::ColorTable& colorTable = vtkm::cont::ColorTable::Preset::Default)
@@ -53,7 +54,7 @@ struct Actor::InternalsType
   }
 };
 
-Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
+Actor::Actor(const vtkm::cont::UnknownCellSet& cells,
              const vtkm::cont::CoordinateSystem& coordinates,
              const vtkm::cont::Field& scalarField)
   : Internals(new InternalsType(cells, coordinates, scalarField))
@@ -61,7 +62,7 @@ Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
   this->Init(coordinates, scalarField);
 }
 
-Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
+Actor::Actor(const vtkm::cont::UnknownCellSet& cells,
              const vtkm::cont::CoordinateSystem& coordinates,
              const vtkm::cont::Field& scalarField,
              const vtkm::rendering::Color& color)
@@ -70,7 +71,7 @@ Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
   this->Init(coordinates, scalarField);
 }
 
-Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
+Actor::Actor(const vtkm::cont::UnknownCellSet& cells,
              const vtkm::cont::CoordinateSystem& coordinates,
              const vtkm::cont::Field& scalarField,
              const vtkm::cont::ColorTable& colorTable)
@@ -82,8 +83,6 @@ Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
 void Actor::Init(const vtkm::cont::CoordinateSystem& coordinates,
                  const vtkm::cont::Field& scalarField)
 {
-  VTKM_ASSERT(scalarField.GetData().GetNumberOfComponentsFlat() == 1);
-
   scalarField.GetRange(&this->Internals->ScalarRange);
   this->Internals->SpatialBounds = coordinates.GetBounds();
 }
@@ -102,7 +101,7 @@ void Actor::Render(vtkm::rendering::Mapper& mapper,
                      this->Internals->ScalarRange);
 }
 
-const vtkm::cont::DynamicCellSet& Actor::GetCells() const
+const vtkm::cont::UnknownCellSet& Actor::GetCells() const
 {
   return this->Internals->Cells;
 }

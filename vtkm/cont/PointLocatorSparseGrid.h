@@ -10,12 +10,6 @@
 #ifndef vtk_m_cont_PointLocatorSparseGrid_h
 #define vtk_m_cont_PointLocatorSparseGrid_h
 
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
-
 #include <vtkm/cont/internal/PointLocatorBase.h>
 #include <vtkm/exec/PointLocatorSparseGrid.h>
 

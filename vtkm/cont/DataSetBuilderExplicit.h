@@ -10,7 +10,6 @@
 #ifndef vtk_m_cont_DataSetBuilderExplicit_h
 #define vtk_m_cont_DataSetBuilderExplicit_h
 
-#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>

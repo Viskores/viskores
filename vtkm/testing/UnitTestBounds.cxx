@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <vtkm/Bounds.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/testing/Testing.h>
 
@@ -130,6 +131,23 @@ void TestBounds()
   VTKM_TEST_ASSERT(unionBounds.Contains(Vec3(4)), "Contains fail");
   VTKM_TEST_ASSERT(unionBounds.Contains(Vec3(17, 3, 7)), "Contains fail");
   VTKM_TEST_ASSERT(unionBounds.Contains(Vec3(25)), "Contains fail");
+
+  std::cout << "Try VecTraits." << std::endl;
+  using VTraits = vtkm::VecTraits<vtkm::Bounds>;
+  VTKM_TEST_ASSERT(VTraits::NUM_COMPONENTS == 3);
+  vtkm::Bounds simpleBounds{ { 0.0, 1.0 }, { 2.0, 4.0 }, { 8.0, 16.0 } };
+  VTKM_TEST_ASSERT(VTraits::GetNumberOfComponents(simpleBounds) == 3);
+  VTKM_TEST_ASSERT(VTraits::GetComponent(simpleBounds, 0) == vtkm::Range{ 0.0, 1.0 });
+  VTKM_TEST_ASSERT(VTraits::GetComponent(simpleBounds, 1) == vtkm::Range{ 2.0, 4.0 });
+  VTKM_TEST_ASSERT(VTraits::GetComponent(simpleBounds, 2) == vtkm::Range{ 8.0, 16.0 });
+  vtkm::Vec<vtkm::Range, 3> simpleBoundsCopy;
+  VTraits::CopyInto(simpleBounds, simpleBoundsCopy);
+  VTKM_TEST_ASSERT(simpleBoundsCopy == vtkm::Vec<vtkm::Range, 3>{ { 0, 1 }, { 2, 4 }, { 8, 16 } });
+  VTraits::SetComponent(simpleBounds, 0, { 8.0, 16.0 });
+  VTraits::SetComponent(simpleBounds, 2, { 2.0, 4.0 });
+  VTraits::SetComponent(simpleBounds, 1, { 0.0, 1.0 });
+  VTKM_TEST_ASSERT(!simpleBounds.Contains(vtkm::Vec3f_64{ 0.5, 3.0, 12.0 }));
+  VTKM_TEST_ASSERT(simpleBounds.Contains(vtkm::Vec3f_64{ 12.0, 0.5, 3.0 }));
 }
 
 } // anonymous namespace

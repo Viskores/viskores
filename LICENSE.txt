@@ -1,4 +1,4 @@
-VTKm License Version 1.7
+VTKm License Version 1.8
 ========================================================================
 
 Copyright (c) 2014-2022
@@ -54,6 +54,5 @@ vtkm/cont/tbb/internal/parallel_sort.h
 vtkm/cont/tbb/internal/parallel_radix_sort_tbb.h
 vtkm/cont/tbb/internal/kxsort.h
 vtkm/thirdparty
-vtkm/internal/brigand.hpp
 version.txt
 .gitlab/cmake

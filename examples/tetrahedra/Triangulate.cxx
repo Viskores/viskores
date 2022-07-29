@@ -12,7 +12,7 @@
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
-#include <vtkm/filter/Triangulate.h>
+#include <vtkm/filter/geometry_refinement/Triangulate.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
   vtkm::io::VTKDataSetReader reader(infilename);
   vtkm::cont::DataSet input = reader.ReadDataSet();
 
-  vtkm::filter::Triangulate triangulateFilter;
+  vtkm::filter::geometry_refinement::Triangulate triangulateFilter;
   vtkm::cont::DataSet output = triangulateFilter.Execute(input);
 
   vtkm::io::VTKDataSetWriter writer(outfilename);

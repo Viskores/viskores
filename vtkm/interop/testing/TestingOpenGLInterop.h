@@ -12,8 +12,8 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/filter/vector_analysis/worklet/Magnitude.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/Magnitude.h>
 
 #include <vtkm/interop/TransferToOpenGL.h>
 

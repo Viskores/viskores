@@ -129,6 +129,15 @@ public:
     return SourceStorage::GetNumberOfValues(SourceBuffers(buffers));
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+                             const ValueType&,
+                             vtkm::Id,
+                             vtkm::Id,
+                             vtkm::cont::Token&)
+  {
+    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleExtractComponent.");
+  }
+
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
                                       vtkm::cont::internal::Buffer* buffers,
                                       vtkm::CopyFlag preserve,

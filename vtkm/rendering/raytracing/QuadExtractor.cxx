@@ -199,7 +199,7 @@ public:
 
 } //namespace detail
 
-void QuadExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells)
+void QuadExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells)
 {
   vtkm::Id numOfQuads;
   vtkm::rendering::Quadralizer quadrizer;
@@ -209,7 +209,7 @@ void QuadExtractor::ExtractCells(const vtkm::cont::DynamicCellSet& cells)
 }
 
 
-void QuadExtractor::SetQuadIdsFromCells(const vtkm::cont::DynamicCellSet& cells)
+void QuadExtractor::SetQuadIdsFromCells(const vtkm::cont::UnknownCellSet& cells)
 {
   vtkm::Id numCells = cells.GetNumberOfCells();
   if (numCells == 0)
@@ -219,9 +219,9 @@ void QuadExtractor::SetQuadIdsFromCells(const vtkm::cont::DynamicCellSet& cells)
   //
   // look for points in the cell set
   //
-  if (cells.IsSameType(vtkm::cont::CellSetExplicit<>()))
+  if (cells.CanConvert<vtkm::cont::CellSetExplicit<>>())
   {
-    auto cellsExplicit = cells.Cast<vtkm::cont::CellSetExplicit<>>();
+    auto cellsExplicit = cells.AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
     vtkm::cont::ArrayHandle<vtkm::Id> points;
     vtkm::worklet::DispatcherMapTopology<detail::CountQuads>(detail::CountQuads())

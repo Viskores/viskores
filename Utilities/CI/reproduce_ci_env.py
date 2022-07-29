@@ -200,9 +200,9 @@ def create_container(ci_file_path, *args):
   script_search_locations = [ci_state, subset, runner]
   for loc in script_search_locations:
     if 'before_script' in loc:
-      before_script = loc['before_script']
+      before_script = [command.strip() for command in loc['before_script']]
     if 'script' in loc:
-      script = loc['script']
+      script = [command.strip() for command in loc['script']]
 
   docker_template = string.Template('''
 FROM $image
@@ -223,10 +223,10 @@ RUN echo "$before_script" >> /setup-gitlab-env.sh && \
                     job_name='local-build'+runner_name,
                     src_dir=src_dir,
                     gitlab_env= " ".join(gitlab_env),
-                    before_script="\n".join(before_script)
-                                              .replace('\n', '\\n\\\n')
+                    before_script=" && ".join(before_script)
+                                              .replace('\n', ' && ')
                                               .replace('"', '\\"'),
-                    script="\n".join(script).replace('\n', '\\n\\\n')
+                    script=" && ".join(script).replace('\n', ' && ')
                                               .replace('"', '\\"'))
 
   # Write out the file

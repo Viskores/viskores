@@ -294,7 +294,7 @@ void CallPostExecute(Derived* self,
 template <typename Derived>
 inline VTKM_CONT Filter<Derived>::Filter()
   : Invoke()
-  , FieldsToPass(vtkm::filter::FieldSelection::MODE_ALL)
+  , FieldsToPass(vtkm::filter::FieldSelection::Mode::All)
 {
 }
 

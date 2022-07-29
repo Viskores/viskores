@@ -85,16 +85,16 @@ void Field::PrintSummary(std::ostream& out) const
   out << " assoc= ";
   switch (this->GetAssociation())
   {
-    case Association::ANY:
+    case Association::Any:
       out << "Any ";
       break;
-    case Association::WHOLE_MESH:
+    case Association::WholeMesh:
       out << "Mesh ";
       break;
-    case Association::POINTS:
+    case Association::Points:
       out << "Points ";
       break;
-    case Association::CELL_SET:
+    case Association::Cells:
       out << "Cells ";
       break;
   }

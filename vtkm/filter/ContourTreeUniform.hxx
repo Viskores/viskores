@@ -90,7 +90,7 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   // Collect sizing information from the dataset
   const auto& dynamicCellSet = input.GetCellSet();
   vtkm::cont::CellSetStructured<2> cellSet;
-  dynamicCellSet.CopyTo(cellSet);
+  dynamicCellSet.AsCellSet(cellSet);
 
   vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
   vtkm::Id nRows = pointDimensions[0];
@@ -125,7 +125,7 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
 
   // Collect sizing information from the dataset
   vtkm::cont::CellSetStructured<3> cellSet;
-  input.GetCellSet().CopyTo(cellSet);
+  input.GetCellSet().AsCellSet(cellSet);
 
   vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
   vtkm::Id nRows = pointDimensions[0];

@@ -27,13 +27,14 @@ namespace
 
 void RenderTests()
 {
-  using M = vtkm::rendering::MapperVolume;
-  using C = vtkm::rendering::CanvasRayTracer;
-  using V3 = vtkm::rendering::View3D;
-
-  vtkm::cont::ColorTable colorTable("inferno");
+  vtkm::cont::ColorTable colorTable = vtkm::cont::ColorTable::Preset::Inferno;
   colorTable.AddPointAlpha(0.0, .01f);
   colorTable.AddPointAlpha(1.0, .01f);
+
+  vtkm::rendering::testing::RenderTestOptions options;
+  options.Mapper = vtkm::rendering::testing::MapperType::Volume;
+  options.AllowAnyDevice = false;
+  options.ColorTable = colorTable;
 
   vtkm::cont::DataSet rectDS, unsDS;
   std::string rectfname = vtkm::cont::testing::Testing::DataPath("rectilinear/noise.vtk");
@@ -53,7 +54,8 @@ void RenderTests()
     VTKM_TEST_FAIL(message.c_str());
   }
 
-  vtkm::rendering::testing::Render<M, C, V3>(rectDS, "hardyglobal", colorTable, "rect3D.pnm");
+  vtkm::rendering::testing::RenderTest(
+    rectDS, "hardyglobal", "rendering/volume/rectilinear3D.png", options);
 }
 
 } //namespace

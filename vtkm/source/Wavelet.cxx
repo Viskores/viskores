@@ -98,6 +98,7 @@ struct WaveletField : public vtkm::worklet::WorkletVisitPointsWithCells
 
 Wavelet::Wavelet(vtkm::Id3 minExtent, vtkm::Id3 maxExtent)
   : Center{ minExtent - ((minExtent - maxExtent) / 2) }
+  , Origin{ minExtent }
   , Spacing{ 1. }
   , Frequency{ 60., 30., 40. }
   , Magnitude{ 10., 18., 5. }
@@ -108,17 +109,16 @@ Wavelet::Wavelet(vtkm::Id3 minExtent, vtkm::Id3 maxExtent)
 {
 }
 
-vtkm::cont::DataSet Wavelet::Execute() const
+template <vtkm::IdComponent Dim>
+vtkm::cont::DataSet Wavelet::GenerateDataSet(vtkm::cont::CoordinateSystem coords) const
 {
-  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-  // Create points:
-  const vtkm::Id3 dims{ this->MaximumExtent - this->MinimumExtent + vtkm::Id3{ 1 } };
-  const vtkm::Vec3f origin{ this->MinimumExtent };
-  vtkm::cont::CoordinateSystem coords{ "coordinates", dims, origin, this->Spacing };
-
   // And cells:
-  vtkm::cont::CellSetStructured<3> cellSet;
+  vtkm::Vec<vtkm::Id, Dim> dims;
+  for (unsigned int d = 0; d < Dim; d++)
+  {
+    dims[d] = this->MaximumExtent[d] - this->MinimumExtent[d] + 1;
+  }
+  vtkm::cont::CellSetStructured<Dim> cellSet;
   cellSet.SetPointDimensions(dims);
 
   // Compile the dataset:
@@ -133,7 +133,27 @@ vtkm::cont::DataSet Wavelet::Execute() const
   return dataSet;
 }
 
-vtkm::cont::Field Wavelet::GeneratePointField(const vtkm::cont::CellSetStructured<3>& cellset,
+vtkm::cont::DataSet Wavelet::Execute() const
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  // Create points:
+  const vtkm::Id3 dims{ this->MaximumExtent - this->MinimumExtent + vtkm::Id3{ 1 } };
+  vtkm::cont::CoordinateSystem coords{ "coordinates", dims, this->Origin, this->Spacing };
+
+  // Compile the dataset:
+  if (this->MaximumExtent[2] - this->MinimumExtent[2] < vtkm::Epsilon<vtkm::FloatDefault>())
+  {
+    return this->GenerateDataSet<2>(coords);
+  }
+  else
+  {
+    return this->GenerateDataSet<3>(coords);
+  }
+}
+
+template <vtkm::IdComponent Dim>
+vtkm::cont::Field Wavelet::GeneratePointField(const vtkm::cont::CellSetStructured<Dim>& cellset,
                                               const std::string& name) const
 {
   const vtkm::Id3 dims{ this->MaximumExtent - this->MinimumExtent + vtkm::Id3{ 1 } };

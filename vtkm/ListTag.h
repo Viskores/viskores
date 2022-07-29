@@ -16,9 +16,18 @@
 
 #include <vtkm/StaticAssert.h>
 #include <vtkm/internal/ExportMacros.h>
-#include <vtkm/internal/brigand.hpp>
 
 #include <type_traits>
+
+struct VTKM_DEPRECATED(1.6, "ListTag.h is deprecated. Include List.h and use vtkm::List instead.")
+  VTKmListTagHeaderDeprecationWarning
+{
+};
+
+inline VTKmListTagHeaderDeprecationWarning IssueVTKmListTagHeaderDeprecationWarning()
+{
+  return {};
+}
 
 namespace vtkm
 {
@@ -35,7 +44,7 @@ struct ListRoot
 };
 
 template <class... T>
-using ListBase = brigand::list<T...>;
+using ListBase = vtkm::List<T...>;
 
 /// list value that is used to represent a list actually matches all values
 struct UniversalTag
@@ -115,7 +124,7 @@ namespace detail
 
 /// @cond NONE
 template <typename ListTag>
-struct ListTagAsBrigandListImpl
+struct ListTagAsListImpl
 {
   VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag);
@@ -126,10 +135,10 @@ struct ListTagAsBrigandListImpl
 
 } // namespace detail
 
-/// Converts a ListTag to a brigand::list.
+/// Converts a ListTag to a vtkm::List.
 ///
 template <typename ListTag>
-using ListTagAsBrigandList = typename detail::ListTagAsBrigandListImpl<ListTag>::type;
+using ListTagAsList = typename detail::ListTagAsListImpl<ListTag>::type;
 
 VTKM_DEPRECATED_SUPPRESS_BEGIN
 namespace detail
@@ -159,26 +168,12 @@ struct AsListImpl
   VTKM_DEPRECATED_SUPPRESS_BEGIN
   using type = typename std::conditional<std::is_base_of<vtkm::ListTagUniversal, T>::value,
                                          vtkm::ListUniversal,
-                                         brigand::wrap<ListTagAsBrigandList<T>, vtkm::List>>::type;
+                                         ListTagAsList<T>>::type;
   VTKM_DEPRECATED_SUPPRESS_END
 };
 
 } // namespace internal
 
-
-namespace detail
-{
-
-template <typename BrigandList, template <typename...> class Target>
-struct ListTagApplyImpl;
-
-template <typename... Ts, template <typename...> class Target>
-struct ListTagApplyImpl<brigand::list<Ts...>, Target>
-{
-  using type = Target<Ts...>;
-};
-
-} // namespace detail
 
 /// \brief Applies the list of types to a template.
 ///
@@ -187,7 +182,7 @@ struct ListTagApplyImpl<brigand::list<Ts...>, Target>
 ///
 template <typename ListTag, template <typename...> class Target>
 using ListTagApply VTKM_DEPRECATED(1.6, "ListTagApply replaced by ListApply.") =
-  typename detail::ListTagApplyImpl<internal::ListTagAsBrigandList<ListTag>, Target>::type;
+  vtkm::ListApply<ListTag, Target>;
 
 /// A special tag for an empty list.
 ///
@@ -285,26 +280,18 @@ struct VTKM_DEPRECATED(
 };
 /// @endcond
 
-namespace detail
-{
-
-// Old stlye ListCrossProduct expects brigand::list instead of vtkm::List. Transform back
-template <typename List>
-using ListToBrigand = vtkm::ListApply<List, brigand::list>;
-
-} // namespace detail
-
 /// Generate a tag that is the cross product of two other tags. The resulting
-/// tag has the form of Tag< brigand::list<A1,B1>, brigand::list<A1,B2> .... >
+/// tag has the form of Tag< vtkm::List<A1,B1>, vtkm::List<A1,B2> .... >
+///
+/// Note that as of VTK-m 1.8, the behavior of this (already depreciated) operation
+/// was changed to return pairs in vtkm::List instead of brigand::list.
 ///
 /// @cond NONE
 template <typename ListTag1, typename ListTag2>
 struct VTKM_DEPRECATED(
   1.6,
-  "ListCrossProduct replaced by ListCross. Note that LIstCross cannot be subclassed.")
-  ListCrossProduct
-  : vtkm::internal::ListAsListTag<
-      vtkm::ListTransform<vtkm::ListCross<ListTag1, ListTag2>, detail::ListToBrigand>>
+  "ListCrossProduct replaced by ListCross. Note that ListCross cannot be subclassed.")
+  ListCrossProduct : vtkm::internal::ListAsListTag<vtkm::ListCross<ListTag1, ListTag2>>
 {
 };
 /// @endcond
@@ -332,8 +319,7 @@ struct VTKM_DEPRECATED(1.6, "ListTypeAt::type replaced by ListAt.") ListTypeAt
   VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag);
   VTKM_DEPRECATED_SUPPRESS_END
-  using type = brigand::at<internal::ListTagAsBrigandList<ListTag>,
-                           std::integral_constant<vtkm::IdComponent, Index>>;
+  using type = vtkm::ListAt<ListTag, Index>;
 };
 
 } // namespace vtkm

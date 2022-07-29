@@ -19,7 +19,8 @@
 
 void vtkm::cont::internal::ArrayGetValuesImpl(const vtkm::cont::UnknownArrayHandle& ids,
                                               const vtkm::cont::UnknownArrayHandle& data,
-                                              const vtkm::cont::UnknownArrayHandle& output)
+                                              const vtkm::cont::UnknownArrayHandle& output,
+                                              std::false_type)
 {
   auto idArray = ids.ExtractComponent<vtkm::Id>(0, vtkm::CopyFlag::On);
   output.Allocate(ids.GetNumberOfValues());

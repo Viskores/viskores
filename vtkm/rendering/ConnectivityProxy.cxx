@@ -29,7 +29,7 @@ protected:
   TracerType Tracer;
   vtkm::cont::Field ScalarField;
   vtkm::cont::Field EmissionField;
-  vtkm::cont::DynamicCellSet Cells;
+  vtkm::cont::UnknownCellSet Cells;
   vtkm::cont::CoordinateSystem Coords;
   RenderMode Mode;
   vtkm::Bounds SpatialBounds;
@@ -44,7 +44,7 @@ public:
     Dataset = dataSet;
     Cells = dataSet.GetCellSet();
     Coords = dataSet.GetCoordinateSystem();
-    Mode = VOLUME_MODE;
+    Mode = RenderMode::Volume;
     CompositeBackground = true;
     //
     // Just grab a default scalar field
@@ -63,7 +63,7 @@ public:
 
   void SetSampleDistance(const vtkm::Float32& distance)
   {
-    if (Mode != VOLUME_MODE)
+    if (this->Mode != RenderMode::Volume)
     {
       throw vtkm::cont::ErrorBadValue(
         "Conn Proxy: volume mode must be set before sample distance set");
@@ -103,7 +103,7 @@ public:
   VTKM_CONT
   void SetEmissionField(const std::string& fieldName)
   {
-    if (Mode != ENERGY_MODE)
+    if (this->Mode != RenderMode::Energy)
     {
       throw vtkm::cont::ErrorBadValue(
         "Conn Proxy: energy mode must be set before setting emission field");
@@ -132,7 +132,7 @@ public:
   void Trace(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays)
   {
 
-    if (Mode == VOLUME_MODE)
+    if (this->Mode == RenderMode::Volume)
     {
       Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
@@ -151,7 +151,7 @@ public:
   VTKM_CONT
   void Trace(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays)
   {
-    if (Mode == VOLUME_MODE)
+    if (this->Mode == RenderMode::Volume)
     {
       Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
@@ -171,7 +171,7 @@ public:
   PartialVector64 PartialTrace(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays)
   {
 
-    if (Mode == VOLUME_MODE)
+    if (this->Mode == RenderMode::Volume)
     {
       Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
@@ -190,7 +190,7 @@ public:
   VTKM_CONT
   PartialVector32 PartialTrace(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays)
   {
-    if (Mode == VOLUME_MODE)
+    if (this->Mode == RenderMode::Volume)
     {
       Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
@@ -222,7 +222,7 @@ public:
     rays.Buffers.at(0).InitConst(0.f);
     raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvas);
 
-    if (Mode == VOLUME_MODE)
+    if (this->Mode == RenderMode::Volume)
     {
       Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
@@ -249,7 +249,7 @@ ConnectivityProxy::ConnectivityProxy(vtkm::cont::DataSet& dataSet)
 }
 
 VTKM_CONT
-ConnectivityProxy::ConnectivityProxy(const vtkm::cont::DynamicCellSet& cellset,
+ConnectivityProxy::ConnectivityProxy(const vtkm::cont::UnknownCellSet& cellset,
                                      const vtkm::cont::CoordinateSystem& coords,
                                      const vtkm::cont::Field& scalarField)
 {
@@ -330,7 +330,7 @@ void ConnectivityProxy::Trace(vtkm::rendering::raytracing::Ray<vtkm::Float64>& r
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("connectivity_trace_64");
-  if (Internals->GetRenderMode() == VOLUME_MODE)
+  if (this->Internals->GetRenderMode() == RenderMode::Volume)
   {
     logger->AddLogData("volume_mode", "true");
   }
@@ -349,7 +349,7 @@ PartialVector32 ConnectivityProxy::PartialTrace(
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("connectivity_trace_32");
-  if (Internals->GetRenderMode() == VOLUME_MODE)
+  if (this->Internals->GetRenderMode() == RenderMode::Volume)
   {
     logger->AddLogData("volume_mode", "true");
   }
@@ -369,7 +369,7 @@ void ConnectivityProxy::Trace(vtkm::rendering::raytracing::Ray<vtkm::Float32>& r
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("connectivity_trace_32");
-  if (Internals->GetRenderMode() == VOLUME_MODE)
+  if (this->Internals->GetRenderMode() == RenderMode::Volume)
   {
     logger->AddLogData("volume_mode", "true");
   }
@@ -389,7 +389,7 @@ PartialVector64 ConnectivityProxy::PartialTrace(
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("connectivity_trace_64");
-  if (Internals->GetRenderMode() == VOLUME_MODE)
+  if (this->Internals->GetRenderMode() == RenderMode::Volume)
   {
     logger->AddLogData("volume_mode", "true");
   }

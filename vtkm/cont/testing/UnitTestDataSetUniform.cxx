@@ -41,7 +41,7 @@ static void TwoDimUniformTest()
   dataSet.PrintSummary(std::cout);
 
   vtkm::cont::CellSetStructured<2> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2, "Incorrect number of fields");
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == 1,
@@ -58,7 +58,7 @@ static void TwoDimUniformTest()
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::Cells.");
   }
 
   try
@@ -130,7 +130,7 @@ static void ThreeDimUniformTest()
   dataSet.PrintSummary(std::cout);
 
   vtkm::cont::CellSetStructured<3> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2, "Incorrect number of fields");
 
@@ -152,7 +152,7 @@ static void ThreeDimUniformTest()
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::Cells.");
   }
 
   try

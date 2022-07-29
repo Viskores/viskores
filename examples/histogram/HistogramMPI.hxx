@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/FieldHistogram.h>
+#include <vtkm/filter/density_estimate/worklet/FieldHistogram.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
@@ -140,7 +140,7 @@ inline VTKM_CONT vtkm::cont::DataSet HistogramMPI::DoExecute(
   this->BinDelta = static_cast<vtkm::Float64>(delta);
   vtkm::cont::DataSet output;
   vtkm::cont::Field rfield(
-    this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, binArray);
+    this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, binArray);
   output.AddField(rfield);
   return output;
 }
@@ -182,7 +182,7 @@ inline VTKM_CONT void HistogramMPI::PostExecute(const vtkm::cont::PartitionedDat
 
   vtkm::cont::DataSet output;
   vtkm::cont::Field rfield(this->GetOutputFieldName(),
-                           vtkm::cont::Field::Association::WHOLE_MESH,
+                           vtkm::cont::Field::Association::WholeMesh,
                            helper.ReduceAll(this->NumberOfBins));
   output.AddField(rfield);
 

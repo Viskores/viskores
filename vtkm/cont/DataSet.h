@@ -14,11 +14,10 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace vtkm
 {
@@ -49,7 +48,7 @@ public:
 
   VTKM_CONT
   bool HasField(const std::string& name,
-                vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const
+                vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const
   {
     return (this->GetFieldIndex(name, assoc) != -1);
   }
@@ -57,13 +56,13 @@ public:
   VTKM_CONT
   bool HasCellField(const std::string& name) const
   {
-    return (this->GetFieldIndex(name, vtkm::cont::Field::Association::CELL_SET) != -1);
+    return (this->GetFieldIndex(name, vtkm::cont::Field::Association::Cells) != -1);
   }
 
   VTKM_CONT
   bool HasPointField(const std::string& name) const
   {
-    return (this->GetFieldIndex(name, vtkm::cont::Field::Association::POINTS) != -1);
+    return (this->GetFieldIndex(name, vtkm::cont::Field::Association::Points) != -1);
   }
 
 
@@ -72,7 +71,7 @@ public:
   VTKM_CONT
   vtkm::Id GetFieldIndex(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const;
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const;
 
   /// Returns the field that matches the provided name and association
   /// Will throw an exception if no match is found
@@ -80,12 +79,12 @@ public:
   VTKM_CONT
   const vtkm::cont::Field& GetField(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY) const;
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const;
 
   VTKM_CONT
   vtkm::cont::Field& GetField(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any);
   //@}
 
   /// Returns the first cell field that matches the provided name.
@@ -94,13 +93,13 @@ public:
   VTKM_CONT
   const vtkm::cont::Field& GetCellField(const std::string& name) const
   {
-    return this->GetField(name, vtkm::cont::Field::Association::CELL_SET);
+    return this->GetField(name, vtkm::cont::Field::Association::Cells);
   }
 
   VTKM_CONT
   vtkm::cont::Field& GetCellField(const std::string& name)
   {
-    return this->GetField(name, vtkm::cont::Field::Association::CELL_SET);
+    return this->GetField(name, vtkm::cont::Field::Association::Cells);
   }
   //@}
 
@@ -110,13 +109,13 @@ public:
   VTKM_CONT
   const vtkm::cont::Field& GetPointField(const std::string& name) const
   {
-    return this->GetField(name, vtkm::cont::Field::Association::POINTS);
+    return this->GetField(name, vtkm::cont::Field::Association::Points);
   }
 
   VTKM_CONT
   vtkm::cont::Field& GetPointField(const std::string& name)
   {
-    return this->GetField(name, vtkm::cont::Field::Association::POINTS);
+    return this->GetField(name, vtkm::cont::Field::Association::Points);
   }
   //@}
 
@@ -137,14 +136,14 @@ public:
   VTKM_CONT void AddPointField(const std::string& fieldName, const std::vector<T>& field)
   {
     this->AddField(
-      make_Field(fieldName, vtkm::cont::Field::Association::POINTS, field, vtkm::CopyFlag::On));
+      make_Field(fieldName, vtkm::cont::Field::Association::Points, field, vtkm::CopyFlag::On));
   }
 
   template <typename T>
   VTKM_CONT void AddPointField(const std::string& fieldName, const T* field, const vtkm::Id& n)
   {
     this->AddField(
-      make_Field(fieldName, vtkm::cont::Field::Association::POINTS, field, n, vtkm::CopyFlag::On));
+      make_Field(fieldName, vtkm::cont::Field::Association::Points, field, n, vtkm::CopyFlag::On));
   }
 
   //Cell centered field
@@ -165,14 +164,14 @@ public:
   VTKM_CONT void AddCellField(const std::string& fieldName, const std::vector<T>& field)
   {
     this->AddField(
-      make_Field(fieldName, vtkm::cont::Field::Association::CELL_SET, field, vtkm::CopyFlag::On));
+      make_Field(fieldName, vtkm::cont::Field::Association::Cells, field, vtkm::CopyFlag::On));
   }
 
   template <typename T>
   VTKM_CONT void AddCellField(const std::string& fieldName, const T* field, const vtkm::Id& n)
   {
-    this->AddField(make_Field(
-      fieldName, vtkm::cont::Field::Association::CELL_SET, field, n, vtkm::CopyFlag::On));
+    this->AddField(
+      make_Field(fieldName, vtkm::cont::Field::Association::Cells, field, n, vtkm::CopyFlag::On));
   }
 
 
@@ -210,21 +209,26 @@ public:
   vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name);
   //@}
 
+  /// Returns an `std::vector` of `CoordinateSystem`s held in this `DataSet`.
+  ///
   VTKM_CONT
-  void SetCellSet(const vtkm::cont::DynamicCellSet& cellSet) { this->CellSet = cellSet; }
+  std::vector<vtkm::cont::CoordinateSystem> GetCoordinateSystems() const
+  {
+    return this->CoordSystems;
+  }
 
   template <typename CellSetType>
   VTKM_CONT void SetCellSet(const CellSetType& cellSet)
   {
-    VTKM_IS_CELL_SET(CellSetType);
-    this->CellSet = vtkm::cont::DynamicCellSet(cellSet);
+    VTKM_IS_KNOWN_OR_UNKNOWN_CELL_SET(CellSetType);
+    this->CellSet = vtkm::cont::UnknownCellSet(cellSet);
   }
 
   VTKM_CONT
-  const vtkm::cont::DynamicCellSet& GetCellSet() const { return this->CellSet; }
+  const vtkm::cont::UnknownCellSet& GetCellSet() const { return this->CellSet; }
 
   VTKM_CONT
-  vtkm::cont::DynamicCellSet& GetCellSet() { return this->CellSet; }
+  vtkm::cont::UnknownCellSet& GetCellSet() { return this->CellSet; }
 
   VTKM_CONT
   vtkm::IdComponent GetNumberOfFields() const
@@ -270,8 +274,8 @@ private:
     bool operator()(const T& a, const T& b) const
     {
       if (a.first == b.first)
-        return a.second < b.second && a.second != vtkm::cont::Field::Association::ANY &&
-          b.second != vtkm::cont::Field::Association::ANY;
+        return a.second < b.second && a.second != vtkm::cont::Field::Association::Any &&
+          b.second != vtkm::cont::Field::Association::Any;
 
       return a.first < b.first;
     }
@@ -279,7 +283,7 @@ private:
 
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
   std::map<FieldCompare::Key, vtkm::cont::Field, FieldCompare> Fields;
-  vtkm::cont::DynamicCellSet CellSet;
+  vtkm::cont::UnknownCellSet CellSet;
 };
 
 } // namespace cont
@@ -354,9 +358,9 @@ public:
       dataset.AddCoordinateSystem(coords);
     }
 
-    vtkm::cont::DynamicCellSetBase<CellSetTypesList> cells;
+    vtkm::cont::UncertainCellSet<CellSetTypesList> cells;
     vtkmdiy::load(bb, cells);
-    dataset.SetCellSet(vtkm::cont::DynamicCellSet(cells));
+    dataset.SetCellSet(cells);
 
     vtkm::IdComponent numberOfFields = 0;
     vtkmdiy::load(bb, numberOfFields);

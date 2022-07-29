@@ -371,7 +371,7 @@ private:
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
 
     vtkm::cont::CellSetStructured<3> cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
@@ -719,7 +719,7 @@ public:
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
 
     vtkm::cont::CellSetStructured<2> cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     vtkm::Id2 pointDimensions2D = cellSet.GetPointDimensions();
     vtkm::Id3 meshSize{ pointDimensions2D[0], pointDimensions2D[1], 1 };
@@ -786,7 +786,7 @@ public:
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
 
     vtkm::cont::CellSetStructured<3> cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
@@ -859,7 +859,7 @@ public:
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
 
     vtkm::cont::CellSetStructured<3> cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 

@@ -22,7 +22,8 @@
 #include <vector>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/filter/MeshQuality.h>
+#include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/filter/mesh_info/MeshQuality.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
@@ -200,7 +201,7 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
 
 int TestMetrics(const char* outFileName,
                 vtkm::cont::DataSet data,
-                vtkm::filter::MeshQuality& filter)
+                vtkm::filter::mesh_info::MeshQuality& filter)
 {
   vtkm::cont::DataSet outputData;
   try
@@ -257,7 +258,7 @@ int main(int argc, char* argv[])
 
   // A cell metric is now computed for every shape type that exists in the
   // input dataset.
-  vtkm::filter::CellMetric shapeMetric = vtkm::filter::CellMetric::VOLUME;
+  vtkm::filter::mesh_info::CellMetric shapeMetric = vtkm::filter::mesh_info::CellMetric::Volume;
 
   try
   {
@@ -270,7 +271,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  vtkm::filter::MeshQuality filter(shapeMetric);
+  vtkm::filter::mesh_info::MeshQuality filter(shapeMetric);
   TestMetrics(outFileName, input, filter);
   return 0;
 }

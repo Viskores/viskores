@@ -7,42 +7,28 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
 #ifndef vtk_m_filter_Tetrahedralize_h
 #define vtk_m_filter_Tetrahedralize_h
 
-#include <vtkm/filter/FilterDataSet.h>
-#include <vtkm/worklet/Tetrahedralize.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
 
 namespace vtkm
 {
 namespace filter
 {
 
-class Tetrahedralize : public vtkm::filter::FilterDataSet<Tetrahedralize>
+VTKM_DEPRECATED(
+  1.8,
+  "Use vtkm/filter/geometry_refinement/Tetrahedralize.h instead of vtkm/filter/Tetrahedralize.h.")
+inline void Tetrahedralize_deprecated() {}
+
+inline void Tetrahedralize_deprecated_warning()
 {
-public:
-  VTKM_CONT
-  Tetrahedralize();
+  Tetrahedralize_deprecated();
+}
 
-  template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  // Map new field onto the resulting dataset after running the filter
-  template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                    const vtkm::cont::Field& field,
-                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
-
-private:
-  vtkm::worklet::Tetrahedralize Worklet;
-};
 }
 } // namespace vtkm::filter
 
-#ifndef vtk_m_filter_Tetrahedralize_hxx
-#include <vtkm/filter/Tetrahedralize.hxx>
-#endif
-
-#endif // vtk_m_filter_Tetrahedralize_h
+#endif //vtk_m_filter_Tetrahedralize_h

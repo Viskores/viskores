@@ -64,8 +64,7 @@ void BenchAddSeq(benchmark::State& state)
   auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   vtkm::cont::ArrayHandle<ValueType> atomicArray;
-  vtkm::cont::Algorithm::Fill(
-    atomicArray, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+  atomicArray.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
@@ -115,7 +114,7 @@ void BenchAddSeqBaseline(benchmark::State& state)
   auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   vtkm::cont::ArrayHandle<ValueType> array;
-  vtkm::cont::Algorithm::Fill(array, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+  array.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
@@ -175,8 +174,7 @@ void BenchAddStride(benchmark::State& state)
   auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   vtkm::cont::ArrayHandle<ValueType> atomicArray;
-  vtkm::cont::Algorithm::Fill(
-    atomicArray, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+  atomicArray.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
@@ -235,7 +233,7 @@ void BenchAddStrideBaseline(benchmark::State& state)
   auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   vtkm::cont::ArrayHandle<ValueType> array;
-  vtkm::cont::Algorithm::Fill(array, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+  array.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
@@ -289,8 +287,7 @@ void BenchCASSeq(benchmark::State& state)
   auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   vtkm::cont::ArrayHandle<ValueType> atomicArray;
-  vtkm::cont::Algorithm::Fill(
-    atomicArray, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+  atomicArray.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
@@ -342,7 +339,7 @@ void BenchCASSeqBaseline(benchmark::State& state)
   auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   vtkm::cont::ArrayHandle<ValueType> array;
-  vtkm::cont::Algorithm::Fill(array, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+  array.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
@@ -406,8 +403,7 @@ void BenchCASStride(benchmark::State& state)
   auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   vtkm::cont::ArrayHandle<ValueType> atomicArray;
-  vtkm::cont::Algorithm::Fill(
-    atomicArray, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+  atomicArray.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
@@ -468,7 +464,7 @@ void BenchCASStrideBaseline(benchmark::State& state)
   auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   vtkm::cont::ArrayHandle<ValueType> array;
-  vtkm::cont::Algorithm::Fill(array, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+  array.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };

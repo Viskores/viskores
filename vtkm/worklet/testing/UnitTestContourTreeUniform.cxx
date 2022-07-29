@@ -78,7 +78,7 @@ public:
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
 
     vtkm::cont::CellSetStructured<2> cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
     vtkm::Id nRows = pointDimensions[0];
@@ -124,7 +124,7 @@ public:
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
 
     vtkm::cont::CellSetStructured<3> cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
+    dataSet.GetCellSet().AsCellSet(cellSet);
 
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
     vtkm::Id nRows = pointDimensions[0];

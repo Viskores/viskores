@@ -1,0 +1,99 @@
+# Ad-hoc build that runs in the ECP Hardware, concretely in OLCF Ascent.
+
+build:ascent_gcc_cuda:
+  tags: [olcf, ascent, nobatch]
+  extends:
+    - .ascent_gcc_cuda
+    - .ascent_build
+    - .run_ecp_ci
+    - .cmake_build_artifacts
+
+test:ascent_gcc_cuda:
+  tags: [olcf, ascent, batch]
+  extends:
+    - .ascent_gcc_cuda
+    - .ascent_test
+    - .run_ecp_ci
+    - .cmake_test_artifacts
+  needs:
+    - build:ascent_gcc_cuda
+  dependencies:
+    - build:ascent_gcc_cuda
+
+.ascent_gcc_cuda:
+  variables:
+    CCACHE_BASEDIR: /gpfs/wolf/
+    CCACHE_DIR: "/gpfs/wolf/proj-shared/csc331/vtk-m/ci/ccache/"
+
+    # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
+    CCACHE_IGNOREOPTIONS: "-isystem=*"
+    CCACHE_NOHASHDIR: "true"
+
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    CMAKE_GENERATOR: Ninja
+    CUSTOM_CI_BUILDS_DIR: "/gpfs/wolf/proj-shared/csc331/vtk-m/ci/runtime"
+
+    CC: gcc
+    CXX: g++
+    CUDAHOSTCXX: g++
+    JOB_MODULES: git cmake ninja gcc/10.2.0 spectrum-mpi lsf-tools cuda/11.4.2
+    VTKM_SETTINGS: cuda+ascent+ccache
+
+.ascent_build:
+  stage: build
+  variables:
+    CTEST_MAX_PARALLELISM: 4
+  before_script:
+    # Prep the environment
+    - module purge
+    - echo ${JOB_MODULES}
+
+
+    - export PATH="/gpfs/wolf/proj-shared/csc331/vtk-m/ci/utils:$PATH"
+    - ccache -p
+    - ccache -z
+
+
+
+
+
+
+
+
+
+
+    # Start running the builds scripts
+    - cmake --version
+    - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
+    - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
+
+  script:
+    - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
+    - ccache -s
+
+.ascent_test:
+  stage: test
+  variables:
+    SCHEDULER_PARAMETERS: -P CSC331 -W 1:00 -nnodes 1 -alloc_flags gpudefault
+    CTEST_MAX_PARALLELISM: 8
+    # Tests errors to address due to different env/arch in Ascent
+    # Refer to issue: https://gitlab.kitware.com/vtk/vtk-m/-/issues/652
+    CTEST_EXCLUSIONS: >-
+      UnitTestMathSERIAL
+      UnitTestMathCUDA
+      UnitTestSerialDeviceAdapter
+      UnitTestAverageByKeySERIAL
+      UnitTestKeysSERIAL
+      UnitTestWorkletReduceByKeySERIAL
+      RegressionTestAmrArraysSERIAL
+      RegressionTestAmrArraysCUDA
+
+  before_script:
+    # Prep the environment
+    - module purge
+    - module load ${JOB_MODULES}
+
+  script:
+    - "jsrun -n1 -r1 -a1 -g1 -c7 ctest -VV -S .gitlab/ci/ctest_test.cmake || test_output=$?"
+    - ctest -VV -S .gitlab/ci/ctest_test_submit.cmake
+    - $(exit $test_output)

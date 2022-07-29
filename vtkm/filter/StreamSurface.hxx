@@ -47,7 +47,7 @@ inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(
   if (this->Seeds.GetNumberOfValues() == 0)
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
 
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 

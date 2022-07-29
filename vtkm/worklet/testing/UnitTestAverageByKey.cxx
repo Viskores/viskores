@@ -70,7 +70,8 @@ void TryKeyType(KeyType)
   VTKM_TEST_ASSERT(keys.GetInputRange() == NUM_UNIQUE, "Keys has bad input range.");
 
   // Create values array
-  vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault> valuesArray(0.0f, 1.0f, ARRAY_SIZE);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> valuesArray;
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), valuesArray);
 
   std::cout << "  Try average with Keys object" << std::endl;
   CheckAverageByKey(keys.GetUniqueKeys(), vtkm::worklet::AverageByKey::Run(keys, valuesArray));

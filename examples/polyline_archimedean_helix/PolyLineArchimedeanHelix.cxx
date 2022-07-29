@@ -10,8 +10,8 @@
 
 #include <complex>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <vtkm/filter/geometry_refinement/worklet/Tube.h>
 #include <vtkm/io/VTKDataSetWriter.h>
-#include <vtkm/worklet/Tube.h>
 
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/CoordinateSystem.h>

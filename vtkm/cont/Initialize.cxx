@@ -225,8 +225,7 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
                    << std::string{ options[opt::OptionIndex::DEPRECATED_LOGLEVEL].name } << ", use "
                    << loggingFlag << " instead.");
 #ifdef VTKM_ENABLE_LOGGING
-      loguru::g_stderr_verbosity =
-        loguru::get_verbosity_from_name(options[opt::OptionIndex::DEPRECATED_LOGLEVEL].arg);
+      vtkm::cont::SetStderrLogLevel(options[opt::OptionIndex::DEPRECATED_LOGLEVEL].arg);
 #endif // VTKM_ENABLE_LOGGING
     }
 

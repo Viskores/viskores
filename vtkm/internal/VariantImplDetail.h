@@ -17,6 +17,7 @@
 #define VTK_M_NAMESPACE tmp
 #endif
 
+#include <vtkm/List.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/internal/Assume.h>
@@ -36,176 +37,23 @@ namespace internal
 namespace detail
 {
 
-template <typename ReturnType>
-struct VariantDummyReturn
-{
-  VTK_M_DEVICE static inline ReturnType F() noexcept { return ReturnType{}; }
-};
-template <>
-struct VariantDummyReturn<void>
-{
-  VTK_M_DEVICE static inline void F() noexcept {}
-};
-
-// clang-format off
-
 // --------------------------------------------------------------------------------
 // Helper classes to determine if all Variant types are trivial.
-template <typename T0 = vtkm::internal::NullType,
-          typename T1 = vtkm::internal::NullType,
-          typename T2 = vtkm::internal::NullType,
-          typename T3 = vtkm::internal::NullType,
-          typename T4 = vtkm::internal::NullType,
-          typename T5 = vtkm::internal::NullType,
-          typename T6 = vtkm::internal::NullType,
-          typename T7 = vtkm::internal::NullType,
-          typename T8 = vtkm::internal::NullType,
-          typename T9 = vtkm::internal::NullType,
-          typename T10 = vtkm::internal::NullType,
-          typename T11 = vtkm::internal::NullType,
-          typename T12 = vtkm::internal::NullType,
-          typename T13 = vtkm::internal::NullType,
-          typename T14 = vtkm::internal::NullType,
-          typename T15 = vtkm::internal::NullType,
-          typename T16 = vtkm::internal::NullType,
-          typename T17 = vtkm::internal::NullType,
-          typename T18 = vtkm::internal::NullType,
-          typename T19 = vtkm::internal::NullType,
-          typename... Ts>
-struct AllTriviallyCopyable;
+template <typename... Ts>
+using AllTriviallyCopyable = vtkm::ListAll<vtkm::List<Ts...>, vtkmstd::is_trivially_copyable>;
 
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value &&
-                                  vtkmstd::is_trivially_copyable<T1>::value &&
-                                  vtkmstd::is_trivially_copyable<T2>::value &&
-                                  vtkmstd::is_trivially_copyable<T3>::value &&
-                                  vtkmstd::is_trivially_copyable<T4>::value &&
-                                  vtkmstd::is_trivially_copyable<T5>::value &&
-                                  vtkmstd::is_trivially_copyable<T6>::value &&
-                                  vtkmstd::is_trivially_copyable<T7>::value &&
-                                  vtkmstd::is_trivially_copyable<T8>::value &&
-                                  vtkmstd::is_trivially_copyable<T9>::value &&
-                                  vtkmstd::is_trivially_copyable<T10>::value &&
-                                  vtkmstd::is_trivially_copyable<T11>::value &&
-                                  vtkmstd::is_trivially_copyable<T12>::value &&
-                                  vtkmstd::is_trivially_copyable<T13>::value &&
-                                  vtkmstd::is_trivially_copyable<T14>::value &&
-                                  vtkmstd::is_trivially_copyable<T15>::value &&
-                                  vtkmstd::is_trivially_copyable<T16>::value &&
-                                  vtkmstd::is_trivially_copyable<T17>::value &&
-                                  vtkmstd::is_trivially_copyable<T18>::value &&
-                                  vtkmstd::is_trivially_copyable<T19>::value)> { };
+// Single argument version of is_trivially_constructible
+template <typename T>
+using Constructible = vtkmstd::is_trivially_constructible<T>;
 
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-struct AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
-  : std::integral_constant<bool, (
-      AllTriviallyCopyable<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>::value &&
-      AllTriviallyCopyable<T20, Ts...>::value)> {  };
+template <typename... Ts>
+using AllTriviallyConstructible = vtkm::ListAll<vtkm::List<Ts...>, Constructible>;
 
-template <typename T0 = vtkm::internal::NullType,
-          typename T1 = vtkm::internal::NullType,
-          typename T2 = vtkm::internal::NullType,
-          typename T3 = vtkm::internal::NullType,
-          typename T4 = vtkm::internal::NullType,
-          typename T5 = vtkm::internal::NullType,
-          typename T6 = vtkm::internal::NullType,
-          typename T7 = vtkm::internal::NullType,
-          typename T8 = vtkm::internal::NullType,
-          typename T9 = vtkm::internal::NullType,
-          typename T10 = vtkm::internal::NullType,
-          typename T11 = vtkm::internal::NullType,
-          typename T12 = vtkm::internal::NullType,
-          typename T13 = vtkm::internal::NullType,
-          typename T14 = vtkm::internal::NullType,
-          typename T15 = vtkm::internal::NullType,
-          typename T16 = vtkm::internal::NullType,
-          typename T17 = vtkm::internal::NullType,
-          typename T18 = vtkm::internal::NullType,
-          typename T19 = vtkm::internal::NullType,
-          typename... Ts>
-struct AllTriviallyConstructible;
+template <typename... Ts>
+using AllTriviallyDestructible =
+  vtkm::ListAll<vtkm::List<Ts...>, vtkmstd::is_trivially_destructible>;
 
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value &&
-                                  vtkmstd::is_trivially_constructible<T1>::value &&
-                                  vtkmstd::is_trivially_constructible<T2>::value &&
-                                  vtkmstd::is_trivially_constructible<T3>::value &&
-                                  vtkmstd::is_trivially_constructible<T4>::value &&
-                                  vtkmstd::is_trivially_constructible<T5>::value &&
-                                  vtkmstd::is_trivially_constructible<T6>::value &&
-                                  vtkmstd::is_trivially_constructible<T7>::value &&
-                                  vtkmstd::is_trivially_constructible<T8>::value &&
-                                  vtkmstd::is_trivially_constructible<T9>::value &&
-                                  vtkmstd::is_trivially_constructible<T10>::value &&
-                                  vtkmstd::is_trivially_constructible<T11>::value &&
-                                  vtkmstd::is_trivially_constructible<T12>::value &&
-                                  vtkmstd::is_trivially_constructible<T13>::value &&
-                                  vtkmstd::is_trivially_constructible<T14>::value &&
-                                  vtkmstd::is_trivially_constructible<T15>::value &&
-                                  vtkmstd::is_trivially_constructible<T16>::value &&
-                                  vtkmstd::is_trivially_constructible<T17>::value &&
-                                  vtkmstd::is_trivially_constructible<T18>::value &&
-                                  vtkmstd::is_trivially_constructible<T19>::value)> { };
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-struct AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
-  : std::integral_constant<bool, (
-      AllTriviallyConstructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>::value &&
-      AllTriviallyConstructible<T20, Ts...>::value)> {  };
-
-template <typename T0 = vtkm::internal::NullType,
-          typename T1 = vtkm::internal::NullType,
-          typename T2 = vtkm::internal::NullType,
-          typename T3 = vtkm::internal::NullType,
-          typename T4 = vtkm::internal::NullType,
-          typename T5 = vtkm::internal::NullType,
-          typename T6 = vtkm::internal::NullType,
-          typename T7 = vtkm::internal::NullType,
-          typename T8 = vtkm::internal::NullType,
-          typename T9 = vtkm::internal::NullType,
-          typename T10 = vtkm::internal::NullType,
-          typename T11 = vtkm::internal::NullType,
-          typename T12 = vtkm::internal::NullType,
-          typename T13 = vtkm::internal::NullType,
-          typename T14 = vtkm::internal::NullType,
-          typename T15 = vtkm::internal::NullType,
-          typename T16 = vtkm::internal::NullType,
-          typename T17 = vtkm::internal::NullType,
-          typename T18 = vtkm::internal::NullType,
-          typename T19 = vtkm::internal::NullType,
-          typename... Ts>
-struct AllTriviallyDestructible;
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
-  : std::integral_constant<bool, (vtkmstd::is_trivially_destructible<T0>::value &&
-                                  vtkmstd::is_trivially_destructible<T1>::value &&
-                                  vtkmstd::is_trivially_destructible<T2>::value &&
-                                  vtkmstd::is_trivially_destructible<T3>::value &&
-                                  vtkmstd::is_trivially_destructible<T4>::value &&
-                                  vtkmstd::is_trivially_destructible<T5>::value &&
-                                  vtkmstd::is_trivially_destructible<T6>::value &&
-                                  vtkmstd::is_trivially_destructible<T7>::value &&
-                                  vtkmstd::is_trivially_destructible<T8>::value &&
-                                  vtkmstd::is_trivially_destructible<T9>::value &&
-                                  vtkmstd::is_trivially_destructible<T10>::value &&
-                                  vtkmstd::is_trivially_destructible<T11>::value &&
-                                  vtkmstd::is_trivially_destructible<T12>::value &&
-                                  vtkmstd::is_trivially_destructible<T13>::value &&
-                                  vtkmstd::is_trivially_destructible<T14>::value &&
-                                  vtkmstd::is_trivially_destructible<T15>::value &&
-                                  vtkmstd::is_trivially_destructible<T16>::value &&
-                                  vtkmstd::is_trivially_destructible<T17>::value &&
-                                  vtkmstd::is_trivially_destructible<T18>::value &&
-                                  vtkmstd::is_trivially_destructible<T19>::value)> { };
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
-  : std::integral_constant<bool, (
-      AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>::value &&
-      AllTriviallyDestructible<T20, Ts...>::value)> {  };
+// clang-format off
 
 // --------------------------------------------------------------------------------
 // Union type used inside of Variant
@@ -238,55 +86,169 @@ struct AllTriviallyDestructible<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11
 //
 
 // TD = trivially deconstructible
-template <typename T0 = vtkm::internal::NullType,
-          typename T1 = vtkm::internal::NullType,
-          typename T2 = vtkm::internal::NullType,
-          typename T3 = vtkm::internal::NullType,
-          typename T4 = vtkm::internal::NullType,
-          typename T5 = vtkm::internal::NullType,
-          typename T6 = vtkm::internal::NullType,
-          typename T7 = vtkm::internal::NullType,
-          typename T8 = vtkm::internal::NullType,
-          typename T9 = vtkm::internal::NullType,
-          typename T10 = vtkm::internal::NullType,
-          typename T11 = vtkm::internal::NullType,
-          typename T12 = vtkm::internal::NullType,
-          typename T13 = vtkm::internal::NullType,
-          typename T14 = vtkm::internal::NullType,
-          typename T15 = vtkm::internal::NullType,
-          typename T16 = vtkm::internal::NullType,
-          typename T17 = vtkm::internal::NullType,
-          typename T18 = vtkm::internal::NullType,
-          typename T19 = vtkm::internal::NullType,
-          typename... Ts>
+template <typename T0, typename... Ts>
 union VariantUnionTD;
 
 // NTD = non-trivially deconstructible
-template <typename T0 = vtkm::internal::NullType,
-          typename T1 = vtkm::internal::NullType,
-          typename T2 = vtkm::internal::NullType,
-          typename T3 = vtkm::internal::NullType,
-          typename T4 = vtkm::internal::NullType,
-          typename T5 = vtkm::internal::NullType,
-          typename T6 = vtkm::internal::NullType,
-          typename T7 = vtkm::internal::NullType,
-          typename T8 = vtkm::internal::NullType,
-          typename T9 = vtkm::internal::NullType,
-          typename T10 = vtkm::internal::NullType,
-          typename T11 = vtkm::internal::NullType,
-          typename T12 = vtkm::internal::NullType,
-          typename T13 = vtkm::internal::NullType,
-          typename T14 = vtkm::internal::NullType,
-          typename T15 = vtkm::internal::NullType,
-          typename T16 = vtkm::internal::NullType,
-          typename T17 = vtkm::internal::NullType,
-          typename T18 = vtkm::internal::NullType,
-          typename T19 = vtkm::internal::NullType,
-          typename... Ts>
+template <typename T0, typename... Ts>
 union VariantUnionNTD;
 
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+template <typename T0>
+union VariantUnionTD<T0>
+{
+  T0 V0;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+template <typename T0>
+union VariantUnionNTD<T0>
+{
+  T0 V0;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1>
+union VariantUnionTD<T0, T1>
+{
+  T0 V0;
+  T1 V1;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+template <typename T0, typename T1>
+union VariantUnionNTD<T0, T1>
+{
+  T0 V0;
+  T1 V1;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2>
+union VariantUnionTD<T0, T1, T2>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+template <typename T0, typename T1, typename T2>
+union VariantUnionNTD<T0, T1, T2>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3>
+union VariantUnionTD<T0, T1, T2, T3>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+template <typename T0, typename T1, typename T2, typename T3>
+union VariantUnionNTD<T0, T1, T2, T3>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4>
+union VariantUnionTD<T0, T1, T2, T3, T4>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+template <typename T0, typename T1, typename T2, typename T3, typename T4>
+union VariantUnionNTD<T0, T1, T2, T3, T4>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7>
 {
   T0 V0;
   T1 V1;
@@ -296,26 +258,45 @@ union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13,
   T5 V5;
   T6 V6;
   T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  T16 V16;
-  T17 V17;
-  T18 V18;
-  T19 V19;
-  vtkm::internal::NullType Remaining;
+  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
+  VariantUnionTD() = default;
+};
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
+  VariantUnionNTD() = default;
+  VTK_M_DEVICE ~VariantUnionNTD() { }
+};
+
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename... Ts>
+union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>
+{
+  T0 V0;
+  T1 V1;
+  T2 V2;
+  T3 V3;
+  T4 V4;
+  T5 V5;
+  T6 V6;
+  T7 V7;
+  VariantUnionTD<T8, Ts...> Remaining;
 
   VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
   VariantUnionTD() = default;
 };
 
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename... Ts>
+union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>
 {
   T0 V0;
   T1 V1;
@@ -325,83 +306,14 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13
   T5 V5;
   T6 V6;
   T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  T16 V16;
-  T17 V17;
-  T18 V18;
-  T19 V19;
-  vtkm::internal::NullType Remaining;
+  VariantUnionNTD<T8, Ts...> Remaining;
 
   VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
   VariantUnionNTD() = default;
   VTK_M_DEVICE ~VariantUnionNTD() { }
 };
 
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  T16 V16;
-  T17 V17;
-  T18 V18;
-  T19 V19;
-  VariantUnionTD<T20, Ts...> Remaining;
-
-  VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
-  VariantUnionTD() = default;
-};
-
-template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14, typename T15, typename T16, typename T17, typename T18, typename T19, typename T20, typename... Ts>
-union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, Ts...>
-{
-  T0 V0;
-  T1 V1;
-  T2 V2;
-  T3 V3;
-  T4 V4;
-  T5 V5;
-  T6 V6;
-  T7 V7;
-  T8 V8;
-  T9 V9;
-  T10 V10;
-  T11 V11;
-  T12 V12;
-  T13 V13;
-  T14 V14;
-  T15 V15;
-  T16 V16;
-  T17 V17;
-  T18 V18;
-  T19 V19;
-  VariantUnionNTD<T20, Ts...> Remaining;
-
-  VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
-  VariantUnionNTD() = default;
-  VTK_M_DEVICE ~VariantUnionNTD() { }
-};
+//clang-format on
 
 template <bool TrivialConstructor, typename... Ts>
 struct VariantUnionFinder;
@@ -538,180 +450,12 @@ struct VariantUnionGetImpl<7, UnionType>
   }
 };
 
-template <typename UnionType>
-struct VariantUnionGetImpl<8, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V8);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V8;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V8;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<9, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V9);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V9;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V9;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<10, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V10);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V10;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V10;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<11, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V11);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V11;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V11;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<12, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V12);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V12;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V12;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<13, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V13);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V13;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V13;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<14, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V14);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V14;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V14;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<15, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V15);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V15;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V15;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<16, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V16);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V16;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V16;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<17, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V17);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V17;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V17;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<18, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V18);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V18;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V18;
-  }
-};
-
-template <typename UnionType>
-struct VariantUnionGetImpl<19, UnionType>
-{
-  using ReturnType = decltype(std::declval<UnionType>().V19);
-  VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
-  {
-    return storage.V19;
-  }
-  VTK_M_DEVICE static const ReturnType& Get(const UnionType& storage) noexcept
-  {
-    return storage.V19;
-  }
-};
-
 
 template <vtkm::IdComponent I, typename UnionType>
 struct VariantUnionGetImpl
 {
-  VTKM_STATIC_ASSERT(I >= 20);
-  using RecursiveGet = VariantUnionGetImpl<I - 20, decltype(std::declval<UnionType&>().Remaining)>;
+  VTKM_STATIC_ASSERT(I >= 8);
+  using RecursiveGet = VariantUnionGetImpl<I - 8, decltype(std::declval<UnionType&>().Remaining)>;
   using ReturnType = typename RecursiveGet::ReturnType;
   VTK_M_DEVICE static ReturnType& Get(UnionType& storage) noexcept
   {
@@ -730,192 +474,529 @@ VTK_M_DEVICE auto VariantUnionGet(UnionType& storage) noexcept
   return VariantUnionGetImpl<I, typename std::decay<UnionType>::type>::Get(storage);
 }
 
-//clang-format on
-
 // --------------------------------------------------------------------------------
 // Internal implementation of CastAndCall for Variant
-template <typename ReturnType,
-          typename Functor,
-          typename CastMember,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCallFunctor(
-  std::false_type,
-  Functor&& f,
-  CastMember& value,
-  Args&&... args) noexcept(noexcept(f(value, args...)))
+template <std::size_t NumCases>
+struct VariantCases
 {
-  // If you get a compile error here, it probably means that you have called Variant::CastAndCall
-  // with a functor that does not accept one of the types in the Variant. The functor you provide
-  // must be callable with all types in the Variant, not just the one that it currently holds.
-  return f(value, std::forward<Args>(args)...);
-}
-
-template <typename ReturnType,
-          typename Functor,
-          typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCallFunctor(
-  std::true_type, Functor&&, vtkm::internal::NullType, Args&&...) noexcept
-{
-  // If we are here, it means a Variant had an inappropriate index.
-  VTKM_ASSERT(false && "Internal error, bad Variant state.");
-  return VariantDummyReturn<ReturnType>::F();
-}
-
-// Terminating condition in recursive template
-template <typename ReturnType, typename Functor, typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImplR(
-  std::true_type,
-  vtkm::IdComponent vtkmNotUsed(index),
-  Functor&& vtkmNotUsed(f),
-  vtkm::internal::NullType,
-  Args&&... vtkmNotUsed(args)) noexcept
-{
-  // If we are here, it means a Variant had an inappropriate index.
-  VTKM_ASSERT(false && "Internal error, bad Variant state.");
-  return VariantDummyReturn<ReturnType>::F();
-}
-
-template <typename ReturnType, typename Functor, typename UnionType, typename... Args>
-VTK_M_DEVICE inline ReturnType VariantCastAndCallImplR(
-  std::false_type,
-  vtkm::IdComponent index,
-  Functor&& f,
-  UnionType& storage,
-  Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
-{
-  switch (index)
+  template <typename Functor, typename UnionType, typename... Args>
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
+    vtkm::IdComponent index,
+    Functor&& f,
+    UnionType& storage,
+    Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+    -> decltype(f(storage.V0, args...))
   {
-    case 0:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V0), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V0,
-        std::forward<Args>(args)...);
-    case 1:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V1), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V1,
-        std::forward<Args>(args)...);
-    case 2:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V2), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V2,
-        std::forward<Args>(args)...);
-    case 3:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V3), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V3,
-        std::forward<Args>(args)...);
-    case 4:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V4), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V4,
-        std::forward<Args>(args)...);
-    case 5:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V5), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V5,
-        std::forward<Args>(args)...);
-    case 6:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V6), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V6,
-        std::forward<Args>(args)...);
-    case 7:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V7), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V7,
-        std::forward<Args>(args)...);
-    case 8:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V8), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V8,
-        std::forward<Args>(args)...);
-    case 9:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V9), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V9,
-        std::forward<Args>(args)...);
-    case 10:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V10), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V10,
-        std::forward<Args>(args)...);
-    case 11:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V11), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V11,
-        std::forward<Args>(args)...);
-    case 12:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V12), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V12,
-        std::forward<Args>(args)...);
-    case 13:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V13), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V13,
-        std::forward<Args>(args)...);
-    case 14:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V14), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V14,
-        std::forward<Args>(args)...);
-    case 15:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V15), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V15,
-        std::forward<Args>(args)...);
-    case 16:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V16), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V16,
-        std::forward<Args>(args)...);
-    case 17:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V17), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V17,
-        std::forward<Args>(args)...);
-    case 18:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V18), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V18,
-        std::forward<Args>(args)...);
-    case 19:
-      return VariantCallFunctor<ReturnType>(
-        typename std::is_same<decltype(storage.V19), vtkm::internal::NullType>::type{},
-        std::forward<Functor>(f),
-        storage.V19,
-        std::forward<Args>(args)...);
-    default:
-      return VariantCastAndCallImplR<ReturnType>(
-        typename std::is_same<decltype(storage.Remaining), vtkm::internal::NullType>::type{},
-        index - 20,
-        std::forward<Functor>(f),
-        storage.Remaining,
-        std::forward<Args>(args)...);
+    VTKM_ASSERT((index >= 0) && (index < static_cast<vtkm::IdComponent>(NumCases)));
+    switch (index)
+    {
+      case 0:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V0, std::forward<Args>(args)...);
+      case 1:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V1, std::forward<Args>(args)...);
+      case 2:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V2, std::forward<Args>(args)...);
+      case 3:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V3, std::forward<Args>(args)...);
+      case 4:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V4, std::forward<Args>(args)...);
+      case 5:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V5, std::forward<Args>(args)...);
+      case 6:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V6, std::forward<Args>(args)...);
+      case 7:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V7, std::forward<Args>(args)...);
+      default:
+        return VariantCases<NumCases - 8>::template CastAndCall(
+          index - 8, std::forward<Functor>(f), storage.Remaining, std::forward<Args>(args)...);
+    }
   }
-}
+};
 
-template <typename Functor, typename UnionType, typename... Args>
+template<>
+struct VariantCases<1>
+{
+  template <typename Functor, typename UnionType, typename... Args>
+  VTK_M_DEVICE static inline auto CastAndCall(
+    vtkm::IdComponent index,
+    Functor&& f,
+    UnionType& storage,
+    Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+    -> decltype(f(storage.V0, args...))
+  {
+    // Assume index is 0. Saves us some conditionals.
+    VTKM_ASSERT(index == 0);
+    (void)index;
+    return f(storage.V0, std::forward<Args>(args)...);
+  }
+};
+
+template<>
+struct VariantCases<2>
+{
+  template <typename Functor, typename UnionType, typename... Args>
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
+    vtkm::IdComponent index,
+    Functor&& f,
+    UnionType& storage,
+    Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+    -> decltype(f(storage.V0, args...))
+  {
+    // Assume index is 0. Saves us some conditionals.
+    VTKM_ASSERT((index >= 0) && (index < 2));
+    switch (index)
+    {
+      default:
+      case 0:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V0, std::forward<Args>(args)...);
+      case 1:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V1, std::forward<Args>(args)...);
+    }
+  }
+};
+template<>
+struct VariantCases<3>
+{
+  template <typename Functor, typename UnionType, typename... Args>
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
+    vtkm::IdComponent index,
+    Functor&& f,
+    UnionType& storage,
+    Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+    -> decltype(f(storage.V0, args...))
+  {
+    // Assume index is 0. Saves us some conditionals.
+    VTKM_ASSERT((index >= 0) && (index < 3));
+    switch (index)
+    {
+      default:
+      case 0:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V0, std::forward<Args>(args)...);
+      case 1:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V1, std::forward<Args>(args)...);
+      case 2:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V2, std::forward<Args>(args)...);
+    }
+  }
+};
+template<>
+struct VariantCases<4>
+{
+  template <typename Functor, typename UnionType, typename... Args>
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
+    vtkm::IdComponent index,
+    Functor&& f,
+    UnionType& storage,
+    Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+    -> decltype(f(storage.V0, args...))
+  {
+    // Assume index is 0. Saves us some conditionals.
+    VTKM_ASSERT((index >= 0) && (index < 4));
+    switch (index)
+    {
+      default:
+      case 0:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V0, std::forward<Args>(args)...);
+      case 1:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V1, std::forward<Args>(args)...);
+      case 2:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V2, std::forward<Args>(args)...);
+      case 3:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V3, std::forward<Args>(args)...);
+    }
+  }
+};
+template<>
+struct VariantCases<5>
+{
+  template <typename Functor, typename UnionType, typename... Args>
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
+    vtkm::IdComponent index,
+    Functor&& f,
+    UnionType& storage,
+    Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+    -> decltype(f(storage.V0, args...))
+  {
+    // Assume index is 0. Saves us some conditionals.
+    VTKM_ASSERT((index >= 0) && (index < 5));
+    switch (index)
+    {
+      default:
+      case 0:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V0, std::forward<Args>(args)...);
+      case 1:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V1, std::forward<Args>(args)...);
+      case 2:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V2, std::forward<Args>(args)...);
+      case 3:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V3, std::forward<Args>(args)...);
+      case 4:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V4, std::forward<Args>(args)...);
+    }
+  }
+};
+template<>
+struct VariantCases<6>
+{
+  template <typename Functor, typename UnionType, typename... Args>
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
+    vtkm::IdComponent index,
+    Functor&& f,
+    UnionType& storage,
+    Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+    -> decltype(f(storage.V0, args...))
+  {
+    // Assume index is 0. Saves us some conditionals.
+    VTKM_ASSERT((index >= 0) && (index < 6));
+    switch (index)
+    {
+      default:
+      case 0:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V0, std::forward<Args>(args)...);
+      case 1:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V1, std::forward<Args>(args)...);
+      case 2:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V2, std::forward<Args>(args)...);
+      case 3:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V3, std::forward<Args>(args)...);
+      case 4:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V4, std::forward<Args>(args)...);
+      case 5:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V5, std::forward<Args>(args)...);
+    }
+  }
+};
+template<>
+struct VariantCases<7>
+{
+  template <typename Functor, typename UnionType, typename... Args>
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
+    vtkm::IdComponent index,
+    Functor&& f,
+    UnionType& storage,
+    Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+    -> decltype(f(storage.V0, args...))
+  {
+    // Assume index is 0. Saves us some conditionals.
+    VTKM_ASSERT((index >= 0) && (index < 7));
+    switch (index)
+    {
+      default:
+      case 0:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V0, std::forward<Args>(args)...);
+      case 1:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V1, std::forward<Args>(args)...);
+      case 2:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V2, std::forward<Args>(args)...);
+      case 3:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V3, std::forward<Args>(args)...);
+      case 4:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V4, std::forward<Args>(args)...);
+      case 5:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V5, std::forward<Args>(args)...);
+      case 6:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V6, std::forward<Args>(args)...);
+    }
+  }
+};
+template<>
+struct VariantCases<8>
+{
+  template <typename Functor, typename UnionType, typename... Args>
+  VTK_M_DEVICE static
+#ifdef VTKM_HIP
+  // this is a temporary solution to improve Kokkos/HIP compile times for
+  // ConnectivityTracer in Rendering.
+  //
+  // This function currently gets inlined many times, which dramatically increases
+  // both compile time and the size of the resulting code-object
+  __attribute__((noinline))
+#else
+  inline
+#endif
+  auto CastAndCall(
+    vtkm::IdComponent index,
+    Functor&& f,
+    UnionType& storage,
+    Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
+    -> decltype(f(storage.V0, args...))
+  {
+    // Assume index is 0. Saves us some conditionals.
+    VTKM_ASSERT((index >= 0) && (index < 8));
+    switch (index)
+    {
+      default:
+      case 0:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V0, std::forward<Args>(args)...);
+      case 1:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V1, std::forward<Args>(args)...);
+      case 2:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V2, std::forward<Args>(args)...);
+      case 3:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V3, std::forward<Args>(args)...);
+      case 4:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V4, std::forward<Args>(args)...);
+      case 5:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V5, std::forward<Args>(args)...);
+      case 6:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V6, std::forward<Args>(args)...);
+      case 7:
+        // If you get a compile error here, it probably means that you have called
+        // Variant::CastAndCall with a functor that does not accept one of the types in the
+        // Variant. The functor you provide must be callable with all types in the Variant, not
+        // just the one that it currently holds.
+        return f(storage.V7, std::forward<Args>(args)...);
+    }
+  }
+};
+
+
+template <std::size_t UnionSize, typename Functor, typename UnionType, typename... Args>
 VTK_M_DEVICE inline auto VariantCastAndCallImpl(
   vtkm::IdComponent index,
   Functor&& f,
@@ -923,8 +1004,8 @@ VTK_M_DEVICE inline auto VariantCastAndCallImpl(
   Args&&... args) noexcept(noexcept(f(storage.V0, args...)))
   -> decltype(f(storage.V0, args...))
 {
-  return VariantCastAndCallImplR<decltype(f(storage.V0, args...))>(
-    std::false_type{}, index, std::forward<Functor>(f), storage, std::forward<Args>(args)...);
+  return VariantCases<UnionSize>::CastAndCall(
+    index, std::forward<Functor>(f), storage, std::forward<Args>(args)...);
 }
 
 }

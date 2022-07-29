@@ -33,7 +33,7 @@ public:
   using Scalar = vtkm::FloatDefault;
 
   VTKM_CONT
-  LagrangianStructures(Scalar endTime, vtkm::cont::DynamicCellSet cellSet)
+  LagrangianStructures(Scalar endTime, vtkm::cont::UnknownCellSet cellSet)
     : EndTime(endTime)
     , GridData(cellSet)
   {
@@ -109,7 +109,7 @@ public:
   using Scalar = vtkm::FloatDefault;
 
   VTKM_CONT
-  LagrangianStructures(Scalar endTime, vtkm::cont::DynamicCellSet cellSet)
+  LagrangianStructures(Scalar endTime, vtkm::cont::UnknownCellSet cellSet)
     : EndTime(endTime)
     , GridData(cellSet)
   {

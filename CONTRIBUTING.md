@@ -45,7 +45,7 @@ Before you begin, perform initial setup:
 
 [GitLab Access]: https://gitlab.kitware.com/users/sign_in
 [Fork VTK-m]: https://gitlab.kitware.com/vtk/vtk-m/-/forks/new
-[Register with the VTK-m dashboard]: https://open.cdash.org/register.php
+[Register with the VTK-m dashboard]: https://open.cdash.org/register
 [Sign up for the VTK-m mailing list]: http://vtk.org/mailman/listinfo/vtkm
 
 

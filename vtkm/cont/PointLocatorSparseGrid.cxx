@@ -19,6 +19,12 @@
 //============================================================================
 #include <vtkm/cont/PointLocatorSparseGrid.h>
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/Invoker.h>
+#include <vtkm/worklet/WorkletMapField.h>
+
 namespace vtkm
 {
 namespace cont
@@ -76,17 +82,16 @@ void PointLocatorSparseGrid::Build()
                              static_cast<vtkm::FloatDefault>(this->Range[2].Max));
 
   // generate unique id for each input point
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(
-    0, 1, this->GetCoordinates().GetNumberOfValues());
-  vtkm::cont::ArrayCopy(pointCounting, this->PointIds);
+  vtkm::cont::ArrayHandleIndex pointIndex(this->GetCoordinates().GetNumberOfValues());
+  vtkm::cont::ArrayCopy(pointIndex, this->PointIds);
 
   using internal::BinPointsWorklet;
 
   // bin points into cells and give each of them the cell id.
   vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
   BinPointsWorklet cellIdWorklet(rmin, rmax, this->Dims);
-  vtkm::worklet::DispatcherMapField<BinPointsWorklet> dispatchCellId(cellIdWorklet);
-  dispatchCellId.Invoke(this->GetCoordinates(), cellIds);
+  vtkm::cont::Invoker invoke;
+  invoke(cellIdWorklet, this->GetCoordinates(), cellIds);
 
   // Group points of the same cell together by sorting them according to the cell ids
   vtkm::cont::Algorithm::SortByKey(cellIds, this->PointIds);

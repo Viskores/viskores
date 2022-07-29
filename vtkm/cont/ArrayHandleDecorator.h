@@ -14,12 +14,12 @@
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Storage.h>
 
+#include <vtkm/List.h>
 #include <vtkm/StaticAssert.h>
 #include <vtkm/Tuple.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/internal/ArrayPortalHelpers.h>
-#include <vtkm/internal/brigand.hpp>
 
 #include <vtkmstd/integer_sequence.h>
 
@@ -109,8 +109,7 @@ namespace decor
 // Ensures that all types in variadic container ArrayHandleList are subclasses
 // of ArrayHandleBase.
 template <typename ArrayHandleList>
-using AllAreArrayHandles =
-  brigand::all<ArrayHandleList, std::is_base_of<ArrayHandleBase, brigand::_1>>;
+using AllAreArrayHandles = vtkm::ListAll<ArrayHandleList, vtkm::cont::internal::ArrayHandleCheck>;
 
 namespace detail
 {
@@ -219,11 +218,11 @@ typename std::decay<ArrayT>::type::ReadPortalType GetWritePortalImpl(
 // array handles, since these may throw. On non-writable handles, use the
 // const array handles so we can at least read from them in the inverse
 // functors.
-template <typename ArrayT,
-          typename Portal = typename std::decay<ArrayT>::type::WritePortalType,
-          typename PortalConst = typename std::decay<ArrayT>::type::ReadPortalType>
-using GetWritePortalType =
-  typename brigand::if_<vtkm::internal::PortalSupportsSets<Portal>, Portal, PortalConst>::type;
+template <typename ArrayT>
+using GetWritePortalType = std::conditional_t<
+  vtkm::internal::PortalSupportsSets<typename std::decay<ArrayT>::type::WritePortalType>::value,
+  typename std::decay<ArrayT>::type::WritePortalType,
+  typename std::decay<ArrayT>::type::ReadPortalType>;
 
 template <typename ArrayT>
 using GetReadPortalType = typename std::decay<ArrayT>::type::ReadPortalType;
@@ -249,9 +248,7 @@ GetReadPortalType<typename std::decay<ArrayT>::type> ReadPortal(const ArrayT& ar
 // Equivalent to std::true_type if *any* portal in PortalList can be written to.
 // If all are read-only, std::false_type is used instead.
 template <typename PortalList>
-using AnyPortalIsWritable =
-  typename brigand::any<PortalList,
-                        brigand::bind<vtkm::internal::PortalSupportsSets, brigand::_1>>::type;
+using AnyPortalIsWritable = vtkm::ListAny<PortalList, vtkm::internal::PortalSupportsSets>;
 
 // Set to std::true_type if DecoratorImplT::CreateInverseFunctor can be called
 // with the supplied portals, or std::false_type otherwise.
@@ -268,8 +265,8 @@ using IsDecoratorAllocatable =
 // std::true_type/std::false_type depending on whether the decorator impl has a
 // CreateInversePortal method AND any of the arrays are writable.
 template <typename DecoratorImplT, typename PortalList>
-using CanWriteToFunctor = typename brigand::and_<IsFunctorInvertible<DecoratorImplT, PortalList>,
-                                                 AnyPortalIsWritable<PortalList>>::type;
+using CanWriteToFunctor = vtkm::internal::meta::And<IsFunctorInvertible<DecoratorImplT, PortalList>,
+                                                    AnyPortalIsWritable<PortalList>>;
 
 // The FunctorType for the provided implementation and portal types.
 template <typename DecoratorImplT, typename PortalList>
@@ -286,22 +283,28 @@ using GetInverseFunctorType =
 // Convert a sequence of array handle types to a list of portals:
 
 // Some notes on this implementation:
-// - MSVC 2015 ICEs when using brigand::transform to convert a brigand::list
-//   of arrayhandles to portals. So instead we pass the ArrayTs.
-// - Just using brigand::list<GetWritePortalType<ArrayTs>...> fails, as
-//   apparently that is an improper parameter pack expansion
+// - A more straightforward way to implement these to types would be to take
+//   a simple template that takes a vtkm::List of array types and convert
+//   that with vtkm::ListTransform<ArrayList, GetWritePortalType>. However,
+//   this causes a strange compiler error in VS 2017 when evaluating the
+//   `ValueType` in `DecoratorStorageTraits`. (It does not recognize the
+//   decorator impl functor as a function taking one argument, even when it
+//   effectively is.) A previous similar implementation caused an ICE in
+//   VS 2015 (although that compiler is no longer supported anyway).
+// - The same problem happens with VS 2017 if you just try to create a list
+//   with vtkm::List<GetWritePortalType<ArrayTs>...>.
 // - So we jump through some decltype/declval hoops here to get this to work:
 template <typename... ArrayTs>
 using GetReadPortalList =
-  brigand::list<decltype((ReadPortal(std::declval<ArrayTs&>(),
-                                     std::declval<vtkm::cont::DeviceAdapterId>(),
-                                     std::declval<vtkm::cont::Token&>())))...>;
+  vtkm::List<decltype((ReadPortal(std::declval<ArrayTs&>(),
+                                  std::declval<vtkm::cont::DeviceAdapterId>(),
+                                  std::declval<vtkm::cont::Token&>())))...>;
 
 template <typename... ArrayTs>
 using GetWritePortalList =
-  brigand::list<decltype((WritePortal(std::declval<ArrayTs&>(),
-                                      std::declval<vtkm::cont::DeviceAdapterId>(),
-                                      std::declval<vtkm::cont::Token&>())))...>;
+  vtkm::List<decltype((WritePortal(std::declval<ArrayTs&>(),
+                                   std::declval<vtkm::cont::DeviceAdapterId>(),
+                                   std::declval<vtkm::cont::Token&>())))...>;
 
 template <vtkm::IdComponent I, typename ArrayTupleType>
 struct BufferIndexImpl
@@ -340,7 +343,7 @@ struct DecoratorMetaData
 template <typename DecoratorImplT, typename... ArrayTs>
 struct DecoratorStorageTraits
 {
-  using ArrayList = brigand::list<ArrayTs...>;
+  using ArrayList = vtkm::List<ArrayTs...>;
 
   VTKM_STATIC_ASSERT_MSG(sizeof...(ArrayTs) > 0,
                          "Must specify at least one source array handle for "
@@ -387,7 +390,7 @@ struct DecoratorStorageTraits
 
   // Portal lists:
   // NOTE we have to pass the parameter pack here instead of using ArrayList
-  // with brigand::transform, since that's causing MSVC 2015 to ice:
+  // with vtkm::ListTransform, since that's causing problems with VS 2017:
   using WritePortalList = GetWritePortalList<ArrayTs...>;
   using ReadPortalList = GetReadPortalList<ArrayTs...>;
 
@@ -682,7 +685,7 @@ VTKM_CONT ArrayHandleDecorator<typename std::decay<DecoratorImplT>::type,
                                typename std::decay<ArrayTs>::type...>
 make_ArrayHandleDecorator(vtkm::Id numValues, DecoratorImplT&& f, ArrayTs&&... arrays)
 {
-  using AHList = brigand::list<typename std::decay<ArrayTs>::type...>;
+  using AHList = vtkm::List<typename std::decay<ArrayTs>::type...>;
   VTKM_STATIC_ASSERT_MSG(sizeof...(ArrayTs) > 0,
                          "Must specify at least one source array handle for "
                          "ArrayHandleDecorator. Consider using "

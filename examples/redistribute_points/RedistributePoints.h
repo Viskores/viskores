@@ -14,8 +14,8 @@
 #include <vtkm/cont/BoundsGlobalCompute.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Serialization.h>
-#include <vtkm/filter/ExtractPoints.h>
 #include <vtkm/filter/Filter.h>
+#include <vtkm/filter/entity_extraction/ExtractPoints.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
 
@@ -50,7 +50,7 @@ class Redistributor
     // extract points
     vtkm::Box box(bds.min[0], bds.max[0], bds.min[1], bds.max[1], bds.min[2], bds.max[2]);
 
-    vtkm::filter::ExtractPoints extractor;
+    vtkm::filter::entity_extraction::ExtractPoints extractor;
     extractor.SetCompactPoints(true);
     extractor.SetImplicitFunction(box);
     return extractor.Execute(input);

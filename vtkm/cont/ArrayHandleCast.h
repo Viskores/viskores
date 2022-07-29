@@ -184,8 +184,8 @@ private:
     using SrcLimits = std::numeric_limits<SrcComp>;
     using DstLimits = std::numeric_limits<DstComp>;
 
-    const vtkm::Range SrcRange{ SrcLimits::min(), SrcLimits::max() };
-    const vtkm::Range DstRange{ DstLimits::min(), DstLimits::max() };
+    const vtkm::Range SrcRange{ SrcLimits::lowest(), SrcLimits::max() };
+    const vtkm::Range DstRange{ DstLimits::lowest(), DstLimits::max() };
 
     const bool RangeLoss = (SrcRange.Max > DstRange.Max || SrcRange.Min < DstRange.Min);
     const bool PrecLoss = SrcLimits::digits > DstLimits::digits;

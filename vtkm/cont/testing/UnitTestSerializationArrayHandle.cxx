@@ -44,22 +44,16 @@ using namespace vtkm::cont::testing::serialization;
 namespace
 {
 
-using StorageList = vtkm::List<
-  vtkm::cont::StorageTagBasic,
-  vtkm::cont::StorageTagSOA,
-  vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
-                                         vtkm::cont::StorageTagBasic,
-                                         vtkm::cont::StorageTagBasic>,
+using TestTypesListScalar = vtkm::List<vtkm::Int8, vtkm::Id, vtkm::FloatDefault>;
+using TestTypesListVec = vtkm::List<vtkm::Vec3f_32, vtkm::Vec3f_64>;
+using TestTypesList = vtkm::ListAppend<TestTypesListScalar, TestTypesListVec>;
+
+using StorageListInefficientExtract = vtkm::List<
   vtkm::cont::StorageTagCast<vtkm::Int8, vtkm::cont::StorageTagBasic>,
   vtkm::cont::StorageTagConstant,
   vtkm::cont::StorageTagCounting,
-  vtkm::cont::StorageTagGroupVec<vtkm::cont::StorageTagBasic, 2>,
-  vtkm::cont::StorageTagGroupVec<vtkm::cont::StorageTagBasic, 3>,
-  vtkm::cont::StorageTagGroupVec<vtkm::cont::StorageTagBasic, 4>,
   vtkm::cont::StorageTagIndex,
-  vtkm::cont::StorageTagPermutation<vtkm::cont::StorageTagBasic, vtkm::cont::StorageTagBasic>,
-  vtkm::cont::StorageTagReverse<vtkm::cont::StorageTagBasic>,
-  vtkm::cont::StorageTagUniformPoints>;
+  vtkm::cont::StorageTagPermutation<vtkm::cont::StorageTagBasic, vtkm::cont::StorageTagBasic>>;
 
 //-----------------------------------------------------------------------------
 struct TestEqualArrayHandle
@@ -71,11 +65,52 @@ public:
     VTKM_TEST_ASSERT(test_equal_ArrayHandles(array1, array2));
   }
 
+  template <typename TypeList, typename StorageList>
+  VTKM_CONT void operator()(const vtkm::cont::UncertainArrayHandle<TypeList, StorageList>& array1,
+                            const vtkm::cont::UnknownArrayHandle& array2) const
+  {
+    // This results in an excessive amount of compiling. However, we do it here to avoid
+    // warnings about inefficient copies of the weirder arrays. That slowness might be OK
+    // to test arrays, but we want to make sure that the serialization itself does not do
+    // that.
+    array1.CastAndCall([array2](const auto& concreteArray1) {
+      using ArrayType = std::decay_t<decltype(concreteArray1)>;
+      ArrayType concreteArray2;
+      array2.AsArrayHandle(concreteArray2);
+      test_equal_ArrayHandles(concreteArray1, concreteArray2);
+    });
+  }
+
+  template <typename TypeList1, typename StorageList1, typename TypeList2, typename StorageList2>
+  VTKM_CONT void operator()(
+    const vtkm::cont::UncertainArrayHandle<TypeList1, StorageList1>& array1,
+    const vtkm::cont::UncertainArrayHandle<TypeList2, StorageList2>& array2) const
+  {
+    (*this)(array1, vtkm::cont::UnknownArrayHandle(array2));
+  }
+
   VTKM_CONT void operator()(const vtkm::cont::UnknownArrayHandle& array1,
                             const vtkm::cont::UnknownArrayHandle& array2) const
   {
-    VTKM_TEST_ASSERT(test_equal_ArrayHandles(array1.ResetTypes<vtkm::TypeListAll, StorageList>(),
-                                             array2.ResetTypes<vtkm::TypeListAll, StorageList>()));
+    bool isInefficient = false;
+    vtkm::ListForEach(
+      [&](auto type) {
+        using StorageTag = std::decay_t<decltype(type)>;
+        if (array1.IsStorageType<StorageTag>())
+        {
+          isInefficient = true;
+        }
+      },
+      StorageListInefficientExtract{});
+
+    if (isInefficient)
+    {
+      (*this)(array1.ResetTypes<TestTypesList, StorageListInefficientExtract>(), array2);
+    }
+    else
+    {
+      test_equal_ArrayHandles(array1, array2);
+    }
   }
 };
 
@@ -88,10 +123,6 @@ inline void RunTest(const T& obj)
 
 //-----------------------------------------------------------------------------
 constexpr vtkm::Id ArraySize = 10;
-
-using TestTypesListScalar = vtkm::List<vtkm::Int8, vtkm::Id, vtkm::FloatDefault>;
-using TestTypesListVec = vtkm::List<vtkm::Vec3f_32, vtkm::Vec3f_64>;
-using TestTypesList = vtkm::ListAppend<TestTypesListScalar, TestTypesListVec>;
 
 template <typename T, typename S>
 inline vtkm::cont::UnknownArrayHandle MakeTestUnknownArrayHandle(
@@ -345,7 +376,8 @@ void TestArrayHandleSerialization()
   vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesListVec());
 
   std::cout << "Testing ArrayHandleCartesianProduct\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleCartesianProduct(), TestTypesListScalar());
+  vtkm::testing::Testing::TryTypes(TestArrayHandleCartesianProduct(),
+                                   vtkm::List<vtkm::Float32, vtkm::Float64>());
 
   std::cout << "Testing TestArrayHandleCast\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleCast(), TestTypesList());

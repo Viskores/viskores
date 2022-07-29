@@ -105,6 +105,12 @@ public:
       nullptr // optional input, included for consistency with ContourTreeMesh
   ) const;
 
+  /// Get of global indices of the vertices owned by this mesh. Implemented via
+  /// DataSetMesh.GetOwnedVerticesByGlobalIdImpl.
+  void GetOwnedVerticesByGlobalId(
+    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
+    IdArrayType& ownedVertices) const;
+
 private:
   bool UseGetMax; // Define the behavior ofr the PrepareForExecution function
 };                // class DataSetMesh_Triangulation
@@ -204,6 +210,14 @@ inline void DataSetMeshTriangulation3DMarchingCubes::GetBoundaryVertices(
          boundaryVertexArray,                                  // output
          boundarySortIndexArray                                // output
   );
+}
+
+// Overwrite the implemenation from the base DataSetMesh parent class
+inline void DataSetMeshTriangulation3DMarchingCubes::GetOwnedVerticesByGlobalId(
+  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
+  IdArrayType& ownedVertices) const
+{
+  return this->GetOwnedVerticesByGlobalIdImpl(this, localToGlobalIdRelabeler, ownedVertices);
 }
 
 } // namespace contourtree_augmented

@@ -21,7 +21,7 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UncertainCellSet.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <vtkm/cont/testing/vtkm_cont_testing_export.h>
@@ -31,7 +31,7 @@
 
 // We could, conceivably, use CUDA or Kokkos specific print statements here.
 // But we cannot use std::stringstream on device, so for now, we'll just accept
-// that on CUDA and Kokkos we print less actionalble information.
+// that on CUDA and Kokkos we print less actionable information.
 #if defined(VTKM_ENABLE_CUDA) || defined(VTKM_ENABLE_KOKKOS)
 #define VTKM_MATH_ASSERT(condition, message) \
   {                                          \
@@ -62,43 +62,20 @@ namespace cont
 namespace testing
 {
 
-enum TestOptionsIndex
-{
-  TEST_UNKNOWN,
-  DATADIR,                // base dir containing test data files
-  BASELINEDIR,            // base dir for regression test images
-  WRITEDIR,               // base dir for generated regression test images
-  DEPRECATED_DATADIR,     // base dir containing test data files
-  DEPRECATED_BASELINEDIR, // base dir for regression test images
-  DEPRECATED_WRITEDIR     // base dir for generated regression test images
-};
-
-struct Testing
+struct VTKM_CONT_TESTING_EXPORT Testing
 {
 public:
-  static VTKM_CONT const std::string GetTestDataBasePath() { return SetAndGetTestDataBasePath(); }
+  static VTKM_CONT std::string GetTestDataBasePath();
 
-  static VTKM_CONT const std::string DataPath(const std::string& filename)
-  {
-    return GetTestDataBasePath() + filename;
-  }
+  static VTKM_CONT std::string DataPath(const std::string& filename);
 
-  static VTKM_CONT const std::string GetRegressionTestImageBasePath()
-  {
-    return SetAndGetRegressionImageBasePath();
-  }
+  static VTKM_CONT std::string GetRegressionTestImageBasePath();
 
-  static VTKM_CONT const std::string RegressionImagePath(const std::string& filename)
-  {
-    return GetRegressionTestImageBasePath() + filename;
-  }
+  static VTKM_CONT std::string RegressionImagePath(const std::string& filename);
 
-  static VTKM_CONT const std::string GetWriteDirBasePath() { return SetAndGetWriteDirBasePath(); }
+  static VTKM_CONT std::string GetWriteDirBasePath();
 
-  static VTKM_CONT const std::string WriteDirPath(const std::string& filename)
-  {
-    return GetWriteDirBasePath() + filename;
-  }
+  static VTKM_CONT std::string WriteDirPath(const std::string& filename);
 
   template <class Func>
   static VTKM_CONT int ExecuteFunction(Func function)
@@ -198,224 +175,19 @@ public:
     MakeArgs(argc, argv, "program-name", args...);
   }
 
-  static void SetEnv(const std::string& var, const std::string& value)
-  {
-    static std::vector<std::pair<std::string, std::string>> envVars{};
-#ifdef _MSC_VER
-    auto iter = envVars.emplace(envVars.end(), var, value);
-    _putenv_s(iter->first.c_str(), iter->second.c_str());
-#else
-    setenv(var.c_str(), value.c_str(), 1);
-#endif
-  }
+  static void SetEnv(const std::string& var, const std::string& value);
 
-  static void UnsetEnv(const std::string& var)
-  {
-#ifdef _MSC_VER
-    SetEnv(var, "");
-#else
-    unsetenv(var.c_str());
-#endif
-  }
+  static void UnsetEnv(const std::string& var);
 
 private:
-  static std::string& SetAndGetTestDataBasePath(std::string path = "")
-  {
-    static std::string TestDataBasePath;
+  static std::string& SetAndGetTestDataBasePath(std::string path = "");
 
-    if (!path.empty())
-    {
-      TestDataBasePath = path;
-      if ((TestDataBasePath.back() != '/') && (TestDataBasePath.back() != '\\'))
-      {
-        TestDataBasePath = TestDataBasePath + "/";
-      }
-    }
+  static std::string& SetAndGetRegressionImageBasePath(std::string path = "");
 
-    if (TestDataBasePath.empty())
-    {
-      VTKM_LOG_S(
-        vtkm::cont::LogLevel::Error,
-        "TestDataBasePath was never set, was --vtkm-data-dir set correctly? (hint: ../data/data)");
-    }
-
-    return TestDataBasePath;
-  }
-
-  static std::string& SetAndGetRegressionImageBasePath(std::string path = "")
-  {
-    static std::string RegressionTestImageBasePath;
-
-    if (!path.empty())
-    {
-      RegressionTestImageBasePath = path;
-      if ((RegressionTestImageBasePath.back() != '/') &&
-          (RegressionTestImageBasePath.back() != '\\'))
-      {
-        RegressionTestImageBasePath = RegressionTestImageBasePath + '/';
-      }
-    }
-
-    if (RegressionTestImageBasePath.empty())
-    {
-      VTKM_LOG_S(
-        vtkm::cont::LogLevel::Error,
-        "RegressionTestImageBasePath was never set, was --vtkm-baseline-dir set correctly? "
-        "(hint: ../data/baseline)");
-    }
-
-    return RegressionTestImageBasePath;
-  }
-
-  static std::string& SetAndGetWriteDirBasePath(std::string path = "")
-  {
-    static std::string WriteDirBasePath;
-
-    if (!path.empty())
-    {
-      WriteDirBasePath = path;
-      if ((WriteDirBasePath.back() != '/') && (WriteDirBasePath.back() != '\\'))
-      {
-        WriteDirBasePath = WriteDirBasePath + '/';
-      }
-    }
-
-    return WriteDirBasePath;
-  }
+  static std::string& SetAndGetWriteDirBasePath(std::string path = "");
 
   // Method to parse the extra arguments given to unit tests
-  static VTKM_CONT void ParseAdditionalTestArgs(int& argc, char* argv[])
-  {
-    std::vector<opt::Descriptor> usage;
-
-    usage.push_back({ DATADIR,
-                      0,
-                      "",
-                      "vtkm-data-dir",
-                      opt::VtkmArg::Required,
-                      "  --vtkm-data-dir "
-                      "<data-dir-path> \tPath to the "
-                      "base data directory in the VTK-m "
-                      "src dir." });
-    usage.push_back({ BASELINEDIR,
-                      0,
-                      "",
-                      "vtkm-baseline-dir",
-                      opt::VtkmArg::Required,
-                      "  --vtkm-baseline-dir "
-                      "<baseline-dir-path> "
-                      "\tPath to the base dir "
-                      "for regression test "
-                      "images" });
-    usage.push_back({ WRITEDIR,
-                      0,
-                      "",
-                      "vtkm-write-dir",
-                      opt::VtkmArg::Required,
-                      "  --vtkm-write-dir "
-                      "<write-dir-path> "
-                      "\tPath to the write dir "
-                      "to store generated "
-                      "regression test images" });
-    usage.push_back({ DEPRECATED_DATADIR,
-                      0,
-                      "D",
-                      "data-dir",
-                      opt::VtkmArg::Required,
-                      "  --data-dir "
-                      "<data-dir-path> "
-                      "\tDEPRECATED: use --vtkm-data-dir instead" });
-    usage.push_back({ DEPRECATED_BASELINEDIR,
-                      0,
-                      "B",
-                      "baseline-dir",
-                      opt::VtkmArg::Required,
-                      "  --baseline-dir "
-                      "<baseline-dir-path> "
-                      "\tDEPRECATED: use --vtkm-baseline-dir instead" });
-    usage.push_back({ WRITEDIR,
-                      0,
-                      "",
-                      "write-dir",
-                      opt::VtkmArg::Required,
-                      "  --write-dir "
-                      "<write-dir-path> "
-                      "\tDEPRECATED: use --vtkm-write-dir instead" });
-
-    // Required to collect unknown arguments when help is off.
-    usage.push_back({ TEST_UNKNOWN, 0, "", "", opt::VtkmArg::UnknownOption, "" });
-    usage.push_back({ 0, 0, 0, 0, 0, 0 });
-
-
-    // Remove argv[0] (executable name) if present:
-    int vtkmArgc = argc > 0 ? argc - 1 : 0;
-    char** vtkmArgv = argc > 0 ? argv + 1 : argv;
-
-    opt::Stats stats(usage.data(), vtkmArgc, vtkmArgv);
-    std::unique_ptr<opt::Option[]> options{ new opt::Option[stats.options_max] };
-    std::unique_ptr<opt::Option[]> buffer{ new opt::Option[stats.buffer_max] };
-    opt::Parser parse(usage.data(), vtkmArgc, vtkmArgv, options.get(), buffer.get());
-
-    if (parse.error())
-    {
-      std::cerr << "Internal Initialize parser error" << std::endl;
-      exit(1);
-    }
-
-    if (options[DEPRECATED_DATADIR])
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "Supplied deprecated datadir flag: "
-                   << std::string{ options[DEPRECATED_DATADIR].name }
-                   << ", use --vtkm-data-dir instead");
-      SetAndGetTestDataBasePath(options[DEPRECATED_DATADIR].arg);
-    }
-
-    if (options[DEPRECATED_BASELINEDIR])
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "Supplied deprecated baselinedir flag: "
-                   << std::string{ options[DEPRECATED_BASELINEDIR].name }
-                   << ", use --vtkm-baseline-dir instead");
-      SetAndGetRegressionImageBasePath(options[DEPRECATED_BASELINEDIR].arg);
-    }
-
-    if (options[DEPRECATED_WRITEDIR])
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "Supplied deprecated writedir flag: "
-                   << std::string{ options[DEPRECATED_WRITEDIR].name }
-                   << ", use --vtkm-write-dir instead");
-      SetAndGetWriteDirBasePath(options[DEPRECATED_WRITEDIR].arg);
-    }
-
-    if (options[DATADIR])
-    {
-      SetAndGetTestDataBasePath(options[DATADIR].arg);
-    }
-
-    if (options[BASELINEDIR])
-    {
-      SetAndGetRegressionImageBasePath(options[BASELINEDIR].arg);
-    }
-
-    if (options[WRITEDIR])
-    {
-      SetAndGetWriteDirBasePath(options[WRITEDIR].arg);
-    }
-
-    for (const opt::Option* opt = options[TEST_UNKNOWN]; opt != nullptr; opt = opt->next())
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Unknown option to internal Initialize: " << opt->name << "\n");
-    }
-
-    for (int nonOpt = 0; nonOpt < parse.nonOptionsCount(); ++nonOpt)
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Unknown argument to internal Initialize: " << parse.nonOption(nonOpt) << "\n");
-    }
-  }
+  static VTKM_CONT void ParseAdditionalTestArgs(int& argc, char* argv[]);
 };
 
 } // namespace vtkm::cont::testing
@@ -459,10 +231,24 @@ namespace detail
 
 struct TestEqualCellSet
 {
+  template <typename CellSetType1, typename CellSetType2>
+  void operator()(const CellSetType1& cs1, const CellSetType2& cs2, TestEqualResult& result) const
+  {
+    // Avoid ambiguous overloads by specifying whether each cell type is known or unknown.
+    this->Run(cs1,
+              typename vtkm::cont::internal::CellSetCheck<CellSetType1>::type{},
+              cs2,
+              typename vtkm::cont::internal::CellSetCheck<CellSetType2>::type{},
+              result);
+  }
+
+private:
   template <typename ShapeST, typename ConnectivityST, typename OffsetST>
-  void operator()(const vtkm::cont::CellSetExplicit<ShapeST, ConnectivityST, OffsetST>& cs1,
-                  const vtkm::cont::CellSetExplicit<ShapeST, ConnectivityST, OffsetST>& cs2,
-                  TestEqualResult& result) const
+  void Run(const vtkm::cont::CellSetExplicit<ShapeST, ConnectivityST, OffsetST>& cs1,
+           std::true_type,
+           const vtkm::cont::CellSetExplicit<ShapeST, ConnectivityST, OffsetST>& cs2,
+           std::true_type,
+           TestEqualResult& result) const
   {
     vtkm::TopologyElementTagCell visitTopo{};
     vtkm::TopologyElementTagPoint incidentTopo{};
@@ -505,9 +291,11 @@ struct TestEqualCellSet
   }
 
   template <vtkm::IdComponent DIMENSION>
-  void operator()(const vtkm::cont::CellSetStructured<DIMENSION>& cs1,
-                  const vtkm::cont::CellSetStructured<DIMENSION>& cs2,
-                  TestEqualResult& result) const
+  void Run(const vtkm::cont::CellSetStructured<DIMENSION>& cs1,
+           std::true_type,
+           const vtkm::cont::CellSetStructured<DIMENSION>& cs2,
+           std::true_type,
+           TestEqualResult& result) const
   {
     if (cs1.GetPointDimensions() != cs2.GetPointDimensions())
     {
@@ -516,27 +304,47 @@ struct TestEqualCellSet
     }
   }
 
-  template <typename CellSetTypes1, typename CellSetTypes2>
-  void operator()(const vtkm::cont::DynamicCellSetBase<CellSetTypes1>& cs1,
-                  const vtkm::cont::DynamicCellSetBase<CellSetTypes2>& cs2,
-                  TestEqualResult& result) const
+  template <typename CellSetType>
+  void Run(const CellSetType& cs1,
+           std::true_type,
+           const vtkm::cont::UnknownCellSet& cs2,
+           std::false_type,
+           TestEqualResult& result) const
   {
-    cs1.CastAndCall(*this, cs2, result);
-  }
-
-  template <typename CellSet, typename CellSetTypes>
-  void operator()(const CellSet& cs,
-                  const vtkm::cont::DynamicCellSetBase<CellSetTypes>& dcs,
-                  TestEqualResult& result) const
-  {
-    if (!dcs.IsSameType(cs))
+    if (!cs2.CanConvert<CellSetType>())
     {
       result.PushMessage("types don't match");
       return;
     }
-    this->operator()(cs, dcs.template Cast<CellSet>(), result);
+    this->Run(cs1, std::true_type{}, cs2.AsCellSet<CellSetType>(), std::true_type{}, result);
+  }
+
+  template <typename CellSetType>
+  void Run(const vtkm::cont::UnknownCellSet& cs1,
+           std::false_type,
+           const CellSetType& cs2,
+           std::true_type,
+           TestEqualResult& result) const
+  {
+    if (!cs1.CanConvert<CellSetType>())
+    {
+      result.PushMessage("types don't match");
+      return;
+    }
+    this->Run(cs1.AsCellSet<CellSetType>(), std::true_type{}, cs2, std::true_type{}, result);
+  }
+
+  template <typename UnknownCellSetType>
+  void Run(const UnknownCellSetType& cs1,
+           std::false_type,
+           const vtkm::cont::UnknownCellSet& cs2,
+           std::false_type,
+           TestEqualResult& result) const
+  {
+    vtkm::cont::CastAndCall(cs1, *this, cs2, result);
   }
 };
+
 } // detail
 
 template <typename CellSet1, typename CellSet2>

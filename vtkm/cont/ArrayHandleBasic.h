@@ -52,6 +52,18 @@ public:
                                  static_cast<vtkm::BufferSizeType>(sizeof(T)));
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+                             const T& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token)
+  {
+    constexpr vtkm::BufferSizeType fillValueSize =
+      static_cast<vtkm::BufferSizeType>(sizeof(fillValue));
+    buffers[0].Fill(
+      &fillValue, fillValueSize, startIndex * fillValueSize, endIndex * fillValueSize, token);
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)

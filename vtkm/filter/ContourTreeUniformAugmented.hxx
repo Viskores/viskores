@@ -212,7 +212,7 @@ vtkm::cont::DataSet ContourTreeAugmented::DoExecute(
       // Create the result object
       vtkm::cont::DataSet result;
       vtkm::cont::Field rfield(
-        this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, sortedValues);
+        this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, sortedValues);
       result.AddField(rfield);
       return result;
     }
@@ -455,7 +455,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     // TODO the result we return for the parallel and serial case are different right now. This should be made consistent. However, only in the parallel case are we useing the result output
     vtkm::cont::DataSet temp;
     vtkm::cont::Field rfield(this->GetOutputFieldName(),
-                             vtkm::cont::Field::Association::WHOLE_MESH,
+                             vtkm::cont::Field::Association::WholeMesh,
                              contourTreeMeshOut.SortedValues);
     temp.AddField(rfield);
     output = vtkm::cont::PartitionedDataSet(temp);

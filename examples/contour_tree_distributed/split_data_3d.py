@@ -10,7 +10,7 @@ import operator
 # Read a 3D text file from disk into a NumPy array
 # ... Plain text
 def read_file(fn):
-    data = np.fromfile(fn, dtype=np.float, sep=" ")
+    data = np.fromfile(fn, dtype=float, sep=" ")
     data = data[3:].reshape((int(data[2]),int(data[0]),int(data[1])))
     return data
 

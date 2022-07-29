@@ -18,8 +18,8 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-template <typename Derived>
-inline VTKM_CONT FilterParticleAdvection<Derived>::FilterParticleAdvection()
+template <typename Derived, typename ParticleType>
+inline VTKM_CONT FilterParticleAdvection<Derived, ParticleType>::FilterParticleAdvection()
   : vtkm::filter::FilterDataSetWithField<Derived>()
   , NumberOfSteps(0)
   , StepSize(0)
@@ -27,8 +27,8 @@ inline VTKM_CONT FilterParticleAdvection<Derived>::FilterParticleAdvection()
 {
 }
 
-template <typename Derived>
-void FilterParticleAdvection<Derived>::ValidateOptions() const
+template <typename Derived, typename ParticleType>
+void FilterParticleAdvection<Derived, ParticleType>::ValidateOptions() const
 {
   if (this->GetUseCoordinateSystemAsField())
     throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");
@@ -40,13 +40,15 @@ void FilterParticleAdvection<Derived>::ValidateOptions() const
     throw vtkm::cont::ErrorFilterExecution("Step size not specified.");
 }
 
-template <typename Derived>
+template <typename Derived, typename ParticleType>
 std::vector<vtkm::filter::particleadvection::DataSetIntegrator>
-FilterParticleAdvection<Derived>::CreateDataSetIntegrators(
+FilterParticleAdvection<Derived, ParticleType>::CreateDataSetIntegrators(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::particleadvection::BoundsMap& boundsMap) const
 {
-  std::vector<vtkm::filter::particleadvection::DataSetIntegrator> dsi;
+  using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
+
+  std::vector<DSIType> dsi;
 
   if (boundsMap.GetTotalNumBlocks() == 0)
     throw vtkm::cont::ErrorFilterExecution("No input datasets.");
@@ -66,9 +68,10 @@ FilterParticleAdvection<Derived>::CreateDataSetIntegrators(
 }
 
 //-----------------------------------------------------------------------------
-template <typename Derived>
+template <typename Derived, typename ParticleType>
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet FilterParticleAdvection<Derived>::PrepareForExecution(
+inline VTKM_CONT vtkm::cont::DataSet
+FilterParticleAdvection<Derived, ParticleType>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {

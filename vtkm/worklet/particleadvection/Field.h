@@ -46,7 +46,7 @@ public:
 
   VTKM_EXEC void GetValue(const vtkm::Id cellId, vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
   {
-    VTKM_ASSERT(this->Assoc == Association::CELL_SET);
+    VTKM_ASSERT(this->Assoc == Association::Cells);
 
     vtkm::Vec3f velocity = VelocityValues.Get(cellId);
     value = vtkm::make_Vec(velocity);
@@ -58,7 +58,7 @@ public:
                           const vtkm::UInt8 cellShape,
                           vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
   {
-    VTKM_ASSERT(this->Assoc == Association::POINTS);
+    VTKM_ASSERT(this->Assoc == Association::Points);
 
     vtkm::Vec3f velocityInterp;
     vtkm::VecVariable<vtkm::Vec3f, 8> velocities;
@@ -96,7 +96,7 @@ public:
 
   VTKM_EXEC void GetValue(const vtkm::Id cellId, vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
   {
-    VTKM_ASSERT(this->Assoc == Association::CELL_SET);
+    VTKM_ASSERT(this->Assoc == Association::Cells);
 
     auto electric = this->ElectricValues.Get(cellId);
     auto magnetic = this->MagneticValues.Get(cellId);
@@ -109,7 +109,7 @@ public:
                           const vtkm::UInt8 cellShape,
                           vtkm::VecVariable<vtkm::Vec3f, 2>& value) const
   {
-    VTKM_ASSERT(this->Assoc == Association::POINTS);
+    VTKM_ASSERT(this->Assoc == Association::Points);
 
     vtkm::Vec3f electricInterp, magneticInterp;
     vtkm::VecVariable<vtkm::Vec3f, 8> electric;
@@ -143,7 +143,7 @@ public:
   VTKM_CONT
   VelocityField(const FieldArrayType& fieldValues)
     : FieldValues(fieldValues)
-    , Assoc(vtkm::cont::Field::Association::POINTS)
+    , Assoc(vtkm::cont::Field::Association::Points)
   {
   }
 
@@ -152,7 +152,7 @@ public:
     : FieldValues(fieldValues)
     , Assoc(assoc)
   {
-    if (assoc == Association::ANY || assoc == Association::WHOLE_MESH)
+    if (assoc == Association::Any || assoc == Association::WholeMesh)
       throw("Unsupported field association");
   }
 
@@ -182,7 +182,7 @@ public:
   ElectroMagneticField(const FieldArrayType& electricField, const FieldArrayType& magneticField)
     : ElectricField(electricField)
     , MagneticField(magneticField)
-    , Assoc(vtkm::cont::Field::Association::POINTS)
+    , Assoc(vtkm::cont::Field::Association::Points)
   {
   }
 

@@ -145,7 +145,9 @@ public:
   GetSteps() {}
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
-  VTKM_EXEC void operator()(const vtkm::Particle& p, vtkm::Id& numSteps) const
+
+  template <typename ParticleType>
+  VTKM_EXEC void operator()(const ParticleType& p, vtkm::Id& numSteps) const
   {
     numSteps = p.NumSteps;
   }
@@ -161,7 +163,8 @@ public:
 
   // Offset is number of points in streamline.
   // 1 (inital point) + number of steps taken (p.NumSteps - initalNumSteps)
-  VTKM_EXEC void operator()(const vtkm::Particle& p,
+  template <typename ParticleType>
+  VTKM_EXEC void operator()(const ParticleType& p,
                             const vtkm::Id& initialNumSteps,
                             vtkm::Id& diff) const
   {
@@ -222,7 +225,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> cellIndex;
     vtkm::Id connectivityLen = vtkm::cont::Algorithm::ScanExclusive(numPoints, cellIndex);
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> connCount(0, 1, connectivityLen);
+    vtkm::cont::ArrayHandleIndex connCount(connectivityLen);
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
     vtkm::cont::ArrayCopy(connCount, connectivity);
 

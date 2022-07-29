@@ -31,4 +31,4 @@ if(VTKm_ENABLE_RENDERING)
   list(APPEND unit_test_libraries vtkm_rendering)
 endif()
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES ${unit_test_libraries})
+vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES ${unit_test_libraries})

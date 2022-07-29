@@ -25,7 +25,7 @@ class VTKM_RENDERING_EXPORT TriangleExtractor
 protected:
   vtkm::cont::ArrayHandle<vtkm::Id4> Triangles; // (cellid, v0, v1, v2)
 public:
-  void ExtractCells(const vtkm::cont::DynamicCellSet& cells);
+  void ExtractCells(const vtkm::cont::UnknownCellSet& cells);
 
   vtkm::cont::ArrayHandle<vtkm::Id4> GetTriangles();
   vtkm::Id GetNumberOfTriangles() const;

@@ -55,7 +55,9 @@
 #define vtk_m_worklet_contourtree_augmented_types_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/CellSetStructured.h>
 
 namespace vtkm
@@ -126,18 +128,61 @@ inline vtkm::Id MaskedIndex(vtkm::Id flaggedIndex)
   return (flaggedIndex & INDEX_MASK);
 } // MaskedIndex()
 
-// Used in the context of CombinedVector class used in ContourTreeMesh to merge the mesh of contour trees
+/// Used in the context of CombinedVector class used in ContourTreeMesh to merge the mesh of contour trees
 VTKM_EXEC_CONT
 inline bool IsThis(vtkm::Id flaggedIndex)
 { // IsThis
   return ((flaggedIndex & CV_OTHER_FLAG) == 0);
 } // IsThis
 
+/// Helper function to set a single array valye with CopySubRange to avoid pulling the array to the control environment
+VTKM_CONT
+inline void IdArraySetValue(vtkm::Id index, vtkm::Id value, IdArrayType& arr)
+{ // IdArraySetValue
+  vtkm::cont::Algorithm::CopySubRange(
+    vtkm::cont::ArrayHandleConstant<vtkm::Id>(value, 1), 0, 1, arr, index);
+} // IdArraySetValues
+
+
+/// Helper function used to resize a 1D ArrayHandle and initalize new values with a
+/// given fillValue. For resizing ArrayHandles without initalizing new values VTKm
+/// supports the vtkm::CopyFlag::On setting as part of the ArrayHandle.Allocate
+/// method.
+/// @param[in] thearray The 1D array to be resized
+/// @param[in] newSize The new size the array should be changed to
+/// @param[in] fillValue The value to be used to fill the array
+template <typename ValueType>
+void ResizeVector(vtkm::cont::ArrayHandle<ValueType>& thearray,
+                  vtkm::Id newSize,
+                  ValueType fillValue)
+{
+  vtkm::Id oldSize = thearray.GetNumberOfValues();
+  // Simply return if the size of the array does not change
+  if (oldSize == newSize)
+  {
+    return;
+  }
+
+  // Resize the array but keep the original values
+  thearray.Allocate(newSize, vtkm::CopyFlag::On);
+
+  // Add the fill values to the array if we increased the size of the array
+  if (oldSize < newSize)
+  {
+    vtkm::cont::Algorithm::CopySubRange(
+      vtkm::cont::ArrayHandleConstant<ValueType>(fillValue, newSize - oldSize), // copy
+      0,                 // start copying from first index
+      newSize - oldSize, // num values to copy
+      thearray,          // target array to copy to
+      oldSize            // start copy to after oldSize
+    );
+  }
+}
+
 template <typename T>
 struct MaskedIndexFunctor
 {
   VTKM_EXEC_CONT
-
   MaskedIndexFunctor() {}
 
   VTKM_EXEC_CONT

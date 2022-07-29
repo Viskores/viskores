@@ -34,6 +34,7 @@ if(VTKm_ENABLE_EXAMPLES)
   add_subdirectory(redistribute_points)
   add_subdirectory(temporal_advection)
   add_subdirectory(tetrahedra)
+  add_subdirectory(smoke_test)
 endif()
 
 if (VTKm_ENABLE_TESTING)
@@ -41,4 +42,5 @@ if (VTKm_ENABLE_TESTING)
   # be built each time we run the test
   vtkm_test_against_install(demo)
   vtkm_test_against_install(histogram)
+  vtkm_test_against_install(smoke_test)
 endif()

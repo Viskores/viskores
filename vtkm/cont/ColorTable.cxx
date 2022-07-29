@@ -14,7 +14,6 @@
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/ColorTableMap.h>
 #include <vtkm/cont/ErrorBadType.h>
-#include <vtkm/cont/TryExecute.h>
 
 
 namespace

@@ -40,7 +40,7 @@ static void TwoDimRectilinearTest()
   vtkm::cont::DataSet dataSet = testDataSet.Make2DRectilinearDataSet0();
 
   vtkm::cont::CellSetStructured<2> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2, "Incorrect number of fields");
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == 1,
@@ -55,7 +55,7 @@ static void TwoDimRectilinearTest()
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::Cells.");
   }
 
   try
@@ -126,7 +126,7 @@ static void ThreeDimRectilinearTest()
   vtkm::cont::DataSet dataSet = testDataSet.Make3DRectilinearDataSet0();
 
   vtkm::cont::CellSetStructured<3> cellSet;
-  dataSet.GetCellSet().CopyTo(cellSet);
+  dataSet.GetCellSet().AsCellSet(cellSet);
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2, "Incorrect number of fields");
 
@@ -143,7 +143,7 @@ static void ThreeDimRectilinearTest()
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::Cells.");
   }
 
   try

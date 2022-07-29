@@ -94,7 +94,7 @@ public:
   {
     vtkm::cont::DataSet dataset = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::cont::CoordinateSystem coords = dataset.GetCoordinateSystem();
-    vtkm::cont::DynamicCellSet cellSet = dataset.GetCellSet();
+    vtkm::cont::UnknownCellSet cellSet = dataset.GetCellSet();
 
     vtkm::Bounds bounds = coords.GetBounds();
     std::cout << "X bounds : " << bounds.X.Min << " to " << bounds.X.Max << std::endl;
@@ -103,7 +103,7 @@ public:
 
     using StructuredType = vtkm::cont::CellSetStructured<3>;
     vtkm::Id3 cellDims =
-      cellSet.Cast<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
+      cellSet.AsCellSet<StructuredType>().GetSchedulingRange(vtkm::TopologyElementTagCell());
     std::cout << "Dimensions of dataset : " << cellDims << std::endl;
 
     vtkm::cont::CellLocatorUniformGrid locator;

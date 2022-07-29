@@ -38,7 +38,7 @@ VTKM_CONT CoordinateSystem::CoordinateSystem()
 
 VTKM_CONT CoordinateSystem::CoordinateSystem(std::string name,
                                              const vtkm::cont::UnknownArrayHandle& data)
-  : Superclass(name, Association::POINTS, data)
+  : Superclass(name, Association::Points, data)
 {
 }
 
@@ -50,7 +50,7 @@ CoordinateSystem::CoordinateSystem(std::string name,
                                    vtkm::Vec3f origin,
                                    vtkm::Vec3f spacing)
   : Superclass(name,
-               Association::POINTS,
+               Association::Points,
                vtkm::cont::ArrayHandleUniformPointCoordinates(dimensions, origin, spacing))
 {
 }

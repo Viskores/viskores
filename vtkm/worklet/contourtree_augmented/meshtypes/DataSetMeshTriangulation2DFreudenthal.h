@@ -70,30 +70,47 @@ namespace worklet
 namespace contourtree_augmented
 {
 
+/// Class representing a 2D dataset mesh with freudenthal triangulation connectivity for contour tree computation
 class DataSetMeshTriangulation2DFreudenthal
   : public DataSetMesh
   , public vtkm::cont::ExecutionObjectBase
 { // class DataSetMeshTriangulation
 public:
-  // Constants and case tables
+  /// Constants and case tables
   m2d_freudenthal::EdgeBoundaryDetectionMasksType EdgeBoundaryDetectionMasks;
   static constexpr int MAX_OUTDEGREE = 3;
 
   //Mesh dependent helper functions
   void SetPrepareForExecutionBehavior(bool getMax);
 
+  /// Prepare mesh for use in VTKm worklets. This function creates a MeshStructureFreudenthal2D
+  /// ExecutionObject that implements relevant mesh functions on the device.
   MeshStructureFreudenthal2D PrepareForExecution(vtkm::cont::DeviceAdapterId device,
                                                  vtkm::cont::Token& token) const;
 
+  /// Constructor
+  /// @param meshSize vtkm::Id2 object describing the number of vertices in x and y
   DataSetMeshTriangulation2DFreudenthal(vtkm::Id2 meshSize);
 
+  /// Helper function to create a boundary excution object for the mesh. The MeshBoundary2DExec object
+  /// implements functions for using in worklets in VTKm's execution environment related the boundary
+  /// of the mesh.
   MeshBoundary2DExec GetMeshBoundaryExecutionObject() const;
 
-  void GetBoundaryVertices(IdArrayType& boundaryVertexArray,    // output
-                           IdArrayType& boundarySortIndexArray, // output
-                           MeshBoundary2DExec* meshBoundaryExecObj =
-                             NULL // optional input, included for consistency with ContourTreeMesh
-  ) const;
+  /// Get boundary vertices
+  /// @param[out] boundaryVertexArray Array of boundary vertices
+  /// @param[out] boundarySortIndexArray Array of sort index of boundary vertices
+  /// @param[in] meshBoundaryExecObj Optional mesh boundary object inluced for consistency with ContourTreeMesh.
+  ///                                if omitted, GetMeshBoundaryExecutionObject() will be used.
+  void GetBoundaryVertices(IdArrayType& boundaryVertexArray,
+                           IdArrayType& boundarySortIndexArray,
+                           MeshBoundary2DExec* meshBoundaryExecObj = NULL) const;
+
+  /// Get of global indices of the vertices owned by this mesh. Implemented via
+  /// DataSetMesh.GetOwnedVerticesByGlobalIdImpl
+  void GetOwnedVerticesByGlobalId(
+    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
+    IdArrayType& ownedVertices) const;
 
 private:
   bool UseGetMax; // Define the behavior ofr the PrepareForExecution function
@@ -155,6 +172,14 @@ inline void DataSetMeshTriangulation2DFreudenthal::GetBoundaryVertices(
          boundaryVertexArray,                                  // output
          boundarySortIndexArray                                // output
   );
+}
+
+// Overwrite the implemenation from the base DataSetMesh parent class
+inline void DataSetMeshTriangulation2DFreudenthal::GetOwnedVerticesByGlobalId(
+  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
+  IdArrayType& ownedVertices) const
+{
+  return this->GetOwnedVerticesByGlobalIdImpl(this, localToGlobalIdRelabeler, ownedVertices);
 }
 
 } // namespace contourtree_augmented

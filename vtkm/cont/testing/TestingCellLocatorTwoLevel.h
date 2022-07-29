@@ -17,11 +17,11 @@
 
 #include <vtkm/exec/ParametricCoordinates.h>
 
+#include <vtkm/filter/geometry_refinement/worklet/Tetrahedralize.h>
+#include <vtkm/filter/geometry_refinement/worklet/Triangulate.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/ScatterPermutation.h>
-#include <vtkm/worklet/Tetrahedralize.h>
-#include <vtkm/worklet/Triangulate.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -77,7 +77,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
                                               vtkm::Vec<vtkm::FloatDefault, DIMENSIONS>(1.0f));
 
   auto uniformCs =
-    uniformDs.GetCellSet().template Cast<vtkm::cont::CellSetStructured<DIMENSIONS>>();
+    uniformDs.GetCellSet().template AsCellSet<vtkm::cont::CellSetStructured<DIMENSIONS>>();
 
   // triangulate the cellset
   vtkm::cont::CellSetSingleType<> cellset;

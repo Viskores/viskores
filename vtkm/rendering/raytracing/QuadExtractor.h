@@ -26,14 +26,14 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Float32> Radii;
 
 public:
-  void ExtractCells(const vtkm::cont::DynamicCellSet& cells);
+  void ExtractCells(const vtkm::cont::UnknownCellSet& cells);
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 5>> GetQuadIds();
 
   vtkm::Id GetNumberOfQuads() const;
 
 protected:
-  void SetQuadIdsFromCells(const vtkm::cont::DynamicCellSet& cells);
+  void SetQuadIdsFromCells(const vtkm::cont::UnknownCellSet& cells);
 
 }; // class ShapeIntersector
 }

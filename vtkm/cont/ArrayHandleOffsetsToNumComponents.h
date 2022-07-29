@@ -65,10 +65,11 @@ class VTKM_ALWAYS_EXPORT
   using OffsetsStorage = vtkm::cont::internal::Storage<vtkm::Id, OffsetsStorageTag>;
 
 public:
+  VTKM_STORAGE_NO_RESIZE;
+  VTKM_STORAGE_NO_WRITE_PORTAL;
+
   using ReadPortalType =
     vtkm::internal::ArrayPortalOffsetsToNumComponents<typename OffsetsStorage::ReadPortalType>;
-  // Writing to ArrayHandleOffsetsToNumComponents not really supported, but we need to define this.
-  using WritePortalType = ReadPortalType;
 
   VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers()
   {
@@ -86,36 +87,12 @@ public:
     return numOffsets - 1;
   }
 
-  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
-                                      vtkm::CopyFlag,
-                                      vtkm::cont::Token&)
-  {
-    if (numValues == GetNumberOfValues(buffers))
-    {
-      // In general, we don't allow resizing of the array, but if it was "allocated" to the
-      // correct size, we will allow that.
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadAllocation(
-        "Cannot allocate/resize ArrayHandleOffsetsToNumComponents.");
-    }
-  }
-
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
   {
     VTKM_ASSERT(OffsetsStorage::GetNumberOfValues(buffers) > 0);
     return ReadPortalType(OffsetsStorage::CreateReadPortal(buffers, device, token));
-  }
-
-  VTKM_CONT static WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer*,
-                                                     vtkm::cont::DeviceAdapterId,
-                                                     vtkm::cont::Token&)
-  {
-    throw vtkm::cont::ErrorBadAllocation("Cannot write to implicit arrays.");
   }
 };
 

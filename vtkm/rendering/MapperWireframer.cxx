@@ -8,12 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/Assert.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Algorithm.h>
 
-#include <vtkm/cont/TryExecute.h>
 #include <vtkm/exec/CellEdge.h>
-#include <vtkm/filter/ExternalFaces.h>
+#include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/MapperWireframer.h>
@@ -229,17 +227,17 @@ void MapperWireframer::SetIsOverlay(bool isOverlay)
   this->Internals->IsOverlay = isOverlay;
 }
 
-void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
+void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
                                    const vtkm::cont::CoordinateSystem& coords,
                                    const vtkm::cont::Field& inScalarField,
                                    const vtkm::cont::ColorTable& colorTable,
                                    const vtkm::rendering::Camera& camera,
                                    const vtkm::Range& scalarRange)
 {
-  vtkm::cont::DynamicCellSet cellSet = inCellSet;
+  vtkm::cont::UnknownCellSet cellSet = inCellSet;
 
-  bool is1D = cellSet.IsSameType(vtkm::cont::CellSetStructured<1>());
-  bool is2D = cellSet.IsSameType(vtkm::cont::CellSetStructured<2>());
+  bool is1D = cellSet.CanConvert<vtkm::cont::CellSetStructured<1>>();
+  bool is2D = cellSet.CanConvert<vtkm::cont::CellSetStructured<2>>();
 
   vtkm::cont::CoordinateSystem actualCoords = coords;
   vtkm::cont::Field actualField = inScalarField;
@@ -267,7 +265,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
 
     actualCoords = vtkm::cont::CoordinateSystem("coords", newCoords);
     actualField = vtkm::cont::Field(
-      inScalarField.GetName(), vtkm::cont::Field::Association::POINTS, newScalars);
+      inScalarField.GetName(), vtkm::cont::Field::Association::Points, newScalars);
 
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     vtkm::cont::ArrayHandle<vtkm::Id> conn;
@@ -279,15 +277,15 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::cont::CellSetSingleType<> newCellSet;
     newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
 
-    cellSet = vtkm::cont::DynamicCellSet(newCellSet);
+    cellSet = vtkm::cont::UnknownCellSet(newCellSet);
   }
   bool isLines = false;
   // Check for a cell set that is already lines
   // Since there is no need to de external faces or
   // render the depth of the mesh to hide internal zones
-  if (cellSet.IsSameType(vtkm::cont::CellSetSingleType<>()))
+  if (cellSet.CanConvert<vtkm::cont::CellSetSingleType<>>())
   {
-    auto singleType = cellSet.Cast<vtkm::cont::CellSetSingleType<>>();
+    auto singleType = cellSet.AsCellSet<vtkm::cont::CellSetSingleType<>>();
     isLines = singleType.GetCellShape(0) == vtkm::CELL_SHAPE_LINE;
   }
 
@@ -300,7 +298,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     dataSet.AddCoordinateSystem(actualCoords);
     dataSet.SetCellSet(inCellSet);
     dataSet.AddField(inScalarField);
-    vtkm::filter::ExternalFaces externalFaces;
+    vtkm::filter::entity_extraction::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
     externalFaces.SetPassPolyData(true);
     vtkm::cont::DataSet output = externalFaces.Execute(dataSet);
@@ -315,8 +313,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   vtkm::worklet::DispatcherMapTopology<EdgesExtracter> extractDispatcher(
     EdgesExtracter::MakeScatter(counts));
   extractDispatcher.Invoke(cellSet, edgeIndices);
-  vtkm::cont::Algorithm::template Sort<vtkm::Id2>(edgeIndices);
-  vtkm::cont::Algorithm::template Unique<vtkm::Id2>(edgeIndices);
+  vtkm::cont::Algorithm::Sort(edgeIndices);
+  vtkm::cont::Algorithm::Unique(edgeIndices);
 
   Wireframer renderer(
     this->Internals->Canvas, this->Internals->ShowInternalZones, this->Internals->IsOverlay);

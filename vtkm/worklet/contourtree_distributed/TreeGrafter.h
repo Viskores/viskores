@@ -66,6 +66,7 @@
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
 #include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
+#include <vtkm/worklet/contourtree_distributed/tree_grafter/CalculateAttachementCounterWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/tree_grafter/CollapseRegularChainsWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/tree_grafter/CopyFirstHypernodePerIterationWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/tree_grafter/CopyFirstSupernodePerIterationWorklet.h>
@@ -267,40 +268,6 @@ public:
 private:
   /// Used internally to Invoke worklets
   vtkm::cont::Invoker Invoke;
-
-  /// Internal helper function used to resize ArrayHandles since VTKm does not provide a
-  /// method to grow a vector without loosing the original data values. The input array
-  /// is modified or replaced
-  /// @param[in] thearray The 1D array to be resized
-  /// @param[in] newSize The new size the array should be changed to
-  /// @param[in] fillValue The value to be used to fill the array
-  template <typename ValueType>
-  static void ResizeVector(vtkm::cont::ArrayHandle<ValueType>& thearray,
-                           vtkm::Id newSize,
-                           ValueType fillValue)
-  {
-    vtkm::Id oldSize = thearray.GetNumberOfValues();
-    // Simply return if the size of the array does not change
-    if (oldSize == newSize)
-    {
-      return;
-    }
-
-    // Resize the array but keep the original values
-    thearray.Allocate(newSize, vtkm::CopyFlag::On);
-
-    // Add the fill values to the array if we increased the size of the array
-    if (oldSize < newSize)
-    {
-      vtkm::cont::Algorithm::CopySubRange(
-        vtkm::cont::ArrayHandleConstant<ValueType>(fillValue, newSize - oldSize), // copy
-        0,                 // start copying from first index
-        newSize - oldSize, // num values to copy
-        thearray,          // target array to copy to
-        oldSize            // start copy to after oldSize
-      );
-    }
-  }
 }; // class TreeGrafter
 
 
@@ -354,7 +321,18 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
   // count the number of iterations
   this->NumTransferIterations = 0;
 
-  //  Now loop to transfer one iteration at a time
+  // There are several cases we need to handle properly
+  // 1.  We could have a round with no superarcs to add (in which case we are
+  //     guaranteed not to have attachment points)
+  // 2.  We could have a round with some superarcs but no attachment points
+  //     (because we attach to existing supernodes)
+  // 3.  We could have a round with attachment points to add
+  // Attachment points are interior, so are never added to the active superarc
+  // list in the first place. This means that we need to have an extra round
+  // some of the time to transfer attachment points. So the logic is:
+  // first we transfer all active superarcs, then we test (somehow) for having
+  // attachment points to transfer
+  //  Loop to transfer active superarcs with a variation of the PPP transfer phase
   //  We stop when all that is left are attachment points (which aren't included in the active list)
   while (this->ActiveSuperarcs.GetNumberOfValues() > 0)
   { // loop to transfer
@@ -381,18 +359,37 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
              DebugPrint("Finished Transfer Iterations", __FILE__, __LINE__));
 #endif
 
-  //  Now set the transfer iteration for all attachment points
-  //  If there were no supernodes to transfer, their types are all NO_SUCH_ELEMENT
-  auto setTransferIterationWorklet = vtkm::worklet::contourtree_distributed::tree_grafter::
-    GraftInteriorForestsSetTransferIterationWorklet(this->NumTransferIterations);
-  this->Invoke(setTransferIterationWorklet,
-               this->SupernodeType,       // input
-               this->HierarchicalSuperId, // input
-               this->WhenTransferred      // output
+  // At this point, we can check to see whether all supernodes in the residue have already been transferred
+  // length of the attachementCounter will be set to (this->ContourTree->Supernodes.GetNumberOfValue());
+  // as a result of the worklet
+  vtkm::worklet::contourtree_augmented::IdArrayType attachmentCounter;
+  vtkm::worklet::contourtree_distributed::tree_grafter::CalculateAttachementCounterWorklet
+    calculateAttachementCounterWorklet;
+  this->Invoke(calculateAttachementCounterWorklet, // worklet
+               this->SupernodeType,                // input
+               this->HierarchicalSuperId,          // input
+               attachmentCounter                   // output
   );
+  // Compute the sum of all values in attachmentCounter. vtkm::Add() is the default (so it could be omitted).
+  // We include it here to be more explicit about what Reduce does.
+  vtkm::Id numAttachmentPoints =
+    vtkm::cont::Algorithm::Reduce(attachmentCounter, static_cast<vtkm::Id>(0), vtkm::Add());
 
-  // and increment the number of iterations
-  this->NumTransferIterations++;
+  // if there are any at all, we need an extra iteration
+  if (numAttachmentPoints > 0)
+  { // attachment points needing transfer
+    //  Now set the transfer iteration for all attachment points
+    //  If there were no supernodes to transfer, their types are all NO_SUCH_ELEMENT
+    auto setTransferIterationWorklet = vtkm::worklet::contourtree_distributed::tree_grafter::
+      GraftInteriorForestsSetTransferIterationWorklet(this->NumTransferIterations);
+    this->Invoke(setTransferIterationWorklet,
+                 this->SupernodeType,       // input
+                 this->HierarchicalSuperId, // input
+                 this->WhenTransferred      // output
+    );
+    // and increment the number of iterations
+    this->NumTransferIterations++;
+  } // attachment points needing transfer
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -575,7 +572,8 @@ void TreeGrafter<MeshType, FieldType>::InitializeActiveSuperarcs()
     // vtkm::cont::Algorithm::ScanInclusive(activeSuperarcId , activeSuperarcId);
   }
   // the final element will hold the result
-  vtkm::Id nFree = activeSuperarcId.ReadPortal().Get(activeSuperarcId.GetNumberOfValues() - 1);
+  vtkm::Id nFree =
+    vtkm::cont::ArrayGetValue(activeSuperarcId.GetNumberOfValues() - 1, activeSuperarcId);
   // TODO FIX nFree is 0 here. Check that this is correct. I believe it should be non-zero.
   // resize the active list accordingly
   this->ActiveSuperarcs.Allocate(nFree);
@@ -632,9 +630,10 @@ template <typename MeshType, typename FieldType>
 void TreeGrafter<MeshType, FieldType>::FindCriticalPoints()
 { // FindCriticalPoints()
   // allocate memory for type of supernode
-  this->ResizeVector(this->SupernodeType,
-                     this->ContourTree.Supernodes.GetNumberOfValues(),
-                     vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector(
+    this->SupernodeType,
+    this->ContourTree.Supernodes.GetNumberOfValues(),
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
   // Reset the UpNeighbour and DownNeighbour array
   vtkm::cont::Algorithm::Copy(
     vtkm::cont::make_ArrayHandleConstant(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
@@ -1082,13 +1081,15 @@ void TreeGrafter<MeshType, FieldType>::CopyNewHypernodes(
   {
     // Resize array to length totalNHypernodes and fill new values with NO_SUCH_ELEMENT (or 0) (while keeping original values)
     // NOTE: hierarchicalTree.Superchildren is initalized here but not used by this function
-    this->ResizeVector<vtkm::Id>(hierarchicalTree.Hypernodes,
-                                 totalNHypernodes,
-                                 vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    this->ResizeVector<vtkm::Id>(hierarchicalTree.Hyperarcs,
-                                 totalNHypernodes,
-                                 vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    this->ResizeVector<vtkm::Id>(
+    vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+      hierarchicalTree.Hypernodes,
+      totalNHypernodes,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+      hierarchicalTree.Hyperarcs,
+      totalNHypernodes,
+      vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
       hierarchicalTree.Superchildren, totalNHypernodes, static_cast<vtkm::Id>(0));
   }
   // B.  Copy in the hypernodes & hyperarcs
@@ -1133,32 +1134,39 @@ void TreeGrafter<MeshType, FieldType>::CopyNewSupernodes(
   vtkm::Id nNewSupernodes = this->NewSupernodes.GetNumberOfValues();
   vtkm::Id totalNSupernodes = nOldSupernodes + nNewSupernodes;
   // Resize array to length totalNHypernodes and fill new values with NO_SUCH_ELEMENT (while keeping original values)
-  this->ResizeVector<vtkm::Id>(hierarchicalTree.Supernodes,
-                               totalNSupernodes,
-                               vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-  this->ResizeVector<vtkm::Id>(hierarchicalTree.Superarcs,
-                               totalNSupernodes,
-                               vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-  this->ResizeVector<vtkm::Id>(hierarchicalTree.Hyperparents,
-                               totalNSupernodes,
-                               vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-  this->ResizeVector<vtkm::Id>(hierarchicalTree.Super2Hypernode,
-                               totalNSupernodes,
-                               vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-  this->ResizeVector<vtkm::Id>(hierarchicalTree.WhichRound,
-                               totalNSupernodes,
-                               vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-  this->ResizeVector<vtkm::Id>(hierarchicalTree.WhichIteration,
-                               totalNSupernodes,
-                               vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    hierarchicalTree.Supernodes,
+    totalNSupernodes,
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    hierarchicalTree.Superarcs,
+    totalNSupernodes,
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    hierarchicalTree.Hyperparents,
+    totalNSupernodes,
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    hierarchicalTree.Super2Hypernode,
+    totalNSupernodes,
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    hierarchicalTree.WhichRound,
+    totalNSupernodes,
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    hierarchicalTree.WhichIteration,
+    totalNSupernodes,
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
 
   // we will need this here, since we need to set some new superparents here for supernodes added
   vtkm::Id nOldNodes = hierarchicalTree.RegularNodeGlobalIds.GetNumberOfValues();
   vtkm::Id nNewNodes = this->NewNodes.GetNumberOfValues();
   vtkm::Id totalNNodes = nOldNodes + nNewNodes;
-  this->ResizeVector<vtkm::Id>(hierarchicalTree.Superparents,
-                               totalNNodes,
-                               vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    hierarchicalTree.Superparents,
+    totalNNodes,
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
 
   // B.  Copy in the supernodes, &c.
   auto copyNewSupernodesWorklet =
@@ -1249,9 +1257,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
   vtkm::Id totalNNodes = nOldNodes + nNewNodes;
 
   // A.  We start by finding & copying the global IDs for every regular node
-  this->ResizeVector<vtkm::Id>(hierarchicalTree.RegularNodeGlobalIds,
-                               totalNNodes,
-                               vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    hierarchicalTree.RegularNodeGlobalIds,
+    totalNNodes,
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
   // NOTE: The original code created a separate array newNodesGloablId that was set
   // to NO_SUCH_ELEMENT first but we should only need the fancy array here and save the memory
   auto newNodesGloablId =
@@ -1292,9 +1301,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
   // C.  Then we add the new array indices to the sort and resort it
   // Resize and initialize hierarchicalTree.RegularNodeSortOrder with NO_SUCH_ELEMENT
   // TODO: We should be able to shortcut this since the last values are set next in the CopySubrange
-  this->ResizeVector<vtkm::Id>(hierarchicalTree.RegularNodeSortOrder,
-                               totalNNodes,
-                               vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    hierarchicalTree.RegularNodeSortOrder,
+    totalNNodes,
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
   {
     // Do the following: std::iota(hierarchicalTree.regularNodeSortOrder.begin() + nOldNodes, hierarchicalTree.regularNodeSortOrder.end(), nOldNodes);
     auto tempCountingArray = vtkm::cont::ArrayHandleCounting<vtkm::Id>(
@@ -1320,9 +1330,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
 
   // D. now loop through the supernodes to set their lookup index from regular IDs
   // Resize and initialize hierarchicalTree.Regular2Supernode with NO_SUCH_ELEMENT
-  this->ResizeVector<vtkm::Id>(hierarchicalTree.Regular2Supernode,
-                               totalNNodes,
-                               vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
+    hierarchicalTree.Regular2Supernode,
+    totalNNodes,
+    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
   {
     // The code in this block does the following in serial
     // for (indexType newSupernode = hierarchicalTree.supernodes.size() - newSupernodes.size(); newSupernode < hierarchicalTree.supernodes.size(); newSupernode++)
@@ -1391,14 +1402,15 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
 #endif
 
   // update the round counts
-  hierarchicalTree.NumRegularNodesInRound.WritePortal().Set(theRound,
-                                                            this->NewNodes.GetNumberOfValues());
-  hierarchicalTree.NumSupernodesInRound.WritePortal().Set(theRound,
-                                                          this->NewSupernodes.GetNumberOfValues());
-  hierarchicalTree.NumHypernodesInRound.WritePortal().Set(theRound,
-                                                          this->NewHypernodes.GetNumberOfValues());
-  // the -1 is because the last iteration is just setting attachment points
-  hierarchicalTree.NumIterations.WritePortal().Set(theRound, this->NumTransferIterations - 1);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    theRound, this->NewNodes.GetNumberOfValues(), hierarchicalTree.NumRegularNodesInRound);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    theRound, this->NewSupernodes.GetNumberOfValues(), hierarchicalTree.NumSupernodesInRound);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    theRound, this->NewHypernodes.GetNumberOfValues(), hierarchicalTree.NumHypernodesInRound);
+  // last iteration is just setting attachment points (but we are including this now) (previously added -1)
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(
+    theRound, this->NumTransferIterations, hierarchicalTree.NumIterations);
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -1414,7 +1426,6 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
   vtkm::Id nOldHypernodes = nTotalHypernodes - nNewHypernodes;
 
 #ifdef DEBUG_PRINT
-  // TODO: Hamish why do we need this debug print. It looks like the hierarchical tree does not change
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              hierarchicalTree.DebugPrint("Node Counts Retrieved", __FILE__, __LINE__));
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -1422,9 +1433,9 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
 #endif
 
   // and set the per round iteration counts. There may be smarter ways of doing this, but . . .
-  this->ResizeVector<vtkm::Id>(
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
     hierarchicalTree.FirstSupernodePerIteration[static_cast<std::size_t>(theRound)],
-    this->NumTransferIterations,
+    this->NumTransferIterations + 1,
     vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
   {
     auto copyFirstSupernodePerIterationWorklet =
@@ -1438,6 +1449,13 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
       hierarchicalTree.WhichIteration, // input
       hierarchicalTree.FirstSupernodePerIteration[static_cast<std::size_t>(theRound)] // output.
     );
+
+    // force the extra one to be one-off-the end for safety
+    vtkm::worklet::contourtree_augmented::IdArraySetValue(
+      this->NumTransferIterations,                          // index to set
+      hierarchicalTree.Supernodes.GetNumberOfValues(),      // value to set
+      hierarchicalTree.FirstSupernodePerIteration[theRound] // array to modify
+    );
   }
 
 #ifdef DEBUG_PRINT_GRAFT_RESIDUE
@@ -1445,11 +1463,16 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
              hierarchicalTree.DebugPrint("Supernode Iteration Counts Set", __FILE__, __LINE__));
 #endif
 
-  // Initalize hierarchicalTree.FirstHypernodePerIteration with NO_SUCH_ELEMENT
-  this->ResizeVector<vtkm::Id>(
+  // we add one so we don't need special cases when establishing subranges
+  // There's a tricky case to be dealt with due to attachment points - the last (extra) iteration transfers supernodes
+  // with a "virtual" superarc but no hyperarc.  This can only occur in the final iteration, in which case the correct value is
+  // the "off the end" sentinel.  But it is also possible for there to be no attachment points, in which case the final iteration
+  // will have some other value.  Also, we need to set the "off the end" for the extra entry in any event.
+  // THEREFORE, instead of instantiating to NO_SUCH_ELEMENT for safety, we instantiate to the hypernodes.size()
+  vtkm::worklet::contourtree_augmented::ResizeVector<vtkm::Id>(
     hierarchicalTree.FirstHypernodePerIteration[static_cast<std::size_t>(theRound)],
-    this->NumTransferIterations,
-    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    this->NumTransferIterations + 1,
+    hierarchicalTree.Hypernodes.GetNumberOfValues());
   // copy the approbriat hierarchicalTree.FirstHypernodePerIteration values
   {
     auto copyFirstHypernodePerIterationWorklet =
@@ -1465,10 +1488,6 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
       hierarchicalTree.FirstHypernodePerIteration[static_cast<std::size_t>(theRound)] //output
     );
   }
-
-  // force the extra one to be one-off-the end for safety
-  hierarchicalTree.FirstHypernodePerIteration[static_cast<size_t>(theRound)].WritePortal().Set(
-    this->NumTransferIterations - 1, hierarchicalTree.Hypernodes.GetNumberOfValues());
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,

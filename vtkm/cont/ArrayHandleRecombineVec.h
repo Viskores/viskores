@@ -442,6 +442,15 @@ public:
     return SourceStorage::GetNumberOfValues(BuffersForComponent(buffers, 0));
   }
 
+  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+                             const vtkm::internal::RecombineVec<ReadWritePortal>&,
+                             vtkm::Id,
+                             vtkm::Id,
+                             vtkm::cont::Token&)
+  {
+    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleRecombineVec.");
+  }
+
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)

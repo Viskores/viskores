@@ -13,8 +13,8 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
+#include <vtkm/cont/UnknownCellSet.h>
 
 namespace vtkm
 {
@@ -29,7 +29,7 @@ namespace internal
 /// filters, and filters should be compiled in a library (for the same reason).
 ///
 VTKM_RENDERING_EXPORT
-void RunTriangulator(const vtkm::cont::DynamicCellSet& cellSet,
+void RunTriangulator(const vtkm::cont::UnknownCellSet& cellSet,
                      vtkm::cont::ArrayHandle<vtkm::Id4>& indices,
                      vtkm::Id& numberOfTriangles);
 }

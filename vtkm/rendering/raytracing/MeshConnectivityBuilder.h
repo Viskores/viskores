@@ -27,7 +27,7 @@ public:
   ~MeshConnectivityBuilder();
 
   VTKM_CONT
-  MeshConnectivityContainer* BuildConnectivity(const vtkm::cont::DynamicCellSet& cellset,
+  MeshConnectivityContainer* BuildConnectivity(const vtkm::cont::UnknownCellSet& cellset,
                                                const vtkm::cont::CoordinateSystem& coordinates);
 
   VTKM_CONT

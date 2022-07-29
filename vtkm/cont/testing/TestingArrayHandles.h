@@ -700,6 +700,40 @@ private:
     }
   };
 
+  struct VerifyFill
+  {
+    template <typename T>
+    VTKM_CONT void operator()(T) const
+    {
+      std::cout << "Initialize values of array." << std::endl;
+      const T testValue1 = TestValue(13, T{});
+      vtkm::cont::ArrayHandle<T> array;
+      array.AllocateAndFill(ARRAY_SIZE, testValue1);
+      {
+        auto portal = array.ReadPortal();
+        for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+        {
+          VTKM_TEST_ASSERT(portal.Get(index) == testValue1);
+        }
+      }
+
+      std::cout << "Grow array with new values." << std::endl;
+      const T testValue2 = TestValue(42, T{});
+      array.AllocateAndFill(ARRAY_SIZE * 2, testValue2, vtkm::CopyFlag::On);
+      {
+        auto portal = array.ReadPortal();
+        for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+        {
+          VTKM_TEST_ASSERT(portal.Get(index) == testValue1);
+        }
+        for (vtkm::Id index = ARRAY_SIZE; index < ARRAY_SIZE * 2; ++index)
+        {
+          VTKM_TEST_ASSERT(portal.Get(index) == testValue2);
+        }
+      }
+    }
+  };
+
   struct TryArrayHandleType
   {
     void operator()() const
@@ -712,6 +746,7 @@ private:
       vtkm::testing::Testing::TryTypes(VerifyVTKMAllocatedHandle{});
       vtkm::testing::Testing::TryTypes(VerifyVTKMTransferredOwnership{});
       vtkm::testing::Testing::TryTypes(VerifyEqualityOperators{});
+      vtkm::testing::Testing::TryTypes(VerifyFill{});
     }
   };
 

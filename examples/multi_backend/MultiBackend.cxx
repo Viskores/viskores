@@ -90,7 +90,7 @@ void partition_processing(TaskQueue<vtkm::cont::PartitionedDataSet>& queue)
       // std::cout << std::endl << std::endl << std::endl;
       // std::cout << "partition: " << std::endl;
       // partition.PrintSummary(std::cout);
-      if (!partition.HasField("Gradients", vtkm::cont::Field::Association::POINTS))
+      if (!partition.HasField("Gradients", vtkm::cont::Field::Association::Points))
       {
         std::cerr << "Gradient filter failed!" << std::endl;
         std::cerr << "Missing Gradient field on output partition." << std::endl;
