@@ -21,7 +21,7 @@ set(libraries
   )
 
 vtkm_unit_tests(
-  SOURCES ${unit_tests}
+  DEVICE_SOURCES ${unit_tests}
   LIBRARIES ${libraries} vtkm_filter vtkm_io
   USE_VTKM_JOB_POOL
 )
@@ -34,7 +34,7 @@ if (VTKm_ENABLE_MPI)
     UnitTestStreamlineFilterMPI.cxx
   )
   vtkm_unit_tests(
-    MPI SOURCES ${mpi_unit_tests}
+    MPI DEVICE_SOURCES ${mpi_unit_tests}
     LIBRARIES vtkm_filter vtkm_source vtkm_io
     ALL_BACKENDS
     USE_VTKM_JOB_POOL

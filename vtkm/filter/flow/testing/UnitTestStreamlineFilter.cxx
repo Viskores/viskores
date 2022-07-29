@@ -86,12 +86,6 @@ void TestStreamline()
   }
 }
 
-void DumpDS(const vtkm::cont::DataSet& ds, const std::string& fname)
-{
-  vtkm::io::VTKDataSetWriter wrt(fname);
-  wrt.WriteDataSet(ds);
-}
-
 void TestPathline()
 {
   const vtkm::Id3 dims(5, 5, 5);
@@ -140,11 +134,6 @@ void TestPathline()
         filt.SetNextDataSet(ds2);
         output = filt.Execute(ds1);
         numExpectedPoints = 33;
-        /*
-        DumpDS(output, "pathline.vtk");
-        DumpDS(ds1, "ds1.vtk");
-        DumpDS(ds2, "ds2.vtk");
-        */
       }
       else
       {
