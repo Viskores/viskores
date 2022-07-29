@@ -192,7 +192,7 @@ void TestAMRStreamline(bool useSL)
             ghosts[idx] = vtkm::CellClassification::Normal;
           idx++;
         }
-    dsOuter.AddCellField("vtkmGhostCells", ghosts);
+    dsOuter.AddGhostCellField(vtkm::cont::make_ArrayHandle(ghosts, vtkm::CopyFlag::On));
 
     //Create a partitioned dataset with 1 inner and 1 outer.
     vtkm::cont::PartitionedDataSet pds;

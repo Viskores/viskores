@@ -192,7 +192,10 @@ inline vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::Bound
   }
 
   if (addGhost)
-    output.AddField(input.GetField("vtkmGhostCells"));
+  {
+    output.AddGhostCellField(input.GetGhostCellField());
+  }
+
   return output;
 }
 

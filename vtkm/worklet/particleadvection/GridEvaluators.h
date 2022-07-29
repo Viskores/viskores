@@ -184,9 +184,9 @@ public:
   {
     this->InitializeLocator(dataSet.GetCoordinateSystem(), dataSet.GetCellSet());
 
-    if (dataSet.HasCellField("vtkmGhostCells"))
+    if (dataSet.HasGhostCellField())
     {
-      auto arr = dataSet.GetCellField("vtkmGhostCells").GetData();
+      auto arr = dataSet.GetGhostCellField().GetData();
       vtkm::cont::ArrayCopyShallowIfPossible(arr, this->GhostCellArray);
     }
   }

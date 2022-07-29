@@ -14,6 +14,23 @@ namespace vtkm
 {
 namespace cont
 {
+
+VTKM_CONT std::string& GlobalGhostCellFieldName() noexcept
+{
+  static std::string GhostCellName("vtkGhostCells");
+  return GhostCellName;
+}
+
+VTKM_CONT const std::string& GetGlobalGhostCellFieldName() noexcept
+{
+  return GlobalGhostCellFieldName();
+}
+
+VTKM_CONT void SetGlobalGhostCellFieldName(const std::string& name) noexcept
+{
+  GlobalGhostCellFieldName() = name;
+}
+
 void DataSet::Clear()
 {
   this->CoordSystems.clear();
@@ -39,6 +56,7 @@ void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
 {
   this->CoordSystems = source.CoordSystems;
   this->CellSet = source.CellSet;
+  this->GhostCellName = source.GhostCellName;
 }
 
 const vtkm::cont::Field& DataSet::GetField(vtkm::Id index) const

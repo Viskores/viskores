@@ -60,7 +60,7 @@ vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK)
   return ds;
 }
 
-void TestStructured()
+void TestStructured(std::string GhostFieldName = "")
 {
   std::cout << "Testing ghost cells for structured datasets." << std::endl;
 
@@ -99,14 +99,18 @@ void TestStructured()
           ds = MakeRectilinear(nx, ny, nz);
 
         vtkm::filter::mesh_info::GhostCellClassify addGhost;
-
+        if (GhostFieldName != "")
+          addGhost.SetGhostCellName(GhostFieldName);
         auto output = addGhost.Execute(ds);
 
         //Validate the output.
-        VTKM_TEST_ASSERT(output.HasCellField("vtkmGhostCells"),
+        std::string correctFieldName = vtkm::cont::GetGlobalGhostCellFieldName();
+        if (GhostFieldName != "")
+          correctFieldName = GhostFieldName;
+        VTKM_TEST_ASSERT(output.HasCellField(correctFieldName),
                          "Ghost cells array not found in output");
         vtkm::Id numCells = output.GetNumberOfCells();
-        auto fieldArray = output.GetCellField("vtkmGhostCells").GetData();
+        auto fieldArray = output.GetCellField(addGhost.GetGhostCellName()).GetData();
         VTKM_TEST_ASSERT(fieldArray.GetNumberOfValues() == numCells,
                          "Wrong number of values in ghost cell array");
 
@@ -134,7 +138,7 @@ void TestStructured()
 
 void TestGhostCellClassify()
 {
-  TestStructured();
+  TestStructured("MyGhostFieldName");
 }
 }
 
