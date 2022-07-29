@@ -11,8 +11,6 @@
 #ifndef vtk_m_filter_flow_NewFilterParticleAdvection_h
 #define vtk_m_filter_flow_NewFilterParticleAdvection_h
 
-#include <vtkm/Particle.h>
-#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
@@ -66,33 +64,8 @@ public:
   void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
 
 protected:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override
-  {
-    auto out = this->DoExecutePartitions(inData);
-    if (out.GetNumberOfPartitions() != 1)
-      throw vtkm::cont::ErrorFilterExecution("Wrong number of results");
-
-    return out.GetPartition(0);
-  }
-
-  VTKM_CONT virtual void ValidateOptions() const
-  {
-    if (this->GetUseCoordinateSystemAsField())
-      throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");
-    if (this->Seeds.GetNumberOfValues() == 0)
-      throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
-    if (!this->Seeds.IsBaseComponentType<vtkm::Particle>() &&
-        this->Seeds.IsBaseComponentType<vtkm::ChargedParticle>())
-      throw vtkm::cont::ErrorFilterExecution("Unsupported particle type in seed array.");
-    if (this->NumberOfSteps == 0)
-      throw vtkm::cont::ErrorFilterExecution("Number of steps not specified.");
-    if (this->StepSize == 0)
-      throw vtkm::cont::ErrorFilterExecution("Step size not specified.");
-    if (this->NumberOfSteps < 0)
-      throw vtkm::cont::ErrorFilterExecution("NumberOfSteps cannot be negative");
-    if (this->StepSize < 0)
-      throw vtkm::cont::ErrorFilterExecution("StepSize cannot be negative");
-  }
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
+  VTKM_CONT virtual void ValidateOptions() const;
 
   VTKM_CONT virtual vtkm::filter::flow::FlowResultType GetResultType() const
   {

@@ -21,6 +21,7 @@ set(flow_headers
 
 set(flow_sources
   internal/Messenger.cxx
+  NewFilterParticleAdvection.cxx
   NewFilterParticleAdvectionSteadyState.cxx
   NewFilterParticleAdvectionUnsteadyState.cxx
   ParticleAdvection.cxx
