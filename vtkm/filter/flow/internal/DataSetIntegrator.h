@@ -87,6 +87,8 @@ public:
     //check that things are valid.
   }
 
+  virtual ~DataSetIntegrator() {}
+
   VTKM_CONT vtkm::Id GetID() const { return this->Id; }
   VTKM_CONT void SetCopySeedFlag(bool val) { this->CopySeedArray = val; }
 
