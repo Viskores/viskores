@@ -87,15 +87,13 @@ public:
     //check that things are valid.
   }
 
-  virtual ~DataSetIntegrator() {}
-
   VTKM_CONT vtkm::Id GetID() const { return this->Id; }
   VTKM_CONT void SetCopySeedFlag(bool val) { this->CopySeedArray = val; }
 
   VTKM_CONT
-  virtual void Advect(DSIHelperInfoType& b,
-                      vtkm::FloatDefault stepSize, //move these to member data(?)
-                      vtkm::Id maxSteps)
+  void Advect(DSIHelperInfoType& b,
+              vtkm::FloatDefault stepSize, //move these to member data(?)
+              vtkm::Id maxSteps)
   {
     //Cast the DSIHelperInfo<ParticleType> to the concrete type and call DoAdvect.
     b.CastAndCall([&](auto& concrete) { this->DoAdvect(concrete, stepSize, maxSteps); });
