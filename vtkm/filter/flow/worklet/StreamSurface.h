@@ -10,12 +10,8 @@
 #ifndef vtk_m_filter_flow_worklet_streamsurface_h
 #define vtk_m_filter_flow_worklet_streamsurface_h
 
-#include <typeinfo>
-#include <vtkm/VectorAnalysis.h>
-#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>

@@ -8,11 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/flow/worklet/StreamSurface.h>
 #include <vtkm/io/VTKDataSetWriter.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 
 namespace
 {
