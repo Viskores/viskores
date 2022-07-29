@@ -11,7 +11,6 @@
 #ifndef vtk_m_filter_flow_worklet_ParticleAdvection_h
 #define vtk_m_filter_flow_worklet_ParticleAdvection_h
 
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/filter/flow/worklet/ParticleAdvectionWorklets.h>
 

@@ -10,6 +10,7 @@
 
 #include <vtkm/filter/flow/NewFilterParticleAdvectionSteadyState.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/filter/flow/DataSetIntegratorSteadyState.h>
 #include <vtkm/filter/flow/ParticleAdvector.h>
 

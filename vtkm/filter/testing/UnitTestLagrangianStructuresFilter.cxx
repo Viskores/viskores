@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <iostream>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/LagrangianStructures.h>

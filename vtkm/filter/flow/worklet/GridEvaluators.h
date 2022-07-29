@@ -11,11 +11,7 @@
 #ifndef vtk_m_filter_flow_worklet_GridEvaluators_h
 #define vtk_m_filter_flow_worklet_GridEvaluators_h
 
-#include <vtkm/Bitset.h>
 #include <vtkm/CellClassification.h>
-#include <vtkm/Types.h>
-#include <vtkm/VectorAnalysis.h>
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellLocatorGeneral.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
