@@ -8,11 +8,9 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(filter_unit_tests
+set(unit_tests
   UnitTestStreamlineFilter.cxx
   UnitTestStreamSurfaceFilter.cxx
-  )
-set(worklet_unit_tests
   UnitTestWorkletParticleAdvection.cxx
   UnitTestWorkletTemporalAdvection.cxx
   UnitTestStreamSurfaceWorklet.cxx
@@ -23,8 +21,7 @@ set(libraries
   )
 
 vtkm_unit_tests(
-  SOURCES ${filter_unit_tests}
-  DEVICE_SOURCES ${worklet_unit_tests}
+  DEVICE_SOURCES ${unit_tests}
   LIBRARIES ${libraries} vtkm_filter vtkm_io
   USE_VTKM_JOB_POOL
 )
