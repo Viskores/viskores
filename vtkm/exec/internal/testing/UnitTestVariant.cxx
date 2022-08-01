@@ -21,6 +21,7 @@ namespace test_variant
 template <vtkm::IdComponent Index>
 struct TypePlaceholder
 {
+  vtkm::IdComponent Value = Index;
 };
 
 // A class that is trivially copiable but not totally trivial.
@@ -313,6 +314,17 @@ struct TestFunctor
   }
 };
 
+struct TestFunctorModify
+{
+  template <vtkm::IdComponent Index>
+  void operator()(TypePlaceholder<Index>& object, vtkm::Id expectedValue)
+  {
+    VTKM_TEST_ASSERT(Index == expectedValue, "Index = ", Index, ", expected = ", expectedValue);
+    VTKM_TEST_ASSERT(object.Value == expectedValue);
+    ++object.Value;
+  }
+};
+
 void TestGet()
 {
   std::cout << "Test Get" << std::endl;
@@ -429,6 +441,11 @@ void TestCastAndCall()
   VariantType variant26{ TypePlaceholder<26>{} };
   result = variant26.CastAndCall(TestFunctor(), 26);
   VTKM_TEST_ASSERT(test_equal(result, TestValue(26, vtkm::FloatDefault{})));
+
+  variant1.CastAndCall(TestFunctorModify{}, 1);
+  VTKM_TEST_ASSERT(variant1.Get<1>().Value == 2, "Variant object not updated.");
+
+  variant1.CastAndCall([](auto& object) { ++object.Value; });
 }
 
 void TestCopyInvalid()

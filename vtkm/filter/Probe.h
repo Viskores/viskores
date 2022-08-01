@@ -11,7 +11,7 @@
 #define vtk_m_filter_Probe_h
 
 #include <vtkm/Deprecated.h>
-#include <vtkm/filter/resampling //Probe.h>
+#include <vtkm/filter/resampling/Probe.h>
 
 namespace vtkm
 {

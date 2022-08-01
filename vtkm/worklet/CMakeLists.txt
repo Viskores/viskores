@@ -29,7 +29,6 @@ set(headers
   MaskSelect.h
   NDimsHistMarginalization.h
   Normalize.h
-  ParticleAdvection.h
   ScalarsToColors.h
   ScatterCounting.h
   ScatterIdentity.h
@@ -38,7 +37,6 @@ set(headers
   StableSortIndices.h
   DescriptiveStatistics.h
   StreamLineUniformGrid.h
-  StreamSurface.h
   TriangleWinding.h
   WaveletCompressor.h
   WorkletMapField.h
@@ -79,7 +77,6 @@ add_subdirectory(lcs)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
 add_subdirectory(wavelets)
-add_subdirectory(particleadvection)
 
 vtkm_library(
   NAME vtkm_worklet

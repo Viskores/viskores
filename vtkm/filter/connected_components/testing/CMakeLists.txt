@@ -14,6 +14,7 @@ set(unit_tests
 
 set(unit_tests_device
   UnitTestCellSetConnectivityFilter.cxx # uses vtkm::cont::Algorithm
+  UnitTestGraphConnectivityWorklet.cxx
   )
 
 set(libraries

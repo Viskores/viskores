@@ -106,7 +106,7 @@
     - .docker_image
 
 .ubuntu2004_hip_kokkos: &ubuntu2004_hip_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_hip_kokkos-20210827"
+  image: "kitware/vtkm:ci-ubuntu2004_hip_kokkos-20220620"
   extends:
     - .docker_image
 
