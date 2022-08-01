@@ -137,7 +137,7 @@ public:
     this->TotalNumParticles = static_cast<vtkm::Id>(total);
   }
 
-  DataSetIntegrator& GetDataSet(vtkm::Id id)
+  DataSetIntegrator<DSIType>& GetDataSet(vtkm::Id id)
   {
     for (auto& it : this->Blocks)
       if (it.GetID() == id)

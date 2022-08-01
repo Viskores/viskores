@@ -23,7 +23,8 @@ namespace flow
 namespace internal
 {
 
-class DataSetIntegratorSteadyState : public vtkm::filter::flow::internal::DataSetIntegrator
+class DataSetIntegratorSteadyState
+  : public vtkm::filter::flow::internal::DataSetIntegrator<DataSetIntegratorSteadyState>
 {
 public:
   DataSetIntegratorSteadyState(const vtkm::cont::DataSet& ds,
@@ -32,22 +33,22 @@ public:
                                vtkm::filter::flow::IntegrationSolverType solverType,
                                vtkm::filter::flow::VectorFieldType vecFieldType,
                                vtkm::filter::flow::FlowResultType resultType)
-    : vtkm::filter::flow::internal::DataSetIntegrator(id,
-                                                      fieldName,
-                                                      solverType,
-                                                      vecFieldType,
-                                                      resultType)
+    : vtkm::filter::flow::internal::DataSetIntegrator<DataSetIntegratorSteadyState>(id,
+                                                                                    fieldName,
+                                                                                    solverType,
+                                                                                    vecFieldType,
+                                                                                    resultType)
     , DataSet(ds)
   {
   }
 
   VTKM_CONT inline void DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
                                  vtkm::FloatDefault stepSize,
-                                 vtkm::Id maxSteps) override;
+                                 vtkm::Id maxSteps);
 
   VTKM_CONT inline void DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& b,
                                  vtkm::FloatDefault stepSize,
-                                 vtkm::Id maxSteps) override;
+                                 vtkm::Id maxSteps);
 
 protected:
   template <typename ArrayType>

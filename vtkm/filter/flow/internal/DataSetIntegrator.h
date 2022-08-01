@@ -57,6 +57,7 @@ public:
 using DSIHelperInfoType = vtkm::cont::internal::Variant<DSIHelperInfo<vtkm::Particle>,
                                                         DSIHelperInfo<vtkm::ChargedParticle>>;
 
+template <typename Derived>
 class DataSetIntegrator
 {
 protected:
@@ -87,8 +88,6 @@ public:
     //check that things are valid.
   }
 
-  virtual ~DataSetIntegrator() {}
-
   VTKM_CONT vtkm::Id GetID() const { return this->Id; }
   VTKM_CONT void SetCopySeedFlag(bool val) { this->CopySeedArray = val; }
 
@@ -97,8 +96,10 @@ public:
               vtkm::FloatDefault stepSize, //move these to member data(?)
               vtkm::Id maxSteps)
   {
+    Derived* inst = static_cast<Derived*>(this);
+
     //Cast the DSIHelperInfo<ParticleType> to the concrete type and call DoAdvect.
-    b.CastAndCall([&](auto& concrete) { this->DoAdvect(concrete, stepSize, maxSteps); });
+    b.CastAndCall([&](auto& concrete) { inst->DoAdvect(concrete, stepSize, maxSteps); });
   }
 
   template <typename ParticleType>
@@ -120,17 +121,9 @@ protected:
     return this->AdvectionResType == FlowResultType::STREAMLINE_TYPE;
   }
 
-  VTKM_CONT virtual void DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
-                                  vtkm::FloatDefault stepSize,
-                                  vtkm::Id maxSteps) = 0;
-
-  VTKM_CONT virtual void DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& b,
-                                  vtkm::FloatDefault stepSize,
-                                  vtkm::Id maxSteps) = 0;
-
   template <typename ParticleType>
-  VTKM_CONT void ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
-                                   DSIHelperInfo<ParticleType>& dsiInfo) const;
+  VTKM_CONT inline void ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
+                                          DSIHelperInfo<ParticleType>& dsiInfo) const;
 
   //Data members.
   vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType> FieldName;
@@ -147,8 +140,9 @@ protected:
   std::vector<RType> Results;
 };
 
+template <typename Derived>
 template <typename ParticleType>
-VTKM_CONT void DataSetIntegrator::ClassifyParticles(
+VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
   const vtkm::cont::ArrayHandle<ParticleType>& particles,
   DSIHelperInfo<ParticleType>& dsiInfo) const
 {
@@ -233,9 +227,11 @@ VTKM_CONT void DataSetIntegrator::ClassifyParticles(
   VTKM_ASSERT(dsiInfo.TermIdx.size() == dsiInfo.TermID.size());
 }
 
+template <typename Derived>
 template <typename ParticleType, template <typename> class ResultType>
-VTKM_CONT void DataSetIntegrator::UpdateResult(const ResultType<ParticleType>& result,
-                                               DSIHelperInfo<ParticleType>& dsiInfo)
+VTKM_CONT inline void DataSetIntegrator<Derived>::UpdateResult(
+  const ResultType<ParticleType>& result,
+  DSIHelperInfo<ParticleType>& dsiInfo)
 {
   this->ClassifyParticles(result.Particles, dsiInfo);
 
@@ -258,8 +254,9 @@ VTKM_CONT void DataSetIntegrator::UpdateResult(const ResultType<ParticleType>& r
     this->Results.emplace_back(result);
 }
 
+template <typename Derived>
 template <typename ParticleType>
-VTKM_CONT bool DataSetIntegrator::GetOutput(vtkm::cont::DataSet& ds) const
+VTKM_CONT inline bool DataSetIntegrator<Derived>::GetOutput(vtkm::cont::DataSet& ds) const
 {
   std::size_t nResults = this->Results.size();
   if (nResults == 0)

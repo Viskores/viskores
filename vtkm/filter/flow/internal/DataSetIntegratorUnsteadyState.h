@@ -24,24 +24,25 @@ namespace flow
 namespace internal
 {
 
-class DataSetIntegratorUnsteadyState : public vtkm::filter::flow::internal::DataSetIntegrator
+class DataSetIntegratorUnsteadyState
+  : public vtkm::filter::flow::internal::DataSetIntegrator<DataSetIntegratorUnsteadyState>
 {
 public:
-  DataSetIntegratorUnsteadyState(
-    const vtkm::cont::DataSet& ds1,
-    const vtkm::cont::DataSet& ds2,
-    vtkm::FloatDefault t1,
-    vtkm::FloatDefault t2,
-    vtkm::Id id,
-    const vtkm::filter::flow::internal::DataSetIntegrator::FieldNameType& fieldName,
-    vtkm::filter::flow::IntegrationSolverType solverType,
-    vtkm::filter::flow::VectorFieldType vecFieldType,
-    vtkm::filter::flow::FlowResultType resultType)
-    : vtkm::filter::flow::internal::DataSetIntegrator(id,
-                                                      fieldName,
-                                                      solverType,
-                                                      vecFieldType,
-                                                      resultType)
+  DataSetIntegratorUnsteadyState(const vtkm::cont::DataSet& ds1,
+                                 const vtkm::cont::DataSet& ds2,
+                                 vtkm::FloatDefault t1,
+                                 vtkm::FloatDefault t2,
+                                 vtkm::Id id,
+                                 const vtkm::filter::flow::internal::DataSetIntegrator<
+                                   DataSetIntegratorUnsteadyState>::FieldNameType& fieldName,
+                                 vtkm::filter::flow::IntegrationSolverType solverType,
+                                 vtkm::filter::flow::VectorFieldType vecFieldType,
+                                 vtkm::filter::flow::FlowResultType resultType)
+    : vtkm::filter::flow::internal::DataSetIntegrator<DataSetIntegratorUnsteadyState>(id,
+                                                                                      fieldName,
+                                                                                      solverType,
+                                                                                      vecFieldType,
+                                                                                      resultType)
     , DataSet1(ds1)
     , DataSet2(ds2)
     , Time1(t1)
@@ -49,13 +50,13 @@ public:
   {
   }
 
-  VTKM_CONT virtual inline void DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
-                                         vtkm::FloatDefault stepSize,
-                                         vtkm::Id maxSteps) override;
+  VTKM_CONT inline void DoAdvect(DSIHelperInfo<vtkm::Particle>& b,
+                                 vtkm::FloatDefault stepSize,
+                                 vtkm::Id maxSteps);
 
-  VTKM_CONT virtual inline void DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& b,
-                                         vtkm::FloatDefault stepSize,
-                                         vtkm::Id maxSteps) override;
+  VTKM_CONT inline void DoAdvect(DSIHelperInfo<vtkm::ChargedParticle>& b,
+                                 vtkm::FloatDefault stepSize,
+                                 vtkm::Id maxSteps);
 
 protected:
   template <typename ArrayType>
