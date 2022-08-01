@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_flow_internal_DataSetIntegratorSteadyState_h
 #define vtk_m_filter_flow_internal_DataSetIntegratorSteadyState_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/filter/flow/internal/DataSetIntegrator.h>
 
 namespace vtkm

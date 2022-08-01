@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_flow_worklet_ParticleAdvectionWorklets_h
 #define vtk_m_filter_flow_worklet_ParticleAdvectionWorklets_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/ExecutionObjectBase.h>

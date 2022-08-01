@@ -12,9 +12,6 @@
 #define vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
 
 #include <vtkm/filter/flow/NewFilterParticleAdvection.h>
-#include <vtkm/filter/flow/internal/BoundsMap.h>
-#include <vtkm/filter/flow/internal/DataSetIntegratorUnsteadyState.h>
-
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
@@ -23,9 +20,6 @@ namespace filter
 {
 namespace flow
 {
-
-// Forward declaration
-class DataSetIntegratorUnsteadyState;
 
 class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvectionUnsteadyState
   : public NewFilterParticleAdvection
@@ -40,17 +34,7 @@ public:
   VTKM_CONT void SetNextDataSet(const vtkm::cont::PartitionedDataSet& pds) { this->Input2 = pds; }
 
 protected:
-  VTKM_CONT virtual void ValidateOptions() const override
-  {
-    this->NewFilterParticleAdvection::ValidateOptions();
-    if (this->Time1 >= this->Time2)
-      throw vtkm::cont::ErrorFilterExecution("PreviousTime must be less than NextTime");
-  }
-
-  VTKM_CONT std::vector<vtkm::filter::flow::internal::DataSetIntegratorUnsteadyState>
-  CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
-                           const vtkm::filter::flow::internal::BoundsMap& boundsMap,
-                           const vtkm::filter::flow::FlowResultType& resultType) const;
+  VTKM_CONT virtual void ValidateOptions() const override;
 
 private:
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(

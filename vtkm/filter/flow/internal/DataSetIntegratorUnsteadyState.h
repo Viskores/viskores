@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_flow_internal_DataSetIntegratorUnsteadyState_h
 #define vtk_m_filter_flow_internal_DataSetIntegratorUnsteadyState_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/filter/flow/internal/DataSetIntegrator.h>
 #include <vtkm/filter/flow/worklet/TemporalGridEvaluators.h>
 

@@ -8,8 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvectionUnsteadyState.h>
 #include <vtkm/filter/flow/internal/DataSetIntegratorUnsteadyState.h>
 #include <vtkm/filter/flow/internal/ParticleAdvector.h>
@@ -20,39 +18,44 @@ namespace filter
 {
 namespace flow
 {
-
+namespace
+{
 VTKM_CONT std::vector<vtkm::filter::flow::internal::DataSetIntegratorUnsteadyState>
-NewFilterParticleAdvectionUnsteadyState::CreateDataSetIntegrators(
-  const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::flow::internal::BoundsMap& boundsMap,
-  const vtkm::filter::flow::FlowResultType& resultType) const
+CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
+                         const vtkm::cont::PartitionedDataSet& input2,
+                         const std::string& activeField,
+                         const vtkm::FloatDefault timer1,
+                         const vtkm::FloatDefault timer2,
+                         const vtkm::filter::flow::internal::BoundsMap& boundsMap,
+                         const vtkm::filter::flow::IntegrationSolverType solverType,
+                         const vtkm::filter::flow::VectorFieldType vecFieldType,
+                         const vtkm::filter::flow::FlowResultType resultType)
 {
   using DSIType = vtkm::filter::flow::internal::DataSetIntegratorUnsteadyState;
-
-  std::string activeField = this->GetActiveFieldName();
 
   std::vector<DSIType> dsi;
   for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {
     vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
     auto ds1 = input.GetPartition(i);
-    auto ds2 = this->Input2.GetPartition(i);
+    auto ds2 = input2.GetPartition(i);
     if ((!ds1.HasPointField(activeField) && !ds1.HasCellField(activeField)) ||
         (!ds2.HasPointField(activeField) && !ds2.HasCellField(activeField)))
       throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-    dsi.emplace_back(ds1,
-                     ds2,
-                     this->Time1,
-                     this->Time2,
-                     blockId,
-                     activeField,
-                     this->SolverType,
-                     this->VecFieldType,
-                     resultType);
+    dsi.emplace_back(
+      ds1, ds2, timer1, timer2, blockId, activeField, solverType, vecFieldType, resultType);
   }
 
   return dsi;
+}
+} // anonymous namespace
+
+VTKM_CONT void NewFilterParticleAdvectionUnsteadyState::ValidateOptions() const
+{
+  this->NewFilterParticleAdvection::ValidateOptions();
+  if (this->Time1 >= this->Time2)
+    throw vtkm::cont::ErrorFilterExecution("PreviousTime must be less than NextTime");
 }
 
 VTKM_CONT vtkm::cont::PartitionedDataSet
@@ -63,7 +66,15 @@ NewFilterParticleAdvectionUnsteadyState::DoExecutePartitions(
   this->ValidateOptions();
 
   vtkm::filter::flow::internal::BoundsMap boundsMap(input);
-  auto dsi = this->CreateDataSetIntegrators(input, boundsMap, this->GetResultType());
+  auto dsi = CreateDataSetIntegrators(input,
+                                      this->Input2,
+                                      this->GetActiveFieldName(),
+                                      this->Time1,
+                                      this->Time2,
+                                      boundsMap,
+                                      this->SolverType,
+                                      this->VecFieldType,
+                                      this->GetResultType());
 
   vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(
     boundsMap, dsi, this->UseThreadedAlgorithm, this->GetResultType());

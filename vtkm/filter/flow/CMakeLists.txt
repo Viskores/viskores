@@ -22,19 +22,23 @@ set(flow_headers
 set(flow_sources
   internal/Messenger.cxx
   NewFilterParticleAdvection.cxx
-  NewFilterParticleAdvectionSteadyState.cxx
-  NewFilterParticleAdvectionUnsteadyState.cxx
   ParticleAdvection.cxx
   Pathline.cxx
   PathParticle.cxx
   Streamline.cxx
+  )
+
+set(flow_device_sources
+  NewFilterParticleAdvectionSteadyState.cxx
+  NewFilterParticleAdvectionUnsteadyState.cxx
   StreamSurface.cxx
   )
 
 vtkm_library(
   NAME vtkm_filter_flow
   HEADERS ${flow_headers}
-  DEVICE_SOURCES ${flow_sources}
+  SOURCES ${flow_sources}
+  DEVICE_SOURCES ${flow_device_sources}
   USE_VTKM_JOB_POOL
 )
 

@@ -8,10 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvectionSteadyState.h>
 #include <vtkm/filter/flow/internal/DataSetIntegratorSteadyState.h>
+
+#include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/internal/ParticleAdvector.h>
 
 namespace vtkm
@@ -21,15 +21,17 @@ namespace filter
 namespace flow
 {
 
+namespace
+{
 VTKM_CONT std::vector<vtkm::filter::flow::internal::DataSetIntegratorSteadyState>
-NewFilterParticleAdvectionSteadyState::CreateDataSetIntegrators(
-  const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::flow::internal::BoundsMap& boundsMap,
-  const vtkm::filter::flow::FlowResultType& resultType) const
+CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
+                         const std::string& activeField,
+                         const vtkm::filter::flow::internal::BoundsMap& boundsMap,
+                         const vtkm::filter::flow::IntegrationSolverType solverType,
+                         const vtkm::filter::flow::VectorFieldType vecFieldType,
+                         const vtkm::filter::flow::FlowResultType resultType)
 {
   using DSIType = vtkm::filter::flow::internal::DataSetIntegratorSteadyState;
-
-  std::string activeField = this->GetActiveFieldName();
 
   std::vector<DSIType> dsi;
   for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
@@ -39,11 +41,12 @@ NewFilterParticleAdvectionSteadyState::CreateDataSetIntegrators(
     if (!ds.HasPointField(activeField) && !ds.HasCellField(activeField))
       throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
 
-    dsi.emplace_back(ds, blockId, activeField, this->SolverType, this->VecFieldType, resultType);
+    dsi.emplace_back(ds, blockId, activeField, solverType, vecFieldType, resultType);
   }
 
   return dsi;
 }
+} //anonymous namespace
 
 VTKM_CONT vtkm::cont::PartitionedDataSet NewFilterParticleAdvectionSteadyState::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
@@ -52,7 +55,12 @@ VTKM_CONT vtkm::cont::PartitionedDataSet NewFilterParticleAdvectionSteadyState::
   this->ValidateOptions();
 
   vtkm::filter::flow::internal::BoundsMap boundsMap(input);
-  auto dsi = this->CreateDataSetIntegrators(input, boundsMap, this->GetResultType());
+  auto dsi = CreateDataSetIntegrators(input,
+                                      this->GetActiveFieldName(),
+                                      boundsMap,
+                                      this->SolverType,
+                                      this->VecFieldType,
+                                      this->GetResultType());
 
   vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(
     boundsMap, dsi, this->UseThreadedAlgorithm, this->GetResultType());

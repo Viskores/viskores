@@ -11,6 +11,7 @@
 #ifndef vtk_m_cont_ParticleArrayCopy_hxx
 #define vtk_m_cont_ParticleArrayCopy_hxx
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/ParticleArrayCopy.h>

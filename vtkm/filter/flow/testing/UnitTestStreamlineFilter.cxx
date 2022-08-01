@@ -9,7 +9,7 @@
 //============================================================================
 
 #include <vtkm/CellClassification.h>
-#include <vtkm/cont/Algorithm.h>
+#include <vtkm/Particle.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -18,7 +18,6 @@
 #include <vtkm/filter/flow/Pathline.h>
 #include <vtkm/filter/flow/Streamline.h>
 #include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 namespace

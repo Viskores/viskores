@@ -8,8 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/Particle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/filter/flow/Streamline.h>

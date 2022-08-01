@@ -25,14 +25,6 @@ set(libraries
   vtkm_source
 )
 
-if (VTKm_ENABLE_RENDERING)
-  list(APPEND libraries vtkm_rendering vtkm_rendering_testing)
-
-  list(APPEND unit_tests
-    RenderTestStreamline.cxx
-  )
-endif()
-
 vtkm_unit_tests(
   DEVICE_SOURCES ${unit_tests}
   LIBRARIES ${libraries}

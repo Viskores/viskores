@@ -14,6 +14,7 @@
 #include <sstream>
 
 #include <vtkm/ImplicitFunction.h>
+#include <vtkm/Particle.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>

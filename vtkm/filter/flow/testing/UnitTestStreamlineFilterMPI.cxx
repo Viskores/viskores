@@ -9,8 +9,7 @@
 //============================================================================
 
 #include <vtkm/CellClassification.h>
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/Particle.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/flow/ParticleAdvection.h>
 #include <vtkm/filter/flow/Pathline.h>
