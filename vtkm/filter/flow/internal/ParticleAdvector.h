@@ -44,15 +44,15 @@ public:
                                          vtkm::FloatDefault stepSize,
                                          const vtkm::cont::UnknownArrayHandle& seeds)
   {
-    using ParticleArray = vtkm::cont::ArrayHandle<vtkm::Particle>;
-    using ChargedParticleArray = vtkm::cont::ArrayHandle<vtkm::ChargedParticle>;
+    using ParticleTypeList = vtkm::List<vtkm::Particle, vtkm::ChargedParticle>;
 
-    if (seeds.IsBaseComponentType<vtkm::Particle>())
-      return this->Execute(numSteps, stepSize, seeds.AsArrayHandle<ParticleArray>());
-    else if (seeds.IsBaseComponentType<vtkm::ChargedParticle>())
-      return this->Execute(numSteps, stepSize, seeds.AsArrayHandle<ChargedParticleArray>());
+    vtkm::cont::PartitionedDataSet result;
+    seeds.CastAndCallForTypes<ParticleTypeList, VTKM_DEFAULT_STORAGE_LIST>(
+      [&](const auto& concreteSeeds) {
+        result = this->Execute(numSteps, stepSize, concreteSeeds);
+      });
 
-    throw vtkm::cont::ErrorFilterExecution("Unsupported options in AdvectAlgorithm");
+    return result;
   }
 
 private:
