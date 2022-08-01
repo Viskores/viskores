@@ -269,7 +269,7 @@ VTKM_CONT inline bool DataSetIntegrator<Derived>::GetOutput(vtkm::cont::DataSet&
     std::vector<vtkm::cont::ArrayHandle<ParticleType>> allParticles;
     allParticles.reserve(nResults);
     for (const auto& vres : this->Results)
-      allParticles.emplace_back(vres.Get<ResType>().Particles);
+      allParticles.emplace_back(vres.template Get<ResType>().Particles);
 
     vtkm::cont::ArrayHandle<vtkm::Vec3f> pts;
     vtkm::cont::ParticleArrayCopy(allParticles, pts);
@@ -296,7 +296,7 @@ VTKM_CONT inline bool DataSetIntegrator<Derived>::GetOutput(vtkm::cont::DataSet&
     //Easy case with one result.
     if (nResults == 1)
     {
-      const auto& res = this->Results[0].Get<ResType>();
+      const auto& res = this->Results[0].template Get<ResType>();
       ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", res.Positions));
       ds.SetCellSet(res.PolyLines);
     }
@@ -306,7 +306,7 @@ VTKM_CONT inline bool DataSetIntegrator<Derived>::GetOutput(vtkm::cont::DataSet&
       vtkm::Id totalNumCells = 0, totalNumPts = 0;
       for (std::size_t i = 0; i < nResults; i++)
       {
-        const auto& res = this->Results[i].Get<ResType>();
+        const auto& res = this->Results[i].template Get<ResType>();
         if (i == 0)
           posOffsets[i] = 0;
         else
@@ -321,7 +321,7 @@ VTKM_CONT inline bool DataSetIntegrator<Derived>::GetOutput(vtkm::cont::DataSet&
       appendPts.Allocate(totalNumPts);
       for (std::size_t i = 0; i < nResults; i++)
       {
-        const auto& res = this->Results[i].Get<ResType>();
+        const auto& res = this->Results[i].template Get<ResType>();
         // copy all values into appendPts starting at offset.
         vtkm::cont::Algorithm::CopySubRange(
           res.Positions, 0, res.Positions.GetNumberOfValues(), appendPts, posOffsets[i]);
@@ -333,7 +333,7 @@ VTKM_CONT inline bool DataSetIntegrator<Derived>::GetOutput(vtkm::cont::DataSet&
       std::size_t off = 0;
       for (std::size_t i = 0; i < nResults; i++)
       {
-        const auto& res = this->Results[i].Get<ResType>();
+        const auto& res = this->Results[i].template Get<ResType>();
         vtkm::Id nCells = res.PolyLines.GetNumberOfCells();
         for (vtkm::Id j = 0; j < nCells; j++)
           numPtsPerCell[off++] = static_cast<vtkm::Id>(res.PolyLines.GetNumberOfPointsInCell(j));
