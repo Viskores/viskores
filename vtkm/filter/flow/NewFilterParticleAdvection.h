@@ -67,10 +67,7 @@ protected:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
   VTKM_CONT virtual void ValidateOptions() const;
 
-  VTKM_CONT virtual vtkm::filter::flow::FlowResultType GetResultType() const
-  {
-    return vtkm::filter::flow::FlowResultType::UNKNOWN_TYPE;
-  }
+  VTKM_CONT virtual vtkm::filter::flow::FlowResultType GetResultType() const = 0;
 
   vtkm::Id NumberOfSteps = 0;
   vtkm::cont::UnknownArrayHandle Seeds;
