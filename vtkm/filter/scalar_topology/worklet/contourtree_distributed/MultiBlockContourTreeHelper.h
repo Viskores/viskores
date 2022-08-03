@@ -53,15 +53,12 @@
 #ifndef vtk_m_worklet_contourtree_distributed_multiblockcontourtreehelper_h
 #define vtk_m_worklet_contourtree_distributed_multiblockcontourtreehelper_h
 
-#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
-
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/BoundsCompute.h>
 #include <vtkm/cont/BoundsGlobalCompute.h>
-//#include <vtkm/cont/AssignerPartitionedDataSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
@@ -79,19 +76,21 @@ class MultiBlockContourTreeHelper
 public:
   VTKM_CONT
   MultiBlockContourTreeHelper(vtkm::Id3 blocksPerDim,
-                              vtkm::Id3 globalSize,
-                              const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-                              const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
-                              const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes)
-    : MultiBlockSpatialDecomposition(blocksPerDim,
-                                     globalSize,
-                                     localBlockIndices,
-                                     localBlockOrigins,
-                                     localBlockSizes)
+                              const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices)
+    : BlocksPerDimension(blocksPerDim)
+    , LocalBlockIndices(localBlockIndices)
+    , LocalContourTrees(static_cast<size_t>(localBlockIndices.GetNumberOfValues()))
+    , LocalSortOrders(static_cast<size_t>(localBlockIndices.GetNumberOfValues()))
   {
-    vtkm::Id localNumBlocks = this->GetLocalNumberOfBlocks();
-    LocalContourTrees.resize(static_cast<std::size_t>(localNumBlocks));
-    LocalSortOrders.resize(static_cast<std::size_t>(localNumBlocks));
+  }
+
+  VTKM_CONT
+  MultiBlockContourTreeHelper(const vtkm::cont::PartitionedDataSet& input)
+    : BlocksPerDimension(-1, -1, -1)
+    , LocalBlockIndices()
+    , LocalContourTrees(static_cast<size_t>(input.GetNumberOfPartitions()))
+    , LocalSortOrders(static_cast<size_t>(input.GetNumberOfPartitions()))
+  {
   }
 
   VTKM_CONT
@@ -118,25 +117,12 @@ public:
 
   inline vtkm::Id GetLocalNumberOfBlocks() const
   {
-    return this->MultiBlockSpatialDecomposition.GetLocalNumberOfBlocks();
+    return static_cast<vtkm::Id>(this->LocalContourTrees.size());
   }
 
   inline vtkm::Id GetGlobalNumberOfBlocks() const
   {
-    return this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks();
-  }
-
-  inline static vtkm::Id GetGlobalNumberOfBlocks(const vtkm::cont::PartitionedDataSet& input)
-  {
-    auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-    vtkm::Id localSize = input.GetNumberOfPartitions();
-    vtkm::Id globalSize = 0;
-#ifdef VTKM_ENABLE_MPI
-    vtkmdiy::mpi::all_reduce(comm, localSize, globalSize, std::plus<vtkm::Id>{});
-#else
-    globalSize = localSize;
-#endif
-    return globalSize;
+    return this->BlocksPerDimension[0] * this->BlocksPerDimension[1] * this->BlocksPerDimension[2];
   }
 
   // Used to compute the local contour tree mesh in after DoExecute. I.e., the function is
@@ -198,7 +184,8 @@ public:
     }
   }
 
-  vtkm::filter::scalar_topology::internal::SpatialDecomposition MultiBlockSpatialDecomposition;
+  vtkm::Id3 BlocksPerDimension;
+  vtkm::cont::ArrayHandle<vtkm::Id3> LocalBlockIndices;
   std::vector<vtkm::worklet::contourtree_augmented::ContourTree> LocalContourTrees;
   std::vector<vtkm::worklet::contourtree_augmented::IdArrayType> LocalSortOrders;
 }; // end MultiBlockContourTreeHelper
