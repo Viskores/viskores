@@ -18,7 +18,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/ScatterPermutation.h>
+#include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -146,11 +146,11 @@ public:
                                     _3 polylineOffset,
                                     _4 outNormals);
     using InputDomain = _1;
-    using ScatterType = vtkm::worklet::ScatterPermutation<>;
+    using ScatterType = vtkm::worklet::ScatterCounting;
     VTKM_CONT
-    static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id>& validIds)
+    static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id>& validCell)
     {
-      return ScatterType(validIds);
+      return ScatterType(validCell);
     }
 
     template <typename InPointsType, typename PointIndexType>
@@ -322,11 +322,11 @@ public:
                                     _7 outPts,
                                     _8 outPointSrcIdx);
     using InputDomain = _1;
-    using ScatterType = vtkm::worklet::ScatterPermutation<>;
+    using ScatterType = vtkm::worklet::ScatterCounting;
     VTKM_CONT
-    static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id>& validIds)
+    static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id>& validCell)
     {
-      return ScatterType(validIds);
+      return ScatterType(validCell);
     }
 
     template <typename CellShapeTag,
@@ -654,16 +654,11 @@ public:
     vtkm::cont::Algorithm::ScanExclusive(numTubeConnIds, tubeConnOffsets);
     vtkm::cont::Algorithm::ScanExclusive(segPerPolyline, segOffset);
 
-    //Skip any cells marked invalid.
-    vtkm::cont::ArrayHandle<vtkm::Id> validIds;
-    vtkm::cont::Algorithm::CopyIf(
-      vtkm::cont::ArrayHandleIndex(cellset.GetNumberOfCells()), validCell, validIds);
-
     //Generate normals at each point on all polylines
     NormalsType normals;
     normals.Allocate(totalPolylinePts);
     vtkm::worklet::DispatcherMapTopology<GenerateNormals> genNormalsDisp(
-      GenerateNormals::MakeScatter(validIds));
+      GenerateNormals::MakeScatter(validCell));
     genNormalsDisp.Invoke(cellset, coords, polylinePtOffset, normals);
 
     //Generate the tube points
@@ -671,7 +666,7 @@ public:
     this->OutputPointSourceIndex.Allocate(totalTubePts);
     GeneratePoints genPts(this->Capping, this->NumSides, this->Radius);
     vtkm::worklet::DispatcherMapTopology<GeneratePoints> genPtsDisp(
-      genPts, GeneratePoints::MakeScatter(validIds));
+      genPts, GeneratePoints::MakeScatter(validCell));
     genPtsDisp.Invoke(cellset,
                       coords,
                       normals,
