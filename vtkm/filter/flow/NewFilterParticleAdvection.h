@@ -64,7 +64,6 @@ public:
   void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
 
 protected:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
   VTKM_CONT virtual void ValidateOptions() const;
 
   VTKM_CONT virtual vtkm::filter::flow::FlowResultType GetResultType() const
@@ -82,6 +81,7 @@ protected:
     vtkm::filter::flow::VectorFieldType::VELOCITY_FIELD_TYPE;
 
 private:
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
 };
 
 }
