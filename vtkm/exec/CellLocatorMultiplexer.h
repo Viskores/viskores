@@ -11,6 +11,7 @@
 #define vtk_m_exec_CellLocatorMultiplexer_h
 
 #include <vtkm/ErrorCode.h>
+#include <vtkm/LocatorGoulash.h>
 #include <vtkm/TypeList.h>
 
 #include <vtkm/exec/internal/Variant.h>
@@ -32,6 +33,16 @@ struct FindCellFunctor
                                        vtkm::Vec3f& parametric) const
   {
     return locator.FindCell(point, cellId, parametric);
+  }
+
+  template <typename Locator>
+  VTKM_EXEC vtkm::ErrorCode operator()(Locator&& locator,
+                                       const vtkm::Vec3f& point,
+                                       vtkm::Id& cellId,
+                                       vtkm::Vec3f& parametric,
+                                       LastCellType& lastCell) const
+  {
+    return locator.FindCell(point, cellId, parametric, lastCell);
   }
 };
 
@@ -56,6 +67,15 @@ public:
                                      vtkm::Vec3f& parametric) const
   {
     return this->Locators.CastAndCall(detail::FindCellFunctor{}, point, cellId, parametric);
+  }
+
+  VTKM_EXEC vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                                     vtkm::Id& cellId,
+                                     vtkm::Vec3f& parametric,
+                                     LastCellType& lastCell) const
+  {
+    return this->Locators.CastAndCall(
+      detail::FindCellFunctor{}, point, cellId, parametric, lastCell);
   }
 
   VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")

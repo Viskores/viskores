@@ -11,6 +11,7 @@
 #define vtkm_exec_celllocatorrectilineargrid_h
 
 #include <vtkm/Bounds.h>
+#include <vtkm/LocatorGoulash.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
@@ -85,6 +86,15 @@ public:
         inside = false;
     }
     return inside;
+  }
+
+  VTKM_EXEC
+  vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                           vtkm::Id& cellId,
+                           vtkm::Vec3f& parametric,
+                           vtkm::LastCellType& vtkmNotUsed(lastCell)) const
+  {
+    return this->FindCell(point, cellId, parametric);
   }
 
   VTKM_EXEC

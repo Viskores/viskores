@@ -16,6 +16,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
 
+#include <vtkm/LocatorGoulash.h>
 #include <vtkm/Math.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
@@ -156,9 +157,105 @@ public:
   VTKM_EXEC
   vtkm::ErrorCode FindCell(const FloatVec3& point, vtkm::Id& cellId, FloatVec3& parametric) const
   {
+    vtkm::LastCellTwoLevel lastCell;
+    return this->FindCellImpl(point, cellId, parametric, lastCell);
+  }
+
+  VTKM_EXEC
+  vtkm::ErrorCode FindCell(const FloatVec3& point,
+                           vtkm::Id& cellId,
+                           FloatVec3& parametric,
+                           vtkm::LastCellType& lastCell) const
+  {
+    if (lastCell.GetIndex() != lastCell.GetIndexOf<vtkm::LastCellTwoLevel>())
+      lastCell = vtkm::LastCellTwoLevel();
+
+    auto& lastCell2L = lastCell.Get<vtkm::LastCellTwoLevel>();
+
+    vtkm::Vec3f pc;
+    //See if point is inside the last cell.
+    if (lastCell2L.CellId != -1 &&
+        this->PointInCell(point, lastCell2L.CellId, pc) == vtkm::ErrorCode::Success)
+    {
+      parametric = pc;
+      return vtkm::ErrorCode::Success;
+    }
+
+    //See if it's in the last leaf.
+    if (lastCell2L.LeafIdx != -1 &&
+        this->PointInLeaf(point, lastCell2L.LeafIdx, cellId, pc) == vtkm::ErrorCode::Success)
+    {
+      parametric = pc;
+      lastCell2L.CellId = cellId;
+      return vtkm::ErrorCode::Success;
+    }
+
+    //Call the full point search.
+    return this->FindCellImpl(point, cellId, parametric, lastCell2L);
+  }
+
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
+  VTKM_EXEC CellLocatorTwoLevel* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
+  VTKM_EXEC const CellLocatorTwoLevel* operator->() const { return this; }
+
+private:
+  VTKM_EXEC
+  vtkm::ErrorCode PointInCell(const vtkm::Vec3f& point,
+                              const vtkm::Id& cid,
+                              vtkm::Vec3f& parametric) const
+  {
+    auto indices = this->CellSet.GetIndices(cid);
+    auto pts = vtkm::make_VecFromPortalPermute(&indices, this->Coords);
+    vtkm::Vec3f pc;
+    bool inside;
+    auto status = PointInsideCell(point, this->CellSet.GetCellShape(cid), pts, pc, inside);
+    if (status == vtkm::ErrorCode::Success && inside)
+    {
+      parametric = pc;
+      return vtkm::ErrorCode::Success;
+    }
+
+    return vtkm::ErrorCode::CellNotFound;
+  }
+
+  VTKM_EXEC
+  vtkm::ErrorCode PointInLeaf(const FloatVec3& point,
+                              const vtkm::Id& leafIdx,
+                              vtkm::Id& cellId,
+                              FloatVec3& parametric) const
+  {
+    vtkm::Id start = this->CellStartIndex.Get(leafIdx);
+    vtkm::Id end = start + this->CellCount.Get(leafIdx);
+
+    for (vtkm::Id i = start; i < end; ++i)
+    {
+      vtkm::Vec3f pc;
+
+      vtkm::Id cid = this->CellIds.Get(i);
+      if (this->PointInCell(point, cid, pc) == vtkm::ErrorCode::Success)
+      {
+        cellId = cid;
+        parametric = pc;
+        return vtkm::ErrorCode::Success;
+      }
+    }
+
+    return vtkm::ErrorCode::CellNotFound;
+  }
+
+
+  VTKM_EXEC
+  vtkm::ErrorCode FindCellImpl(const FloatVec3& point,
+                               vtkm::Id& cellId,
+                               FloatVec3& parametric,
+                               vtkm::LastCellTwoLevel& lastCell) const
+  {
     using namespace vtkm::internal::cl_uniform_bins;
 
     cellId = -1;
+    lastCell.CellId = -1;
+    lastCell.LeafIdx = -1;
 
     DimVec3 binId3 = static_cast<DimVec3>((point - this->TopLevel.Origin) / this->TopLevel.BinSize);
     if (binId3[0] >= 0 && binId3[0] < this->TopLevel.Dimensions[0] && binId3[1] >= 0 &&
@@ -180,37 +277,20 @@ public:
       leafId3 = vtkm::Max(DimVec3(0), vtkm::Min(ldim - DimVec3(1), leafId3));
 
       vtkm::Id leafStart = this->LeafStartIndex.Get(binId);
-      vtkm::Id leafId = leafStart + ComputeFlatIndex(leafId3, leafGrid.Dimensions);
+      vtkm::Id leafIdx = leafStart + ComputeFlatIndex(leafId3, leafGrid.Dimensions);
 
-      vtkm::Id start = this->CellStartIndex.Get(leafId);
-      vtkm::Id end = start + this->CellCount.Get(leafId);
-      for (vtkm::Id i = start; i < end; ++i)
+      if (this->PointInLeaf(point, leafIdx, cellId, parametric) == vtkm::ErrorCode::Success)
       {
-        vtkm::Id cid = this->CellIds.Get(i);
-        auto indices = this->CellSet.GetIndices(cid);
-        auto pts = vtkm::make_VecFromPortalPermute(&indices, this->Coords);
-        FloatVec3 pc;
-        bool inside;
-        VTKM_RETURN_ON_ERROR(
-          PointInsideCell(point, this->CellSet.GetCellShape(cid), pts, pc, inside));
-        if (inside)
-        {
-          cellId = cid;
-          parametric = pc;
-          return vtkm::ErrorCode::Success;
-        }
+        lastCell.CellId = cellId;
+        lastCell.LeafIdx = leafIdx;
+
+        return vtkm::ErrorCode::Success;
       }
     }
 
     return vtkm::ErrorCode::CellNotFound;
   }
 
-  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
-  VTKM_EXEC CellLocatorTwoLevel* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
-  VTKM_EXEC const CellLocatorTwoLevel* operator->() const { return this; }
-
-private:
   vtkm::internal::cl_uniform_bins::Grid TopLevel;
 
   ReadPortal<DimVec3> LeafDimensions;
