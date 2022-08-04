@@ -42,7 +42,13 @@ test:macos_xcode13:
   before_script:
     - .gitlab/ci/config/cmake.sh
     - export PATH=$PWD/.gitlab/cmake/bin:$PATH
+    - "cmake -VV -P .gitlab/ci/config/ccache.cmake"
+    - export PATH=$PWD/.gitlab/ccache:$PATH
+    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
+    - export PATH=$PWD/.gitlab:$PATH
     - "cmake --version"
+    - "ccache --version"
+    - "ninja --version"
     - "cmake -V -P .gitlab/ci/config/fetch_vtkm_tags.cmake"
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
@@ -59,8 +65,11 @@ test:macos_xcode13:
   interruptible: true
   before_script:
     - .gitlab/ci/config/cmake.sh
-    - export PATH=$PWD/.gitlab/cmake/bin:$PATH
+    - export PATH=.gitlab/cmake/bin:$PATH
+    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
+    - export PATH=$PWD/.gitlab:$PATH
     - cmake --version
+    - ninja --version
   script:
     - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
   extends:
