@@ -178,6 +178,7 @@ public:
         this->PointInCell(point, lastCell2L.CellId, pc) == vtkm::ErrorCode::Success)
     {
       parametric = pc;
+      cellId = lastCell2L.CellId;
       return vtkm::ErrorCode::Success;
     }
 
