@@ -8,17 +8,17 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/LocatorGoulash.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/exec/ParametricCoordinates.h>
 
 #include <vtkm/filter/geometry_refinement/worklet/Tetrahedralize.h>
 #include <vtkm/filter/geometry_refinement/worklet/Triangulate.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/ScatterPermutation.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -150,10 +150,13 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
     pcoords.WritePortal().Set(i, pc);
   }
 
-  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
-    ParametricToWorldCoordinates::MakeScatter(cellIds));
-  dispatcher.Invoke(
-    ds.GetCellSet(), ds.GetCoordinateSystem().GetDataAsMultiplexer(), pcoords, wcoords);
+  vtkm::cont::Invoker invoker;
+  invoker(ParametricToWorldCoordinates{},
+          ParametricToWorldCoordinates::MakeScatter(cellIds),
+          ds.GetCellSet(),
+          ds.GetCoordinateSystem().GetDataAsMultiplexer(),
+          pcoords,
+          wcoords);
 }
 
 class FindCellWorklet : public vtkm::worklet::WorkletMapField
@@ -176,6 +179,29 @@ public:
     {
       this->RaiseError(vtkm::ErrorString(status));
     }
+  }
+};
+
+class FindCellWorkletWithLastCell : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn points,
+                                ExecObject locator,
+                                FieldOut cellIds,
+                                FieldOut pcoords,
+                                FieldInOut lastCell);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
+
+  template <typename LocatorType>
+  VTKM_EXEC void operator()(const vtkm::Vec3f& point,
+                            const LocatorType& locator,
+                            vtkm::Id& cellId,
+                            vtkm::Vec3f& pcoords,
+                            vtkm::LastCellType& lastCell) const
+  {
+    vtkm::ErrorCode status = locator.FindCell(point, cellId, pcoords, lastCell);
+    if (status != vtkm::ErrorCode::Success)
+      this->RaiseError(vtkm::ErrorString(status));
   }
 };
 
@@ -202,13 +228,30 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
   vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
   vtkm::cont::ArrayHandle<PointType> pcoords;
 
-  vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
-  dispatcher.Invoke(points, locator, cellIds, pcoords);
+  vtkm::cont::Invoker invoker;
+  invoker(FindCellWorklet{}, points, locator, cellIds, pcoords);
 
   auto cellIdsPortal = cellIds.ReadPortal();
   auto expCellIdsPortal = expCellIds.ReadPortal();
   auto pcoordsPortal = pcoords.ReadPortal();
   auto expPCoordsPortal = expPCoords.ReadPortal();
+  for (vtkm::Id i = 0; i < numberOfPoints; ++i)
+  {
+    VTKM_TEST_ASSERT(cellIdsPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
+    VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
+                     "Incorrect parameteric coordinates");
+  }
+
+  //Test the last cell option.
+  //Call the locator to fill in the lastCell array.
+  std::vector<vtkm::LastCellType> lastCell(numberOfPoints);
+  auto lastCellArray = vtkm::cont::make_ArrayHandle(lastCell, vtkm::CopyFlag::Off);
+
+  invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCellArray);
+
+  //Call it again so that it uses the last-cell array. We should get the same results.
+  invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCellArray);
+
   for (vtkm::Id i = 0; i < numberOfPoints; ++i)
   {
     VTKM_TEST_ASSERT(cellIdsPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
