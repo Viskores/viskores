@@ -10,7 +10,6 @@
 #ifndef vtk_m_exec_CellLocatorBoundingIntervalHierarchy_h
 #define vtk_m_exec_CellLocatorBoundingIntervalHierarchy_h
 
-#include <vtkm/LocatorGoulash.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/VecFromPortalPermute.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -84,12 +83,18 @@ public:
   {
   }
 
+  struct LastCell
+  {
+    vtkm::Id CellId = -1;
+    vtkm::Id NodeIdx = -1;
+  };
+
   VTKM_EXEC
   vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
                            vtkm::Id& cellId,
                            vtkm::Vec3f& parametric) const
   {
-    vtkm::LastCellBoundingHierarchy lastCell;
+    LastCell lastCell;
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
@@ -97,28 +102,24 @@ public:
   vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
                            vtkm::Id& cellId,
                            vtkm::Vec3f& parametric,
-                           vtkm::LastCellType& lastCell) const
+                           LastCell& lastCell) const
   {
-    if (lastCell.GetIndex() != lastCell.GetIndexOf<vtkm::LastCellBoundingHierarchy>())
-      lastCell = vtkm::LastCellBoundingHierarchy();
-    auto& lastCellBH = lastCell.Get<vtkm::LastCellBoundingHierarchy>();
-
     cellId = -1;
 
     //Check the last cell.
-    if (lastCellBH.CellId != -1)
+    if (lastCell.CellId != -1)
     {
-      if (this->PointInCell(point, lastCellBH.CellId, parametric) == vtkm::ErrorCode::Success)
+      if (this->PointInCell(point, lastCell.CellId, parametric) == vtkm::ErrorCode::Success)
       {
-        cellId = lastCellBH.CellId;
+        cellId = lastCell.CellId;
         return vtkm::ErrorCode::Success;
       }
     }
 
     //Check the last leaf node.
-    if (lastCellBH.NodeIdx != -1)
+    if (lastCell.NodeIdx != -1)
     {
-      const auto& node = this->Nodes.Get(lastCellBH.NodeIdx);
+      const auto& node = this->Nodes.Get(lastCell.NodeIdx);
       VTKM_ASSERT(node.ChildIndex < 0); //should be a leaf node.
 
       if (node.ChildIndex < 0)
@@ -126,21 +127,21 @@ public:
         VTKM_RETURN_ON_ERROR(this->FindInLeaf(point, parametric, node, cellId));
         if (cellId != -1)
         {
-          lastCellBH.CellId = cellId;
+          lastCell.CellId = cellId;
           return vtkm::ErrorCode::Success;
         }
       }
     }
 
     //No fastpath. Do a full search.
-    return this->FindCellImpl(point, cellId, parametric, lastCellBH);
+    return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
   VTKM_EXEC
   vtkm::ErrorCode FindCellImpl(const vtkm::Vec3f& point,
                                vtkm::Id& cellId,
                                vtkm::Vec3f& parametric,
-                               vtkm::LastCellBoundingHierarchy& lastCell) const
+                               LastCell& lastCell) const
   {
     cellId = -1;
     vtkm::Id nodeIndex = 0;
@@ -196,7 +197,7 @@ private:
                             vtkm::Id& cellId,
                             vtkm::Id nodeIndex,
                             vtkm::Vec3f& parametric,
-                            vtkm::LastCellBoundingHierarchy& lastCell) const
+                            LastCell& lastCell) const
   {
     VTKM_ASSERT(state == FindCellState::EnterNode);
 

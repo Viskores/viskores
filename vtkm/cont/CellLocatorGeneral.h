@@ -54,6 +54,7 @@ public:
                vtkm::cont::internal::ExecutionObjectType<vtkm::cont::CellLocatorTwoLevel>>;
 
   using ExecObjType = vtkm::ListApply<ExecLocatorList, vtkm::exec::CellLocatorMultiplexer>;
+  using LastCell = typename ExecObjType::LastCell;
 
   VTKM_CONT ExecObjType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
                                             vtkm::cont::Token& token) const;

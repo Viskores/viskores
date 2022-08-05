@@ -187,7 +187,7 @@ public:
                             const LocatorType& locator,
                             vtkm::Id& cellId,
                             vtkm::Vec3f& pcoords,
-                            vtkm::LastCellType& lastCell) const
+                            typename LocatorType::LastCell& lastCell) const
   {
     vtkm::ErrorCode status = locator.FindCell(point, cellId, pcoords, lastCell);
     if (status != vtkm::ErrorCode::Success)
@@ -225,7 +225,7 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
 
   //Test the last cell option.
   //Call the locator to fill in the lastCell array.
-  std::vector<vtkm::LastCellType> lastCell(64);
+  std::vector<vtkm::cont::CellLocatorGeneral::LastCell> lastCell(64);
   auto lastCellArray = vtkm::cont::make_ArrayHandle(lastCell, vtkm::CopyFlag::Off);
 
   invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCellArray);

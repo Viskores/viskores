@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/LocatorGoulash.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
@@ -197,7 +196,7 @@ public:
                             const LocatorType& locator,
                             vtkm::Id& cellId,
                             vtkm::Vec3f& pcoords,
-                            vtkm::LastCellType& lastCell) const
+                            typename LocatorType::LastCell& lastCell) const
   {
     vtkm::ErrorCode status = locator.FindCell(point, cellId, pcoords, lastCell);
     if (status != vtkm::ErrorCode::Success)
@@ -244,7 +243,7 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
 
   //Test the last cell option.
   //Call the locator to fill in the lastCell array.
-  std::vector<vtkm::LastCellType> lastCell(numberOfPoints);
+  std::vector<vtkm::cont::CellLocatorTwoLevel::LastCell> lastCell(numberOfPoints);
   auto lastCellArray = vtkm::cont::make_ArrayHandle(lastCell, vtkm::CopyFlag::Off);
 
   invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCellArray);
