@@ -107,7 +107,7 @@ public:
     cellId = -1;
 
     //Check the last cell.
-    if (lastCell.CellId != -1)
+    if ((lastCell.CellId >= 0) && (lastCell.CellId < this->CellSet.GetNumberOfElements()))
     {
       if (this->PointInCell(point, lastCell.CellId, parametric) == vtkm::ErrorCode::Success)
       {
@@ -117,7 +117,7 @@ public:
     }
 
     //Check the last leaf node.
-    if (lastCell.NodeIdx != -1)
+    if ((lastCell.NodeIdx >= 0) && (lastCell.NodeIdx < this->Nodes.GetNumberOfValues()))
     {
       const auto& node = this->Nodes.Get(lastCell.NodeIdx);
       VTKM_ASSERT(node.ChildIndex < 0); //should be a leaf node.

@@ -174,7 +174,7 @@ public:
   {
     vtkm::Vec3f pc;
     //See if point is inside the last cell.
-    if (lastCell.CellId != -1 &&
+    if ((lastCell.CellId >= 0) && (lastCell.CellId < this->CellSet.GetNumberOfElements()) &&
         this->PointInCell(point, lastCell.CellId, pc) == vtkm::ErrorCode::Success)
     {
       parametric = pc;
@@ -183,7 +183,7 @@ public:
     }
 
     //See if it's in the last leaf.
-    if (lastCell.LeafIdx != -1 &&
+    if ((lastCell.LeafIdx >= 0) && (lastCell.LeafIdx < this->CellCount.GetNumberOfValues()) &&
         this->PointInLeaf(point, lastCell.LeafIdx, cellId, pc) == vtkm::ErrorCode::Success)
     {
       parametric = pc;
