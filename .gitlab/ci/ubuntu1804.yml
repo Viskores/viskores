@@ -91,7 +91,7 @@ build:ubuntu1804_clang_cuda:
     - .ubuntu1804_cuda
     - .cmake_build_linux
     - .run_automatically
-    # - .run_master
+    # - .run_upstream_branches
   variables:
     CC: "clang-8"
     CXX: "clang++-8"
@@ -110,7 +110,7 @@ test:ubuntu1804_clang_cuda:
     - .ubuntu1804_cuda
     - .cmake_test_linux
     - .run_automatically
-    # - .run_master
+    # - .run_upstream_branches
   dependencies:
     - build:ubuntu1804_clang_cuda
   needs:
