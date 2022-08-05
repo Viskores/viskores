@@ -78,17 +78,14 @@ public:
       p.Status.SetTemporalBounds();
     if (status.CheckInGhostCell())
       p.Status.SetInGhostCell();
+    if (status.CheckZeroVelocity())
+      p.Status.SetZeroVelocity();
+
     this->Particles.Set(idx, p);
   }
 
   VTKM_EXEC
-  bool CanContinue(const vtkm::Id& idx)
-  {
-    ParticleType p(this->GetParticle(idx));
-
-    return (p.Status.CheckOk() && !p.Status.CheckTerminate() && !p.Status.CheckSpatialBounds() &&
-            !p.Status.CheckTemporalBounds() && !p.Status.CheckInGhostCell());
-  }
+  bool CanContinue(const vtkm::Id& idx) { return this->GetParticle(idx).Status.CanContinue(); }
 
   VTKM_EXEC
   void UpdateTookSteps(const vtkm::Id& idx, bool val)

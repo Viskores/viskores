@@ -44,7 +44,7 @@ public:
     GridEvaluatorStatus status = this->Evaluator.Evaluate(inpos, time, vectors);
     if (status.CheckOk())
       velocity = particle.Velocity(vectors, stepLength);
-    return IntegratorStatus(status);
+    return IntegratorStatus(status, velocity);
   }
 
 private:
