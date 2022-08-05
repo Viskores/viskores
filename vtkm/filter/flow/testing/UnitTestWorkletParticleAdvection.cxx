@@ -622,8 +622,6 @@ void TestParticleStatus()
     auto dataSets = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
     for (auto& ds : dataSets)
     {
-      ds.AddPointField("vec", fieldArray);
-
       using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
       using GridEvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
       using RK4Type = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
