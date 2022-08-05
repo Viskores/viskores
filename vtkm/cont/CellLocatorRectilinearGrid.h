@@ -36,6 +36,8 @@ public:
 
   ~CellLocatorRectilinearGrid() = default;
 
+  using LastCell = vtkm::exec::CellLocatorRectilinearGrid::LastCell;
+
   VTKM_CONT vtkm::exec::CellLocatorRectilinearGrid PrepareForExecution(
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const;

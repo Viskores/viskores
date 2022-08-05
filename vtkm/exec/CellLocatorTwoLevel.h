@@ -16,7 +16,6 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
 
-#include <vtkm/LocatorGoulash.h>
 #include <vtkm/Math.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
@@ -154,10 +153,16 @@ public:
   {
   }
 
+  struct LastCell
+  {
+    vtkm::Id CellId = -1;
+    vtkm::Id LeafIdx = -1;
+  };
+
   VTKM_EXEC
   vtkm::ErrorCode FindCell(const FloatVec3& point, vtkm::Id& cellId, FloatVec3& parametric) const
   {
-    vtkm::LastCellTwoLevel lastCell;
+    LastCell lastCell;
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
@@ -165,34 +170,29 @@ public:
   vtkm::ErrorCode FindCell(const FloatVec3& point,
                            vtkm::Id& cellId,
                            FloatVec3& parametric,
-                           vtkm::LastCellType& lastCell) const
+                           LastCell& lastCell) const
   {
-    if (lastCell.GetIndex() != lastCell.GetIndexOf<vtkm::LastCellTwoLevel>())
-      lastCell = vtkm::LastCellTwoLevel();
-
-    auto& lastCell2L = lastCell.Get<vtkm::LastCellTwoLevel>();
-
     vtkm::Vec3f pc;
     //See if point is inside the last cell.
-    if (lastCell2L.CellId != -1 &&
-        this->PointInCell(point, lastCell2L.CellId, pc) == vtkm::ErrorCode::Success)
+    if ((lastCell.CellId >= 0) && (lastCell.CellId < this->CellSet.GetNumberOfElements()) &&
+        this->PointInCell(point, lastCell.CellId, pc) == vtkm::ErrorCode::Success)
     {
       parametric = pc;
-      cellId = lastCell2L.CellId;
+      cellId = lastCell.CellId;
       return vtkm::ErrorCode::Success;
     }
 
     //See if it's in the last leaf.
-    if (lastCell2L.LeafIdx != -1 &&
-        this->PointInLeaf(point, lastCell2L.LeafIdx, cellId, pc) == vtkm::ErrorCode::Success)
+    if ((lastCell.LeafIdx >= 0) && (lastCell.LeafIdx < this->CellCount.GetNumberOfValues()) &&
+        this->PointInLeaf(point, lastCell.LeafIdx, cellId, pc) == vtkm::ErrorCode::Success)
     {
       parametric = pc;
-      lastCell2L.CellId = cellId;
+      lastCell.CellId = cellId;
       return vtkm::ErrorCode::Success;
     }
 
     //Call the full point search.
-    return this->FindCellImpl(point, cellId, parametric, lastCell2L);
+    return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
   VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
@@ -250,7 +250,7 @@ private:
   vtkm::ErrorCode FindCellImpl(const FloatVec3& point,
                                vtkm::Id& cellId,
                                FloatVec3& parametric,
-                               vtkm::LastCellTwoLevel& lastCell) const
+                               LastCell& lastCell) const
   {
     using namespace vtkm::internal::cl_uniform_bins;
 

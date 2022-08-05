@@ -35,7 +35,6 @@ set(headers
   ImplicitFunction.h
   List.h
   ListTag.h # Deprecated, replaced by List.h
-  LocatorGoulash.h
   LowerBound.h
   Math.h
   Matrix.h

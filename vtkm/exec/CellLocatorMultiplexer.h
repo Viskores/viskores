@@ -11,7 +11,6 @@
 #define vtk_m_exec_CellLocatorMultiplexer_h
 
 #include <vtkm/ErrorCode.h>
-#include <vtkm/LocatorGoulash.h>
 #include <vtkm/TypeList.h>
 
 #include <vtkm/exec/internal/Variant.h>
@@ -35,14 +34,19 @@ struct FindCellFunctor
     return locator.FindCell(point, cellId, parametric);
   }
 
-  template <typename Locator>
+  template <typename Locator, typename LastCell>
   VTKM_EXEC vtkm::ErrorCode operator()(Locator&& locator,
                                        const vtkm::Vec3f& point,
                                        vtkm::Id& cellId,
                                        vtkm::Vec3f& parametric,
-                                       LastCellType& lastCell) const
+                                       LastCell& lastCell) const
   {
-    return locator.FindCell(point, cellId, parametric, lastCell);
+    using ConcreteLastCell = typename std::decay_t<Locator>::LastCell;
+    if (!lastCell.template IsType<ConcreteLastCell>())
+    {
+      lastCell = ConcreteLastCell{};
+    }
+    return locator.FindCell(point, cellId, parametric, lastCell.template Get<ConcreteLastCell>());
   }
 };
 
@@ -55,6 +59,8 @@ class VTKM_ALWAYS_EXPORT CellLocatorMultiplexer
 
 public:
   CellLocatorMultiplexer() = default;
+
+  using LastCell = vtkm::exec::internal::Variant<typename LocatorTypes::LastCell...>;
 
   template <typename Locator>
   VTKM_CONT CellLocatorMultiplexer(const Locator& locator)
@@ -72,7 +78,7 @@ public:
   VTKM_EXEC vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
                                      vtkm::Id& cellId,
                                      vtkm::Vec3f& parametric,
-                                     LastCellType& lastCell) const
+                                     LastCell& lastCell) const
   {
     return this->Locators.CastAndCall(
       detail::FindCellFunctor{}, point, cellId, parametric, lastCell);
