@@ -42,7 +42,11 @@ function(vtkm_extract_real_library library real_library)
 endfunction()
 
 if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
-  find_package(TBB REQUIRED)
+  # Skip find_package(TBB) if we already have it
+  if (NOT TARGET TBB::tbb)
+    find_package(TBB REQUIRED)
+  endif()
+
   add_library(vtkmTBB INTERFACE)
   add_library(vtkm::tbb ALIAS vtkmTBB)
   target_link_libraries(vtkmTBB INTERFACE TBB::tbb)
