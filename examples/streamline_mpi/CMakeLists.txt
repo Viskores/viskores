@@ -16,12 +16,5 @@ find_package(VTKm REQUIRED QUIET)
 if (VTKm_ENABLE_MPI)
   add_executable(StreamlineMPI StreamlineMPI.cxx)
   target_compile_definitions(StreamlineMPI PRIVATE "MPI_ENABLED")
-  target_link_libraries(StreamlineMPI PRIVATE vtkm_filter vtkm_io MPI::MPI_CXX)
-  vtkm_add_target_information(StreamlineMPI
-                              DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
-                              DEVICE_SOURCES StreamlineMPI.cxx)
+  target_link_libraries(StreamlineMPI PRIVATE vtkm_filter_flow vtkm_io MPI::MPI_CXX)
 endif()
-
-#if(TARGET vtkm::tbb)
-#  target_compile_definitions(streamline_mpi PRIVATE BUILDING_TBB_VERSION)
-#endif()

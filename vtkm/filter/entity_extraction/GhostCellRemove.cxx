@@ -308,8 +308,9 @@ namespace entity_extraction
 //-----------------------------------------------------------------------------
 VTKM_CONT GhostCellRemove::GhostCellRemove()
 {
-  this->SetActiveField("vtkmGhostCells");
-  this->SetFieldsToPass("vtkmGhostCells", vtkm::filter::FieldSelection::Mode::Exclude);
+  this->SetActiveField(vtkm::cont::GetGlobalGhostCellFieldName());
+  this->SetFieldsToPass(vtkm::cont::GetGlobalGhostCellFieldName(),
+                        vtkm::filter::FieldSelection::Mode::Exclude);
 }
 
 //-----------------------------------------------------------------------------

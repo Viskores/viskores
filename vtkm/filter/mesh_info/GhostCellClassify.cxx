@@ -88,6 +88,7 @@ private:
 
 namespace mesh_info
 {
+
 VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::DataSet& input)
 {
   const vtkm::cont::UnknownCellSet& cellset = input.GetCellSet();
@@ -142,7 +143,7 @@ VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::Dat
   }
 
   auto output = this->CreateResult(input);
-  output.AddCellField("vtkmGhostCells", ghosts);
+  output.AddGhostCellField(this->GhostCellName, ghosts);
   return output;
 }
 }

@@ -9,12 +9,14 @@
 //============================================================================
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/VTKDataSetReader.h>
 
-#include <vtkm/filter/Streamline.h>
+#include <vtkm/filter/flow/Streamline.h>
 #include <vtkm/filter/geometry_refinement/Tube.h>
 
 #include <vtkm/rendering/testing/RenderTest.h>
@@ -34,7 +36,7 @@ void TestStreamline()
                                    vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
                                    vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-  vtkm::filter::Streamline streamline;
+  vtkm::filter::flow::Streamline streamline;
   streamline.SetStepSize(0.1f);
   streamline.SetNumberOfSteps(20);
   streamline.SetSeeds(seedArray);

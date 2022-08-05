@@ -8,13 +8,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/Particle.h>
 #include <vtkm/cont/AssignerPartitionedDataSet.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/filter/Streamline.h>
+#include <vtkm/filter/flow/ParticleAdvection.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
@@ -22,12 +23,6 @@
 #include <mpi.h>
 #include <vtkm/thirdparty/diy/diy.h>
 #include <vtkm/thirdparty/diy/mpi-cast.h>
-
-
-#include <vtkm/filter/ParticleAdvection.h>
-#include <vtkm/filter/particleadvection/BoundsMap.h>
-#include <vtkm/filter/particleadvection/ParticleMessenger.h>
-
 
 void LoadData(std::string& fname, std::vector<vtkm::cont::DataSet>& dataSets, int rank, int nRanks)
 {
@@ -99,7 +94,7 @@ int main(int argc, char** argv)
   std::vector<vtkm::cont::DataSet> dataSets;
   LoadData(dataFile, dataSets, rank, size);
 
-  vtkm::filter::ParticleAdvection pa;
+  vtkm::filter::flow::ParticleAdvection pa;
 
   vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
   seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.1f, .1f, .9f), 0),
