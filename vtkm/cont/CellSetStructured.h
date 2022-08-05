@@ -51,6 +51,11 @@ public:
     this->Structure.SetPointDimensions(dimensions);
   }
 
+  void SetGlobalPointDimensions(SchedulingRangeType dimensions)
+  {
+    this->Structure.SetGlobalPointDimensions(dimensions);
+  }
+
   void SetGlobalPointIndexStart(SchedulingRangeType start)
   {
     this->Structure.SetGlobalPointIndexStart(start);
@@ -58,7 +63,17 @@ public:
 
   SchedulingRangeType GetPointDimensions() const { return this->Structure.GetPointDimensions(); }
 
+  SchedulingRangeType GetGlobalPointDimensions() const
+  {
+    return this->Structure.GetGlobalPointDimensions();
+  }
+
   SchedulingRangeType GetCellDimensions() const { return this->Structure.GetCellDimensions(); }
+
+  SchedulingRangeType GetGlobalCellDimensions() const
+  {
+    return this->Structure.GetGlobalCellDimensions();
+  }
 
   SchedulingRangeType GetGlobalPointIndexStart() const
   {
@@ -225,17 +240,20 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
   {
     vtkmdiy::save(bb, cs.GetPointDimensions());
+    vtkmdiy::save(bb, cs.GetGlobalPointDimensions());
     vtkmdiy::save(bb, cs.GetGlobalPointIndexStart());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
   {
-    typename Type::SchedulingRangeType dims, start;
+    typename Type::SchedulingRangeType dims, gdims, start;
     vtkmdiy::load(bb, dims);
+    vtkmdiy::load(bb, gdims);
     vtkmdiy::load(bb, start);
 
     cs = Type{};
     cs.SetPointDimensions(dims);
+    cs.SetGlobalPointDimensions(gdims);
     cs.SetGlobalPointIndexStart(start);
   }
 };

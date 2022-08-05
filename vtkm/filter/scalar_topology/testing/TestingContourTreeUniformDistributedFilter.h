@@ -203,12 +203,22 @@ inline vtkm::cont::DataSet CreateSubDataSet(const vtkm::cont::DataSet& ds,
   {
     vtkm::Id2 dimensions{ blockSize[0], blockSize[1] };
     vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
+    vtkm::cont::CellSetStructured<2> cellSet;
+    cellSet.SetPointDimensions(dimensions);
+    cellSet.SetGlobalPointDimensions(vtkm::Id2{ globalSize[0], globalSize[1] });
+    cellSet.SetGlobalPointIndexStart(vtkm::Id2{ blockOrigin[0], blockOrigin[1] });
+    dataSet.SetCellSet(cellSet);
     dataSet.AddField(permutedField);
     return dataSet;
   }
   else
   {
     vtkm::cont::DataSet dataSet = dsb.Create(blockSize);
+    vtkm::cont::CellSetStructured<3> cellSet;
+    cellSet.SetPointDimensions(blockSize);
+    cellSet.SetGlobalPointDimensions(globalSize);
+    cellSet.SetGlobalPointIndexStart(blockOrigin);
+    dataSet.SetCellSet(cellSet);
     dataSet.AddField(permutedField);
     return dataSet;
   }
@@ -241,7 +251,8 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   int numberOfRanks,
   bool augmentHierarchicalTree,
   bool computeHierarchicalVolumetricBranchDecomposition,
-  vtkm::Id3& globalSize)
+  vtkm::Id3& globalSize,
+  bool passBlockIndices = true)
 {
   // Get dimensions of data set
   vtkm::cont::CastAndCall(
@@ -267,15 +278,9 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   // Created partitioned (split) data set
   vtkm::cont::PartitionedDataSet pds;
   vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
-  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockOrigins;
-  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockSizes;
   localBlockIndices.Allocate(blocksOnThisRank);
-  localBlockOrigins.Allocate(blocksOnThisRank);
-  localBlockSizes.Allocate(blocksOnThisRank);
 
   auto localBlockIndicesPortal = localBlockIndices.WritePortal();
-  auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
-  auto localBlockSizesPortal = localBlockSizes.WritePortal();
 
   for (vtkm::Id blockNo = 0; blockNo < blocksOnThisRank; ++blockNo)
   {
@@ -283,20 +288,17 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
     std::tie(blockIndex, blockOrigin, blockSize) =
       ComputeBlockExtents(globalSize, blocksPerAxis, startBlockNo + blockNo);
     pds.AppendPartition(CreateSubDataSet(ds, blockOrigin, blockSize, fieldName));
-    localBlockOriginsPortal.Set(blockNo, blockOrigin);
-    localBlockSizesPortal.Set(blockNo, blockSize);
     localBlockIndicesPortal.Set(blockNo, blockIndex);
   }
 
   // Run the contour tree analysis
   vtkm::filter::scalar_topology::ContourTreeUniformDistributed filter(
-    blocksPerAxis,
-    globalSize,
-    localBlockIndices,
-    localBlockOrigins,
-    localBlockSizes,
-    vtkm::cont::LogLevel::UserVerboseLast,
-    vtkm::cont::LogLevel::UserVerboseLast);
+    vtkm::cont::LogLevel::UserVerboseLast, vtkm::cont::LogLevel::UserVerboseLast);
+
+  if (passBlockIndices)
+  {
+    filter.SetBlockIndices(blocksPerAxis, localBlockIndices);
+  }
 
   filter.SetUseMarchingCubes(useMarchingCubes);
   // Freudenthal: Only use boundary extrema; MC: use all points on boundary
@@ -310,8 +312,7 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   {
     using vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter;
 
-    DistributedBranchDecompositionFilter bd_filter(
-      blocksPerAxis, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
+    DistributedBranchDecompositionFilter bd_filter;
     result = bd_filter.Execute(result);
   }
 
@@ -387,7 +388,8 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   int rank = 0,
   int numberOfRanks = 1,
   bool augmentHierarchicalTree = false,
-  bool computeHierarchicalVolumetricBranchDecomposition = false)
+  bool computeHierarchicalVolumetricBranchDecomposition = false,
+  bool passBlockIndices = true)
 {
   vtkm::Id3 globalSize;
 
@@ -399,7 +401,8 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
                                            numberOfRanks,
                                            augmentHierarchicalTree,
                                            computeHierarchicalVolumetricBranchDecomposition,
-                                           globalSize);
+                                           globalSize,
+                                           passBlockIndices);
 }
 
 inline void TestContourTreeUniformDistributed8x9(int nBlocks, int rank = 0, int size = 1)
@@ -575,7 +578,8 @@ inline void TestContourTreeFile(std::string ds_filename,
                                 int rank = 0,
                                 int size = 1,
                                 bool augmentHierarchicalTree = false,
-                                bool computeHierarchicalVolumetricBranchDecomposition = false)
+                                bool computeHierarchicalVolumetricBranchDecomposition = false,
+                                bool passBlockIndices = true)
 {
   if (rank == 0)
   {
@@ -611,7 +615,8 @@ inline void TestContourTreeFile(std::string ds_filename,
                                       size,
                                       augmentHierarchicalTree,
                                       computeHierarchicalVolumetricBranchDecomposition,
-                                      globalSize);
+                                      globalSize,
+                                      passBlockIndices);
 
   if (rank == 0)
   {

@@ -94,7 +94,7 @@ vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
     ds = vtkm::cont::DataSetBuilderUniform::Create(vtkm::Id3(numI + 1, numJ + 1, numK + 1));
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
-  ds.AddCellField("vtkmGhostCells", ghosts);
+  ds.AddGhostCellField(ghosts);
 
   return ds;
 }
@@ -128,7 +128,7 @@ vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
-  ds.AddCellField("vtkmGhostCells", ghosts);
+  ds.AddGhostCellField(ghosts);
 
   return ds;
 }
@@ -205,7 +205,7 @@ vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK, in
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers);
 
-  ds.AddCellField("vtkmGhostCells", ghosts);
+  ds.AddGhostCellField(ghosts);
 
   return ds;
 }
