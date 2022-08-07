@@ -818,8 +818,12 @@ void ValidateResult(const ResultType& res,
     vtkm::Vec3f p = portal.Get(i).Pos;
     vtkm::Vec3f e = endPts[static_cast<std::size_t>(i)];
 
+
     VTKM_TEST_ASSERT(vtkm::Magnitude(p - e) <= eps, "Particle advection point is wrong");
-    VTKM_TEST_ASSERT(portal.Get(i).NumSteps == maxSteps, "Particle advection NumSteps is wrong");
+    if (portal.Get(i).Status.CheckZeroVelocity())
+      VTKM_TEST_ASSERT(portal.Get(i).NumSteps > 0, "Particle advection NumSteps is wrong");
+    else
+      VTKM_TEST_ASSERT(portal.Get(i).NumSteps == maxSteps, "Particle advection NumSteps is wrong");
     VTKM_TEST_ASSERT(portal.Get(i).Status.CheckOk(), "Particle advection Status is wrong");
     VTKM_TEST_ASSERT(portal.Get(i).Status.CheckTerminate(),
                      "Particle advection particle did not terminate");
@@ -903,17 +907,13 @@ void TestParticleAdvectionFile(const std::string& fname,
 
 void TestParticleAdvection()
 {
-  /*
   TestIntegrators();
   TestEvaluators();
   TestGhostCellEvaluators();
-  */
 
   TestParticleStatus();
-  /*
   TestWorkletsBasic();
   TestParticleWorkletsWithDataSetTypes();
-  */
 
   //Fusion test.
   std::vector<vtkm::Vec3f> fusionPts, fusionEndPts;

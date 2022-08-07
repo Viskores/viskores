@@ -79,7 +79,10 @@ public:
     if (status.CheckInGhostCell())
       p.Status.SetInGhostCell();
     if (status.CheckZeroVelocity())
+    {
       p.Status.SetZeroVelocity();
+      p.Status.SetTerminate();
+    }
 
     this->Particles.Set(idx, p);
   }
