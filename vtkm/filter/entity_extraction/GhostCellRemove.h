@@ -53,6 +53,7 @@ private:
   VTKM_CONT
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
+  bool UseGhostCellsAsField = true;
   bool RemoveAll = false;
   bool RemoveField = false;
   vtkm::UInt8 RemoveVals = 0;
