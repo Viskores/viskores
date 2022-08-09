@@ -14,4 +14,7 @@ find_package(VTKm REQUIRED QUIET)
 if (VTKm_ENABLE_RENDERING)
     add_executable(PolyLineArchimedeanHelix PolyLineArchimedeanHelix.cxx)
     target_link_libraries(PolyLineArchimedeanHelix PRIVATE vtkm_filter vtkm_rendering)
+    vtkm_add_target_information(PolyLineArchimedeanHelix
+      DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
+      DEVICE_SOURCES PolyLineArchimedeanHelix.cxx)
 endif()
