@@ -244,12 +244,16 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
   //Test the last cell option.
   //Call the locator to fill in the lastCell array.
   std::vector<vtkm::cont::CellLocatorTwoLevel::LastCell> lastCell(numberOfPoints);
-  auto lastCellArray = vtkm::cont::make_ArrayHandle(lastCell, vtkm::CopyFlag::Off);
+  auto lastCellArray = vtkm::cont::make_ArrayHandle(lastCell, vtkm::CopyFlag::On);
 
   invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCellArray);
 
   //Call it again so that it uses the last-cell array. We should get the same results.
   invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCellArray);
+  //vtkm::exec::CellLocatorTwoLevel<>::LastCell x = lastCell[0].Get();
+  //using LastCellType = vtkm::exec::CellLocatorTwoLevel<vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 2>>::LastCell;
+  //auto x = lastCell[0].Get<LastCellType>();
+  //std::cout<<"LastCell: "<<x.CellId<<std::endl;
 
   for (vtkm::Id i = 0; i < numberOfPoints; ++i)
   {
