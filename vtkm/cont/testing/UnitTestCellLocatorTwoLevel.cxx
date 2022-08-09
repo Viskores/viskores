@@ -246,6 +246,7 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
   std::vector<vtkm::cont::CellLocatorTwoLevel::LastCell> lastCell(numberOfPoints);
   auto lastCellArray = vtkm::cont::make_ArrayHandle(lastCell, vtkm::CopyFlag::On);
 
+  //vtkm::cont::printSummary_ArrayHandle(lastCellArray, std::cout);
   invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCellArray);
 
   //Call it again so that it uses the last-cell array. We should get the same results.
@@ -284,8 +285,8 @@ void TestingCellLocatorTwoLevel()
   std::cout << "Seed: " << seed << std::endl;
   RandomGenerator.seed(seed);
 
-  TestCellLocator(vtkm::Id3(8), 512);  // 3D dataset
-  TestCellLocator(vtkm::Id2(18), 512); // 2D dataset
+  TestCellLocator(vtkm::Id3(8), 8);  // 3D dataset
+  TestCellLocator(vtkm::Id2(18), 8); // 2D dataset
 }
 
 } // anonymous
