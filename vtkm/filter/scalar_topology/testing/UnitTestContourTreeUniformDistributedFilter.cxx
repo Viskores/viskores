@@ -112,6 +112,16 @@ public:
                         1,
                         true,
                         false);
+    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
+                        "var",
+                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
+                        4,
+                        false,
+                        0,
+                        1,
+                        true,
+                        false,
+                        false);
   }
 };
 }

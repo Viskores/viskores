@@ -32,16 +32,16 @@ public:
   using reference = typename StorageVec::reference;
   using const_reference = typename StorageVec::const_reference;
 
-  /// create a new PartitionedDataSet containng a single DataSet @a ds
+  /// Create a new PartitionedDataSet containng a single DataSet @a ds.
   VTKM_CONT
   PartitionedDataSet(const vtkm::cont::DataSet& ds);
-  /// create a new PartitionedDataSet with the existing one @a src
+  /// Create a new PartitionedDataSet with the existing one @a src.
   VTKM_CONT
   PartitionedDataSet(const vtkm::cont::PartitionedDataSet& src);
-  /// create a new PartitionedDataSet with a DataSet vector @a partitions.
+  /// Create a new PartitionedDataSet with a DataSet vector @a partitions.
   VTKM_CONT
   explicit PartitionedDataSet(const std::vector<vtkm::cont::DataSet>& partitions);
-  /// create a new PartitionedDataSet with the capacity set to be @a size
+  /// Create a new PartitionedDataSet with the capacity set to be @a size.
   VTKM_CONT
   explicit PartitionedDataSet(vtkm::Id size);
 
@@ -53,33 +53,41 @@ public:
 
   VTKM_CONT
   ~PartitionedDataSet();
-  /// get the field @a field_name from partition @a partition_index
+  /// Get the field @a field_name from partition @a partition_index.
   VTKM_CONT
   vtkm::cont::Field GetField(const std::string& field_name, int partition_index) const;
 
+  /// Get number of DataSet objects stored in this PartitionedDataSet.
   VTKM_CONT
   vtkm::Id GetNumberOfPartitions() const;
 
+  /// Get number of partations across all MPI ranks.
+  /// @warning This method requires global communication (MPI_Allreduce) if MPI is enabled.
+  VTKM_CONT
+  vtkm::Id GetGlobalNumberOfPartitions() const;
+
+  /// Get the DataSet @a partId.
   VTKM_CONT
   const vtkm::cont::DataSet& GetPartition(vtkm::Id partId) const;
 
+  /// Get an STL vector of all DataSet objects stored in PartitionedDataSet.
   VTKM_CONT
   const std::vector<vtkm::cont::DataSet>& GetPartitions() const;
 
-  /// add DataSet @a ds to the end of the contained DataSet vector
+  /// Add DataSet @a ds to the end of the contained DataSet vector.
   VTKM_CONT
   void AppendPartition(const vtkm::cont::DataSet& ds);
 
-  /// add DataSet @a ds to position @a index of the contained DataSet vector
+  /// Add DataSet @a ds to position @a index of the contained DataSet vector.
   VTKM_CONT
   void InsertPartition(vtkm::Id index, const vtkm::cont::DataSet& ds);
 
-  /// replace the @a index positioned element of the contained DataSet vector
-  /// with @a ds
+  /// Replace the @a index positioned element of the contained DataSet vector
+  /// with @a ds.
   VTKM_CONT
   void ReplacePartition(vtkm::Id index, const vtkm::cont::DataSet& ds);
 
-  /// append the DataSet vector "partitions"  to the end of the contained one
+  /// Append the DataSet vector @a partitions to the end of the contained one.
   VTKM_CONT
   void AppendPartitions(const std::vector<vtkm::cont::DataSet>& partitions);
 

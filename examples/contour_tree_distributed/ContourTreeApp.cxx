@@ -401,14 +401,8 @@ int main(int argc, char* argv[])
   vtkm::Id3 globalSize;
   vtkm::Id3 blocksPerDim;
   vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
-  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockOrigins;
-  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockSizes;
   localBlockIndices.Allocate(blocksPerRank);
-  localBlockOrigins.Allocate(blocksPerRank);
-  localBlockSizes.Allocate(blocksPerRank);
   auto localBlockIndicesPortal = localBlockIndices.WritePortal();
-  auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
-  auto localBlockSizesPortal = localBlockSizes.WritePortal();
 
   // Read the pre-split data files
   if (preSplitFiles)
@@ -595,6 +589,11 @@ int main(int argc, char* argv[])
                                                 static_cast<ValueType>(offset[1]) };
         const vtkm::Vec<ValueType, 2> v_spacing{ 1, 1 };
         ds = dsb.Create(v_dims, v_origin, v_spacing);
+        vtkm::cont::CellSetStructured<2> cs;
+        cs.SetPointDimensions(v_dims);
+        cs.SetGlobalPointDimensions(vtkm::Id2{ globalSize[0], globalSize[1] });
+        cs.SetGlobalPointIndexStart(vtkm::Id2{ offset[0], offset[1] });
+        ds.SetCellSet(cs);
       }
       else
       {
@@ -607,6 +606,11 @@ int main(int argc, char* argv[])
                                                 static_cast<ValueType>(offset[2]) };
         vtkm::Vec<ValueType, 3> v_spacing(1, 1, 1);
         ds = dsb.Create(v_dims, v_origin, v_spacing);
+        vtkm::cont::CellSetStructured<3> cs;
+        cs.SetPointDimensions(v_dims);
+        cs.SetGlobalPointDimensions(globalSize);
+        cs.SetGlobalPointIndexStart(vtkm::Id3{ offset[0], offset[1], offset[2] });
+        ds.SetCellSet(cs);
       }
       ds.AddPointField("values", values);
       // and add to partition
@@ -617,14 +621,6 @@ int main(int argc, char* argv[])
         vtkm::Id3{ static_cast<vtkm::Id>(blockIndex[0]),
                    static_cast<vtkm::Id>(blockIndex[1]),
                    static_cast<vtkm::Id>(nDims == 3 ? blockIndex[2] : 0) });
-      localBlockOriginsPortal.Set(blockNo,
-                                  vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
-                                             static_cast<vtkm::Id>(offset[1]),
-                                             static_cast<vtkm::Id>(nDims == 3 ? offset[2] : 0) });
-      localBlockSizesPortal.Set(blockNo,
-                                vtkm::Id3{ static_cast<vtkm::Id>(dims[0]),
-                                           static_cast<vtkm::Id>(dims[1]),
-                                           static_cast<vtkm::Id>(nDims == 3 ? dims[2] : 0) });
 
       if (blockNo == 0)
       {
@@ -753,7 +749,6 @@ int main(int argc, char* argv[])
                             : vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
                                         static_cast<vtkm::Id>(dims[1]),
                                         static_cast<vtkm::Id>(1));
-    std::cout << blocksPerDim << " " << globalSize << std::endl;
     {
       vtkm::Id lastDimSize =
         (nDims == 2) ? static_cast<vtkm::Id>(dims[1]) : static_cast<vtkm::Id>(dims[2]);
@@ -801,12 +796,12 @@ int main(int argc, char* argv[])
           vtkm::Vec<ValueType, 2> origin(0, blockIndex * blockSize);
           vtkm::Vec<ValueType, 2> spacing(1, 1);
           ds = dsb.Create(vdims, origin, spacing);
-
+          vtkm::cont::CellSetStructured<2> cs;
+          cs.SetPointDimensions(vdims);
+          cs.SetGlobalPointDimensions(vtkm::Id2{ globalSize[0], globalSize[1] });
+          cs.SetGlobalPointIndexStart(vtkm::Id2{ 0, (blockStart / blockSliceSize) });
+          ds.SetCellSet(cs);
           localBlockIndicesPortal.Set(localBlockIndex, vtkm::Id3(0, blockIndex, 0));
-          localBlockOriginsPortal.Set(localBlockIndex,
-                                      vtkm::Id3(0, (blockStart / blockSliceSize), 0));
-          localBlockSizesPortal.Set(localBlockIndex,
-                                    vtkm::Id3(static_cast<vtkm::Id>(dims[0]), currBlockSize, 0));
         }
         // 3D data
         else
@@ -818,14 +813,12 @@ int main(int argc, char* argv[])
           vtkm::Vec<ValueType, 3> origin(0, 0, (blockIndex * blockSize));
           vtkm::Vec<ValueType, 3> spacing(1, 1, 1);
           ds = dsb.Create(vdims, origin, spacing);
-
+          vtkm::cont::CellSetStructured<3> cs;
+          cs.SetPointDimensions(vdims);
+          cs.SetGlobalPointDimensions(globalSize);
+          cs.SetGlobalPointIndexStart(vtkm::Id3(0, 0, blockStart / blockSliceSize));
+          ds.SetCellSet(cs);
           localBlockIndicesPortal.Set(localBlockIndex, vtkm::Id3(0, 0, blockIndex));
-          localBlockOriginsPortal.Set(localBlockIndex,
-                                      vtkm::Id3(0, 0, (blockStart / blockSliceSize)));
-          localBlockSizesPortal.Set(localBlockIndex,
-                                    vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
-                                              static_cast<vtkm::Id>(dims[1]),
-                                              currBlockSize));
         }
 
         std::vector<vtkm::Float32> subValues((values.begin() + blockStart),
@@ -863,13 +856,9 @@ int main(int argc, char* argv[])
   prevTime = currTime;
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::ContourTreeUniformDistributed filter(blocksPerDim,
-                                                     globalSize,
-                                                     localBlockIndices,
-                                                     localBlockOrigins,
-                                                     localBlockSizes,
-                                                     timingsLogLevel,
-                                                     treeLogLevel);
+  vtkm::filter::scalar_topology::ContourTreeUniformDistributed filter(timingsLogLevel,
+                                                                      treeLogLevel);
+  filter.SetBlockIndices(blocksPerDim, localBlockIndices);
   filter.SetUseBoundaryExtremaOnly(useBoundaryExtremaOnly);
   filter.SetUseMarchingCubes(useMarchingCubes);
   filter.SetAugmentHierarchicalTree(augmentHierarchicalTree);
@@ -895,8 +884,7 @@ int main(int argc, char* argv[])
     {
       if (computeHierarchicalVolumetricBranchDecomposition)
       {
-        vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter(
-          blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
+        vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter;
         auto bd_result = bd_filter.Execute(result);
 
         for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)

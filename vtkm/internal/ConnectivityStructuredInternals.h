@@ -38,13 +38,22 @@ public:
   void SetPointDimensions(vtkm::Id dimensions) { this->PointDimensions = dimensions; }
 
   VTKM_EXEC_CONT
+  void SetGlobalPointDimensions(vtkm::Id dimensions) { this->GlobalPointDimensions = dimensions; }
+
+  VTKM_EXEC_CONT
   void SetGlobalPointIndexStart(vtkm::Id start) { this->GlobalPointIndexStart = start; }
 
   VTKM_EXEC_CONT
   vtkm::Id GetPointDimensions() const { return this->PointDimensions; }
 
   VTKM_EXEC_CONT
+  vtkm::Id GetGlobalPointDimensions() const { return this->GlobalPointDimensions; }
+
+  VTKM_EXEC_CONT
   vtkm::Id GetCellDimensions() const { return this->PointDimensions - 1; }
+
+  VTKM_EXEC_CONT
+  vtkm::Id GetGlobalCellDimensions() const { return this->GlobalPointDimensions - 1; }
 
   VTKM_EXEC_CONT
   SchedulingRangeType GetSchedulingRange(vtkm::TopologyElementTagCell) const
@@ -138,12 +147,15 @@ public:
   void PrintSummary(std::ostream& out) const
   {
     out << "   UniformConnectivity<1> ";
-    out << "this->PointDimensions[" << this->PointDimensions << "] ";
+    out << "PointDimensions[" << this->PointDimensions << "] ";
+    out << "GlobalPointDimensions[" << this->GlobalPointDimensions << "] ";
+    out << "GlobalPointIndexStart[" << this->GlobalPointIndexStart << "] ";
     out << "\n";
   }
 
 private:
   vtkm::Id PointDimensions = 0;
+  vtkm::Id GlobalPointDimensions = 0;
   vtkm::Id GlobalPointIndexStart = 0;
 };
 
@@ -158,13 +170,22 @@ public:
   void SetPointDimensions(vtkm::Id2 dims) { this->PointDimensions = dims; }
 
   VTKM_EXEC_CONT
+  void SetGlobalPointDimensions(vtkm::Id2 dims) { this->GlobalPointDimensions = dims; }
+
+  VTKM_EXEC_CONT
   void SetGlobalPointIndexStart(vtkm::Id2 start) { this->GlobalPointIndexStart = start; }
 
   VTKM_EXEC_CONT
   const vtkm::Id2& GetPointDimensions() const { return this->PointDimensions; }
 
   VTKM_EXEC_CONT
+  const vtkm::Id2& GetGlobalPointDimensions() const { return this->GlobalPointDimensions; }
+
+  VTKM_EXEC_CONT
   vtkm::Id2 GetCellDimensions() const { return this->PointDimensions - vtkm::Id2(1); }
+
+  VTKM_EXEC_CONT
+  vtkm::Id2 GetGlobalCellDimensions() const { return this->GlobalPointDimensions - vtkm::Id2(1); }
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfPoints() const { return vtkm::ReduceProduct(this->GetPointDimensions()); }
@@ -303,12 +324,18 @@ public:
   void PrintSummary(std::ostream& out) const
   {
     out << "   UniformConnectivity<2> ";
-    out << "pointDim[" << this->PointDimensions[0] << " " << this->PointDimensions[1] << "] ";
+    out << "PointDimensions[" << this->PointDimensions[0] << " " << this->PointDimensions[1]
+        << "] ";
+    out << "GlobalPointDimensions[" << this->GlobalPointDimensions[0] << " "
+        << this->GlobalPointDimensions[1] << "] ";
+    out << "GlobalPointIndexStart[" << this->GlobalPointIndexStart[0] << " "
+        << this->GlobalPointIndexStart[1] << "] ";
     out << std::endl;
   }
 
 private:
   vtkm::Id2 PointDimensions = { 0, 0 };
+  vtkm::Id2 GlobalPointDimensions = { 0, 0 };
   vtkm::Id2 GlobalPointIndexStart = { 0, 0 };
 };
 
@@ -328,13 +355,26 @@ public:
   }
 
   VTKM_EXEC_CONT
+  void SetGlobalPointDimensions(vtkm::Id3 dims)
+  {
+    this->GlobalPointDimensions = dims;
+    this->GlobalCellDimensions = dims - vtkm::Id3(1);
+  }
+
+  VTKM_EXEC_CONT
   void SetGlobalPointIndexStart(vtkm::Id3 start) { this->GlobalPointIndexStart = start; }
 
   VTKM_EXEC_CONT
   const vtkm::Id3& GetPointDimensions() const { return this->PointDimensions; }
 
   VTKM_EXEC_CONT
+  const vtkm::Id3& GetGlobalPointDimensions() const { return this->GlobalPointDimensions; }
+
+  VTKM_EXEC_CONT
   const vtkm::Id3& GetCellDimensions() const { return this->CellDimensions; }
+
+  VTKM_EXEC_CONT
+  const vtkm::Id3& GetGlobalCellDimensions() const { return this->GlobalCellDimensions; }
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfPoints() const { return vtkm::ReduceProduct(this->PointDimensions); }
@@ -466,8 +506,12 @@ public:
   void PrintSummary(std::ostream& out) const
   {
     out << "   UniformConnectivity<3> ";
-    out << "pointDim[" << this->PointDimensions[0] << " " << this->PointDimensions[1] << " "
+    out << "PointDimensions[" << this->PointDimensions[0] << " " << this->PointDimensions[1] << " "
         << this->PointDimensions[2] << "] ";
+    out << "GlobalPointDimensions[" << this->GlobalPointDimensions[0] << " "
+        << this->GlobalPointDimensions[1] << " " << this->GlobalPointDimensions[2] << "] ";
+    out << "GlobalPointIndexStart[" << this->GlobalPointIndexStart[0] << " "
+        << this->GlobalPointIndexStart[1] << " " << this->GlobalPointIndexStart[2] << "] ";
     out << std::endl;
   }
 
@@ -509,6 +553,8 @@ public:
 
 private:
   vtkm::Id3 PointDimensions = { 0, 0, 0 };
+  vtkm::Id3 GlobalPointDimensions = { 0, 0, 0 };
+  vtkm::Id3 GlobalCellDimensions = { 0, 0, 0 };
   vtkm::Id3 GlobalPointIndexStart = { 0, 0, 0 };
   vtkm::Id3 CellDimensions = { 0, 0, 0 };
   vtkm::Id CellDim01 = 0;

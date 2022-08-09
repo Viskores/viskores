@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <random>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
 #include <vtkm/cont/testing/Testing.h>
 

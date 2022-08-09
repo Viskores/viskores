@@ -45,8 +45,6 @@
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
-#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
-
 namespace vtkm
 {
 namespace filter
@@ -59,20 +57,17 @@ class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT DistributedBranchDecompositionFilter
   : public vtkm::filter::NewFilter
 {
 public:
-  VTKM_CONT DistributedBranchDecompositionFilter(
-    vtkm::Id3 blocksPerDim,
-    vtkm::Id3 globalSize,
-    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
-    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes);
+  VTKM_CONT DistributedBranchDecompositionFilter() = default;
+  VTKM_CONT DistributedBranchDecompositionFilter(vtkm::Id3,
+                                                 vtkm::Id3,
+                                                 const vtkm::cont::ArrayHandle<vtkm::Id3>&,
+                                                 const vtkm::cont::ArrayHandle<vtkm::Id3>&,
+                                                 const vtkm::cont::ArrayHandle<vtkm::Id3>&);
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&) override;
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData) override;
-
-  /// Information about the spatial decomposition
-  vtkm::filter::scalar_topology::internal::SpatialDecomposition MultiBlockSpatialDecomposition;
 };
 
 } // namespace scalar_topology

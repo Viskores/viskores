@@ -238,36 +238,6 @@ public:
     return result;
   }
 
-  //============================================================================
-  template <typename T>
-  class MapCellField : public vtkm::worklet::WorkletMapField
-  {
-  public:
-    T InvalidValue;
-    MapCellField(const T& invalidValue)
-      : InvalidValue(invalidValue)
-    {
-    }
-
-    using ControlSignature = void(FieldIn cellIds, WholeArrayIn inputField, FieldOut result);
-    using ExecutionSignature = void(_1, _2, _3);
-
-    template <typename InputFieldPortalType>
-    VTKM_EXEC void operator()(vtkm::Id cellId,
-                              const InputFieldPortalType& in,
-                              typename InputFieldPortalType::ValueType& out) const
-    {
-      if (cellId != -1)
-      {
-        out = in.Get(cellId);
-      }
-      else
-      {
-        out = this->InvalidValue;
-      }
-    }
-  };
-
   vtkm::cont::ArrayHandle<vtkm::Id> GetCellIds() const { return this->CellIds; }
 
   //============================================================================

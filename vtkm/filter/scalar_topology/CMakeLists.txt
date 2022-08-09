@@ -16,6 +16,7 @@ set(scalar_topology_headers
 
 set(scalar_topology_sources
   internal/BranchDecompositionBlock.cxx
+  internal/ComputeBlockIndices.cxx
   internal/ComputeDistributedBranchDecompositionFunctor.cxx
   ContourTreeUniform.cxx
   ContourTreeUniformAugmented.cxx

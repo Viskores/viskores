@@ -15,6 +15,13 @@
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/PartitionedDataSet.h>
+#include <vtkm/internal/Configure.h>
+
+// clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/diy/diy.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+// clang-format on
 
 namespace vtkm
 {
@@ -71,6 +78,19 @@ VTKM_CONT
 vtkm::Id PartitionedDataSet::GetNumberOfPartitions() const
 {
   return static_cast<vtkm::Id>(this->Partitions.size());
+}
+
+VTKM_CONT
+vtkm::Id PartitionedDataSet::GetGlobalNumberOfPartitions() const
+{
+#ifdef VTKM_ENABLE_MPI
+  auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkm::Id globalSize = 0;
+  vtkmdiy::mpi::all_reduce(comm, GetNumberOfPartitions(), globalSize, std::plus<vtkm::Id>{});
+  return globalSize;
+#else
+  return GetNumberOfPartitions();
+#endif
 }
 
 VTKM_CONT
