@@ -365,6 +365,8 @@ void TestGet()
 
     VariantType variant = expectedValue;
     VTKM_TEST_ASSERT(variant.GetIndex() == 2);
+    VTKM_TEST_ASSERT(variant.IsType<vtkm::Id>());
+    VTKM_TEST_ASSERT(!variant.IsType<vtkm::Float32>());
 
     VTKM_TEST_ASSERT(variant.Get<2>() == expectedValue);
 
