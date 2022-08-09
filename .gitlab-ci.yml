@@ -164,8 +164,9 @@ stages:
   interruptible: true
   before_script:
     - *install_cmake
-    - .gitlab/ci/config/sccache.sh
+    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
     - export PATH=$PWD/.gitlab:$PATH
+    - .gitlab/ci/config/sccache.sh
     - SCCACHE_IDLE_TIMEOUT=0 sccache --start-server
     - sccache --show-stats
     - .gitlab/ci/config/google_benchmarks.sh
@@ -185,6 +186,8 @@ stages:
   interruptible: true
   before_script:
     - *install_cmake
+    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
+    - export PATH=$PWD/.gitlab:$PATH
   script:
     - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
   extends:

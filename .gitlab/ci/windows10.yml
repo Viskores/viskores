@@ -29,8 +29,12 @@
     - Invoke-Expression -Command .gitlab/ci/config/cmake.ps1
     - Invoke-Expression -Command .gitlab/ci/config/vcvarsall.ps1
     - $pwdpath = $pwd.Path
-    - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab;$pwdpath\.gitlab\cmake\bin;$env:PATH"
+    - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab\cmake\bin;$env:PATH"
     - "cmake --version"
+    - "cmake -V -P .gitlab/ci/config/ccache.cmake"
+    - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab\ccache;$env:PATH"
+    - "cmake -V -P .gitlab/ci/config/ninja.cmake"
+    - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab;$env:PATH"
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
@@ -67,7 +71,10 @@
     - Invoke-Expression -Command .gitlab/ci/config/cmake.ps1
     - Invoke-Expression -Command .gitlab/ci/config/vcvarsall.ps1
     - $pwdpath = $pwd.Path
-    - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab;$pwdpath\.gitlab\cmake\bin;$env:PATH"
+    - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab\cmake\bin;$env:PATH"
+    - "cmake --version"
+    - "cmake -V -P .gitlab/ci/config/ninja.cmake"
+    - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab;$env:PATH"
   script:
     - "ctest -VV -S .gitlab/ci/ctest_test.cmake"
 
