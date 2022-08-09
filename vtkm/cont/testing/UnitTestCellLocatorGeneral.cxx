@@ -234,6 +234,21 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
   invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCellArray);
   for (vtkm::Id i = 0; i < 64; ++i)
   {
+    if (cellIdPortal.Get(i) != expCellIdsPortal.Get(i))
+      std::cout << "Error at: " << i << " " << cellIdPortal.Get(i) << " " << expCellIdsPortal.Get(i)
+                << std::endl;
+    VTKM_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
+    VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
+                     "Incorrect parameteric coordinates");
+  }
+
+  //Test with uninitialized lastCell objects.
+  vtkm::cont::ArrayHandle<vtkm::cont::CellLocatorGeneral::LastCell> lastCell2;
+  lastCell2.Allocate(64);
+
+  invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCell2);
+  for (vtkm::Id i = 0; i < 64; ++i)
+  {
     VTKM_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
     VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
                      "Incorrect parameteric coordinates");

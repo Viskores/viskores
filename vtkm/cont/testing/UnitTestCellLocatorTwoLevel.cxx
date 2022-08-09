@@ -253,6 +253,21 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
 
   for (vtkm::Id i = 0; i < numberOfPoints; ++i)
   {
+    if (cellIdsPortal.Get(i) != expCellIdsPortal.Get(i))
+      std::cout << "Error at: " << i << " " << cellIdsPortal.Get(i) << " "
+                << expCellIdsPortal.Get(i) << std::endl;
+    VTKM_TEST_ASSERT(cellIdsPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
+    VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
+                     "Incorrect parameteric coordinates");
+  }
+
+  //Test with uninitialized lastCell objects.
+  vtkm::cont::ArrayHandle<vtkm::cont::CellLocatorTwoLevel::LastCell> lastCell2;
+  lastCell2.Allocate(numberOfPoints);
+
+  invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCell2);
+  for (vtkm::Id i = 0; i < numberOfPoints; ++i)
+  {
     VTKM_TEST_ASSERT(cellIdsPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
     VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
                      "Incorrect parameteric coordinates");
