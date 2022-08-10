@@ -284,9 +284,6 @@ private:
       {
         lastCell.CellId = cellId;
         lastCell.LeafIdx = leafIdx;
-        std::cout << " ::FindCell(" << point << ") lastCell= " << lastCell.CellId << " "
-                  << lastCell.LeafIdx << std::endl;
-
         return vtkm::ErrorCode::Success;
       }
     }
