@@ -120,7 +120,6 @@ public:
     if ((lastCell.NodeIdx >= 0) && (lastCell.NodeIdx < this->Nodes.GetNumberOfValues()))
     {
       const auto& node = this->Nodes.Get(lastCell.NodeIdx);
-      VTKM_ASSERT(node.ChildIndex < 0); //should be a leaf node.
 
       if (node.ChildIndex < 0)
       {
