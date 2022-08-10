@@ -16,6 +16,6 @@ if (VTKm_ENABLE_MPI)
   add_executable(Histogram Histogram.cxx HistogramMPI.h HistogramMPI.hxx)
   target_link_libraries(Histogram PRIVATE vtkm_filter MPI::MPI_CXX)
   vtkm_add_target_information(Histogram
-                              DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
-                              DEVICE_SOURCES Histogram.cxx)
+    DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
+    DEVICE_SOURCES Histogram.cxx)
 endif()
