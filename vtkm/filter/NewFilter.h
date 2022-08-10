@@ -224,6 +224,11 @@ public:
   virtual bool CanThread() const;
 
   VTKM_CONT
+  void SetThreadsPerCPU(vtkm::Id numThreads) { this->NumThreadsPerCPU = numThreads; }
+  VTKM_CONT
+  void SetThreadsPerGPU(vtkm::Id numThreads) { this->NumThreadsPerGPU = numThreads; }
+
+  VTKM_CONT
   bool GetRunMultiThreadedFilter() const
   {
     return this->CanThread() && this->RunFilterWithMultipleThreads;
@@ -441,6 +446,8 @@ private:
 
   vtkm::filter::FieldSelection FieldsToPass = vtkm::filter::FieldSelection::Mode::All;
   bool RunFilterWithMultipleThreads = false;
+  vtkm::Id NumThreadsPerCPU = 4;
+  vtkm::Id NumThreadsPerGPU = 8;
 };
 }
 } // namespace vtkm::filter

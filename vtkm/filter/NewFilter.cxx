@@ -115,21 +115,17 @@ vtkm::Id NewFilter::DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSe
 {
   vtkm::Id numDS = input.GetNumberOfPartitions();
 
-  //Aribitrary constants.
-  const vtkm::Id threadsPerGPU = 8;
-  const vtkm::Id threadsPerCPU = 4;
-
   vtkm::Id availThreads = 1;
 
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
 
   if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{}))
-    availThreads = threadsPerGPU;
+    availThreads = this->NumThreadsPerGPU;
   else if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagKokkos{}))
   {
     //Kokkos doesn't support threading on the CPU.
 #ifdef VTKM_KOKKOS_CUDA
-    availThreads = threadsPerGPU;
+    availThreads = this->NumThreadsPerGPU;
 #else
     availThreads = 1;
 #endif
@@ -137,7 +133,7 @@ vtkm::Id NewFilter::DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSe
   else if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagSerial{}))
     availThreads = 1;
   else
-    availThreads = threadsPerCPU;
+    availThreads = this->NumThreadsPerCPU;
 
   vtkm::Id numThreads = std::min<vtkm::Id>(numDS, availThreads);
   return numThreads;
