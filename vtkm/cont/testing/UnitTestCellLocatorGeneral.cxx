@@ -232,6 +232,8 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
 
   //Call it again so that it uses the last-cell array. We should get the same results.
   invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCellArray);
+  cellIdPortal = cellIds.ReadPortal();
+  pcoordsPortal = pcoords.ReadPortal();
   for (vtkm::Id i = 0; i < 64; ++i)
   {
     if (cellIdPortal.Get(i) != expCellIdsPortal.Get(i))
@@ -247,6 +249,8 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
   lastCell2.Allocate(64);
 
   invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCell2);
+  cellIdPortal = cellIds.ReadPortal();
+  pcoordsPortal = pcoords.ReadPortal();
   for (vtkm::Id i = 0; i < 64; ++i)
   {
     VTKM_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
