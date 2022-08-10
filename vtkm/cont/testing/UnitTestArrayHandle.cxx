@@ -16,6 +16,10 @@
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/RuntimeDeviceInformation.h>
+#include <vtkm/cont/cuda/internal/CudaAllocator.h>
+
 #include <algorithm>
 #include <vector>
 
@@ -548,7 +552,7 @@ struct VerifyFill
   }
 };
 
-VTKM_CONT void Run()
+VTKM_CONT void RunTests()
 {
   vtkm::testing::Testing::TryTypes(VerifyEmptyArrays{});
   vtkm::testing::Testing::TryTypes(VerifyUserOwnedMemory{});
@@ -559,6 +563,20 @@ VTKM_CONT void Run()
   vtkm::testing::Testing::TryTypes(VerifyVTKMTransferredOwnership{});
   vtkm::testing::Testing::TryTypes(VerifyEqualityOperators{});
   vtkm::testing::Testing::TryTypes(VerifyFill{});
+}
+
+VTKM_CONT void Run()
+{
+#ifdef VTKM_CUDA
+  //For cuda, run tests with and without managed memory.
+  //When managed memory is off, async cuda malloc will be used.
+  vtkm::cont::cuda::internal::CudaAllocator::ForceManagedMemoryOff();
+  RunTests();
+  vtkm::cont::cuda::internal::CudaAllocator::ForceManagedMemoryOn();
+  RunTests();
+#else
+  RunTests();
+#endif
 }
 
 } // anonymous namespace

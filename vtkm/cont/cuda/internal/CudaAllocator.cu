@@ -158,7 +158,11 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
   }
   else
   {
+#if CUDART_VERSION >= 11030
+    VTKM_CUDA_CALL(cudaMallocAsync(&ptr, numBytes, cudaStreamPerThread));
+#else
     VTKM_CUDA_CALL(cudaMalloc(&ptr, numBytes));
+#endif
   }
 
   {
@@ -195,7 +199,19 @@ void CudaAllocator::Free(void* ptr)
   }
 
   VTKM_LOG_F(vtkm::cont::LogLevel::MemExec, "Freeing CUDA allocation at %p.", ptr);
+
+#if CUDART_VERSION >= 11030
+  if (ManagedMemoryEnabled)
+  {
+    VTKM_CUDA_CALL(cudaFree(ptr));
+  }
+  else
+  {
+    VTKM_CUDA_CALL(cudaFreeAsync(ptr, cudaStreamPerThread));
+  }
+#else
   VTKM_CUDA_CALL(cudaFree(ptr));
+#endif
 }
 
 void CudaAllocator::FreeDeferred(void* ptr, std::size_t numBytes)
