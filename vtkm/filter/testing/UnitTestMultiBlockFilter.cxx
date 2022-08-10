@@ -10,6 +10,7 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -86,7 +87,7 @@ void ValidateResults(const vtkm::cont::PartitionedDataSet& truth,
 } //namespace
 
 
-void TestMultiBlockFilter()
+void RunMBTests()
 {
   vtkm::cont::PartitionedDataSet pds;
 
@@ -157,6 +158,19 @@ void TestMultiBlockFilter()
     results.push_back(result);
   }
   ValidateResults(results[0], results[1], "gradient", false);
+}
+
+void TestMultiBlockFilter()
+{
+  //For cuda, run it with and without async memory allocation.
+#ifdef VTKM_CUDA
+  CudaAllocator::ForceSyncMemoryAllocator();
+  RunMBTests();
+  CudaAllocator::ForceAsyncMemoryAllocator();
+  RunMBTests();
+#else
+  RunMBTests();
+#endif
 }
 
 int UnitTestMultiBlockFilter(int argc, char* argv[])
