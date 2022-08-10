@@ -11,14 +11,13 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/exec/ParametricCoordinates.h>
 
 #include <vtkm/filter/geometry_refinement/worklet/Tetrahedralize.h>
 #include <vtkm/filter/geometry_refinement/worklet/Triangulate.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/ScatterPermutation.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -150,10 +149,13 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
     pcoords.WritePortal().Set(i, pc);
   }
 
-  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
-    ParametricToWorldCoordinates::MakeScatter(cellIds));
-  dispatcher.Invoke(
-    ds.GetCellSet(), ds.GetCoordinateSystem().GetDataAsMultiplexer(), pcoords, wcoords);
+  vtkm::cont::Invoker invoker;
+  invoker(ParametricToWorldCoordinates{},
+          ParametricToWorldCoordinates::MakeScatter(cellIds),
+          ds.GetCellSet(),
+          ds.GetCoordinateSystem().GetDataAsMultiplexer(),
+          pcoords,
+          wcoords);
 }
 
 class FindCellWorklet : public vtkm::worklet::WorkletMapField
@@ -179,6 +181,56 @@ public:
   }
 };
 
+class FindCellWorkletWithLastCell : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn points,
+                                ExecObject locator,
+                                FieldOut cellIds,
+                                FieldOut pcoords,
+                                FieldInOut lastCell);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
+
+  template <typename LocatorType>
+  VTKM_EXEC void operator()(const vtkm::Vec3f& point,
+                            const LocatorType& locator,
+                            vtkm::Id& cellId,
+                            vtkm::Vec3f& pcoords,
+                            typename LocatorType::LastCell& lastCell) const
+  {
+    vtkm::ErrorCode status = locator.FindCell(point, cellId, pcoords, lastCell);
+    if (status != vtkm::ErrorCode::Success)
+      this->RaiseError(vtkm::ErrorString(status));
+  }
+};
+
+void TestLastCell(vtkm::cont::CellLocatorTwoLevel& locator,
+                  vtkm::Id numPoints,
+                  vtkm::cont::ArrayHandle<vtkm::cont::CellLocatorTwoLevel::LastCell>& lastCell,
+                  const vtkm::cont::ArrayHandle<PointType>& points,
+                  const vtkm::cont::ArrayHandle<vtkm::Id>& expCellIds,
+                  const vtkm::cont::ArrayHandle<PointType>& expPCoords)
+
+{
+  vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
+  vtkm::cont::ArrayHandle<PointType> pcoords;
+
+  vtkm::cont::Invoker invoker;
+  invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCell);
+
+  auto cellIdPortal = cellIds.ReadPortal();
+  auto expCellIdsPortal = expCellIds.ReadPortal();
+  auto pcoordsPortal = pcoords.ReadPortal();
+  auto expPCoordsPortal = expPCoords.ReadPortal();
+
+  for (vtkm::Id i = 0; i < numPoints; ++i)
+  {
+    VTKM_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
+    VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
+                     "Incorrect parameteric coordinates");
+  }
+}
+
 template <vtkm::IdComponent DIMENSIONS>
 void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id numberOfPoints)
 {
@@ -202,8 +254,8 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
   vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
   vtkm::cont::ArrayHandle<PointType> pcoords;
 
-  vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
-  dispatcher.Invoke(points, locator, cellIds, pcoords);
+  vtkm::cont::Invoker invoker;
+  invoker(FindCellWorklet{}, points, locator, cellIds, pcoords);
 
   auto cellIdsPortal = cellIds.ReadPortal();
   auto expCellIdsPortal = expCellIds.ReadPortal();
@@ -215,6 +267,24 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
     VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
                      "Incorrect parameteric coordinates");
   }
+
+  //Test locator using lastCell
+
+  //Test it with initialized.
+  vtkm::cont::ArrayHandle<vtkm::cont::CellLocatorTwoLevel::LastCell> lastCell;
+  lastCell.AllocateAndFill(numberOfPoints, vtkm::cont::CellLocatorTwoLevel::LastCell{});
+  TestLastCell(locator, numberOfPoints, lastCell, points, expCellIds, pcoords);
+
+  //Call it again using the lastCell just computed to validate.
+  TestLastCell(locator, numberOfPoints, lastCell, points, expCellIds, pcoords);
+
+  //Test it with uninitialized array.
+  vtkm::cont::ArrayHandle<vtkm::cont::CellLocatorTwoLevel::LastCell> lastCell2;
+  lastCell2.Allocate(numberOfPoints);
+  TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
+
+  //Call it again using the lastCell2 just computed to validate.
+  TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
 }
 
 void TestingCellLocatorTwoLevel()
