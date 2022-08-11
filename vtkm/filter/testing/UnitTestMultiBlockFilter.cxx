@@ -164,9 +164,9 @@ void TestMultiBlockFilter()
 {
   //For cuda, run it with and without async memory allocation.
 #ifdef VTKM_CUDA
-  CudaAllocator::ForceSyncMemoryAllocator();
+  vtkm::cont::cuda::internal::CudaAllocator::ForceSyncMemoryAllocator();
   RunMBTests();
-  CudaAllocator::ForceAsyncMemoryAllocator();
+  vtkm::cont::cuda::internal::CudaAllocator::ForceAsyncMemoryAllocator();
   RunMBTests();
 #else
   RunMBTests();
