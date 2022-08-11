@@ -18,10 +18,6 @@
 #include <cstdlib>
 #include <iostream>
 
-int rank = 0;
-int numRanks = 1;
-
-
 struct Options
 {
 public:
@@ -38,8 +34,6 @@ public:
   std::string MapField = "";
   int IsoLevels = 1;
   std::vector<double> IsoValues;
-  int Rank = 0;
-  int NumRanks = 1;
   std::string ThreadMode = "serial";
   bool SyncMemAlloc = true;
   int NumTasks = 0;
@@ -172,8 +166,7 @@ public:
 
     if ((!this->Tangle && (this->DataFile == "" || this->ThreadMode == "")) || this->Field == "")
     {
-      if (this->Rank == 0)
-        std::cerr << "Error in options" << std::endl;
+      std::cerr << "Error in options" << std::endl;
       return false;
     }
 
@@ -218,12 +211,12 @@ int main(int argc, char** argv)
     {
       if (opts.SyncMemAlloc)
       {
-        CudaAllocator::ForceSyncMemoryAllocator();
+        vtkm::cont::cuda::internal::CudaAllocator::ForceSyncMemoryAllocator();
         std::cout << "  Task: Sync memory alloc = ON" << std::endl;
       }
       else
       {
-        CudaAllocator::ForceAsyncMemoryAllocator();
+        vtkm::cont::cuda::internal::CudaAllocator::ForceAsyncMemoryAllocator();
         std::cout << "  Task: Sync memory alloc = OFF" << std::endl;
       }
     }

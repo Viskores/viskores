@@ -103,7 +103,9 @@ public:
       //Insert them back in the same order.
       std::pair<vtkm::Id, vtkm::cont::DataSet> task;
       while (this->GetTask(task))
+      {
         dataSets[static_cast<std::size_t>(task.first)] = std::move(task.second);
+      }
 
       pds.AppendPartitions(dataSets);
     }

@@ -20,12 +20,17 @@ namespace vtkm
 {
 namespace filter
 {
-namespace
+
+NewFilter::~NewFilter() = default;
+
+void NewFilter::RunFilter(NewFilter* self,
+                          vtkm::filter::DataSetQueue& input,
+                          vtkm::filter::DataSetQueue& output)
 {
-void RunFilter(NewFilter* self,
-               vtkm::filter::DataSetQueue& input,
-               vtkm::filter::DataSetQueue& output)
-{
+#ifdef VTKM_CUDA
+  vtkm::cont::cuda::internal::CudaAllocator::ForceSyncMemoryAllocator();
+#endif
+
   std::pair<vtkm::Id, vtkm::cont::DataSet> task;
   while (input.GetTask(task))
   {
@@ -35,9 +40,7 @@ void RunFilter(NewFilter* self,
 
   vtkm::cont::Algorithm::Synchronize();
 }
-} // anonymous namespace
 
-NewFilter::~NewFilter() = default;
 
 bool NewFilter::CanThread() const
 {
@@ -61,8 +64,11 @@ vtkm::cont::PartitionedDataSet NewFilter::DoExecutePartitions(
     std::vector<std::future<void>> futures(static_cast<std::size_t>(numThreads));
     for (std::size_t i = 0; i < static_cast<std::size_t>(numThreads); i++)
     {
-      auto f = std::async(
-        std::launch::async, RunFilter, this, std::ref(inputQueue), std::ref(outputQueue));
+      auto f = std::async(std::launch::async,
+                          vtkm::filter::NewFilter::RunFilter,
+                          this,
+                          std::ref(inputQueue),
+                          std::ref(outputQueue));
       futures[i] = std::move(f);
     }
 

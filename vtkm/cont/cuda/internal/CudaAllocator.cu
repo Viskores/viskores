@@ -48,7 +48,7 @@ static bool ManagedMemoryEnabled = false;
 static bool HardwareSupportsManagedMemory = false;
 
 // True if using syncronous memory allocator. Managed memory must be off to use this.
-static bool UseSyncMemoryAlloc = true;
+static thread_local bool UseSyncMemoryAlloc = true;
 
 // Avoid overhead of cudaMemAdvise and cudaMemPrefetchAsync for small buffers.
 // This value should be > 0 or else these functions will error out.
@@ -104,11 +104,6 @@ void CudaAllocator::ForceManagedMemoryOn()
     VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
                "CudaAllocator trying to enable managed memory on hardware that doesn't support it");
   }
-}
-
-bool CudaAllocator::UsingSyncMemoryAllocator()
-{
-  return UseSyncMemoryAlloc;
 }
 
 void CudaAllocator::ForceSyncMemoryAllocator()
@@ -190,22 +185,21 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
   }
 
   void* ptr = nullptr;
-  if (ManagedMemoryEnabled)
+#if CUDART_VERSION >= 11030
+  if (!UseSyncMemoryAlloc)
+  {
+    VTKM_CUDA_CALL(cudaMallocAsync(&ptr, numBytes, cudaStreamPerThread));
+  }
+
+  else
+#endif
+    if (ManagedMemoryEnabled)
   {
     VTKM_CUDA_CALL(cudaMallocManaged(&ptr, numBytes));
   }
   else
   {
-    if (UseSyncMemoryAlloc)
-    {
-      VTKM_CUDA_CALL(cudaMalloc(&ptr, numBytes));
-    }
-    else
-    {
-#if CUDART_VERSION >= 11030
-      VTKM_CUDA_CALL(cudaMallocAsync(&ptr, numBytes, cudaStreamPerThread));
-#endif
-    }
+    VTKM_CUDA_CALL(cudaMalloc(&ptr, numBytes));
   }
 
   {
@@ -251,6 +245,8 @@ void CudaAllocator::Free(void* ptr)
   {
 #if CUDART_VERSION >= 11030
     VTKM_CUDA_CALL(cudaFreeAsync(ptr, cudaStreamPerThread));
+#else
+    VTKM_CUDA_CALL(cudaFree(ptr));
 #endif
   }
 }
