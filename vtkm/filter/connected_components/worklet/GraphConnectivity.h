@@ -69,14 +69,11 @@ class GraphConnectivity
 {
 public:
   template <typename InputArrayType, typename OutputArrayType>
-  void Run(const InputArrayType& numIndicesArray,
-           const InputArrayType& indexOffsetsArray,
-           const InputArrayType& connectivityArray,
-           OutputArrayType& componentsOut) const
+  static void Run(const InputArrayType& numIndicesArray,
+                  const InputArrayType& indexOffsetsArray,
+                  const InputArrayType& connectivityArray,
+                  OutputArrayType& componentsOut)
   {
-    VTKM_IS_ARRAY_HANDLE(InputArrayType);
-    VTKM_IS_ARRAY_HANDLE(OutputArrayType);
-
     using Algorithm = vtkm::cont::Algorithm;
 
     // Initialize the parent pointer to point to the node itself. There are other

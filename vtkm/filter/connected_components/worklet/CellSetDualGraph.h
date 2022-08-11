@@ -99,7 +99,6 @@ struct CellToCellConnectivity : public vtkm::worklet::WorkletMapField
 
 class CellSetDualGraph
 {
-public:
   using Algorithm = vtkm::cont::Algorithm;
 
   struct degree2
@@ -108,10 +107,9 @@ public:
     bool operator()(vtkm::Id degree) const { return degree >= 2; }
   };
 
-  template <typename CellSet>
-  void EdgeToCellConnectivity(const CellSet& cellSet,
-                              vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
-                              vtkm::cont::ArrayHandle<vtkm::Id2>& cellEdges) const
+  static void EdgeToCellConnectivity(const vtkm::cont::UnknownCellSet& cellSet,
+                                     vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
+                                     vtkm::cont::ArrayHandle<vtkm::Id2>& cellEdges)
   {
     // Get number of edges for each cell and use it as scatter count.
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numEdgesPerCell;
@@ -124,11 +122,11 @@ public:
     edgeExtractDisp.Invoke(cellSet, cellIds, cellEdges);
   }
 
-  template <typename CellSetType>
-  void Run(const CellSetType& cellSet,
-           vtkm::cont::ArrayHandle<vtkm::Id>& numIndicesArray,
-           vtkm::cont::ArrayHandle<vtkm::Id>& indexOffsetArray,
-           vtkm::cont::ArrayHandle<vtkm::Id>& connectivityArray) const
+public:
+  static void Run(const vtkm::cont::UnknownCellSet& cellSet,
+                  vtkm::cont::ArrayHandle<vtkm::Id>& numIndicesArray,
+                  vtkm::cont::ArrayHandle<vtkm::Id>& indexOffsetArray,
+                  vtkm::cont::ArrayHandle<vtkm::Id>& connectivityArray)
   {
     // calculate the uncompressed Edge to Cell connectivity from Point to Cell connectivity
     // in the CellSet
