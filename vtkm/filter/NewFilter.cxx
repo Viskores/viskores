@@ -27,9 +27,8 @@ void NewFilter::RunFilter(NewFilter* self,
                           vtkm::filter::DataSetQueue& input,
                           vtkm::filter::DataSetQueue& output)
 {
-#ifdef VTKM_CUDA
-  vtkm::cont::cuda::internal::CudaAllocator::ForceSyncMemoryAllocator();
-#endif
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  tracker.SetThreadFriendlyMemAlloc(vtkm::cont::DeviceAdapterTagAny{}, true);
 
   std::pair<vtkm::Id, vtkm::cont::DataSet> task;
   while (input.GetTask(task))
