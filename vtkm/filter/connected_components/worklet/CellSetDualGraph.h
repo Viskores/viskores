@@ -101,12 +101,6 @@ class CellSetDualGraph
 {
   using Algorithm = vtkm::cont::Algorithm;
 
-  struct degree2
-  {
-    VTKM_EXEC
-    bool operator()(vtkm::Id degree) const { return degree >= 2; }
-  };
-
   static void EdgeToCellConnectivity(const vtkm::cont::UnknownCellSet& cellSet,
                                      vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
                                      vtkm::cont::ArrayHandle<vtkm::Id2>& cellEdges)
@@ -123,6 +117,12 @@ class CellSetDualGraph
   }
 
 public:
+  struct degree2
+  {
+    VTKM_EXEC
+    bool operator()(vtkm::Id degree) const { return degree >= 2; }
+  };
+
   static void Run(const vtkm::cont::UnknownCellSet& cellSet,
                   vtkm::cont::ArrayHandle<vtkm::Id>& numIndicesArray,
                   vtkm::cont::ArrayHandle<vtkm::Id>& indexOffsetArray,

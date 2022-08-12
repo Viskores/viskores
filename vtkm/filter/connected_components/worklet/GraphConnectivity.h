@@ -74,6 +74,9 @@ public:
                   const InputArrayType& connectivityArray,
                   OutputArrayType& componentsOut)
   {
+    VTKM_IS_ARRAY_HANDLE(InputArrayType);
+    VTKM_IS_ARRAY_HANDLE(OutputArrayType);
+
     using Algorithm = vtkm::cont::Algorithm;
 
     // Initialize the parent pointer to point to the node itself. There are other
