@@ -51,10 +51,17 @@ public:
 
   VTKM_CONT
   void SetSolverRK4() { this->SolverType = vtkm::filter::flow::IntegrationSolverType::RK4_TYPE; }
+
   VTKM_CONT
   void SetSolverEuler()
   {
     this->SolverType = vtkm::filter::flow::IntegrationSolverType::EULER_TYPE;
+  }
+
+  VTKM_CONT
+  void SetVectorFieldType(vtkm::filter::flow::VectorFieldType vecFieldType)
+  {
+    this->VecFieldType = vecFieldType;
   }
 
   VTKM_CONT

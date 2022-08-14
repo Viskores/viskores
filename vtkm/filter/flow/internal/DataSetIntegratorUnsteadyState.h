@@ -254,8 +254,11 @@ VTKM_CONT inline void DataSetIntegratorUnsteadyState::DoAdvect(
   vtkm::FloatDefault vtkmNotUsed(stepSize),
   vtkm::Id vtkmNotUsed(maxSteps))
 {
-}
+  throw vtkm::cont::ErrorFilterExecution(
 
+
+    "for steady state");
+}
 
 }
 }
