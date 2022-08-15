@@ -9,7 +9,6 @@
 //============================================================================
 
 #include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
@@ -211,12 +210,12 @@ int main(int argc, char** argv)
     {
       if (opts.SyncMemAlloc)
       {
-        vtkm::cont::cuda::internal::CudaAllocator::ForceSyncMemoryAllocator();
+        //vtkm::cont::cuda::internal::CudaAllocator::ForceSyncMemoryAllocator();
         std::cout << "  Task: Sync memory alloc = ON" << std::endl;
       }
       else
       {
-        vtkm::cont::cuda::internal::CudaAllocator::ForceAsyncMemoryAllocator();
+        //vtkm::cont::cuda::internal::CudaAllocator::ForceAsyncMemoryAllocator();
         std::cout << "  Task: Sync memory alloc = OFF" << std::endl;
       }
     }

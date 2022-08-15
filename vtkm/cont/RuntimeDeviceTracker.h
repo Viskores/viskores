@@ -113,8 +113,8 @@ public:
   /// \brief Get/Set use of thread-friendly memory allocation for a device.
   ///
   ///
-  VTKM_CONT bool GetThreadFriendlyMemAlloc(DeviceAdapterId deviceId) const;
-  VTKM_CONT void SetThreadFriendlyMemAlloc(vtkm::cont::DeviceAdapterId deviceId, bool state);
+  VTKM_CONT bool GetThreadFriendlyMemAlloc() const;
+  VTKM_CONT void SetThreadFriendlyMemAlloc(bool state);
 
   /// \brief Copies the state from the given device.
   ///

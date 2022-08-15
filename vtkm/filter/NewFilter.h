@@ -447,11 +447,6 @@ private:
   }
 
   VTKM_CONT
-  static void RunFilter(NewFilter* self,
-                        vtkm::filter::DataSetQueue& input,
-                        vtkm::filter::DataSetQueue& output);
-
-  VTKM_CONT
   virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
 
 

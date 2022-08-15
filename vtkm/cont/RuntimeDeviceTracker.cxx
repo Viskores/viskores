@@ -41,30 +41,15 @@ struct RuntimeDeviceTrackerInternals
   bool GetRuntimeAllowed(std::size_t deviceId) const { return this->RuntimeAllowed[deviceId]; }
   void SetRuntimeAllowed(std::size_t deviceId, bool flag) { this->RuntimeAllowed[deviceId] = flag; }
 
-  bool GetThreadFriendlyMemAlloc(std::size_t deviceId) const
-  {
-    return this->ThreadFriendlyMemAlloc[deviceId];
-  }
-  void SetThreadFriendlyMemAlloc(std::size_t deviceId, bool flag)
-  {
-    this->ThreadFriendlyMemAlloc[deviceId] = flag;
-  }
+  bool GetThreadFriendlyMemAlloc() const { return this->ThreadFriendlyMemAlloc; }
+  void SetThreadFriendlyMemAlloc(bool flag) { this->ThreadFriendlyMemAlloc = flag; }
 
   void ResetRuntimeAllowed()
   {
     std::fill_n(this->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, false);
   }
 
-  void ResetThreadFriendlyMemAlloc()
-  {
-    std::fill_n(this->ThreadFriendlyMemAlloc, VTKM_MAX_DEVICE_ADAPTER_ID, false);
-  }
-
-  void Reset()
-  {
-    this->ResetRuntimeAllowed();
-    this->ResetThreadFriendlyMemAlloc();
-  }
+  void Reset() { this->ResetRuntimeAllowed(); }
 
 private:
   void CopyFrom(const RuntimeDeviceTrackerInternals* v)
@@ -72,14 +57,13 @@ private:
     std::copy(std::cbegin(v->RuntimeAllowed),
               std::cend(v->RuntimeAllowed),
               std::begin(this->RuntimeAllowed));
-    std::copy(std::cbegin(v->ThreadFriendlyMemAlloc),
-              std::cend(v->ThreadFriendlyMemAlloc),
-              std::begin(this->ThreadFriendlyMemAlloc));
+    this->SetThreadFriendlyMemAlloc(v->GetThreadFriendlyMemAlloc());
   }
 
   bool RuntimeAllowed[VTKM_MAX_DEVICE_ADAPTER_ID];
-  bool ThreadFriendlyMemAlloc[VTKM_MAX_DEVICE_ADAPTER_ID];
+  bool ThreadFriendlyMemAlloc = false;
 };
+
 }
 
 VTKM_CONT
@@ -130,24 +114,9 @@ bool RuntimeDeviceTracker::CanRunOn(vtkm::cont::DeviceAdapterId deviceId) const
 }
 
 VTKM_CONT
-bool RuntimeDeviceTracker::GetThreadFriendlyMemAlloc(vtkm::cont::DeviceAdapterId deviceId) const
+bool RuntimeDeviceTracker::GetThreadFriendlyMemAlloc() const
 {
-  if (deviceId == vtkm::cont::DeviceAdapterTagAny{})
-  { //If at least a single device is enabled, than any device is enabled
-    for (vtkm::Int8 i = 1; i < VTKM_MAX_DEVICE_ADAPTER_ID; ++i)
-    {
-      if (this->Internals->GetThreadFriendlyMemAlloc(static_cast<std::size_t>(i)))
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-  else
-  {
-    this->CheckDevice(deviceId);
-    return this->Internals->GetThreadFriendlyMemAlloc(deviceId.GetValue());
-  }
+  return this->Internals->GetThreadFriendlyMemAlloc();
 }
 
 VTKM_CONT
@@ -159,12 +128,9 @@ void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId, 
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::SetThreadFriendlyMemAlloc(vtkm::cont::DeviceAdapterId deviceId,
-                                                     bool state)
+void RuntimeDeviceTracker::SetThreadFriendlyMemAlloc(bool state)
 {
-  this->CheckDevice(deviceId);
-
-  this->Internals->SetThreadFriendlyMemAlloc(deviceId.GetValue(), state);
+  this->Internals->SetThreadFriendlyMemAlloc(state);
 }
 
 VTKM_CONT void RuntimeDeviceTracker::ResetDevice(vtkm::cont::DeviceAdapterId deviceId)
