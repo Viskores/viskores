@@ -30,12 +30,6 @@ namespace worklet
 class Threshold
 {
 public:
-  enum class FieldType
-  {
-    Point,
-    Cell
-  };
-
   template <typename UnaryPredicate>
   class ThresholdByPointField : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
@@ -84,22 +78,8 @@ public:
     bool ReturnAllInRange;
   };
 
-  struct ThresholdCopy : public vtkm::worklet::WorkletMapField
-  {
-    using ControlSignature = void(FieldIn, FieldOut, WholeArrayIn);
-
-    template <typename ScalarType, typename WholeFieldIn>
-    VTKM_EXEC void operator()(vtkm::Id& index,
-                              ScalarType& output,
-                              const WholeFieldIn& inputField) const
-    {
-      output = inputField.Get(index);
-    }
-  };
-
-
   template <typename CellSetType, typename ValueType, typename StorageType, typename UnaryPredicate>
-  vtkm::cont::CellSetPermutation<CellSetType> Run(
+  vtkm::cont::CellSetPermutation<CellSetType> RunImpl(
     const CellSetType& cellSet,
     const vtkm::cont::ArrayHandle<ValueType, StorageType>& field,
     const vtkm::cont::Field::Association fieldType,
@@ -141,53 +121,18 @@ public:
     return OutputType(this->ValidCellIds, cellSet);
   }
 
-  template <typename FieldArrayType, typename UnaryPredicate>
-  struct CallWorklet
-  {
-    vtkm::cont::UnknownCellSet& Output;
-    vtkm::worklet::Threshold& Worklet;
-    const FieldArrayType& Field;
-    const vtkm::cont::Field::Association FieldType;
-    const UnaryPredicate& Predicate;
-    const bool ReturnAllInRange;
-
-    CallWorklet(vtkm::cont::UnknownCellSet& output,
-                vtkm::worklet::Threshold& worklet,
-                const FieldArrayType& field,
-                const vtkm::cont::Field::Association fieldType,
-                const UnaryPredicate& predicate,
-                const bool returnAllInRange)
-      : Output(output)
-      , Worklet(worklet)
-      , Field(field)
-      , FieldType(fieldType)
-      , Predicate(predicate)
-      , ReturnAllInRange(returnAllInRange)
-    {
-    }
-
-    template <typename CellSetType>
-    void operator()(const CellSetType& cellSet) const
-    {
-      // Copy output to an explicit grid so that other units can guess what this is.
-      this->Output = vtkm::worklet::CellDeepCopy::Run(this->Worklet.Run(
-        cellSet, this->Field, this->FieldType, this->Predicate, this->ReturnAllInRange));
-    }
-  };
-
-  template <typename CellSetList, typename ValueType, typename StorageType, typename UnaryPredicate>
-  vtkm::cont::UnknownCellSet Run(const vtkm::cont::UncertainCellSet<CellSetList>& cellSet,
+  template <typename ValueType, typename StorageType, typename UnaryPredicate>
+  vtkm::cont::UnknownCellSet Run(const vtkm::cont::UnknownCellSet& cellSet,
                                  const vtkm::cont::ArrayHandle<ValueType, StorageType>& field,
                                  const vtkm::cont::Field::Association fieldType,
                                  const UnaryPredicate& predicate,
                                  const bool returnAllInRange = false)
   {
-    using Worker = CallWorklet<vtkm::cont::ArrayHandle<ValueType, StorageType>, UnaryPredicate>;
-
     vtkm::cont::UnknownCellSet output;
-    Worker worker(output, *this, field, fieldType, predicate, returnAllInRange);
-    cellSet.CastAndCall(worker);
-
+    CastAndCall(cellSet, [&](auto concrete) {
+      output = vtkm::worklet::CellDeepCopy::Run(
+        this->template RunImpl(concrete, field, fieldType, predicate, returnAllInRange));
+    });
     return output;
   }
 

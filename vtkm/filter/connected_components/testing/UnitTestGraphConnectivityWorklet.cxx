@@ -93,7 +93,7 @@ public:
     vtkm::cont::ArrayHandle<int> conns_h = vtkm::cont::make_ArrayHandle(conns, vtkm::CopyFlag::Off);
 
     vtkm::cont::ArrayHandle<vtkm::Id> comps_h;
-    vtkm::worklet::connectivity::GraphConnectivity().Run(counts_h, offsets_h, conns_h, comps_h);
+    vtkm::worklet::connectivity::GraphConnectivity::Run(counts_h, offsets_h, conns_h, comps_h);
 
     VTKM_TEST_ASSERT(vtkm::cont::Algorithm::Reduce(comps_h, vtkm::Id(0), vtkm::Maximum{}) ==
                        ncomps - 1,
