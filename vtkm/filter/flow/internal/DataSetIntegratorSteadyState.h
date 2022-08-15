@@ -55,7 +55,7 @@ protected:
   VTKM_CONT void GetVelocityField(
     vtkm::worklet::flow::VelocityField<ArrayType>& velocityField) const
   {
-    if (this->FieldName.GetIndex() == this->FieldName.GetIndexOf<VelocityFieldNameType>())
+    if (this->FieldName.IsType<VelocityFieldNameType>())
     {
       const auto& fieldNm = this->FieldName.Get<VelocityFieldNameType>();
       auto assoc = this->DataSet.GetField(fieldNm).GetAssociation();
@@ -72,20 +72,25 @@ protected:
   VTKM_CONT void GetElectroMagneticField(
     vtkm::worklet::flow::ElectroMagneticField<ArrayType>& ebField) const
   {
-    if (this->FieldName.GetIndex() == this->FieldName.GetIndexOf<ElectroMagneticFieldNameType>())
+    if (this->FieldName.IsType<ElectroMagneticFieldNameType>())
     {
       const auto& fieldNm = this->FieldName.Get<ElectroMagneticFieldNameType>();
       const auto& electric = fieldNm.first;
       const auto& magnetic = fieldNm.second;
-      auto assoc = this->DataSet.GetField(electric).GetAssociation();
+      auto eAssoc = this->DataSet.GetField(electric).GetAssociation();
+      auto bAssoc = this->DataSet.GetField(magnetic).GetAssociation();
 
+      if (eAssoc != bAssoc)
+      {
+        throw vtkm::cont::ErrorFilterExecution("E and B field need to have same association");
+      }
       ArrayType eField, bField;
       vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(electric).GetData(), eField);
       vtkm::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(magnetic).GetData(), bField);
-      ebField = vtkm::worklet::flow::ElectroMagneticField<ArrayType>(eField, bField, assoc);
+      ebField = vtkm::worklet::flow::ElectroMagneticField<ArrayType>(eField, bField, eAssoc);
     }
     else
-      throw vtkm::cont::ErrorFilterExecution("Velocity field vector type not available");
+      throw vtkm::cont::ErrorFilterExecution("Electromagnetic field vector type not available");
   }
 
 private:

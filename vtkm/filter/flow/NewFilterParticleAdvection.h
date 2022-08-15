@@ -64,6 +64,17 @@ public:
     this->VecFieldType = vecFieldType;
   }
 
+  //@{
+  /// Choose the field to operate on. Note, if
+  /// `this->UseCoordinateSystemAsField` is true, then the active field is not used.
+  VTKM_CONT void SetEField(const std::string& name) { this->SetActiveField(0, name); }
+
+  VTKM_CONT void SetBField(const std::string& name) { this->SetActiveField(1, name); }
+
+  VTKM_CONT std::string GetEField() const { return this->GetActiveFieldName(0); }
+
+  VTKM_CONT std::string GetBField() const { return this->GetActiveFieldName(1); }
+
   VTKM_CONT
   bool GetUseThreadedAlgorithm() { return this->UseThreadedAlgorithm; }
 
