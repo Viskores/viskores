@@ -21,7 +21,7 @@ VTKM_CONT vtkm::cont::DataSet CellSetConnectivity::DoExecute(const vtkm::cont::D
 {
   vtkm::cont::ArrayHandle<vtkm::Id> component;
 
-  vtkm::worklet::connectivity::CellSetConnectivity().Run(input.GetCellSet(), component);
+  vtkm::worklet::connectivity::CellSetConnectivity::Run(input.GetCellSet(), component);
 
   return this->CreateResultFieldCell(input, this->GetOutputFieldName(), component);
 }

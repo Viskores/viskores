@@ -9,18 +9,12 @@
 //============================================================================
 #include <algorithm>
 #include <cctype>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Initialize.h>
-
-#include <vtkm/filter/FilterDataSet.h>
-
-#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/source/Oscillator.h>
 
