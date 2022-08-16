@@ -131,7 +131,7 @@ public:
     vtkm::cont::UnknownCellSet output;
     CastAndCall(cellSet, [&](auto concrete) {
       output = vtkm::worklet::CellDeepCopy::Run(
-        this->template RunImpl(concrete, field, fieldType, predicate, returnAllInRange));
+        this->RunImpl(concrete, field, fieldType, predicate, returnAllInRange));
     });
     return output;
   }
