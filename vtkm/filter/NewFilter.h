@@ -230,9 +230,9 @@ public:
   void SetThreadsPerGPU(vtkm::Id numThreads) { this->NumThreadsPerGPU = numThreads; }
 
   VTKM_CONT
-  vtkm::Id SetThreadsPerCPU() const { return this->NumThreadsPerCPU; }
+  vtkm::Id GetThreadsPerCPU() const { return this->NumThreadsPerCPU; }
   VTKM_CONT
-  vtkm::Id SetThreadsPerGPU() const { return this->NumThreadsPerGPU; }
+  vtkm::Id GetThreadsPerGPU() const { return this->NumThreadsPerGPU; }
 
   VTKM_CONT
   bool GetRunMultiThreadedFilter() const
