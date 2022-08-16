@@ -89,13 +89,6 @@ void CudaAllocator::ForceManagedMemoryOn()
   {
     ManagedMemoryEnabled = true;
     VTKM_LOG_F(vtkm::cont::LogLevel::Info, "CudaAllocator enabling managed memory");
-
-    if (!UseSyncMemoryAlloc)
-    {
-      CudaAllocator::ForceSyncMemoryAllocator();
-      VTKM_LOG_F(vtkm::cont::LogLevel::Warn,
-                 "CudaAllocator turning off asynchronous allocator to support managed memory");
-    }
   }
   else
   {
