@@ -14,17 +14,6 @@
 
 namespace
 {
-struct DeduceCellSet
-{
-  template <typename CellSetType>
-  void operator()(const CellSetType& cellset,
-                  vtkm::worklet::Tetrahedralize& worklet,
-                  vtkm::cont::CellSetSingleType<>& outCellSet) const
-  {
-    outCellSet = worklet.Run(cellset);
-  }
-};
-
 VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::worklet::Tetrahedralize& worklet)
@@ -62,11 +51,12 @@ namespace geometry_refinement
 {
 VTKM_CONT vtkm::cont::DataSet Tetrahedralize::DoExecute(const vtkm::cont::DataSet& input)
 {
-  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& inCellSet = input.GetCellSet();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::Tetrahedralize worklet;
-  vtkm::cont::CastAndCall(cells, DeduceCellSet{}, worklet, outCellSet);
+  vtkm::cont::CastAndCall(inCellSet,
+                          [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
   // create the output dataset (without a CoordinateSystem).

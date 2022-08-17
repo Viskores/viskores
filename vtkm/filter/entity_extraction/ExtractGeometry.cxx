@@ -16,45 +16,6 @@
 
 namespace
 {
-struct CallWorker
-{
-  vtkm::cont::UnknownCellSet& Output;
-  vtkm::worklet::ExtractGeometry& Worklet;
-  const vtkm::cont::CoordinateSystem& Coords;
-  const vtkm::ImplicitFunctionGeneral& Function;
-  bool ExtractInside;
-  bool ExtractBoundaryCells;
-  bool ExtractOnlyBoundaryCells;
-
-  CallWorker(vtkm::cont::UnknownCellSet& output,
-             vtkm::worklet::ExtractGeometry& worklet,
-             const vtkm::cont::CoordinateSystem& coords,
-             const vtkm::ImplicitFunctionGeneral& function,
-             bool extractInside,
-             bool extractBoundaryCells,
-             bool extractOnlyBoundaryCells)
-    : Output(output)
-    , Worklet(worklet)
-    , Coords(coords)
-    , Function(function)
-    , ExtractInside(extractInside)
-    , ExtractBoundaryCells(extractBoundaryCells)
-    , ExtractOnlyBoundaryCells(extractOnlyBoundaryCells)
-  {
-  }
-
-  template <typename CellSetType>
-  void operator()(const CellSetType& cellSet) const
-  {
-    this->Output = this->Worklet.Run(cellSet,
-                                     this->Coords,
-                                     this->Function,
-                                     this->ExtractInside,
-                                     this->ExtractBoundaryCells,
-                                     this->ExtractOnlyBoundaryCells);
-  }
-};
-
 bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::cont::Field& field,
                 const vtkm::worklet::ExtractGeometry& worklet)
@@ -97,14 +58,15 @@ vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input)
 
   vtkm::worklet::ExtractGeometry worklet;
   vtkm::cont::UnknownCellSet outCells;
-  CallWorker worker(outCells,
-                    worklet,
-                    coords,
-                    this->Function,
-                    this->ExtractInside,
-                    this->ExtractBoundaryCells,
-                    this->ExtractOnlyBoundaryCells);
-  cells.CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(worker);
+
+  cells.CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>([&](const auto& concrete) {
+    outCells = worklet.Run(concrete,
+                           coords,
+                           this->Function,
+                           this->ExtractInside,
+                           this->ExtractBoundaryCells,
+                           this->ExtractOnlyBoundaryCells);
+  });
 
   // create the output dataset
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
