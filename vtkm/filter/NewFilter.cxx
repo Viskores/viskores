@@ -28,6 +28,7 @@ void RunFilter(NewFilter* self,
                vtkm::filter::DataSetQueue& output)
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  bool prevVal = tracker.GetThreadFriendlyMemAlloc();
   tracker.SetThreadFriendlyMemAlloc(true);
 
   std::pair<vtkm::Id, vtkm::cont::DataSet> task;
@@ -38,6 +39,7 @@ void RunFilter(NewFilter* self,
   }
 
   vtkm::cont::Algorithm::Synchronize();
+  tracker.SetThreadFriendlyMemAlloc(prevVal);
 }
 
 }
