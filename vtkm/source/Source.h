@@ -26,11 +26,9 @@ public:
   VTKM_CONT
   virtual ~Source() = default;
 
-  VTKM_CONT
   vtkm::cont::DataSet Execute() const { return this->DoExecute(); }
 
 protected:
-  VTKM_CONT
   virtual vtkm::cont::DataSet DoExecute() const = 0;
 
   vtkm::cont::Invoker Invoke;
