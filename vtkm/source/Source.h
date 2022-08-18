@@ -28,9 +28,11 @@ public:
   VTKM_CONT
   virtual ~Source();
 
-  virtual vtkm::cont::DataSet Execute() const = 0;
+  vtkm::cont::DataSet Execute() const { return this->DoExecute(); }
 
 protected:
+  virtual vtkm::cont::DataSet DoExecute() const = 0;
+
   vtkm::cont::Invoker Invoke;
 };
 

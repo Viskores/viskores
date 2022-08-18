@@ -206,7 +206,7 @@ PerlinNoise::PerlinNoise(vtkm::Id3 dims, vtkm::Vec3f origin, vtkm::IdComponent s
 {
 }
 
-vtkm::cont::DataSet PerlinNoise::Execute() const
+vtkm::cont::DataSet PerlinNoise::DoExecute() const
 {
   VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
