@@ -11,7 +11,7 @@
 #include <random>
 
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/NewFilterField.h>
 #include <vtkm/source/PerlinNoise.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -124,7 +124,7 @@ struct PerlinNoiseWorklet : public vtkm::worklet::WorkletVisitPointsWithCells
   vtkm::Id Repeat;
 };
 
-class PerlinNoiseField : public vtkm::filter::FilterField<PerlinNoiseField>
+class PerlinNoiseField : public vtkm::filter::NewFilterField
 {
 public:
   VTKM_CONT PerlinNoiseField(vtkm::IdComponent tableSize, vtkm::Id seed)
@@ -135,22 +135,16 @@ public:
     this->SetUseCoordinateSystemAsField(true);
   }
 
-  template <typename FieldType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(
-    const vtkm::cont::DataSet& input,
-    const FieldType& vtkmNotUsed(field),
-    const vtkm::filter::FieldMetadata& fieldMetadata,
-    vtkm::filter::PolicyBase<DerivedPolicy> vtkmNotUsed(policy))
+private:
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override
   {
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> noise;
     PerlinNoiseWorklet worklet{ this->TableSize };
     this->Invoke(
       worklet, input.GetCellSet(), input.GetCoordinateSystem(), this->Permutations, noise);
-
-    return vtkm::filter::CreateResult(input, noise, this->GetOutputFieldName(), fieldMetadata);
+    return this->CreateResultFieldPoint(input, this->GetOutputFieldName(), noise);
   }
 
-private:
   VTKM_CONT void GeneratePermutations()
   {
     std::mt19937_64 rng;
