@@ -50,7 +50,7 @@ build:ubuntu1604_gcc5_2:
   extends:
     - .ubuntu1604_cuda
     - .cmake_build_linux
-    - .run_master
+    - .run_upstream_branches
     - .use_minimum_supported_cmake
   variables:
     CC: "gcc-5"
@@ -69,7 +69,7 @@ test:ubuntu1804_test_ubuntu1604_gcc5_2:
   extends:
     - .ubuntu1804_cuda
     - .cmake_test_linux
-    - .run_master
+    - .run_upstream_branches
   variables:
       CTEST_EXCLUSIONS: "built_against_test_install"
   dependencies:

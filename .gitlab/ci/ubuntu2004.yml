@@ -69,7 +69,7 @@ build:ubuntu2004_hip_kokkos:
   extends:
     - .ubuntu2004_hip_kokkos
     - .cmake_build_linux
-    - .run_scheduled
+    - .run_upstream_branches
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     VTKM_SETTINGS: "benchmarks+kokkos+hip+no_virtual+no_rendering+ccache"
@@ -96,7 +96,7 @@ test:ubuntu2004_hip_kokkos:
   extends:
     - .ubuntu2004_hip_kokkos
     - .cmake_test_linux
-    - .run_scheduled
+    - .run_upstream_branches
   variables:
     CTEST_TIMEOUT: "30"
   dependencies:
