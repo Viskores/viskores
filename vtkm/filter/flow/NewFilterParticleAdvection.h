@@ -31,6 +31,9 @@ class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvection : public vtkm::filter::
 {
 public:
   VTKM_CONT
+  bool CanThread() const override { return false; }
+
+  VTKM_CONT
   void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
 
   VTKM_CONT

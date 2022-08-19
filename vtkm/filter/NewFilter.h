@@ -17,6 +17,7 @@
 #include <vtkm/cont/PartitionedDataSet.h>
 
 #include <vtkm/filter/FieldSelection.h>
+#include <vtkm/filter/TaskQueue.h>
 #include <vtkm/filter/vtkm_filter_core_export.h>
 
 namespace vtkm
@@ -222,6 +223,16 @@ public:
 
   VTKM_CONT
   virtual bool CanThread() const;
+
+  VTKM_CONT
+  void SetThreadsPerCPU(vtkm::Id numThreads) { this->NumThreadsPerCPU = numThreads; }
+  VTKM_CONT
+  void SetThreadsPerGPU(vtkm::Id numThreads) { this->NumThreadsPerGPU = numThreads; }
+
+  VTKM_CONT
+  vtkm::Id GetThreadsPerCPU() const { return this->NumThreadsPerCPU; }
+  VTKM_CONT
+  vtkm::Id GetThreadsPerGPU() const { return this->NumThreadsPerGPU; }
 
   VTKM_CONT
   bool GetRunMultiThreadedFilter() const
@@ -441,6 +452,8 @@ private:
 
   vtkm::filter::FieldSelection FieldsToPass = vtkm::filter::FieldSelection::Mode::All;
   bool RunFilterWithMultipleThreads = false;
+  vtkm::Id NumThreadsPerCPU = 4;
+  vtkm::Id NumThreadsPerGPU = 8;
 };
 }
 } // namespace vtkm::filter
