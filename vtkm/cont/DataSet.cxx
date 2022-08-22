@@ -190,6 +190,12 @@ void DataSet::PrintSummary(std::ostream& out) const
 VTKM_CONT void DataSet::AddField(const Field& field)
 {
   // map::insert will not replace the duplicated element
+  if (field.GetAssociation() == vtkm::cont::Field::Association::Partitions ||
+      field.GetAssociation() == vtkm::cont::Field::Association::WholePartition)
+  {
+    throw vtkm::cont::ErrorBadValue("Association not valid for DataSet.");
+  }
+
   this->Fields[{ field.GetName(), field.GetAssociation() }] = field;
 }
 

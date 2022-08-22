@@ -38,7 +38,17 @@ static void PartitionedDataSetTest()
   pds.AppendPartition(TDset1);
   pds.AppendPartition(TDset2);
 
+  std::vector<vtkm::Id> ids = { 0, 1 };
+  std::vector<vtkm::FloatDefault> var = { 1, 2 };
+  auto idsField = vtkm::cont::make_Field(
+    "ids", vtkm::cont::Field::Association::Partitions, ids, vtkm::CopyFlag::On);
+  auto pdsVar = vtkm::cont::make_Field(
+    "pds_var", vtkm::cont::Field::Association::WholePartition, ids, vtkm::CopyFlag::On);
+  pds.AddField(idsField);
+  pds.AddField(pdsVar);
+
   VTKM_TEST_ASSERT(pds.GetNumberOfPartitions() == 2, "Incorrect number of partitions");
+  VTKM_TEST_ASSERT(pds.GetNumberOfFields() == 2, "Incorrect number of fields");
 
   vtkm::cont::DataSet TestDSet = pds.GetPartition(0);
   VTKM_TEST_ASSERT(TDset1.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
@@ -88,10 +98,19 @@ static void PartitionedDataSetTest()
                    "Local field value range info incorrect");
 
   vtkm::Range SourceRange; //test the validity of member function GetField(FieldName, BlockId)
-  pds.GetField("cellvar", 0).GetRange(&SourceRange);
+  pds.GetPartitionField("cellvar", 0).GetRange(&SourceRange);
   vtkm::Range TestRange;
   pds.GetPartition(0).GetField("cellvar").GetRange(&TestRange);
   VTKM_TEST_ASSERT(TestRange == SourceRange, "Local field value info incorrect");
+
+  //test partition fields.
+  idsField.GetRange(&SourceRange);
+  pds.GetField("ids").GetRange(&TestRange);
+  VTKM_TEST_ASSERT(TestRange == SourceRange, "Partitions field values incorrect");
+
+  pdsVar.GetRange(&SourceRange);
+  pds.GetField("pds_var").GetRange(&TestRange);
+  VTKM_TEST_ASSERT(TestRange == SourceRange, "WholePartitions field values incorrect");
 
   vtkm::cont::PartitionedDataSet testblocks1;
   std::vector<vtkm::cont::DataSet> partitions = pds.GetPartitions();

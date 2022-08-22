@@ -37,6 +37,8 @@ public:
     WholeMesh,
     Points,
     Cells,
+    WholePartition,
+    Partitions,
     ANY VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Any.") = Any,
     WHOLE_MESH VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::WholeMesh.") = WholeMesh,
     POINTS VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Points.") = Points,

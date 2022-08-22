@@ -21,6 +21,8 @@ namespace vtkm
 namespace cont
 {
 
+//Should field data and methods be put into a base class for DataSet and PartitionedDataSet ???
+
 class VTKM_CONT_EXPORT PartitionedDataSet
 {
   using StorageVec = std::vector<vtkm::cont::DataSet>;
@@ -55,7 +57,7 @@ public:
   ~PartitionedDataSet();
   /// Get the field @a field_name from partition @a partition_index.
   VTKM_CONT
-  vtkm::cont::Field GetField(const std::string& field_name, int partition_index) const;
+  vtkm::cont::Field GetPartitionField(const std::string& field_name, int partition_index) const;
 
   /// Get number of DataSet objects stored in this PartitionedDataSet.
   VTKM_CONT
@@ -91,6 +93,45 @@ public:
   VTKM_CONT
   void AppendPartitions(const std::vector<vtkm::cont::DataSet>& partitions);
 
+  //Fields on partitions.
+  VTKM_CONT
+  vtkm::IdComponent GetNumberOfFields() const
+  {
+    return static_cast<vtkm::IdComponent>(this->Fields.size());
+  }
+  VTKM_CONT void AddField(const Field& field);
+  VTKM_CONT const vtkm::cont::Field& GetField(
+    const std::string& name,
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const;
+  VTKM_CONT vtkm::cont::Field& GetField(
+    const std::string& name,
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any);
+  VTKM_CONT const vtkm::cont::Field& GetField(vtkm::Id index) const;
+  VTKM_CONT vtkm::cont::Field& GetField(vtkm::Id index);
+  VTKM_CONT
+  bool HasField(const std::string& name,
+                vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const
+  {
+    return (this->GetFieldIndex(name, assoc) != -1);
+  }
+
+  VTKM_CONT
+  bool HasWholePartitionField(const std::string& name) const
+  {
+    return (this->GetFieldIndex(name, vtkm::cont::Field::Association::WholePartition) != -1);
+  }
+
+  VTKM_CONT
+  bool HasPartitionsField(const std::string& name) const
+  {
+    return (this->GetFieldIndex(name, vtkm::cont::Field::Association::Partitions) != -1);
+  }
+
+  VTKM_CONT
+  vtkm::Id GetFieldIndex(
+    const std::string& name,
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const;
+
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;
 
@@ -110,7 +151,24 @@ public:
   const_iterator cend() const noexcept { return this->Partitions.cend(); }
   //@}
 private:
+  //Move this to another place...
+  struct FieldCompare
+  {
+    using Key = std::pair<std::string, vtkm::cont::Field::Association>;
+
+    template <typename T>
+    bool operator()(const T& a, const T& b) const
+    {
+      if (a.first == b.first)
+        return a.second < b.second && a.second != vtkm::cont::Field::Association::Any &&
+          b.second != vtkm::cont::Field::Association::Any;
+
+      return a.first < b.first;
+    }
+  };
+
   std::vector<vtkm::cont::DataSet> Partitions;
+  std::map<FieldCompare::Key, vtkm::cont::Field, FieldCompare> Fields;
 };
 }
 } // namespace vtkm::cont
