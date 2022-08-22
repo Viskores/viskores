@@ -126,9 +126,9 @@
       when: on_success
     - when: never
 
-.run_master: &run_master
+.run_upstream_branches: &run_upstream_branches
   rules:
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_MERGE_REQUEST_ID == null'
       when: on_success
     - when: never
 

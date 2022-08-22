@@ -12,6 +12,7 @@
 #include <mutex>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
@@ -152,7 +153,15 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
   }
 
   void* ptr = nullptr;
-  if (ManagedMemoryEnabled)
+#if CUDART_VERSION >= 11030
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  if (tracker.GetThreadFriendlyMemAlloc())
+  {
+    VTKM_CUDA_CALL(cudaMallocAsync(&ptr, numBytes, cudaStreamPerThread));
+  }
+  else
+#endif
+    if (ManagedMemoryEnabled)
   {
     VTKM_CUDA_CALL(cudaMallocManaged(&ptr, numBytes));
   }
@@ -174,7 +183,18 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
 void* CudaAllocator::AllocateUnManaged(std::size_t numBytes)
 {
   void* ptr = nullptr;
-  VTKM_CUDA_CALL(cudaMalloc(&ptr, numBytes));
+#if CUDART_VERSION >= 11030
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  if (tracker.GetThreadFriendlyMemAlloc())
+  {
+    VTKM_CUDA_CALL(cudaMallocAsync(&ptr, numBytes, cudaStreamPerThread));
+  }
+  else
+#endif
+  {
+    VTKM_CUDA_CALL(cudaMalloc(&ptr, numBytes));
+  }
+
   {
     VTKM_LOG_F(vtkm::cont::LogLevel::MemExec,
                "Allocated CUDA array of %s at %p.",
@@ -195,7 +215,18 @@ void CudaAllocator::Free(void* ptr)
   }
 
   VTKM_LOG_F(vtkm::cont::LogLevel::MemExec, "Freeing CUDA allocation at %p.", ptr);
-  VTKM_CUDA_CALL(cudaFree(ptr));
+
+#if CUDART_VERSION >= 11030
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  if (tracker.GetThreadFriendlyMemAlloc())
+  {
+    VTKM_CUDA_CALL(cudaFreeAsync(ptr, cudaStreamPerThread));
+  }
+  else
+#endif
+  {
+    VTKM_CUDA_CALL(cudaFree(ptr));
+  }
 }
 
 void CudaAllocator::FreeDeferred(void* ptr, std::size_t numBytes)
