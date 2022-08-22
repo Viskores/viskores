@@ -10,11 +10,9 @@
 
 #include <vtkm/Particle.h>
 
-#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/flow/Streamline.h>
 #include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 namespace
 {
