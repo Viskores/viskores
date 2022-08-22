@@ -19,33 +19,6 @@
 namespace
 {
 
-class GetChargedParticles : public vtkm::worklet::WorkletMapField
-{
-public:
-  GetChargedParticles() {}
-
-  using ControlSignature = void(FieldIn pos,
-                                FieldIn mom,
-                                FieldIn mass,
-                                FieldIn charge,
-                                FieldIn weighting,
-                                FieldOut electrons);
-
-  using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6);
-
-  void operator()(const vtkm::Id index,
-                  const vtkm::Vec3f& pos,
-                  const vtkm::Vec3f& mom,
-                  const vtkm::Float64& mass,
-                  const vtkm::Float64& charge,
-                  const vtkm::Float64& w,
-                  vtkm::ChargedParticle& electron) const
-  {
-    electron = vtkm::ChargedParticle(pos, index, mass, charge, w, mom);
-  }
-};
-
-
 void GenerateChargedParticles(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& pos,
                               const vtkm::cont::ArrayHandle<vtkm::Vec3f>& mom,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& mass,
@@ -53,10 +26,24 @@ void GenerateChargedParticles(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& pos,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& weight,
                               vtkm::cont::ArrayHandle<vtkm::ChargedParticle>& seeds)
 {
-  vtkm::cont::Invoker invoker;
-  invoker(GetChargedParticles{}, pos, mom, mass, charge, weight, seeds);
-}
+  auto pPortal = pos.ReadPortal();
+  auto uPortal = mom.ReadPortal();
+  auto mPortal = mass.ReadPortal();
+  auto qPortal = charge.ReadPortal();
+  auto wPortal = weight.ReadPortal();
 
+  auto numValues = pos.GetNumberOfValues();
+
+  seeds.Allocate(numValues);
+  auto sPortal = seeds.WritePortal();
+
+  for (vtkm::Id i = 0; i < numValues; i++)
+  {
+    vtkm::ChargedParticle electron(
+      pPortal.Get(i), i, mPortal.Get(i), qPortal.Get(i), wPortal.Get(i), uPortal.Get(i));
+    sPortal.Set(i, electron);
+  }
+}
 
 void TestStreamlineFilters()
 {
@@ -98,7 +85,6 @@ void TestStreamlineFilters()
     static_cast<vtkm::FloatDefault>(2.99792458e8);
   spacing = spacing * spacing;
 
-
   vtkm::Id steps = 50;
   vtkm::FloatDefault length = static_cast<vtkm::FloatDefault>(
     1.0 / (SPEED_OF_LIGHT * vtkm::Sqrt(1. / spacing[0] + 1. / spacing[1] + 1. / spacing[2])));
@@ -112,16 +98,14 @@ void TestStreamlineFilters()
   streamline.SetVectorFieldType(vtkm::filter::flow::VectorFieldType::ELECTRO_MAGNETIC_FIELD_TYPE);
   streamline.SetEField("E");
   streamline.SetBField("B");
-  std::cout << "[pre] Executing test" << std::endl;
+
   auto output = streamline.Execute(dataset);
-  std::cout << "[post] Executing test" << std::endl;
-  std::cout << "[pre] Executing asserts" << std::endl;
+
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(output.GetCoordinateSystem().GetNumberOfPoints() == 2550,
                    "Wrong number of coordinates");
   VTKM_TEST_ASSERT(output.GetCellSet().GetNumberOfCells() == 50, "Wrong number of cells");
-  std::cout << "[post] Executing asserts" << std::endl;
 }
 }
 
