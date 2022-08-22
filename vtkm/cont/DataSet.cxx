@@ -34,7 +34,7 @@ VTKM_CONT void SetGlobalGhostCellFieldName(const std::string& name) noexcept
 void DataSet::Clear()
 {
   this->CoordSystems.clear();
-  this->Fields.clear();
+  this->Fields.Clear();
   this->CellSet = this->CellSet.NewInstance();
 }
 
@@ -57,55 +57,6 @@ void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
   this->CoordSystems = source.CoordSystems;
   this->CellSet = source.CellSet;
   this->GhostCellName = source.GhostCellName;
-}
-
-const vtkm::cont::Field& DataSet::GetField(vtkm::Id index) const
-{
-  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
-  auto it = this->Fields.cbegin();
-  std::advance(it, index);
-  return it->second;
-}
-
-vtkm::cont::Field& DataSet::GetField(vtkm::Id index)
-{
-  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
-  auto it = this->Fields.begin();
-  std::advance(it, index);
-  return it->second;
-}
-
-vtkm::Id DataSet::GetFieldIndex(const std::string& name, vtkm::cont::Field::Association assoc) const
-{
-  const auto it = this->Fields.find({ name, assoc });
-  if (it != this->Fields.end())
-  {
-    return static_cast<vtkm::Id>(std::distance(this->Fields.begin(), it));
-  }
-  return -1;
-}
-
-const vtkm::cont::Field& DataSet::GetField(const std::string& name,
-                                           vtkm::cont::Field::Association assoc) const
-{
-  auto idx = this->GetFieldIndex(name, assoc);
-  if (idx == -1)
-  {
-    throw vtkm::cont::ErrorBadValue("No field with requested name: " + name);
-  }
-
-  return this->GetField(idx);
-}
-
-vtkm::cont::Field& DataSet::GetField(const std::string& name, vtkm::cont::Field::Association assoc)
-{
-  auto idx = this->GetFieldIndex(name, assoc);
-  if (idx == -1)
-  {
-    throw vtkm::cont::ErrorBadValue("No field with requested name: " + name);
-  }
-
-  return this->GetField(idx);
 }
 
 const vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(vtkm::Id index) const
@@ -185,18 +136,6 @@ void DataSet::PrintSummary(std::ostream& out) const
   }
 
   out.flush();
-}
-
-VTKM_CONT void DataSet::AddField(const Field& field)
-{
-  // map::insert will not replace the duplicated element
-  if (field.GetAssociation() == vtkm::cont::Field::Association::Partitions ||
-      field.GetAssociation() == vtkm::cont::Field::Association::WholePartition)
-  {
-    throw vtkm::cont::ErrorBadValue("Association not valid for DataSet.");
-  }
-
-  this->Fields[{ field.GetName(), field.GetAssociation() }] = field;
 }
 
 void DataSet::ConvertToExpected()

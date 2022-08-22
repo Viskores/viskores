@@ -41,9 +41,9 @@ static void PartitionedDataSetTest()
   std::vector<vtkm::Id> ids = { 0, 1 };
   std::vector<vtkm::FloatDefault> var = { 1, 2 };
   auto idsField = vtkm::cont::make_Field(
-    "ids", vtkm::cont::Field::Association::Partitions, ids, vtkm::CopyFlag::On);
+    "ids", vtkm::cont::Field::Association::WholeMesh, ids, vtkm::CopyFlag::On);
   auto pdsVar = vtkm::cont::make_Field(
-    "pds_var", vtkm::cont::Field::Association::WholePartition, ids, vtkm::CopyFlag::On);
+    "pds_var", vtkm::cont::Field::Association::AllPartitions, ids, vtkm::CopyFlag::On);
   pds.AddField(idsField);
   pds.AddField(pdsVar);
 

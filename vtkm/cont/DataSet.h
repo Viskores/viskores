@@ -18,6 +18,7 @@
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 #include <vtkm/cont/UnknownCellSet.h>
+#include <vtkm/cont/internal/FieldCollection.h>
 
 namespace vtkm
 {
@@ -54,25 +55,25 @@ public:
   /// to have the same number of points.
   VTKM_CONT vtkm::Id GetNumberOfPoints() const;
 
-  VTKM_CONT void AddField(const Field& field);
+  VTKM_CONT void AddField(const Field& field) { this->Fields.AddField(field); }
 
   VTKM_CONT
-  const vtkm::cont::Field& GetField(vtkm::Id index) const;
+  const vtkm::cont::Field& GetField(vtkm::Id index) const { return this->Fields.GetField(index); }
 
   VTKM_CONT
-  vtkm::cont::Field& GetField(vtkm::Id index);
+  vtkm::cont::Field& GetField(vtkm::Id index) { return this->Fields.GetField(index); }
 
   VTKM_CONT
   bool HasField(const std::string& name,
                 vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const
   {
-    return (this->GetFieldIndex(name, assoc) != -1);
+    return this->Fields.HasField(name, assoc);
   }
 
   VTKM_CONT
   bool HasCellField(const std::string& name) const
   {
-    return (this->GetFieldIndex(name, vtkm::cont::Field::Association::Cells) != -1);
+    return (this->Fields.GetFieldIndex(name, vtkm::cont::Field::Association::Cells) != -1);
   }
 
   VTKM_CONT
@@ -104,7 +105,7 @@ public:
   VTKM_CONT
   bool HasPointField(const std::string& name) const
   {
-    return (this->GetFieldIndex(name, vtkm::cont::Field::Association::Points) != -1);
+    return (this->Fields.GetFieldIndex(name, vtkm::cont::Field::Association::Points) != -1);
   }
 
 
@@ -113,7 +114,10 @@ public:
   VTKM_CONT
   vtkm::Id GetFieldIndex(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const;
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const
+  {
+    return this->Fields.GetFieldIndex(name, assoc);
+  }
 
   /// Returns the field that matches the provided name and association
   /// Will throw an exception if no match is found
@@ -121,12 +125,19 @@ public:
   VTKM_CONT
   const vtkm::cont::Field& GetField(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const;
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const
+  {
+    return this->Fields.GetField(name, assoc);
+  }
+
 
   VTKM_CONT
   vtkm::cont::Field& GetField(
     const std::string& name,
-    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any);
+    vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any)
+  {
+    return this->Fields.GetField(name, assoc);
+  }
   //@}
 
   /// Returns the first cell field that matches the provided name.
@@ -309,10 +320,7 @@ public:
   vtkm::cont::UnknownCellSet& GetCellSet() { return this->CellSet; }
 
   VTKM_CONT
-  vtkm::IdComponent GetNumberOfFields() const
-  {
-    return static_cast<vtkm::IdComponent>(this->Fields.size());
-  }
+  vtkm::IdComponent GetNumberOfFields() const { return this->Fields.GetNumberOfFields(); }
 
   VTKM_CONT
   vtkm::IdComponent GetNumberOfCoordinateSystems() const
@@ -360,7 +368,11 @@ private:
   };
 
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
-  std::map<FieldCompare::Key, vtkm::cont::Field, FieldCompare> Fields;
+  vtkm::cont::internal::FieldCollection Fields =
+    vtkm::cont::internal::FieldCollection({ vtkm::cont::Field::Association::WholeMesh,
+                                            vtkm::cont::Field::Association::Points,
+                                            vtkm::cont::Field::Association::Cells });
+
   vtkm::cont::UnknownCellSet CellSet;
   std::shared_ptr<std::string> GhostCellName;
 };

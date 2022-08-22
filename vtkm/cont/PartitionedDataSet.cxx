@@ -13,7 +13,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/ErrorBadValue.h>
-#include <vtkm/cont/Field.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/internal/Configure.h>
 
@@ -72,71 +71,6 @@ vtkm::cont::Field PartitionedDataSet::GetPartitionField(const std::string& field
   assert(partition_index >= 0);
   assert(static_cast<std::size_t>(partition_index) < this->Partitions.size());
   return this->Partitions[static_cast<std::size_t>(partition_index)].GetField(field_name);
-}
-
-VTKM_CONT void PartitionedDataSet::AddField(const Field& field)
-{
-  // map::insert will not replace the duplicated element
-  if (field.GetAssociation() == vtkm::cont::Field::Association::Cells ||
-      field.GetAssociation() == vtkm::cont::Field::Association::Points ||
-      field.GetAssociation() == vtkm::cont::Field::Association::WholeMesh)
-  {
-    throw vtkm::cont::ErrorBadValue("Association not valid for PartitionedDataSet.");
-  }
-
-  this->Fields[{ field.GetName(), field.GetAssociation() }] = field;
-}
-
-const vtkm::cont::Field& PartitionedDataSet::GetField(const std::string& name,
-                                                      vtkm::cont::Field::Association assoc) const
-{
-  auto idx = this->GetFieldIndex(name, assoc);
-  if (idx == -1)
-  {
-    throw vtkm::cont::ErrorBadValue("No field with requested name: " + name);
-  }
-
-  return this->GetField(idx);
-}
-
-vtkm::cont::Field& PartitionedDataSet::GetField(const std::string& name,
-                                                vtkm::cont::Field::Association assoc)
-{
-  auto idx = this->GetFieldIndex(name, assoc);
-  if (idx == -1)
-  {
-    throw vtkm::cont::ErrorBadValue("No field with requested name: " + name);
-  }
-
-  return this->GetField(idx);
-}
-
-
-const vtkm::cont::Field& PartitionedDataSet::GetField(vtkm::Id index) const
-{
-  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
-  auto it = this->Fields.cbegin();
-  std::advance(it, index);
-  return it->second;
-}
-
-vtkm::cont::Field& PartitionedDataSet::GetField(vtkm::Id index)
-{
-  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
-  auto it = this->Fields.begin();
-  std::advance(it, index);
-  return it->second;
-}
-
-vtkm::Id PartitionedDataSet::GetFieldIndex(const std::string& name,
-                                           vtkm::cont::Field::Association assoc) const
-{
-  const auto it = this->Fields.find({ name, assoc });
-  if (it != this->Fields.end())
-  {
-    return static_cast<vtkm::Id>(std::distance(this->Fields.begin(), it));
-  }
-  return -1;
 }
 
 VTKM_CONT
@@ -217,6 +151,12 @@ void PartitionedDataSet::PrintSummary(std::ostream& stream) const
   {
     stream << "Partition " << part << ":\n";
     this->Partitions[part].PrintSummary(stream);
+  }
+
+  stream << "  Fields[" << this->GetNumberOfFields() << "]\n";
+  for (vtkm::Id index = 0; index < this->GetNumberOfFields(); index++)
+  {
+    this->GetField(index).PrintSummary(stream);
   }
 }
 }
