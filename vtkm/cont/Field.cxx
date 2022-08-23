@@ -98,7 +98,7 @@ void Field::PrintSummary(std::ostream& out) const
       out << "Cells ";
       break;
     case Association::AllPartitions:
-      out << "WholePartition ";
+      out << "AllPartitions ";
       break;
   }
   this->Data.PrintSummary(out);
