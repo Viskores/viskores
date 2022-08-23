@@ -58,6 +58,13 @@ public:
 
   VTKM_CONT
   ~PartitionedDataSet();
+
+  VTKM_DEPRECATED(1.9, "Renamed to GetPartitionField.")
+  VTKM_CONT vtkm::cont::Field GetField(const std::string& field_name, int partition_index) const
+  {
+    return this->GetPartitionField(field_name, partition_index);
+  }
+
   /// Get the field @a field_name from partition @a partition_index.
   VTKM_CONT
   vtkm::cont::Field GetPartitionField(const std::string& field_name, int partition_index) const;
@@ -96,6 +103,8 @@ public:
   VTKM_CONT
   void AppendPartitions(const std::vector<vtkm::cont::DataSet>& partitions);
 
+  //@{
+  /// Methods to Add and Get fields on a PartitionedDataSet
   VTKM_CONT
   vtkm::IdComponent GetNumberOfFields() const { return this->Fields.GetNumberOfFields(); }
 
@@ -145,7 +154,6 @@ public:
     this->AddField(make_Field(
       fieldName, vtkm::cont::Field::Association::WholeMesh, field, n, vtkm::CopyFlag::On));
   }
-
 
   VTKM_CONT
   const vtkm::cont::Field& GetField(vtkm::Id index) const { return this->Fields.GetField(index); }
@@ -211,6 +219,7 @@ public:
   {
     return (this->Fields.GetFieldIndex(name, vtkm::cont::Field::Association::WholeMesh) != -1);
   }
+  //@}
 
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;
