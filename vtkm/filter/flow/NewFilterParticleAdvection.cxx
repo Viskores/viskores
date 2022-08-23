@@ -37,7 +37,7 @@ VTKM_CONT void NewFilterParticleAdvection::ValidateOptions() const
   if (this->Seeds.GetNumberOfValues() == 0)
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
   if (!this->Seeds.IsBaseComponentType<vtkm::Particle>() &&
-      this->Seeds.IsBaseComponentType<vtkm::ChargedParticle>())
+      !this->Seeds.IsBaseComponentType<vtkm::ChargedParticle>())
     throw vtkm::cont::ErrorFilterExecution("Unsupported particle type in seed array.");
   if (this->NumberOfSteps == 0)
     throw vtkm::cont::ErrorFilterExecution("Number of steps not specified.");

@@ -60,9 +60,11 @@ using DSIHelperInfoType = vtkm::cont::internal::Variant<DSIHelperInfo<vtkm::Part
 template <typename Derived>
 class DataSetIntegrator
 {
-protected:
+public:
   using VelocityFieldNameType = std::string;
   using ElectroMagneticFieldNameType = std::pair<std::string, std::string>;
+
+protected:
   using FieldNameType =
     vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType>;
 
