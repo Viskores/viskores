@@ -56,12 +56,13 @@ void ImageWriterPNG::WriteToFile(vtkm::Id width, vtkm::Id height, const ColorArr
     }
   }
 
-  vtkm::png::lodepng_encode_file(this->FileName.c_str(),
-                                 imageData.data(),
-                                 static_cast<unsigned>(width),
-                                 static_cast<unsigned>(height),
-                                 PixelType::PNG_COLOR_TYPE,
-                                 PixelType::BIT_DEPTH);
+  vtkm::png::lodepng_encode_file(
+    this->FileName.c_str(),
+    imageData.data(),
+    static_cast<unsigned>(width),
+    static_cast<unsigned>(height),
+    static_cast<vtkm::png::LodePNGColorType>(PixelType::GetColorType()),
+    PixelType::GetBitDepth());
 }
 }
 } // namespace vtkm::io

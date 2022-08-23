@@ -12,6 +12,10 @@
 
 #include <vtkm/io/PixelTypes.h>
 
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/lodepng/vtkmlodepng/lodepng.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+
 namespace
 {
 
@@ -23,12 +27,13 @@ vtkm::io::ImageReaderBase::ColorArrayType ReadFromPNG(const std::string& fileNam
 {
   unsigned char* imageData;
   unsigned uwidth, uheight;
-  vtkm::png::lodepng_decode_file(&imageData,
-                                 &uwidth,
-                                 &uheight,
-                                 fileName.c_str(),
-                                 PixelType::PNG_COLOR_TYPE,
-                                 PixelType::BIT_DEPTH);
+  vtkm::png::lodepng_decode_file(
+    &imageData,
+    &uwidth,
+    &uheight,
+    fileName.c_str(),
+    static_cast<vtkm::png::LodePNGColorType>(PixelType::GetColorType()),
+    PixelType::GetBitDepth());
 
   width = static_cast<vtkm::Id>(uwidth);
   height = static_cast<vtkm::Id>(uheight);
