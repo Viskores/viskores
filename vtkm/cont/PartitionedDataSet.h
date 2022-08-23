@@ -239,23 +239,8 @@ public:
   VTKM_CONT
   const_iterator cend() const noexcept { return this->Partitions.cend(); }
   //@}
+
 private:
-  //Move this to another place...
-  struct FieldCompare
-  {
-    using Key = std::pair<std::string, vtkm::cont::Field::Association>;
-
-    template <typename T>
-    bool operator()(const T& a, const T& b) const
-    {
-      if (a.first == b.first)
-        return a.second < b.second && a.second != vtkm::cont::Field::Association::Any &&
-          b.second != vtkm::cont::Field::Association::Any;
-
-      return a.first < b.first;
-    }
-  };
-
   std::vector<vtkm::cont::DataSet> Partitions;
 
   vtkm::cont::internal::FieldCollection Fields = vtkm::cont::internal::FieldCollection(
