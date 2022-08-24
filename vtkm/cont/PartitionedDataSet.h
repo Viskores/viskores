@@ -17,14 +17,10 @@
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/internal/FieldCollection.h>
 
-#include <set>
-
 namespace vtkm
 {
 namespace cont
 {
-
-//Should field data and methods be put into a base class for DataSet and PartitionedDataSet ???
 
 class VTKM_CONT_EXPORT PartitionedDataSet
 {
@@ -138,7 +134,7 @@ public:
   VTKM_CONT void AddWholeMeshField(const std::string& fieldName,
                                    const vtkm::cont::ArrayHandle<T, Storage>& field)
   {
-    this->AddField(vtkm::cont::Field(vtkm::cont::Field::Association::WholeMesh, field));
+    this->AddField(vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::WholeMesh, field));
   }
 
   template <typename T>

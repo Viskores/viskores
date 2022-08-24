@@ -46,6 +46,9 @@ vtkm::cont::Field& FieldCollection::GetField(vtkm::Id index)
 vtkm::Id FieldCollection::GetFieldIndex(const std::string& name,
                                         vtkm::cont::Field::Association assoc) const
 {
+  // Find the field with the given name and association. If the association is
+  // `vtkm::cont::Field::Association::Any`, then the `Fields` object has a
+  // special comparator that will match the field to any association.
   const auto it = this->Fields.find({ name, assoc });
   if (it != this->Fields.end())
   {

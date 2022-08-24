@@ -24,8 +24,8 @@ class VTKM_CONT_EXPORT FieldCollection
 {
 public:
   VTKM_CONT
-  FieldCollection(const std::set<vtkm::cont::Field::Association>& validAssoc)
-    : ValidAssoc(validAssoc)
+  FieldCollection(std::set<vtkm::cont::Field::Association>&& validAssoc)
+    : ValidAssoc(std::move(validAssoc))
   {
   }
 
