@@ -132,24 +132,24 @@ public:
   }
 
   template <typename T, typename Storage>
-  VTKM_CONT void AddWholeMeshField(const std::string& fieldName,
-                                   const vtkm::cont::ArrayHandle<T, Storage>& field)
+  VTKM_CONT void AddPartitionsField(const std::string& fieldName,
+                                    const vtkm::cont::ArrayHandle<T, Storage>& field)
   {
-    this->AddField(vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::WholeMesh, field));
+    this->AddField(vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::Partitions, field));
   }
 
   template <typename T>
-  VTKM_CONT void AddWholeMeshField(const std::string& fieldName, const std::vector<T>& field)
+  VTKM_CONT void AddPartitionsField(const std::string& fieldName, const std::vector<T>& field)
   {
     this->AddField(
-      make_Field(fieldName, vtkm::cont::Field::Association::WholeMesh, field, vtkm::CopyFlag::On));
+      make_Field(fieldName, vtkm::cont::Field::Association::Partitions, field, vtkm::CopyFlag::On));
   }
 
   template <typename T>
-  VTKM_CONT void AddWholeMeshField(const std::string& fieldName, const T* field, const vtkm::Id& n)
+  VTKM_CONT void AddPartitionsField(const std::string& fieldName, const T* field, const vtkm::Id& n)
   {
     this->AddField(make_Field(
-      fieldName, vtkm::cont::Field::Association::WholeMesh, field, n, vtkm::CopyFlag::On));
+      fieldName, vtkm::cont::Field::Association::Partitions, field, n, vtkm::CopyFlag::On));
   }
 
   VTKM_CONT
@@ -181,9 +181,9 @@ public:
   }
 
   VTKM_CONT
-  const vtkm::cont::Field& GetWholeMeshField(const std::string& name) const
+  const vtkm::cont::Field& GetPartitionsField(const std::string& name) const
   {
-    return this->GetField(name, vtkm::cont::Field::Association::WholeMesh);
+    return this->GetField(name, vtkm::cont::Field::Association::Partitions);
   }
 
   VTKM_CONT
@@ -193,9 +193,9 @@ public:
   }
 
   VTKM_CONT
-  vtkm::cont::Field& GetWholeMeshField(const std::string& name)
+  vtkm::cont::Field& GetPartitionsField(const std::string& name)
   {
-    return this->GetField(name, vtkm::cont::Field::Association::WholeMesh);
+    return this->GetField(name, vtkm::cont::Field::Association::Partitions);
   }
 
   VTKM_CONT
@@ -212,9 +212,9 @@ public:
   }
 
   VTKM_CONT
-  bool HasWholeMeshField(const std::string& name) const
+  bool HasPartitionsField(const std::string& name) const
   {
-    return (this->Fields.GetFieldIndex(name, vtkm::cont::Field::Association::WholeMesh) != -1);
+    return (this->Fields.GetFieldIndex(name, vtkm::cont::Field::Association::Partitions) != -1);
   }
   //@}
 
@@ -241,7 +241,7 @@ private:
   std::vector<vtkm::cont::DataSet> Partitions;
 
   vtkm::cont::internal::FieldCollection Fields = vtkm::cont::internal::FieldCollection(
-    { vtkm::cont::Field::Association::WholeMesh, vtkm::cont::Field::Association::AllPartitions });
+    { vtkm::cont::Field::Association::Partitions, vtkm::cont::Field::Association::AllPartitions });
 };
 }
 } // namespace vtkm::cont
