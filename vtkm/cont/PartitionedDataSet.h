@@ -111,7 +111,8 @@ public:
   VTKM_CONT void AddAllPartitionsField(const std::string& fieldName,
                                        const vtkm::cont::ArrayHandle<T, Storage>& field)
   {
-    this->AddField(vtkm::cont::Field(vtkm::cont::Field::Association::AllPartitions, field));
+    this->AddField(
+      vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::AllPartitions, field));
   }
 
   template <typename T>
