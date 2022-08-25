@@ -88,6 +88,11 @@ vtkm::cont::PartitionedDataSet NewFilter::DoExecutePartitions(
     }
   }
 
+  //Copy any fields.
+  vtkm::Id numFields = static_cast<vtkm::Id>(input.GetNumberOfFields());
+  for (vtkm::Id i = 0; i < numFields; i++)
+    output.AddField(input.GetField(i));
+
   return output;
 }
 
