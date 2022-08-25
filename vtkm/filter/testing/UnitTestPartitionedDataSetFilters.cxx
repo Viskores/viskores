@@ -114,6 +114,33 @@ void TestPartitionedDataSetFilters()
   cellAverage.SetActiveField("pointvar");
   result = cellAverage.Execute(partitions);
   Result_Verify<vtkm::FloatDefault>(result, cellAverage, partitions, std::string("pointvar"));
+
+
+  //Make sure that any Fields are propagated to the output.
+  partitionNum = 3;
+  partitions = PartitionedDataSetBuilder<vtkm::FloatDefault>(partitionNum, "pointvar");
+  std::vector<vtkm::Id> ids = { 0, 1, 2 };
+  std::vector<vtkm::FloatDefault> scalar = { 10.0f };
+  partitions.AddPartitionsField("ids", ids);
+  partitions.AddAllPartitionsField("scalar", scalar);
+
+  result = cellAverage.Execute(partitions);
+
+  VTKM_TEST_ASSERT(result.HasPartitionsField("ids"), "Missing field on result");
+  auto field0 = result.GetField("ids");
+  auto portal0 = field0.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>().ReadPortal();
+  VTKM_TEST_ASSERT(portal0.GetNumberOfValues() == static_cast<vtkm::Id>(ids.size()),
+                   "Wrong number of field values.");
+  for (std::size_t i = 0; i < ids.size(); i++)
+    VTKM_TEST_ASSERT(portal0.Get(static_cast<vtkm::Id>(i)) == ids[i], "Wrong field value.");
+
+  VTKM_TEST_ASSERT(result.HasAllPartitionsField("scalar"), "Missing field on result");
+  auto field1 = result.GetField("scalar");
+  auto portal1 =
+    field1.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::FloatDefault>>().ReadPortal();
+  VTKM_TEST_ASSERT(portal1.GetNumberOfValues() == static_cast<vtkm::Id>(scalar.size()),
+                   "Wrong number of field values.");
+  VTKM_TEST_ASSERT(portal1.Get(0) == scalar[0], "Wrong field value.");
 }
 
 int UnitTestPartitionedDataSetFilters(int argc, char* argv[])

@@ -61,6 +61,7 @@ VTKM_CONT
 PartitionedDataSet& PartitionedDataSet::operator=(const vtkm::cont::PartitionedDataSet& src)
 {
   this->Partitions = src.GetPartitions();
+  this->Fields = src.Fields;
   return *this;
 }
 
