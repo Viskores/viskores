@@ -58,6 +58,11 @@ private:
 };
 
 }
+struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::StreamSurface.") StreamSurface
+  : vtkm::filter::flow::StreamSurface
+{
+  using vtkm::filter::flow::StreamSurface::StreamSurface;
+};
 }
 } // namespace vtkm::filter::flow
 

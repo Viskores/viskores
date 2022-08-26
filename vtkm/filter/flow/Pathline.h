@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Pathline_h
-#define vtk_m_filter_Pathline_h
+#ifndef vtk_m_filter_flow_Pathline_h
+#define vtk_m_filter_flow_Pathline_h
 
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvectionUnsteadyState.h>
@@ -35,7 +35,12 @@ private:
 };
 
 }
+struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::Pathline.") Pathline
+  : vtkm::filter::flow::Pathline
+{
+  using vtkm::filter::flow::Pathline::Pathline;
+};
 }
 } // namespace vtkm::filter::flow
 
-#endif // vtk_m_filter_Pathline_h
+#endif // vtk_m_filter_flow_Pathline_h

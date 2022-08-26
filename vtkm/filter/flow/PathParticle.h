@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_PathParticle_h
-#define vtk_m_filter_PathParticle_h
+#ifndef vtk_m_filter_flow_PathParticle_h
+#define vtk_m_filter_flow_PathParticle_h
 
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/NewFilterParticleAdvectionUnsteadyState.h>
@@ -35,7 +35,12 @@ private:
 };
 
 }
+struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::PathParticle.") PathParticle
+  : vtkm::filter::flow::PathParticle
+{
+  using vtkm::filter::flow::PathParticle::PathParticle;
+};
 }
 } // namespace vtkm::filter::flow
 
-#endif // vtk_m_filter_PathParticle_h
+#endif // vtk_m_filter_flow_PathParticle_h

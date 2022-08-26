@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_flow_NewFilterParticleAdvection_h
 #define vtk_m_filter_flow_NewFilterParticleAdvection_h
 
+#include <vtkm/Particle.h>
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
