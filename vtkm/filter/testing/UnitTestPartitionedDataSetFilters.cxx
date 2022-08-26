@@ -115,7 +115,6 @@ void TestPartitionedDataSetFilters()
   result = cellAverage.Execute(partitions);
   Result_Verify<vtkm::FloatDefault>(result, cellAverage, partitions, std::string("pointvar"));
 
-
   //Make sure that any Fields are propagated to the output.
   partitionNum = 3;
   partitions = PartitionedDataSetBuilder<vtkm::FloatDefault>(partitionNum, "pointvar");

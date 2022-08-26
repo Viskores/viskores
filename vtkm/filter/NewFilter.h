@@ -326,6 +326,9 @@ protected:
   /// fields of `inDataSet` (as selected by the `FieldsToPass` state of the filter).
   ///
   VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet) const;
+  VTKM_CONT vtkm::cont::PartitionedDataSet CreateResult(
+    const vtkm::cont::PartitionedDataSet& input,
+    const vtkm::cont::PartitionedDataSet& output) const;
 
   /// \brief Create the output data set for `DoExecute`.
   ///
@@ -431,9 +434,9 @@ protected:
     const vtkm::cont::PartitionedDataSet& inData);
 
 private:
-  template <typename FieldMapper>
-  VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input,
-                                     vtkm::cont::DataSet& output,
+  template <typename DataType, typename FieldMapper>
+  VTKM_CONT void MapFieldsOntoOutput(const DataType& input,
+                                     DataType& output,
                                      FieldMapper&& fieldMapper) const
   {
     for (vtkm::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)

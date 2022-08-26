@@ -88,7 +88,7 @@ vtkm::cont::PartitionedDataSet NewFilter::DoExecutePartitions(
     }
   }
 
-  return output;
+  return this->CreateResult(input, output);
 }
 
 vtkm::cont::DataSet NewFilter::Execute(const vtkm::cont::DataSet& input)
@@ -103,14 +103,7 @@ vtkm::cont::PartitionedDataSet NewFilter::Execute(const vtkm::cont::PartitionedD
                  (int)input.GetNumberOfPartitions(),
                  vtkm::cont::TypeToString<decltype(*this)>().c_str());
 
-  vtkm::cont::PartitionedDataSet output = this->DoExecutePartitions(input);
-
-  //Copy any fields.
-  vtkm::Id numFields = static_cast<vtkm::Id>(input.GetNumberOfFields());
-  for (vtkm::Id i = 0; i < numFields; i++)
-    output.AddField(input.GetField(i));
-
-  return output;
+  return this->DoExecutePartitions(input);
 }
 
 vtkm::cont::DataSet NewFilter::CreateResult(const vtkm::cont::DataSet& inDataSet) const
@@ -121,6 +114,20 @@ vtkm::cont::DataSet NewFilter::CreateResult(const vtkm::cont::DataSet& inDataSet
     inDataSet, clone, [](vtkm::cont::DataSet& out, const vtkm::cont::Field& fieldToPass) {
       out.AddField(fieldToPass);
     });
+  return clone;
+}
+
+vtkm::cont::PartitionedDataSet NewFilter::CreateResult(
+  const vtkm::cont::PartitionedDataSet& input,
+  const vtkm::cont::PartitionedDataSet& output) const
+{
+  vtkm::cont::PartitionedDataSet clone;
+  clone.CopyStructure(output);
+  this->MapFieldsOntoOutput(
+    input, clone, [](vtkm::cont::PartitionedDataSet& out, const vtkm::cont::Field& fieldToPass) {
+      out.AddField(fieldToPass);
+    });
+
   return clone;
 }
 

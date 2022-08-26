@@ -144,6 +144,12 @@ void PartitionedDataSet::ReplacePartition(vtkm::Id index, const vtkm::cont::Data
 }
 
 VTKM_CONT
+void PartitionedDataSet::CopyStructure(const vtkm::cont::PartitionedDataSet& source)
+{
+  this->Partitions = source.Partitions;
+}
+
+VTKM_CONT
 void PartitionedDataSet::PrintSummary(std::ostream& stream) const
 {
   stream << "PartitionedDataSet [" << this->Partitions.size() << " partitions]:\n";
