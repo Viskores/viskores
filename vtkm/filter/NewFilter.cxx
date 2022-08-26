@@ -119,10 +119,10 @@ vtkm::cont::DataSet NewFilter::CreateResult(const vtkm::cont::DataSet& inDataSet
 
 vtkm::cont::PartitionedDataSet NewFilter::CreateResult(
   const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::cont::PartitionedDataSet& output) const
+  const vtkm::cont::PartitionedDataSet& resultPartitions) const
 {
   vtkm::cont::PartitionedDataSet clone;
-  clone.CopyStructure(output);
+  clone.CopyPartitions(resultPartitions);
   this->MapFieldsOntoOutput(
     input, clone, [](vtkm::cont::PartitionedDataSet& out, const vtkm::cont::Field& fieldToPass) {
       out.AddField(fieldToPass);

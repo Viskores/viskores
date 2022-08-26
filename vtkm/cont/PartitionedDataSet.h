@@ -218,9 +218,9 @@ public:
   }
   //@}
 
-  /// Copies the structure i.e. partitions from the source. The fields are left unchanged.
+  /// Copies the partitions from the source. The fields on the PartitionedDataSet are not copied.
   VTKM_CONT
-  void CopyStructure(const vtkm::cont::PartitionedDataSet& source);
+  void CopyPartitions(const vtkm::cont::PartitionedDataSet& source);
 
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;

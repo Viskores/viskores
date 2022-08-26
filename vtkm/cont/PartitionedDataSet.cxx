@@ -144,7 +144,7 @@ void PartitionedDataSet::ReplacePartition(vtkm::Id index, const vtkm::cont::Data
 }
 
 VTKM_CONT
-void PartitionedDataSet::CopyStructure(const vtkm::cont::PartitionedDataSet& source)
+void PartitionedDataSet::CopyPartitions(const vtkm::cont::PartitionedDataSet& source)
 {
   this->Partitions = source.Partitions;
 }
