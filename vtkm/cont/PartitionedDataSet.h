@@ -55,15 +55,22 @@ public:
   VTKM_CONT
   ~PartitionedDataSet();
 
-  VTKM_DEPRECATED(1.9, "Renamed to GetPartitionField.")
+  VTKM_DEPRECATED(1.9, "Renamed to GetFieldFromPartition.")
   VTKM_CONT vtkm::cont::Field GetField(const std::string& field_name, int partition_index) const
   {
-    return this->GetPartitionField(field_name, partition_index);
+    return this->GetFieldFromPartition(field_name, partition_index);
   }
 
   /// Get the field @a field_name from partition @a partition_index.
   VTKM_CONT
-  vtkm::cont::Field GetPartitionField(const std::string& field_name, int partition_index) const;
+  vtkm::cont::Field GetFieldFromPartition(const std::string& field_name, int partition_index) const;
+
+  VTKM_DEPRECATED(1.9, "Use GetFieldFromPartition.")
+  VTKM_CONT
+  vtkm::cont::Field GetPartitionField(const std::string& field_name, int partition_index) const
+  {
+    return this->GetFieldFromPartition(field_name, partition_index);
+  }
 
   /// Get number of DataSet objects stored in this PartitionedDataSet.
   VTKM_CONT

@@ -98,7 +98,7 @@ static void PartitionedDataSetTest()
                    "Local field value range info incorrect");
 
   vtkm::Range SourceRange; //test the validity of member function GetField(FieldName, BlockId)
-  pds.GetPartitionField("cellvar", 0).GetRange(&SourceRange);
+  pds.GetFieldFromPartition("cellvar", 0).GetRange(&SourceRange);
   vtkm::Range TestRange;
   pds.GetPartition(0).GetField("cellvar").GetRange(&TestRange);
   VTKM_TEST_ASSERT(TestRange == SourceRange, "Local field value info incorrect");

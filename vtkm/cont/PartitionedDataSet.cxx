@@ -66,8 +66,8 @@ PartitionedDataSet& PartitionedDataSet::operator=(const vtkm::cont::PartitionedD
 }
 
 VTKM_CONT
-vtkm::cont::Field PartitionedDataSet::GetPartitionField(const std::string& field_name,
-                                                        int partition_index) const
+vtkm::cont::Field PartitionedDataSet::GetFieldFromPartition(const std::string& field_name,
+                                                            int partition_index) const
 {
   assert(partition_index >= 0);
   assert(static_cast<std::size_t>(partition_index) < this->Partitions.size());
