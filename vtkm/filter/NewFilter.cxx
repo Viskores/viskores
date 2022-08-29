@@ -121,14 +121,10 @@ vtkm::cont::PartitionedDataSet NewFilter::CreateResult(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::cont::PartitionedDataSet& resultPartitions) const
 {
-  vtkm::cont::PartitionedDataSet clone;
-  clone.CopyPartitions(resultPartitions);
-  this->MapFieldsOntoOutput(
-    input, clone, [](vtkm::cont::PartitionedDataSet& out, const vtkm::cont::Field& fieldToPass) {
-      out.AddField(fieldToPass);
-    });
-
-  return clone;
+  auto fieldMapper = [](vtkm::cont::PartitionedDataSet& out, const vtkm::cont::Field& fieldToPass) {
+    out.AddField(fieldToPass);
+  };
+  return this->CreateResult(input, resultPartitions, fieldMapper);
 }
 
 vtkm::Id NewFilter::DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input)
