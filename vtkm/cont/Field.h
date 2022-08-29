@@ -70,8 +70,24 @@ public:
   VTKM_CONT Field& operator=(const vtkm::cont::Field& src);
   VTKM_CONT Field& operator=(vtkm::cont::Field&& src) noexcept;
 
-  VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::Cells; }
-  VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::Points; }
+  VTKM_CONT bool IsCellField() const { return this->FieldAssociation == Association::Cells; }
+  VTKM_CONT bool IsPointField() const { return this->FieldAssociation == Association::Points; }
+  VTKM_CONT bool IsWholeDataSetField() const
+  {
+    return this->FieldAssociation == Association::WholeDataSet;
+  }
+  VTKM_CONT bool IsPartitionsField() const
+  {
+    return this->FieldAssociation == Association::WholeMesh;
+    return this->FieldAssociation == Association::Partitions;
+  }
+  VTKM_CONT bool IsGlobalField() const { return this->FieldAssociation == Association::Global; }
+
+  VTKM_DEPRECATED(1.9, "Use IsCellField.")
+  VTKM_CONT bool IsFieldCell() const { return this->IsCellField(); }
+  VTKM_DEPRECATED(1.9, "Use IsPointField.")
+  VTKM_CONT bool IsFieldPoint() const { return this->IsPointField(); }
+  VTKM_DEPRECATED(1.9, "Use IsWholeDataSetField. Note that meaning of `Global` has changed!")
   VTKM_CONT bool IsFieldGlobal() const
   {
     return this->FieldAssociation == Association::WholeDataSet;
