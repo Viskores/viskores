@@ -34,12 +34,6 @@ PartitionedDataSet::PartitionedDataSet(const vtkm::cont::DataSet& ds)
 }
 
 VTKM_CONT
-PartitionedDataSet::PartitionedDataSet(const vtkm::cont::PartitionedDataSet& src)
-{
-  this->Partitions = src.GetPartitions();
-}
-
-VTKM_CONT
 PartitionedDataSet::PartitionedDataSet(const std::vector<vtkm::cont::DataSet>& partitions)
 {
   this->Partitions = partitions;
@@ -49,20 +43,6 @@ VTKM_CONT
 PartitionedDataSet::PartitionedDataSet(vtkm::Id size)
 {
   this->Partitions.reserve(static_cast<std::size_t>(size));
-}
-
-VTKM_CONT
-PartitionedDataSet::PartitionedDataSet() {}
-
-VTKM_CONT
-PartitionedDataSet::~PartitionedDataSet() {}
-
-VTKM_CONT
-PartitionedDataSet& PartitionedDataSet::operator=(const vtkm::cont::PartitionedDataSet& src)
-{
-  this->Partitions = src.GetPartitions();
-  this->Fields = src.Fields;
-  return *this;
 }
 
 VTKM_CONT

@@ -36,9 +36,7 @@ public:
   /// Create a new PartitionedDataSet containng a single DataSet @a ds.
   VTKM_CONT
   PartitionedDataSet(const vtkm::cont::DataSet& ds);
-  /// Create a new PartitionedDataSet with the existing one @a src.
-  VTKM_CONT
-  PartitionedDataSet(const vtkm::cont::PartitionedDataSet& src);
+
   /// Create a new PartitionedDataSet with a DataSet vector @a partitions.
   VTKM_CONT
   explicit PartitionedDataSet(const std::vector<vtkm::cont::DataSet>& partitions);
@@ -47,13 +45,7 @@ public:
   explicit PartitionedDataSet(vtkm::Id size);
 
   VTKM_CONT
-  PartitionedDataSet();
-
-  VTKM_CONT
-  PartitionedDataSet& operator=(const vtkm::cont::PartitionedDataSet& src);
-
-  VTKM_CONT
-  ~PartitionedDataSet();
+  PartitionedDataSet() = default;
 
   VTKM_DEPRECATED(1.9, "Renamed to GetFieldFromPartition.")
   VTKM_CONT vtkm::cont::Field GetField(const std::string& field_name, int partition_index) const
@@ -248,8 +240,8 @@ public:
 private:
   std::vector<vtkm::cont::DataSet> Partitions;
 
-  vtkm::cont::internal::FieldCollection Fields = vtkm::cont::internal::FieldCollection(
-    { vtkm::cont::Field::Association::Partitions, vtkm::cont::Field::Association::Global });
+  vtkm::cont::internal::FieldCollection Fields{ vtkm::cont::Field::Association::Partitions,
+                                                vtkm::cont::Field::Association::Global };
 };
 }
 } // namespace vtkm::cont

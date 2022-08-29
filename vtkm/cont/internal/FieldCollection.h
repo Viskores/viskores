@@ -24,6 +24,14 @@ class VTKM_CONT_EXPORT FieldCollection
 {
 public:
   VTKM_CONT
+  FieldCollection(std::initializer_list<vtkm::cont::Field::Association> validAssoc)
+  {
+    auto it = this->ValidAssoc.begin();
+    for (const auto& item : validAssoc)
+      it = this->ValidAssoc.insert(it, item);
+  }
+
+  VTKM_CONT
   FieldCollection(std::set<vtkm::cont::Field::Association>&& validAssoc)
     : ValidAssoc(std::move(validAssoc))
   {
