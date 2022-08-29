@@ -58,6 +58,7 @@ public:
     vtkm::ListTransform<CellExecObjectList, vtkm::exec::CellLocatorTwoLevel>;
 
   using ExecObjType = vtkm::ListApply<CellLocatorExecList, vtkm::exec::CellLocatorMultiplexer>;
+  using LastCell = typename ExecObjType::LastCell;
 
   CellLocatorTwoLevel()
     : DensityL1(32.0f)

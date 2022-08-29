@@ -352,6 +352,14 @@ public:
     return (this->Index >= 0) && (this->Index < NumberOfTypes);
   }
 
+  /// Returns true if this `Variant` stores the given type
+  ///
+  template <typename T>
+  VTK_M_DEVICE bool IsType() const
+  {
+    return (this->GetIndex() == this->GetIndexOf<T>());
+  }
+
   Variant() = default;
   ~Variant() = default;
   Variant(const Variant&) = default;
@@ -373,7 +381,7 @@ public:
   template <typename T>
   VTK_M_DEVICE Variant& operator=(const T& src)
   {
-    if (this->GetIndex() == this->GetIndexOf<T>())
+    if (this->IsType<T>())
     {
       this->Get<T>() = src;
     }
@@ -474,14 +482,14 @@ private:
   template <typename T>
   VTK_M_DEVICE T& GetImpl(std::true_type)
   {
-    VTKM_ASSERT(this->GetIndexOf<T>() == this->GetIndex());
+    VTKM_ASSERT(this->IsType<T>());
     return detail::VariantUnionGet<IndexOf<T>::value>(this->Storage);
   }
 
   template <typename T>
   VTK_M_DEVICE const T& GetImpl(std::true_type) const
   {
-    VTKM_ASSERT(this->GetIndexOf<T>() == this->GetIndex());
+    VTKM_ASSERT(this->IsType<T>());
     return detail::VariantUnionGet<IndexOf<T>::value>(this->Storage);
   }
 

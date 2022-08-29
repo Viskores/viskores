@@ -352,17 +352,12 @@ VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataS
 
   if (this->GetRemoveAllGhost())
   {
-    cellOut = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
-                          fieldArray,
-                          field.GetAssociation(),
-                          RemoveAllGhosts());
+    cellOut = worklet.Run(cells, fieldArray, field.GetAssociation(), RemoveAllGhosts());
   }
   else if (this->GetRemoveByType())
   {
-    cellOut = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
-                          fieldArray,
-                          field.GetAssociation(),
-                          RemoveGhostByType(this->GetRemoveType()));
+    cellOut = worklet.Run(
+      cells, fieldArray, field.GetAssociation(), RemoveGhostByType(this->GetRemoveType()));
   }
   else
   {

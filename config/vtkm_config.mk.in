@@ -34,6 +34,5 @@ VTKm_LIB_FLAGS = -L $(VTKm_DIR)/lib \
     -lvtkm_worklet-$(VTKM_VERSION) \
     -lvtkm_source-$(VTKM_VERSION) \
     -lvtkm_io-$(VTKM_VERSION) \
-    -lvtkm_lodepng-$(VTKM_VERSION) \
     -lvtkm_cont-$(VTKM_VERSION) \
     -lvtkmdiympi_nompi

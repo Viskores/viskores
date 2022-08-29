@@ -55,8 +55,8 @@ VTKM_CONT vtkm::cont::DataSet WarpVector::DoExecute(const vtkm::cont::DataSet& i
     using VecType = typename std::decay_t<decltype(concrete)>::ValueType;
 
     vtkm::cont::ArrayHandle<VecType> result;
-    vtkm::worklet::WarpVector worklet;
-    worklet.Run(concrete, vectorArray, this->Scale, result);
+    vtkm::worklet::WarpVector worklet{ this->Scale };
+    this->Invoke(worklet, concrete, vectorArray, result);
     outArray = result;
   };
   const auto& field = this->GetFieldFromDataSet(inDataSet);

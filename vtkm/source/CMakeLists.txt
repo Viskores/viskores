@@ -20,7 +20,6 @@ set(headers
 set(device_sources
   Amr.cxx
   Oscillator.cxx
-  Source.cxx
   Tangle.cxx
   Wavelet.cxx
   PerlinNoise.cxx

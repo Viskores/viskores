@@ -12,25 +12,19 @@
 #define vtk_m_worklet_CoordinateSystemTransform_h
 
 #include <vtkm/Math.h>
-#include <vtkm/Matrix.h>
-#include <vtkm/Transform3D.h>
-#include <vtkm/VectorAnalysis.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace detail
-{
-template <typename T>
 struct CylToCar : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   //Functor
+  template <typename T>
   VTKM_EXEC vtkm::Vec<T, 3> operator()(const vtkm::Vec<T, 3>& vec) const
   {
     vtkm::Vec<T, 3> res(vec[0] * static_cast<T>(vtkm::Cos(vec[1])),
@@ -40,13 +34,13 @@ struct CylToCar : public vtkm::worklet::WorkletMapField
   }
 };
 
-template <typename T>
 struct CarToCyl : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   //Functor
+  template <typename T>
   VTKM_EXEC vtkm::Vec<T, 3> operator()(const vtkm::Vec<T, 3>& vec) const
   {
     T R = vtkm::Sqrt(vec[0] * vec[0] + vec[1] * vec[1]);
@@ -64,13 +58,13 @@ struct CarToCyl : public vtkm::worklet::WorkletMapField
   }
 };
 
-template <typename T>
 struct SphereToCar : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   //Functor
+  template <typename T>
   VTKM_EXEC vtkm::Vec<T, 3> operator()(const vtkm::Vec<T, 3>& vec) const
   {
     T R = vec[0];
@@ -91,13 +85,13 @@ struct SphereToCar : public vtkm::worklet::WorkletMapField
   }
 };
 
-template <typename T>
 struct CarToSphere : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   //Functor
+  template <typename T>
   VTKM_EXEC vtkm::Vec<T, 3> operator()(const vtkm::Vec<T, 3>& vec) const
   {
     T R = vtkm::Sqrt(vtkm::Dot(vec, vec));
@@ -110,97 +104,6 @@ struct CarToSphere : public vtkm::worklet::WorkletMapField
 
     return vtkm::Vec<T, 3>(R, Theta, Phi);
   }
-};
-}
-
-class CylindricalCoordinateTransform
-{
-public:
-  VTKM_CONT
-  explicit CylindricalCoordinateTransform(bool car2cyl)
-    : CartesianToCylindrical(car2cyl)
-  {
-  }
-
-  template <typename T, typename InStorageType, typename OutStorageType>
-  void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, InStorageType>& inPoints,
-           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, OutStorageType>& outPoints) const
-  {
-    if (CartesianToCylindrical)
-    {
-      vtkm::worklet::DispatcherMapField<detail::CarToCyl<T>> dispatcher;
-      dispatcher.Invoke(inPoints, outPoints);
-    }
-    else
-    {
-      vtkm::worklet::DispatcherMapField<detail::CylToCar<T>> dispatcher;
-      dispatcher.Invoke(inPoints, outPoints);
-    }
-  }
-
-  template <typename T, typename CoordsStorageType>
-  void Run(const vtkm::cont::CoordinateSystem& inPoints,
-           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints) const
-  {
-    if (CartesianToCylindrical)
-    {
-      vtkm::worklet::DispatcherMapField<detail::CarToCyl<T>> dispatcher;
-      dispatcher.Invoke(inPoints, outPoints);
-    }
-    else
-    {
-      vtkm::worklet::DispatcherMapField<detail::CylToCar<T>> dispatcher;
-      dispatcher.Invoke(inPoints, outPoints);
-    }
-  }
-
-private:
-  bool CartesianToCylindrical;
-};
-
-class SphericalCoordinateTransform
-{
-public:
-  VTKM_CONT
-  explicit SphericalCoordinateTransform(bool car2sph)
-    : CartesianToSpherical(car2sph)
-  {
-  }
-
-  template <typename T, typename InStorageType, typename OutStorageType>
-  void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, InStorageType>& inPoints,
-           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, OutStorageType>& outPoints) const
-  {
-    if (CartesianToSpherical)
-    {
-      vtkm::worklet::DispatcherMapField<detail::CarToSphere<T>> dispatcher;
-      dispatcher.Invoke(inPoints, outPoints);
-    }
-    else
-    {
-      vtkm::worklet::DispatcherMapField<detail::SphereToCar<T>> dispatcher;
-      dispatcher.Invoke(inPoints, outPoints);
-    }
-  }
-
-  template <typename T, typename CoordsStorageType>
-  void Run(const vtkm::cont::CoordinateSystem& inPoints,
-           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, CoordsStorageType>& outPoints) const
-  {
-    if (CartesianToSpherical)
-    {
-      vtkm::worklet::DispatcherMapField<detail::CarToSphere<T>> dispatcher;
-      dispatcher.Invoke(inPoints, outPoints);
-    }
-    else
-    {
-      vtkm::worklet::DispatcherMapField<detail::SphereToCar<T>> dispatcher;
-      dispatcher.Invoke(inPoints, outPoints);
-    }
-  }
-
-private:
-  bool CartesianToSpherical;
 };
 }
 } // namespace vtkm::worklet

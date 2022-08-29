@@ -15,7 +15,3 @@ find_package(VTKm REQUIRED QUIET)
 
 add_executable(Clipping Clipping.cxx)
 target_link_libraries(Clipping PRIVATE vtkm_filter vtkm_io)
-
-vtkm_add_target_information(Clipping
-                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
-                            DEVICE_SOURCES Clipping.cxx)

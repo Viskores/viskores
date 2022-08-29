@@ -34,13 +34,13 @@ class VTKM_SOURCE_EXPORT Oscillator final : public vtkm::source::Source
 public:
   ///Construct a Oscillator with Cell Dimensions
   VTKM_CONT
-  Oscillator(vtkm::Id3 dims);
+  explicit Oscillator(vtkm::Id3 dims);
 
   // We can not declare default destructor here since compiler does not know how
   // to create one for the Worklet at this point yet. However, the implementation
   // in Oscillator.cxx does have ~Oscillator() = default;
   VTKM_CONT
-  ~Oscillator();
+  ~Oscillator() override;
 
   VTKM_CONT
   void SetTime(vtkm::FloatDefault time);
@@ -69,13 +69,13 @@ public:
                    vtkm::FloatDefault omega,
                    vtkm::FloatDefault zeta);
 
-  VTKM_CONT vtkm::cont::DataSet Execute() const;
-
 private:
+  VTKM_CONT vtkm::cont::DataSet DoExecute() const override;
+
   vtkm::Id3 Dims;
   std::unique_ptr<internal::OscillatorSource> Worklet;
 };
 }
 }
 
-#endif // vtk_m_source_Oscillator_h
+#endif // vtk_m_source_OscillatorSource_h
