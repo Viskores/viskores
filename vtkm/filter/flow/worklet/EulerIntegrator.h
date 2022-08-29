@@ -41,10 +41,14 @@ public:
     auto time = particle.Time;
     auto inpos = particle.GetEvaluationPosition(stepLength);
     vtkm::VecVariable<vtkm::Vec3f, 2> vectors;
-    GridEvaluatorStatus status = this->Evaluator.Evaluate(inpos, time, vectors);
-    if (status.CheckOk())
-      velocity = particle.Velocity(vectors, stepLength);
-    return IntegratorStatus(status, velocity);
+    GridEvaluatorStatus evalStatus = this->Evaluator.Evaluate(inpos, time, vectors);
+    if (evalStatus.CheckFail())
+      return IntegratorStatus(evalStatus, false);
+
+    velocity = particle.Velocity(vectors, stepLength);
+
+    return IntegratorStatus(
+      evalStatus, vtkm::MagnitudeSquared(velocity) <= vtkm::Epsilon<vtkm::FloatDefault>());
   }
 
 private:

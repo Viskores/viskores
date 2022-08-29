@@ -48,20 +48,13 @@ public:
     this->set(this->ZERO_VELOCITY_BIT, isZero);
   }
 
-  VTKM_EXEC_CONT IntegratorStatus(const GridEvaluatorStatus& es)
+  VTKM_EXEC_CONT IntegratorStatus(const GridEvaluatorStatus& es, bool isZero)
     : IntegratorStatus(es.CheckOk(),
                        es.CheckSpatialBounds(),
                        es.CheckTemporalBounds(),
                        es.CheckInGhostCell(),
-                       false)
+                       isZero)
   {
-  }
-
-  VTKM_EXEC_CONT IntegratorStatus(const GridEvaluatorStatus& es, const vtkm::Vec3f& velocity)
-    : IntegratorStatus(es)
-  {
-    this->set(this->ZERO_VELOCITY_BIT,
-              vtkm::MagnitudeSquared(velocity) <= vtkm::Epsilon<vtkm::FloatDefault>());
   }
 
   VTKM_EXEC_CONT void SetOk() { this->set(this->SUCCESS_BIT); }
