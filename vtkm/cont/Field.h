@@ -34,15 +34,18 @@ public:
   enum struct Association
   {
     Any,
-    WholeMesh,
+    WholeDataSet,
     Points,
     Cells,
     Partitions,
-    AllPartitions,
+    Global,
     ANY VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Any.") = Any,
-    WHOLE_MESH VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::WholeMesh.") = WholeMesh,
+    WHOLE_MESH VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::WholeMesh.") =
+      WholeDataSet,
     POINTS VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Points.") = Points,
-    CELL_SET VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Cells.") = Cells
+    CELL_SET VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Cells.") = Cells,
+    WholeMesh VTKM_DEPRECATED(1.9, "Use vtkm::cont::Field::Association::WholeDataSet.") =
+      WholeDataSet
   };
 
   VTKM_CONT
@@ -69,7 +72,10 @@ public:
 
   VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::Cells; }
   VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::Points; }
-  VTKM_CONT bool IsFieldGlobal() const { return this->FieldAssociation == Association::WholeMesh; }
+  VTKM_CONT bool IsFieldGlobal() const
+  {
+    return this->FieldAssociation == Association::WholeDataSet;
+  }
 
   /// Returns true if the array of the field has a value type that matches something in
   /// `VTKM_FIELD_TYPE_LIST` and a storage that matches something in `VTKM_FIELD_STORAGE_LIST`.

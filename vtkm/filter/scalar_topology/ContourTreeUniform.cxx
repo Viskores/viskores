@@ -96,7 +96,7 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(const vtkm::cont::DataSet& inpu
   this->CastAndCallScalarField(field, resolveType);
 
   return this->CreateResultField(
-    input, this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, saddlePeak);
+    input, this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeDataSet, saddlePeak);
 }
 
 //-----------------------------------------------------------------------------
@@ -132,7 +132,7 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(const vtkm::cont::DataSet& inpu
   this->CastAndCallScalarField(field, resolveType);
 
   return this->CreateResultField(
-    input, this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, saddlePeak);
+    input, this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeDataSet, saddlePeak);
 }
 } // namespace scalar_topology
 } // namespace filter

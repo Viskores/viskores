@@ -61,9 +61,9 @@ VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(const vtkm::cont::DataSet& 
   for (size_t i = 0; i < binIds.size(); i++)
   {
     outputData.AddField(
-      { this->FieldNames[i], vtkm::cont::Field::Association::WholeMesh, binIds[i] });
+      { this->FieldNames[i], vtkm::cont::Field::Association::WholeDataSet, binIds[i] });
   }
-  outputData.AddField({ "Frequency", vtkm::cont::Field::Association::WholeMesh, freqs });
+  outputData.AddField({ "Frequency", vtkm::cont::Field::Association::WholeDataSet, freqs });
   // The output is a "summary" of the input, no need to map fields
   return outputData;
 }

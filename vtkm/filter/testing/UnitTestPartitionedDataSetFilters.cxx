@@ -130,7 +130,7 @@ void TestPartitionedDataSetFilters()
     std::vector<vtkm::Id> ids = { 0, 1, 2 };
     std::vector<vtkm::FloatDefault> scalar = { 10.0f };
     partitions.AddPartitionsField("ids", ids);
-    partitions.AddAllPartitionsField("scalar", scalar);
+    partitions.AddGlobalField("scalar", scalar);
 
     //On second iteration, only allow "ids" to pass through.
     cellAverage.GetFieldsToPass().ClearFields();
@@ -161,7 +161,7 @@ void TestPartitionedDataSetFilters()
 
     if (fields.empty() || std::find(fields.begin(), fields.end(), "scalar") != fields.end())
     {
-      VTKM_TEST_ASSERT(result.HasAllPartitionsField("scalar"), "Missing field on result");
+      VTKM_TEST_ASSERT(result.HasGlobalField("scalar"), "Missing field on result");
       auto field1 = result.GetField("scalar");
       auto portal1 =
         field1.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::FloatDefault>>().ReadPortal();
@@ -171,7 +171,7 @@ void TestPartitionedDataSetFilters()
     }
     else
     {
-      VTKM_TEST_ASSERT(!result.HasAllPartitionsField("scalar"), "Field should not be on result");
+      VTKM_TEST_ASSERT(!result.HasGlobalField("scalar"), "Field should not be on result");
     }
   }
 }

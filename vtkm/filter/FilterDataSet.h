@@ -44,7 +44,7 @@ public:
 
   //From the field we can extract the association component
   // Association::Any -> unable to map
-  // Association::WholeMesh -> (I think this is points)
+  // Association::WholeDataSet -> (I think this is points)
   // Association::Points -> map using point mapping
   // Association::Cells -> how do we map this?
   template <typename DerivedPolicy>

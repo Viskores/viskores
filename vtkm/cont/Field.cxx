@@ -88,8 +88,8 @@ void Field::PrintSummary(std::ostream& out) const
     case Association::Any:
       out << "Any ";
       break;
-    case Association::WholeMesh:
-      out << "Mesh ";
+    case Association::WholeDataSet:
+      out << "WholeDataSet ";
       break;
     case Association::Points:
       out << "Points ";
@@ -97,8 +97,11 @@ void Field::PrintSummary(std::ostream& out) const
     case Association::Cells:
       out << "Cells ";
       break;
-    case Association::AllPartitions:
-      out << "AllPartitions ";
+    case Association::Partitions:
+      out << "Partitions ";
+      break;
+    case Association::Global:
+      out << "Global ";
       break;
   }
   this->Data.PrintSummary(out);

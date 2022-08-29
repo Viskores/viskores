@@ -108,27 +108,24 @@ public:
   VTKM_CONT void AddField(const Field& field) { this->Fields.AddField(field); }
 
   template <typename T, typename Storage>
-  VTKM_CONT void AddAllPartitionsField(const std::string& fieldName,
-                                       const vtkm::cont::ArrayHandle<T, Storage>& field)
+  VTKM_CONT void AddGlobalField(const std::string& fieldName,
+                                const vtkm::cont::ArrayHandle<T, Storage>& field)
+  {
+    this->AddField(vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::Global, field));
+  }
+
+  template <typename T>
+  VTKM_CONT void AddGlobalField(const std::string& fieldName, const std::vector<T>& field)
   {
     this->AddField(
-      vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::AllPartitions, field));
+      make_Field(fieldName, vtkm::cont::Field::Association::Global, field, vtkm::CopyFlag::On));
   }
 
   template <typename T>
-  VTKM_CONT void AddAllPartitionsField(const std::string& fieldName, const std::vector<T>& field)
+  VTKM_CONT void AddGlobalField(const std::string& fieldName, const T* field, const vtkm::Id& n)
   {
-    this->AddField(make_Field(
-      fieldName, vtkm::cont::Field::Association::AllPartitions, field, vtkm::CopyFlag::On));
-  }
-
-  template <typename T>
-  VTKM_CONT void AddAllPartitionsField(const std::string& fieldName,
-                                       const T* field,
-                                       const vtkm::Id& n)
-  {
-    this->AddField(make_Field(
-      fieldName, vtkm::cont::Field::Association::AllPartitions, field, n, vtkm::CopyFlag::On));
+    this->AddField(
+      make_Field(fieldName, vtkm::cont::Field::Association::Global, field, n, vtkm::CopyFlag::On));
   }
 
   template <typename T, typename Storage>
@@ -175,9 +172,9 @@ public:
   }
 
   VTKM_CONT
-  const vtkm::cont::Field& GetAllPartitionsField(const std::string& name) const
+  const vtkm::cont::Field& GetGlobalField(const std::string& name) const
   {
-    return this->GetField(name, vtkm::cont::Field::Association::AllPartitions);
+    return this->GetField(name, vtkm::cont::Field::Association::Global);
   }
 
   VTKM_CONT
@@ -187,9 +184,9 @@ public:
   }
 
   VTKM_CONT
-  vtkm::cont::Field& GetAllPartitionsField(const std::string& name)
+  vtkm::cont::Field& GetGlobalField(const std::string& name)
   {
-    return this->GetField(name, vtkm::cont::Field::Association::AllPartitions);
+    return this->GetField(name, vtkm::cont::Field::Association::Global);
   }
 
   VTKM_CONT
@@ -206,9 +203,9 @@ public:
   }
 
   VTKM_CONT
-  bool HasAllPartitionsField(const std::string& name) const
+  bool HasGlobalField(const std::string& name) const
   {
-    return (this->Fields.GetFieldIndex(name, vtkm::cont::Field::Association::AllPartitions) != -1);
+    return (this->Fields.GetFieldIndex(name, vtkm::cont::Field::Association::Global) != -1);
   }
 
   VTKM_CONT
@@ -245,7 +242,7 @@ private:
   std::vector<vtkm::cont::DataSet> Partitions;
 
   vtkm::cont::internal::FieldCollection Fields = vtkm::cont::internal::FieldCollection(
-    { vtkm::cont::Field::Association::Partitions, vtkm::cont::Field::Association::AllPartitions });
+    { vtkm::cont::Field::Association::Partitions, vtkm::cont::Field::Association::Global });
 };
 }
 } // namespace vtkm::cont

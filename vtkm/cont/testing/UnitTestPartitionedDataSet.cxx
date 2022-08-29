@@ -43,7 +43,7 @@ static void PartitionedDataSetTest()
   auto idsField = vtkm::cont::make_Field(
     "ids", vtkm::cont::Field::Association::Partitions, ids, vtkm::CopyFlag::On);
   auto pdsVar = vtkm::cont::make_Field(
-    "pds_var", vtkm::cont::Field::Association::AllPartitions, ids, vtkm::CopyFlag::On);
+    "pds_var", vtkm::cont::Field::Association::Partitions, ids, vtkm::CopyFlag::On);
   pds.AddField(idsField);
   pds.AddField(pdsVar);
 
@@ -110,7 +110,7 @@ static void PartitionedDataSetTest()
 
   pdsVar.GetRange(&SourceRange);
   pds.GetField("pds_var").GetRange(&TestRange);
-  VTKM_TEST_ASSERT(TestRange == SourceRange, "AllPartitions field values incorrect");
+  VTKM_TEST_ASSERT(TestRange == SourceRange, "Global field values incorrect");
 
   vtkm::cont::PartitionedDataSet testblocks1;
   std::vector<vtkm::cont::DataSet> partitions = pds.GetPartitions();
@@ -162,7 +162,7 @@ static void PartitionedDataSetFieldTest()
       auto idField = vtkm::cont::make_Field(
         "id", vtkm::cont::Field::Association::Partitions, ids, vtkm::CopyFlag::Off);
       auto gScalar = vtkm::cont::make_Field(
-        "global_scalar", vtkm::cont::Field::Association::AllPartitions, gs, vtkm::CopyFlag::Off);
+        "global_scalar", vtkm::cont::Field::Association::Global, gs, vtkm::CopyFlag::Off);
 
       pds.AddField(idField);
       pds.AddField(gScalar);
@@ -170,26 +170,25 @@ static void PartitionedDataSetFieldTest()
     else if (i == 1) //array handle
     {
       pds.AddPartitionsField("id", idsArr);
-      pds.AddAllPartitionsField("global_scalar", gsArr);
+      pds.AddGlobalField("global_scalar", gsArr);
     }
     else if (i == 2) //std::vector
     {
       pds.AddPartitionsField("id", ids);
-      pds.AddAllPartitionsField("global_scalar", gs);
+      pds.AddGlobalField("global_scalar", gs);
     }
     else if (i == 3) //pointer
     {
       pds.AddPartitionsField("id", ids.data(), 2);
-      pds.AddAllPartitionsField("global_scalar", gs.data(), 1);
+      pds.AddGlobalField("global_scalar", gs.data(), 1);
     }
 
     //Validate each method.
     VTKM_TEST_ASSERT(pds.GetNumberOfFields() == 2, "Wrong number of fields");
 
     //Make sure fields are there and of the right type.
-    VTKM_TEST_ASSERT(pds.HasField("id") && pds.HasPartitionsField("id"), "id field misssing.");
-    VTKM_TEST_ASSERT(pds.HasField("global_scalar") && pds.HasAllPartitionsField("global_scalar"),
-                     "global_scalar field misssing.");
+    VTKM_TEST_ASSERT(pds.HasPartitionsField("id"), "id field misssing.");
+    VTKM_TEST_ASSERT(pds.HasGlobalField("global_scalar"), "global_scalar field misssing.");
 
     for (int j = 0; j < 2; j++)
     {
@@ -203,7 +202,7 @@ static void PartitionedDataSetFieldTest()
       else
       {
         f0 = pds.GetPartitionsField("id");
-        f1 = pds.GetAllPartitionsField("global_scalar");
+        f1 = pds.GetGlobalField("global_scalar");
       }
 
       //Check the values.

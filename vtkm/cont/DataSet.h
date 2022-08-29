@@ -354,7 +354,7 @@ public:
 private:
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
   vtkm::cont::internal::FieldCollection Fields =
-    vtkm::cont::internal::FieldCollection({ vtkm::cont::Field::Association::WholeMesh,
+    vtkm::cont::internal::FieldCollection({ vtkm::cont::Field::Association::WholeDataSet,
                                             vtkm::cont::Field::Association::Points,
                                             vtkm::cont::Field::Association::Cells });
 
