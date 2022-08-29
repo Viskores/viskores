@@ -43,7 +43,7 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
                           vtkm::worklet::Contour& worklet)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     auto functor = [&](const auto& concrete) {
       auto fieldArray = worklet.ProcessPointField(concrete);
@@ -54,13 +54,13 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
         functor);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     // Use the precompiled field permutation function.
     vtkm::cont::ArrayHandle<vtkm::Id> permutation = worklet.GetCellIdMap();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;
@@ -93,7 +93,7 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
   vtkm::worklet::Contour worklet;
   worklet.SetMergeDuplicatePoints(this->GetMergeDuplicatePoints());
 
-  if (!this->GetFieldFromDataSet(inDataSet).IsFieldPoint())
+  if (!this->GetFieldFromDataSet(inDataSet).IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }

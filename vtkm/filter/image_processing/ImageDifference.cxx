@@ -49,7 +49,7 @@ VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(const vtkm::cont::DataS
   this->ImageDiffWithinThreshold = true;
 
   const auto& primaryField = this->GetFieldFromDataSet(input);
-  if (!primaryField.IsFieldPoint())
+  if (!primaryField.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }

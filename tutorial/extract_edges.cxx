@@ -127,11 +127,11 @@ VTKM_CONT bool DoMapField(
 {
   vtkm::cont::Field outputField;
 
-  if (inputField.IsFieldPoint())
+  if (inputField.IsPointField())
   {
     outputField = inputField; // pass through
   }
-  else if (inputField.IsFieldCell())
+  else if (inputField.IsCellField())
   {
     vtkm::cont::Field permuted;
     vtkm::filter::MapFieldPermutation(inputField, OutputToInputCellMap, permuted);

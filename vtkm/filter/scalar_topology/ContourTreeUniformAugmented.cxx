@@ -121,7 +121,7 @@ vtkm::cont::DataSet ContourTreeAugmented::DoExecute(const vtkm::cont::DataSet& i
 
   // Check that the field is Ok
   const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }

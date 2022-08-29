@@ -74,7 +74,7 @@ ContourTreeMesh2D::ContourTreeMesh2D()
 vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(const vtkm::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("ContourTreeMesh2D expects point field input.");
   }
@@ -109,7 +109,7 @@ ContourTreeMesh3D::ContourTreeMesh3D()
 vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(const vtkm::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }

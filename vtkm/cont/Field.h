@@ -40,7 +40,7 @@ public:
     Partitions,
     Global,
     ANY VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Any.") = Any,
-    WHOLE_MESH VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::WholeMesh.") =
+    WHOLE_MESH VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::WholeDataSet.") =
       WholeDataSet,
     POINTS VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Points.") = Points,
     CELL_SET VTKM_DEPRECATED(1.8, "Use vtkm::cont::Field::Association::Cells.") = Cells,
@@ -78,7 +78,6 @@ public:
   }
   VTKM_CONT bool IsPartitionsField() const
   {
-    return this->FieldAssociation == Association::WholeMesh;
     return this->FieldAssociation == Association::Partitions;
   }
   VTKM_CONT bool IsGlobalField() const { return this->FieldAssociation == Association::Global; }

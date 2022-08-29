@@ -24,11 +24,11 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::worklet::SplitSharpEdges& worklet)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     return vtkm::filter::MapFieldPermutation(field, worklet.GetNewPointsIdArray(), result);
   }
-  else if (field.IsFieldCell() || field.IsFieldGlobal())
+  else if (field.IsCellField() || field.IsWholeDataSetField())
   {
     result.AddField(field); // pass through
     return true;

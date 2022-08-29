@@ -205,12 +205,12 @@ void ConnectivityTracer::SetVolumeData(const vtkm::cont::Field& scalarField,
   Coords = coords;
   MeshConnIsConstructed = false;
 
-  const bool isSupportedField = ScalarField.IsFieldCell() || ScalarField.IsFieldPoint();
+  const bool isSupportedField = ScalarField.IsCellField() || ScalarField.IsPointField();
   if (!isSupportedField)
   {
     throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
   }
-  FieldAssocPoints = ScalarField.IsFieldPoint();
+  FieldAssocPoints = ScalarField.IsPointField();
 
   this->Integrator = Volume;
 

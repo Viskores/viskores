@@ -531,7 +531,7 @@ vtkm::cont::PartitionedDataSet ContourTreeUniformDistributed::DoExecutePartition
     const auto& dataset = input.GetPartition(blockNo);
     const auto& field =
       dataset.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
-    if (!field.IsFieldPoint())
+    if (!field.IsPointField())
     {
       throw vtkm::cont::ErrorFilterExecution("Point field expected.");
     }

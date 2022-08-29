@@ -176,7 +176,7 @@ inline VTKM_CONT bool LagrangianStructures::MapFieldOntoOutput(
   const vtkm::cont::Field& field,
   vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  if (field.IsFieldGlobal())
+  if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;

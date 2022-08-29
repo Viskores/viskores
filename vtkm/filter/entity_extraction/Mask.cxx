@@ -17,12 +17,12 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::worklet::Mask& worklet)
 {
-  if (field.IsFieldPoint() || field.IsFieldGlobal())
+  if (field.IsPointField() || field.IsWholeDataSetField())
   {
     result.AddField(field); // pass through
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     return vtkm::filter::MapFieldPermutation(field, worklet.GetValidCellIds(), result);
   }

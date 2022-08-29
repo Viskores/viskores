@@ -20,15 +20,15 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::ArrayHandle<vtkm::Id>& CellFieldMap,
                           const vtkm::cont::ArrayHandle<vtkm::Id>& PointFieldMap)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     return vtkm::filter::MapFieldPermutation(field, PointFieldMap, result);
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     return vtkm::filter::MapFieldPermutation(field, CellFieldMap, result);
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;
