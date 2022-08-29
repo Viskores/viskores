@@ -364,7 +364,7 @@ protected:
     const vtkm::cont::PartitionedDataSet& resultPartitions,
     FieldMapper&& fieldMapper) const
   {
-    vtkm::cont::PartitionedDataSet output(resultPartitions.GetPartitions);
+    vtkm::cont::PartitionedDataSet output(resultPartitions.GetPartitions());
     this->MapFieldsOntoOutput(input, output, fieldMapper);
     return output;
   }
