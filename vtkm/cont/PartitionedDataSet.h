@@ -57,13 +57,6 @@ public:
   VTKM_CONT
   vtkm::cont::Field GetFieldFromPartition(const std::string& field_name, int partition_index) const;
 
-  VTKM_DEPRECATED(1.9, "Use GetFieldFromPartition.")
-  VTKM_CONT
-  vtkm::cont::Field GetPartitionField(const std::string& field_name, int partition_index) const
-  {
-    return this->GetFieldFromPartition(field_name, partition_index);
-  }
-
   /// Get number of DataSet objects stored in this PartitionedDataSet.
   VTKM_CONT
   vtkm::Id GetNumberOfPartitions() const;
