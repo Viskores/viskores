@@ -190,6 +190,7 @@ static void PartitionedDataSetFieldTest()
     VTKM_TEST_ASSERT(pds.HasPartitionsField("id"), "id field misssing.");
     VTKM_TEST_ASSERT(pds.HasGlobalField("global_scalar"), "global_scalar field misssing.");
 
+
     for (int j = 0; j < 2; j++)
     {
       vtkm::cont::Field f0, f1;
