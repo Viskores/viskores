@@ -48,13 +48,13 @@ bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::cont::Field& field,
                 const vtkm::worklet::Threshold& worklet)
 {
-  if (field.IsFieldPoint() || field.IsFieldGlobal())
+  if (field.IsPointField() || field.IsWholeDataSetField())
   {
     //we copy the input handle to the result dataset, reusing the metadata
     result.AddField(field);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     return vtkm::filter::MapFieldPermutation(field, worklet.GetValidCellIds(), result);
   }

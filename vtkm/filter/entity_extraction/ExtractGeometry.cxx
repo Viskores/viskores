@@ -20,17 +20,17 @@ bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::cont::Field& field,
                 const vtkm::worklet::ExtractGeometry& worklet)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     result.AddField(field);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     vtkm::cont::ArrayHandle<vtkm::Id> permutation = worklet.GetValidCellIds();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;

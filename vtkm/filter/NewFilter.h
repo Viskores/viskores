@@ -327,6 +327,48 @@ protected:
   ///
   VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet) const;
 
+
+  /// \brief Create the output data set for `DoExecute`.
+  ///
+  /// This form of `CreateResult` will create an output PartitionedDataSet with the
+  /// same partitions and pass all PartitionedDataSet fields (as requested by the
+  /// `Filter` state).
+  ///
+  /// \param[in] input The input data set being modified (usually the one passed into
+  /// `DoExecute`).
+  /// \param[in] resultPartitions The output data created by the filter. Fields from the input are
+  /// passed onto the return result partition as requested by the `Filter` state.
+  ///
+  VTKM_CONT vtkm::cont::PartitionedDataSet CreateResult(
+    const vtkm::cont::PartitionedDataSet& input,
+    const vtkm::cont::PartitionedDataSet& resultPartitions) const;
+
+  /// \brief Create the output data set for `DoExecute`.
+  ///
+  /// This form of `CreateResult` will create an output PartitionedDataSet with the
+  /// same partitions and pass all PartitionedDataSet fields (as requested by the
+  /// `Filter` state).
+  ///
+  /// \param[in] input The input data set being modified (usually the one passed into
+  /// `DoExecute`).
+  /// \param[in] resultPartitions The output data created by the filter. Fields from the input are
+  /// passed onto the return result partition as requested by the `Filter` state.
+  /// \param[in] fieldMapper A function or functor that takes a `PartitionedDataSet` as its first
+  ///     argument and a `Field` as its second argument. The `PartitionedDataSet` is the data being
+  ///     created and will eventually be returned by `CreateResult`. The `Field` comes from `input`.
+  ///
+
+  template <typename FieldMapper>
+  VTKM_CONT vtkm::cont::PartitionedDataSet CreateResult(
+    const vtkm::cont::PartitionedDataSet& input,
+    const vtkm::cont::PartitionedDataSet& resultPartitions,
+    FieldMapper&& fieldMapper) const
+  {
+    vtkm::cont::PartitionedDataSet output(resultPartitions.GetPartitions());
+    this->MapFieldsOntoOutput(input, output, fieldMapper);
+    return output;
+  }
+
   /// \brief Create the output data set for `DoExecute`.
   ///
   /// This form of `CreateResult` will create an output data set with the given `CellSet`. You must
@@ -431,9 +473,9 @@ protected:
     const vtkm::cont::PartitionedDataSet& inData);
 
 private:
-  template <typename FieldMapper>
-  VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input,
-                                     vtkm::cont::DataSet& output,
+  template <typename DataSetType, typename FieldMapper>
+  VTKM_CONT void MapFieldsOntoOutput(const DataSetType& input,
+                                     DataSetType& output,
                                      FieldMapper&& fieldMapper) const
   {
     for (vtkm::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)

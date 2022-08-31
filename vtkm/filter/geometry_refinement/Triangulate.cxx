@@ -19,20 +19,20 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::worklet::Triangulate& worklet)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     // point data is copied as is because it was not collapsed
     result.AddField(field);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     // cell data must be scattered to the cells created per input cell
     vtkm::cont::ArrayHandle<vtkm::Id> permutation =
       worklet.GetOutCellScatter().GetOutputToInputMap();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;

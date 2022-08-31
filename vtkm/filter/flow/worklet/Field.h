@@ -152,7 +152,7 @@ public:
     : FieldValues(fieldValues)
     , Assoc(assoc)
   {
-    if (assoc == Association::Any || assoc == Association::WholeMesh)
+    if (assoc != Association::Points && assoc != Association::Cells)
       throw("Unsupported field association");
   }
 

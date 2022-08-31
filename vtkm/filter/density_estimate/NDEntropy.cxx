@@ -42,7 +42,7 @@ VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(const vtkm::cont::DataSet& in
   entropyHandle.WritePortal().Set(0, entropy);
 
   vtkm::cont::DataSet outputData;
-  outputData.AddField({ "Entropy", vtkm::cont::Field::Association::WholeMesh, entropyHandle });
+  outputData.AddField({ "Entropy", vtkm::cont::Field::Association::WholeDataSet, entropyHandle });
   // The output is a "summary" of the input, no need to map fields
   return outputData;
 }

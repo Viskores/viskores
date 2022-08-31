@@ -38,7 +38,17 @@ static void PartitionedDataSetTest()
   pds.AppendPartition(TDset1);
   pds.AppendPartition(TDset2);
 
+  std::vector<vtkm::Id> ids = { 0, 1 };
+  std::vector<vtkm::FloatDefault> var = { 1, 2 };
+  auto idsField = vtkm::cont::make_Field(
+    "ids", vtkm::cont::Field::Association::Partitions, ids, vtkm::CopyFlag::On);
+  auto pdsVar = vtkm::cont::make_Field(
+    "pds_var", vtkm::cont::Field::Association::Partitions, ids, vtkm::CopyFlag::On);
+  pds.AddField(idsField);
+  pds.AddField(pdsVar);
+
   VTKM_TEST_ASSERT(pds.GetNumberOfPartitions() == 2, "Incorrect number of partitions");
+  VTKM_TEST_ASSERT(pds.GetNumberOfFields() == 2, "Incorrect number of fields");
 
   vtkm::cont::DataSet TestDSet = pds.GetPartition(0);
   VTKM_TEST_ASSERT(TDset1.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
@@ -88,10 +98,19 @@ static void PartitionedDataSetTest()
                    "Local field value range info incorrect");
 
   vtkm::Range SourceRange; //test the validity of member function GetField(FieldName, BlockId)
-  pds.GetField("cellvar", 0).GetRange(&SourceRange);
+  pds.GetFieldFromPartition("cellvar", 0).GetRange(&SourceRange);
   vtkm::Range TestRange;
   pds.GetPartition(0).GetField("cellvar").GetRange(&TestRange);
   VTKM_TEST_ASSERT(TestRange == SourceRange, "Local field value info incorrect");
+
+  //test partition fields.
+  idsField.GetRange(&SourceRange);
+  pds.GetField("ids").GetRange(&TestRange);
+  VTKM_TEST_ASSERT(TestRange == SourceRange, "Partitions field values incorrect");
+
+  pdsVar.GetRange(&SourceRange);
+  pds.GetField("pds_var").GetRange(&TestRange);
+  VTKM_TEST_ASSERT(TestRange == SourceRange, "Global field values incorrect");
 
   vtkm::cont::PartitionedDataSet testblocks1;
   std::vector<vtkm::cont::DataSet> partitions = pds.GetPartitions();
@@ -119,6 +138,88 @@ static void PartitionedDataSetTest()
   DataSet_Compare(TDset1, TestDSet);
 }
 
+static void PartitionedDataSetFieldTest()
+{
+  vtkm::cont::testing::MakeTestDataSet testDataSet;
+
+  vtkm::cont::DataSet TDset1 = testDataSet.Make2DUniformDataSet0();
+  vtkm::cont::DataSet TDset2 = testDataSet.Make3DUniformDataSet0();
+
+  constexpr vtkm::Id id0 = 0, id1 = 1;
+  constexpr vtkm::FloatDefault globalScalar = 1.0f;
+
+  for (int i = 0; i < 4; i++)
+  {
+    vtkm::cont::PartitionedDataSet pds({ TDset1, TDset2 });
+    std::vector<vtkm::Id> ids = { id0, id1 };
+    std::vector<vtkm::FloatDefault> gs = { globalScalar };
+
+    auto idsArr = vtkm::cont::make_ArrayHandle(ids, vtkm::CopyFlag::Off);
+    auto gsArr = vtkm::cont::make_ArrayHandle(gs, vtkm::CopyFlag::Off);
+
+    if (i == 0) //field
+    {
+      auto idField = vtkm::cont::make_Field(
+        "id", vtkm::cont::Field::Association::Partitions, ids, vtkm::CopyFlag::Off);
+      auto gScalar = vtkm::cont::make_Field(
+        "global_scalar", vtkm::cont::Field::Association::Global, gs, vtkm::CopyFlag::Off);
+
+      pds.AddField(idField);
+      pds.AddField(gScalar);
+    }
+    else if (i == 1) //array handle
+    {
+      pds.AddPartitionsField("id", idsArr);
+      pds.AddGlobalField("global_scalar", gsArr);
+    }
+    else if (i == 2) //std::vector
+    {
+      pds.AddPartitionsField("id", ids);
+      pds.AddGlobalField("global_scalar", gs);
+    }
+    else if (i == 3) //pointer
+    {
+      pds.AddPartitionsField("id", ids.data(), 2);
+      pds.AddGlobalField("global_scalar", gs.data(), 1);
+    }
+
+    //Validate each method.
+    VTKM_TEST_ASSERT(pds.GetNumberOfFields() == 2, "Wrong number of fields");
+
+    //Make sure fields are there and of the right type.
+    VTKM_TEST_ASSERT(pds.HasPartitionsField("id"), "id field misssing.");
+    VTKM_TEST_ASSERT(pds.HasGlobalField("global_scalar"), "global_scalar field misssing.");
+
+
+    for (int j = 0; j < 2; j++)
+    {
+      vtkm::cont::Field f0, f1;
+
+      if (j == 0)
+      {
+        f0 = pds.GetField("id");
+        f1 = pds.GetField("global_scalar");
+      }
+      else
+      {
+        f0 = pds.GetPartitionsField("id");
+        f1 = pds.GetGlobalField("global_scalar");
+      }
+
+      //Check the values.
+      auto portal0 = f0.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>().ReadPortal();
+      auto portal1 =
+        f1.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::FloatDefault>>().ReadPortal();
+
+      VTKM_TEST_ASSERT(portal0.GetNumberOfValues() == 2, "Wrong number of values in field");
+      VTKM_TEST_ASSERT(portal1.GetNumberOfValues() == 1, "Wrong number of values in field");
+
+      VTKM_TEST_ASSERT(portal0.Get(0) == id0 && portal0.Get(1) == id1, "Wrong field value");
+      VTKM_TEST_ASSERT(portal1.Get(0) == globalScalar, "Wrong field value");
+    }
+  }
+}
+
 void DataSet_Compare(vtkm::cont::DataSet& leftDataSet, vtkm::cont::DataSet& rightDataSet)
 {
   for (vtkm::Id j = 0; j < leftDataSet.GetNumberOfFields(); j++)
@@ -132,7 +233,13 @@ void DataSet_Compare(vtkm::cont::DataSet& leftDataSet, vtkm::cont::DataSet& righ
   return;
 }
 
+static void PartitionedDataSetTests()
+{
+  PartitionedDataSetTest();
+  PartitionedDataSetFieldTest();
+}
+
 int UnitTestPartitionedDataSet(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(PartitionedDataSetTest, argc, argv);
+  return vtkm::cont::testing::Testing::Run(PartitionedDataSetTests, argc, argv);
 }

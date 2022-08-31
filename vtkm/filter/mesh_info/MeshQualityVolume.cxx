@@ -132,7 +132,7 @@ vtkm::Float64 MeshQualityVolume::ComputeAverageVolume(const vtkm::cont::DataSet&
 vtkm::cont::DataSet MeshQualityVolume::DoExecute(const vtkm::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorBadValue("Active field for MeshQuality must be point coordinates. "
                                     "But the active field is not a point field.");

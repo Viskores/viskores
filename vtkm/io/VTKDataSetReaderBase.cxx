@@ -499,7 +499,7 @@ void VTKDataSetReaderBase::AddField(const std::string& name,
     switch (association)
     {
       case vtkm::cont::Field::Association::Points:
-      case vtkm::cont::Field::Association::WholeMesh:
+      case vtkm::cont::Field::Association::WholeDataSet:
         this->DataSet.AddField(vtkm::cont::Field(name, association, data));
         break;
       case vtkm::cont::Field::Association::Cells:

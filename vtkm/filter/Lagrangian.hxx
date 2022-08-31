@@ -333,7 +333,7 @@ inline VTKM_CONT bool Lagrangian::MapFieldOntoOutput(vtkm::cont::DataSet& result
                                                      const vtkm::cont::Field& field,
                                                      vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  if (field.IsFieldGlobal())
+  if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;
