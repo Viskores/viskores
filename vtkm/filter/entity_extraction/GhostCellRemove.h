@@ -47,7 +47,7 @@ public:
   VTKM_CONT
   bool GetUseGhostCellsAsField() const { return this->UseGhostCellsAsField; }
   VTKM_CONT
-  void SetUseGhostCellsAsField() { this->UseGhostCellsAsField = true; }
+  void SetUseGhostCellsAsField(bool flag) { this->UseGhostCellsAsField = flag; }
 
   VTKM_CONT
   bool GetRemoveByType() const { return !this->RemoveAll; }
