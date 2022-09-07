@@ -648,22 +648,31 @@ int main(int argc, char* argv[])
   vtkm::Float64 computeContourTreeTime = currTime - prevTime;
   prevTime = currTime;
 
-  // Make sure that all ranks have started up before we start the data read
+  // Record the time to synchronize after the filter has finished
   MPI_Barrier(comm);
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 postFilterSyncTime = currTime - prevTime;
   prevTime = currTime;
 
+  // Compute branch decomposition if requested
+  vtkm::cont::PartitionedDataSet bd_result;
+  if (computeHierarchicalVolumetricBranchDecomposition)
+  {
+    vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter(
+      blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
+    bd_result = bd_filter.Execute(result);
+  }
+  currTime = totalTime.GetElapsedTime();
+  vtkm::Float64 branchDecompTime = currTime - prevTime;
+  prevTime = currTime;
+
+  // Save output
   if (saveOutputData)
   {
     if (augmentHierarchicalTree)
     {
       if (computeHierarchicalVolumetricBranchDecomposition)
       {
-        vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter(
-          blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
-        auto bd_result = bd_filter.Execute(result);
-
         for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
         {
           auto ds = bd_result.GetPartition(ds_no);
@@ -780,6 +789,8 @@ int main(int argc, char* argv[])
                << ": " << computeContourTreeTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Post filter Sync"
                << ": " << postFilterSyncTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Branch Decomposition"
+               << ": " << branchDecompTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Save Tree Compiler Data"
                << ": " << saveOutputDataTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Total Time"
