@@ -41,7 +41,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::cont::Field& field,
                 const vtkm::worklet::Clip& Worklet)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     auto resolve = [&](const auto& concrete) {
       // use std::decay to remove const ref from the decltype of concrete.
@@ -56,13 +56,13 @@ bool DoMapField(vtkm::cont::DataSet& result,
         resolve);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     // Use the precompiled field permutation function.
     vtkm::cont::ArrayHandle<vtkm::Id> permutation = Worklet.GetCellMapOutputToInput();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;

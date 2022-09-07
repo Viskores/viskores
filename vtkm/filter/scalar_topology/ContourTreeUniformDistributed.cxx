@@ -531,7 +531,7 @@ vtkm::cont::PartitionedDataSet ContourTreeUniformDistributed::DoExecutePartition
     const auto& dataset = input.GetPartition(blockNo);
     const auto& field =
       dataset.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
-    if (!field.IsFieldPoint())
+    if (!field.IsPointField())
     {
       throw vtkm::cont::ErrorFilterExecution("Point field expected.");
     }
@@ -784,10 +784,10 @@ inline VTKM_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
   hierarchical_hyper_sweep_master.foreach (
     [&](HyperSweepBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
       vtkm::cont::Field intrinsicVolumeField(
-        "IntrinsicVolume", vtkm::cont::Field::Association::WholeMesh, b->IntrinsicVolume);
+        "IntrinsicVolume", vtkm::cont::Field::Association::WholeDataSet, b->IntrinsicVolume);
       hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(intrinsicVolumeField);
       vtkm::cont::Field dependentVolumeField(
-        "DependentVolume", vtkm::cont::Field::Association::WholeMesh, b->DependentVolume);
+        "DependentVolume", vtkm::cont::Field::Association::WholeDataSet, b->DependentVolume);
       hierarchicalTreeOutputDataSet[b->LocalBlockNo].AddField(dependentVolumeField);
 #ifdef DEBUG_PRINT
       VTKM_LOG_S(this->TreeLogLevel, "Block " << b->GlobalBlockId);
@@ -1210,7 +1210,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     auto vtkmGlobalBlockIdWP = vtkmGlobalBlockIdAH.WritePortal();
     vtkmGlobalBlockIdWP.Set(0, blockData->GlobalBlockId);
     vtkm::cont::Field vtkmGlobalBlockIdField(
-      "vtkmGlobalBlockId", vtkm::cont::Field::Association::WholeMesh, vtkmGlobalBlockIdAH);
+      "vtkmGlobalBlockId", vtkm::cont::Field::Association::WholeDataSet, vtkmGlobalBlockIdAH);
     hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(vtkmGlobalBlockIdField);
     vtkm::cont::ArrayHandle<vtkm::Id> vtkmBlocksPerDimensionAH;
     vtkmBlocksPerDimensionAH.Allocate(3);
@@ -1219,7 +1219,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     vtkmBlocksPerDimensionWP.Set(1, this->BlocksPerDimension[1]);
     vtkmBlocksPerDimensionWP.Set(2, this->BlocksPerDimension[2]);
     vtkm::cont::Field vtkmBlocksPerDimensionField("vtkmBlocksPerDimension",
-                                                  vtkm::cont::Field::Association::WholeMesh,
+                                                  vtkm::cont::Field::Association::WholeDataSet,
                                                   vtkmBlocksPerDimensionAH);
     hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(vtkmBlocksPerDimensionField);
 

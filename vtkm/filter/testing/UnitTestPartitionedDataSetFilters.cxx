@@ -114,6 +114,66 @@ void TestPartitionedDataSetFilters()
   cellAverage.SetActiveField("pointvar");
   result = cellAverage.Execute(partitions);
   Result_Verify<vtkm::FloatDefault>(result, cellAverage, partitions, std::string("pointvar"));
+
+  //Make sure that any Fields are propagated to the output.
+  //Test it with and without using SetFieldsToPass
+  std::vector<std::vector<std::string>> fieldsToPass;
+  fieldsToPass.push_back({});
+  fieldsToPass.push_back({ "ids" });
+  fieldsToPass.push_back({ "scalar" });
+  fieldsToPass.push_back({ "ids", "scalar" });
+
+  for (auto& fields : fieldsToPass)
+  {
+    partitionNum = 3;
+    partitions = PartitionedDataSetBuilder<vtkm::FloatDefault>(partitionNum, "pointvar");
+    std::vector<vtkm::Id> ids = { 0, 1, 2 };
+    std::vector<vtkm::FloatDefault> scalar = { 10.0f };
+    partitions.AddPartitionsField("ids", ids);
+    partitions.AddGlobalField("scalar", scalar);
+
+    //On second iteration, only allow "ids" to pass through.
+    cellAverage.GetFieldsToPass().ClearFields();
+    if (!fields.empty())
+    {
+      cellAverage.GetFieldsToPass().SetMode(vtkm::filter::FieldSelection::Mode::Select);
+      for (auto& f : fields)
+        cellAverage.GetFieldsToPass().AddField(f);
+    }
+
+    result = cellAverage.Execute(partitions);
+
+    if (fields.empty() || std::find(fields.begin(), fields.end(), "ids") != fields.end())
+    {
+      VTKM_TEST_ASSERT(result.HasPartitionsField("ids"), "Missing field on result");
+      auto field0 = result.GetField("ids");
+      auto portal0 =
+        field0.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>().ReadPortal();
+      VTKM_TEST_ASSERT(portal0.GetNumberOfValues() == static_cast<vtkm::Id>(ids.size()),
+                       "Wrong number of field values.");
+      for (std::size_t i = 0; i < ids.size(); i++)
+        VTKM_TEST_ASSERT(portal0.Get(static_cast<vtkm::Id>(i)) == ids[i], "Wrong field value.");
+    }
+    else
+    {
+      VTKM_TEST_ASSERT(!result.HasPartitionsField("ids"), "Field should not be on result");
+    }
+
+    if (fields.empty() || std::find(fields.begin(), fields.end(), "scalar") != fields.end())
+    {
+      VTKM_TEST_ASSERT(result.HasGlobalField("scalar"), "Missing field on result");
+      auto field1 = result.GetField("scalar");
+      auto portal1 =
+        field1.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::FloatDefault>>().ReadPortal();
+      VTKM_TEST_ASSERT(portal1.GetNumberOfValues() == static_cast<vtkm::Id>(scalar.size()),
+                       "Wrong number of field values.");
+      VTKM_TEST_ASSERT(portal1.Get(0) == scalar[0], "Wrong field value.");
+    }
+    else
+    {
+      VTKM_TEST_ASSERT(!result.HasGlobalField("scalar"), "Field should not be on result");
+    }
+  }
 }
 
 int UnitTestPartitionedDataSetFilters(int argc, char* argv[])

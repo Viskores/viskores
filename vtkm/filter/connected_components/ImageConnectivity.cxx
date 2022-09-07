@@ -21,7 +21,7 @@ VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(const vtkm::cont::Dat
 {
   const auto& field = this->GetFieldFromDataSet(input);
 
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorBadValue("Active field for ImageConnectivity must be a point field.");
   }

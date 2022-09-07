@@ -395,7 +395,7 @@ void TestReadingFishTank()
   // And if we open the file in Paraview, we can observe the bounds [0, 156.905].
   const vtkm::cont::Field& vec_magnitude = ds.GetField("vec_magnitude");
   VTKM_TEST_ASSERT(vec_magnitude.GetName() == "vec_magnitude");
-  VTKM_TEST_ASSERT(vec_magnitude.IsFieldPoint());
+  VTKM_TEST_ASSERT(vec_magnitude.IsPointField());
 
   vtkm::Range mag_range;
   vec_magnitude.GetRange(&mag_range);
@@ -405,7 +405,7 @@ void TestReadingFishTank()
   // This info was gleaned from the Paraview Information panel:
   const vtkm::cont::Field& vec = ds.GetField("vec");
   VTKM_TEST_ASSERT(vec.GetName() == "vec");
-  VTKM_TEST_ASSERT(vec.IsFieldPoint());
+  VTKM_TEST_ASSERT(vec.IsPointField());
   // Bounds from Information panel:
   // [-65.3147, 86.267], [-88.0325, 78.7217], [-67.0969, 156.867]
   const vtkm::cont::ArrayHandle<vtkm::Range>& vecRanges = vec.GetRange();
@@ -460,7 +460,7 @@ void TestReadingDoublePrecisionFishTank()
   // This info was gleaned from the Paraview Information panel:
   const vtkm::cont::Field& vec = ds.GetField("vec");
   VTKM_TEST_ASSERT(vec.GetName() == "vec");
-  VTKM_TEST_ASSERT(vec.IsFieldPoint());
+  VTKM_TEST_ASSERT(vec.IsPointField());
   // Bounds from Information panel:
   // [-65.3147, 86.267], [-88.0325, 78.7217], [-67.0969, 156.867]
   const vtkm::cont::ArrayHandle<vtkm::Range>& vecRanges = vec.GetRange();
@@ -508,7 +508,7 @@ void TestReadingASCIIFishTank()
 
   const vtkm::cont::Field& vec = ds.GetField("vec");
   VTKM_TEST_ASSERT(vec.GetName() == "vec");
-  VTKM_TEST_ASSERT(vec.IsFieldPoint());
+  VTKM_TEST_ASSERT(vec.IsPointField());
   // Bounds from Paraview information panel:
   // [-65.3147, 86.267], [-88.0325, 78.7217], [-67.0969, 156.867]
   const vtkm::cont::ArrayHandle<vtkm::Range>& vecRanges = vec.GetRange();
@@ -561,7 +561,7 @@ void TestReadingFusion()
   // vec_magnitude [0, 3.73778]
   vtkm::cont::Field vec_magnitude = ds.GetField("vec_magnitude");
   VTKM_TEST_ASSERT(vec_magnitude.GetName() == "vec_magnitude");
-  VTKM_TEST_ASSERT(vec_magnitude.IsFieldPoint());
+  VTKM_TEST_ASSERT(vec_magnitude.IsPointField());
 
   vtkm::Range mag_range;
   vec_magnitude.GetRange(&mag_range);
@@ -571,7 +571,7 @@ void TestReadingFusion()
 
   vtkm::cont::Field vec = ds.GetField("vec");
   VTKM_TEST_ASSERT(vec.GetName() == "vec");
-  VTKM_TEST_ASSERT(vec.IsFieldPoint());
+  VTKM_TEST_ASSERT(vec.IsPointField());
   const vtkm::cont::ArrayHandle<vtkm::Range>& vecRanges = vec.GetRange();
   VTKM_TEST_ASSERT(vecRanges.GetNumberOfValues() == 3);
   auto vecRangesReadPortal = vecRanges.ReadPortal();

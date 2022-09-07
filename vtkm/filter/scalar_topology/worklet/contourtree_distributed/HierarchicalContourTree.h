@@ -1001,38 +1001,40 @@ template <typename FieldType>
 void HierarchicalContourTree<FieldType>::AddToVTKMDataSet(vtkm::cont::DataSet& ds) const
 {
   // Create data set from output
-  vtkm::cont::Field regularNodeGlobalIdsField(
-    "RegularNodeGlobalIds", vtkm::cont::Field::Association::WholeMesh, this->RegularNodeGlobalIds);
+  vtkm::cont::Field regularNodeGlobalIdsField("RegularNodeGlobalIds",
+                                              vtkm::cont::Field::Association::WholeDataSet,
+                                              this->RegularNodeGlobalIds);
   ds.AddField(regularNodeGlobalIdsField);
   vtkm::cont::Field dataValuesField(
-    "DataValues", vtkm::cont::Field::Association::WholeMesh, this->DataValues);
+    "DataValues", vtkm::cont::Field::Association::WholeDataSet, this->DataValues);
   ds.AddField(dataValuesField);
-  vtkm::cont::Field regularNodeSortOrderField(
-    "RegularNodeSortOrder", vtkm::cont::Field::Association::WholeMesh, this->RegularNodeSortOrder);
+  vtkm::cont::Field regularNodeSortOrderField("RegularNodeSortOrder",
+                                              vtkm::cont::Field::Association::WholeDataSet,
+                                              this->RegularNodeSortOrder);
   ds.AddField(regularNodeSortOrderField);
   vtkm::cont::Field regular2SupernodeField(
-    "Regular2Supernode", vtkm::cont::Field::Association::WholeMesh, this->Regular2Supernode);
+    "Regular2Supernode", vtkm::cont::Field::Association::WholeDataSet, this->Regular2Supernode);
   ds.AddField(regular2SupernodeField);
   vtkm::cont::Field superparentsField(
-    "Superparents", vtkm::cont::Field::Association::WholeMesh, this->Superparents);
+    "Superparents", vtkm::cont::Field::Association::WholeDataSet, this->Superparents);
   ds.AddField(superparentsField);
   vtkm::cont::Field supernodesField(
-    "Supernodes", vtkm::cont::Field::Association::WholeMesh, this->Supernodes);
+    "Supernodes", vtkm::cont::Field::Association::WholeDataSet, this->Supernodes);
   ds.AddField(supernodesField);
   vtkm::cont::Field superarcsField(
-    "Superarcs", vtkm::cont::Field::Association::WholeMesh, this->Superarcs);
+    "Superarcs", vtkm::cont::Field::Association::WholeDataSet, this->Superarcs);
   ds.AddField(superarcsField);
   vtkm::cont::Field hyperparentsField(
-    "Hyperparents", vtkm::cont::Field::Association::WholeMesh, this->Hyperparents);
+    "Hyperparents", vtkm::cont::Field::Association::WholeDataSet, this->Hyperparents);
   ds.AddField(hyperparentsField);
   vtkm::cont::Field super2HypernodeField(
-    "Super2Hypernode", vtkm::cont::Field::Association::WholeMesh, this->Super2Hypernode);
+    "Super2Hypernode", vtkm::cont::Field::Association::WholeDataSet, this->Super2Hypernode);
   ds.AddField(super2HypernodeField);
   vtkm::cont::Field whichRoundField(
-    "WhichRound", vtkm::cont::Field::Association::WholeMesh, this->WhichRound);
+    "WhichRound", vtkm::cont::Field::Association::WholeDataSet, this->WhichRound);
   ds.AddField(whichRoundField);
   vtkm::cont::Field whichIterationField(
-    "WhichIteration", vtkm::cont::Field::Association::WholeMesh, this->WhichIteration);
+    "WhichIteration", vtkm::cont::Field::Association::WholeDataSet, this->WhichIteration);
   ds.AddField(whichIterationField);
   // TODO/FIXME: See what other fields we need to add
   vtkm::worklet::contourtree_augmented::IdArrayType firstSupernodePerIterationComponents;
@@ -1042,12 +1044,12 @@ void HierarchicalContourTree<FieldType>::AddToVTKMDataSet(vtkm::cont::DataSet& d
                                                         firstSupernodePerIterationOffsets);
   vtkm::cont::Field firstSupernodePerIterationComponentsField(
     "FirstSupernodePerIterationComponents",
-    vtkm::cont::Field::Association::WholeMesh,
+    vtkm::cont::Field::Association::WholeDataSet,
     firstSupernodePerIterationComponents);
   ds.AddField(firstSupernodePerIterationComponentsField);
   vtkm::cont::Field firstSupernodePerIterationOffsetsField(
     "FirstSupernodePerIterationOffsets",
-    vtkm::cont::Field::Association::WholeMesh,
+    vtkm::cont::Field::Association::WholeDataSet,
     firstSupernodePerIterationOffsets);
   ds.AddField(firstSupernodePerIterationOffsetsField);
   // TODO/FIXME: It seems we may only need the counts for the first iteration, so check, which

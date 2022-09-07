@@ -93,8 +93,8 @@ vtkm::cont::DataSet GetTestDataSet()
   vtkm::cont::DataSet ds = dsb.Create(points, shapes, numberofInd, connections);
   ds.AddField(vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::Cells, offsets));
   ds.AddField(vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::Cells, lengths));
-  ds.AddField(vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WholeMesh, ids));
-  ds.AddField(vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WholeMesh, vfs));
+  ds.AddField(vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WholeDataSet, ids));
+  ds.AddField(vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WholeDataSet, vfs));
 
   return ds;
 }
@@ -201,9 +201,9 @@ void TestMIRVenn250()
   data.AddField(vtkm::cont::Field("scatter_pos", vtkm::cont::Field::Association::Cells, offset));
   data.AddField(vtkm::cont::Field("scatter_len", vtkm::cont::Field::Association::Cells, length));
   data.AddField(
-    vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WholeMesh, matIds));
+    vtkm::cont::Field("scatter_ids", vtkm::cont::Field::Association::WholeDataSet, matIds));
   data.AddField(
-    vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WholeMesh, matVFs));
+    vtkm::cont::Field("scatter_vfs", vtkm::cont::Field::Association::WholeDataSet, matVFs));
 
   vtkm::filter::contour::MIRFilter mir;
   mir.SetIDWholeSetName("scatter_ids");

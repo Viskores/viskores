@@ -45,7 +45,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::filter::clean_grid::CleanGrid& self,
                 vtkm::filter::clean_grid::SharedStates& worklets)
 {
-  if (field.IsFieldPoint() && (self.GetCompactPointFields() || self.GetMergePoints()))
+  if (field.IsPointField() && (self.GetCompactPointFields() || self.GetMergePoints()))
   {
     vtkm::cont::Field compactedField;
     if (self.GetCompactPointFields())
@@ -72,7 +72,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
       return true;
     }
   }
-  else if (field.IsFieldCell() && self.GetRemoveDegenerateCells())
+  else if (field.IsCellField() && self.GetRemoveDegenerateCells())
   {
     return vtkm::filter::MapFieldPermutation(
       field, worklets.CellCompactor.GetValidCellIds(), result);

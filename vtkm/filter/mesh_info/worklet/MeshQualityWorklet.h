@@ -82,7 +82,7 @@ struct MeshQualityWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
   VTKM_CONT vtkm::cont::UnknownArrayHandle Run(const vtkm::cont::DataSet& input,
                                                const vtkm::cont::Field& field) const
   {
-    if (!field.IsFieldPoint())
+    if (!field.IsPointField())
     {
       throw vtkm::cont::ErrorBadValue("Active field for MeshQuality must be point coordinates. "
                                       "But the active field is not a point field.");

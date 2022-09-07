@@ -90,7 +90,7 @@ namespace image_processing
 VTKM_CONT vtkm::cont::DataSet ImageMedian::DoExecute(const vtkm::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorBadValue("Active field for ImageMedian must be a point field.");
   }

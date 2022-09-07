@@ -47,7 +47,7 @@ vtkm::cont::DataSet ExternalFaces::GenerateOutput(const vtkm::cont::DataSet& inp
   for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
   {
     const auto& f = input.GetField(fieldIdx);
-    hasCellFields = f.IsFieldCell();
+    hasCellFields = f.IsCellField();
   }
 
   if (!hasCellFields)
@@ -104,16 +104,16 @@ vtkm::cont::DataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& input)
 
 bool ExternalFaces::MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     result.AddField(field);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     return vtkm::filter::MapFieldPermutation(field, this->Worklet->GetCellIdMap(), result);
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;

@@ -25,6 +25,7 @@ set(headers
   DeviceAdapterMemoryManager.h
   DeviceAdapterMemoryManagerShared.h
   DeviceAdapterListHelpers.h
+  FieldCollection.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
   KXSort.h

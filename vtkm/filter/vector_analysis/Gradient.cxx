@@ -40,7 +40,7 @@ namespace vector_analysis
 vtkm::cont::DataSet Gradient::DoExecute(const vtkm::cont::DataSet& inputDataSet)
 {
   const auto& field = this->GetFieldFromDataSet(inputDataSet);
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }

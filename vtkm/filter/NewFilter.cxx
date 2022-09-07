@@ -88,7 +88,7 @@ vtkm::cont::PartitionedDataSet NewFilter::DoExecutePartitions(
     }
   }
 
-  return output;
+  return this->CreateResult(input, output);
 }
 
 vtkm::cont::DataSet NewFilter::Execute(const vtkm::cont::DataSet& input)
@@ -103,8 +103,7 @@ vtkm::cont::PartitionedDataSet NewFilter::Execute(const vtkm::cont::PartitionedD
                  (int)input.GetNumberOfPartitions(),
                  vtkm::cont::TypeToString<decltype(*this)>().c_str());
 
-  vtkm::cont::PartitionedDataSet output = this->DoExecutePartitions(input);
-  return output;
+  return this->DoExecutePartitions(input);
 }
 
 vtkm::cont::DataSet NewFilter::CreateResult(const vtkm::cont::DataSet& inDataSet) const
@@ -116,6 +115,16 @@ vtkm::cont::DataSet NewFilter::CreateResult(const vtkm::cont::DataSet& inDataSet
       out.AddField(fieldToPass);
     });
   return clone;
+}
+
+vtkm::cont::PartitionedDataSet NewFilter::CreateResult(
+  const vtkm::cont::PartitionedDataSet& input,
+  const vtkm::cont::PartitionedDataSet& resultPartitions) const
+{
+  auto fieldMapper = [](vtkm::cont::PartitionedDataSet& out, const vtkm::cont::Field& fieldToPass) {
+    out.AddField(fieldToPass);
+  };
+  return this->CreateResult(input, resultPartitions, fieldMapper);
 }
 
 vtkm::Id NewFilter::DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input)

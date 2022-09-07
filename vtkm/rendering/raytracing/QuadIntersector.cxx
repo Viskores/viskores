@@ -501,7 +501,7 @@ void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
   ShapeIntersector::IntersectionPoint(rays);
 
   // TODO: if this is nodes of a mesh, support points
-  const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
+  const bool isSupportedField = scalarField.IsCellField() || scalarField.IsPointField();
   if (!isSupportedField)
   {
     throw vtkm::cont::ErrorBadValue("Field not accociated with a cell set");
@@ -510,7 +510,7 @@ void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
   vtkm::worklet::DispatcherMapField<detail::CalculateNormals>(detail::CalculateNormals())
     .Invoke(rays.HitIdx, rays.Dir, rays.NormalX, rays.NormalY, rays.NormalZ, CoordsHandle, QuadIds);
 
-  if (scalarField.IsFieldPoint())
+  if (scalarField.IsPointField())
   {
     vtkm::worklet::DispatcherMapField<detail::GetLerpedScalar<Precision>>(
       detail::GetLerpedScalar<Precision>(vtkm::Float32(scalarRange.Min),

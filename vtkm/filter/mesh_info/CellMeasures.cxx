@@ -31,7 +31,7 @@ VTKM_CONT CellMeasures::CellMeasures(IntegrationType m)
 VTKM_CONT vtkm::cont::DataSet CellMeasures::DoExecute(const vtkm::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("CellMeasures expects point field input.");
   }
