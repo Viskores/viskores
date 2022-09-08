@@ -62,27 +62,28 @@ public:
 
     evalStatus = this->Evaluator.Evaluate(inpos, time, k1);
     if (evalStatus.CheckFail())
-      return IntegratorStatus(evalStatus);
+      return IntegratorStatus(evalStatus, false);
     v1 = particle.Velocity(k1, stepLength);
 
     evalStatus = this->Evaluator.Evaluate(inpos + var1 * v1, var2, k2);
     if (evalStatus.CheckFail())
-      return IntegratorStatus(evalStatus);
+      return IntegratorStatus(evalStatus, false);
     v2 = particle.Velocity(k2, stepLength);
 
     evalStatus = this->Evaluator.Evaluate(inpos + var1 * v2, var2, k3);
     if (evalStatus.CheckFail())
-      return IntegratorStatus(evalStatus);
+      return IntegratorStatus(evalStatus, false);
     v3 = particle.Velocity(k3, stepLength);
 
     evalStatus = this->Evaluator.Evaluate(inpos + stepLength * v3, var3, k4);
     if (evalStatus.CheckFail())
-      return IntegratorStatus(evalStatus);
+      return IntegratorStatus(evalStatus, false);
     v4 = particle.Velocity(k4, stepLength);
 
     velocity = (v1 + 2 * v2 + 2 * v3 + v4) / static_cast<vtkm::FloatDefault>(6);
 
-    return IntegratorStatus(evalStatus);
+    return IntegratorStatus(
+      evalStatus, vtkm::MagnitudeSquared(velocity) <= vtkm::Epsilon<vtkm::FloatDefault>());
   }
 
 private:
