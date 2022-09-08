@@ -36,6 +36,11 @@ private:
 };
 
 }
+struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::ParticleAdvection.") ParticleAdvection
+  : vtkm::filter::flow::ParticleAdvection
+{
+  using vtkm::filter::flow::ParticleAdvection::ParticleAdvection;
+};
 }
 } // namespace vtkm::filter::flow
 

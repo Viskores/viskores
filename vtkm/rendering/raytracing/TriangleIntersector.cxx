@@ -356,12 +356,12 @@ public:
                      const vtkm::cont::Field scalarField,
                      const vtkm::Range& scalarRange)
   {
-    const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
+    const bool isSupportedField = scalarField.IsCellField() || scalarField.IsPointField();
     if (!isSupportedField)
     {
       throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
     }
-    const bool isAssocPoints = scalarField.IsFieldPoint();
+    const bool isAssocPoints = scalarField.IsPointField();
 
     // Find the triangle normal
     vtkm::worklet::DispatcherMapField<CalculateNormals>(CalculateNormals())

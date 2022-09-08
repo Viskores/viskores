@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_flow_NewFilterParticleAdvection_h
 #define vtk_m_filter_flow_NewFilterParticleAdvection_h
 
+#include <vtkm/Particle.h>
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
@@ -54,11 +55,29 @@ public:
 
   VTKM_CONT
   void SetSolverRK4() { this->SolverType = vtkm::filter::flow::IntegrationSolverType::RK4_TYPE; }
+
   VTKM_CONT
   void SetSolverEuler()
   {
     this->SolverType = vtkm::filter::flow::IntegrationSolverType::EULER_TYPE;
   }
+
+  VTKM_CONT
+  void SetVectorFieldType(vtkm::filter::flow::VectorFieldType vecFieldType)
+  {
+    this->VecFieldType = vecFieldType;
+  }
+
+  //@{
+  /// Choose the field to operate on. Note, if
+  /// `this->UseCoordinateSystemAsField` is true, then the active field is not used.
+  VTKM_CONT void SetEField(const std::string& name) { this->SetActiveField(0, name); }
+
+  VTKM_CONT void SetBField(const std::string& name) { this->SetActiveField(1, name); }
+
+  VTKM_CONT std::string GetEField() const { return this->GetActiveFieldName(0); }
+
+  VTKM_CONT std::string GetBField() const { return this->GetActiveFieldName(1); }
 
   VTKM_CONT
   bool GetUseThreadedAlgorithm() { return this->UseThreadedAlgorithm; }

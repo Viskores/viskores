@@ -86,7 +86,7 @@ public:
     vtkm::VecVariable<vtkm::Vec3f, 2> currValue, tmp;
     auto evalStatus = this->Evaluator.Evaluate(currPos, particle.Time, currValue);
     if (evalStatus.CheckFail())
-      return IntegratorStatus(evalStatus);
+      return IntegratorStatus(evalStatus, false);
 
     const vtkm::FloatDefault eps = vtkm::Epsilon<vtkm::FloatDefault>() * 10;
     vtkm::FloatDefault div = 1;
@@ -128,16 +128,18 @@ public:
     // The eval at Time + stepRange[0] better be *inside*
     VTKM_ASSERT(evalStatus.CheckOk() && !evalStatus.CheckSpatialBounds());
     if (evalStatus.CheckFail() || evalStatus.CheckSpatialBounds())
-      return IntegratorStatus(evalStatus);
+      return IntegratorStatus(evalStatus, false);
 
     // Update the position and time.
-    outpos = currPos + stepRange[1] * particle.Velocity(currValue, stepRange[1]);
+    auto velocity = particle.Velocity(currValue, stepRange[1]);
+    outpos = currPos + stepRange[1] * velocity;
     time += stepRange[1];
 
     // Get the evaluation status for the point that is moved by the euler step.
     evalStatus = this->Evaluator.Evaluate(outpos, time, currValue);
 
-    IntegratorStatus status(evalStatus);
+    IntegratorStatus status(
+      evalStatus, vtkm::MagnitudeSquared(velocity) <= vtkm::Epsilon<vtkm::FloatDefault>());
     status.SetOk(); //status is ok.
 
     return status;

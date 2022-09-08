@@ -10,6 +10,7 @@
 
 set(filter_unit_tests
   UnitTestStreamlineFilter.cxx
+  UnitTestStreamlineFilterWarpX.cxx
   UnitTestStreamSurfaceFilter.cxx
   )
 set(worklet_unit_tests

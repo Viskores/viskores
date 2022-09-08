@@ -28,7 +28,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::worklet::Probe& worklet,
                 vtkm::Float64 invalidValue)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     auto resolve = [&](const auto& concrete) {
       using T = typename std::decay_t<decltype(concrete)>::ValueType;
@@ -41,7 +41,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
         resolve);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     vtkm::cont::Field outField;
     if (vtkm::filter::MapFieldPermutation(field, worklet.GetCellIds(), outField, invalidValue))
@@ -54,7 +54,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
     }
     return false;
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;

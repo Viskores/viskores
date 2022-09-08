@@ -263,7 +263,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
   branch_decomposition_master.foreach (
     [&](BranchDecompositionBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
       vtkm::cont::Field branchRootField(
-        "BranchRoots", vtkm::cont::Field::Association::WholeMesh, b->BranchRoots);
+        "BranchRoots", vtkm::cont::Field::Association::WholeDataSet, b->BranchRoots);
       outputDataSets[b->LocalBlockNo].AddField(branchRootField);
     });
 

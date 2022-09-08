@@ -39,9 +39,9 @@ public:
 
   void SetSeed(vtkm::IdComponent seed) { this->Seed = seed; }
 
-  vtkm::cont::DataSet Execute() const override;
-
 private:
+  vtkm::cont::DataSet DoExecute() const override;
+
   vtkm::Id3 Dims;
   vtkm::Vec3f Origin;
   vtkm::IdComponent Seed;

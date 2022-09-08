@@ -42,9 +42,9 @@ public:
   {
   }
 
-  vtkm::cont::DataSet Execute() const;
-
 private:
+  vtkm::cont::DataSet DoExecute() const override;
+
   vtkm::Id3 Dims;
 };
 } //namespace source

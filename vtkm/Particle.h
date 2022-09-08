@@ -55,6 +55,16 @@ public:
   VTKM_EXEC_CONT void ClearInGhostCell() { this->reset(this->IN_GHOST_CELL_BIT); }
   VTKM_EXEC_CONT bool CheckInGhostCell() const { return this->test(this->IN_GHOST_CELL_BIT); }
 
+  VTKM_EXEC_CONT void SetZeroVelocity() { this->set(this->ZERO_VELOCITY); }
+  VTKM_EXEC_CONT void ClearZeroVelocity() { this->reset(this->ZERO_VELOCITY); }
+  VTKM_EXEC_CONT bool CheckZeroVelocity() const { return this->test(this->ZERO_VELOCITY); }
+
+  VTKM_EXEC_CONT bool CanContinue() const
+  {
+    return this->CheckOk() && !this->CheckTerminate() && !this->CheckSpatialBounds() &&
+      !this->CheckTemporalBounds() && !this->CheckInGhostCell() && !this->CheckZeroVelocity();
+  }
+
 private:
   static constexpr vtkm::Id SUCCESS_BIT = 0;
   static constexpr vtkm::Id TERMINATE_BIT = 1;
@@ -62,6 +72,7 @@ private:
   static constexpr vtkm::Id TEMPORAL_BOUNDS_BIT = 3;
   static constexpr vtkm::Id TOOK_ANY_STEPS_BIT = 4;
   static constexpr vtkm::Id IN_GHOST_CELL_BIT = 5;
+  static constexpr vtkm::Id ZERO_VELOCITY = 6;
 };
 
 inline VTKM_CONT std::ostream& operator<<(std::ostream& s, const vtkm::ParticleStatus& status)
@@ -71,6 +82,7 @@ inline VTKM_CONT std::ostream& operator<<(std::ostream& s, const vtkm::ParticleS
   s << " spat= " << status.CheckSpatialBounds();
   s << " temp= " << status.CheckTemporalBounds();
   s << " ghst= " << status.CheckInGhostCell();
+  s << " zvel= " << status.CheckZeroVelocity();
   s << "]";
   return s;
 }
@@ -164,9 +176,9 @@ public:
   VTKM_EXEC_CONT
   ChargedParticle(const vtkm::Vec3f& position,
                   const vtkm::Id& id,
-                  const vtkm::FloatDefault& mass,
-                  const vtkm::FloatDefault& charge,
-                  const vtkm::FloatDefault& weighting,
+                  const vtkm::Float64& mass,
+                  const vtkm::Float64& charge,
+                  const vtkm::Float64& weighting,
                   const vtkm::Vec3f& momentum,
                   const vtkm::Id& numSteps = 0,
                   const vtkm::ParticleStatus& status = vtkm::ParticleStatus(),
@@ -184,16 +196,16 @@ public:
   }
 
   VTKM_EXEC_CONT
-  vtkm::FloatDefault Gamma(vtkm::Vec3f momentum, bool reciprocal = false) const
+  vtkm::Float64 Gamma(vtkm::Vec3f momentum, bool reciprocal = false) const
   {
     constexpr vtkm::FloatDefault c2 = SPEED_OF_LIGHT * SPEED_OF_LIGHT;
-    const auto fMom2 = vtkm::MagnitudeSquared(momentum);
-    const auto m2 = this->Mass * this->Mass;
-    const auto m2_c2_reci = 1.0 / (m2 * c2);
+    const vtkm::Float64 fMom2 = vtkm::MagnitudeSquared(momentum);
+    const vtkm::Float64 m2 = this->Mass * this->Mass;
+    const vtkm::Float64 m2_c2_reci = 1.0 / (m2 * c2);
     if (reciprocal)
-      return static_cast<vtkm::FloatDefault>(vtkm::RSqrt(1.0 + fMom2 * m2_c2_reci));
+      return vtkm::RSqrt(1.0 + fMom2 * m2_c2_reci);
     else
-      return static_cast<vtkm::FloatDefault>(vtkm::Sqrt(1.0 + fMom2 * m2_c2_reci));
+      return vtkm::Sqrt(1.0 + fMom2 * m2_c2_reci);
   }
 
   VTKM_EXEC_CONT
@@ -208,11 +220,11 @@ public:
     vtkm::Vec3f eField = vectors[0];
     vtkm::Vec3f bField = vectors[1];
 
-    const vtkm::FloatDefault QoM = this->Charge / this->Mass;
+    const vtkm::Float64 QoM = this->Charge / this->Mass;
     const vtkm::Vec3f mom_minus = this->Momentum + (0.5 * this->Charge * eField * length);
 
     // Get reciprocal of Gamma
-    vtkm::Vec3f gamma_reci = this->Gamma(mom_minus, true);
+    vtkm::Vec3f gamma_reci = static_cast<vtkm::FloatDefault>(this->Gamma(mom_minus, true));
     const vtkm::Vec3f t = 0.5 * QoM * length * bField * gamma_reci;
     const vtkm::Vec3f s = 2.0f * t * (1.0 / (1.0 + vtkm::Magnitude(t)));
     const vtkm::Vec3f mom_prime = mom_minus + vtkm::Cross(mom_minus, t);
@@ -254,9 +266,9 @@ public:
   vtkm::FloatDefault Time = 0;
 
 private:
-  vtkm::FloatDefault Mass;
-  vtkm::FloatDefault Charge;
-  vtkm::FloatDefault Weighting;
+  vtkm::Float64 Mass;
+  vtkm::Float64 Charge;
+  vtkm::Float64 Weighting;
   vtkm::Vec3f Momentum;
   constexpr static vtkm::FloatDefault SPEED_OF_LIGHT =
     static_cast<vtkm::FloatDefault>(2.99792458e8);
@@ -271,11 +283,10 @@ public:
       + sizeof(vtkm::Id)                           // NumSteps
       + sizeof(vtkm::UInt8)                        // Status
       + sizeof(vtkm::FloatDefault)                 // Time
-      + sizeof(vtkm::FloatDefault)                 //Mass
-      + sizeof(vtkm::FloatDefault)                 //Charge
-      + sizeof(vtkm::FloatDefault)                 //Weighting
-      + sizeof(vtkm::Vec3f)                        //Momentum
-      + sizeof(vtkm::FloatDefault);                //Speed_of_light
+      + sizeof(vtkm::Float64)                      //Mass
+      + sizeof(vtkm::Float64)                      //Charge
+      + sizeof(vtkm::Float64)                      //Weighting
+      + sizeof(vtkm::Vec3f);                       //Momentum
 
     return sz;
   }

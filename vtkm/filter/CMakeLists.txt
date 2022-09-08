@@ -45,14 +45,19 @@ set(deprecated_headers
   MIRFilter.h
   NDEntropy.h
   NDHistogram.h
+  ParticleAdvection.h
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
+  Pathline.h
+  PathParticle.h
   PointAverage.h
   PointElevation.h
   PointTransform.h
   Probe.h
   Slice.h
   SplitSharpEdges.h
+  Streamline.h
+  StreamSurface.h
   SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h

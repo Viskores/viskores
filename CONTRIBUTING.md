@@ -414,7 +414,7 @@ extend or revise the topic.
 
 2.  Get the new version from gitlab
 
-        $ git gitlab-sync -f
+        $ git gitlab-sync
 
 
 If you do not wish to have the "Kitware Robot" automatically reformat your

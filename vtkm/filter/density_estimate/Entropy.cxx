@@ -42,7 +42,7 @@ VTKM_CONT vtkm::cont::DataSet Entropy::DoExecute(const vtkm::cont::DataSet& inDa
 
   vtkm::cont::DataSet output;
   output.AddField(
-    { this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, entropy });
+    { this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeDataSet, entropy });
 
   // The output is a "summary" of the input, no need to map fields
   return output;

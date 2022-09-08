@@ -245,7 +245,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
   if (is1D)
   {
 
-    const bool isSupportedField = inScalarField.IsFieldPoint();
+    const bool isSupportedField = inScalarField.IsPointField();
     if (!isSupportedField)
     {
       throw vtkm::cont::ErrorBadValue(

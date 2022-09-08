@@ -121,7 +121,7 @@ vtkm::cont::DataSet ContourTreeAugmented::DoExecute(const vtkm::cont::DataSet& i
 
   // Check that the field is Ok
   const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
@@ -189,10 +189,10 @@ vtkm::cont::DataSet ContourTreeAugmented::DoExecute(const vtkm::cont::DataSet& i
         //  DataSet without any coordinate system etc.
         result = this->CreateResultField(input,
                                          this->GetOutputFieldName(),
-                                         vtkm::cont::Field::Association::WholeMesh,
+                                         vtkm::cont::Field::Association::WholeDataSet,
                                          sortedValues);
         //        vtkm::cont::Field rfield(
-        //          this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, sortedValues);
+        //          this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeDataSet, sortedValues);
         //        result.AddField(rfield);
         //        return result;
       }
@@ -446,7 +446,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(const vtkm::cont::Partitioned
     // TODO the result we return for the parallel and serial case are different right now. This should be made consistent. However, only in the parallel case are we useing the result output
     vtkm::cont::DataSet temp;
     vtkm::cont::Field rfield(this->GetOutputFieldName(),
-                             vtkm::cont::Field::Association::WholeMesh,
+                             vtkm::cont::Field::Association::WholeDataSet,
                              contourTreeMeshOut.SortedValues);
     temp.AddField(rfield);
     output = vtkm::cont::PartitionedDataSet(temp);
