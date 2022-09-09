@@ -39,6 +39,8 @@ set(deprecated_headers
   ImageDifference.h
   ImageMedian.h
   Instantiations.h
+  Lagrangian.h
+  LagrangianStructures.h
   Mask.h
   MaskPoints.h
   MeshQuality.h
@@ -89,8 +91,6 @@ set(common_headers
   FilterTraits.h
   PolicyBase.h
   PolicyDefault.h
-  Lagrangian.h
-  LagrangianStructures.h
   )
 
 vtkm_declare_headers(${common_headers})
@@ -100,8 +100,6 @@ set(common_header_template_sources
   FilterDataSetWithField.hxx
   FilterField.hxx
   Filter.hxx
-  Lagrangian.hxx
-  LagrangianStructures.hxx
   )
 
 vtkm_declare_headers(${common_header_template_sources})

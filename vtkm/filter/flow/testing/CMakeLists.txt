@@ -9,6 +9,8 @@
 ##============================================================================
 
 set(filter_unit_tests
+  UnitTestLagrangianFilter.cxx
+  UnitTestLagrangianStructuresFilter.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestStreamlineFilterWarpX.cxx
   UnitTestStreamSurfaceFilter.cxx

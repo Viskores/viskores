@@ -7,14 +7,16 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_worklet_lcs_GridMetaData_h
-#define vtk_m_worklet_lcs_GridMetaData_h
+#ifndef vtkm_filter_flow_internal_GridMetaData_h
+#define vtkm_filter_flow_internal_GridMetaData_h
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
-namespace detail
+namespace flow
+{
+namespace internal
 {
 
 class GridMetaData
@@ -86,8 +88,9 @@ private:
   vtkm::Id RowSize;
 };
 
-} // namespace detail
-} // namespace worklet
-} // namespace vtkm
+}
+}
+}
+} //vtkm::filter::flow::internal
 
-#endif //vtk_m_worklet_lcs_GridMetaData_h
+#endif //vtkm_filter_flow_internal_GridMetaData_h

@@ -15,6 +15,8 @@ set(headers
   DataSetIntegrator.h
   DataSetIntegratorSteadyState.h
   DataSetIntegratorUnsteadyState.h
+  GridMetaData.h
+  LagrangianStructureHelpers.h
   Messenger.h
   ParticleAdvector.h
   ParticleMessenger.h

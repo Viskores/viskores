@@ -7,11 +7,14 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
+
 set(flow_headers
   FlowTypes.h
   NewFilterParticleAdvection.h
   NewFilterParticleAdvectionSteadyState.h
   NewFilterParticleAdvectionUnsteadyState.h
+  Lagrangian.h
+  LagrangianStructures.h
   ParticleAdvection.h
   Pathline.h
   PathParticle.h
@@ -29,6 +32,8 @@ set(flow_sources
   )
 
 set(flow_device_sources
+  Lagrangian.cxx
+  LagrangianStructures.cxx
   NewFilterParticleAdvectionSteadyState.cxx
   NewFilterParticleAdvectionUnsteadyState.cxx
   StreamSurface.cxx

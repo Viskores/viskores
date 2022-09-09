@@ -15,12 +15,13 @@ set(headers
   Field.h
   GridEvaluators.h
   GridEvaluatorStatus.h
-  Stepper.h
   IntegratorStatus.h
+  LagrangianStructures.h
   Particles.h
   ParticleAdvectionWorklets.h
   RK4Integrator.h
   TemporalGridEvaluators.h
+  Stepper.h
   StreamSurface.h
   )
 

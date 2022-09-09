@@ -8,35 +8,23 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_Lagrangian_hxx
-#define vtk_m_filter_Lagrangian_hxx
-
-#include <vtkm/Types.h>
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+
+#include <vtkm/filter/flow/Lagrangian.h>
 #include <vtkm/filter/flow/worklet/Field.h>
 #include <vtkm/filter/flow/worklet/GridEvaluators.h>
 #include <vtkm/filter/flow/worklet/ParticleAdvection.h>
-#include <vtkm/filter/flow/worklet/Particles.h>
 #include <vtkm/filter/flow/worklet/RK4Integrator.h>
 #include <vtkm/filter/flow/worklet/Stepper.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
-#include <cstring>
-#include <sstream>
-#include <string.h>
-
-static vtkm::Id cycle = 0;
-static vtkm::cont::ArrayHandle<vtkm::Particle> BasisParticles;
-static vtkm::cont::ArrayHandle<vtkm::Particle> BasisParticlesOriginal;
-static vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;
+namespace vtkm
+{
+namespace filter
+{
+namespace flow
+{
 
 namespace
 {
@@ -96,30 +84,8 @@ public:
 };
 }
 
-namespace vtkm
-{
-namespace filter
-{
-
 //-----------------------------------------------------------------------------
-inline VTKM_CONT Lagrangian::Lagrangian()
-  : vtkm::filter::FilterDataSetWithField<Lagrangian>()
-  , rank(0)
-  , initFlag(true)
-  , extractFlows(false)
-  , resetParticles(true)
-  , stepSize(1.0f)
-  , x_res(0)
-  , y_res(0)
-  , z_res(0)
-  , cust_res(0)
-  , SeedRes(vtkm::Id3(1, 1, 1))
-  , writeFrequency(0)
-{
-}
-
-//-----------------------------------------------------------------------------
-inline void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
+void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
 {
   vtkm::cont::UnknownCellSet cell_set = input.GetCellSet();
 
@@ -129,9 +95,9 @@ inline void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
       cell_set.AsCellSet<vtkm::cont::CellSetStructured<1>>();
     vtkm::Id dims1 = cell_set1.GetPointDimensions();
     this->SeedRes[0] = dims1;
-    if (this->cust_res)
+    if (this->CustRes)
     {
-      this->SeedRes[0] = dims1 / this->x_res;
+      this->SeedRes[0] = dims1 / this->ResX;
     }
   }
   else if (cell_set.CanConvert<vtkm::cont::CellSetStructured<2>>())
@@ -141,10 +107,10 @@ inline void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
     vtkm::Id2 dims2 = cell_set2.GetPointDimensions();
     this->SeedRes[0] = dims2[0];
     this->SeedRes[1] = dims2[1];
-    if (this->cust_res)
+    if (this->CustRes)
     {
-      this->SeedRes[0] = dims2[0] / this->x_res;
-      this->SeedRes[1] = dims2[1] / this->y_res;
+      this->SeedRes[0] = dims2[0] / this->ResX;
+      this->SeedRes[1] = dims2[1] / this->ResY;
     }
   }
   else if (cell_set.CanConvert<vtkm::cont::CellSetStructured<3>>())
@@ -155,18 +121,18 @@ inline void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
     this->SeedRes[0] = dims3[0];
     this->SeedRes[1] = dims3[1];
     this->SeedRes[2] = dims3[2];
-    if (this->cust_res)
+    if (this->CustRes)
     {
-      this->SeedRes[0] = dims3[0] / this->x_res;
-      this->SeedRes[1] = dims3[1] / this->y_res;
-      this->SeedRes[2] = dims3[2] / this->z_res;
+      this->SeedRes[0] = dims3[0] / this->ResX;
+      this->SeedRes[1] = dims3[1] / this->ResY;
+      this->SeedRes[2] = dims3[2] / this->ResZ;
     }
   }
 }
 
 
 //-----------------------------------------------------------------------------
-inline void Lagrangian::InitializeSeedPositions(const vtkm::cont::DataSet& input)
+void Lagrangian::InitializeSeedPositions(const vtkm::cont::DataSet& input)
 {
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
@@ -181,11 +147,11 @@ inline void Lagrangian::InitializeSeedPositions(const vtkm::cont::DataSet& input
     z_spacing = (double)(bounds.Z.Max - bounds.Z.Min) / (double)(this->SeedRes[2] - 1);
   // Divide by zero handling for 2D data set. How is this handled
 
-  BasisParticles.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
-  BasisParticlesValidity.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
+  this->BasisParticles.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
+  this->BasisParticlesValidity.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
 
-  auto portal1 = BasisParticles.WritePortal();
-  auto portal2 = BasisParticlesValidity.WritePortal();
+  auto portal1 = this->BasisParticles.WritePortal();
+  auto portal2 = this->BasisParticlesValidity.WritePortal();
 
   vtkm::Id id = 0;
   for (int z = 0; z < this->SeedRes[2]; z++)
@@ -210,10 +176,10 @@ inline void Lagrangian::InitializeSeedPositions(const vtkm::cont::DataSet& input
 }
 
 //-----------------------------------------------------------------------------
-inline void Lagrangian::InitializeCoordinates(const vtkm::cont::DataSet& input,
-                                              std::vector<Float64>& xC,
-                                              std::vector<Float64>& yC,
-                                              std::vector<Float64>& zC)
+void Lagrangian::InitializeCoordinates(const vtkm::cont::DataSet& input,
+                                       std::vector<Float64>& xC,
+                                       std::vector<Float64>& yC,
+                                       std::vector<Float64>& zC)
 {
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
@@ -244,36 +210,29 @@ inline void Lagrangian::InitializeCoordinates(const vtkm::cont::DataSet& input,
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy>)
+VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& input)
 {
-
-  if (cycle == 0)
+  if (this->Cycle == 0)
   {
-    InitializeSeedPositions(input);
-    BasisParticlesOriginal.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
-    vtkm::cont::ArrayCopy(BasisParticles, BasisParticlesOriginal);
+    this->InitializeSeedPositions(input);
+    vtkm::cont::ArrayCopy(this->BasisParticles, this->BasisParticlesOriginal);
   }
 
-  if (this->writeFrequency == 0)
+  if (this->WriteFrequency == 0)
   {
     throw vtkm::cont::ErrorFilterExecution(
       "Write frequency can not be 0. Use SetWriteFrequency().");
   }
   vtkm::cont::ArrayHandle<vtkm::Particle> basisParticleArray;
-  vtkm::cont::ArrayCopy(BasisParticles, basisParticleArray);
+  vtkm::cont::ArrayCopy(this->BasisParticles, basisParticleArray);
 
-  cycle += 1;
+  this->Cycle += 1;
   const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
   using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
   using GridEvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
@@ -282,9 +241,12 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::worklet::flow::ParticleAdvection particleadvection;
   vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> res;
 
-  FieldType velocities(field, fieldMeta.GetAssociation());
+  const auto field = input.GetField(this->GetActiveFieldName());
+  FieldType velocities(field.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f>>(),
+                       field.GetAssociation());
+
   GridEvalType gridEval(coords, cells, velocities);
-  Stepper rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
+  Stepper rk4(gridEval, static_cast<vtkm::Float32>(this->StepSize));
 
   res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
   auto particles = res.Particles;
@@ -292,58 +254,76 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::cont::DataSet outputData;
   vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
 
-  if (cycle % this->writeFrequency == 0)
+  if (this->Cycle % this->WriteFrequency == 0)
   {
     /* Steps to create a structured dataset */
     UpdateSeedResolution(input);
-    vtkm::cont::ArrayHandle<vtkm::Vec3f> BasisParticlesDisplacement;
-    BasisParticlesDisplacement.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> basisParticlesDisplacement;
+    basisParticlesDisplacement.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
     DisplacementCalculation displacement;
-    this->Invoke(displacement, particles, BasisParticlesOriginal, BasisParticlesDisplacement);
+    this->Invoke(displacement, particles, this->BasisParticlesOriginal, basisParticlesDisplacement);
     std::vector<Float64> xC, yC, zC;
     InitializeCoordinates(input, xC, yC, zC);
     outputData = dataSetBuilder.Create(xC, yC, zC);
-    outputData.AddPointField("valid", BasisParticlesValidity);
-    outputData.AddPointField("displacement", BasisParticlesDisplacement);
+    outputData.AddPointField("valid", this->BasisParticlesValidity);
+    outputData.AddPointField("displacement", basisParticlesDisplacement);
 
-    if (this->resetParticles)
+    if (this->ResetParticles)
     {
-      InitializeSeedPositions(input);
-      BasisParticlesOriginal.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
-      vtkm::cont::ArrayCopy(BasisParticles, BasisParticlesOriginal);
+      this->InitializeSeedPositions(input);
+      vtkm::cont::ArrayCopy(this->BasisParticles, this->BasisParticlesOriginal);
     }
     else
     {
-      vtkm::cont::ArrayCopy(particles, BasisParticles);
+      vtkm::cont::ArrayCopy(particles, this->BasisParticles);
     }
   }
   else
   {
     ValidityCheck check(bounds);
-    this->Invoke(check, particles, BasisParticlesValidity);
-    vtkm::cont::ArrayCopy(particles, BasisParticles);
+    this->Invoke(check, particles, this->BasisParticlesValidity);
+    vtkm::cont::ArrayCopy(particles, this->BasisParticles);
   }
 
   return outputData;
 }
 
-//---------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT bool Lagrangian::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                     const vtkm::cont::Field& field,
-                                                     vtkm::filter::PolicyBase<DerivedPolicy>)
-{
-  if (field.IsWholeDataSetField())
-  {
-    result.AddField(field);
-    return true;
-  }
-  else
-  {
-    return false;
-  }
 }
+}
+} //vtkm::filter::flow
+
+
+//Deprecated filter: vtkm::filter::Lagrangian
+namespace vtkm
+{
+namespace filter
+{
+
+static vtkm::Id deprecatedLagrange_Cycle = 0;
+static vtkm::cont::ArrayHandle<vtkm::Particle> deprecatedLagrange_BasisParticles;
+static vtkm::cont::ArrayHandle<vtkm::Particle> deprecatedLagrange_BasisParticlesOriginal;
+static vtkm::cont::ArrayHandle<vtkm::Id> deprecatedLagrange_BasisParticlesValidity;
+
+
+VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& input)
+{
+  //Initialize the filter with the static variables
+  this->SetCycle(deprecatedLagrange_Cycle);
+  this->SetBasisParticles(deprecatedLagrange_BasisParticles);
+  this->SetBasisParticlesOriginal(deprecatedLagrange_BasisParticlesOriginal);
+  this->SetBasisParticleValidity(deprecatedLagrange_BasisParticlesValidity);
+
+  //call the base class
+  auto output = vtkm::filter::flow::Lagrangian::DoExecute(input);
+
+  //Set the static variables with the current values.
+  deprecatedLagrange_Cycle = this->GetCycle();
+  deprecatedLagrange_BasisParticles = this->GetBasisParticles();
+  deprecatedLagrange_BasisParticlesOriginal = this->GetBasisParticlesOriginal();
+  deprecatedLagrange_BasisParticlesValidity = this->GetBasisParticleValidity();
+
+  return output;
+}
+
 }
 } // namespace vtkm::filter
-
-#endif
