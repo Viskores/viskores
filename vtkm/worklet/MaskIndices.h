@@ -32,7 +32,7 @@ class MaskIndices : public internal::MaskBase
 public:
   using ThreadToOutputMapType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
-  //@{
+  ///@{
   /// \brief Construct using an index array.
   ///
   /// When you construct a \c MaskSelect with the \c IndexArray tag, you provide an array
@@ -57,7 +57,7 @@ public:
   {
     vtkm::cont::Algorithm::Copy(device, indexArray, this->ThreadToOutputMap);
   }
-  //@}
+  ///@}
 
   // TODO? Create a version that accepts an UnknownArrayHandle. Is this needed?
 

@@ -121,7 +121,7 @@ public:
 
   /// Returns the field that matches the provided name and association
   /// Will throw an exception if no match is found
-  //@{
+  ///@{
   VTKM_CONT
   const vtkm::cont::Field& GetField(
     const std::string& name,
@@ -138,11 +138,11 @@ public:
   {
     return this->Fields.GetField(name, assoc);
   }
-  //@}
+  ///@}
 
   /// Returns the first cell field that matches the provided name.
   /// Will throw an exception if no match is found
-  //@{
+  ///@{
   VTKM_CONT
   const vtkm::cont::Field& GetCellField(const std::string& name) const
   {
@@ -154,11 +154,11 @@ public:
   {
     return this->GetField(name, vtkm::cont::Field::Association::Cells);
   }
-  //@}
+  ///@}
 
   /// Returns the first cell field that matches the provided name.
   /// Will throw an exception if no match is found
-  //@{
+  ///@{
   VTKM_CONT
   const vtkm::cont::Field& GetGhostCellField() const
   {
@@ -171,11 +171,11 @@ public:
       throw vtkm::cont::ErrorBadValue("No Ghost Cell Field");
     }
   }
-  //@}
+  ///@}
 
   /// Returns the first point field that matches the provided name.
   /// Will throw an exception if no match is found
-  //@{
+  ///@{
   VTKM_CONT
   const vtkm::cont::Field& GetPointField(const std::string& name) const
   {
@@ -187,7 +187,7 @@ public:
   {
     return this->GetField(name, vtkm::cont::Field::Association::Points);
   }
-  //@}
+  ///@}
 
   VTKM_CONT
   void AddPointField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
@@ -290,13 +290,13 @@ public:
 
   /// Returns the first CoordinateSystem that matches the provided name.
   /// Will throw an exception if no match is found
-  //@{
+  ///@{
   VTKM_CONT
   const vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name) const;
 
   VTKM_CONT
   vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name);
-  //@}
+  ///@}
 
   /// Returns an `std::vector` of `CoordinateSystem`s held in this `DataSet`.
   ///

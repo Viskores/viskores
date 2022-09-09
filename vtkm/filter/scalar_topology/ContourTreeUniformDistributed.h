@@ -177,7 +177,7 @@ private:
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& input) override;
 
-  //@{
+  ///@{
   /// when operating on vtkm::cont::MultiBlock we want to
   /// do processing across ranks as well. Just adding pre/post handles
   /// for the same does the trick.
@@ -204,7 +204,7 @@ private:
   template <typename T>
   VTKM_CONT void DoPostExecute(const vtkm::cont::PartitionedDataSet& input,
                                vtkm::cont::PartitionedDataSet& output);
-  //@}
+  ///@}
 
   /// Use only boundary critical points in the parallel merge to reduce communication.
   /// Disabling this should only be needed for performance testing.

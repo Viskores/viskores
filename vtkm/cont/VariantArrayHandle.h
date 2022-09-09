@@ -364,7 +364,7 @@ public:
     return VariantArrayHandleBase<NewTypeList>(*this);
   }
 
-  //@{
+  ///@{
   /// \brief Call a functor using the underlying array type.
   ///
   /// `CastAndCall` attempts to cast the held array to a specific value type,
@@ -398,7 +398,7 @@ public:
   {
     this->CastAndCallImpl(std::false_type(), std::forward<Functor>(f));
   }
-  //@}
+  ///@}
 
   /// \brief Create a new array of the same type as this array.
   ///

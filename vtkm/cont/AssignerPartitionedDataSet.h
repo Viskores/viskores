@@ -68,7 +68,7 @@ public:
 
   VTKM_CONT
   int rank(int gid) const override;
-  //@}
+  ///@}
 private:
   std::vector<vtkm::Id> IScanPartitionCounts;
 };

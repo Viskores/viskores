@@ -442,7 +442,7 @@ private:
   }
 
 public:
-  //@{
+  ///@{
   /// Returns the value as the type at the given index. The behavior is undefined if the
   /// variant does not contain the value at the given index.
   ///
@@ -459,9 +459,9 @@ public:
     VTKM_ASSERT(I == this->GetIndex());
     return detail::VariantUnionGet<I>(this->Storage);
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Returns the value as the given type. The behavior is undefined if the variant does not
   /// contain a value of the given type.
   ///
@@ -476,7 +476,7 @@ public:
   {
     return this->GetImpl<T>(CanStore<T>{});
   }
-  //@}
+  ///@}
 
 private:
   template <typename T>
@@ -508,7 +508,7 @@ private:
   }
 
 public:
-  //@{
+  ///@{
   /// Given a functor object, calls the functor with the contained object cast to the appropriate
   /// type. If extra \c args are given, then those are also passed to the functor after the cast
   /// object. If the functor returns a value, that value is returned from \c CastAndCall.
