@@ -253,7 +253,7 @@ public:
     }
   }
 
-  //@{
+  ///@{
   /// \brief Specify which fields get passed from input to output.
   ///
   /// After a filter successfully executes and returns a new data set, fields are mapped from
@@ -290,21 +290,21 @@ public:
   const vtkm::filter::FieldSelection& GetFieldsToPass() const { return this->FieldsToPass; }
   VTKM_CONT
   vtkm::filter::FieldSelection& GetFieldsToPass() { return this->FieldsToPass; }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Executes the filter on the input and produces a result dataset.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
   VTKM_CONT vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input);
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Executes the filter on the input PartitionedDataSet and produces a result PartitionedDataSet.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
   VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input);
-  //@}
+  ///@}
 
   // FIXME: Is this actually materialize? Are there different kinds of Invoker?
   /// Specify the vtkm::cont::Invoker to be used to execute worklets by

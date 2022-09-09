@@ -196,7 +196,7 @@ public:
     }
   }
 
-  //@{
+  ///@{
   /// Add fields to map. Note, if Mode is not MODE_SELECT, then adding fields
   /// will have no impact of the fields that will be mapped.
   VTKM_CONT
@@ -211,7 +211,7 @@ public:
   {
     this->Fields.insert(Field(fieldName, association));
   }
-  //@}
+  ///@}
 
   /// Returns true if the input field has been added to this selection.
   /// Note that depending on the mode of this selection, the result of HasField

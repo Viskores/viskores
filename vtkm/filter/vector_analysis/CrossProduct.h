@@ -28,7 +28,7 @@ public:
   VTKM_CONT
   CrossProduct();
 
-  //@{
+  ///@{
   /// Choose the primary field to operate on. In the cross product operation A x B, A is
   /// the primary field.
   VTKM_CONT
@@ -44,9 +44,9 @@ public:
   {
     return this->GetActiveFieldAssociation();
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// When set to true, uses a coordinate system as the primary field instead of the one selected
   /// by name. Use SetPrimaryCoordinateSystem to select which coordinate system.
   VTKM_CONT
@@ -59,9 +59,9 @@ public:
   {
     return this->GetUseCoordinateSystemAsField();
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Select the coordinate system index to use as the primary field. This only has an effect when
   /// UseCoordinateSystemAsPrimaryField is true.
   VTKM_CONT
@@ -71,9 +71,9 @@ public:
   {
     return this->GetActiveCoordinateSystemIndex();
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Choose the secondary field to operate on. In the dot product operation A . B, B is
   /// the secondary field.
   VTKM_CONT
@@ -89,9 +89,9 @@ public:
   {
     return this->GetActiveFieldAssociation(1);
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// When set to true, uses a coordinate system as the secondary field instead of the one selected
   /// by name. Use SetSecondaryCoordinateSystem to select which coordinate system.
   VTKM_CONT
@@ -104,9 +104,9 @@ public:
   {
     return this->GetUseCoordinateSystemAsField(1);
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Select the coordinate system index to use as the secondary field. This only has an effect when
   /// UseCoordinateSystemAsSecondaryField is true.
   VTKM_CONT
@@ -116,7 +116,7 @@ public:
   {
     return this->GetActiveCoordinateSystemIndex(1);
   }
-  //@}
+  ///@}
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
