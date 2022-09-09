@@ -34,7 +34,7 @@ public:
   VTKM_CONT
   explicit WarpScalar(vtkm::FloatDefault scaleAmount);
 
-  //@{
+  ///@{
   /// Choose the secondary field to operate on. In the warp op A + B *
   /// scaleAmount * scalarFactor, B is the secondary field
   VTKM_CONT
@@ -52,9 +52,9 @@ public:
   {
     return this->NormalFieldAssociation;
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Choose the scalar factor field to operate on. In the warp op A + B *
   /// scaleAmount * scalarFactor, scalarFactor is the scalar factor field.
   VTKM_CONT
@@ -75,7 +75,7 @@ public:
   {
     return this->ScalarFactorFieldAssociation;
   }
-  //@}
+  ///@}
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

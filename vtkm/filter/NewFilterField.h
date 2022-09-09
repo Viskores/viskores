@@ -29,7 +29,7 @@ public:
   VTKM_CONT
   const std::string& GetOutputFieldName() const { return this->OutputFieldName; }
 
-  //@{
+  ///@{
   /// Choose the field to operate on. Note, if
   /// `this->UseCoordinateSystemAsField` is true, then the active field is not used.
   VTKM_CONT
@@ -63,9 +63,9 @@ public:
   {
     return this->ActiveFieldAssociation[index];
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Select the coordinate system coord_idx to make active to use when processing the input
   /// DataSet. This is used primarily by the Filter to select the coordinate system
   /// to use as a field when \c UseCoordinateSystemAsField is true.
@@ -95,9 +95,9 @@ public:
     auto index_st = static_cast<std::size_t>(index);
     return this->ActiveCoordinateSystemIndices[index_st];
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// To simply use the active coordinate system as the field to operate on, set
   /// UseCoordinateSystemAsField to true.
   VTKM_CONT
@@ -118,7 +118,7 @@ public:
                 (index < static_cast<vtkm::IdComponent>(this->ActiveFieldNames.size())));
     return this->UseCoordinateSystemAsField[index];
   }
-  //@}
+  ///@}
 
 protected:
   VTKM_CONT

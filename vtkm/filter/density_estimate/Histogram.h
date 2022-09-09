@@ -37,7 +37,7 @@ public:
   VTKM_CONT
   vtkm::Id GetNumberOfBins() const { return this->NumberOfBins; }
 
-  //@{
+  ///@{
   /// Get/Set the range to use to generate the histogram. If range is set to
   /// empty, the field's global range (computed using `vtkm::cont::FieldRangeGlobalCompute`)
   /// will be used.
@@ -46,7 +46,7 @@ public:
 
   VTKM_CONT
   const vtkm::Range& GetRange() const { return this->Range; }
-  //@}
+  ///@}
 
   /// Returns the bin delta of the last computed field.
   VTKM_CONT
@@ -63,14 +63,14 @@ private:
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData) override;
 
-  //@{
+  ///@{
   /// when operating on vtkm::cont::PartitionedDataSet, we
   /// want to do processing across ranks as well. Just adding pre/post handles
   /// for the same does the trick.
   VTKM_CONT void PreExecute(const vtkm::cont::PartitionedDataSet& input);
   VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet& input,
                              vtkm::cont::PartitionedDataSet& output);
-  //@}
+  ///@}
 
   vtkm::Id NumberOfBins = 10;
   vtkm::Float64 BinDelta = 0;

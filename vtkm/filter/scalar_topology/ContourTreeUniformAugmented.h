@@ -133,14 +133,14 @@ public:
     SetBlockIndices(blocksPerDim, localBlockIndices);
   }
 
-  //@{
+  ///@{
   /// Get the contour tree computed by the filter
   const vtkm::worklet::contourtree_augmented::ContourTree& GetContourTree() const;
   /// Get the sort order for the mesh vertices
   const vtkm::worklet::contourtree_augmented::IdArrayType& GetSortOrder() const;
   /// Get the number of iterations used to compute the contour tree
   vtkm::Id GetNumIterations() const;
-  //@}
+  ///@}
 
 private:
   /// Output field "saddlePeak" wich is pairs of vertex ids indicating saddle and peak of contour
@@ -148,7 +148,7 @@ private:
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData) override;
 
-  //@{
+  ///@{
   /// when operating on vtkm::cont::MultiBlock we want to
   /// do processing across ranks as well. Just adding pre/post handles
   /// for the same does the trick.
@@ -164,7 +164,7 @@ private:
   template <typename T>
   VTKM_CONT void DoPostExecute(const vtkm::cont::PartitionedDataSet& input,
                                vtkm::cont::PartitionedDataSet& output);
-  //@}
+  ///@}
 
   /// Use marching cubes connectivity for computing the contour tree
   bool UseMarchingCubes;

@@ -91,7 +91,7 @@ public:
   VTKM_CONT
   void AppendPartitions(const std::vector<vtkm::cont::DataSet>& partitions);
 
-  //@{
+  ///@{
   /// Methods to Add and Get fields on a PartitionedDataSet
   VTKM_CONT
   vtkm::IdComponent GetNumberOfFields() const { return this->Fields.GetNumberOfFields(); }
@@ -205,7 +205,7 @@ public:
   {
     return (this->Fields.GetFieldIndex(name, vtkm::cont::Field::Association::Partitions) != -1);
   }
-  //@}
+  ///@}
 
   /// Copies the partitions from the source. The fields on the PartitionedDataSet are not copied.
   VTKM_CONT
@@ -214,7 +214,7 @@ public:
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;
 
-  //@{
+  ///@{
   /// API to support range-based for loops on partitions.
   VTKM_CONT
   iterator begin() noexcept { return this->Partitions.begin(); }
@@ -228,7 +228,7 @@ public:
   const_iterator cbegin() const noexcept { return this->Partitions.cbegin(); }
   VTKM_CONT
   const_iterator cend() const noexcept { return this->Partitions.cend(); }
-  //@}
+  ///@}
 
 private:
   std::vector<vtkm::cont::DataSet> Partitions;

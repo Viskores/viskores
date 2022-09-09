@@ -34,7 +34,7 @@ public:
   VTKM_CONT
   explicit WarpVector(vtkm::FloatDefault scale);
 
-  //@{
+  ///@{
   /// Choose the vector field to operate on. In the warp op A + B *scale, B is
   /// the vector field
   VTKM_CONT
@@ -52,7 +52,7 @@ public:
   {
     return this->VectorFieldAssociation;
   }
-  //@}
+  ///@}
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

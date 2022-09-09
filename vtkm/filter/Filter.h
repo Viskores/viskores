@@ -243,7 +243,7 @@ public:
   /// of concrete cell set it is. This provides a list of supported cell sets.
   using SupportedCellSets = VTKM_DEFAULT_CELL_SET_LIST;
 
-  //@{
+  ///@{
   /// \brief Specify which fields get passed from input to output.
   ///
   /// After a filter successfully executes and returns a new data set, fields are mapped from
@@ -280,9 +280,9 @@ public:
   const vtkm::filter::FieldSelection& GetFieldsToPass() const { return this->FieldsToPass; }
   VTKM_CONT
   vtkm::filter::FieldSelection& GetFieldsToPass() { return this->FieldsToPass; }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Executes the filter on the input and produces a result dataset.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
@@ -294,9 +294,9 @@ public:
                   "Specify default types in CMake configuration instead.")
   VTKM_CONT vtkm::cont::DataSet
     Execute(const vtkm::cont::DataSet& input, vtkm::filter::PolicyBase<DerivedPolicy> policy);
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Executes the filter on the input PartitionedDataSet and produces a result PartitionedDataSet.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
@@ -312,7 +312,7 @@ public:
                   "Specify default types in CMake configuration instead.")
   VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input,
                                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
-  //@}
+  ///@}
 
   /// Map fields from input dataset to output.
   /// This is not intended for external use. Subclasses of Filter, however, may
