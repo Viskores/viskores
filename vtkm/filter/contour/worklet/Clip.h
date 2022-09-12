@@ -241,8 +241,8 @@ public:
     using InputDomain = _1;
 
     template <typename CellShapeTag, typename ScalarFieldVec, typename DeviceAdapter>
-    VTKM_EXEC void operator()(const CellShapeTag shape,
-                              const vtkm::IdComponent pointCount,
+    VTKM_EXEC void operator()(CellShapeTag shape,
+                              vtkm::IdComponent pointCount,
                               const ScalarFieldVec& scalars,
                               const internal::ClipTables::DevicePortal<DeviceAdapter>& clippingData,
                               ClipStats& clipStat,
@@ -360,12 +360,12 @@ public:
               typename IdArrayType,
               typename EdgeInterpolationPortalType,
               typename DeviceAdapter>
-    VTKM_EXEC void operator()(const CellShapeTag shape,
-                              const vtkm::Id workIndex,
-                              const PointVecType points,
-                              const ScalarVecType scalars,
-                              const vtkm::Id clipDataIndex,
-                              const ClipStats clipStats,
+    VTKM_EXEC void operator()(CellShapeTag shape,
+                              vtkm::Id workIndex,
+                              const PointVecType& points,
+                              const ScalarVecType& scalars,
+                              vtkm::Id clipDataIndex,
+                              const ClipStats& clipStats,
                               const internal::ClipTables::DevicePortal<DeviceAdapter>& clippingData,
                               ConnectivityObject& connectivityObject,
                               IdArrayType& edgePointReverseConnectivity,
@@ -534,8 +534,8 @@ public:
     using InputDomain = _1;
 
     template <typename ConnectivityDataType>
-    VTKM_EXEC void operator()(const vtkm::Id sourceValue,
-                              const vtkm::Id destinationIndex,
+    VTKM_EXEC void operator()(vtkm::Id sourceValue,
+                              vtkm::Id destinationIndex,
                               ConnectivityDataType& destinationData) const
     {
       destinationData.Set(destinationIndex, (sourceValue + EdgePointOffset));
@@ -561,7 +561,7 @@ public:
     using InputDomain = _1;
 
     template <typename ConnectivityDataType>
-    VTKM_EXEC void operator()(const vtkm::Id destinationIndex,
+    VTKM_EXEC void operator()(vtkm::Id destinationIndex,
                               ConnectivityDataType& destinationData) const
     {
       auto sourceValue = destinationData.Get(destinationIndex);
@@ -704,7 +704,7 @@ public:
     ClipWithImplicitFunction(Clip* clipper,
                              const CellSetType& cellSet,
                              const ImplicitFunction& function,
-                             const bool invert,
+                             bool invert,
                              vtkm::cont::CellSetExplicit<>* result)
       : Clipper(clipper)
       , CellSet(&cellSet)
@@ -739,7 +739,7 @@ public:
   vtkm::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
                                     const ImplicitFunction& clipFunction,
                                     const vtkm::cont::CoordinateSystem& coords,
-                                    const bool invert)
+                                    bool invert)
   {
     vtkm::cont::CellSetExplicit<> output;
 
@@ -787,7 +787,7 @@ public:
       template <typename EdgeInterp, typename OutputFieldPortal>
       VTKM_EXEC void operator()(const EdgeInterp& ei,
                                 OutputFieldPortal& field,
-                                const vtkm::Id workIndex) const
+                                vtkm::Id workIndex) const
       {
         using T = typename OutputFieldPortal::ValueType;
         T v1 = field.Get(ei.Vertex1);
