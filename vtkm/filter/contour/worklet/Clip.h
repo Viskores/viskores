@@ -704,11 +704,13 @@ public:
     ClipWithImplicitFunction(Clip* clipper,
                              const CellSetType& cellSet,
                              const ImplicitFunction& function,
+                             vtkm::Float64 offset,
                              bool invert,
                              vtkm::cont::CellSetExplicit<>* result)
       : Clipper(clipper)
       , CellSet(&cellSet)
       , Function(function)
+      , Offset(offset)
       , Invert(invert)
       , Result(result)
     {
@@ -723,14 +725,15 @@ public:
                                        vtkm::ImplicitFunctionValueFunctor<ImplicitFunction>>
         clipScalars(handle, this->Function);
 
-      // Clip at locations where the implicit function evaluates to 0
-      *this->Result = this->Clipper->Run(*this->CellSet, clipScalars, 0.0, this->Invert);
+      // Clip at locations where the implicit function evaluates to `Offset`
+      *this->Result = this->Clipper->Run(*this->CellSet, clipScalars, this->Offset, this->Invert);
     }
 
   private:
     Clip* Clipper;
     const CellSetType* CellSet;
     ImplicitFunction Function;
+    vtkm::Float64 Offset;
     bool Invert;
     vtkm::cont::CellSetExplicit<>* Result;
   };
@@ -738,16 +741,26 @@ public:
   template <typename CellSetType, typename ImplicitFunction>
   vtkm::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
                                     const ImplicitFunction& clipFunction,
+                                    vtkm::Float64 offset,
                                     const vtkm::cont::CoordinateSystem& coords,
                                     bool invert)
   {
     vtkm::cont::CellSetExplicit<> output;
 
     ClipWithImplicitFunction<CellSetType, ImplicitFunction> clip(
-      this, cellSet, clipFunction, invert, &output);
+      this, cellSet, clipFunction, offset, invert, &output);
 
     CastAndCall(coords, clip);
     return output;
+  }
+
+  template <typename CellSetType, typename ImplicitFunction>
+  vtkm::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
+                                    const ImplicitFunction& clipFunction,
+                                    const vtkm::cont::CoordinateSystem& coords,
+                                    bool invert)
+  {
+    return this->Run(cellSet, clipFunction, 0.0, coords, invert);
   }
 
   template <typename ArrayHandleType>
