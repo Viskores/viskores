@@ -84,7 +84,7 @@ vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(const vtkm::cont::DataSe
   vtkm::worklet::Clip worklet;
 
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    worklet.Run(inputCellSet, this->Function, inputCoords, this->Invert);
+    worklet.Run(inputCellSet, this->Function, this->Offset, inputCoords, this->Invert);
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
   vtkm::cont::DataSet output = this->CreateResult(input, outputCellSet, mapper);
