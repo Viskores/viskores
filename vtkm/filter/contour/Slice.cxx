@@ -33,7 +33,10 @@ vtkm::cont::DataSet Slice::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::cont::DataSet clone = input;
   clone.AddField(vtkm::cont::make_FieldPoint("sliceScalars", sliceScalars));
 
-  this->Contour::SetIsoValue(0.0);
+  if (this->GetNumberOfIsoValues() < 1)
+  {
+    this->SetIsoValue(0.0);
+  }
   this->Contour::SetActiveField("sliceScalars");
   result = this->Contour::DoExecute(clone);
 
