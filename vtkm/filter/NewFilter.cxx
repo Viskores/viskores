@@ -20,12 +20,17 @@ namespace vtkm
 {
 namespace filter
 {
+
 namespace
 {
 void RunFilter(NewFilter* self,
                vtkm::filter::DataSetQueue& input,
                vtkm::filter::DataSetQueue& output)
 {
+  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  bool prevVal = tracker.GetThreadFriendlyMemAlloc();
+  tracker.SetThreadFriendlyMemAlloc(true);
+
   std::pair<vtkm::Id, vtkm::cont::DataSet> task;
   while (input.GetTask(task))
   {
@@ -34,8 +39,10 @@ void RunFilter(NewFilter* self,
   }
 
   vtkm::cont::Algorithm::Synchronize();
+  tracker.SetThreadFriendlyMemAlloc(prevVal);
 }
-} // anonymous namespace
+
+}
 
 NewFilter::~NewFilter() = default;
 
@@ -81,7 +88,7 @@ vtkm::cont::PartitionedDataSet NewFilter::DoExecutePartitions(
     }
   }
 
-  return output;
+  return this->CreateResult(input, output);
 }
 
 vtkm::cont::DataSet NewFilter::Execute(const vtkm::cont::DataSet& input)
@@ -96,8 +103,7 @@ vtkm::cont::PartitionedDataSet NewFilter::Execute(const vtkm::cont::PartitionedD
                  (int)input.GetNumberOfPartitions(),
                  vtkm::cont::TypeToString<decltype(*this)>().c_str());
 
-  vtkm::cont::PartitionedDataSet output = this->DoExecutePartitions(input);
-  return output;
+  return this->DoExecutePartitions(input);
 }
 
 vtkm::cont::DataSet NewFilter::CreateResult(const vtkm::cont::DataSet& inDataSet) const
@@ -111,25 +117,31 @@ vtkm::cont::DataSet NewFilter::CreateResult(const vtkm::cont::DataSet& inDataSet
   return clone;
 }
 
+vtkm::cont::PartitionedDataSet NewFilter::CreateResult(
+  const vtkm::cont::PartitionedDataSet& input,
+  const vtkm::cont::PartitionedDataSet& resultPartitions) const
+{
+  auto fieldMapper = [](vtkm::cont::PartitionedDataSet& out, const vtkm::cont::Field& fieldToPass) {
+    out.AddField(fieldToPass);
+  };
+  return this->CreateResult(input, resultPartitions, fieldMapper);
+}
+
 vtkm::Id NewFilter::DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input)
 {
   vtkm::Id numDS = input.GetNumberOfPartitions();
-
-  //Aribitrary constants.
-  const vtkm::Id threadsPerGPU = 8;
-  const vtkm::Id threadsPerCPU = 4;
 
   vtkm::Id availThreads = 1;
 
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
 
   if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{}))
-    availThreads = threadsPerGPU;
+    availThreads = this->NumThreadsPerGPU;
   else if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagKokkos{}))
   {
     //Kokkos doesn't support threading on the CPU.
 #ifdef VTKM_KOKKOS_CUDA
-    availThreads = threadsPerGPU;
+    availThreads = this->NumThreadsPerGPU;
 #else
     availThreads = 1;
 #endif
@@ -137,7 +149,7 @@ vtkm::Id NewFilter::DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSe
   else if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagSerial{}))
     availThreads = 1;
   else
-    availThreads = threadsPerCPU;
+    availThreads = this->NumThreadsPerCPU;
 
   vtkm::Id numThreads = std::min<vtkm::Id>(numDS, availThreads);
   return numThreads;

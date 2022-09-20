@@ -40,6 +40,9 @@ struct VTKM_CONT_EXPORT CudaAllocator
   /// VTK-m will ignore the request and continue to use unmanaged memory (aka cudaMalloc).
   static VTKM_CONT void ForceManagedMemoryOn();
 
+  static VTKM_CONT void ForceSyncMemoryAllocator();
+  static VTKM_CONT void ForceAsyncMemoryAllocator();
+
   /// Returns true if the pointer is accessible from a CUDA device.
   static VTKM_CONT bool IsDevicePointer(const void* ptr);
 

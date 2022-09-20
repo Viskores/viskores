@@ -36,16 +36,11 @@ namespace scalar_topology
 // not need to pass it sperately (or check if it can already be derived from
 // information stored in PartitionedDataSet)
 VTKM_CONT DistributedBranchDecompositionFilter::DistributedBranchDecompositionFilter(
-  vtkm::Id3 blocksPerDim,
-  vtkm::Id3 globalSize,
-  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
-  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes)
-  : MultiBlockSpatialDecomposition(blocksPerDim,
-                                   globalSize,
-                                   localBlockIndices,
-                                   localBlockOrigins,
-                                   localBlockSizes)
+  vtkm::Id3,
+  vtkm::Id3,
+  const vtkm::cont::ArrayHandle<vtkm::Id3>&,
+  const vtkm::cont::ArrayHandle<vtkm::Id3>&,
+  const vtkm::cont::ArrayHandle<vtkm::Id3>&)
 {
 }
 
@@ -80,52 +75,59 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
                                               BranchDecompositionBlock::Destroy);
 
   timingsStream << "    " << std::setw(60) << std::left
-                << "Create DIY Master (Branch Decomposition)"
+                << "Create DIY Master and Assigner (Branch Decomposition)"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
   // Compute global ids (gids) for our local blocks
-  using RegularDecomposer = vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds>;
-  int globalNumberOfBlocks =
-    static_cast<int>(this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks());
-  int numDims = static_cast<int>(this->MultiBlockSpatialDecomposition.NumberOfDimensions());
+  // TODO/FIXME: Is there a better way to set this up?
+  auto firstDS = input.GetPartition(0);
+  vtkm::Id3 firstPointDimensions, firstGlobalPointDimensions, firstGlobalPointIndexStart;
+  firstDS.GetCellSet().CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED>(
+    vtkm::worklet::contourtree_augmented::GetLocalAndGlobalPointDimensions(),
+    firstPointDimensions,
+    firstGlobalPointDimensions,
+    firstGlobalPointIndexStart);
+  int numDims = firstGlobalPointDimensions[2] > 1 ? 3 : 2;
+  auto vtkmBlocksPerDimensionRP = input.GetPartition(0)
+                                    .GetField("vtkmBlocksPerDimension")
+                                    .GetData()
+                                    .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                    .ReadPortal();
 
   // ... compute division vector for global domain
+  using RegularDecomposer = vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds>;
   RegularDecomposer::DivisionsVector diyDivisions(numDims);
+  vtkmdiy::DiscreteBounds diyBounds(numDims);
+  int globalNumberOfBlocks = 1;
+
   for (vtkm::IdComponent d = 0; d < static_cast<vtkm::IdComponent>(numDims); ++d)
   {
-    diyDivisions[d] = static_cast<int>(this->MultiBlockSpatialDecomposition.BlocksPerDimension[d]);
-  }
-
-  // ... compute coordinates of local blocks
-  std::vector<int> vtkmdiyLocalBlockGids(static_cast<size_t>(input.GetNumberOfPartitions()));
-
-  auto localBlockIndicesPortal =
-    this->MultiBlockSpatialDecomposition.LocalBlockIndices.ReadPortal();
-  for (vtkm::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
-  {
-    RegularDecomposer::DivisionsVector diyCoords(static_cast<size_t>(numDims));
-    auto currentCoords = localBlockIndicesPortal.Get(bi);
-    for (vtkm::IdComponent d = 0; d < numDims; ++d)
-    {
-      diyCoords[d] = static_cast<int>(currentCoords[d]);
-    }
-    vtkmdiyLocalBlockGids[static_cast<size_t>(bi)] =
-      RegularDecomposer::coords_to_gid(diyCoords, diyDivisions);
+    diyDivisions[d] = static_cast<int>(vtkmBlocksPerDimensionRP.Get(d));
+    globalNumberOfBlocks *= diyDivisions[d];
+    diyBounds.min[d] = 0;
+    diyBounds.max[d] = static_cast<int>(firstGlobalPointDimensions[d]);
   }
 
   // Record time to compute the local block ids
   timingsStream << "    " << std::setw(60) << std::left
-                << "Compute Block Ids and Local Links (Branch Decomposition)"
+                << "Get DIY Information (Branch Decomposition)"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
+
   // Initialize branch decomposition computation from data in PartitionedDataSet blocks
+  vtkmdiy::DynamicAssigner assigner(comm, size, globalNumberOfBlocks);
   for (vtkm::Id localBlockIndex = 0; localBlockIndex < input.GetNumberOfPartitions();
        ++localBlockIndex)
   {
-    int globalBlockId = vtkmdiyLocalBlockGids[localBlockIndex];
     const vtkm::cont::DataSet& ds = input.GetPartition(localBlockIndex);
+    int globalBlockId = static_cast<int>(
+      vtkm::cont::ArrayGetValue(0,
+                                ds.GetField("vtkmGlobalBlockId")
+                                  .GetData()
+                                  .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()));
+
     BranchDecompositionBlock* newBlock =
       new BranchDecompositionBlock(localBlockIndex, globalBlockId, ds);
     // NOTE: Use dummy link to make DIY happy. The dummy link is never used, since all
@@ -134,6 +136,9 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
     // NOTE: Since we passed a "Destroy" function to DIY master, it will own the local data
     //       blocks and delete them when done.
     branch_decomposition_master.add(globalBlockId, newBlock, new vtkmdiy::Link());
+
+    // Tell assigner that this block lives on this rank so that DIY can manage blocks
+    assigner.set_rank(rank, globalBlockId);
   }
 
   // Log time to copy the data to the HyperSweepBlock data objects
@@ -146,19 +151,15 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
   RegularDecomposer::BoolVector wrap(3, false);
   RegularDecomposer::CoordinateVector ghosts(3, 1);
   RegularDecomposer decomposer(numDims,
-                               this->MultiBlockSpatialDecomposition.GetVTKmDIYBounds(),
+                               diyBounds,
                                static_cast<int>(globalNumberOfBlocks),
                                shareFace,
                                wrap,
                                ghosts,
                                diyDivisions);
 
-  // Define which blocks live on which rank so that vtkmdiy can manage them
-  vtkmdiy::DynamicAssigner assigner(comm, size, globalNumberOfBlocks);
-
   for (vtkm::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
   {
-    assigner.set_rank(rank, vtkmdiyLocalBlockGids[static_cast<size_t>(bi)]);
   }
 
   timingsStream << "    " << std::setw(60) << std::left
@@ -196,7 +197,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
         ds.GetField("DependentVolume").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
 
       // Get global size and compute total volume from it
-      const auto& globalSize = this->MultiBlockSpatialDecomposition.GlobalSize;
+      const auto& globalSize = firstGlobalPointDimensions;
       vtkm::Id totalVolume = globalSize[0] * globalSize[1] * globalSize[2];
 
       // Compute local best up and down paths by volume
@@ -262,7 +263,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
   branch_decomposition_master.foreach (
     [&](BranchDecompositionBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
       vtkm::cont::Field branchRootField(
-        "BranchRoots", vtkm::cont::Field::Association::WholeMesh, b->BranchRoots);
+        "BranchRoots", vtkm::cont::Field::Association::WholeDataSet, b->BranchRoots);
       outputDataSets[b->LocalBlockNo].AddField(branchRootField);
     });
 

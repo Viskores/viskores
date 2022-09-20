@@ -110,7 +110,13 @@ public:
   ///
   VTKM_CONT void ForceDevice(DeviceAdapterId deviceId);
 
-  /// \brief Copyies the state from the given device.
+  /// \brief Get/Set use of thread-friendly memory allocation for a device.
+  ///
+  ///
+  VTKM_CONT bool GetThreadFriendlyMemAlloc() const;
+  VTKM_CONT void SetThreadFriendlyMemAlloc(bool state);
+
+  /// \brief Copies the state from the given device.
   ///
   /// This is a convenient way to allow the `RuntimeDeviceTracker` on one thread
   /// copy the behavior from another thread.

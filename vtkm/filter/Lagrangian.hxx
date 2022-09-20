@@ -21,13 +21,13 @@
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/filter/flow/worklet/Field.h>
+#include <vtkm/filter/flow/worklet/GridEvaluators.h>
+#include <vtkm/filter/flow/worklet/ParticleAdvection.h>
+#include <vtkm/filter/flow/worklet/Particles.h>
+#include <vtkm/filter/flow/worklet/RK4Integrator.h>
+#include <vtkm/filter/flow/worklet/Stepper.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/particleadvection/Field.h>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Particles.h>
-#include <vtkm/worklet/particleadvection/RK4Integrator.h>
-#include <vtkm/worklet/particleadvection/Stepper.h>
 
 #include <cstring>
 #include <sstream>
@@ -274,13 +274,13 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-  using Stepper = vtkm::worklet::particleadvection::Stepper<RK4Type, GridEvalType>;
+  using FieldType = vtkm::worklet::flow::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::flow::GridEvaluator<FieldType>;
+  using RK4Type = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
+  using Stepper = vtkm::worklet::flow::Stepper<RK4Type, GridEvalType>;
 
-  vtkm::worklet::ParticleAdvection particleadvection;
-  vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
+  vtkm::worklet::flow::ParticleAdvection particleadvection;
+  vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> res;
 
   FieldType velocities(field, fieldMeta.GetAssociation());
   GridEvalType gridEval(coords, cells, velocities);
@@ -333,7 +333,7 @@ inline VTKM_CONT bool Lagrangian::MapFieldOntoOutput(vtkm::cont::DataSet& result
                                                      const vtkm::cont::Field& field,
                                                      vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  if (field.IsFieldGlobal())
+  if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;

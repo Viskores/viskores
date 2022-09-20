@@ -19,34 +19,21 @@ namespace filter
 {
 namespace resampling
 {
-vtkm::cont::DataSet Probe::DoExecute(const vtkm::cont::DataSet& input)
+
+namespace
 {
-  vtkm::worklet::Probe worklet;
-  worklet.Run(input.GetCellSet(),
-              input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
-              this->Geometry.GetCoordinateSystem().GetData());
 
-  auto mapper = [&](auto& outDataSet, const auto& f) { this->DoMapField(outDataSet, f, worklet); };
-  auto output = this->CreateResult(
-    input, this->Geometry.GetCellSet(), this->Geometry.GetCoordinateSystems(), mapper);
-  output.AddField(vtkm::cont::make_FieldPoint("HIDDEN", worklet.GetHiddenPointsField()));
-  output.AddField(
-    vtkm::cont::make_FieldCell("HIDDEN", worklet.GetHiddenCellsField(output.GetCellSet())));
-
-  return output;
-}
-
-
-bool Probe::DoMapField(vtkm::cont::DataSet& result,
-                       const vtkm::cont::Field& field,
-                       const vtkm::worklet::Probe& worklet)
+bool DoMapField(vtkm::cont::DataSet& result,
+                const vtkm::cont::Field& field,
+                const vtkm::worklet::Probe& worklet,
+                vtkm::Float64 invalidValue)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     auto resolve = [&](const auto& concrete) {
       using T = typename std::decay_t<decltype(concrete)>::ValueType;
       vtkm::cont::ArrayHandle<T> outputArray = worklet.ProcessPointField(
-        concrete, vtkm::cont::internal::CastInvalidValue<T>(this->InvalidValue));
+        concrete, vtkm::cont::internal::CastInvalidValue<T>(invalidValue));
       result.AddPointField(field.GetName(), outputArray);
     };
     field.GetData()
@@ -54,11 +41,10 @@ bool Probe::DoMapField(vtkm::cont::DataSet& result,
         resolve);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     vtkm::cont::Field outField;
-    if (vtkm::filter::MapFieldPermutation(
-          field, worklet.GetCellIds(), outField, this->InvalidValue))
+    if (vtkm::filter::MapFieldPermutation(field, worklet.GetCellIds(), outField, invalidValue))
     {
       // output field should be associated with points
       outField = vtkm::cont::Field(
@@ -68,7 +54,7 @@ bool Probe::DoMapField(vtkm::cont::DataSet& result,
     }
     return false;
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;
@@ -78,6 +64,27 @@ bool Probe::DoMapField(vtkm::cont::DataSet& result,
     return false;
   }
 }
+} // anonymous namespace
+
+vtkm::cont::DataSet Probe::DoExecute(const vtkm::cont::DataSet& input)
+{
+  vtkm::worklet::Probe worklet;
+  worklet.Run(input.GetCellSet(),
+              input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
+              this->Geometry.GetCoordinateSystem().GetData());
+
+  auto mapper = [&](auto& outDataSet, const auto& f) {
+    DoMapField(outDataSet, f, worklet, this->InvalidValue);
+  };
+  auto output = this->CreateResult(
+    input, this->Geometry.GetCellSet(), this->Geometry.GetCoordinateSystems(), mapper);
+  output.AddField(vtkm::cont::make_FieldPoint("HIDDEN", worklet.GetHiddenPointsField()));
+  output.AddField(
+    vtkm::cont::make_FieldCell("HIDDEN", worklet.GetHiddenCellsField(output.GetCellSet())));
+
+  return output;
+}
+
 } // namespace resampling
 } // namespace filter
 } // namespace vtkm

@@ -20,6 +20,9 @@ set(headers
 
 set(unit_tests
   UnitTestContourTreeUniformFilter.cxx
+  )
+
+set(unit_tests_device
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestContourTreeUniformAugmentedWorklet.cxx
   UnitTestContourTreeUniformDistributedFilter.cxx
@@ -34,19 +37,22 @@ set(libraries
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
+  DEVICE_SOURCES ${unit_tests_device}
   LIBRARIES ${libraries}
-  ALL_BACKENDS # includes Worklet unit test and uses vtkm::cont::Algorithm
   USE_VTKM_JOB_POOL
 )
 
 if (VTKm_ENABLE_MPI)
   set(mpi_unit_tests
+    )
+  set(mpi_unit_tests_device
     UnitTestContourTreeUniformDistributedFilterMPI.cxx
     )
   vtkm_unit_tests(
-    MPI SOURCES ${mpi_unit_tests}
+    MPI
+    SOURCES ${mpi_unit_tests}
+    DEVICE_SOURCES ${mpi_unit_tests_device}
     LIBRARIES vtkm_filter vtkm_source vtkm_io
-    ALL_BACKENDS
     USE_VTKM_JOB_POOL
   )
 endif()

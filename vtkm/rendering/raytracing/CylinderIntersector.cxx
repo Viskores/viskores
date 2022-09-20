@@ -476,7 +476,7 @@ void CylinderIntersector::IntersectionDataImp(Ray<Precision>& rays,
   ShapeIntersector::IntersectionPoint(rays);
 
   // TODO: if this is nodes of a mesh, support points
-  const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
+  const bool isSupportedField = scalarField.IsCellField() || scalarField.IsPointField();
   if (!isSupportedField)
   {
     throw vtkm::cont::ErrorBadValue("Field not accociated with a cell set");

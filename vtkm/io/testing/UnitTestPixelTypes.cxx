@@ -106,6 +106,7 @@ void TestGreyPixelConstructors()
                    "Incorrect Conversion");
   VTKM_TEST_ASSERT(vtkm::Vec<vtkm::UInt16, 1>(10) == pixel_7, "Bad Vec4f_32 construction");
 
+  VTKM_TEST_ASSERT(GreyPixel<16>::GetBitDepth() == 16, "Bad BitDepth");
   VTKM_TEST_ASSERT(GreyPixel<16>::BIT_DEPTH == 16, "Bad BitDepth");
   VTKM_TEST_ASSERT(GreyPixel<16>::NUM_BYTES == 2, "Bad NumBytes");
   VTKM_TEST_ASSERT(GreyPixel<16>::MAX_COLOR_VALUE == 65535, "Bad NumBytes");
@@ -146,6 +147,7 @@ void TestRGBPixelConstructors()
                    "Incorrect Conversion");
   VTKM_TEST_ASSERT(vtkm::Vec<vtkm::UInt16, 3>(10, 10, 10) == pixel_8, "Bad Vec4f_32 construction");
 
+  VTKM_TEST_ASSERT(RGBPixel<16>::GetBitDepth() == 16, "Bad BitDepth");
   VTKM_TEST_ASSERT(RGBPixel<16>::BIT_DEPTH == 16, "Bad BitDepth");
   VTKM_TEST_ASSERT(RGBPixel<16>::NUM_BYTES == 2, "Bad NumBytes");
   VTKM_TEST_ASSERT(RGBPixel<16>::MAX_COLOR_VALUE == 65535, "Bad NumBytes");

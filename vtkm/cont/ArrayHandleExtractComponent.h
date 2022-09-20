@@ -44,13 +44,8 @@ public:
   {
   }
 
-  // Copy constructor
-  VTKM_EXEC_CONT ArrayPortalExtractComponent(const ArrayPortalExtractComponent<PortalType>& src)
-    : Portal(src.Portal)
-    , Component(src.Component)
-  {
-  }
-
+  ArrayPortalExtractComponent(const ArrayPortalExtractComponent&) = default;
+  ArrayPortalExtractComponent(ArrayPortalExtractComponent&&) = default;
   ArrayPortalExtractComponent& operator=(const ArrayPortalExtractComponent&) = default;
   ArrayPortalExtractComponent& operator=(ArrayPortalExtractComponent&&) = default;
 
@@ -103,15 +98,16 @@ class Storage<typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::Com
   using SourceStorage = vtkm::cont::internal::Storage<SourceValueType, SourceStorageTag>;
 
 public:
-  VTKM_CONT static vtkm::IdComponent ComponentIndex(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::IdComponent ComponentIndex(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<vtkm::IdComponent>();
   }
 
-  template <typename Buff>
-  VTKM_CONT static Buff* SourceBuffers(Buff* buffers)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> SourceBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return buffers + 1;
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + 1, buffers.end());
   }
 
   using ReadPortalType =
@@ -119,17 +115,13 @@ public:
   using WritePortalType =
     vtkm::internal::ArrayPortalExtractComponent<typename SourceStorage::WritePortalType>;
 
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
-  {
-    return SourceStorage::GetNumberOfBuffers() + 1;
-  }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return SourceStorage::GetNumberOfValues(SourceBuffers(buffers));
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>&,
                              const ValueType&,
                              vtkm::Id,
                              vtkm::Id,
@@ -139,31 +131,33 @@ public:
   }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
     SourceStorage::ResizeBuffers(numValues, SourceBuffers(buffers), preserve, token);
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return ReadPortalType(SourceStorage::CreateReadPortal(SourceBuffers(buffers), device, token),
                           ComponentIndex(buffers));
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return WritePortalType(SourceStorage::CreateWritePortal(SourceBuffers(buffers), device, token),
                            ComponentIndex(buffers));
   }
 
-  VTKM_CONT static auto CreateBuffers(vtkm::IdComponent componentIndex,
-                                      const ArrayHandleType& array)
+  VTKM_CONT static auto CreateBuffers(vtkm::IdComponent componentIndex = 0,
+                                      const ArrayHandleType& array = ArrayHandleType{})
     -> decltype(vtkm::cont::internal::CreateBuffers())
   {
     return vtkm::cont::internal::CreateBuffers(componentIndex, array);

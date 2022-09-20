@@ -133,7 +133,7 @@ vtkm::cont::DataSet Wavelet::GenerateDataSet(vtkm::cont::CoordinateSystem coords
   return dataSet;
 }
 
-vtkm::cont::DataSet Wavelet::Execute() const
+vtkm::cont::DataSet Wavelet::DoExecute() const
 {
   VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 

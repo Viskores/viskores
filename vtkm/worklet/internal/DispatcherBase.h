@@ -586,7 +586,7 @@ private:
   }
 
 public:
-  //@{
+  ///@{
   /// Setting the device ID will force the execute to happen on a particular device. If no device
   /// is specified (or the device ID is set to any), then a device will automatically be chosen
   /// based on the runtime device tracker.
@@ -595,7 +595,7 @@ public:
   void SetDevice(vtkm::cont::DeviceAdapterId device) { this->Device = device; }
 
   VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const { return this->Device; }
-  //@}
+  ///@}
 
   using ScatterType = typename WorkletType::ScatterType;
   using MaskType = typename WorkletType::MaskType;

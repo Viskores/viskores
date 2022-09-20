@@ -74,7 +74,7 @@ ContourTreeMesh2D::ContourTreeMesh2D()
 vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(const vtkm::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("ContourTreeMesh2D expects point field input.");
   }
@@ -96,7 +96,7 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(const vtkm::cont::DataSet& inpu
   this->CastAndCallScalarField(field, resolveType);
 
   return this->CreateResultField(
-    input, this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, saddlePeak);
+    input, this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeDataSet, saddlePeak);
 }
 
 //-----------------------------------------------------------------------------
@@ -109,7 +109,7 @@ ContourTreeMesh3D::ContourTreeMesh3D()
 vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(const vtkm::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
-  if (!field.IsFieldPoint())
+  if (!field.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
@@ -132,7 +132,7 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(const vtkm::cont::DataSet& inpu
   this->CastAndCallScalarField(field, resolveType);
 
   return this->CreateResultField(
-    input, this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, saddlePeak);
+    input, this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeDataSet, saddlePeak);
 }
 } // namespace scalar_topology
 } // namespace filter

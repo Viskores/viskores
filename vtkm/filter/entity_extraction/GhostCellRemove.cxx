@@ -277,17 +277,17 @@ bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::cont::Field& field,
                 const vtkm::worklet::Threshold& worklet)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     //we copy the input handle to the result dataset, reusing the metadata
     result.AddField(field);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     return vtkm::filter::MapFieldPermutation(field, worklet.GetValidCellIds(), result);
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;
@@ -308,8 +308,9 @@ namespace entity_extraction
 //-----------------------------------------------------------------------------
 VTKM_CONT GhostCellRemove::GhostCellRemove()
 {
-  this->SetActiveField("vtkmGhostCells");
-  this->SetFieldsToPass("vtkmGhostCells", vtkm::filter::FieldSelection::Mode::Exclude);
+  this->SetActiveField(vtkm::cont::GetGlobalGhostCellFieldName());
+  this->SetFieldsToPass(vtkm::cont::GetGlobalGhostCellFieldName(),
+                        vtkm::filter::FieldSelection::Mode::Exclude);
 }
 
 //-----------------------------------------------------------------------------
@@ -351,17 +352,12 @@ VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataS
 
   if (this->GetRemoveAllGhost())
   {
-    cellOut = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
-                          fieldArray,
-                          field.GetAssociation(),
-                          RemoveAllGhosts());
+    cellOut = worklet.Run(cells, fieldArray, field.GetAssociation(), RemoveAllGhosts());
   }
   else if (this->GetRemoveByType())
   {
-    cellOut = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
-                          fieldArray,
-                          field.GetAssociation(),
-                          RemoveGhostByType(this->GetRemoveType()));
+    cellOut = worklet.Run(
+      cells, fieldArray, field.GetAssociation(), RemoveGhostByType(this->GetRemoveType()));
   }
   else
   {

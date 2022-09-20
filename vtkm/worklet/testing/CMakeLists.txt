@@ -26,7 +26,6 @@ set(unit_tests
   UnitTestMaskSelect.cxx
   UnitTestNormalize.cxx
   UnitTestNDimsHistMarginalization.cxx
-  UnitTestParticleAdvection.cxx
   UnitTestScalarsToColors.cxx
   UnitTestScatterAndMask.cxx
   UnitTestScatterCounting.cxx
@@ -34,8 +33,6 @@ set(unit_tests
   UnitTestSplatKernels.cxx
   UnitTestScatterAndMaskWithTopology.cxx
   UnitTestStreamLineUniformGrid.cxx
-  UnitTestStreamSurface.cxx
-  UnitTestTemporalAdvection.cxx
   UnitTestTriangleWinding.cxx
   UnitTestWholeCellSetIn.cxx
   UnitTestWorkletMapField.cxx
@@ -51,9 +48,8 @@ set(unit_tests
  )
 
 vtkm_unit_tests(
-  SOURCES ${unit_tests}
+  DEVICE_SOURCES ${unit_tests}
   LIBRARIES vtkm_source vtkm_worklet vtkm_filter vtkm_io
-  ALL_BACKENDS
   USE_VTKM_JOB_POOL
   )
 if (TARGET vtkm::cuda)

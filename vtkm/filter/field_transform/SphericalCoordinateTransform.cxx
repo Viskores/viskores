@@ -25,8 +25,10 @@ vtkm::cont::DataSet SphericalCoordinateTransform::DoExecute(const vtkm::cont::Da
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     vtkm::cont::ArrayHandle<T> result;
-    vtkm::worklet::SphericalCoordinateTransform worklet{ this->CartesianToSpherical };
-    worklet.Run(concrete, result);
+    if (this->CartesianToSpherical)
+      this->Invoke(vtkm::worklet::CarToSphere{}, concrete, result);
+    else
+      this->Invoke(vtkm::worklet::SphereToCar{}, concrete, result);
     outArray = result;
   };
   this->CastAndCallVecField<3>(this->GetFieldFromDataSet(inDataSet), resolveType);

@@ -83,11 +83,64 @@ public:
   {
   }
 
+  struct LastCell
+  {
+    vtkm::Id CellId = -1;
+    vtkm::Id NodeIdx = -1;
+  };
 
   VTKM_EXEC
   vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
                            vtkm::Id& cellId,
                            vtkm::Vec3f& parametric) const
+  {
+    LastCell lastCell;
+    return this->FindCellImpl(point, cellId, parametric, lastCell);
+  }
+
+  VTKM_EXEC
+  vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                           vtkm::Id& cellId,
+                           vtkm::Vec3f& parametric,
+                           LastCell& lastCell) const
+  {
+    cellId = -1;
+
+    //Check the last cell.
+    if ((lastCell.CellId >= 0) && (lastCell.CellId < this->CellSet.GetNumberOfElements()))
+    {
+      if (this->PointInCell(point, lastCell.CellId, parametric) == vtkm::ErrorCode::Success)
+      {
+        cellId = lastCell.CellId;
+        return vtkm::ErrorCode::Success;
+      }
+    }
+
+    //Check the last leaf node.
+    if ((lastCell.NodeIdx >= 0) && (lastCell.NodeIdx < this->Nodes.GetNumberOfValues()))
+    {
+      const auto& node = this->Nodes.Get(lastCell.NodeIdx);
+
+      if (node.ChildIndex < 0)
+      {
+        VTKM_RETURN_ON_ERROR(this->FindInLeaf(point, parametric, node, cellId));
+        if (cellId != -1)
+        {
+          lastCell.CellId = cellId;
+          return vtkm::ErrorCode::Success;
+        }
+      }
+    }
+
+    //No fastpath. Do a full search.
+    return this->FindCellImpl(point, cellId, parametric, lastCell);
+  }
+
+  VTKM_EXEC
+  vtkm::ErrorCode FindCellImpl(const vtkm::Vec3f& point,
+                               vtkm::Id& cellId,
+                               vtkm::Vec3f& parametric,
+                               LastCell& lastCell) const
   {
     cellId = -1;
     vtkm::Id nodeIndex = 0;
@@ -98,7 +151,8 @@ public:
       switch (state)
       {
         case FindCellState::EnterNode:
-          VTKM_RETURN_ON_ERROR(this->EnterNode(state, point, cellId, nodeIndex, parametric));
+          VTKM_RETURN_ON_ERROR(
+            this->EnterNode(state, point, cellId, nodeIndex, parametric, lastCell));
           break;
         case FindCellState::AscendFromNode:
           this->AscendFromNode(state, nodeIndex);
@@ -141,7 +195,8 @@ private:
                             const vtkm::Vec3f& point,
                             vtkm::Id& cellId,
                             vtkm::Id nodeIndex,
-                            vtkm::Vec3f& parametric) const
+                            vtkm::Vec3f& parametric,
+                            LastCell& lastCell) const
   {
     VTKM_ASSERT(state == FindCellState::EnterNode);
 
@@ -152,6 +207,11 @@ private:
       // In a leaf node. Look for a containing cell.
       VTKM_RETURN_ON_ERROR(this->FindInLeaf(point, parametric, node, cellId));
       state = FindCellState::AscendFromNode;
+      if (cellId != -1)
+      {
+        lastCell.CellId = cellId;
+        lastCell.NodeIdx = nodeIndex;
+      }
     }
     else
     {
@@ -230,24 +290,38 @@ private:
     const vtkm::exec::CellLocatorBoundingIntervalHierarchyNode& node,
     vtkm::Id& containingCellId) const
   {
-    using IndicesType = typename CellSetPortal::IndicesType;
     for (vtkm::Id i = node.Leaf.Start; i < node.Leaf.Start + node.Leaf.Size; ++i)
     {
       vtkm::Id cellId = this->CellIds.Get(i);
-      IndicesType cellPointIndices = this->CellSet.GetIndices(cellId);
-      vtkm::VecFromPortalPermute<IndicesType, CoordsPortal> cellPoints(&cellPointIndices,
-                                                                       this->Coords);
-      bool found;
-      VTKM_RETURN_ON_ERROR(this->IsPointInCell(
-        point, parametric, this->CellSet.GetCellShape(cellId), cellPoints, found));
-      if (found)
+
+      if (this->PointInCell(point, cellId, parametric) == vtkm::ErrorCode::Success)
       {
         containingCellId = cellId;
         return vtkm::ErrorCode::Success;
       }
     }
+
     containingCellId = -1;
     return vtkm::ErrorCode::Success;
+  }
+
+  //  template <typename CoordsType, typename CellShapeTag>
+  VTKM_EXEC vtkm::ErrorCode PointInCell(const vtkm::Vec3f& point,
+                                        vtkm::Id& cellId,
+                                        vtkm::Vec3f& parametric) const
+  {
+    using IndicesType = typename CellSetPortal::IndicesType;
+    IndicesType cellPointIndices = this->CellSet.GetIndices(cellId);
+    vtkm::VecFromPortalPermute<IndicesType, CoordsPortal> cellPoints(&cellPointIndices,
+                                                                     this->Coords);
+    auto cellShape = this->CellSet.GetCellShape(cellId);
+    bool isInside;
+    VTKM_RETURN_ON_ERROR(IsPointInCell(point, parametric, cellShape, cellPoints, isInside));
+
+    if (isInside && vtkm::exec::CellInside(parametric, cellShape))
+      return vtkm::ErrorCode::Success;
+
+    return vtkm::ErrorCode::CellNotFound;
   }
 
   template <typename CoordsType, typename CellShapeTag>

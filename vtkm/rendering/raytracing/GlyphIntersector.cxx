@@ -587,7 +587,7 @@ void GlyphIntersector::IntersectionDataImp(Ray<Precision>& rays,
 {
   ShapeIntersector::IntersectionPoint(rays);
 
-  const bool isSupportedField = scalarField.IsFieldCell() || scalarField.IsFieldPoint();
+  const bool isSupportedField = scalarField.IsCellField() || scalarField.IsPointField();
   if (!isSupportedField)
   {
     throw vtkm::cont::ErrorBadValue(

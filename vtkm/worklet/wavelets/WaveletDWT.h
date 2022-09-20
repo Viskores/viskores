@@ -1436,8 +1436,7 @@ public:
       }
     }
 
-    vtkm::Id sigConvolvedLen = L[0] + L[1]; // approx + detail coeffs
-    vtkm::Id addLen;                        // for extension
+    vtkm::Id addLen; // for extension
     bool oddLow = true;
     bool oddHigh = true;
     if (filterLen % 2 != 0)
@@ -1447,10 +1446,6 @@ public:
     if (doSymConv)
     {
       addLen = filterLen / 2;
-      if (sigInLen % 2 != 0)
-      {
-        sigConvolvedLen += 1;
-      }
     }
     else
     {

@@ -20,6 +20,7 @@
 
 #include <vtkmstd/integer_sequence.h>
 
+#include <numeric>
 #include <type_traits>
 
 namespace vtkm
@@ -169,31 +170,6 @@ struct VerifyArrayHandle
                          "must be a list of ArrayHandle types.");
 };
 
-template <std::size_t I>
-struct BufferIndexImpl
-{
-  template <typename... Ts>
-  static constexpr vtkm::IdComponent Value(vtkm::IdComponent n, Ts... remaining)
-  {
-    return n + BufferIndexImpl<I - 1>::Value(remaining...);
-  }
-};
-template <>
-struct BufferIndexImpl<0>
-{
-  template <typename... Ts>
-  static constexpr vtkm::IdComponent Value(Ts...)
-  {
-    return 0;
-  }
-};
-
-template <std::size_t I, typename... StorageTypes>
-constexpr vtkm::IdComponent BufferIndex()
-{
-  return BufferIndexImpl<I>::Value(StorageTypes::GetNumberOfBuffers()...);
-}
-
 } // end namespace compvec
 
 } // namespace internal
@@ -226,21 +202,31 @@ class Storage<vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags)
 {
   using ValueType = vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags))>;
 
+  struct Info
+  {
+    std::array<std::size_t, sizeof...(StorageTags) + 1> BufferOffset;
+  };
+
   template <typename S>
   using StorageFor = vtkm::cont::internal::Storage<T, S>;
 
   using StorageTuple = vtkm::Tuple<StorageFor<StorageTags>...>;
 
-  template <std::size_t I>
-  VTKM_CONT static constexpr vtkm::IdComponent BufferIndex()
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> GetBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    std::size_t subArray)
   {
-    return compvec::BufferIndex<I, StorageFor<StorageTags>...>();
+    Info info = buffers[0].GetMetaData<Info>();
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + info.BufferOffset[subArray],
+                                                     buffers.begin() +
+                                                       info.BufferOffset[subArray + 1]);
   }
 
-  template <std::size_t I, typename Buff>
-  VTKM_CONT static Buff* Buffers(Buff* buffers)
+  template <std::size_t I>
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> Buffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return buffers + BufferIndex<I>();
+    return GetBuffers(buffers, I);
   }
 
   using IndexList = vtkmstd::make_index_sequence<sizeof...(StorageTags)>;
@@ -255,19 +241,21 @@ private:
   template <std::size_t... Is>
   static void ResizeBuffersImpl(vtkmstd::index_sequence<Is...>,
                                 vtkm::Id numValues,
-                                vtkm::cont::internal::Buffer* buffers,
+                                const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                 vtkm::CopyFlag preserve,
                                 vtkm::cont::Token& token)
   {
+    std::vector<std::vector<vtkm::cont::internal::Buffer>> bufferPartitions = { Buffers<Is>(
+      buffers)... };
     auto init_list = { (vtkm::tuple_element_t<Is, StorageTuple>::ResizeBuffers(
-                          numValues, Buffers<Is>(buffers), preserve, token),
+                          numValues, bufferPartitions[Is], preserve, token),
                         false)... };
     (void)init_list;
   }
 
   template <std::size_t... Is>
   static void FillImpl(vtkmstd::index_sequence<Is...>,
-                       vtkm::cont::internal::Buffer* buffers,
+                       const std::vector<vtkm::cont::internal::Buffer>& buffers,
                        const ValueType& fillValue,
                        vtkm::Id startIndex,
                        vtkm::Id endIndex,
@@ -284,45 +272,43 @@ private:
   }
 
   template <std::size_t... Is>
-  static ReadPortalType CreateReadPortalImpl(vtkmstd::index_sequence<Is...>,
-                                             const vtkm::cont::internal::Buffer* buffers,
-                                             vtkm::cont::DeviceAdapterId device,
-                                             vtkm::cont::Token& token)
+  static ReadPortalType CreateReadPortalImpl(
+    vtkmstd::index_sequence<Is...>,
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return ReadPortalType(vtkm::tuple_element_t<Is, StorageTuple>::CreateReadPortal(
       Buffers<Is>(buffers), device, token)...);
   }
 
   template <std::size_t... Is>
-  static WritePortalType CreateWritePortalImpl(vtkmstd::index_sequence<Is...>,
-                                               vtkm::cont::internal::Buffer* buffers,
-                                               vtkm::cont::DeviceAdapterId device,
-                                               vtkm::cont::Token& token)
+  static WritePortalType CreateWritePortalImpl(
+    vtkmstd::index_sequence<Is...>,
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return WritePortalType(vtkm::tuple_element_t<Is, StorageTuple>::CreateWritePortal(
       Buffers<Is>(buffers), device, token)...);
   }
 
 public:
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return BufferIndex<sizeof...(StorageTags)>();
-  }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
-  {
-    return vtkm::TupleElement<0, StorageTuple>::GetNumberOfValues(buffers);
+    return vtkm::TupleElement<0, StorageTuple>::GetNumberOfValues(Buffers<0>(buffers));
   }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
     ResizeBuffersImpl(IndexList{}, numValues, buffers, preserve, token);
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>& buffers,
                              const ValueType& fillValue,
                              vtkm::Id startIndex,
                              vtkm::Id endIndex,
@@ -331,65 +317,51 @@ public:
     FillImpl(IndexList{}, buffers, fillValue, startIndex, endIndex, token);
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return CreateReadPortalImpl(IndexList{}, buffers, device, token);
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return CreateWritePortalImpl(IndexList{}, buffers, device, token);
   }
 
-private:
-  template <typename ArrayType>
-  VTKM_CONT static bool CopyBuffers(const ArrayType& array,
-                                    vtkm::cont::internal::Buffer* destBuffers)
-  {
-    vtkm::IdComponent numBuffers = array.GetNumberOfBuffers();
-    const vtkm::cont::internal::Buffer* srcBuffers = array.GetBuffers();
-    for (vtkm::IdComponent buffIndex = 0; buffIndex < numBuffers; ++buffIndex)
-    {
-      destBuffers[buffIndex] = srcBuffers[buffIndex];
-    }
-    return false; // Return value does not matter. Hopefully just thrown away by compiler.
-  }
-
-  template <std::size_t... Is, typename... ArrayTs>
-  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffersImpl(
-    vtkmstd::index_sequence<Is...>,
-    const ArrayTs... arrays)
-  {
-    std::vector<vtkm::cont::internal::Buffer> buffers(
-      static_cast<std::size_t>(GetNumberOfBuffers()));
-    auto init_list = { CopyBuffers(arrays, Buffers<Is>(&buffers.front()))... };
-    (void)init_list;
-    return buffers;
-  }
-
 public:
-  template <typename... ArrayTs>
-  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(const ArrayTs... arrays)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
+    const vtkm::cont::ArrayHandle<T, StorageTags>&... arrays)
   {
-    return CreateBuffersImpl(IndexList{}, arrays...);
+    auto numBuffers = { std::size_t{ 1 }, arrays.GetBuffers().size()... };
+    Info info;
+    std::partial_sum(numBuffers.begin(), numBuffers.end(), info.BufferOffset.begin());
+    return vtkm::cont::internal::CreateBuffers(info, arrays...);
+  }
+
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers()
+  {
+    return CreateBuffers(vtkm::cont::ArrayHandle<T, StorageTags>{}...);
   }
 
 private:
   using ArrayTupleType = vtkm::Tuple<vtkm::cont::ArrayHandle<T, StorageTags>...>;
 
   template <std::size_t... Is>
-  VTKM_CONT static ArrayTupleType GetArrayTupleImpl(vtkmstd::index_sequence<Is...>,
-                                                    const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static ArrayTupleType GetArrayTupleImpl(
+    vtkmstd::index_sequence<Is...>,
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return ArrayTupleType(vtkm::cont::ArrayHandle<T, StorageTags>(Buffers<Is>(buffers))...);
   }
 
 public:
-  VTKM_CONT static ArrayTupleType GetArrayTuple(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static ArrayTupleType GetArrayTuple(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return GetArrayTupleImpl(IndexList{}, buffers);
   }
@@ -400,13 +372,13 @@ template <typename T, typename StorageTag>
 struct Storage<T, vtkm::cont::StorageTagCompositeVec<StorageTag>> : Storage<T, StorageTag>
 {
   VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
-    const vtkm::cont::ArrayHandle<T, StorageTag>& array)
+    const vtkm::cont::ArrayHandle<T, StorageTag>& array = vtkm::cont::ArrayHandle<T, StorageTag>{})
   {
     return vtkm::cont::internal::CreateBuffers(array);
   }
 
   VTKM_CONT static vtkm::Tuple<vtkm::cont::ArrayHandle<T, StorageTag>> GetArrayTuple(
-    const vtkm::cont::internal::Buffer* buffers)
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return vtkm::cont::ArrayHandle<T, StorageTag>(buffers);
   }

@@ -53,7 +53,7 @@ VTKM_CONT bool MIRFilter::DoMapField(
     return false;
   }
 
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     auto resolve = [&](const auto& concrete) {
       using T = typename std::decay_t<decltype(concrete)>::ValueType;
@@ -67,7 +67,7 @@ VTKM_CONT bool MIRFilter::DoMapField(
         resolve);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     return vtkm::filter::MapFieldPermutation(field, filterCellInterp, result);
   }
@@ -117,7 +117,7 @@ VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& in
   vtkm::cont::Field or_len = input.GetField(this->len_name);
   vtkm::cont::Field or_ids = input.GetField(this->id_name);
   vtkm::cont::Field or_vfs = input.GetField(this->vf_name);
-  // TODO: Check all fields for 'IsFieldCell'
+  // TODO: Check all fields for 'IsCellField'
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> vfsdata_or, vfsdata;
   vtkm::cont::ArrayHandle<vtkm::Id> idsdata_or, idsdata, lendata_or, lendata, posdata_or, posdata,
     allids;

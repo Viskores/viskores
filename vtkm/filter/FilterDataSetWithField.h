@@ -40,7 +40,7 @@ public:
   VTKM_CONT
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
 
-  //@{
+  ///@{
   /// Choose the field to operate on. Note, if
   /// `this->UseCoordinateSystemAsField` is true, then the active field is not used.
   VTKM_CONT
@@ -57,20 +57,20 @@ public:
   {
     return this->ActiveFieldAssociation;
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// To simply use the active coordinate system as the field to operate on, set
   /// UseCoordinateSystemAsField to true.
   VTKM_CONT
   void SetUseCoordinateSystemAsField(bool val) { this->UseCoordinateSystemAsField = val; }
   VTKM_CONT
   bool GetUseCoordinateSystemAsField() const { return this->UseCoordinateSystemAsField; }
-  //@}
+  ///@}
 
   //From the field we can extract the association component
   // Association::Any -> unable to map
-  // Association::WholeMesh -> (I think this is points)
+  // Association::WholeDataSet -> (I think this is points)
   // Association::Points -> map using point mapping
   // Association::Cells -> how do we map this?
   template <typename DerivedPolicy>

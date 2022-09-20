@@ -352,6 +352,14 @@ public:
     return (this->Index >= 0) && (this->Index < NumberOfTypes);
   }
 
+  /// Returns true if this `Variant` stores the given type
+  ///
+  template <typename T>
+  VTK_M_DEVICE bool IsType() const
+  {
+    return (this->GetIndex() == this->GetIndexOf<T>());
+  }
+
   Variant() = default;
   ~Variant() = default;
   Variant(const Variant&) = default;
@@ -373,7 +381,7 @@ public:
   template <typename T>
   VTK_M_DEVICE Variant& operator=(const T& src)
   {
-    if (this->GetIndex() == this->GetIndexOf<T>())
+    if (this->IsType<T>())
     {
       this->Get<T>() = src;
     }
@@ -434,7 +442,7 @@ private:
   }
 
 public:
-  //@{
+  ///@{
   /// Returns the value as the type at the given index. The behavior is undefined if the
   /// variant does not contain the value at the given index.
   ///
@@ -451,9 +459,9 @@ public:
     VTKM_ASSERT(I == this->GetIndex());
     return detail::VariantUnionGet<I>(this->Storage);
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Returns the value as the given type. The behavior is undefined if the variant does not
   /// contain a value of the given type.
   ///
@@ -468,20 +476,20 @@ public:
   {
     return this->GetImpl<T>(CanStore<T>{});
   }
-  //@}
+  ///@}
 
 private:
   template <typename T>
   VTK_M_DEVICE T& GetImpl(std::true_type)
   {
-    VTKM_ASSERT(this->GetIndexOf<T>() == this->GetIndex());
+    VTKM_ASSERT(this->IsType<T>());
     return detail::VariantUnionGet<IndexOf<T>::value>(this->Storage);
   }
 
   template <typename T>
   VTK_M_DEVICE const T& GetImpl(std::true_type) const
   {
-    VTKM_ASSERT(this->GetIndexOf<T>() == this->GetIndex());
+    VTKM_ASSERT(this->IsType<T>());
     return detail::VariantUnionGet<IndexOf<T>::value>(this->Storage);
   }
 
@@ -500,7 +508,7 @@ private:
   }
 
 public:
-  //@{
+  ///@{
   /// Given a functor object, calls the functor with the contained object cast to the appropriate
   /// type. If extra \c args are given, then those are also passed to the functor after the cast
   /// object. If the functor returns a value, that value is returned from \c CastAndCall.
@@ -510,7 +518,6 @@ public:
   template <typename Functor, typename... Args>
   VTK_M_DEVICE auto CastAndCall(Functor&& f, Args&&... args) const
     noexcept(noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
-      -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
     VTKM_ASSERT(this->IsValid());
     return detail::VariantCastAndCallImpl<sizeof...(Ts)>(
@@ -518,9 +525,9 @@ public:
   }
 
   template <typename Functor, typename... Args>
-  VTK_M_DEVICE auto CastAndCall(Functor&& f, Args&&... args) noexcept(
-    noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
-    -> decltype(f(std::declval<TypeAt<0>&>(), args...))
+  VTK_M_DEVICE auto CastAndCall(Functor&& f,
+                                Args&&... args) noexcept(noexcept(f(std::declval<TypeAt<0>&>(),
+                                                                    args...)))
   {
     VTKM_ASSERT(this->IsValid());
     return detail::VariantCastAndCallImpl<sizeof...(Ts)>(

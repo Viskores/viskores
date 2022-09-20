@@ -78,6 +78,17 @@ vtkm::Vec4f_32 GreyPixel<B>::ToVec4f() const
                         1);
 }
 
+template <const vtkm::Id B>
+int RGBPixel<B>::GetColorType()
+{
+  return internal::RGBColorType;
+}
+
+template <const vtkm::Id B>
+int GreyPixel<B>::GetColorType()
+{
+  return internal::GreyColorType;
+}
 
 } // namespace io
 } // namespace vtkm

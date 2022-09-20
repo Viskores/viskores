@@ -12,11 +12,11 @@
 
 #include <vtkm/VecTraits.h>
 
-#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/Invoker.h>
 
-#include <vtkm/exec/FunctorBase.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -34,40 +34,19 @@ struct MySquare
   }
 };
 
-template <typename OriginalPortalType, typename TransformedPortalType>
-struct CheckTransformFunctor : vtkm::exec::FunctorBase
+struct CheckTransformWorklet : vtkm::worklet::WorkletMapField
 {
-  OriginalPortalType OriginalPortal;
-  TransformedPortalType TransformedPortal;
+  using ControlSignature = void(FieldIn original, FieldIn transformed);
 
-  VTKM_EXEC
-  void operator()(vtkm::Id index) const
+  template <typename T, typename U>
+  VTKM_EXEC void operator()(const T& original, const U& transformed) const
   {
-    using T = typename TransformedPortalType::ValueType;
-    typename OriginalPortalType::ValueType original = this->OriginalPortal.Get(index);
-    T transformed = this->TransformedPortal.Get(index);
     if (!test_equal(transformed, MySquare{}(original)))
     {
       this->RaiseError("Encountered bad transformed value.");
     }
   }
 };
-
-template <typename OriginalArrayHandleType, typename TransformedArrayHandleType, typename Device>
-VTKM_CONT CheckTransformFunctor<typename OriginalArrayHandleType::ReadPortalType,
-                                typename TransformedArrayHandleType::ReadPortalType>
-make_CheckTransformFunctor(const OriginalArrayHandleType& originalArray,
-                           const TransformedArrayHandleType& transformedArray,
-                           Device,
-                           vtkm::cont::Token& token)
-{
-  using OriginalPortalType = typename OriginalArrayHandleType::ReadPortalType;
-  using TransformedPortalType = typename TransformedArrayHandleType::ReadPortalType;
-  CheckTransformFunctor<OriginalPortalType, TransformedPortalType> functor;
-  functor.OriginalPortal = originalArray.PrepareForInput(Device(), token);
-  functor.TransformedPortal = transformedArray.PrepareForInput(Device(), token);
-  return functor;
-}
 
 template <typename OriginalArrayHandleType, typename TransformedArrayHandleType>
 VTKM_CONT void CheckControlPortals(const OriginalArrayHandleType& originalArray,
@@ -96,6 +75,51 @@ VTKM_CONT void CheckControlPortals(const OriginalArrayHandleType& originalArray,
   }
 }
 
+struct ValueScale
+{
+  ValueScale()
+    : Factor(1.0)
+  {
+  }
+
+  ValueScale(vtkm::Float64 factor)
+    : Factor(factor)
+  {
+  }
+
+  template <typename ValueType>
+  VTKM_EXEC_CONT ValueType operator()(const ValueType& v) const
+  {
+    using Traits = vtkm::VecTraits<ValueType>;
+    using TTraits = vtkm::TypeTraits<ValueType>;
+    using ComponentType = typename Traits::ComponentType;
+
+    ValueType result = TTraits::ZeroInitialization();
+    for (vtkm::IdComponent i = 0; i < Traits::GetNumberOfComponents(v); ++i)
+    {
+      vtkm::Float64 vi = static_cast<vtkm::Float64>(Traits::GetComponent(v, i));
+      vtkm::Float64 ri = vi * this->Factor;
+      Traits::SetComponent(result, i, static_cast<ComponentType>(ri));
+    }
+    return result;
+  }
+
+private:
+  vtkm::Float64 Factor;
+};
+
+struct PassThrough : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2);
+
+  template <typename InValue, typename OutValue>
+  VTKM_EXEC void operator()(const InValue& inValue, OutValue& outValue) const
+  {
+    outValue = inValue;
+  }
+};
+
 template <typename InputValueType>
 struct TransformTests
 {
@@ -113,46 +137,33 @@ struct TransformTests
   void operator()() const
   {
     MySquare functor;
+    vtkm::cont::Invoker invoke;
 
     std::cout << "Test a transform handle with a counting handle as the values" << std::endl;
-    {
-      vtkm::cont::Token token;
-      vtkm::cont::ArrayHandleCounting<InputValueType> counting =
-        vtkm::cont::make_ArrayHandleCounting(
-          InputValueType(OutputValueType(0)), InputValueType(1), ARRAY_SIZE);
-      CountingTransformHandle countingTransformed =
-        vtkm::cont::make_ArrayHandleTransform(counting, functor);
+    vtkm::cont::ArrayHandleCounting<InputValueType> counting = vtkm::cont::make_ArrayHandleCounting(
+      InputValueType(OutputValueType(0)), InputValueType(1), ARRAY_SIZE);
+    CountingTransformHandle countingTransformed =
+      vtkm::cont::make_ArrayHandleTransform(counting, functor);
 
-      CheckControlPortals(counting, countingTransformed);
+    CheckControlPortals(counting, countingTransformed);
 
-      std::cout << "  Verify that the execution portal works" << std::endl;
-      Algorithm::Schedule(
-        make_CheckTransformFunctor(counting, countingTransformed, Device(), token), ARRAY_SIZE);
-    }
+    std::cout << "  Verify that the execution portal works" << std::endl;
+    invoke(CheckTransformWorklet{}, counting, countingTransformed);
 
     std::cout << "Test a transform handle with a normal handle as the values" << std::endl;
     //we are going to connect the two handles up, and than fill
-    //the values and make the transform sees the new values in the handle
+    //the values and make sure the transform sees the new values in the handle
     vtkm::cont::ArrayHandle<InputValueType> input;
     TransformHandle thandle(input, functor);
 
     using Portal = typename vtkm::cont::ArrayHandle<InputValueType>::WritePortalType;
     input.Allocate(ARRAY_SIZE);
-    {
-      Portal portal = input.WritePortal();
-      for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
-      {
-        portal.Set(index, TestValue(index, InputValueType()));
-      }
-    }
+    SetPortal(input.WritePortal());
 
     CheckControlPortals(input, thandle);
 
     std::cout << "  Verify that the execution portal works" << std::endl;
-    {
-      vtkm::cont::Token token;
-      Algorithm::Schedule(make_CheckTransformFunctor(input, thandle, Device(), token), ARRAY_SIZE);
-    }
+    invoke(CheckTransformWorklet{}, input, thandle);
 
     std::cout << "Modify array handle values to ensure transform gets updated" << std::endl;
     {
@@ -166,9 +177,33 @@ struct TransformTests
     CheckControlPortals(input, thandle);
 
     std::cout << "  Verify that the execution portal works" << std::endl;
+    invoke(CheckTransformWorklet{}, input, thandle);
+
+    std::cout << "Write to a transformed array with an inverse transform" << std::endl;
     {
-      vtkm::cont::Token token;
-      Algorithm::Schedule(make_CheckTransformFunctor(input, thandle, Device(), token), ARRAY_SIZE);
+      ValueScale scaleUp(2.0);
+      ValueScale scaleDown(1.0 / 2.0);
+
+      input.Allocate(ARRAY_SIZE);
+      SetPortal(input.WritePortal());
+
+      vtkm::cont::ArrayHandle<InputValueType> output;
+      auto transformed = vtkm::cont::make_ArrayHandleTransform(output, scaleUp, scaleDown);
+
+      invoke(PassThrough{}, input, transformed);
+
+      //verify that the control portal works
+      auto outputPortal = output.ReadPortal();
+      auto transformedPortal = transformed.ReadPortal();
+      for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+      {
+        const InputValueType result_v = outputPortal.Get(i);
+        const InputValueType correct_value = scaleDown(TestValue(i, InputValueType()));
+        const InputValueType control_value = transformedPortal.Get(i);
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(scaleUp(result_v), control_value),
+                         "Transform Handle Control Failed");
+      }
     }
   }
 };

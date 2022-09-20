@@ -490,14 +490,8 @@ int main(int argc, char* argv[])
   vtkm::Id3 globalSize;
   vtkm::Id3 blocksPerDim;
   vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
-  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockOrigins;
-  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockSizes;
   localBlockIndices.Allocate(blocksPerRank);
-  localBlockOrigins.Allocate(blocksPerRank);
-  localBlockSizes.Allocate(blocksPerRank);
   auto localBlockIndicesPortal = localBlockIndices.WritePortal();
-  auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
-  auto localBlockSizesPortal = localBlockSizes.WritePortal();
 
   // Read the pre-split data files
   bool readOk = true;
@@ -514,8 +508,6 @@ int main(int argc, char* argv[])
       globalSize,
       blocksPerDim,
       localBlockIndices,
-      localBlockOrigins,
-      localBlockSizes,
       // output timers
       dataReadTime,
       buildDatasetTime);
@@ -541,8 +533,6 @@ int main(int argc, char* argv[])
         useDataSet,
         globalSize,
         localBlockIndices,
-        localBlockOrigins,
-        localBlockSizes,
         // output timers
         dataReadTime,
         buildDatasetTime);
@@ -567,8 +557,6 @@ int main(int argc, char* argv[])
         globalSize,
         blocksPerDim,
         localBlockIndices,
-        localBlockOrigins,
-        localBlockSizes,
         // output timers
         dataReadTime,
         buildDatasetTime);
@@ -598,7 +586,7 @@ int main(int argc, char* argv[])
                   << nDims << "D. "
                   << "Contour tree using marching cubes is only supported for 3D data.");
 
-  // If we found any errors in the setttings than finalize MPI and exit the execution
+  // If we found any errors in the settings than finalize MPI and exit the execution
   if (invalidMCOption)
   {
     MPI_Finalize();
@@ -615,26 +603,23 @@ int main(int argc, char* argv[])
   prevTime = currTime;
 
   // Log information of the (first) local data block
+  // TODO: Get localBlockSize and localBlockOrigins from the cell set to log results
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-             "" << std::setw(42) << std::left << "blockSize"
-                << ":" << localBlockSizesPortal.Get(0) << std::endl
-                << std::setw(42) << std::left << "blockOrigin=" << localBlockOriginsPortal.Get(0)
-                << std::endl
-                << std::setw(42) << std::left << "blockIndices=" << localBlockIndicesPortal.Get(0)
-                << std::endl
-                << std::setw(42) << std::left << "blocksPerDim=" << blocksPerDim << std::endl
-                << std::setw(42) << std::left << "globalSize=" << globalSize << std::endl
+             "" //<< std::setw(42) << std::left << "blockSize"
+               //<< ":" << localBlockSizesPortal.Get(0) << std::endl
+               //<< std::setw(42) << std::left << "blockOrigin=" << localBlockOriginsPortal.Get(0)
+               //<< std::endl
+               << std::setw(42) << std::left << "blockIndices=" << localBlockIndicesPortal.Get(0)
+               << std::endl
+               << std::setw(42) << std::left << "blocksPerDim=" << blocksPerDim << std::endl
+               << std::setw(42) << std::left << "globalSize=" << globalSize << std::endl
 
   );
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::ContourTreeUniformDistributed filter(blocksPerDim,
-                                                     globalSize,
-                                                     localBlockIndices,
-                                                     localBlockOrigins,
-                                                     localBlockSizes,
-                                                     timingsLogLevel,
-                                                     treeLogLevel);
+  vtkm::filter::scalar_topology::ContourTreeUniformDistributed filter(timingsLogLevel,
+                                                                      treeLogLevel);
+  filter.SetBlockIndices(blocksPerDim, localBlockIndices);
   filter.SetUseBoundaryExtremaOnly(useBoundaryExtremaOnly);
   filter.SetUseMarchingCubes(useMarchingCubes);
   filter.SetAugmentHierarchicalTree(augmentHierarchicalTree);
@@ -658,8 +643,7 @@ int main(int argc, char* argv[])
   vtkm::cont::PartitionedDataSet bd_result;
   if (computeHierarchicalVolumetricBranchDecomposition)
   {
-    vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter(
-      blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
+    vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter;
     bd_result = bd_filter.Execute(result);
   }
   currTime = totalTime.GetElapsedTime();

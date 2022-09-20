@@ -136,8 +136,7 @@ UnknownAHExtractComponent(void* mem, vtkm::IdComponent componentIndex, vtkm::Cop
   using AH = vtkm::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
   auto componentArray = vtkm::cont::ArrayExtractComponent(*arrayHandle, componentIndex, allowCopy);
-  vtkm::cont::internal::Buffer* buffers = componentArray.GetBuffers();
-  return std::vector<vtkm::cont::internal::Buffer>(buffers, buffers + 2);
+  return componentArray.GetBuffers();
 }
 
 template <typename T, typename S>

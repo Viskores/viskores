@@ -114,6 +114,8 @@ function(do_verify root_dir prefix)
 
   set(file_exceptions
     thirdparty/diy/vtkmdiy/cmake/mpi_types.h
+    thirdparty/lodepng/vtkmlodepng/lodepng.h
+    thirdparty/loguru/vtkmloguru/loguru.hpp
 
     # Ignore deprecated virtual classes (which are not installed if VTKm_NO_DEPRECATED_VIRTUAL
     # is on). These exceptions can be removed when these files are completely removed.

@@ -10,16 +10,101 @@
 
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/Invoker.h>
+
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
 {
 
-constexpr vtkm::Id ARRAY_SIZE = 4;
+constexpr vtkm::Id ARRAY_SIZE = 10;
+
+template <typename ValueType>
+struct IndexSquared
+{
+  VTKM_EXEC_CONT
+  ValueType operator()(vtkm::Id index) const
+  {
+    using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
+    return ValueType(static_cast<ComponentType>(index * index));
+  }
+};
+
+struct PassThrough : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2);
+
+  template <typename InValue, typename OutValue>
+  VTKM_EXEC void operator()(const InValue& inValue, OutValue& outValue) const
+  {
+    outValue = inValue;
+  }
+};
+
+VTKM_CONT void TestConcatInvoke()
+{
+  using ValueType = vtkm::Id;
+  using FunctorType = IndexSquared<ValueType>;
+
+  using ValueHandleType = vtkm::cont::ArrayHandleImplicit<FunctorType>;
+  using BasicArrayType = vtkm::cont::ArrayHandle<ValueType>;
+  using ConcatenateType = vtkm::cont::ArrayHandleConcatenate<ValueHandleType, BasicArrayType>;
+
+  FunctorType functor;
+  for (vtkm::Id start_pos = 0; start_pos < ARRAY_SIZE; start_pos += ARRAY_SIZE / 4)
+  {
+    vtkm::Id implicitLen = ARRAY_SIZE - start_pos;
+    vtkm::Id basicLen = start_pos;
+
+    // make an implicit array
+    ValueHandleType implicit = vtkm::cont::make_ArrayHandleImplicit(functor, implicitLen);
+    // make a basic array
+    std::vector<ValueType> basicVec;
+    for (vtkm::Id i = 0; i < basicLen; i++)
+    {
+      basicVec.push_back(ValueType(i));
+    }
+    BasicArrayType basic = vtkm::cont::make_ArrayHandle(basicVec, vtkm::CopyFlag::Off);
+
+    // concatenate two arrays together
+    ConcatenateType concatenate = vtkm::cont::make_ArrayHandleConcatenate(implicit, basic);
+
+    vtkm::cont::ArrayHandle<ValueType> result;
+
+    vtkm::cont::Invoker invoke;
+    invoke(PassThrough{}, concatenate, result);
+
+    //verify that the control portal works
+    auto resultPortal = result.ReadPortal();
+    auto implicitPortal = implicit.ReadPortal();
+    auto basicPortal = basic.ReadPortal();
+    auto concatPortal = concatenate.ReadPortal();
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
+      const ValueType result_v = resultPortal.Get(i);
+      ValueType correct_value;
+      if (i < implicitLen)
+        correct_value = implicitPortal.Get(i);
+      else
+        correct_value = basicPortal.Get(i - implicitLen);
+      const ValueType control_value = concatPortal.Get(i);
+      VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                       "ArrayHandleConcatenate as Input Failed");
+      VTKM_TEST_ASSERT(test_equal(result_v, control_value),
+                       "ArrayHandleConcatenate as Input Failed");
+    }
+
+    concatenate.ReleaseResources();
+  }
+}
 
 void TestConcatOfConcat()
 {
+  std::cout << "Test concat of concat" << std::endl;
+
   vtkm::cont::ArrayHandleIndex array1(ARRAY_SIZE);
   vtkm::cont::ArrayHandleIndex array2(2 * ARRAY_SIZE);
 
@@ -56,6 +141,8 @@ void TestConcatOfConcat()
 
 void TestConcatenateEmptyArray()
 {
+  std::cout << "Test empty array" << std::endl;
+
   std::vector<vtkm::Float64> vec;
   for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
   {
@@ -80,6 +167,8 @@ void TestConcatenateEmptyArray()
 
 void TestConcatenateFill()
 {
+  std::cout << "Test fill" << std::endl;
+
   using T = vtkm::FloatDefault;
   vtkm::cont::ArrayHandle<T> array1;
   vtkm::cont::ArrayHandle<T> array2;
@@ -117,6 +206,7 @@ void TestConcatenateFill()
 
 void TestArrayHandleConcatenate()
 {
+  TestConcatInvoke();
   TestConcatOfConcat();
   TestConcatenateEmptyArray();
   TestConcatenateFill();

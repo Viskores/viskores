@@ -14,10 +14,27 @@ namespace vtkm
 {
 namespace cont
 {
+
+VTKM_CONT std::string& GlobalGhostCellFieldName() noexcept
+{
+  static std::string GhostCellName("vtkGhostCells");
+  return GhostCellName;
+}
+
+VTKM_CONT const std::string& GetGlobalGhostCellFieldName() noexcept
+{
+  return GlobalGhostCellFieldName();
+}
+
+VTKM_CONT void SetGlobalGhostCellFieldName(const std::string& name) noexcept
+{
+  GlobalGhostCellFieldName() = name;
+}
+
 void DataSet::Clear()
 {
   this->CoordSystems.clear();
-  this->Fields.clear();
+  this->Fields.Clear();
   this->CellSet = this->CellSet.NewInstance();
 }
 
@@ -39,36 +56,7 @@ void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
 {
   this->CoordSystems = source.CoordSystems;
   this->CellSet = source.CellSet;
-}
-
-const vtkm::cont::Field& DataSet::GetField(vtkm::Id index) const
-{
-  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
-  auto it = this->Fields.cbegin();
-  std::advance(it, index);
-  return it->second;
-}
-
-vtkm::cont::Field& DataSet::GetField(vtkm::Id index)
-{
-  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
-  auto it = this->Fields.begin();
-  std::advance(it, index);
-  return it->second;
-}
-
-vtkm::Id DataSet::GetFieldIndex(const std::string& name, vtkm::cont::Field::Association assoc) const
-{
-  bool found;
-  vtkm::Id index = this->FindFieldIndex(name, assoc, found);
-  if (found)
-  {
-    return index;
-  }
-  else
-  {
-    throw vtkm::cont::ErrorBadValue("No field with requested name: " + name);
-  }
+  this->GhostCellName = source.GhostCellName;
 }
 
 const vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(vtkm::Id index) const
@@ -148,27 +136,6 @@ void DataSet::PrintSummary(std::ostream& out) const
   }
 
   out.flush();
-}
-
-vtkm::Id DataSet::FindFieldIndex(const std::string& name,
-                                 vtkm::cont::Field::Association association,
-                                 bool& found) const
-{
-  const auto it = this->Fields.find({ name, association });
-  if (it != this->Fields.end())
-  {
-    found = true;
-    return static_cast<vtkm::Id>(std::distance(this->Fields.begin(), it));
-  }
-
-  found = false;
-  return -1;
-}
-
-VTKM_CONT void DataSet::AddField(const Field& field)
-{
-  // map::insert will not replace the duplicated element
-  this->Fields[{ field.GetName(), field.GetAssociation() }] = field;
 }
 
 void DataSet::ConvertToExpected()

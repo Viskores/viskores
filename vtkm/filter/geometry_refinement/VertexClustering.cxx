@@ -19,15 +19,15 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::worklet::VertexClustering& worklet)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     return vtkm::filter::MapFieldPermutation(field, worklet.GetPointIdMap(), result);
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     return vtkm::filter::MapFieldPermutation(field, worklet.GetCellIdMap(), result);
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;

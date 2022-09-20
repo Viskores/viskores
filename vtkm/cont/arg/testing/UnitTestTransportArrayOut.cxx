@@ -14,7 +14,8 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -67,15 +68,17 @@ struct TryArrayOutType
 };
 
 template <typename Device>
-void TryArrayOutTransport(Device)
+bool TryArrayOutTransport(Device device)
 {
+  std::cout << "Trying ArrayOut transport with " << device.GetName() << std::endl;
   vtkm::testing::Testing::TryTypes(TryArrayOutType<Device>());
+  return true;
 }
 
 void TestArrayOutTransport()
 {
-  std::cout << "Trying ArrayOut transport with serial device." << std::endl;
-  TryArrayOutTransport(vtkm::cont::DeviceAdapterTagSerial());
+  VTKM_TEST_ASSERT(
+    vtkm::cont::TryExecute([](auto device) { return TryArrayOutTransport(device); }));
 }
 
 } // Anonymous namespace

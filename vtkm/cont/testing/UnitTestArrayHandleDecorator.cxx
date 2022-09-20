@@ -21,7 +21,9 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace
+// not anonymous because nvcc sometimes complains about "unused" methods (that
+// are definitely being used)
+namespace ut_decorator
 {
 
 struct DecoratorTests
@@ -644,9 +646,9 @@ void TestArrayHandleDecorator()
   ResizeTest();
 }
 
-} // anonymous namespace
+} // namespace ut_decorator
 
 int UnitTestArrayHandleDecorator(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleDecorator, argc, argv);
+  return vtkm::cont::testing::Testing::Run(ut_decorator::TestArrayHandleDecorator, argc, argv);
 }

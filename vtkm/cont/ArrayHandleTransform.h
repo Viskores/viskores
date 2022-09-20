@@ -249,7 +249,11 @@ class Storage<typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueT
   using SourceStorage =
     Storage<typename ArrayHandleType::ValueType, typename ArrayHandleType::StorageTag>;
 
-  static constexpr vtkm::IdComponent NUM_METADATA_BUFFERS = 1;
+  static std::vector<vtkm::cont::internal::Buffer> SourceBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + 1, buffers.end());
+  }
 
 public:
   VTKM_STORAGE_NO_RESIZE;
@@ -260,54 +264,51 @@ public:
                                          typename ArrayHandleType::ReadPortalType,
                                          typename FunctorManager::FunctorType>;
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers()
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return SourceStorage::GetNumberOfBuffers() + NUM_METADATA_BUFFERS;
+    return SourceStorage::GetNumberOfValues(SourceBuffers(buffers));
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
-  {
-    return SourceStorage::GetNumberOfValues(buffers + NUM_METADATA_BUFFERS);
-  }
-
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     if (device == vtkm::cont::DeviceAdapterTagUndefined{})
     {
-      return ReadPortalType(
-        SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
-        buffers[0].GetMetaData<FunctorManager>().PrepareForControl());
+      return ReadPortalType(SourceStorage::CreateReadPortal(SourceBuffers(buffers), device, token),
+                            buffers[0].GetMetaData<FunctorManager>().PrepareForControl());
     }
     else
     {
       return ReadPortalType(
-        SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
+        SourceStorage::CreateReadPortal(SourceBuffers(buffers), device, token),
         buffers[0].GetMetaData<FunctorManager>().PrepareForExecution(device, token));
     }
   }
 
   VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
-    const ArrayHandleType& handle,
+    const ArrayHandleType& handle = ArrayHandleType{},
     const FunctorType& functor = FunctorType())
   {
     return vtkm::cont::internal::CreateBuffers(FunctorManager(functor), handle);
   }
 
-  VTKM_CONT static ArrayHandleType GetArray(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static ArrayHandleType GetArray(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                   typename ArrayHandleType::StorageTag>(buffers +
-                                                                         NUM_METADATA_BUFFERS);
+                                   typename ArrayHandleType::StorageTag>(SourceBuffers(buffers));
   }
 
-  VTKM_CONT static FunctorType GetFunctor(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static FunctorType GetFunctor(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<FunctorManager>().Functor;
   }
 
-  VTKM_CONT static NullFunctorType GetInverseFunctor(const vtkm::cont::internal::Buffer*)
+  VTKM_CONT static NullFunctorType GetInverseFunctor(
+    const std::vector<vtkm::cont::internal::Buffer>&)
   {
     return NullFunctorType{};
   }
@@ -325,7 +326,11 @@ class Storage<
   using SourceStorage =
     Storage<typename ArrayHandleType::ValueType, typename ArrayHandleType::StorageTag>;
 
-  static constexpr vtkm::IdComponent NUM_METADATA_BUFFERS = 2;
+  static std::vector<vtkm::cont::internal::Buffer> SourceBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + 2, buffers.end());
+  }
 
 public:
   using ReadPortalType =
@@ -339,56 +344,54 @@ public:
                                          typename FunctorManager::FunctorType,
                                          typename InverseFunctorManager::FunctorType>;
 
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return SourceStorage::GetNumberOfBuffers() + NUM_METADATA_BUFFERS;
-  }
-
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
-  {
-    return SourceStorage::GetNumberOfValues(buffers + NUM_METADATA_BUFFERS);
+    return SourceStorage::GetNumberOfValues(SourceBuffers(buffers));
   }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
-    SourceStorage::ResizeBuffers(numValues, buffers + NUM_METADATA_BUFFERS, preserve, token);
+    std::vector<vtkm::cont::internal::Buffer> sourceBuffers = SourceBuffers(buffers);
+    SourceStorage::ResizeBuffers(numValues, sourceBuffers, preserve, token);
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     if (device == vtkm::cont::DeviceAdapterTagUndefined{})
     {
-      return ReadPortalType(
-        SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
-        buffers[0].GetMetaData<FunctorManager>().PrepareForControl(),
-        buffers[1].GetMetaData<InverseFunctorManager>().PrepareForControl());
+      return ReadPortalType(SourceStorage::CreateReadPortal(SourceBuffers(buffers), device, token),
+                            buffers[0].GetMetaData<FunctorManager>().PrepareForControl(),
+                            buffers[1].GetMetaData<InverseFunctorManager>().PrepareForControl());
     }
     else
     {
       return ReadPortalType(
-        SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
+        SourceStorage::CreateReadPortal(SourceBuffers(buffers), device, token),
         buffers[0].GetMetaData<FunctorManager>().PrepareForExecution(device, token),
         buffers[1].GetMetaData<InverseFunctorManager>().PrepareForExecution(device, token));
     }
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return WritePortalType(
-      SourceStorage::CreateWritePortal(buffers + NUM_METADATA_BUFFERS, device, token),
+      SourceStorage::CreateWritePortal(SourceBuffers(buffers), device, token),
       buffers[0].GetMetaData<FunctorManager>().PrepareForExecution(device, token),
       buffers[1].GetMetaData<InverseFunctorManager>().PrepareForExecution(device, token));
   }
 
   VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
-    const ArrayHandleType& handle,
+    const ArrayHandleType& handle = ArrayHandleType{},
     const FunctorType& functor = FunctorType(),
     const InverseFunctorType& inverseFunctor = InverseFunctorType())
   {
@@ -396,19 +399,20 @@ public:
       FunctorManager(functor), InverseFunctorManager(inverseFunctor), handle);
   }
 
-  VTKM_CONT static ArrayHandleType GetArray(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static ArrayHandleType GetArray(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                   typename ArrayHandleType::StorageTag>(buffers +
-                                                                         NUM_METADATA_BUFFERS);
+                                   typename ArrayHandleType::StorageTag>(SourceBuffers(buffers));
   }
 
-  VTKM_CONT static FunctorType GetFunctor(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static FunctorType GetFunctor(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<FunctorManager>().Functor;
   }
 
-  VTKM_CONT static InverseFunctorType GetInverseFunctor(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static InverseFunctorType GetInverseFunctor(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[1].GetMetaData<InverseFunctorManager>().Functor;
   }

@@ -829,12 +829,12 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   logger->AddLogData("calc_ray_start", time);
   timer.Start();
 
-  const bool isSupportedField = ScalarField->IsFieldCell() || ScalarField->IsFieldPoint();
+  const bool isSupportedField = ScalarField->IsCellField() || ScalarField->IsPointField();
   if (!isSupportedField)
   {
     throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
   }
-  const bool isAssocPoints = ScalarField->IsFieldPoint();
+  const bool isAssocPoints = ScalarField->IsPointField();
 
   if (IsUniformDataSet)
   {

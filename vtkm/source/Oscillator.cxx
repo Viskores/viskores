@@ -139,7 +139,7 @@ private:
   vtkm::VecVariable<internal::Oscillator, MAX_OSCILLATORS> PeriodicOscillators;
   vtkm::VecVariable<internal::Oscillator, MAX_OSCILLATORS> DampedOscillators;
   vtkm::VecVariable<internal::Oscillator, MAX_OSCILLATORS> DecayingOscillators;
-  vtkm::FloatDefault Time;
+  vtkm::FloatDefault Time{};
 }; // OscillatorSource
 
 } // internal
@@ -194,7 +194,7 @@ void Oscillator::AddDecaying(vtkm::FloatDefault x,
 
 
 //-----------------------------------------------------------------------------
-vtkm::cont::DataSet Oscillator::Execute() const
+vtkm::cont::DataSet Oscillator::DoExecute() const
 {
   VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 

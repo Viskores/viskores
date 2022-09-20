@@ -112,25 +112,6 @@ public:
   void SetNormalize(bool value) { this->Normalize = value; }
   bool GetNormalize() const { return this->Normalize; }
 
-  template <typename CellSetType,
-            typename CoordsCompType,
-            typename CoordsStorageType,
-            typename NormalCompType>
-  void Run(const CellSetType& cellset,
-           const vtkm::cont::ArrayHandle<vtkm::Vec<CoordsCompType, 3>, CoordsStorageType>& points,
-           vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals)
-  {
-    if (this->Normalize)
-    {
-      vtkm::worklet::DispatcherMapTopology<Worklet<>>().Invoke(cellset, points, normals);
-    }
-    else
-    {
-      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>>().Invoke(
-        cellset, points, normals);
-    }
-  }
-
   template <typename CellSetType, typename PointsType, typename NormalCompType>
   void Run(const CellSetType& cellset,
            const PointsType& points,
@@ -189,18 +170,6 @@ public:
   void Run(
     const CellSetType& cellset,
     const vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>, FaceNormalStorageType>& faceNormals,
-    vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals)
-  {
-    vtkm::worklet::DispatcherMapTopology<Worklet>().Invoke(cellset, faceNormals, pointNormals);
-  }
-
-  template <typename CellSetType,
-            typename FaceNormalTypeList,
-            typename FaceNormalStorageList,
-            typename NormalCompType>
-  void Run(
-    const CellSetType& cellset,
-    const vtkm::cont::UncertainArrayHandle<FaceNormalTypeList, FaceNormalStorageList>& faceNormals,
     vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals)
   {
     vtkm::worklet::DispatcherMapTopology<Worklet>().Invoke(cellset, faceNormals, pointNormals);

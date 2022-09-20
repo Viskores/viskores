@@ -13,8 +13,14 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/ErrorBadValue.h>
-#include <vtkm/cont/Field.h>
 #include <vtkm/cont/PartitionedDataSet.h>
+#include <vtkm/internal/Configure.h>
+
+// clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/diy/diy.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+// clang-format on
 
 namespace vtkm
 {
@@ -25,12 +31,6 @@ VTKM_CONT
 PartitionedDataSet::PartitionedDataSet(const vtkm::cont::DataSet& ds)
 {
   this->Partitions.insert(this->Partitions.end(), ds);
-}
-
-VTKM_CONT
-PartitionedDataSet::PartitionedDataSet(const vtkm::cont::PartitionedDataSet& src)
-{
-  this->Partitions = src.GetPartitions();
 }
 
 VTKM_CONT
@@ -46,21 +46,8 @@ PartitionedDataSet::PartitionedDataSet(vtkm::Id size)
 }
 
 VTKM_CONT
-PartitionedDataSet::PartitionedDataSet() {}
-
-VTKM_CONT
-PartitionedDataSet::~PartitionedDataSet() {}
-
-VTKM_CONT
-PartitionedDataSet& PartitionedDataSet::operator=(const vtkm::cont::PartitionedDataSet& src)
-{
-  this->Partitions = src.GetPartitions();
-  return *this;
-}
-
-VTKM_CONT
-vtkm::cont::Field PartitionedDataSet::GetField(const std::string& field_name,
-                                               int partition_index) const
+vtkm::cont::Field PartitionedDataSet::GetFieldFromPartition(const std::string& field_name,
+                                                            int partition_index) const
 {
   assert(partition_index >= 0);
   assert(static_cast<std::size_t>(partition_index) < this->Partitions.size());
@@ -71,6 +58,19 @@ VTKM_CONT
 vtkm::Id PartitionedDataSet::GetNumberOfPartitions() const
 {
   return static_cast<vtkm::Id>(this->Partitions.size());
+}
+
+VTKM_CONT
+vtkm::Id PartitionedDataSet::GetGlobalNumberOfPartitions() const
+{
+#ifdef VTKM_ENABLE_MPI
+  auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkm::Id globalSize = 0;
+  vtkmdiy::mpi::all_reduce(comm, GetNumberOfPartitions(), globalSize, std::plus<vtkm::Id>{});
+  return globalSize;
+#else
+  return GetNumberOfPartitions();
+#endif
 }
 
 VTKM_CONT
@@ -124,6 +124,12 @@ void PartitionedDataSet::ReplacePartition(vtkm::Id index, const vtkm::cont::Data
 }
 
 VTKM_CONT
+void PartitionedDataSet::CopyPartitions(const vtkm::cont::PartitionedDataSet& source)
+{
+  this->Partitions = source.Partitions;
+}
+
+VTKM_CONT
 void PartitionedDataSet::PrintSummary(std::ostream& stream) const
 {
   stream << "PartitionedDataSet [" << this->Partitions.size() << " partitions]:\n";
@@ -132,6 +138,12 @@ void PartitionedDataSet::PrintSummary(std::ostream& stream) const
   {
     stream << "Partition " << part << ":\n";
     this->Partitions[part].PrintSummary(stream);
+  }
+
+  stream << "  Fields[" << this->GetNumberOfFields() << "]\n";
+  for (vtkm::Id index = 0; index < this->GetNumberOfFields(); index++)
+  {
+    this->GetField(index).PrintSummary(stream);
   }
 }
 }

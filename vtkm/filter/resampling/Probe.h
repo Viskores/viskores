@@ -7,19 +7,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_Probe_h
-#define vtk_m_filter_Probe_h
+#ifndef vtk_m_filter_resampling_Probe_h
+#define vtk_m_filter_resampling_Probe_h
 
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/resampling/vtkm_filter_resampling_export.h>
 
 namespace vtkm
 {
-namespace worklet
-{
-class Probe;
-}
-
 namespace filter
 {
 namespace resampling
@@ -43,10 +38,6 @@ public:
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
-  bool DoMapField(vtkm::cont::DataSet& result,
-                  const vtkm::cont::Field& field,
-                  const vtkm::worklet::Probe& worklet);
-
   vtkm::cont::DataSet Geometry;
 
   vtkm::Float64 InvalidValue = vtkm::Nan64();
@@ -62,4 +53,4 @@ class VTKM_DEPRECATED(1.8, "Use vtkm::filter::resampling::Probe.") Probe
 } // namespace filter
 } // namespace vtkm
 
-#endif // vtk_m_filter_Probe_h
+#endif // vtk_m_filter_resampling_Probe_h

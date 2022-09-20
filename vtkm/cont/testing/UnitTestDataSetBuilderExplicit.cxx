@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/ExplicitTestData.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
@@ -18,8 +17,6 @@
 
 namespace DataSetBuilderExplicitNamespace
 {
-
-using DFA = vtkm::cont::Algorithm;
 
 template <typename T>
 vtkm::Bounds ComputeBounds(std::size_t numPoints, const T* coords)

@@ -33,6 +33,21 @@ struct FindCellFunctor
   {
     return locator.FindCell(point, cellId, parametric);
   }
+
+  template <typename Locator, typename LastCell>
+  VTKM_EXEC vtkm::ErrorCode operator()(Locator&& locator,
+                                       const vtkm::Vec3f& point,
+                                       vtkm::Id& cellId,
+                                       vtkm::Vec3f& parametric,
+                                       LastCell& lastCell) const
+  {
+    using ConcreteLastCell = typename std::decay_t<Locator>::LastCell;
+    if (!lastCell.template IsType<ConcreteLastCell>())
+    {
+      lastCell = ConcreteLastCell{};
+    }
+    return locator.FindCell(point, cellId, parametric, lastCell.template Get<ConcreteLastCell>());
+  }
 };
 
 } // namespace detail
@@ -45,6 +60,8 @@ class VTKM_ALWAYS_EXPORT CellLocatorMultiplexer
 public:
   CellLocatorMultiplexer() = default;
 
+  using LastCell = vtkm::exec::internal::Variant<typename LocatorTypes::LastCell...>;
+
   template <typename Locator>
   VTKM_CONT CellLocatorMultiplexer(const Locator& locator)
     : Locators(locator)
@@ -56,6 +73,15 @@ public:
                                      vtkm::Vec3f& parametric) const
   {
     return this->Locators.CastAndCall(detail::FindCellFunctor{}, point, cellId, parametric);
+  }
+
+  VTKM_EXEC vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                                     vtkm::Id& cellId,
+                                     vtkm::Vec3f& parametric,
+                                     LastCell& lastCell) const
+  {
+    return this->Locators.CastAndCall(
+      detail::FindCellFunctor{}, point, cellId, parametric, lastCell);
   }
 
   VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")

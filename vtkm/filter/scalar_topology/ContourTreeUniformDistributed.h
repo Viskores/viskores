@@ -56,7 +56,6 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/filter/scalar_topology/internal/SpatialDecomposition.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/DataSetMesh.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/BoundaryTree.h>
@@ -113,14 +112,20 @@ public:
   /// @param[in] treeLogLevel Set the vtkm::cont:LogLevel to be used to record metadata information
   ///                         about the various trees computed as part of the hierarchical contour tree compute
   VTKM_CONT
-  ContourTreeUniformDistributed(
-    vtkm::Id3 blocksPerDim, // TODO/FIXME: Possibly pass SpatialDecomposition object instead
-    vtkm::Id3 globalSize,
-    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
-    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
-    vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
-    vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info);
+  VTKM_DEPRECATED(
+    1.9,
+    "Use default constructor and set PointSize, GlobalPointIndexStart, and GlobalPointSize in "
+    "CellSetStructured. Optionally use `SetBlockIndices` accessor (if information is available).")
+  ContourTreeUniformDistributed(vtkm::Id3 blocksPerDim,
+                                vtkm::Id3 globalSize,
+                                const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
+                                const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
+                                const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
+                                vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
+                                vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info);
+
+  ContourTreeUniformDistributed(vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
+                                vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info);
 
   VTKM_CONT void SetUseBoundaryExtremaOnly(bool useBoundaryExtremaOnly)
   {
@@ -139,6 +144,13 @@ public:
   VTKM_CONT void SetAugmentHierarchicalTree(bool augmentHierarchicalTree)
   {
     this->AugmentHierarchicalTree = augmentHierarchicalTree;
+  }
+
+  VTKM_CONT void SetBlockIndices(vtkm::Id3 blocksPerDim,
+                                 const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices)
+  {
+    this->BlocksPerDimension = blocksPerDim;
+    vtkm::cont::ArrayCopy(localBlockIndices, this->LocalBlockIndices);
   }
 
   VTKM_CONT bool GetAugmentHierarchicalTree() { return this->AugmentHierarchicalTree; }
@@ -165,7 +177,7 @@ private:
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& input) override;
 
-  //@{
+  ///@{
   /// when operating on vtkm::cont::MultiBlock we want to
   /// do processing across ranks as well. Just adding pre/post handles
   /// for the same does the trick.
@@ -192,7 +204,7 @@ private:
   template <typename T>
   VTKM_CONT void DoPostExecute(const vtkm::cont::PartitionedDataSet& input,
                                vtkm::cont::PartitionedDataSet& output);
-  //@}
+  ///@}
 
   /// Use only boundary critical points in the parallel merge to reduce communication.
   /// Disabling this should only be needed for performance testing.
@@ -213,8 +225,11 @@ private:
   /// Log level to be used for outputting metadata about the trees. Default is vtkm::cont::LogLevel::Info
   vtkm::cont::LogLevel TreeLogLevel = vtkm::cont::LogLevel::Info;
 
-  /// Information about the spatial decomposition
-  vtkm::filter::scalar_topology::internal::SpatialDecomposition MultiBlockSpatialDecomposition;
+  /// Information about block decomposition TODO/FIXME: Remove need for this information
+  // ... Number of blocks along each dimension
+  vtkm::Id3 BlocksPerDimension;
+  // ... Index of the local blocks in x,y,z, i.e., in i,j,k mesh coordinates
+  vtkm::cont::ArrayHandle<vtkm::Id3> LocalBlockIndices;
 
   /// Intermediate results (one per local data block)...
   /// ... local mesh information needed at end of fan out
@@ -240,28 +255,23 @@ class VTKM_DEPRECATED(1.8, "Use vtkm::filter::scalar_topology::ContourTreeUnifor
   using scalar_topology::ContourTreeUniformDistributed::ContourTreeUniformDistributed;
 
   ContourTreeUniformDistributed(vtkm::Id3 blocksPerDim,
-                                vtkm::Id3 globalSize,
+                                vtkm::Id3,
                                 const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-                                const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
-                                const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
+                                const vtkm::cont::ArrayHandle<vtkm::Id3>&,
+                                const vtkm::cont::ArrayHandle<vtkm::Id3>&,
                                 bool useBoundaryExtremaOnly = true,
                                 bool useMarchingCubes = false,
                                 bool augmentHierarchicalTree = false,
                                 bool saveDotFiles = false,
                                 vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
                                 vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info)
-    : vtkm::filter::scalar_topology::ContourTreeUniformDistributed(blocksPerDim,
-                                                                   globalSize,
-                                                                   localBlockIndices,
-                                                                   localBlockOrigins,
-                                                                   localBlockSizes,
-                                                                   timingsLogLevel,
-                                                                   treeLogLevel)
+    : vtkm::filter::scalar_topology::ContourTreeUniformDistributed(timingsLogLevel, treeLogLevel)
   {
     this->SetUseBoundaryExtremaOnly(useBoundaryExtremaOnly);
     this->SetUseMarchingCubes(useMarchingCubes);
     this->SetAugmentHierarchicalTree(augmentHierarchicalTree);
     this->SetSaveDotFiles(saveDotFiles);
+    this->SetBlockIndices(blocksPerDim, localBlockIndices);
     this->SetOutputFieldName("resultData");
   }
 };

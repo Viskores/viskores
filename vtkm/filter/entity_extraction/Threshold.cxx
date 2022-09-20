@@ -48,13 +48,13 @@ bool DoMapField(vtkm::cont::DataSet& result,
                 const vtkm::cont::Field& field,
                 const vtkm::worklet::Threshold& worklet)
 {
-  if (field.IsFieldPoint() || field.IsFieldGlobal())
+  if (field.IsPointField() || field.IsWholeDataSetField())
   {
     //we copy the input handle to the result dataset, reusing the metadata
     result.AddField(field);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     return vtkm::filter::MapFieldPermutation(field, worklet.GetValidCellIds(), result);
   }
@@ -83,15 +83,8 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::cont::UnknownCellSet cellOut;
 
   auto resolveArrayType = [&](const auto& concrete) {
-    // Note: there are two overloads of .Run, the first one taking an UncertainCellSet, which is
-    // the desired entry point in the following call. The other is a function template on the input
-    // CellSet. Without the call to .ResetCellSetList to turn an UnknownCellSet to an UncertainCellSet,
-    // the compiler will pick the function template (i.e. wrong overload).
-    cellOut = worklet.Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST>(),
-                          concrete,
-                          field.GetAssociation(),
-                          predicate,
-                          this->GetAllInRange());
+    cellOut =
+      worklet.Run(cells, concrete, field.GetAssociation(), predicate, this->GetAllInRange());
   };
 
   field.GetData().CastAndCallForTypes<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(

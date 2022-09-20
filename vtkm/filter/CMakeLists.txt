@@ -45,14 +45,19 @@ set(deprecated_headers
   MIRFilter.h
   NDEntropy.h
   NDHistogram.h
+  ParticleAdvection.h
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
+  Pathline.h
+  PathParticle.h
   PointAverage.h
   PointElevation.h
   PointTransform.h
   Probe.h
   Slice.h
   SplitSharpEdges.h
+  Streamline.h
+  StreamSurface.h
   SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
@@ -81,11 +86,11 @@ set(common_headers
   FilterDataSetWithField.h
   FilterField.h
   Filter.h
-  FilterParticleAdvection.h
-  FilterTemporalParticleAdvection.h
   FilterTraits.h
   PolicyBase.h
   PolicyDefault.h
+  Lagrangian.h
+  LagrangianStructures.h
   )
 
 vtkm_declare_headers(${common_headers})
@@ -95,36 +100,11 @@ set(common_header_template_sources
   FilterDataSetWithField.hxx
   FilterField.hxx
   Filter.hxx
-  FilterParticleAdvection.hxx
-  FilterTemporalParticleAdvection.hxx
+  Lagrangian.hxx
+  LagrangianStructures.hxx
   )
 
 vtkm_declare_headers(${common_header_template_sources})
-
-set(extra_headers
-  Lagrangian.h
-  LagrangianStructures.h
-  ParticleAdvection.h
-  Pathline.h
-  PathParticle.h
-  Streamline.h
-  StreamSurface.h
-  )
-
-set(extra_header_template_sources
-  Lagrangian.hxx
-  LagrangianStructures.hxx
-  ParticleAdvection.hxx
-  Pathline.hxx
-  PathParticle.hxx
-  Streamline.hxx
-  StreamSurface.hxx
-  )
-
-set(extra_sources_device
-  particleadvection/Messenger.cxx
-  particleadvection/ParticleMessenger.cxx
-  )
 
 set(core_headers
   FieldSelection.h
@@ -153,30 +133,16 @@ vtkm_library(
 
 add_library(vtkm_filter INTERFACE)
 
-vtkm_library(
-  NAME vtkm_filter_extra
-  TEMPLATE_SOURCES ${extra_header_template_sources}
-  HEADERS ${extra_headers}
-  DEVICE_SOURCES ${extra_sources_device}
-  USE_VTKM_JOB_POOL
-)
-
 set_target_properties(
   vtkm_filter_core
-  vtkm_filter_extra
   PROPERTIES
   UNITY_BUILD ON
   UNITY_BUILD_MODE BATCH
 )
 
 target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont vtkm_worklet)
-target_link_libraries(vtkm_filter_extra PUBLIC vtkm_cont vtkm_worklet)
-if (VTKm_ENABLE_MPI)
-  target_link_libraries(vtkm_filter_extra PUBLIC MPI::MPI_CXX)
-endif()
 
 target_link_libraries(vtkm_filter PUBLIC INTERFACE
-  vtkm_filter_extra
   vtkm_filter_core
   )
 
@@ -187,9 +153,9 @@ add_subdirectory(connected_components)
 add_subdirectory(contour)
 add_subdirectory(density_estimate)
 add_subdirectory(entity_extraction)
+add_subdirectory(flow)
 add_subdirectory(image_processing)
 add_subdirectory(internal)
-add_subdirectory(particleadvection)
 add_subdirectory(field_conversion)
 add_subdirectory(field_transform)
 add_subdirectory(geometry_refinement)

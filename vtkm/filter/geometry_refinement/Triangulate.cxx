@@ -14,60 +14,25 @@
 
 namespace
 {
-
-class DeduceCellSetTriangulate
-{
-  vtkm::worklet::Triangulate& Worklet;
-  vtkm::cont::CellSetSingleType<>& OutCellSet;
-
-public:
-  DeduceCellSetTriangulate(vtkm::worklet::Triangulate& worklet,
-                           vtkm::cont::CellSetSingleType<>& outCellSet)
-    : Worklet(worklet)
-    , OutCellSet(outCellSet)
-  {
-  }
-
-  template <typename CellSetType>
-  void operator()(const CellSetType& vtkmNotUsed(cellset)) const
-  {
-  }
-};
-template <>
-void DeduceCellSetTriangulate::operator()(const vtkm::cont::CellSetExplicit<>& cellset) const
-{
-  this->OutCellSet = Worklet.Run(cellset);
-}
-template <>
-void DeduceCellSetTriangulate::operator()(const vtkm::cont::CellSetStructured<2>& cellset) const
-{
-  this->OutCellSet = Worklet.Run(cellset);
-}
-template <>
-void DeduceCellSetTriangulate::operator()(const vtkm::cont::CellSetStructured<3>& cellset) const
-{
-  this->OutCellSet = Worklet.Run(cellset);
-}
-
 //-----------------------------------------------------------------------------
 VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::worklet::Triangulate& worklet)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     // point data is copied as is because it was not collapsed
     result.AddField(field);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     // cell data must be scattered to the cells created per input cell
     vtkm::cont::ArrayHandle<vtkm::Id> permutation =
       worklet.GetOutCellScatter().GetOutputToInputMap();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;
@@ -87,13 +52,13 @@ namespace geometry_refinement
 {
 VTKM_CONT vtkm::cont::DataSet Triangulate::DoExecute(const vtkm::cont::DataSet& input)
 {
-  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& inCellSet = input.GetCellSet();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::Triangulate worklet;
-  DeduceCellSetTriangulate triangulate(worklet, outCellSet);
 
-  vtkm::cont::CastAndCall(cells, triangulate);
+  vtkm::cont::CastAndCall(inCellSet,
+                          [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
   // create the output dataset (without a CoordinateSystem).

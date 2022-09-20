@@ -133,22 +133,11 @@ struct RemoveDegenerateCells
     return output;
   }
 
-  struct CallWorklet
-  {
-    template <typename CellSetType>
-    void operator()(const CellSetType& cellSet,
-                    RemoveDegenerateCells& self,
-                    vtkm::cont::CellSetExplicit<>& output) const
-    {
-      output = self.Run(cellSet);
-    }
-  };
-
   template <typename CellSetList>
   vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::UncertainCellSet<CellSetList>& cellSet)
   {
     vtkm::cont::CellSetExplicit<> output;
-    cellSet.CastAndCall(CallWorklet(), *this, output);
+    cellSet.CastAndCall([&](const auto& concrete) { output = this->Run(concrete); });
 
     return output;
   }
