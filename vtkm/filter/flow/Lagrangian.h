@@ -103,12 +103,6 @@ protected: // make this protected so the deprecated version can override.
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
 
 private:
-  VTKM_CONT
-  void InitializeCoordinates(const vtkm::cont::DataSet& input,
-                             std::vector<Float64>& xC,
-                             std::vector<Float64>& yC,
-                             std::vector<Float64>& zC);
-
   vtkm::cont::ArrayHandle<vtkm::Particle> BasisParticles;
   vtkm::cont::ArrayHandle<vtkm::Particle> BasisParticlesOriginal;
   vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;

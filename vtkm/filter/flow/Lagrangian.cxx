@@ -9,7 +9,9 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/DataSetBuilderRectilinear.h>
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
 #include <vtkm/filter/flow/Lagrangian.h>
@@ -82,7 +84,20 @@ public:
     res[2] = end_point.Pos[2] - start_point.Pos[2];
   }
 };
+
+VTKM_CONT void MapField(vtkm::cont::DataSet& dataset, const vtkm::cont::Field& field)
+{
+  if (field.IsWholeDataSetField())
+  {
+    dataset.AddField(field);
+  }
+  else
+  {
+    // Do not currently support other types of fields.
+  }
 }
+
+} // anonymous namespace
 
 //-----------------------------------------------------------------------------
 void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
@@ -176,40 +191,6 @@ void Lagrangian::InitializeSeedPositions(const vtkm::cont::DataSet& input)
 }
 
 //-----------------------------------------------------------------------------
-void Lagrangian::InitializeCoordinates(const vtkm::cont::DataSet& input,
-                                       std::vector<Float64>& xC,
-                                       std::vector<Float64>& yC,
-                                       std::vector<Float64>& zC)
-{
-  vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
-
-  vtkm::Float64 x_spacing = 0.0, y_spacing = 0.0, z_spacing = 0.0;
-  if (this->SeedRes[0] > 1)
-    x_spacing = (double)(bounds.X.Max - bounds.X.Min) / (double)(this->SeedRes[0] - 1);
-  if (this->SeedRes[1] > 1)
-    y_spacing = (double)(bounds.Y.Max - bounds.Y.Min) / (double)(this->SeedRes[1] - 1);
-  if (this->SeedRes[2] > 1)
-    z_spacing = (double)(bounds.Z.Max - bounds.Z.Min) / (double)(this->SeedRes[2] - 1);
-  // Divide by zero handling for 2D data set. How is this handled
-
-  for (int x = 0; x < this->SeedRes[0]; x++)
-  {
-    vtkm::FloatDefault xi = static_cast<vtkm::FloatDefault>(x * x_spacing);
-    xC.push_back(bounds.X.Min + xi);
-  }
-  for (int y = 0; y < this->SeedRes[1]; y++)
-  {
-    vtkm::FloatDefault yi = static_cast<vtkm::FloatDefault>(y * y_spacing);
-    yC.push_back(bounds.Y.Min + yi);
-  }
-  for (int z = 0; z < this->SeedRes[2]; z++)
-  {
-    vtkm::FloatDefault zi = static_cast<vtkm::FloatDefault>(z * z_spacing);
-    zC.push_back(bounds.Z.Min + zi);
-  }
-}
-
-//-----------------------------------------------------------------------------
 VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& input)
 {
   if (this->Cycle == 0)
@@ -252,7 +233,6 @@ VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& i
   auto particles = res.Particles;
 
   vtkm::cont::DataSet outputData;
-  vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
 
   if (this->Cycle % this->WriteFrequency == 0)
   {
@@ -262,9 +242,27 @@ VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& i
     basisParticlesDisplacement.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
     DisplacementCalculation displacement;
     this->Invoke(displacement, particles, this->BasisParticlesOriginal, basisParticlesDisplacement);
-    std::vector<Float64> xC, yC, zC;
-    InitializeCoordinates(input, xC, yC, zC);
-    outputData = dataSetBuilder.Create(xC, yC, zC);
+    vtkm::Vec3f origin(0);
+    vtkm::Vec3f spacing(0);
+    if (this->SeedRes[0] > 1)
+    {
+      spacing[0] = static_cast<vtkm::FloatDefault>(bounds.X.Length() / (this->SeedRes[0] - 1));
+    }
+    if (this->SeedRes[1] > 1)
+    {
+      spacing[1] = static_cast<vtkm::FloatDefault>(bounds.Y.Length() / (this->SeedRes[1] - 1));
+    }
+    if (this->SeedRes[2] > 1)
+    {
+      spacing[2] = static_cast<vtkm::FloatDefault>(bounds.Z.Length() / (this->SeedRes[2] - 1));
+    }
+    vtkm::cont::CoordinateSystem outCoords("coords", this->SeedRes, origin, spacing);
+    vtkm::cont::CellSetStructured<3> outCellSet;
+    outCellSet.SetPointDimensions(this->SeedRes);
+    auto fieldmapper = [&](vtkm::cont::DataSet& dataset, const vtkm::cont::Field& fieldToPass) {
+      MapField(dataset, fieldToPass);
+    };
+    outputData = this->CreateResult(input, outCellSet, outCoords, fieldmapper);
     outputData.AddPointField("valid", this->BasisParticlesValidity);
     outputData.AddPointField("displacement", basisParticlesDisplacement);
 
@@ -321,6 +319,32 @@ VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& i
   deprecatedLagrange_BasisParticles = this->GetBasisParticles();
   deprecatedLagrange_BasisParticlesOriginal = this->GetBasisParticlesOriginal();
   deprecatedLagrange_BasisParticlesValidity = this->GetBasisParticleValidity();
+
+  //The deprecated filter returned a rectilinear grid of points whereas the new version
+  //returns a uniform grid of points. Convert the coordinates for deprecated users.
+  if (output.GetNumberOfCoordinateSystems() > 0)
+  {
+    vtkm::cont::ArrayHandleUniformPointCoordinates originalCoordinates;
+    output.GetCoordinateSystem().GetData().AsArrayHandle(originalCoordinates);
+    vtkm::Id3 dims = originalCoordinates.GetDimensions();
+    vtkm::Vec3f origin = originalCoordinates.GetOrigin();
+    vtkm::Vec3f spacing = originalCoordinates.GetSpacing();
+
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> xCoords;
+    vtkm::cont::ArrayCopy(
+      vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault>(origin[0], spacing[0], dims[0]), xCoords);
+
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> yCoords;
+    vtkm::cont::ArrayCopy(
+      vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault>(origin[1], spacing[1], dims[1]), yCoords);
+
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> zCoords;
+    vtkm::cont::ArrayCopy(
+      vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault>(origin[2], spacing[2], dims[2]), zCoords);
+
+    output.GetCoordinateSystem() = vtkm::cont::CoordinateSystem(
+      "coords", vtkm::cont::make_ArrayHandleCartesianProduct(xCoords, yCoords, zCoords));
+  }
 
   return output;
 }

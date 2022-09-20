@@ -22,6 +22,23 @@
 #include <vtkm/filter/flow/worklet/RK4Integrator.h>
 #include <vtkm/filter/flow/worklet/Stepper.h>
 
+namespace
+{
+
+VTKM_CONT void MapField(vtkm::cont::DataSet& dataset, const vtkm::cont::Field& field)
+{
+  if (field.IsWholeDataSetField())
+  {
+    dataset.AddField(field);
+  }
+  else
+  {
+    // Do not currently support other types of fields.
+  }
+}
+
+} // anonymous namespace
+
 namespace vtkm
 {
 namespace filter
@@ -120,7 +137,6 @@ VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(const vtkm::cont::
   }
   else
   {
-    vtkm::cont::Invoker invoke;
     const auto field = input.GetField(this->GetActiveFieldName());
 
     FieldType velocities(field.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f>>(),
@@ -130,9 +146,9 @@ VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(const vtkm::cont::
     vtkm::worklet::flow::ParticleAdvection particles;
     vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> advectionResult;
     vtkm::cont::ArrayHandle<vtkm::Particle> advectionPoints;
-    invoke(detail::MakeParticles{}, lcsInputPoints, advectionPoints);
+    this->Invoke(detail::MakeParticles{}, lcsInputPoints, advectionPoints);
     advectionResult = particles.Run(integrator, advectionPoints, numberOfSteps);
-    invoke(detail::ExtractParticlePosition{}, advectionResult.Particles, lcsOutputPoints);
+    this->Invoke(detail::ExtractParticlePosition{}, advectionResult.Particles, lcsOutputPoints);
   }
   // FTLE output field
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputField;
@@ -154,9 +170,12 @@ VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(const vtkm::cont::
     dispatcher.Invoke(lcsInputPoints, lcsOutputPoints, outputField);
   }
 
-  vtkm::cont::DataSet output;
-  output.AddCoordinateSystem(lcsInput.GetCoordinateSystem());
-  output.SetCellSet(lcsInput.GetCellSet());
+
+  auto fieldmapper = [&](vtkm::cont::DataSet& dataset, const vtkm::cont::Field& field) {
+    MapField(dataset, field);
+  };
+  vtkm::cont::DataSet output =
+    this->CreateResult(input, lcsInput.GetCellSet(), lcsInput.GetCoordinateSystem(), fieldmapper);
   output.AddPointField(this->GetOutputFieldName(), outputField);
   return output;
 }
