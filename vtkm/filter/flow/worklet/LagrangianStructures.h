@@ -7,20 +7,23 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_worklet_LagrangianStructures_h
-#define vtk_m_worklet_LagrangianStructures_h
+
+#ifndef vtk_m_filter_flow_worklet_LagrangianStructures_h
+#define vtk_m_filter_flow_worklet_LagrangianStructures_h
 
 #include <vtkm/Matrix.h>
 #include <vtkm/Types.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/worklet/lcs/GridMetaData.h>
-#include <vtkm/worklet/lcs/LagrangianStructureHelpers.h>
+#include <vtkm/filter/flow/internal/GridMetaData.h>
+#include <vtkm/filter/flow/internal/LagrangianStructureHelpers.h>
 
 namespace vtkm
 {
 namespace worklet
+{
+namespace flow
 {
 
 template <vtkm::IdComponent dimensions>
@@ -77,10 +80,10 @@ public:
     vtkm::MatrixSetRow(jacobian, 0, vtkm::Vec<Scalar, 2>(f1x, f1y));
     vtkm::MatrixSetRow(jacobian, 1, vtkm::Vec<Scalar, 2>(f2x, f2y));
 
-    detail::ComputeLeftCauchyGreenTensor(jacobian);
+    vtkm::filter::flow::internal::ComputeLeftCauchyGreenTensor(jacobian);
 
     vtkm::Vec<Scalar, 2> eigenValues;
-    detail::Jacobi(jacobian, eigenValues);
+    vtkm::filter::flow::internal::Jacobi(jacobian, eigenValues);
 
     Scalar delta = eigenValues[0];
     // Check if we need to clamp these values
@@ -99,7 +102,7 @@ public:
   // To calculate FTLE field
   Scalar EndTime;
   // To assist in calculation of indices
-  detail::GridMetaData GridData;
+  vtkm::filter::flow::internal::GridMetaData GridData;
 };
 
 template <>
@@ -168,10 +171,10 @@ public:
     vtkm::MatrixSetRow(jacobian, 1, vtkm::Vec<Scalar, 3>(f2x, f2y, f2z));
     vtkm::MatrixSetRow(jacobian, 2, vtkm::Vec<Scalar, 3>(f3x, f3y, f3z));
 
-    detail::ComputeLeftCauchyGreenTensor(jacobian);
+    vtkm::filter::flow::internal::ComputeLeftCauchyGreenTensor(jacobian);
 
     vtkm::Vec<Scalar, 3> eigenValues;
-    detail::Jacobi(jacobian, eigenValues);
+    vtkm::filter::flow::internal::Jacobi(jacobian, eigenValues);
 
     Scalar delta = eigenValues[0];
     // Given endTime is in units where start time is 0. else do endTime-startTime
@@ -183,10 +186,11 @@ public:
   // To calculate FTLE field
   Scalar EndTime;
   // To assist in calculation of indices
-  detail::GridMetaData GridData;
+  vtkm::filter::flow::internal::GridMetaData GridData;
 };
 
-} // worklet
-} // vtkm
+}
+}
+} //vtkm::worklet::flow
 
-#endif //vtk_m_worklet_LagrangianStructures_h
+#endif //vtk_m_filter_flow_worklet_LagrangianStructures_h

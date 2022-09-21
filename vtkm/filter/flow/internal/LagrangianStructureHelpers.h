@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_worklet_lcs_LagrangianStructureHelpers_h
-#define vtk_m_worklet_lcs_LagrangianStructureHelpers_h
+#ifndef vtkm_filter_flow_internal_LagrangianStructureHelpers_h
+#define vtkm_filter_flow_internal_LagrangianStructureHelpers_h
 
 #include <vtkm/Matrix.h>
 #include <vtkm/Swap.h>
@@ -16,9 +16,11 @@
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
-namespace detail
+namespace flow
+{
+namespace internal
 {
 
 template <typename T>
@@ -198,7 +200,9 @@ VTKM_EXEC_CONT void Jacobi(vtkm::Matrix<T, 3, 3> tensor, vtkm::Vec<T, 3>& eigen)
   eigen[2] = w2;
 }
 
-} // namespace detail
-} // namespace worklet
-} // namespace vtkm
-#endif //vtk_m_worklet_lcs_LagrangianStructureHelpers_h
+}
+}
+}
+} //vtkm::filter::flow::internal
+
+#endif //vtkm_filter_flow_internal_LagrangianStructureHelpers_h
