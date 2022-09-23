@@ -45,7 +45,7 @@ ctest_test(APPEND
   PARALLEL_LEVEL ${PARALLEL_LEVEL}
   RETURN_VALUE test_result
   EXCLUDE "${test_exclusions}"
-  REPEAT "UNTIL_PASS:3"
+  REPEAT "UNTIL_PASS:${CTEST_REPEAT_UNTIL_PASS}"
   ${junit_args}
   )
   message(STATUS "ctest_test RETURN_VALUE: ${test_result}")

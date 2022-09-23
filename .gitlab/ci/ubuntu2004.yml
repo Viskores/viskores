@@ -97,7 +97,7 @@ test:ubuntu2004_hip_kokkos:
     - .cmake_test_linux
     - .run_upstream_branches
   variables:
-    CTEST_TIMEOUT: "30"
+    CTEST_MAX_PARALLELISM: 1
   dependencies:
     - build:ubuntu2004_hip_kokkos
   needs:
