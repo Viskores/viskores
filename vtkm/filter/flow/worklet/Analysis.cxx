@@ -8,15 +8,4 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/flow/FilterParticleAdvectionSteadyState.h>
-
-namespace vtkm
-{
-namespace filter
-{
-namespace flow
-{
-
-}
-}
-} // namespace vtkm::filter::flow
+#include <vtkm/filter/flow/worklet/Analysis.h>

@@ -28,7 +28,7 @@ if (TARGET vtkm_rendering_testing)
 endif()
 
 vtkm_unit_tests(
-  SOURCES ${filter_unit_tests}
+  DEVICE_SOURCES ${filter_unit_tests}
   DEVICE_SOURCES ${worklet_unit_tests}
   USE_VTKM_JOB_POOL
   )

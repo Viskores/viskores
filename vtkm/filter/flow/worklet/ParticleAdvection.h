@@ -47,7 +47,7 @@ public:
 };
 
 } //detail
-
+/*
 template <typename ParticleType>
 struct ParticleAdvectionResult
 {
@@ -63,12 +63,12 @@ struct ParticleAdvectionResult
 
   vtkm::cont::ArrayHandle<ParticleType> Particles;
 };
-
+*/
 class ParticleAdvection
 {
 public:
   ParticleAdvection() {}
-
+  /*
   template <typename IntegratorType, typename ParticleType, typename ParticleStorage>
   void Run2(const IntegratorType& it,
             vtkm::cont::ArrayHandle<ParticleType, ParticleStorage>& particles,
@@ -80,26 +80,37 @@ public:
     worklet.Run(it, particles, MaxSteps);
     result = ParticleAdvectionResult<ParticleType>(particles);
   }
-
-  template <typename IntegratorType, typename ParticleType, typename ParticleStorage>
-  ParticleAdvectionResult<ParticleType> Run(
-    const IntegratorType& it,
-    vtkm::cont::ArrayHandle<ParticleType, ParticleStorage>& particles,
-    vtkm::Id MaxSteps)
+*/
+  template <typename IntegratorType,
+            typename ParticleType,
+            typename ParticleStorage,
+            typename TerminationType,
+            typename AnalysisType>
+  void Run(const IntegratorType& it,
+           vtkm::cont::ArrayHandle<ParticleType, ParticleStorage>& particles,
+           const TerminationType& termination,
+           AnalysisType& analysis)
   {
-    vtkm::worklet::flow::ParticleAdvectionWorklet<IntegratorType, ParticleType> worklet;
-
-    worklet.Run(it, particles, MaxSteps);
-    return ParticleAdvectionResult<ParticleType>(particles);
+    vtkm::worklet::flow::
+      ParticleAdvectionWorklet<IntegratorType, ParticleType, TerminationType, AnalysisType>
+        worklet;
+    worklet.Run(it, particles, termination, analysis);
+    //return ParticleAdvectionResult<ParticleType>(particles);
   }
 
-  template <typename IntegratorType, typename ParticleType, typename PointStorage>
-  ParticleAdvectionResult<ParticleType> Run(
-    const IntegratorType& it,
-    const vtkm::cont::ArrayHandle<vtkm::Vec3f, PointStorage>& points,
-    vtkm::Id MaxSteps)
+  template <typename IntegratorType,
+            typename ParticleType,
+            typename PointStorage,
+            typename TerminationType,
+            typename AnalysisType>
+  void Run(const IntegratorType& it,
+           const vtkm::cont::ArrayHandle<vtkm::Vec3f, PointStorage>& points,
+           const TerminationType& termination,
+           AnalysisType& analysis)
   {
-    vtkm::worklet::flow::ParticleAdvectionWorklet<IntegratorType, ParticleType> worklet;
+    vtkm::worklet::flow::
+      ParticleAdvectionWorklet<IntegratorType, ParticleType, TerminationType, AnalysisType>
+        worklet;
 
     vtkm::cont::ArrayHandle<ParticleType> particles;
     vtkm::cont::ArrayHandle<vtkm::Id> step, ids;
@@ -117,11 +128,11 @@ public:
     vtkm::cont::ArrayCopy(id, ids);
     invoke(detail::CopyToParticle{}, points, ids, time, step, particles);
 
-    worklet.Run(it, particles, MaxSteps);
-    return ParticleAdvectionResult<ParticleType>(particles);
+    worklet.Run(it, particles, termination, analysis);
+    //return ParticleAdvectionResult<ParticleType>(particles);
   }
 };
-
+/*
 template <typename ParticleType>
 struct StreamlineResult
 {
@@ -167,7 +178,7 @@ public:
     return StreamlineResult<ParticleType>(particles, positions, polyLines);
   }
 };
-
+*/
 }
 }
 } // vtkm::worklet::flow

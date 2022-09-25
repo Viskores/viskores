@@ -34,7 +34,7 @@ public:
   }
 
   template <typename Particle>
-  VTKM_EXEC IntegratorStatus CheckStep(Particle& particle,
+  VTKM_EXEC IntegratorStatus CheckStep(const Particle& particle,
                                        vtkm::FloatDefault stepLength,
                                        vtkm::Vec3f& velocity) const
   {

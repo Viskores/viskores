@@ -15,19 +15,81 @@
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
+#include <vtkm/filter/flow/internal/BoundsMap.h>
+#include <vtkm/filter/flow/internal/DataSetIntegratorSteadyState.h>
+#include <vtkm/filter/flow/internal/ParticleAdvector.h>
+
 namespace vtkm
 {
 namespace filter
 {
 namespace flow
 {
+
+template <typename Derived>
+struct FlowTraits;
+
+template <typename Derived>
 class VTKM_FILTER_FLOW_EXPORT FilterParticleAdvectionSteadyState : public FilterParticleAdvection
 {
-private:
-  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
-    const vtkm::cont::PartitionedDataSet& inData) override;
-};
+public:
+  using ParticleType = typename FlowTraits<Derived>::ParticleType;
+  using FieldType = typename FlowTraits<Derived>::FieldType;
+  using TerminationType = typename FlowTraits<Derived>::TerminationType;
+  using AnalysisType = typename FlowTraits<Derived>::AnalysisType;
 
+private:
+  VTKM_CONT FieldType GetField(const vtkm::cont::DataSet& data) const
+  {
+    const Derived* inst = static_cast<const Derived*>(this);
+    return inst->GetField(data);
+  }
+
+  VTKM_CONT TerminationType GetTermination(const vtkm::cont::DataSet& data) const
+  {
+    const Derived* inst = static_cast<const Derived*>(this);
+    return inst->GetTermination(data);
+  }
+
+  VTKM_CONT AnalysisType GetAnalysis(const vtkm::cont::DataSet& data) const
+  {
+    const Derived* inst = static_cast<const Derived*>(this);
+    return inst->GetAnalysis(data);
+  }
+
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& input)
+  {
+    this->ValidateOptions();
+
+    using DSIType = vtkm::filter::flow::internal::
+      DataSetIntegratorSteadyState<ParticleType, FieldType, TerminationType, AnalysisType>;
+
+    vtkm::filter::flow::internal::BoundsMap boundsMap(input);
+    std::vector<DSIType> dsi;
+    for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
+    {
+      vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
+      auto dataset = input.GetPartition(i);
+
+      // Build the field for the current dataset
+      FieldType field = this->GetField(dataset);
+      // Build the termination for the current dataset
+      TerminationType termination = this->GetTermination(dataset);
+      // Build the analysis for the current dataset
+      AnalysisType analysis = this->GetAnalysis(dataset);
+
+      dsi.emplace_back(blockId, field, dataset, this->SolverType, termination, analysis);
+    }
+
+    vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(
+      boundsMap, dsi, this->UseThreadedAlgorithm);
+
+    vtkm::cont::ArrayHandle<ParticleType> particles;
+    this->Seeds.AsArrayHandle(particles);
+    return pav.Execute(particles, this->StepSize);
+  }
+};
 }
 }
 } // namespace vtkm::filter::flow

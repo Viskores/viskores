@@ -15,6 +15,7 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/Invoker.h>
 
 #include <vtkm/Particle.h>
 #include <vtkm/filter/flow/worklet/Particles.h>
@@ -34,18 +35,26 @@ namespace flow
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn idx,
-                                ExecObject integrator,
-                                ExecObject integralCurve,
-                                FieldIn maxSteps);
-  using ExecutionSignature = void(_1 idx, _2 integrator, _3 integralCurve, _4 maxSteps);
+  VTKM_EXEC_CONT
+  ParticleAdvectWorklet()
+    : PushOutOfBounds(true)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  ParticleAdvectWorklet(bool pushOutOfBounds)
+    : PushOutOfBounds(pushOutOfBounds)
+  {
+  }
+
+  using ControlSignature = void(FieldIn idx, ExecObject integrator, ExecObject integralCurve);
+  using ExecutionSignature = void(_1 idx, _2 integrator, _3 integralCurve);
   using InputDomain = _1;
 
   template <typename IntegratorType, typename IntegralCurveType>
   VTKM_EXEC void operator()(const vtkm::Id& idx,
                             const IntegratorType& integrator,
-                            IntegralCurveType& integralCurve,
-                            const vtkm::Id& maxSteps) const
+                            IntegralCurveType& integralCurve) const
   {
     auto particle = integralCurve.GetParticle(idx);
     vtkm::FloatDefault time = particle.GetTime();
@@ -69,7 +78,7 @@ public:
 
       //We can't take a step inside spatial boundary.
       //Try and take a step just past the boundary.
-      else if (status.CheckSpatialBounds())
+      else if (status.CheckSpatialBounds() && this->PushOutOfBounds)
       {
         status = integrator.SmallStep(particle, time, outpos);
         if (status.CheckOk())
@@ -78,16 +87,22 @@ public:
           tookAnySteps = true;
         }
       }
-      integralCurve.StatusUpdate(idx, status, maxSteps);
+      integralCurve.StatusUpdate(idx, status);
     } while (integralCurve.CanContinue(idx));
 
     //Mark if any steps taken
     integralCurve.UpdateTookSteps(idx, tookAnySteps);
   }
+
+private:
+  bool PushOutOfBounds;
 };
 
 
-template <typename IntegratorType, typename ParticleType>
+template <typename IntegratorType,
+          typename ParticleType,
+          typename TerminationType,
+          typename AnalysisType>
 class ParticleAdvectionWorklet
 {
 public:
@@ -97,19 +112,17 @@ public:
 
   void Run(const IntegratorType& integrator,
            vtkm::cont::ArrayHandle<ParticleType>& particles,
-           vtkm::Id& MaxSteps)
+           const TerminationType& termination,
+           AnalysisType& analysis)
   {
 
-    using ParticleAdvectWorkletType = vtkm::worklet::flow::ParticleAdvectWorklet;
-    using ParticleWorkletDispatchType =
-      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-    using ParticleArrayType = vtkm::worklet::flow::Particles<ParticleType>;
+    using ParticleArrayType =
+      vtkm::worklet::flow::Particles<ParticleType, TerminationType, AnalysisType>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(particles.GetNumberOfValues());
     //Create and invoke the particle advection.
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> maxSteps(MaxSteps, numSeeds);
+    //vtkm::cont::ArrayHandleConstant<vtkm::Id> maxSteps(MaxSteps, numSeeds);
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
-
     // TODO: The particle advection sometimes behaves incorrectly on CUDA if the stack size
     // is not changed thusly. This is concerning as the compiler should be able to determine
     // staticly the required stack depth. What is even more concerning is that the runtime
@@ -121,15 +134,23 @@ public:
     (void)stack;
 #endif // VTKM_CUDA
 
-    ParticleArrayType particlesObj(particles, MaxSteps);
+    // Initialize all the pre-requisites needed to start analysis
+    // It's based on the existing properties of the particles,
+    // for e.g. the number of steps they've already taken
+    analysis.InitializeAnalysis(particles);
 
-    //Invoke particle advection worklet
-    ParticleWorkletDispatchType particleWorkletDispatch;
+    ParticleArrayType particlesObj(particles, termination, analysis);
 
-    particleWorkletDispatch.Invoke(idxArray, integrator, particlesObj, maxSteps);
+    vtkm::worklet::flow::ParticleAdvectWorklet worklet(analysis.SupportPushOutOfBounds());
+
+    vtkm::cont::Invoker invoker;
+    invoker(worklet, idxArray, integrator, particlesObj);
+
+    // Finalize the analysis and clear intermittant arrays.
+    analysis.FinalizeAnalysis(particles);
   }
 };
-
+/*
 namespace detail
 {
 class GetSteps : public vtkm::worklet::WorkletMapField
@@ -166,8 +187,8 @@ public:
   }
 };
 } // namespace detail
-
-
+*/
+/*
 template <typename IntegratorType, typename ParticleType>
 class StreamlineWorklet
 {
@@ -231,7 +252,7 @@ public:
     polyLines.Fill(positions.GetNumberOfValues(), cellTypes, connectivity, offsets);
   }
 };
-
+*/
 }
 }
 } // namespace vtkm::worklet::flow

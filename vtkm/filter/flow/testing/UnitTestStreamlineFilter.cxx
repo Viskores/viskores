@@ -372,7 +372,6 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
     seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
                                                vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
-
     if (fType == FilterType::STREAMLINE || fType == FilterType::PATHLINE)
     {
       vtkm::cont::PartitionedDataSet out;
@@ -382,7 +381,6 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         streamline.SetStepSize(0.1f);
         streamline.SetNumberOfSteps(100000);
         streamline.SetSeeds(seedArray);
-
         streamline.SetActiveField(fieldName);
         out = streamline.Execute(pds);
       }
@@ -590,8 +588,6 @@ void TestStreamlineFilters()
                                      FilterType::PATHLINE,
                                      FilterType::PATH_PARTICLE };
 
-  //fTypes = {FilterType::PARTICLE_ADVECTION,FilterType::STREAMLINE};
-  //fTypes = {FilterType::PATHLINE};
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)

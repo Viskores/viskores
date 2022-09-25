@@ -97,11 +97,13 @@ public:
   Particle(const vtkm::Vec3f& p,
            const vtkm::Id& id,
            const vtkm::Id& numSteps = 0,
+           const vtkm::Id& numPunctures = 0,
            const vtkm::ParticleStatus& status = vtkm::ParticleStatus(),
            const vtkm::FloatDefault& time = 0)
     : Position(p)
     , ID(id)
     , NumSteps(numSteps)
+    , NumPunctures(numPunctures)
     , Status(status)
     , Time(time)
   {
@@ -112,6 +114,7 @@ public:
     : Position(p.Position)
     , ID(p.ID)
     , NumSteps(p.NumSteps)
+    , NumPunctures(p.NumPunctures)
     , Status(p.Status)
     , Time(p.Time)
   {
@@ -134,6 +137,9 @@ public:
   VTKM_EXEC_CONT vtkm::Id GetNumberOfSteps() const { return this->NumSteps; }
   VTKM_EXEC_CONT void SetNumberOfSteps(vtkm::Id numSteps) { this->NumSteps = numSteps; }
 
+  VTKM_EXEC_CONT vtkm::Id GetNumberOfPunctures() const { return this->NumPunctures; }
+  VTKM_EXEC_CONT void SetNumberOfPunctures(vtkm::Id punctures) { this->NumPunctures = punctures; }
+
   VTKM_EXEC_CONT vtkm::ParticleStatus GetStatus() const { return this->Status; }
   VTKM_EXEC_CONT vtkm::ParticleStatus& GetStatus() { return this->Status; }
   VTKM_EXEC_CONT void SetStatus(vtkm::ParticleStatus status) { this->Status = status; }
@@ -143,7 +149,7 @@ public:
 
   VTKM_EXEC_CONT
   vtkm::Vec3f Velocity(const vtkm::VecVariable<vtkm::Vec3f, 2>& vectors,
-                       const vtkm::FloatDefault& vtkmNotUsed(length))
+                       const vtkm::FloatDefault& vtkmNotUsed(length)) const
   {
     // Velocity is evaluated from the Velocity field
     // and is not influenced by the particle
@@ -169,6 +175,7 @@ private:
   vtkm::Vec3f Position;
   vtkm::Id ID = -1;
   vtkm::Id NumSteps = 0;
+  vtkm::Id NumPunctures = 0;
   vtkm::ParticleStatus Status;
   vtkm::FloatDefault Time = 0;
 
@@ -178,6 +185,7 @@ public:
     constexpr std::size_t sz = sizeof(vtkm::Vec3f) // Pos
       + sizeof(vtkm::Id)                           // ID
       + sizeof(vtkm::Id)                           // NumSteps
+      + sizeof(vtkm::Id)                           // NumPunctures
       + sizeof(vtkm::UInt8)                        // Status
       + sizeof(vtkm::FloatDefault);                // Time
 
@@ -244,7 +252,7 @@ public:
 
   VTKM_EXEC_CONT
   vtkm::Vec3f Velocity(const vtkm::VecVariable<vtkm::Vec3f, 2>& vectors,
-                       const vtkm::FloatDefault& length)
+                       const vtkm::FloatDefault& length) const
   {
     VTKM_ASSERT(vectors.GetNumberOfComponents() == 2);
 
@@ -302,7 +310,7 @@ private:
   vtkm::Float64 Mass;
   vtkm::Float64 Charge;
   vtkm::Float64 Weighting;
-  vtkm::Vec3f Momentum;
+  mutable vtkm::Vec3f Momentum;
   constexpr static vtkm::FloatDefault SPEED_OF_LIGHT =
     static_cast<vtkm::FloatDefault>(2.99792458e8);
 
@@ -366,7 +374,30 @@ public:
     p.SetTime(time);
   }
 };
+/*
+template <>
+struct Serialization<vtkm::XGCParticle>
+{
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::XGCParticle& p)
+  {
+    vtkmdiy::save(bb, p.Pos);
+    vtkmdiy::save(bb, p.ID);
+    vtkmdiy::save(bb, p.NumSteps);
+    vtkmdiy::save(bb, p.Status);
+    vtkmdiy::save(bb, p.Time);
+  }
 
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::XGCParticle& p)
+  {
+    vtkmdiy::load(bb, p.Pos);
+    vtkmdiy::load(bb, p.ID);
+    vtkmdiy::load(bb, p.NumSteps);
+    vtkmdiy::load(bb, p.Status);
+    vtkmdiy::load(bb, p.Time);
+  }
+};
+*/
 template <>
 struct Serialization<vtkm::ChargedParticle>
 {
