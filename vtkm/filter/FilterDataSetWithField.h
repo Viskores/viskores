@@ -24,8 +24,10 @@ namespace vtkm
 namespace filter
 {
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <class Derived>
-class FilterDataSetWithField : public vtkm::filter::Filter<Derived>
+class VTKM_DEPRECATED(1.9, "Use vtkm::filter::NewFilterField.") FilterDataSetWithField
+  : public vtkm::filter::Filter<Derived>
 {
 public:
   VTKM_CONT
@@ -109,6 +111,7 @@ private:
 
   friend class vtkm::filter::Filter<Derived>;
 };
+VTKM_DEPRECATED_SUPPRESS_END
 }
 } // namespace vtkm::filter
 

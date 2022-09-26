@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_FilterTraits_h
 #define vtk_m_filter_FilterTraits_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/List.h>
 
 namespace vtkm
@@ -23,21 +24,21 @@ class Filter;
 
 
 template <typename Filter>
-struct FilterTraits
+struct VTKM_DEPRECATED(1.9) FilterTraits
 {
   using InputFieldTypeList = typename Filter::SupportedTypes;
   using AdditionalFieldStorage = typename Filter::AdditionalFieldStorage;
 };
 
 template <typename DerivedPolicy, typename ListOfTypes>
-struct DeduceFilterFieldTypes
+struct VTKM_DEPRECATED(1.9) DeduceFilterFieldTypes
 {
   using PList = typename DerivedPolicy::FieldTypeList;
   using TypeList = vtkm::ListIntersect<ListOfTypes, PList>;
 };
 
 template <typename DerivedPolicy, typename ListOfStorage>
-struct DeduceFilterFieldStorage
+struct VTKM_DEPRECATED(1.9) DeduceFilterFieldStorage
 {
   using PList = typename DerivedPolicy::StorageList;
   using StorageList = vtkm::ListAppend<ListOfStorage, PList>;

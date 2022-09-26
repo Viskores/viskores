@@ -18,9 +18,11 @@ namespace vtkm
 namespace filter
 {
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <class Derived>
 using FilterCell VTKM_DEPRECATED(1.6, "Use FilterField instead of FilterCell.") =
   vtkm::filter::FilterField<Derived>;
+VTKM_DEPRECATED_SUPPRESS_END
 }
 }
 #endif // vtk_m_filter_CellFilter_h

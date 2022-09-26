@@ -29,7 +29,6 @@
 #include <vtkm/cont/internal/OptionParser.h>
 
 #include <vtkm/filter/FieldSelection.h>
-#include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/filter/entity_extraction/ExternalFaces.h>
 #include <vtkm/filter/entity_extraction/Threshold.h>

@@ -31,6 +31,7 @@ namespace filter
 
 /// Use this if you have built a \c Field object. An output
 /// \c DataSet will be created by adding the field to the input.
+VTKM_DEPRECATED(1.9, "Use CreateResultField method in NewFilterField.")
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
                                                   const vtkm::cont::Field& field)
 {
@@ -45,11 +46,12 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inD
 /// Use this function if you have an ArrayHandle that holds the data for
 /// the field. You also need to specify a name for the field.
 template <typename T, typename Storage>
-inline VTKM_CONT vtkm::cont::DataSet CreateResult(
-  const vtkm::cont::DataSet& inDataSet,
-  const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
-  const std::string& fieldName,
-  const vtkm::filter::FieldMetadata& metaData)
+VTKM_DEPRECATED(1.9, "Use CreateResultField method in NewFilterField.")
+inline VTKM_CONT vtkm::cont::DataSet
+  CreateResult(const vtkm::cont::DataSet& inDataSet,
+               const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
+               const std::string& fieldName,
+               const vtkm::filter::FieldMetadata& metaData)
 {
   VTKM_ASSERT(!fieldName.empty());
 
@@ -64,6 +66,7 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(
 
 /// Use this function if you have a UnknownArrayHandle that holds the data
 /// for the field.
+VTKM_DEPRECATED(1.9, "Use CreateResultField method in NewFilterField.")
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
                                                   const vtkm::cont::UnknownArrayHandle& fieldArray,
                                                   const std::string& fieldName,
@@ -83,10 +86,11 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inD
 /// Use this function if you want to explicit construct a Cell field and have a ArrayHandle
 /// that holds the data for the field.
 template <typename T, typename Storage>
-inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
-  const vtkm::cont::DataSet& inDataSet,
-  const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
-  const std::string& fieldName)
+VTKM_DEPRECATED(1.9, "Use CreateResultFieldCell method in NewFilterField.")
+inline VTKM_CONT vtkm::cont::DataSet
+  CreateResultFieldCell(const vtkm::cont::DataSet& inDataSet,
+                        const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
+                        const std::string& fieldName)
 {
   VTKM_ASSERT(!fieldName.empty());
 
@@ -101,6 +105,7 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
 
 /// Use this function if you want to explicit construct a Cell field and have a UnknownArrayHandle
 /// that holds the data for the field.
+VTKM_DEPRECATED(1.9, "Use CreateResultFieldCell method in NewFilterField.")
 inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::UnknownArrayHandle& fieldArray,
@@ -120,10 +125,11 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldCell(
 /// Use this function if you want to explicit construct a Point field and have a ArrayHandle
 /// that holds the data for the field.
 template <typename T, typename Storage>
-inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldPoint(
-  const vtkm::cont::DataSet& inDataSet,
-  const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
-  const std::string& fieldName)
+VTKM_DEPRECATED(1.9, "Use CreateResultFieldPoint method in NewFilterField.")
+inline VTKM_CONT vtkm::cont::DataSet
+  CreateResultFieldPoint(const vtkm::cont::DataSet& inDataSet,
+                         const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
+                         const std::string& fieldName)
 {
   VTKM_ASSERT(!fieldName.empty());
 
@@ -138,6 +144,7 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldPoint(
 
 /// Use this function if you want to explicit construct a Point field and have a UnknownArrayHandle
 /// that holds the data for the field.
+VTKM_DEPRECATED(1.9, "Use CreateResultFieldCell method in NewFilterField.")
 inline VTKM_CONT vtkm::cont::DataSet CreateResultFieldPoint(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::UnknownArrayHandle& fieldArray,

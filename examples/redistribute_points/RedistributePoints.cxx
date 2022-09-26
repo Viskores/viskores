@@ -8,53 +8,228 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/EnvironmentTracker.h>
-#include <vtkm/cont/Initialize.h>
+#include "RedistributePoints.h"
 
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <vtkm/ImplicitFunction.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/AssignerPartitionedDataSet.h>
+#include <vtkm/cont/BoundsGlobalCompute.h>
+#include <vtkm/cont/EnvironmentTracker.h>
+#include <vtkm/cont/Serialization.h>
+#include <vtkm/filter/entity_extraction/ExtractPoints.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
 
-#include "RedistributePoints.h"
-
-#include <sstream>
-using std::cout;
-using std::endl;
-
-int main(int argc, char* argv[])
+namespace example
 {
-  // Process vtk-m general args
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  auto config = vtkm::cont::Initialize(argc, argv, opts);
 
-  vtkmdiy::mpi::environment env(argc, argv);
-  vtkmdiy::mpi::communicator comm;
-  vtkm::cont::EnvironmentTracker::SetCommunicator(comm);
+namespace internal
+{
 
-  if (argc != 3)
-  {
-    cout << "Usage: " << endl
-         << "$ " << argv[0] << " [options] <input-vtk-file> <output-file-prefix>" << endl;
-    cout << config.Usage << endl;
-    return EXIT_FAILURE;
-  }
-
-  vtkm::cont::DataSet input;
-  if (comm.rank() == 0)
-  {
-    vtkm::io::VTKDataSetReader reader(argv[1]);
-    input = reader.ReadDataSet();
-  }
-
-  example::RedistributePoints redistributor;
-  auto output = redistributor.Execute(input);
-
-  std::ostringstream str;
-  str << argv[2] << "-" << comm.rank() << ".vtk";
-
-  vtkm::io::VTKDataSetWriter writer(str.str());
-  writer.WriteDataSet(output);
-  return EXIT_SUCCESS;
+static vtkmdiy::ContinuousBounds convert(const vtkm::Bounds& bds)
+{
+  vtkmdiy::ContinuousBounds result(3);
+  result.min[0] = static_cast<float>(bds.X.Min);
+  result.min[1] = static_cast<float>(bds.Y.Min);
+  result.min[2] = static_cast<float>(bds.Z.Min);
+  result.max[0] = static_cast<float>(bds.X.Max);
+  result.max[1] = static_cast<float>(bds.Y.Max);
+  result.max[2] = static_cast<float>(bds.Z.Max);
+  return result;
 }
+
+
+template <typename FilterType>
+class Redistributor
+{
+  const vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds>& Decomposer;
+  const FilterType& Filter;
+
+  vtkm::cont::DataSet Extract(const vtkm::cont::DataSet& input,
+                              const vtkmdiy::ContinuousBounds& bds) const
+  {
+    // extract points
+    vtkm::Box box(bds.min[0], bds.max[0], bds.min[1], bds.max[1], bds.min[2], bds.max[2]);
+
+    vtkm::filter::entity_extraction::ExtractPoints extractor;
+    extractor.SetCompactPoints(true);
+    extractor.SetImplicitFunction(box);
+    return extractor.Execute(input);
+  }
+
+  class ConcatenateFields
+  {
+  public:
+    explicit ConcatenateFields(vtkm::Id totalSize)
+      : TotalSize(totalSize)
+      , CurrentIdx(0)
+    {
+    }
+
+    void Append(const vtkm::cont::Field& field)
+    {
+      VTKM_ASSERT(this->CurrentIdx + field.GetNumberOfValues() <= this->TotalSize);
+
+      if (this->Field.GetNumberOfValues() == 0)
+      {
+        // Copy metadata
+        this->Field = field;
+        // Reset array
+        this->Field.SetData(field.GetData().NewInstanceBasic());
+        // Preallocate array
+        this->Field.GetData().Allocate(this->TotalSize);
+      }
+      else
+      {
+        VTKM_ASSERT(this->Field.GetName() == field.GetName() &&
+                    this->Field.GetAssociation() == field.GetAssociation());
+      }
+
+      field.GetData().CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
+        Appender{}, this->Field, this->CurrentIdx);
+      this->CurrentIdx += field.GetNumberOfValues();
+    }
+
+    const vtkm::cont::Field& GetResult() const { return this->Field; }
+
+  private:
+    struct Appender
+    {
+      template <typename T, typename S>
+      void operator()(const vtkm::cont::ArrayHandle<T, S>& data,
+                      vtkm::cont::Field& field,
+                      vtkm::Id currentIdx) const
+      {
+        vtkm::cont::ArrayHandle<T> farray =
+          field.GetData().template AsArrayHandle<vtkm::cont::ArrayHandle<T>>();
+        vtkm::cont::Algorithm::CopySubRange(data, 0, data.GetNumberOfValues(), farray, currentIdx);
+      }
+    };
+
+    vtkm::Id TotalSize;
+    vtkm::Id CurrentIdx;
+    vtkm::cont::Field Field;
+  };
+
+public:
+  Redistributor(const vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds>& decomposer,
+                const FilterType& filter)
+    : Decomposer(decomposer)
+    , Filter(filter)
+  {
+  }
+
+  void operator()(vtkm::cont::DataSet* block, const vtkmdiy::ReduceProxy& rp) const
+  {
+    if (rp.in_link().size() == 0)
+    {
+      if (block->GetNumberOfCoordinateSystems() > 0)
+      {
+        for (int cc = 0; cc < rp.out_link().size(); ++cc)
+        {
+          auto target = rp.out_link().target(cc);
+          // let's get the bounding box for the target block.
+          vtkmdiy::ContinuousBounds bds(3);
+          this->Decomposer.fill_bounds(bds, target.gid);
+
+          auto extractedDS = this->Extract(*block, bds);
+          // TODO: Need a better way to serialize DataSet. See issue #725.
+          rp.enqueue(target, vtkm::cont::SerializableDataSet<>(extractedDS));
+        }
+        // clear our dataset.
+        *block = vtkm::cont::DataSet();
+      }
+    }
+    else
+    {
+      vtkm::Id numValues = 0;
+      std::vector<vtkm::cont::DataSet> receives;
+      for (int cc = 0; cc < rp.in_link().size(); ++cc)
+      {
+        auto target = rp.in_link().target(cc);
+        if (rp.incoming(target.gid).size() > 0)
+        {
+          // TODO: Need a better way to serialize DataSet. See issue #725.
+          vtkm::cont::SerializableDataSet<> sds;
+          rp.dequeue(target.gid, sds);
+          receives.push_back(sds.DataSet);
+          numValues += receives.back().GetCoordinateSystem(0).GetNumberOfPoints();
+        }
+      }
+
+      *block = vtkm::cont::DataSet();
+      if (receives.size() == 1)
+      {
+        *block = receives[0];
+      }
+      else if (receives.size() > 1)
+      {
+        ConcatenateFields concatCoords(numValues);
+        for (const auto& ds : receives)
+        {
+          concatCoords.Append(ds.GetCoordinateSystem(0));
+        }
+        block->AddCoordinateSystem(vtkm::cont::CoordinateSystem(
+          concatCoords.GetResult().GetName(), concatCoords.GetResult().GetData()));
+
+        for (vtkm::IdComponent i = 0; i < receives[0].GetNumberOfFields(); ++i)
+        {
+          ConcatenateFields concatField(numValues);
+          for (const auto& ds : receives)
+          {
+            concatField.Append(ds.GetField(i));
+          }
+          block->AddField(concatField.GetResult());
+        }
+      }
+    }
+  }
+};
+
+} // namespace example::internal
+
+
+VTKM_CONT vtkm::cont::PartitionedDataSet RedistributePoints::DoExecutePartitions(
+  const vtkm::cont::PartitionedDataSet& input)
+{
+  auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+
+  // let's first get the global bounds of the domain
+  vtkm::Bounds gbounds = vtkm::cont::BoundsGlobalCompute(input);
+
+  vtkm::cont::AssignerPartitionedDataSet assigner(input.GetNumberOfPartitions());
+  vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds> decomposer(
+    /*dim*/ 3, internal::convert(gbounds), assigner.nblocks());
+
+  vtkmdiy::Master master(
+    comm,
+    /*threads*/ 1,
+    /*limit*/ -1,
+    []() -> void* { return new vtkm::cont::DataSet(); },
+    [](void* ptr) { delete static_cast<vtkm::cont::DataSet*>(ptr); });
+  decomposer.decompose(comm.rank(), assigner, master);
+
+  assert(static_cast<vtkm::Id>(master.size()) == input.GetNumberOfPartitions());
+  // let's populate local blocks
+  master.foreach ([&input](vtkm::cont::DataSet* ds, const vtkmdiy::Master::ProxyWithLink& proxy) {
+    auto lid = proxy.master()->lid(proxy.gid());
+    *ds = input.GetPartition(lid);
+  });
+
+  internal::Redistributor<RedistributePoints> redistributor(decomposer, *this);
+  vtkmdiy::all_to_all(master, assigner, redistributor, /*k=*/2);
+
+  vtkm::cont::PartitionedDataSet result;
+  master.foreach ([&result](vtkm::cont::DataSet* ds, const vtkmdiy::Master::ProxyWithLink&) {
+    result.AppendPartition(*ds);
+  });
+
+  return result;
+}
+
+vtkm::cont::DataSet RedistributePoints::DoExecute(const vtkm::cont::DataSet&)
+{
+  throw vtkm::cont::ErrorBadType("RedistributePoints requires PartitionedDataSet.");
+}
+
+} // namespace example
