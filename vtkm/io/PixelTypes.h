@@ -13,14 +13,19 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/lodepng/vtkmlodepng/lodepng.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm
 {
+
 namespace io
 {
+
+namespace internal
+{
+
+extern int GreyColorType;
+extern int RGBColorType;
+
+}
 
 // ----------------------------------------------------------------------
 // Define custom SFINAE structures to calculate the VTKM types associated
@@ -75,6 +80,10 @@ public:
   static constexpr vtkm::IdComponent MAX_COLOR_VALUE = (1 << BitDepth) - 1;
   static constexpr vtkm::IdComponent NUM_CHANNELS = Superclass::NUM_COMPONENTS;
   static constexpr vtkm::IdComponent BYTES_PER_PIXEL = NUM_CHANNELS * NUM_BYTES;
+  static constexpr vtkm::IdComponent GetBitDepth()
+  {
+    return BasePixel<BitDepth, Channels>::BIT_DEPTH;
+  }
 
   using Superclass::Superclass;
   BasePixel() = default;
@@ -131,8 +140,6 @@ public:
   // RGB values are stored in a vtkm::Vec<ComponentType, 3>
   using Superclass = BasePixel<BitDepth, 3>;
   using ComponentType = typename Superclass::ComponentType;
-  static constexpr vtkm::png::LodePNGColorType PNG_COLOR_TYPE =
-    vtkm::png::LodePNGColorType::LCT_RGB;
 
   using Superclass::Superclass;
   RGBPixel() = default;
@@ -144,6 +151,9 @@ public:
   }
 
   virtual ~RGBPixel() = default;
+
+  // Get the implementation specific color type (Gray|RGB) value
+  static int GetColorType();
 
   ComponentType Diff(const Superclass& pixel) const override;
   vtkm::Vec4f_32 ToVec4f() const override;
@@ -169,8 +179,6 @@ public:
   // in order to simplify the pixel helper functions
   using Superclass = BasePixel<BitDepth, 1>;
   using ComponentType = typename Superclass::ComponentType;
-  static constexpr vtkm::png::LodePNGColorType PNG_COLOR_TYPE =
-    vtkm::png::LodePNGColorType::LCT_GREY;
 
   using Superclass::Superclass;
   GreyPixel() = default;
@@ -181,6 +189,9 @@ public:
   }
 
   virtual ~GreyPixel() = default;
+
+  // Get the implementation specific color type (Gray|RGB) value
+  static int GetColorType();
 
   ComponentType Diff(const Superclass& pixel) const override;
   vtkm::Vec4f_32 ToVec4f() const override;

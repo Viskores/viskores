@@ -73,15 +73,25 @@ public:
   vtkm::Float64 GetElapsedTime() const;
 
   /// Returns the device for which this timer is synchronized. If the device adapter has the same
-  /// id as DeviceAdapterTagAny, then the timer will synchronize all devices.
+  /// id as `DeviceAdapterTagAny`, then the timer will synchronize all devices.
   VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const { return this->Device; }
+
+  /// Synchronize the device(s) that this timer is monitoring without starting or stopping the
+  /// timer. This is useful for ensuring that external events are synchronized to this timer.
+  ///
+  /// Note that this method will allways block until the device(s) finish even if the
+  /// `Start`/`Stop` methods do not actually block. For example, the timer for CUDA does not
+  /// actually wait for asynchronous operations to finish. Rather, it inserts a fence and
+  /// records the time as fences are encounted. But regardless, this `Synchronize` method
+  /// will block for the CUDA device.
+  VTKM_CONT void Synchronize() const;
 
 private:
   /// Some timers are ill-defined when copied, so disallow that for all timers.
   VTKM_CONT Timer(const Timer&) = delete;
   VTKM_CONT void operator=(const Timer&) = delete;
 
-  DeviceAdapterId Device;
+  vtkm::cont::DeviceAdapterId Device;
   std::unique_ptr<detail::EnabledDeviceTimerImpls> Internal;
 };
 }

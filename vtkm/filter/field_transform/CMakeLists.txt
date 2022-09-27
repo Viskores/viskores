@@ -16,6 +16,7 @@ set(field_transform_headers
   SphericalCoordinateTransform.h
   WarpScalar.h
   WarpVector.h
+  LogValues.h
   )
 
 set(field_transform_sources
@@ -27,6 +28,7 @@ set(field_transform_sources
   SphericalCoordinateTransform.cxx
   WarpScalar.cxx
   WarpVector.cxx
+  LogValues.cxx
   )
 
 vtkm_library(

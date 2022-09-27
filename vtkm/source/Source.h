@@ -14,6 +14,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/source/vtkm_source_export.h>
+
 namespace vtkm
 {
 namespace source
@@ -23,14 +24,13 @@ class VTKM_SOURCE_EXPORT Source
 {
 public:
   VTKM_CONT
-  Source();
+  virtual ~Source() = default;
 
-  VTKM_CONT
-  virtual ~Source();
-
-  virtual vtkm::cont::DataSet Execute() const = 0;
+  vtkm::cont::DataSet Execute() const { return this->DoExecute(); }
 
 protected:
+  virtual vtkm::cont::DataSet DoExecute() const = 0;
+
   vtkm::cont::Invoker Invoke;
 };
 

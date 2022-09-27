@@ -11,12 +11,56 @@ set(mesh_info_headers
   CellMeasures.h
   GhostCellClassify.h
   MeshQuality.h
+  MeshQualityArea.h
+  MeshQualityAspectGamma.h
+  MeshQualityAspectRatio.h
+  MeshQualityCondition.h
+  MeshQualityDiagonalRatio.h
+  MeshQualityDimension.h
+  MeshQualityJacobian.h
+  MeshQualityMaxAngle.h
+  MeshQualityMaxDiagonal.h
+  MeshQualityMinAngle.h
+  MeshQualityMinDiagonal.h
+  MeshQualityOddy.h
+  MeshQualityRelativeSizeSquared.h
+  MeshQualityScaledJacobian.h
+  MeshQualityShape.h
+  MeshQualityShapeAndSize.h
+  MeshQualityShear.h
+  MeshQualitySkew.h
+  MeshQualityStretch.h
+  MeshQualityTaper.h
+  MeshQualityVolume.h
+  MeshQualityWarpage.h
   )
 
 set(mesh_info_sources
   CellMeasures.cxx
   GhostCellClassify.cxx
   MeshQuality.cxx
+  MeshQualityArea.cxx
+  MeshQualityAspectGamma.cxx
+  MeshQualityAspectRatio.cxx
+  MeshQualityCondition.cxx
+  MeshQualityDiagonalRatio.cxx
+  MeshQualityDimension.cxx
+  MeshQualityJacobian.cxx
+  MeshQualityMaxAngle.cxx
+  MeshQualityMaxDiagonal.cxx
+  MeshQualityMinAngle.cxx
+  MeshQualityMinDiagonal.cxx
+  MeshQualityOddy.cxx
+  MeshQualityRelativeSizeSquared.cxx
+  MeshQualityScaledJacobian.cxx
+  MeshQualityShape.cxx
+  MeshQualityShapeAndSize.cxx
+  MeshQualityShear.cxx
+  MeshQualitySkew.cxx
+  MeshQualityStretch.cxx
+  MeshQualityTaper.cxx
+  MeshQualityVolume.cxx
+  MeshQualityWarpage.cxx
   )
 
 vtkm_library(

@@ -353,7 +353,7 @@ void WriteCellFields(std::ostream& out,
   for (vtkm::Id f = 0; f < dataSet.GetNumberOfFields(); f++)
   {
     const vtkm::cont::Field field = dataSet.GetField(f);
-    if (!field.IsFieldCell())
+    if (!field.IsCellField())
     {
       continue;
     }

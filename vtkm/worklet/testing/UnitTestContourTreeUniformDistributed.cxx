@@ -55,14 +55,13 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
-#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_distributed/CombineHyperSweepBlockFunctor.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
-#include <vtkm/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
-#include <vtkm/worklet/contourtree_distributed/HyperSweepBlock.h>
-#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/DataSetMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/CombineHyperSweepBlockFunctor.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/HyperSweepBlock.h>
 #include <vtkm/worklet/testing/TestingContourTreeUniformDistributedLoadArrays.h>
 
 // clang-format off
@@ -154,7 +153,6 @@ void TestHierarchicalHyperSweeper()
                                        "misc/8x9test_HierarchicalAugmentedTree_Block2.dat",
                                        "misc/8x9test_HierarchicalAugmentedTree_Block3.dat" };
   vtkm::Id3 globalSize{ 9, 8, 1 };
-  vtkm::Id3 blocksPerDim{ 2, 2, 1 };
   vtkm::Id3 sizes[numBlocks] = { { 5, 4, 1 }, { 5, 5, 1 }, { 5, 4, 1 }, { 5, 5, 1 } };
   vtkm::Id3 origins[numBlocks] = { { 0, 0, 0 }, { 0, 3, 0 }, { 4, 0, 0 }, { 4, 3, 0 } };
   vtkm::Id3 blockIndices[numBlocks] = { { 0, 0, 0 }, { 0, 1, 0 }, { 1, 0, 0 }, { 1, 1, 0 } };
@@ -173,14 +171,6 @@ void TestHierarchicalHyperSweeper()
     vtkm::cont::make_ArrayHandle<vtkm::Id>({ 6, 9, 18, 24, 46, 72 }),
     vtkm::cont::make_ArrayHandle<vtkm::Id>({ 6, 9, 18, 24, 46, 72, 2 })
   };
-
-  // Create spatial decomposition
-  vtkm::worklet::contourtree_distributed::SpatialDecomposition spatialDecomp(
-    blocksPerDim,
-    globalSize,
-    vtkm::cont::make_ArrayHandle(blockIndices, numBlocks, vtkm::CopyFlag::Off),
-    vtkm::cont::make_ArrayHandle(origins, numBlocks, vtkm::CopyFlag::Off),
-    vtkm::cont::make_ArrayHandle(sizes, numBlocks, vtkm::CopyFlag::Off));
 
   // Load trees
   vtkm::worklet::contourtree_distributed::HierarchicalContourTree<vtkm::FloatDefault>
@@ -209,22 +199,21 @@ void TestHierarchicalHyperSweeper()
   RegularDecomposer::CoordinateVector ghosts(3, 1);
   RegularDecomposer::DivisionsVector diyDivisions{ 2, 2, 1 }; // HARDCODED FOR TEST
 
-  int numDims = static_cast<int>(globalSize[2] > 1 ? 3 : 2);
-  RegularDecomposer decomposer(numDims,
-                               spatialDecomp.GetVTKmDIYBounds(),
-                               static_cast<int>(spatialDecomp.GetGlobalNumberOfBlocks()),
-                               shareFace,
-                               wrap,
-                               ghosts,
-                               diyDivisions);
+  int numDims = 2;
+  vtkmdiy::DiscreteBounds diyBounds(2);
+  diyBounds.min[0] = diyBounds.min[1] = 0;
+  diyBounds.max[0] = static_cast<int>(globalSize[0]);
+  diyBounds.max[1] = static_cast<int>(globalSize[1]);
+
+  RegularDecomposer decomposer(
+    numDims, diyBounds, numBlocks, shareFace, wrap, ghosts, diyDivisions);
 
   // ... coordinates of local blocks
-  auto localBlockIndicesPortal = spatialDecomp.LocalBlockIndices.ReadPortal();
   std::vector<int> vtkmdiyLocalBlockGids(numBlocks);
   for (vtkm::Id bi = 0; bi < numBlocks; bi++)
   {
     RegularDecomposer::DivisionsVector diyCoords(static_cast<size_t>(numDims));
-    auto currentCoords = localBlockIndicesPortal.Get(bi);
+    auto currentCoords = blockIndices[bi];
     for (vtkm::IdComponent d = 0; d < numDims; ++d)
     {
       diyCoords[d] = static_cast<int>(currentCoords[d]);
@@ -234,8 +223,7 @@ void TestHierarchicalHyperSweeper()
   }
 
   // Define which blocks live on which rank so that vtkmdiy can manage them
-  vtkmdiy::DynamicAssigner assigner(
-    comm, comm.size(), static_cast<int>(spatialDecomp.GetGlobalNumberOfBlocks()));
+  vtkmdiy::DynamicAssigner assigner(comm, comm.size(), numBlocks);
   for (vtkm::Id bi = 0; bi < numBlocks; bi++)
   {
     assigner.set_rank(static_cast<int>(rank),

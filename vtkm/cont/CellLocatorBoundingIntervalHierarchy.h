@@ -39,6 +39,7 @@ public:
     vtkm::ListTransform<SupportedCellSets, vtkm::exec::CellLocatorBoundingIntervalHierarchy>;
 
   using ExecObjType = vtkm::ListApply<CellLocatorExecList, vtkm::exec::CellLocatorMultiplexer>;
+  using LastCell = typename ExecObjType::LastCell;
 
   VTKM_CONT
   CellLocatorBoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4,

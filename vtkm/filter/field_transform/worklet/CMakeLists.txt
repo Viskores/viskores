@@ -14,6 +14,7 @@ set(headers
   PointTransform.h
   WarpScalar.h
   WarpVector.h
+  LogValues.h
   )
 
 vtkm_declare_headers(${headers})

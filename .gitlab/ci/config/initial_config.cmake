@@ -101,7 +101,11 @@ foreach(option IN LISTS options)
   # From turing we set the architecture using the cannonical
   # CMAKE_CUDA_ARCHITECTURES
   elseif(turing STREQUAL option)
-    set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING "")
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+      set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING "")
+    else()
+      set(VTKm_CUDA_Architecture "turing" CACHE STRING "")
+    endif()
 
   elseif(hip STREQUAL option)
     if(CMAKE_VERSION VERSION_LESS_EQUAL 3.20)
@@ -140,6 +144,9 @@ foreach(option IN LISTS options)
       if(VTKm_ENABLE_CUDA)
         set(CMAKE_CUDA_COMPILER_LAUNCHER "${CCACHE_COMMAND}" CACHE STRING "")
       endif()
+      if(VTKm_ENABLE_KOKKOS_HIP)
+        set(CMAKE_HIP_COMPILER_LAUNCHER "${CCACHE_COMMAND}" CACHE STRING "")
+      endif()
     else()
       message(FATAL_ERROR "CCACHE version [${CCACHE_VERSION}] is <= 4")
     endif()
@@ -160,10 +167,6 @@ find_program(SCCACHE_COMMAND NAMES sccache)
 if(SCCACHE_COMMAND)
   set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
   set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
-
-  if(DEFINED VTKm_ENABLE_KOKKOS_HIP)
-    set(CMAKE_HIP_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
-  endif()
 
   # Use VTKm_CUDA_Architecture to determine if we need CUDA sccache setup
   # since this will also capture when kokkos is being used with CUDA backing

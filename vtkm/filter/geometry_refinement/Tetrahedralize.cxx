@@ -14,35 +14,24 @@
 
 namespace
 {
-struct DeduceCellSet
-{
-  template <typename CellSetType>
-  void operator()(const CellSetType& cellset,
-                  vtkm::worklet::Tetrahedralize& worklet,
-                  vtkm::cont::CellSetSingleType<>& outCellSet) const
-  {
-    outCellSet = worklet.Run(cellset);
-  }
-};
-
 VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::worklet::Tetrahedralize& worklet)
 {
-  if (field.IsFieldPoint())
+  if (field.IsPointField())
   {
     // point data is copied as is because it was not collapsed
     result.AddField(field);
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     // cell data must be scattered to the cells created per input cell
     vtkm::cont::ArrayHandle<vtkm::Id> permutation =
       worklet.GetOutCellScatter().GetOutputToInputMap();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
-  else if (field.IsFieldGlobal())
+  else if (field.IsWholeDataSetField())
   {
     result.AddField(field);
     return true;
@@ -62,11 +51,12 @@ namespace geometry_refinement
 {
 VTKM_CONT vtkm::cont::DataSet Tetrahedralize::DoExecute(const vtkm::cont::DataSet& input)
 {
-  const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
+  const vtkm::cont::UnknownCellSet& inCellSet = input.GetCellSet();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::Tetrahedralize worklet;
-  vtkm::cont::CastAndCall(cells, DeduceCellSet{}, worklet, outCellSet);
+  vtkm::cont::CastAndCall(inCellSet,
+                          [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
   // create the output dataset (without a CoordinateSystem).

@@ -13,36 +13,16 @@
 
 namespace
 {
-struct CallWorklet
-{
-  vtkm::Id Stride;
-  vtkm::cont::UnknownCellSet& Output;
-  vtkm::worklet::Mask& Worklet;
-
-  CallWorklet(vtkm::Id stride, vtkm::cont::UnknownCellSet& output, vtkm::worklet::Mask& worklet)
-    : Stride(stride)
-    , Output(output)
-    , Worklet(worklet)
-  {
-  }
-
-  template <typename CellSetType>
-  void operator()(const CellSetType& cells) const
-  {
-    this->Output = this->Worklet.Run(cells, this->Stride);
-  }
-};
-
 VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::worklet::Mask& worklet)
 {
-  if (field.IsFieldPoint() || field.IsFieldGlobal())
+  if (field.IsPointField() || field.IsWholeDataSetField())
   {
     result.AddField(field); // pass through
     return true;
   }
-  else if (field.IsFieldCell())
+  else if (field.IsCellField())
   {
     return vtkm::filter::MapFieldPermutation(field, worklet.GetValidCellIds(), result);
   }
@@ -66,8 +46,8 @@ VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::cont::UnknownCellSet cellOut;
   vtkm::worklet::Mask worklet;
 
-  CallWorklet workletCaller(this->Stride, cellOut, worklet);
-  cells.CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(workletCaller);
+  cells.CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST>(
+    [&](const auto& concrete) { cellOut = worklet.Run(concrete, this->Stride); });
 
   // create the output dataset
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };

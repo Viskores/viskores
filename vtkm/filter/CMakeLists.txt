@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(deprecated_headers
+  AmrArrays.h
   CellAverage.h
   CellMeasures.h
   CellSetConnectivity.h
@@ -17,7 +18,11 @@ set(deprecated_headers
   ClipWithImplicitFunction.h
   ComputeMoments.h
   Contour.h
+  ContourTreeUniform.h
+  ContourTreeUniformAugmented.h
+  ContourTreeUniformDistributed.h
   CoordinateSystemTransform.h
+  CreateResult.h
   CrossProduct.h
   DotProduct.h
   Entropy.h
@@ -26,6 +31,17 @@ set(deprecated_headers
   ExtractPoints.h
   ExtractStructured.h
   FieldToColors.h
+  FieldMetadata.h
+  FilterCell.h
+  FilterDataSet.h
+  FilterDataSet.hxx
+  FilterDataSetWithField.h
+  FilterDataSetWithField.hxx
+  FilterField.h
+  FilterField.hxx
+  Filter.h
+  Filter.hxx
+  FilterTraits.h
   GenerateIds.h
   GhostCellClassify.h
   GhostCellRemove.h
@@ -35,18 +51,29 @@ set(deprecated_headers
   ImageDifference.h
   ImageMedian.h
   Instantiations.h
+  Lagrangian.h
+  LagrangianStructures.h
   Mask.h
   MaskPoints.h
   MeshQuality.h
+  MIRFilter.h
   NDEntropy.h
   NDHistogram.h
+  ParticleAdvection.h
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
+  Pathline.h
+  PathParticle.h
   PointAverage.h
   PointElevation.h
   PointTransform.h
+  PolicyBase.h
+  PolicyDefault.h
+  Probe.h
   Slice.h
   SplitSharpEdges.h
+  Streamline.h
+  StreamSurface.h
   SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
@@ -66,71 +93,6 @@ set(deprecated_headers
   )
 
 vtkm_declare_headers(${deprecated_headers})
-
-set(common_headers
-  CreateResult.h
-  FieldMetadata.h
-  FilterCell.h
-  FilterDataSet.h
-  FilterDataSetWithField.h
-  FilterField.h
-  Filter.h
-  FilterParticleAdvection.h
-  FilterTemporalParticleAdvection.h
-  FilterTraits.h
-  PolicyBase.h
-  PolicyDefault.h
-  )
-
-vtkm_declare_headers(${common_headers})
-
-set(common_header_template_sources
-  FilterDataSet.hxx
-  FilterDataSetWithField.hxx
-  FilterField.hxx
-  Filter.hxx
-  FilterParticleAdvection.hxx
-  FilterTemporalParticleAdvection.hxx
-  )
-
-vtkm_declare_headers(${common_header_template_sources})
-
-set(extra_headers
-  AmrArrays.h
-  ContourTreeUniformAugmented.h
-  ContourTreeUniformDistributed.h
-  ContourTreeUniform.h
-  Lagrangian.h
-  LagrangianStructures.h
-  MIRFilter.h
-  ParticleAdvection.h
-  Pathline.h
-  PathParticle.h
-  Probe.h
-  Streamline.h
-  StreamSurface.h
-  )
-
-set(extra_header_template_sources
-  AmrArrays.hxx
-  ContourTreeUniformAugmented.hxx
-  ContourTreeUniformDistributed.hxx
-  ContourTreeUniform.hxx
-  Lagrangian.hxx
-  LagrangianStructures.hxx
-  MIRFilter.hxx
-  ParticleAdvection.hxx
-  Pathline.hxx
-  PathParticle.hxx
-  Probe.hxx
-  Streamline.hxx
-  StreamSurface.hxx
-  )
-
-set(extra_sources_device
-  particleadvection/Messenger.cxx
-  particleadvection/ParticleMessenger.cxx
-  )
 
 set(core_headers
   FieldSelection.h
@@ -159,30 +121,16 @@ vtkm_library(
 
 add_library(vtkm_filter INTERFACE)
 
-vtkm_library(
-  NAME vtkm_filter_extra
-  TEMPLATE_SOURCES ${extra_header_template_sources}
-  HEADERS ${extra_headers}
-  DEVICE_SOURCES ${extra_sources_device}
-  USE_VTKM_JOB_POOL
-)
-
 set_target_properties(
   vtkm_filter_core
-  vtkm_filter_extra
   PROPERTIES
   UNITY_BUILD ON
   UNITY_BUILD_MODE BATCH
 )
 
 target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont vtkm_worklet)
-target_link_libraries(vtkm_filter_extra PUBLIC vtkm_cont vtkm_worklet)
-if (VTKm_ENABLE_MPI)
-  target_link_libraries(vtkm_filter_extra PUBLIC MPI::MPI_CXX)
-endif()
 
 target_link_libraries(vtkm_filter PUBLIC INTERFACE
-  vtkm_filter_extra
   vtkm_filter_core
   )
 
@@ -193,13 +141,16 @@ add_subdirectory(connected_components)
 add_subdirectory(contour)
 add_subdirectory(density_estimate)
 add_subdirectory(entity_extraction)
+add_subdirectory(flow)
 add_subdirectory(image_processing)
 add_subdirectory(internal)
-add_subdirectory(particleadvection)
 add_subdirectory(field_conversion)
 add_subdirectory(field_transform)
 add_subdirectory(geometry_refinement)
 add_subdirectory(mesh_info)
+add_subdirectory(multi_block)
+add_subdirectory(resampling)
+add_subdirectory(scalar_topology)
 add_subdirectory(vector_analysis)
 add_subdirectory(zfp)
 

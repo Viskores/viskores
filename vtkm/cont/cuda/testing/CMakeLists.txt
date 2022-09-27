@@ -9,30 +9,11 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestCudaArrayHandle.cu
-  UnitTestCudaArrayHandleFancy.cu
-  UnitTestCudaArrayHandleMultiplexer.cu
-  UnitTestCudaBitField.cu
-  UnitTestCudaCellLocatorRectilinearGrid.cu
-  UnitTestCudaCellLocatorTwoLevel.cu
-  UnitTestCudaCellLocatorUniformGrid.cu
-  UnitTestCudaComputeRange.cu
-  UnitTestCudaColorTable.cu
-  UnitTestCudaDataSetExplicit.cu
-  UnitTestCudaDataSetSingleType.cu
   UnitTestCudaDeviceAdapter.cu
-  UnitTestCudaImplicitFunction.cu
   UnitTestCudaIterators.cu
   UnitTestCudaMathEdgeCases.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
-  UnitTestCudaPointLocatorSparseGrid.cu
   UnitTestCudaRuntimeDeviceConfiguration.cu
   )
 
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(unit_tests ${unit_tests}
-    UnitTestCudaVirtualObjectHandle.cu
-    )
-endif()
-
-vtkm_unit_tests(SOURCES ${unit_tests} LABEL "CUDA" LIBRARIES vtkm_worklet)
+vtkm_unit_tests(SOURCES ${unit_tests} LABEL "CUDA" LIBRARIES vtkm_worklet BACKEND cuda)

@@ -13,7 +13,8 @@
 #include <vtkm/exec/FunctorBase.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -68,15 +69,16 @@ struct TryArrayInType
 };
 
 template <typename Device>
-void TryArrayInTransport(Device)
+bool TryArrayInTransport(Device device)
 {
+  std::cout << "Trying ArrayIn transport with " << device.GetName() << std::endl;
   vtkm::testing::Testing::TryTypes(TryArrayInType<Device>());
+  return true;
 }
 
 void TestArrayInTransport()
 {
-  std::cout << "Trying ArrayIn transport with serial device." << std::endl;
-  TryArrayInTransport(vtkm::cont::DeviceAdapterTagSerial());
+  VTKM_TEST_ASSERT(vtkm::cont::TryExecute([](auto device) { return TryArrayInTransport(device); }));
 }
 
 } // Anonymous namespace

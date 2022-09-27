@@ -95,9 +95,9 @@ public:
     this->StandardDeviation = stdev;
   }
 
-  vtkm::cont::DataSet Execute() const;
-
 private:
+  vtkm::cont::DataSet DoExecute() const override;
+
   template <vtkm::IdComponent Dim>
   vtkm::cont::Field GeneratePointField(const vtkm::cont::CellSetStructured<Dim>& cellset,
                                        const std::string& name) const;

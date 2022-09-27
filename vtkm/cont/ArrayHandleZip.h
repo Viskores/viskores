@@ -129,6 +129,10 @@ struct ArrayHandleZipTraits
   using Tag =
     StorageTagZip<typename FirstHandleType::StorageTag, typename SecondHandleType::StorageTag>;
 
+  /// The storage type.
+  ///
+  using Storage = vtkm::cont::internal::Storage<ValueType, Tag>;
+
   /// The superclass for ArrayHandleZip.
   ///
   using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
@@ -141,15 +145,27 @@ class Storage<vtkm::Pair<T1, T2>, vtkm::cont::StorageTagZip<ST1, ST2>>
   using SecondStorage = Storage<T2, ST2>;
   using ValueType = vtkm::Pair<T1, T2>;
 
-  template <typename BufferType>
-  VTKM_CONT static BufferType* FirstArrayBuffers(BufferType* buffers)
+  using FirstArrayType = vtkm::cont::ArrayHandle<T1, ST1>;
+  using SecondArrayType = vtkm::cont::ArrayHandle<T2, ST2>;
+
+  struct Info
   {
-    return buffers;
+    std::size_t SecondBuffersOffset;
+  };
+
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> FirstArrayBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    const Info& info = buffers[0].GetMetaData<Info>();
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + 1,
+                                                     buffers.begin() + info.SecondBuffersOffset);
   }
-  template <typename BufferType>
-  VTKM_CONT static BufferType* SecondArrayBuffers(BufferType* buffers)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> SecondArrayBuffers(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return buffers + FirstStorage::GetNumberOfBuffers();
+    const Info& info = buffers[0].GetMetaData<Info>();
+    return std::vector<vtkm::cont::internal::Buffer>(buffers.begin() + info.SecondBuffersOffset,
+                                                     buffers.end());
   }
 
 public:
@@ -160,13 +176,17 @@ public:
     vtkm::exec::internal::ArrayPortalZip<typename FirstStorage::WritePortalType,
                                          typename SecondStorage::WritePortalType>;
 
-  VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers()
+  static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
+    const FirstArrayType& firstArray = FirstArrayType{},
+    const SecondArrayType& secondArray = SecondArrayType{})
   {
-    return FirstStorage::GetNumberOfBuffers() + SecondStorage::GetNumberOfBuffers();
+    Info info;
+    info.SecondBuffersOffset = 1 + firstArray.GetBuffers().size();
+    return vtkm::cont::internal::CreateBuffers(info, firstArray, secondArray);
   }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
@@ -174,14 +194,15 @@ public:
     SecondStorage::ResizeBuffers(numValues, SecondArrayBuffers(buffers), preserve, token);
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     vtkm::Id numValues = FirstStorage::GetNumberOfValues(FirstArrayBuffers(buffers));
     VTKM_ASSERT(numValues == SecondStorage::GetNumberOfValues(SecondArrayBuffers(buffers)));
     return numValues;
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>& buffers,
                              const ValueType& fillValue,
                              vtkm::Id startIndex,
                              vtkm::Id endIndex,
@@ -191,29 +212,31 @@ public:
     SecondStorage::Fill(SecondArrayBuffers(buffers), fillValue.second, startIndex, endIndex, token);
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                                   vtkm::cont::DeviceAdapterId device,
-                                                   vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return ReadPortalType(
       FirstStorage::CreateReadPortal(FirstArrayBuffers(buffers), device, token),
       SecondStorage::CreateReadPortal(SecondArrayBuffers(buffers), device, token));
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
     return WritePortalType(
       FirstStorage::CreateWritePortal(FirstArrayBuffers(buffers), device, token),
       SecondStorage::CreateWritePortal(SecondArrayBuffers(buffers), device, token));
   }
 
-  vtkm::cont::ArrayHandle<T1, ST1> GetFirstArray(const vtkm::cont::internal::Buffer* buffers)
+  static FirstArrayType GetFirstArray(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return { FirstArrayBuffers(buffers) };
   }
-  vtkm::cont::ArrayHandle<T2, ST2> GetSecondArray(const vtkm::cont::internal::Buffer* buffers)
+  static SecondArrayType GetSecondArray(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return { SecondArrayBuffers(buffers) };
   }
@@ -236,6 +259,9 @@ class ArrayHandleZip
   // template argument is not a valid ArrayHandle type.
   VTKM_IS_ARRAY_HANDLE(SecondHandleType);
 
+  using StorageType =
+    typename internal::ArrayHandleZipTraits<FirstHandleType, SecondHandleType>::Storage;
+
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleZip,
@@ -244,17 +270,14 @@ public:
 
   VTKM_CONT
   ArrayHandleZip(const FirstHandleType& firstArray, const SecondHandleType& secondArray)
-    : Superclass(vtkm::cont::internal::CreateBuffers(firstArray, secondArray))
+    : Superclass(StorageType::CreateBuffers(firstArray, secondArray))
   {
   }
 
-  FirstHandleType GetFirstArray() const
-  {
-    return this->GetStorage().GetFirstArray(this->GetBuffers());
-  }
+  FirstHandleType GetFirstArray() const { return StorageType::GetFirstArray(this->GetBuffers()); }
   SecondHandleType GetSecondArray() const
   {
-    return this->GetStorage().GetSecondArray(this->GetBuffers());
+    return StorageType::GetSecondArray(this->GetBuffers());
   }
 };
 

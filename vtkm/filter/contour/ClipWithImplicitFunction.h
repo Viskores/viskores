@@ -31,6 +31,9 @@ class VTKM_FILTER_CONTOUR_EXPORT ClipWithImplicitFunction : public vtkm::filter:
 public:
   void SetImplicitFunction(const vtkm::ImplicitFunctionGeneral& func) { this->Function = func; }
 
+  void SetOffset(vtkm::Float64 offset) { this->Offset = offset; }
+  vtkm::Float64 GetOffset() const { return this->Offset; }
+
   void SetInvertClip(bool invert) { this->Invert = invert; }
 
   const vtkm::ImplicitFunctionGeneral& GetImplicitFunction() const { return this->Function; }
@@ -39,6 +42,7 @@ private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
   vtkm::ImplicitFunctionGeneral Function;
+  vtkm::Float64 Offset = 0.0;
   bool Invert = false;
 };
 } // namespace contour

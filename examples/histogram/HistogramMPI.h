@@ -10,7 +10,7 @@
 #ifndef vtk_m_examples_histogram_HistogramMPI_h
 #define vtk_m_examples_histogram_HistogramMPI_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/NewFilterField.h>
 
 namespace example
 {
@@ -19,7 +19,7 @@ namespace example
 ///
 /// Construct a HistogramMPI with a default of 10 bins.
 ///
-class HistogramMPI : public vtkm::filter::FilterField<HistogramMPI>
+class HistogramMPI : public vtkm::filter::NewFilterField
 {
 public:
   //currently the HistogramMPI filter only works on scalar data.
@@ -29,7 +29,7 @@ public:
 
   //Construct a HistogramMPI with a default of 10 bins
   VTKM_CONT
-  HistogramMPI();
+  HistogramMPI() { this->SetOutputFieldName("histogram"); }
 
   VTKM_CONT
   void SetNumberOfBins(vtkm::Id count) { this->NumberOfBins = count; }
@@ -37,7 +37,7 @@ public:
   VTKM_CONT
   vtkm::Id GetNumberOfBins() const { return this->NumberOfBins; }
 
-  //@{
+  ///@{
   /// Get/Set the range to use to generate the HistogramMPI. If range is set to
   /// empty, the field's global range (computed using `vtkm::cont::FieldRangeGlobalCompute`)
   /// will be used.
@@ -46,7 +46,7 @@ public:
 
   VTKM_CONT
   const vtkm::Range& GetRange() const { return this->Range; }
-  //@}
+  ///@}
 
   /// Returns the bin delta of the last computed field.
   VTKM_CONT
@@ -58,34 +58,27 @@ public:
   VTKM_CONT
   vtkm::Range GetComputedRange() const { return this->ComputedRange; }
 
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                          const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+protected:
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& input) override;
 
-  //@{
+  ///@{
   /// when operating on vtkm::cont::PartitionedDataSet, we
   /// want to do processing across ranks as well. Just adding pre/post handles
   /// for the same does the trick.
-  template <typename DerivedPolicy>
-  VTKM_CONT void PreExecute(const vtkm::cont::PartitionedDataSet& input,
-                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  template <typename DerivedPolicy>
+  VTKM_CONT void PreExecute(const vtkm::cont::PartitionedDataSet& input);
   VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet& input,
-                             vtkm::cont::PartitionedDataSet& output,
-                             const vtkm::filter::PolicyBase<DerivedPolicy>&);
-  //@}
+                             vtkm::cont::PartitionedDataSet& output);
+  ///@}
 
 private:
-  vtkm::Id NumberOfBins;
-  vtkm::Float64 BinDelta;
+  vtkm::Id NumberOfBins = 10;
+  vtkm::Float64 BinDelta = 0;
   vtkm::Range ComputedRange;
   vtkm::Range Range;
+  bool InExecutePartitions = false;
 };
 } // namespace example
-
-#include "HistogramMPI.hxx"
 
 #endif // vtk_m_filter_Histogram_h

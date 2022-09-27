@@ -105,7 +105,6 @@ public:
       while (this->GetTask(task))
       {
         dataSets[static_cast<std::size_t>(task.first)] = std::move(task.second);
-        std::cout << "****** Get: " << task.first << std::endl;
       }
 
       pds.AppendPartitions(dataSets);

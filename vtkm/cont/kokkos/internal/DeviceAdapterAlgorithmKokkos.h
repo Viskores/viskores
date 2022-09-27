@@ -27,7 +27,6 @@
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>
-#include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_Sort.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 

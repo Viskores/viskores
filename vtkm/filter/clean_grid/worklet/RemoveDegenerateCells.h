@@ -133,38 +133,13 @@ struct RemoveDegenerateCells
     return output;
   }
 
-  struct CallWorklet
-  {
-    template <typename CellSetType>
-    void operator()(const CellSetType& cellSet,
-                    RemoveDegenerateCells& self,
-                    vtkm::cont::CellSetExplicit<>& output) const
-    {
-      output = self.Run(cellSet);
-    }
-  };
-
   template <typename CellSetList>
   vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::UncertainCellSet<CellSetList>& cellSet)
   {
     vtkm::cont::CellSetExplicit<> output;
-    cellSet.CastAndCall(CallWorklet(), *this, output);
+    cellSet.CastAndCall([&](const auto& concrete) { output = this->Run(concrete); });
 
     return output;
-  }
-
-  template <typename ValueType, typename StorageTag>
-  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageTag> in) const
-  {
-    // Use a temporary permutation array to simplify the mapping:
-    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, in);
-
-    // Copy into an array with default storage:
-    vtkm::cont::ArrayHandle<ValueType> result;
-    vtkm::cont::ArrayCopy(tmp, result);
-
-    return result;
   }
 
   vtkm::cont::ArrayHandle<vtkm::Id> GetValidCellIds() const { return this->ValidCellIds; }

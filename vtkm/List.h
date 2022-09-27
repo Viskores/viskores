@@ -14,6 +14,8 @@
 
 #include <vtkm/internal/Meta.h>
 
+#include <functional>
+
 namespace vtkm
 {
 

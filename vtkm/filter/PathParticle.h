@@ -7,45 +7,26 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
 #ifndef vtk_m_filter_PathParticle_h
 #define vtk_m_filter_PathParticle_h
 
-#include <vtkm/filter/FilterTemporalParticleAdvection.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/filter/flow/PathParticle.h>
 
 namespace vtkm
 {
 namespace filter
 {
-/// \brief Advect particles in a time varying vector field.
 
-/// Takes as input a vector field and seed locations and generates the
-/// paths taken by the seeds through the vector field.
-template <typename ParticleType>
-class PathParticleBase
-  : public vtkm::filter::FilterTemporalParticleAdvection<PathParticleBase<ParticleType>,
-                                                         ParticleType>
+VTKM_DEPRECATED(1.8, "Use vtkm/filter/flow/PathParticle.h instead of vtkm/filter/PathParticle.h")
+inline void PathParticle_deprecated() {}
+
+inline void PathParticle_deprecated_warning()
 {
-public:
-  VTKM_CONT
-  PathParticleBase();
-
-  template <typename DerivedPolicy>
-  vtkm::cont::PartitionedDataSet PrepareForExecution(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-protected:
-private:
-};
-
-using PathParticle = PathParticleBase<vtkm::Particle>;
+  PathParticle_deprecated();
+}
 
 }
-} // namespace vtkm::filter
+}
 
-#ifndef vtk_m_filter_PathParticle_hxx
-#include <vtkm/filter/PathParticle.hxx>
-#endif
-
-#endif // vtk_m_filter_PathParticle_h
+#endif //vtk_m_filter_PathParticle_h

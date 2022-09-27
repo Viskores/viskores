@@ -14,7 +14,11 @@ set(unit_tests
   UnitTestNDEntropyFilter.cxx
   UnitTestNDHistogramFilter.cxx
   UnitTestPartitionedDataSetHistogramFilter.cxx
-  UnitTestParticleDensity.cxx)
+  )
+
+set(unit_tests_device
+  UnitTestParticleDensity.cxx # uses DescriptiveStatistcs worklet
+  )
 
 set(libraries
   vtkm_filter_density_estimate
@@ -22,7 +26,7 @@ set(libraries
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
+  DEVICE_SOURCES ${unit_tests_device}
   LIBRARIES ${libraries}
-  ALL_BACKENDS # UnitTestParticleDensity.cxx uses DescriptiveStatistcs worklet
   USE_VTKM_JOB_POOL
 )

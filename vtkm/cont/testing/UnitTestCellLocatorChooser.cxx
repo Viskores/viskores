@@ -224,6 +224,5 @@ void TestCellLocatorChooser()
 
 int UnitTestCellLocatorChooser(int argc, char* argv[])
 {
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(TestCellLocatorChooser, argc, argv);
 }

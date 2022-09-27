@@ -60,7 +60,7 @@ public:
 };
 } // namespace tangle
 
-vtkm::cont::DataSet Tangle::Execute() const
+vtkm::cont::DataSet Tangle::DoExecute() const
 {
   VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 

@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_density_estimate_ParticleDensityCIC_h
 #define vtk_m_filter_density_estimate_ParticleDensityCIC_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/filter/density_estimate/ParticleDensityBase.h>
 
 namespace vtkm
@@ -40,10 +41,14 @@ class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT ParticleDensityCloudInCell : public Pa
 public:
   using Superclass = ParticleDensityBase;
 
+  ParticleDensityCloudInCell() = default;
+
+  VTKM_DEPRECATED(1.9, "Use default constructor and `Set*` accessors.")
   ParticleDensityCloudInCell(const vtkm::Id3& dimension,
                              const vtkm::Vec3f& origin,
                              const vtkm::Vec3f& spacing);
 
+  VTKM_DEPRECATED(1.9, "Use default constructor and `Set*` accessors.")
   ParticleDensityCloudInCell(const Id3& dimension, const vtkm::Bounds& bounds);
 
 private:

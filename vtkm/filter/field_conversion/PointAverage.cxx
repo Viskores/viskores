@@ -23,7 +23,7 @@ namespace field_conversion
 vtkm::cont::DataSet PointAverage::DoExecute(const vtkm::cont::DataSet& input)
 {
   const auto& field = GetFieldFromDataSet(input);
-  if (!field.IsFieldCell())
+  if (!field.IsCellField())
   {
     throw vtkm::cont::ErrorFilterExecution("Cell field expected.");
   }

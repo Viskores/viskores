@@ -19,13 +19,14 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/interop/TransferToOpenGL.h>
 
-#include <vtkm/filter/FilterDataSet.h>
+#include <vtkm/filter/NewFilterField.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 #include <vtkm/cont/Invoker.h>
@@ -47,11 +48,6 @@
 #endif
 
 #include "LoadShaders.h"
-
-struct GameOfLifePolicy : public vtkm::filter::PolicyBase<GameOfLifePolicy>
-{
-  using FieldTypeList = vtkm::List<vtkm::UInt8, vtkm::Vec4ui_8>;
-};
 
 struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
 {
@@ -99,43 +95,32 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
 };
 
 
-class GameOfLife : public vtkm::filter::FilterDataSet<GameOfLife>
+class GameOfLife : public vtkm::filter::NewFilterField
 {
 public:
-  template <typename Policy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          vtkm::filter::PolicyBase<Policy> policy)
+  VTKM_CONT GameOfLife() { this->SetActiveField("state", vtkm::cont::Field::Association::Points); }
 
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override
   {
     vtkm::cont::ArrayHandle<vtkm::UInt8> state;
     vtkm::cont::ArrayHandle<vtkm::UInt8> prevstate;
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
 
     //get the coordinate system we are using for the 2D area
-    const vtkm::cont::UnknownCellSet cells = input.GetCellSet();
+    vtkm::cont::CellSetStructured<2> cells;
+    input.GetCellSet().AsCellSet(cells);
 
     //get the previous state of the game
-    input.GetField("state", vtkm::cont::Field::Association::Points).GetData().CopyTo(prevstate);
+    this->GetFieldFromDataSet(input).GetData().AsArrayHandle(prevstate);
 
     //Update the game state
-    this->Invoke(
-      UpdateLifeState{}, vtkm::filter::ApplyPolicyCellSet(cells, policy), prevstate, state, colors);
+    this->Invoke(UpdateLifeState{}, cells, prevstate, state, colors);
 
     //save the results
-    vtkm::cont::DataSet output;
-    output.CopyStructure(input);
-
+    vtkm::cont::DataSet output =
+      this->CreateResultFieldPoint(input, this->GetActiveFieldName(), state);
     output.AddField(vtkm::cont::make_FieldPoint("colors", colors));
-    output.AddField(vtkm::cont::make_FieldPoint("state", state));
     return output;
-  }
-
-  template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet&,
-                                    const vtkm::cont::Field&,
-                                    vtkm::filter::PolicyBase<DerivedPolicy>)
-  {
-    return false;
   }
 };
 
@@ -346,7 +331,7 @@ int main(int argc, char** argv)
   glutDisplayFunc([]() {
     const vtkm::Float32 c = static_cast<vtkm::Float32>(gTimer.GetElapsedTime());
 
-    vtkm::cont::DataSet oData = gFilter->Execute(*gData, GameOfLifePolicy());
+    vtkm::cont::DataSet oData = gFilter->Execute(*gData);
     gRenderer->render(oData);
     glutSwapBuffers();
 

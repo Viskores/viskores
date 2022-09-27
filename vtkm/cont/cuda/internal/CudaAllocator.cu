@@ -12,12 +12,14 @@
 #include <mutex>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/RuntimeDeviceConfigurationCuda.h>
 #define NO_VTKM_MANAGED_MEMORY "NO_VTKM_MANAGED_MEMORY"
 
+#include <cstdlib>
 #include <mutex>
 #include <vector>
 
@@ -28,10 +30,12 @@ VTKM_THIRDPARTY_POST_INCLUDE
 // These static vars are in an anon namespace to work around MSVC linker issues.
 namespace
 {
-#if CUDART_VERSION >= 8000
 // Has CudaAllocator::Initialize been called by any thread?
-static std::once_flag IsInitialized;
-#endif
+static std::once_flag IsInitializedFlag;
+
+// Used to keep track of whether the CUDA allocator has been initialized CUDA has not
+// been finalized (since CUDA does not seem to track that for us).
+static bool IsInitialized = false;
 
 // Holds how VTK-m currently allocates memory.
 // When VTK-m is initialized we set this based on the hardware support ( HardwareSupportsManagedMemory ).
@@ -149,7 +153,15 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
   }
 
   void* ptr = nullptr;
-  if (ManagedMemoryEnabled)
+#if CUDART_VERSION >= 11030
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  if (tracker.GetThreadFriendlyMemAlloc())
+  {
+    VTKM_CUDA_CALL(cudaMallocAsync(&ptr, numBytes, cudaStreamPerThread));
+  }
+  else
+#endif
+    if (ManagedMemoryEnabled)
   {
     VTKM_CUDA_CALL(cudaMallocManaged(&ptr, numBytes));
   }
@@ -171,7 +183,18 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
 void* CudaAllocator::AllocateUnManaged(std::size_t numBytes)
 {
   void* ptr = nullptr;
-  VTKM_CUDA_CALL(cudaMalloc(&ptr, numBytes));
+#if CUDART_VERSION >= 11030
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  if (tracker.GetThreadFriendlyMemAlloc())
+  {
+    VTKM_CUDA_CALL(cudaMallocAsync(&ptr, numBytes, cudaStreamPerThread));
+  }
+  else
+#endif
+  {
+    VTKM_CUDA_CALL(cudaMalloc(&ptr, numBytes));
+  }
+
   {
     VTKM_LOG_F(vtkm::cont::LogLevel::MemExec,
                "Allocated CUDA array of %s at %p.",
@@ -183,12 +206,39 @@ void* CudaAllocator::AllocateUnManaged(std::size_t numBytes)
 
 void CudaAllocator::Free(void* ptr)
 {
+  if (!IsInitialized)
+  {
+    // Since the data was successfully allocated, it is a fair assumption that the CUDA
+    // runtime has been finalized and a global object is trying to destroy itself. Since
+    // CUDA already cleaned up all memory for program exit, we can ignore this free.
+    return;
+  }
+
   VTKM_LOG_F(vtkm::cont::LogLevel::MemExec, "Freeing CUDA allocation at %p.", ptr);
-  VTKM_CUDA_CALL(cudaFree(ptr));
+
+#if CUDART_VERSION >= 11030
+  const auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  if (tracker.GetThreadFriendlyMemAlloc())
+  {
+    VTKM_CUDA_CALL(cudaFreeAsync(ptr, cudaStreamPerThread));
+  }
+  else
+#endif
+  {
+    VTKM_CUDA_CALL(cudaFree(ptr));
+  }
 }
 
 void CudaAllocator::FreeDeferred(void* ptr, std::size_t numBytes)
 {
+  if (!IsInitialized)
+  {
+    // Since the data was successfully allocated, it is a fair assumption that the CUDA
+    // runtime has been finalized and a global object is trying to destroy itself. Since
+    // CUDA already cleaned up all memory for program exit, we can ignore this free.
+    return;
+  }
+
   static std::mutex deferredMutex;
   static std::vector<void*> deferredPointers;
   static std::size_t deferredSize = 0;
@@ -225,12 +275,10 @@ void CudaAllocator::PrepareForControl(const void* ptr, std::size_t numBytes)
 {
   if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
-#if CUDART_VERSION >= 8000
     // TODO these hints need to be benchmarked and adjusted once we start
     // sharing the pointers between cont/exec
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, cudaCpuDeviceId));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, cudaCpuDeviceId, cudaStreamPerThread));
-#endif // CUDA >= 8.0
   }
 }
 
@@ -238,7 +286,6 @@ void CudaAllocator::PrepareForInput(const void* ptr, std::size_t numBytes)
 {
   if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
-#if CUDART_VERSION >= 8000
     vtkm::Id dev;
     vtkm::cont::RuntimeDeviceInformation()
       .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
@@ -247,7 +294,6 @@ void CudaAllocator::PrepareForInput(const void* ptr, std::size_t numBytes)
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
-#endif // CUDA >= 8.0
   }
 }
 
@@ -255,7 +301,6 @@ void CudaAllocator::PrepareForOutput(const void* ptr, std::size_t numBytes)
 {
   if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
-#if CUDART_VERSION >= 8000
     vtkm::Id dev;
     vtkm::cont::RuntimeDeviceInformation()
       .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
@@ -264,7 +309,6 @@ void CudaAllocator::PrepareForOutput(const void* ptr, std::size_t numBytes)
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
-#endif // CUDA >= 8.0
   }
 }
 
@@ -272,7 +316,6 @@ void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
 {
   if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
-#if CUDART_VERSION >= 8000
     vtkm::Id dev;
     vtkm::cont::RuntimeDeviceInformation()
       .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda())
@@ -281,14 +324,12 @@ void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
     // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
-#endif // CUDA >= 8.0
   }
 }
 
 void CudaAllocator::Initialize()
 {
-#if CUDART_VERSION >= 8000
-  std::call_once(IsInitialized, []() {
+  std::call_once(IsInitializedFlag, []() {
     auto cudaDeviceConfig = dynamic_cast<
       vtkm::cont::internal::RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagCuda>&>(
       vtkm::cont::RuntimeDeviceInformation{}.GetRuntimeConfiguration(
@@ -334,8 +375,17 @@ void CudaAllocator::Initialize()
         vtkm::cont::LogLevel::Info,
         "CudaAllocator disabling managed memory due to NO_VTKM_MANAGED_MEMORY env variable");
     }
+
+    // CUDA does not give any indication of whether it is still running, but we have found from
+    // experience that it finalizes itself during program termination. However, the user might
+    // have their own objects being cleaned up during termination after CUDA. We need a flag
+    // to catch if this happens after CUDA finalizes itself. We will set this flag to true now
+    // and false on termination. Because we are creating the atexit call here (after CUDA must
+    // have initialized itself), C++ will require our function that unsets the flag to happen
+    // before CUDA finalizes.
+    IsInitialized = true;
+    std::atexit([]() { IsInitialized = false; });
   });
-#endif
 }
 }
 }

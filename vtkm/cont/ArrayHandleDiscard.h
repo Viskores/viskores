@@ -103,10 +103,15 @@ public:
   // you actually try to use this read portal.
   using ReadPortalType = vtkm::exec::internal::ArrayPortalDiscard<ValueType>;
 
-  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers()
+  {
+    DiscardMetaData metaData;
+    metaData.NumberOfValues = 0;
+    return vtkm::cont::internal::CreateBuffers(metaData);
+  }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag,
                                       vtkm::cont::Token&)
   {
@@ -114,12 +119,13 @@ public:
     buffers[0].GetMetaData<DiscardMetaData>().NumberOfValues = numValues;
   }
 
-  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<DiscardMetaData>().NumberOfValues;
   }
 
-  VTKM_CONT static void Fill(vtkm::cont::internal::Buffer*,
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>&,
                              const ValueType&,
                              vtkm::Id,
                              vtkm::Id,
@@ -128,16 +134,17 @@ public:
     // Fill is a NO-OP.
   }
 
-  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer*,
+  VTKM_CONT static ReadPortalType CreateReadPortal(const std::vector<vtkm::cont::internal::Buffer>&,
                                                    vtkm::cont::DeviceAdapterId,
                                                    vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadValue("Cannot read from ArrayHandleDiscard.");
   }
 
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                                     vtkm::cont::DeviceAdapterId,
-                                                     vtkm::cont::Token&)
+  VTKM_CONT static WritePortalType CreateWritePortal(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    vtkm::cont::DeviceAdapterId,
+    vtkm::cont::Token&)
   {
     return WritePortalType(GetNumberOfValues(buffers));
   }

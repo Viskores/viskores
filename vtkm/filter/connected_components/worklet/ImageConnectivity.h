@@ -90,13 +90,12 @@ public:
 // Parallel and Distributed Computing. 2018.
 class ImageConnectivity
 {
-public:
   class RunImpl
   {
   public:
     template <int Dimension, typename T, typename StorageT, typename OutputPortalType>
-    void operator()(const vtkm::cont::ArrayHandle<T, StorageT>& pixels,
-                    const vtkm::cont::CellSetStructured<Dimension>& input,
+    void operator()(const vtkm::cont::CellSetStructured<Dimension>& input,
+                    const vtkm::cont::ArrayHandle<T, StorageT>& pixels,
                     OutputPortalType& componentsOut) const
     {
       using Algorithm = vtkm::cont::Algorithm;
@@ -115,43 +114,14 @@ public:
     }
   };
 
-  class ResolveUnknownCellSet
-  {
-  public:
-    template <int Dimension, typename T, typename StorageT, typename OutputPortalType>
-    void operator()(const vtkm::cont::CellSetStructured<Dimension>& input,
-                    const vtkm::cont::ArrayHandle<T, StorageT>& pixels,
-                    OutputPortalType& components) const
-    {
-      vtkm::cont::CastAndCall(pixels, RunImpl(), input, components);
-    }
-  };
-
-  template <int Dimension, typename OutputPortalType>
-  void Run(const vtkm::cont::CellSetStructured<Dimension>& input,
-           const vtkm::cont::UnknownArrayHandle& pixels,
-           OutputPortalType& componentsOut) const
-  {
-    using Types = vtkm::TypeListScalarAll;
-    using Storages = VTKM_DEFAULT_STORAGE_LIST;
-    vtkm::cont::CastAndCall(pixels.ResetTypes<Types, Storages>(), RunImpl(), input, componentsOut);
-  }
-
-  template <int Dimension, typename T, typename S, typename OutputPortalType>
-  void Run(const vtkm::cont::CellSetStructured<Dimension>& input,
-           const vtkm::cont::ArrayHandle<T, S>& pixels,
-           OutputPortalType& componentsOut) const
-  {
-    vtkm::cont::CastAndCall(pixels, RunImpl(), input, componentsOut);
-  }
-
+public:
   template <typename T, typename S, typename OutputPortalType>
   void Run(const vtkm::cont::UnknownCellSet& input,
            const vtkm::cont::ArrayHandle<T, S>& pixels,
            OutputPortalType& componentsOut) const
   {
-    input.ResetCellSetList(vtkm::cont::CellSetListStructured())
-      .CastAndCall(ResolveUnknownCellSet(), pixels, componentsOut);
+    input.template CastAndCallForTypes<vtkm::cont::CellSetListStructured>(
+      RunImpl(), pixels, componentsOut);
   }
 };
 } // namespace connectivity

@@ -20,7 +20,6 @@ set(headers
 set(device_sources
   Amr.cxx
   Oscillator.cxx
-  Source.cxx
   Tangle.cxx
   Wavelet.cxx
   PerlinNoise.cxx
@@ -32,7 +31,7 @@ vtkm_library(NAME vtkm_source
   HEADERS ${headers}
   )
 
-target_link_libraries(vtkm_source PUBLIC vtkm_cont vtkm_filter_field_conversion)
+target_link_libraries(vtkm_source PUBLIC vtkm_cont vtkm_filter_field_conversion vtkm_filter_multi_block)
 
 #-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TESTING)

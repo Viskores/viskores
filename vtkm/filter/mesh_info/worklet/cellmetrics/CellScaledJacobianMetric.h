@@ -34,11 +34,11 @@
 #include "TypeOfCellQuadrilateral.h"
 #include "TypeOfCellTetrahedral.h"
 #include "TypeOfCellTriangle.h"
-#include "vtkm/CellShape.h"
-#include "vtkm/CellTraits.h"
-#include "vtkm/VecTraits.h"
-#include "vtkm/VectorAnalysis.h"
-#include "vtkm/exec/FunctorBase.h"
+#include <vtkm/CellShape.h>
+#include <vtkm/CellTraits.h>
+#include <vtkm/ErrorCode.h>
+#include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
 
 #define UNUSED(expr) (void)(expr);
 
@@ -48,6 +48,8 @@ namespace worklet
 {
 namespace cellmetrics
 {
+
+using FloatType = vtkm::FloatDefault;
 
 // ========================= Unsupported cells ==================================
 

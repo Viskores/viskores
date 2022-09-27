@@ -147,8 +147,10 @@ bool TestMeshQualityFilter(const vtkm::cont::DataSet& input,
   {
     output = filter.Execute(input);
   }
-  catch (vtkm::cont::ErrorExecution&)
+  catch (vtkm::cont::ErrorExecution& error)
   {
+    std::cout << "Metric '" << outputname << "' threw execution exception " << error.GetMessage()
+              << std::endl;
     return true;
   }
 
@@ -221,7 +223,7 @@ int TestMeshQuality()
   inputs.push_back(singleTypeInput);
 
   expectedValues.push_back(FloatVec{ 0, 0, 1.52012f, 0, 0, 0 });
-  metrics.push_back(vtkm::filter::mesh_info::CellMetric::AspectGama);
+  metrics.push_back(vtkm::filter::mesh_info::CellMetric::AspectGamma);
   metricName.emplace_back("aspectGamma");
   inputs.push_back(explicitInput);
 

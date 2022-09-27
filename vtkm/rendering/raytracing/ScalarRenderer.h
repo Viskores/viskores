@@ -32,7 +32,9 @@ protected:
   bool IntersectorValid;
 
   template <typename Precision>
-  void RenderOnDevice(Ray<Precision>& rays, Precision missScalar);
+  void RenderOnDevice(Ray<Precision>& rays,
+                      Precision missScalar,
+                      vtkm::rendering::raytracing::Camera& cam);
 
   template <typename Precision>
   void AddBuffer(Ray<Precision>& rays, Precision missScalar, const std::string name);
@@ -53,10 +55,14 @@ public:
   void AddField(const vtkm::cont::Field& scalarField);
 
   VTKM_CONT
-  void Render(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays, vtkm::Float32 missScalar);
+  void Render(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays,
+              vtkm::Float32 missScalar,
+              vtkm::rendering::raytracing::Camera& cam);
 
   VTKM_CONT
-  void Render(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays, vtkm::Float64 missScalar);
+  void Render(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays,
+              vtkm::Float64 missScalar,
+              vtkm::rendering::raytracing::Camera& cam);
 
 }; //class RayTracer
 }

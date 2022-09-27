@@ -311,12 +311,13 @@ struct DoTestForType
 
 void DoTest()
 {
-  // We are not testing on the default (exemplar) types because they include unsigned bytes, and
-  // simply doing a += (or similar) operation on them automatically creates a conversion warning
-  // on some compilers. Since we want to test these operators, just remove the short types from
-  // the list to avoid the warning.
+  // We are not testing on the default (exemplar) types because we want to test operators, and
+  // many basic C types could fail on basic operations. Small integer types (such as unsigned
+  // bytes) get automatically promoted to larger types, so doing somthing like a += operation
+  // causes annoying compiler warnings. Float types are also problematic because comparison
+  // operations like == can fail even when you expect the values to be the same.
   vtkm::testing::Testing::TryTypes(DoTestForType(),
-                                   vtkm::List<vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>());
+                                   vtkm::List<vtkm::Int32, vtkm::UInt64, vtkm::Id3>());
 }
 
 } // anonymous namespace

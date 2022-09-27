@@ -13,6 +13,7 @@
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
@@ -211,6 +212,9 @@ void TryExecuteErrorTests()
 
 static void Run()
 {
+  // This test requires all available devices to be enabled.
+  vtkm::cont::GetRuntimeDeviceTracker().Reset();
+
   using ValidDevice = vtkm::cont::DeviceAdapterTagSerial;
   using InvalidDevice = vtkm::cont::DeviceAdapterTagUndefined;
 

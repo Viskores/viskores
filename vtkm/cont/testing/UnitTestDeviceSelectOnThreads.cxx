@@ -72,12 +72,15 @@ int UnitTestDeviceSelectOnThreads(int argc, char* argv[])
   std::vector<char*> newArgs;
   for (int i = 0; i < argc; ++i)
   {
-    newArgs.push_back(argv[i]);
+    if (std::strncmp(argv[i], "--vtkm-device", 13) != 0)
+    {
+      newArgs.push_back(argv[i]);
+    }
   }
   newArgs.push_back(deviceSelectArg.data());
   newArgs.push_back(nullptr);
 
-  int newArgc = argc + 1;
+  int newArgc = static_cast<int>(newArgs.size() - 1);
 
   return vtkm::cont::testing::Testing::Run(DoTest, newArgc, newArgs.data());
 }

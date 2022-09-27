@@ -106,7 +106,7 @@
     - .docker_image
 
 .ubuntu2004_hip_kokkos: &ubuntu2004_hip_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_hip_kokkos-20210827"
+  image: "kitware/vtkm:ci-ubuntu2004_hip_kokkos-20220620"
   extends:
     - .docker_image
 
@@ -126,9 +126,9 @@
       when: on_success
     - when: never
 
-.run_master: &run_master
+.run_upstream_branches: &run_upstream_branches
   rules:
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_MERGE_REQUEST_ID == null'
       when: on_success
     - when: never
 
@@ -164,8 +164,9 @@ stages:
   interruptible: true
   before_script:
     - *install_cmake
-    - .gitlab/ci/config/sccache.sh
+    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
     - export PATH=$PWD/.gitlab:$PATH
+    - .gitlab/ci/config/sccache.sh
     - SCCACHE_IDLE_TIMEOUT=0 sccache --start-server
     - sccache --show-stats
     - .gitlab/ci/config/google_benchmarks.sh
@@ -185,6 +186,8 @@ stages:
   interruptible: true
   before_script:
     - *install_cmake
+    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
+    - export PATH=$PWD/.gitlab:$PATH
   script:
     - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
   extends:
@@ -206,9 +209,9 @@ stages:
       - build/*.png
       - build/*.pnm
       - build/*.pmm
+      - build/junit.xml
     reports:
-      junit:
-        - build/junit.xml
+      junit: build/junit.xml
 
 .cmake_build_artifacts: &cmake_build_artifacts
   artifacts:
@@ -223,17 +226,9 @@ stages:
       - build/config/
 
       # CTest and CMake install files.
-      # XXX(globbing): Can be simplified with support from
-      # https://gitlab.com/gitlab-org/gitlab-runner/issues/4840
-      #
       # Note: this also captures our CIState.cmake file
       - build/CMakeCache.txt
-      - build/*.cmake
-      - build/*/*.cmake
-      - build/*/*/*.cmake
-      - build/*/*/*/*.cmake
-      - build/*/*/*/*/*.cmake
-      - build/*/*/*/*/*/*.cmake
+      - build/**/*.cmake
       - build/Testing/
 
       # CDash files.
@@ -245,30 +240,22 @@ stages:
     when: always
     paths:
       # The generated regression testing images
-      - build/*.png
-      - build/*.pnm
-      - build/*.pmm
-      - build/*/*.png
-      - build/*/*.pnm
-      - build/*/*.pmm
-      - build/*/*/*.png
-      - build/*/*/*.pnm
-      - build/*/*/*.pmm
-      - build/*/*/*/*.png
-      - build/*/*/*/*.pnm
-      - build/*/*/*/*.pmm
+      - build/**/*.png
+      - build/**/*.pnm
+      - build/**/*.pmm
+      - build/junit.xml
     reports:
-      junit:
-        - build/junit.xml
+      junit: build/junit.xml
 
 
 include:
+  - local: '/.gitlab/ci/ascent.yml'
   - local: '/.gitlab/ci/centos7.yml'
   - local: '/.gitlab/ci/centos8.yml'
   - local: '/.gitlab/ci/doxygen.yml'
+  - local: '/.gitlab/ci/macos.yml'
   - local: '/.gitlab/ci/rhel8.yml'
   - local: '/.gitlab/ci/ubuntu1604.yml'
   - local: '/.gitlab/ci/ubuntu1804.yml'
   - local: '/.gitlab/ci/ubuntu2004.yml'
   - local: '/.gitlab/ci/windows10.yml'
-  - local: '/.gitlab/ci/ascent.yml'

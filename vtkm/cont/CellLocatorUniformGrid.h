@@ -25,6 +25,8 @@ class VTKM_CONT_EXPORT CellLocatorUniformGrid
   using Superclass = vtkm::cont::internal::CellLocatorBase<CellLocatorUniformGrid>;
 
 public:
+  using LastCell = vtkm::exec::CellLocatorUniformGrid::LastCell;
+
   VTKM_CONT vtkm::exec::CellLocatorUniformGrid PrepareForExecution(
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const;

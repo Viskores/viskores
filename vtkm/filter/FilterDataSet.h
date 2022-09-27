@@ -24,8 +24,10 @@ namespace vtkm
 namespace filter
 {
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <class Derived>
-class FilterDataSet : public vtkm::filter::Filter<Derived>
+class VTKM_DEPRECATED(1.9, "Use vtkm::filter::NewFilter.") FilterDataSet
+  : public vtkm::filter::Filter<Derived>
 {
 public:
   VTKM_CONT
@@ -44,7 +46,7 @@ public:
 
   //From the field we can extract the association component
   // Association::Any -> unable to map
-  // Association::WholeMesh -> (I think this is points)
+  // Association::WholeDataSet -> (I think this is points)
   // Association::Points -> map using point mapping
   // Association::Cells -> how do we map this?
   template <typename DerivedPolicy>
@@ -67,6 +69,7 @@ private:
 
   friend class vtkm::filter::Filter<Derived>;
 };
+VTKM_DEPRECATED_SUPPRESS_END
 }
 } // namespace vtkm::filter
 

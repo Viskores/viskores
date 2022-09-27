@@ -166,6 +166,7 @@ set(sources
   FieldRangeGlobalCompute.cxx
   internal/DeviceAdapterMemoryManager.cxx
   internal/DeviceAdapterMemoryManagerShared.cxx
+  internal/FieldCollection.cxx
   internal/RuntimeDeviceConfiguration.cxx
   internal/RuntimeDeviceConfigurationOptions.cxx
   internal/RuntimeDeviceOption.cxx

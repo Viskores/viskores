@@ -12,11 +12,14 @@
 #include <string>
 #include <vector>
 
+#include <vtkm/Particle.h>
+//#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/Timer.h>
+//#include <vtkm/cont/Timer.h>
 
-#include <vtkm/filter/Pathline.h>
+#include <vtkm/filter/flow/Pathline.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
@@ -91,7 +94,7 @@ int main(int argc, char** argv)
 
   // Instantiate the filter by providing necessary parameters.
   // Necessary parameters are :
-  vtkm::filter::Pathline pathlineFilter;
+  vtkm::filter::flow::Pathline pathlineFilter;
   pathlineFilter.SetActiveField(fieldName);
   // 1. The current and next time slice. The current time slice is passed
   //    through the parameter to the Execute method.

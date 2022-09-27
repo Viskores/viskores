@@ -12,6 +12,7 @@ set(contour_headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   Contour.h
+  MIRFilter.h
   Slice.h
 )
 
@@ -19,6 +20,7 @@ set(contour_sources_device
   ClipWithField.cxx
   ClipWithImplicitFunction.cxx
   Contour.cxx
+  MIRFilter.cxx
   Slice.cxx
 )
 
@@ -36,7 +38,9 @@ set_property(TARGET
   PROPERTY UNITY_BUILD_MODE GROUP
 )
 
-target_link_libraries(vtkm_filter_contour PRIVATE vtkm_worklet PUBLIC vtkm_filter_core vtkm_filter_vector_analysis)
+target_link_libraries(vtkm_filter_contour
+  PRIVATE vtkm_worklet
+  PUBLIC vtkm_filter_core vtkm_filter_vector_analysis vtkm_filter_mesh_info)
 
 if (VTKm_ENABLE_MPI)
   target_link_libraries(vtkm_filter_contour PUBLIC MPI::MPI_CXX)

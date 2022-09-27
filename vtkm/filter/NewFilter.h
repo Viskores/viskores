@@ -17,6 +17,7 @@
 #include <vtkm/cont/PartitionedDataSet.h>
 
 #include <vtkm/filter/FieldSelection.h>
+#include <vtkm/filter/TaskQueue.h>
 #include <vtkm/filter/vtkm_filter_core_export.h>
 
 namespace vtkm
@@ -224,6 +225,16 @@ public:
   virtual bool CanThread() const;
 
   VTKM_CONT
+  void SetThreadsPerCPU(vtkm::Id numThreads) { this->NumThreadsPerCPU = numThreads; }
+  VTKM_CONT
+  void SetThreadsPerGPU(vtkm::Id numThreads) { this->NumThreadsPerGPU = numThreads; }
+
+  VTKM_CONT
+  vtkm::Id GetThreadsPerCPU() const { return this->NumThreadsPerCPU; }
+  VTKM_CONT
+  vtkm::Id GetThreadsPerGPU() const { return this->NumThreadsPerGPU; }
+
+  VTKM_CONT
   bool GetRunMultiThreadedFilter() const
   {
     return this->CanThread() && this->RunFilterWithMultipleThreads;
@@ -242,7 +253,7 @@ public:
     }
   }
 
-  //@{
+  ///@{
   /// \brief Specify which fields get passed from input to output.
   ///
   /// After a filter successfully executes and returns a new data set, fields are mapped from
@@ -279,21 +290,21 @@ public:
   const vtkm::filter::FieldSelection& GetFieldsToPass() const { return this->FieldsToPass; }
   VTKM_CONT
   vtkm::filter::FieldSelection& GetFieldsToPass() { return this->FieldsToPass; }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Executes the filter on the input and produces a result dataset.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
   VTKM_CONT vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input);
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// Executes the filter on the input PartitionedDataSet and produces a result PartitionedDataSet.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
   VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input);
-  //@}
+  ///@}
 
   // FIXME: Is this actually materialize? Are there different kinds of Invoker?
   /// Specify the vtkm::cont::Invoker to be used to execute worklets by
@@ -315,6 +326,48 @@ protected:
   /// fields of `inDataSet` (as selected by the `FieldsToPass` state of the filter).
   ///
   VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet) const;
+
+
+  /// \brief Create the output data set for `DoExecute`.
+  ///
+  /// This form of `CreateResult` will create an output PartitionedDataSet with the
+  /// same partitions and pass all PartitionedDataSet fields (as requested by the
+  /// `Filter` state).
+  ///
+  /// \param[in] input The input data set being modified (usually the one passed into
+  /// `DoExecute`).
+  /// \param[in] resultPartitions The output data created by the filter. Fields from the input are
+  /// passed onto the return result partition as requested by the `Filter` state.
+  ///
+  VTKM_CONT vtkm::cont::PartitionedDataSet CreateResult(
+    const vtkm::cont::PartitionedDataSet& input,
+    const vtkm::cont::PartitionedDataSet& resultPartitions) const;
+
+  /// \brief Create the output data set for `DoExecute`.
+  ///
+  /// This form of `CreateResult` will create an output PartitionedDataSet with the
+  /// same partitions and pass all PartitionedDataSet fields (as requested by the
+  /// `Filter` state).
+  ///
+  /// \param[in] input The input data set being modified (usually the one passed into
+  /// `DoExecute`).
+  /// \param[in] resultPartitions The output data created by the filter. Fields from the input are
+  /// passed onto the return result partition as requested by the `Filter` state.
+  /// \param[in] fieldMapper A function or functor that takes a `PartitionedDataSet` as its first
+  ///     argument and a `Field` as its second argument. The `PartitionedDataSet` is the data being
+  ///     created and will eventually be returned by `CreateResult`. The `Field` comes from `input`.
+  ///
+
+  template <typename FieldMapper>
+  VTKM_CONT vtkm::cont::PartitionedDataSet CreateResult(
+    const vtkm::cont::PartitionedDataSet& input,
+    const vtkm::cont::PartitionedDataSet& resultPartitions,
+    FieldMapper&& fieldMapper) const
+  {
+    vtkm::cont::PartitionedDataSet output(resultPartitions.GetPartitions());
+    this->MapFieldsOntoOutput(input, output, fieldMapper);
+    return output;
+  }
 
   /// \brief Create the output data set for `DoExecute`.
   ///
@@ -420,12 +473,9 @@ protected:
     const vtkm::cont::PartitionedDataSet& inData);
 
 private:
-  VTKM_CONT
-  virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
-
-  template <typename FieldMapper>
-  VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input,
-                                     vtkm::cont::DataSet& output,
+  template <typename DataSetType, typename FieldMapper>
+  VTKM_CONT void MapFieldsOntoOutput(const DataSetType& input,
+                                     DataSetType& output,
                                      FieldMapper&& fieldMapper) const
   {
     for (vtkm::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)
@@ -438,8 +488,14 @@ private:
     }
   }
 
+  VTKM_CONT
+  virtual vtkm::Id DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input);
+
+
   vtkm::filter::FieldSelection FieldsToPass = vtkm::filter::FieldSelection::Mode::All;
   bool RunFilterWithMultipleThreads = false;
+  vtkm::Id NumThreadsPerCPU = 4;
+  vtkm::Id NumThreadsPerGPU = 8;
 };
 }
 } // namespace vtkm::filter

@@ -34,7 +34,7 @@ namespace mesh_info
 enum struct CellMetric
 {
   Area,
-  AspectGama,
+  AspectGamma,
   AspectRatio,
   Condition,
   DiagonalRatio,

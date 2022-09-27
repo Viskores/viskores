@@ -24,8 +24,10 @@ namespace vtkm
 namespace filter
 {
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <class Derived>
-class FilterField : public vtkm::filter::Filter<Derived>
+class VTKM_DEPRECATED(1.9, "Use vtkm::filter::NewFilterField.") FilterField
+  : public vtkm::filter::Filter<Derived>
 {
 public:
   VTKM_CONT
@@ -40,7 +42,7 @@ public:
   VTKM_CONT
   const std::string& GetOutputFieldName() const { return this->OutputFieldName; }
 
-  //@{
+  ///@{
   /// Choose the field to operate on. Note, if
   /// `this->UseCoordinateSystemAsField` is true, then the active field is not used.
   VTKM_CONT
@@ -57,19 +59,19 @@ public:
   {
     return this->ActiveFieldAssociation;
   }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// To simply use the active coordinate system as the field to operate on, set
   /// UseCoordinateSystemAsField to true.
   VTKM_CONT
   void SetUseCoordinateSystemAsField(bool val) { this->UseCoordinateSystemAsField = val; }
   VTKM_CONT
   bool GetUseCoordinateSystemAsField() const { return this->UseCoordinateSystemAsField; }
-  //@}
+  ///@}
 
 
-  //@{
+  ///@{
   /// Select the coordinate system index to make active to use when processing the input
   /// DataSet. This is used primarily by the Filter to select the coordinate system
   /// to use as a field when \c UseCoordinateSystemAsField is true.
@@ -78,9 +80,9 @@ public:
 
   VTKM_CONT
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
-  //@}
+  ///@}
 
-  //@{
+  ///@{
   /// These are provided to satisfy the Filter API requirements.
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
@@ -95,7 +97,7 @@ public:
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
                                                     const vtkm::cont::CoordinateSystem& field,
                                                     vtkm::filter::PolicyBase<DerivedPolicy> policy);
-  //@}
+  ///@}
 
 protected:
   vtkm::filter::FilterField<Derived>& operator=(const vtkm::filter::FilterField<Derived>&) =
@@ -112,6 +114,7 @@ private:
 
   friend class vtkm::filter::Filter<Derived>;
 };
+VTKM_DEPRECATED_SUPPRESS_END
 }
 } // namespace vtkm::filter
 

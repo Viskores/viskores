@@ -48,14 +48,6 @@ set(benchmarks
   BenchmarkTopologyAlgorithms
   )
 
-#Taking too long to compile with HIPCC
-if(HIP IN_LIST Kokkos_DEVICES)
-  list(REMOVE_ITEM benchmarks
-       BenchmarkDeviceAdapter
-       BenchmarkODEIntegrators
-      )
-endif()
-
 set(VTKm_BENCHS_RANGE_LOWER_BOUNDARY 4096 CACHE STRING "Smallest sample for input size bench for BenchmarkDeviceAdapter")
 set(VTKm_BENCHS_RANGE_UPPER_BOUNDARY 134217728 CACHE STRING "Biggest sample for input size bench for BenchmarkDeviceAdapter")
 mark_as_advanced(VTKm_BENCHS_RANGE_LOWER_BOUNDARY VTKm_BENCHS_RANGE_UPPER_BOUNDARY)
@@ -64,10 +56,8 @@ foreach (benchmark ${benchmarks})
   add_benchmark(NAME ${benchmark} FILE ${benchmark}.cxx LIBS vtkm_source vtkm_filter vtkm_io)
 endforeach ()
 
-if(NOT HIP IN_LIST Kokkos_DEVICES)
-  target_compile_definitions(BenchmarkDeviceAdapter PUBLIC VTKm_BENCHS_RANGE_LOWER_BOUNDARY=${VTKm_BENCHS_RANGE_LOWER_BOUNDARY})
-  target_compile_definitions(BenchmarkDeviceAdapter PUBLIC VTKm_BENCHS_RANGE_UPPER_BOUNDARY=${VTKm_BENCHS_RANGE_UPPER_BOUNDARY})
-endif()
+target_compile_definitions(BenchmarkDeviceAdapter PUBLIC VTKm_BENCHS_RANGE_LOWER_BOUNDARY=${VTKm_BENCHS_RANGE_LOWER_BOUNDARY})
+target_compile_definitions(BenchmarkDeviceAdapter PUBLIC VTKm_BENCHS_RANGE_UPPER_BOUNDARY=${VTKm_BENCHS_RANGE_UPPER_BOUNDARY})
 
 if(TARGET vtkm_rendering)
   add_benchmark(NAME BenchmarkRayTracing FILE BenchmarkRayTracing.cxx LIBS vtkm_rendering vtkm_source)

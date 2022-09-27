@@ -27,6 +27,5 @@ Libs: -L${libdir} \
     -lvtkm_worklet-@VTKm_VERSION@ \
     -lvtkm_source-@VTKm_VERSION@ \
     -lvtkm_io-@VTKm_VERSION@ \
-    -lvtkm_lodepng-@VTKm_VERSION@ \
     -lvtkm_cont-@VTKm_VERSION@ \
     -lvtkmdiympi_nompi

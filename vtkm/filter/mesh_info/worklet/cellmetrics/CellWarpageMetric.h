@@ -20,12 +20,12 @@
 #ifndef vtk_m_worklet_CellWarpageMetric_h
 #define vtk_m_worklet_CellWarpageMetric_h
 
-#include "vtkm/CellShape.h"
-#include "vtkm/CellTraits.h"
-#include "vtkm/ErrorCode.h"
-#include "vtkm/VecTraits.h"
-#include "vtkm/VectorAnalysis.h"
-#include "vtkm/exec/FunctorBase.h"
+#include "TypeOfCellQuadrilateral.h"
+#include <vtkm/CellShape.h>
+#include <vtkm/CellTraits.h>
+#include <vtkm/ErrorCode.h>
+#include <vtkm/VecTraits.h>
+#include <vtkm/VectorAnalysis.h>
 
 namespace vtkm
 {
@@ -35,27 +35,21 @@ namespace cellmetrics
 {
 
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
-VTKM_EXEC OutType CellWarpageMetric(const vtkm::IdComponent& numPts,
-                                    const PointCoordVecType& pts,
-                                    CellShapeType shape,
-                                    vtkm::ErrorCode& ec)
+VTKM_EXEC OutType CellWarpageMetric(const vtkm::IdComponent& vtkmNotUsed(numPts),
+                                    const PointCoordVecType& vtkmNotUsed(pts),
+                                    CellShapeType vtkmNotUsed(shape),
+                                    vtkm::ErrorCode& vtkmNotUsed(ec))
 {
-  UNUSED(numPts);
-  UNUSED(pts);
-  UNUSED(shape);
-  UNUSED(ec);
   //ec = vtkm::ErrorCode::InvalidCellMetric;
   return OutType(-1.0);
 }
 
 template <typename OutType, typename PointCoordVecType>
-VTKM_EXEC OutType CellWarpageMetric(const vtkm::IdComponent& numPts,
+VTKM_EXEC OutType CellWarpageMetric(const vtkm::IdComponent& vtkmNotUsed(numPts),
                                     const PointCoordVecType& pts,
                                     vtkm::CellShapeTagQuad,
-                                    vtkm::ErrorCode& ec)
+                                    vtkm::ErrorCode& vtkmNotUsed(ec))
 {
-  UNUSED(numPts);
-  UNUSED(ec);
   using Scalar = OutType;
   using CollectionOfPoints = PointCoordVecType;
   using Vector = typename PointCoordVecType::ComponentType;

@@ -55,6 +55,19 @@ public:
     return inside;
   }
 
+  struct LastCell
+  {
+  };
+
+  VTKM_EXEC
+  vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                           vtkm::Id& cellId,
+                           vtkm::Vec3f& parametric,
+                           LastCell& vtkmNotUsed(lastCell)) const
+  {
+    return this->FindCell(point, cellId, parametric);
+  }
+
   VTKM_EXEC
   vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
                            vtkm::Id& cellId,

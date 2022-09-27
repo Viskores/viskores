@@ -10,17 +10,14 @@
 
 #include "Benchmarker.h"
 
+#include <vtkm/Particle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/ErrorInternal.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/internal/OptionParser.h>
-#include <vtkm/filter/ParticleAdvection.h>
-#include <vtkm/worklet/particleadvection/EulerIntegrator.h>
-#include <vtkm/worklet/particleadvection/RK4Integrator.h>
-
+#include <vtkm/filter/flow/ParticleAdvection.h>
 
 namespace
 {
@@ -50,7 +47,7 @@ void BenchParticleAdvection(::benchmark::State& state)
                                    vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
                                    vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-  vtkm::filter::ParticleAdvection particleAdvection;
+  vtkm::filter::flow::ParticleAdvection particleAdvection;
 
   particleAdvection.SetStepSize(vtkm::FloatDefault(1) / state.range(0));
   particleAdvection.SetNumberOfSteps(static_cast<vtkm::Id>(state.range(0)));

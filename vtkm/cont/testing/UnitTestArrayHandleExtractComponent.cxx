@@ -8,12 +8,15 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Invoker.h>
+
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -31,9 +34,6 @@ struct ExtractComponentTests
                                                     ReferenceComponentArray,
                                                     ReferenceComponentArray,
                                                     ReferenceComponentArray>;
-
-  using DeviceTag = vtkm::cont::DeviceAdapterTagSerial;
-  using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;
 
   // This is used to build a ArrayHandleExtractComponent's internal array.
   ReferenceCompositeArray RefComposite;
@@ -53,7 +53,7 @@ struct ExtractComponentTests
   InputArray BuildInputArray() const
   {
     InputArray result;
-    Algo::Copy(this->RefComposite, result);
+    vtkm::cont::ArrayCopyDevice(this->RefComposite, result);
     return result;
   }
 
@@ -77,7 +77,7 @@ struct ExtractComponentTests
 
     // Copy the extract array in the execution environment to test reading:
     vtkm::cont::ArrayHandle<ValueType> execCopy;
-    Algo::Copy(extract, execCopy);
+    vtkm::cont::ArrayCopy(extract, execCopy);
     this->ValidateReadTestArray(execCopy, component);
   }
 
@@ -101,32 +101,22 @@ struct ExtractComponentTests
     }
   }
 
-  // Doubles the specified component (reading from RefVectorType).
-  template <typename PortalType, typename RefPortalType>
-  struct WriteTestFunctor : vtkm::exec::FunctorBase
+  // Doubles the specified component
+  struct WriteTestWorklet : vtkm::worklet::WorkletMapField
   {
-    using RefVectorType = typename RefPortalType::ValueType;
-    using Traits = vtkm::VecTraits<RefVectorType>;
+    using ControlSignature = void(FieldIn referenceArray, FieldOut componentArray);
 
-    PortalType Portal;
-    RefPortalType RefPortal;
     vtkm::IdComponent Component;
 
-    VTKM_CONT
-    WriteTestFunctor(const PortalType& portal,
-                     const RefPortalType& ref,
-                     vtkm::IdComponent component)
-      : Portal(portal)
-      , RefPortal(ref)
-      , Component(component)
+    VTKM_CONT WriteTestWorklet(vtkm::IdComponent component)
+      : Component(component)
     {
     }
 
-    VTKM_EXEC_CONT
-    void operator()(vtkm::Id index) const
+    template <typename RefType, typename ComponentType>
+    VTKM_EXEC void operator()(const RefType& reference, ComponentType& outComponent) const
     {
-      this->Portal.Set(index,
-                       Traits::GetComponent(this->RefPortal.Get(index), this->Component) * 2);
+      outComponent = vtkm::VecTraits<RefType>::GetComponent(reference, this->Component) * 2;
     }
   };
 
@@ -138,13 +128,13 @@ struct ExtractComponentTests
       ExtractArray extract(composite, component);
 
       {
-        WriteTestFunctor<typename ExtractArray::WritePortalType,
-                         typename ReferenceCompositeArray::ReadPortalType>
-          functor(extract.WritePortal(), this->RefComposite.ReadPortal(), component);
-
+        auto refPortal = this->RefComposite.ReadPortal();
+        auto outPortal = extract.WritePortal();
         for (vtkm::Id i = 0; i < extract.GetNumberOfValues(); ++i)
         {
-          functor(i);
+          auto ref = refPortal.Get(i);
+          using Traits = vtkm::VecTraits<decltype(ref)>;
+          outPortal.Set(i, Traits::GetComponent(ref, component) * 2);
         }
       }
 
@@ -156,17 +146,7 @@ struct ExtractComponentTests
       InputArray composite = this->BuildInputArray();
       ExtractArray extract(composite, component);
 
-      using Portal = typename ExtractArray::WritePortalType;
-      using RefPortal = typename ReferenceCompositeArray::ReadPortalType;
-
-      {
-        vtkm::cont::Token token;
-        WriteTestFunctor<Portal, RefPortal> functor(
-          extract.PrepareForInPlace(DeviceTag(), token),
-          this->RefComposite.PrepareForInput(DeviceTag(), token),
-          component);
-        Algo::Schedule(functor, extract.GetNumberOfValues());
-      }
+      vtkm::cont::Invoker{}(WriteTestWorklet(component), this->RefComposite, extract);
 
       this->ValidateWriteTestArray(composite, component);
     }

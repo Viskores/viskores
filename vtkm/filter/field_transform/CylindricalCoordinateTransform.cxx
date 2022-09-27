@@ -26,8 +26,10 @@ vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(const vtkm::cont::
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     vtkm::cont::ArrayHandle<T> result;
-    vtkm::worklet::CylindricalCoordinateTransform worklet{ this->CartesianToCylindrical };
-    worklet.Run(concrete, result);
+    if (this->CartesianToCylindrical)
+      this->Invoke(vtkm::worklet::CarToCyl{}, concrete, result);
+    else
+      this->Invoke(vtkm::worklet::CylToCar{}, concrete, result);
     outArray = result;
   };
   this->CastAndCallVecField<3>(this->GetFieldFromDataSet(inDataSet), resolveType);

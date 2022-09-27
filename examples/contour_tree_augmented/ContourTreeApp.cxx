@@ -71,11 +71,12 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/io/BOVDataSetReader.h>
 
-#include <vtkm/filter/ContourTreeUniformAugmented.h>
-#include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
-#include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/processcontourtree/Branch.h>
+#include <vtkm/filter/MapFieldPermutation.h>
+#include <vtkm/filter/scalar_topology/ContourTreeUniformAugmented.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ProcessContourTree.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/processcontourtree/Branch.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -153,6 +154,122 @@ private:
   std::vector<std::string> mCLOptions;
 };
 
+inline vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id numberOfBlocks)
+{
+  vtkm::Id currNumberOfBlocks = numberOfBlocks;
+  vtkm::Id3 blocksPerAxis{ 1, 1, 1 };
+  while (currNumberOfBlocks > 1)
+  {
+    vtkm::IdComponent splitAxis = 0;
+    for (vtkm::IdComponent d = 1; d < 3; ++d)
+    {
+      if (globalSize[d] > globalSize[splitAxis])
+      {
+        splitAxis = d;
+      }
+    }
+    if (currNumberOfBlocks % 2 == 0)
+    {
+      blocksPerAxis[splitAxis] *= 2;
+      globalSize[splitAxis] /= 2;
+      currNumberOfBlocks /= 2;
+    }
+    else
+    {
+      blocksPerAxis[splitAxis] *= currNumberOfBlocks;
+      break;
+    }
+  }
+  return blocksPerAxis;
+}
+
+inline std::tuple<vtkm::Id3, vtkm::Id3, vtkm::Id3> ComputeBlockExtents(vtkm::Id3 globalSize,
+                                                                       vtkm::Id3 blocksPerAxis,
+                                                                       vtkm::Id blockNo)
+{
+  // DEBUG: std::cout << "ComputeBlockExtents("<<globalSize <<", " << blocksPerAxis << ", " << blockNo << ")" << std::endl;
+  // DEBUG: std::cout << "Block " << blockNo;
+
+  vtkm::Id3 blockIndex, blockOrigin, blockSize;
+  for (vtkm::IdComponent d = 0; d < 3; ++d)
+  {
+    blockIndex[d] = blockNo % blocksPerAxis[d];
+    blockNo /= blocksPerAxis[d];
+
+    float dx = float(globalSize[d] - 1) / float(blocksPerAxis[d]);
+    blockOrigin[d] = vtkm::Id(blockIndex[d] * dx);
+    vtkm::Id maxIdx =
+      blockIndex[d] < blocksPerAxis[d] - 1 ? vtkm::Id((blockIndex[d] + 1) * dx) : globalSize[d] - 1;
+    blockSize[d] = maxIdx - blockOrigin[d] + 1;
+    // DEBUG: std::cout << " " << blockIndex[d] <<  dx << " " << blockOrigin[d] << " " << maxIdx << " " << blockSize[d] << "; ";
+  }
+  // DEBUG: std::cout << " -> " << blockIndex << " "  << blockOrigin << " " << blockSize << std::endl;
+  return std::make_tuple(blockIndex, blockOrigin, blockSize);
+}
+
+inline vtkm::cont::DataSet CreateSubDataSet(const vtkm::cont::DataSet& ds,
+                                            vtkm::Id3 blockOrigin,
+                                            vtkm::Id3 blockSize,
+                                            const std::string& fieldName)
+{
+  vtkm::Id3 globalSize;
+  ds.GetCellSet().CastAndCallForTypes<VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED>(
+    vtkm::worklet::contourtree_augmented::GetPointDimensions(), globalSize);
+  const vtkm::Id nOutValues = blockSize[0] * blockSize[1] * blockSize[2];
+
+  const auto inDataArrayHandle = ds.GetPointField(fieldName).GetData();
+
+  vtkm::cont::ArrayHandle<vtkm::Id> copyIdsArray;
+  copyIdsArray.Allocate(nOutValues);
+  auto copyIdsPortal = copyIdsArray.WritePortal();
+
+  vtkm::Id3 outArrIdx;
+  for (outArrIdx[2] = 0; outArrIdx[2] < blockSize[2]; ++outArrIdx[2])
+    for (outArrIdx[1] = 0; outArrIdx[1] < blockSize[1]; ++outArrIdx[1])
+      for (outArrIdx[0] = 0; outArrIdx[0] < blockSize[0]; ++outArrIdx[0])
+      {
+        vtkm::Id3 inArrIdx = outArrIdx + blockOrigin;
+        vtkm::Id inIdx = (inArrIdx[2] * globalSize[1] + inArrIdx[1]) * globalSize[0] + inArrIdx[0];
+        vtkm::Id outIdx =
+          (outArrIdx[2] * blockSize[1] + outArrIdx[1]) * blockSize[0] + outArrIdx[0];
+        VTKM_ASSERT(inIdx >= 0 && inIdx < inDataArrayHandle.GetNumberOfValues());
+        VTKM_ASSERT(outIdx >= 0 && outIdx < nOutValues);
+        copyIdsPortal.Set(outIdx, inIdx);
+      }
+  // DEBUG: std::cout << copyIdsPortal.GetNumberOfValues() << std::endl;
+
+  vtkm::cont::Field permutedField;
+  bool success =
+    vtkm::filter::MapFieldPermutation(ds.GetPointField(fieldName), copyIdsArray, permutedField);
+  if (!success)
+    throw vtkm::cont::ErrorBadType("Field copy failed (probably due to invalid type)");
+
+
+  vtkm::cont::DataSetBuilderUniform dsb;
+  if (globalSize[2] <= 1) // 2D Data Set
+  {
+    vtkm::Id2 dimensions{ blockSize[0], blockSize[1] };
+    vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
+    vtkm::cont::CellSetStructured<2> cellSet;
+    cellSet.SetPointDimensions(dimensions);
+    cellSet.SetGlobalPointDimensions(vtkm::Id2{ globalSize[0], globalSize[1] });
+    cellSet.SetGlobalPointIndexStart(vtkm::Id2{ blockOrigin[0], blockOrigin[1] });
+    dataSet.SetCellSet(cellSet);
+    dataSet.AddField(permutedField);
+    return dataSet;
+  }
+  else
+  {
+    vtkm::cont::DataSet dataSet = dsb.Create(blockSize);
+    vtkm::cont::CellSetStructured<3> cellSet;
+    cellSet.SetPointDimensions(blockSize);
+    cellSet.SetGlobalPointDimensions(globalSize);
+    cellSet.SetGlobalPointIndexStart(blockOrigin);
+    dataSet.SetCellSet(cellSet);
+    dataSet.AddField(permutedField);
+    return dataSet;
+  }
+}
 
 
 // Compute and render an isosurface for a uniform grid example
@@ -171,7 +288,6 @@ int main(int argc, char* argv[])
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
   int numBlocks = size;
-  int blocksPerRank = 1;
 #endif
 
   // initialize vtkm-m (e.g., logging via -v and device via the -d option)
@@ -354,7 +470,7 @@ int main(int argc, char* argv[])
   // From https://www.unix.com/302983597-post2.html
   char cstr_filename[32];
   snprintf(cstr_filename, sizeof(cstr_filename), "cout_%d.log", rank);
-  int out = open(cstr_filename, O_RDWR | O_CREAT | O_APPEND, 0600);
+  int out = open(cstr_filename, O_RDWR | O_CREAT | O_TRUNC | O_APPEND, 0600);
   if (-1 == out)
   {
     perror("opening cout.log");
@@ -362,7 +478,7 @@ int main(int argc, char* argv[])
   }
 
   snprintf(cstr_filename, sizeof(cstr_filename), "cerr_%d.log", rank);
-  int err = open(cstr_filename, O_RDWR | O_CREAT | O_APPEND, 0600);
+  int err = open(cstr_filename, O_RDWR | O_CREAT | O_TRUNC | O_APPEND, 0600);
   if (-1 == err)
   {
     perror("opening cerr.log");
@@ -396,43 +512,15 @@ int main(int argc, char* argv[])
   std::vector<vtkm::Id> dims;
   if (filename.compare(filename.length() - 3, 3, "bov") == 0)
   {
-    std::cout << "Reading BOV file" << std::endl;
     vtkm::io::BOVDataSetReader reader(filename);
     inDataSet = reader.ReadDataSet();
     nDims = 3;
     currTime = totalTime.GetElapsedTime();
     dataReadTime = currTime - prevTime;
     prevTime = currTime;
-#ifdef WITH_MPI
-    // Copy the data into the values array so we can construct a multiblock dataset
-    // TODO All we should need to do to implement BOV support is to copy the values
-    // in the values vector and copy the dimensions in the dims vector
-    vtkm::Id3 meshSize;
-    vtkm::worklet::contourtree_augmented::GetPointDimensions temp;
-    temp(inDataSet.GetCellSet(), meshSize);
-    dims[0] = meshSize[0];
-    dims[1] = meshSize[1];
-    dims[2] = meshSize[2];
-    // TODO/FIXME: The following is commented out since it creates a a warning that
-    // AsVirtual() will no longer be supported. Since this implementation is
-    // incomplete anyway, it currently makes more sense to comment it out than
-    // to fix the warning.
-    // auto tempField = inDataSet.GetField("values").GetData();
-    // values.resize(static_cast<std::size_t>(tempField.GetNumberOfValues()));
-    // auto tempFieldHandle = tempField.AsVirtual<ValueType>().ReadPortal();
-    // for (vtkm::Id i = 0; i < tempField.GetNumberOfValues(); i++)
-    // {
-    //   values[static_cast<std::size_t>(i)] = static_cast<ValueType>(tempFieldHandle.Get(i));
-    // }
-    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "BOV reader not yet support in MPI mode by this example");
-    MPI_Finalize();
-    return EXIT_FAILURE;
-#endif
   }
   else // Read ASCII data input
   {
-    std::cout << "Reading ASCII file" << std::endl;
     std::ifstream inFile(filename);
     if (inFile.bad())
       return 0;
@@ -485,7 +573,6 @@ int main(int argc, char* argv[])
     // swap dims order
     std::swap(dims[0], dims[1]);
 
-#ifndef WITH_MPI // We only need the inDataSet if are not using MPI otherwise we'll constructe a multi-block dataset
     // build the input dataset
     vtkm::cont::DataSetBuilderUniform dsb;
     // 2D data
@@ -506,7 +593,6 @@ int main(int argc, char* argv[])
       inDataSet = dsb.Create(vdims);
     }
     inDataSet.AddPointField("values", values);
-#endif
   } // END ASCII Read
 
   // Print the mesh metadata
@@ -538,104 +624,49 @@ int main(int argc, char* argv[])
 #ifndef WITH_MPI                              // construct regular, single-block VTK-M input dataset
   vtkm::cont::DataSet useDataSet = inDataSet; // Single block dataset
 #else  // Create a multi-block dataset for multi-block DIY-paralle processing
-  vtkm::cont::PartitionedDataSet useDataSet; // Partitioned variant of the input dataset
-  vtkm::Id3 blocksPerDim =
-    nDims == 3 ? vtkm::Id3(1, 1, numBlocks) : vtkm::Id3(1, numBlocks, 1); // Decompose the data into
+  // Determine split
   vtkm::Id3 globalSize = nDims == 3 ? vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
                                                 static_cast<vtkm::Id>(dims[1]),
                                                 static_cast<vtkm::Id>(dims[2]))
                                     : vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
                                                 static_cast<vtkm::Id>(dims[1]),
-                                                static_cast<vtkm::Id>(0));
-  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
-  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockOrigins;
-  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockSizes;
-  localBlockIndices.Allocate(blocksPerRank);
-  localBlockOrigins.Allocate(blocksPerRank);
-  localBlockSizes.Allocate(blocksPerRank);
-  auto localBlockIndicesPortal = localBlockIndices.WritePortal();
-  auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
-  auto localBlockSizesPortal = localBlockSizes.WritePortal();
-
+                                                static_cast<vtkm::Id>(1));
+  vtkm::Id3 blocksPerDim = ComputeNumberOfBlocksPerAxis(globalSize, numBlocks);
+  vtkm::Id blocksPerRank = numBlocks / size;
+  vtkm::Id numRanksWithExtraBlock = numBlocks % size;
+  vtkm::Id blocksOnThisRank, startBlockNo;
+  if (rank < numRanksWithExtraBlock)
   {
-    vtkm::Id lastDimSize =
-      (nDims == 2) ? static_cast<vtkm::Id>(dims[1]) : static_cast<vtkm::Id>(dims[2]);
-    if (size > (lastDimSize / 2.))
-    {
-      VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
-                    rank == 0,
-                    "Number of ranks too large for data. Use " << lastDimSize / 2
-                                                               << "or fewer ranks");
-      MPI_Finalize();
-      return EXIT_FAILURE;
-    }
-    vtkm::Id standardBlockSize = (vtkm::Id)(lastDimSize / numBlocks);
-    vtkm::Id blockSize = standardBlockSize;
-    vtkm::Id blockSliceSize =
-      nDims == 2 ? static_cast<vtkm::Id>(dims[0]) : static_cast<vtkm::Id>((dims[0] * dims[1]));
-    vtkm::Id blockNumValues = blockSize * blockSliceSize;
+    blocksOnThisRank = blocksPerRank + 1;
+    startBlockNo = (blocksPerRank + 1) * rank;
+  }
+  else
+  {
+    blocksOnThisRank = blocksPerRank;
+    startBlockNo = numRanksWithExtraBlock * (blocksPerRank + 1) +
+      (rank - numRanksWithExtraBlock) * blocksPerRank;
+  }
 
-    vtkm::Id startBlock = blocksPerRank * rank;
-    vtkm::Id endBlock = startBlock + blocksPerRank;
-    for (vtkm::Id blockIndex = startBlock; blockIndex < endBlock; ++blockIndex)
-    {
-      vtkm::Id localBlockIndex = blockIndex - startBlock;
-      vtkm::Id blockStart = blockIndex * blockNumValues;
-      vtkm::Id blockEnd = blockStart + blockNumValues;
-      if (blockIndex < (numBlocks - 1)) // add overlap between regions
-      {
-        blockEnd += blockSliceSize;
-      }
-      else
-      {
-        blockEnd = lastDimSize * blockSliceSize;
-      }
-      vtkm::Id currBlockSize = (vtkm::Id)((blockEnd - blockStart) / blockSliceSize);
+  if (blocksOnThisRank != 1)
+  {
+    std::cerr << "Currently only one block per rank supported!";
+    MPI_Finalize();
+    return EXIT_FAILURE;
+  }
 
-      vtkm::cont::DataSetBuilderUniform dsb;
-      vtkm::cont::DataSet ds;
+  // Created partitioned (split) data set
+  vtkm::cont::PartitionedDataSet useDataSet;
+  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
+  localBlockIndices.Allocate(blocksPerRank);
+  auto localBlockIndicesPortal = localBlockIndices.WritePortal();
 
-      // 2D data
-      if (nDims == 2)
-      {
-        vtkm::Id2 vdims;
-        vdims[0] = static_cast<vtkm::Id>(dims[0]);
-        vdims[1] = static_cast<vtkm::Id>(currBlockSize);
-        vtkm::Vec<ValueType, 2> origin(0, blockIndex * blockSize);
-        vtkm::Vec<ValueType, 2> spacing(1, 1);
-        ds = dsb.Create(vdims, origin, spacing);
-
-        localBlockIndicesPortal.Set(localBlockIndex, vtkm::Id3(blockIndex, 0, 0));
-        localBlockOriginsPortal.Set(localBlockIndex,
-                                    vtkm::Id3((blockStart / blockSliceSize), 0, 0));
-        localBlockSizesPortal.Set(localBlockIndex,
-                                  vtkm::Id3(currBlockSize, static_cast<vtkm::Id>(dims[0]), 0));
-      }
-      // 3D data
-      else
-      {
-        vtkm::Id3 vdims;
-        vdims[0] = static_cast<vtkm::Id>(dims[1]);
-        vdims[1] = static_cast<vtkm::Id>(dims[0]);
-        vdims[2] = static_cast<vtkm::Id>(currBlockSize);
-        vtkm::Vec<ValueType, 3> origin(0, 0, (blockIndex * blockSize));
-        vtkm::Vec<ValueType, 3> spacing(1, 1, 1);
-        ds = dsb.Create(vdims, origin, spacing);
-
-        localBlockIndicesPortal.Set(localBlockIndex, vtkm::Id3(0, 0, blockIndex));
-        localBlockOriginsPortal.Set(localBlockIndex,
-                                    vtkm::Id3(0, 0, (blockStart / blockSliceSize)));
-        localBlockSizesPortal.Set(
-          localBlockIndex,
-          vtkm::Id3(static_cast<vtkm::Id>(dims[0]), static_cast<vtkm::Id>(dims[1]), currBlockSize));
-      }
-
-      std::vector<vtkm::Float32> subValues((values.begin() + blockStart),
-                                           (values.begin() + blockEnd));
-
-      ds.AddPointField("values", subValues);
-      useDataSet.AppendPartition(ds);
-    }
+  for (vtkm::Id blockNo = 0; blockNo < blocksOnThisRank; ++blockNo)
+  {
+    vtkm::Id3 blockOrigin, blockSize, blockIndex;
+    std::tie(blockIndex, blockOrigin, blockSize) =
+      ComputeBlockExtents(globalSize, blocksPerDim, startBlockNo + blockNo);
+    useDataSet.AppendPartition(CreateSubDataSet(inDataSet, blockOrigin, blockSize, "values"));
+    localBlockIndicesPortal.Set(blockNo, blockIndex);
   }
 #endif // WITH_MPI construct input dataset
 
@@ -644,11 +675,11 @@ int main(int argc, char* argv[])
   prevTime = currTime;
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::ContourTreeAugmented filter(useMarchingCubes, computeRegularStructure);
+  vtkm::filter::scalar_topology::ContourTreeAugmented filter(useMarchingCubes,
+                                                             computeRegularStructure);
 
 #ifdef WITH_MPI
-  filter.SetSpatialDecomposition(
-    blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
+  filter.SetBlockIndices(blocksPerDim, localBlockIndices);
 #endif
   filter.SetActiveField("values");
 
