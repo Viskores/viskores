@@ -26,23 +26,6 @@ namespace vtkm
 namespace interop
 {
 
-namespace detail
-{
-struct TransferToOpenGL
-{
-  template <typename DeviceAdapterTag, typename ValueType, typename StorageTag>
-  VTKM_CONT bool operator()(DeviceAdapterTag,
-                            const vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
-                            BufferState& state) const
-  {
-    vtkm::interop::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(state);
-    toGL.Transfer(handle);
-    return true;
-  }
-};
-}
-
-
 /// \brief Manages transferring an ArrayHandle to opengl .
 ///
 /// \c TransferToOpenGL manages to transfer the contents of an ArrayHandle
@@ -80,18 +63,30 @@ template <typename ValueType, typename StorageTag>
 VTKM_CONT void TransferToOpenGL(const vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
                                 BufferState& state)
 {
-
-  vtkm::cont::DeviceAdapterId devId = handle.GetDeviceAdapterId();
-  bool success = vtkm::cont::TryExecuteOnDevice(devId, detail::TransferToOpenGL{}, handle, state);
+  // First, try to transfer data that already exists on a device.
+  bool success = vtkm::cont::TryExecute([&](auto device) {
+    if (handle.IsOnDevice(device))
+    {
+      TransferToOpenGL(handle, state, device);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  });
   if (!success)
   {
-    //Generally we are here because the devId is undefined
-    //or for some reason the last executed device is now disabled
-    success = vtkm::cont::TryExecute(detail::TransferToOpenGL{}, handle, state);
+    // Generally, we are here because the array is not already on a device
+    // or for some reason the transfer failed on that device. Try any device.
+    success = vtkm::cont::TryExecute([&](auto device) {
+      TransferToOpenGL(handle, state, device);
+      return true;
+    });
   }
   if (!success)
   {
-    throw vtkm::cont::ErrorBadValue("Unknown device id.");
+    throw vtkm::cont::ErrorBadValue("Failed to transfer array to OpenGL on any device.");
   }
 }
 }
