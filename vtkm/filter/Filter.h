@@ -10,6 +10,8 @@
 #ifndef vtk_m_filter_Filter_h
 #define vtk_m_filter_Filter_h
 
+#include <vtkm/Deprecated.h>
+
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorExecution.h>
@@ -171,7 +173,7 @@ namespace filter
 /// partition.
 ///
 template <typename Derived>
-class Filter
+class VTKM_DEPRECATED(1.9, "Use vtkm::filter::NewFilter.") Filter
 {
 public:
   VTKM_CONT

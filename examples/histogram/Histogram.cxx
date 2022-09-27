@@ -64,9 +64,8 @@ int main(int argc, char* argv[])
   // tell VTK-m the communicator to use.
   vtkm::cont::EnvironmentTracker::SetCommunicator(world);
 
-  int rank, size;
-  MPI_Comm_rank(vtkmdiy::mpi::mpi_cast(world.handle()), &rank);
-  MPI_Comm_size(vtkmdiy::mpi::mpi_cast(world.handle()), &size);
+  int rank = world.rank();
+  int size = world.size();
 
   if (argc != 2)
   {

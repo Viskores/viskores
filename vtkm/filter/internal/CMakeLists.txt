@@ -1,3 +1,4 @@
+
 ##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
@@ -8,9 +9,9 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(headers
+set(deprecated_headers
   ResolveFieldTypeAndExecute.h
   ResolveFieldTypeAndMap.h
 )
 
-vtkm_declare_headers(${headers})
+vtkm_declare_headers(${deprecated_headers})

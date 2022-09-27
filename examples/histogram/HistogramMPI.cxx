@@ -8,6 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include "HistogramMPI.h"
+
 #include <vtkm/filter/density_estimate/worklet/FieldHistogram.h>
 
 #include <vtkm/cont/Algorithm.h>
@@ -102,53 +104,69 @@ public:
 } // namespace detail
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT HistogramMPI::HistogramMPI()
-  : NumberOfBins(10)
-  , BinDelta(0)
-  , ComputedRange()
-  , Range()
+VTKM_CONT vtkm::cont::DataSet HistogramMPI::DoExecute(const vtkm::cont::DataSet& input)
 {
-  this->SetOutputFieldName("histogram");
-}
+  const auto& fieldArray = this->GetFieldFromDataSet(input).GetData();
 
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet HistogramMPI::DoExecute(
-  const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata&,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  vtkm::cont::ArrayHandle<vtkm::Id> binArray;
-  T delta;
-
-  vtkm::worklet::FieldHistogram worklet;
-  if (this->ComputedRange.IsNonEmpty())
+  if (!this->InExecutePartitions)
   {
-    worklet.Run(field,
+    // Handle initialization that would be done in PreExecute if the data set had partitions.
+    if (this->Range.IsNonEmpty())
+    {
+      this->ComputedRange = this->Range;
+    }
+    else
+    {
+      auto handle = vtkm::cont::FieldRangeGlobalCompute(
+        input, this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+      if (handle.GetNumberOfValues() != 1)
+      {
+        throw vtkm::cont::ErrorFilterExecution("expecting scalar field.");
+      }
+      this->ComputedRange = handle.ReadPortal().Get(0);
+    }
+  }
+
+  vtkm::cont::ArrayHandle<vtkm::Id> binArray;
+
+  auto resolveType = [&](const auto& concrete) {
+    using T = typename std::decay_t<decltype(concrete)>::ValueType;
+    T delta;
+
+    vtkm::worklet::FieldHistogram worklet;
+    worklet.Run(concrete,
                 this->NumberOfBins,
                 static_cast<T>(this->ComputedRange.Min),
                 static_cast<T>(this->ComputedRange.Max),
                 delta,
                 binArray);
-  }
-  else
-  {
-    worklet.Run(field, this->NumberOfBins, this->ComputedRange, delta, binArray);
-  }
 
-  this->BinDelta = static_cast<vtkm::Float64>(delta);
+    this->BinDelta = static_cast<vtkm::Float64>(delta);
+  };
+
+  fieldArray
+    .CastAndCallForTypesWithFloatFallback<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(
+      resolveType);
+
   vtkm::cont::DataSet output;
-  vtkm::cont::Field rfield(
-    this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeMesh, binArray);
-  output.AddField(rfield);
+  output.AddField(
+    { this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeDataSet, binArray });
+
+  // The output is a "summary" of the input, no need to map fields
   return output;
 }
 
+VTKM_CONT vtkm::cont::PartitionedDataSet HistogramMPI::DoExecutePartitions(
+  const vtkm::cont::PartitionedDataSet& input)
+{
+  this->PreExecute(input);
+  auto result = this->NewFilter::DoExecutePartitions(input);
+  this->PostExecute(input, result);
+  return result;
+}
+
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT void HistogramMPI::PreExecute(const vtkm::cont::PartitionedDataSet& input,
-                                               const vtkm::filter::PolicyBase<DerivedPolicy>&)
+inline VTKM_CONT void HistogramMPI::PreExecute(const vtkm::cont::PartitionedDataSet& input)
 {
   if (this->Range.IsNonEmpty())
   {
@@ -167,10 +185,8 @@ inline VTKM_CONT void HistogramMPI::PreExecute(const vtkm::cont::PartitionedData
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
 inline VTKM_CONT void HistogramMPI::PostExecute(const vtkm::cont::PartitionedDataSet&,
-                                                vtkm::cont::PartitionedDataSet& result,
-                                                const vtkm::filter::PolicyBase<DerivedPolicy>&)
+                                                vtkm::cont::PartitionedDataSet& result)
 {
   // iterate and compute HistogramMPI for each local block.
   detail::DistributedHistogram helper(result.GetNumberOfPartitions());
@@ -182,7 +198,7 @@ inline VTKM_CONT void HistogramMPI::PostExecute(const vtkm::cont::PartitionedDat
 
   vtkm::cont::DataSet output;
   vtkm::cont::Field rfield(this->GetOutputFieldName(),
-                           vtkm::cont::Field::Association::WholeMesh,
+                           vtkm::cont::Field::Association::WholeDataSet,
                            helper.ReduceAll(this->NumberOfBins));
   output.AddField(rfield);
 
