@@ -85,7 +85,6 @@ build:ubuntu2004_hip_kokkos:
   after_script:
     - ccache -v -s
     - ccache -z
-  timeout: 10 hours
 
 test:ubuntu2004_hip_kokkos:
   tags:

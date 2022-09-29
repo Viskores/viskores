@@ -145,7 +145,7 @@ function(vtkm_unit_tests)
       list(APPEND per_device_command_line_arguments --vtkm-device=kokkos)
       list(APPEND per_device_suffix "KOKKOS")
       #may require more time because of kernel generation.
-      list(APPEND per_device_timeout 1500)
+      list(APPEND per_device_timeout 2500)
       list(APPEND per_device_serial FALSE)
     endif()
     if(VTKm_ENABLE_TBB AND (enable_all_backends OR NOT per_device_suffix))
