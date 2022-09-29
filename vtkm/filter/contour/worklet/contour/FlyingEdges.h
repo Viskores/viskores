@@ -34,17 +34,7 @@ template <typename T, typename S>
 vtkm::Id extend_by(vtkm::cont::ArrayHandle<T, S>& handle, vtkm::Id size)
 {
   vtkm::Id oldLen = handle.GetNumberOfValues();
-  if (oldLen == 0)
-  {
-    handle.Allocate(size);
-  }
-  else
-  {
-    vtkm::cont::ArrayHandle<T, S> tempHandle;
-    tempHandle.Allocate(oldLen + size);
-    vtkm::cont::Algorithm::CopySubRange(handle, 0, oldLen, tempHandle);
-    handle = tempHandle;
-  }
+  handle.Allocate(oldLen + size, vtkm::CopyFlag::On);
   return oldLen;
 }
 }
