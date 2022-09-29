@@ -15,7 +15,10 @@
 
 
 #include <vtkm/filter/contour/worklet/contour/FlyingEdgesHelpers.h>
+#include <vtkm/filter/contour/worklet/contour/FlyingEdgesPass4Common.h>
 #include <vtkm/filter/contour/worklet/contour/FlyingEdgesTables.h>
+
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
 {
