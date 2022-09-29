@@ -23,7 +23,6 @@ set(headers
   KdTree3D.h            # Deprecated
   KernelSplatter.h
   Keys.h
-  LagrangianStructures.h
   MaskIndices.h
   MaskNone.h
   MaskSelect.h
@@ -73,7 +72,6 @@ set(sources_device
 add_subdirectory(internal)
 add_subdirectory(colorconversion)
 add_subdirectory(cosmotools)
-add_subdirectory(lcs)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)
 add_subdirectory(wavelets)

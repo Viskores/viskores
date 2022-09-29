@@ -18,7 +18,7 @@ namespace vtkm
 namespace filter
 {
 
-struct PolicyDefault : vtkm::filter::PolicyBase<PolicyDefault>
+struct VTKM_DEPRECATED(1.9) PolicyDefault : vtkm::filter::PolicyBase<PolicyDefault>
 {
   // Inherit defaults from PolicyBase
 };

@@ -10,7 +10,6 @@
 
 #include <vtkm/cont/Logging.h>
 #include <vtkm/filter/MapFieldMergeAverage.h>
-#include <vtkm/filter/PolicyDefault.h>
 #include <vtkm/worklet/AverageByKey.h>
 
 namespace

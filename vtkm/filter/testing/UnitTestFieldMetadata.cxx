@@ -11,6 +11,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/FieldMetadata.h>
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 namespace
 {
 
@@ -77,3 +78,4 @@ int UnitTestFieldMetadata(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestFieldMetadata, argc, argv);
 }
+VTKM_DEPRECATED_SUPPRESS_END

@@ -11,8 +11,6 @@
 set(unit_tests
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
-  UnitTestLagrangianFilter.cxx
-  UnitTestLagrangianStructuresFilter.cxx
   UnitTestMapFieldMergeAverage.cxx
   UnitTestMapFieldPermutation.cxx
   UnitTestMultiBlockFilter.cxx

@@ -22,6 +22,7 @@ set(deprecated_headers
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   CoordinateSystemTransform.h
+  CreateResult.h
   CrossProduct.h
   DotProduct.h
   Entropy.h
@@ -30,6 +31,17 @@ set(deprecated_headers
   ExtractPoints.h
   ExtractStructured.h
   FieldToColors.h
+  FieldMetadata.h
+  FilterCell.h
+  FilterDataSet.h
+  FilterDataSet.hxx
+  FilterDataSetWithField.h
+  FilterDataSetWithField.hxx
+  FilterField.h
+  FilterField.hxx
+  Filter.h
+  Filter.hxx
+  FilterTraits.h
   GenerateIds.h
   GhostCellClassify.h
   GhostCellRemove.h
@@ -39,6 +51,8 @@ set(deprecated_headers
   ImageDifference.h
   ImageMedian.h
   Instantiations.h
+  Lagrangian.h
+  LagrangianStructures.h
   Mask.h
   MaskPoints.h
   MeshQuality.h
@@ -53,6 +67,8 @@ set(deprecated_headers
   PointAverage.h
   PointElevation.h
   PointTransform.h
+  PolicyBase.h
+  PolicyDefault.h
   Probe.h
   Slice.h
   SplitSharpEdges.h
@@ -77,34 +93,6 @@ set(deprecated_headers
   )
 
 vtkm_declare_headers(${deprecated_headers})
-
-set(common_headers
-  CreateResult.h
-  FieldMetadata.h
-  FilterCell.h
-  FilterDataSet.h
-  FilterDataSetWithField.h
-  FilterField.h
-  Filter.h
-  FilterTraits.h
-  PolicyBase.h
-  PolicyDefault.h
-  Lagrangian.h
-  LagrangianStructures.h
-  )
-
-vtkm_declare_headers(${common_headers})
-
-set(common_header_template_sources
-  FilterDataSet.hxx
-  FilterDataSetWithField.hxx
-  FilterField.hxx
-  Filter.hxx
-  Lagrangian.hxx
-  LagrangianStructures.hxx
-  )
-
-vtkm_declare_headers(${common_header_template_sources})
 
 set(core_headers
   FieldSelection.h

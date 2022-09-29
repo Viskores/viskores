@@ -87,6 +87,9 @@ shown in here:
 # Get started with a new Release
 
 1. Go to `https://gitlab.kitware.com/vtkm/vtk-m/` and open a new issue.
-2. At the _issue template_ dropdown menu select: `NewRelease.md`
-3. Now remove the comments and substitute the variables surrounded by `@`.
-4. Post the issue and follow the steps.
+2. Generate and copy to clipboard the release script (-rcN is optional):
+```
+# Download pyexpander (Available in pip)
+expander.py --eval 'version="X.Y.Z-rcN"' docs/NewRelease.md.tmpl | xclip -selection c
+```
+3. Paste the output in the issue and follow the steps.

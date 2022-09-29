@@ -30,6 +30,141 @@ namespace raytracing
 
 namespace detail
 {
+
+template <typename Precision>
+class SurfaceShade
+{
+public:
+  class Shade : public vtkm::worklet::WorkletMapField
+  {
+  private:
+    vtkm::Vec3f_32 LightPosition;
+    vtkm::Vec3f_32 LightAmbient;
+    vtkm::Vec3f_32 LightDiffuse;
+    vtkm::Vec3f_32 LightSpecular;
+    vtkm::Float32 SpecularExponent;
+    vtkm::Vec3f_32 CameraPosition;
+    vtkm::Vec3f_32 LookAt;
+    Precision MissScalar;
+
+  public:
+    VTKM_CONT
+    Shade(const vtkm::Vec3f_32& lightPosition,
+          const vtkm::Vec3f_32& cameraPosition,
+          const vtkm::Vec3f_32& lookAt,
+          const Precision missScalar)
+      : LightPosition(lightPosition)
+      , CameraPosition(cameraPosition)
+      , LookAt(lookAt)
+      , MissScalar(missScalar)
+    {
+      //Set up some default lighting parameters for now
+      LightAmbient[0] = .5f;
+      LightAmbient[1] = .5f;
+      LightAmbient[2] = .5f;
+      LightDiffuse[0] = .7f;
+      LightDiffuse[1] = .7f;
+      LightDiffuse[2] = .7f;
+      LightSpecular[0] = .7f;
+      LightSpecular[1] = .7f;
+      LightSpecular[2] = .7f;
+      SpecularExponent = 20.f;
+    }
+
+    using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldOut);
+    using ExecutionSignature = void(_1, _2, _3, _4);
+    //using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
+
+    //template <typename ShadePortalType, typename Precision>
+    VTKM_EXEC void operator()(const vtkm::Id& hitIdx,
+                              const vtkm::Vec<Precision, 3>& normal,
+                              const vtkm::Vec<Precision, 3>& intersection,
+                              Precision& output) const //,
+    //                              const vtkm::Id& idx) const
+    {
+
+      if (hitIdx < 0)
+      {
+        output = MissScalar;
+      }
+
+      vtkm::Vec<Precision, 3> lightDir = LightPosition - intersection;
+      vtkm::Vec<Precision, 3> viewDir = CameraPosition - LookAt;
+      vtkm::Normalize(lightDir);
+      vtkm::Normalize(viewDir);
+      //Diffuse lighting
+      Precision cosTheta = vtkm::dot(normal, lightDir);
+      //clamp tp [0,1]
+      const Precision zero = 0.f;
+      const Precision one = 1.f;
+      cosTheta = vtkm::Min(vtkm::Max(cosTheta, zero), one);
+      //Specular lighting
+      vtkm::Vec<Precision, 3> reflect = 2.f * vtkm::dot(lightDir, normal) * normal - lightDir;
+      vtkm::Normalize(reflect);
+      Precision cosPhi = vtkm::dot(reflect, viewDir);
+      Precision specularConstant =
+        vtkm::Pow(vtkm::Max(cosPhi, zero), static_cast<Precision>(SpecularExponent));
+
+      Precision shade = vtkm::Min(
+        LightAmbient[0] + LightDiffuse[0] * cosTheta + LightSpecular[0] * specularConstant, one);
+      output = shade;
+    }
+
+    vtkm::Vec3f_32 GetDiffuse() { return LightDiffuse; }
+
+    vtkm::Vec3f_32 GetAmbient() { return LightAmbient; }
+
+    vtkm::Vec3f_32 GetSpecular() { return LightSpecular; }
+
+    vtkm::Float32 GetSpecularExponent() { return SpecularExponent; }
+
+
+    void SetDiffuse(vtkm::Vec3f_32 newDiffuse)
+    {
+      LightDiffuse[0] = newDiffuse[0];
+      LightDiffuse[1] = newDiffuse[1];
+      LightDiffuse[2] = newDiffuse[2];
+    }
+
+    void SetAmbient(vtkm::Vec3f_32 newAmbient)
+    {
+      LightAmbient[0] = newAmbient[0];
+      LightAmbient[1] = newAmbient[1];
+      LightAmbient[2] = newAmbient[2];
+    }
+
+    void SetSpecular(vtkm::Vec3f_32 newSpecular)
+    {
+      LightSpecular[0] = newSpecular[0];
+      LightSpecular[1] = newSpecular[1];
+      LightSpecular[2] = newSpecular[2];
+    }
+
+    void SetSpecularExponent(vtkm::Float32 newExponent) { SpecularExponent = newExponent; }
+
+
+  }; //class Shade
+
+  //template <typename Precision>
+  VTKM_CONT void run(Ray<Precision>& rays,
+                     const vtkm::rendering::raytracing::Camera& camera,
+                     const Precision missScalar,
+                     vtkm::cont::ArrayHandle<Precision> shadings,
+                     bool shade)
+  {
+    if (shade)
+    {
+      // TODO: support light positions
+      vtkm::Vec3f_32 scale(2, 2, 2);
+      vtkm::Vec3f_32 lightPosition = camera.GetPosition() + scale * camera.GetUp();
+      vtkm::worklet::DispatcherMapField<Shade>(
+        Shade(lightPosition, camera.GetPosition(), camera.GetLookAt(), missScalar))
+        .Invoke(rays.HitIdx, rays.Normal, rays.Intersection, shadings);
+    }
+  }
+}; // class SurfaceShade
+
+
 template <typename Precision>
 class FilterDepth : public vtkm::worklet::WorkletMapField
 {
@@ -56,7 +191,7 @@ public:
 
     scalar = value;
   }
-}; //class WriteBuffer
+}; //class FilterDepth
 
 template <typename Precision>
 class WriteBuffer : public vtkm::worklet::WorkletMapField
@@ -125,18 +260,24 @@ void ScalarRenderer::AddField(const vtkm::cont::Field& scalarField)
   Fields.push_back(scalarField);
 }
 
-void ScalarRenderer::Render(Ray<vtkm::Float32>& rays, vtkm::Float32 missScalar)
+void ScalarRenderer::Render(Ray<vtkm::Float32>& rays,
+                            vtkm::Float32 missScalar,
+                            vtkm::rendering::raytracing::Camera& cam)
 {
-  RenderOnDevice(rays, missScalar);
+  RenderOnDevice(rays, missScalar, cam);
 }
 
-void ScalarRenderer::Render(Ray<vtkm::Float64>& rays, vtkm::Float64 missScalar)
+void ScalarRenderer::Render(Ray<vtkm::Float64>& rays,
+                            vtkm::Float64 missScalar,
+                            vtkm::rendering::raytracing::Camera& cam)
 {
-  RenderOnDevice(rays, missScalar);
+  RenderOnDevice(rays, missScalar, cam);
 }
 
 template <typename Precision>
-void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays, Precision missScalar)
+void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays,
+                                    Precision missScalar,
+                                    vtkm::rendering::raytracing::Camera& cam)
 {
   using Timer = vtkm::cont::Timer;
 
@@ -174,6 +315,16 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays, Precision missScalar)
     logger->AddLogData("intersection_data", time);
     AddBuffer(rays, missScalar, Fields[f].GetName());
   }
+
+
+
+  const vtkm::Int32 numChannels = 1;
+  ChannelBuffer<Precision> buffer(numChannels, rays.NumRays);
+  detail::SurfaceShade<Precision> surfaceShade;
+  surfaceShade.run(rays, cam, missScalar, buffer.Buffer, true);
+  buffer.SetName("shading");
+  rays.Buffers.push_back(buffer);
+
 
   vtkm::worklet::DispatcherMapField<detail::FilterDepth<Precision>>(
     detail::FilterDepth<Precision>(missScalar))

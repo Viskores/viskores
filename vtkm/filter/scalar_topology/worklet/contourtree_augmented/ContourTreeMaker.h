@@ -80,6 +80,7 @@
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/contourtreemaker/FindDegrees_FindRHE.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/contourtreemaker/FindDegrees_ResetUpAndDowndegree.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/contourtreemaker/FindDegrees_SubtractLHE.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/contourtreemaker/MoveNoSuchElementToBackComparator.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/contourtreemaker/TransferLeafChains_CollapsePastRegular.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/contourtreemaker/TransferLeafChains_InitInAndOutbound.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/contourtreemaker/TransferLeafChains_TransferToContourTree.h>
@@ -676,6 +677,9 @@ inline void ContourTreeMaker::AugmentMergeTrees()
                                       nJoinSupernodes);
 
   // Need to sort before Unique because VTKM only guarantees to find neighboring duplicates
+  // TODO/FIXME: It would be more efficient to do a merge of two sorted lists here, but that operation
+  // is currently missing in vtk-m
+  AssertArrayHandleNoFlagsSet(this->ContourTreeResult.Supernodes);
   vtkm::cont::Algorithm::Sort(this->ContourTreeResult.Supernodes);
   vtkm::cont::Algorithm::Unique(this->ContourTreeResult.Supernodes);
   nSupernodes = this->ContourTreeResult.Supernodes.GetNumberOfValues();
@@ -1001,7 +1005,8 @@ inline void ContourTreeMaker::FindDegrees()
                                                   this->AugmentedJoinSuperarcs);
   vtkm::cont::Algorithm::Copy(permuteAugmentedJoinSuperarcs, inNeighbour);
   // now sort to group copies together
-  vtkm::cont::Algorithm::Sort(inNeighbour);
+  vtkm::cont::Algorithm::Sort(inNeighbour,
+                              contourtree_maker_inc_ns::MoveNoSuchElementToBackComparator{});
 
   // there's probably a smarter scatter-gather solution to this, but this should work
   // find the RHE of each segment
@@ -1017,7 +1022,8 @@ inline void ContourTreeMaker::FindDegrees()
                                                    this->AugmentedSplitSuperarcs);
   vtkm::cont::Algorithm::Copy(permuteAugmentedSplitSuperarcs, inNeighbour);
   // now sort to group copies together
-  vtkm::cont::Algorithm::Sort(inNeighbour);
+  vtkm::cont::Algorithm::Sort(inNeighbour,
+                              contourtree_maker_inc_ns::MoveNoSuchElementToBackComparator{});
 
   // there's probably a smarter scatter-gather solution to this, but this should work
   // find the RHE of each segment

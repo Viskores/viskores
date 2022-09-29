@@ -12,7 +12,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/LagrangianStructures.h>
+#include <vtkm/filter/flow/LagrangianStructures.h>
 #include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 namespace auxiliary
@@ -336,7 +336,7 @@ void Test2DLCS()
     vtkm::cont::make_ArrayHandle(fieldVec, vtkm::CopyFlag::On);
   inputData.AddPointField("velocity", fieldHandle);
 
-  vtkm::filter::LagrangianStructures lagrangianStructures;
+  vtkm::filter::flow::LagrangianStructures lagrangianStructures;
   lagrangianStructures.SetStepSize(0.025f);
   lagrangianStructures.SetNumberOfSteps(500);
   lagrangianStructures.SetAdvectionTime(0.025f * 500);
@@ -380,7 +380,7 @@ void Test3DLCS()
       vtkm::cont::make_ArrayHandle(fieldVec, vtkm::CopyFlag::On);
     input.AddPointField("velocity", fieldHandle);
 
-    vtkm::filter::LagrangianStructures lagrangianStructures;
+    vtkm::filter::flow::LagrangianStructures lagrangianStructures;
     lagrangianStructures.SetStepSize(0.01f);
     lagrangianStructures.SetNumberOfSteps(500);
     lagrangianStructures.SetAdvectionTime(0.01f * 500);

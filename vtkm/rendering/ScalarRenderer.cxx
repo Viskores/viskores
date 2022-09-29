@@ -138,7 +138,7 @@ ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& cam
     }
   }
 
-  this->Internals->Tracer.Render(rays, Internals->DefaultValue);
+  this->Internals->Tracer.Render(rays, Internals->DefaultValue, cam);
 
   using ArrayF32 = vtkm::cont::ArrayHandle<vtkm::Float32>;
   std::vector<ArrayF32> res;

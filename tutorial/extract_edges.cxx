@@ -20,9 +20,9 @@
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
-#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/MapFieldMergeAverage.h>
 #include <vtkm/filter/MapFieldPermutation.h>
+#include <vtkm/filter/NewFilter.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 

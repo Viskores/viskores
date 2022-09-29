@@ -39,17 +39,23 @@ vtkm::cont::DataSet MakeTestDatasetStructured()
   return ds;
 }
 
-void TestClipStructured()
+void TestClipStructured(vtkm::Float64 offset)
 {
   std::cout << "Testing ClipWithImplicitFunction Filter on Structured data" << std::endl;
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
   vtkm::Vec3f center(1, 1, 0);
-  vtkm::FloatDefault radius(0.5);
+
+  // the `expected` results are based on radius = 0.5 and offset = 0.
+  // for a given offset, compute the radius that would produce the same results
+  auto radius = static_cast<vtkm::FloatDefault>(vtkm::Sqrt(0.25 - offset));
+
+  std::cout << "offset = " << offset << ", radius = " << radius << std::endl;
 
   vtkm::filter::contour::ClipWithImplicitFunction clip;
   clip.SetImplicitFunction(vtkm::Sphere(center, radius));
+  clip.SetOffset(offset);
   clip.SetFieldsToPass("scalars");
 
   vtkm::cont::DataSet outputData = clip.Execute(ds);
@@ -115,7 +121,9 @@ void TestClipStructuredInverted()
 void TestClip()
 {
   //todo: add more clip tests
-  TestClipStructured();
+  TestClipStructured(-0.2);
+  TestClipStructured(0.0);
+  TestClipStructured(0.2);
   TestClipStructuredInverted();
 }
 
