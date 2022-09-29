@@ -10,11 +10,13 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/clean_grid/CleanGrid.h>
 #include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/field_transform/PointElevation.h>
 #include <vtkm/source/Tangle.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
@@ -70,6 +72,40 @@ void TestContourFilterUniform()
     result, "pointvar", "filter/contour-uniform.png", testOptions);
 }
 
+void TestContourFilterUniformBoundaries()
+{
+  std::cout << "Generate Image for Contour filter on a uniform grid that goes through boundaries"
+            << std::endl;
+  // There was a bug in flying edges that did not identify boundaries when the dimension
+  // sizes were not the same.
+
+  vtkm::cont::DataSetBuilderUniform dsb;
+  vtkm::cont::DataSet dataSet =
+    dsb.Create({ 9, 5, 3 }, vtkm::Vec3f_64{ 0.0, 0.0, 0.0 }, vtkm::Vec3f_64{ 0.125, 0.25, 0.5 });
+
+  std::string fieldName = "pointvar";
+  vtkm::filter::field_transform::PointElevation elevation;
+  elevation.SetLowPoint(1.0, 0.0, 0.0);
+  elevation.SetHighPoint(0.0, 1.0, 1.0);
+  elevation.SetOutputFieldName(fieldName);
+  elevation.SetUseCoordinateSystemAsField(true);
+  dataSet = elevation.Execute(dataSet);
+
+  vtkm::filter::contour::Contour contour;
+  contour.SetGenerateNormals(true);
+  contour.SetMergeDuplicatePoints(true);
+  contour.SetIsoValues({ 0.25, 0.5, 0.75 });
+  contour.SetActiveField(fieldName);
+  vtkm::cont::DataSet result = contour.Execute(dataSet);
+
+  result.PrintSummary(std::cout);
+
+  //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  vtkm::rendering::testing::RenderTest(
+    result, fieldName, "filter/contour-uniform-boundaries.png", testOptions);
+}
+
 void TestContourFilterTangle()
 {
   std::cout << "Generate Image for Contour filter on a uniform tangle grid" << std::endl;
@@ -97,6 +133,7 @@ void TestContourFilterTangle()
 void TestContourFilter()
 {
   TestContourFilterUniform();
+  TestContourFilterUniformBoundaries();
   TestContourFilterTangle();
   TestContourFilterWedge();
 }

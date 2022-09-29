@@ -15,6 +15,12 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
+
+#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
+#include <vtkm/cont/kokkos/internal/DeviceAdapterTagKokkos.h>
+
 namespace vtkm
 {
 namespace worklet
