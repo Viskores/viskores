@@ -17,6 +17,8 @@ find_package(VTKm REQUIRED)
 add_executable(smoke_test smoke_test.cxx)
 target_link_libraries(smoke_test PRIVATE vtkm_source)
 
+vtkm_add_target_information(smoke_test DEVICE_SOURCES smoke_test.cxx)
+
 # Only add this test when this an standalone project
 if (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   add_test(NAME SmokeTestInternal COMMAND ${CMAKE_BINARY_DIR}/smoke_test)

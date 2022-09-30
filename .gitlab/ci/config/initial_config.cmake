@@ -112,10 +112,14 @@ foreach(option IN LISTS options)
       message(FATAL_ERROR "VTK-m requires cmake > 3.20 to enable HIP support")
     endif()
 
-    set(CMAKE_C_COMPILER   "/opt/rocm/llvm/bin/clang" CACHE FILEPATH "")
-    set(CMAKE_CXX_COMPILER "/opt/rocm/llvm/bin/clang++" CACHE FILEPATH "")
+    set(CMAKE_HIP_COMPILER  "/opt/rocm/llvm/bin/clang++" CACHE FILEPATH "")
+    set(Kokkos_CXX_COMPILER "/opt/rocm/llvm/bin/clang++" CACHE FILEPATH "")
     set(VTKm_ENABLE_KOKKOS_HIP ON CACHE STRING "")
     set(CMAKE_HIP_ARCHITECTURES "gfx900" CACHE STRING "")
+
+    # -O1 and -O2 results in ridiculous build times in ROCm < 5.3
+    set(CMAKE_HIP_FLAGS "-O0 " CACHE STRING "")
+    set(CMAKE_HIP_FLAGS_RELWITHDEBINFO "-g" CACHE STRING "")
 
   elseif(ascent STREQUAL option)
     set(CMAKE_C_FLAGS "-mcpu=power9" CACHE STRING "")
