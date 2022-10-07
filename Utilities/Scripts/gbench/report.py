@@ -6,7 +6,11 @@ import re
 import copy
 
 from scipy.stats import mannwhitneyu
+from scipy.stats import norm
+from scipy.stats import t
 
+from statistics import mean
+from statistics import stdev
 
 class BenchmarkColor(object):
     def __init__(self, name, code):
@@ -38,6 +42,7 @@ BC_UNDERLINE = BenchmarkColor('UNDERLINE', '\033[4m')
 UTEST_MIN_REPETITIONS = 2
 UTEST_OPTIMAL_REPETITIONS = 9  # Lowest reasonable number, More is better.
 UTEST_COL_NAME = "_pvalue"
+UTEST_NORM_MIN_STDEV = 0.05
 
 
 def color_format(use_color, fmt_str, *args, **kwargs):
@@ -154,7 +159,7 @@ def extract_field(partition, field_name):
     rhs = [x[field_name] for x in partition[1]]
     return [lhs, rhs]
 
-def calc_utest(timings_cpu, timings_time):
+def calc_utest(utest_dist, timings_cpu, timings_time):
     min_rep_cnt = min(len(timings_time[0]),
                       len(timings_time[1]),
                       len(timings_cpu[0]),
@@ -164,20 +169,30 @@ def calc_utest(timings_cpu, timings_time):
     if min_rep_cnt < UTEST_MIN_REPETITIONS:
         return False, None, None
 
-    time_pvalue = mannwhitneyu(
-        timings_time[0], timings_time[1], alternative='two-sided').pvalue
-    cpu_pvalue = mannwhitneyu(
-        timings_cpu[0], timings_cpu[1], alternative='two-sided').pvalue
+    pvalue_fn = str
+    if utest_dist == "normal":
+        pvalue_fn = lambda x : norm.sf(mean(x[1]), mean(x[0]),
+                               max(stdev(x[0]), mean(x[0])*UTEST_NORM_MIN_STDEV))
+    elif utest_dist == "t":
+        pvalue_fn = lambda x : t.sf(mean(x[1]), len(x[0]) - 1, mean(x[0]),
+                               max(stdev(x[0]), mean(x[0])*UTEST_NORM_MIN_STDEV))
+    elif utest_dist == "mannwhitney":
+        pvalue_fn = lambda x : mannwhitneyu(x[0], x[1], alternative='two-sided').pvalue
+    else:
+      return False, None, None
+
+    time_pvalue = pvalue_fn(timings_time)
+    cpu_pvalue = pvalue_fn(timings_cpu)
 
     return (min_rep_cnt >= UTEST_OPTIMAL_REPETITIONS), cpu_pvalue, time_pvalue
 
-def print_utest(partition, utest_alpha, first_col_width, use_color=True):
+def print_utest(partition, utest_dist, utest_alpha, first_col_width, use_color=True):
     def get_utest_color(pval):
         return BC_FAIL if pval >= utest_alpha else BC_OKGREEN
 
     timings_time = extract_field(partition, 'real_time')
     timings_cpu = extract_field(partition, 'cpu_time')
-    have_optimal_repetitions, cpu_pvalue, time_pvalue = calc_utest(timings_cpu, timings_time)
+    have_optimal_repetitions, cpu_pvalue, time_pvalue = calc_utest(utest_dist, timings_cpu, timings_time)
 
     # Check if we failed miserably with minimum required repetitions for utest
     if not have_optimal_repetitions and cpu_pvalue is None and time_pvalue is None:
@@ -212,6 +227,7 @@ def generate_difference_report(
         json2,
         display_aggregates_only=False,
         utest=False,
+        utest_dist="mannwhitney",
         utest_alpha=0.05,
         use_color=True):
     """
@@ -279,6 +295,7 @@ def generate_difference_report(
         # After processing the whole partition, if requested, do the U test.
         if utest:
             output_strs += print_utest(partition,
+                                       utest_dist=utest_dist,
                                        utest_alpha=utest_alpha,
                                        first_col_width=first_col_width,
                                        use_color=use_color)

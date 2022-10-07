@@ -220,3 +220,39 @@ test:ubuntu1804_kokkos:
     - build:ubuntu1804_kokkos
   needs:
     - build:ubuntu1804_kokkos
+
+build:ubuntu1804_cuda_perftest:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1804_cuda
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_BUILD_TYPE: Release
+    VTKM_SETTINGS: "benchmarks+ampere+perftest+cuda+mpi+shared"
+
+test:ubuntu1804_cuda_perftest:
+  tags:
+    - benchmark
+    - vtkm
+    - docker
+    - cuda-rt
+    - linux
+  extends:
+    - .ubuntu1804_cuda
+    - .cmake_test_linux
+    - .run_automatically
+  dependencies:
+    - build:ubuntu1804_cuda_perftest
+  needs:
+    - build:ubuntu1804_cuda_perftest
+  variables:
+    TEST_INCLUSIONS: "PerformanceTest"
+    VTKm_PERF_REMOTE_URL: "https://vbolea:$VTKM_BENCH_RECORDS_TOKEN@gitlab.kitware.com/vbolea/vtk-m-benchmark-records.git"
+    VTKm_PERF_ALPHA: "0.05"
+    VTKm_PERF_REPETITIONS: "10"
+    VTKm_PERF_DIST: "t"
