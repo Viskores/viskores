@@ -12,6 +12,13 @@ $py(MAJOR=int(VERSION.split(".")[0]))\
 $py(MINOR=int(VERSION.split(".")[1]))\
 $py(PATCH=int(VERSION.split(".")[2]))\
 $py(RC="".join(version.partition("-")[1:3]))\
+$if(PATCH == 0 and RC == "")\
+## Prerequisites
+
+- [ ] Make sure that the current VTK-m release branch builds in VTK.
+- [ ] Make sure that the current VTK-m release branch builds in ECP Ascent.
+
+$endif\
 ## Update VTK-m
 
 - [ ] Update `release` branch for **vtk-m** and create update branch
@@ -97,6 +104,11 @@ $endif\
 - [ ] Update Spack package: https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/vtk-m/package.py
 
 ## Post-release
+$if(PATCH == 0 and RC == "-rc1")\
+- [ ] Create a release-specific branch of the previous major/minor release (Ask
+      @ben.boeckel). For more information on release-specific branch maintanance
+      schedule refer to `docs/ReleaseRoadmap.md`.
+$endif\
 - [ ] Copy the contents of docs/changelog/$(VERSION)/release-notes.md to
       the GitLab release.
 $if(PATCH == 0 and RC == ""))\
