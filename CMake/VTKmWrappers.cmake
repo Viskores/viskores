@@ -499,8 +499,8 @@ function(vtkm_library)
 
   if (NOT VTKm_SKIP_LIBRARY_VERSIONS)
     # Setup the SOVERSION and VERSION information for this vtkm library
-    set_property(TARGET ${lib_name} PROPERTY VERSION 1)
-    set_property(TARGET ${lib_name} PROPERTY SOVERSION 1)
+    set_property(TARGET ${lib_name} PROPERTY VERSION ${VTKm_VERSION}.${VTKm_VERSION_PATCH})
+    set_property(TARGET ${lib_name} PROPERTY SOVERSION ${VTKm_VERSION})
   endif ()
 
   # Support custom library suffix names, for other projects wanting to inject

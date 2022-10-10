@@ -53,3 +53,11 @@ list(APPEND CTEST_CUSTOM_WARNING_MATCH
   # Let CUDA compiler warn us about recursive functions we should avoid.
   ".*nvlink warning.*"
   )
+
+## Sometimes a few test hangs in HIP disable repeat until_pass for HIP builds
+set(CTEST_REPEAT_UNTIL_PASS 3)
+if (NOT x"@CMAKE_HIP_COMPILER@"x STREQUAL xx)
+  set(CTEST_REPEAT_UNTIL_PASS 0)
+endif()
+
+set(VTKm_ENABLE_PERFORMANCE_TESTING "@VTKm_ENABLE_PERFORMANCE_TESTING@")

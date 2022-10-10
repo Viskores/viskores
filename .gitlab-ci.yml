@@ -81,7 +81,7 @@
     - .docker_image
 
 .ubuntu1804_cuda: &ubuntu1804_cuda
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11.6-20220407"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11-20220919"
   extends:
     - .docker_image
 
@@ -96,7 +96,7 @@
     - .docker_image
 
 .ubuntu2004: &ubuntu2004
-  image: "kitware/vtkm:ci-ubuntu2004-20210920"
+  image: "kitware/vtkm:ci-ubuntu2004-20220623"
   extends:
     - .docker_image
 

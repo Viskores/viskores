@@ -15,6 +15,8 @@
 #include <vtkm/cont/internal/OptionParser.h>
 #include <vtkm/cont/internal/OptionParserArguments.h>
 
+#include <vtkm/thirdparty/diy/environment.h>
+
 #include <memory>
 #include <sstream>
 
@@ -114,7 +116,7 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
   const std::string loggingHelp = "  " + loggingFlag +
     " <#|INFO|WARNING|ERROR|FATAL|OFF> \tSpecify a log level (when logging is enabled).";
 
-  // initialize logging first -- it'll pop off the options it consumes:
+  // initialize logging and diy first -- they'll pop off the options they consume:
   if (argc == 0 || argv == nullptr)
   {
     vtkm::cont::InitLogging();
@@ -122,6 +124,19 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
   else
   {
     vtkm::cont::InitLogging(argc, argv, loggingFlag);
+  }
+  if (!vtkmdiy::mpi::environment::initialized())
+  {
+    if (argc == 0 || argv == nullptr)
+    {
+      // If initialized, will be deleted on program exit (calling MPI_Finalize if necessary)
+      static vtkmdiy::mpi::environment diyEnvironment;
+    }
+    else
+    {
+      // If initialized, will be deleted on program exit (calling MPI_Finalize if necessary)
+      static vtkmdiy::mpi::environment diyEnvironment(argc, argv);
+    }
   }
 
   { // Parse VTKm options
@@ -359,8 +374,9 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
 VTKM_CONT
 InitializeResult Initialize()
 {
-  vtkm::cont::InitLogging();
-  return InitializeResult{};
+  int argc = 0;
+  char** argv = nullptr;
+  return Initialize(argc, argv);
 }
 }
 } // end namespace vtkm::cont
