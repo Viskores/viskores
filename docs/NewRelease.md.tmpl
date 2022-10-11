@@ -46,11 +46,16 @@ $if(PATCH == 0 and RC == "-rc1")\
       taking master's version)
 ```
 git merge --no-ff origin/master
-echo "$(MAJOR).$(MINOR).9999" > version.txt
-git add version.txt
 ```
 $else\
 - [ ] Backport merge-requests belonging to the milestone $(VERSION)
+$endif\
+$if(PATCH == 0)\
+- [ ] Set version to master
+```
+echo "$(MAJOR).$(MINOR).9999" > version.txt
+git add version.txt
+```
 $endif\
 
 - [ ] Update the version (not in patch releases) and date in the LICENSE.md
@@ -88,7 +93,7 @@ The major changes to VTK-m from (previous release) can be found in:
 - Integrate changes to `release` branch
   - [ ] Create a MR using the [release-mr script][1]
         (see [notes](#notes-about-update-mr)).
-$if(PATCH == 0 and RC == "-rc1")\
+$if(PATCH == 0)\
   - [ ] Add (or ensure) at the bottom of the description of the merge request:
         `Backport: master:HEAD~1`
 $else\
@@ -111,7 +116,7 @@ $if(PATCH == 0 and RC == "-rc1")\
 $endif\
 - [ ] Copy the contents of docs/changelog/$(VERSION)/release-notes.md to
       the GitLab release.
-$if(PATCH == 0 and RC == ""))\
+$if(PATCH == 0 and RC == "")\
 - [ ] Tag new version of the [VTK-m User Guide][2].
 $endif\
 - [ ] Post an [Email Announcements](#email-announcements) VTK-m mailing list.
@@ -269,9 +274,11 @@ $else\
 $endif\
 ```
 
-@ben.boeckel  
-@vbolea  
-/label ~"priority:required"  
-
 [1]:  https://gitlab.kitware.com/utils/release-utils/-/blob/master/release-mr.py
 [2]:  https://gitlab.kitware.com/vtk/vtk-m-user-guide
+
+@ben.boeckel  
+@vbolea  
+/label ~"area:release"  
+/milestone %"v$(VERSION)"  
+/assign @vbolea
