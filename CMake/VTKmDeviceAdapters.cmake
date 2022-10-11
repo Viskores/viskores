@@ -323,6 +323,13 @@ if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm::kokkos)
   cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
   find_package(Kokkos REQUIRED)
+
+  # We must empty this property for every kokkos backend device since it
+  # contains a generator expresion which breaks some of our users builds.
+  set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_COMPILE_DEFINITIONS "")
+  set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_COMPILE_OPTIONS "")
+  set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_LINK_OPTIONS "")
+
   if (CUDA IN_LIST Kokkos_DEVICES)
     cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
     enable_language(CUDA)
@@ -344,9 +351,6 @@ if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm::kokkos)
     cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
     enable_language(HIP)
     add_library(vtkm::kokkos_hip INTERFACE IMPORTED GLOBAL)
-    set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_COMPILE_DEFINITIONS "")
-    set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_COMPILE_OPTIONS "")
-    set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_LINK_OPTIONS "")
   endif()
 
   add_library(vtkm::kokkos INTERFACE IMPORTED GLOBAL)
