@@ -6,6 +6,7 @@ VTK-m 1.9 Release Notes
 1. [Core](#Core)
 - Fix bug with copying invalid variants
 - Add Variant::IsType
+- Initialize DIY in vtkm::cont::Initialize
 
 2. [ArrayHandle](#ArrayHandle)
 - Add test for array and datas that are cleaned up after finalize
@@ -16,6 +17,7 @@ VTK-m 1.9 Release Notes
 3. [Filters](#Filters)
 - Old Filter Base Classes are Deprecated
 - Divided the mesh quality filter
+- Fixed Flying Edges Crash
 
 4. [Build](#Build)
 - Added DEVICE_SOURCES to vtkm_unit_tests
@@ -37,6 +39,13 @@ The `Variant` class was missing a way to check the type. You could do it
 indirectly using `variant.GetIndex() == variant.GetIndexOf<T>()`, but
 having this convenience function is more clear.
 
+## Initialize DIY in vtkm::cont::Initialize
+
+This has the side effect of initialing `MPI_Init` (and will also
+call `MPI_Finalize` at program exit). However, if the calling 
+code has already called `MPI_Init`, then nothing will happen. 
+Thus, if the calling code wants to manage `MPI_Init/Finalize`,
+it can do so as long as it does before it initializes VTK-m.
 
 # ArrayHandle
 
@@ -143,6 +152,20 @@ filter (e.g., `MeshQualityArea`, `MeshQualityVolume`). The uber
 you only need a particular metric. However, internally the switch statement
 now occurs on the host to select the appropriate specific filter that loads
 a more targeted kernel.
+
+## Fixed Flying Edges Crash
+
+There was a bug in VTK-m's flying edges algorithm (in the contour filter
+for uniform structured data) that cause the code to read an index from
+uninitialized memory. This in turn caused memory reads from an
+inappropriate address that could cause bad values, failed assertions, or
+segmentation faults.
+
+The problem was caused by a misidentification of edges at the positive z
+boundary. Due to a typo, the z index was being compared to the length in
+the y dimension. Thus, the problem would only occur in the case where the y
+and z dimensions were of different sizes and the contour would go through
+the positive z boundary of the data, which was missing our test cases.
 
 # Build
 
