@@ -35,8 +35,8 @@ struct CountEdgesWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
   using ExecutionSignature = _2(CellShape, PointCount);
 
   template <typename CellShapeTag>
-  VTKM_EXEC_CONT vtkm::IdComponent operator()(CellShapeTag cellShape,
-                                              vtkm::IdComponent numPointsInCell) const
+  VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag cellShape,
+                                         vtkm::IdComponent numPointsInCell) const
   {
     vtkm::IdComponent numEdges;
     vtkm::exec::CellEdgeNumberOfEdges(numPointsInCell, cellShape, numEdges);
@@ -122,8 +122,8 @@ namespace
 VTKM_CONT bool DoMapField(
   vtkm::cont::DataSet& result,
   const vtkm::cont::Field& inputField,
-  const vtkm::worklet::ScatterCounting::OutputToInputMapType& OutputToInputCellMap,
-  const vtkm::worklet::Keys<vtkm::Id2>& CellToEdgeKeys)
+  const vtkm::worklet::ScatterCounting::OutputToInputMapType& outputToInputCellMap,
+  const vtkm::worklet::Keys<vtkm::Id2>& cellToEdgeKeys)
 {
   vtkm::cont::Field outputField;
 
@@ -134,8 +134,8 @@ VTKM_CONT bool DoMapField(
   else if (inputField.IsCellField())
   {
     vtkm::cont::Field permuted;
-    vtkm::filter::MapFieldPermutation(inputField, OutputToInputCellMap, permuted);
-    vtkm::filter::MapFieldMergeAverage(permuted, CellToEdgeKeys, outputField);
+    vtkm::filter::MapFieldPermutation(inputField, outputToInputCellMap, permuted);
+    vtkm::filter::MapFieldMergeAverage(permuted, cellToEdgeKeys, outputField);
   }
   else
   {
@@ -146,6 +146,8 @@ VTKM_CONT bool DoMapField(
 
   return true;
 }
+
+} // anonymous namespace
 
 class ExtractEdges : public vtkm::filter::NewFilter
 {
@@ -164,8 +166,8 @@ VTKM_CONT vtkm::cont::DataSet ExtractEdges::DoExecute(const vtkm::cont::DataSet&
   // Second, using these counts build a scatter that repeats a cell's visit
   // for each edge in the cell.
   vtkm::worklet::ScatterCounting scatter(edgeCounts);
-  vtkm::worklet::ScatterCounting::OutputToInputMapType OutputToInputCellMap;
-  OutputToInputCellMap = scatter.GetOutputToInputMap(inCellSet.GetNumberOfCells());
+  vtkm::worklet::ScatterCounting::OutputToInputMapType outputToInputCellMap;
+  outputToInputCellMap = scatter.GetOutputToInputMap(inCellSet.GetNumberOfCells());
   vtkm::worklet::ScatterCounting::VisitArrayType outputToInputEdgeMap =
     scatter.GetVisitArray(inCellSet.GetNumberOfCells());
 
@@ -174,15 +176,15 @@ VTKM_CONT vtkm::cont::DataSet ExtractEdges::DoExecute(const vtkm::cont::DataSet&
   this->Invoke(EdgeIdsWorklet{}, scatter, inCellSet, canonicalIds);
 
   // Fourth, construct a Keys object to combine all like edge ids.
-  vtkm::worklet::Keys<vtkm::Id2> CellToEdgeKeys;
-  CellToEdgeKeys = vtkm::worklet::Keys<vtkm::Id2>(canonicalIds);
+  vtkm::worklet::Keys<vtkm::Id2> cellToEdgeKeys;
+  cellToEdgeKeys = vtkm::worklet::Keys<vtkm::Id2>(canonicalIds);
 
   // Fifth, use a reduce-by-key to extract indices for each unique edge.
   vtkm::cont::ArrayHandle<vtkm::Id> connectivityArray;
   this->Invoke(EdgeIndicesWorklet{},
-               CellToEdgeKeys,
+               cellToEdgeKeys,
                inCellSet,
-               OutputToInputCellMap,
+               outputToInputCellMap,
                outputToInputEdgeMap,
                vtkm::cont::make_ArrayHandleGroupVec<2>(connectivityArray));
 
@@ -191,11 +193,9 @@ VTKM_CONT vtkm::cont::DataSet ExtractEdges::DoExecute(const vtkm::cont::DataSet&
   outCellSet.Fill(inCellSet.GetNumberOfPoints(), vtkm::CELL_SHAPE_LINE, 2, connectivityArray);
 
   auto mapper = [&](auto& outDataSet, const auto& f) {
-    DoMapField(outDataSet, f, OutputToInputCellMap, CellToEdgeKeys);
+    DoMapField(outDataSet, f, outputToInputCellMap, cellToEdgeKeys);
   };
   return this->CreateResult(inData, outCellSet, inData.GetCoordinateSystems(), mapper);
-}
-
 }
 
 int main(int argc, char** argv)
