@@ -52,7 +52,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
     };
 
     field.GetData()
-      .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
+      .CastAndCallForTypesWithFloatFallback<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
         resolve);
     return true;
   }
