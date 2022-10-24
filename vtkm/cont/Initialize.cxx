@@ -143,18 +143,25 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     std::vector<opt::Descriptor> usage;
     if ((opts & InitializeOptions::AddHelp) != InitializeOptions::None)
     {
-      usage.push_back({ opt::OptionIndex::UNKNOWN,
-                        0,
-                        "",
-                        "",
-                        opt::VtkmArg::UnknownOption,
-                        "Usage information:\n" });
+      // Because we have the AddHelp option, we will add both --help and --vtkm-help to
+      // the list of arguments. Use the first entry for introduction on the usage.
+      usage.push_back(
+        { opt::OptionIndex::HELP, 0, "", "vtkm-help", opt::Arg::None, "Usage information:\n" });
       usage.push_back({ opt::OptionIndex::HELP,
                         0,
                         "h",
+                        "help",
+                        opt::Arg::None,
+                        "  --help, --vtkm-help, -h \tPrint usage information." });
+    }
+    else
+    {
+      usage.push_back({ opt::OptionIndex::HELP,
+                        0,
+                        "",
                         "vtkm-help",
                         opt::Arg::None,
-                        "  --vtkm-help, -h \tPrint usage information." });
+                        "  --vtkm-help \tPrint usage information." });
     }
     usage.push_back(
       { opt::OptionIndex::DEVICE,
@@ -188,7 +195,7 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     // Bring in extra args used by the runtime device configuration options
     vtkm::cont::internal::RuntimeDeviceConfigurationOptions runtimeDeviceOptions(usage);
 
-    // Required to collect unknown arguments when help is off.
+    // Required to collect unknown arguments.
     usage.push_back({ opt::OptionIndex::UNKNOWN, 0, "", "", opt::VtkmArg::UnknownOption, "" });
     usage.push_back({ 0, 0, 0, 0, 0, 0 });
 
