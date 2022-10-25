@@ -71,17 +71,20 @@ build:ubuntu2004_hip_kokkos:
     - .cmake_build_linux
     - .run_automatically
   variables:
-    CMAKE_BUILD_TYPE: RelWithDebInfo
-    VTKM_SETTINGS: "benchmarks+kokkos+hip+no_virtual+no_rendering+ccache"
-    CMAKE_PREFIX_PATH: "/opt/rocm/lib/cmake"
+    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
+    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_virtual+no_rendering+ccache"
 
-    CCACHE_BASEDIR: "$CI_PROJECT_DIR"
+    CMAKE_PREFIX_PATH:       "/opt/rocm/lib/cmake"
+    CMAKE_HIP_COMPILER:      "/opt/rocm/llvm/bin/clang++"
+    Kokkos_CXX_COMPILER:     "/opt/rocm/llvm/bin/clang++"
+    CMAKE_HIP_ARCHITECTURES: "gfx900"
 
     # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
-    CCACHE_IGNOREOPTIONS: "-isystem=*"
-    CCACHE_COMPILERCHECK: "content"
-    CCACHE_NOHASHDIR: "true"
-    CCACHE_RESHARE: "true"
+    CCACHE_IGNOREOPTIONS:    "-isystem=*"
+    CCACHE_BASEDIR:          "$CI_PROJECT_DIR"
+    CCACHE_COMPILERCHECK:    "content"
+    CCACHE_NOHASHDIR:        "true"
+    CCACHE_RESHARE:          "true"
   after_script:
     - ccache -v -s
     - ccache -z
