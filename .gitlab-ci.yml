@@ -138,6 +138,12 @@
       when: on_success
     - when: never
 
+.run_spock_ci: &run_spock_ci
+  rules:
+    - if: '$CI_PROJECT_PATH == "ci/csc331_crusher/dev/vtk-m"'
+      when: on_success
+    - when: never
+
 # General Longer Term Tasks:
 # - Setup clang tidy as sub-pipeline
 # - Setup a machine to replicate the issue in https://gitlab.kitware.com/vtk/vtk-m/-/issues/447
@@ -250,6 +256,7 @@ stages:
 
 include:
   - local: '/.gitlab/ci/ascent.yml'
+  - local: '/.gitlab/ci/spock.yml'
   - local: '/.gitlab/ci/centos7.yml'
   - local: '/.gitlab/ci/centos8.yml'
   - local: '/.gitlab/ci/doxygen.yml'

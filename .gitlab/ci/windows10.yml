@@ -5,7 +5,8 @@
     # change between the build and test stages which CMake doesn't support.
     # Even if we could, it could change if other runners on the machine
     # could run at the same time, so we drop it.
-    GIT_CLONE_PATH: "$CI_BUILDS_DIR\\vtkm ci"
+    GIT_CLONE_PATH:     "$CI_BUILDS_DIR\\vtkm ci"
+    CCACHE_INSTALL_DIR: "$CI_PROJECT_DIR\\.gitlab"
   artifacts:
     reports:
       junit:
@@ -32,7 +33,7 @@
     - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab\cmake\bin;$env:PATH"
     - "cmake --version"
     - "cmake -V -P .gitlab/ci/config/ccache.cmake"
-    - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab\ccache;$env:PATH"
+    - Set-Item -Force -Path "env:PATH" -Value "$env:CCACHE_INSTALL_DIR\ccache;$env:PATH"
     - "cmake -V -P .gitlab/ci/config/ninja.cmake"
     - Set-Item -Force -Path "env:PATH" -Value "$pwdpath\.gitlab;$env:PATH"
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"

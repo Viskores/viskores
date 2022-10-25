@@ -87,5 +87,5 @@ test:ascent_gcc_cuda:
 
   script:
     - "jsrun -n1 -r1 -a1 -g1 -c7 ctest -VV -S .gitlab/ci/ctest_test.cmake || test_output=$?"
-    - ctest -VV -S .gitlab/ci/ctest_test_submit.cmake
+    - ctest -VV -S .gitlab/ci/ctest_submit_test.cmake
     - $(exit $test_output)
