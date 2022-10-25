@@ -51,7 +51,6 @@ void TestFieldTypesPoint()
 
 void TestFieldTypesCell()
 {
-  vtkm::filter::FieldMetadata defaultMD;
   vtkm::filter::FieldMetadata helperMD(
     vtkm::cont::make_FieldCell("foo", vtkm::cont::ArrayHandle<vtkm::Float32>()));
   VTKM_TEST_ASSERT(helperMD.IsPointField() == false, "cell can't be a point field");

@@ -174,6 +174,7 @@ void TestCellSetExplicit()
   vtkm::cont::Token token;
   {
     vtkm::cont::ScopedRuntimeDeviceTracker deviceScope(vtkm::cont::DeviceAdapterTagSerial{});
+    (void)deviceScope;
     cellset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, PointTag{}, CellTag{}, token);
   }
 
