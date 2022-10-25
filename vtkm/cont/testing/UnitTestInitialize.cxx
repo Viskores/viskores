@@ -199,7 +199,7 @@ void InitializeWithHelp()
   int argc;
   char** argv;
   vtkm::cont::testing::Testing::MakeArgsAddProgramName(argc, argv, "--vtkm-help");
-  vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::AddHelp);
+  vtkm::cont::Initialize(argc, argv);
 
   VTKM_TEST_FAIL("Help argument did not exit as expected.");
 }

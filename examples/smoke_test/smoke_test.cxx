@@ -13,7 +13,7 @@
 
 int main(int argc, char** argv)
 {
-  vtkm::cont::Initialize(argc, argv);
+  vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::Strict);
   vtkm::source::Wavelet source;
 
   auto output = source.Execute();
