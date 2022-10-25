@@ -98,7 +98,7 @@ private:
     vtkm::filter::scalar_topology::ContourTreeAugmented filter(useMarchingCubes,
                                                                computeRegularStructure);
     filter.SetActiveField("pointvar");
-    auto result = filter.Execute(dataSet);
+    filter.Execute(dataSet);
     return filter;
   }
 
