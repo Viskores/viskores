@@ -118,6 +118,12 @@
       when: on_success
     - when: never
 
+.run_only_merge_requests: &run_only_merge_requests
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID && $CI_PROJECT_PATH == "vtk/vtk-m"'
+      when: on_success
+    - when: never
+
 .run_scheduled: &run_scheduled
   rules:
     - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_TAG'
@@ -132,7 +138,7 @@
       when: on_success
     - when: never
 
-.run_ecp_ci: &run_ecp_ci
+.run_ascent_ci: &run_ascent_ci
   rules:
     - if: '$CI_PROJECT_PATH == "ecpcitest/vtk-m"'
       when: on_success
