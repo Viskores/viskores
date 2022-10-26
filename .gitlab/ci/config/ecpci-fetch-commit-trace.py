@@ -35,9 +35,9 @@ jobs = handler.to_json("/pipelines/" + last_pipeline_id + "/jobs")
 build_job_id = str(jobs[1]['id'])
 test_job_id = str(jobs[0]['id'])
 
-print("ECPCITEST BUILD OUTPUT================================================")
+print("ECPCITEST CONFIGURE OUTPUT============================================")
 print(handler.to_string("/jobs/" + build_job_id + "/trace"))
-print("ECPCITEST BUILD END===================================================")
+print("ECPCITEST CONFIGURE END===============================================")
 
 print("ECPCITEST TEST OUTPUT=================================================")
 print(handler.to_string("/jobs/" + test_job_id + "/trace"))

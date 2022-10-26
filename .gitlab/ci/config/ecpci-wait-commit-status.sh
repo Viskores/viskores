@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 declare -r POLL_INTERVAL_SECONDS="10"
 
