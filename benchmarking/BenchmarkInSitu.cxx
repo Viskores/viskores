@@ -986,6 +986,34 @@ void ParseBenchmarkOptions(int& argc, char** argv)
   std::cerr << "Using image size = " << ImageSize << "x" << ImageSize << std::endl;
 }
 
+// Adding a const char* or std::string to a vector of char* is harder than it sounds.
+void AddArg(int& argc, std::vector<char*>& args, const std::string newArg)
+{
+  // This object will be deleted when the program exits
+  static std::vector<std::vector<char>> stringPool;
+
+  // Add a new vector of chars to the back of stringPool
+  stringPool.emplace_back();
+  std::vector<char>& newArgData = stringPool.back();
+
+  // Copy the string to the std::vector.
+  // Yes, something like malloc or strdup would be easier. But that would technically create
+  // a memory leak that could be reported by a memory analyzer. By copying this way, the
+  // memory will be deleted on program exit and no leak will be reported.
+  newArgData.resize(newArg.length() + 1);
+  std::copy(newArg.begin(), newArg.end(), newArgData.begin());
+  newArgData.back() = '\0'; // Don't forget the terminating null character.
+
+  // Add the argument to the list.
+  if (args.size() <= static_cast<std::size_t>(argc))
+  {
+    args.resize(static_cast<std::size_t>(argc + 1));
+  }
+  args[static_cast<std::size_t>(argc)] = newArgData.data();
+
+  ++argc;
+}
+
 } // end anon namespace
 
 int main(int argc, char* argv[])
@@ -1023,10 +1051,14 @@ int main(int argc, char* argv[])
   if (benchmark_repetitions)
   {
     if (!benchmark_min_time)
-      args[argc++] = strdup("--benchmark_min_time=0.00000001");
+    {
+      AddArg(argc, args, "--benchmark_min_time=0.00000001");
+    }
 
     if (!benchmark_report_aggregates_only)
-      args[argc++] = strdup("--benchmark_report_aggregates_only=true");
+    {
+      AddArg(argc, args, "--benchmark_report_aggregates_only=true");
+    }
   }
 
   VTKM_EXECUTE_BENCHMARKS(argc, args.data());
