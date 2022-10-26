@@ -58,7 +58,7 @@ build:ascent_gcc_cuda:
     when: always
     paths:
       - build/
-  timeout: 90 minutes
+  timeout: 10 minutes
 
 test:ascent_gcc_cuda:
   stage: test
@@ -85,4 +85,4 @@ test:ascent_gcc_cuda:
     - ccache -s
     - ctest -VV -S .gitlab/ci/ctest_submit_build.cmake
     - ctest -VV -S .gitlab/ci/ctest_submit_test.cmake
-  timeout: 30 minutes
+  timeout: 120 minutes
