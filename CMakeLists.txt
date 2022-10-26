@@ -332,6 +332,33 @@ write_basic_package_version_file(
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
 
+#-----------------------------------------------------------------------------
+# Create makefile/package files for projects not using CMake
+
+set(lib_args)
+vtkm_module_get_list(module_list)
+list(REVERSE module_list)
+foreach(module IN LISTS module_list)
+  get_target_property(type ${module} TYPE)
+  if (NOT type MATCHES "LIBRARY" OR type STREQUAL "INTERFACE_LIBRARY")
+    continue()
+  endif()
+  get_target_property(library ${module} OUTPUT_NAME)
+  if (NOT library)
+    continue()
+  endif()
+  set(lib_args "${lib_args} \\
+    -l${library}")
+endforeach()
+if (TARGET vtkmdiympi)
+  set(lib_args "${lib_args} \\
+    -lvtkmdiympi")
+endif()
+if (TARGET vtkmdiympi_nompi)
+  set(lib_args "${lib_args} \\
+    -lvtkmdiympi_nompi")
+endif()
+
 configure_file(${VTKm_SOURCE_DIR}/config/vtkm_config.mk.in
   ${VTKm_BINARY_DIR}/config/vtkm_config.mk @ONLY)
 install(FILES ${VTKm_BINARY_DIR}/config/vtkm_config.mk
