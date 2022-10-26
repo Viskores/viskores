@@ -32,6 +32,7 @@ test:ubuntu1604_gcc5:
     - .ubuntu1604_cuda
     - .cmake_test_linux
     - .run_automatically
+    - .use_minimum_supported_cmake
   dependencies:
     - build:ubuntu1604_gcc5
   needs:
@@ -70,6 +71,7 @@ test:ubuntu1804_test_ubuntu1604_gcc5_2:
     - .ubuntu1804_cuda
     - .cmake_test_linux
     - .run_upstream_branches
+    - .use_minimum_supported_cmake
   variables:
       CTEST_EXCLUSIONS: "built_against_test_install"
   dependencies:
@@ -106,6 +108,7 @@ test:ubuntu1604_clang5:
     - .ubuntu1604
     - .cmake_test_linux
     - .run_automatically
+    - .use_minimum_supported_cmake
   dependencies:
     - build:ubuntu1604_clang5
   needs:
