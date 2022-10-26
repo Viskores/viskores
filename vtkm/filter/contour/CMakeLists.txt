@@ -38,10 +38,6 @@ set_property(TARGET
   PROPERTY UNITY_BUILD_MODE GROUP
 )
 
-target_link_libraries(vtkm_filter_contour
-  PRIVATE vtkm_worklet
-  PUBLIC vtkm_filter_core vtkm_filter_vector_analysis vtkm_filter_mesh_info)
-
 if (VTKm_ENABLE_MPI)
   target_link_libraries(vtkm_filter_contour PUBLIC MPI::MPI_CXX)
 endif ()
@@ -51,8 +47,3 @@ target_link_libraries(vtkm_filter PUBLIC INTERFACE
 )
 
 add_subdirectory(worklet)
-
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

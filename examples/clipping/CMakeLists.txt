@@ -13,5 +13,7 @@ project(Clipping CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(Clipping Clipping.cxx)
-target_link_libraries(Clipping PRIVATE vtkm_filter vtkm_io)
+if(TARGET vtkm_filter_contour AND TARGET vtkm_io)
+  add_executable(Clipping Clipping.cxx)
+  target_link_libraries(Clipping PRIVATE vtkm_filter_contour vtkm_io)
+endif()

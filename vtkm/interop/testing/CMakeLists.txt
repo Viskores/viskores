@@ -45,5 +45,4 @@ if(unit_tests)
   vtkm_unit_tests(SOURCES ${unit_tests}
                   LIBRARIES vtkm_rendering GLUT::GLUT
                   DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
-
 endif()

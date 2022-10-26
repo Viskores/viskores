@@ -1,0 +1,4 @@
+NAME
+  vtkm_interop
+TEST_DEPENDS
+  vtkm_rendering

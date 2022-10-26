@@ -1,0 +1,8 @@
+NAME
+  vtkm_cont_serial
+GROUPS
+  Core
+DEPENDS
+  vtkm_cont
+TEST_DEPENDS
+  vtkm_worklet

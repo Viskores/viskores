@@ -20,6 +20,7 @@ set(unit_tests
   UnitTestContourTreeUniformDistributed.cxx
   UnitTestCosmoTools.cxx
   UnitTestDescriptiveStatistics.cxx
+  UnitTestDispatcherBase.cxx
   UnitTestFieldStatistics.cxx
   UnitTestKeys.cxx
   UnitTestMaskIndices.cxx

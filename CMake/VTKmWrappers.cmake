@@ -512,6 +512,35 @@ function(vtkm_library)
   endif()
   set_property(TARGET ${lib_name} PROPERTY OUTPUT_NAME ${lib_name}${_lib_suffix})
 
+  # Include any module information
+  if(vtkm_module_current)
+    if(NOT lib_name STREQUAL vtkm_module_current)
+      # We do want each library to be in its own module. (VTK's module allows you to declare
+      # multiple libraries per module. We may want that in the future, but right now we should
+      # not need it.) Right now we have one exception: vtkm_filter_extra inside of the
+      # vtkm_filter_core module. We are in the process of moving the filters to the new filter
+      # structure, and when that is done, vtkm_filter_extra should go away. But it is complex
+      # and will take some time. When that is done, perhaps this should be a stronger message
+      # (either a warning or error).
+      message("Library name `${lib_name}` does not match module name `${vtkm_module_current}`")
+    endif()
+    vtkm_module_get_property(depends ${vtkm_module_current} DEPENDS)
+    vtkm_module_get_property(private_depends ${vtkm_module_current} PRIVATE_DEPENDS)
+    vtkm_module_get_property(optional_depends ${vtkm_module_current} OPTIONAL_DEPENDS)
+    target_link_libraries(${lib_name}
+      PUBLIC ${depends}
+      PRIVATE ${private_depends}
+      )
+    foreach(opt_dep IN LISTS optional_depends)
+      if(TARGET ${opt_dep})
+        target_link_libraries(${lib_name} PRIVATE ${opt_dep})
+      endif()
+    endforeach()
+  else()
+    # Might need to add an argument to vtkm_library to create an exception to this rule
+    message(FATAL_ERROR "Library `${lib_name}` is not created inside of a VTK-m module.")
+  endif()
+
   #generate the export header and install it
   vtkm_generate_export_header(${lib_name})
 

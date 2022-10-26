@@ -92,6 +92,11 @@ endif()
 #-----------------------------------------------------------------------------
 if(VTKm_ENABLE_RENDERING AND NOT TARGET vtkm_rendering_gl_context)
   add_library(vtkm_rendering_gl_context INTERFACE)
+  if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+    install(TARGETS vtkm_rendering_gl_context
+      EXPORT ${VTKm_EXPORT_NAME}
+      )
+  endif()
 endif()
 
 #-----------------------------------------------------------------------------

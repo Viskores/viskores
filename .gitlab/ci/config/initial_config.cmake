@@ -71,6 +71,10 @@ foreach(option IN LISTS options)
     set(VTKm_ENABLE_BENCHMARKS "ON" CACHE STRING "")
     set(ENV{CMAKE_PREFIX_PATH} "$ENV{CMAKE_PREFIX_PATH}:$ENV{HOME}/gbench")
 
+  elseif(min_build STREQUAL option)
+    set(VTKm_BUILD_ALL_LIBRARIES "OFF" CACHE STRING "")
+    set(VTKm_VERBOSE_MODULES "ON" CACHE STRING "")
+
   elseif(mpi STREQUAL option)
     set(VTKm_ENABLE_MPI "ON" CACHE STRING "")
 
