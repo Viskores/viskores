@@ -27,7 +27,6 @@ set(headers
   ConnectivityExtrude.h
   ConnectivityPermuted.h
   ConnectivityStructured.h
-  ExecutionWholeArray.h
   FieldNeighborhood.h
   FunctorBase.h
   ParametricCoordinates.h

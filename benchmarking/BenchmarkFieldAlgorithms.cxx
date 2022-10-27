@@ -225,21 +225,30 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
-  template <typename WeightType, typename T, typename S>
+  template <typename WeightType, typename PortalType, typename U>
   VTKM_EXEC void operator()(const vtkm::Id2& low_high,
                             const WeightType& weight,
-                            const vtkm::exec::ExecutionWholeArrayConst<T, S>& inPortal,
-                            T& result) const
+                            const PortalType& inPortal,
+                            U& result) const
+  {
+    using T = typename PortalType::ValueType;
+    this->DoIt(low_high, weight, inPortal, result, typename std::is_same<T, U>::type{});
+  }
+
+  template <typename WeightType, typename PortalType>
+  VTKM_EXEC void DoIt(const vtkm::Id2& low_high,
+                      const WeightType& weight,
+                      const PortalType& inPortal,
+                      typename PortalType::ValueType& result,
+                      std::true_type) const
   {
     //fetch the low / high values from inPortal
     result = vtkm::Lerp(inPortal.Get(low_high[0]), inPortal.Get(low_high[1]), weight);
   }
 
-  template <typename WeightType, typename T, typename S, typename U>
-  VTKM_EXEC void operator()(const vtkm::Id2&,
-                            const WeightType&,
-                            const vtkm::exec::ExecutionWholeArrayConst<T, S>&,
-                            U&) const
+  template <typename WeightType, typename PortalType, typename U>
+  VTKM_EXEC void DoIt(const vtkm::Id2&, const WeightType&, const PortalType&, U&, std::false_type)
+    const
   {
     //the inPortal and result need to be the same type so this version only
     //exists to generate code when using dynamic arrays

@@ -281,7 +281,7 @@ public:
     choice = 1;
     using Split = SplitProperties;
     vtkm::FloatDefault minCost = vtkm::Infinity<vtkm::FloatDefault>();
-    const Split& xSplit = xSplits[ArgMin(xSplits, index * Stride, Stride)];
+    const Split& xSplit = xSplits.Get(ArgMin(xSplits, index * Stride, Stride));
     bool found = false;
     if (xSplit.Cost < minCost && xSplit.NumLeftPoints != 0 && xSplit.NumRightPoints != 0)
     {
@@ -292,7 +292,7 @@ public:
       plane = xSplit.Plane;
       found = true;
     }
-    const Split& ySplit = ySplits[ArgMin(ySplits, index * Stride, Stride)];
+    const Split& ySplit = ySplits.Get(ArgMin(ySplits, index * Stride, Stride));
     if (ySplit.Cost < minCost && ySplit.NumLeftPoints != 0 && ySplit.NumRightPoints != 0)
     {
       minCost = ySplit.Cost;
@@ -302,7 +302,7 @@ public:
       plane = ySplit.Plane;
       found = true;
     }
-    const Split& zSplit = zSplits[ArgMin(zSplits, index * Stride, Stride)];
+    const Split& zSplit = zSplits.Get(ArgMin(zSplits, index * Stride, Stride));
     if (zSplit.Cost < minCost && zSplit.NumLeftPoints != 0 && zSplit.NumRightPoints != 0)
     {
       minCost = zSplit.Cost;
@@ -314,13 +314,13 @@ public:
     }
     if (!found)
     {
-      const Split& xMSplit = xSplits[NumPlanes];
+      const Split& xMSplit = xSplits.Get(NumPlanes);
       minCost = xMSplit.Cost;
       node.Dimension = 0;
       node.LMax = xMSplit.LMax;
       node.RMin = xMSplit.RMin;
       plane = xMSplit.Plane;
-      const Split& yMSplit = ySplits[NumPlanes];
+      const Split& yMSplit = ySplits.Get(NumPlanes);
       if (yMSplit.Cost < minCost && yMSplit.NumLeftPoints != 0 && yMSplit.NumRightPoints != 0)
       {
         minCost = yMSplit.Cost;
@@ -329,7 +329,7 @@ public:
         node.RMin = yMSplit.RMin;
         plane = yMSplit.Plane;
       }
-      const Split& zMSplit = zSplits[NumPlanes];
+      const Split& zMSplit = zSplits.Get(NumPlanes);
       if (zMSplit.Cost < minCost && zMSplit.NumLeftPoints != 0 && zMSplit.NumRightPoints != 0)
       {
         minCost = zMSplit.Cost;
@@ -348,7 +348,7 @@ public:
     vtkm::Id minIdx = start;
     for (vtkm::Id i = start; i < (start + length); ++i)
     {
-      if (values[i].Cost < values[minIdx].Cost)
+      if (values.Get(i).Cost < values.Get(minIdx).Cost)
       {
         minIdx = i;
       }
