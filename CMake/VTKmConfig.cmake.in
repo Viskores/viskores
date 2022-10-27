@@ -115,12 +115,12 @@ endif()
 # replace this with setting `cuda_architecture_flags` as part of the
 # EXPORT_PROPERTIES of the vtkm_cuda target
 if(VTKm_ENABLE_CUDA AND VTKM_FROM_INSTALL_DIR)
+  # Canonical way of setting CUDA arch
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+    set_target_properties(vtkm::cuda PROPERTIES CUDA_ARCHITECTURES "@CMAKE_CUDA_ARCHITECTURES@")
+  endif()
 
   set_target_properties(vtkm::cuda PROPERTIES
-
-    # Canonical way of setting CUDA arch
-    CUDA_ARCHITECTURES      "@CMAKE_CUDA_ARCHITECTURES@"
-
     # Legacy way of setting CUDA arch
     cuda_architecture_flags "@VTKm_CUDA_Architecture_Flags@"
     requires_static_builds TRUE)
