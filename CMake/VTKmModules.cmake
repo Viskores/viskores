@@ -219,7 +219,8 @@ function(_vtkm_module_parse_module_file module_file name_var)
 
   # Check required arguments
   if(_vtkm_module_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "Module file ${module_file} contains unknown options.")
+    message(FATAL_ERROR
+      "Module file ${module_file} contains unknown options: ${_vtkm_module_UNPARSED_ARGUMENTS}")
   endif()
   if(NOT _vtkm_module_NAME)
     message(FATAL_ERROR "Module file ${module_file} does not specify a NAME option.")
@@ -232,6 +233,10 @@ function(_vtkm_module_parse_module_file module_file name_var)
   endforeach()
   get_filename_component(directory "${module_file}" DIRECTORY)
   vtkm_module_set_property(${NAME} DIRECTORY "${directory}")
+
+  # Add a build dependency that reruns CMake whenever the vtkm.module file changes.
+  set_property(DIRECTORY "${PROJECT_SOURCE_DIR}"
+    APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${module_file}")
 
   set(${name_var} ${NAME} PARENT_SCOPE)
 endfunction()
