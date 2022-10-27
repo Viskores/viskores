@@ -9,9 +9,6 @@ TEST_DEPENDS
   vtkm_filter
   vtkm_io
   vtkm_source
-  # The following depend is only for UnitTestContourTreeUniformDistributedFilter.
-  # This dependency should be removed when that test is moved to its own library.
-  vtkm_filter_scalar_toplogy
 TEST_OPTIONAL_DEPENDS
   vtkm_rendering
   vtkm_rendering_testing
