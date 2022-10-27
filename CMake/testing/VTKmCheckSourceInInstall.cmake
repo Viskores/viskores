@@ -112,29 +112,6 @@ function(do_verify root_dir prefix)
     thirdparty/diy/vtkmdiy/cmake/mpi_types.h
     thirdparty/lodepng/vtkmlodepng/lodepng.h
     thirdparty/loguru/vtkmloguru/loguru.hpp
-
-    # Ignore deprecated virtual classes (which are not installed if VTKm_NO_DEPRECATED_VIRTUAL
-    # is on). These exceptions can be removed when these files are completely removed.
-    cont/ArrayHandleVirtual.h
-    cont/ArrayHandleVirtual.hxx
-    cont/ArrayHandleVirtualCoordinates.h
-    cont/CellLocator.h
-    cont/PointLocator.h
-    cont/StorageVirtual.h
-    cont/StorageVirtual.hxx
-    cont/VirtualObjectHandle.h
-    cont/cuda/internal/VirtualObjectTransferCuda.h
-    cont/internal/TransferInfo.h
-    cont/internal/VirtualObjectTransfer.h
-    cont/internal/VirtualObjectTransferInstantiate.h
-    cont/internal/VirtualObjectTransferShareWithControl.h
-    cont/kokkos/internal/VirtualObjectTransferKokkos.h
-    cont/openmp/internal/VirtualObjectTransferOpenMP.h
-    cont/serial/internal/VirtualObjectTransferSerial.h
-    cont/tbb/internal/VirtualObjectTransferTBB.h
-    exec/CellLocator.h
-    exec/PointLocator.h
-    internal/ArrayPortalVirtual.h
     )
 
   string(REPLACE ":" ";" directory_exceptions "${DIR_EXCEPTIONS}")

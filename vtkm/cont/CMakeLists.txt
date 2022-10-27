@@ -102,7 +102,6 @@ set(headers
   Field.h
   FieldRangeCompute.h
   FieldRangeGlobalCompute.h
-  ImplicitFunctionHandle.h
   Initialize.h
   Invoker.h
   Logging.h
@@ -133,7 +132,6 @@ set(template_sources
   ArrayRangeCompute.hxx # Deprecated, replaced with ArrayRangeComputeTemplate.h
   CellSetExplicit.hxx
   ParticleArrayCopy.hxx
-  VirtualObjectHandle.hxx
   )
 
 set(sources
@@ -214,31 +212,6 @@ set(device_sources
   RuntimeDeviceInformation.cxx
   Timer.cxx
   )
-
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    ArrayHandleVirtual.h
-    ArrayHandleVirtualCoordinates.h
-    CellLocator.h
-    PointLocator.h
-    StorageVirtual.h
-    VirtualObjectHandle.h
-    )
-
-  set(template_sources ${template_sources}
-    ArrayHandleVirtual.hxx
-    StorageVirtual.hxx
-    )
-
-  set(device_sources ${device_sources}
-    ArrayHandleVirtual.cxx
-    CellLocator.cxx
-    internal/TransferInfo.cxx
-    internal/VirtualObjectTransfer.cxx
-    PointLocator.cxx
-    StorageVirtual.cxx
-    )
-endif()
 
 #-----------------------------------------------------------------------------
 # Set up default types, which can be custom configured by other build systems.

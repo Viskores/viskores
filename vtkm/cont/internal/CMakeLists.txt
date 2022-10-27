@@ -44,15 +44,6 @@ set(headers
   Variant.h
   )
 
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    TransferInfo.h
-    VirtualObjectTransfer.h
-    VirtualObjectTransferInstantiate.h
-    VirtualObjectTransferShareWithControl.h
-    )
-endif()
-
 vtkm_declare_headers(${headers})
 
 # These source files are actually compiled in the parent directory.

@@ -20,9 +20,6 @@
 #include <vtkm/cont/kokkos/internal/DeviceAdapterMemoryManagerKokkos.h>
 #include <vtkm/cont/kokkos/internal/DeviceAdapterRuntimeDetectorKokkos.h>
 #include <vtkm/cont/kokkos/internal/RuntimeDeviceConfigurationKokkos.h>
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/kokkos/internal/VirtualObjectTransferKokkos.h>
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 #else // !defined(VTKM_KOKKOS_CUDA) || defined(VTKM_CUDA)
 

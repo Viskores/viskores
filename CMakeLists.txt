@@ -177,12 +177,6 @@ vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful w
 # Some application might need not to install those, hence this option.
 vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README and LICENSE files" OFF)
 
-# We are in the process of deprecating the use of virtual methods because they
-# are not well supported on many accelerators. Turn this option on to remove
-# the code entirely. In VTK-m 2.0 virtual methods should be removed entirely
-# and this option will be removed.
-vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" ON)
-
 # In Python wheels, having SONAME suffixes just ends up duplicating files.
 # Allow VTK to turn off these symlinks for its wheel distribution.
 vtkm_option(VTKm_SKIP_LIBRARY_VERSIONS "Skip versioning VTK-m libraries" OFF)
@@ -196,7 +190,6 @@ mark_as_advanced(
   VTKm_HIDE_PRIVATE_SYMBOLS
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
-  VTKm_NO_DEPRECATED_VIRTUAL
   VTKm_SKIP_LIBRARY_VERSIONS
   )
 
