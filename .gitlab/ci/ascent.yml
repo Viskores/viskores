@@ -51,7 +51,7 @@ build:ascent_gcc_cuda:
 
 
   script:
-    - cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
+    - CTEST_MAX_PARALLELISM=32 cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
     - ctest -VV -S .gitlab/ci/ctest_configure.cmake
   artifacts:
     expire_in: 24 hours
@@ -78,7 +78,7 @@ test:ascent_gcc_cuda:
   before_script:
     - *setup_env_ecpci
   script:
-    - CTEST_MAX_PARALLELISM=32 jsrun -n1 -a1 -g1 -c42 ctest -VV -S .gitlab/ci/ctest_build.cmake
+    - jsrun -n1 -a1 -g1 -c42 ctest -VV -S .gitlab/ci/ctest_build.cmake
     - CTEST_MAX_PARALLELISM=4  jsrun -n1 -a1 -g1 -c8  ctest -VV -S .gitlab/ci/ctest_test.cmake
   after_script:
     - *setup_env_ecpci
