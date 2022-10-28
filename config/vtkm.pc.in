@@ -18,14 +18,4 @@ Name: VTKm
 Description: The VTKm library
 Version: @VTKm_VERSION@
 Cflags: -I${includedir}/vtkm-@CMAKE_INSTALL_PREFIX@
-Libs: -L${libdir} \
-    -lvtkm_rendering-@VTKm_VERSION@ \
-    -lvtkm_filter_contour-@VTKm_VERSION@ \
-    -lvtkm_filter_gradient-@VTKm_VERSION@ \
-    -lvtkm_filter_extra-@VTKm_VERSION@ \
-    -lvtkm_filter_common-@VTKm_VERSION@ \
-    -lvtkm_worklet-@VTKm_VERSION@ \
-    -lvtkm_source-@VTKm_VERSION@ \
-    -lvtkm_io-@VTKm_VERSION@ \
-    -lvtkm_cont-@VTKm_VERSION@ \
-    -lvtkmdiympi_nompi
+Libs: -L${libdir}@lib_args@

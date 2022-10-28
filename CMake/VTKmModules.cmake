@@ -51,6 +51,19 @@ function(vtkm_module_exists out_var module_name)
 endfunction()
 
 #[==[
+Sets out_var to a list of all modules that are being built. This list includes
+all modules that are enabled and have an associated target. Any modules not being
+built will not be listed.
+
+The modules are listed in an order such that any module will be listed _after_
+any modules that it depends on.
+#]==]
+function(vtkm_module_get_list out_var)
+  get_property(_vtkm_module_list GLOBAL PROPERTY "_vtkm_module_list")
+  set("${out_var}" "${_vtkm_module_list}" PARENT_SCOPE)
+endfunction()
+
+#[==[
 Forces the enable value of a module group to be a particular value. This is
 useful for converting a CMake `option` to a group of modules to turn on or
 off. When a group of modules is forced with this function, a CMake cache
@@ -541,6 +554,9 @@ so that other modules know this module is loaded.")
     endif()
     add_library(${target_module} INTERFACE)
   endif()
+  get_property(_vtkm_module_list GLOBAL PROPERTY "_vtkm_module_list")
+  list(APPEND _vtkm_module_list ${target_module})
+  set_property(GLOBAL PROPERTY "_vtkm_module_list" "${_vtkm_module_list}")
 endfunction()
 
 # -----------------------------------------------------------------------------
