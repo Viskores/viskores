@@ -103,7 +103,7 @@ public:
   {
     // Note that CoordPortalType is actually a RectilinearPortalType wrapped in an
     // ExecutionWholeArrayConst. We need to get out the actual portal.
-    vtkm::Id calculated = CalculateCellId(pointIn, coordsPortal.GetPortal());
+    vtkm::Id calculated = CalculateCellId(pointIn, coordsPortal);
     vtkm::ErrorCode status = locator.FindCell(pointIn, cellId, parametric);
     if (status != vtkm::ErrorCode::Success)
     {

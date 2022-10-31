@@ -16,8 +16,6 @@
 
 #include <vtkm/cont/arg/Transport.h>
 
-#include <vtkm/exec/ExecutionWholeArray.h>
-
 namespace vtkm
 {
 namespace cont
@@ -58,7 +56,7 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayInOut, ContObjectType, D
   using ValueType = typename ContObjectType::ValueType;
   using StorageTag = typename ContObjectType::StorageTag;
 
-  using ExecObjectType = vtkm::exec::ExecutionWholeArray<ValueType, StorageTag>;
+  using ExecObjectType = typename ContObjectType::WritePortalType;
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(ContObjectType& array,
@@ -71,7 +69,7 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayInOut, ContObjectType, D
     // array might not have the same size depending on how the user is using
     // the array.
 
-    return ExecObjectType(array, Device{}, token);
+    return array.PrepareForInPlace(Device{}, token);
   }
 
 #ifdef VTKM_MSVC

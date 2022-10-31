@@ -271,8 +271,8 @@ public:
     {
       for (vtkm::IdComponent iter = pointCount - 1; iter >= 0; iter--)
       {
-        if (static_cast<vtkm::Float64>(prevVals[valPositionStart + iter]) <=
-            static_cast<vtkm::Float64>(newVals[valPositionStart + iter]))
+        if (static_cast<vtkm::Float64>(prevVals.Get(valPositionStart + iter)) <=
+            static_cast<vtkm::Float64>(newVals.Get(valPositionStart + iter)))
         {
           caseId++;
         }
@@ -548,11 +548,12 @@ public:
             // need to swap the weight of the point to be A-C / ((D-C) - (B-A)),
             // where A and C are edge0 mats 1 and 2, and B and D are edge1 mats 1 and 2.
             ei.Weight = vtkm::Float64(1) +
-              ((static_cast<vtkm::Float64>(curScalars[valPositionStart + edge[0]] -
-                                           newScalars[valPositionStart + edge[0]])) /
-               static_cast<vtkm::Float64>(
-                 curScalars[valPositionStart + edge[1]] - curScalars[valPositionStart + edge[0]] +
-                 newScalars[valPositionStart + edge[0]] - newScalars[valPositionStart + edge[1]]));
+              ((static_cast<vtkm::Float64>(curScalars.Get(valPositionStart + edge[0]) -
+                                           newScalars.Get(valPositionStart + edge[0]))) /
+               static_cast<vtkm::Float64>(curScalars.Get(valPositionStart + edge[1]) -
+                                          curScalars.Get(valPositionStart + edge[0]) +
+                                          newScalars.Get(valPositionStart + edge[0]) -
+                                          newScalars.Get(valPositionStart + edge[1])));
 
             inCellEdgeReverseConnectivity.Set(inCellEdgeInterpIndex, inCellInterpPointIndex);
             inCellEdgeInterpolation.Set(inCellEdgeInterpIndex, ei);
@@ -609,11 +610,12 @@ public:
             }
 
             ei.Weight = vtkm::Float64(1) +
-              ((static_cast<vtkm::Float64>(curScalars[valPositionStart + edge[0]] -
-                                           newScalars[valPositionStart + edge[0]])) /
-               static_cast<vtkm::Float64>(
-                 curScalars[valPositionStart + edge[1]] - curScalars[valPositionStart + edge[0]] +
-                 newScalars[valPositionStart + edge[0]] - newScalars[valPositionStart + edge[1]]));
+              ((static_cast<vtkm::Float64>(curScalars.Get(valPositionStart + edge[0]) -
+                                           newScalars.Get(valPositionStart + edge[0]))) /
+               static_cast<vtkm::Float64>(curScalars.Get(valPositionStart + edge[1]) -
+                                          curScalars.Get(valPositionStart + edge[0]) +
+                                          newScalars.Get(valPositionStart + edge[0]) -
+                                          newScalars.Get(valPositionStart + edge[1])));
             //Add to set of new edge points
             //Add reverse connectivity;
             edgePointReverseConnectivity.Set(edgeIndex, connectivityIndex++);
