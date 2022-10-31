@@ -18,12 +18,6 @@ set(headers
   RuntimeDeviceConfigurationTBB.h
   )
 
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    VirtualObjectTransferTBB.h
-    )
-endif()
-
 vtkm_declare_headers(${headers}
    ParallelSortTBB.hxx
    )

@@ -31,10 +31,6 @@
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/internal/VirtualObjectTransfer.h>
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
-
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/cont/AtomicArray.h>
@@ -340,45 +336,6 @@ public:
     vtkm::exec::AtomicArrayExecutionObject<T> AArray;
   };
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-
-  class VirtualObjectTransferKernel
-  {
-  public:
-    struct Interface : public vtkm::VirtualObjectBase
-    {
-      VTKM_EXEC virtual vtkm::Id Foo() const = 0;
-    };
-
-    struct Concrete : public Interface
-    {
-      VTKM_EXEC vtkm::Id Foo() const override { return this->Value; }
-
-      vtkm::Id Value = 0;
-    };
-
-    VirtualObjectTransferKernel(const Interface* vo,
-                                IdArrayHandle& result,
-                                vtkm::cont::Token& token)
-      : Virtual(vo)
-      , Result(result.PrepareForInPlace(DeviceAdapterTag(), token))
-    {
-    }
-
-    VTKM_EXEC
-    void operator()(vtkm::Id) const { this->Result.Set(0, this->Virtual->Foo()); }
-
-    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
-
-  private:
-    const Interface* Virtual;
-    IdPortalType Result;
-  };
-
-  VTKM_DEPRECATED_SUPPRESS_END
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
-
   struct CustomPairOp
   {
     using ValueType = vtkm::Pair<vtkm::Id, vtkm::Float32>;
@@ -611,49 +568,6 @@ private:
       VTKM_TEST_ASSERT(elapsedTime < 1.0, "Timer counted too far or system really busy.");
     }
   }
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-
-  VTKM_CONT
-  static void TestVirtualObjectTransfer()
-  {
-    std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing VirtualObjectTransfer" << std::endl;
-
-    using BaseType = typename VirtualObjectTransferKernel::Interface;
-    using TargetType = typename VirtualObjectTransferKernel::Concrete;
-    using Transfer = vtkm::cont::internal::VirtualObjectTransfer<TargetType, DeviceAdapterTag>;
-
-    IdArrayHandle result;
-    result.Allocate(1);
-    result.WritePortal().Set(0, 0);
-
-    TargetType target;
-    target.Value = 5;
-
-    Transfer transfer(&target);
-    const BaseType* base = static_cast<const BaseType*>(transfer.PrepareForExecution(false));
-
-    {
-      vtkm::cont::Token token;
-      Algorithm::Schedule(VirtualObjectTransferKernel(base, result, token), 1);
-    }
-    VTKM_TEST_ASSERT(result.ReadPortal().Get(0) == 5, "Did not get expected result");
-
-    {
-      vtkm::cont::Token token;
-      target.Value = 10;
-      base = static_cast<const BaseType*>(transfer.PrepareForExecution(true));
-      Algorithm::Schedule(VirtualObjectTransferKernel(base, result, token), 1);
-    }
-    VTKM_TEST_ASSERT(result.ReadPortal().Get(0) == 10, "Did not get expected result");
-
-    transfer.ReleaseResources();
-  }
-
-  VTKM_DEPRECATED_SUPPRESS_END
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   static VTKM_CONT void TestAlgorithmSchedule()
   {
@@ -3026,10 +2940,6 @@ private:
       TestMemoryTransfer();
       TestOutOfMemory();
       TestTimer();
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-      TestVirtualObjectTransfer();
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
       TestAlgorithmSchedule();
       TestErrorExecution();

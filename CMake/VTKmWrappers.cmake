@@ -368,12 +368,6 @@ function(vtkm_add_target_information uses_vtkm_target)
     endif()
   endforeach()
 
-  # set the required target properties
-  if(NOT VTKm_NO_DEPRECATED_VIRTUAL)
-    set_target_properties(${targets} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    set_target_properties(${targets} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-  endif()
-
   if(VTKm_TI_DROP_UNUSED_SYMBOLS)
     foreach(target IN LISTS targets)
       vtkm_add_drop_unused_function_flags(${target})
@@ -385,44 +379,6 @@ function(vtkm_add_target_information uses_vtkm_target)
   elseif(TARGET vtkm::kokkos_hip)
     set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "HIP")
     kokkos_compilation(SOURCE ${VTKm_TI_DEVICE_SOURCES})
-  endif()
-
-  # Validate that following:
-  #   - We are building with CUDA enabled.
-  #   - We are building a VTK-m library or a library that wants cross library
-  #     device calls.
-  #
-  # This is required as CUDA currently doesn't support device side calls across
-  # dynamic library boundaries.
-  if((NOT VTKm_NO_DEPRECATED_VIRTUAL) AND ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda)))
-    foreach(target IN LISTS targets)
-      get_target_property(lib_type ${target} TYPE)
-      if (TARGET vtkm::cuda)
-        get_target_property(requires_static vtkm::cuda requires_static_builds)
-      endif()
-      if (TARGET vtkm::kokkos)
-        get_target_property(requires_static vtkm::kokkos requires_static_builds)
-      endif()
-
-      if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY" AND VTKm_TI_EXTENDS_VTKM)
-        #We provide different error messages based on if we are building VTK-m
-        #or being called by a consumer of VTK-m. We use PROJECT_NAME so that we
-        #produce the correct error message when VTK-m is a subdirectory include
-        #of another project
-        if(PROJECT_NAME STREQUAL "VTKm")
-          message(SEND_ERROR "${target} needs to be built STATIC as CUDA doesn't"
-                " support virtual methods across dynamic library boundaries. You"
-                " need to set the CMake option BUILD_SHARED_LIBS to `OFF` or"
-                " (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.")
-        else()
-          message(SEND_ERROR "${target} needs to be built STATIC as CUDA doesn't"
-                  " support virtual methods across dynamic library boundaries. You"
-                  " should either explicitly call add_library with the `STATIC` keyword"
-                  " or set the CMake option BUILD_SHARED_LIBS to `OFF` or"
-                  " (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.")
-        endif()
-      endif()
-    endforeach()
   endif()
 endfunction()
 

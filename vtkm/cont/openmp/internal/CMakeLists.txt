@@ -21,12 +21,6 @@ set(headers
   RuntimeDeviceConfigurationOpenMP.h
   )
 
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    VirtualObjectTransferOpenMP.h
-    )
-endif()
-
 vtkm_declare_headers(${headers})
 
 #These sources need to always be built

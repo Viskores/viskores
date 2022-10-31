@@ -21,12 +21,6 @@ set(headers
   ThrustExceptionHandler.h
   )
 
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    VirtualObjectTransferCuda.h
-    )
-endif()
-
 vtkm_declare_headers(${headers})
 
 

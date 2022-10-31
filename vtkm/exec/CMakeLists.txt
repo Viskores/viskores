@@ -39,13 +39,6 @@ set(header_impls
   ColorTable.hxx
   )
 
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    CellLocator.h
-    PointLocator.h
-    )
-endif()
-
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(arg)

@@ -27,7 +27,6 @@ set(unit_tests
   UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
-  UnitTestArrayHandleVirtual.cxx
   UnitTestArrayPortalFromIterators.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestBuffer.cxx
@@ -122,12 +121,6 @@ set(unit_tests_device
 if(TARGET vtkm_filter_field_conversion)
   list(APPEND unit_tests_device
     UnitTestCellSetExtrude.cxx
-    )
-endif()
-
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  list(APPEND unit_tests_device
-    UnitTestVirtualObjectHandle.cxx
     )
 endif()
 

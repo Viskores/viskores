@@ -17,10 +17,6 @@
 
 #include <vtkm/cont/Algorithm.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/ArrayHandleVirtual.h>
-#endif
-
 #include <limits>
 
 namespace vtkm
@@ -99,49 +95,6 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
 
 } // namespace detail
 
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-VTKM_CONT
-inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& input,
-  vtkm::cont::DeviceAdapterId device)
-{
-  using UniformHandleType = ArrayHandleUniformPointCoordinates;
-  using RectilinearHandleType =
-    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
-
-  if (input.IsType<UniformHandleType>())
-  {
-    using T = typename UniformHandleType::ValueType;
-    using S = typename UniformHandleType::StorageTag;
-    const vtkm::cont::internal::detail::StorageVirtual* storage =
-      input.GetStorage().GetStorageVirtual();
-    const auto* castStorage =
-      storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>();
-
-    return ArrayRangeCompute(castStorage->GetHandle(), device);
-  }
-  else if (input.IsType<RectilinearHandleType>())
-  {
-    using T = typename RectilinearHandleType::ValueType;
-    using S = typename RectilinearHandleType::StorageTag;
-    const vtkm::cont::internal::detail::StorageVirtual* storage =
-      input.GetStorage().GetStorageVirtual();
-    const auto* castStorage =
-      storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>();
-
-    return ArrayRangeCompute(castStorage->GetHandle(), device);
-  }
-  else
-  {
-    return detail::ArrayRangeComputeImpl(input, device);
-  }
-}
-VTKM_DEPRECATED_SUPPRESS_END
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <typename ArrayHandleType>
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
