@@ -100,7 +100,7 @@ VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
     // We create an ArrayHandle and pass it to the Worklet as AtomicArrayInOut.
     // However, the ArrayHandle needs to be allocated and initialized first.
     vtkm::cont::ArrayHandle<T> density;
-    density.AllocateAndFill(uniform.GetNumberOfPoints(), 0);
+    density.AllocateAndFill(uniform.GetNumberOfCells(), 0);
 
     this->Invoke(vtkm::worklet::NGPWorklet{}, coords, concrete, locator, density);
 
