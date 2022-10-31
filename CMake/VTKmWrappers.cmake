@@ -517,12 +517,9 @@ function(vtkm_library)
     if(NOT lib_name STREQUAL vtkm_module_current)
       # We do want each library to be in its own module. (VTK's module allows you to declare
       # multiple libraries per module. We may want that in the future, but right now we should
-      # not need it.) Right now we have one exception: vtkm_filter_extra inside of the
-      # vtkm_filter_core module. We are in the process of moving the filters to the new filter
-      # structure, and when that is done, vtkm_filter_extra should go away. But it is complex
-      # and will take some time. When that is done, perhaps this should be a stronger message
-      # (either a warning or error).
-      message("Library name `${lib_name}` does not match module name `${vtkm_module_current}`")
+      # not need it.)
+      message(FATAL_ERROR
+        "Library name `${lib_name}` does not match module name `${vtkm_module_current}`")
     endif()
     vtkm_module_get_property(depends ${vtkm_module_current} DEPENDS)
     vtkm_module_get_property(private_depends ${vtkm_module_current} PRIVATE_DEPENDS)
