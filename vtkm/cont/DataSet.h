@@ -44,6 +44,19 @@ public:
 
   vtkm::cont::DataSet& operator=(const vtkm::cont::DataSet&) = default;
 
+  /// \brief An enumeration that can be used to refer to the parts of a `DataSet`.
+  ///
+  /// The items can be or'ed together (`|`) to refer to multiple parts.
+  enum struct Parts : vtkm::UInt32
+  {
+    None = 0x00,
+    CellSet = 0x01,
+    Fields = 0x02,
+    Coordinates = 0x04,
+    GhostCellName = 0x08,
+    All = 0xFF
+  };
+
   VTKM_CONT void Clear();
 
   /// Get the number of cells contained in this DataSet
@@ -259,8 +272,21 @@ public:
   }
 
 
+  /// \brief Adds the given `CoordinateSystem` to the `DataSet`.
+  ///
+  /// The coordinate system will also be added as a point field of the same name.
+  ///
+  /// \returns the index assigned to the added coordinate system.
   VTKM_CONT
-  void AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs);
+  vtkm::IdComponent AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs);
+
+  /// \brief Marks the point field with the given name as a coordinate system.
+  ///
+  /// If no such point field exists or the point field is of the wrong format, an exception
+  /// will be throw.
+  ///
+  /// \returns the index assigned to the added coordinate system.
+  VTKM_CONT vtkm::IdComponent AddCoordinateSystem(const std::string& pointFieldName);
 
   VTKM_CONT
   bool HasCoordinateSystem(const std::string& name) const
@@ -269,34 +295,20 @@ public:
   }
 
   VTKM_CONT
-  const vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0) const;
+  vtkm::cont::CoordinateSystem GetCoordinateSystem(vtkm::Id index = 0) const;
 
-  VTKM_CONT
-  vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0);
-
-  /// Returns the index for the first CoordinateSystem whose
+  /// Returns the index for the CoordinateSystem whose
   /// name matches the provided string.
   /// Will return -1 if no match is found
   VTKM_CONT
-  vtkm::Id GetCoordinateSystemIndex(const std::string& name) const;
+  vtkm::IdComponent GetCoordinateSystemIndex(const std::string& name) const;
 
-  /// Returns the first CoordinateSystem that matches the provided name.
+  VTKM_CONT const std::string& GetCoordinateSystemName(vtkm::Id index = 0) const;
+
+  /// Returns the CoordinateSystem that matches the provided name.
   /// Will throw an exception if no match is found
-  ///@{
   VTKM_CONT
-  const vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name) const;
-
-  VTKM_CONT
-  vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name);
-  ///@}
-
-  /// Returns an `std::vector` of `CoordinateSystem`s held in this `DataSet`.
-  ///
-  VTKM_CONT
-  std::vector<vtkm::cont::CoordinateSystem> GetCoordinateSystems() const
-  {
-    return this->CoordSystems;
-  }
+  vtkm::cont::CoordinateSystem GetCoordinateSystem(const std::string& name) const;
 
   template <typename CellSetType>
   VTKM_CONT void SetCellSet(const CellSetType& cellSet)
@@ -317,13 +329,35 @@ public:
   VTKM_CONT
   vtkm::IdComponent GetNumberOfCoordinateSystems() const
   {
-    return static_cast<vtkm::IdComponent>(this->CoordSystems.size());
+    return static_cast<vtkm::IdComponent>(this->CoordSystemNames.size());
   }
 
   /// Copies the structure i.e. coordinates systems and cellset from the source
   /// dataset. The fields are left unchanged.
+  VTKM_DEPRECATED(2.0, "Use CopyPartsFromExcept(source, vtkm::cont::DataSet::Parts::Fields)")
   VTKM_CONT
-  void CopyStructure(const vtkm::cont::DataSet& source);
+  void CopyStructure(const vtkm::cont::DataSet& source)
+  {
+    this->CopyPartsFromExcept(source, vtkm::cont::DataSet::Parts::Fields);
+  }
+
+  /// \brief Copy parts from a source data set.
+  ///
+  /// Data from the `source` `DataSet` are copied into this `DataSet`. Where possible,
+  /// parts like `Field`s and `CoordinateSystem`s from the source are added. Parts that
+  /// only have one instance in the `DataSet`, such as the `CellSet`, are replaced.
+  ///
+  /// By default, all parts are copied. A `partMask` is provided that
+  /// specifies which parts _not_ to copy. For example, to copy only the structure
+  /// but not any of the fields, specify to not copy the fields or coordinates as so.
+  ///
+  /// ```cpp
+  /// dest.CopyPartsFromExcept(
+  ///   src, vtkm::cont::DataSet::Parts::Fields | vtkm::cont::DataSet::Parts::Coordinates);
+  /// ```
+  ///
+  VTKM_CONT
+  void CopyPartsFromExcept(const vtkm::cont::DataSet& source, vtkm::cont::DataSet::Parts partMask);
 
   /// \brief Convert the structures in this data set to expected types.
   ///
@@ -344,7 +378,7 @@ public:
   void PrintSummary(std::ostream& out) const;
 
 private:
-  std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
+  std::vector<std::string> CoordSystemNames;
   vtkm::cont::internal::FieldCollection Fields{ vtkm::cont::Field::Association::WholeDataSet,
                                                 vtkm::cont::Field::Association::Points,
                                                 vtkm::cont::Field::Association::Cells };
@@ -354,6 +388,20 @@ private:
 
   VTKM_CONT void SetCellSetImpl(const vtkm::cont::UnknownCellSet& cellSet);
 };
+
+VTKM_CONT inline vtkm::cont::DataSet::Parts operator|(vtkm::cont::DataSet::Parts lhs,
+                                                      vtkm::cont::DataSet::Parts rhs)
+{
+  using T = std::underlying_type_t<vtkm::cont::DataSet::Parts>;
+  return static_cast<vtkm::cont::DataSet::Parts>(static_cast<T>(lhs) | static_cast<T>(rhs));
+}
+
+VTKM_CONT inline vtkm::cont::DataSet::Parts operator&(vtkm::cont::DataSet::Parts lhs,
+                                                      vtkm::cont::DataSet::Parts rhs)
+{
+  using T = std::underlying_type_t<vtkm::cont::DataSet::Parts>;
+  return static_cast<vtkm::cont::DataSet::Parts>(static_cast<T>(lhs) & static_cast<T>(rhs));
+}
 
 } // namespace cont
 } // namespace vtkm
@@ -396,13 +444,6 @@ public:
   {
     const auto& dataset = serializable.DataSet;
 
-    vtkm::IdComponent numberOfCoordinateSystems = dataset.GetNumberOfCoordinateSystems();
-    vtkmdiy::save(bb, numberOfCoordinateSystems);
-    for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
-    {
-      vtkmdiy::save(bb, dataset.GetCoordinateSystem(i));
-    }
-
     vtkmdiy::save(bb, dataset.GetCellSet().ResetCellSetList(CellSetTypesList{}));
 
     vtkm::IdComponent numberOfFields = dataset.GetNumberOfFields();
@@ -411,21 +452,19 @@ public:
     {
       vtkmdiy::save(bb, dataset.GetField(i));
     }
+
+    vtkm::IdComponent numberOfCoordinateSystems = dataset.GetNumberOfCoordinateSystems();
+    vtkmdiy::save(bb, numberOfCoordinateSystems);
+    for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
+    {
+      vtkmdiy::save(bb, dataset.GetCoordinateSystemName(i));
+    }
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& serializable)
   {
     auto& dataset = serializable.DataSet;
     dataset = {}; // clear
-
-    vtkm::IdComponent numberOfCoordinateSystems = 0;
-    vtkmdiy::load(bb, numberOfCoordinateSystems);
-    for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
-    {
-      vtkm::cont::CoordinateSystem coords;
-      vtkmdiy::load(bb, coords);
-      dataset.AddCoordinateSystem(coords);
-    }
 
     vtkm::cont::UncertainCellSet<CellSetTypesList> cells;
     vtkmdiy::load(bb, cells);
@@ -438,6 +477,15 @@ public:
       vtkm::cont::Field field;
       vtkmdiy::load(bb, field);
       dataset.AddField(field);
+    }
+
+    vtkm::IdComponent numberOfCoordinateSystems = 0;
+    vtkmdiy::load(bb, numberOfCoordinateSystems);
+    for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
+    {
+      std::string coordName;
+      vtkmdiy::load(bb, coordName);
+      dataset.AddCoordinateSystem(coordName);
     }
   }
 };

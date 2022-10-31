@@ -86,7 +86,7 @@ void MapperGlyphVector::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
   vtkm::cont::DataSet processedDataSet = this->FilterPoints(cellset, coords, field);
   vtkm::cont::UnknownCellSet processedCellSet = processedDataSet.GetCellSet();
   vtkm::cont::CoordinateSystem processedCoords = processedDataSet.GetCoordinateSystem();
-  vtkm::cont::Field processedField = processedDataSet.GetField(0);
+  vtkm::cont::Field processedField = processedDataSet.GetField(field.GetName());
 
   if (this->ScaleByValue)
   {

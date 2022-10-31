@@ -70,7 +70,7 @@ vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input)
 
   // create the output dataset
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  return this->CreateResult(input, outCells, input.GetCoordinateSystems(), mapper);
+  return this->CreateResult(input, outCells, mapper);
 }
 
 } // namespace entity_extraction

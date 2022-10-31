@@ -415,7 +415,6 @@ public:
     return output;
   }
 
-private:
   using UniformCoordinatesArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
 
   using RectilinearCoordinatesArrayHandle =
@@ -424,7 +423,8 @@ private:
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
 
 
-  UniformCoordinatesArrayHandle MapCoordinatesUniform(const UniformCoordinatesArrayHandle& coords)
+  UniformCoordinatesArrayHandle MapCoordinatesUniform(
+    const UniformCoordinatesArrayHandle& coords) const
   {
     using CoordsArray = vtkm::cont::ArrayHandleUniformPointCoordinates;
     using CoordType = CoordsArray::ValueType;
@@ -444,7 +444,7 @@ private:
   }
 
   RectilinearCoordinatesArrayHandle MapCoordinatesRectilinear(
-    const RectilinearCoordinatesArrayHandle& coords)
+    const RectilinearCoordinatesArrayHandle& coords) const
   {
     // For structured datasets, the cellsets are of different types based on
     // its dimensionality, but the coordinates are always 3 dimensional.
@@ -477,41 +477,6 @@ private:
     VTKM_ASSERT(dim == this->InputDimensionality);
 
     return vtkm::cont::make_ArrayHandleCartesianProduct(xyzs[0], xyzs[1], xyzs[2]);
-  }
-
-  struct MapCoordinatesFunctor
-  {
-    template <typename T, typename S>
-    VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>& coords,
-                              ExtractStructured& self,
-                              vtkm::cont::UnknownArrayHandle& output) const
-    {
-      output = self.ProcessPointField(coords);
-    }
-
-    VTKM_CONT void operator()(const UniformCoordinatesArrayHandle::Superclass& coords,
-                              ExtractStructured& self,
-                              vtkm::cont::UnknownArrayHandle& output) const
-    {
-      output = self.MapCoordinatesUniform(coords);
-    }
-
-    VTKM_CONT void operator()(const RectilinearCoordinatesArrayHandle::Superclass& coords,
-                              ExtractStructured& self,
-                              vtkm::cont::UnknownArrayHandle& output) const
-    {
-      output = self.MapCoordinatesRectilinear(coords);
-    }
-  };
-
-  friend MapCoordinatesFunctor;
-
-public:
-  vtkm::cont::UnknownArrayHandle MapCoordinates(const vtkm::cont::CoordinateSystem& coordinates)
-  {
-    vtkm::cont::UnknownArrayHandle output;
-    vtkm::cont::CastAndCall(coordinates, MapCoordinatesFunctor{}, *this, output);
-    return output;
   }
 
 public:

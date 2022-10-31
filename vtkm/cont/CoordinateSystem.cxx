@@ -11,6 +11,7 @@
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/ErrorBadValue.h>
 
 namespace vtkm
 {
@@ -20,6 +21,15 @@ namespace cont
 VTKM_CONT CoordinateSystem::CoordinateSystem()
   : Superclass()
 {
+}
+
+VTKM_CONT CoordinateSystem::CoordinateSystem(const vtkm::cont::Field& src)
+  : Superclass(src)
+{
+  if (src.GetAssociation() != vtkm::cont::Field::Association::Points)
+  {
+    throw vtkm::cont::ErrorBadValue("CoordinateSystems can only be point field.");
+  }
 }
 
 VTKM_CONT CoordinateSystem::CoordinateSystem(std::string name,

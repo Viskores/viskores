@@ -27,6 +27,8 @@ class VTKM_FILTER_FIELD_TRANSFORM_EXPORT CylindricalCoordinateTransform
   : public vtkm::filter::NewFilterField
 {
 public:
+  VTKM_CONT CylindricalCoordinateTransform();
+
   VTKM_CONT void SetCartesianToCylindrical() { CartesianToCylindrical = true; }
   VTKM_CONT void SetCylindricalToCartesian() { CartesianToCylindrical = false; }
 

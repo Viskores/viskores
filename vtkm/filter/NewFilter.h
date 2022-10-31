@@ -150,7 +150,7 @@ namespace filter
 ///   };
 ///   // This passes coordinate systems directly from input to output. If the points of
 ///   // the cell set change at all, they will have to be mapped by hand.
-///   return this->CreateResult(input, outCellSet, input.GetCoordinateSystems(), mapper);
+///   return this->CreateResult(input, outCellSet, mapper);
 /// }
 /// \endcode
 ///
@@ -188,15 +188,15 @@ namespace filter
 ///   // thus making it thread-safe.
 ///   SharedStates states;
 ///
-///   vtkm::cont::DataSet output;
-///   output = ... // Generation of the new DataSet and store interpolation parameters in `states`
+///   vtkm::cont::CellSetExplicit<> cellSet;
+///   cellSet = ... // Generation of the new DataSet and store interpolation parameters in `states`
 ///
 ///   // Lambda capture of `states`, effectively passing the shared states to the Mapper.
 ///   auto mapper = [&states](auto& outputDs, const auto& inputField) {
 ///      auto outputField = ... // Use `states` for mapping input field to output field
 ///      output.AddField(outputField);
 ///   };
-///   this->MapFieldsOntoOutput(input, output, mapper);
+///   this->CreateOutput(input, cellSet, mapper);
 ///
 ///   return output;
 /// }
@@ -293,6 +293,21 @@ public:
   ///@}
 
   ///@{
+  /// \brief Specify whether to always pass coordinate systems.
+  ///
+  /// `CoordinateSystem`s in a `DataSet` are really just point fields marked as being a
+  /// coordinate system. Thus, a coordinate system is passed if and only if the associated
+  /// field is passed.
+  ///
+  /// By default, the filter will pass all fields associated with a coordinate system
+  /// regardless of the `FieldsToPass` marks the field as passing. If this option is set
+  /// to `false`, then coordinate systems will only be passed if it is marked so by
+  /// `FieldsToPass`.
+  VTKM_CONT void SetPassCoordinateSystems(bool flag) { this->PassCoordinateSystems = flag; }
+  VTKM_CONT bool GetPassCoordinateSystems() const { return this->PassCoordinateSystems; }
+  ///@}
+
+  ///@{
   /// Executes the filter on the input and produces a result dataset.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
@@ -357,7 +372,6 @@ protected:
   ///     argument and a `Field` as its second argument. The `PartitionedDataSet` is the data being
   ///     created and will eventually be returned by `CreateResult`. The `Field` comes from `input`.
   ///
-
   template <typename FieldMapper>
   VTKM_CONT vtkm::cont::PartitionedDataSet CreateResult(
     const vtkm::cont::PartitionedDataSet& input,
@@ -365,7 +379,7 @@ protected:
     FieldMapper&& fieldMapper) const
   {
     vtkm::cont::PartitionedDataSet output(resultPartitions.GetPartitions());
-    this->MapFieldsOntoOutput(input, output, fieldMapper);
+    this->MapFieldsOntoOutput(input, this->GetFieldsToPass(), output, fieldMapper);
     return output;
   }
 
@@ -375,9 +389,6 @@ protected:
   /// also provide a field mapper function, which is a function that takes the output `DataSet`
   /// being created and a `Field` from the input and then applies any necessary transformations to
   /// the field array and adds it to the `DataSet`.
-  ///
-  /// This form of `CreateResult` returns a `DataSet` with _no_ coordinate systems. The calling
-  /// program must add any necessary `CoordinateSystem`s.
   ///
   /// \param[in] inDataSet The input data set being modified (usually the one passed
   ///     into `DoExecute`). The returned `DataSet` is filled with fields of `inDataSet`
@@ -396,8 +407,12 @@ protected:
                                              FieldMapper&& fieldMapper) const
   {
     vtkm::cont::DataSet outDataSet;
+    outDataSet.CopyPartsFromExcept(inDataSet,
+                                   vtkm::cont::DataSet::Parts::Fields |
+                                     vtkm::cont::DataSet::Parts::Coordinates |
+                                     vtkm::cont::DataSet::Parts::CellSet);
     outDataSet.SetCellSet(resultCellSet);
-    this->MapFieldsOntoOutput(inDataSet, outDataSet, fieldMapper);
+    this->MapFieldsOntoOutput(inDataSet, this->GetFieldsToPass(), outDataSet, fieldMapper);
     return outDataSet;
   }
 
@@ -436,6 +451,7 @@ protected:
     return outDataSet;
   }
 
+  ///@{
   /// \brief Create the output data set for `DoExecute`.
   ///
   /// This form of `CreateResult` will create an output data set with the given `CellSet`
@@ -457,31 +473,89 @@ protected:
   ///     the function should do nothing.
   ///
   template <typename FieldMapper>
-  VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
-                                             const vtkm::cont::UnknownCellSet& resultCellSet,
-                                             const vtkm::cont::CoordinateSystem& resultCoordSystem,
-                                             FieldMapper&& fieldMapper) const
+  VTKM_CONT vtkm::cont::DataSet CreateResultCoordinateSystem(
+    const vtkm::cont::DataSet& inDataSet,
+    const vtkm::cont::UnknownCellSet& resultCellSet,
+    const vtkm::cont::CoordinateSystem& resultCoordSystem,
+    FieldMapper&& fieldMapper) const
   {
-    return this->CreateResult(inDataSet,
-                              resultCellSet,
-                              std::vector<vtkm::cont::CoordinateSystem>{ resultCoordSystem },
-                              fieldMapper);
+    vtkm::cont::DataSet outDataSet;
+    outDataSet.CopyPartsFromExcept(inDataSet,
+                                   vtkm::cont::DataSet::Parts::Fields |
+                                     vtkm::cont::DataSet::Parts::Coordinates |
+                                     vtkm::cont::DataSet::Parts::CellSet);
+    outDataSet.SetCellSet(resultCellSet);
+    outDataSet.AddCoordinateSystem(resultCoordSystem);
+    vtkm::filter::FieldSelection fieldSelection = this->GetFieldsToPass();
+    fieldSelection.AddField(resultCoordSystem, vtkm::filter::FieldSelection::Mode::Exclude);
+    this->MapFieldsOntoOutput(inDataSet, fieldSelection, outDataSet, fieldMapper);
+    return outDataSet;
   }
+
+  template <typename FieldMapper>
+  VTKM_CONT vtkm::cont::DataSet CreateResultCoordinateSystem(
+    const vtkm::cont::DataSet& inDataSet,
+    const vtkm::cont::UnknownCellSet& resultCellSet,
+    const std::string& coordsName,
+    const vtkm::cont::UnknownArrayHandle& coordsData,
+    FieldMapper&& fieldMapper) const
+  {
+    return this->CreateResultCoordinateSystem(
+      inDataSet,
+      resultCellSet,
+      vtkm::cont::CoordinateSystem{ coordsName, coordsData },
+      fieldMapper);
+  }
+  ///@}
 
   VTKM_CONT virtual vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) = 0;
   VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData);
 
 private:
-  template <typename DataSetType, typename FieldMapper>
-  VTKM_CONT void MapFieldsOntoOutput(const DataSetType& input,
-                                     DataSetType& output,
+  template <typename FieldMapper>
+  VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::DataSet& input,
+                                     const vtkm::filter::FieldSelection& fieldSelection,
+                                     vtkm::cont::DataSet& output,
                                      FieldMapper&& fieldMapper) const
   {
     for (vtkm::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)
     {
       auto field = input.GetField(cc);
-      if (this->GetFieldsToPass().IsFieldSelected(field))
+      if (fieldSelection.IsFieldSelected(field))
+      {
+        fieldMapper(output, field);
+      }
+    }
+
+    for (vtkm::IdComponent csIndex = 0; csIndex < input.GetNumberOfCoordinateSystems(); ++csIndex)
+    {
+      auto coords = input.GetCoordinateSystem(csIndex);
+      if (!output.HasCoordinateSystem(coords.GetName()))
+      {
+        if (!output.HasPointField(coords.GetName()) &&
+            (this->GetPassCoordinateSystems() || this->GetFieldsToPass().IsFieldSelected(coords)))
+        {
+          fieldMapper(output, coords);
+        }
+        if (output.HasPointField(coords.GetName()))
+        {
+          output.AddCoordinateSystem(coords.GetName());
+        }
+      }
+    }
+  }
+
+  template <typename FieldMapper>
+  VTKM_CONT void MapFieldsOntoOutput(const vtkm::cont::PartitionedDataSet& input,
+                                     const vtkm::filter::FieldSelection& fieldSelection,
+                                     vtkm::cont::PartitionedDataSet& output,
+                                     FieldMapper&& fieldMapper) const
+  {
+    for (vtkm::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)
+    {
+      auto field = input.GetField(cc);
+      if (fieldSelection.IsFieldSelected(field))
       {
         fieldMapper(output, field);
       }
@@ -493,6 +567,7 @@ private:
 
 
   vtkm::filter::FieldSelection FieldsToPass = vtkm::filter::FieldSelection::Mode::All;
+  bool PassCoordinateSystems = true;
   bool RunFilterWithMultipleThreads = false;
   vtkm::Id NumThreadsPerCPU = 4;
   vtkm::Id NumThreadsPerGPU = 8;

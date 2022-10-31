@@ -109,11 +109,14 @@ vtkm::cont::PartitionedDataSet NewFilter::Execute(const vtkm::cont::PartitionedD
 vtkm::cont::DataSet NewFilter::CreateResult(const vtkm::cont::DataSet& inDataSet) const
 {
   vtkm::cont::DataSet clone;
-  clone.CopyStructure(inDataSet);
-  this->MapFieldsOntoOutput(
-    inDataSet, clone, [](vtkm::cont::DataSet& out, const vtkm::cont::Field& fieldToPass) {
-      out.AddField(fieldToPass);
-    });
+  clone.CopyPartsFromExcept(
+    inDataSet, vtkm::cont::DataSet::Parts::Fields | vtkm::cont::DataSet::Parts::Coordinates);
+  this->MapFieldsOntoOutput(inDataSet,
+                            this->GetFieldsToPass(),
+                            clone,
+                            [](vtkm::cont::DataSet& out, const vtkm::cont::Field& fieldToPass) {
+                              out.AddField(fieldToPass);
+                            });
   return clone;
 }
 

@@ -26,7 +26,7 @@ public:
   void SetGeometry(const vtkm::cont::DataSet& geometry)
   {
     this->Geometry = vtkm::cont::DataSet();
-    this->Geometry.CopyStructure(geometry);
+    this->Geometry.CopyPartsFromExcept(geometry, vtkm::cont::DataSet::Parts::Fields);
   }
 
   VTKM_CONT

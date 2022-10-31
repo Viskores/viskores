@@ -262,7 +262,7 @@ VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& i
     auto fieldmapper = [&](vtkm::cont::DataSet& dataset, const vtkm::cont::Field& fieldToPass) {
       MapField(dataset, fieldToPass);
     };
-    outputData = this->CreateResult(input, outCellSet, outCoords, fieldmapper);
+    outputData = this->CreateResultCoordinateSystem(input, outCellSet, outCoords, fieldmapper);
     outputData.AddPointField("valid", this->BasisParticlesValidity);
     outputData.AddPointField("displacement", basisParticlesDisplacement);
 

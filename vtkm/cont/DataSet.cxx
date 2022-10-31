@@ -9,7 +9,10 @@
 //============================================================================
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Logging.h>
+
+#include <algorithm>
 
 namespace
 {
@@ -84,7 +87,7 @@ VTKM_CONT void SetGlobalGhostCellFieldName(const std::string& name) noexcept
 
 void DataSet::Clear()
 {
-  this->CoordSystems.clear();
+  this->CoordSystemNames.clear();
   this->Fields.Clear();
   this->CellSet = this->CellSet.NewInstance();
 }
@@ -158,10 +161,31 @@ const vtkm::cont::Field& DataSet::GetGhostCellField() const
   }
 }
 
-void DataSet::AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs)
+vtkm::IdComponent DataSet::AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs)
 {
-  CheckFieldSize(this->CellSet, cs);
-  this->CoordSystems.push_back(cs);
+  this->AddField(cs);
+  return this->AddCoordinateSystem(cs.GetName());
+}
+
+vtkm::IdComponent DataSet::AddCoordinateSystem(const std::string& pointFieldName)
+{
+  // Check to see if we already have this coordinate system.
+  vtkm::IdComponent index = this->GetCoordinateSystemIndex(pointFieldName);
+  if (index >= 0)
+  {
+    return index;
+  }
+
+  // Check to make sure this is a valid point field.
+  if (!this->HasPointField(pointFieldName))
+  {
+    throw vtkm::cont::ErrorBadValue("Cannot set point field named `" + pointFieldName +
+                                    "` as a coordinate system because it does not exist.");
+  }
+
+  // Add the field to the list of coordinates.
+  this->CoordSystemNames.push_back(pointFieldName);
+  return static_cast<vtkm::IdComponent>(this->CoordSystemNames.size() - 1);
 }
 
 void DataSet::SetCellSetImpl(const vtkm::cont::UnknownCellSet& cellSet)
@@ -211,67 +235,82 @@ void DataSet::SetGhostCellField(const vtkm::cont::UnknownArrayHandle& field)
   this->SetGhostCellField(GetGlobalGhostCellFieldName(), field);
 }
 
-void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
+void DataSet::CopyPartsFromExcept(const vtkm::cont::DataSet& source,
+                                  vtkm::cont::DataSet::Parts partMask)
 {
-  this->CoordSystems = source.CoordSystems;
-  this->CellSet = source.CellSet;
-  this->GhostCellName = source.GhostCellName;
+  if ((partMask & vtkm::cont::DataSet::Parts::CellSet) == vtkm::cont::DataSet::Parts::None)
+  {
+    this->CellSet = source.CellSet;
+  }
+  if ((partMask & vtkm::cont::DataSet::Parts::GhostCellName) == vtkm::cont::DataSet::Parts::None)
+  {
+    this->GhostCellName = source.GhostCellName;
+  }
+
+  if ((partMask & vtkm::cont::DataSet::Parts::Fields) == vtkm::cont::DataSet::Parts::None)
+  {
+    vtkm::IdComponent numFields = source.GetNumberOfFields();
+    for (vtkm::IdComponent fIndex = 0; fIndex < numFields; ++fIndex)
+    {
+      this->AddField(source.GetField(fIndex));
+    }
+  }
+
+  if ((partMask & vtkm::cont::DataSet::Parts::Coordinates) == vtkm::cont::DataSet::Parts::None)
+  {
+    vtkm::IdComponent numCoords = source.GetNumberOfCoordinateSystems();
+    for (vtkm::IdComponent cIndex = 0; cIndex < numCoords; ++cIndex)
+    {
+      std::string coordName = source.GetCoordinateSystemName(cIndex);
+      if (this->HasPointField(coordName))
+      {
+        this->AddCoordinateSystem(coordName);
+      }
+      else
+      {
+        this->AddCoordinateSystem(source.GetCoordinateSystem(cIndex));
+      }
+    }
+  }
 
   CheckFieldSizes(this->CellSet, this->Fields);
 }
 
-const vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(vtkm::Id index) const
+vtkm::cont::CoordinateSystem DataSet::GetCoordinateSystem(vtkm::Id index) const
 {
   VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfCoordinateSystems()));
-  return this->CoordSystems[static_cast<std::size_t>(index)];
+  return this->GetPointField(this->CoordSystemNames[static_cast<std::size_t>(index)]);
 }
 
-vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(vtkm::Id index)
+vtkm::IdComponent DataSet::GetCoordinateSystemIndex(const std::string& name) const
 {
-  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfCoordinateSystems()));
-  return this->CoordSystems[static_cast<std::size_t>(index)];
-}
-
-vtkm::Id DataSet::GetCoordinateSystemIndex(const std::string& name) const
-{
-  vtkm::Id index = -1;
-  for (auto i = this->CoordSystems.begin(); i != this->CoordSystems.end(); ++i)
+  auto nameIter = std::find(this->CoordSystemNames.begin(), this->CoordSystemNames.end(), name);
+  if (nameIter != this->CoordSystemNames.end())
   {
-    if (i->GetName() == name)
-    {
-      index = static_cast<vtkm::Id>(std::distance(this->CoordSystems.begin(), i));
-      break;
-    }
+    return static_cast<vtkm::IdComponent>(std::distance(this->CoordSystemNames.begin(), nameIter));
   }
-  return index;
+  else
+  {
+    return -1;
+  }
 }
 
-const vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(const std::string& name) const
+const std::string& DataSet::GetCoordinateSystemName(vtkm::Id index) const
+{
+  VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfCoordinateSystems()));
+  return this->CoordSystemNames[static_cast<std::size_t>(index)];
+}
+
+vtkm::cont::CoordinateSystem DataSet::GetCoordinateSystem(const std::string& name) const
 {
   vtkm::Id index = this->GetCoordinateSystemIndex(name);
   if (index < 0)
   {
     std::string error_message("No coordinate system with the name " + name +
                               " valid names are: \n");
-    for (const auto& cs : this->CoordSystems)
+    for (const auto& csn : this->CoordSystemNames)
     {
-      error_message += cs.GetName() + "\n";
-    }
-    throw vtkm::cont::ErrorBadValue(error_message);
-  }
-  return this->GetCoordinateSystem(index);
-}
-
-vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(const std::string& name)
-{
-  vtkm::Id index = this->GetCoordinateSystemIndex(name);
-  if (index < 0)
-  {
-    std::string error_message("No coordinate system with the name " + name +
-                              " valid names are: \n");
-    for (const auto& cs : this->CoordSystems)
-    {
-      error_message += cs.GetName() + "\n";
+      error_message += csn + "\n";
     }
     throw vtkm::cont::ErrorBadValue(error_message);
   }
@@ -281,11 +320,13 @@ vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(const std::string& na
 void DataSet::PrintSummary(std::ostream& out) const
 {
   out << "DataSet:\n";
-  out << "  CoordSystems[" << this->CoordSystems.size() << "]\n";
-  for (std::size_t index = 0; index < this->CoordSystems.size(); index++)
+  out << "  CoordSystems[" << this->CoordSystemNames.size() << "]\n";
+  out << "   ";
+  for (const auto& csn : this->CoordSystemNames)
   {
-    this->CoordSystems[index].PrintSummary(out);
+    out << " " << csn;
   }
+  out << "\n";
 
   out << "  CellSet \n";
   this->GetCellSet().PrintSummary(out);

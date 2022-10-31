@@ -25,6 +25,8 @@ class VTKM_FILTER_FIELD_TRANSFORM_EXPORT SphericalCoordinateTransform
   : public vtkm::filter::NewFilterField
 {
 public:
+  VTKM_CONT SphericalCoordinateTransform();
+
   VTKM_CONT void SetCartesianToSpherical() { CartesianToSpherical = true; }
   VTKM_CONT void SetSphericalToCartesian() { CartesianToSpherical = false; }
 

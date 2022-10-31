@@ -174,8 +174,7 @@ VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(const vtkm::cont::DataS
 
   // create the output dataset
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f); };
-  vtkm::cont::DataSet output =
-    this->CreateResult(input, outCellSet, input.GetCoordinateSystems(), mapper);
+  vtkm::cont::DataSet output = this->CreateResult(input, outCellSet, mapper);
 
   // compact the unused points in the output dataset
   if (this->CompactPoints)
