@@ -18,6 +18,7 @@ set(headers
   CellInterpolate.h
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorMultiplexer.h
+  CellLocatorPartitioned.h
   CellLocatorRectilinearGrid.h
   CellLocatorTwoLevel.h
   CellLocatorUniformGrid.h

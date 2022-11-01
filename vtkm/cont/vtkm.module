@@ -10,3 +10,5 @@ OPTIONAL_DEPENDS
   vtkm_loguru
 TEST_OPTIONAL_DEPENDS
   vtkm_filter_field_conversion
+TEST_DEPENDS
+  vtkm_source

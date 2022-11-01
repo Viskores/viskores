@@ -98,6 +98,7 @@ set(unit_tests_device
   UnitTestBitField.cxx
   UnitTestCellLocatorChooser.cxx
   UnitTestCellLocatorGeneral.cxx
+  UnitTestCellLocatorPartitioned.cxx
   UnitTestCellLocatorRectilinearGrid.cxx
   UnitTestCellLocatorTwoLevel.cxx
   UnitTestCellLocatorUniformGrid.cxx
