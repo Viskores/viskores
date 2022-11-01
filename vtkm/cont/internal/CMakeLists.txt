@@ -41,7 +41,6 @@ set(headers
   RuntimeDeviceOption.h
   StorageDeprecated.h
   StorageError.h
-  Variant.h
   )
 
 vtkm_declare_headers(${headers})

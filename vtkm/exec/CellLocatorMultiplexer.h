@@ -13,7 +13,7 @@
 #include <vtkm/ErrorCode.h>
 #include <vtkm/TypeList.h>
 
-#include <vtkm/exec/internal/Variant.h>
+#include <vtkm/exec/Variant.h>
 
 namespace vtkm
 {
@@ -55,12 +55,12 @@ struct FindCellFunctor
 template <typename... LocatorTypes>
 class VTKM_ALWAYS_EXPORT CellLocatorMultiplexer
 {
-  vtkm::exec::internal::Variant<LocatorTypes...> Locators;
+  vtkm::exec::Variant<LocatorTypes...> Locators;
 
 public:
   CellLocatorMultiplexer() = default;
 
-  using LastCell = vtkm::exec::internal::Variant<typename LocatorTypes::LastCell...>;
+  using LastCell = vtkm::exec::Variant<typename LocatorTypes::LastCell...>;
 
   template <typename Locator>
   VTKM_CONT CellLocatorMultiplexer(const Locator& locator)

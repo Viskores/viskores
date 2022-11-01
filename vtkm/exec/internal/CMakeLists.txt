@@ -14,7 +14,6 @@ set(headers
   ReduceByKeyLookup.h
   TaskSingular.h
   TwoLevelUniformGridExecutionObject.h
-  Variant.h
   WorkletInvokeFunctorDetail.h
   )
 

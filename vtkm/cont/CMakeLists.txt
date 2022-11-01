@@ -126,6 +126,7 @@ set(headers
   UncertainCellSet.h
   UnknownArrayHandle.h
   UnknownCellSet.h
+  Variant.h
   VariantArrayHandle.h # Deprecated, replaces with Unknown/UncertainArrayHandle.h
   )
 

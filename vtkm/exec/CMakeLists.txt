@@ -33,6 +33,7 @@ set(headers
   ParametricCoordinates.h
   PointLocatorSparseGrid.h
   TaskBase.h
+  Variant.h
   )
 
 set(header_impls

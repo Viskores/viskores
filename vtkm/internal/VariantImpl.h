@@ -26,8 +26,6 @@ namespace vtkm
 {
 namespace VTK_M_NAMESPACE
 {
-namespace internal
-{
 
 // Forward declaration
 template <typename... Ts>
@@ -126,8 +124,7 @@ template <typename VariantType>
 struct VariantTriviallyCopyable;
 
 template <typename... Ts>
-struct VariantTriviallyCopyable<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>>
-  : AllTriviallyCopyable<Ts...>
+struct VariantTriviallyCopyable<vtkm::VTK_M_NAMESPACE::Variant<Ts...>> : AllTriviallyCopyable<Ts...>
 {
 };
 
@@ -135,7 +132,7 @@ template <typename VariantType>
 struct VariantTriviallyConstructible;
 
 template <typename... Ts>
-struct VariantTriviallyConstructible<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>>
+struct VariantTriviallyConstructible<vtkm::VTK_M_NAMESPACE::Variant<Ts...>>
   : AllTriviallyConstructible<Ts...>
 {
 };
@@ -205,9 +202,8 @@ struct VariantConstructorImpl;
 
 // Can trivially construct, deconstruct, and copy all data. (Probably all trivial classes.)
 template <typename... Ts>
-struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
-                              std::true_type,
-                              std::true_type> : VariantStorageImpl<Ts...>
+struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::Variant<Ts...>, std::true_type, std::true_type>
+  : VariantStorageImpl<Ts...>
 {
   VariantConstructorImpl() = default;
   ~VariantConstructorImpl() = default;
@@ -221,7 +217,7 @@ struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
 // Can trivially copy, but cannot trivially construct. Common if a class is simple but
 // initializes itself.
 template <typename... Ts>
-struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
+struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::Variant<Ts...>,
                               std::false_type,
                               std::true_type> : VariantStorageImpl<Ts...>
 {
@@ -242,7 +238,7 @@ struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
 
 // Cannot trivially copy. We assume we cannot trivially construct/destruct.
 template <typename construct_type, typename... Ts>
-struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
+struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::Variant<Ts...>,
                               construct_type,
                               std::false_type> : VariantStorageImpl<Ts...>
 {
@@ -555,15 +551,14 @@ template <typename ListTag>
 using ListTagAsVariant VTKM_DEPRECATED(
   1.6,
   "vtkm::ListTag is no longer supported. Use vtkm::List instead.") =
-  vtkm::ListApply<ListTag, vtkm::VTK_M_NAMESPACE::internal::Variant>;
+  vtkm::ListApply<ListTag, vtkm::VTK_M_NAMESPACE::Variant>;
 
 /// \brief Convert a `List` to a `Variant`.
 ///
 template <typename List>
-using ListAsVariant = vtkm::ListApply<List, vtkm::VTK_M_NAMESPACE::internal::Variant>;
+using ListAsVariant = vtkm::ListApply<List, vtkm::VTK_M_NAMESPACE::Variant>;
 }
-}
-} // namespace vtkm::VTK_M_NAMESPACE::internal
+} // namespace vtkm::VTK_M_NAMESPACE
 
 #undef VTK_M_DEVICE
 #undef VTK_M_NAMESPACE
