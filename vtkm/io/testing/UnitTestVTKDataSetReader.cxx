@@ -140,6 +140,29 @@ void TestReadingV5Format(Format format)
   VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 15, "Incorrect number of cells");
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
                    "Incorrect cellset type");
+
+  for (vtkm::IdComponent fieldIdx = 0; fieldIdx < ds.GetNumberOfFields(); ++fieldIdx)
+  {
+    vtkm::cont::Field field = ds.GetField(fieldIdx);
+    switch (field.GetAssociation())
+    {
+      case vtkm::cont::Field::Association::Points:
+        VTKM_TEST_ASSERT(field.GetData().GetNumberOfValues() == ds.GetNumberOfPoints(),
+                         "Field ",
+                         field.GetName(),
+                         " is the wrong size");
+        break;
+      case vtkm::cont::Field::Association::Cells:
+        VTKM_TEST_ASSERT(field.GetData().GetNumberOfValues() == ds.GetNumberOfCells(),
+                         "Field ",
+                         field.GetName(),
+                         " is the wrong size");
+        break;
+      default:
+        // Could be any size.
+        break;
+    }
+  }
 }
 
 void TestReadingUnstructuredGridEmpty()
