@@ -15,7 +15,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
 
-#include <vtkm/exec/internal/Variant.h>
+#include <vtkm/exec/Variant.h>
 
 // For interface class only.
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
@@ -729,7 +729,7 @@ class ImplicitFunctionMultiplexer
   : public vtkm::internal::ImplicitFunctionBase<
       ImplicitFunctionMultiplexer<ImplicitFunctionTypes...>>
 {
-  vtkm::exec::internal::Variant<ImplicitFunctionTypes...> Variant;
+  vtkm::exec::Variant<ImplicitFunctionTypes...> Variant;
 
   using Superclass =
     vtkm::internal::ImplicitFunctionBase<ImplicitFunctionMultiplexer<ImplicitFunctionTypes...>>;

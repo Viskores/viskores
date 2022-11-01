@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/exec/internal/Variant.h>
+#include <vtkm/exec/Variant.h>
 
 #include <vtkm/testing/Testing.h>
 
@@ -93,7 +93,7 @@ void TestSize()
 {
   std::cout << "Test size" << std::endl;
 
-  using VariantType = vtkm::exec::internal::Variant<float, double, char, short, int, long>;
+  using VariantType = vtkm::exec::Variant<float, double, char, short, int, long>;
 
   constexpr size_t variantSize = sizeof(VariantType);
 
@@ -106,36 +106,36 @@ void TestIndexing()
 {
   std::cout << "Test indexing" << std::endl;
 
-  using VariantType = vtkm::exec::internal::Variant<TypePlaceholder<0>,
-                                                    TypePlaceholder<1>,
-                                                    TypePlaceholder<2>,
-                                                    TypePlaceholder<3>,
-                                                    TypePlaceholder<4>,
-                                                    TypePlaceholder<5>,
-                                                    TypePlaceholder<6>,
-                                                    TypePlaceholder<7>,
-                                                    TypePlaceholder<8>,
-                                                    TypePlaceholder<9>,
-                                                    TypePlaceholder<10>,
-                                                    TypePlaceholder<11>,
-                                                    TypePlaceholder<12>,
-                                                    TypePlaceholder<13>,
-                                                    TypePlaceholder<14>,
-                                                    TypePlaceholder<15>,
-                                                    TypePlaceholder<16>,
-                                                    TypePlaceholder<17>,
-                                                    TypePlaceholder<18>,
-                                                    TypePlaceholder<19>,
-                                                    TypePlaceholder<20>,
-                                                    TypePlaceholder<21>,
-                                                    TypePlaceholder<22>,
-                                                    TypePlaceholder<23>,
-                                                    TypePlaceholder<24>,
-                                                    TypePlaceholder<25>,
-                                                    TypePlaceholder<26>,
-                                                    TypePlaceholder<27>,
-                                                    TypePlaceholder<28>,
-                                                    TypePlaceholder<29>>;
+  using VariantType = vtkm::exec::Variant<TypePlaceholder<0>,
+                                          TypePlaceholder<1>,
+                                          TypePlaceholder<2>,
+                                          TypePlaceholder<3>,
+                                          TypePlaceholder<4>,
+                                          TypePlaceholder<5>,
+                                          TypePlaceholder<6>,
+                                          TypePlaceholder<7>,
+                                          TypePlaceholder<8>,
+                                          TypePlaceholder<9>,
+                                          TypePlaceholder<10>,
+                                          TypePlaceholder<11>,
+                                          TypePlaceholder<12>,
+                                          TypePlaceholder<13>,
+                                          TypePlaceholder<14>,
+                                          TypePlaceholder<15>,
+                                          TypePlaceholder<16>,
+                                          TypePlaceholder<17>,
+                                          TypePlaceholder<18>,
+                                          TypePlaceholder<19>,
+                                          TypePlaceholder<20>,
+                                          TypePlaceholder<21>,
+                                          TypePlaceholder<22>,
+                                          TypePlaceholder<23>,
+                                          TypePlaceholder<24>,
+                                          TypePlaceholder<25>,
+                                          TypePlaceholder<26>,
+                                          TypePlaceholder<27>,
+                                          TypePlaceholder<28>,
+                                          TypePlaceholder<29>>;
 
   VariantType variant;
 
@@ -256,51 +256,48 @@ void TestTriviallyCopyable()
   VTKM_STATIC_ASSERT(!vtkmstd::is_trivial<TrivialCopy>::value);
 
   // A variant of trivially constructable things should be trivially constructable
-  VTKM_STATIC_ASSERT((vtkmstd::is_trivially_constructible<
-                      vtkm::exec::internal::detail::VariantUnion<float, int>>::value));
   VTKM_STATIC_ASSERT(
-    (vtkmstd::is_trivially_constructible<vtkm::exec::internal::Variant<float, int>>::value));
+    (vtkmstd::is_trivially_constructible<vtkm::exec::detail::VariantUnion<float, int>>::value));
+  VTKM_STATIC_ASSERT((vtkmstd::is_trivially_constructible<vtkm::exec::Variant<float, int>>::value));
 
   // A variant of trivially copyable things should be trivially copyable
   VTKM_STATIC_ASSERT((vtkmstd::is_trivially_copyable<
-                      vtkm::exec::internal::detail::VariantUnion<float, int, TrivialCopy>>::value));
-  VTKM_STATIC_ASSERT((
-    vtkmstd::is_trivially_copyable<vtkm::exec::internal::Variant<float, int, TrivialCopy>>::value));
+                      vtkm::exec::detail::VariantUnion<float, int, TrivialCopy>>::value));
+  VTKM_STATIC_ASSERT(
+    (vtkmstd::is_trivially_copyable<vtkm::exec::Variant<float, int, TrivialCopy>>::value));
 
   // A variant of any non-trivially constructable things is not trivially copyable
   VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
-                      vtkm::exec::internal::detail::VariantUnion<NonTrivial, float, int>>::value));
+                      vtkm::exec::detail::VariantUnion<NonTrivial, float, int>>::value));
   VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
-                      vtkm::exec::internal::detail::VariantUnion<float, NonTrivial, int>>::value));
+                      vtkm::exec::detail::VariantUnion<float, NonTrivial, int>>::value));
   VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
-                      vtkm::exec::internal::detail::VariantUnion<float, int, NonTrivial>>::value));
-  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
-                      vtkm::exec::internal::Variant<NonTrivial, float, int>>::value));
-  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
-                      vtkm::exec::internal::Variant<float, NonTrivial, int>>::value));
-  VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_constructible<
-                      vtkm::exec::internal::Variant<float, int, NonTrivial>>::value));
+                      vtkm::exec::detail::VariantUnion<float, int, NonTrivial>>::value));
+  VTKM_STATIC_ASSERT(
+    (!vtkmstd::is_trivially_constructible<vtkm::exec::Variant<NonTrivial, float, int>>::value));
+  VTKM_STATIC_ASSERT(
+    (!vtkmstd::is_trivially_constructible<vtkm::exec::Variant<float, NonTrivial, int>>::value));
+  VTKM_STATIC_ASSERT(
+    (!vtkmstd::is_trivially_constructible<vtkm::exec::Variant<float, int, NonTrivial>>::value));
 
   // A variant of any non-trivially copyable things is not trivially copyable
   VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_copyable<
-                      vtkm::exec::internal::detail::VariantUnion<NonTrivial, float, int>>::value));
+                      vtkm::exec::detail::VariantUnion<NonTrivial, float, int>>::value));
   VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_copyable<
-                      vtkm::exec::internal::detail::VariantUnion<float, NonTrivial, int>>::value));
+                      vtkm::exec::detail::VariantUnion<float, NonTrivial, int>>::value));
   VTKM_STATIC_ASSERT((!vtkmstd::is_trivially_copyable<
-                      vtkm::exec::internal::detail::VariantUnion<float, int, NonTrivial>>::value));
-  VTKM_STATIC_ASSERT((
-    !vtkmstd::is_trivially_copyable<vtkm::exec::internal::Variant<NonTrivial, float, int>>::value));
-  VTKM_STATIC_ASSERT((
-    !vtkmstd::is_trivially_copyable<vtkm::exec::internal::Variant<float, NonTrivial, int>>::value));
-  VTKM_STATIC_ASSERT((
-    !vtkmstd::is_trivially_copyable<vtkm::exec::internal::Variant<float, int, NonTrivial>>::value));
+                      vtkm::exec::detail::VariantUnion<float, int, NonTrivial>>::value));
+  VTKM_STATIC_ASSERT(
+    (!vtkmstd::is_trivially_copyable<vtkm::exec::Variant<NonTrivial, float, int>>::value));
+  VTKM_STATIC_ASSERT(
+    (!vtkmstd::is_trivially_copyable<vtkm::exec::Variant<float, NonTrivial, int>>::value));
+  VTKM_STATIC_ASSERT(
+    (!vtkmstd::is_trivially_copyable<vtkm::exec::Variant<float, int, NonTrivial>>::value));
 
   // A variant of trivial things should be trivial
-  VTKM_STATIC_ASSERT((vtkmstd::is_trivial<vtkm::exec::internal::Variant<float, int>>::value));
-  VTKM_STATIC_ASSERT(
-    (!vtkmstd::is_trivial<vtkm::exec::internal::Variant<float, int, TrivialCopy>>::value));
-  VTKM_STATIC_ASSERT(
-    (!vtkmstd::is_trivial<vtkm::exec::internal::Variant<float, int, NonTrivial>>::value));
+  VTKM_STATIC_ASSERT((vtkmstd::is_trivial<vtkm::exec::Variant<float, int>>::value));
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivial<vtkm::exec::Variant<float, int, TrivialCopy>>::value));
+  VTKM_STATIC_ASSERT((!vtkmstd::is_trivial<vtkm::exec::Variant<float, int, NonTrivial>>::value));
 #endif // VTKM_USE_STD_IS_TRIVIAL
 }
 
@@ -329,36 +326,36 @@ void TestGet()
 {
   std::cout << "Test Get" << std::endl;
 
-  using VariantType = vtkm::exec::internal::Variant<TypePlaceholder<0>,
-                                                    TypePlaceholder<1>,
-                                                    vtkm::Id,
-                                                    TypePlaceholder<3>,
-                                                    TypePlaceholder<4>,
-                                                    TypePlaceholder<5>,
-                                                    TypePlaceholder<6>,
-                                                    TypePlaceholder<7>,
-                                                    TypePlaceholder<8>,
-                                                    TypePlaceholder<9>,
-                                                    TypePlaceholder<10>,
-                                                    TypePlaceholder<11>,
-                                                    TypePlaceholder<12>,
-                                                    TypePlaceholder<13>,
-                                                    TypePlaceholder<14>,
-                                                    TypePlaceholder<15>,
-                                                    TypePlaceholder<16>,
-                                                    TypePlaceholder<17>,
-                                                    TypePlaceholder<18>,
-                                                    TypePlaceholder<19>,
-                                                    TypePlaceholder<20>,
-                                                    TypePlaceholder<21>,
-                                                    TypePlaceholder<22>,
-                                                    TypePlaceholder<23>,
-                                                    TypePlaceholder<24>,
-                                                    TypePlaceholder<25>,
-                                                    TypePlaceholder<26>,
-                                                    vtkm::Float32,
-                                                    TypePlaceholder<28>,
-                                                    TypePlaceholder<29>>;
+  using VariantType = vtkm::exec::Variant<TypePlaceholder<0>,
+                                          TypePlaceholder<1>,
+                                          vtkm::Id,
+                                          TypePlaceholder<3>,
+                                          TypePlaceholder<4>,
+                                          TypePlaceholder<5>,
+                                          TypePlaceholder<6>,
+                                          TypePlaceholder<7>,
+                                          TypePlaceholder<8>,
+                                          TypePlaceholder<9>,
+                                          TypePlaceholder<10>,
+                                          TypePlaceholder<11>,
+                                          TypePlaceholder<12>,
+                                          TypePlaceholder<13>,
+                                          TypePlaceholder<14>,
+                                          TypePlaceholder<15>,
+                                          TypePlaceholder<16>,
+                                          TypePlaceholder<17>,
+                                          TypePlaceholder<18>,
+                                          TypePlaceholder<19>,
+                                          TypePlaceholder<20>,
+                                          TypePlaceholder<21>,
+                                          TypePlaceholder<22>,
+                                          TypePlaceholder<23>,
+                                          TypePlaceholder<24>,
+                                          TypePlaceholder<25>,
+                                          TypePlaceholder<26>,
+                                          vtkm::Float32,
+                                          TypePlaceholder<28>,
+                                          TypePlaceholder<29>>;
 
   {
     const vtkm::Id expectedValue = TestValue(3, vtkm::Id{});
@@ -392,36 +389,36 @@ void TestCastAndCall()
 {
   std::cout << "Test CastAndCall" << std::endl;
 
-  using VariantType = vtkm::exec::internal::Variant<TypePlaceholder<0>,
-                                                    TypePlaceholder<1>,
-                                                    TypePlaceholder<2>,
-                                                    TypePlaceholder<3>,
-                                                    TypePlaceholder<4>,
-                                                    TypePlaceholder<5>,
-                                                    TypePlaceholder<6>,
-                                                    TypePlaceholder<7>,
-                                                    TypePlaceholder<8>,
-                                                    TypePlaceholder<9>,
-                                                    TypePlaceholder<10>,
-                                                    TypePlaceholder<11>,
-                                                    TypePlaceholder<12>,
-                                                    TypePlaceholder<13>,
-                                                    TypePlaceholder<14>,
-                                                    TypePlaceholder<15>,
-                                                    TypePlaceholder<16>,
-                                                    TypePlaceholder<17>,
-                                                    TypePlaceholder<18>,
-                                                    TypePlaceholder<19>,
-                                                    TypePlaceholder<20>,
-                                                    TypePlaceholder<21>,
-                                                    TypePlaceholder<22>,
-                                                    TypePlaceholder<23>,
-                                                    TypePlaceholder<24>,
-                                                    TypePlaceholder<25>,
-                                                    TypePlaceholder<26>,
-                                                    TypePlaceholder<27>,
-                                                    TypePlaceholder<28>,
-                                                    TypePlaceholder<29>>;
+  using VariantType = vtkm::exec::Variant<TypePlaceholder<0>,
+                                          TypePlaceholder<1>,
+                                          TypePlaceholder<2>,
+                                          TypePlaceholder<3>,
+                                          TypePlaceholder<4>,
+                                          TypePlaceholder<5>,
+                                          TypePlaceholder<6>,
+                                          TypePlaceholder<7>,
+                                          TypePlaceholder<8>,
+                                          TypePlaceholder<9>,
+                                          TypePlaceholder<10>,
+                                          TypePlaceholder<11>,
+                                          TypePlaceholder<12>,
+                                          TypePlaceholder<13>,
+                                          TypePlaceholder<14>,
+                                          TypePlaceholder<15>,
+                                          TypePlaceholder<16>,
+                                          TypePlaceholder<17>,
+                                          TypePlaceholder<18>,
+                                          TypePlaceholder<19>,
+                                          TypePlaceholder<20>,
+                                          TypePlaceholder<21>,
+                                          TypePlaceholder<22>,
+                                          TypePlaceholder<23>,
+                                          TypePlaceholder<24>,
+                                          TypePlaceholder<25>,
+                                          TypePlaceholder<26>,
+                                          TypePlaceholder<27>,
+                                          TypePlaceholder<28>,
+                                          TypePlaceholder<29>>;
   vtkm::FloatDefault result;
 
   VariantType variant0{ TypePlaceholder<0>{} };
@@ -454,7 +451,7 @@ void TestCopyInvalid()
 {
   std::cout << "Test copy invalid variant" << std::endl;
 
-  using VariantType = vtkm::exec::internal::Variant<TypePlaceholder<0>, NonTrivial>;
+  using VariantType = vtkm::exec::Variant<TypePlaceholder<0>, NonTrivial>;
 
   VariantType source;
   source.Reset();
@@ -488,11 +485,11 @@ void TestCopyDestroy()
 {
   std::cout << "Test copy destroy" << std::endl;
 
-  using VariantType = vtkm::exec::internal::Variant<TypePlaceholder<0>,
-                                                    TypePlaceholder<1>,
-                                                    CountConstructDestruct,
-                                                    TypePlaceholder<3>,
-                                                    TypePlaceholder<4>>;
+  using VariantType = vtkm::exec::Variant<TypePlaceholder<0>,
+                                          TypePlaceholder<1>,
+                                          CountConstructDestruct,
+                                          TypePlaceholder<3>,
+                                          TypePlaceholder<4>>;
 #ifdef VTKM_USE_STD_IS_TRIVIAL
   VTKM_STATIC_ASSERT(!vtkmstd::is_trivially_copyable<VariantType>::value);
 #endif // VTKM_USE_STD_IS_TRIVIAL
@@ -545,7 +542,7 @@ void TestEmplace()
 {
   std::cout << "Test Emplace" << std::endl;
 
-  using VariantType = vtkm::exec::internal::Variant<vtkm::Id, vtkm::Id3, std::vector<vtkm::Id>>;
+  using VariantType = vtkm::exec::Variant<vtkm::Id, vtkm::Id3, std::vector<vtkm::Id>>;
 
   VariantType variant;
   variant.Emplace<vtkm::Id>(TestValue(0, vtkm::Id{}));
@@ -577,7 +574,7 @@ void TestConstructDestruct()
 
   g_NonTrivialCount = 0;
 
-  using VariantType = vtkm::exec::internal::Variant<NonTrivial, TrivialCopy>;
+  using VariantType = vtkm::exec::Variant<NonTrivial, TrivialCopy>;
 
   {
     VariantType variant1 = NonTrivial{};
@@ -597,8 +594,7 @@ void TestCopySelf()
 {
   std::cout << "Make sure copying a Variant to itself works" << std::endl;
 
-  using VariantType =
-    vtkm::exec::internal::Variant<TypePlaceholder<0>, NonTrivial, TypePlaceholder<2>>;
+  using VariantType = vtkm::exec::Variant<TypePlaceholder<0>, NonTrivial, TypePlaceholder<2>>;
 
   VariantType variant{ NonTrivial{} };
   VariantType& variantRef = variant;

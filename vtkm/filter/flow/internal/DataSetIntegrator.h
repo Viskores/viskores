@@ -22,7 +22,7 @@
 #include <vtkm/filter/flow/worklet/RK4Integrator.h>
 #include <vtkm/filter/flow/worklet/Stepper.h>
 
-#include <vtkm/cont/internal/Variant.h>
+#include <vtkm/cont/Variant.h>
 
 namespace vtkm
 {
@@ -54,8 +54,8 @@ public:
   std::vector<vtkm::Id> TermIdx, TermID;
 };
 
-using DSIHelperInfoType = vtkm::cont::internal::Variant<DSIHelperInfo<vtkm::Particle>,
-                                                        DSIHelperInfo<vtkm::ChargedParticle>>;
+using DSIHelperInfoType =
+  vtkm::cont::Variant<DSIHelperInfo<vtkm::Particle>, DSIHelperInfo<vtkm::ChargedParticle>>;
 
 template <typename Derived>
 class DataSetIntegrator
@@ -65,14 +65,13 @@ public:
   using ElectroMagneticFieldNameType = std::pair<std::string, std::string>;
 
 protected:
-  using FieldNameType =
-    vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType>;
+  using FieldNameType = vtkm::cont::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType>;
 
-  using RType = vtkm::cont::internal::Variant<
-    vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle>,
-    vtkm::worklet::flow::ParticleAdvectionResult<vtkm::ChargedParticle>,
-    vtkm::worklet::flow::StreamlineResult<vtkm::Particle>,
-    vtkm::worklet::flow::StreamlineResult<vtkm::ChargedParticle>>;
+  using RType =
+    vtkm::cont::Variant<vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle>,
+                        vtkm::worklet::flow::ParticleAdvectionResult<vtkm::ChargedParticle>,
+                        vtkm::worklet::flow::StreamlineResult<vtkm::Particle>,
+                        vtkm::worklet::flow::StreamlineResult<vtkm::ChargedParticle>>;
 
 public:
   DataSetIntegrator(vtkm::Id id,
@@ -128,7 +127,7 @@ protected:
                                           DSIHelperInfo<ParticleType>& dsiInfo) const;
 
   //Data members.
-  vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType> FieldName;
+  vtkm::cont::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType> FieldName;
 
   vtkm::Id Id;
   vtkm::filter::flow::IntegrationSolverType SolverType;

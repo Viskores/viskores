@@ -26,8 +26,7 @@ namespace
 VTKM_CONT std::vector<vtkm::filter::flow::internal::DataSetIntegratorSteadyState>
 CreateDataSetIntegrators(
   const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::cont::internal::Variant<std::string, std::pair<std::string, std::string>>&
-    activeField,
+  const vtkm::cont::Variant<std::string, std::pair<std::string, std::string>>& activeField,
   const vtkm::filter::flow::internal::BoundsMap& boundsMap,
   const vtkm::filter::flow::IntegrationSolverType solverType,
   const vtkm::filter::flow::VectorFieldType vecFieldType,
@@ -69,8 +68,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet NewFilterParticleAdvectionSteadyState::
   using DSIType = vtkm::filter::flow::internal::DataSetIntegratorSteadyState;
   this->ValidateOptions();
 
-  using VariantType =
-    vtkm::cont::internal::Variant<std::string, std::pair<std::string, std::string>>;
+  using VariantType = vtkm::cont::Variant<std::string, std::pair<std::string, std::string>>;
   VariantType variant;
 
   if (this->VecFieldType == vtkm::filter::flow::VectorFieldType::VELOCITY_FIELD_TYPE)

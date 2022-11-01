@@ -32,8 +32,6 @@ namespace vtkm
 {
 namespace VTK_M_NAMESPACE
 {
-namespace internal
-{
 namespace detail
 {
 
@@ -1010,5 +1008,4 @@ VTK_M_DEVICE inline auto VariantCastAndCallImpl(
 
 }
 }
-}
-} // vtkm::VTK_M_NAMESPACE::internal::detail
+} // vtkm::VTK_M_NAMESPACE::detail
