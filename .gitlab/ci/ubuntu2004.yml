@@ -121,10 +121,12 @@ build:ascent:
     - .ubuntu2004
     - .run_only_merge_requests
   script:
+    # A new commit is needed to symbolize a restart of a build from the same original commit
+    - .gitlab/ci/config/ecpci-amend-commit.sh "NEW_COMMIT_SHA"
     - .gitlab/ci/config/ecpci-push-branch.sh "$ASCENT_GIT_URL" "$BRANCH_NAME"
-    - timeout 130m .gitlab/ci/config/ecpci-wait-commit-status.sh "$ASCENT_REST_URL" "$CI_COMMIT_SHA"
+    - timeout 130m .gitlab/ci/config/ecpci-wait-commit-status.sh "$ASCENT_REST_URL" "$(cat NEW_COMMIT_SHA)"
   after_script:
     - .gitlab/ci/config/ecpci-remove-branch.sh "$ASCENT_GIT_URL" "$BRANCH_NAME" || true
-    - .gitlab/ci/config/ecpci-fetch-commit-trace.py "$ASCENT_REST_URL" "$CI_COMMIT_SHA" "$ECPTEST_TOKEN"
+    - .gitlab/ci/config/ecpci-fetch-commit-trace.py "$ASCENT_REST_URL" "$(cat NEW_COMMIT_SHA)" "$ECPTEST_TOKEN"
   timeout: 150 minutes
   interruptible: true
