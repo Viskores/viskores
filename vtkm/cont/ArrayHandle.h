@@ -452,6 +452,7 @@ public:
   ReadPortalType GetPortalConstControl() const { return this->ReadPortal(); }
   /// \endcond
 
+  ///@{
   /// \brief Get an array portal that can be used in the control environment.
   ///
   /// The returned array can be used in the control environment to read values from the array. (It
@@ -465,9 +466,14 @@ public:
   VTKM_CONT ReadPortalType ReadPortal() const
   {
     vtkm::cont::Token token;
+    return this->ReadPortal(token);
+  }
+  VTKM_CONT ReadPortalType ReadPortal(vtkm::cont::Token& token) const
+  {
     return StorageType::CreateReadPortal(
       this->GetBuffers(), vtkm::cont::DeviceAdapterTagUndefined{}, token);
   }
+  ///@}
 
   /// \brief Get an array portal that can be used in the control environment.
   ///
@@ -481,7 +487,10 @@ public:
   VTKM_CONT WritePortalType WritePortal() const
   {
     vtkm::cont::Token token;
-
+    return this->WritePortal(token);
+  }
+  VTKM_CONT WritePortalType WritePortal(vtkm::cont::Token& token) const
+  {
     return StorageType::CreateWritePortal(
       this->GetBuffers(), vtkm::cont::DeviceAdapterTagUndefined{}, token);
   }

@@ -67,10 +67,10 @@ const vtkm::exec::CellLocatorPartitioned CellLocatorPartitioned::PrepareForExecu
   this->Update();
 
   vtkm::Id numPartitions = this->Partitions.GetNumberOfPartitions();
-  this->LocatorsExec.Allocate(numPartitions, vtkm::CopyFlag::Off);
-  auto portalLocators = this->LocatorsExec.WritePortal();
-  this->GhostsExec.Allocate(numPartitions, vtkm::CopyFlag::Off);
-  auto portalGhosts = this->GhostsExec.WritePortal();
+  this->LocatorsExec.Allocate(numPartitions, vtkm::CopyFlag::Off, token);
+  auto portalLocators = this->LocatorsExec.WritePortal(token);
+  this->GhostsExec.Allocate(numPartitions, vtkm::CopyFlag::Off, token);
+  auto portalGhosts = this->GhostsExec.WritePortal(token);
   for (vtkm::Id index = 0; index < numPartitions; ++index)
   {
     // fill arrayhandle of cellLocators
