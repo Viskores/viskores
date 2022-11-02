@@ -52,6 +52,8 @@ public:
   using ArrayType = typename FlowTraits<WarpXStreamline>::ArrayType;
   using FieldType = typename FlowTraits<WarpXStreamline>::FieldType;
 
+  VTKM_CONT WarpXStreamline() { this->SetSolverEuler(); }
+
   VTKM_CONT FieldType GetField(const vtkm::cont::DataSet& data) const;
 
   VTKM_CONT TerminationType GetTermination(const vtkm::cont::DataSet& data) const;
