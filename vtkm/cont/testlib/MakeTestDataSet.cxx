@@ -1302,7 +1302,7 @@ vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet8()
 
   // Coordinates
   const int nVerts = 8;
-  const int nCells = 10;
+  const int nCells = 9;
   using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords = { { -0.707f, -0.354f, -0.354f }, { 0.000f, -0.854f, 0.146f },
                                     { 0.000f, -0.146f, 0.854f },   { -0.707f, 0.354f, 0.354f },
@@ -1366,7 +1366,7 @@ vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet8()
 
   // Field data
   vtkm::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 94.0f, 71.0f, 47.0f, 57.0f };
-  vtkm::Float32 cellvar[nCells] = { 0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f };
+  vtkm::Float32 cellvar[nCells] = { 0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f };
 
   dataSet.AddPointField("pointvar", pointvar, nVerts);
   dataSet.AddCellField("cellvar", cellvar, nCells);

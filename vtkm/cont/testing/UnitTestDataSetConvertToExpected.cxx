@@ -11,6 +11,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CastAndCall.h>
+#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 
@@ -60,6 +61,10 @@ vtkm::cont::DataSet MakeDataSet()
                                    vtkm::TypeTraitsScalarTag>::value));
 
   vtkm::cont::DataSet dataset;
+
+  vtkm::cont::CellSetStructured<3> cellSet;
+  cellSet.SetPointDimensions(vtkm::Id3(DIM_SIZE));
+  dataset.SetCellSet(cellSet);
 
   dataset.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", MakeCoordinates<FieldType>()));
   dataset.AddPointField("scalars", MakeField<FieldType>());
