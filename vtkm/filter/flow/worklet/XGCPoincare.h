@@ -92,7 +92,6 @@ public:
     //std::cout<<std::setprecision(12)<<" Step: "<<particle.Pos<<std::endl;
     if (numRevs1 > numRevs0)
     {
-      std::cout << "Puncture!!! : " << newParticle.Pos << std::endl;
       auto R = newParticle.Pos[0];
       auto Z = newParticle.Pos[2];
       auto theta = vtkm::ATan2(Z - this->Params.eq_axis_z, R - this->Params.eq_axis_r);
@@ -105,8 +104,6 @@ public:
       HighOrderB(ptRPZ, metadata, this->Params, this->Coeff_1D, this->Coeff_2D);
 
       vtkm::Id loc = (index * this->MaxPunctures) + newParticle.NumPunctures;
-      std::cout << "Puncture data : " << R << " " << Z << " " << theta << " "
-                << (metadata.Psi / this->Params.eq_x_psi) << " " << index << std::endl;
       this->Validity.Set(loc, 1);
       this->OutputR.Set(loc, R);
       this->OutputZ.Set(loc, Z);
