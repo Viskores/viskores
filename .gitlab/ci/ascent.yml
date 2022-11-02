@@ -51,7 +51,7 @@ build:ascent_gcc_cuda:
 
 
   script:
-    - cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
+    - CTEST_MAX_PARALLELISM=32 cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
     - ctest -VV -S .gitlab/ci/ctest_configure.cmake
   artifacts:
     expire_in: 24 hours
