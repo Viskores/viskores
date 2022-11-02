@@ -40,6 +40,10 @@
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
     - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
+  after_script:
+    # This is needed since sometimes this process hangs holding files
+    # in the build directory. Blocking new builds
+    - "tskill cvtres"
   artifacts:
     expire_in: 24 hours
     when: always
