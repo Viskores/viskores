@@ -103,6 +103,7 @@ set(core_headers
   TaskQueue.h
   )
 set(core_sources
+  FieldSelection.cxx
   NewFilterField.cxx
   )
 set(core_sources_device
