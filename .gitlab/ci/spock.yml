@@ -34,7 +34,7 @@
       ninja
       spectrum-mpi
       zstd
-    VTKM_SETTINGS: kokkos+hip+spock+ccache+no_virtual+no_rendering
+    VTKM_SETTINGS: kokkos+hip+spock+ccache+no_rendering
   interruptible: true
 
 .setup_env_ecpci: &setup_env_ecpci |
