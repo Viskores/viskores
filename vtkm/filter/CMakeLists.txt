@@ -103,6 +103,7 @@ set(core_headers
   TaskQueue.h
   )
 set(core_sources
+  FieldSelection.cxx
   NewFilterField.cxx
   )
 set(core_sources_device
@@ -128,33 +129,10 @@ set_target_properties(
   UNITY_BUILD_MODE BATCH
 )
 
-target_link_libraries(vtkm_filter_core PUBLIC vtkm_cont vtkm_worklet)
-
 target_link_libraries(vtkm_filter PUBLIC INTERFACE
   vtkm_filter_core
   )
 
 install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
 
-add_subdirectory(clean_grid)
-add_subdirectory(connected_components)
-add_subdirectory(contour)
-add_subdirectory(density_estimate)
-add_subdirectory(entity_extraction)
-add_subdirectory(flow)
-add_subdirectory(image_processing)
 add_subdirectory(internal)
-add_subdirectory(field_conversion)
-add_subdirectory(field_transform)
-add_subdirectory(geometry_refinement)
-add_subdirectory(mesh_info)
-add_subdirectory(multi_block)
-add_subdirectory(resampling)
-add_subdirectory(scalar_topology)
-add_subdirectory(vector_analysis)
-add_subdirectory(zfp)
-
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

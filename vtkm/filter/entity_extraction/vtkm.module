@@ -1,0 +1,13 @@
+NAME
+  vtkm_filter_entity_extraction
+GROUPS
+  FiltersCommon
+  Filters
+DEPENDS
+  vtkm_filter_core
+  vtkm_filter_clean_grid
+PRIVATE_DEPENDS
+  vtkm_worklet
+TEST_DEPENDS
+  vtkm_filter_clean_grid
+  vtkm_filter_entity_extraction

@@ -128,26 +128,17 @@ private:
     return result;
   }
 
-  //This is fairly complex so that we can trigger code to extract
-  //VecRectilinearPointCoordinates when using structured connectivity, and
-  //uniform point coordinates.
-  //c++14 would make the return type simply auto
   template <typename ThreadIndicesType, typename WholeFieldIn>
   VTKM_EXEC auto GetValues(const ThreadIndicesType& indices, const WholeFieldIn& in) const
-    -> decltype(std::declval<vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
-                                                    vtkm::exec::arg::AspectTagDefault,
-                                                    typename WholeFieldIn::PortalType>>()
-                  .Load(indices, in.GetPortal()))
   {
     //the current problem is that when the topology is structured
     //we are passing in an vtkm::Id when it wants a Id2 or an Id3 that
     //represents the flat index of the topology
-    using ExecObjectType = typename WholeFieldIn::PortalType;
     using Fetch = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
                                          vtkm::exec::arg::AspectTagDefault,
-                                         ExecObjectType>;
+                                         WholeFieldIn>;
     Fetch fetch;
-    return fetch.Load(indices, in.GetPortal());
+    return fetch.Load(indices, in);
   }
 };
 }

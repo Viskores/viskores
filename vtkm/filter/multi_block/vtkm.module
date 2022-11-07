@@ -1,0 +1,12 @@
+NAME
+  vtkm_filter_multi_block
+GROUPS
+  Filters
+DEPENDS
+  vtkm_filter_core
+PRIVATE_DEPENDS
+  vtkm_worklet
+TEST_DEPENDS
+  vtkm_source
+  vtkm_rendering
+  vtkm_rendering_testing

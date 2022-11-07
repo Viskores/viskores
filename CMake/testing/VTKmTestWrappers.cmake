@@ -10,7 +10,7 @@
 
 include(VTKmWrappers)
 
-function(vtkm_create_test_executable
+function(_vtkm_create_test_executable
   prog_name
   sources
   device_sources
@@ -145,7 +145,7 @@ function(vtkm_unit_tests)
       list(APPEND per_device_command_line_arguments --vtkm-device=kokkos)
       list(APPEND per_device_suffix "KOKKOS")
       #may require more time because of kernel generation.
-      list(APPEND per_device_timeout 2500)
+      list(APPEND per_device_timeout 1500)
       list(APPEND per_device_serial FALSE)
     endif()
     if(VTKm_ENABLE_TBB AND (enable_all_backends OR NOT per_device_suffix))
@@ -206,35 +206,67 @@ function(vtkm_unit_tests)
   # Add the path to the location where generated regression test images should be written
   list(APPEND VTKm_UT_TEST_ARGS "--vtkm-write-dir=${VTKm_BINARY_DIR}")
 
+  set(test_libraries)
+  if(vtkm_module_current_test)
+    vtkm_module_get_property(module_dir ${vtkm_module_current_test} DIRECTORY)
+    vtkm_module_get_property(depends ${vtkm_module_current_test} TEST_DEPENDS)
+    vtkm_module_get_property(optional_depends ${vtkm_module_current_test} TEST_OPTIONAL_DEPENDS)
+    list(APPEND depends ${vtkm_module_current_test})
+    set(test_libraries ${depends})
+    foreach(lib IN LISTS VTKm_UT_LIBRARIES)
+      vtkm_module_exists(lib_is_module ${lib})
+      if((lib_is_module) AND (NOT ${lib} IN_LIST depends) AND (NOT ${lib} IN_LIST optional_depends))
+        message(WARNING "\
+Test program for module `${vtkm_module_current_test}` lists `${lib} as a library in \
+vtkm_unit_tests but not in its test dependencies. Add test dependencies to \
+`${module_dir}/vtkm.module`.")
+      endif()
+      list(APPEND test_libraries ${lib})
+    endforeach()
+    foreach(module IN LISTS optional_depends)
+      if(TARGET ${module})
+        list(APPEND test_libraries ${module})
+      endif()
+    endforeach()
+  else()
+    if(NOT vtkm_module_current)
+      message(WARNING "TEST ${test_prog} is not associated with any module.")
+    endif()
+  endif()
+
+  if(vtkm_module_current)
+    message(WARNING "Test ${test_prog} is being created inside a module definition rather than tests.")
+  endif()
+
   if(VTKm_UT_MPI)
     if (VTKm_ENABLE_MPI)
-      vtkm_create_test_executable(
+      _vtkm_create_test_executable(
         ${test_prog}
         "${VTKm_UT_SOURCES}"
         "${VTKm_UT_DEVICE_SOURCES}"
-        "${VTKm_UT_LIBRARIES}"
+        "${test_libraries}"
         "${VTKm_UT_DEFINES}"
         ON   # is_mpi_test
         ON   # use_mpi
         ${VTKm_UT_USE_VTKM_JOB_POOL})
     endif()
     if ((NOT VTKm_ENABLE_MPI) OR VTKm_ENABLE_DIY_NOMPI)
-      vtkm_create_test_executable(
+      _vtkm_create_test_executable(
         ${test_prog}
         "${VTKm_UT_SOURCES}"
         "${VTKm_UT_DEVICE_SOURCES}"
-        "${VTKm_UT_LIBRARIES}"
+        "${test_libraries}"
         "${VTKm_UT_DEFINES}"
         ON   # is_mpi_test
         OFF  # use_mpi
         ${VTKm_UT_USE_VTKM_JOB_POOL})
     endif()
   else()
-    vtkm_create_test_executable(
+    _vtkm_create_test_executable(
       ${test_prog}
       "${VTKm_UT_SOURCES}"
       "${VTKm_UT_DEVICE_SOURCES}"
-      "${VTKm_UT_LIBRARIES}"
+      "${test_libraries}"
       "${VTKm_UT_DEFINES}"
       OFF   # is_mpi_test
       OFF   # use_mpi

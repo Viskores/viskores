@@ -140,6 +140,22 @@ void TestFieldSelection()
                        true,
                      "field selection failed.");
     VTKM_TEST_ASSERT(selection.IsFieldSelected("bar") == true, "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("baz") == false, "field selection failed.");
+
+    std::cout << "  Select a field as excluded (should not change result)" << std::endl;
+    selection.AddField("baz", vtkm::filter::FieldSelection::Mode::Exclude);
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == true, "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo", vtkm::cont::Field::Association::Points) ==
+                       true,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar", vtkm::cont::Field::Association::Points) ==
+                       false,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar", vtkm::cont::Field::Association::Cells) ==
+                       true,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar") == true, "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("baz") == false, "field selection failed.");
   }
 
   {
@@ -149,6 +165,21 @@ void TestFieldSelection()
       { pair_type{ "foo", vtkm::cont::Field::Association::Any },
         pair_type{ "bar", vtkm::cont::Field::Association::Cells } },
       vtkm::filter::FieldSelection::Mode::Exclude);
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == false, "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo", vtkm::cont::Field::Association::Points) ==
+                       false,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar", vtkm::cont::Field::Association::Points) ==
+                       true,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar", vtkm::cont::Field::Association::Cells) ==
+                       false,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar") == false, "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("baz") == true, "field selection failed.");
+
+    std::cout << "  Select a field as included (should not change result)" << std::endl;
+    selection.AddField("baz", vtkm::filter::FieldSelection::Mode::Select);
     VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == false, "field selection failed.");
     VTKM_TEST_ASSERT(selection.IsFieldSelected("foo", vtkm::cont::Field::Association::Points) ==
                        false,

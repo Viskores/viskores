@@ -112,6 +112,14 @@ cmake_dependent_option(VTKm_ENABLE_TESTING_LIBRARY "Enable VTKm Testing Library"
   OFF "NOT VTKm_ENABLE_TESTING;NOT VTKm_ENABLE_BENCHMARKS" ON)
 mark_as_advanced(VTKm_ENABLE_TESTING_LIBRARY)
 
+# We may want to make finer controls on whether libraries/modules get built.
+# VTK uses the concept of groups for its modules
+vtkm_option(VTKm_BUILD_ALL_LIBRARIES
+  "Build all libraries by default. (Can be overridden for each library.)"
+  ON
+  )
+mark_as_advanced(VTKm_BUILD_ALL_LIBRARIES)
+
 vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
@@ -169,12 +177,6 @@ vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful w
 # Some application might need not to install those, hence this option.
 vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README and LICENSE files" OFF)
 
-# We are in the process of deprecating the use of virtual methods because they
-# are not well supported on many accelerators. Turn this option on to remove
-# the code entirely. In VTK-m 2.0 virtual methods should be removed entirely
-# and this option will be removed.
-vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" ON)
-
 # In Python wheels, having SONAME suffixes just ends up duplicating files.
 # Allow VTK to turn off these symlinks for its wheel distribution.
 vtkm_option(VTKm_SKIP_LIBRARY_VERSIONS "Skip versioning VTK-m libraries" OFF)
@@ -188,9 +190,28 @@ mark_as_advanced(
   VTKm_HIDE_PRIVATE_SYMBOLS
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
-  VTKm_NO_DEPRECATED_VIRTUAL
   VTKm_SKIP_LIBRARY_VERSIONS
   )
+
+#-----------------------------------------------------------------------------
+# Force building of modules where specified by user-facing options.
+include(VTKmModules)
+vtkm_module_force_group(Core VALUE "YES" REASON "Core modules always built")
+vtkm_module_force_group(Rendering ENABLE_OPTION VTKm_ENABLE_RENDERING)
+vtkm_module_force_group(Logging ENABLE_OPTION VTKm_ENABLE_LOGGING)
+vtkm_module_force_group(Testing
+  ENABLE_OPTION VTKm_ENABLE_TESTING_LIBRARY
+  ENABLE_VALUE "WANT"
+  DISABLE_VALUE "DONT_WANT"
+  )
+vtkm_module_force_group(Benchmarking ENABLE_OPTION VTKm_ENABLE_BENCHMARKS)
+
+# The tutorial requires several common filters. This logic might need to
+# become more complicated (or less compliated if we decide to always
+# compile these).
+if(VTKm_ENABLE_TUTORIALS)
+  vtkm_module_force_group(FiltersCommon VALUE "YES" REASON "Tutorial needs common filters.")
+endif()
 
 #-----------------------------------------------------------------------------
 
@@ -264,7 +285,18 @@ check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 #-----------------------------------------------------------------------------
 # Add subdirectories
 add_subdirectory(vtkmstd)
-add_subdirectory(vtkm)
+
+#-----------------------------------------------------------------------------
+# Process modules
+vtkm_modules_scan(
+  SCAN_DIRECTORIES vtkm benchmarking
+  PROVIDED_MODULES all_modules
+  )
+vtkm_modules_build(
+  PROVIDED_MODULES ${all_modules}
+  WANT_BY_DEFAULT ${VTKm_BUILD_ALL_LIBRARIES}
+  WANT_BY_DEFAULT_REASON "VTKm_BUILD_ALL_LIBRARIES is `${VTKm_BUILD_ALL_LIBRARIES}`"
+  )
 
 #-----------------------------------------------------------------------------
 # Build documentation
@@ -292,6 +324,33 @@ write_basic_package_version_file(
   ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
+
+#-----------------------------------------------------------------------------
+# Create makefile/package files for projects not using CMake
+
+set(lib_args)
+vtkm_module_get_list(module_list)
+list(REVERSE module_list)
+foreach(module IN LISTS module_list)
+  get_target_property(type ${module} TYPE)
+  if (NOT type MATCHES "LIBRARY" OR type STREQUAL "INTERFACE_LIBRARY")
+    continue()
+  endif()
+  get_target_property(library ${module} OUTPUT_NAME)
+  if (NOT library)
+    continue()
+  endif()
+  set(lib_args "${lib_args} \\
+    -l${library}")
+endforeach()
+if (TARGET vtkmdiympi)
+  set(lib_args "${lib_args} \\
+    -lvtkmdiympi")
+endif()
+if (TARGET vtkmdiympi_nompi)
+  set(lib_args "${lib_args} \\
+    -lvtkmdiympi_nompi")
+endif()
 
 configure_file(${VTKm_SOURCE_DIR}/config/vtkm_config.mk.in
   ${VTKm_BINARY_DIR}/config/vtkm_config.mk @ONLY)
@@ -377,12 +436,6 @@ if (VTKm_ENABLE_CPACK)
   set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)
   include(CPack)
 endif ()
-
-#-----------------------------------------------------------------------------
-#add the benchmarking folder
-if(VTKm_ENABLE_BENCHMARKS)
-  add_subdirectory(benchmarking)
-endif()
 
 #-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TESTING)

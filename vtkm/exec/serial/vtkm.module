@@ -1,0 +1,6 @@
+NAME
+  vtkm_exec_serial
+GROUPS
+  Core
+DEPENDS
+  vtkm_exec

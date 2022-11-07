@@ -20,8 +20,7 @@
 
 int main(int argc, char** argv)
 {
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+  vtkm::cont::Initialize(argc, argv);
 
   //Loading .vtk File
   vtkm::io::VTKDataSetReader reader("data/kitchen.vtk");

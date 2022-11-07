@@ -63,13 +63,13 @@ VTKM_CONT cont::DataSet ConvertPointFieldToCells::DoExecute(const vtkm::cont::Da
   const auto& inField = this->GetFieldFromDataSet(inDataSet);
 
   vtkm::cont::UnknownArrayHandle outArray;
-  auto resolveType = [&](const auto& concrete) {
-    using ValueType = typename std::decay_t<decltype(concrete)>::ValueType;
+  auto resolveType = [&](const auto& inConcrete) {
+    using ValueType = typename std::decay_t<decltype(inConcrete)>::ValueType;
 
-    vtkm::cont::ArrayHandle<ValueType> outField;
+    vtkm::cont::ArrayHandle<ValueType> outConcrete;
     this->Invoke(
-      vtkm::worklet::ConvertPointFieldToCells{}, inDataSet.GetCellSet(), concrete, outField);
-    outArray = outField;
+      vtkm::worklet::ConvertPointFieldToCells{}, inDataSet.GetCellSet(), inConcrete, outConcrete);
+    outArray = outConcrete;
   };
   this->CastAndCallScalarField(inField, resolveType);
 

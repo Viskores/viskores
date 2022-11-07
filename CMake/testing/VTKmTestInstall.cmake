@@ -11,12 +11,23 @@
 # -----------------------------------------------------------------------------
 function(vtkm_test_install )
   if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+    # Find all modules that are not-compiled. Skip these directories.
+    set(dir_exceptions)
+    foreach(module IN LISTS all_modules)
+      if(NOT TARGET ${module})
+        vtkm_module_get_property(directory ${module} DIRECTORY)
+        file(RELATIVE_PATH directory "${VTKm_SOURCE_DIR}/vtkm" "${directory}")
+        list(APPEND dir_exceptions ${directory})
+      endif()
+    endforeach()
+    # Replace ';' list separator with ':' to preserve them as a single argument
+    string(REPLACE ";" ":" dir_exceptions "${dir_exceptions}")
+
     set(command_args
       "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}"
       "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}"
       "-DVTKm_INSTALL_INCLUDE_DIR=${VTKm_INSTALL_INCLUDE_DIR}"
-      "-DVTKm_ENABLE_RENDERING=${VTKm_ENABLE_RENDERING}"
-      "-DVTKm_ENABLE_LOGGING=${VTKm_ENABLE_LOGGING}"
+      "-DDIR_EXCEPTIONS=${dir_exceptions}"
       "-DVTKm_ENABLE_HDF5_IO=${VTKm_ENABLE_HDF5_IO}"
       )
 

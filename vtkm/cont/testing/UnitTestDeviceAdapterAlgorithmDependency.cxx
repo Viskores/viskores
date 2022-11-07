@@ -37,6 +37,7 @@ void CheckPostDefinedDeviceAdapter()
   // Nothing to really check. If this compiles, then the test is probably
   // successful.
   vtkm::cont::ArrayHandle<vtkm::Id> test;
+  (void)test;
 }
 
 } // anonymous namespace

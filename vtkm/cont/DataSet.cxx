@@ -9,6 +9,57 @@
 //============================================================================
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Logging.h>
+
+namespace
+{
+
+VTKM_CONT void CheckFieldSize(const vtkm::cont::UnknownCellSet& cellSet,
+                              const vtkm::cont::Field& field)
+{
+  if (!cellSet.IsValid())
+  {
+    return;
+  }
+  switch (field.GetAssociation())
+  {
+    case vtkm::cont::Field::Association::Points:
+      if (cellSet.GetNumberOfPoints() != field.GetData().GetNumberOfValues())
+      {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                   "The size of field `"
+                     << field.GetName() << "` (" << field.GetData().GetNumberOfValues()
+                     << " values) does not match the size of the data set structure ("
+                     << cellSet.GetNumberOfPoints() << " points).");
+      }
+      break;
+    case vtkm::cont::Field::Association::Cells:
+      if (cellSet.GetNumberOfCells() != field.GetData().GetNumberOfValues())
+      {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                   "The size of field `"
+                     << field.GetName() << "` (" << field.GetData().GetNumberOfValues()
+                     << " values) does not match the size of the data set structure ("
+                     << cellSet.GetNumberOfCells() << " cells).");
+      }
+      break;
+    default:
+      // Ignore as the association does not match any topological element.
+      break;
+  }
+}
+
+VTKM_CONT void CheckFieldSizes(const vtkm::cont::UnknownCellSet& cellSet,
+                               const vtkm::cont::internal::FieldCollection& fields)
+{
+  vtkm::IdComponent numFields = fields.GetNumberOfFields();
+  for (vtkm::IdComponent fieldIndex = 0; fieldIndex < numFields; ++fieldIndex)
+  {
+    CheckFieldSize(cellSet, fields.GetField(fieldIndex));
+  }
+}
+
+} // anonymous namespace
 
 namespace vtkm
 {
@@ -38,6 +89,12 @@ void DataSet::Clear()
   this->CellSet = this->CellSet.NewInstance();
 }
 
+void DataSet::AddField(const Field& field)
+{
+  CheckFieldSize(this->CellSet, field);
+  this->Fields.AddField(field);
+}
+
 vtkm::Id DataSet::GetNumberOfCells() const
 {
   return this->CellSet.GetNumberOfCells();
@@ -45,11 +102,43 @@ vtkm::Id DataSet::GetNumberOfCells() const
 
 vtkm::Id DataSet::GetNumberOfPoints() const
 {
-  if (this->CoordSystems.empty())
+  if (this->CellSet.IsValid())
   {
-    return 0;
+    return this->CellSet.GetNumberOfPoints();
   }
-  return this->CoordSystems[0].GetNumberOfPoints();
+
+  // If there is no cell set, then try to use a coordinate system to get the number
+  // of points.
+  if (this->GetNumberOfCoordinateSystems() > 0)
+  {
+    return this->GetCoordinateSystem().GetNumberOfPoints();
+  }
+
+  // If there is no coordinate system either, we can try to guess the number of
+  // points by finding a point field.
+  for (vtkm::IdComponent fieldIdx = 0; fieldIdx < this->Fields.GetNumberOfFields(); ++fieldIdx)
+  {
+    const vtkm::cont::Field& field = this->Fields.GetField(fieldIdx);
+    if (field.GetAssociation() == vtkm::cont::Field::Association::Points)
+    {
+      return field.GetData().GetNumberOfValues();
+    }
+  }
+
+  // There are no point fields either.
+  return 0;
+}
+
+void DataSet::AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs)
+{
+  CheckFieldSize(this->CellSet, cs);
+  this->CoordSystems.push_back(cs);
+}
+
+void DataSet::SetCellSetImpl(const vtkm::cont::UnknownCellSet& cellSet)
+{
+  CheckFieldSizes(cellSet, this->Fields);
+  this->CellSet = cellSet;
 }
 
 void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
@@ -57,6 +146,8 @@ void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
   this->CoordSystems = source.CoordSystems;
   this->CellSet = source.CellSet;
   this->GhostCellName = source.GhostCellName;
+
+  CheckFieldSizes(this->CellSet, this->Fields);
 }
 
 const vtkm::cont::CoordinateSystem& DataSet::GetCoordinateSystem(vtkm::Id index) const

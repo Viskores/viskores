@@ -46,14 +46,15 @@ struct PerlinNoiseWorklet : public vtkm::worklet::WorkletVisitPointsWithCells
     vtkm::FloatDefault w = this->Fade(zf);
 
     vtkm::Id aaa, aba, aab, abb, baa, bba, bab, bbb;
-    aaa = perms[perms[perms[xi] + yi] + zi];
-    aba = perms[perms[perms[xi] + this->Increment(yi)] + zi];
-    aab = perms[perms[perms[xi] + yi] + this->Increment(zi)];
-    abb = perms[perms[perms[xi] + this->Increment(yi)] + this->Increment(zi)];
-    baa = perms[perms[perms[this->Increment(xi)] + yi] + zi];
-    bba = perms[perms[perms[this->Increment(xi)] + this->Increment(yi)] + zi];
-    bab = perms[perms[perms[this->Increment(xi)] + yi] + this->Increment(zi)];
-    bbb = perms[perms[perms[this->Increment(xi)] + this->Increment(yi)] + this->Increment(zi)];
+    aaa = perms.Get(perms.Get(perms.Get(xi) + yi) + zi);
+    aba = perms.Get(perms.Get(perms.Get(xi) + this->Increment(yi)) + zi);
+    aab = perms.Get(perms.Get(perms.Get(xi) + yi) + this->Increment(zi));
+    abb = perms.Get(perms.Get(perms.Get(xi) + this->Increment(yi)) + this->Increment(zi));
+    baa = perms.Get(perms.Get(perms.Get(this->Increment(xi)) + yi) + zi);
+    bba = perms.Get(perms.Get(perms.Get(this->Increment(xi)) + this->Increment(yi)) + zi);
+    bab = perms.Get(perms.Get(perms.Get(this->Increment(xi)) + yi) + this->Increment(zi));
+    bbb = perms.Get(perms.Get(perms.Get(this->Increment(xi)) + this->Increment(yi)) +
+                    this->Increment(zi));
 
     vtkm::FloatDefault x1, x2, y1, y2;
     x1 = vtkm::Lerp(this->Gradient(aaa, xf, yf, zf), this->Gradient(baa, xf - 1, yf, zf), u);

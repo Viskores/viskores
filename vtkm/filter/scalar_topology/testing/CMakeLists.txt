@@ -29,16 +29,9 @@ set(unit_tests_device
   UnitTestDistributedBranchDecompositionFilter.cxx
   )
 
-set(libraries
-  vtkm_filter_scalar_topology
-  vtkm_io
-  vtkm_source
-  )
-
 vtkm_unit_tests(
   SOURCES ${unit_tests}
   DEVICE_SOURCES ${unit_tests_device}
-  LIBRARIES ${libraries}
   USE_VTKM_JOB_POOL
 )
 

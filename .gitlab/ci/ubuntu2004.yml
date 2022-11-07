@@ -10,7 +10,7 @@ build:ubuntu2004_gcc9:
     - .run_automatically
   variables:
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5"
+    VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5+min_build"
 
 test:ubuntu2004_gcc9:
   tags:
@@ -71,17 +71,20 @@ build:ubuntu2004_hip_kokkos:
     - .cmake_build_linux
     - .run_automatically
   variables:
-    CMAKE_BUILD_TYPE: RelWithDebInfo
-    VTKM_SETTINGS: "benchmarks+kokkos+hip+no_virtual+no_rendering+ccache"
-    CMAKE_PREFIX_PATH: "/opt/rocm/lib/cmake"
+    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
+    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_virtual+no_rendering+ccache"
 
-    CCACHE_BASEDIR: "$CI_PROJECT_DIR"
+    CMAKE_PREFIX_PATH:       "/opt/rocm/lib/cmake"
+    CMAKE_HIP_COMPILER:      "/opt/rocm/llvm/bin/clang++"
+    Kokkos_CXX_COMPILER:     "/opt/rocm/llvm/bin/clang++"
+    CMAKE_HIP_ARCHITECTURES: "gfx900"
 
     # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
-    CCACHE_IGNOREOPTIONS: "-isystem=*"
-    CCACHE_COMPILERCHECK: "content"
-    CCACHE_NOHASHDIR: "true"
-    CCACHE_RESHARE: "true"
+    CCACHE_IGNOREOPTIONS:    "-isystem=*"
+    CCACHE_BASEDIR:          "$CI_PROJECT_DIR"
+    CCACHE_COMPILERCHECK:    "content"
+    CCACHE_NOHASHDIR:        "true"
+    CCACHE_RESHARE:          "true"
   after_script:
     - ccache -v -s
     - ccache -z
@@ -103,3 +106,27 @@ test:ubuntu2004_hip_kokkos:
   needs:
     - build:ubuntu2004_hip_kokkos
   timeout: 3 hours
+
+# This is only for merge-requests
+build:ascent:
+  stage: build
+  variables:
+    BRANCH_NAME:     "mr${CI_MERGE_REQUEST_IID}-${CI_COMMIT_REF_NAME}"
+    ASCENT_REST_URL: "https://code.ornl.gov/api/v4/projects/7035"
+    ASCENT_GIT_URL:  "https://vbolea:${ECPTEST_TOKEN}@code.ornl.gov/ecpcitest/vtk-m.git"
+  tags:
+    - vtkm
+    - docker
+  extends:
+    - .ubuntu2004
+    - .run_only_merge_requests
+  script:
+    # A new commit is needed to symbolize a restart of a build from the same original commit
+    - .gitlab/ci/config/ecpci-amend-commit.sh "NEW_COMMIT_SHA"
+    - .gitlab/ci/config/ecpci-push-branch.sh "$ASCENT_GIT_URL" "$BRANCH_NAME"
+    - timeout 130m .gitlab/ci/config/ecpci-wait-commit-status.sh "$ASCENT_REST_URL" "$(cat NEW_COMMIT_SHA)"
+  after_script:
+    - .gitlab/ci/config/ecpci-remove-branch.sh "$ASCENT_GIT_URL" "$BRANCH_NAME" || true
+    - .gitlab/ci/config/ecpci-fetch-commit-trace.py "$ASCENT_REST_URL" "$(cat NEW_COMMIT_SHA)" "$ECPTEST_TOKEN"
+  timeout: 150 minutes
+  interruptible: true

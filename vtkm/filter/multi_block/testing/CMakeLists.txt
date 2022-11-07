@@ -8,16 +8,19 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-if (VTKm_ENABLE_RENDERING)
-  list(APPEND libraries vtkm_filter_multi_block vtkm_source vtkm_rendering vtkm_rendering_testing)
-
-  list(APPEND unit_tests
-    RenderTestAmrArrays.cxx
-    )
-  vtkm_unit_tests(
-    SOURCES ${unit_tests}
-    LIBRARIES ${libraries}
-    USE_VTKM_JOB_POOL
+set(libraries
+  vtkm_filter_multi_block
+  vtkm_source
+  vtkm_rendering
+  vtkm_rendering_testing
   )
 
-endif()
+set(unit_tests
+  RenderTestAmrArrays.cxx
+  )
+
+vtkm_unit_tests(
+  SOURCES ${unit_tests}
+  LIBRARIES ${libraries}
+  USE_VTKM_JOB_POOL
+  )

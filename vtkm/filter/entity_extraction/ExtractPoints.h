@@ -13,10 +13,6 @@
 
 #include <vtkm/ImplicitFunction.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/ImplicitFunctionHandle.h>
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
-
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 

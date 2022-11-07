@@ -8,23 +8,25 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
+if(NOT vtkm_module_current STREQUAL "benchmarking")
+  message(FATAL_ERROR "Benchmarking CMakeLists.txt not loaded by benchmarking module.")
+endif()
+
 #Find Google Benchmark.Note that benchmark_DIR must be pointed at an
 #installation, not a build directory.
 find_package(benchmark REQUIRED)
 
-function(add_benchmark)
-  set(options)
-  set(oneValueArgs NAME FILE)
-  set(multiValueArgs LIBS)
-  cmake_parse_arguments(VTKm_AB
-          "${options}" "${oneValueArgs}" "${multiValueArgs}"
-          ${ARGN}
-          )
-  set(exe_name ${VTKm_AB_NAME})
-
-  add_executable(${exe_name} ${VTKm_AB_FILE})
-  target_link_libraries(${exe_name} PRIVATE ${VTKm_AB_LIBS})
+function(add_benchmark exe_name)
+  add_executable(${exe_name} ${exe_name}.cxx)
   target_link_libraries(${exe_name} PRIVATE benchmark::benchmark)
+  vtkm_module_get_property(depends benchmarking DEPENDS)
+  target_link_libraries(${exe_name} PRIVATE ${depends})
+  vtkm_module_get_property(optional_depends benchmarking OPTIONAL_DEPENDS)
+  foreach(dep IN LISTS optional_depends)
+    if(TARGET ${dep})
+      target_link_libraries(${exe_name} PRIVATE ${dep})
+    endif()
+  endforeach()
   vtkm_add_drop_unused_function_flags(${exe_name})
   vtkm_add_target_information(${exe_name})
 
@@ -34,7 +36,8 @@ function(add_benchmark)
     CUDA_VISIBILITY_PRESET "hidden"
   )
 
-  vtkm_add_target_information(${exe_name} DEVICE_SOURCES ${VTKm_AB_FILE})
+  # At some point, we might not want to compile benchmarks with device compilers.
+  vtkm_add_target_information(${exe_name} DEVICE_SOURCES ${exe_name}.cxx)
 endfunction()
 
 set(benchmarks
@@ -48,21 +51,23 @@ set(benchmarks
   BenchmarkTopologyAlgorithms
   )
 
+if(TARGET vtkm_rendering)
+  list(APPEND benchmarks
+    BenchmarkRayTracing
+    BenchmarkInSitu
+    )
+endif()
+
 set(VTKm_BENCHS_RANGE_LOWER_BOUNDARY 4096 CACHE STRING "Smallest sample for input size bench for BenchmarkDeviceAdapter")
 set(VTKm_BENCHS_RANGE_UPPER_BOUNDARY 134217728 CACHE STRING "Biggest sample for input size bench for BenchmarkDeviceAdapter")
 mark_as_advanced(VTKm_BENCHS_RANGE_LOWER_BOUNDARY VTKm_BENCHS_RANGE_UPPER_BOUNDARY)
 
 foreach (benchmark ${benchmarks})
-  add_benchmark(NAME ${benchmark} FILE ${benchmark}.cxx LIBS vtkm_source vtkm_filter vtkm_io)
+  add_benchmark(${benchmark})
 endforeach ()
 
 target_compile_definitions(BenchmarkDeviceAdapter PUBLIC VTKm_BENCHS_RANGE_LOWER_BOUNDARY=${VTKm_BENCHS_RANGE_LOWER_BOUNDARY})
 target_compile_definitions(BenchmarkDeviceAdapter PUBLIC VTKm_BENCHS_RANGE_UPPER_BOUNDARY=${VTKm_BENCHS_RANGE_UPPER_BOUNDARY})
-
-if(TARGET vtkm_rendering)
-  add_benchmark(NAME BenchmarkRayTracing FILE BenchmarkRayTracing.cxx LIBS vtkm_rendering vtkm_source)
-  add_benchmark(NAME BenchmarkInSitu FILE BenchmarkInSitu.cxx LIBS vtkm_rendering vtkm_source vtkm_filter vtkm_io)
-endif()
 
 if(VTKm_ENABLE_PERFORMANCE_TESTING)
   include("${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTest.cmake")

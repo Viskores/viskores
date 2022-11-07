@@ -55,7 +55,7 @@ public:
   /// to have the same number of points.
   VTKM_CONT vtkm::Id GetNumberOfPoints() const;
 
-  VTKM_CONT void AddField(const Field& field) { this->Fields.AddField(field); }
+  VTKM_CONT void AddField(const Field& field);
 
   VTKM_CONT
   const vtkm::cont::Field& GetField(vtkm::Id index) const { return this->Fields.GetField(index); }
@@ -265,10 +265,7 @@ public:
 
 
   VTKM_CONT
-  void AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs)
-  {
-    this->CoordSystems.push_back(cs);
-  }
+  void AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs);
 
   VTKM_CONT
   bool HasCoordinateSystem(const std::string& name) const
@@ -310,7 +307,7 @@ public:
   VTKM_CONT void SetCellSet(const CellSetType& cellSet)
   {
     VTKM_IS_KNOWN_OR_UNKNOWN_CELL_SET(CellSetType);
-    this->CellSet = vtkm::cont::UnknownCellSet(cellSet);
+    this->SetCellSetImpl(cellSet);
   }
 
   VTKM_CONT
@@ -359,6 +356,8 @@ private:
 
   vtkm::cont::UnknownCellSet CellSet;
   std::shared_ptr<std::string> GhostCellName;
+
+  VTKM_CONT void SetCellSetImpl(const vtkm::cont::UnknownCellSet& cellSet);
 };
 
 } // namespace cont

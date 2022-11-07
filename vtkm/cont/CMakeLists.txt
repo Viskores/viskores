@@ -59,6 +59,7 @@ set(headers
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorChooser.h
   CellLocatorGeneral.h
+  CellLocatorPartitioned.h
   CellLocatorRectilinearGrid.h
   CellLocatorTwoLevel.h
   CellLocatorUniformBins.h
@@ -102,7 +103,6 @@ set(headers
   Field.h
   FieldRangeCompute.h
   FieldRangeGlobalCompute.h
-  ImplicitFunctionHandle.h
   Initialize.h
   Invoker.h
   Logging.h
@@ -126,6 +126,7 @@ set(headers
   UncertainCellSet.h
   UnknownArrayHandle.h
   UnknownCellSet.h
+  Variant.h
   VariantArrayHandle.h # Deprecated, replaces with Unknown/UncertainArrayHandle.h
   )
 
@@ -133,7 +134,6 @@ set(template_sources
   ArrayRangeCompute.hxx # Deprecated, replaced with ArrayRangeComputeTemplate.h
   CellSetExplicit.hxx
   ParticleArrayCopy.hxx
-  VirtualObjectHandle.hxx
   )
 
 set(sources
@@ -147,6 +147,7 @@ set(sources
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
   CellLocatorGeneral.cxx
+  CellLocatorPartitioned.cxx
   CellLocatorRectilinearGrid.cxx
   CellLocatorUniformGrid.cxx
   CellSet.cxx
@@ -189,7 +190,7 @@ if(VTKm_ENABLE_TESTING_LIBRARY)
     # deprecated behavior expects to only need to include vtkm_cont. As a workaround, add the code
     # to vtkm_cont for now. This should probably be changed back to be in vtkm_cont_testing for the
     # 2.0 release.
-    testing/MakeTestDataSet.cxx
+    testlib/MakeTestDataSet.cxx
     )
 endif()
 
@@ -214,31 +215,6 @@ set(device_sources
   RuntimeDeviceInformation.cxx
   Timer.cxx
   )
-
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    ArrayHandleVirtual.h
-    ArrayHandleVirtualCoordinates.h
-    CellLocator.h
-    PointLocator.h
-    StorageVirtual.h
-    VirtualObjectHandle.h
-    )
-
-  set(template_sources ${template_sources}
-    ArrayHandleVirtual.hxx
-    StorageVirtual.hxx
-    )
-
-  set(device_sources ${device_sources}
-    ArrayHandleVirtual.cxx
-    CellLocator.cxx
-    internal/TransferInfo.cxx
-    internal/VirtualObjectTransfer.cxx
-    PointLocator.cxx
-    StorageVirtual.cxx
-    )
-endif()
 
 #-----------------------------------------------------------------------------
 # Set up default types, which can be custom configured by other build systems.
@@ -312,11 +288,6 @@ vtkm_library( NAME vtkm_cont
 
 add_subdirectory(internal)
 add_subdirectory(arg)
-add_subdirectory(serial)
-add_subdirectory(tbb)
-add_subdirectory(openmp)
-add_subdirectory(cuda)
-add_subdirectory(kokkos)
 
 set(backends )
 if(TARGET vtkm::tbb)
@@ -334,12 +305,3 @@ endif()
 
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
 target_link_libraries(vtkm_cont PUBLIC Threads::Threads)
-target_link_libraries(vtkm_cont PUBLIC vtkm_optionparser vtkm_diy vtkm_lcl)
-if(TARGET vtkm_loguru)
-  target_link_libraries(vtkm_cont PRIVATE vtkm_loguru)
-endif()
-
-#-----------------------------------------------------------------------------
-if(VTKm_ENABLE_TESTING_LIBRARY)
-  add_subdirectory(testing)
-endif()

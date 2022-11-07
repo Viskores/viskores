@@ -30,10 +30,6 @@ VTKM_DEPRECATED_SUPPRESS_BEGIN
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/ArrayHandleVirtual.h>
-#endif
-
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -124,19 +120,6 @@ struct CheckFunctor
 
     CheckArray(array);
   }
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  template <typename T>
-  void operator()(const vtkm::cont::ArrayHandleVirtual<T>& array,
-                  bool& vtkmNotUsed(calledBasic),
-                  bool& calledVirtual) const
-  {
-    calledVirtual = true;
-    std::cout << "  Checking for virtual array type: " << typeid(T).name() << std::endl;
-
-    CheckArray(array);
-  }
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   template <typename T, typename S>
   void operator()(const vtkm::cont::ArrayHandle<T, S>&, bool&, bool&) const
@@ -257,83 +240,6 @@ void CheckCastToArrayHandle(const ArrayHandleType& array)
 // A vtkm::Vec if NumComps > 1, otherwise a scalar
 template <typename T, vtkm::IdComponent NumComps>
 using VecOrScalar = typename std::conditional<(NumComps > 1), vtkm::Vec<T, NumComps>, T>::type;
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-template <typename ArrayType>
-void CheckCastToVirtualArrayHandle(const ArrayType& array)
-{
-  VTKM_IS_ARRAY_HANDLE(ArrayType);
-
-  using ValueType = typename ArrayType::ValueType;
-  using VTraits = vtkm::VecTraits<ValueType>;
-  using ComponentType = typename VTraits::ComponentType;
-  static constexpr vtkm::IdComponent NumComps = VTraits::NUM_COMPONENTS;
-
-  using Storage = typename ArrayType::StorageTag;
-  using StorageList = vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST, vtkm::List<Storage>>;
-
-  using TypeList = vtkm::ListAppend<VTKM_DEFAULT_TYPE_LIST, vtkm::List<ValueType>>;
-  using VariantArrayType = vtkm::cont::VariantArrayHandleBase<TypeList>;
-
-  VariantArrayType arrayVariant = array;
-
-  {
-    auto testArray = arrayVariant.template AsVirtual<ValueType, StorageList>();
-    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
-                     "Did not get back virtual array handle representation.");
-  }
-
-  {
-    auto testArray =
-      arrayVariant.template AsVirtual<VecOrScalar<vtkm::Int8, NumComps>, StorageList>();
-    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
-                     "Did not get back virtual array handle representation.");
-  }
-
-  {
-    auto testArray =
-      arrayVariant.template AsVirtual<VecOrScalar<vtkm::Int64, NumComps>, StorageList>();
-    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
-                     "Did not get back virtual array handle representation.");
-  }
-
-  {
-    auto testArray =
-      arrayVariant.template AsVirtual<VecOrScalar<vtkm::UInt64, NumComps>, StorageList>();
-    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
-                     "Did not get back virtual array handle representation.");
-  }
-
-  {
-    auto testArray =
-      arrayVariant.template AsVirtual<VecOrScalar<vtkm::Float32, NumComps>, StorageList>();
-    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
-                     "Did not get back virtual array handle representation.");
-  }
-
-  {
-    auto testArray =
-      arrayVariant.template AsVirtual<VecOrScalar<vtkm::Float64, NumComps>, StorageList>();
-    VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
-                     "Did not get back virtual array handle representation.");
-  }
-
-  bool threw = false;
-  try
-  {
-    arrayVariant.template AsVirtual<vtkm::Vec<ComponentType, NumComps + 1>, StorageList>();
-  }
-  catch (vtkm::cont::ErrorBadType&)
-  {
-    // caught expected exception
-    threw = true;
-  }
-
-  VTKM_TEST_ASSERT(threw,
-                   "Casting to different vector width did not throw expected "
-                   "ErrorBadType exception.");
-}
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <typename T, typename ArrayVariantType>
 void TryNewInstance(T, ArrayVariantType originalArray)
@@ -468,9 +374,6 @@ template <typename ArrayHandleType>
 void TryCastToArrayHandle(const ArrayHandleType& array)
 {
   CheckCastToArrayHandle(array);
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  CheckCastToVirtualArrayHandle(array);
-#endif
 }
 
 void TryCastToArrayHandle()

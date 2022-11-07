@@ -27,10 +27,6 @@
 
 #include <sstream>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/ArrayHandleVirtual.h>
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
-
 namespace vtkm
 {
 namespace cont
@@ -51,78 +47,6 @@ inline void EmitVariantArrayHandleHDeprecationWarning()
 // This is a deprecated class. Don't warn about deprecation while implementing
 // deprecated functionality.
 VTKM_DEPRECATED_SUPPRESS_BEGIN
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-namespace internal
-{
-namespace variant
-{
-
-struct ForceCastToVirtual
-{
-  template <typename SrcValueType, typename Storage, typename DstValueType>
-  VTKM_CONT typename std::enable_if<std::is_same<SrcValueType, DstValueType>::value>::type
-  operator()(const vtkm::cont::ArrayHandle<SrcValueType, Storage>& input,
-             vtkm::cont::ArrayHandleVirtual<DstValueType>& output) const
-  { // ValueTypes match
-    output = vtkm::cont::make_ArrayHandleVirtual<DstValueType>(input);
-  }
-
-  template <typename SrcValueType, typename Storage, typename DstValueType>
-  VTKM_CONT typename std::enable_if<!std::is_same<SrcValueType, DstValueType>::value>::type
-  operator()(const vtkm::cont::ArrayHandle<SrcValueType, Storage>& input,
-             vtkm::cont::ArrayHandleVirtual<DstValueType>& output) const
-  { // ValueTypes do not match
-    this->ValidateWidthAndCast<SrcValueType, DstValueType>(input, output);
-  }
-
-private:
-  template <typename S,
-            typename D,
-            typename InputType,
-            vtkm::IdComponent SSize = vtkm::VecTraits<S>::NUM_COMPONENTS,
-            vtkm::IdComponent DSize = vtkm::VecTraits<D>::NUM_COMPONENTS>
-  VTKM_CONT typename std::enable_if<SSize == DSize>::type ValidateWidthAndCast(
-    const InputType& input,
-    vtkm::cont::ArrayHandleVirtual<D>& output) const
-  { // number of components match
-    auto casted = vtkm::cont::make_ArrayHandleCast<D>(input);
-    output = vtkm::cont::make_ArrayHandleVirtual<D>(casted);
-  }
-
-  template <typename S,
-            typename D,
-            vtkm::IdComponent SSize = vtkm::VecTraits<S>::NUM_COMPONENTS,
-            vtkm::IdComponent DSize = vtkm::VecTraits<D>::NUM_COMPONENTS>
-  VTKM_CONT typename std::enable_if<SSize != DSize>::type ValidateWidthAndCast(
-    const ArrayHandleBase&,
-    ArrayHandleBase&) const
-  { // number of components do not match
-    std::ostringstream str;
-    str << "VariantArrayHandle::AsVirtual: Cannot cast from " << vtkm::cont::TypeToString<S>()
-        << " to " << vtkm::cont::TypeToString<D>()
-        << "; "
-           "number of components must match exactly.";
-    throw vtkm::cont::ErrorBadType(str.str());
-  }
-};
-
-template <typename S>
-struct NoCastStorageTransformImpl
-{
-  using type = S;
-};
-template <typename T, typename S>
-struct NoCastStorageTransformImpl<vtkm::cont::StorageTagCast<T, S>>
-{
-  using type = S;
-};
-template <typename S>
-using NoCastStorageTransform = typename NoCastStorageTransformImpl<S>::type;
-
-}
-} // namespace internal::variant
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 /// \brief VariantArrayHandle superclass holding common operations.
 ///
@@ -173,34 +97,6 @@ public:
     this->CastAndCallForTypes<TypeList, StorageList>(std::forward<Functor>(functor),
                                                      std::forward<Args>(args)...);
   }
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  /// Returns this array cast to a `ArrayHandleVirtual` of the given type.
-  /// This will perform type conversions as necessary, and will log warnings
-  /// if the conversion is lossy.
-  ///
-  /// This method internally uses `CastAndCall`. A custom storage tag list may
-  /// be specified in the second template parameter, which will be passed to
-  /// the CastAndCall. You can also specify a list of types to try as the optional
-  /// third template argument.
-  ///
-  template <typename T,
-            typename StorageList = VTKM_DEFAULT_STORAGE_LIST,
-            typename TypeList = vtkm::List<T>>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "ArrayHandleVirtual is no longer supported.")
-    vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
-  {
-    VTKM_IS_LIST(StorageList);
-    VTKM_IS_LIST(TypeList);
-    // Remove cast storage from storage list because we take care of casting elsewhere
-    using CleanStorageList =
-      vtkm::ListTransform<StorageList, vtkm::cont::internal::variant::NoCastStorageTransform>;
-    vtkm::cont::internal::variant::ForceCastToVirtual caster;
-    vtkm::cont::ArrayHandleVirtual<T> output;
-    this->CastAndCall<TypeList, CleanStorageList>(caster, output);
-    return output;
-  }
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   /// Returns this array cast to a `ArrayHandleMultiplexer` of the given type.
   /// This will attempt to cast the internal array to each supported type of
@@ -332,23 +228,6 @@ public:
     return vtkm::cont::UncertainArrayHandle<TypeList, VTKM_DEFAULT_STORAGE_LIST>(*this);
   }
 
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  /// Returns this array cast to a \c ArrayHandleVirtual of the given type.
-  /// This will perform type conversions as necessary, and will log warnings
-  /// if the conversion is lossy.
-  ///
-  /// This method internally uses CastAndCall. A custom storage tag list may
-  /// be specified in the second template parameter, which will be passed to
-  /// the CastAndCall.
-  ///
-  template <typename T, typename StorageList = VTKM_DEFAULT_STORAGE_LIST>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "ArrayHandleVirtual is no longer suported.")
-    vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
-  {
-    return this->Superclass::AsVirtual<T, StorageList, TypeList>();
-  }
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   /// Changes the types to try casting to when resolving this variant array,
   /// which is specified with a list tag like those in TypeList.h. Since C++
