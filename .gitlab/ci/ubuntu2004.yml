@@ -72,7 +72,7 @@ build:ubuntu2004_hip_kokkos:
     - .run_automatically
   variables:
     CMAKE_BUILD_TYPE:        "RelWithDebInfo"
-    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_virtual+no_rendering+ccache"
+    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
 
     CMAKE_PREFIX_PATH:       "/opt/rocm/lib/cmake"
     CMAKE_HIP_COMPILER:      "/opt/rocm/llvm/bin/clang++"
