@@ -317,7 +317,9 @@ VTKM_CONT GhostCellRemove::GhostCellRemove()
 VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataSet& input)
 {
   const vtkm::cont::UnknownCellSet& cells = input.GetCellSet();
-  const auto& field = this->GetFieldFromDataSet(input);
+  const vtkm::cont::Field& field =
+    (this->GetUseGhostCellsAsField() ? input.GetGhostCellField()
+                                     : this->GetFieldFromDataSet(input));
 
   vtkm::cont::ArrayHandle<vtkm::UInt8> fieldArray;
   vtkm::cont::ArrayCopyShallowIfPossible(field.GetData(), fieldArray);

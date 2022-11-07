@@ -45,6 +45,11 @@ public:
   bool GetRemoveAllGhost() const { return this->RemoveAll; }
 
   VTKM_CONT
+  bool GetUseGhostCellsAsField() const { return this->UseGhostCellsAsField; }
+  VTKM_CONT
+  void SetUseGhostCellsAsField(bool flag) { this->UseGhostCellsAsField = flag; }
+
+  VTKM_CONT
   bool GetRemoveByType() const { return !this->RemoveAll; }
   VTKM_CONT
   vtkm::UInt8 GetRemoveType() const { return this->RemoveVals; }
@@ -53,6 +58,7 @@ private:
   VTKM_CONT
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
+  bool UseGhostCellsAsField = true;
   bool RemoveAll = false;
   bool RemoveField = false;
   vtkm::UInt8 RemoveVals = 0;
