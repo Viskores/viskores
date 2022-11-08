@@ -13,6 +13,13 @@
     CMAKE_BUILD_TYPE:        "RelWithDebInfo"
     CMAKE_GENERATOR:         "Ninja"
 
+    # This is needed for the smoke_test, while we use rocm 5 to build VTK-m the
+    # smoke_test needs 4.5 since Kokkos is built agains rocm 4.5
+    LD_LIBRARY_PATH:         "/opt/rocm-4.5.0/lib:${LD_LIBRARY_PATH}"
+    LIBRARY_PATH:            "/opt/rocm-4.5.0/lib:${LIBRARY_PATH}"
+
+    # While Kokkos and VTK-m uses ROCm 4.5.0 runtime/sdk, we need to build
+    # VTK-m with HIPCC from ROCM 5
     CMAKE_HIP_COMPILER:      "/opt/rocm-default/llvm/bin/clang++"
     Kokkos_CXX_COMPILER:     "/opt/rocm-default/llvm/bin/clang++"
     CMAKE_HIP_ARCHITECTURES: "gfx908"
