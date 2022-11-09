@@ -75,6 +75,7 @@ build:ubuntu2004_hip_kokkos:
     VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
 
     CMAKE_PREFIX_PATH:       "/opt/rocm/lib/cmake"
+    LD_LIBRARY_PATH:         "/opt/rocm/lib"
     CMAKE_HIP_COMPILER:      "/opt/rocm/llvm/bin/clang++"
     Kokkos_CXX_COMPILER:     "/opt/rocm/llvm/bin/clang++"
     CMAKE_HIP_ARCHITECTURES: "gfx900"
