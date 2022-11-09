@@ -44,19 +44,6 @@ public:
 
   vtkm::cont::DataSet& operator=(const vtkm::cont::DataSet&) = default;
 
-  /// \brief An enumeration that can be used to refer to the parts of a `DataSet`.
-  ///
-  /// The items can be or'ed together (`|`) to refer to multiple parts.
-  enum struct Parts : vtkm::UInt32
-  {
-    None = 0x00,
-    CellSet = 0x01,
-    Fields = 0x02,
-    Coordinates = 0x04,
-    GhostCellName = 0x08,
-    All = 0xFF
-  };
-
   VTKM_CONT void Clear();
 
   /// Get the number of cells contained in this DataSet
@@ -332,32 +319,11 @@ public:
     return static_cast<vtkm::IdComponent>(this->CoordSystemNames.size());
   }
 
-  /// Copies the structure i.e. coordinates systems and cellset from the source
-  /// dataset. The fields are left unchanged.
-  VTKM_DEPRECATED(2.0, "Use CopyPartsFromExcept(source, vtkm::cont::DataSet::Parts::Fields)")
+  /// Copies the structure from the source dataset. The structure includes the cellset,
+  /// the coordinate systems, and any ghost layer information. The fields that are not
+  /// part of a coordinate system or ghost layers are left unchanged.
   VTKM_CONT
-  void CopyStructure(const vtkm::cont::DataSet& source)
-  {
-    this->CopyPartsFromExcept(source, vtkm::cont::DataSet::Parts::Fields);
-  }
-
-  /// \brief Copy parts from a source data set.
-  ///
-  /// Data from the `source` `DataSet` are copied into this `DataSet`. Where possible,
-  /// parts like `Field`s and `CoordinateSystem`s from the source are added. Parts that
-  /// only have one instance in the `DataSet`, such as the `CellSet`, are replaced.
-  ///
-  /// By default, all parts are copied. A `partMask` is provided that
-  /// specifies which parts _not_ to copy. For example, to copy only the structure
-  /// but not any of the fields, specify to not copy the fields or coordinates as so.
-  ///
-  /// ```cpp
-  /// dest.CopyPartsFromExcept(
-  ///   src, vtkm::cont::DataSet::Parts::Fields | vtkm::cont::DataSet::Parts::Coordinates);
-  /// ```
-  ///
-  VTKM_CONT
-  void CopyPartsFromExcept(const vtkm::cont::DataSet& source, vtkm::cont::DataSet::Parts partMask);
+  void CopyStructure(const vtkm::cont::DataSet& source);
 
   /// \brief Convert the structures in this data set to expected types.
   ///
@@ -388,20 +354,6 @@ private:
 
   VTKM_CONT void SetCellSetImpl(const vtkm::cont::UnknownCellSet& cellSet);
 };
-
-VTKM_CONT inline vtkm::cont::DataSet::Parts operator|(vtkm::cont::DataSet::Parts lhs,
-                                                      vtkm::cont::DataSet::Parts rhs)
-{
-  using T = std::underlying_type_t<vtkm::cont::DataSet::Parts>;
-  return static_cast<vtkm::cont::DataSet::Parts>(static_cast<T>(lhs) | static_cast<T>(rhs));
-}
-
-VTKM_CONT inline vtkm::cont::DataSet::Parts operator&(vtkm::cont::DataSet::Parts lhs,
-                                                      vtkm::cont::DataSet::Parts rhs)
-{
-  using T = std::underlying_type_t<vtkm::cont::DataSet::Parts>;
-  return static_cast<vtkm::cont::DataSet::Parts>(static_cast<T>(lhs) & static_cast<T>(rhs));
-}
 
 } // namespace cont
 } // namespace vtkm

@@ -407,10 +407,6 @@ protected:
                                              FieldMapper&& fieldMapper) const
   {
     vtkm::cont::DataSet outDataSet;
-    outDataSet.CopyPartsFromExcept(inDataSet,
-                                   vtkm::cont::DataSet::Parts::Fields |
-                                     vtkm::cont::DataSet::Parts::Coordinates |
-                                     vtkm::cont::DataSet::Parts::CellSet);
     outDataSet.SetCellSet(resultCellSet);
     this->MapFieldsOntoOutput(inDataSet, this->GetFieldsToPass(), outDataSet, fieldMapper);
     return outDataSet;
@@ -480,10 +476,6 @@ protected:
     FieldMapper&& fieldMapper) const
   {
     vtkm::cont::DataSet outDataSet;
-    outDataSet.CopyPartsFromExcept(inDataSet,
-                                   vtkm::cont::DataSet::Parts::Fields |
-                                     vtkm::cont::DataSet::Parts::Coordinates |
-                                     vtkm::cont::DataSet::Parts::CellSet);
     outDataSet.SetCellSet(resultCellSet);
     outDataSet.AddCoordinateSystem(resultCoordSystem);
     vtkm::filter::FieldSelection fieldSelection = this->GetFieldsToPass();
@@ -519,6 +511,7 @@ private:
                                      vtkm::cont::DataSet& output,
                                      FieldMapper&& fieldMapper) const
   {
+    // Basic field mapping
     for (vtkm::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)
     {
       auto field = input.GetField(cc);
@@ -528,13 +521,22 @@ private:
       }
     }
 
+    // Check if the ghost levels have been copied. If so, set so on the output.
+    if (input.HasGhostCellField())
+    {
+      const std::string& ghostFieldName = input.GetGhostCellFieldName();
+      if (output.HasCellField(ghostFieldName) && (output.GetGhostCellFieldName() != ghostFieldName))
+      {
+        output.SetGhostCellFieldName(ghostFieldName);
+      }
+    }
+
     for (vtkm::IdComponent csIndex = 0; csIndex < input.GetNumberOfCoordinateSystems(); ++csIndex)
     {
       auto coords = input.GetCoordinateSystem(csIndex);
       if (!output.HasCoordinateSystem(coords.GetName()))
       {
-        if (!output.HasPointField(coords.GetName()) &&
-            (this->GetPassCoordinateSystems() || this->GetFieldsToPass().IsFieldSelected(coords)))
+        if (!output.HasPointField(coords.GetName()) && this->GetPassCoordinateSystems())
         {
           fieldMapper(output, coords);
         }

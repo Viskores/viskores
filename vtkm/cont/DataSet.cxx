@@ -235,42 +235,27 @@ void DataSet::SetGhostCellField(const vtkm::cont::UnknownArrayHandle& field)
   this->SetGhostCellField(GetGlobalGhostCellFieldName(), field);
 }
 
-void DataSet::CopyPartsFromExcept(const vtkm::cont::DataSet& source,
-                                  vtkm::cont::DataSet::Parts partMask)
+void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
 {
-  if ((partMask & vtkm::cont::DataSet::Parts::CellSet) == vtkm::cont::DataSet::Parts::None)
+  // Copy the cells.
+  this->CellSet = source.CellSet;
+
+  // Copy the coordinate systems.
+  this->CoordSystemNames.clear();
+  vtkm::IdComponent numCoords = source.GetNumberOfCoordinateSystems();
+  for (vtkm::IdComponent coordIndex = 0; coordIndex < numCoords; ++coordIndex)
   {
-    this->CellSet = source.CellSet;
-  }
-  if ((partMask & vtkm::cont::DataSet::Parts::GhostCellName) == vtkm::cont::DataSet::Parts::None)
-  {
-    this->GhostCellName = source.GhostCellName;
+    this->AddCoordinateSystem(source.GetCoordinateSystem(coordIndex));
   }
 
-  if ((partMask & vtkm::cont::DataSet::Parts::Fields) == vtkm::cont::DataSet::Parts::None)
+  // Copy the ghost cells.
+  // Note that we copy the GhostCellName separately from the field it points to
+  // to preserve (or remove) the case where the ghost cell name follows the
+  // global ghost cell name.
+  this->GhostCellName = source.GhostCellName;
+  if (source.HasGhostCellField())
   {
-    vtkm::IdComponent numFields = source.GetNumberOfFields();
-    for (vtkm::IdComponent fIndex = 0; fIndex < numFields; ++fIndex)
-    {
-      this->AddField(source.GetField(fIndex));
-    }
-  }
-
-  if ((partMask & vtkm::cont::DataSet::Parts::Coordinates) == vtkm::cont::DataSet::Parts::None)
-  {
-    vtkm::IdComponent numCoords = source.GetNumberOfCoordinateSystems();
-    for (vtkm::IdComponent cIndex = 0; cIndex < numCoords; ++cIndex)
-    {
-      std::string coordName = source.GetCoordinateSystemName(cIndex);
-      if (this->HasPointField(coordName))
-      {
-        this->AddCoordinateSystem(coordName);
-      }
-      else
-      {
-        this->AddCoordinateSystem(source.GetCoordinateSystem(cIndex));
-      }
-    }
+    this->AddField(source.GetGhostCellField());
   }
 
   CheckFieldSizes(this->CellSet, this->Fields);
