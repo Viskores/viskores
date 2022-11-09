@@ -77,30 +77,10 @@ public:
   }
 
   VTKM_CONT
-  bool HasGhostCellField() const
-  {
-    if (this->GhostCellName)
-    {
-      return this->HasCellField(*this->GhostCellName);
-    }
-    else
-    {
-      return false;
-    }
-  }
+  bool HasGhostCellField() const;
 
   VTKM_CONT
-  const std::string& GetGhostCellFieldName() const
-  {
-    if (this->HasGhostCellField())
-    {
-      return *this->GhostCellName;
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadValue("No Ghost Cell Field Name");
-    }
-  }
+  const std::string& GetGhostCellFieldName() const;
 
   VTKM_CONT
   bool HasPointField(const std::string& name) const
@@ -156,21 +136,11 @@ public:
   }
   ///@}
 
-  /// Returns the first cell field that matches the provided name.
+  /// Returns the cell field that matches the ghost cell field name.
   /// Will throw an exception if no match is found
   ///@{
   VTKM_CONT
-  const vtkm::cont::Field& GetGhostCellField() const
-  {
-    if (this->HasGhostCellField())
-    {
-      return this->GetCellField(*(this->GhostCellName));
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadValue("No Ghost Cell Field");
-    }
-  }
+  const vtkm::cont::Field& GetGhostCellField() const;
   ///@}
 
   /// Returns the first point field that matches the provided name.
@@ -223,24 +193,49 @@ public:
     this->AddField(make_FieldCell(fieldName, field));
   }
 
+  /// \brief Sets the name of the field to use for cell ghost levels.
+  ///
+  /// This value can be set regardless of whether such a cell field actually exists.
+  VTKM_CONT void SetGhostCellFieldName(const std::string& name);
+
+  /// \brief Sets the cell field of the given name as the cell ghost levels.
+  ///
+  /// If a cell field of the given name does not exist, an exception is thrown.
+  VTKM_CONT void SetGhostCellField(const std::string& name);
+
+  ///@{
+  /// \brief Sets the ghost cell levels.
+  ///
+  /// A field of the given name is added to the `DataSet`, and that field is set as the cell
+  /// ghost levels.
+  VTKM_CONT void SetGhostCellField(const vtkm::cont::Field& field);
+  VTKM_CONT void SetGhostCellField(const std::string& fieldName,
+                                   const vtkm::cont::UnknownArrayHandle& field);
+  ///@}
+
+  /// \brief Sets the ghost cell levels to the given array.
+  ///
+  /// A field with the global ghost cell field name (see `GlobalGhostCellFieldName`) is added
+  /// to the `DataSet` and made to be the cell ghost levels.
+  VTKM_CONT void SetGhostCellField(const vtkm::cont::UnknownArrayHandle& field);
+
+  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
   VTKM_CONT
   void AddGhostCellField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
   {
-    this->GhostCellName.reset(new std::string(fieldName));
-    this->AddField(make_FieldCell(fieldName, field));
+    this->SetGhostCellField(fieldName, field);
   }
 
+  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
   VTKM_CONT
   void AddGhostCellField(const vtkm::cont::UnknownArrayHandle& field)
   {
-    this->AddGhostCellField(GetGlobalGhostCellFieldName(), field);
+    this->SetGhostCellField(field);
   }
 
+  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
   VTKM_CONT
-  void AddGhostCellField(const vtkm::cont::Field& field)
-  {
-    this->AddGhostCellField(field.GetName(), field.GetData());
-  }
+  void AddGhostCellField(const vtkm::cont::Field& field) { this->SetGhostCellField(field); }
 
   template <typename T, typename Storage>
   VTKM_CONT void AddCellField(const std::string& fieldName,

@@ -97,11 +97,11 @@ vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
 
   if (ghostName == "default")
   {
-    ds.AddGhostCellField(ghosts);
+    ds.SetGhostCellField(ghosts);
   }
   else
   {
-    ds.AddGhostCellField(ghostName, ghosts);
+    ds.SetGhostCellField(ghostName, ghosts);
   }
   return ds;
 }
@@ -138,11 +138,11 @@ vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
 
   if (ghostName == "default")
   {
-    ds.AddGhostCellField(ghosts);
+    ds.SetGhostCellField(ghosts);
   }
   else
   {
-    ds.AddGhostCellField(ghostName, ghosts);
+    ds.SetGhostCellField(ghostName, ghosts);
   }
 
   return ds;
@@ -226,11 +226,11 @@ vtkm::cont::DataSet MakeExplicit(vtkm::Id numI,
 
   if (ghostName == "default")
   {
-    ds.AddGhostCellField(ghosts);
+    ds.SetGhostCellField(ghosts);
   }
   else
   {
-    ds.AddGhostCellField(ghostName, ghosts);
+    ds.SetGhostCellField(ghostName, ghosts);
   }
 
   return ds;
