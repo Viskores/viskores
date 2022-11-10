@@ -13,11 +13,13 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <typeindex>
@@ -187,6 +189,15 @@
 /// and then cast appropriately, as described here:
 /// https://gitlab.kitware.com/vtk/vtk-m/-/issues/358#note_550157
 
+#define VTKM_CONCAT_IMPL(s1, s2) s1##s2
+#define VTKM_CONCAT(s1, s2) VTKM_CONCAT_IMPL(s1, s2)
+
+#ifdef __COUNTER__
+#define VTKM_ANONYMOUS_VARIABLE VTKM_CONCAT(vtk_m_anonymous_, __COUNTER__)
+#else
+#define VTKM_ANONYMOUS_VARIABLE VTKM_CONCAT(vtk_m_anonymous_, __LINE__)
+#endif
+
 #if defined(VTKM_ENABLE_LOGGING)
 
 #define VTKM_LOG_IF_S(level, cond, ...) \
@@ -198,7 +209,8 @@
 #define VTKM_LOG_S(level, ...) VTKM_LOG_IF_S(level, true, __VA_ARGS__)
 #define VTKM_LOG_F(level, ...) VTKM_LOG_IF_F(level, true, __VA_ARGS__)
 
-#define VTKM_LOG_SCOPE(level, ...) vtkm::cont::LogScope(level, __FILE__, __LINE__, __VA_ARGS__)
+#define VTKM_LOG_SCOPE(level, ...) \
+  vtkm::cont::detail::LogScope VTKM_ANONYMOUS_VARIABLE { level, __FILE__, __LINE__, __VA_ARGS__ }
 
 #define VTKM_LOG_SCOPE_FUNCTION(level) VTKM_LOG_SCOPE(level, __func__)
 #define VTKM_LOG_ALWAYS_S(level, ...) VTKM_LOG_S(level, __VA_ARGS__)
@@ -494,16 +506,37 @@ VTKM_CONT_EXPORT
 VTKM_CONT
 void LogCond(LogLevel level, bool cond, const char* file, unsigned line, const char* format...);
 
+namespace detail
+{
+
 /**
  * \brief Logs a scoped message with a printf-like format.
  *
  * The indentation level will be determined based on its LogLevel and it will
- * print out its wall time upon exiting its scope.
- *
- * \param level  Desired LogLevel value for the log message.
- * \param cond   When false this function is no-op.
- * \param format Printf like format string.
+ * print out its wall time upon exiting its scope. The scope starts from when
+ * the object is created to when it is destroyed.
  */
+class VTKM_CONT_EXPORT LogScope
+{
+  struct InternalStruct;
+  std::unique_ptr<InternalStruct> Internals;
+
+public:
+  /*
+   * \param level  Desired LogLevel value for the log message.
+   * \param cond   When false this function is no-op.
+   * \param format Printf like format string.
+   */
+  VTKM_CONT
+  LogScope(LogLevel level, const char* file, unsigned line, const char* format...);
+
+  VTKM_CONT ~LogScope();
+};
+
+
+} // namespace detail
+
+VTKM_DEPRECATED(1.9, "Use VTKM_LOG_SCOPE macro.")
 VTKM_CONT_EXPORT
 VTKM_CONT
 void LogScope(LogLevel level, const char* file, unsigned line, const char* format...);
