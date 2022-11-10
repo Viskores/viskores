@@ -340,22 +340,48 @@ int getVerbosityByLevel(LogLevel level)
   return static_cast<loguru::Verbosity>(level);
 }
 
+namespace detail
+{
+
+struct LogScope::InternalStruct : loguru::LogScopeRAII
+{
+  template <typename... Ts>
+  InternalStruct(Ts&&... args)
+    : loguru::LogScopeRAII(std::forward<Ts>(args)...)
+  {
+  }
+};
+
 VTKM_CONT
-void LogScope(LogLevel level, const char* file, unsigned line, const char* format...)
+LogScope::LogScope(LogLevel level, const char* file, unsigned line, const char* format...)
 {
   auto verbosity = getVerbosityByLevel(level);
 
   if (verbosity > loguru::current_verbosity_cutoff())
   {
-    loguru::LogScopeRAII();
+    this->Internals = std::make_unique<InternalStruct>();
   }
   else
   {
     va_list args;
     va_start(args, format);
-    loguru::LogScopeRAII(verbosity, file, line, format, args);
+    this->Internals = std::make_unique<InternalStruct>(verbosity, file, line, format, args);
     va_end(args);
   }
+}
+
+LogScope::~LogScope() = default;
+
+} // namespace detail
+
+VTKM_CONT
+void LogScope(LogLevel level, const char* file, unsigned line, const char* format...)
+{
+  // This does not scope right, but neither did the deprecated method this is replacing.
+  va_list args;
+  va_start(args, format);
+  detail::LogScope scopedVar{ level, file, line, format, args };
+  va_end(args);
 }
 
 VTKM_CONT
