@@ -129,6 +129,35 @@ vtkm::Id DataSet::GetNumberOfPoints() const
   return 0;
 }
 
+const std::string& DataSet::GetGhostCellFieldName() const
+{
+  if (this->GhostCellName)
+  {
+    return *this->GhostCellName;
+  }
+  else
+  {
+    return GetGlobalGhostCellFieldName();
+  }
+}
+
+bool DataSet::HasGhostCellField() const
+{
+  return this->HasCellField(this->GetGhostCellFieldName());
+}
+
+const vtkm::cont::Field& DataSet::GetGhostCellField() const
+{
+  if (this->HasGhostCellField())
+  {
+    return this->GetCellField(this->GetGhostCellFieldName());
+  }
+  else
+  {
+    throw vtkm::cont::ErrorBadValue("No Ghost Cell Field");
+  }
+}
+
 void DataSet::AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs)
 {
   CheckFieldSize(this->CellSet, cs);
@@ -139,6 +168,47 @@ void DataSet::SetCellSetImpl(const vtkm::cont::UnknownCellSet& cellSet)
 {
   CheckFieldSizes(cellSet, this->Fields);
   this->CellSet = cellSet;
+}
+
+void DataSet::SetGhostCellFieldName(const std::string& name)
+{
+  this->GhostCellName.reset(new std::string(name));
+}
+
+void DataSet::SetGhostCellField(const std::string& name)
+{
+  if (this->HasCellField(name))
+  {
+    this->SetGhostCellFieldName(name);
+  }
+  else
+  {
+    throw vtkm::cont::ErrorBadValue("No such cell field " + name);
+  }
+}
+
+void DataSet::SetGhostCellField(const vtkm::cont::Field& field)
+{
+  if (field.GetAssociation() == vtkm::cont::Field::Association::Cells)
+  {
+    this->SetGhostCellField(field.GetName(), field.GetData());
+  }
+  else
+  {
+    throw vtkm::cont::ErrorBadValue("A ghost cell field must be a cell field.");
+  }
+}
+
+void DataSet::SetGhostCellField(const std::string& fieldName,
+                                const vtkm::cont::UnknownArrayHandle& field)
+{
+  this->AddCellField(fieldName, field);
+  this->SetGhostCellField(fieldName);
+}
+
+void DataSet::SetGhostCellField(const vtkm::cont::UnknownArrayHandle& field)
+{
+  this->SetGhostCellField(GetGlobalGhostCellFieldName(), field);
 }
 
 void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
