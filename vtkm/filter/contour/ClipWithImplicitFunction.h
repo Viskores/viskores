@@ -46,11 +46,6 @@ private:
   bool Invert = false;
 };
 } // namespace contour
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::contour::ClipWithImplicitFunction.")
-  ClipWithImplicitFunction : public vtkm::filter::contour::ClipWithImplicitFunction
-{
-  using contour::ClipWithImplicitFunction::ClipWithImplicitFunction;
-};
 } // namespace filter
 } // namespace vtkm
 

@@ -10,12 +10,9 @@
 
 set(headers
   ArrayCopyUnknown.h
-  ArrayHandleDeprecated.h
   ArrayHandleExecutionManager.h
   ArrayPortalFromIterators.h
   ArrayTransfer.h
-  AtomicInterfaceControl.h
-  AtomicInterfaceExecution.h
   Buffer.h
   CastInvalidValue.h
   CellLocatorBase.h
@@ -39,7 +36,6 @@ set(headers
   RuntimeDeviceConfiguration.h
   RuntimeDeviceConfigurationOptions.h
   RuntimeDeviceOption.h
-  StorageDeprecated.h
   StorageError.h
   )
 

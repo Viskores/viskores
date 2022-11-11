@@ -126,22 +126,6 @@ static void SetFastestDeviceId()
     .SetDeviceInstance(deviceId);
 }
 
-//choose a cuda compute device. This can't be used if you are setting
-//up open gl interop
-VTKM_DEPRECATED(1.7,
-                "Use "
-                "RuntimeInformation{}.GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda)."
-                "SetDeviceInstance(id) instead")
-static void SetCudaDevice(int id)
-{
-  cudaError_t cError = cudaSetDevice(id);
-  if (cError != cudaSuccess)
-  {
-    std::string cuda_error_msg("Unable to bind to the given cuda device. Error: ");
-    cuda_error_msg.append(cudaGetErrorString(cError));
-    throw vtkm::cont::ErrorExecution(cuda_error_msg);
-  }
-}
 }
 }
 } //namespace

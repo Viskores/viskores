@@ -20,6 +20,7 @@
 #include <vtkm/cont/ArrayHandleStride.h>
 #include <vtkm/cont/StorageList.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/TypeList.h>
 
 #include <memory>
@@ -550,15 +551,6 @@ public:
     NewValueTypeList = NewValueTypeList{},
     NewStorageTypeList = NewStorageTypeList{}) const;
 
-  template <typename NewValueTypeList>
-  VTKM_DEPRECATED(1.6, "Specify both value types and storage types.")
-  VTKM_CONT
-    vtkm::cont::UncertainArrayHandle<NewValueTypeList, vtkm::cont::StorageListCommon> ResetTypes(
-      NewValueTypeList = NewValueTypeList{}) const
-  {
-    return this->ResetTypes<NewValueTypeList, vtkm::cont::StorageListCommon>();
-  }
-
   /// \brief Returns the number of values in the array.
   ///
   VTKM_CONT vtkm::Id GetNumberOfValues() const;
@@ -658,32 +650,6 @@ public:
 #ifdef VTKM_MSVC
   VTKM_DEPRECATED_SUPPRESS_END
 #endif
-
-  // For code still expecting a VariantArrayHandle
-  template <typename ArrayHandleType>
-  VTKM_DEPRECATED(1.6, "Use AsArrayHandle.")
-  VTKM_CONT ArrayHandleType Cast() const
-  {
-    return this->AsArrayHandle<ArrayHandleType>();
-  }
-  template <typename ArrayHandleType>
-  VTKM_DEPRECATED(1.6, "Use AsArrayHandle.")
-  VTKM_CONT void CopyTo(ArrayHandleType& array) const
-  {
-    this->AsArrayHandle(array);
-  }
-  template <typename MultiplexerType>
-  VTKM_DEPRECATED(1.6, "Use AsArrayHandle.")
-  VTKM_CONT MultiplexerType AsMultiplexer() const
-  {
-    return this->AsArrayHandle<MultiplexerType>();
-  }
-  template <typename MultiplexerType>
-  VTKM_DEPRECATED(1.6, "Use AsArrayHandle.")
-  VTKM_CONT void AsMultiplexer(MultiplexerType& result) const
-  {
-    result = this->AsArrayHandle<MultiplexerType>();
-  }
 
   /// \brief Deep copies data from another `UnknownArrayHandle`.
   ///
@@ -884,16 +850,6 @@ public:
   template <typename Functor, typename... Args>
   VTKM_CONT void CastAndCallWithExtractedArray(Functor&& functor, Args&&... args) const;
 
-  template <typename FunctorOrStorageList, typename... Args>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "Use CastAndCallForTypes.") void CastAndCall(
-    FunctorOrStorageList&& functorOrStorageList,
-    Args&&... args) const
-  {
-    this->CastAndCallImpl(vtkm::internal::IsList<FunctorOrStorageList>{},
-                          std::forward<FunctorOrStorageList>(functorOrStorageList),
-                          std::forward<Args>(args)...);
-  }
-
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).
   ///
@@ -904,20 +860,6 @@ public:
   VTKM_CONT void ReleaseResources() const;
 
   VTKM_CONT void PrintSummary(std::ostream& out, bool full = false) const;
-
-private:
-  // Remove this when deprecated CastAndCall is removed.
-  template <typename... Args>
-  VTKM_CONT void CastAndCallImpl(std::false_type, Args&&... args) const
-  {
-    this->CastAndCallForTypes<vtkm::TypeListCommon, vtkm::cont::StorageListCommon>(
-      std::forward<Args>(args)...);
-  }
-  template <typename StorageList, typename... Args>
-  VTKM_CONT void CastAndCallImpl(std::true_type, StorageList, Args&&... args) const
-  {
-    this->CastAndCallForTypes<vtkm::TypeListCommon, StorageList>(std::forward<Args>(args)...);
-  }
 };
 
 //=============================================================================

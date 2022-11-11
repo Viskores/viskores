@@ -60,11 +60,6 @@ private:
   vtkm::Float64 RangeLow = 0.0, RangeHigh = 1.0;
 };
 } // namespace field_transform
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::PointElevation.") PointElevation
-  : public vtkm::filter::field_transform::PointElevation
-{
-  using field_transform::PointElevation::PointElevation;
-};
 } // namespace filter
 } // namespace vtkm
 

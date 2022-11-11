@@ -77,46 +77,8 @@ struct ArithType<vtkm::Float64>
 };
 }
 
-template <typename T, typename... MaybeDevice>
-class AtomicArrayExecutionObject;
-
-template <typename T, typename Device>
-class VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject no longer uses Device template parameter.")
-  AtomicArrayExecutionObject<T, Device> : public AtomicArrayExecutionObject<T>
-{
-  using Superclass = AtomicArrayExecutionObject<T>;
-
-public:
-  AtomicArrayExecutionObject() = default;
-
-  // This constructor is deprecated in VTK-m 1.6.
-  VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject no longer uses Device template parameter.")
-  AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle)
-    : Superclass(handle, Device{})
-  {
-  }
-
-  VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject no longer uses Device template parameter.")
-  AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle, vtkm::cont::Token& token)
-    : Superclass(handle, Device{}, token)
-  {
-  }
-
-  // How does this even work?
-  template <typename PortalType>
-#ifndef VTKM_MSVC
-  // Some versions of visual studio seem to have a bug that causes an error with the
-  // deprecated attribute at this location.
-  VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject no longer uses Device template parameter.")
-#endif
-    AtomicArrayExecutionObject(const PortalType& portal)
-    : Superclass(portal)
-  {
-  }
-};
-
 template <typename T>
-class AtomicArrayExecutionObject<T>
+class AtomicArrayExecutionObject
 {
   // Checks if PortalType has a GetIteratorBegin() method that returns a
   // pointer.
@@ -130,19 +92,6 @@ public:
   using ValueType = T;
 
   AtomicArrayExecutionObject() = default;
-
-  // This constructor is deprecated in VTK-m 1.6.
-  VTKM_CONT VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject constructor needs token.")
-    AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle,
-                               vtkm::cont::DeviceAdapterId device)
-    : Data{ handle.PrepareForInPlace(device).GetIteratorBegin() }
-    , NumberOfValues{ handle.GetNumberOfValues() }
-  {
-    using PortalType = decltype(handle.PrepareForInPlace(device));
-    VTKM_STATIC_ASSERT_MSG(HasPointerAccess<PortalType>::value,
-                           "Source portal must return a pointer from "
-                           "GetIteratorBegin().");
-  }
 
   VTKM_CONT AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle,
                                        vtkm::cont::DeviceAdapterId device,
@@ -283,15 +232,6 @@ public:
     return vtkm::AtomicCompareExchange(reinterpret_cast<APIType*>(this->Data + index),
                                        reinterpret_cast<APIType*>(oldValue),
                                        static_cast<APIType>(newValue));
-  }
-
-  VTKM_DEPRECATED(1.6, "Use CompareExchange. (Note the changed interface.)")
-  VTKM_EXEC ValueType CompareAndSwap(vtkm::Id index,
-                                     const ValueType& newValue,
-                                     ValueType oldValue) const
-  {
-    this->CompareExchange(index, &oldValue, newValue);
-    return oldValue;
   }
 
 private:

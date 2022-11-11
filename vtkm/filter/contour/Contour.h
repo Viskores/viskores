@@ -128,11 +128,6 @@ protected:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& result) override;
 };
 } // namespace contour
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::contour::Contour.") Contour
-  : public vtkm::filter::contour::Contour
-{
-  using contour::Contour::Contour;
-};
 } // namespace filter
 } // namespace vtkm
 

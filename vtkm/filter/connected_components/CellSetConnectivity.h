@@ -41,12 +41,6 @@ private:
 
 } // namespace connected_components
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::connected_components::CellSetConnectivity.")
-  CellSetConnectivity : public vtkm::filter::connected_components::CellSetConnectivity
-{
-  using connected_components::CellSetConnectivity::CellSetConnectivity;
-};
-
 } // namespace filter
 } // namespace vtkm
 

@@ -13,7 +13,6 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/vtkm_cont_export.h>
@@ -214,9 +213,6 @@
 
 #define VTKM_LOG_SCOPE_FUNCTION(level) VTKM_LOG_SCOPE(level, __func__)
 #define VTKM_LOG_ALWAYS_S(level, ...) VTKM_LOG_S(level, __VA_ARGS__)
-
-// VTKM_LOG_ERROR_CONTEXT is disabled as it is deprecated
-#define VTKM_LOG_ERROR_CONTEXT(desc, data)
 
 
 // Convenience macros:
@@ -535,11 +531,6 @@ public:
 
 
 } // namespace detail
-
-VTKM_DEPRECATED(1.9, "Use VTKM_LOG_SCOPE macro.")
-VTKM_CONT_EXPORT
-VTKM_CONT
-void LogScope(LogLevel level, const char* file, unsigned line, const char* format...);
 
 /**
  * \brief Conditionally logs a message with a stream-like interface.

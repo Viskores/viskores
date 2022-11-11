@@ -1371,51 +1371,9 @@ bool LoadColorTablePreset(vtkm::cont::ColorTable::Preset preset, vtkm::cont::Col
     }
   }
 
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  // Handle deprecated names
-  switch (preset)
-  {
-    case vtkm::cont::ColorTable::Preset::DEFAULT:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Default, table);
-    case vtkm::cont::ColorTable::Preset::COOL_TO_WARM:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::CoolToWarm, table);
-    case vtkm::cont::ColorTable::Preset::COOL_TO_WARM_EXTENDED:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::CoolToWarmExtended, table);
-    case vtkm::cont::ColorTable::Preset::VIRIDIS:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Viridis, table);
-    case vtkm::cont::ColorTable::Preset::INFERNO:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Inferno, table);
-    case vtkm::cont::ColorTable::Preset::PLASMA:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Plasma, table);
-    case vtkm::cont::ColorTable::Preset::BLACK_BODY_RADIATION:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::BlackBodyRadiation, table);
-    case vtkm::cont::ColorTable::Preset::X_RAY:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::XRay, table);
-    case vtkm::cont::ColorTable::Preset::GREEN:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Green, table);
-    case vtkm::cont::ColorTable::Preset::BLACK_BLUE_WHITE:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::BlackBlueWhite, table);
-    case vtkm::cont::ColorTable::Preset::BLUE_TO_ORANGE:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::BlueToOrange, table);
-    case vtkm::cont::ColorTable::Preset::GRAY_TO_RED:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::GrayToRed, table);
-    case vtkm::cont::ColorTable::Preset::COLD_AND_HOT:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::ColdAndHot, table);
-    case vtkm::cont::ColorTable::Preset::BLUE_GREEN_ORANGE:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::BlueGreenOrange, table);
-    case vtkm::cont::ColorTable::Preset::YELLOW_GRAY_BLUE:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::YellowGrayBlue, table);
-    case vtkm::cont::ColorTable::Preset::RAINBOW_UNIFORM:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::RainbowUniform, table);
-    case vtkm::cont::ColorTable::Preset::JET:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::Jet, table);
-    case vtkm::cont::ColorTable::Preset::RAINBOW_DESATURATED:
-      return LoadColorTablePreset(vtkm::cont::ColorTable::Preset::RainbowDesaturated, table);
-    default:
-      // Should not get here.
-      return false;
-  }
-  VTKM_DEPRECATED_SUPPRESS_END
+  // Should not get here.
+  VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Missing ColorTable preset.");
+  return false;
 }
 
 VTKM_CONT_EXPORT std::set<std::string> GetPresetNames()

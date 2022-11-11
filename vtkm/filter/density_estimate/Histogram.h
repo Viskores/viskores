@@ -79,11 +79,6 @@ private:
   bool InExecutePartitions = false;
 };
 } // namespace density_estimate
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::Histogram.") Histogram
-  : public vtkm::filter::density_estimate::Histogram
-{
-  using density_estimate::Histogram::Histogram;
-};
 } // namespace filter
 } // namespace vtkm
 

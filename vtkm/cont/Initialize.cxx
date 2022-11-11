@@ -177,21 +177,6 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
                       opt::VtkmArg::Required,
                       loggingHelp.c_str() });
 
-    // TODO: remove deprecated options on next vtk-m release
-    usage.push_back({ opt::OptionIndex::DEPRECATED_DEVICE,
-                      0,
-                      "d",
-                      "device",
-                      VtkmDeviceArg::IsDevice,
-                      "  --device, -d <dev> \tDEPRECATED: use --vtkm-device to set the device" });
-    usage.push_back({ opt::OptionIndex::DEPRECATED_LOGLEVEL,
-                      0,
-                      "v",
-                      "",
-                      opt::VtkmArg::Required,
-                      "  -v <#|INFO|WARNING|ERROR|FATAL|OFF> \tDEPRECATED: use --vtkm-log-level to "
-                      "set the log level" });
-
     // Bring in extra args used by the runtime device configuration options
     vtkm::cont::internal::RuntimeDeviceConfigurationOptions runtimeDeviceOptions(usage);
 
@@ -240,32 +225,9 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
         vtkm::cont::DeviceAdapterTagAny{}, runtimeDeviceOptions, argc, argv);
     }
 
-    if (options[opt::OptionIndex::DEPRECATED_LOGLEVEL])
+    if (options[opt::OptionIndex::DEVICE])
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "Supplied Deprecated log level flag: "
-                   << std::string{ options[opt::OptionIndex::DEPRECATED_LOGLEVEL].name } << ", use "
-                   << loggingFlag << " instead.");
-#ifdef VTKM_ENABLE_LOGGING
-      vtkm::cont::SetStderrLogLevel(options[opt::OptionIndex::DEPRECATED_LOGLEVEL].arg);
-#endif // VTKM_ENABLE_LOGGING
-    }
-
-    if (options[opt::OptionIndex::DEVICE] || options[opt::OptionIndex::DEPRECATED_DEVICE])
-    {
-      const char* arg = nullptr;
-      if (options[opt::OptionIndex::DEPRECATED_DEVICE])
-      {
-        VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                   "Supplied Deprecated device flag "
-                     << std::string{ options[opt::OptionIndex::DEPRECATED_DEVICE].name }
-                     << ", use --vtkm-device instead");
-        arg = options[opt::OptionIndex::DEPRECATED_DEVICE].arg;
-      }
-      if (options[opt::OptionIndex::DEVICE])
-      {
-        arg = options[opt::OptionIndex::DEVICE].arg;
-      }
+      const char* arg = options[opt::OptionIndex::DEVICE].arg;
       auto id = vtkm::cont::make_DeviceAdapterId(arg);
       if (id != vtkm::cont::DeviceAdapterTagAny{})
       {

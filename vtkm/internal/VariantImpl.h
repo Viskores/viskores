@@ -17,7 +17,6 @@
 
 #include <vtkm/internal/VariantImplDetail.h>
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/List.h>
 
 #include <vtkm/internal/Assume.h>
@@ -542,16 +541,6 @@ public:
     }
   }
 };
-
-/// \brief Convert a ListTag to a Variant.
-///
-/// Depricated. Use ListAsVariant instead.
-///
-template <typename ListTag>
-using ListTagAsVariant VTKM_DEPRECATED(
-  1.6,
-  "vtkm::ListTag is no longer supported. Use vtkm::List instead.") =
-  vtkm::ListApply<ListTag, vtkm::VTK_M_NAMESPACE::Variant>;
 
 /// \brief Convert a `List` to a `Variant`.
 ///

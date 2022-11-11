@@ -89,11 +89,6 @@ private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace field_transform
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::GenerateIds.") GenerateIds
-  : public vtkm::filter::field_transform::GenerateIds
-{
-  using field_transform::GenerateIds::GenerateIds;
-};
 } // namespace vtkm::filter
 } // namespace vtkm
 

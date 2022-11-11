@@ -87,11 +87,6 @@ private:
   vtkm::FloatDefault ScaleAmount;
 };
 } // namespace field_transform
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::WarpScalar.") WarpScalar
-  : public vtkm::filter::field_transform::WarpScalar
-{
-  using field_transform::WarpScalar::WarpScalar;
-};
 } // namespace filter
 } // namespace vtkm
 #endif // vtk_m_filter_field_transform_WarpScalar_h

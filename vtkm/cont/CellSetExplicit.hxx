@@ -14,6 +14,8 @@
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/Logging.h>
 
+#include <vtkm/Deprecated.h>
+
 // This file uses a lot of very verbose identifiers and the clang formatted
 // code quickly becomes unreadable. Stick with manual formatting for now.
 //

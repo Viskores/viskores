@@ -232,13 +232,6 @@ VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(const T* array,
   }
 }
 
-template <typename T>
-VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
-VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(const T* array, vtkm::Id numberOfValues)
-{
-  return make_ArrayHandle(array, numberOfValues, vtkm::CopyFlag::Off);
-}
-
 /// A convenience function to move a user-allocated array into an `ArrayHandle`.
 /// The provided array pointer will be reset to `nullptr`.
 /// If the array was not allocated with the `new[]` operator, then deleter and reallocater
@@ -271,13 +264,6 @@ VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(const std::vector<T, 
     // Vector empty. Just return an empty array handle.
     return vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>();
   }
-}
-
-template <typename T, typename Allocator>
-VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
-VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(const std::vector<T, Allocator>& array)
-{
-  return make_ArrayHandle(array, vtkm::CopyFlag::Off);
 }
 
 /// Move an std::vector into an ArrayHandle.

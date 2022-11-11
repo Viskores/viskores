@@ -25,11 +25,6 @@ class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Triangulate : public vtkm::filter::
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace geometry_refinement
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::geometry_refinement::Triangulate.") Triangulate
-  : public vtkm::filter::geometry_refinement::Triangulate
-{
-  using geometry_refinement::Triangulate::Triangulate;
-};
 } // namespace filter
 } // namespace vtkm
 

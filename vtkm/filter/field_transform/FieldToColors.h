@@ -11,7 +11,6 @@
 #ifndef vtk_m_filter_field_transform_FieldToColors_h
 #define vtk_m_filter_field_transform_FieldToColors_h
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/filter/NewFilterField.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
@@ -35,28 +34,13 @@ public:
     Scalar,
     Magnitude,
     Component,
-    SCALAR VTKM_DEPRECATED(1.8, "Use FieldToColors::InputMode::Scalar.") = Scalar,
-    MAGNITUDE VTKM_DEPRECATED(1.8, "Use FieldToColors::InputMode::Magnitude.") = Magnitude,
-    COMPONENT VTKM_DEPRECATED(1.8, "Use FieldToColors::InputMode::Component.") = Component
   };
-  using FieldToColorsInputMode VTKM_DEPRECATED(1.8, "Use FieldToColors::InputMode.") = InputMode;
-  VTKM_DEPRECATED(1.8, "Use FieldToColors::InputMode::Scalar.")
-  static constexpr InputMode SCALAR = InputMode::Scalar;
-  VTKM_DEPRECATED(1.8, "Use FieldToColors::InputMode::Magnitude.")
-  static constexpr InputMode MAGNITUDE = InputMode::Magnitude;
-  VTKM_DEPRECATED(1.8, "Use FieldToColors::InputMode::Component.")
-  static constexpr InputMode COMPONENT = InputMode::Component;
 
   enum struct OutputMode
   {
     RGB,
     RGBA
   };
-  using FieldToColorsOutputMode VTKM_DEPRECATED(1.8, "Use FieldToColors::OutputMode.") = OutputMode;
-  VTKM_DEPRECATED(1.8, "Use FieldToColors::OutputMode::RGB.")
-  static constexpr OutputMode RGB = OutputMode::RGB;
-  VTKM_DEPRECATED(1.8, "Use FieldToColors::OutputMode::RGBA.")
-  static constexpr OutputMode RGBA = OutputMode::RGBA;
 
   void SetColorTable(const vtkm::cont::ColorTable& table)
   {
@@ -101,11 +85,6 @@ private:
   vtkm::Id ModifiedCount = -1;
 };
 } // namespace field_transform
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::FieldToColors.") FieldToColors
-  : public vtkm::filter::field_transform::FieldToColors
-{
-  using field_transform::FieldToColors::FieldToColors;
-};
 } // namespace filter
 } // namespace vtkm
 

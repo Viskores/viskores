@@ -70,26 +70,12 @@ public:
     typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType,
     typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType>;
 
-  template <typename Device>
-  struct VTKM_DEPRECATED(1.6, "Replace ExecutionTypes<D>::Lookup with ExecLookup.") ExecutionTypes
-  {
-    using Lookup = ExecLookup;
-  };
-
   VTKM_CONT ExecLookup PrepareForInput(vtkm::cont::DeviceAdapterId device,
                                        vtkm::cont::Token& token) const
   {
     return ExecLookup(this->SortedValuesMap.PrepareForInput(device, token),
                       this->Offsets.PrepareForInput(device, token),
                       this->Counts.PrepareForInput(device, token));
-  }
-
-  VTKM_CONT VTKM_DEPRECATED(1.6,
-                            "PrepareForInput now requires a vtkm::cont::Token object.") ExecLookup
-    PrepareForInput(vtkm::cont::DeviceAdapterId device) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInput(device, token);
   }
 
   VTKM_CONT
@@ -193,12 +179,6 @@ public:
     typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType,
     typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType>;
 
-  template <typename Device>
-  struct VTKM_DEPRECATED(1.6, "Replace ExecutionTypes<D>::Lookup with ExecLookup.") ExecutionTypes
-  {
-    using Lookup = ExecLookup;
-  };
-
   VTKM_CONT ExecLookup PrepareForInput(vtkm::cont::DeviceAdapterId device,
                                        vtkm::cont::Token& token) const
   {
@@ -206,14 +186,6 @@ public:
                       this->SortedValuesMap.PrepareForInput(device, token),
                       this->Offsets.PrepareForInput(device, token),
                       this->Counts.PrepareForInput(device, token));
-  }
-
-  VTKM_CONT VTKM_DEPRECATED(1.6,
-                            "PrepareForInput now requires a vtkm::cont::Token object.") ExecLookup
-    PrepareForInput(vtkm::cont::DeviceAdapterId device) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInput(device, token);
   }
 
   VTKM_CONT

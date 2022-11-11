@@ -61,8 +61,7 @@ struct HasPrepareForControl
 #define VTKM_IS_EXECUTION_AND_CONTROL_OBJECT(execObject)                                          \
   static_assert(::vtkm::cont::internal::IsExecutionAndControlObjectBase<execObject>::value,       \
                 "Provided type is not a subclass of vtkm::cont::ExecutionAndControlObjectBase."); \
-  static_assert(::vtkm::cont::internal::HasPrepareForExecution<execObject>::value ||              \
-                  ::vtkm::cont::internal::HasPrepareForExecutionDeprecated<execObject>::value,    \
+  static_assert(::vtkm::cont::internal::HasPrepareForExecution<execObject>::value,                \
                 "Provided type does not have requisite PrepareForExecution method.");             \
   static_assert(::vtkm::cont::internal::HasPrepareForControl<execObject>::value,                  \
                 "Provided type does not have requisite PrepareForControl method.")

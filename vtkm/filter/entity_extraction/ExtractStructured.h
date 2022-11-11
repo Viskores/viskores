@@ -92,12 +92,6 @@ private:
 };
 
 } // namespace entity_extraction
-class VTKM_DEPRECATED(1.8,
-                      "Use vtkm::filter::entity_extraction::ExtractStructured.") ExtractStructured
-  : public vtkm::filter::entity_extraction::ExtractStructured
-{
-  using entity_extraction::ExtractStructured::ExtractStructured;
-};
 } // namespace filter
 } // namespace vtkm
 

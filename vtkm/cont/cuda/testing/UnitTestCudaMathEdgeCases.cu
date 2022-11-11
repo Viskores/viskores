@@ -139,8 +139,8 @@ void RunEdgeCases()
     sanevalues.push_back(range(rng));
   }
 
-  auto bad = vtkm::cont::make_ArrayHandle(badvalues);
-  auto sane = vtkm::cont::make_ArrayHandle(sanevalues);
+  auto bad = vtkm::cont::make_ArrayHandle(badvalues, vtkm::CopyFlag::On);
+  auto sane = vtkm::cont::make_ArrayHandle(sanevalues, vtkm::CopyFlag::On);
   decltype(sane) result;
   vtkm::worklet::DispatcherMapField<TriggerICE> dispatcher;
   dispatcher.SetDevice(Device());

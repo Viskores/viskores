@@ -69,11 +69,6 @@ private:
 };
 
 }
-struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::LagrangianStructures.") LagrangianStructures
-  : vtkm::filter::flow::LagrangianStructures
-{
-  using vtkm::filter::flow::LagrangianStructures::LagrangianStructures;
-};
 }
 } // namespace vtkm
 

@@ -433,20 +433,6 @@ public:
   }
 };
 
-/// \brief Converts a \c vtkm::ListTag to an \c ArrayHandleMultiplexer
-///
-/// The argument of this template must be a vtkm::ListTag and furthermore all the types in
-/// the list tag must be some type of \c ArrayHandle. The templated type gets aliased to
-/// an \c ArrayHandleMultiplexer that can store any of these ArrayHandle types.
-///
-/// Deprecated. Use `ArrayHandleMultiplexerFromList` instead.
-///
-template <typename ListTag>
-using ArrayHandleMultiplexerFromListTag VTKM_DEPRECATED(
-  1.6,
-  "vtkm::ListTag is no longer supported. Use vtkm::List instead.") =
-  vtkm::ListApply<ListTag, ArrayHandleMultiplexer>;
-
 /// \brief Converts a`vtkm::List` to an `ArrayHandleMultiplexer`
 ///
 /// The argument of this template must be a `vtkm::List` and furthermore all the types in

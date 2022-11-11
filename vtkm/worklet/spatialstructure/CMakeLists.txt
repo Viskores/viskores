@@ -10,8 +10,6 @@
 
 set(headers
   BoundingIntervalHierarchy.h
-  KdTree3DConstruction.h        # Deprecated
-  KdTree3DNNSearch.h            # Deprecated
   )
 
 vtkm_declare_headers(${headers})

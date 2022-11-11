@@ -35,11 +35,6 @@ private:
 };
 
 }
-struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::PathParticle.") PathParticle
-  : vtkm::filter::flow::PathParticle
-{
-  using vtkm::filter::flow::PathParticle::PathParticle;
-};
 }
 } // namespace vtkm::filter::flow
 

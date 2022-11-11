@@ -12,7 +12,6 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
@@ -93,9 +92,6 @@ public:
   VTKM_CONT void SetRenderAnnotationsEnabled(bool val) { this->RenderAnnotationsEnabled = val; }
   VTKM_CONT bool GetRenderAnnotationsEnabled() { return this->RenderAnnotationsEnabled; }
 
-  VTKM_DEPRECATED(1.6, "Initialize() does nothing.")
-  virtual void Initialize();
-
   virtual void Paint() = 0;
   virtual void RenderScreenAnnotations() = 0;
   virtual void RenderWorldAnnotations() = 0;
@@ -103,11 +99,6 @@ public:
   void RenderAnnotations();
 
   void SaveAs(const std::string& fileName) const;
-
-  VTKM_CONT VTKM_DEPRECATED(1.6, "Use ClearTextAnnotations Instead") void ClearAnnotations();
-
-  VTKM_CONT VTKM_DEPRECATED(1.6, "Use AddTextAnnotation Instead") void AddAnnotation(
-    std::unique_ptr<vtkm::rendering::TextAnnotation> ann);
 
   VTKM_CONT
   void SetAxisColor(vtkm::rendering::Color c);

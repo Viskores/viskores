@@ -120,19 +120,6 @@ public:
   void SetBlockIndices(vtkm::Id3 blocksPerDim,
                        const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices);
 
-  VTKM_CONT
-  VTKM_DEPRECATED(1.9,
-                  "Set PointSize, GlobalPointOrigin, and GlobalPointSize in CellSetStructured and "
-                  "optionally use SetBlockIndices.")
-  void SetSpatialDecomposition(vtkm::Id3 blocksPerDim,
-                               vtkm::Id3,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>&,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>&)
-  {
-    SetBlockIndices(blocksPerDim, localBlockIndices);
-  }
-
   ///@{
   /// Get the contour tree computed by the filter
   const vtkm::worklet::contourtree_augmented::ContourTree& GetContourTree() const;
@@ -185,11 +172,6 @@ private:
     MultiBlockTreeHelper;
 };
 } // namespace scalar_topology
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::scalar_topology::ContourTreeAugmented.")
-  ContourTreeAugmented : public vtkm::filter::scalar_topology::ContourTreeAugmented
-{
-  using scalar_topology::ContourTreeAugmented::ContourTreeAugmented;
-};
 } // namespace filter
 } // namespace vtkm
 
