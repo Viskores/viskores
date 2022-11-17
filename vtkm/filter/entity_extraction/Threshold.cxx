@@ -148,7 +148,7 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::ListForEach(callWithArrayBaseComponent, vtkm::TypeListScalarAll{});
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  return this->CreateResult(input, cellOut, input.GetCoordinateSystems(), mapper);
+  return this->CreateResult(input, cellOut, mapper);
 }
 } // namespace entity_extraction
 } // namespace filter

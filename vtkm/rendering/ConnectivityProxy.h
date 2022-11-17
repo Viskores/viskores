@@ -31,7 +31,7 @@ using PartialVector32 = std::vector<vtkm::rendering::raytracing::PartialComposit
 class VTKM_RENDERING_EXPORT ConnectivityProxy
 {
 public:
-  ConnectivityProxy(vtkm::cont::DataSet& dataset);
+  ConnectivityProxy(const vtkm::cont::DataSet& dataset, const std::string& fieldName);
   ConnectivityProxy(const vtkm::cont::UnknownCellSet& cellset,
                     const vtkm::cont::CoordinateSystem& coords,
                     const vtkm::cont::Field& scalarField);

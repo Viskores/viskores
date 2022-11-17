@@ -51,8 +51,9 @@ VTKM_CONT vtkm::cont::DataSet PointTransform::DoExecute(const vtkm::cont::DataSe
   const auto& field = this->GetFieldFromDataSet(inDataSet);
   this->CastAndCallVecField<3>(field, resolveType);
 
-  vtkm::cont::DataSet outData = this->CreateResultField(
-    inDataSet, this->GetOutputFieldName(), field.GetAssociation(), outArray);
+  auto passMapper = [](auto& d, const auto& f) { d.AddField(f); };
+  vtkm::cont::DataSet outData = this->CreateResultCoordinateSystem(
+    inDataSet, inDataSet.GetCellSet(), this->GetOutputFieldName(), outArray, passMapper);
 
   if (this->GetChangeCoordinateSystem())
   {

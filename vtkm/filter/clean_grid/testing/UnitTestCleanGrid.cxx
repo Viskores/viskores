@@ -76,7 +76,7 @@ void TestPointMerging()
   //filter for uniform data always does point merging
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newcoords;
   vtkm::cont::ArrayCopy(baseData.GetCoordinateSystem().GetData(), newcoords);
-  baseData.GetCoordinateSystem().SetData(newcoords);
+  baseData.AddPointField(baseData.GetCoordinateSystemName(), newcoords);
 
   vtkm::filter::contour::Contour marchingCubes;
   marchingCubes.SetIsoValue(0.05);
