@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestMapFieldMergeAverage.cxx
   UnitTestMapFieldPermutation.cxx

@@ -48,12 +48,6 @@ private:
   vtkm::FloatDefault FeatureAngle = 30.0;
 };
 } // namespace geometry_refinement
-class VTKM_DEPRECATED(1.8,
-                      "Use vtkm::filter::geometry_refinement::SplitSharpEdges.") SplitSharpEdges
-  : public vtkm::filter::geometry_refinement::SplitSharpEdges
-{
-  using geometry_refinement::SplitSharpEdges::SplitSharpEdges;
-};
 } // namespace filter
 } // namespace vtkm
 

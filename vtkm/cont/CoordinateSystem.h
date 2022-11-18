@@ -11,7 +11,6 @@
 #define vtk_m_cont_CoordinateSystem_h
 
 #include <vtkm/Bounds.h>
-#include <vtkm/Deprecated.h>
 
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/CastAndCall.h>

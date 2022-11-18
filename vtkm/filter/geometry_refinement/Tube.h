@@ -45,11 +45,6 @@ private:
   bool Capping{};
 };
 } // namespace geometry_refinement
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::geometry_refinement::Tube.") Tube
-  : public vtkm::filter::geometry_refinement::Tube
-{
-  using geometry_refinement::Tube::Tube;
-};
 } // namespace filter
 } // namespace vtkm
 

@@ -10,7 +10,6 @@
 #ifndef vtk_m_cont_ArrayHandleConcatenate_h
 #define vtk_m_cont_ArrayHandleConcatenate_h
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/StaticAssert.h>
 
 #include <vtkm/cont/ArrayHandle.h>
@@ -117,57 +116,14 @@ class VTKM_ALWAYS_EXPORT StorageTagConcatenate
 namespace internal
 {
 
-namespace detail
-{
-
-template <typename T, typename ArrayOrStorage, bool IsArrayType>
-struct ConcatinateTypeArgImpl;
-
-template <typename T, typename StorageTag_>
-struct ConcatinateTypeArgImpl<T, StorageTag_, false>
-{
-  using StorageTag = StorageTag_;
-  using Storage = vtkm::cont::internal::Storage<T, StorageTag>;
-  using ArrayHandle = vtkm::cont::ArrayHandle<T, StorageTag>;
-};
-
-template <typename T, typename Array>
-struct ConcatinateTypeArgImpl<T, Array, true>
-{
-  VTKM_STATIC_ASSERT_MSG((std::is_same<T, typename Array::ValueType>::value),
-                         "Used array with wrong type in ArrayHandleConcatinate.");
-  using StorageTag VTKM_DEPRECATED(
-    1.6,
-    "Use storage tags instead of array handles in StorageTagConcatenate.") =
-    typename Array::StorageTag;
-  using Storage VTKM_DEPRECATED(
-    1.6,
-    "Use storage tags instead of array handles in StorageTagConcatenate.") =
-    vtkm::cont::internal::Storage<T, typename Array::StorageTag>;
-  using ArrayHandle VTKM_DEPRECATED(
-    1.6,
-    "Use storage tags instead of array handles in StorageTagConcatenate.") =
-    vtkm::cont::ArrayHandle<T, typename Array::StorageTag>;
-};
-
-template <typename T, typename ArrayOrStorage>
-struct ConcatinateTypeArg
-  : ConcatinateTypeArgImpl<T,
-                           ArrayOrStorage,
-                           vtkm::cont::internal::ArrayHandleCheck<ArrayOrStorage>::type::value>
-{
-};
-
-} // namespace detail
-
 template <typename T, typename ST1, typename ST2>
 class Storage<T, StorageTagConcatenate<ST1, ST2>>
 {
-  using SourceStorage1 = typename detail::ConcatinateTypeArg<T, ST1>::Storage;
-  using SourceStorage2 = typename detail::ConcatinateTypeArg<T, ST2>::Storage;
+  using SourceStorage1 = vtkm::cont::internal::Storage<T, ST1>;
+  using SourceStorage2 = vtkm::cont::internal::Storage<T, ST2>;
 
-  using ArrayHandleType1 = typename detail::ConcatinateTypeArg<T, ST1>::ArrayHandle;
-  using ArrayHandleType2 = typename detail::ConcatinateTypeArg<T, ST2>::ArrayHandle;
+  using ArrayHandleType1 = vtkm::cont::ArrayHandle<T, ST1>;
+  using ArrayHandleType2 = vtkm::cont::ArrayHandle<T, ST2>;
 
   struct Info
   {
@@ -338,9 +294,8 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
 template <typename T, typename ST1, typename ST2>
 struct SerializableTypeString<
   vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConcatenate<ST1, ST2>>>
-  : SerializableTypeString<vtkm::cont::ArrayHandleConcatenate<
-      typename internal::detail::ConcatinateTypeArg<T, ST1>::ArrayHandle,
-      typename internal::detail::ConcatinateTypeArg<T, ST2>::ArrayHandle>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleConcatenate<vtkm::cont::ArrayHandle<T, ST1>,
+                                                              vtkm::cont::ArrayHandle<T, ST2>>>
 {
 };
 }
@@ -378,11 +333,11 @@ public:
 
 template <typename T, typename ST1, typename ST2>
 struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConcatenate<ST1, ST2>>>
-  : Serialization<vtkm::cont::ArrayHandleConcatenate<
-      typename vtkm::cont::internal::detail::ConcatinateTypeArg<T, ST1>::ArrayHandle,
-      typename vtkm::cont::internal::detail::ConcatinateTypeArg<T, ST2>::ArrayHandle>>
+  : Serialization<vtkm::cont::ArrayHandleConcatenate<vtkm::cont::ArrayHandle<T, ST1>,
+                                                     vtkm::cont::ArrayHandle<T, ST2>>>
 {
 };
+
 } // diy
 /// @endcond SERIALIZATION
 

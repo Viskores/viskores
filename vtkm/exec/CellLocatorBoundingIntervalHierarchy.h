@@ -176,11 +176,6 @@ public:
     }
   }
 
-  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
-  VTKM_EXEC CellLocatorBoundingIntervalHierarchy* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
-  VTKM_EXEC const CellLocatorBoundingIntervalHierarchy* operator->() const { return this; }
-
 private:
   enum struct FindCellState
   {

@@ -32,11 +32,6 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace field_conversion
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_conversion::PointAverage.") PointAverage
-  : public vtkm::filter::field_conversion::PointAverage
-{
-  using field_conversion::PointAverage::PointAverage;
-};
 } // namespace filter
 } // namespace vtkm
 

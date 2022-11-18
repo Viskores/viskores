@@ -138,7 +138,7 @@ struct UploadData
   bool operator()(DeviceAdapterTag device)
   {
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
-    this->Colors.GetData().CopyTo(colors);
+    this->Colors.GetData().AsArrayHandle(colors);
     vtkm::interop::TransferToOpenGL(colors, *this->ColorState, device);
     return true;
   }
@@ -316,8 +316,8 @@ int main(int argc, char** argv)
   vtkm::cont::DataSetBuilderUniform builder;
   vtkm::cont::DataSet data = builder.Create(vtkm::Id2(x, y));
 
-  auto stateField =
-    vtkm::cont::make_Field("state", vtkm::cont::Field::Association::Points, input_state);
+  auto stateField = vtkm::cont::make_FieldMove(
+    "state", vtkm::cont::Field::Association::Points, std::move(input_state));
   data.AddField(stateField);
 
   GameOfLife filter;

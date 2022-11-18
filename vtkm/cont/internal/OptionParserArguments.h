@@ -33,10 +33,6 @@ enum OptionIndex
   DEVICE,
   LOGLEVEL, // not parsed by this parser, but by loguru
 
-  // TODO: remove deprecated arguments on next vtk-m release
-  DEPRECATED_DEVICE,
-  DEPRECATED_LOGLEVEL,
-
   // All RuntimeDeviceConfiguration specific options
   NUM_THREADS,
   NUMA_REGIONS,

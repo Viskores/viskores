@@ -38,11 +38,6 @@ private:
   vtkm::Float64 rate = 0;
 };
 } // namespace zfp
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::zfp::ZFPCompressor3D.") ZFPCompressor3D
-  : public vtkm::filter::zfp::ZFPCompressor3D
-{
-  using zfp::ZFPCompressor3D::ZFPCompressor3D;
-};
 } // namespace filter
 } // namespace vtkm
 

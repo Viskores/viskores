@@ -56,11 +56,6 @@ private:
   std::vector<vtkm::Range> DataRanges; //Min Max of the field
 };
 } // namespace density_estimate
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::NDHistogram.") NDHistogram
-  : public vtkm::filter::density_estimate::NDHistogram
-{
-  using density_estimate::NDHistogram::NDHistogram;
-};
 } // namespace filter
 } // namespace vtm
 

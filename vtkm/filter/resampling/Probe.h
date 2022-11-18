@@ -43,13 +43,6 @@ private:
   vtkm::Float64 InvalidValue = vtkm::Nan64();
 };
 } // namespace resampling
-
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::resampling::Probe.") Probe
-  : public vtkm::filter::resampling::Probe
-{
-  using resampling::Probe::Probe;
-};
-
 } // namespace filter
 } // namespace vtkm
 

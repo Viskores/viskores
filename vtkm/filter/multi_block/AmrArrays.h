@@ -70,14 +70,6 @@ private:
   std::vector<std::vector<vtkm::Id>> ChildrenIdsVector;
 };
 } // namespace multi_block
-
-
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::multi_block::AmrArrays.") AmrArrays
-  : public vtkm::filter::multi_block::AmrArrays
-{
-  using multi_block::AmrArrays::AmrArrays;
-};
-
 } // namesapce filter
 } // namespace vtkm
 

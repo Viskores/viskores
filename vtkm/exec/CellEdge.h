@@ -12,7 +12,6 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/CellTraits.h>
-#include <vtkm/Deprecated.h>
 #include <vtkm/ErrorCode.h>
 #include <vtkm/Types.h>
 #include <vtkm/exec/FunctorBase.h>
@@ -175,22 +174,6 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeNumberOfEdges(vtkm::IdComponent 
 }
 
 template <typename CellShapeTag>
-VTKM_DEPRECATED(1.6, "Signature changed to CellEdgeNumberOfEdges(numPoints, shape, result).")
-static inline VTKM_EXEC vtkm::IdComponent
-  CellEdgeNumberOfEdges(vtkm::IdComponent numPoints,
-                        CellShapeTag shape,
-                        const vtkm::exec::FunctorBase& worklet)
-{
-  vtkm::IdComponent numEdges;
-  vtkm::ErrorCode status = CellEdgeNumberOfEdges(numPoints, shape, numEdges);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-  return numEdges;
-}
-
-template <typename CellShapeTag>
 static inline VTKM_EXEC vtkm::ErrorCode CellEdgeLocalIndex(vtkm::IdComponent numPoints,
                                                            vtkm::IdComponent pointIndex,
                                                            vtkm::IdComponent edgeIndex,
@@ -290,25 +273,6 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeLocalIndex(vtkm::IdComponent num
   }
 }
 
-template <typename CellShapeTag>
-VTKM_DEPRECATED(
-  1.6,
-  "Signature changed to CellEdgeLocalIndex(numPoints, pointIndex, edgeIndex, shape, result).")
-static inline VTKM_EXEC vtkm::IdComponent CellEdgeLocalIndex(vtkm::IdComponent numPoints,
-                                                             vtkm::IdComponent pointIndex,
-                                                             vtkm::IdComponent edgeIndex,
-                                                             CellShapeTag shape,
-                                                             const vtkm::exec::FunctorBase& worklet)
-{
-  vtkm::IdComponent result;
-  vtkm::ErrorCode status = CellEdgeLocalIndex(numPoints, pointIndex, edgeIndex, shape, result);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-  return result;
-}
-
 /// \brief Returns a canonical identifier for a cell edge
 ///
 /// Given information about a cell edge and the global point indices for that cell, returns a
@@ -345,26 +309,6 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeCanonicalId(
   return vtkm::ErrorCode::Success;
 }
 
-template <typename CellShapeTag, typename GlobalPointIndicesVecType>
-VTKM_DEPRECATED(
-  1.6,
-  "Signature changed to CellEdgeCononicalId(numPoints, edgeIndex, shape, globalIds, result).")
-static inline VTKM_EXEC vtkm::Id2
-  CellEdgeCanonicalId(vtkm::IdComponent numPoints,
-                      vtkm::IdComponent edgeIndex,
-                      CellShapeTag shape,
-                      const GlobalPointIndicesVecType& globalPointIndicesVec,
-                      const vtkm::exec::FunctorBase& worklet)
-{
-  vtkm::Id2 result;
-  vtkm::ErrorCode status =
-    CellEdgeCanonicalId(numPoints, edgeIndex, shape, globalPointIndicesVec, result);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-  return result;
-}
 }
 } // namespace vtkm::exec
 

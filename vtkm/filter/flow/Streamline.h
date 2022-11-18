@@ -35,11 +35,6 @@ private:
 };
 
 }
-struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::Streamline.") Streamline
-  : vtkm::filter::flow::Streamline
-{
-  using vtkm::filter::flow::Streamline::Streamline;
-};
 }
 } // namespace vtkm::filter::flow
 

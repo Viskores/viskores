@@ -36,11 +36,6 @@ private:
   std::vector<std::string> FieldNames;
 };
 } // namespace density_estimate
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::NDEntropy.") NDEntropy
-  : public vtkm::filter::density_estimate::NDEntropy
-{
-  using density_estimate::NDEntropy::NDEntropy;
-};
 } // namespace filter
 } // namespace vtkm
 

@@ -38,12 +38,6 @@ private:
   bool CartesianToCylindrical = true;
 };
 } // namespace field_transform
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::CylindricalCoordinateTransform.")
-  CylindricalCoordinateTransform
-  : public vtkm::filter::field_transform::CylindricalCoordinateTransform
-{
-  using field_transform::CylindricalCoordinateTransform::CylindricalCoordinateTransform;
-};
 } // namespace filter
 } // namespace vtkm
 

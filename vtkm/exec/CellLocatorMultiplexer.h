@@ -83,11 +83,6 @@ public:
     return this->Locators.CastAndCall(
       detail::FindCellFunctor{}, point, cellId, parametric, lastCell);
   }
-
-  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
-  VTKM_EXEC CellLocatorMultiplexer* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
-  VTKM_EXEC const CellLocatorMultiplexer* operator->() const { return this; }
 };
 
 }

@@ -33,11 +33,6 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace field_conversion
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_conversion::CellAverage.") CellAverage
-  : public vtkm::filter::field_conversion::CellAverage
-{
-  using field_conversion::CellAverage::CellAverage;
-};
 } // namespace filter
 } // namespace vtkm
 

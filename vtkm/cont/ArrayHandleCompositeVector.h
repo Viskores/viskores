@@ -13,7 +13,6 @@
 #include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/StaticAssert.h>
 #include <vtkm/Tuple.h>
 #include <vtkm/VecTraits.h>

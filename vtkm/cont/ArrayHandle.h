@@ -13,7 +13,6 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/Assert.h>
-#include <vtkm/Deprecated.h>
 #include <vtkm/Flags.h>
 #include <vtkm/Types.h>
 
@@ -260,9 +259,6 @@ VTKM_CONT_EXPORT VTKM_CONT bool ArrayHandleIsOnDevice(
   const std::vector<vtkm::cont::internal::Buffer>& buffers,
   vtkm::cont::DeviceAdapterId device);
 
-VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::DeviceAdapterId ArrayHandleGetDeviceAdapterId(
-  const std::vector<vtkm::cont::internal::Buffer>& buffers);
-
 } // namespace detail
 
 /// \brief Manages an array-worth of data.
@@ -297,19 +293,6 @@ public:
 
   using ReadPortalType = typename StorageType::ReadPortalType;
   using WritePortalType = typename StorageType::WritePortalType;
-
-  // TODO: Deprecate this
-  template <typename Device>
-  struct VTKM_DEPRECATED(1.6, "Use ReadPortalType and WritePortalType.") ExecutionTypes
-  {
-    using Portal = WritePortalType;
-    using PortalConst = ReadPortalType;
-  };
-
-  using PortalControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::WritePortalType instead.") =
-    WritePortalType;
-  using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::ReadPortalType instead.") =
-    ReadPortalType;
 
   /// Constructs an empty ArrayHandle.
   ///
@@ -413,44 +396,9 @@ public:
     return true; // different valuetype and/or storage
   }
 
-  VTKM_DEPRECATED(1.9, "Use the size of the std::vector returned from GetBuffers.")
-  VTKM_CONT constexpr vtkm::IdComponent GetNumberOfBuffers()
-  {
-    return static_cast<vtkm::IdComponent>(this->GetBuffers().size());
-  }
-
   /// Get the storage.
   ///
   VTKM_CONT StorageType GetStorage() const { return StorageType{}; }
-
-  /// Get the array portal of the control array.
-  /// Since worklet invocations are asynchronous and this routine is a synchronization point,
-  /// exceptions maybe thrown for errors from previously executed worklets.
-  ///
-  /// \deprecated Use `WritePortal` instead.
-  ///
-  VTKM_CONT
-  VTKM_DEPRECATED(1.6,
-                  "Use ArrayHandle::WritePortal() instead. "
-                  "Note that the returned portal will lock the array while it is in scope.")
-
-  /// \cond NOPE
-  WritePortalType GetPortalControl() const { return this->WritePortal(); }
-  /// \endcond
-
-  /// Get the array portal of the control array.
-  /// Since worklet invocations are asynchronous and this routine is a synchronization point,
-  /// exceptions maybe thrown for errors from previously executed worklets.
-  ///
-  /// \deprecated Use `ReadPortal` instead.
-  ///
-  VTKM_CONT
-  VTKM_DEPRECATED(1.6,
-                  "Use ArrayHandle::ReadPortal() instead. "
-                  "Note that the returned portal will lock the array while it is in scope.")
-  /// \cond NOPE
-  ReadPortalType GetPortalConstControl() const { return this->ReadPortal(); }
-  /// \endcond
 
   ///@{
   /// \brief Get an array portal that can be used in the control environment.
@@ -572,12 +520,6 @@ public:
   }
   ///@}
 
-  VTKM_DEPRECATED(1.6, "Use Allocate(n, vtkm::CopyFlag::On) instead of Shrink(n).")
-  VTKM_CONT void Shrink(vtkm::Id numberOfValues)
-  {
-    this->Allocate(numberOfValues, vtkm::CopyFlag::On);
-  }
-
   /// @{
   /// \brief Fills the array with a given value.
   ///
@@ -676,25 +618,6 @@ public:
     return StorageType::CreateWritePortal(this->GetBuffers(), device, token);
   }
 
-  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
-    ReadPortalType PrepareForInput(vtkm::cont::DeviceAdapterId device) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInput(device, token);
-  }
-  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForOutput now requires a vtkm::cont::Token object.")
-    WritePortalType PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::DeviceAdapterId device)
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForOutput(numberOfValues, device, token);
-  }
-  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInPlace now requires a vtkm::cont::Token object.")
-    WritePortalType PrepareForInPlace(vtkm::cont::DeviceAdapterId device) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInPlace(device, token);
-  }
-
   /// Returns true if the ArrayHandle's data is on the given device. If the data are on the given
   /// device, then preparing for that device should not require any data movement.
   ///
@@ -709,19 +632,6 @@ public:
   VTKM_CONT bool IsOnHost() const
   {
     return this->IsOnDevice(vtkm::cont::DeviceAdapterTagUndefined{});
-  }
-
-  /// Returns a DeviceAdapterId for a device currently allocated on. If there is no device
-  /// with an up-to-date copy of the data, VTKM_DEVICE_ADAPTER_UNDEFINED is
-  /// returned.
-  ///
-  /// Note that in a multithreaded environment the validity of this result can
-  /// change.
-  ///
-  VTKM_CONT
-  VTKM_DEPRECATED(1.7, "Use ArrayHandle::IsOnDevice.") DeviceAdapterId GetDeviceAdapterId() const
-  {
-    return detail::ArrayHandleGetDeviceAdapterId(this->Buffers);
   }
 
   /// Synchronizes the control array with the execution array. If either the

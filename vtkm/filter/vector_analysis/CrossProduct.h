@@ -123,11 +123,6 @@ private:
 };
 
 } // namespace vector_analysis
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::CrossProduct.") CrossProduct
-  : public vtkm::filter::vector_analysis::CrossProduct
-{
-  using vector_analysis::CrossProduct::CrossProduct;
-};
 } // namespace filter
 } // namespace vtkm
 

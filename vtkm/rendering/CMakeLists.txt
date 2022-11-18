@@ -24,8 +24,6 @@ set(headers
   ColorLegendAnnotation.h
   ConnectivityProxy.h
   Cylinderizer.h
-  DecodePNG.h # deprecated
-  EncodePNG.h # deprecated
   GlyphType.h
   LineRenderer.h
   LineRendererBatcher.h

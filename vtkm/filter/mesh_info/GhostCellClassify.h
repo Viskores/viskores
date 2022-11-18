@@ -35,11 +35,6 @@ public:
   VTKM_CONT const std::string& GetGhostCellName() { return this->GhostCellName; }
 };
 } // namespace mesh_info
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::GhostCellClassify.") GhostCellClassify
-  : public vtkm::filter::mesh_info::GhostCellClassify
-{
-  using mesh_info::GhostCellClassify::GhostCellClassify;
-};
 } // namespace filter
 } // namespace vtkm
 

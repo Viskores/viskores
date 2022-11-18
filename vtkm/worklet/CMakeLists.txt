@@ -20,7 +20,6 @@ set(headers
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   FieldStatistics.h
-  KdTree3D.h            # Deprecated
   KernelSplatter.h
   Keys.h
   MaskIndices.h

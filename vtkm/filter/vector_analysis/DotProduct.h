@@ -122,11 +122,6 @@ private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace vector_analysis
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::DotProduct.") DotProduct
-  : public vtkm::filter::vector_analysis::DotProduct
-{
-  using vector_analysis::DotProduct::DotProduct;
-};
 } // namespace filter
 } // namespace vtkm
 

@@ -76,11 +76,6 @@ private:
   std::unique_ptr<vtkm::worklet::ExternalFaces> Worklet;
 };
 } // namespace entity_extraction
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::ExternalFaces.") ExternalFaces
-  : public vtkm::filter::entity_extraction::ExternalFaces
-{
-  using entity_extraction::ExternalFaces::ExternalFaces;
-};
 } // namespace filter
 } // namespace vtkm
 

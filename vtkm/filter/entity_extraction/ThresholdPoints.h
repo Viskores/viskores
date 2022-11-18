@@ -62,11 +62,6 @@ private:
   bool CompactPoints = false;
 };
 } // namespace entity_extraction
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::ThresholdPoints.") ThresholdPoints
-  : public vtkm::filter::entity_extraction::ThresholdPoints
-{
-  using entity_extraction::ThresholdPoints::ThresholdPoints;
-};
 } // namespace filter
 } // namespace vtkm
 

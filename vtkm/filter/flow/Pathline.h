@@ -35,11 +35,6 @@ private:
 };
 
 }
-struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::Pathline.") Pathline
-  : vtkm::filter::flow::Pathline
-{
-  using vtkm::filter::flow::Pathline::Pathline;
-};
 }
 } // namespace vtkm::filter::flow
 

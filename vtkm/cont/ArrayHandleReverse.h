@@ -16,8 +16,6 @@
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
 
-#include <vtkm/Deprecated.h>
-
 namespace vtkm
 {
 namespace cont
@@ -81,50 +79,13 @@ class VTKM_ALWAYS_EXPORT StorageTagReverse
 namespace internal
 {
 
-namespace detail
-{
-
-template <typename T, typename ArrayOrStorage, bool IsArrayType>
-struct ReverseTypeArgImpl;
-
-template <typename T, typename Storage>
-struct ReverseTypeArgImpl<T, Storage, false>
-{
-  using StorageTag = Storage;
-  using ArrayHandle = vtkm::cont::ArrayHandle<T, StorageTag>;
-};
-
-template <typename T, typename Array>
-struct ReverseTypeArgImpl<T, Array, true>
-{
-  VTKM_STATIC_ASSERT_MSG((std::is_same<T, typename Array::ValueType>::value),
-                         "Used array with wrong type in ArrayHandleReverse.");
-  using StorageTag VTKM_DEPRECATED(
-    1.6,
-    "Use storage tag instead of array handle in StorageTagReverse.") = typename Array::StorageTag;
-  using ArrayHandle VTKM_DEPRECATED(
-    1.6,
-    "Use storage tag instead of array handle in StorageTagReverse.") =
-    vtkm::cont::ArrayHandle<T, typename Array::StorageTag>;
-};
-
-template <typename T, typename ArrayOrStorage>
-struct ReverseTypeArg
-  : ReverseTypeArgImpl<T,
-                       ArrayOrStorage,
-                       vtkm::cont::internal::ArrayHandleCheck<ArrayOrStorage>::type::value>
-{
-};
-
-} // namespace detail
-
 template <typename T, typename ST>
 class Storage<T, StorageTagReverse<ST>>
 {
-  using SourceStorage = Storage<T, typename detail::ReverseTypeArg<T, ST>::StorageTag>;
+  using SourceStorage = Storage<T, ST>;
 
 public:
-  using ArrayHandleType = typename detail::ReverseTypeArg<T, ST>::ArrayHandle;
+  using ArrayHandleType = vtkm::cont::ArrayHandle<T, ST>;
   using ReadPortalType = ArrayPortalReverse<typename ArrayHandleType::ReadPortalType>;
   using WritePortalType = ArrayPortalReverse<typename ArrayHandleType::WritePortalType>;
 

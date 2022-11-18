@@ -313,7 +313,9 @@ int main(int argc, char** argv)
     if (generateOutput)
     {
       vtkm::cont::ArrayHandleBasic<vtkm::Float64> tmp;
-      rdata.GetField("oscillating", vtkm::cont::Field::Association::Points).GetData().CopyTo(tmp);
+      rdata.GetField("oscillating", vtkm::cont::Field::Association::Points)
+        .GetData()
+        .AsArrayHandle(tmp);
       const double* values = tmp.GetReadPointer();
       writeData(outputDirectory, count++, sizeX, sizeY, sizeZ, values);
     }
