@@ -62,14 +62,12 @@ void TestTubeFilters()
   ptVar.push_back(1);
   ptVar.push_back(2);
   cellVar.push_back(100);
-  cellVar.push_back(101);
 
   //Polyline 2.
   ptVar.push_back(10);
   ptVar.push_back(11);
   ptVar.push_back(12);
   cellVar.push_back(110);
-  cellVar.push_back(111);
 
   //Add some degenerate polylines.
   //Polyline 3: (only 1 point)
@@ -78,7 +76,6 @@ void TestTubeFilters()
   //Polyline 4: (2 coincident points)
   ptVar.push_back(-1);
   ptVar.push_back(-1);
-  cellVar.push_back(-1);
   cellVar.push_back(-1);
 
   ds.AddPointField("pointVar", ptVar);
@@ -117,10 +114,10 @@ void TestTubeFilters()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellArr;
   output.GetField("cellVar").GetData().AsArrayHandle(cellArr);
   VTKM_TEST_ASSERT(cellArr.GetNumberOfValues() == 36, "Wrong number of values in cell field");
-  std::vector<vtkm::FloatDefault> cellVals = { 100, 100, 100, 100, 100, 100, 101, 101, 101,
-                                               101, 101, 101, 100, 100, 100, 101, 101, 101,
-                                               110, 110, 110, 110, 110, 110, 111, 111, 111,
-                                               111, 111, 111, 110, 110, 110, 111, 111, 111 };
+  std::vector<vtkm::FloatDefault> cellVals = { 100, 100, 100, 100, 100, 100, 100, 100, 100,
+                                               100, 100, 100, 100, 100, 100, 100, 100, 100,
+                                               110, 110, 110, 110, 110, 110, 110, 110, 110,
+                                               110, 110, 110, 110, 110, 110, 110, 110, 110 };
   portal = cellArr.ReadPortal();
   for (vtkm::Id i = 0; i < 36; i++)
     VTKM_TEST_ASSERT(portal.Get(i) == cellVals[static_cast<std::size_t>(i)],
