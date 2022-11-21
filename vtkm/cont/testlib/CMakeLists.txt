@@ -20,7 +20,7 @@ set(testing_library_headers
   )
 
 set(testing_library_sources
-  # MakeTestDataSet.cxx  Currently in vtkm_cont. Should be moved to testlib in VTK-m 2.0
+  MakeTestDataSet.cxx
   TestEqualArrayHandles.cxx
   Testing.cxx
   )

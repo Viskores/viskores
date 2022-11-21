@@ -72,21 +72,6 @@ namespace filter
 {
 namespace density_estimate
 {
-VTKM_CONT ParticleDensityCloudInCell::ParticleDensityCloudInCell(const vtkm::Id3& dimension,
-                                                                 const vtkm::Vec3f& origin,
-                                                                 const vtkm::Vec3f& spacing)
-{
-  this->SetDimension(dimension);
-  this->SetOrigin(origin);
-  this->SetSpacing(spacing);
-}
-
-VTKM_CONT ParticleDensityCloudInCell::ParticleDensityCloudInCell(const Id3& dimension,
-                                                                 const vtkm::Bounds& bounds)
-{
-  this->SetDimension(dimension);
-  this->SetBounds(bounds);
-}
 
 VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(const cont::DataSet& input)
 {

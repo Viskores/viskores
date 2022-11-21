@@ -89,5 +89,3 @@ if (VTKm_ENABLE_HDF5_IO)
 endif()
 
 add_subdirectory(internal)
-add_subdirectory(reader)
-add_subdirectory(writer)

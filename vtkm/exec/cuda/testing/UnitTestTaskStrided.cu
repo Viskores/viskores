@@ -274,7 +274,8 @@ void TestNormalFunctorInvoke()
 
   vtkm::Id inputTestValues[3] = { 5, 5, 6 };
 
-  vtkm::cont::ArrayHandle<vtkm::Id> input = vtkm::cont::make_ArrayHandle(inputTestValues, 3);
+  vtkm::cont::ArrayHandle<vtkm::Id> input =
+    vtkm::cont::make_ArrayHandle(inputTestValues, 3, vtkm::CopyFlag::Off);
   vtkm::cont::ArrayHandle<vtkm::Id> output;
 
   vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
@@ -331,8 +332,10 @@ void TestErrorFunctorInvoke()
   vtkm::Id inputTestValue = 5;
   vtkm::Id outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
 
-  vtkm::cont::ArrayHandle<vtkm::Id> input = vtkm::cont::make_ArrayHandle(&inputTestValue, 1);
-  vtkm::cont::ArrayHandle<vtkm::Id> output = vtkm::cont::make_ArrayHandle(&outputTestValue, 1);
+  vtkm::cont::ArrayHandle<vtkm::Id> input =
+    vtkm::cont::make_ArrayHandle(&inputTestValue, 1, vtkm::CopyFlag::Off);
+  vtkm::cont::ArrayHandle<vtkm::Id> output =
+    vtkm::cont::make_ArrayHandle(&outputTestValue, 1, vtkm::CopyFlag::Off);
 
   vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
     vtkm::internal::make_FunctionInterface<void>(

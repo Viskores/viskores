@@ -45,11 +45,6 @@ private:
   vtkm::Id NumberOfBins = 10;
 };
 } // namespace density_estimate
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::Entropy.") Entropy
-  : public vtkm::filter::density_estimate::Entropy
-{
-  using density_estimate::Entropy::Entropy;
-};
 } // namespace filter
 } // namespace vtkm
 

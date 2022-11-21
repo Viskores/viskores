@@ -367,7 +367,7 @@ VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(const vtkm::cont::DataS
   }
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  return this->CreateResult(input, cellOut, input.GetCoordinateSystems(), mapper);
+  return this->CreateResult(input, cellOut, mapper);
 }
 
 }

@@ -11,7 +11,6 @@
 #define vtk_m_cont_ArrayHandleView_h
 
 #include <vtkm/Assert.h>
-#include <vtkm/Deprecated.h>
 
 #include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -101,46 +100,10 @@ struct VTKM_ALWAYS_EXPORT StorageTagView
 namespace internal
 {
 
-namespace detail
-{
-
-template <typename T, typename ArrayOrStorage, bool IsArrayType>
-struct ViewTypeArgImpl;
-
-template <typename T, typename Storage>
-struct ViewTypeArgImpl<T, Storage, false>
-{
-  using StorageTag = Storage;
-  using ArrayHandle = vtkm::cont::ArrayHandle<T, StorageTag>;
-};
-
-template <typename T, typename Array>
-struct ViewTypeArgImpl<T, Array, true>
-{
-  VTKM_STATIC_ASSERT_MSG((std::is_same<T, typename Array::ValueType>::value),
-                         "Used array with wrong type in ArrayHandleView.");
-  using StorageTag VTKM_DEPRECATED(1.6,
-                                   "Use storage tag instead of array handle in StorageTagView.") =
-    typename Array::StorageTag;
-  using ArrayHandle VTKM_DEPRECATED(1.6,
-                                    "Use storage tag instead of array handle in StorageTagView.") =
-    vtkm::cont::ArrayHandle<T, typename Array::StorageTag>;
-};
-
-template <typename T, typename ArrayOrStorage>
-struct ViewTypeArg
-  : ViewTypeArgImpl<T,
-                    ArrayOrStorage,
-                    vtkm::cont::internal::ArrayHandleCheck<ArrayOrStorage>::type::value>
-{
-};
-
-} // namespace detail
-
 template <typename T, typename ST>
 class Storage<T, StorageTagView<ST>>
 {
-  using ArrayHandleType = typename detail::ViewTypeArg<T, ST>::ArrayHandle;
+  using ArrayHandleType = vtkm::cont::ArrayHandle<T, ST>;
   using SourceStorage = Storage<T, ST>;
 
   static std::vector<vtkm::cont::internal::Buffer> SourceBuffers(

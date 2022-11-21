@@ -164,30 +164,6 @@ void SaveHierarchicalTreeDot(
 //-----------------------------------------------------------------------------
 // Main constructor
 //-----------------------------------------------------------------------------
-ContourTreeUniformDistributed::ContourTreeUniformDistributed(
-  vtkm::Id3 blocksPerDim,
-  vtkm::Id3, // globalSize, -> Now in CellSetStructured
-  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-  const vtkm::cont::ArrayHandle<vtkm::Id3>&, // localBlockOrigins, -> Use from CellSetStructured
-  const vtkm::cont::ArrayHandle<vtkm::Id3>&, // localBlockSizes, -> Use from CellSetStructured
-  vtkm::cont::LogLevel timingsLogLevel,
-  vtkm::cont::LogLevel treeLogLevel)
-  : UseBoundaryExtremaOnly(true)
-  , UseMarchingCubes(false)
-  , AugmentHierarchicalTree(false)
-  , SaveDotFiles(false)
-  , TimingsLogLevel(timingsLogLevel)
-  , TreeLogLevel(treeLogLevel)
-  , BlocksPerDimension(blocksPerDim)
-  , LocalBlockIndices(localBlockIndices)
-  , LocalMeshes()
-  , LocalContourTrees()
-  , LocalBoundaryTrees()
-  , LocalInteriorForests()
-{
-  this->SetOutputFieldName("resultData");
-}
-
 ContourTreeUniformDistributed::ContourTreeUniformDistributed(vtkm::cont::LogLevel timingsLogLevel,
                                                              vtkm::cont::LogLevel treeLogLevel)
   : UseBoundaryExtremaOnly(true)

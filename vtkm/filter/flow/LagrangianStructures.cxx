@@ -174,8 +174,8 @@ VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(const vtkm::cont::
   auto fieldmapper = [&](vtkm::cont::DataSet& dataset, const vtkm::cont::Field& field) {
     MapField(dataset, field);
   };
-  vtkm::cont::DataSet output =
-    this->CreateResult(input, lcsInput.GetCellSet(), lcsInput.GetCoordinateSystem(), fieldmapper);
+  vtkm::cont::DataSet output = this->CreateResultCoordinateSystem(
+    input, lcsInput.GetCellSet(), lcsInput.GetCoordinateSystem(), fieldmapper);
   output.AddPointField(this->GetOutputFieldName(), outputField);
   return output;
 }

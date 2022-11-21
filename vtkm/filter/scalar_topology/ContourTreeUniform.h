@@ -100,16 +100,6 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace scalar_topology
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::scalar_topology::ContourTree2D.") ContourTree2D
-  : public vtkm::filter::scalar_topology::ContourTreeMesh2D
-{
-  using scalar_topology::ContourTreeMesh2D::ContourTreeMesh2D;
-};
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::scalar_topology::ContourTree3D.") ContourTree3D
-  : public vtkm::filter::scalar_topology::ContourTreeMesh3D
-{
-  using scalar_topology::ContourTreeMesh3D::ContourTreeMesh3D;
-};
 } // namespace filter
 } // namespace vtkm
 

@@ -11,7 +11,6 @@
 #define vtk_m_cont_CoordinateSystem_h
 
 #include <vtkm/Bounds.h>
-#include <vtkm/Deprecated.h>
 
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/CastAndCall.h>
@@ -30,6 +29,9 @@ class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 public:
   VTKM_CONT
   CoordinateSystem();
+
+  // It's OK for regular _point_ fields to become a CoordinateSystem object.
+  VTKM_CONT CoordinateSystem(const vtkm::cont::Field& src);
 
   VTKM_CONT CoordinateSystem(std::string name, const vtkm::cont::UnknownArrayHandle& data);
 

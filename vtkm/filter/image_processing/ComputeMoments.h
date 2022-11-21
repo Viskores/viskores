@@ -38,11 +38,6 @@ private:
   vtkm::Int32 Order = 0;
 };
 } // namespace image_processing
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::image_processing::ComputeMoments.") ComputeMoments
-  : public vtkm::filter::image_processing::ComputeMoments
-{
-  using image_processing::ComputeMoments::ComputeMoments;
-};
 } // namespace filter
 } // namespace vtkm
 

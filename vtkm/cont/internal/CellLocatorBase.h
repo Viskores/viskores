@@ -63,15 +63,6 @@ public:
     }
   }
 
-  template <typename Device>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object.")
-    vtkm::cont::internal::ExecutionObjectType<Derived, Device> PrepareForExecution(
-      Device device) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForExecution(device, token);
-  }
-
 protected:
   void SetModified() { this->Modified = true; }
   bool GetModified() const { return this->Modified; }

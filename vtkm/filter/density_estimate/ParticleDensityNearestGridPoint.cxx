@@ -54,23 +54,6 @@ namespace filter
 {
 namespace density_estimate
 {
-VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(
-  const vtkm::Id3& dimension,
-  const vtkm::Vec3f& origin,
-  const vtkm::Vec3f& spacing)
-{
-  this->SetDimension(dimension);
-  this->SetOrigin(origin);
-  this->SetSpacing(spacing);
-}
-
-VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(
-  const Id3& dimension,
-  const vtkm::Bounds& bounds)
-{
-  this->SetDimension(dimension);
-  this->SetBounds(bounds);
-}
 
 VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   const vtkm::cont::DataSet& input)

@@ -25,6 +25,8 @@ class VTKM_FILTER_FIELD_TRANSFORM_EXPORT SphericalCoordinateTransform
   : public vtkm::filter::NewFilterField
 {
 public:
+  VTKM_CONT SphericalCoordinateTransform();
+
   VTKM_CONT void SetCartesianToSpherical() { CartesianToSpherical = true; }
   VTKM_CONT void SetSphericalToCartesian() { CartesianToSpherical = false; }
 
@@ -34,11 +36,6 @@ private:
   bool CartesianToSpherical = true;
 };
 } // namespace field_transform
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::SphericalCoordinateTransform.")
-  SphericalCoordinateTransform : public vtkm::filter::field_transform::SphericalCoordinateTransform
-{
-  using field_transform::SphericalCoordinateTransform::SphericalCoordinateTransform;
-};
 } // namespace filter
 } // namespace vtkm
 

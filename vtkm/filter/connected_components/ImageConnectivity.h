@@ -42,12 +42,6 @@ private:
 };
 } // namespace connected_components
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::connected_components::ImageConnectivity.")
-  ImageConnectivity : public vtkm::filter::connected_components::ImageConnectivity
-{
-  using connected_components::ImageConnectivity::ImageConnectivity;
-};
-
 } // namespace filter
 } // namespace vtkm
 

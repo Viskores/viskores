@@ -11,7 +11,6 @@
 #define vtk_m_cont_CellSetExplicit_h
 
 #include <vtkm/CellShape.h>
-#include <vtkm/Deprecated.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandleCast.h>
@@ -164,32 +163,6 @@ public:
             const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag>& connectivity,
             const vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag>& offsets);
 
-  template <typename Device, typename VisitTopology, typename IncidentTopology>
-  struct VTKM_DEPRECATED(
-    1.6,
-    "Replace ExecutionTypes<D, V, I>::ExecObjectType with ExecConnectivityType<V, I>.")
-    ExecutionTypes
-  {
-  private:
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(VisitTopology);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(IncidentTopology);
-
-    using Chooser = ConnectivityChooser<VisitTopology, IncidentTopology>;
-
-    using ShapesAT = typename Chooser::ShapesArrayType;
-    using ConnAT = typename Chooser::ConnectivityArrayType;
-    using OffsetsAT = typename Chooser::OffsetsArrayType;
-
-  public:
-    using ShapesPortalType = typename ShapesAT::ReadPortalType;
-    using ConnectivityPortalType = typename ConnAT::ReadPortalType;
-    using OffsetsPortalType = typename OffsetsAT::ReadPortalType;
-
-    using ExecObjectType =
-      vtkm::exec::ConnectivityExplicit<ShapesPortalType, ConnectivityPortalType, OffsetsPortalType>;
-  };
-
   template <typename VisitTopology, typename IncidentTopology>
   using ExecConnectivityType =
     typename ConnectivityChooser<VisitTopology, IncidentTopology>::ExecConnectivityType;
@@ -200,17 +173,6 @@ public:
     VisitTopology,
     IncidentTopology,
     vtkm::cont::Token&) const;
-
-  template <typename VisitTopology, typename IncidentTopology>
-  VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
-  VTKM_CONT ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(
-    vtkm::cont::DeviceAdapterId device,
-    VisitTopology visitTopology,
-    IncidentTopology incidentTopology) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
-  }
 
   template <typename VisitTopology, typename IncidentTopology>
   VTKM_CONT const typename ConnectivityChooser<VisitTopology, IncidentTopology>::ShapesArrayType&

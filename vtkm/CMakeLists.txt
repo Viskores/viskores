@@ -17,7 +17,6 @@ vtkm_install_headers(
   vtkm ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Version.h)
 
 set(headers
-  Algorithms.h # Deprecated, split into LowerBound.h, UpperBound.h
   Assert.h
   Atomic.h
   BinaryPredicates.h
@@ -34,7 +33,6 @@ set(headers
   Hash.h
   ImplicitFunction.h
   List.h
-  ListTag.h # Deprecated, replaced by List.h
   LowerBound.h
   Math.h
   Matrix.h
@@ -51,7 +49,6 @@ set(headers
   Transform3D.h
   Tuple.h
   TypeList.h
-  TypeListTag.h # Deprecated, replaced by TypeList.h
   Types.h
   TypeTraits.h
   VecAxisAlignedPointCoordinates.h

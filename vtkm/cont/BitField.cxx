@@ -11,28 +11,6 @@
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Logging.h>
 
-namespace
-{
-
-struct DeviceCheckFunctor
-{
-  vtkm::cont::DeviceAdapterId FoundDevice = vtkm::cont::DeviceAdapterTagUndefined{};
-
-  VTKM_CONT void operator()(vtkm::cont::DeviceAdapterId device,
-                            const vtkm::cont::internal::Buffer& buffer)
-  {
-    if (this->FoundDevice == vtkm::cont::DeviceAdapterTagUndefined{})
-    {
-      if (buffer.IsAllocatedOnDevice(device))
-      {
-        this->FoundDevice = device;
-      }
-    }
-  }
-};
-
-} // anonymous namespace
-
 namespace vtkm
 {
 namespace cont
@@ -98,13 +76,6 @@ void BitField::SyncControlArray() const
 bool BitField::IsOnDevice(vtkm::cont::DeviceAdapterId device) const
 {
   return this->Buffer.IsAllocatedOnDevice(device);
-}
-
-vtkm::cont::DeviceAdapterId BitField::GetDeviceAdapterId() const
-{
-  DeviceCheckFunctor functor;
-  vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST{}, this->Buffer);
-  return functor.FoundDevice;
 }
 
 BitField::WritePortalType BitField::WritePortal() const

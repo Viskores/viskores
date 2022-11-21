@@ -133,7 +133,12 @@ protected:
   {
     if (this->UseCoordinateSystemAsField[index])
     {
-      return input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex(index));
+      // Note that we cannot use input.GetCoordinateSystem because that does not return
+      // a reference to a field. Instead, get the field name for the coordinate system
+      // and return the field.
+      const std::string& coordSystemName =
+        input.GetCoordinateSystemName(this->GetActiveCoordinateSystemIndex(index));
+      return input.GetPointField(coordSystemName);
     }
     else
     {

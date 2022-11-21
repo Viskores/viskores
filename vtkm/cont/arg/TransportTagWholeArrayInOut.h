@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_arg_TransportTagWholeArrayInOut_h
 #define vtk_m_cont_arg_TransportTagWholeArrayInOut_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>

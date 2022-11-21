@@ -23,7 +23,6 @@ if(VTKm_ENABLE_TESTING)
     #UnitTestFunctionInterface.cxx #FIXME
     UnitTestHash.cxx
     UnitTestList.cxx
-    UnitTestListTag.cxx
     UnitTestMatrix.cxx
     UnitTestNewtonsMethod.cxx
     UnitTestNoAssert.cxx
@@ -33,7 +32,6 @@ if(VTKm_ENABLE_TESTING)
     UnitTestTransform3D.cxx
     UnitTestTuple.cxx
     UnitTestTypeList.cxx
-    UnitTestTypeListTag.cxx
     UnitTestTypes.cxx
     UnitTestTypeTraits.cxx
     UnitTestUnaryPredicates.cxx
@@ -48,7 +46,6 @@ if(VTKm_ENABLE_TESTING)
 
   # Unit tests that have device-specific code to be tested
   set(unit_tests_device
-    UnitTestAlgorithms.cxx
     UnitTestAtomic.cxx
     UnitTestGeometry.cxx
     UnitTestLowerBound.cxx

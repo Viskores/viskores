@@ -31,7 +31,7 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
 {
   //Verify basics..
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Wrong number of fields.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Wrong number of fields.");
   VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1, "Wrong number of coordinate systems.");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == numPoints, "Wrong number of coordinates.");
   VTKM_TEST_ASSERT(ds.GetNumberOfCells() == numCells, "Wrong number of cells.");

@@ -87,11 +87,6 @@ private:
   vtkm::Float64 error_scaling = vtkm::Float64(0.0);
 };
 } // namespace contour
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::contour::MIRFilter.") MIRFilter
-  : public vtkm::filter::contour::MIRFilter
-{
-  using contour::MIRFilter::MIRFilter;
-};
 } // namespace filter
 } // namespace vtkm
 

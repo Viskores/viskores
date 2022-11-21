@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/filter/field_transform/CylindricalCoordinateTransform.h>
 #include <vtkm/filter/field_transform/worklet/CoordinateSystemTransform.h>
 
@@ -18,9 +19,20 @@ namespace filter
 namespace field_transform
 {
 
+CylindricalCoordinateTransform::CylindricalCoordinateTransform()
+{
+  this->SetUseCoordinateSystemAsField(true);
+}
+
 vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
   vtkm::cont::UnknownArrayHandle outArray;
+
+  const vtkm::cont::Field& inField = this->GetFieldFromDataSet(inDataSet);
+  if (!inField.IsPointField())
+  {
+    throw vtkm::cont::ErrorBadValue("CylindricalCoordinateTransform only applies to point data.");
+  }
 
   auto resolveType = [&](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
@@ -32,15 +44,21 @@ vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(const vtkm::cont::
       this->Invoke(vtkm::worklet::CylToCar{}, concrete, result);
     outArray = result;
   };
-  this->CastAndCallVecField<3>(this->GetFieldFromDataSet(inDataSet), resolveType);
+  this->CastAndCallVecField<3>(inField, resolveType);
 
-  vtkm::cont::DataSet outDataSet =
-    this->CreateResult(inDataSet,
-                       inDataSet.GetCellSet(),
-                       vtkm::cont::CoordinateSystem("coordinates", outArray),
-                       [](vtkm::cont::DataSet& out, const vtkm::cont::Field& fieldToPass) {
-                         out.AddField(fieldToPass);
-                       });
+  std::string coordinateName = this->GetOutputFieldName();
+  if (coordinateName.empty())
+  {
+    coordinateName = inField.GetName();
+  }
+
+  vtkm::cont::DataSet outDataSet = this->CreateResultCoordinateSystem(
+    inDataSet,
+    inDataSet.GetCellSet(),
+    vtkm::cont::CoordinateSystem(coordinateName, outArray),
+    [](vtkm::cont::DataSet& out, const vtkm::cont::Field& fieldToPass) {
+      out.AddField(fieldToPass);
+    });
   return outDataSet;
 }
 

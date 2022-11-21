@@ -63,7 +63,7 @@ void TestClipExplicit()
 
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
+  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
                    "Wrong number of fields in the output dataset");
 
   auto temp = outputData.GetField("scalars").GetData();

@@ -53,7 +53,7 @@ void TestReadingPolyData(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 5, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 6, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 8, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 8,
                    "Incorrect number of points (from cell set)");
@@ -70,7 +70,7 @@ void TestReadingPolyDataEmpty()
   VTKM_TEST_ASSERT(data.GetNumberOfPoints() == 8);
   VTKM_TEST_ASSERT(data.GetNumberOfCells() == 0);
   VTKM_TEST_ASSERT(data.GetCellSet().GetNumberOfPoints() == 8);
-  VTKM_TEST_ASSERT(data.GetNumberOfFields() == 1);
+  VTKM_TEST_ASSERT(data.GetNumberOfFields() == 2);
 }
 
 void TestReadingStructuredPoints(Format format)
@@ -81,7 +81,7 @@ void TestReadingStructuredPoints(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 1, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 72, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 72,
                    "Incorrect number of points (from cell set)");
@@ -99,7 +99,7 @@ void TestReadingStructuredPointsVisIt(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 1, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 64, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 64,
                    "Incorrect number of points (from cell set)");
@@ -116,7 +116,7 @@ void TestReadingUnstructuredGrid(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 26, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
                    "Incorrect number of points (from cell set)");
@@ -133,7 +133,7 @@ void TestReadingV5Format(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 6, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 7, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 26, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
                    "Incorrect number of points (from cell set)");
@@ -173,7 +173,7 @@ void TestReadingUnstructuredGridEmpty()
   VTKM_TEST_ASSERT(data.GetNumberOfPoints() == 26);
   VTKM_TEST_ASSERT(data.GetNumberOfCells() == 0);
   VTKM_TEST_ASSERT(data.GetCellSet().GetNumberOfPoints() == 26);
-  VTKM_TEST_ASSERT(data.GetNumberOfFields() == 2);
+  VTKM_TEST_ASSERT(data.GetNumberOfFields() == 3);
 }
 
 void TestReadingUnstructuredPixels()
@@ -291,7 +291,7 @@ void TestReadingUnstructuredGridVisIt(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 26, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
                    "Incorrect number of points (from cell set)");
@@ -309,7 +309,7 @@ void TestReadingRectilinearGrid1(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 125, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 125,
                    "Incorrect number of points (from cell set)");
@@ -327,7 +327,7 @@ void TestReadingRectilinearGrid2(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 24, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 24,
                    "Incorrect number of points (from cell set)");
@@ -343,7 +343,7 @@ void TestReadingStructuredGridASCII()
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 6, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 6,
                    "Incorrect number of points (from cell set)");
@@ -359,7 +359,7 @@ void TestReadingStructuredGridBin()
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 18, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 18,
                    "Incorrect number of points (from cell set)");
@@ -379,7 +379,7 @@ void TestReadingFishTank()
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 50 * 50 * 50, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 50 * 50 * 50,
                    "Incorrect number of points (from cell set)");
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.HasField("vec"), "The vtk file has a field 'vec', but the dataset does not.");
   VTKM_TEST_ASSERT(ds.HasField("vec_magnitude"),
                    "The vtk file has a field 'vec_magnitude', but the dataset does not.");
@@ -622,7 +622,7 @@ void TestSkppingStringFields(Format format)
 
   vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 1, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 72, "Incorrect number of points");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 72,
                    "Incorrect number of points (from cell set)");

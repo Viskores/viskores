@@ -99,10 +99,9 @@ public:
     return this->BasisParticlesValidity;
   }
 
-protected: // make this protected so the deprecated version can override.
+private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
 
-private:
   vtkm::cont::ArrayHandle<vtkm::Particle> BasisParticles;
   vtkm::cont::ArrayHandle<vtkm::Particle> BasisParticlesOriginal;
   vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;
@@ -122,30 +121,5 @@ private:
 }
 }
 } //vtkm::filter::flow
-
-
-//Deprecated Lagrangian filter
-namespace vtkm
-{
-namespace filter
-{
-
-class VTKM_FILTER_FLOW_EXPORT VTKM_DEPRECATED(
-  1.9,
-  "Use vtkm::filter::flow::Lagrangian. "
-  "Note that the new version of the filter no longer relies on global "
-  "variables to record particle position from one time step to the next. "
-  "It is important to keep a reference to _the same object_. "
-  "If you create a new filter object, the seeds will be reinitialized.") Lagrangian
-  : public vtkm::filter::flow::Lagrangian
-{
-private:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
-};
-
-}
-} //vtkm::filter
-
-
 
 #endif // #define vtk_m_filter_flow_Lagrangian_h

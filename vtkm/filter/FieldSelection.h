@@ -10,7 +10,6 @@
 #ifndef vtk_m_filter_FieldSelection_h
 #define vtk_m_filter_FieldSelection_h
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/Pair.h>
 #include <vtkm/cont/Field.h>
 
@@ -39,14 +38,6 @@ public:
     Select,
     Exclude
   };
-  VTKM_DEPRECATED(1.8, "Use FieldSelection::Mode::None.")
-  static constexpr Mode MODE_NONE = Mode::None;
-  VTKM_DEPRECATED(1.8, "Use FieldSelection::Mode::All.") static constexpr Mode MODE_ALL = Mode::All;
-  VTKM_DEPRECATED(1.8, "Use FieldSelection::Mode::Select.")
-  static constexpr Mode MODE_SELECT = Mode::Select;
-  VTKM_DEPRECATED(1.8, "Use FieldSelection::Mode::Exclude.")
-  static constexpr Mode MODE_EXCLUDE = Mode::Exclude;
-  using ModeEnum VTKM_DEPRECATED(1.8, "Use FieldSelection::Mode.") = Mode;
 
   VTKM_CONT FieldSelection(Mode mode = Mode::Select);
 

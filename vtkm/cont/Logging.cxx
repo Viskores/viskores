@@ -375,16 +375,6 @@ LogScope::~LogScope() = default;
 } // namespace detail
 
 VTKM_CONT
-void LogScope(LogLevel level, const char* file, unsigned line, const char* format...)
-{
-  // This does not scope right, but neither did the deprecated method this is replacing.
-  va_list args;
-  va_start(args, format);
-  detail::LogScope scopedVar{ level, file, line, format, args };
-  va_end(args);
-}
-
-VTKM_CONT
 void LogCond(LogLevel level, bool cond, const char* file, unsigned line, const char* format...)
 {
   if (cond)

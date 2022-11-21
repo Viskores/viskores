@@ -29,11 +29,6 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace vector_analysis
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::VectorMagnitude.") VectorMagnitude
-  : public vtkm::filter::vector_analysis::VectorMagnitude
-{
-  using vector_analysis::VectorMagnitude::VectorMagnitude;
-};
 } // namespace filter
 } // namespace vtkm::filter
 

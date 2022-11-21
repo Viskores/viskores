@@ -44,11 +44,6 @@ private:
   int Neighborhood = 1;
 };
 } // namespace image_processing
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::image_processing::ImageMedian.") ImageMedian
-  : public vtkm::filter::image_processing::ImageMedian
-{
-  using image_processing::ImageMedian::ImageMedian;
-};
 } // namespace filter
 } // namespace vtkm
 

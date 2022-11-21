@@ -42,22 +42,6 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
   vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any);
-
-template <typename TypeList>
-VTKM_DEPRECATED(1.6, "FieldRangeGlobalCompute no longer supports TypeList.")
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
-  const vtkm::cont::DataSet& dataset,
-  const std::string& name,
-  vtkm::cont::Field::Association assoc,
-  TypeList)
-{
-  VTKM_IS_LIST(TypeList);
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  auto lrange = vtkm::cont::FieldRangeCompute(dataset, name, assoc, TypeList());
-  VTKM_DEPRECATED_SUPPRESS_END
-  return vtkm::cont::detail::MergeRangesGlobal(lrange);
-}
-
 //@}
 
 //{@
@@ -74,22 +58,8 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::PartitionedDataSet& pds,
   const std::string& name,
   vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any);
-
-template <typename TypeList>
-VTKM_DEPRECATED(1.6, "FieldRangeGlobalCompute no longer supports TypeList.")
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
-  const vtkm::cont::PartitionedDataSet& pds,
-  const std::string& name,
-  vtkm::cont::Field::Association assoc,
-  TypeList)
-{
-  VTKM_IS_LIST(TypeList);
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  auto lrange = vtkm::cont::FieldRangeCompute(pds, name, assoc, TypeList());
-  VTKM_DEPRECATED_SUPPRESS_END
-  return vtkm::cont::detail::MergeRangesGlobal(lrange);
-}
 //@}
+
 }
 } // namespace vtkm::cont
 

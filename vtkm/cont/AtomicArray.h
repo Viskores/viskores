@@ -10,18 +10,12 @@
 #ifndef vtk_m_cont_AtomicArray_h
 #define vtk_m_cont_AtomicArray_h
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/List.h>
 #include <vtkm/StaticAssert.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/exec/AtomicArrayExecutionObject.h>
-
-// Support deprecated features
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-#include <vtkm/ListTag.h>
-VTKM_DEPRECATED_SUPPRESS_END
 
 namespace vtkm
 {
@@ -33,13 +27,6 @@ namespace cont
 /// @cond NONE
 using AtomicArrayTypeList =
   vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::UInt64, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
-
-struct VTKM_DEPRECATED(1.6,
-                       "AtomicArrayTypeListTag replaced by AtomicArrayTypeList. Note that the "
-                       "new AtomicArrayTypeList cannot be subclassed.") AtomicArrayTypeListTag
-  : vtkm::internal::ListAsListTag<AtomicArrayTypeList>
-{
-};
 /// @endcond
 
 
@@ -84,14 +71,6 @@ public:
     vtkm::cont::Token& token) const
   {
     return vtkm::exec::AtomicArrayExecutionObject<T>(this->Handle, device, token);
-  }
-
-  template <typename Device>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object.")
-    vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(Device device) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForExecution(device, token);
   }
 
 private:

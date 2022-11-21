@@ -63,12 +63,6 @@ private:
   vtkm::Id3 NumberOfDivisions = { 256, 256, 256 };
 };
 } // namespace geometry_refinement
-class VTKM_DEPRECATED(1.8,
-                      "Use vtkm::filter::geometry_refinement::VertexClustering.") VertexClustering
-  : public vtkm::filter::geometry_refinement::VertexClustering
-{
-  using geometry_refinement::VertexClustering::VertexClustering;
-};
 } // namespace filter
 } // namespace vtkm
 

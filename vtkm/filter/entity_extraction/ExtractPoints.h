@@ -65,11 +65,6 @@ private:
   bool CompactPoints = false;
 };
 } // namespace entity_extraction
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::ExtractPoints.") ExtractPoints
-  : public vtkm::filter::entity_extraction::ExtractPoints
-{
-  using entity_extraction::ExtractPoints::ExtractPoints;
-};
 } // namespace filter
 } // namespace vtkm
 

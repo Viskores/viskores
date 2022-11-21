@@ -97,12 +97,6 @@ private:
 };
 } // namespace clean_grid
 
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::clean_grid::CleanGrid.") CleanGrid
-  : public vtkm::filter::clean_grid::CleanGrid
-{
-  using clean_grid::CleanGrid::CleanGrid;
-};
-
 } // namespace filter
 } // namespace vtkm
 

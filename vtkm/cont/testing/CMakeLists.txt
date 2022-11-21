@@ -43,7 +43,6 @@ set(unit_tests
   UnitTestDataSetUniform.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceSelectOnThreads.cxx
-  UnitTestDynamicCellSet.cxx
   UnitTestError.cxx
   UnitTestFieldRangeCompute.cxx
   UnitTestInitialize.cxx
@@ -58,7 +57,6 @@ set(unit_tests
   UnitTestRuntimeDeviceNames.cxx
   UnitTestScopedRuntimeDeviceTracker.cxx
   UnitTestStorageList.cxx
-  UnitTestStorageListTag.cxx
   UnitTestTimer.cxx
   UnitTestToken.cxx
   UnitTestTryExecute.cxx
@@ -68,7 +66,6 @@ set(unit_tests
   UnitTestTypeCheckKeys.cxx
   UnitTestUnknownArrayHandle.cxx
   UnitTestUnknownCellSet.cxx
-  UnitTestVariantArrayHandle.cxx
   )
 
 set(unit_tests_device

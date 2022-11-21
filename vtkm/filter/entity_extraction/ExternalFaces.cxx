@@ -60,7 +60,7 @@ vtkm::cont::DataSet ExternalFaces::GenerateOutput(const vtkm::cont::DataSet& inp
     // New Design: We are still using the old MapFieldOntoOutput to demonstrate the transition
     this->MapFieldOntoOutput(result, f);
   };
-  return this->CreateResult(input, outCellSet, input.GetCoordinateSystems(), mapper);
+  return this->CreateResult(input, outCellSet, mapper);
 }
 
 //-----------------------------------------------------------------------------

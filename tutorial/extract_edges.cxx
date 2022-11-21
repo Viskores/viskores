@@ -195,7 +195,7 @@ VTKM_CONT vtkm::cont::DataSet ExtractEdges::DoExecute(const vtkm::cont::DataSet&
   auto mapper = [&](auto& outDataSet, const auto& f) {
     DoMapField(outDataSet, f, outputToInputCellMap, cellToEdgeKeys);
   };
-  return this->CreateResult(inData, outCellSet, inData.GetCoordinateSystems(), mapper);
+  return this->CreateResult(inData, outCellSet, mapper);
 }
 
 int main(int argc, char** argv)

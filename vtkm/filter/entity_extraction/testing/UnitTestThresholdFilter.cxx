@@ -49,7 +49,7 @@ public:
 
     if (returnAllInRange)
     {
-      VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
+      VTKM_TEST_ASSERT(output.GetNumberOfFields() == 2,
                        "Wrong number of fields in the output dataset");
 
       vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
@@ -61,7 +61,7 @@ public:
     }
     else
     {
-      VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
+      VTKM_TEST_ASSERT(output.GetNumberOfFields() == 2,
                        "Wrong number of fields in the output dataset");
 
       vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
@@ -105,7 +105,7 @@ public:
 
     if (returnAllInRange)
     {
-      VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
+      VTKM_TEST_ASSERT(output.GetNumberOfFields() == 2,
                        "Wrong number of fields in the output dataset");
 
       vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
@@ -119,7 +119,7 @@ public:
     }
     else
     {
-      VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
+      VTKM_TEST_ASSERT(output.GetNumberOfFields() == 2,
                        "Wrong number of fields in the output dataset");
 
       vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
@@ -150,7 +150,7 @@ public:
     threshold.SetFieldsToPass("cellvar");
     auto output = threshold.Execute(dataset);
 
-    VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
+    VTKM_TEST_ASSERT(output.GetNumberOfFields() == 2,
                      "Wrong number of fields in the output dataset");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
@@ -180,7 +180,7 @@ public:
     threshold.SetFieldsToPass("cellvar");
     auto output = threshold.Execute(dataset);
 
-    VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
+    VTKM_TEST_ASSERT(output.GetNumberOfFields() == 2,
                      "Wrong number of fields in the output dataset");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;

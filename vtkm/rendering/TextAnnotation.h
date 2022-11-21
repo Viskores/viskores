@@ -16,8 +16,6 @@
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 
-#include <vtkm/Deprecated.h>
-
 namespace vtkm
 {
 namespace rendering

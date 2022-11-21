@@ -16,12 +16,9 @@ namespace
 enum TestOptionsIndex
 {
   TEST_UNKNOWN,
-  DATADIR,                // base dir containing test data files
-  BASELINEDIR,            // base dir for regression test images
-  WRITEDIR,               // base dir for generated regression test images
-  DEPRECATED_DATADIR,     // base dir containing test data files
-  DEPRECATED_BASELINEDIR, // base dir for regression test images
-  DEPRECATED_WRITEDIR     // base dir for generated regression test images
+  DATADIR,     // base dir containing test data files
+  BASELINEDIR, // base dir for regression test images
+  WRITEDIR,    // base dir for generated regression test images
 };
 
 } // anonymous namespace
@@ -178,30 +175,6 @@ void Testing::ParseAdditionalTestArgs(int& argc, char* argv[])
                     "\tPath to the write dir "
                     "to store generated "
                     "regression test images" });
-  usage.push_back({ DEPRECATED_DATADIR,
-                    0,
-                    "D",
-                    "data-dir",
-                    opt::VtkmArg::Required,
-                    "  --data-dir "
-                    "<data-dir-path> "
-                    "\tDEPRECATED: use --vtkm-data-dir instead" });
-  usage.push_back({ DEPRECATED_BASELINEDIR,
-                    0,
-                    "B",
-                    "baseline-dir",
-                    opt::VtkmArg::Required,
-                    "  --baseline-dir "
-                    "<baseline-dir-path> "
-                    "\tDEPRECATED: use --vtkm-baseline-dir instead" });
-  usage.push_back({ WRITEDIR,
-                    0,
-                    "",
-                    "write-dir",
-                    opt::VtkmArg::Required,
-                    "  --write-dir "
-                    "<write-dir-path> "
-                    "\tDEPRECATED: use --vtkm-write-dir instead" });
 
   // Required to collect unknown arguments when help is off.
   usage.push_back({ TEST_UNKNOWN, 0, "", "", opt::VtkmArg::UnknownOption, "" });
@@ -221,33 +194,6 @@ void Testing::ParseAdditionalTestArgs(int& argc, char* argv[])
   {
     std::cerr << "Internal Initialize parser error" << std::endl;
     exit(1);
-  }
-
-  if (options[DEPRECATED_DATADIR])
-  {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "Supplied deprecated datadir flag: "
-                 << std::string{ options[DEPRECATED_DATADIR].name }
-                 << ", use --vtkm-data-dir instead");
-    SetAndGetTestDataBasePath(options[DEPRECATED_DATADIR].arg);
-  }
-
-  if (options[DEPRECATED_BASELINEDIR])
-  {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "Supplied deprecated baselinedir flag: "
-                 << std::string{ options[DEPRECATED_BASELINEDIR].name }
-                 << ", use --vtkm-baseline-dir instead");
-    SetAndGetRegressionImageBasePath(options[DEPRECATED_BASELINEDIR].arg);
-  }
-
-  if (options[DEPRECATED_WRITEDIR])
-  {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "Supplied deprecated writedir flag: "
-                 << std::string{ options[DEPRECATED_WRITEDIR].name }
-                 << ", use --vtkm-write-dir instead");
-    SetAndGetWriteDirBasePath(options[DEPRECATED_WRITEDIR].arg);
   }
 
   if (options[DATADIR])
