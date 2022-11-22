@@ -181,6 +181,7 @@ set(device_sources
   ArrayGetValues.cxx
   ArrayRangeCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
+  CellLocatorUniformBins.cxx
   CellLocatorTwoLevel.cxx
   CellSetExplicit.cxx
   CellSetExtrude.cxx
