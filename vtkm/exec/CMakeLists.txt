@@ -21,6 +21,7 @@ set(headers
   CellLocatorPartitioned.h
   CellLocatorRectilinearGrid.h
   CellLocatorTwoLevel.h
+  CellLocatorUniformBins.h
   CellLocatorUniformGrid.h
   CellMeasure.h
   ColorTable.h
