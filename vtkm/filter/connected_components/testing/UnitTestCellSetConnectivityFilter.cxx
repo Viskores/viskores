@@ -24,8 +24,8 @@ class TestCellSetConnectivity
 public:
   static void TestTangleIsosurface()
   {
-    vtkm::Id3 dims(4, 4, 4);
-    vtkm::source::Tangle tangle(dims);
+    vtkm::source::Tangle tangle;
+    tangle.SetCellDimensions({ 4, 4, 4 });
     vtkm::cont::DataSet dataSet = tangle.Execute();
 
     vtkm::filter::contour::Contour filter;

@@ -30,8 +30,6 @@ Amr::Amr(vtkm::IdComponent dimension,
 {
 }
 
-Amr::~Amr() = default;
-
 template <vtkm::IdComponent Dim>
 vtkm::cont::DataSet Amr::GenerateDataSet(unsigned int level, unsigned int amrIndex) const
 {
@@ -53,10 +51,11 @@ vtkm::cont::DataSet Amr::GenerateDataSet(unsigned int level, unsigned int amrInd
     center[2] = 0;
   }
 
-  vtkm::source::Wavelet waveletSource(-extent, extent);
+  vtkm::source::Wavelet waveletSource;
   waveletSource.SetOrigin(origin);
   waveletSource.SetSpacing(spacing);
   waveletSource.SetCenter(center);
+  waveletSource.SetExtent(-extent, extent);
   waveletSource.SetFrequency(frequency);
   waveletSource.SetStandardDeviation(deviation);
   vtkm::cont::DataSet wavelet = waveletSource.Execute();

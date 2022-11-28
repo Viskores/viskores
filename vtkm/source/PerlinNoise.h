@@ -29,21 +29,40 @@ namespace source
 class VTKM_SOURCE_EXPORT PerlinNoise final : public vtkm::source::Source
 {
 public:
-  ///Construct a PerlinNoise with Cell Dimensions
+  VTKM_CONT PerlinNoise();
+  VTKM_CONT ~PerlinNoise() = default;
+
+  VTKM_CONT PerlinNoise(const PerlinNoise&) = default;
+  VTKM_CONT PerlinNoise(PerlinNoise&&) = default;
+  VTKM_CONT PerlinNoise& operator=(const PerlinNoise&) = default;
+  VTKM_CONT PerlinNoise& operator=(PerlinNoise&&) = default;
+
+  VTKM_DEPRECATED(2.0, "Use SetCellDimensions or SetPointDimensions.")
   VTKM_CONT PerlinNoise(vtkm::Id3 dims);
+  VTKM_DEPRECATED(2.0, "Use Set*Dimensions and SetSeed.")
   VTKM_CONT PerlinNoise(vtkm::Id3 dims, vtkm::IdComponent seed);
+  VTKM_DEPRECATED(2.0, "Use Set*Dimensions and SetOrigin.")
   VTKM_CONT PerlinNoise(vtkm::Id3 dims, vtkm::Vec3f origin);
+  VTKM_DEPRECATED(2.0, "Use Set*Dimensions, SetOrigin, and SetSeed.")
   VTKM_CONT PerlinNoise(vtkm::Id3 dims, vtkm::Vec3f origin, vtkm::IdComponent seed);
 
-  vtkm::IdComponent GetSeed() const { return this->Seed; }
+  VTKM_CONT vtkm::Id3 GetPointDimensions() const { return this->PointDimensions; }
+  VTKM_CONT void SetPointDimensions(vtkm::Id3 dims) { this->PointDimensions = dims; }
 
-  void SetSeed(vtkm::IdComponent seed) { this->Seed = seed; }
+  VTKM_CONT vtkm::Id3 GetCellDimensions() const { return this->PointDimensions - vtkm::Id3(1); }
+  VTKM_CONT void SetCellDimensions(vtkm::Id3 dims) { this->PointDimensions = dims + vtkm::Id3(1); }
+
+  VTKM_CONT vtkm::Vec3f GetOrigin() const { return this->Origin; }
+  VTKM_CONT void SetOrigin(const vtkm::Vec3f& origin) { this->Origin = origin; }
+
+  VTKM_CONT vtkm::IdComponent GetSeed() const { return this->Seed; }
+  VTKM_CONT void SetSeed(vtkm::IdComponent seed) { this->Seed = seed; }
 
 private:
   vtkm::cont::DataSet DoExecute() const override;
 
-  vtkm::Id3 Dims;
-  vtkm::Vec3f Origin;
+  vtkm::Id3 PointDimensions = { 16, 16, 16 };
+  vtkm::Vec3f Origin = { 0, 0, 0 };
   vtkm::IdComponent Seed;
 };
 } //namespace source

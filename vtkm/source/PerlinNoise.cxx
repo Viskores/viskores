@@ -179,26 +179,36 @@ namespace vtkm
 namespace source
 {
 
-PerlinNoise::PerlinNoise(vtkm::Id3 dims)
-  : PerlinNoise(dims, vtkm::Vec3f(0), static_cast<vtkm::IdComponent>(time(NULL)))
+PerlinNoise::PerlinNoise()
+  : Seed(static_cast<vtkm::IdComponent>(time(NULL)))
 {
+}
+
+PerlinNoise::PerlinNoise(vtkm::Id3 dims)
+  : PerlinNoise()
+{
+  this->SetCellDimensions(dims);
 }
 
 PerlinNoise::PerlinNoise(vtkm::Id3 dims, vtkm::IdComponent seed)
-  : PerlinNoise(dims, vtkm::Vec3f(0), seed)
+  : PerlinNoise()
 {
+  this->SetCellDimensions(dims);
+  this->SetSeed(seed);
 }
 
 PerlinNoise::PerlinNoise(vtkm::Id3 dims, vtkm::Vec3f origin)
-  : PerlinNoise(dims, origin, static_cast<vtkm::IdComponent>(time(NULL)))
+  : PerlinNoise()
 {
+  this->SetCellDimensions(dims);
+  this->SetOrigin(origin);
 }
 
 PerlinNoise::PerlinNoise(vtkm::Id3 dims, vtkm::Vec3f origin, vtkm::IdComponent seed)
-  : Dims(dims)
-  , Origin(origin)
-  , Seed(seed)
 {
+  this->SetCellDimensions(dims);
+  this->SetOrigin(origin);
+  this->SetSeed(seed);
 }
 
 vtkm::cont::DataSet PerlinNoise::DoExecute() const
@@ -206,20 +216,19 @@ vtkm::cont::DataSet PerlinNoise::DoExecute() const
   VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
   vtkm::cont::DataSet dataSet;
-  const vtkm::Id3 pdims{ this->Dims + vtkm::Id3{ 1, 1, 1 } };
-  const vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(this->Dims[0]),
-                            1.0f / static_cast<vtkm::FloatDefault>(this->Dims[1]),
-                            1.0f / static_cast<vtkm::FloatDefault>(this->Dims[2]));
+  const vtkm::Vec3f cellDims = this->GetCellDimensions();
+  const vtkm::Vec3f spacing(1.0f / cellDims[0], 1.0f / cellDims[1], 1.0f / cellDims[2]);
 
 
   vtkm::cont::CellSetStructured<3> cellSet;
-  cellSet.SetPointDimensions(pdims);
+  cellSet.SetPointDimensions(this->PointDimensions);
   dataSet.SetCellSet(cellSet);
-  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(pdims, this->Origin, spacing);
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(
+    this->PointDimensions, this->Origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
-  auto tableSize = static_cast<vtkm::IdComponent>(
-    vtkm::Max(this->Dims[0], vtkm::Max(this->Dims[1], this->Dims[2])));
+  auto tableSize =
+    static_cast<vtkm::IdComponent>(vtkm::Max(cellDims[0], vtkm::Max(cellDims[1], cellDims[2])));
   PerlinNoiseField noiseGenerator(tableSize, this->Seed);
   noiseGenerator.SetOutputFieldName("perlinnoise");
   dataSet = noiseGenerator.Execute(dataSet);

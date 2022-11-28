@@ -24,7 +24,10 @@ void TestAmrArraysExecute(int dim, int numberOfLevels, int cellsPerDimension)
   std::cout << "Generate Image for AMR" << std::endl;
 
   // Generate AMR
-  vtkm::source::Amr source(dim, cellsPerDimension, numberOfLevels);
+  vtkm::source::Amr source;
+  source.SetDimension(dim);
+  source.SetNumberOfLevels(numberOfLevels);
+  source.SetCellsPerDimension(cellsPerDimension);
   vtkm::cont::PartitionedDataSet amrDataSet = source.Execute();
   //  std::cout << "amr " << std::endl;
   //  amrDataSet.PrintSummary(std::cout);

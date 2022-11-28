@@ -30,8 +30,8 @@ public:
   {
     std::cout << "Testing Contour filter on a uniform grid" << std::endl;
 
-    vtkm::Id3 dims(4, 4, 4);
-    vtkm::source::Tangle tangle(dims);
+    vtkm::source::Tangle tangle;
+    tangle.SetCellDimensions({ 4, 4, 4 });
     vtkm::filter::field_transform::GenerateIds genIds;
     genIds.SetUseFloat(true);
     genIds.SetGeneratePointIds(false);
