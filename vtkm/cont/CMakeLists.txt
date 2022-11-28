@@ -62,6 +62,7 @@ set(headers
   CellLocatorPartitioned.h
   CellLocatorRectilinearGrid.h
   CellLocatorTwoLevel.h
+  CellLocatorUniformBins.h
   CellLocatorUniformGrid.h
   CellSet.h
   CellSetExplicit.h
@@ -139,6 +140,7 @@ set(sources
   CellLocatorGeneral.cxx
   CellLocatorPartitioned.cxx
   CellLocatorRectilinearGrid.cxx
+  CellLocatorUniformBins.cxx
   CellLocatorUniformGrid.cxx
   CellSet.cxx
   CellSetStructured.cxx
@@ -179,6 +181,7 @@ set(device_sources
   ArrayGetValues.cxx
   ArrayRangeCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
+  CellLocatorUniformBins.cxx
   CellLocatorTwoLevel.cxx
   CellSetExplicit.cxx
   CellSetExtrude.cxx
