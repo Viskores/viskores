@@ -2890,7 +2890,7 @@ vtkm::Int32 CountSetBits(vtkm::UInt32 word)
 
   return __builtin_popcount(word);
 
-#  elif defined(VTKM_MSVC)
+#  elif defined(VTKM_MSVC) && !defined(_M_ARM64)
 
   return static_cast<vtkm::Int32>(__popcnt(word));
 
@@ -2932,7 +2932,7 @@ vtkm::Int32 CountSetBits(vtkm::UInt64 word)
 
   return __builtin_popcountll(word);
 
-#  elif defined(VTKM_MSVC)
+#  elif defined(VTKM_MSVC) && !defined(_M_ARM64)
 
   return static_cast<vtkm::Int32>(__popcnt64(word));
 
