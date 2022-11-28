@@ -909,7 +909,7 @@ enum optionIndex
 void InitDataSet(int& argc, char** argv)
 {
   std::string filename;
-  vtkm::Id waveletDim = 32; //256;
+  vtkm::Id waveletDim = 32;
   vtkm::Id numPartitions = 8;
   bool tetra = false;
 
