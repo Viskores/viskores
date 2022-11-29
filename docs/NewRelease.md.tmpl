@@ -120,6 +120,9 @@ $if(PATCH == 0 and RC == "")\
 - [ ] Tag new version of the [VTK-m User Guide][2].
 $endif\
 - [ ] Post an [Email Announcements](#email-announcements) VTK-m mailing list.
+$if(RC == "")\
+- [ ] Update this release Date, Delay and End-of-Support fields in `docs/ReleaseRoadmap.md`.
+$endif\
 $if(PATCH == 0)\
 - [ ] Ensure that the content of `version.txt` in master is `$(MAJOR).$(MINOR).9999`.
 $endif\
