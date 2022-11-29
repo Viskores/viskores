@@ -910,8 +910,8 @@ enum optionIndex
 void InitDataSet(int& argc, char** argv)
 {
   std::string filename;
-  vtkm::Id waveletDim = 32;
-  vtkm::Id numPartitions = 8;
+  vtkm::Id waveletDim = 256;
+  vtkm::Id numPartitions = 1;
   bool tetra = false;
 
   namespace option = vtkm::cont::internal::option;
