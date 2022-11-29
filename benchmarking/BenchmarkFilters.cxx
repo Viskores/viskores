@@ -23,6 +23,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorInternal.h>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 
