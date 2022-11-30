@@ -98,16 +98,9 @@ vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
 {
   using VecId = std::size_t;
   const auto activeCoordIndex = static_cast<VecId>(this->GetActiveCoordinateSystemIndex());
-  const auto numCoordSystems = static_cast<VecId>(inData.GetNumberOfCoordinateSystems());
-
-  std::vector<vtkm::cont::CoordinateSystem> outputCoordinateSystems(numCoordSystems);
 
   // Start with a shallow copy of the coordinate systems
-  for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
-  {
-    outputCoordinateSystems[coordSystemIndex] =
-      inData.GetCoordinateSystem(static_cast<vtkm::IdComponent>(coordSystemIndex));
-  }
+  vtkm::cont::CoordinateSystem activeCoordSystem = inData.GetCoordinateSystem(activeCoordIndex);
 
   // Optionally adjust the cell set indices to remove all unused points
   if (this->GetCompactPointFields())
@@ -118,19 +111,14 @@ vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
 
     outputCellSet = worklets.PointCompactor.MapCellSet(outputCellSet);
 
-    for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
-    {
-      outputCoordinateSystems[coordSystemIndex] =
-        vtkm::cont::CoordinateSystem(outputCoordinateSystems[coordSystemIndex].GetName(),
-                                     worklets.PointCompactor.MapPointFieldDeep(
-                                       outputCoordinateSystems[coordSystemIndex].GetData()));
-    }
+    activeCoordSystem = vtkm::cont::CoordinateSystem(
+      activeCoordSystem.GetName(),
+      worklets.PointCompactor.MapPointFieldDeep(activeCoordSystem.GetData()));
   }
 
   // Optionally find and merge coincident points
   if (this->GetMergePoints())
   {
-    vtkm::cont::CoordinateSystem activeCoordSystem = outputCoordinateSystems[activeCoordIndex];
     vtkm::Bounds bounds = activeCoordSystem.GetBounds();
 
     vtkm::Float64 delta = this->GetTolerance();
@@ -143,20 +131,6 @@ vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
     auto coordArray = activeCoordSystem.GetData();
     worklets.PointMerger.Run(delta, this->GetFastMerge(), bounds, coordArray);
     activeCoordSystem = vtkm::cont::CoordinateSystem(activeCoordSystem.GetName(), coordArray);
-
-    for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
-    {
-      if (coordSystemIndex == activeCoordIndex)
-      {
-        outputCoordinateSystems[coordSystemIndex] = activeCoordSystem;
-      }
-      else
-      {
-        outputCoordinateSystems[coordSystemIndex] = vtkm::cont::CoordinateSystem(
-          outputCoordinateSystems[coordSystemIndex].GetName(),
-          worklets.PointMerger.MapPointField(outputCoordinateSystems[coordSystemIndex].GetData()));
-      }
-    }
 
     outputCellSet = worklets.PointMerger.MapCellSet(outputCellSet);
   }
@@ -178,7 +152,7 @@ vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
   auto mapper = [&](auto& outDataSet, const auto& f) {
     DoMapField(outDataSet, f, *this, worklets);
   };
-  return this->CreateResult(inData, outputCellSet, outputCoordinateSystems, mapper);
+  return this->CreateResultCoordinateSystem(inData, outputCellSet, activeCoordSystem, mapper);
 }
 
 vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData)
