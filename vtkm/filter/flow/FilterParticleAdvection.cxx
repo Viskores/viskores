@@ -11,7 +11,7 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/flow/NewFilterParticleAdvection.h>
+#include <vtkm/filter/flow/FilterParticleAdvection.h>
 
 namespace vtkm
 {
@@ -20,8 +20,7 @@ namespace filter
 namespace flow
 {
 
-VTKM_CONT vtkm::cont::DataSet NewFilterParticleAdvection::DoExecute(
-  const vtkm::cont::DataSet& inData)
+VTKM_CONT vtkm::cont::DataSet FilterParticleAdvection::DoExecute(const vtkm::cont::DataSet& inData)
 {
   auto out = this->DoExecutePartitions(inData);
   if (out.GetNumberOfPartitions() != 1)
@@ -30,7 +29,7 @@ VTKM_CONT vtkm::cont::DataSet NewFilterParticleAdvection::DoExecute(
   return out.GetPartition(0);
 }
 
-VTKM_CONT void NewFilterParticleAdvection::ValidateOptions() const
+VTKM_CONT void FilterParticleAdvection::ValidateOptions() const
 {
   if (this->GetUseCoordinateSystemAsField())
     throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");

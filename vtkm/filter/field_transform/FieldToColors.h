@@ -12,7 +12,7 @@
 #define vtk_m_filter_field_transform_FieldToColors_h
 
 #include <vtkm/cont/ColorTable.h>
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -23,7 +23,7 @@ namespace field_transform
 {
 /// \brief  Convert an arbitrary field to an RGB or RGBA field
 ///
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT FieldToColors : public vtkm::filter::NewFilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT FieldToColors : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT

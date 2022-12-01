@@ -11,8 +11,8 @@
 #ifndef vtk_m_filter_flow_ParticleAdvection_h
 #define vtk_m_filter_flow_ParticleAdvection_h
 
+#include <vtkm/filter/flow/FilterParticleAdvectionSteadyState.h>
 #include <vtkm/filter/flow/FlowTypes.h>
-#include <vtkm/filter/flow/NewFilterParticleAdvectionSteadyState.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
@@ -28,7 +28,7 @@ namespace flow
 /// end points for each seed through the vector field.
 
 class VTKM_FILTER_FLOW_EXPORT ParticleAdvection
-  : public vtkm::filter::flow::NewFilterParticleAdvectionSteadyState
+  : public vtkm::filter::flow::FilterParticleAdvectionSteadyState
 {
 public:
 private:

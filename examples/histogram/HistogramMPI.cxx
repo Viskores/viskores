@@ -160,7 +160,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet HistogramMPI::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
 {
   this->PreExecute(input);
-  auto result = this->NewFilter::DoExecutePartitions(input);
+  auto result = this->Filter::DoExecutePartitions(input);
   this->PostExecute(input, result);
   return result;
 }

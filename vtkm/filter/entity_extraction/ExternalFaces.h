@@ -11,7 +11,7 @@
 #ifndef vtkm_filter_entity_extraction_ExternalFaces_h
 #define vtkm_filter_entity_extraction_ExternalFaces_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -32,7 +32,7 @@ namespace entity_extraction
 /// @warning
 /// This filter is currently only supports propagation of point properties
 ///
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExternalFaces : public vtkm::filter::NewFilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExternalFaces : public vtkm::filter::FilterField
 {
 public:
   ExternalFaces();

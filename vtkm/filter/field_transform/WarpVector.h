@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_field_transform_WarpVector_h
 #define vtk_m_filter_field_transform_WarpVector_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -28,7 +28,7 @@ namespace field_transform
 /// Useful for showing flow profiles or mechanical deformation.
 /// This worklet does not modify the input points but generate new point
 /// coordinate instance that has been warped.
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT WarpVector : public vtkm::filter::NewFilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT WarpVector : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
