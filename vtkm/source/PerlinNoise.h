@@ -29,7 +29,7 @@ namespace source
 class VTKM_SOURCE_EXPORT PerlinNoise final : public vtkm::source::Source
 {
 public:
-  VTKM_CONT PerlinNoise();
+  VTKM_CONT PerlinNoise() = default;
   VTKM_CONT ~PerlinNoise() = default;
 
   VTKM_CONT PerlinNoise(const PerlinNoise&) = default;
@@ -55,6 +55,9 @@ public:
   VTKM_CONT vtkm::Vec3f GetOrigin() const { return this->Origin; }
   VTKM_CONT void SetOrigin(const vtkm::Vec3f& origin) { this->Origin = origin; }
 
+  /// \brief The seed used for the pseudorandom number generation of the noise.
+  ///
+  /// If the seed is set to 0, then a new, unique seed is picked each time `Execute` is run.
   VTKM_CONT vtkm::IdComponent GetSeed() const { return this->Seed; }
   VTKM_CONT void SetSeed(vtkm::IdComponent seed) { this->Seed = seed; }
 
@@ -63,7 +66,7 @@ private:
 
   vtkm::Id3 PointDimensions = { 16, 16, 16 };
   vtkm::Vec3f Origin = { 0, 0, 0 };
-  vtkm::IdComponent Seed;
+  vtkm::IdComponent Seed = 0;
 };
 } //namespace source
 } //namespace vtkm
