@@ -52,6 +52,8 @@ public:
 
     std::vector<std::thread> workerThreads;
     workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
+    this->Comm.barrier();
+    //MPI_Barrier(this->Comm);
     this->Manage();
 
     //This will only work for 1 thread. For > 1, the Blocks will need a mutex.
@@ -136,6 +138,7 @@ protected:
     vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
       this->Comm, this->BoundsMap, 1, 128);
 
+    messenger.Log << "Begin" << std::endl;
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfoType>> workerResults;
@@ -147,6 +150,8 @@ protected:
         for (auto& r : it.second)
           numTerm += this->UpdateResult(r.Get<DSIHelperInfo<ParticleType>>());
       }
+      messenger.Log << " Advected: " << workerResults.size() << " numTerm= " << numTerm
+                    << std::endl;
 
       vtkm::Id numTermMessages = 0;
       this->Communicate(messenger, numTerm, numTermMessages);
@@ -156,17 +161,24 @@ protected:
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
 
+    messenger.Log << "DONE" << std::endl;
     //Let the workers know that we are done.
     this->SetDone();
+
+    //Do one last communicate to send out the messages.
+    vtkm::Id dummy;
+    this->Communicate(messenger, 0, dummy);
   }
 
-  bool GetBlockAndWait(const vtkm::Id& numLocalTerm) override
+  bool GetBlockAndWait(const bool& syncComm, const vtkm::Id& numLocalTerm) override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
+    if (this->Done)
+      return true;
 
-    return (
-      this->AdvectAlgorithm<DSIType, ResultType, ParticleType>::GetBlockAndWait(numLocalTerm) &&
-      !this->WorkerActivate && this->WorkerResults.empty());
+    return (this->AdvectAlgorithm<DSIType, ResultType, ParticleType>::GetBlockAndWait(
+              syncComm, numLocalTerm) &&
+            !this->WorkerActivate && this->WorkerResults.empty());
   }
 
   void GetWorkerResults(std::unordered_map<vtkm::Id, std::vector<DSIHelperInfoType>>& results)

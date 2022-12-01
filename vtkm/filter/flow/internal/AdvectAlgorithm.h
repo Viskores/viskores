@@ -96,18 +96,22 @@ public:
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
     this->ComputeTotalNumParticles(nLocal);
 
+    messenger.Log << "Begin" << std::endl;
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
+      messenger.Log << " TotNumTerminated= " << this->TotalNumTerminatedParticles << std::endl;
       std::vector<ParticleType> v;
       vtkm::Id numTerm = 0, blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
+        messenger.Log << " Advect " << v.size() << " in block " << blockId << std::endl;
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfoType bb =
           DSIHelperInfo<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
         block.Advect(bb, this->StepSize, this->NumberOfSteps);
         numTerm = this->UpdateResult(bb.Get<DSIHelperInfo<ParticleType>>());
+        messenger.Log << " numTerm=  " << numTerm << std::endl;
       }
 
       vtkm::Id numTermMessages = 0;
@@ -117,6 +121,7 @@ public:
       if (this->TotalNumTerminatedParticles > this->TotalNumParticles)
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
+    messenger.Log << "Done" << std::endl;
   }
 
 
@@ -194,16 +199,23 @@ public:
     std::vector<ParticleType> incoming;
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingIDs;
     numTermMessages = 0;
+    bool block = this->GetBlockAndWait(messenger.UsingSyncCommunication(), numLocalTerminations);
+
+    messenger.Log << " Communicate: AI= " << this->Active.size() << " " << this->Inactive.size()
+                  << " localTerm= " << numLocalTerminations << " Block= " << block << std::endl;
     messenger.Exchange(this->Inactive,
                        this->ParticleBlockIDsMap,
                        numLocalTerminations,
                        incoming,
                        incomingIDs,
                        numTermMessages,
-                       this->GetBlockAndWait(numLocalTerminations));
+                       block);
+    //this->GetBlockAndWait(messenger.UsingSyncCommunication(), numLocalTerminations));
 
     this->Inactive.clear();
     this->UpdateActive(incoming, incomingIDs);
+    messenger.Log << " Communicate Done: AI= " << this->Active.size() << " "
+                  << this->Inactive.size() << " numTermMsg= " << numTermMessages << std::endl;
   }
 
   virtual void UpdateActive(const std::vector<ParticleType>& particles,
@@ -245,20 +257,29 @@ public:
     return numTerm;
   }
 
-  virtual bool GetBlockAndWait(const vtkm::Id& numLocalTerm)
+
+  virtual bool GetBlockAndWait(const bool& syncComm, const vtkm::Id& numLocalTerm)
   {
-    //There are only two cases where blocking would deadlock.
-    //1. There are active particles.
-    //2. numLocalTerm + this->TotalNumberOfTerminatedParticles == this->TotalNumberOfParticles
-    //So, if neither are true, we can safely block and wait for communication to come in.
+    bool haveNoWork = this->Active.empty() && this->Inactive.empty();
 
-    if (this->Active.empty() && this->Inactive.empty() &&
-        (numLocalTerm + this->TotalNumTerminatedParticles < this->TotalNumParticles))
+    //Using syncronous communication we should only block and wait if we have no particles
+    if (syncComm)
     {
-      return true;
+      return haveNoWork;
     }
+    else
+    {
+      //Otherwise, for asyncronous communication, there are only two cases where blocking would deadlock.
+      //1. There are active particles.
+      //2. numLocalTerm + this->TotalNumberOfTerminatedParticles == this->TotalNumberOfParticles
+      //So, if neither are true, we can safely block and wait for communication to come in.
 
-    return false;
+      if (haveNoWork &&
+          (numLocalTerm + this->TotalNumTerminatedParticles < this->TotalNumParticles))
+        return true;
+
+      return false;
+    }
   }
 
   //Member data
