@@ -412,41 +412,6 @@ protected:
     return outDataSet;
   }
 
-  /// \brief Create the output data set for `DoExecute`.
-  ///
-  /// This form of `CreateResult` will create an output data set with the given `CellSet`
-  /// and set of `CoordinateSystem`s. You must also provide a field mapper function, which
-  /// is a function that takes the output `DataSet` being created and a `Field` from the
-  /// input and then applies any necessary transformations to the field array and adds it
-  /// to the `DataSet`.
-  ///
-  /// \param[in] inDataSet The input data set being modified (usually the one passed
-  ///     into `DoExecute`). The returned `DataSet` is filled with fields of `inDataSet`
-  ///     (as selected by the `FieldsToPass` state of the filter).
-  /// \param[in] resultCellSet The `CellSet` of the output will be set to this.
-  /// \param[in] resultCoordSystems These `CoordinateSystem`s will be added to the output.
-  /// \param[in] fieldMapper A function or functor that takes a `DataSet` as its first
-  ///     argument and a `Field` as its second argument. The `DataSet` is the data being
-  ///     created and will eventually be returned by `CreateResult`. The `Field` comes from
-  ///     `inDataSet`. The function should map the `Field` to match `resultCellSet` and then
-  ///     add the resulting field to the `DataSet`. If the mapping is not possible, then
-  ///     the function should do nothing.
-  ///
-  template <typename FieldMapper>
-  VTKM_CONT vtkm::cont::DataSet CreateResult(
-    const vtkm::cont::DataSet& inDataSet,
-    const vtkm::cont::UnknownCellSet& resultCellSet,
-    const std::vector<vtkm::cont::CoordinateSystem>& resultCoordSystems,
-    FieldMapper&& fieldMapper) const
-  {
-    vtkm::cont::DataSet outDataSet = this->CreateResult(inDataSet, resultCellSet, fieldMapper);
-    for (auto&& cs : resultCoordSystems)
-    {
-      outDataSet.AddCoordinateSystem(cs);
-    }
-    return outDataSet;
-  }
-
   ///@{
   /// \brief Create the output data set for `DoExecute`.
   ///
