@@ -24,7 +24,9 @@ namespace
 
 void TestPerlinNoise()
 {
-  vtkm::source::PerlinNoise noiseSource(vtkm::Id3(16), 77698);
+  vtkm::source::PerlinNoise noiseSource;
+  noiseSource.SetCellDimensions(vtkm::Id3(16));
+  noiseSource.SetSeed(77698);
   vtkm::cont::DataSet noise = noiseSource.Execute();
 
   noise.PrintSummary(std::cout);
