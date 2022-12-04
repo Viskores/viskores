@@ -72,14 +72,16 @@ target_compile_definitions(BenchmarkDeviceAdapter PUBLIC VTKm_BENCHS_RANGE_UPPER
 if(VTKm_ENABLE_PERFORMANCE_TESTING)
   include("${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTest.cmake")
   add_benchmark_test(BenchmarkFilters
-                     BenchThreshold
-                     BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:1/GenNormals:0
-                     BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:0/GenNormals:1/FastNormals:1
-                     BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:1/GenNormals:0
-                     BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:0/GenNormals:/FastNormals:1
-                     BenchTetrahedralize
-                     BenchVertexClustering/NumDivs:256)
+    FILTERS
+      BenchThreshold
+      BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:1/GenNormals:0
+      BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:0/GenNormals:1/FastNormals:1
+      BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:1/GenNormals:0
+      BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:0/GenNormals:/FastNormals:1
+      BenchTetrahedralize
+      BenchVertexClustering/NumDivs:256
+    )
   if(TARGET vtkm_rendering)
-    add_benchmark_test(BenchmarkInSitu "BenchContour")
+    add_benchmark_test(BenchmarkInSitu FILTERS "BenchContour")
   endif()
 endif()
