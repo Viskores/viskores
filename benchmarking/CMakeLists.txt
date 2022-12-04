@@ -72,16 +72,35 @@ target_compile_definitions(BenchmarkDeviceAdapter PUBLIC VTKm_BENCHS_RANGE_UPPER
 if(VTKm_ENABLE_PERFORMANCE_TESTING)
   include("${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTest.cmake")
   add_benchmark_test(BenchmarkFilters
-    FILTERS
-      BenchThreshold
-      BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:1/GenNormals:0
-      BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:0/GenNormals:1/FastNormals:1
-      BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:1/GenNormals:0
-      BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:0/GenNormals:/FastNormals:1
-      BenchTetrahedralize
-      BenchVertexClustering/NumDivs:256
+    NAME BenchThreshold
+    REGEX BenchThreshold
+    )
+  add_benchmark_test(BenchmarkFilters
+    NAME BenchTetrahedralize
+    REGEX BenchTetrahedralize
+    )
+  add_benchmark_test(BenchmarkFilters
+    NAME BenchContour
+    REGEX
+      BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:1/GenNormals:0.*/MultiPartitioned:0
+      BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:0/GenNormals:1/FastNormals:1.*/MultiPartitioned:0
+      BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:1/GenNormals:0.*/MultiPartitioned:0
+      BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:0/GenNormals:1/FastNormals:1.*/MultiPartitioned:0
+    )
+  add_benchmark_test(BenchmarkFilters
+    NAME BenchContourPartitioned
+    ARGS --wavelet-dim=32 --num-partitions=128
+    REGEX
+      BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:1/GenNormals:0.*/MultiPartitioned:1
+      BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:0/GenNormals:1/FastNormals:1.*/MultiPartitioned:1
+      BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:1/GenNormals:0.*/MultiPartitioned:1
+      BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:0/GenNormals:1/FastNormals:1.*/MultiPartitioned:1
+    )
+  add_benchmark_test(BenchmarkFilters
+    NAME BenchVertexClustering
+    REGEX BenchVertexClustering/NumDivs:256
     )
   if(TARGET vtkm_rendering)
-    add_benchmark_test(BenchmarkInSitu FILTERS "BenchContour")
+    add_benchmark_test(BenchmarkInSitu REGEX "BenchContour")
   endif()
 endif()

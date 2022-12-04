@@ -499,8 +499,7 @@ void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
   helper(12);
 }
 
-// :TODO: Disabled until SIGSEGV in Countour when passings field is resolved
-//VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
+VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
 
 void BenchExternalFaces(::benchmark::State& state)
 {
