@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_clean_grid_CleanGrid_h
 #define vtk_m_filter_clean_grid_CleanGrid_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/clean_grid/vtkm_filter_clean_grid_export.h>
 
 namespace vtkm
@@ -37,7 +37,7 @@ struct SharedStates;
 /// \todo Add a feature to merge points that are coincident or within a
 /// tolerance.
 ///
-class VTKM_FILTER_CLEAN_GRID_EXPORT CleanGrid : public vtkm::filter::NewFilterField
+class VTKM_FILTER_CLEAN_GRID_EXPORT CleanGrid : public vtkm::filter::FilterField
 {
 public:
   /// When the CompactPointFields flag is true, the filter will identify any

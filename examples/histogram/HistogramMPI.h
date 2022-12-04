@@ -10,7 +10,7 @@
 #ifndef vtk_m_examples_histogram_HistogramMPI_h
 #define vtk_m_examples_histogram_HistogramMPI_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 
 namespace example
 {
@@ -19,7 +19,7 @@ namespace example
 ///
 /// Construct a HistogramMPI with a default of 10 bins.
 ///
-class HistogramMPI : public vtkm::filter::NewFilterField
+class HistogramMPI : public vtkm::filter::FilterField
 {
 public:
   //currently the HistogramMPI filter only works on scalar data.

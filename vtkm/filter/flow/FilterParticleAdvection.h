@@ -8,11 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_flow_NewFilterParticleAdvection_h
-#define vtk_m_filter_flow_NewFilterParticleAdvection_h
+#ifndef vtk_m_filter_flow_FilterParticleAdvection_h
+#define vtk_m_filter_flow_FilterParticleAdvection_h
 
 #include <vtkm/Particle.h>
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
@@ -28,7 +28,7 @@ namespace flow
 /// Takes as input a vector field and seed locations and advects the seeds
 /// through the flow field.
 
-class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvection : public vtkm::filter::NewFilterField
+class VTKM_FILTER_FLOW_EXPORT FilterParticleAdvection : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
@@ -107,4 +107,4 @@ private:
 }
 } // namespace vtkm::filter::flow
 
-#endif // vtk_m_filter_flow_NewFilterParticleAdvection_h
+#endif // vtk_m_filter_flow_FilterParticleAdvection_h

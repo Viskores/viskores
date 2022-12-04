@@ -8,20 +8,20 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_NewFilterField_h
-#define vtk_m_filter_NewFilterField_h
+#ifndef vtk_m_filter_FilterField_h
+#define vtk_m_filter_FilterField_h
 
-#include <vtkm/filter/NewFilter.h>
+#include <vtkm/filter/Filter.h>
 
 namespace vtkm
 {
 namespace filter
 {
 
-class VTKM_FILTER_CORE_EXPORT NewFilterField : public vtkm::filter::NewFilter
+class VTKM_FILTER_CORE_EXPORT FilterField : public vtkm::filter::Filter
 {
 public:
-  NewFilterField() { this->SetActiveCoordinateSystem(0); }
+  FilterField() { this->SetActiveCoordinateSystem(0); }
 
   VTKM_CONT
   void SetOutputFieldName(const std::string& name) { this->OutputFieldName = name; }
@@ -300,4 +300,4 @@ private:
 } // namespace filter
 } // namespace vtkm
 
-#endif // vtk_m_filter_NewFilterField_h
+#endif // vtk_m_filter_FilterField_h

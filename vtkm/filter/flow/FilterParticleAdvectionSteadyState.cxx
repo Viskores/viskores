@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/flow/NewFilterParticleAdvectionSteadyState.h>
+#include <vtkm/filter/flow/FilterParticleAdvectionSteadyState.h>
 #include <vtkm/filter/flow/internal/DataSetIntegratorSteadyState.h>
 
 #include <vtkm/filter/flow/internal/BoundsMap.h>
@@ -62,7 +62,7 @@ CreateDataSetIntegrators(
 
 } //anonymous namespace
 
-VTKM_CONT vtkm::cont::PartitionedDataSet NewFilterParticleAdvectionSteadyState::DoExecutePartitions(
+VTKM_CONT vtkm::cont::PartitionedDataSet FilterParticleAdvectionSteadyState::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
 {
   using DSIType = vtkm::filter::flow::internal::DataSetIntegratorSteadyState;

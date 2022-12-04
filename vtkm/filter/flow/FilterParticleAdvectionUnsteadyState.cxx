@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/flow/NewFilterParticleAdvectionUnsteadyState.h>
+#include <vtkm/filter/flow/FilterParticleAdvectionUnsteadyState.h>
 #include <vtkm/filter/flow/internal/DataSetIntegratorUnsteadyState.h>
 #include <vtkm/filter/flow/internal/ParticleAdvector.h>
 
@@ -51,15 +51,14 @@ CreateDataSetIntegrators(const vtkm::cont::PartitionedDataSet& input,
 }
 } // anonymous namespace
 
-VTKM_CONT void NewFilterParticleAdvectionUnsteadyState::ValidateOptions() const
+VTKM_CONT void FilterParticleAdvectionUnsteadyState::ValidateOptions() const
 {
-  this->NewFilterParticleAdvection::ValidateOptions();
+  this->FilterParticleAdvection::ValidateOptions();
   if (this->Time1 >= this->Time2)
     throw vtkm::cont::ErrorFilterExecution("PreviousTime must be less than NextTime");
 }
 
-VTKM_CONT vtkm::cont::PartitionedDataSet
-NewFilterParticleAdvectionUnsteadyState::DoExecutePartitions(
+VTKM_CONT vtkm::cont::PartitionedDataSet FilterParticleAdvectionUnsteadyState::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
 {
   using DSIType = vtkm::filter::flow::internal::DataSetIntegratorUnsteadyState;

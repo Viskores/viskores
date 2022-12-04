@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_geometry_refinement_Tube_h
 #define vtk_m_filter_geometry_refinement_Tube_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/geometry_refinement/vtkm_filter_geometry_refinement_export.h>
 
 namespace vtkm
@@ -25,7 +25,7 @@ namespace geometry_refinement
 /// Takes as input a set of polylines, radius, num sides and capping flag.
 /// Produces tubes along each polyline
 
-class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Tube : public vtkm::filter::NewFilterField
+class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Tube : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT

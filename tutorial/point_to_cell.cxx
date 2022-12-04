@@ -46,14 +46,14 @@ struct ConvertPointFieldToCells : vtkm::worklet::WorkletVisitCellsWithPoints
 } // namespace worklet
 } // namespace vtkm
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 
 namespace vtkm
 {
 namespace filter
 {
 
-struct ConvertPointFieldToCells : vtkm::filter::NewFilterField
+struct ConvertPointFieldToCells : vtkm::filter::FilterField
 {
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet) override;
 };

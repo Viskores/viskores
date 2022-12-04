@@ -11,7 +11,7 @@
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
-#include <vtkm/filter/NewFilter.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/TaskQueue.h>
 
 #include <future>
@@ -23,9 +23,7 @@ namespace filter
 
 namespace
 {
-void RunFilter(NewFilter* self,
-               vtkm::filter::DataSetQueue& input,
-               vtkm::filter::DataSetQueue& output)
+void RunFilter(Filter* self, vtkm::filter::DataSetQueue& input, vtkm::filter::DataSetQueue& output)
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   bool prevVal = tracker.GetThreadFriendlyMemAlloc();
@@ -44,15 +42,15 @@ void RunFilter(NewFilter* self,
 
 }
 
-NewFilter::~NewFilter() = default;
+Filter::~Filter() = default;
 
-bool NewFilter::CanThread() const
+bool Filter::CanThread() const
 {
   return true;
 }
 
 //----------------------------------------------------------------------------
-vtkm::cont::PartitionedDataSet NewFilter::DoExecutePartitions(
+vtkm::cont::PartitionedDataSet Filter::DoExecutePartitions(
   const vtkm::cont::PartitionedDataSet& input)
 {
   vtkm::cont::PartitionedDataSet output;
@@ -91,22 +89,22 @@ vtkm::cont::PartitionedDataSet NewFilter::DoExecutePartitions(
   return this->CreateResult(input, output);
 }
 
-vtkm::cont::DataSet NewFilter::Execute(const vtkm::cont::DataSet& input)
+vtkm::cont::DataSet Filter::Execute(const vtkm::cont::DataSet& input)
 {
   return this->DoExecute(input);
 }
 
-vtkm::cont::PartitionedDataSet NewFilter::Execute(const vtkm::cont::PartitionedDataSet& input)
+vtkm::cont::PartitionedDataSet Filter::Execute(const vtkm::cont::PartitionedDataSet& input)
 {
   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
-                 "NewFilter (%d partitions): '%s'",
+                 "Filter (%d partitions): '%s'",
                  (int)input.GetNumberOfPartitions(),
                  vtkm::cont::TypeToString<decltype(*this)>().c_str());
 
   return this->DoExecutePartitions(input);
 }
 
-vtkm::cont::DataSet NewFilter::CreateResult(const vtkm::cont::DataSet& inDataSet) const
+vtkm::cont::DataSet Filter::CreateResult(const vtkm::cont::DataSet& inDataSet) const
 {
   auto fieldMapper = [](vtkm::cont::DataSet& out, const vtkm::cont::Field& fieldToPass) {
     out.AddField(fieldToPass);
@@ -114,7 +112,7 @@ vtkm::cont::DataSet NewFilter::CreateResult(const vtkm::cont::DataSet& inDataSet
   return this->CreateResult(inDataSet, inDataSet.GetCellSet(), fieldMapper);
 }
 
-vtkm::cont::PartitionedDataSet NewFilter::CreateResult(
+vtkm::cont::PartitionedDataSet Filter::CreateResult(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::cont::PartitionedDataSet& resultPartitions) const
 {
@@ -124,7 +122,7 @@ vtkm::cont::PartitionedDataSet NewFilter::CreateResult(
   return this->CreateResult(input, resultPartitions, fieldMapper);
 }
 
-vtkm::Id NewFilter::DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input)
+vtkm::Id Filter::DetermineNumberOfThreads(const vtkm::cont::PartitionedDataSet& input)
 {
   vtkm::Id numDS = input.GetNumberOfPartitions();
 

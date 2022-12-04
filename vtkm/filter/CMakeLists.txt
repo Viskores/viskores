@@ -10,20 +10,20 @@
 
 set(core_headers
   FieldSelection.h
-  NewFilter.h
-  NewFilterField.h
+  Filter.h
+  FilterField.h
   MapFieldMergeAverage.h
   MapFieldPermutation.h
   TaskQueue.h
   )
 set(core_sources
   FieldSelection.cxx
-  NewFilterField.cxx
+  FilterField.cxx
   )
 set(core_sources_device
   MapFieldMergeAverage.cxx
   MapFieldPermutation.cxx
-  NewFilter.cxx
+  Filter.cxx
   )
 
 vtkm_library(
