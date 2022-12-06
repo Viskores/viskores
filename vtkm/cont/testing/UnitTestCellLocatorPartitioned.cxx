@@ -54,7 +54,10 @@ void Test()
   int cellsPerDimension = 8;
 
   // Generate AMR
-  vtkm::source::Amr source(dim, cellsPerDimension, numberOfLevels);
+  vtkm::source::Amr source;
+  source.SetDimension(dim);
+  source.SetNumberOfLevels(numberOfLevels);
+  source.SetCellsPerDimension(cellsPerDimension);
   vtkm::cont::PartitionedDataSet amrDataSet = source.Execute();
 
   // one point for each partition

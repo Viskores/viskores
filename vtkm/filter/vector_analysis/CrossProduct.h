@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_vector_analysis_CrossProduct_h
 #define vtk_m_filter_vector_analysis_CrossProduct_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 
 #include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
@@ -22,7 +22,7 @@ namespace filter
 namespace vector_analysis
 {
 
-class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT CrossProduct : public vtkm::filter::NewFilterField
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT CrossProduct : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT

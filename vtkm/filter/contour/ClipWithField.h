@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_contour_ClipWithField_h
 #define vtk_m_filter_contour_ClipWithField_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/contour/vtkm_filter_contour_export.h>
 
 namespace vtkm
@@ -26,7 +26,7 @@ namespace contour
 /// value are considered outside, and will be discarded. All points that are greater
 /// are kept.
 /// The resulting geometry will not be water tight.
-class VTKM_FILTER_CONTOUR_EXPORT ClipWithField : public vtkm::filter::NewFilterField
+class VTKM_FILTER_CONTOUR_EXPORT ClipWithField : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT

@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_field_transform_WarpScalar_h
 #define vtk_m_filter_field_transform_WarpScalar_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -28,7 +28,7 @@ namespace field_transform
 /// It's a VTK-m version of the vtkWarpScalar in VTK.
 /// Useful for creating carpet or x-y-z plots.
 /// It doesn't modify the point coordinates, but creates a new point coordinates that have been warped.
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT WarpScalar : public vtkm::filter::NewFilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT WarpScalar : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT

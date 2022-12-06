@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityRelativeSizeSquared_h
 #define vtk_m_filter_mesh_info_MeshQualityRelativeSizeSquared_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,8 +30,7 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityRelativeSizeSquared
-  : public vtkm::filter::NewFilterField
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityRelativeSizeSquared : public vtkm::filter::FilterField
 {
 public:
   MeshQualityRelativeSizeSquared();

@@ -118,7 +118,9 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
   PointVectorsName = "perlinnoisegrad";
 
   // Generate uniform dataset(s)
-  const vtkm::Id3 dims{ dim, dim, dim };
+  vtkm::source::PerlinNoise noise;
+  noise.SetPointDimensions({ dim, dim, dim });
+  noise.SetSeed(static_cast<vtkm::IdComponent>(cycle));
   if (isMultiBlock)
   {
     for (auto i = 0; i < 2; ++i)
@@ -127,12 +129,9 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
       {
         for (auto k = 0; k < 2; ++k)
         {
-          const vtkm::Vec3f origin{ static_cast<vtkm::FloatDefault>(i),
-                                    static_cast<vtkm::FloatDefault>(j),
-                                    static_cast<vtkm::FloatDefault>(k) };
-          const vtkm::source::PerlinNoise noise{ dims,
-                                                 origin,
-                                                 static_cast<vtkm::IdComponent>(cycle) };
+          noise.SetOrigin({ static_cast<vtkm::FloatDefault>(i),
+                            static_cast<vtkm::FloatDefault>(j),
+                            static_cast<vtkm::FloatDefault>(k) });
           const auto dataset = noise.Execute();
           partitionedInputDataSet.AppendPartition(dataset);
         }
@@ -141,7 +140,6 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
   }
   else
   {
-    const vtkm::source::PerlinNoise noise{ dims, static_cast<vtkm::IdComponent>(cycle) };
     inputDataSet = noise.Execute();
   }
 

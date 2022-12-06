@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_mesh_info_GhostCellClassify_h
 #define vtk_m_filter_mesh_info_GhostCellClassify_h
 
-#include <vtkm/filter/NewFilter.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -19,14 +19,14 @@ namespace filter
 {
 namespace mesh_info
 {
-class VTKM_FILTER_MESH_INFO_EXPORT GhostCellClassify : public vtkm::filter::NewFilter
+class VTKM_FILTER_MESH_INFO_EXPORT GhostCellClassify : public vtkm::filter::Filter
 {
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
   std::string GhostCellName;
 
 public:
   VTKM_CONT GhostCellClassify()
-    : NewFilter()
+    : Filter()
     , GhostCellName(vtkm::cont::GetGlobalGhostCellFieldName())
   {
   }

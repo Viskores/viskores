@@ -11,7 +11,7 @@
 include("${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestLib.cmake")
 
 REQUIRE_FLAG("VTKm_PERF_BENCH_PATH")
-REQUIRE_FLAG("VTKm_PERF_FILTER_NAME")
+REQUIRE_FLAG("VTKm_PERF_REGEX")
 REQUIRE_FLAG("VTKm_PERF_COMPARE_JSON")
 REQUIRE_FLAG("VTKm_PERF_STDOUT")
 
@@ -22,7 +22,8 @@ REQUIRE_FLAG_MUTABLE("VTKm_PERF_MIN_TIME")
 execute(
   COMMAND "${VTKm_PERF_BENCH_PATH}"
   --vtkm-device "${VTKm_PERF_BENCH_DEVICE}"
-  "--benchmark_filter=${VTKm_PERF_FILTER_NAME}"
+  ${VTKm_PERF_ARGS}
+  "--benchmark_filter=${VTKm_PERF_REGEX}"
   "--benchmark_out=${VTKm_PERF_COMPARE_JSON}"
   "--benchmark_repetitions=${VTKm_PERF_REPETITIONS}"
   "--benchmark_min_time=${VTKm_PERF_MIN_TIME}"

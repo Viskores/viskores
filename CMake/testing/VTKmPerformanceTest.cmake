@@ -11,18 +11,25 @@
 #-----------------------------------------------------------------------------
 # Adds a performance benchmark test
 #
-# add_benchmark_test(benchmark [ <filter_regex...> ])
-#
 # Usage:
-#   add_benchmark_test(FiltersBenchmark BenchThreshold BenchTetrahedralize)
+#   add_benchmark_test(benchmark
+#     [ NAME <name> ]
+#     [ ARGS <args...> ]
+#     [ REGEX <benchmark_regex...> ]
+#     )
 #
 # benchmark:    Target of an executable that uses Google Benchmark.
 #
-# filter_regex: CMake regexes that selects the specific benchmarks within the binary
+# NAME:         The name given to the CMake tests. The benchmark target name is used
+#               if NAME is not specified.
+#
+# ARGS:         Extra arguments passed to the benchmark executable when run.
+#
+# REGEX:        Regular expressions that select the specific benchmarks within the binary
 #               to be used. It populates the Google Benchmark
 #               --benchmark_filter parameter. When multiple regexes are passed
 #               as independent positional arguments, they are joined using the "|"
-#               regex operator before populating the  `--benchmark_filter` parameter
+#               regex operator before populating the  `--benchmark_filter` parameter.
 #
 function(add_benchmark_test benchmark)
 
@@ -34,10 +41,22 @@ function(add_benchmark_test benchmark)
 
   ###TEST VARIABLES############################################################
 
-  # Optional positional parameters for filter_regex
-  set(VTKm_PERF_FILTER_NAME ".*")
-  if (${ARGC} GREATER_EQUAL 2)
-    string(REPLACE ";" "|" VTKm_PERF_FILTER_NAME "${ARGN}")
+  set(options)
+  set(one_value_keywords NAME)
+  set(multi_value_keywords ARGS REGEX)
+  cmake_parse_arguments(PARSE_ARGV 1 VTKm_PERF "${options}" "${one_value_keywords}" "${multi_value_keywords}")
+  if (VTKm_PERF_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "Bad arguments to add_benchmark_test (${VTKm_PERF_UNPARSED_ARGUMENTS}).")
+  endif()
+
+  if (NOT VTKm_PERF_NAME)
+    set(VTKm_PERF_NAME ${benchmark})
+  endif()
+
+  if (VTKm_PERF_REGEX)
+    string(REPLACE ";" "|" VTKm_PERF_REGEX "${VTKm_PERF_REGEX}")
+  else()
+    set(VTKm_PERF_REGEX ".*")
   endif()
 
   set(VTKm_PERF_REMOTE_URL "https://gitlab.kitware.com/vbolea/vtk-m-benchmark-records.git")
@@ -49,22 +68,23 @@ function(add_benchmark_test benchmark)
   set(VTKm_PERF_DIST "normal")
 
   set(VTKm_PERF_REPO           "${CMAKE_BINARY_DIR}/vtk-m-benchmark-records")
-  set(VTKm_PERF_COMPARE_JSON   "${CMAKE_BINARY_DIR}/nocommit_${benchmark}.json")
-  set(VTKm_PERF_STDOUT         "${CMAKE_BINARY_DIR}/benchmark_${benchmark}.stdout")
-  set(VTKm_PERF_COMPARE_STDOUT "${CMAKE_BINARY_DIR}/compare_${benchmark}.stdout")
+  set(VTKm_PERF_COMPARE_JSON   "${CMAKE_BINARY_DIR}/nocommit_${VTKm_PERF_NAME}.json")
+  set(VTKm_PERF_STDOUT         "${CMAKE_BINARY_DIR}/benchmark_${VTKm_PERF_NAME}.stdout")
+  set(VTKm_PERF_COMPARE_STDOUT "${CMAKE_BINARY_DIR}/compare_${VTKm_PERF_NAME}.stdout")
 
   if (DEFINED ENV{CI_COMMIT_SHA})
-    set(VTKm_PERF_COMPARE_JSON "${CMAKE_BINARY_DIR}/$ENV{CI_COMMIT_SHA}_${benchmark}.json")
+    set(VTKm_PERF_COMPARE_JSON "${CMAKE_BINARY_DIR}/$ENV{CI_COMMIT_SHA}_${VTKm_PERF_NAME}.json")
   endif()
 
-  set(test_name "PerformanceTest${benchmark}")
+  set(test_name "PerformanceTest${VTKm_PERF_NAME}")
 
   ###TEST INVOKATIONS##########################################################
   add_test(NAME "${test_name}Run"
     COMMAND ${CMAKE_COMMAND}
     "-DVTKm_PERF_BENCH_DEVICE=Any"
     "-DVTKm_PERF_BENCH_PATH=${CMAKE_BINARY_DIR}/bin/${benchmark}"
-    "-DVTKm_PERF_FILTER_NAME=${VTKm_PERF_FILTER_NAME}"
+    "-DVTKm_PERF_ARGS=${VTKm_PERF_ARGS}"
+    "-DVTKm_PERF_REGEX=${VTKm_PERF_REGEX}"
     "-DVTKm_PERF_REPETITIONS=${VTKm_PERF_REPETITIONS}"
     "-DVTKm_PERF_MIN_TIME=${VTKm_PERF_MIN_TIME}"
     "-DVTKm_PERF_COMPARE_JSON=${VTKm_PERF_COMPARE_JSON}"

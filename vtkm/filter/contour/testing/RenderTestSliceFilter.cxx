@@ -24,7 +24,8 @@ void TestSliceStructuredPointsPlane()
 {
   std::cout << "Generate Image for Slice by plane on structured points" << std::endl;
 
-  vtkm::source::Wavelet wavelet(vtkm::Id3(-8), vtkm::Id3(8));
+  vtkm::source::Wavelet wavelet;
+  wavelet.SetExtent(vtkm::Id3(-8), vtkm::Id3(8));
   auto ds = wavelet.Execute();
 
   vtkm::Plane plane(vtkm::Plane::Vector{ 1, 1, 1 });
@@ -45,7 +46,8 @@ void TestSliceStructuredPointsSphere()
 {
   std::cout << "Generate Image for Slice by sphere on structured points" << std::endl;
 
-  vtkm::source::Wavelet wavelet(vtkm::Id3(-8), vtkm::Id3(8));
+  vtkm::source::Wavelet wavelet;
+  wavelet.SetExtent(vtkm::Id3(-8), vtkm::Id3(8));
   auto ds = wavelet.Execute();
 
   vtkm::Sphere sphere(8.5f);
@@ -66,7 +68,8 @@ void TestSliceUnstructuredGridPlane()
 {
   std::cout << "Generate Image for Slice by plane on unstructured grid" << std::endl;
 
-  vtkm::source::Wavelet wavelet(vtkm::Id3(-8), vtkm::Id3(8));
+  vtkm::source::Wavelet wavelet;
+  wavelet.SetExtent(vtkm::Id3(-8), vtkm::Id3(8));
   auto ds = wavelet.Execute();
   vtkm::filter::geometry_refinement::Tetrahedralize tetrahedralize;
   ds = tetrahedralize.Execute(ds);
@@ -89,7 +92,8 @@ void TestSliceUnstructuredGridCylinder()
 {
   std::cout << "Generate Image for Slice by cylinder on unstructured grid" << std::endl;
 
-  vtkm::source::Wavelet wavelet(vtkm::Id3(-8), vtkm::Id3(8));
+  vtkm::source::Wavelet wavelet;
+  wavelet.SetExtent(vtkm::Id3(-8), vtkm::Id3(8));
   auto ds = wavelet.Execute();
   vtkm::filter::geometry_refinement::Tetrahedralize tetrahedralize;
   ds = tetrahedralize.Execute(ds);

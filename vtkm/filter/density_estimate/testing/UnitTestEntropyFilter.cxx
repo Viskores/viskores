@@ -20,8 +20,8 @@ namespace
 void TestEntropy()
 {
   ///// make a data set /////
-  vtkm::Id3 dims(32, 32, 32);
-  vtkm::source::Tangle tangle(dims);
+  vtkm::source::Tangle tangle;
+  tangle.SetCellDimensions({ 32, 32, 32 });
   vtkm::cont::DataSet dataSet = tangle.Execute();
 
   vtkm::filter::density_estimate::Entropy entropyFilter;

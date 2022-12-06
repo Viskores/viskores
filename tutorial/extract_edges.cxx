@@ -20,9 +20,9 @@
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/MapFieldMergeAverage.h>
 #include <vtkm/filter/MapFieldPermutation.h>
-#include <vtkm/filter/NewFilter.h>
 #include <vtkm/filter/contour/Contour.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -149,7 +149,7 @@ VTKM_CONT bool DoMapField(
 
 } // anonymous namespace
 
-class ExtractEdges : public vtkm::filter::NewFilter
+class ExtractEdges : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;

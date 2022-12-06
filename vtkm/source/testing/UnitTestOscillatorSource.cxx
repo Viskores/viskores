@@ -18,7 +18,8 @@ void OscillatorSourceTest()
   vtkm::cont::Timer timer;
   timer.Start();
 
-  vtkm::source::Oscillator source(vtkm::Id3{ 20, 20, 20 });
+  vtkm::source::Oscillator source;
+  source.SetPointDimensions({ 21, 21, 21 });
   source.SetTime(0.5);
   source.AddDamped(0.25f, 0.25f, 0.25f, 0.5f, 0.1f, 0.2f);
   source.AddDecaying(0.5f, 0.5f, 0.5f, 0.35f, 0.2f, 0.1f);
