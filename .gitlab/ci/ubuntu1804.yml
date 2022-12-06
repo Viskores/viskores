@@ -46,7 +46,6 @@ build:ubuntu1804_gcc7:
     - vtkm
     - docker
     - linux
-    - cuda-rt
     - large-memory
   extends:
     - .ubuntu1804_cuda
@@ -85,7 +84,6 @@ build:ubuntu1804_clang_cuda:
     - vtkm
     - docker
     - linux
-    - cuda-rt
     - large-memory
   extends:
     - .ubuntu1804_cuda
@@ -193,7 +191,6 @@ build:ubuntu1804_kokkos:
     - vtkm
     - docker
     - linux
-    - cuda-rt
     - large-memory
   extends:
     - .ubuntu1804_cuda_kokkos
