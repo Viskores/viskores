@@ -128,7 +128,7 @@ struct PerlinNoiseWorklet : public vtkm::worklet::WorkletVisitPointsWithCells
 class PerlinNoiseField : public vtkm::filter::FilterField
 {
 public:
-  VTKM_CONT PerlinNoiseField(vtkm::IdComponent tableSize, vtkm::Id seed)
+  VTKM_CONT PerlinNoiseField(vtkm::IdComponent tableSize, vtkm::IdComponent seed)
     : TableSize(tableSize)
     , Seed(seed)
   {
@@ -149,26 +149,7 @@ private:
   VTKM_CONT void GeneratePermutations()
   {
     std::mt19937_64 rng;
-    if (this->Seed != 0)
-    {
-      rng.seed(this->Seed);
-    }
-    else
-    {
-      // If a seed has not been chosen, create a unique seed here. It is done here instead
-      // of the `PerlinNoise` source constructor for 2 reasons. First, `std::random_device`
-      // can be slow. If the user wants to specify a seed, it makes no sense to spend
-      // time generating a random seed only to overwrite it. Second, creating the seed
-      // here allows subsequent runs of the `PerlinNoise` source to have different random
-      // results if a seed is not specified.
-      //
-      // It is also worth noting that the current time is added to the random number.
-      // This is because the spec for std::random_device allows it to be deterministic
-      // if nondeterministic hardware is unavailable and the deterministic numbers can
-      // be the same for every execution of the program. Adding the current time is
-      // a fallback for that case.
-      rng.seed(std::random_device{}() + time(NULL));
-    }
+    rng.seed(this->Seed);
     std::uniform_int_distribution<vtkm::IdComponent> distribution(0, this->TableSize - 1);
 
     vtkm::cont::ArrayHandle<vtkm::Id> perms;
@@ -187,7 +168,7 @@ private:
   }
 
   vtkm::IdComponent TableSize;
-  vtkm::Id Seed;
+  vtkm::IdComponent Seed;
   vtkm::cont::ArrayHandle<vtkm::Id> Permutations;
 };
 
@@ -243,7 +224,26 @@ vtkm::cont::DataSet PerlinNoise::DoExecute() const
 
   auto tableSize =
     static_cast<vtkm::IdComponent>(vtkm::Max(cellDims[0], vtkm::Max(cellDims[1], cellDims[2])));
-  PerlinNoiseField noiseGenerator(tableSize, this->Seed);
+
+  vtkm::IdComponent seed = this->Seed;
+  if (!this->SeedSet)
+  {
+    // If a seed has not been chosen, create a unique seed here. It is done here instead
+    // of the `PerlinNoise` source constructor for 2 reasons. First, `std::random_device`
+    // can be slow. If the user wants to specify a seed, it makes no sense to spend
+    // time generating a random seed only to overwrite it. Second, creating the seed
+    // here allows subsequent runs of the `PerlinNoise` source to have different random
+    // results if a seed is not specified.
+    //
+    // It is also worth noting that the current time is added to the random number.
+    // This is because the spec for std::random_device allows it to be deterministic
+    // if nondeterministic hardware is unavailable and the deterministic numbers can
+    // be the same for every execution of the program. Adding the current time is
+    // a fallback for that case.
+    seed = static_cast<vtkm::IdComponent>(std::random_device{}() + time(NULL));
+  }
+
+  PerlinNoiseField noiseGenerator(tableSize, seed);
   noiseGenerator.SetOutputFieldName("perlinnoise");
   dataSet = noiseGenerator.Execute(dataSet);
 
