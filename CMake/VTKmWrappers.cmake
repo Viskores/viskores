@@ -197,7 +197,7 @@ endfunction()
 #
 # If VTK-m was built with CMake 3.18+ and you are using CMake 3.18+ and have
 # a cmake_minimum_required of 3.18 or have set policy CMP0105 to new, this will
-# return an empty string as the `vtkm::cuda` target will correctly propagate
+# return an empty string as the `vtkm_cuda` target will correctly propagate
 # all the necessary flags.
 #
 # This is required for CMake < 3.18 as they don't support the `$<DEVICE_LINK>`
@@ -211,11 +211,11 @@ endfunction()
 #
 function(vtkm_get_cuda_flags settings_var)
 
-  if(TARGET vtkm::cuda)
+  if(TARGET vtkm_cuda)
     if(POLICY CMP0105)
       cmake_policy(GET CMP0105 does_device_link)
       get_property(arch_flags
-        TARGET vtkm::cuda
+        TARGET vtkm_cuda
         PROPERTY INTERFACE_LINK_OPTIONS)
       if(arch_flags AND CMP0105 STREQUAL "NEW")
         return()
@@ -223,7 +223,7 @@ function(vtkm_get_cuda_flags settings_var)
     endif()
 
     get_property(arch_flags
-      TARGET    vtkm::cuda
+      TARGET    vtkm_cuda
       PROPERTY  cuda_architecture_flags)
     set(${settings_var} "${${settings_var}} ${arch_flags}" PARENT_SCOPE)
   endif()
@@ -259,6 +259,66 @@ function(vtkm_add_drop_unused_function_flags uses_vtkm_target)
   endif()
 endfunction()
 
+#-----------------------------------------------------------------------------
+# This function takes a target name and returns the mangled version of its name
+# in a form that complies with the VTK-m export target naming scheme.
+macro(vtkm_target_mangle output target)
+  string(REPLACE "vtkm_" "" ${output} ${target})
+endmacro()
+
+#-----------------------------------------------------------------------------
+# Enable VTK-m targets to be installed.
+#
+# This function decorates the `install` CMake function mangling the exported
+# target names to comply with the VTK-m exported target names scheme. Use this
+# function instead of the canonical CMake `install` function for VTK-m targets.
+#
+# Signature:
+# vtkm_install_targets(
+#   TARGETS <target[s]>
+#   [EXPORT <export_name>]
+#   [ARGS <cmake_install_args>]
+#   )
+#
+# Usage:
+#   add_library(vtkm_library)
+#   vtkm_install_targets(TARGETS vtkm_library ARGS COMPONENT core)
+#
+# TARGETS: List of targets to be installed.
+#
+# EXPORT:  [OPTIONAL] The name of the export set to which this target will be
+#          added. If omitted vtkm_install_targets will use the value of
+#          VTKm_EXPORT_NAME by default.
+#
+# ARGS:    [OPTIONAL] Any argument other than `TARGETS` and `EXPORT` accepted
+#          by the `install` CMake function:
+#          <https://cmake.org/cmake/help/latest/command/install.html>
+#
+function(vtkm_install_targets)
+  set(oneValueArgs EXPORT)
+  set(multiValueArgs TARGETS ARGS)
+  cmake_parse_arguments(VTKm_INSTALL "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  set(export_name ${VTKm_EXPORT_NAME})
+  if(VTKm_INSTALL_EXPORT)
+    set(export_name ${VTKm_INSTALL_EXPORT})
+  endif()
+
+  if(NOT DEFINED VTKm_INSTALL_TARGETS)
+    message(FATAL_ERROR "vtkm_install_targets invoked without TARGETS arguments.")
+  endif()
+
+  if(DEFINED VTKm_INSTALL_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "vtkm_install_targets missing ARGS keyword prepending install arguments")
+  endif()
+
+  foreach(tgt IN LISTS VTKm_INSTALL_TARGETS)
+    vtkm_target_mangle(tgt_mangled ${tgt})
+    set_target_properties(${tgt} PROPERTIES EXPORT_NAME ${tgt_mangled})
+  endforeach()
+
+  install(TARGETS ${VTKm_INSTALL_TARGETS} EXPORT ${export_name} ${VTKm_INSTALL_ARGS})
+endfunction(vtkm_install_targets)
 
 #-----------------------------------------------------------------------------
 # Add a relevant information to target that wants to use VTK-m.
@@ -301,7 +361,7 @@ endfunction()
 #
 #  If VTK-m was built with CMake 3.18+ and you are using CMake 3.18+ and have
 #  a cmake_minimum_required of 3.18 or have set policy CMP0105 to new, this will
-#  return an empty string as the `vtkm::cuda` target will correctly propagate
+#  return an empty string as the `vtkm_cuda` target will correctly propagate
 #  all the necessary flags.
 #
 #  Note: calling `vtkm_add_target_information` multiple times with
@@ -374,7 +434,7 @@ function(vtkm_add_target_information uses_vtkm_target)
     endforeach()
   endif()
 
-  if((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
+  if((TARGET vtkm_cuda) OR (TARGET vtkm::kokkos_cuda))
     set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
   elseif(TARGET vtkm::kokkos_hip)
     set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "HIP")
@@ -513,8 +573,7 @@ function(vtkm_library)
   endif()
 
   #install the library itself
-  install(TARGETS ${lib_name}
-    EXPORT ${VTKm_EXPORT_NAME}
+  vtkm_install_targets(TARGETS ${lib_name} ARGS
     ARCHIVE DESTINATION ${VTKm_INSTALL_LIB_DIR}
     LIBRARY DESTINATION ${VTKm_INSTALL_LIB_DIR}
     RUNTIME DESTINATION ${VTKm_INSTALL_BIN_DIR}

@@ -16,7 +16,7 @@ project(ParticleAdvection CXX)
 find_package(VTKm REQUIRED QUIET)
 
 add_executable(ftle LagrangianStructures.cxx)
-target_link_libraries(ftle PRIVATE vtkm_cont vtkm_worklet)
+target_link_libraries(ftle PRIVATE vtkm::cont vtkm::worklet)
 vtkm_add_target_information(ftle
                             DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES  LagrangianStructures.cxx)

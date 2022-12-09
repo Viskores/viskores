@@ -15,10 +15,10 @@ project(TemporalAdvection CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if(TARGET vtkm_filter_flow AND TARGET vtkm_io)
+if(TARGET vtkm::filter_flow AND TARGET vtkm::io)
   add_executable(Temporal_Advection TemporalAdvection.cxx)
   vtkm_add_target_information(Temporal_Advection
     DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
     DEVICE_SOURCES TemporalAdvection.cxx)
-  target_link_libraries(Temporal_Advection PRIVATE vtkm_filter_flow vtkm_io)
+  target_link_libraries(Temporal_Advection PRIVATE vtkm::filter_flow vtkm::io)
 endif()

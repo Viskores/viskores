@@ -41,38 +41,39 @@ function(vtkm_extract_real_library library real_library)
   endif()
 endfunction()
 
-if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
+if(VTKm_ENABLE_TBB AND NOT TARGET vtkm_tbb)
   # Skip find_package(TBB) if we already have it
   if (NOT TARGET TBB::tbb)
     find_package(TBB REQUIRED)
   endif()
 
-  add_library(vtkmTBB INTERFACE)
-  add_library(vtkm::tbb ALIAS vtkmTBB)
-  target_link_libraries(vtkmTBB INTERFACE TBB::tbb)
-  target_compile_definitions(vtkmTBB INTERFACE "TBB_VERSION_MAJOR=${TBB_VERSION_MAJOR}")
-  set_target_properties(vtkmTBB PROPERTIES EXPORT_NAME vtkm::tbb)
-  install(TARGETS vtkmTBB EXPORT ${VTKm_EXPORT_NAME})
+  add_library(vtkm_tbb INTERFACE)
+  target_link_libraries(vtkm_tbb INTERFACE TBB::tbb)
+  target_compile_definitions(vtkm_tbb INTERFACE "TBB_VERSION_MAJOR=${TBB_VERSION_MAJOR}")
+  set_target_properties(vtkm_tbb PROPERTIES EXPORT_NAME tbb)
+  install(TARGETS vtkm_tbb EXPORT ${VTKm_EXPORT_NAME})
 endif()
 
-if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
+if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm_openmp)
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
-  add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
+  add_library(vtkm_openmp INTERFACE)
+  set_target_properties(vtkm_openmp PROPERTIES EXPORT_NAME openmp)
   if(OpenMP_CXX_FLAGS)
-    set_property(TARGET vtkm::openmp
+    set_property(TARGET vtkm_openmp
       APPEND PROPERTY INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>)
 
     if(VTKm_ENABLE_CUDA)
       string(REPLACE ";" "," openmp_cuda_flags "-Xcompiler=${OpenMP_CXX_FLAGS}")
-      set_property(TARGET vtkm::openmp
+      set_property(TARGET vtkm_openmp
         APPEND PROPERTY INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:${openmp_cuda_flags}>)
     endif()
   endif()
   if(OpenMP_CXX_LIBRARIES)
-    set_target_properties(vtkm::openmp PROPERTIES
+    set_target_properties(vtkm_openmp PROPERTIES
       INTERFACE_LINK_LIBRARIES "${OpenMP_CXX_LIBRARIES}")
   endif()
+  install(TARGETS vtkm_openmp EXPORT ${VTKm_EXPORT_NAME})
 endif()
 
 if(VTKm_ENABLE_CUDA)
@@ -84,10 +85,9 @@ if(VTKm_ENABLE_CUDA)
     message(FATAL_ERROR "VTK-m CUDA support requires version 9.2+")
   endif()
 
-  if(NOT TARGET vtkm::cuda)
+  if(NOT TARGET vtkm_cuda)
     add_library(vtkm_cuda INTERFACE)
-    add_library(vtkm::cuda ALIAS vtkm_cuda)
-    set_target_properties(vtkm_cuda PROPERTIES EXPORT_NAME vtkm::cuda)
+    set_target_properties(vtkm_cuda PROPERTIES EXPORT_NAME cuda)
 
     install(TARGETS vtkm_cuda EXPORT ${VTKm_EXPORT_NAME})
     # Reserve `requires_static_builds` to potential work around issues

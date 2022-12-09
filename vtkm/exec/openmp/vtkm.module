@@ -5,4 +5,4 @@ GROUPS
 DEPENDS
   vtkm_exec
 TEST_DEPENDS
-  vtkm::openmp
+  vtkm_openmp
