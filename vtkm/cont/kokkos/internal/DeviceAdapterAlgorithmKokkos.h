@@ -776,37 +776,18 @@ public:
   }
 
 protected:
-  // Used to define valid operators in Thrust (only used if thrust is enabled)
-  template <typename Compare>
-  struct ThrustSortByKeySupport : std::false_type
-  {
-  };
-
   // Kokkos currently (11/10/2022) does not support a sort_by_key operator
   // so instead we are using thrust if and only if HIP or CUDA are the backends for Kokkos
 #if defined(VTKM_KOKKOS_HIP) || defined(VTKM_KOKKOS_CUDA)
 
-  // Valid thrust instantiations
-  template <>
-  struct ThrustSortByKeySupport<vtkm::SortLess> : std::true_type
-  {
-    template <typename T>
-    using Operator = thrust::less<T>;
-  };
-  template <>
-  struct ThrustSortByKeySupport<vtkm::SortGreater> : std::true_type
-  {
-    template <typename T>
-    using Operator = thrust::greater<T>;
-  };
-
   template <typename T, typename U, typename BinaryCompare>
-  VTKM_CONT static void SortByKeyImpl(vtkm::cont::ArrayHandle<T>& keys,
-                                      vtkm::cont::ArrayHandle<U>& values,
-                                      BinaryCompare,
-                                      std::true_type,
-                                      std::true_type,
-                                      std::true_type)
+  VTKM_CONT static std::enable_if_t<(std::is_same<BinaryCompare, vtkm::SortLess>::value ||
+                                     std::is_same<BinaryCompare, vtkm::SortGreater>::value)>
+  SortByKeyImpl(vtkm::cont::ArrayHandle<T>& keys,
+                vtkm::cont::ArrayHandle<U>& values,
+                BinaryCompare,
+                std::true_type,
+                std::true_type)
   {
     vtkm::cont::Token token;
     auto keys_portal = keys.PrepareForInPlace(vtkm::cont::DeviceAdapterTagKokkos{}, token);
@@ -816,12 +797,19 @@ protected:
                                                   keys_portal.GetNumberOfValues());
     kokkos::internal::KokkosViewExec<U> values_view(values_portal.GetArray(),
                                                     values_portal.GetNumberOfValues());
-    using ThrustOperator = typename ThrustSortByKeySupport<BinaryCompare>::template Operator<T>;
 
     thrust::device_ptr<T> keys_begin(keys_view.data());
     thrust::device_ptr<T> keys_end(keys_view.data() + keys_view.size());
     thrust::device_ptr<U> values_begin(values_view.data());
-    thrust::sort_by_key(keys_begin, keys_end, values_begin, ThrustOperator());
+
+    if (std::is_same<BinaryCompare, vtkm::SortLess>::value)
+    {
+      thrust::sort_by_key(keys_begin, keys_end, values_begin, thrust::less<T>());
+    }
+    else
+    {
+      thrust::sort_by_key(keys_begin, keys_end, values_begin, thrust::greater<T>());
+    }
   }
 
 #endif
@@ -832,14 +820,12 @@ protected:
             class StorageU,
             class BinaryCompare,
             typename ValidKeys,
-            typename ValidValues,
-            typename ValidCompare>
+            typename ValidValues>
   VTKM_CONT static void SortByKeyImpl(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                       vtkm::cont::ArrayHandle<U, StorageU>& values,
                                       BinaryCompare binary_compare,
                                       ValidKeys,
-                                      ValidValues,
-                                      ValidCompare)
+                                      ValidValues)
   {
     // Default to general algorithm
     Superclass::SortByKey(keys, values, binary_compare);
@@ -866,8 +852,7 @@ public:
                   values,
                   binary_compare,
                   typename std::is_scalar<T>::type{},
-                  typename std::is_scalar<U>::type{},
-                  typename ThrustSortByKeySupport<BinaryCompare>::type{});
+                  typename std::is_scalar<U>::type{});
   }
 
   //----------------------------------------------------------------------------
