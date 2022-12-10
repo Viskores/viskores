@@ -13,10 +13,10 @@ project(ContourTree CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if (TARGET vtkm_filter_scalar_topology)
+if (TARGET vtkm::filter_scalar_topology)
   add_executable(ContourTreeMesh2D ContourTreeMesh2D.cxx)
-  target_link_libraries(ContourTreeMesh2D vtkm_filter_core vtkm_filter_scalar_topology)
+  target_link_libraries(ContourTreeMesh2D vtkm::filter_core vtkm::filter_scalar_topology)
 
   add_executable(ContourTreeMesh3D ContourTreeMesh3D.cxx)
-  target_link_libraries(ContourTreeMesh3D vtkm_filter_core vtkm_filter_scalar_topology)
+  target_link_libraries(ContourTreeMesh3D vtkm::filter_core vtkm::filter_scalar_topology)
 endif()

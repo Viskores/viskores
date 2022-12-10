@@ -53,7 +53,7 @@ vtkm_unit_tests(
   LIBRARIES vtkm_source vtkm_worklet vtkm_filter vtkm_io
   USE_VTKM_JOB_POOL
   )
-if (TARGET vtkm::cuda)
+if (TARGET vtkm_cuda)
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
      CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
     set(problematic_cuda_srcs

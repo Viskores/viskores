@@ -24,7 +24,7 @@ set(headers
 vtkm_declare_headers(${headers})
 
 
-if (TARGET vtkm::cuda)
+if (TARGET vtkm_cuda)
   target_sources(vtkm_cont PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/CudaAllocator.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmCuda.cu

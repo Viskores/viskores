@@ -12,13 +12,13 @@ project(PolyLineArchimedeanHelix CXX)
 
 find_package(VTKm REQUIRED QUIET)
 
-if (TARGET vtkm_rendering)
+if (TARGET vtkm::rendering)
   # TODO: This example should be changed from using the Tube worklet to using
-  # the Tube filter (in the vtkm_filter_geometry_refinement library). Then
+  # the Tube filter (in the vtkm::filter_geometry_refinement library). Then
   # compiling it would no longer require a device compiler and the example
   # would generally be simpler.
   add_executable(PolyLineArchimedeanHelix PolyLineArchimedeanHelix.cxx)
-  target_link_libraries(PolyLineArchimedeanHelix PRIVATE vtkm_rendering)
+  target_link_libraries(PolyLineArchimedeanHelix PRIVATE vtkm::rendering)
   vtkm_add_target_information(PolyLineArchimedeanHelix
     DROP_UNUSED_SYMBOLS
     MODIFY_CUDA_FLAGS

@@ -29,7 +29,7 @@ target_sources(vtkm_cont PRIVATE
   )
 
 #-----------------------------------------------------------------------------
-if (TARGET vtkm::openmp)
+if (TARGET vtkm_openmp)
   target_sources(vtkm_cont PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmOpenMP.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/ParallelRadixSortOpenMP.cxx

@@ -28,7 +28,7 @@ target_sources(vtkm_cont PRIVATE
   )
 
 #-----------------------------------------------------------------------------
-if (TARGET vtkm::tbb)
+if (TARGET vtkm_tbb)
   target_sources(vtkm_cont PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmTBB.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/ParallelSortTBB.cxx

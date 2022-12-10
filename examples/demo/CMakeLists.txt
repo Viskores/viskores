@@ -13,7 +13,7 @@ project(VTKmDemo CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if(TARGET vtkm_rendering AND TARGET vtkm_filter_contour AND TARGET vtkm_source)
+if(TARGET vtkm::rendering AND TARGET vtkm::filter_contour AND TARGET vtkm::source)
   add_executable(Demo Demo.cxx)
-  target_link_libraries(Demo PRIVATE vtkm_rendering vtkm_filter_contour vtkm_source)
+  target_link_libraries(Demo PRIVATE vtkm::rendering vtkm::filter_contour vtkm::source)
 endif()

@@ -13,7 +13,7 @@ project(Oscillator CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if(TARGET vtkm_source)
+if(TARGET vtkm::source)
   add_executable(Oscillator Oscillator.cxx)
-  target_link_libraries(Oscillator PRIVATE vtkm_source)
+  target_link_libraries(Oscillator PRIVATE vtkm::source)
 endif()
