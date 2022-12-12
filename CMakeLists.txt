@@ -90,6 +90,7 @@ endmacro ()
 # Configurable Options
 vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
 vtkm_option(VTKm_ENABLE_KOKKOS "Enable Kokkos support" OFF)
+vtkm_option(VTKm_ENABLE_KOKKOS_THRUST "Enable Kokkos thrust support (only valid with CUDA and HIP)" ON)
 vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
 vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)

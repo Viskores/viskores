@@ -300,6 +300,10 @@
 #ifndef VTKM_KOKKOS_HIP
 #cmakedefine VTKM_KOKKOS_HIP
 #endif
+// Mark if Kokkos algorithms should use thrust
+#if defined(VTKM_KOKKOS_HIP) || defined(VTKM_KOKKOS_CUDA)
+#cmakedefine VTKM_ENABLE_KOKKOS_THRUST
+#endif
 
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI
