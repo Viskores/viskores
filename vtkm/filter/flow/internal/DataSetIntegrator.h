@@ -161,32 +161,32 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
   {
     auto p = portal.Get(i);
 
-    if (p.Status.CheckTerminate())
+    if (p.GetStatus().CheckTerminate())
     {
       dsiInfo.TermIdx.emplace_back(i);
-      dsiInfo.TermID.emplace_back(p.ID);
+      dsiInfo.TermID.emplace_back(p.GetID());
     }
     else
     {
-      const auto& it = dsiInfo.ParticleBlockIDsMap.find(p.ID);
+      const auto& it = dsiInfo.ParticleBlockIDsMap.find(p.GetID());
       VTKM_ASSERT(it != dsiInfo.ParticleBlockIDsMap.end());
       auto currBIDs = it->second;
       VTKM_ASSERT(!currBIDs.empty());
 
       std::vector<vtkm::Id> newIDs;
-      if (p.Status.CheckSpatialBounds() && !p.Status.CheckTookAnySteps())
+      if (p.GetStatus().CheckSpatialBounds() && !p.GetStatus().CheckTookAnySteps())
         newIDs.assign(std::next(currBIDs.begin(), 1), currBIDs.end());
       else
-        newIDs = dsiInfo.BoundsMap.FindBlocks(p.Pos, currBIDs);
+        newIDs = dsiInfo.BoundsMap.FindBlocks(p.GetPosition(), currBIDs);
 
       //reset the particle status.
-      p.Status = vtkm::ParticleStatus();
+      p.GetStatus() = vtkm::ParticleStatus();
 
       if (newIDs.empty()) //No blocks, we're done.
       {
-        p.Status.SetTerminate();
+        p.GetStatus().SetTerminate();
         dsiInfo.TermIdx.emplace_back(i);
-        dsiInfo.TermID.emplace_back(p.ID);
+        dsiInfo.TermID.emplace_back(p.GetID());
       }
       else
       {
@@ -210,12 +210,12 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
         if (dstRank == this->Rank)
         {
           dsiInfo.A.emplace_back(p);
-          dsiInfo.IdMapA[p.ID] = newIDs;
+          dsiInfo.IdMapA[p.GetID()] = newIDs;
         }
         else
         {
           dsiInfo.I.emplace_back(p);
-          dsiInfo.IdMapI[p.ID] = newIDs;
+          dsiInfo.IdMapI[p.GetID()] = newIDs;
         }
       }
       portal.Set(i, p);

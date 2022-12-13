@@ -57,7 +57,7 @@ public:
                             vtkm::Vec3f& pointOut) const
   {
     vtkm::VecVariable<vtkm::Vec3f, 2> values;
-    status = evaluator.Evaluate(pointIn.Pos, 0.5f, values);
+    status = evaluator.Evaluate(pointIn.GetPosition(), 0.5f, values);
     if (values.GetNumberOfComponents() > 0)
       pointOut = values[0];
   }
