@@ -132,10 +132,10 @@ and then build. Here are some example *nix commands for the process
 (individual commands may vary).
 
 ```sh
-$ tar xvzf ~/Downloads/vtk-m-v1.4.0.tar.gz
+$ tar xvzf ~/Downloads/vtk-m-v1.9.0.tar.gz
 $ mkdir vtkm-build
 $ cd vtkm-build
-$ cmake-gui ../vtk-m-v1.4.0
+$ cmake-gui ../vtk-m-v1.9.0
 $ cmake --build -j .              # Runs make (or other build program)
 ```
 
@@ -147,76 +147,109 @@ Users Guide].
 
 The VTK-m source distribution includes a number of examples. The goal of the
 VTK-m examples is to illustrate specific VTK-m concepts in a consistent and
-simple format. However, these examples only cover a small part of the
+simple format. However, these examples only cover a small portion of the
 capabilities of VTK-m.
 
-Below is a simple example of using VTK-m to load a VTK image file, run the
-Marching Cubes algorithm on it, and render the results to an image:
+Below is a simple example of using VTK-m to create a simple data set and use VTK-m's rendering
+engine to render an image and write that image to a file. It then computes an isosurface on the
+input data set and renders this output data set in a separate image file:
 
 ```cpp
-#include <vtkm/Bounds.h>
-#include <vtkm/Range.h>
-#include <vtkm/cont/ColorTable.h>
-#include <vtkm/filter/Contour.h>
-#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/cont/Initialize.h>
+#include <vtkm/source/Tangle.h>
+
 #include <vtkm/rendering/Actor.h>
-#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/MapperRayTracer.h>
+#include <vtkm/rendering/MapperVolume.h>
+#include <vtkm/rendering/MapperWireframer.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
 
-vtkm::io::VTKDataSetReader reader("path/to/vtk_image_file.vtk");
-vtkm::cont::DataSet inputData = reader.ReadDataSet();
-std::string fieldName = "scalars";
+#include <vtkm/filter/contour/Contour.h>
 
-vtkm::Range range;
-inputData.GetPointField(fieldName).GetRange(&range);
-vtkm::Float64 isovalue = range.Center();
+using vtkm::rendering::CanvasRayTracer;
+using vtkm::rendering::MapperRayTracer;
+using vtkm::rendering::MapperVolume;
+using vtkm::rendering::MapperWireframer;
 
-// Create an isosurface filter
-vtkm::filter::Contour filter;
-filter.SetIsoValue(0, isovalue);
-filter.SetActiveField(fieldName);
-vtkm::cont::DataSet outputData = filter.Execute(inputData);
+int main(int argc, char* argv[])
+{
+  vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::Strict);
 
-// compute the bounds and extends of the input data
-vtkm::Bounds coordsBounds = inputData.GetCoordinateSystem().GetBounds();
+  auto tangle = vtkm::source::Tangle(vtkm::Id3{ 50, 50, 50 });
+  vtkm::cont::DataSet tangleData = tangle.Execute();
+  std::string fieldName = "tangle";
 
-// setup a camera and point it to towards the center of the input data
-vtkm::rendering::Camera camera;
-camera.ResetToBounds(coordsBounds);
-vtkm::cont::ColorTable colorTable("inferno");
+  // Set up a camera for rendering the input data
+  vtkm::rendering::Camera camera;
+  camera.SetLookAt(vtkm::Vec3f_32(0.5, 0.5, 0.5));
+  camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
+  camera.SetClippingRange(1.f, 10.f);
+  camera.SetFieldOfView(60.f);
+  camera.SetPosition(vtkm::Vec3f_32(1.5, 1.5, 1.5));
+  vtkm::cont::ColorTable colorTable("inferno");
 
-// Create a mapper, canvas and view that will be used to render the scene
-vtkm::rendering::Scene scene;
-vtkm::rendering::MapperRayTracer mapper;
-vtkm::rendering::CanvasRayTracer canvas(512, 512);
-vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
+  // Background color:
+  vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
+  vtkm::rendering::Actor actor(tangleData.GetCellSet(),
+                               tangleData.GetCoordinateSystem(),
+                               tangleData.GetField(fieldName),
+                               colorTable);
+  vtkm::rendering::Scene scene;
+  scene.AddActor(actor);
+  // 2048x2048 pixels in the canvas:
+  CanvasRayTracer canvas(2048, 2048);
+  // Create a view and use it to render the input data using OS Mesa
 
-// Render an image of the output isosurface
-scene.AddActor(vtkm::rendering::Actor(outputData.GetCellSet(),
-                                      outputData.GetCoordinateSystem(),
-                                      outputData.GetField(fieldName),
-                                      colorTable));
-vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
-view.Paint();
-view.SaveAs("demo_output.png");
+  vtkm::rendering::View3D view(scene, MapperVolume(), canvas, camera, bg);
+  view.Paint();
+  view.SaveAs("volume.png");
+
+  // Compute an isosurface:
+  vtkm::filter::contour::Contour filter;
+  // [min, max] of the tangle field is [-0.887, 24.46]:
+  filter.SetIsoValue(3.0);
+  filter.SetActiveField(fieldName);
+  vtkm::cont::DataSet isoData = filter.Execute(tangleData);
+  // Render a separate image with the output isosurface
+  vtkm::rendering::Actor isoActor(
+    isoData.GetCellSet(), isoData.GetCoordinateSystem(), isoData.GetField(fieldName), colorTable);
+  // By default, the actor will automatically scale the scalar range of the color table to match
+  // that of the data. However, we are coloring by the scalar that we just extracted a contour
+  // from, so we want the scalar range to match that of the previous image.
+  isoActor.SetScalarRange(actor.GetScalarRange());
+  vtkm::rendering::Scene isoScene;
+  isoScene.AddActor(isoActor);
+
+  // Wireframe surface:
+  vtkm::rendering::View3D isoView(isoScene, MapperWireframer(), canvas, camera, bg);
+  isoView.Paint();
+  isoView.SaveAs("isosurface_wireframer.png");
+
+  // Smooth surface:
+  vtkm::rendering::View3D solidView(isoScene, MapperRayTracer(), canvas, camera, bg);
+  solidView.Paint();
+  solidView.SaveAs("isosurface_raytracer.png");
+
+  return 0;
+}
 ```
 
 A minimal CMakeLists.txt such as the following one can be used to build this
 example.
 
 ```CMake
-project(example)
+cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
+project(VTKmDemo CXX)
 
-set(VTKm_DIR "/somepath/lib/cmake/vtkm-XYZ")
+#Find the VTK-m package
+find_package(VTKm REQUIRED QUIET)
 
-find_package(VTKm REQUIRED)
-
-add_executable(example example.cxx)
-target_link_libraries(example vtkm_cont vtkm_rendering)
+if(TARGET vtkm_rendering)
+  add_executable(Demo Demo.cxx)
+  target_link_libraries(Demo PRIVATE vtkm_filter vtkm_rendering vtkm_source)
+endif()
 ```
 
 ## License ##
@@ -229,11 +262,11 @@ See [LICENSE.txt](LICENSE.txt) for details.
 [VTK-m Coding Conventions]: docs/CodingConventions.md
 [VTK-m Doxygen latest]:     https://docs-m.vtk.org/latest/index.html
 [VTK-m Doxygen nightly]:    https://docs-m.vtk.org/nightly/
-[VTK-m download page]:      http://m.vtk.org/index.php/VTK-m_Releases
+[VTK-m download page]:      https://gitlab.kitware.com/vtk/vtk-m/-/releases
 [VTK-m git repository]:     https://gitlab.kitware.com/vtk/vtk-m/
 [VTK-m Issue Tracker]:      https://gitlab.kitware.com/vtk/vtk-m/-/issues
 [VTK-m Overview]:           http://m.vtk.org/images/2/29/VTKmVis2016.pptx
-[VTK-m Users Guide]:        http://m.vtk.org/images/c/c8/VTKmUsersGuide.pdf
+[VTK-m Users Guide]:        https://gitlab.kitware.com/vtk/vtk-m-user-guide/-/wikis/home
 [VTK-m users email list]:   http://vtk.org/mailman/listinfo/vtkm
 [VTK-m Wiki]:               http://m.vtk.org/
 [VTK-m Tutorial]:           http://m.vtk.org/index.php/Tutorial
