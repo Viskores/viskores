@@ -57,7 +57,7 @@ public:
 
   VTKM_EXEC void operator()(const vtkm::Particle& particle, vtkm::Vec3f& pt) const
   {
-    pt = particle.Pos;
+    pt = particle.GetPosition();
   }
 };
 
@@ -72,8 +72,8 @@ public:
                             const vtkm::Vec3f& seed,
                             vtkm::Particle& particle) const
   {
-    particle.ID = index;
-    particle.Pos = seed;
+    particle.SetID(index);
+    particle.SetPosition(seed);
   }
 };
 

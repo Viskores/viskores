@@ -147,7 +147,7 @@ public:
                             vtkm::Vec3f& pointOut) const
   {
     vtkm::VecVariable<vtkm::Vec3f, 2> values;
-    status = evaluator.Evaluate(pointIn.Pos, pointIn.Time, values);
+    status = evaluator.Evaluate(pointIn.GetPosition(), pointIn.GetTime(), values);
     pointOut = values[0];
   }
 };
@@ -228,7 +228,7 @@ void ValidateIntegrator(const IntegratorType& integrator,
     vtkm::Vec3f result = resultsPortal.Get(index);
     VTKM_TEST_ASSERT(status.CheckOk(), "Error in evaluator for " + msg);
     if (status.CheckSpatialBounds())
-      VTKM_TEST_ASSERT(result == pointsPortal.Get(index).Pos,
+      VTKM_TEST_ASSERT(result == pointsPortal.Get(index).GetPosition(),
                        "Error in evaluator result for [OUTSIDE SPATIAL]" + msg);
     else
       VTKM_TEST_ASSERT(result == expStepResults[static_cast<size_t>(index)],
@@ -322,7 +322,7 @@ void TestEvaluators()
 
         GenerateRandomParticles(pointIns, 38, interiorBounds);
         for (auto& p : pointIns)
-          stepResult.push_back(p.Pos + vec * stepSize);
+          stepResult.push_back(p.GetPosition() + vec * stepSize);
 
         vtkm::Range xRange, yRange, zRange;
 
@@ -414,14 +414,16 @@ void TestGhostCellEvaluators()
     for (vtkm::Id i = 0; i < numSeeds; i++)
     {
       const auto& p = posPortal.Get(i);
-      VTKM_TEST_ASSERT(p.Status.CheckSpatialBounds(), "Particle did not leave the dataset.");
-      VTKM_TEST_ASSERT(p.Status.CheckInGhostCell(), "Particle did not end up in ghost cell.");
+      VTKM_TEST_ASSERT(p.GetStatus().CheckSpatialBounds(), "Particle did not leave the dataset.");
+      VTKM_TEST_ASSERT(p.GetStatus().CheckInGhostCell(), "Particle did not end up in ghost cell.");
 
       //Particles that start in a ghost cell should take no steps.
-      if (p.ID == 0 || p.ID == 1 || p.ID == 2)
-        VTKM_TEST_ASSERT(p.NumSteps == 0, "Particle in ghost cell should *not* take any steps");
-      else if (p.ID == 3)
-        VTKM_TEST_ASSERT(p.NumSteps == 21, "Wrong number of steps for particle with ghost cells");
+      if (p.GetID() == 0 || p.GetID() == 1 || p.GetID() == 2)
+        VTKM_TEST_ASSERT(p.GetNumberOfSteps() == 0,
+                         "Particle in ghost cell should *not* take any steps");
+      else if (p.GetID() == 3)
+        VTKM_TEST_ASSERT(p.GetNumberOfSteps() == 21,
+                         "Wrong number of steps for particle with ghost cells");
     }
   }
 }
@@ -436,8 +438,8 @@ void ValidateParticleAdvectionResult(
   auto portal = res.Particles.ReadPortal();
   for (vtkm::Id i = 0; i < nSeeds; i++)
   {
-    auto stepsTaken = portal.Get(i).NumSteps;
-    auto status = portal.Get(i).Status;
+    auto stepsTaken = portal.Get(i).GetNumberOfSteps();
+    auto status = portal.Get(i).GetStatus();
     VTKM_TEST_ASSERT(stepsTaken <= maxSteps, "Too many steps taken in particle advection");
     if (stepsTaken == maxSteps)
       VTKM_TEST_ASSERT(status.CheckTerminate(), "Particle expected to be terminated");
@@ -456,8 +458,9 @@ void ValidateStreamlineResult(const vtkm::worklet::flow::StreamlineResult<vtkm::
   auto portal = res.Particles.ReadPortal();
   for (vtkm::Id i = 0; i < nSeeds; i++)
   {
-    VTKM_TEST_ASSERT(portal.Get(i).NumSteps <= maxSteps, "Too many steps taken in streamline");
-    VTKM_TEST_ASSERT(portal.Get(i).Status.CheckOk(), "Bad status in streamline");
+    VTKM_TEST_ASSERT(portal.Get(i).GetNumberOfSteps() <= maxSteps,
+                     "Too many steps taken in streamline");
+    VTKM_TEST_ASSERT(portal.Get(i).GetStatus().CheckOk(), "Bad status in streamline");
   }
   VTKM_TEST_ASSERT(res.Particles.GetNumberOfValues() == nSeeds,
                    "Number of output particles does not match input.");
@@ -556,7 +559,7 @@ void TestParticleWorkletsWithDataSetTypes()
     vtkm::Id nSeeds = static_cast<vtkm::Id>(pts.size());
     std::vector<vtkm::Id> stepsTaken = { 10, 20, 600 };
     for (std::size_t i = 0; i < stepsTaken.size(); i++)
-      pts2[i].NumSteps = stepsTaken[i];
+      pts2[i].SetNumberOfSteps(stepsTaken[i]);
 
     for (auto& ds : dataSets)
     {
@@ -644,10 +647,10 @@ void TestParticleStatus()
       pa.Run(rk4, seedsArray, maxSteps);
       auto portal = seedsArray.ReadPortal();
 
-      bool tookStep0 = portal.Get(0).Status.CheckTookAnySteps();
-      bool tookStep1 = portal.Get(1).Status.CheckTookAnySteps();
-      bool isZero0 = portal.Get(0).Status.CheckZeroVelocity();
-      bool isZero1 = portal.Get(1).Status.CheckZeroVelocity();
+      bool tookStep0 = portal.Get(0).GetStatus().CheckTookAnySteps();
+      bool tookStep1 = portal.Get(1).GetStatus().CheckTookAnySteps();
+      bool isZero0 = portal.Get(0).GetStatus().CheckZeroVelocity();
+      bool isZero1 = portal.Get(1).GetStatus().CheckZeroVelocity();
 
       if (vtkm::Magnitude(vec) > 0)
       {
@@ -662,7 +665,8 @@ void TestParticleStatus()
         VTKM_TEST_ASSERT(tookStep1 == false, "Particle took a step when it should not have.");
         VTKM_TEST_ASSERT(isZero0 == true, "Particle in zero velocity when it should not be.");
         VTKM_TEST_ASSERT(isZero1 == false, "Particle in zero velocity when it should not be.");
-        VTKM_TEST_ASSERT(portal.Get(0).NumSteps == 1, "Particle should have taken only 1 step.");
+        VTKM_TEST_ASSERT(portal.Get(0).GetNumberOfSteps() == 1,
+                         "Particle should have taken only 1 step.");
       }
     }
   }
@@ -744,14 +748,15 @@ void TestWorkletsBasic()
         auto portal = res.Particles.ReadPortal();
         for (vtkm::Id i = 0; i < res.Particles.GetNumberOfValues(); i++)
         {
-          VTKM_TEST_ASSERT(portal.Get(i).Pos == endPts[static_cast<std::size_t>(i)],
+          VTKM_TEST_ASSERT(portal.Get(i).GetPosition() == endPts[static_cast<std::size_t>(i)],
                            "Particle advection point is wrong");
-          VTKM_TEST_ASSERT(portal.Get(i).NumSteps == maxSteps,
+          VTKM_TEST_ASSERT(portal.Get(i).GetNumberOfSteps() == maxSteps,
                            "Particle advection NumSteps is wrong");
-          VTKM_TEST_ASSERT(vtkm::Abs(portal.Get(i).Time - endT) < stepSize / 100,
+          VTKM_TEST_ASSERT(vtkm::Abs(portal.Get(i).GetTime() - endT) < stepSize / 100,
                            "Particle advection Time is wrong");
-          VTKM_TEST_ASSERT(portal.Get(i).Status.CheckOk(), "Particle advection Status is wrong");
-          VTKM_TEST_ASSERT(portal.Get(i).Status.CheckTerminate(),
+          VTKM_TEST_ASSERT(portal.Get(i).GetStatus().CheckOk(),
+                           "Particle advection Status is wrong");
+          VTKM_TEST_ASSERT(portal.Get(i).GetStatus().CheckTerminate(),
                            "Particle advection particle did not terminate");
         }
       }
@@ -770,13 +775,14 @@ void TestWorkletsBasic()
         auto parPortal = res.Particles.ReadPortal();
         for (vtkm::Id i = 0; i < res.Particles.GetNumberOfValues(); i++)
         {
-          VTKM_TEST_ASSERT(parPortal.Get(i).Pos == endPts[static_cast<std::size_t>(i)],
+          VTKM_TEST_ASSERT(parPortal.Get(i).GetPosition() == endPts[static_cast<std::size_t>(i)],
                            "Streamline end point is wrong");
-          VTKM_TEST_ASSERT(parPortal.Get(i).NumSteps == maxSteps, "Streamline NumSteps is wrong");
-          VTKM_TEST_ASSERT(vtkm::Abs(parPortal.Get(i).Time - endT) < stepSize / 100,
+          VTKM_TEST_ASSERT(parPortal.Get(i).GetNumberOfSteps() == maxSteps,
+                           "Streamline NumSteps is wrong");
+          VTKM_TEST_ASSERT(vtkm::Abs(parPortal.Get(i).GetTime() - endT) < stepSize / 100,
                            "Streamline Time is wrong");
-          VTKM_TEST_ASSERT(parPortal.Get(i).Status.CheckOk(), "Streamline Status is wrong");
-          VTKM_TEST_ASSERT(parPortal.Get(i).Status.CheckTerminate(),
+          VTKM_TEST_ASSERT(parPortal.Get(i).GetStatus().CheckOk(), "Streamline Status is wrong");
+          VTKM_TEST_ASSERT(parPortal.Get(i).GetStatus().CheckTerminate(),
                            "Streamline particle did not terminate");
         }
 
@@ -815,17 +821,19 @@ void ValidateResult(const ResultType& res,
   auto portal = res.Particles.ReadPortal();
   for (vtkm::Id i = 0; i < 3; i++)
   {
-    vtkm::Vec3f p = portal.Get(i).Pos;
+    vtkm::Vec3f p = portal.Get(i).GetPosition();
     vtkm::Vec3f e = endPts[static_cast<std::size_t>(i)];
 
 
     VTKM_TEST_ASSERT(vtkm::Magnitude(p - e) <= eps, "Particle advection point is wrong");
-    if (portal.Get(i).Status.CheckZeroVelocity())
-      VTKM_TEST_ASSERT(portal.Get(i).NumSteps > 0, "Particle advection NumSteps is wrong");
+    if (portal.Get(i).GetStatus().CheckZeroVelocity())
+      VTKM_TEST_ASSERT(portal.Get(i).GetNumberOfSteps() > 0,
+                       "Particle advection NumSteps is wrong");
     else
-      VTKM_TEST_ASSERT(portal.Get(i).NumSteps == maxSteps, "Particle advection NumSteps is wrong");
-    VTKM_TEST_ASSERT(portal.Get(i).Status.CheckOk(), "Particle advection Status is wrong");
-    VTKM_TEST_ASSERT(portal.Get(i).Status.CheckTerminate(),
+      VTKM_TEST_ASSERT(portal.Get(i).GetNumberOfSteps() == maxSteps,
+                       "Particle advection NumSteps is wrong");
+    VTKM_TEST_ASSERT(portal.Get(i).GetStatus().CheckOk(), "Particle advection Status is wrong");
+    VTKM_TEST_ASSERT(portal.Get(i).GetStatus().CheckTerminate(),
                      "Particle advection particle did not terminate");
   }
 }

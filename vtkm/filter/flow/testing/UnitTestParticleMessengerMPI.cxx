@@ -85,13 +85,15 @@ void ValidateReceivedParticles(
     const auto& reqP = particles[static_cast<std::size_t>(sendRank)][i];
     const auto& p = recvP[i].first;
 
-    VTKM_TEST_ASSERT(p.Pos == reqP.Pos, "Received particle has wrong Position.");
-    VTKM_TEST_ASSERT(p.Time == reqP.Time, "Received particle has wrong Time.");
-    VTKM_TEST_ASSERT(p.ID == reqP.ID, "Received particle has wrong ID.");
-    VTKM_TEST_ASSERT(p.NumSteps == reqP.NumSteps, "Received particle has wrong NumSteps.");
+    VTKM_TEST_ASSERT(p.GetPosition() == reqP.GetPosition(),
+                     "Received particle has wrong Position.");
+    VTKM_TEST_ASSERT(p.GetTime() == reqP.GetTime(), "Received particle has wrong Time.");
+    VTKM_TEST_ASSERT(p.GetID() == reqP.GetID(), "Received particle has wrong ID.");
+    VTKM_TEST_ASSERT(p.GetNumberOfSteps() == reqP.GetNumberOfSteps(),
+                     "Received particle has wrong NumSteps.");
 
-    VTKM_TEST_ASSERT(p.Pos == reqP.Pos && p.Time == reqP.Time && p.ID == reqP.ID &&
-                       p.NumSteps == reqP.NumSteps,
+    VTKM_TEST_ASSERT(p.GetPosition() == reqP.GetPosition() && p.GetTime() == reqP.GetTime() &&
+                       p.GetID() == reqP.GetID() && p.GetNumberOfSteps() == reqP.GetNumberOfSteps(),
                      "Received particle has wrong values.");
 
     const auto& reqBids = particleBlockIds[static_cast<std::size_t>(sendRank)][i];
@@ -153,12 +155,10 @@ void TestParticleMessenger()
     for (int p = 0; p < nP; p++)
     {
       vtkm::Particle particle;
-      particle.Pos[0] = floatDist(generator);
-      particle.Pos[1] = floatDist(generator);
-      particle.Pos[2] = floatDist(generator);
-      particle.Time = floatDist(generator);
-      particle.ID = pid++;
-      particle.NumSteps = nStepsDist(generator);
+      particle.SetPosition({ floatDist(generator), floatDist(generator), floatDist(generator) });
+      particle.SetTime(floatDist(generator));
+      particle.SetID(pid++);
+      particle.SetNumberOfSteps(nStepsDist(generator));
       pvec.push_back(particle);
 
       std::vector<vtkm::Id> bids(bidDist(generator));
