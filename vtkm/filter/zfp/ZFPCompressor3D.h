@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_zfp_ZFPCompressor3D_h
 #define vtk_m_filter_zfp_ZFPCompressor3D_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/zfp/vtkm_filter_zfp_export.h>
 
 namespace vtkm
@@ -26,7 +26,7 @@ namespace zfp
 /// output of compressed data.
 /// @warning
 /// This filter is currently only supports 1D volumes.
-class VTKM_FILTER_ZFP_EXPORT ZFPCompressor3D : public vtkm::filter::NewFilterField
+class VTKM_FILTER_ZFP_EXPORT ZFPCompressor3D : public vtkm::filter::FilterField
 {
 public:
   void SetRate(vtkm::Float64 _rate) { rate = _rate; }
@@ -38,11 +38,6 @@ private:
   vtkm::Float64 rate = 0;
 };
 } // namespace zfp
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::zfp::ZFPCompressor3D.") ZFPCompressor3D
-  : public vtkm::filter::zfp::ZFPCompressor3D
-{
-  using zfp::ZFPCompressor3D::ZFPCompressor3D;
-};
 } // namespace filter
 } // namespace vtkm
 

@@ -67,7 +67,8 @@ struct CellDeepCopy
             typename OffsetsStorage>
   VTKM_CONT static void Run(
     const InCellSetType& inCellSet,
-    vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& outCellSet)
+    vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& outCellSet,
+    vtkm::Id numberOfPoints)
   {
     VTKM_IS_KNOWN_OR_UNKNOWN_CELL_SET(InCellSetType);
 
@@ -89,8 +90,19 @@ struct CellDeepCopy
       inCellSet, shapes, vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
 
     vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage> newCellSet;
-    newCellSet.Fill(inCellSet.GetNumberOfPoints(), shapes, connectivity, offsets);
+    newCellSet.Fill(numberOfPoints, shapes, connectivity, offsets);
     outCellSet = newCellSet;
+  }
+
+  template <typename InCellSetType,
+            typename ShapeStorage,
+            typename ConnectivityStorage,
+            typename OffsetsStorage>
+  VTKM_CONT static void Run(
+    const InCellSetType& inCellSet,
+    vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& outCellSet)
+  {
+    Run(inCellSet, outCellSet, inCellSet.GetNumberOfPoints());
   }
 
   template <typename InCellSetType>

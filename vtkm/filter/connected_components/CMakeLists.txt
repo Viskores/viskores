@@ -27,8 +27,3 @@ target_link_libraries(vtkm_filter_connected_components PRIVATE vtkm_worklet PUBL
 target_link_libraries(vtkm_filter PUBLIC INTERFACE vtkm_filter_connected_components)
 
 add_subdirectory(worklet)
-
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

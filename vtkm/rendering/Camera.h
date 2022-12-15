@@ -13,7 +13,6 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/Bounds.h>
-#include <vtkm/Deprecated.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/Range.h>
@@ -98,9 +97,6 @@ public:
     TwoD,
     ThreeD,
   };
-  using ModeEnum VTKM_DEPRECATED(1.8, "Use Camaera::Mode") = Mode;
-  VTKM_DEPRECATED(1.8, "Use Camera::Mode::TwoD.") static constexpr Mode MODE_2D = Mode::TwoD;
-  VTKM_DEPRECATED(1.8, "Use Camera::Mode::ThreeD.") static constexpr Mode MODE_3D = Mode::ThreeD;
 
   VTKM_CONT
   Camera(Mode vtype = Camera::Mode::ThreeD)

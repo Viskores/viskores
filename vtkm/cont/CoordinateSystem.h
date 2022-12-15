@@ -11,119 +11,16 @@
 #define vtk_m_cont_CoordinateSystem_h
 
 #include <vtkm/Bounds.h>
-#include <vtkm/Deprecated.h>
 
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
-#endif
-
 namespace vtkm
 {
 namespace cont
 {
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-namespace detail
-{
-
-// CoordinateSystem::GetData used to return an ArrayHandleVirtualCoordinates.
-// That behavior is deprecated, and CoordianteSystem::GetData now returns am
-// UncertainArrayHandle similar (although slightly different than) its superclass.
-// This wrapper class supports the old deprecated behavior until it is no longer
-// supported. Once the behavior is removed (probably when
-// ArrayHandleVirtualCoordinates is removed), then this class should be removed.
-class VTKM_ALWAYS_EXPORT CoordDataDepWrapper
-  : public vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>
-{
-  using Superclass =
-    vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>;
-
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandleVirtualCoordinates ToArray() const;
-  VTKM_DEPRECATED_SUPPRESS_END
-
-public:
-  using Superclass::Superclass;
-
-  // Make the return also behave as ArrayHandleVirtualCoordiantes
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
-  operator vtkm::cont::ArrayHandleVirtualCoordinates() const
-  {
-    return this->ToArray();
-  }
-
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
-  operator vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagVirtual>() const
-  {
-    return this->ToArray();
-  }
-
-  using ValueType VTKM_DEPRECATED(
-    1.6,
-    "CoordinateSystem::GetData() now returns an UncertainArrayHandle.") = vtkm::Vec3f;
-
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
-    ArrayHandleVirtualCoordinates::ReadPortalType ReadPortal() const
-  {
-    return this->ToArray().ReadPortal();
-  }
-
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
-    ArrayHandleVirtualCoordinates::WritePortalType WritePortal() const
-  {
-    return this->ToArray().WritePortal();
-  }
-
-  template <typename Device>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
-    typename ArrayHandleVirtualCoordinates::ReadPortalType
-    PrepareForInput(Device device, vtkm::cont::Token& token) const
-  {
-    return this->ToArray().PrepareForInput(device, token);
-  }
-
-  template <typename Device>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
-    typename ArrayHandleVirtualCoordinates::WritePortalType
-    PrepareForInPlace(Device device, vtkm::cont::Token& token) const
-  {
-    return this->ToArray().PrepareForInPlace(device, token);
-  }
-
-  template <typename Device>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
-    typename ArrayHandleVirtualCoordinates::WritePortalType
-    PrepareForOutput(vtkm::Id numberOfValues, Device device, vtkm::cont::Token& token) const
-  {
-    return this->ToArray().PrepareForOutput(numberOfValues, device, token);
-  }
-
-  VTKM_DEPRECATED_SUPPRESS_END
-};
-
-} // namespace detail
-
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-VTKM_CONT VTKM_DEPRECATED(
-  1.6,
-  "CoordinateSystem::GetData() now returns an "
-  "UncertainArrayHandle.") inline void printSummary_ArrayHandle(const detail::CoordDataDepWrapper&
-                                                                  array,
-                                                                std::ostream& out,
-                                                                bool full = false)
-{
-  vtkm::cont::ArrayHandleVirtualCoordinates coordArray = array;
-  vtkm::cont::printSummary_ArrayHandle(coordArray, out, full);
-}
-VTKM_DEPRECATED_SUPPRESS_END
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
@@ -132,6 +29,9 @@ class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 public:
   VTKM_CONT
   CoordinateSystem();
+
+  // It's OK for regular _point_ fields to become a CoordinateSystem object.
+  VTKM_CONT CoordinateSystem(const vtkm::cont::Field& src);
 
   VTKM_CONT CoordinateSystem(std::string name, const vtkm::cont::UnknownArrayHandle& data);
 
@@ -152,12 +52,8 @@ public:
   VTKM_CONT
   vtkm::Id GetNumberOfPoints() const { return this->GetNumberOfValues(); }
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  VTKM_CONT detail::CoordDataDepWrapper GetData() const;
-#else
   VTKM_CONT vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>
   GetData() const;
-#endif
 
 private:
 #ifdef VTKM_USE_DOUBLE_PRECISION
@@ -275,14 +171,6 @@ struct DynamicTransformTraits<vtkm::cont::CoordinateSystem>
   using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-template <>
-struct DynamicTransformTraits<vtkm::cont::detail::CoordDataDepWrapper>
-{
-  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
-};
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
-
 
 } // namespace internal
 } // namespace cont
@@ -293,16 +181,6 @@ struct DynamicTransformTraits<vtkm::cont::detail::CoordDataDepWrapper>
 /// @cond SERIALIZATION
 namespace mangled_diy_namespace
 {
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-template <>
-struct Serialization<vtkm::cont::detail::CoordDataDepWrapper>
-  : public Serialization<
-      vtkm::cont::UncertainArrayHandle<vtkm::List<vtkm::Vec3f_32, vtkm::Vec3f_64>,
-                                       VTKM_DEFAULT_STORAGE_LIST>>
-{
-};
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <>
 struct Serialization<vtkm::cont::CoordinateSystem> : Serialization<vtkm::cont::Field>

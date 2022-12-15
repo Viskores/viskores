@@ -1,0 +1,11 @@
+NAME
+  vtkm_worklet
+GROUPS
+  Core
+DEPENDS
+  vtkm_cont
+TEST_DEPENDS
+  vtkm_source
+  vtkm_worklet
+  vtkm_filter
+  vtkm_io

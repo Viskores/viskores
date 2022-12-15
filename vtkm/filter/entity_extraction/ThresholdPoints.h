@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_entity_extraction_ThresholdPoints_h
 #define vtk_m_filter_entity_extraction_ThresholdPoints_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -20,7 +20,7 @@ namespace filter
 {
 namespace entity_extraction
 {
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ThresholdPoints : public vtkm::filter::NewFilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ThresholdPoints : public vtkm::filter::FilterField
 {
 public:
   // When CompactPoints is set, instead of copying the points and point fields
@@ -62,11 +62,6 @@ private:
   bool CompactPoints = false;
 };
 } // namespace entity_extraction
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::ThresholdPoints.") ThresholdPoints
-  : public vtkm::filter::entity_extraction::ThresholdPoints
-{
-  using entity_extraction::ThresholdPoints::ThresholdPoints;
-};
 } // namespace filter
 } // namespace vtkm
 

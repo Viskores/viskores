@@ -1,0 +1,10 @@
+NAME
+  vtkm_filter_resampling
+GROUPS
+  Filters
+DEPENDS
+  vtkm_filter_core
+PRIVATE_DEPENDS
+  vtkm_worklet
+TEST_DEPENDS
+  vtkm_filter_clean_grid

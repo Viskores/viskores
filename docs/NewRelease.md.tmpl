@@ -1,0 +1,287 @@
+<!--
+This template is for tracking a release of VTKm.
+
+Process this file with the pyexpander script specifying the desired `version`:
+
+expander.py --eval 'version="1.9.0-rc1"' docs/NewRelease.md.tmpl | xclip -selection c
+
+Please remove this comment.
+-->
+$py(VERSION=str(version.partition("-")[0]))\
+$py(MAJOR=int(VERSION.split(".")[0]))\
+$py(MINOR=int(VERSION.split(".")[1]))\
+$py(PATCH=int(VERSION.split(".")[2]))\
+$py(RC="".join(version.partition("-")[1:3]))\
+$if(PATCH == 0 and RC == "")\
+## Prerequisites
+
+- [ ] Make sure that the current VTK-m release branch builds in VTK.
+- [ ] Make sure that the current VTK-m release branch builds in ECP Ascent.
+
+$endif\
+## Update VTK-m
+
+- [ ] Update `release` branch for **vtk-m** and create update branch
+```
+git fetch origin
+git checkout release
+git merge --ff-only origin/release
+git submodule update --recursive --init
+```
+$if(PATCH == 0 and RC == "-rc1")\
+- [ ] Update `master` branch for **vtk-m** and create update branch
+```
+git fetch origin
+git checkout master
+git merge --ff-only origin/master
+git submodule update --recursive --init
+```
+$endif\
+
+## Create update branch
+
+- [ ] Create update branch `git checkout -b update-to-$(VERSION)`
+$if(PATCH == 0 and RC == "-rc1")\
+- [ ] Bring as a second parent the history of master (Solve conflicts always
+      taking master's version)
+```
+git merge --no-ff origin/master
+```
+$else\
+- [ ] Backport merge-requests belonging to the milestone $(VERSION)
+$endif\
+$if(PATCH == 0)\
+- [ ] Set version to master
+```
+echo "$(MAJOR).$(MINOR).9999" > version.txt
+git add version.txt
+```
+$endif\
+
+- [ ] Update the version (not in patch releases) and date in the LICENSE.md
+      file `git add LICENSE.md`.
+- [ ] Create commit that updates the License (and version.txt if modified):
+```
+git commit -m 'release: update version and License'
+```
+
+<!-- Do we have new release notes? -->
+- [ ] Craft or update [changelog](#generate-change-log)
+      `docs/changelog/$(VERSION)/release-notes.md` file.
+- [ ] Create release notes commit.
+```
+git add docs/changelog/$(MAJOR).$(MINOR)/release-notes.md
+git rm docs/changelog/*.md
+git commit -m 'release: $(VERSION)$(RC) release notes'
+```
+<!-- endif -->
+- [ ] Create update version commit:
+
+```
+echo $(VERSION)$(RC) > version.txt
+git add version.txt
+
+# Create commit with the following template
+# Nth is counted by the number of final release tags
+git commit -m '$(VERSION)$(RC) is our Nth official release of VTK-m.
+
+The major changes to VTK-m from (previous release) can be found in:
+  docs/changelog/$(VERSION)/release-notes.md' version.txt
+```
+
+- [ ] `git tag -a -m 'VTKm $(VERSION)$(RC)' v$(VERSION)$(RC) HEAD`
+- Integrate changes to `release` branch
+  - [ ] Create a MR using the [release-mr script][1]
+        (see [notes](#notes-about-update-mr)).
+$if(PATCH == 0)\
+  - [ ] Add (or ensure) at the bottom of the description of the merge request:
+        `Backport: master:HEAD~1`
+$else\
+  - [ ] Remove (or ensure) that at the bottom of the description of the merge
+        request there is no `Backport` instruction.
+$endif\
+  - [ ] Get +1
+  - [ ] `Do: merge`
+- Push tags
+  - [ ] `git push origin v$(VERSION)$(RC)`
+
+## Update Spack
+- [ ] Update Spack package: https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/vtk-m/package.py
+
+## Post-release
+$if(PATCH == 0 and RC == "-rc1")\
+- [ ] Create a release-specific branch of the previous major/minor release (Ask
+      @ben.boeckel). For more information on release-specific branch maintanance
+      schedule refer to `docs/ReleaseRoadmap.md`.
+$endif\
+- [ ] Copy the contents of docs/changelog/$(VERSION)/release-notes.md to
+      the GitLab release.
+$if(PATCH == 0 and RC == "")\
+- [ ] Tag new version of the [VTK-m User Guide][2].
+$endif\
+- [ ] Post an [Email Announcements](#email-announcements) VTK-m mailing list.
+$if(RC == "")\
+- [ ] Update this release Date, Delay and End-of-Support fields in `docs/ReleaseRoadmap.md`.
+$endif\
+$if(PATCH == 0)\
+- [ ] Ensure that the content of `version.txt` in master is `$(MAJOR).$(MINOR).9999`.
+$endif\
+
+## Update VTK-m in VTK
+
+VTK ships a particular VTK-m release in each of its releases, we need to open a
+merge-request update the VTK-m commit in VTK as soon as possible even if the
+newly VTK-m version does not correspond with the scheduled for the following VTK
+release, the reason for opening the merge-request is that:
+
+- We can test how compatible it is with VTK giving us the change to address
+  those issues in the following releases.
+- We do not forget to update VTK-m commit in VTK when the time comes
+
+ - [ ] Update VTK-m submodule in VTK using: `git submodule update --remote`
+
+---
+
+# Annex
+
+## Generate change log
+Construct a `docs/changelog/$(VERSION)/` folder.
+Construct a `docs/changelog/$(VERSION)/release-notes.md` file
+
+Use the following template for `release-notes.md`:
+
+```md
+VTK-m N Release Notes
+=======================
+
+<!-- if is a patch release -->
+
+| Merge request description                                           | Merge request id |
+| ------------------------------------------------------------------- | ---------------- |
+| Update the link to register with the VTK-m dashboard                | !2629            |
+.
+.
+.
+| CMAKE: CUDA ampere generate sm_80/86                                | !2688            |
+
+<!-- else -->
+
+# Table of Contents
+1. [Core](#Core)
+    - Core change 1
+2. [ArrayHandle](#ArrayHandle)
+3. [Control Environment](#Control-Environment)
+4. [Execution Environment](#Execution-Environment)
+5. [Worklets and Filters](#Worklets-and-Filters)
+6. [Build](#Build)
+7. [Other](#Other)
+
+<!-- endif -->
+# Core
+
+## Core change 1 ##
+
+changes in core 1
+
+# ArrayHandle
+
+# Control Enviornment
+
+# Execution Environment
+
+# Execution Environment
+
+# Worklets and Filters
+
+# Build
+
+
+# Other
+```
+
+For each individual file in `docs/changelog` move them
+to the relevant `release-notes` section.
+
+  - Make sure each title and entry in the table of contents use full vtkm names
+    `vtkm::cont::Field` instead of Field.
+  - Make sure each title and entry DOESN'T have a period at the end.
+  - Make sure any sub-heading as part of the changelog is transformed from `##`
+    to `###`.
+  - Entries for `Core` are reserved for large changes that significantly improve
+    VTK-m users life, or are major breaking changes.
+
+## Notes about update-mr
+
+[`update-mr` script][1] has the following requirements to work:
+
+1. It needs a token to for authentication (reach @ben.boeckel for this)
+2. It needs `kwrobot.release.vtkm` to have developer perms in your vtk-m repo.
+
+Lastly, `update-mr` can be used multiple times with different commit in the same
+branch.
+
+## Notes about version.txt
+
+Master and release branch do not share the same version.txt scheme. In the
+release branch the patch and release-candidate version is observed whereas in
+master the patch field is fixed to _9999_ indicating that each of its commit is
+a developing release.
+
+- Master:  `$(MAJOR).$(MINOR).9999`
+- Release: `$(MAJOR).$(MINOR).$(PATCH)$(RC)`
+
+## Email Announcements
+
+Announce the new VTK-m release on the mailing list. You will need to compute
+the number of merge requests, changelog entries, and maybe # of authors.
+
+Example to compute the number of unique committers
+```
+git log --format="%an" v1.4.0..v1.5.0 | sort -u | wc -l
+```
+
+Example to compute the number of merge requests
+```
+git log v1.4.0..v1.5.0 | grep 'Merge | wc -l
+```
+
+A standard template to use is:
+
+
+```
+Hi All,
+
+VTK-m 1.5.0 is now released, and a special thanks to everyone that has
+contributed to VTK-m since our last release. The 1.5.0 release contains
+over 100000 merge requests, and 100000 entries to the changelog .
+
+Below are all the entries in the changelog, with more details at (
+https://gitlab.kitware.com/vtk/vtk-m/-/tags/v$(VERSION)) or in the vtkm
+repository at `docs/$(VERSION)/release-notes.md`
+
+$if(int(PATCH) > 0)\
+- Update the link to register with the VTK-m dashboard
+.
+.
+.
+- CMAKE: CUDA ampere generate sm_80/86
+$else\
+1. Core
+    - Core change 1
+2. ArrayHandle
+3. Control Environment
+4. Execution Environment
+5. Worklets and Filters
+6. Build
+7. Other
+$endif\
+```
+
+[1]:  https://gitlab.kitware.com/utils/release-utils/-/blob/master/release-mr.py
+[2]:  https://gitlab.kitware.com/vtk/vtk-m-user-guide
+
+@ben.boeckel  
+@vbolea  
+/label ~"area:release"  
+/milestone %"v$(VERSION)"  
+/assign @vbolea

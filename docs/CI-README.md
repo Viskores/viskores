@@ -19,6 +19,10 @@ Gitlab CI
 4. ECP Continuous Integration
    - OLCF Ascent testing machine
 
+5. Automated Performance Regression tests
+   - Overview
+   - Details
+
 # Kitware Gitlab CI
 
 GitLab CI/CD allows for software development through continous integration, delivery, and deployment.
@@ -307,5 +311,104 @@ As for the flavor being currently tested at ECP Ascent is VTK-m with CUDA and
 GCC8.
 
 For a view of only ascent jobs refer to the following [link][cdash-ascent].
+
+# Automated Performance Regression tests
+
+## Overview
+
+The design of the performance regression test is composed of the following
+components:
+
+1. The Kitware Gitlab instance which trigger the benchmark jobs when a git
+   commit is pushed.
+2. Gitlab CI jobs for performing the benchmarks and for generating the
+   comparison with the historical results.
+3. A Git repository that is used for storing the historical results.
+4. The Kitware CDASH instance which files, displays the performance report and
+   inform the developer if a performance regression has occurred.
+
+The performance regression test is performed whenever a git commit is pushed.
+The job _performancetest_ which invoke the benchmark suite in a Gitlab runner
+job and later compare its results against the historical results, stored in
+CDASH, of its most immediate master ancestor. The results of this comparison are
+then displayed in a brief report in the form of a comment in its corresponding
+Gitlab merge-request.
+
+![perftest_arch](perftest_arch.png)
+
+## Details
+
+### Selection of Benchmarks
+
+While we can possibly run all of the provided benchmarks in the continuous
+build track to avoid potential performance and latency issues in the CI, I
+have initially limited the benchmark suites to:
+
+- BenchmarkFilters
+- BenchmarkInsitu
+
+### Benchmark ctest
+
+We provide a CMake function named `add_benchmark_test` which sets the
+performance regression test for the given Google Benchmark suite. It admits one
+argument to filter the number of benchmarks to be executed. If ran locally, it
+will not upload the results to the online record repository. 
+
+### Requirements
+
+- Python3 with the SciPy package
+- Benchmark tests will be enabled in a CMAKE build that sets both
+  `VTKm_ENABLE_BENCHMARKS` and `VTKm_ENABLE_PERFORMANCE_TESTING`
+
+### New Gitlab Runner requirements
+
+- It must have disabled every type of CPU scaling option both at the BIOS and
+  Kernel level (`cpugovern`).
+- It must provide a gitlab runner with a concurrency level 1 to avoid other
+  jobs being scheduled while the benchmark is being executed.
+
+### How to make sense of the results
+
+Results of both of the benchmark and the comparison against its most recent
+commit ancestor can be accessed in the CDASH Notes for the performance
+regression build. The CDASH Notes can be accessed by clicking the note-like
+miniature image in the build name column.
+
+Performance Regressions test that report a performance failure are reported in
+the form of a test failure of the test `PerformanceTest($TestName)Report`. The
+results of the comparison can be seen by clicking this failed test.
+
+Performance regression test success is determined by the performance of a null
+hypothesis test with the hypothesis that the given tests performs similarly
+or better than the baseline test with a confidence level 1-alpha. If a pvalue is
+small enough (less than alpha), we reject the null hypothesis and we report that
+the current commit introduces a performance regression.  By default we use a
+t-distribution with an alpha value of 5%. The pvalues can be seen in the
+uploaded reports.
+
+The following parameters can be modified by editing the corresponding
+environmental variables:
+
+- Alpha value: `VTKm_PERF_ALPHA`
+- Minimum number of repetitions for each benchmark: `VTKm_PERF_REPETITIONS`
+- Minimum time to spend for each benchmark: `VTKm_PERF_MIN_TIME`
+- Statistical distribution to use: `VTKm_PERF_DIST`
+
+Below is an example of this raw output of the comparison of the current commit
+against the baseline results:
+
+```
+Benchmark                       Time             CPU      Time Old      Time New       CPU Old       CPU New
+------------------------------------------------------------------------------------------------------------
+BenchThreshold/manual_time   +0.0043         +0.0036            73            73            92            92
+BenchThreshold/manual_time   +0.0074         +0.0060            73            73            91            92
+BenchThreshold/manual_time   -0.0003         -0.0007            73            73            92            92
+BenchThreshold/manual_time   -0.0019         -0.0018            73            73            92            92
+BenchThreshold/manual_time   -0.0021         -0.0017            73            73            92            92
+BenchThreshold/manual_time   +0.0001         +0.0006            73            73            92            92
+BenchThreshold/manual_time   +0.0033         +0.0031            73            73            92            92
+BenchThreshold/manual_time   -0.0071         -0.0057            73            73            92            92
+BenchThreshold/manual_time   -0.0050         -0.0041            73            73            92            92
+```
 
 [cdash-ascent]: https://open.cdash.org/index.php?project=VTKM&filtercount=1&showfilters=1&field1=site&compare1=63&value1=ascent

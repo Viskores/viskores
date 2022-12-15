@@ -19,8 +19,8 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 
-#include <vtkm/cont/internal/Variant.h>
-#include <vtkm/exec/internal/Variant.h>
+#include <vtkm/cont/Variant.h>
+#include <vtkm/exec/Variant.h>
 
 namespace vtkm
 {
@@ -90,7 +90,7 @@ private:
 template <typename... PortalTypes>
 struct ArrayPortalMultiplexer
 {
-  using PortalVariantType = vtkm::exec::internal::Variant<PortalTypes...>;
+  using PortalVariantType = vtkm::exec::Variant<PortalTypes...>;
   PortalVariantType PortalVariant;
 
   using ValueType = typename PortalVariantType::template TypeAt<0>::ValueType;
@@ -214,7 +214,7 @@ struct MultiplexerCreateWritePortalFunctor
 template <typename T, typename... Ss>
 struct MultiplexerArrayHandleVariantFunctor
 {
-  using VariantType = vtkm::cont::internal::Variant<vtkm::cont::ArrayHandle<T, Ss>...>;
+  using VariantType = vtkm::cont::Variant<vtkm::cont::ArrayHandle<T, Ss>...>;
 
   template <typename StorageTag>
   VTKM_CONT VariantType operator()(vtkm::cont::internal::Storage<T, StorageTag>,
@@ -232,7 +232,7 @@ class Storage<ValueType, StorageTagMultiplexer<StorageTags...>>
   template <typename S>
   using StorageFor = vtkm::cont::internal::Storage<ValueType, S>;
 
-  using StorageVariant = vtkm::cont::internal::Variant<StorageFor<StorageTags>...>;
+  using StorageVariant = vtkm::cont::Variant<StorageFor<StorageTags>...>;
 
   VTKM_CONT static StorageVariant Variant(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
@@ -432,20 +432,6 @@ public:
     return StorageType::GetArrayHandleVariant(this->GetBuffers());
   }
 };
-
-/// \brief Converts a \c vtkm::ListTag to an \c ArrayHandleMultiplexer
-///
-/// The argument of this template must be a vtkm::ListTag and furthermore all the types in
-/// the list tag must be some type of \c ArrayHandle. The templated type gets aliased to
-/// an \c ArrayHandleMultiplexer that can store any of these ArrayHandle types.
-///
-/// Deprecated. Use `ArrayHandleMultiplexerFromList` instead.
-///
-template <typename ListTag>
-using ArrayHandleMultiplexerFromListTag VTKM_DEPRECATED(
-  1.6,
-  "vtkm::ListTag is no longer supported. Use vtkm::List instead.") =
-  vtkm::ListApply<ListTag, ArrayHandleMultiplexer>;
 
 /// \brief Converts a`vtkm::List` to an `ArrayHandleMultiplexer`
 ///

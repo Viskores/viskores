@@ -157,11 +157,6 @@ public:
     return vtkm::ErrorCode::Success;
   }
 
-  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
-  VTKM_EXEC CellLocatorRectilinearGrid* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
-  VTKM_EXEC const CellLocatorRectilinearGrid* operator->() const { return this; }
-
 private:
   vtkm::Id PlaneSize;
   vtkm::Id RowSize;

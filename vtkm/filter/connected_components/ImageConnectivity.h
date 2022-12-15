@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_connected_components_ImageConnectivity_h
 #define vtk_m_filter_connected_components_ImageConnectivity_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/connected_components/vtkm_filter_connected_components_export.h>
 
 /// \brief Groups connected points that have the same field value
@@ -30,8 +30,7 @@ namespace filter
 {
 namespace connected_components
 {
-class VTKM_FILTER_CONNECTED_COMPONENTS_EXPORT ImageConnectivity
-  : public vtkm::filter::NewFilterField
+class VTKM_FILTER_CONNECTED_COMPONENTS_EXPORT ImageConnectivity : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT ImageConnectivity() { this->SetOutputFieldName("component"); }
@@ -41,12 +40,6 @@ private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace connected_components
-
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::connected_components::ImageConnectivity.")
-  ImageConnectivity : public vtkm::filter::connected_components::ImageConnectivity
-{
-  using connected_components::ImageConnectivity::ImageConnectivity;
-};
 
 } // namespace filter
 } // namespace vtkm

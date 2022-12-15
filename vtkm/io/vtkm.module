@@ -1,0 +1,10 @@
+NAME
+  vtkm_io
+GROUPS
+  IO
+DEPENDS
+  vtkm_cont
+PRIVATE_DEPENDS
+  vtkm_lodepng
+TEST_OPTIONAL_DEPENDS
+  vtkm_rendering

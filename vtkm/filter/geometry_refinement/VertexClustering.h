@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_geometry_refinement_VertexClustering_h
 #define vtk_m_filter_geometry_refinement_VertexClustering_h
 
-#include <vtkm/filter/NewFilter.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/geometry_refinement/vtkm_filter_geometry_refinement_export.h>
 
 namespace vtkm
@@ -48,7 +48,7 @@ namespace geometry_refinement
 /// @warning
 /// This filter currently doesn't propagate cell or point fields
 
-class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT VertexClustering : public vtkm::filter::NewFilter
+class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT VertexClustering : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT
@@ -63,12 +63,6 @@ private:
   vtkm::Id3 NumberOfDivisions = { 256, 256, 256 };
 };
 } // namespace geometry_refinement
-class VTKM_DEPRECATED(1.8,
-                      "Use vtkm::filter::geometry_refinement::VertexClustering.") VertexClustering
-  : public vtkm::filter::geometry_refinement::VertexClustering
-{
-  using geometry_refinement::VertexClustering::VertexClustering;
-};
 } // namespace filter
 } // namespace vtkm
 

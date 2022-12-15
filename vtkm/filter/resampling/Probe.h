@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_resampling_Probe_h
 #define vtk_m_filter_resampling_Probe_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/resampling/vtkm_filter_resampling_export.h>
 
 namespace vtkm
@@ -19,7 +19,7 @@ namespace filter
 {
 namespace resampling
 {
-class VTKM_FILTER_RESAMPLING_EXPORT Probe : public vtkm::filter::NewFilterField
+class VTKM_FILTER_RESAMPLING_EXPORT Probe : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
@@ -43,13 +43,6 @@ private:
   vtkm::Float64 InvalidValue = vtkm::Nan64();
 };
 } // namespace resampling
-
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::resampling::Probe.") Probe
-  : public vtkm::filter::resampling::Probe
-{
-  using resampling::Probe::Probe;
-};
-
 } // namespace filter
 } // namespace vtkm
 

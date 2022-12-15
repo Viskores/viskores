@@ -149,8 +149,6 @@ void View::SetForegroundColor(const vtkm::rendering::Color& color)
   this->Internal->CanvasPointer->SetForegroundColor(color);
 }
 
-void View::Initialize() {}
-
 void View::SaveAs(const std::string& fileName) const
 {
   this->GetCanvas().SaveAs(fileName);
@@ -159,16 +157,6 @@ void View::SaveAs(const std::string& fileName) const
 void View::SetAxisColor(vtkm::rendering::Color c)
 {
   this->AxisColor = c;
-}
-
-void View::ClearAnnotations()
-{
-  this->Internal->TextAnnotations.clear();
-}
-
-void View::AddAnnotation(std::unique_ptr<vtkm::rendering::TextAnnotation> ann)
-{
-  this->Internal->TextAnnotations.push_back(std::move(ann));
 }
 
 void View::ClearTextAnnotations()

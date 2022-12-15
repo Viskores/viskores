@@ -303,7 +303,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
     externalFaces.SetPassPolyData(true);
     vtkm::cont::DataSet output = externalFaces.Execute(dataSet);
     cellSet = output.GetCellSet();
-    actualField = output.GetField(0);
+    actualField = output.GetField(inScalarField.GetName());
   }
 
   // Extract unique edges from the cell set.

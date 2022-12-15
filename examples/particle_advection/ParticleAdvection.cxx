@@ -66,10 +66,10 @@ int main(int argc, char** argv)
     vtkm::FloatDefault rx = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
     vtkm::FloatDefault ry = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
     vtkm::FloatDefault rz = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
-    p.Pos[0] = static_cast<vtkm::FloatDefault>(bounds.X.Min + rx * bounds.X.Length());
-    p.Pos[1] = static_cast<vtkm::FloatDefault>(bounds.Y.Min + ry * bounds.Y.Length());
-    p.Pos[2] = static_cast<vtkm::FloatDefault>(bounds.Z.Min + rz * bounds.Z.Length());
-    p.ID = i;
+    p.SetPosition({ static_cast<vtkm::FloatDefault>(bounds.X.Min + rx * bounds.X.Length()),
+                    static_cast<vtkm::FloatDefault>(bounds.Y.Min + ry * bounds.Y.Length()),
+                    static_cast<vtkm::FloatDefault>(bounds.Z.Min + rz * bounds.Z.Length()) });
+    p.SetID(i);
     seeds.push_back(p);
   }
   auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);

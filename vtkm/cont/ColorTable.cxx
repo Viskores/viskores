@@ -1271,12 +1271,6 @@ vtkm::exec::ColorTable ColorTable::PrepareForExecution(vtkm::cont::DeviceAdapter
   return execTable;
 }
 
-vtkm::exec::ColorTable ColorTable::PrepareForExecution(vtkm::cont::DeviceAdapterId device) const
-{
-  vtkm::cont::Token token;
-  return this->PrepareForExecution(device, token);
-}
-
 //---------------------------------------------------------------------------
 vtkm::Id ColorTable::GetModifiedCount() const
 {

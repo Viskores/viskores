@@ -12,7 +12,7 @@
 #define vtk_m_filter_entity_extraction_GhostCellRemove_h
 
 #include <vtkm/CellClassification.h>
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -23,7 +23,7 @@ namespace entity_extraction
 {
 /// \brief Removes ghost cells
 ///
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT GhostCellRemove : public vtkm::filter::NewFilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT GhostCellRemove : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
@@ -45,6 +45,11 @@ public:
   bool GetRemoveAllGhost() const { return this->RemoveAll; }
 
   VTKM_CONT
+  bool GetUseGhostCellsAsField() const { return this->UseGhostCellsAsField; }
+  VTKM_CONT
+  void SetUseGhostCellsAsField(bool flag) { this->UseGhostCellsAsField = flag; }
+
+  VTKM_CONT
   bool GetRemoveByType() const { return !this->RemoveAll; }
   VTKM_CONT
   vtkm::UInt8 GetRemoveType() const { return this->RemoveVals; }
@@ -53,17 +58,13 @@ private:
   VTKM_CONT
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
+  bool UseGhostCellsAsField = true;
   bool RemoveAll = false;
   bool RemoveField = false;
   vtkm::UInt8 RemoveVals = 0;
 };
 
 } // namespace entity_extraction
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::GhostCellRemove.") GhostCellRemove
-  : public vtkm::filter::entity_extraction::GhostCellRemove
-{
-  using entity_extraction::GhostCellRemove::GhostCellRemove;
-};
 } // namespace filter
 } // namespace vtkm
 

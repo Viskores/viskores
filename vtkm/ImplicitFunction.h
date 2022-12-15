@@ -11,47 +11,16 @@
 #define vtk_m_ImplicitFunction_h
 
 #include <vtkm/Bounds.h>
-#include <vtkm/Deprecated.h>
 #include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
 
-#include <vtkm/exec/internal/Variant.h>
+#include <vtkm/exec/Variant.h>
 
 // For interface class only.
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/VirtualObjectBase.h>
-#endif // VTKM_NO_DEPRECATED_VIRTUAL
-
 namespace vtkm
 {
-
-//============================================================================
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-class VTKM_DEPRECATED(1.6, "ImplicitFunction with virtual methods no longer supported.")
-  VTKM_ALWAYS_EXPORT ImplicitFunction : public vtkm::VirtualObjectBase
-{
-public:
-  using Scalar = vtkm::FloatDefault;
-  using Vector = vtkm::Vec<Scalar, 3>;
-
-  VTKM_EXEC_CONT virtual Scalar Value(const Vector& point) const = 0;
-  VTKM_EXEC_CONT virtual Vector Gradient(const Vector& point) const = 0;
-
-  VTKM_EXEC_CONT Scalar Value(Scalar x, Scalar y, Scalar z) const
-  {
-    return this->Value(Vector(x, y, z));
-  }
-
-  VTKM_EXEC_CONT Vector Gradient(Scalar x, Scalar y, Scalar z) const
-  {
-    return this->Gradient(Vector(x, y, z));
-  }
-};
-VTKM_DEPRECATED_SUPPRESS_END
-#endif // VTKM_NO_DEPRECATED_VIRTUAL
 
 //============================================================================
 namespace internal
@@ -92,73 +61,6 @@ public:
 };
 
 } // namespace vtkm::internal
-
-//============================================================================
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-
-/// A helpful functor that calls the (virtual) value method of a given ImplicitFunction. Can be
-/// passed to things that expect a functor instead of an ImplictFunction class (like an array
-/// transform).
-///
-class VTKM_DEPRECATED(1.6,
-                      "Use ImplicitFunctionValueFunctor.") VTKM_ALWAYS_EXPORT ImplicitFunctionValue
-{
-public:
-  using Scalar = vtkm::ImplicitFunction::Scalar;
-  using Vector = vtkm::ImplicitFunction::Vector;
-
-  VTKM_EXEC_CONT ImplicitFunctionValue()
-    : Function(nullptr)
-  {
-  }
-
-  VTKM_EXEC_CONT ImplicitFunctionValue(const ImplicitFunction* function)
-    : Function(function)
-  {
-  }
-
-  VTKM_EXEC_CONT Scalar operator()(const Vector& point) const
-  {
-    return this->Function->Value(point);
-  }
-
-private:
-  const vtkm::ImplicitFunction* Function;
-};
-
-/// A helpful functor that calls the (virtual) gradient method of a given ImplicitFunction. Can be
-/// passed to things that expect a functor instead of an ImplictFunction class (like an array
-/// transform).
-///
-class VTKM_DEPRECATED(1.6, "Use ImplicitFunctionGradientFunctor.")
-  VTKM_ALWAYS_EXPORT ImplicitFunctionGradient
-{
-public:
-  using Scalar = vtkm::ImplicitFunction::Scalar;
-  using Vector = vtkm::ImplicitFunction::Vector;
-
-  VTKM_EXEC_CONT ImplicitFunctionGradient()
-    : Function(nullptr)
-  {
-  }
-
-  VTKM_EXEC_CONT ImplicitFunctionGradient(const ImplicitFunction* function)
-    : Function(function)
-  {
-  }
-
-  VTKM_EXEC_CONT Vector operator()(const Vector& point) const
-  {
-    return this->Function->Gradient(point);
-  }
-
-private:
-  const vtkm::ImplicitFunction* Function;
-};
-
-VTKM_DEPRECATED_SUPPRESS_END
-#endif // VTKM_NO_DEPRECATED_VIRTUAL
 
 //============================================================================
 /// A helpful functor that calls the value method of a given `ImplicitFunction`. Can be
@@ -470,11 +372,6 @@ public:
     return normal;
   }
 
-  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
-  VTKM_EXEC Box* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
-  VTKM_EXEC const Box* operator->() const { return this; }
-
 private:
   Vector MinPoint;
   Vector MaxPoint;
@@ -537,11 +434,6 @@ public:
     vtkm::Vec<FloatDefault, 3> closestPoint = this->Center + (this->Axis * t);
     return (point - closestPoint) * FloatDefault(2);
   }
-
-  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
-  VTKM_EXEC Cylinder* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
-  VTKM_EXEC const Cylinder* operator->() const { return this; }
 
 private:
   Vector Center;
@@ -651,11 +543,6 @@ public:
     return this->Normals[maxValIdx];
   }
 
-  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
-  VTKM_EXEC Frustum* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
-  VTKM_EXEC const Frustum* operator->() const { return this; }
-
 private:
   Vector Points[6] = { { -0.5f, 0.0f, 0.0f }, { 0.5f, 0.0f, 0.0f },  { 0.0f, -0.5f, 0.0f },
                        { 0.0f, 0.5f, 0.0f },  { 0.0f, 0.0f, -0.5f }, { 0.0f, 0.0f, 0.5f } };
@@ -707,11 +594,6 @@ public:
   }
 
   VTKM_EXEC_CONT Vector Gradient(const Vector&) const { return this->Normal; }
-
-  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
-  VTKM_EXEC Plane* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
-  VTKM_EXEC const Plane* operator->() const { return this; }
 
 private:
   Vector Origin;
@@ -767,11 +649,6 @@ public:
     return Scalar(2) * (point - this->Center);
   }
 
-  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
-  VTKM_EXEC Sphere* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "ImplicitFunctions are no longer pointers. Use . operator.")
-  VTKM_EXEC const Sphere* operator->() const { return this; }
-
 private:
   Scalar Radius;
   Vector Center;
@@ -826,7 +703,7 @@ class ImplicitFunctionMultiplexer
   : public vtkm::internal::ImplicitFunctionBase<
       ImplicitFunctionMultiplexer<ImplicitFunctionTypes...>>
 {
-  vtkm::exec::internal::Variant<ImplicitFunctionTypes...> Variant;
+  vtkm::exec::Variant<ImplicitFunctionTypes...> Variant;
 
   using Superclass =
     vtkm::internal::ImplicitFunctionBase<ImplicitFunctionMultiplexer<ImplicitFunctionTypes...>>;

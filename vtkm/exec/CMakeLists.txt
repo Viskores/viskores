@@ -18,8 +18,10 @@ set(headers
   CellInterpolate.h
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorMultiplexer.h
+  CellLocatorPartitioned.h
   CellLocatorRectilinearGrid.h
   CellLocatorTwoLevel.h
+  CellLocatorUniformBins.h
   CellLocatorUniformGrid.h
   CellMeasure.h
   ColorTable.h
@@ -27,24 +29,17 @@ set(headers
   ConnectivityExtrude.h
   ConnectivityPermuted.h
   ConnectivityStructured.h
-  ExecutionWholeArray.h
   FieldNeighborhood.h
   FunctorBase.h
   ParametricCoordinates.h
   PointLocatorSparseGrid.h
   TaskBase.h
+  Variant.h
   )
 
 set(header_impls
   ColorTable.hxx
   )
-
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    CellLocator.h
-    PointLocator.h
-    )
-endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
@@ -53,16 +48,3 @@ add_subdirectory(arg)
 vtkm_declare_headers(${headers}
                     ${header_impls}
                     )
-
-
-#-----------------------------------------------------------------------------
-add_subdirectory(serial)
-add_subdirectory(tbb)
-add_subdirectory(openmp)
-add_subdirectory(cuda)
-add_subdirectory(kokkos)
-
-#-----------------------------------------------------------------------------
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

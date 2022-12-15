@@ -37,11 +37,6 @@ private:
   vtkm::ImplicitFunctionGeneral Function;
 };
 } // namespace contour
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::contour::Slice.") Slice
-  : public vtkm::filter::contour::Slice
-{
-  using contour::Slice::Slice;
-};
 } // namespace filter
 } // namespace vtkm
 

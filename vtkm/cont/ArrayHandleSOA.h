@@ -328,24 +328,6 @@ public:
     VTKM_STATIC_ASSERT(sizeof...(RemainingVectors) + 1 == NUM_COMPONENTS);
   }
 
-  // This only works if all the templated arguments are of type std::vector<ComponentType>.
-  template <typename... RemainingVectors>
-#ifndef VTKM_MSVC
-  // For some reason, having VTKM_DEPRECATED here is causing a syntax error in some MSVC
-  // compilers.
-  VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
-#endif
-    ArrayHandleSOA(const std::vector<ComponentType>& vector0,
-                   const RemainingVectors&... componentVectors)
-    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
-        vtkm::cont::make_ArrayHandle(vector0, vtkm::CopyFlag::Off).GetBuffers()[0],
-        vtkm::cont::make_ArrayHandle(std::forward<RemainingVectors>(componentVectors),
-                                     vtkm::CopyFlag::Off)
-          .GetBuffers()[0]... })
-  {
-    VTKM_STATIC_ASSERT(sizeof...(RemainingVectors) + 1 == NUM_COMPONENTS);
-  }
-
   ArrayHandleSOA(std::initializer_list<const ComponentType*> componentArrays,
                  vtkm::Id length,
                  vtkm::CopyFlag copy)
@@ -360,20 +342,6 @@ public:
     }
   }
 
-  VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
-  ArrayHandleSOA(std::initializer_list<const ComponentType*> componentArrays, vtkm::Id length)
-  {
-    VTKM_ASSERT(componentArrays.size() == NUM_COMPONENTS);
-    vtkm::IdComponent componentIndex = 0;
-    for (auto&& vectorIter = componentArrays.begin(); vectorIter != componentArrays.end();
-         ++vectorIter)
-    {
-      this->SetArray(componentIndex,
-                     vtkm::cont::make_ArrayHandle(*vectorIter, length, vtkm::CopyFlag::Off));
-      ++componentIndex;
-    }
-  }
-
   // This only works if all the templated arguments are of type std::vector<ComponentType>.
   template <typename... RemainingArrays>
   ArrayHandleSOA(vtkm::Id length,
@@ -383,24 +351,6 @@ public:
     : Superclass(std::vector<vtkm::cont::internal::Buffer>{
         vtkm::cont::make_ArrayHandle(array0, length, copy).GetBuffers()[0],
         vtkm::cont::make_ArrayHandle(componentArrays, length, copy).GetBuffers()[0]... })
-  {
-    VTKM_STATIC_ASSERT(sizeof...(RemainingArrays) + 1 == NUM_COMPONENTS);
-  }
-
-  // This only works if all the templated arguments are of type std::vector<ComponentType>.
-  template <typename... RemainingArrays>
-#ifndef VTKM_MSVC
-  // For some reason, having VTKM_DEPRECATED here is causing a syntax error in some MSVC
-  // compilers.
-  VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
-#endif
-    ArrayHandleSOA(vtkm::Id length,
-                   const ComponentType* array0,
-                   const RemainingArrays&... componentArrays)
-    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
-        vtkm::cont::make_ArrayHandle(array0, length, vtkm::CopyFlag::Off).GetBuffers()[0],
-        vtkm::cont::make_ArrayHandle(componentArrays, length, vtkm::CopyFlag::Off)
-          .GetBuffers()[0]... })
   {
     VTKM_STATIC_ASSERT(sizeof...(RemainingArrays) + 1 == NUM_COMPONENTS);
   }
@@ -471,19 +421,6 @@ VTKM_CONT
     vtkm::cont::make_ArrayHandle(std::forward<RemainingVectors>(componentVectors), copy)...);
 }
 
-template <typename ComponentType, typename... RemainingVectors>
-VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
-VTKM_CONT ArrayHandleSOA<
-  vtkm::Vec<ComponentType,
-            vtkm::IdComponent(sizeof...(RemainingVectors) +
-                              1)>> make_ArrayHandleSOA(const std::vector<ComponentType>& vector0,
-                                                       const RemainingVectors&... componentVectors)
-{
-  return ArrayHandleSOA<
-    vtkm::Vec<ComponentType, vtkm::IdComponent(sizeof...(RemainingVectors) + 1)>>(
-    vector0, componentVectors...);
-}
-
 // This only works if all the templated arguments are rvalues of std::vector<ComponentType>.
 template <typename ComponentType, typename... RemainingVectors>
 VTKM_CONT
@@ -505,16 +442,6 @@ VTKM_CONT ArrayHandleSOA<ValueType> make_ArrayHandleSOA(
   return ArrayHandleSOA<ValueType>(std::move(componentVectors), length, copy);
 }
 
-template <typename ValueType>
-VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
-VTKM_CONT ArrayHandleSOA<ValueType> make_ArrayHandleSOA(
-  std::initializer_list<const typename vtkm::VecTraits<ValueType>::ComponentType*>&&
-    componentVectors,
-  vtkm::Id length)
-{
-  return vtkm::cont::make_ArrayHandleSOA(std::move(componentVectors), length, vtkm::CopyFlag::Off);
-}
-
 // This only works if all the templated arguments are of type std::vector<ComponentType>.
 template <typename ComponentType, typename... RemainingArrays>
 VTKM_CONT
@@ -527,20 +454,6 @@ VTKM_CONT
   return ArrayHandleSOA<
     vtkm::Vec<ComponentType, vtkm::IdComponent(sizeof...(RemainingArrays) + 1)>>(
     length, copy, array0, componentArrays...);
-}
-
-template <typename ComponentType, typename... RemainingArrays>
-VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
-VTKM_CONT ArrayHandleSOA<
-  vtkm::Vec<ComponentType,
-            vtkm::IdComponent(sizeof...(RemainingArrays) +
-                              1)>> make_ArrayHandleSOA(vtkm::Id length,
-                                                       const ComponentType* array0,
-                                                       const RemainingArrays*... componentArrays)
-{
-  return ArrayHandleSOA<
-    vtkm::Vec<ComponentType, vtkm::IdComponent(sizeof...(RemainingArrays) + 1)>>(
-    length, array0, componentArrays...);
 }
 
 namespace internal

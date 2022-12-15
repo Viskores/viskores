@@ -20,7 +20,6 @@ set(headers
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   FieldStatistics.h
-  KdTree3D.h            # Deprecated
   KernelSplatter.h
   Keys.h
   MaskIndices.h
@@ -84,11 +83,5 @@ vtkm_library(
   DEVICE_SOURCES ${sources_device}
   USE_VTKM_JOB_POOL
   )
-target_link_libraries(vtkm_worklet PUBLIC vtkm_cont)
 
 set_source_files_properties(${sources_device} PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
-
-#-----------------------------------------------------------------------------
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

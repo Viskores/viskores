@@ -48,7 +48,7 @@ public:
                             const vtkm::Id& maxSteps) const
   {
     auto particle = integralCurve.GetParticle(idx);
-    vtkm::FloatDefault time = particle.Time;
+    vtkm::FloatDefault time = particle.GetTime();
     bool tookAnySteps = false;
 
     //the integrator status needs to be more robust:
@@ -143,7 +143,7 @@ public:
   template <typename ParticleType>
   VTKM_EXEC void operator()(const ParticleType& p, vtkm::Id& numSteps) const
   {
-    numSteps = p.NumSteps;
+    numSteps = p.GetNumberOfSteps();
   }
 };
 
@@ -156,13 +156,13 @@ public:
   using ExecutionSignature = void(_1, _2, _3);
 
   // Offset is number of points in streamline.
-  // 1 (inital point) + number of steps taken (p.NumSteps - initalNumSteps)
+  // 1 (inital point) + number of steps taken (p.GetNumberOfSteps() - initalNumSteps)
   template <typename ParticleType>
   VTKM_EXEC void operator()(const ParticleType& p,
                             const vtkm::Id& initialNumSteps,
                             vtkm::Id& diff) const
   {
-    diff = 1 + p.NumSteps - initialNumSteps;
+    diff = 1 + p.GetNumberOfSteps() - initialNumSteps;
   }
 };
 } // namespace detail

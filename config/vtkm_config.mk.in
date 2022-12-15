@@ -25,14 +25,4 @@ VTKm_ENABLE_EGL_CONTEXT = @VTKm_ENABLE_EGL_CONTEXT@
 VTKm_ENABLE_MPI = @VTKm_ENABLE_MPI@
 
 VTKm_INCLUDE_FLAGS = -I $(VTKm_DIR)/include
-VTKm_LIB_FLAGS = -L $(VTKm_DIR)/lib \
-    -lvtkm_rendering-$(VTKM_VERSION) \
-    -lvtkm_filter_contour-$(VTKM_VERSION) \
-    -lvtkm_filter_gradient-$(VTKM_VERSION) \
-    -lvtkm_filter_extra-$(VTKM_VERSION) \
-    -lvtkm_filter_common-$(VTKM_VERSION) \
-    -lvtkm_worklet-$(VTKM_VERSION) \
-    -lvtkm_source-$(VTKM_VERSION) \
-    -lvtkm_io-$(VTKM_VERSION) \
-    -lvtkm_cont-$(VTKM_VERSION) \
-    -lvtkmdiympi_nompi
+VTKm_LIB_FLAGS = -L $(VTKm_DIR)/lib@lib_args@

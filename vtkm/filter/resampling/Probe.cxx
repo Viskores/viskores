@@ -76,8 +76,8 @@ vtkm::cont::DataSet Probe::DoExecute(const vtkm::cont::DataSet& input)
   auto mapper = [&](auto& outDataSet, const auto& f) {
     DoMapField(outDataSet, f, worklet, this->InvalidValue);
   };
-  auto output = this->CreateResult(
-    input, this->Geometry.GetCellSet(), this->Geometry.GetCoordinateSystems(), mapper);
+  auto output = this->CreateResultCoordinateSystem(
+    input, this->Geometry.GetCellSet(), this->Geometry.GetCoordinateSystem(), mapper);
   output.AddField(vtkm::cont::make_FieldPoint("HIDDEN", worklet.GetHiddenPointsField()));
   output.AddField(
     vtkm::cont::make_FieldCell("HIDDEN", worklet.GetHiddenCellsField(output.GetCellSet())));

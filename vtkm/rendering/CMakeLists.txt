@@ -8,15 +8,6 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-#unconditionally include rendering contexts so that the helper functions
-#are around even if rendering isn't enabled
-include(VTKmRenderingContexts)
-
-if(NOT VTKm_ENABLE_RENDERING)
-  return()
-endif()
-
-
 set(headers
   Actor.h
   AxisAnnotation.h
@@ -33,8 +24,6 @@ set(headers
   ColorLegendAnnotation.h
   ConnectivityProxy.h
   Cylinderizer.h
-  DecodePNG.h # deprecated
-  EncodePNG.h # deprecated
   GlyphType.h
   LineRenderer.h
   LineRendererBatcher.h
@@ -154,23 +143,14 @@ vtkm_library(
   )
 
 #-----------------------------------------------------------------------------
-target_link_libraries(vtkm_rendering PUBLIC vtkm_filter_image_processing vtkm_filter_entity_extraction vtkm_io)
 if(UNIX AND NOT APPLE)
   target_link_libraries(vtkm_rendering PRIVATE rt)
 endif()
 
 #-----------------------------------------------------------------------------
-target_link_libraries(vtkm_rendering PUBLIC vtkm_rendering_gl_context)
-
-if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
-  install(TARGETS vtkm_rendering_gl_context
-    EXPORT ${VTKm_EXPORT_NAME}
-    )
-endif()
-
-#-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(raytracing)
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()
+
+#-----------------------------------------------------------------------------
+# Pretty much obsolete, but might be expected to be exported.
+include(VTKmRenderingContexts)

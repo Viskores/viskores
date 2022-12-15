@@ -77,7 +77,9 @@ void TryGenerateIds(
 
 void TestGenerateIds()
 {
-  vtkm::cont::DataSet input = vtkm::source::Tangle{ vtkm::Id3(8) }.Execute();
+  vtkm::source::Tangle tangle;
+  tangle.SetCellDimensions({ 8, 8, 8 });
+  vtkm::cont::DataSet input = tangle.Execute();
   vtkm::filter::field_transform::GenerateIds filter;
 
   TryGenerateIds(filter, input);

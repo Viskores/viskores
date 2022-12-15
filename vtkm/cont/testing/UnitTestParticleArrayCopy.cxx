@@ -45,7 +45,7 @@ void TestParticleArrayCopy()
       {
         auto p = pPortal.Get(j);
         auto pt = pos.ReadPortal().Get(j);
-        VTKM_TEST_ASSERT(p.Pos == pt, "Positions do not match");
+        VTKM_TEST_ASSERT(p.GetPosition() == pt, "Positions do not match");
       }
     }
     else //Test copy everything
@@ -62,11 +62,11 @@ void TestParticleArrayCopy()
       {
         auto p = pPortal.Get(j);
         auto pt = pos.ReadPortal().Get(j);
-        VTKM_TEST_ASSERT(p.Pos == pt, "Positions do not match");
-        VTKM_TEST_ASSERT(p.ID == ids.ReadPortal().Get(j), "IDs do not match");
-        VTKM_TEST_ASSERT(p.NumSteps == steps.ReadPortal().Get(j), "Steps do not match");
-        VTKM_TEST_ASSERT(p.Status == status.ReadPortal().Get(j), "Status do not match");
-        VTKM_TEST_ASSERT(p.Time == ptime.ReadPortal().Get(j), "Times do not match");
+        VTKM_TEST_ASSERT(p.GetPosition() == pt, "Positions do not match");
+        VTKM_TEST_ASSERT(p.GetID() == ids.ReadPortal().Get(j), "IDs do not match");
+        VTKM_TEST_ASSERT(p.GetNumberOfSteps() == steps.ReadPortal().Get(j), "Steps do not match");
+        VTKM_TEST_ASSERT(p.GetStatus() == status.ReadPortal().Get(j), "Status do not match");
+        VTKM_TEST_ASSERT(p.GetTime() == ptime.ReadPortal().Get(j), "Times do not match");
       }
     }
   }
@@ -106,7 +106,7 @@ void TestParticleArrayCopy()
     {
       auto p = portal.Get(i);
       auto pRes = resPortal.Get(resIdx);
-      VTKM_TEST_ASSERT(p.Pos == pRes, "Positions do not match");
+      VTKM_TEST_ASSERT(p.GetPosition() == pRes, "Positions do not match");
       resIdx++;
     }
   }

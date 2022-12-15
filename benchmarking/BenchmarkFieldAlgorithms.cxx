@@ -19,10 +19,6 @@
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/ArrayHandleVirtual.h>
-#endif
-
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -225,21 +221,30 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
-  template <typename WeightType, typename T, typename S>
+  template <typename WeightType, typename PortalType, typename U>
   VTKM_EXEC void operator()(const vtkm::Id2& low_high,
                             const WeightType& weight,
-                            const vtkm::exec::ExecutionWholeArrayConst<T, S>& inPortal,
-                            T& result) const
+                            const PortalType& inPortal,
+                            U& result) const
+  {
+    using T = typename PortalType::ValueType;
+    this->DoIt(low_high, weight, inPortal, result, typename std::is_same<T, U>::type{});
+  }
+
+  template <typename WeightType, typename PortalType>
+  VTKM_EXEC void DoIt(const vtkm::Id2& low_high,
+                      const WeightType& weight,
+                      const PortalType& inPortal,
+                      typename PortalType::ValueType& result,
+                      std::true_type) const
   {
     //fetch the low / high values from inPortal
     result = vtkm::Lerp(inPortal.Get(low_high[0]), inPortal.Get(low_high[1]), weight);
   }
 
-  template <typename WeightType, typename T, typename S, typename U>
-  VTKM_EXEC void operator()(const vtkm::Id2&,
-                            const WeightType&,
-                            const vtkm::exec::ExecutionWholeArrayConst<T, S>&,
-                            U&) const
+  template <typename WeightType, typename PortalType, typename U>
+  VTKM_EXEC void DoIt(const vtkm::Id2&, const WeightType&, const PortalType&, U&, std::false_type)
+    const
   {
     //the inPortal and result need to be the same type so this version only
     //exists to generate code when using dynamic arrays
@@ -420,20 +425,6 @@ void BenchBlackScholesStatic(::benchmark::State& state)
 };
 VTKM_BENCHMARK_TEMPLATES(BenchBlackScholesStatic, ValueTypes);
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-template <typename ValueType>
-void BenchBlackScholesDynamic(::benchmark::State& state)
-{
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  BenchBlackScholesImpl<ValueType> impl{ state };
-  impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.StockPrice),
-           vtkm::cont::make_ArrayHandleVirtual(impl.OptionStrike),
-           vtkm::cont::make_ArrayHandleVirtual(impl.OptionYears));
-  VTKM_DEPRECATED_SUPPRESS_END
-};
-VTKM_BENCHMARK_TEMPLATES(BenchBlackScholesDynamic, ValueTypes);
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
-
 template <typename ValueType>
 void BenchBlackScholesMultiplexer0(::benchmark::State& state)
 {
@@ -528,20 +519,6 @@ void BenchMathStatic(::benchmark::State& state)
 };
 VTKM_BENCHMARK_TEMPLATES(BenchMathStatic, ValueTypes);
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-template <typename ValueType>
-void BenchMathDynamic(::benchmark::State& state)
-{
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  BenchMathImpl<ValueType> impl{ state };
-  impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.InputHandle),
-           vtkm::cont::make_ArrayHandleVirtual(impl.TempHandle1),
-           vtkm::cont::make_ArrayHandleVirtual(impl.TempHandle2));
-  VTKM_DEPRECATED_SUPPRESS_END
-};
-VTKM_BENCHMARK_TEMPLATES(BenchMathDynamic, ValueTypes);
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
-
 template <typename ValueType>
 void BenchMathMultiplexer0(::benchmark::State& state)
 {
@@ -630,18 +607,6 @@ void BenchFusedMathStatic(::benchmark::State& state)
   impl.Run(impl.InputHandle);
 };
 VTKM_BENCHMARK_TEMPLATES(BenchFusedMathStatic, ValueTypes);
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-template <typename ValueType>
-void BenchFusedMathDynamic(::benchmark::State& state)
-{
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  BenchFusedMathImpl<ValueType> impl{ state };
-  impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.InputHandle));
-  VTKM_DEPRECATED_SUPPRESS_END
-};
-VTKM_BENCHMARK_TEMPLATES(BenchFusedMathDynamic, ValueTypes);
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <typename ValueType>
 void BenchFusedMathMultiplexer0(::benchmark::State& state)
@@ -755,20 +720,6 @@ void BenchEdgeInterpStatic(::benchmark::State& state)
 };
 VTKM_BENCHMARK_TEMPLATES(BenchEdgeInterpStatic, InterpValueTypes);
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-template <typename ValueType>
-void BenchEdgeInterpDynamic(::benchmark::State& state)
-{
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  BenchEdgeInterpImpl<ValueType> impl{ state };
-  impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.EdgePairHandle),
-           vtkm::cont::make_ArrayHandleVirtual(impl.WeightHandle),
-           vtkm::cont::make_ArrayHandleVirtual(impl.FieldHandle));
-  VTKM_DEPRECATED_SUPPRESS_END
-};
-VTKM_BENCHMARK_TEMPLATES(BenchEdgeInterpDynamic, InterpValueTypes);
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
-
 struct ImplicitFunctionBenchData
 {
   vtkm::cont::ArrayHandle<vtkm::Vec3f> Points;
@@ -833,37 +784,6 @@ void BenchImplicitFunction(::benchmark::State& state)
   }
 }
 VTKM_BENCHMARK(BenchImplicitFunction);
-
-void BenchVirtualImplicitFunction(::benchmark::State& state)
-{
-  using EvalWorklet = EvaluateImplicitFunction;
-
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-
-  auto data = MakeImplicitFunctionBenchData();
-
-  {
-    std::ostringstream desc;
-    desc << data.Points.GetNumberOfValues() << " points";
-    state.SetLabel(desc.str());
-  }
-
-  EvalWorklet eval;
-
-  vtkm::cont::Timer timer{ device };
-  vtkm::cont::Invoker invoker{ device };
-
-  for (auto _ : state)
-  {
-    (void)_;
-    timer.Start();
-    invoker(eval, data.Points, data.Result, data.Sphere1);
-    timer.Stop();
-
-    state.SetIterationTime(timer.GetElapsedTime());
-  }
-}
-VTKM_BENCHMARK(BenchVirtualImplicitFunction);
 
 void Bench2ImplicitFunctions(::benchmark::State& state)
 {

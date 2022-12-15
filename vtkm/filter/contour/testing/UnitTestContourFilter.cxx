@@ -30,8 +30,8 @@ public:
   {
     std::cout << "Testing Contour filter on a uniform grid" << std::endl;
 
-    vtkm::Id3 dims(4, 4, 4);
-    vtkm::source::Tangle tangle(dims);
+    vtkm::source::Tangle tangle;
+    tangle.SetCellDimensions({ 4, 4, 4 });
     vtkm::filter::field_transform::GenerateIds genIds;
     genIds.SetUseFloat(true);
     genIds.SetGeneratePointIds(false);
@@ -50,7 +50,7 @@ public:
       VTKM_TEST_ASSERT(result.GetNumberOfCoordinateSystems() == 1,
                        "Wrong number of coordinate systems in the output dataset");
       //since normals is on we have one field
-      VTKM_TEST_ASSERT(result.GetNumberOfFields() == 1,
+      VTKM_TEST_ASSERT(result.GetNumberOfFields() == 2,
                        "Wrong number of fields in the output dataset");
     }
 
@@ -61,7 +61,7 @@ public:
       const bool isMapped = result.HasField("tangle");
       VTKM_TEST_ASSERT(isMapped, "mapping should pass");
 
-      VTKM_TEST_ASSERT(result.GetNumberOfFields() == 3,
+      VTKM_TEST_ASSERT(result.GetNumberOfFields() == 4,
                        "Wrong number of fields in the output dataset");
 
       //verify the cellvar result

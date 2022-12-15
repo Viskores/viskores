@@ -15,8 +15,3 @@ set(headers
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 vtkm_declare_headers(${headers})
-
-#-----------------------------------------------------------------------------
-if (TARGET vtkm::kokkos AND VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif()

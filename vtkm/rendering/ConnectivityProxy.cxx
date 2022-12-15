@@ -39,20 +39,16 @@ protected:
   bool CompositeBackground;
 
 public:
-  InternalsType(vtkm::cont::DataSet& dataSet)
+  InternalsType(const vtkm::cont::DataSet& dataSet, const std::string& fieldName)
   {
     Dataset = dataSet;
     Cells = dataSet.GetCellSet();
     Coords = dataSet.GetCoordinateSystem();
     Mode = RenderMode::Volume;
     CompositeBackground = true;
-    //
-    // Just grab a default scalar field
-    //
-
-    if (Dataset.GetNumberOfFields() > 0)
+    if (!fieldName.empty())
     {
-      this->SetScalarField(Dataset.GetField(0).GetName());
+      this->SetScalarField(fieldName);
     }
   }
 
@@ -243,8 +239,9 @@ public:
 
 
 VTKM_CONT
-ConnectivityProxy::ConnectivityProxy(vtkm::cont::DataSet& dataSet)
-  : Internals(new InternalsType(dataSet))
+ConnectivityProxy::ConnectivityProxy(const vtkm::cont::DataSet& dataSet,
+                                     const std::string& fieldName)
+  : Internals(new InternalsType(dataSet, fieldName))
 {
 }
 
@@ -259,7 +256,7 @@ ConnectivityProxy::ConnectivityProxy(const vtkm::cont::UnknownCellSet& cellset,
   dataset.AddCoordinateSystem(coords);
   dataset.AddField(scalarField);
 
-  Internals = std::shared_ptr<InternalsType>(new InternalsType(dataset));
+  Internals = std::shared_ptr<InternalsType>(new InternalsType(dataset, scalarField.GetName()));
 }
 
 VTKM_CONT

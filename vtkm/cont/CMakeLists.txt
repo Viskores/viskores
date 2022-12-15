@@ -59,6 +59,7 @@ set(headers
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorChooser.h
   CellLocatorGeneral.h
+  CellLocatorPartitioned.h
   CellLocatorRectilinearGrid.h
   CellLocatorTwoLevel.h
   CellLocatorUniformBins.h
@@ -67,7 +68,6 @@ set(headers
   CellSetExplicit.h
   CellSetExtrude.h
   CellSetList.h
-  CellSetListTag.h
   CellSetPermutation.h
   CellSetSingleType.h
   CellSetStructured.h
@@ -81,13 +81,10 @@ set(headers
   DataSetBuilderExplicit.h
   DataSetBuilderRectilinear.h
   DataSetBuilderUniform.h
-  DataSetFieldAdd.h
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
   DeviceAdapterList.h
-  DeviceAdapterListTag.h
   DeviceAdapterTag.h
-  DynamicCellSet.h # Deprecated, replaced by Unknown/UncertainCellSet.h
   EnvironmentTracker.h
   Error.h
   ErrorBadAllocation.h
@@ -102,22 +99,18 @@ set(headers
   Field.h
   FieldRangeCompute.h
   FieldRangeGlobalCompute.h
-  ImplicitFunctionHandle.h
   Initialize.h
   Invoker.h
   Logging.h
   MergePartitionedDataSet.h
   ParticleArrayCopy.h
   PartitionedDataSet.h
-  PointLocatorUniformGrid.h
   PointLocatorSparseGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageImplicit.h # Deprecated, rolled into ArrayHandleImplicit.h
   StorageList.h
-  StorageListTag.h
   Timer.h
   Token.h
   TryExecute.h
@@ -126,14 +119,12 @@ set(headers
   UncertainCellSet.h
   UnknownArrayHandle.h
   UnknownCellSet.h
-  VariantArrayHandle.h # Deprecated, replaces with Unknown/UncertainArrayHandle.h
+  Variant.h
   )
 
 set(template_sources
-  ArrayRangeCompute.hxx # Deprecated, replaced with ArrayRangeComputeTemplate.h
   CellSetExplicit.hxx
   ParticleArrayCopy.hxx
-  VirtualObjectHandle.hxx
   )
 
 set(sources
@@ -147,7 +138,9 @@ set(sources
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
   CellLocatorGeneral.cxx
+  CellLocatorPartitioned.cxx
   CellLocatorRectilinearGrid.cxx
+  CellLocatorUniformBins.cxx
   CellLocatorUniformGrid.cxx
   CellSet.cxx
   CellSetStructured.cxx
@@ -181,18 +174,6 @@ set(sources
   UnknownCellSet.cxx
   )
 
-if(VTKm_ENABLE_TESTING_LIBRARY)
-  list(APPEND sources
-    # This file should really be part of the vtkm_cont_testing library (in the testing
-    # subdirectory) It supports external code using deprecated functionality. In particular,
-    # testing/MakeTestDataSet.h now needs symbols compiled in MakeTestDataSet.cxx, but the
-    # deprecated behavior expects to only need to include vtkm_cont. As a workaround, add the code
-    # to vtkm_cont for now. This should probably be changed back to be in vtkm_cont_testing for the
-    # 2.0 release.
-    testing/MakeTestDataSet.cxx
-    )
-endif()
-
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
@@ -200,6 +181,7 @@ set(device_sources
   ArrayGetValues.cxx
   ArrayRangeCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
+  CellLocatorUniformBins.cxx
   CellLocatorTwoLevel.cxx
   CellSetExplicit.cxx
   CellSetExtrude.cxx
@@ -214,31 +196,6 @@ set(device_sources
   RuntimeDeviceInformation.cxx
   Timer.cxx
   )
-
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    ArrayHandleVirtual.h
-    ArrayHandleVirtualCoordinates.h
-    CellLocator.h
-    PointLocator.h
-    StorageVirtual.h
-    VirtualObjectHandle.h
-    )
-
-  set(template_sources ${template_sources}
-    ArrayHandleVirtual.hxx
-    StorageVirtual.hxx
-    )
-
-  set(device_sources ${device_sources}
-    ArrayHandleVirtual.cxx
-    CellLocator.cxx
-    internal/TransferInfo.cxx
-    internal/VirtualObjectTransfer.cxx
-    PointLocator.cxx
-    StorageVirtual.cxx
-    )
-endif()
 
 #-----------------------------------------------------------------------------
 # Set up default types, which can be custom configured by other build systems.
@@ -312,21 +269,16 @@ vtkm_library( NAME vtkm_cont
 
 add_subdirectory(internal)
 add_subdirectory(arg)
-add_subdirectory(serial)
-add_subdirectory(tbb)
-add_subdirectory(openmp)
-add_subdirectory(cuda)
-add_subdirectory(kokkos)
 
 set(backends )
-if(TARGET vtkm::tbb)
-  list(APPEND backends vtkm::tbb)
+if(TARGET vtkm_tbb)
+  list(APPEND backends vtkm_tbb)
 endif()
-if(TARGET vtkm::cuda)
-  list(APPEND backends vtkm::cuda)
+if(TARGET vtkm_cuda)
+  list(APPEND backends vtkm_cuda)
 endif()
-if(TARGET vtkm::openmp)
-  list(APPEND backends vtkm::openmp)
+if(TARGET vtkm_openmp)
+  list(APPEND backends vtkm_openmp)
 endif()
 if(TARGET vtkm::kokkos)
   list(APPEND backends vtkm::kokkos)
@@ -334,12 +286,3 @@ endif()
 
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
 target_link_libraries(vtkm_cont PUBLIC Threads::Threads)
-target_link_libraries(vtkm_cont PUBLIC vtkm_optionparser vtkm_diy vtkm_lcl)
-if(TARGET vtkm_loguru)
-  target_link_libraries(vtkm_cont PRIVATE vtkm_loguru)
-endif()
-
-#-----------------------------------------------------------------------------
-if(VTKm_ENABLE_TESTING_LIBRARY)
-  add_subdirectory(testing)
-endif()

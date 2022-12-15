@@ -10,13 +10,12 @@
 #ifndef vtk_m_cont_arg_TransportTagWholeArrayIn_h
 #define vtk_m_cont_arg_TransportTagWholeArrayIn_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 
 #include <vtkm/cont/arg/Transport.h>
-
-#include <vtkm/exec/ExecutionWholeArray.h>
 
 namespace vtkm
 {
@@ -56,7 +55,7 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayIn, ContObjectType, Devi
   using ValueType = typename ContObjectType::ValueType;
   using StorageTag = typename ContObjectType::StorageTag;
 
-  using ExecObjectType = vtkm::exec::ExecutionWholeArrayConst<ValueType, StorageTag>;
+  using ExecObjectType = typename ContObjectType::ReadPortalType;
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(ContObjectType& array,
@@ -69,7 +68,7 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayIn, ContObjectType, Devi
     // array might not have the same size depending on how the user is using
     // the array.
 
-    return ExecObjectType(array, Device{}, token);
+    return array.PrepareForInput(Device{}, token);
   }
 
 #ifdef VTKM_MSVC

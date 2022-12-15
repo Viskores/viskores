@@ -26,12 +26,6 @@ vtkm_library(
   USE_VTKM_JOB_POOL
 )
 
-target_link_libraries(vtkm_filter_image_processing PUBLIC vtkm_worklet vtkm_filter_core)
 target_link_libraries(vtkm_filter PUBLIC INTERFACE vtkm_filter_image_processing)
 
 add_subdirectory(worklet)
-
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

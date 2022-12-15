@@ -45,10 +45,10 @@ public:
   template <typename ValidityType>
   VTKM_EXEC void operator()(const vtkm::Particle& end_point, ValidityType& res) const
   {
-    vtkm::Id steps = end_point.NumSteps;
+    vtkm::Id steps = end_point.GetNumberOfSteps();
     if (steps > 0 && res == 1)
     {
-      if (bounds.Contains(end_point.Pos))
+      if (bounds.Contains(end_point.GetPosition()))
       {
         res = 1;
       }
@@ -79,9 +79,9 @@ public:
                             const vtkm::Particle& start_point,
                             DisplacementType& res) const
   {
-    res[0] = end_point.Pos[0] - start_point.Pos[0];
-    res[1] = end_point.Pos[1] - start_point.Pos[1];
-    res[2] = end_point.Pos[2] - start_point.Pos[2];
+    res[0] = end_point.GetPosition()[0] - start_point.GetPosition()[0];
+    res[1] = end_point.GetPosition()[1] - start_point.GetPosition()[1];
+    res[2] = end_point.GetPosition()[2] - start_point.GetPosition()[2];
   }
 };
 
@@ -262,7 +262,7 @@ VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& i
     auto fieldmapper = [&](vtkm::cont::DataSet& dataset, const vtkm::cont::Field& fieldToPass) {
       MapField(dataset, fieldToPass);
     };
-    outputData = this->CreateResult(input, outCellSet, outCoords, fieldmapper);
+    outputData = this->CreateResultCoordinateSystem(input, outCellSet, outCoords, fieldmapper);
     outputData.AddPointField("valid", this->BasisParticlesValidity);
     outputData.AddPointField("displacement", basisParticlesDisplacement);
 
@@ -289,65 +289,3 @@ VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& i
 }
 }
 } //vtkm::filter::flow
-
-
-//Deprecated filter: vtkm::filter::Lagrangian
-namespace vtkm
-{
-namespace filter
-{
-
-static vtkm::Id deprecatedLagrange_Cycle = 0;
-static vtkm::cont::ArrayHandle<vtkm::Particle> deprecatedLagrange_BasisParticles;
-static vtkm::cont::ArrayHandle<vtkm::Particle> deprecatedLagrange_BasisParticlesOriginal;
-static vtkm::cont::ArrayHandle<vtkm::Id> deprecatedLagrange_BasisParticlesValidity;
-
-
-VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& input)
-{
-  //Initialize the filter with the static variables
-  this->SetCycle(deprecatedLagrange_Cycle);
-  this->SetBasisParticles(deprecatedLagrange_BasisParticles);
-  this->SetBasisParticlesOriginal(deprecatedLagrange_BasisParticlesOriginal);
-  this->SetBasisParticleValidity(deprecatedLagrange_BasisParticlesValidity);
-
-  //call the base class
-  auto output = vtkm::filter::flow::Lagrangian::DoExecute(input);
-
-  //Set the static variables with the current values.
-  deprecatedLagrange_Cycle = this->GetCycle();
-  deprecatedLagrange_BasisParticles = this->GetBasisParticles();
-  deprecatedLagrange_BasisParticlesOriginal = this->GetBasisParticlesOriginal();
-  deprecatedLagrange_BasisParticlesValidity = this->GetBasisParticleValidity();
-
-  //The deprecated filter returned a rectilinear grid of points whereas the new version
-  //returns a uniform grid of points. Convert the coordinates for deprecated users.
-  if (output.GetNumberOfCoordinateSystems() > 0)
-  {
-    vtkm::cont::ArrayHandleUniformPointCoordinates originalCoordinates;
-    output.GetCoordinateSystem().GetData().AsArrayHandle(originalCoordinates);
-    vtkm::Id3 dims = originalCoordinates.GetDimensions();
-    vtkm::Vec3f origin = originalCoordinates.GetOrigin();
-    vtkm::Vec3f spacing = originalCoordinates.GetSpacing();
-
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> xCoords;
-    vtkm::cont::ArrayCopy(
-      vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault>(origin[0], spacing[0], dims[0]), xCoords);
-
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> yCoords;
-    vtkm::cont::ArrayCopy(
-      vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault>(origin[1], spacing[1], dims[1]), yCoords);
-
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> zCoords;
-    vtkm::cont::ArrayCopy(
-      vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault>(origin[2], spacing[2], dims[2]), zCoords);
-
-    output.GetCoordinateSystem() = vtkm::cont::CoordinateSystem(
-      "coords", vtkm::cont::make_ArrayHandleCartesianProduct(xCoords, yCoords, zCoords));
-  }
-
-  return output;
-}
-
-}
-} // namespace vtkm::filter

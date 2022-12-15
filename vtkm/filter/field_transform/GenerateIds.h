@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_field_transform_GenerateIds_h
 #define vtk_m_filter_field_transform_GenerateIds_h
 
-#include <vtkm/filter/NewFilter.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -28,7 +28,7 @@ namespace field_transform
 /// convenient for adding indices to operations designed for fields and generally
 /// creating test data.
 ///
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT GenerateIds : public vtkm::filter::NewFilter
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT GenerateIds : public vtkm::filter::Filter
 {
   std::string PointFieldName = "pointids";
   std::string CellFieldName = "cellids";
@@ -89,11 +89,6 @@ private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace field_transform
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_transform::GenerateIds.") GenerateIds
-  : public vtkm::filter::field_transform::GenerateIds
-{
-  using field_transform::GenerateIds::GenerateIds;
-};
 } // namespace vtkm::filter
 } // namespace vtkm
 

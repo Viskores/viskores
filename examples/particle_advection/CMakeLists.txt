@@ -13,5 +13,7 @@ project(ParticleAdvection CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(Particle_Advection ParticleAdvection.cxx)
-target_link_libraries(Particle_Advection PRIVATE vtkm_filter_flow vtkm_io)
+if(TARGET vtkm::filter_flow AND TARGET vtkm::io)
+  add_executable(Particle_Advection ParticleAdvection.cxx)
+  target_link_libraries(Particle_Advection PRIVATE vtkm::filter_flow vtkm::io)
+endif()

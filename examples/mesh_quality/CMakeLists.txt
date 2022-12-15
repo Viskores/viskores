@@ -25,5 +25,7 @@ project(MeshQuality CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(MeshQuality MeshQuality.cxx)
-target_link_libraries(MeshQuality PRIVATE vtkm_filter vtkm_io)
+if(TARGET vtkm::filter_mesh_info AND TARGET vtkm::io)
+  add_executable(MeshQuality MeshQuality.cxx)
+  target_link_libraries(MeshQuality PRIVATE vtkm::filter_mesh_info vtkm::io)
+endif()

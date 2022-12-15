@@ -66,23 +66,25 @@ vtkm::cont::DataSet Tangle::DoExecute() const
 
   vtkm::cont::DataSet dataSet;
 
-  const vtkm::Id3 pdims{ this->Dims + vtkm::Id3{ 1, 1, 1 } };
   const vtkm::Vec3f mins = { -1.0f, -1.0f, -1.0f };
   const vtkm::Vec3f maxs = { 1.0f, 1.0f, 1.0f };
 
   vtkm::cont::CellSetStructured<3> cellSet;
-  cellSet.SetPointDimensions(pdims);
+  cellSet.SetPointDimensions(this->PointDimensions);
   dataSet.SetCellSet(cellSet);
 
+  vtkm::Id3 cellDims = this->GetCellDimensions();
+
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-  this->Invoke(tangle::TangleField{ this->Dims, mins, maxs }, cellSet, pointFieldArray);
+  this->Invoke(tangle::TangleField{ cellDims, mins, maxs }, cellSet, pointFieldArray);
 
   const vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
-  const vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(this->Dims[0]),
-                            1.0f / static_cast<vtkm::FloatDefault>(this->Dims[1]),
-                            1.0f / static_cast<vtkm::FloatDefault>(this->Dims[2]));
+  const vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(cellDims[0]),
+                            1.0f / static_cast<vtkm::FloatDefault>(cellDims[1]),
+                            1.0f / static_cast<vtkm::FloatDefault>(cellDims[2]));
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(pdims, origin, spacing);
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(
+    this->PointDimensions, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
   dataSet.AddField(vtkm::cont::make_FieldPoint("tangle", pointFieldArray));
 

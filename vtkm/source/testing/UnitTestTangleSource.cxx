@@ -18,7 +18,8 @@ void TangleSourceTest()
   vtkm::cont::Timer timer;
   timer.Start();
 
-  vtkm::source::Tangle source(vtkm::Id3{ 20, 20, 20 });
+  vtkm::source::Tangle source;
+  source.SetCellDimensions({ 20, 20, 20 });
   vtkm::cont::DataSet ds = source.Execute();
 
 

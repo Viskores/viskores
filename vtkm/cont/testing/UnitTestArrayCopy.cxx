@@ -147,7 +147,7 @@ void TryCopy()
   {
     std::cout << "view -> basic" << std::endl;
     vtkm::cont::ArrayHandle<ValueType> input = MakeInputArray<ValueType>();
-    auto viewInput = vtkm::cont::make_ArrayHandleView(input, 1, ARRAY_SIZE / 2);
+    vtkm::cont::make_ArrayHandleView(input, 1, ARRAY_SIZE / 2);
     vtkm::cont::ArrayHandle<ValueType> output;
     vtkm::cont::ArrayCopy(input, output);
     TestValues(input, output);

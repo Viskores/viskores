@@ -1,0 +1,14 @@
+NAME
+  vtkm_filter_core
+GROUPS
+  Core
+DEPENDS
+  vtkm_cont
+  vtkm_worklet
+TEST_DEPENDS
+  vtkm_filter
+  vtkm_io
+  vtkm_source
+TEST_OPTIONAL_DEPENDS
+  vtkm_rendering
+  vtkm_rendering_testing

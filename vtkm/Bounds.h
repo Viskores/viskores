@@ -149,6 +149,22 @@ struct Bounds
     return vtkm::Vec3f_64(this->X.Center(), this->Y.Center(), this->Z.Center());
   }
 
+  /// \b Returns the min point of the bounds
+  ///
+  /// \c MinCorder returns the minium point of the bounds.If the bounds
+  /// are empty, the results are undefined.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Vec3f_64 MinCorner() const { return vtkm::Vec3f_64(this->X.Min, this->Y.Min, this->Z.Min); }
+
+  /// \b Returns the max point of the bounds
+  ///
+  /// \c MaxCorder returns the minium point of the bounds.If the bounds
+  /// are empty, the results are undefined.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Vec3f_64 MaxCorner() const { return vtkm::Vec3f_64(this->X.Max, this->Y.Max, this->Z.Max); }
+
   /// \b Expand bounds to include a point.
   ///
   /// This version of \c Include expands the bounds just enough to include the

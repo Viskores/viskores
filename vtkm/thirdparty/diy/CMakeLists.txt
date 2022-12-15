@@ -58,7 +58,11 @@ set(VTKM_USE_EXTERNAL_DIY OFF)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
   ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h)
 
-function(vtkm_diy_set_target_output_directory target)
+function(vtkm_diy_set_target_properties target)
+  if (NOT VTKm_SKIP_LIBRARY_VERSIONS)
+    set_property(TARGET ${target} PROPERTY VERSION ${VTKm_VERSION}.${VTKm_VERSION_PATCH})
+    set_property(TARGET ${target} PROPERTY SOVERSION ${VTKm_VERSION})
+  endif()
   set_property(TARGET ${target} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${target} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${target} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
@@ -69,15 +73,16 @@ add_subdirectory(vtkmdiy)
 
 # move diy libraries
 if (TARGET vtkmdiympi)
-  vtkm_diy_set_target_output_directory(vtkmdiympi)
+  vtkm_diy_set_target_properties(vtkmdiympi)
 endif()
 if (TARGET vtkmdiympi_nompi)
-  vtkm_diy_set_target_output_directory(vtkmdiympi_nompi)
+  vtkm_diy_set_target_properties(vtkmdiympi_nompi)
 endif()
 
 include(VTKmDIYUtils)
 
 add_library(vtkm_diy INTERFACE)
+
 vtkm_diy_init_target()
 target_include_directories(vtkm_diy INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
@@ -109,7 +114,7 @@ else()
 endif()
 
 #-----------------------------------------------------------------------------
-install(TARGETS vtkm_diy EXPORT ${VTKm_EXPORT_NAME})
+vtkm_install_targets(TARGETS vtkm_diy)
 
 ## Install headers
 if (NOT VTKm_INSTALL_ONLY_LIBRARIES)

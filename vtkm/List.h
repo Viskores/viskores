@@ -36,23 +36,13 @@ struct List
   VTKM_CHECK_LIST_SIZE(sizeof...(Ts));
 };
 
-namespace detail
-{
-
-// This prototype is here to detect deprecated ListTag objects. When ListTags are removed, then
-// this should be removed too.
-struct ListRoot;
-}
-
 namespace internal
 {
 
 template <typename T>
 struct IsListImpl
 {
-  // This prototype is here to detect deprecated ListTag objects. When ListTags are removed, then
-  // this should be changed to be just std::false_type.
-  using type = std::is_base_of<vtkm::detail::ListRoot, T>;
+  using type = std::false_type;
 };
 
 template <typename... Ts>
@@ -88,25 +78,6 @@ struct UniversalTypeTag
 
 } // namespace detail
 
-namespace internal
-{
-
-// This is here so that the old (deprecated) `ListTag`s can convert themselves to the new
-// `List` style and be operated on. When that deprecated functionality goes away, we can
-// probably remove `AsList` and just operate directly on the `List`s.
-template <typename T>
-struct AsListImpl;
-
-template <typename... Ts>
-struct AsListImpl<vtkm::List<Ts...>>
-{
-  using type = vtkm::List<Ts...>;
-};
-
-template <typename T>
-using AsList = typename AsListImpl<T>::type;
-}
-
 /// A special tag for an empty list.
 ///
 using ListEmpty = vtkm::List<>;
@@ -134,7 +105,7 @@ struct ListSizeImpl<vtkm::List<Ts...>>
 /// Becomes an std::integral_constant containing the number of types in a list.
 ///
 template <typename List>
-using ListSize = typename detail::ListSizeImpl<internal::AsList<List>>::type;
+using ListSize = typename detail::ListSizeImpl<List>::type;
 
 namespace detail
 {
@@ -158,7 +129,7 @@ struct ListApplyImpl<vtkm::ListUniversal, Target>;
 /// represented by the ListTag.
 ///
 template <typename List, template <typename...> class Target>
-using ListApply = typename detail::ListApplyImpl<internal::AsList<List>, Target>::type;
+using ListApply = typename detail::ListApplyImpl<List, Target>::type;
 
 namespace detail
 {
@@ -301,7 +272,7 @@ struct ListAppendImpl<vtkm::List<T0s...>,
 ///
 /// Note that this does not work correctly with `vtkm::ListUniversal`.
 template <typename... Lists>
-using ListAppend = typename detail::ListAppendImpl<internal::AsList<Lists>...>::type;
+using ListAppend = typename detail::ListAppendImpl<Lists...>::type;
 
 namespace detail
 {
@@ -370,7 +341,7 @@ struct ListAtImpl<vtkm::List<Ts...>, Index>
 /// This becomes the type of the list at the given index.
 ///
 template <typename List, vtkm::IdComponent Index>
-using ListAt = typename detail::ListAtImpl<internal::AsList<List>, Index>::type;
+using ListAt = typename detail::ListAtImpl<List, Index>::type;
 
 namespace detail
 {
@@ -573,7 +544,7 @@ struct ListIndexOfImpl<vtkm::ListUniversal, Target>
 /// given type is not in the list, the value is set to -1.
 ///
 template <typename List, typename T>
-using ListIndexOf = typename detail::ListIndexOfImpl<internal::AsList<List>, T>::type;
+using ListIndexOf = typename detail::ListIndexOfImpl<List, T>::type;
 
 namespace detail
 {
@@ -597,7 +568,7 @@ struct ListHasImpl<vtkm::ListUniversal, T>
 /// Becomes `std::true_type` if the `T` is in `List`. `std::false_type` otherwise.
 ///
 template <typename List, typename T>
-using ListHas = typename detail::ListHasImpl<internal::AsList<List>, T>::type;
+using ListHas = typename detail::ListHasImpl<List, T>::type;
 
 namespace detail
 {
@@ -618,7 +589,7 @@ struct ListTransformImpl<vtkm::ListUniversal, Target>;
 /// Constructs a list containing all types in a source list applied to a transform template.
 ///
 template <typename List, template <typename> class Transform>
-using ListTransform = typename detail::ListTransformImpl<internal::AsList<List>, Transform>::type;
+using ListTransform = typename detail::ListTransformImpl<List, Transform>::type;
 
 namespace detail
 {
@@ -700,7 +671,7 @@ struct ListRemoveIfImpl<vtkm::List<Ts...>, Predicate>
 /// `std::is_integral<float>` and `std::is_integral<double>` resolve to `std::false_type`.
 ///
 template <typename List, template <typename> class Predicate>
-using ListRemoveIf = typename detail::ListRemoveIfImpl<internal::AsList<List>, Predicate>::type;
+using ListRemoveIf = typename detail::ListRemoveIfImpl<List, Predicate>::type;
 
 namespace detail
 {
@@ -738,50 +709,27 @@ struct ListIntersectImpl<vtkm::ListUniversal, vtkm::ListUniversal>
 /// Constructs a list containing types present in all lists.
 ///
 template <typename List1, typename List2>
-using ListIntersect =
-  typename detail::ListIntersectImpl<internal::AsList<List1>, internal::AsList<List2>>::type;
+using ListIntersect = typename detail::ListIntersectImpl<List1, List2>::type;
 
-namespace detail
-{
-
-// We want to use an initializer list as a trick to call a function once for each type, but
-// an initializer list needs a type, so create wrapper function that returns a value.
-VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Functor, typename... Args>
-VTKM_EXEC_CONT inline bool ListForEachCallThrough(Functor&& f, Args&&... args)
-{
-  f(std::forward<Args>(args)...);
-  return false; // Return value does not matter. Hopefully just thrown away.
-}
-
-VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Functor, typename... Ts, typename... Args>
-VTKM_EXEC_CONT void ListForEachImpl(Functor&& f, vtkm::List<Ts...>, Args&&... args)
-{
-  VTKM_STATIC_ASSERT_MSG((!std::is_same<vtkm::List<Ts...>, vtkm::ListUniversal>::value),
-                         "Cannot call ListFor on vtkm::ListUniversal.");
-  auto init_list = { ListForEachCallThrough(
-    std::forward<Functor>(f), Ts{}, std::forward<Args>(args)...)... };
-  (void)init_list;
-}
-
-template <typename Functor, typename... Args>
-VTKM_EXEC_CONT void ListForEachImpl(Functor&&, vtkm::ListEmpty, Args&&...)
-{
-  // No types to run functor on.
-}
-
-} // namespace detail
-
+///@{
 /// For each typename represented by the list, call the functor with a
 /// default instance of that type.
 ///
-template <typename Functor, typename List, typename... Args>
-VTKM_EXEC_CONT void ListForEach(Functor&& f, List, Args&&... args)
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor, typename... Ts, typename... Args>
+VTKM_EXEC_CONT void ListForEach(Functor&& f, vtkm::List<Ts...>, Args&&... args)
 {
-  detail::ListForEachImpl(
-    std::forward<Functor>(f), internal::AsList<List>{}, std::forward<Args>(args)...);
+  VTKM_STATIC_ASSERT_MSG((!std::is_same<vtkm::List<Ts...>, vtkm::ListUniversal>::value),
+                         "Cannot call ListFor on vtkm::ListUniversal.");
+  auto init_list = { (f(Ts{}, std::forward<Args>(args)...), false)... };
+  (void)init_list;
 }
+template <typename Functor, typename... Args>
+VTKM_EXEC_CONT void ListForEach(Functor&&, vtkm::ListEmpty, Args&&...)
+{
+  // No types to run functor on.
+}
+///@}
 
 namespace detail
 {
@@ -808,8 +756,7 @@ struct ListCrossImpl<vtkm::List<T0s...>, vtkm::List<T1s...>>
 /// The resulting list has the form of `vtkm::List<vtkm::List<A1,B1>, vtkm::List<A1,B2>,...>`
 ///
 template <typename List1, typename List2>
-using ListCross =
-  typename detail::ListCrossImpl<internal::AsList<List1>, internal::AsList<List2>>::type;
+using ListCross = typename detail::ListCrossImpl<List1, List2>::type;
 
 namespace detail
 {
@@ -865,7 +812,7 @@ struct ListReduceImpl<vtkm::List<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>, Ope
 /// This continues until a single value is left.
 ///
 template <typename List, template <typename T1, typename T2> class Operator, typename Initial>
-using ListReduce = typename detail::ListReduceImpl<internal::AsList<List>, Operator, Initial>::type;
+using ListReduce = typename detail::ListReduceImpl<List, Operator, Initial>::type;
 
 /// \brief Determines whether all the types in the list are "true."
 ///

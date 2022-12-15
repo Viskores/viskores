@@ -14,12 +14,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/ArrayHandleVirtual.h>
-#include <vtkm/cont/StorageVirtual.h>
-#endif
-
-
 #include <vtkm/cont/arg/Transport.h>
 
 #include <vtkm/cont/AtomicArray.h>
@@ -67,45 +61,6 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
   }
 };
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-template <typename T, typename Device>
-struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
-                 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>,
-                 Device>
-{
-  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T>;
-  using ExecType = vtkm::cont::AtomicArray<T>;
-
-  template <typename InputDomainType>
-  VTKM_CONT ExecObjectType
-  operator()(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>& array,
-             const InputDomainType&,
-             vtkm::Id,
-             vtkm::Id) const
-  {
-    using ArrayHandleType = vtkm::cont::ArrayHandle<T>;
-    const bool is_type = vtkm::cont::IsType<ArrayHandleType>(array);
-    if (!is_type)
-    {
-#if defined(VTKM_ENABLE_LOGGING)
-      VTKM_LOG_CAST_FAIL(array, ArrayHandleType);
-#endif
-      throw vtkm::cont::ErrorBadValue("Arrays being used as atomic's must always have storage that "
-                                      "is of the type StorageTagBasic.");
-    }
-
-    ArrayHandleType handle = vtkm::cont::Cast<ArrayHandleType>(array);
-
-    // Note: we ignore the size of the domain because the randomly accessed
-    // array might not have the same size depending on how the user is using
-    // the array.
-    ExecType obj(handle);
-    return obj.PrepareForExecution(Device());
-  }
-};
-VTKM_DEPRECATED_SUPPRESS_END
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
 }
 }
 } // namespace vtkm::cont::arg

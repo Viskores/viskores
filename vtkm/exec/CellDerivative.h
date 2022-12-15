@@ -11,7 +11,6 @@
 #define vtk_m_exec_Derivative_h
 
 #include <vtkm/CellShape.h>
-#include <vtkm/Deprecated.h>
 #include <vtkm/ErrorCode.h>
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
 #include <vtkm/VecTraits.h>
@@ -202,28 +201,6 @@ VTKM_EXEC vtkm::ErrorCode CellDerivative(const FieldVecType& pointFieldValues,
   return status;
 }
 
-template <typename FieldVecType,
-          typename WorldCoordType,
-          typename ParametricCoordType,
-          typename CellShapeTag>
-VTKM_DEPRECATED(
-  1.6,
-  "Call signature has changed to CellDerivative(field, wCoords, pcoords, shape, result).")
-VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
-  const FieldVecType& field,
-  const WorldCoordType& wCoords,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  CellShapeTag shape,
-  const vtkm::exec::FunctorBase& worklet)
-{
-  vtkm::Vec<typename FieldVecType::ComponentType, 3> result;
-  vtkm::ErrorCode status = CellDerivative(field, wCoords, pcoords, shape, result);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-  return result;
-}
 }
 } // namespace vtkm::exec
 

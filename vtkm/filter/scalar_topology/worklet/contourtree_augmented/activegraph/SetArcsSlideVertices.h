@@ -148,14 +148,14 @@ public:
         if (hyperID == NumHypernodes - 1)
           rightSupernodeID = NumSupernodes - 1;
         else
-          rightSupernodeID = treeFirstSuperchildPortal[hyperID + 1] - 1;
+          rightSupernodeID = treeFirstSuperchildPortal.Get(hyperID + 1) - 1;
       } // join graph
       else
       { // split graph
         if (hyperID == 0)
           rightSupernodeID = NumSupernodes - 1;
         else
-          rightSupernodeID = treeFirstSuperchildPortal[hyperID - 1] - 1;
+          rightSupernodeID = treeFirstSuperchildPortal.Get(hyperID - 1) - 1;
       } // split graph
 
       // the right end is guaranteed to be the hypernode at the top, which is not
@@ -164,7 +164,7 @@ public:
       while (leftSupernodeID != rightSupernodeID - 1)
       { // binary search
         vtkm::Id midSupernodeID = (leftSupernodeID + rightSupernodeID) / 2;
-        vtkm::Id midNodeID = treeSupernodesPortal[midSupernodeID];
+        vtkm::Id midNodeID = treeSupernodesPortal.Get(midSupernodeID);
         // this is NEVER equal, because nodeID cannot be a supernode
         if (IsJoinGraph ? (midNodeID > nodeID) : (midNodeID < nodeID))
           rightSupernodeID = midSupernodeID;

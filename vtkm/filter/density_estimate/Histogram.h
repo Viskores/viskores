@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_density_estimate_Histogram_h
 #define vtk_m_filter_density_estimate_Histogram_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/density_estimate/vtkm_filter_density_estimate_export.h>
 
 namespace vtkm
@@ -24,7 +24,7 @@ namespace density_estimate
 ///
 /// Construct a histogram with a default of 10 bins.
 ///
-class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT Histogram : public vtkm::filter::NewFilterField
+class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT Histogram : public vtkm::filter::FilterField
 {
 public:
   //Construct a histogram with a default of 10 bins
@@ -79,11 +79,6 @@ private:
   bool InExecutePartitions = false;
 };
 } // namespace density_estimate
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::Histogram.") Histogram
-  : public vtkm::filter::density_estimate::Histogram
-{
-  using density_estimate::Histogram::Histogram;
-};
 } // namespace filter
 } // namespace vtkm
 

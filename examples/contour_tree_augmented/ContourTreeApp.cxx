@@ -64,7 +64,6 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>

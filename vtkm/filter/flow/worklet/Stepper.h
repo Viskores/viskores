@@ -57,11 +57,11 @@ public:
     auto status = this->Integrator.CheckStep(particle, this->DeltaT, velocity);
     if (status.CheckOk())
     {
-      outpos = particle.Pos + this->DeltaT * velocity;
+      outpos = particle.GetPosition() + this->DeltaT * velocity;
       time += this->DeltaT;
     }
     else
-      outpos = particle.Pos;
+      outpos = particle.GetPosition();
 
     return status;
   }
@@ -84,7 +84,7 @@ public:
     vtkm::Vec3f currPos(particle.GetEvaluationPosition(this->DeltaT));
     vtkm::Vec3f currVelocity(0, 0, 0);
     vtkm::VecVariable<vtkm::Vec3f, 2> currValue, tmp;
-    auto evalStatus = this->Evaluator.Evaluate(currPos, particle.Time, currValue);
+    auto evalStatus = this->Evaluator.Evaluate(currPos, particle.GetTime(), currValue);
     if (evalStatus.CheckFail())
       return IntegratorStatus(evalStatus, false);
 
@@ -102,8 +102,8 @@ public:
       if (status.CheckOk()) //Integration step succedded.
       {
         //See if this point is in/out.
-        auto newPos = particle.Pos + currStep * currVelocity;
-        evalStatus = this->Evaluator.Evaluate(newPos, particle.Time + currStep, tmp);
+        auto newPos = particle.GetPosition() + currStep * currVelocity;
+        evalStatus = this->Evaluator.Evaluate(newPos, particle.GetTime() + currStep, tmp);
         if (evalStatus.CheckOk())
         {
           //Point still in. Update currPos and set range to {currStep, stepRange[1]}
@@ -124,7 +124,7 @@ public:
       }
     }
 
-    evalStatus = this->Evaluator.Evaluate(currPos, particle.Time + stepRange[0], currValue);
+    evalStatus = this->Evaluator.Evaluate(currPos, particle.GetTime() + stepRange[0], currValue);
     // The eval at Time + stepRange[0] better be *inside*
     VTKM_ASSERT(evalStatus.CheckOk() && !evalStatus.CheckSpatialBounds());
     if (evalStatus.CheckFail() || evalStatus.CheckSpatialBounds())

@@ -21,12 +21,6 @@
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-// For support of deprecated features.
-#include <vtkm/Deprecated.h>
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-#include <vtkm/cont/VariantArrayHandle.h>
-VTKM_DEPRECATED_SUPPRESS_END
-
 namespace vtkm
 {
 namespace worklet
@@ -226,18 +220,6 @@ private:
       (*this)(inArray, outArray, self);
       outHolder = vtkm::cont::UnknownArrayHandle{ outArray };
     }
-
-    VTKM_DEPRECATED_SUPPRESS_BEGIN
-    template <typename InT, typename InS>
-    VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<InT, InS>& inArray,
-                              vtkm::cont::VariantArrayHandleCommon& outHolder,
-                              const RemoveUnusedPoints& self) const
-    {
-      vtkm::cont::ArrayHandle<InT> outArray;
-      (*this)(inArray, outArray, self);
-      outHolder = vtkm::cont::VariantArrayHandleCommon{ outArray };
-    }
-    VTKM_DEPRECATED_SUPPRESS_END
   };
 
 public:
@@ -284,25 +266,6 @@ public:
     vtkm::cont::CastAndCall(inArray, MapPointFieldDeepFunctor{}, outArray, *this);
     return outArray;
   }
-
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  template <typename InArrayTypes, typename OutArrayHandle>
-  VTKM_CONT void MapPointFieldDeep(const vtkm::cont::VariantArrayHandleBase<InArrayTypes>& inArray,
-                                   OutArrayHandle& outArray) const
-  {
-    vtkm::cont::CastAndCall(inArray, MapPointFieldDeepFunctor{}, outArray, *this);
-  }
-
-  template <typename InTypes>
-  VTKM_CONT vtkm::cont::VariantArrayHandleBase<InTypes> MapPointFieldDeep(
-    const vtkm::cont::VariantArrayHandleBase<InTypes>& inArray) const
-  {
-    vtkm::cont::VariantArrayHandleBase<InTypes> outArray;
-    vtkm::cont::CastAndCall(inArray, MapPointFieldDeepFunctor{}, outArray, *this);
-
-    return outArray;
-  }
-  VTKM_DEPRECATED_SUPPRESS_END
   ///@}
 
   const vtkm::worklet::ScatterCounting& GetPointScatter() const { return *this->PointScatter; }

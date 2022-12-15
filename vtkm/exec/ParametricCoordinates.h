@@ -136,39 +136,6 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesCenter(
   return status;
 }
 
-template <typename ParametricCoordType, typename CellShapeTag>
-VTKM_DEPRECATED(1.6, "Signature changed to ParametricCoordinatesCenter(numPoints, shape, result).")
-static inline VTKM_EXEC void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
-                                                         vtkm::Vec<ParametricCoordType, 3>& pcoords,
-                                                         CellShapeTag shape,
-                                                         const vtkm::exec::FunctorBase& worklet)
-{
-  vtkm::ErrorCode status = ParametricCoordinatesCenter(numPoints, shape, pcoords);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-}
-
-/// Returns the parametric center of the given cell shape with the given number
-/// of points.
-///
-template <typename CellShapeTag>
-VTKM_DEPRECATED(1.6, "Signature changed to ParametricCoordinatesCenter(numPoints, shape, result).")
-static inline VTKM_EXEC vtkm::Vec3f
-  ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
-                              CellShapeTag shape,
-                              const vtkm::exec::FunctorBase& worklet)
-{
-  vtkm::Vec3f pcoords(0.0f);
-  vtkm::ErrorCode status = ParametricCoordinatesCenter(numPoints, shape, pcoords);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-  return pcoords;
-}
-
 //-----------------------------------------------------------------------------
 template <typename ParametricCoordType, typename CellShapeTag>
 static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesPoint(
@@ -293,45 +260,6 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesPoint(
   return status;
 }
 
-template <typename ParametricCoordType, typename CellShapeTag>
-VTKM_DEPRECATED(
-  1.6,
-  "Signature changed to ParametricCoordinatesPoint(numPoints, pointIndex, shape, result).")
-static inline VTKM_EXEC void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
-                                                        vtkm::IdComponent pointIndex,
-                                                        vtkm::Vec<ParametricCoordType, 3>& pcoords,
-                                                        CellShapeTag shape,
-                                                        const vtkm::exec::FunctorBase& worklet)
-{
-  vtkm::ErrorCode status = ParametricCoordinatesPoint(numPoints, pointIndex, shape, pcoords);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-}
-
-/// Returns the parametric coordinate of a cell point of the given shape with
-/// the given number of points.
-///
-template <typename CellShapeTag>
-VTKM_DEPRECATED(
-  1.6,
-  "Signature changed to ParametricCoordinatesPoint(numPoints, pointIndex, shape, result).")
-static inline VTKM_EXEC vtkm::Vec3f
-  ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
-                             vtkm::IdComponent pointIndex,
-                             CellShapeTag shape,
-                             const vtkm::exec::FunctorBase& worklet)
-{
-  vtkm::Vec3f pcoords;
-  vtkm::ErrorCode status = ParametricCoordinatesPoint(numPoints, pointIndex, shape, pcoords);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-  return pcoords;
-}
-
 //-----------------------------------------------------------------------------
 namespace internal
 {
@@ -445,26 +373,6 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesToWorldCoordinates(
       status = vtkm::ErrorCode::InvalidShapeId;
   }
   return status;
-}
-
-template <typename WorldCoordVector, typename PCoordType, typename CellShapeTag>
-VTKM_DEPRECATED(1.6,
-                "Signature changed to "
-                "ParametricCoordinatesToWorldCoordinates(pointWCoords, pcoords, shape, result).")
-static inline VTKM_EXEC typename WorldCoordVector::ComponentType
-  ParametricCoordinatesToWorldCoordinates(const WorldCoordVector& pointWCoords,
-                                          const vtkm::Vec<PCoordType, 3>& pcoords,
-                                          CellShapeTag shape,
-                                          const vtkm::exec::FunctorBase& worklet)
-{
-  typename WorldCoordVector::ComponentType result;
-  vtkm::ErrorCode status =
-    ParametricCoordinatesToWorldCoordinates(pointWCoords, pcoords, shape, result);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-  return result;
 }
 
 //-----------------------------------------------------------------------------
@@ -654,31 +562,6 @@ static inline VTKM_EXEC vtkm::ErrorCode WorldCoordinatesToParametricCoordinates(
   return status;
 }
 
-template <typename WorldCoordVector, typename CellShapeTag>
-VTKM_DEPRECATED(1.6,
-                "Signature changed to "
-                "WorldCoordinatesToParametricCoordinates(pointWCoords, wcoords, shape, result).")
-static inline VTKM_EXEC typename WorldCoordVector::ComponentType
-  WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
-                                          const typename WorldCoordVector::ComponentType& wcoords,
-                                          CellShapeTag shape,
-                                          bool& success,
-                                          const vtkm::exec::FunctorBase& worklet)
-{
-  typename WorldCoordVector::ComponentType result;
-  vtkm::ErrorCode status =
-    WorldCoordinatesToParametricCoordinates(pointWCoords, wcoords, shape, result);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    success = false;
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-  else
-  {
-    success = true;
-  }
-  return result;
-}
 }
 } // namespace vtkm::exec
 

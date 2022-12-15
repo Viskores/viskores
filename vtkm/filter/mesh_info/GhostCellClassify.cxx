@@ -143,7 +143,7 @@ VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::Dat
   }
 
   auto output = this->CreateResult(input);
-  output.AddGhostCellField(this->GhostCellName, ghosts);
+  output.SetGhostCellField(this->GhostCellName, ghosts);
   return output;
 }
 }

@@ -37,12 +37,6 @@ vtkm_library(
   USE_VTKM_JOB_POOL
 )
 
-target_link_libraries(vtkm_filter_entity_extraction PRIVATE vtkm_worklet vtkm_filter_clean_grid PUBLIC vtkm_filter_core)
 target_link_libraries(vtkm_filter PUBLIC INTERFACE vtkm_filter_entity_extraction)
 
 add_subdirectory(worklet)
-
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

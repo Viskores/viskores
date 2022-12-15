@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_image_processing_ImageMedian_h
 #define vtk_m_filter_image_processing_ImageMedian_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/image_processing/vtkm_filter_image_processing_export.h>
 
 /// \brief Median algorithm for general image blur
@@ -30,7 +30,7 @@ namespace filter
 {
 namespace image_processing
 {
-class VTKM_FILTER_IMAGE_PROCESSING_EXPORT ImageMedian : public vtkm::filter::NewFilterField
+class VTKM_FILTER_IMAGE_PROCESSING_EXPORT ImageMedian : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT ImageMedian() { this->SetOutputFieldName("median"); }
@@ -44,11 +44,6 @@ private:
   int Neighborhood = 1;
 };
 } // namespace image_processing
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::image_processing::ImageMedian.") ImageMedian
-  : public vtkm::filter::image_processing::ImageMedian
-{
-  using image_processing::ImageMedian::ImageMedian;
-};
 } // namespace filter
 } // namespace vtkm
 

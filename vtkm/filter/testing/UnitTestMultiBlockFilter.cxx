@@ -93,7 +93,8 @@ void TestMultiBlockFilter()
   for (int i = 0; i < 10; i++)
   {
     vtkm::Id3 dims(10 + i, 10 + i, 10 + i);
-    vtkm::source::Tangle tangle(dims);
+    vtkm::source::Tangle tangle;
+    tangle.SetCellDimensions(dims);
     pds.AppendPartition(tangle.Execute());
   }
 

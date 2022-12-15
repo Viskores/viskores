@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_field_transform_LogValues_h
 #define vtk_m_filter_field_transform_LogValues_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -22,9 +22,9 @@ namespace field_transform
 
 /// \brief Adds field to a `DataSet` that gives the log values for the user specified field.
 ///
-/// This filter use the ActiveField defined in the NewFilterField to store the log values.
+/// This filter use the ActiveField defined in the FilterField to store the log values.
 ///
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT LogValues : public vtkm::filter::NewFilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT LogValues : public vtkm::filter::FilterField
 {
 public:
   enum struct LogBase

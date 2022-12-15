@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_image_processing_ImageDifference_h
 #define vtk_m_filter_image_processing_ImageDifference_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/image_processing/vtkm_filter_image_processing_export.h>
 
 namespace vtkm
@@ -29,7 +29,7 @@ namespace image_processing
 /// The threshold-output is calculated for each pixel using the `vtkm::Magnitude` vector function
 /// on the individual pixel difference.
 ///
-class VTKM_FILTER_IMAGE_PROCESSING_EXPORT ImageDifference : public vtkm::filter::NewFilterField
+class VTKM_FILTER_IMAGE_PROCESSING_EXPORT ImageDifference : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT ImageDifference();
@@ -108,11 +108,6 @@ private:
   std::string ThresholdFieldName = "threshold-output";
 };
 } // namespace image_processing
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::image_processing::ImageDifference.") ImageDifference
-  : public vtkm::filter::image_processing::ImageDifference
-{
-  using image_processing::ImageDifference::ImageDifference;
-};
 } // namespace filter
 } // namespace vtkm
 

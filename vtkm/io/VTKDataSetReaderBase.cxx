@@ -664,10 +664,10 @@ void VTKDataSetReaderBase::ReadGlobalOrPedigreeIds(vtkm::cont::Field::Associatio
   std::string dataType;
   this->DataFile->Stream >> dataName >> dataType >> std::ws;
   internal::parseAssert(dataType == "vtkIdType");
+  // vtk writes vtkIdType as int
 
-  std::vector<vtkm::Int32> buffer(numElements); // vtk writes vtkIdType as int
-  this->ReadArray(buffer);
-  vtkm::cont::UnknownArrayHandle data(vtkm::cont::make_ArrayHandleMove(std::move(buffer)));
+  vtkm::cont::UnknownArrayHandle data =
+    this->DoReadArrayVariant(association, "int", numElements, 1);
   this->AddField(dataName, association, data);
 
   this->SkipArrayMetaData(1);
