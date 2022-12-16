@@ -197,7 +197,7 @@ endfunction()
 #
 # If VTK-m was built with CMake 3.18+ and you are using CMake 3.18+ and have
 # a cmake_minimum_required of 3.18 or have set policy CMP0105 to new, this will
-# return an empty string as the `vtkm::cuda` target will correctly propagate
+# return an empty string as the `vtkm_cuda` target will correctly propagate
 # all the necessary flags.
 #
 # This is required for CMake < 3.18 as they don't support the `$<DEVICE_LINK>`
@@ -211,11 +211,11 @@ endfunction()
 #
 function(vtkm_get_cuda_flags settings_var)
 
-  if(TARGET vtkm::cuda)
+  if(TARGET vtkm_cuda)
     if(POLICY CMP0105)
       cmake_policy(GET CMP0105 does_device_link)
       get_property(arch_flags
-        TARGET vtkm::cuda
+        TARGET vtkm_cuda
         PROPERTY INTERFACE_LINK_OPTIONS)
       if(arch_flags AND CMP0105 STREQUAL "NEW")
         return()
@@ -223,7 +223,7 @@ function(vtkm_get_cuda_flags settings_var)
     endif()
 
     get_property(arch_flags
-      TARGET    vtkm::cuda
+      TARGET    vtkm_cuda
       PROPERTY  cuda_architecture_flags)
     set(${settings_var} "${${settings_var}} ${arch_flags}" PARENT_SCOPE)
   endif()
@@ -259,6 +259,66 @@ function(vtkm_add_drop_unused_function_flags uses_vtkm_target)
   endif()
 endfunction()
 
+#-----------------------------------------------------------------------------
+# This function takes a target name and returns the mangled version of its name
+# in a form that complies with the VTK-m export target naming scheme.
+macro(vtkm_target_mangle output target)
+  string(REPLACE "vtkm_" "" ${output} ${target})
+endmacro()
+
+#-----------------------------------------------------------------------------
+# Enable VTK-m targets to be installed.
+#
+# This function decorates the `install` CMake function mangling the exported
+# target names to comply with the VTK-m exported target names scheme. Use this
+# function instead of the canonical CMake `install` function for VTK-m targets.
+#
+# Signature:
+# vtkm_install_targets(
+#   TARGETS <target[s]>
+#   [EXPORT <export_name>]
+#   [ARGS <cmake_install_args>]
+#   )
+#
+# Usage:
+#   add_library(vtkm_library)
+#   vtkm_install_targets(TARGETS vtkm_library ARGS COMPONENT core)
+#
+# TARGETS: List of targets to be installed.
+#
+# EXPORT:  [OPTIONAL] The name of the export set to which this target will be
+#          added. If omitted vtkm_install_targets will use the value of
+#          VTKm_EXPORT_NAME by default.
+#
+# ARGS:    [OPTIONAL] Any argument other than `TARGETS` and `EXPORT` accepted
+#          by the `install` CMake function:
+#          <https://cmake.org/cmake/help/latest/command/install.html>
+#
+function(vtkm_install_targets)
+  set(oneValueArgs EXPORT)
+  set(multiValueArgs TARGETS ARGS)
+  cmake_parse_arguments(VTKm_INSTALL "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  set(export_name ${VTKm_EXPORT_NAME})
+  if(VTKm_INSTALL_EXPORT)
+    set(export_name ${VTKm_INSTALL_EXPORT})
+  endif()
+
+  if(NOT DEFINED VTKm_INSTALL_TARGETS)
+    message(FATAL_ERROR "vtkm_install_targets invoked without TARGETS arguments.")
+  endif()
+
+  if(DEFINED VTKm_INSTALL_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "vtkm_install_targets missing ARGS keyword prepending install arguments")
+  endif()
+
+  foreach(tgt IN LISTS VTKm_INSTALL_TARGETS)
+    vtkm_target_mangle(tgt_mangled ${tgt})
+    set_target_properties(${tgt} PROPERTIES EXPORT_NAME ${tgt_mangled})
+  endforeach()
+
+  install(TARGETS ${VTKm_INSTALL_TARGETS} EXPORT ${export_name} ${VTKm_INSTALL_ARGS})
+endfunction(vtkm_install_targets)
 
 #-----------------------------------------------------------------------------
 # Add a relevant information to target that wants to use VTK-m.
@@ -301,7 +361,7 @@ endfunction()
 #
 #  If VTK-m was built with CMake 3.18+ and you are using CMake 3.18+ and have
 #  a cmake_minimum_required of 3.18 or have set policy CMP0105 to new, this will
-#  return an empty string as the `vtkm::cuda` target will correctly propagate
+#  return an empty string as the `vtkm_cuda` target will correctly propagate
 #  all the necessary flags.
 #
 #  Note: calling `vtkm_add_target_information` multiple times with
@@ -368,61 +428,17 @@ function(vtkm_add_target_information uses_vtkm_target)
     endif()
   endforeach()
 
-  # set the required target properties
-  if(NOT VTKm_NO_DEPRECATED_VIRTUAL)
-    set_target_properties(${targets} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    set_target_properties(${targets} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-  endif()
-
   if(VTKm_TI_DROP_UNUSED_SYMBOLS)
     foreach(target IN LISTS targets)
       vtkm_add_drop_unused_function_flags(${target})
     endforeach()
   endif()
 
-  if((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
+  if((TARGET vtkm_cuda) OR (TARGET vtkm::kokkos_cuda))
     set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
   elseif(TARGET vtkm::kokkos_hip)
     set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "HIP")
     kokkos_compilation(SOURCE ${VTKm_TI_DEVICE_SOURCES})
-  endif()
-
-  # Validate that following:
-  #   - We are building with CUDA enabled.
-  #   - We are building a VTK-m library or a library that wants cross library
-  #     device calls.
-  #
-  # This is required as CUDA currently doesn't support device side calls across
-  # dynamic library boundaries.
-  if((NOT VTKm_NO_DEPRECATED_VIRTUAL) AND ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda)))
-    foreach(target IN LISTS targets)
-      get_target_property(lib_type ${target} TYPE)
-      if (TARGET vtkm::cuda)
-        get_target_property(requires_static vtkm::cuda requires_static_builds)
-      endif()
-      if (TARGET vtkm::kokkos)
-        get_target_property(requires_static vtkm::kokkos requires_static_builds)
-      endif()
-
-      if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY" AND VTKm_TI_EXTENDS_VTKM)
-        #We provide different error messages based on if we are building VTK-m
-        #or being called by a consumer of VTK-m. We use PROJECT_NAME so that we
-        #produce the correct error message when VTK-m is a subdirectory include
-        #of another project
-        if(PROJECT_NAME STREQUAL "VTKm")
-          message(SEND_ERROR "${target} needs to be built STATIC as CUDA doesn't"
-                " support virtual methods across dynamic library boundaries. You"
-                " need to set the CMake option BUILD_SHARED_LIBS to `OFF` or"
-                " (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.")
-        else()
-          message(SEND_ERROR "${target} needs to be built STATIC as CUDA doesn't"
-                  " support virtual methods across dynamic library boundaries. You"
-                  " should either explicitly call add_library with the `STATIC` keyword"
-                  " or set the CMake option BUILD_SHARED_LIBS to `OFF` or"
-                  " (better) turn VTKm_NO_DEPRECATED_VIRTUAL to `ON`.")
-        endif()
-      endif()
-    endforeach()
   endif()
 endfunction()
 
@@ -499,8 +515,8 @@ function(vtkm_library)
 
   if (NOT VTKm_SKIP_LIBRARY_VERSIONS)
     # Setup the SOVERSION and VERSION information for this vtkm library
-    set_property(TARGET ${lib_name} PROPERTY VERSION 1)
-    set_property(TARGET ${lib_name} PROPERTY SOVERSION 1)
+    set_property(TARGET ${lib_name} PROPERTY VERSION ${VTKm_VERSION}.${VTKm_VERSION_PATCH})
+    set_property(TARGET ${lib_name} PROPERTY SOVERSION ${VTKm_VERSION})
   endif ()
 
   # Support custom library suffix names, for other projects wanting to inject
@@ -511,6 +527,32 @@ function(vtkm_library)
     set(_lib_suffix "-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}")
   endif()
   set_property(TARGET ${lib_name} PROPERTY OUTPUT_NAME ${lib_name}${_lib_suffix})
+
+  # Include any module information
+  if(vtkm_module_current)
+    if(NOT lib_name STREQUAL vtkm_module_current)
+      # We do want each library to be in its own module. (VTK's module allows you to declare
+      # multiple libraries per module. We may want that in the future, but right now we should
+      # not need it.)
+      message(FATAL_ERROR
+        "Library name `${lib_name}` does not match module name `${vtkm_module_current}`")
+    endif()
+    vtkm_module_get_property(depends ${vtkm_module_current} DEPENDS)
+    vtkm_module_get_property(private_depends ${vtkm_module_current} PRIVATE_DEPENDS)
+    vtkm_module_get_property(optional_depends ${vtkm_module_current} OPTIONAL_DEPENDS)
+    target_link_libraries(${lib_name}
+      PUBLIC ${depends}
+      PRIVATE ${private_depends}
+      )
+    foreach(opt_dep IN LISTS optional_depends)
+      if(TARGET ${opt_dep})
+        target_link_libraries(${lib_name} PRIVATE ${opt_dep})
+      endif()
+    endforeach()
+  else()
+    # Might need to add an argument to vtkm_library to create an exception to this rule
+    message(FATAL_ERROR "Library `${lib_name}` is not created inside of a VTK-m module.")
+  endif()
 
   #generate the export header and install it
   vtkm_generate_export_header(${lib_name})
@@ -531,8 +573,7 @@ function(vtkm_library)
   endif()
 
   #install the library itself
-  install(TARGETS ${lib_name}
-    EXPORT ${VTKm_EXPORT_NAME}
+  vtkm_install_targets(TARGETS ${lib_name} ARGS
     ARCHIVE DESTINATION ${VTKm_INSTALL_LIB_DIR}
     LIBRARY DESTINATION ${VTKm_INSTALL_LIB_DIR}
     RUNTIME DESTINATION ${VTKm_INSTALL_BIN_DIR}

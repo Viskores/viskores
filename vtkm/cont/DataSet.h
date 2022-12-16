@@ -55,7 +55,7 @@ public:
   /// to have the same number of points.
   VTKM_CONT vtkm::Id GetNumberOfPoints() const;
 
-  VTKM_CONT void AddField(const Field& field) { this->Fields.AddField(field); }
+  VTKM_CONT void AddField(const Field& field);
 
   VTKM_CONT
   const vtkm::cont::Field& GetField(vtkm::Id index) const { return this->Fields.GetField(index); }
@@ -77,30 +77,10 @@ public:
   }
 
   VTKM_CONT
-  bool HasGhostCellField() const
-  {
-    if (this->GhostCellName)
-    {
-      return this->HasCellField(*this->GhostCellName);
-    }
-    else
-    {
-      return false;
-    }
-  }
+  bool HasGhostCellField() const;
 
   VTKM_CONT
-  const std::string& GetGhostCellFieldName() const
-  {
-    if (this->HasGhostCellField())
-    {
-      return *this->GhostCellName;
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadValue("No Ghost Cell Field Name");
-    }
-  }
+  const std::string& GetGhostCellFieldName() const;
 
   VTKM_CONT
   bool HasPointField(const std::string& name) const
@@ -156,21 +136,11 @@ public:
   }
   ///@}
 
-  /// Returns the first cell field that matches the provided name.
+  /// Returns the cell field that matches the ghost cell field name.
   /// Will throw an exception if no match is found
   ///@{
   VTKM_CONT
-  const vtkm::cont::Field& GetGhostCellField() const
-  {
-    if (this->HasGhostCellField())
-    {
-      return this->GetCellField(*(this->GhostCellName));
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadValue("No Ghost Cell Field");
-    }
-  }
+  const vtkm::cont::Field& GetGhostCellField() const;
   ///@}
 
   /// Returns the first point field that matches the provided name.
@@ -223,24 +193,49 @@ public:
     this->AddField(make_FieldCell(fieldName, field));
   }
 
+  /// \brief Sets the name of the field to use for cell ghost levels.
+  ///
+  /// This value can be set regardless of whether such a cell field actually exists.
+  VTKM_CONT void SetGhostCellFieldName(const std::string& name);
+
+  /// \brief Sets the cell field of the given name as the cell ghost levels.
+  ///
+  /// If a cell field of the given name does not exist, an exception is thrown.
+  VTKM_CONT void SetGhostCellField(const std::string& name);
+
+  ///@{
+  /// \brief Sets the ghost cell levels.
+  ///
+  /// A field of the given name is added to the `DataSet`, and that field is set as the cell
+  /// ghost levels.
+  VTKM_CONT void SetGhostCellField(const vtkm::cont::Field& field);
+  VTKM_CONT void SetGhostCellField(const std::string& fieldName,
+                                   const vtkm::cont::UnknownArrayHandle& field);
+  ///@}
+
+  /// \brief Sets the ghost cell levels to the given array.
+  ///
+  /// A field with the global ghost cell field name (see `GlobalGhostCellFieldName`) is added
+  /// to the `DataSet` and made to be the cell ghost levels.
+  VTKM_CONT void SetGhostCellField(const vtkm::cont::UnknownArrayHandle& field);
+
+  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
   VTKM_CONT
   void AddGhostCellField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
   {
-    this->GhostCellName.reset(new std::string(fieldName));
-    this->AddField(make_FieldCell(fieldName, field));
+    this->SetGhostCellField(fieldName, field);
   }
 
+  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
   VTKM_CONT
   void AddGhostCellField(const vtkm::cont::UnknownArrayHandle& field)
   {
-    this->AddGhostCellField(GetGlobalGhostCellFieldName(), field);
+    this->SetGhostCellField(field);
   }
 
+  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
   VTKM_CONT
-  void AddGhostCellField(const vtkm::cont::Field& field)
-  {
-    this->AddGhostCellField(field.GetName(), field.GetData());
-  }
+  void AddGhostCellField(const vtkm::cont::Field& field) { this->SetGhostCellField(field); }
 
   template <typename T, typename Storage>
   VTKM_CONT void AddCellField(const std::string& fieldName,
@@ -264,11 +259,21 @@ public:
   }
 
 
+  /// \brief Adds the given `CoordinateSystem` to the `DataSet`.
+  ///
+  /// The coordinate system will also be added as a point field of the same name.
+  ///
+  /// \returns the index assigned to the added coordinate system.
   VTKM_CONT
-  void AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs)
-  {
-    this->CoordSystems.push_back(cs);
-  }
+  vtkm::IdComponent AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs);
+
+  /// \brief Marks the point field with the given name as a coordinate system.
+  ///
+  /// If no such point field exists or the point field is of the wrong format, an exception
+  /// will be throw.
+  ///
+  /// \returns the index assigned to the added coordinate system.
+  VTKM_CONT vtkm::IdComponent AddCoordinateSystem(const std::string& pointFieldName);
 
   VTKM_CONT
   bool HasCoordinateSystem(const std::string& name) const
@@ -277,40 +282,26 @@ public:
   }
 
   VTKM_CONT
-  const vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0) const;
+  vtkm::cont::CoordinateSystem GetCoordinateSystem(vtkm::Id index = 0) const;
 
-  VTKM_CONT
-  vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0);
-
-  /// Returns the index for the first CoordinateSystem whose
+  /// Returns the index for the CoordinateSystem whose
   /// name matches the provided string.
   /// Will return -1 if no match is found
   VTKM_CONT
-  vtkm::Id GetCoordinateSystemIndex(const std::string& name) const;
+  vtkm::IdComponent GetCoordinateSystemIndex(const std::string& name) const;
 
-  /// Returns the first CoordinateSystem that matches the provided name.
+  VTKM_CONT const std::string& GetCoordinateSystemName(vtkm::Id index = 0) const;
+
+  /// Returns the CoordinateSystem that matches the provided name.
   /// Will throw an exception if no match is found
-  ///@{
   VTKM_CONT
-  const vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name) const;
-
-  VTKM_CONT
-  vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name);
-  ///@}
-
-  /// Returns an `std::vector` of `CoordinateSystem`s held in this `DataSet`.
-  ///
-  VTKM_CONT
-  std::vector<vtkm::cont::CoordinateSystem> GetCoordinateSystems() const
-  {
-    return this->CoordSystems;
-  }
+  vtkm::cont::CoordinateSystem GetCoordinateSystem(const std::string& name) const;
 
   template <typename CellSetType>
   VTKM_CONT void SetCellSet(const CellSetType& cellSet)
   {
     VTKM_IS_KNOWN_OR_UNKNOWN_CELL_SET(CellSetType);
-    this->CellSet = vtkm::cont::UnknownCellSet(cellSet);
+    this->SetCellSetImpl(cellSet);
   }
 
   VTKM_CONT
@@ -325,11 +316,12 @@ public:
   VTKM_CONT
   vtkm::IdComponent GetNumberOfCoordinateSystems() const
   {
-    return static_cast<vtkm::IdComponent>(this->CoordSystems.size());
+    return static_cast<vtkm::IdComponent>(this->CoordSystemNames.size());
   }
 
-  /// Copies the structure i.e. coordinates systems and cellset from the source
-  /// dataset. The fields are left unchanged.
+  /// Copies the structure from the source dataset. The structure includes the cellset,
+  /// the coordinate systems, and any ghost layer information. The fields that are not
+  /// part of a coordinate system or ghost layers are left unchanged.
   VTKM_CONT
   void CopyStructure(const vtkm::cont::DataSet& source);
 
@@ -352,13 +344,15 @@ public:
   void PrintSummary(std::ostream& out) const;
 
 private:
-  std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
+  std::vector<std::string> CoordSystemNames;
   vtkm::cont::internal::FieldCollection Fields{ vtkm::cont::Field::Association::WholeDataSet,
                                                 vtkm::cont::Field::Association::Points,
                                                 vtkm::cont::Field::Association::Cells };
 
   vtkm::cont::UnknownCellSet CellSet;
   std::shared_ptr<std::string> GhostCellName;
+
+  VTKM_CONT void SetCellSetImpl(const vtkm::cont::UnknownCellSet& cellSet);
 };
 
 } // namespace cont
@@ -402,13 +396,6 @@ public:
   {
     const auto& dataset = serializable.DataSet;
 
-    vtkm::IdComponent numberOfCoordinateSystems = dataset.GetNumberOfCoordinateSystems();
-    vtkmdiy::save(bb, numberOfCoordinateSystems);
-    for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
-    {
-      vtkmdiy::save(bb, dataset.GetCoordinateSystem(i));
-    }
-
     vtkmdiy::save(bb, dataset.GetCellSet().ResetCellSetList(CellSetTypesList{}));
 
     vtkm::IdComponent numberOfFields = dataset.GetNumberOfFields();
@@ -417,21 +404,19 @@ public:
     {
       vtkmdiy::save(bb, dataset.GetField(i));
     }
+
+    vtkm::IdComponent numberOfCoordinateSystems = dataset.GetNumberOfCoordinateSystems();
+    vtkmdiy::save(bb, numberOfCoordinateSystems);
+    for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
+    {
+      vtkmdiy::save(bb, dataset.GetCoordinateSystemName(i));
+    }
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& serializable)
   {
     auto& dataset = serializable.DataSet;
     dataset = {}; // clear
-
-    vtkm::IdComponent numberOfCoordinateSystems = 0;
-    vtkmdiy::load(bb, numberOfCoordinateSystems);
-    for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
-    {
-      vtkm::cont::CoordinateSystem coords;
-      vtkmdiy::load(bb, coords);
-      dataset.AddCoordinateSystem(coords);
-    }
 
     vtkm::cont::UncertainCellSet<CellSetTypesList> cells;
     vtkmdiy::load(bb, cells);
@@ -444,6 +429,15 @@ public:
       vtkm::cont::Field field;
       vtkmdiy::load(bb, field);
       dataset.AddField(field);
+    }
+
+    vtkm::IdComponent numberOfCoordinateSystems = 0;
+    vtkmdiy::load(bb, numberOfCoordinateSystems);
+    for (vtkm::IdComponent i = 0; i < numberOfCoordinateSystems; ++i)
+    {
+      std::string coordName;
+      vtkmdiy::load(bb, coordName);
+      dataset.AddCoordinateSystem(coordName);
     }
   }
 };

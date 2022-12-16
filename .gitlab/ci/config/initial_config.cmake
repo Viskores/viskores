@@ -53,9 +53,6 @@ foreach(option IN LISTS options)
   elseif(no_rendering STREQUAL option)
     set(VTKm_ENABLE_RENDERING "OFF" CACHE STRING "")
 
-  elseif(use_virtuals STREQUAL option)
-    set(VTKm_NO_DEPRECATED_VIRTUAL "OFF" CACHE STRING "")
-
   elseif(no_testing STREQUAL option)
     set(VTKm_ENABLE_TESTING "OFF" CACHE STRING "")
     set(VTKm_ENABLE_TESTING_LIBRARY "OFF" CACHE STRING "")
@@ -70,6 +67,10 @@ foreach(option IN LISTS options)
   elseif(benchmarks STREQUAL option)
     set(VTKm_ENABLE_BENCHMARKS "ON" CACHE STRING "")
     set(ENV{CMAKE_PREFIX_PATH} "$ENV{CMAKE_PREFIX_PATH}:$ENV{HOME}/gbench")
+
+  elseif(min_build STREQUAL option)
+    set(VTKm_BUILD_ALL_LIBRARIES "OFF" CACHE STRING "")
+    set(VTKm_VERBOSE_MODULES "ON" CACHE STRING "")
 
   elseif(mpi STREQUAL option)
     set(VTKm_ENABLE_MPI "ON" CACHE STRING "")
@@ -107,15 +108,19 @@ foreach(option IN LISTS options)
       set(VTKm_CUDA_Architecture "turing" CACHE STRING "")
     endif()
 
+  elseif(ampere STREQUAL option)
+    set(CMAKE_CUDA_ARCHITECTURES "80" CACHE STRING "")
+
   elseif(hip STREQUAL option)
     if(CMAKE_VERSION VERSION_LESS_EQUAL 3.20)
       message(FATAL_ERROR "VTK-m requires cmake > 3.20 to enable HIP support")
     endif()
 
-    set(CMAKE_C_COMPILER   "/opt/rocm/llvm/bin/clang" CACHE FILEPATH "")
-    set(CMAKE_CXX_COMPILER "/opt/rocm/llvm/bin/clang++" CACHE FILEPATH "")
     set(VTKm_ENABLE_KOKKOS_HIP ON CACHE STRING "")
-    set(CMAKE_HIP_ARCHITECTURES "gfx900" CACHE STRING "")
+
+    # -O1 and -O2 results in ridiculous build times in ROCm < 5.3
+    set(CMAKE_HIP_FLAGS "-O0 " CACHE STRING "")
+    set(CMAKE_HIP_FLAGS_RELWITHDEBINFO "-g" CACHE STRING "")
 
   elseif(ascent STREQUAL option)
     set(CMAKE_C_FLAGS "-mcpu=power9" CACHE STRING "")
@@ -150,6 +155,9 @@ foreach(option IN LISTS options)
     else()
       message(FATAL_ERROR "CCACHE version [${CCACHE_VERSION}] is <= 4")
     endif()
+
+  elseif(perftest STREQUAL option)
+    set(VTKm_ENABLE_PERFORMANCE_TESTING "ON" CACHE STRING "")
   endif()
 
 endforeach()

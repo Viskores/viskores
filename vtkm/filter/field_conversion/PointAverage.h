@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_field_conversion_PointAverage_h
 #define vtk_m_filter_field_conversion_PointAverage_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/field_conversion/vtkm_filter_field_conversion_export.h>
 
 namespace vtkm
@@ -26,17 +26,12 @@ namespace field_conversion
 /// specified per cell) into point data (i.e., data specified at cell
 /// points). The method of transformation is based on averaging the data
 /// values of all cells using a particular point.
-class VTKM_FILTER_FIELD_CONVERSION_EXPORT PointAverage : public vtkm::filter::NewFilterField
+class VTKM_FILTER_FIELD_CONVERSION_EXPORT PointAverage : public vtkm::filter::FilterField
 {
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace field_conversion
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::field_conversion::PointAverage.") PointAverage
-  : public vtkm::filter::field_conversion::PointAverage
-{
-  using field_conversion::PointAverage::PointAverage;
-};
 } // namespace filter
 } // namespace vtkm
 

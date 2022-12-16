@@ -288,12 +288,6 @@ public:
   using CellIndices = IncidentElementIndices;
 };
 
-// Deprecated signatures for legacy support. These will be removed at some
-// point.
-using WorkletMapCellToPoint VTKM_DEPRECATED(1.5, "Use WorkletVisitPointsWithCells.") =
-  WorkletVisitPointsWithCells;
-using WorkletMapPointToCell VTKM_DEPRECATED(1.5, "Use WorkletVisitCellsWithPoints.") =
-  WorkletVisitCellsWithPoints;
 }
 } // namespace vtkm::worklet
 

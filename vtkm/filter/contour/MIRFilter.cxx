@@ -335,7 +335,8 @@ VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& in
   auto mapper = [&](auto& outDataSet, const auto& f) {
     this->DoMapField(outDataSet, f, filterCellInterp, MIRWeights, MIRIDs);
   };
-  auto output = this->CreateResult(input, saved.GetCellSet(), saved.GetCoordinateSystems(), mapper);
+  auto output = this->CreateResultCoordinateSystem(
+    input, saved.GetCellSet(), saved.GetCoordinateSystem(), mapper);
   output.AddField(saved.GetField(this->GetOutputFieldName()));
 
   return output;

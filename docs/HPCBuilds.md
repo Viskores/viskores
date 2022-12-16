@@ -90,7 +90,6 @@ ${cmake_build_dir}/bin/cmake -S ${vtkm_src_dir} -B ${vtkm_build_dir} \
   -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF\
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=ON\
-  -DVTKm_NO_DEPRECATED_VIRTUAL=ON \
   -DVTKm_ENABLE_KOKKOS=ON \
   -DVTKm_ENABLE_MPI=OFF\
   -DVTKm_ENABLE_RENDERING=ON \

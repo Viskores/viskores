@@ -35,8 +35,12 @@ VTKM_CONT vtkm::cont::DataSet ZFPCompressor2D::DoExecute(const vtkm::cont::DataS
         compressed = compressor.Compress(concrete, rate, pointDimensions);
       });
 
-  // TODO: is it really PointField or WHOLE_MESH, should we do it the same way as Histogram?
-  return this->CreateResultFieldPoint(input, "compressed", compressed);
+  // Note: the compressed array is set as a WholeDataSet field. It is really associated with
+  // the points, but the size does not match and problems will occur if the user attempts to
+  // use it as a point data set. The decompressor will place the data back as a point field.
+  // (This might cause issues if cell fields are ever supported.)
+  return this->CreateResultField(
+    input, "compressed", vtkm::cont::Field::Association::WholeDataSet, compressed);
 }
 } // namespace zfp
 } // namespace filter

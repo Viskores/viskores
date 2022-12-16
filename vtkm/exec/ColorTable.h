@@ -10,7 +10,6 @@
 #ifndef vtk_m_exec_ColorTable_h
 #define vtk_m_exec_ColorTable_h
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 
 namespace vtkm
@@ -88,44 +87,6 @@ private:
                                                                 vtkm::Float32 weight) const;
 };
 
-class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use vtkm::exec::ColorTable.") ColorTableBase
-  : public vtkm::exec::ColorTable
-{
-};
-
-class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use vtkm::exec::ColorTable.") ColorTableRGB final
-  : public ColorTable
-{
-public:
-  ColorTableRGB() { this->Space = vtkm::ColorSpace::RGB; }
-};
-
-class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use vtkm::exec::ColorTable.") ColorTableHSV final
-  : public ColorTable
-{
-public:
-  ColorTableHSV() { this->Space = vtkm::ColorSpace::HSV; }
-};
-
-class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use vtkm::exec::ColorTable.") ColorTableHSVWrap final
-  : public ColorTable
-{
-public:
-  ColorTableHSVWrap() { this->Space = vtkm::ColorSpace::HSVWrap; }
-};
-
-class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use vtkm::exec::ColorTable.") ColorTableLab final
-  : public ColorTable
-{
-public:
-  ColorTableLab() { this->Space = vtkm::ColorSpace::Lab; }
-};
-
-class VTKM_ALWAYS_EXPORT ColorTableDiverging final : public ColorTable
-{
-public:
-  ColorTableDiverging() { this->Space = vtkm::ColorSpace::Diverging; }
-};
 }
 }
 

@@ -126,18 +126,6 @@ public:
   using ExecConnectivityType =
     vtkm::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>;
 
-  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
-  struct VTKM_DEPRECATED(
-    1.6,
-    "Replace ExecutionTypes<D, V, I>::ExecObjectType with ExecConnectivityType<V, I>.")
-    ExecutionTypes
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(VisitTopology);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(IncidentTopology);
-    using ExecObjectType = ExecConnectivityType<VisitTopology, IncidentTopology>;
-  };
-
   template <typename VisitTopology, typename IncidentTopology>
   ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(vtkm::cont::DeviceAdapterId,
                                                                         VisitTopology,
@@ -145,17 +133,6 @@ public:
                                                                         vtkm::cont::Token&) const
   {
     return ExecConnectivityType<VisitTopology, IncidentTopology>(this->Structure);
-  }
-
-  template <typename VisitTopology, typename IncidentTopology>
-  VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
-  ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(
-    vtkm::cont::DeviceAdapterId device,
-    VisitTopology visitTopology,
-    IncidentTopology incidentTopology) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
   }
 
   void PrintSummary(std::ostream& out) const override

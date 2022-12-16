@@ -109,15 +109,14 @@ public:
       }
 
       // Compute points inside cell bounds
-      auto portal = points.GetPortal();
       auto minp =
-        static_cast<vtkm::Id3>(vtkm::Ceil((cbmin - portal.GetOrigin()) / portal.GetSpacing()));
+        static_cast<vtkm::Id3>(vtkm::Ceil((cbmin - points.GetOrigin()) / points.GetSpacing()));
       auto maxp =
-        static_cast<vtkm::Id3>(vtkm::Floor((cbmax - portal.GetOrigin()) / portal.GetSpacing()));
+        static_cast<vtkm::Id3>(vtkm::Floor((cbmax - points.GetOrigin()) / points.GetSpacing()));
 
       // clamp
       minp = vtkm::Max(minp, vtkm::Id3(0));
-      maxp = vtkm::Min(maxp, portal.GetDimensions() - vtkm::Id3(1));
+      maxp = vtkm::Min(maxp, points.GetDimensions() - vtkm::Id3(1));
 
       for (vtkm::Id k = minp[2]; k <= maxp[2]; ++k)
       {
@@ -125,13 +124,13 @@ public:
         {
           for (vtkm::Id i = minp[0]; i <= maxp[0]; ++i)
           {
-            auto pt = portal.Get(vtkm::Id3(i, j, k));
+            auto pt = points.Get(vtkm::Id3(i, j, k));
             CoordsType pc;
             vtkm::ErrorCode status =
               vtkm::exec::WorldCoordinatesToParametricCoordinates(cellPoints, pt, cellShape, pc);
             if ((status == vtkm::ErrorCode::Success) && vtkm::exec::CellInside(pc, cellShape))
             {
-              auto pointId = i + portal.GetDimensions()[0] * (j + portal.GetDimensions()[1] * k);
+              auto pointId = i + points.GetDimensions()[0] * (j + points.GetDimensions()[1] * k);
               cellIds.Set(pointId, cellId);
               pcoords.Set(pointId, pc);
             }

@@ -224,6 +224,11 @@ void DataSet_Compare(vtkm::cont::DataSet& leftDataSet, vtkm::cont::DataSet& righ
 {
   for (vtkm::Id j = 0; j < leftDataSet.GetNumberOfFields(); j++)
   {
+    if (leftDataSet.HasCoordinateSystem(leftDataSet.GetField(j).GetName()))
+    {
+      // Skip coordinate systems, which have a different array type.
+      continue;
+    }
     vtkm::cont::ArrayHandle<vtkm::Float32> lDataArray;
     leftDataSet.GetField(j).GetData().AsArrayHandle(lDataArray);
     vtkm::cont::ArrayHandle<vtkm::Float32> rDataArray;

@@ -44,7 +44,7 @@ void TestDataSet_Explicit()
   vtkm::cont::testing::MakeTestDataSet tds;
   vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet0();
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
 
   // test various field-getting methods and associations
   const vtkm::cont::Field& f1 = ds.GetField("pointvar");

@@ -320,6 +320,12 @@ void WritePointFields(std::ostream& out,
       continue;
     }
 
+    if (field.GetName() == dataSet.GetCoordinateSystemName())
+    {
+      // Do not write out the first coordinate system as a field.
+      continue;
+    }
+
     vtkm::Id npoints = field.GetNumberOfValues();
     int ncomps = field.GetData().GetNumberOfComponentsFlat();
 

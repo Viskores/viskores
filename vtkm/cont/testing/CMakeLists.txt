@@ -9,9 +9,6 @@
 ##============================================================================
 
 set(headers
-  ExplicitTestData.h
-  MakeTestDataSet.h
-  Testing.h
   TestingDeviceAdapter.h
   TestingRuntimeDeviceConfiguration.h
   TestingSerialization.h
@@ -30,9 +27,11 @@ set(unit_tests
   UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
-  UnitTestArrayHandleVirtual.cxx
+  UnitTestArrayPortalFromIterators.cxx
   UnitTestArrayPortalToIterators.cxx
+  UnitTestBuffer.cxx
   UnitTestComputeRange.cxx
+  UnitTestControlSignatureTag.cxx
   UnitTestContTesting.cxx
   UnitTestDataSetBuilderCurvilinear.cxx
   UnitTestDataSetBuilderExplicit.cxx
@@ -44,26 +43,29 @@ set(unit_tests
   UnitTestDataSetUniform.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceSelectOnThreads.cxx
-  UnitTestDynamicCellSet.cxx
   UnitTestError.cxx
   UnitTestFieldRangeCompute.cxx
   UnitTestInitialize.cxx
+  UnitTestIteratorFromArrayPortal.cxx
   UnitTestLateDeallocate.cxx
   UnitTestLogging.cxx
   UnitTestMergePartitionedDataSet.cxx
   UnitTestMoveConstructors.cxx
   UnitTestPartitionedDataSet.cxx
+  UnitTestRuntimeConfigurationOptions.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestRuntimeDeviceNames.cxx
   UnitTestScopedRuntimeDeviceTracker.cxx
   UnitTestStorageList.cxx
-  UnitTestStorageListTag.cxx
   UnitTestTimer.cxx
   UnitTestToken.cxx
   UnitTestTryExecute.cxx
+  UnitTestTypeCheckArray.cxx
+  UnitTestTypeCheckCellSet.cxx
+  UnitTestTypeCheckExecObject.cxx
+  UnitTestTypeCheckKeys.cxx
   UnitTestUnknownArrayHandle.cxx
   UnitTestUnknownCellSet.cxx
-  UnitTestVariantArrayHandle.cxx
   )
 
 set(unit_tests_device
@@ -93,12 +95,12 @@ set(unit_tests_device
   UnitTestBitField.cxx
   UnitTestCellLocatorChooser.cxx
   UnitTestCellLocatorGeneral.cxx
+  UnitTestCellLocatorPartitioned.cxx
   UnitTestCellLocatorRectilinearGrid.cxx
-  UnitTestCellLocatorTwoLevel.cxx
   UnitTestCellLocatorUniformGrid.cxx
+  UnitTestCellLocatorUnstructured.cxx
   UnitTestCellSet.cxx
   UnitTestCellSetExplicit.cxx
-  UnitTestCellSetExtrude.cxx
   UnitTestCellSetPermutation.cxx
   UnitTestColorTable.cxx
   UnitTestDataSetPermutation.cxx
@@ -107,39 +109,26 @@ set(unit_tests_device
   UnitTestImplicitFunction.cxx
   UnitTestParticleArrayCopy.cxx
   UnitTestPointLocatorSparseGrid.cxx
+  UnitTestTransportArrayIn.cxx
+  UnitTestTransportArrayInOut.cxx
+  UnitTestTransportArrayOut.cxx
+  UnitTestTransportCellSetIn.cxx
+  UnitTestTransportExecObject.cxx
+  UnitTestTransportWholeArray.cxx
   )
-
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+if(TARGET vtkm_filter_field_conversion)
   list(APPEND unit_tests_device
-    UnitTestVirtualObjectHandle.cxx
+    UnitTestCellSetExtrude.cxx
     )
 endif()
 
-set(library_sources
-  TestEqualArrayHandles.cxx
-  Testing.cxx
-  )
-
-set(library_sources_device
-  )
-
-vtkm_library(
-  NAME vtkm_cont_testing
-  SOURCES ${library_sources}
-  DEVICE_SOURCES ${library_sources_device}
-  HEADERS ${headers}
-  )
-target_link_libraries(vtkm_cont_testing PUBLIC vtkm_cont vtkm_worklet)
-
-if(VTKm_ENABLE_TESTING)
-  vtkm_unit_tests(SOURCES ${unit_tests} DEVICE_SOURCES ${unit_tests_device})
+vtkm_unit_tests(SOURCES ${unit_tests} DEVICE_SOURCES ${unit_tests_device})
 
 #add distributed tests i.e.test to run with MPI
 #if MPI is enabled.
-  set(mpi_unit_tests
-    UnitTestFieldRangeGlobalCompute.cxx
-    UnitTestSerializationArrayHandle.cxx
-    UnitTestSerializationDataSet.cxx
-    )
-  vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests})
-endif()
+set(mpi_unit_tests
+  UnitTestFieldRangeGlobalCompute.cxx
+  UnitTestSerializationArrayHandle.cxx
+  UnitTestSerializationDataSet.cxx
+  )
+vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests})

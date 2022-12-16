@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_geometry_refinement_SplitSharpEdges_h
 #define vtk_m_filter_geometry_refinement_SplitSharpEdges_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/geometry_refinement/vtkm_filter_geometry_refinement_export.h>
 
 namespace vtkm
@@ -33,7 +33,7 @@ namespace geometry_refinement
 /// to (5,4,3).
 /// By default, all old point's fields would be copied to the new point.
 /// Use with caution.
-class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT SplitSharpEdges : public vtkm::filter::NewFilterField
+class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT SplitSharpEdges : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
@@ -48,12 +48,6 @@ private:
   vtkm::FloatDefault FeatureAngle = 30.0;
 };
 } // namespace geometry_refinement
-class VTKM_DEPRECATED(1.8,
-                      "Use vtkm::filter::geometry_refinement::SplitSharpEdges.") SplitSharpEdges
-  : public vtkm::filter::geometry_refinement::SplitSharpEdges
-{
-  using geometry_refinement::SplitSharpEdges::SplitSharpEdges;
-};
 } // namespace filter
 } // namespace vtkm
 

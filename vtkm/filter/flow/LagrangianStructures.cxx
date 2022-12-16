@@ -57,7 +57,7 @@ public:
 
   VTKM_EXEC void operator()(const vtkm::Particle& particle, vtkm::Vec3f& pt) const
   {
-    pt = particle.Pos;
+    pt = particle.GetPosition();
   }
 };
 
@@ -72,8 +72,8 @@ public:
                             const vtkm::Vec3f& seed,
                             vtkm::Particle& particle) const
   {
-    particle.ID = index;
-    particle.Pos = seed;
+    particle.SetID(index);
+    particle.SetPosition(seed);
   }
 };
 
@@ -174,8 +174,8 @@ VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(const vtkm::cont::
   auto fieldmapper = [&](vtkm::cont::DataSet& dataset, const vtkm::cont::Field& field) {
     MapField(dataset, field);
   };
-  vtkm::cont::DataSet output =
-    this->CreateResult(input, lcsInput.GetCellSet(), lcsInput.GetCoordinateSystem(), fieldmapper);
+  vtkm::cont::DataSet output = this->CreateResultCoordinateSystem(
+    input, lcsInput.GetCellSet(), lcsInput.GetCoordinateSystem(), fieldmapper);
   output.AddPointField(this->GetOutputFieldName(), outputField);
   return output;
 }

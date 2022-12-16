@@ -13,7 +13,6 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ColorTable.h>
@@ -44,16 +43,7 @@ public:
 
   virtual vtkm::rendering::Canvas* NewCopy() const;
 
-  VTKM_DEPRECATED(1.6, "Initialize() does nothing.")
-  virtual void Initialize() {}
-
-  VTKM_DEPRECATED(1.6, "Activate() does nothing.")
-  virtual void Activate() {}
-
   virtual void Clear();
-
-  VTKM_DEPRECATED(1.6, "Finish() does nothing.")
-  virtual void Finish() {}
 
   virtual void BlendBackground();
 

@@ -10,7 +10,6 @@
 #ifndef vtk_m_rendering_Mapper_h
 #define vtk_m_rendering_Mapper_h
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
@@ -38,12 +37,6 @@ public:
                            const vtkm::Range& scalarRange) = 0;
 
   virtual void SetActiveColorTable(const vtkm::cont::ColorTable& ct);
-
-  VTKM_DEPRECATED(1.6, "StartScene() does nothing")
-  void StartScene() {}
-
-  VTKM_DEPRECATED(1.6, "EndScene() does nothing")
-  void EndScene() {}
 
   virtual void SetCanvas(vtkm::rendering::Canvas* canvas) = 0;
   virtual vtkm::rendering::Canvas* GetCanvas() const = 0;

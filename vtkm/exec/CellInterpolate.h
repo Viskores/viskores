@@ -11,7 +11,6 @@
 #define vtk_m_exec_Interpolate_h
 
 #include <vtkm/CellShape.h>
-#include <vtkm/Deprecated.h>
 #include <vtkm/ErrorCode.h>
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
 #include <vtkm/exec/FunctorBase.h>
@@ -177,24 +176,6 @@ VTKM_EXEC vtkm::ErrorCode CellInterpolate(const FieldVecType& pointFieldValues,
   return status;
 }
 
-//-----------------------------------------------------------------------------
-template <typename FieldVecType, typename ParametricCoordType, typename CellShapeTag>
-VTKM_DEPRECATED(1.6,
-                "Signature changed to CellInterpolate(pointFieldValues, pcoords, shape, result).")
-VTKM_EXEC typename FieldVecType::ComponentType
-  CellInterpolate(const FieldVecType& pointFieldValues,
-                  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-                  CellShapeTag shape,
-                  const vtkm::exec::FunctorBase& worklet)
-{
-  typename FieldVecType::ComponentType result;
-  vtkm::ErrorCode status = CellInterpolate(pointFieldValues, pcoords, shape, result);
-  if (status != vtkm::ErrorCode::Success)
-  {
-    worklet.RaiseError(vtkm::ErrorString(status));
-  }
-  return result;
-}
 }
 } // namespace vtkm::exec
 

@@ -132,10 +132,10 @@ and then build. Here are some example *nix commands for the process
 (individual commands may vary).
 
 ```sh
-$ tar xvzf ~/Downloads/vtk-m-v1.9.0.tar.gz
+$ tar xvzf ~/Downloads/vtk-m-v2.0.0.tar.gz
 $ mkdir vtkm-build
 $ cd vtkm-build
-$ cmake-gui ../vtk-m-v1.9.0
+$ cmake-gui ../vtk-m-v2.0.0
 $ cmake --build -j .              # Runs make (or other build program)
 ```
 
@@ -246,9 +246,9 @@ project(VTKmDemo CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if(TARGET vtkm_rendering)
+if(TARGET vtkm::rendering)
   add_executable(Demo Demo.cxx)
-  target_link_libraries(Demo PRIVATE vtkm_filter vtkm_rendering vtkm_source)
+  target_link_libraries(Demo PRIVATE vtkm::filter vtkm::rendering vtkm::source)
 endif()
 ```
 

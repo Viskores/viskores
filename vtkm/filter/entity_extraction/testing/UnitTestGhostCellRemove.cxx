@@ -84,6 +84,7 @@ vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
                                 vtkm::Id numJ,
                                 vtkm::Id numK,
                                 int numLayers,
+                                std::string& ghostName,
                                 bool addMidGhost = false)
 {
   vtkm::cont::DataSet ds;
@@ -94,8 +95,14 @@ vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
     ds = vtkm::cont::DataSetBuilderUniform::Create(vtkm::Id3(numI + 1, numJ + 1, numK + 1));
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
-  ds.AddGhostCellField(ghosts);
-
+  if (ghostName == "default")
+  {
+    ds.SetGhostCellField(ghosts);
+  }
+  else
+  {
+    ds.SetGhostCellField(ghostName, ghosts);
+  }
   return ds;
 }
 
@@ -103,6 +110,7 @@ vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
                                     vtkm::Id numJ,
                                     vtkm::Id numK,
                                     int numLayers,
+                                    std::string& ghostName,
                                     bool addMidGhost = false)
 {
   vtkm::cont::DataSet ds;
@@ -128,7 +136,14 @@ vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
-  ds.AddGhostCellField(ghosts);
+  if (ghostName == "default")
+  {
+    ds.SetGhostCellField(ghosts);
+  }
+  else
+  {
+    ds.SetGhostCellField(ghostName, ghosts);
+  }
 
   return ds;
 }
@@ -164,11 +179,15 @@ static void MakeExplicitCells(const CellSetType& cellSet,
   }
 }
 
-vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK, int numLayers)
+vtkm::cont::DataSet MakeExplicit(vtkm::Id numI,
+                                 vtkm::Id numJ,
+                                 vtkm::Id numK,
+                                 int numLayers,
+                                 std::string& ghostName)
 {
   using CoordType = vtkm::Vec3f_32;
 
-  vtkm::cont::DataSet dsUniform = MakeUniform(numI, numJ, numK, numLayers);
+  vtkm::cont::DataSet dsUniform = MakeUniform(numI, numJ, numK, numLayers, ghostName);
 
   auto coordData = dsUniform.GetCoordinateSystem(0).GetDataAsMultiplexer();
   vtkm::Id numPts = coordData.GetNumberOfValues();
@@ -205,7 +224,14 @@ vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id numK, in
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers);
 
-  ds.AddGhostCellField(ghosts);
+  if (ghostName == "default")
+  {
+    ds.SetGhostCellField(ghosts);
+  }
+  else
+  {
+    ds.SetGhostCellField(ghostName, ghosts);
+  }
 
   return ds;
 }
@@ -235,69 +261,73 @@ void TestGhostCellRemove()
       std::vector<std::string> dsTypes = { "uniform", "rectilinear", "explicit" };
       for (auto& dsType : dsTypes)
       {
-        vtkm::cont::DataSet ds;
-        if (dsType == "uniform")
-          ds = MakeUniform(nx, ny, nz, layer);
-        else if (dsType == "rectilinear")
-          ds = MakeRectilinear(nx, ny, nz, layer);
-        else if (dsType == "explicit")
-          ds = MakeExplicit(nx, ny, nz, layer);
-
-        std::vector<std::string> removeType = { "all", "byType" };
-        for (auto& rt : removeType)
+        std::vector<std::string> nameTypes = { "default", "user-specified" };
+        for (auto& nameType : nameTypes)
         {
-          vtkm::filter::entity_extraction::GhostCellRemove ghostCellRemoval;
-          ghostCellRemoval.RemoveGhostField();
+          vtkm::cont::DataSet ds;
+          if (dsType == "uniform")
+            ds = MakeUniform(nx, ny, nz, layer, nameType);
+          else if (dsType == "rectilinear")
+            ds = MakeRectilinear(nx, ny, nz, layer, nameType);
+          else if (dsType == "explicit")
+            ds = MakeExplicit(nx, ny, nz, layer, nameType);
 
-          if (rt == "all")
-            ghostCellRemoval.RemoveAllGhost();
-          else if (rt == "byType")
-            ghostCellRemoval.RemoveByType(vtkm::CellClassification::Ghost);
-
-          auto output = ghostCellRemoval.Execute(ds);
-          vtkm::Id numCells = output.GetNumberOfCells();
-
-          //Validate the output.
-
-          vtkm::Id numCellsReq = (nx - 2 * layer) * (ny - 2 * layer);
-          if (nz != 0)
-            numCellsReq *= (nz - 2 * layer);
-
-          VTKM_TEST_ASSERT(numCellsReq == numCells, "Wrong number of cells in output");
-          if (dsType == "uniform" || dsType == "rectilinear")
+          std::vector<std::string> removeType = { "all", "byType" };
+          for (auto& rt : removeType)
           {
-            if (nz == 0)
+            vtkm::filter::entity_extraction::GhostCellRemove ghostCellRemoval;
+            ghostCellRemoval.RemoveGhostField();
+
+            if (rt == "all")
+              ghostCellRemoval.RemoveAllGhost();
+            else if (rt == "byType")
+              ghostCellRemoval.RemoveByType(vtkm::CellClassification::Ghost);
+
+            auto output = ghostCellRemoval.Execute(ds);
+            vtkm::Id numCells = output.GetNumberOfCells();
+
+            //Validate the output.
+
+            vtkm::Id numCellsReq = (nx - 2 * layer) * (ny - 2 * layer);
+            if (nz != 0)
+              numCellsReq *= (nz - 2 * layer);
+
+            VTKM_TEST_ASSERT(numCellsReq == numCells, "Wrong number of cells in output");
+            if (dsType == "uniform" || dsType == "rectilinear")
             {
-              VTKM_TEST_ASSERT(output.GetCellSet().CanConvert<vtkm::cont::CellSetStructured<2>>(),
-                               "Wrong cell type for explicit conversion");
+              if (nz == 0)
+              {
+                VTKM_TEST_ASSERT(output.GetCellSet().CanConvert<vtkm::cont::CellSetStructured<2>>(),
+                                 "Wrong cell type for explicit conversion");
+              }
+              else if (nz > 0)
+              {
+                VTKM_TEST_ASSERT(output.GetCellSet().CanConvert<vtkm::cont::CellSetStructured<3>>(),
+                                 "Wrong cell type for explicit conversion");
+              }
             }
-            else if (nz > 0)
+            else
             {
-              VTKM_TEST_ASSERT(output.GetCellSet().CanConvert<vtkm::cont::CellSetStructured<3>>(),
+              VTKM_TEST_ASSERT(output.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
                                "Wrong cell type for explicit conversion");
             }
           }
-          else
+
+          // For structured, test the case where we have a ghost in the 'middle' of the cells.
+          // This will produce an explicit cellset.
+          if (dsType == "uniform" || dsType == "rectilinear")
           {
+            if (dsType == "uniform")
+              ds = MakeUniform(nx, ny, nz, layer, nameType, true);
+            else if (dsType == "rectilinear")
+              ds = MakeRectilinear(nx, ny, nz, layer, nameType, true);
+
+            vtkm::filter::entity_extraction::GhostCellRemove ghostCellRemoval;
+            ghostCellRemoval.RemoveGhostField();
+            auto output = ghostCellRemoval.Execute(ds);
             VTKM_TEST_ASSERT(output.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
                              "Wrong cell type for explicit conversion");
           }
-        }
-
-        // For structured, test the case where we have a ghost in the 'middle' of the cells.
-        // This will produce an explicit cellset.
-        if (dsType == "uniform" || dsType == "rectilinear")
-        {
-          if (dsType == "uniform")
-            ds = MakeUniform(nx, ny, nz, layer, true);
-          else if (dsType == "rectilinear")
-            ds = MakeRectilinear(nx, ny, nz, layer, true);
-
-          vtkm::filter::entity_extraction::GhostCellRemove ghostCellRemoval;
-          ghostCellRemoval.RemoveGhostField();
-          auto output = ghostCellRemoval.Execute(ds);
-          VTKM_TEST_ASSERT(output.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
-                           "Wrong cell type for explicit conversion");
         }
       }
     }

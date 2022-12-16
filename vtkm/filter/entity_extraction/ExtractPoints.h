@@ -13,11 +13,7 @@
 
 #include <vtkm/ImplicitFunction.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/ImplicitFunctionHandle.h>
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
-
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -35,7 +31,7 @@ namespace entity_extraction
 /// Note that while any geometry type can be provided as input, the output is
 /// represented by an explicit representation of points using
 /// vtkm::cont::CellSetSingleType
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExtractPoints : public vtkm::filter::NewFilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExtractPoints : public vtkm::filter::FilterField
 {
 public:
   /// When CompactPoints is set, instead of copying the points and point fields
@@ -69,11 +65,6 @@ private:
   bool CompactPoints = false;
 };
 } // namespace entity_extraction
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::ExtractPoints.") ExtractPoints
-  : public vtkm::filter::entity_extraction::ExtractPoints
-{
-  using entity_extraction::ExtractPoints::ExtractPoints;
-};
 } // namespace filter
 } // namespace vtkm
 

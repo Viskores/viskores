@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_density_estimate_ParticleDensityBase_h
 #define vtk_m_filter_density_estimate_ParticleDensityBase_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/density_estimate/vtkm_filter_density_estimate_export.h>
 
 namespace vtkm
@@ -20,7 +20,7 @@ namespace filter
 {
 namespace density_estimate
 {
-class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT ParticleDensityBase : public vtkm::filter::NewFilterField
+class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT ParticleDensityBase : public vtkm::filter::FilterField
 {
 protected:
   ParticleDensityBase() = default;

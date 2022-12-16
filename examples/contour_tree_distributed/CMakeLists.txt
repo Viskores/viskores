@@ -58,9 +58,9 @@ find_package(VTKm REQUIRED QUIET)
 ####################################
 # MPI
 ####################################
-if (VTKm_ENABLE_MPI)
+if (VTKm_ENABLE_MPI AND TARGET vtkm::filter_scalar_topology AND TARGET vtkm::io)
   add_executable(ContourTree_Distributed ContourTreeApp.cxx)
-  target_link_libraries(ContourTree_Distributed vtkm_filter vtkm_io MPI::MPI_CXX)
+  target_link_libraries(ContourTree_Distributed vtkm::filter_scalar_topology vtkm::io MPI::MPI_CXX)
   vtkm_add_target_information(ContourTree_Distributed
                               MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES ContourTreeApp.cxx)
@@ -78,11 +78,11 @@ if (VTKm_ENABLE_MPI)
   endif()
 
   add_executable(TreeCompiler TreeCompilerApp.cxx)
-  target_link_libraries(TreeCompiler vtkm_filter)
+  target_link_libraries(TreeCompiler vtkm::filter_core)
   vtkm_add_target_information(TreeCompiler DROP_UNUSED_SYMBOLS)
 
   add_executable(BranchCompiler BranchCompilerApp.cxx)
-  target_link_libraries(BranchCompiler vtkm_filter)
+  target_link_libraries(BranchCompiler vtkm::filter)
   vtkm_add_target_information(BranchCompiler DROP_UNUSED_SYMBOLS)
 
   configure_file(split_data_2d.py split_data_2d.py COPYONLY)

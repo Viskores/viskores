@@ -323,10 +323,6 @@
 //Mark if we have enabled logging.
 #cmakedefine VTKM_ENABLE_LOGGING
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#cmakedefine VTKM_NO_DEPRECATED_VIRTUAL
-#endif
-
 // Define a pair of macros, VTKM_SWALLOW_SEMICOLON_PRE_BLOCK and
 // VTKM_SWALLOW_SEMICOLON_POST_BLOCK that can be used around a block in a
 // macro to "swallow" the semicolon after the macro's use so that it is

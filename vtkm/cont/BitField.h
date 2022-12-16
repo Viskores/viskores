@@ -15,7 +15,6 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/Atomic.h>
-#include <vtkm/Deprecated.h>
 #include <vtkm/List.h>
 #include <vtkm/Types.h>
 
@@ -458,13 +457,6 @@ public:
     return true;
   }
 
-  VTKM_DEPRECATED(1.6, "Use CompareExchangeBitAtomic. (Note the changed interface.)")
-  VTKM_EXEC_CONT bool CompareAndSwapBitAtomic(vtkm::Id bitIdx, bool newBit, bool expectedBit) const
-  {
-    this->CompareExchangeBitAtomic(bitIdx, &expectedBit, newBit);
-    return expectedBit;
-  }
-
   /// Perform an atomic compare-exchange operation on the word at @a wordIdx.
   /// If the word in memory is equal to @a oldWord, it is replaced with
   /// the value of @a newWord and true returned. If the word in memory is not
@@ -484,15 +476,6 @@ public:
     return vtkm::AtomicCompareExchange(addr, oldWord, newWord);
   }
 
-  template <typename WordType = WordTypePreferred>
-  VTKM_DEPRECATED(1.6, "Use CompareExchangeWordAtomic. (Note the changed interface.)")
-  VTKM_EXEC_CONT WordType
-    CompareAndSwapWordAtomic(vtkm::Id wordIdx, WordType newWord, WordType expected) const
-  {
-    this->CompareExchangeWordAtomic(wordIdx, &expected, newWord);
-    return expected;
-  }
-
 private:
   template <typename WordType>
   VTKM_EXEC_CONT MaybeConstPointer<WordType> GetWordAddress(vtkm::Id wordId) const noexcept
@@ -509,21 +492,6 @@ using BitPortal = BitPortalBase<false>;
 
 using BitPortalConst = BitPortalBase<true>;
 
-template <typename WordType, typename Device>
-struct IsValidWordTypeDeprecated
-{
-  using type VTKM_DEPRECATED(
-    1.6,
-    "BitField::IsValidWordTypeAtomic no longer takes a second Device parameter.") =
-    detail::BitFieldTraits::IsValidWordTypeAtomic<WordType>;
-};
-
-template <typename WordType>
-struct IsValidWordTypeDeprecated<WordType, void>
-{
-  using type = detail::BitFieldTraits::IsValidWordTypeAtomic<WordType>;
-};
-
 } // end namespace detail
 
 class VTKM_CONT_EXPORT BitField
@@ -531,20 +499,11 @@ class VTKM_CONT_EXPORT BitField
   static constexpr vtkm::Id BlockSize = detail::BitFieldTraits::BlockSize;
 
 public:
-  /// The type array handle used to store the bit data internally:
-  using ArrayHandleType VTKM_DEPRECATED(1.6, "BitField now uses a Buffer to store data.") =
-    ArrayHandle<vtkm::WordTypeDefault, StorageTagBasic>;
-
   /// The BitPortal used in the control environment.
   using WritePortalType = detail::BitPortal;
 
   /// A read-only BitPortal used in the control environment.
   using ReadPortalType = detail::BitPortalConst;
-
-  using PortalControl VTKM_DEPRECATED(1.6,
-                                      "Use BitField::WritePortalType instead.") = detail::BitPortal;
-  using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayBitField::ReadPortalType instead.") =
-    detail::BitPortalConst;
 
   using WordTypePreferred = vtkm::AtomicTypePreferred;
 
@@ -569,12 +528,6 @@ public:
   template <typename WordType, typename Device = void>
   using IsValidWordTypeAtomic = detail::BitFieldTraits::IsValidWordTypeAtomic<WordType>;
 
-  /// Check whether a word type is valid for atomic operations from the control
-  /// environment.
-  template <typename WordType>
-  using IsValidWordTypeAtomicControl VTKM_DEPRECATED(1.6, "Use IsValidWordTypeAtomic instead.") =
-    detail::BitFieldTraits::IsValidWordTypeAtomic<WordType>;
-
   VTKM_CONT BitField();
   VTKM_CONT BitField(const BitField&) = default;
   VTKM_CONT BitField(BitField&&) noexcept = default;
@@ -590,14 +543,6 @@ public:
 
   /// Return the internal `Buffer` used to store the `BitField`.
   VTKM_CONT vtkm::cont::internal::Buffer GetBuffer() const { return this->Buffer; }
-
-  /// Return the internal ArrayHandle used to store the BitField.
-  VTKM_CONT VTKM_DEPRECATED(1.6, "BitField now uses a Buffer to store data.")
-    ArrayHandle<vtkm::WordTypeDefault, StorageTagBasic> GetData() const
-  {
-    return vtkm::cont::ArrayHandle<vtkm::WordTypeDefault, StorageTagBasic>(
-      std::vector<vtkm::cont::internal::Buffer>(1, this->Buffer));
-  }
 
   /// Return the number of bits stored by this BitField.
   VTKM_CONT vtkm::Id GetNumberOfBits() const;
@@ -672,13 +617,6 @@ public:
     this->Fill(value, token);
   }
 
-  /// Shrink the bit field to the requested number of bits.
-  VTKM_CONT VTKM_DEPRECATED(1.6,
-                            "Use Allocate with preserve = On.") void Shrink(vtkm::Id numberOfBits)
-  {
-    this->Allocate(numberOfBits, vtkm::CopyFlag::On);
-  }
-
   /// Release all execution-side resources held by this BitField.
   VTKM_CONT void ReleaseResourcesExecution();
 
@@ -701,9 +639,6 @@ public:
     return this->IsOnDevice(vtkm::cont::DeviceAdapterTagUndefined{});
   }
 
-  VTKM_CONT VTKM_DEPRECATED(1.6, "Data can be on multiple devices. Use IsOnDevice.")
-    vtkm::cont::DeviceAdapterId GetDeviceAdapterId() const;
-
   /// \brief Get a portal to the data that is usable from the control environment.
   ///
   /// As long as this portal is in scope, no one else will be able to read or write the BitField.
@@ -714,20 +649,6 @@ public:
   /// As long as this portal is in scope, no one else will be able to write in the BitField.
   VTKM_CONT ReadPortalType ReadPortal() const;
 
-  VTKM_CONT
-  VTKM_DEPRECATED(1.6,
-                  "Use BitField::WritePortal() instead. "
-                  "Note that the returned portal will lock the array while it is in scope.")
-  detail::BitPortal GetPortalControl() { return this->WritePortal(); }
-
-  /// Get a read-only portal to the data that is usable from the control
-  /// environment.
-  VTKM_CONT
-  VTKM_DEPRECATED(1.6,
-                  "Use BitField::ReadPortal() instead. "
-                  "Note that the returned portal will lock the array while it is in scope.")
-  detail::BitPortalConst GetPortalConstControl() const { return this->ReadPortal(); }
-
   /// Prepares this BitField to be used as an input to an operation in the
   /// execution environment. If necessary, copies data to the execution
   /// environment. Can throw an exception if this BitField does not yet contain
@@ -735,15 +656,6 @@ public:
   /// execution environment.
   VTKM_CONT ReadPortalType PrepareForInput(vtkm::cont::DeviceAdapterId device,
                                            vtkm::cont::Token& token) const;
-
-  template <typename DeviceAdapterTag>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
-    typename ExecutionTypes<DeviceAdapterTag>::PortalConst
-    PrepareForInput(DeviceAdapterTag device) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInput(device, token);
-  }
 
   /// Prepares (allocates) this BitField to be used as an output from an
   /// operation in the execution environment. The internal state of this class
@@ -755,15 +667,6 @@ public:
                                              vtkm::cont::DeviceAdapterId device,
                                              vtkm::cont::Token& token) const;
 
-  template <typename DeviceAdapterTag>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForOutput now requires a vtkm::cont::Token object.")
-    typename ExecutionTypes<DeviceAdapterTag>::Portal
-    PrepareForOutput(vtkm::Id numBits, DeviceAdapterTag device) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForOutput(numBits, device, token);
-  }
-
   /// Prepares this BitField to be used in an in-place operation (both as input
   /// and output) in the execution environment. If necessary, copies data to
   /// the execution environment. Can throw an exception if this BitField does
@@ -771,15 +674,6 @@ public:
   /// running in the execution environment.
   VTKM_CONT WritePortalType PrepareForInPlace(vtkm::cont::DeviceAdapterId device,
                                               vtkm::cont::Token& token) const;
-
-  template <typename DeviceAdapterTag>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInPlace now requires a vtkm::cont::Token object.")
-    typename ExecutionTypes<DeviceAdapterTag>::Portal
-    PrepareForInPlace(DeviceAdapterTag device) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInPlace(device, token);
-  }
 
 private:
   mutable vtkm::cont::internal::Buffer Buffer;

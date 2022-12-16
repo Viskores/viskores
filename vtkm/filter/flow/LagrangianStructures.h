@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_flow_LagrangianStructures_h
 #define vtk_m_filter_flow_LagrangianStructures_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
@@ -22,7 +22,7 @@ namespace filter
 namespace flow
 {
 
-class VTKM_FILTER_FLOW_EXPORT LagrangianStructures : public vtkm::filter::NewFilterField
+class VTKM_FILTER_FLOW_EXPORT LagrangianStructures : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
@@ -69,11 +69,6 @@ private:
 };
 
 }
-struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::LagrangianStructures.") LagrangianStructures
-  : vtkm::filter::flow::LagrangianStructures
-{
-  using vtkm::filter::flow::LagrangianStructures::LagrangianStructures;
-};
 }
 } // namespace vtkm
 

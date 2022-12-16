@@ -89,7 +89,7 @@ VTKM_CONT MeshQuality::MeshQuality(CellMetric metric)
 
 VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& input)
 {
-  std::unique_ptr<vtkm::filter::NewFilterField> implementation;
+  std::unique_ptr<vtkm::filter::FilterField> implementation;
   switch (this->MyMetric)
   {
     case vtkm::filter::mesh_info::CellMetric::Area:
@@ -170,71 +170,5 @@ VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& 
   return implementation->Execute(input);
 }
 } // namespace mesh_info
-} // namespace filter
-} // namespace vtkm
-
-namespace vtkm
-{
-namespace filter
-{
-
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-
-vtkm::filter::mesh_info::CellMetric MeshQuality::ConvertCellMetric(
-  vtkm::filter::CellMetric oldMetricEnum)
-{
-  switch (oldMetricEnum)
-  {
-    case vtkm::filter::CellMetric::AREA:
-      return vtkm::filter::mesh_info::CellMetric::Area;
-    case vtkm::filter::CellMetric::ASPECT_GAMMA:
-      return vtkm::filter::mesh_info::CellMetric::AspectGamma;
-    case vtkm::filter::CellMetric::ASPECT_RATIO:
-      return vtkm::filter::mesh_info::CellMetric::AspectRatio;
-    case vtkm::filter::CellMetric::CONDITION:
-      return vtkm::filter::mesh_info::CellMetric::Condition;
-    case vtkm::filter::CellMetric::DIAGONAL_RATIO:
-      return vtkm::filter::mesh_info::CellMetric::DiagonalRatio;
-    case vtkm::filter::CellMetric::DIMENSION:
-      return vtkm::filter::mesh_info::CellMetric::Dimension;
-    case vtkm::filter::CellMetric::JACOBIAN:
-      return vtkm::filter::mesh_info::CellMetric::Jacobian;
-    case vtkm::filter::CellMetric::MAX_ANGLE:
-      return vtkm::filter::mesh_info::CellMetric::MaxAngle;
-    case vtkm::filter::CellMetric::MAX_DIAGONAL:
-      return vtkm::filter::mesh_info::CellMetric::MaxDiagonal;
-    case vtkm::filter::CellMetric::MIN_ANGLE:
-      return vtkm::filter::mesh_info::CellMetric::MinAngle;
-    case vtkm::filter::CellMetric::MIN_DIAGONAL:
-      return vtkm::filter::mesh_info::CellMetric::MinDiagonal;
-    case vtkm::filter::CellMetric::ODDY:
-      return vtkm::filter::mesh_info::CellMetric::Oddy;
-    case vtkm::filter::CellMetric::RELATIVE_SIZE_SQUARED:
-      return vtkm::filter::mesh_info::CellMetric::RelativeSizeSquared;
-    case vtkm::filter::CellMetric::SCALED_JACOBIAN:
-      return vtkm::filter::mesh_info::CellMetric::ScaledJacobian;
-    case vtkm::filter::CellMetric::SHAPE:
-      return vtkm::filter::mesh_info::CellMetric::Shape;
-    case vtkm::filter::CellMetric::SHAPE_AND_SIZE:
-      return vtkm::filter::mesh_info::CellMetric::ShapeAndSize;
-    case vtkm::filter::CellMetric::SHEAR:
-      return vtkm::filter::mesh_info::CellMetric::Shear;
-    case vtkm::filter::CellMetric::SKEW:
-      return vtkm::filter::mesh_info::CellMetric::Skew;
-    case vtkm::filter::CellMetric::STRETCH:
-      return vtkm::filter::mesh_info::CellMetric::Stretch;
-    case vtkm::filter::CellMetric::TAPER:
-      return vtkm::filter::mesh_info::CellMetric::Taper;
-    case vtkm::filter::CellMetric::VOLUME:
-      return vtkm::filter::mesh_info::CellMetric::Volume;
-    case vtkm::filter::CellMetric::WARPAGE:
-      return vtkm::filter::mesh_info::CellMetric::Warpage;
-    default:
-      throw vtkm::cont::ErrorBadValue("Invalid mesh quality metric.");
-  }
-}
-
-VTKM_DEPRECATED_SUPPRESS_END
-
 } // namespace filter
 } // namespace vtkm

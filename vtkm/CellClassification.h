@@ -10,7 +10,6 @@
 #ifndef vtk_m_CellClassification_h
 #define vtk_m_CellClassification_h
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 
 namespace vtkm
@@ -45,15 +44,6 @@ public:
     Unused3 = 1 << 4,
     Unused4 = 1 << 5,
     Unused5 = 1 << 6,
-
-    NORMAL VTKM_DEPRECATED(1.8, "Use vtkm::CellClassification::Normal") = Normal,
-    GHOST VTKM_DEPRECATED(1.8, "Use vtkm::CellClassification::Ghost") = Ghost,
-    INVALID VTKM_DEPRECATED(1.8, "Use vtkm::CellClassification::Invalid") = Invalid,
-    UNUSED0 VTKM_DEPRECATED(1.8) = Unused0,
-    BLANKED VTKM_DEPRECATED(1.8, "Use vtkm::CellClassification::Blanked") = Blanked,
-    UNUSED3 VTKM_DEPRECATED(1.8) = Unused3,
-    UNUSED4 VTKM_DEPRECATED(1.8) = Unused4,
-    UNUSED5 VTKM_DEPRECATED(1.8) = Unused5,
   };
 
   VTKM_EXEC constexpr CellClassification(vtkm::UInt8 flags = vtkm::UInt8{ Normal })
@@ -63,16 +53,6 @@ public:
 
   VTKM_EXEC constexpr operator vtkm::UInt8() const { return this->Flags; }
 };
-
-// Deprecated scoping.
-VTKM_DEPRECATED(1.8, "Use vtkm::CellClassification::Normal.")
-constexpr vtkm::CellClassification NORMAL = vtkm::CellClassification::Normal;
-VTKM_DEPRECATED(1.8, "Use vtkm::CellClassification::Ghost.")
-constexpr vtkm::CellClassification GHOST = vtkm::CellClassification::Ghost;
-VTKM_DEPRECATED(1.8, "Use vtkm::CellClassification::Invalid.")
-constexpr vtkm::CellClassification INVALID = vtkm::CellClassification::Invalid;
-VTKM_DEPRECATED(1.8, "Use vtkm::CellClassification::Blanked.")
-constexpr vtkm::CellClassification BLANKED = vtkm::CellClassification::Blanked;
 
 } // namespace vtkm
 

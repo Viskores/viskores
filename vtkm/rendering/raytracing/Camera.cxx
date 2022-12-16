@@ -500,20 +500,6 @@ void Camera::SetParameters(const vtkm::rendering::Camera& camera,
   this->CameraView = camera;
 }
 
-VTKM_DEPRECATED(1.6, "Use the canvas width and height rather than the canvas itself.")
-VTKM_CONT void Camera::SetParameters(const vtkm::rendering::Camera& camera,
-                                     vtkm::rendering::CanvasRayTracer& canvas)
-{
-  this->SetUp(camera.GetViewUp());
-  this->SetLookAt(camera.GetLookAt());
-  this->SetPosition(camera.GetPosition());
-  this->SetZoom(camera.GetZoom());
-  this->SetFieldOfView(camera.GetFieldOfView());
-  this->SetHeight(vtkm::Int32(canvas.GetHeight()));
-  this->SetWidth(vtkm::Int32(canvas.GetWidth()));
-  this->CameraView = camera;
-}
-
 
 VTKM_CONT
 void Camera::SetHeight(const vtkm::Int32& height)

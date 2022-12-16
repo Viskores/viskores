@@ -55,11 +55,16 @@ cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 # Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
+if(NOT TARGET vtkm::io OR NOT TARGET vtkm::filter_scalar_topology)
+  # Libraries needed are not built.
+  return()
+endif()
+
 ####################################
 # Serial
 ####################################
 add_executable(ContourTree_Augmented ContourTreeApp.cxx)
-target_link_libraries(ContourTree_Augmented vtkm_filter vtkm_io)
+target_link_libraries(ContourTree_Augmented vtkm::filter_scalar_topology vtkm::io)
 vtkm_add_target_information(ContourTree_Augmented
                             DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES ContourTreeApp.cxx)
@@ -79,7 +84,7 @@ endif()
 ####################################
 if (VTKm_ENABLE_MPI)
   add_executable(ContourTree_Augmented_MPI ContourTreeApp.cxx)
-  target_link_libraries(ContourTree_Augmented_MPI vtkm_filter vtkm_io MPI::MPI_CXX)
+  target_link_libraries(ContourTree_Augmented_MPI vtkm::filter_scalar_topology vtkm::io MPI::MPI_CXX)
   vtkm_add_target_information(ContourTree_Augmented_MPI
                               MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES ContourTreeApp.cxx)

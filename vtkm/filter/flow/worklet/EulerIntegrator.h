@@ -38,7 +38,7 @@ public:
                                        vtkm::FloatDefault stepLength,
                                        vtkm::Vec3f& velocity) const
   {
-    auto time = particle.Time;
+    auto time = particle.GetTime();
     auto inpos = particle.GetEvaluationPosition(stepLength);
     vtkm::VecVariable<vtkm::Vec3f, 2> vectors;
     GridEvaluatorStatus evalStatus = this->Evaluator.Evaluate(inpos, time, vectors);

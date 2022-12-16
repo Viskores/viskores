@@ -15,8 +15,8 @@ find_package(VTKm REQUIRED QUIET)
 
 add_executable(CosmoCenterFinder CosmoCenterFinder.cxx)
 add_executable(CosmoHaloFinder CosmoHaloFinder.cxx)
-target_link_libraries(CosmoCenterFinder PRIVATE vtkm_filter)
-target_link_libraries(CosmoHaloFinder PRIVATE vtkm_filter)
+target_link_libraries(CosmoCenterFinder PRIVATE vtkm::filter_core)
+target_link_libraries(CosmoHaloFinder PRIVATE vtkm::filter_core)
 
 vtkm_add_target_information(CosmoCenterFinder CosmoHaloFinder
                             DROP_UNUSED_SYMBOLS

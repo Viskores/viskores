@@ -11,8 +11,8 @@
 #ifndef vtk_m_filter_flow_Streamline_h
 #define vtk_m_filter_flow_Streamline_h
 
+#include <vtkm/filter/flow/FilterParticleAdvectionSteadyState.h>
 #include <vtkm/filter/flow/FlowTypes.h>
-#include <vtkm/filter/flow/NewFilterParticleAdvectionSteadyState.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
@@ -28,18 +28,13 @@ namespace flow
 /// end points for each seed through the vector field.
 
 class VTKM_FILTER_FLOW_EXPORT Streamline
-  : public vtkm::filter::flow::NewFilterParticleAdvectionSteadyState
+  : public vtkm::filter::flow::FilterParticleAdvectionSteadyState
 {
 private:
   VTKM_CONT vtkm::filter::flow::FlowResultType GetResultType() const override;
 };
 
 }
-struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::Streamline.") Streamline
-  : vtkm::filter::flow::Streamline
-{
-  using vtkm::filter::flow::Streamline::Streamline;
-};
 }
 } // namespace vtkm::filter::flow
 

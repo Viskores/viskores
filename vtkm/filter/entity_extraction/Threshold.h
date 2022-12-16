@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_entity_extraction_Threshold_h
 #define vtk_m_filter_entity_extraction_Threshold_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -26,7 +26,7 @@ namespace entity_extraction
 /// The output of this filter is an permutation of the input dataset.
 ///
 /// You can threshold either on point or cell fields
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT Threshold : public vtkm::filter::NewFilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT Threshold : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
@@ -103,11 +103,6 @@ private:
   bool Invert = false;
 };
 } // namespace entity_extraction
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::Threshold.") Threshold
-  : public vtkm::filter::entity_extraction::Threshold
-{
-  using entity_extraction::Threshold::Threshold;
-};
 } // namespace filter
 } // namespace vtkm
 

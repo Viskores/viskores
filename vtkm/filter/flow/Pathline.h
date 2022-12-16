@@ -11,8 +11,8 @@
 #ifndef vtk_m_filter_flow_Pathline_h
 #define vtk_m_filter_flow_Pathline_h
 
+#include <vtkm/filter/flow/FilterParticleAdvectionUnsteadyState.h>
 #include <vtkm/filter/flow/FlowTypes.h>
-#include <vtkm/filter/flow/NewFilterParticleAdvectionUnsteadyState.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
@@ -28,18 +28,13 @@ namespace flow
 /// end points for each seed through the vector field.
 
 class VTKM_FILTER_FLOW_EXPORT Pathline
-  : public vtkm::filter::flow::NewFilterParticleAdvectionUnsteadyState
+  : public vtkm::filter::flow::FilterParticleAdvectionUnsteadyState
 {
 private:
   VTKM_CONT vtkm::filter::flow::FlowResultType GetResultType() const override;
 };
 
 }
-struct VTKM_DEPRECATED(1.8, "Use vtkm::filter::flow::Pathline.") Pathline
-  : vtkm::filter::flow::Pathline
-{
-  using vtkm::filter::flow::Pathline::Pathline;
-};
 }
 } // namespace vtkm::filter::flow
 

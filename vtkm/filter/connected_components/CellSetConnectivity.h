@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_connected_components_CellSetConnectivity_h
 #define vtk_m_filter_connected_components_CellSetConnectivity_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/connected_components/vtkm_filter_connected_components_export.h>
 
 namespace vtkm
@@ -28,8 +28,7 @@ namespace connected_components
 /// number of components and assigns each component a unique integer.
 /// The result of the filter is a cell field of type vtkm::Id with the default name of 'component'.
 /// Each entry in the cell field will be a number that identifies to which component the cell belongs.
-class VTKM_FILTER_CONNECTED_COMPONENTS_EXPORT CellSetConnectivity
-  : public vtkm::filter::NewFilterField
+class VTKM_FILTER_CONNECTED_COMPONENTS_EXPORT CellSetConnectivity : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT CellSetConnectivity() { this->SetOutputFieldName("component"); }
@@ -40,12 +39,6 @@ private:
 };
 
 } // namespace connected_components
-
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::connected_components::CellSetConnectivity.")
-  CellSetConnectivity : public vtkm::filter::connected_components::CellSetConnectivity
-{
-  using connected_components::CellSetConnectivity::CellSetConnectivity;
-};
 
 } // namespace filter
 } // namespace vtkm

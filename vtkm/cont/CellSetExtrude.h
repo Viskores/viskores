@@ -110,15 +110,6 @@ public:
     typename detail::CellSetExtrudeConnectivityChooser<VisitTopology,
                                                        IncidentTopology>::ExecConnectivityType;
 
-  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
-  struct VTKM_DEPRECATED(
-    1.6,
-    "Replace ExecutionTypes<D, V, I>::ExecObjectType with ExecConnectivityType<V, I>.")
-    ExecutionTypes
-  {
-    using ExecObjectType = ExecConnectivityType<VisitTopology, IncidentTopology>;
-  };
-
   vtkm::exec::ConnectivityExtrude PrepareForInput(vtkm::cont::DeviceAdapterId,
                                                   vtkm::TopologyElementTagCell,
                                                   vtkm::TopologyElementTagPoint,
@@ -128,26 +119,6 @@ public:
                                                          vtkm::TopologyElementTagPoint,
                                                          vtkm::TopologyElementTagCell,
                                                          vtkm::cont::Token&) const;
-
-  VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
-  vtkm::exec::ConnectivityExtrude PrepareForInput(
-    vtkm::cont::DeviceAdapterId device,
-    vtkm::TopologyElementTagCell visitTopology,
-    vtkm::TopologyElementTagPoint incidentTopology) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
-  }
-
-  VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
-  vtkm::exec::ReverseConnectivityExtrude PrepareForInput(
-    vtkm::cont::DeviceAdapterId device,
-    vtkm::TopologyElementTagPoint visitTopology,
-    vtkm::TopologyElementTagCell incidentTopology) const
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
-  }
 
 private:
   void BuildReverseConnectivity();

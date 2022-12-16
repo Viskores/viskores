@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_vector_analysis_SurfaceNormal_h
 #define vtk_m_filter_vector_analysis_SurfaceNormal_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
 namespace vtkm
@@ -25,7 +25,7 @@ namespace vector_analysis
 /// The cell normals are faceted and are computed based on the plane where a
 /// face lies. The point normals are smooth normals, computed by averaging
 /// the face normals of incident cells.
-class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT SurfaceNormals : public vtkm::filter::NewFilterField
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT SurfaceNormals : public vtkm::filter::FilterField
 {
 public:
   /// Create SurfaceNormals filter. This calls
@@ -108,11 +108,6 @@ private:
   std::string PointNormalsName;
 };
 } // namespace vector_analysis
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::vector_analysis::SurfaceNormals.") SurfaceNormals
-  : public vtkm::filter::vector_analysis::SurfaceNormals
-{
-  using vector_analysis::SurfaceNormals::SurfaceNormals;
-};
 } // namespace filter
 } // namespace vtkm
 

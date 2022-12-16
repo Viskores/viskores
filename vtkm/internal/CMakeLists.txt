@@ -38,7 +38,6 @@ elseif(TARGET vtkm::kokkos_hip)
 endif()
 
 set(VTKM_ENABLE_LOGGING ${VTKm_ENABLE_LOGGING})
-set(VTKM_NO_DEPRECATED_VIRTUAL ${VTKm_NO_DEPRECATED_VIRTUAL})
 
 vtkm_get_kit_name(kit_name kit_dir)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
@@ -76,19 +75,9 @@ set(headers
   Windows.h
   )
 
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    ArrayPortalVirtual.h
-    )
-endif()
-
 vtkm_declare_headers(${headers})
 
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPre.h)
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPost.h)
 vtkm_pyexpander_generated_file(VariantImplDetail.h)
 vtkm_pyexpander_generated_file(VecOperators.h)
-
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

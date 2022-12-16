@@ -90,7 +90,6 @@ void TestNormalize()
   createVectors(inputVecs);
 
   vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> inputArray;
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> outputArray;
   inputArray = vtkm::cont::make_ArrayHandle(inputVecs, vtkm::CopyFlag::On);
 
   vtkm::worklet::Normalize normalizeWorklet;

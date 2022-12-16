@@ -13,9 +13,12 @@ project(HelloWorklet CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(HelloWorklet HelloWorklet.cxx)
-target_link_libraries(HelloWorklet PRIVATE vtkm_filter vtkm_io)
+if(TARGET vtkm::io)
+  add_executable(HelloWorklet HelloWorklet.cxx)
+  target_link_libraries(HelloWorklet PRIVATE vtkm::filter_core vtkm::io)
 
-vtkm_add_target_information(HelloWorklet
-                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
-                            DEVICE_SOURCES HelloWorklet.cxx)
+  vtkm_add_target_information(HelloWorklet
+    DROP_UNUSED_SYMBOLS
+    MODIFY_CUDA_FLAGS
+    DEVICE_SOURCES HelloWorklet.cxx)
+endif()

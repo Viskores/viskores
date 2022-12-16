@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_mesh_info_CellMeasures_h
 #define vtk_m_filter_mesh_info_CellMeasures_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -47,7 +47,7 @@ VTKM_EXEC_CONT inline IntegrationType operator|(IntegrationType left, Integratio
 /// or 0 (if measure is not well defined or the cell type is unsupported).
 ///
 /// By default, the new cell-data array is named "measure".
-class VTKM_FILTER_MESH_INFO_EXPORT CellMeasures : public vtkm::filter::NewFilterField
+class VTKM_FILTER_MESH_INFO_EXPORT CellMeasures : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
@@ -65,84 +65,5 @@ private:
 } // namespace mesh_info
 } // namespace filter
 } // namespace vtkm
-
-// Implement the deprecated functionality of vtkm::filter::CellMeasures, which was moved into the
-// mesh_info namespace (along with some other API changes). Everything below this line (up to the
-// #endif for the include guard) can be deleted once the deprecated functionality is removed.
-
-// Don't warn about deprecation while implementing deprecated functionality.
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-
-namespace vtkm
-{
-
-struct VTKM_DEPRECATED(1.8, "IntegrateOver is no longer supported") IntegrateOver
-{
-};
-struct VTKM_DEPRECATED(1.8, "IntegrateOverCurve is no longer supported") IntegrateOverCurve
-  : IntegrateOver
-{
-  static constexpr vtkm::filter::mesh_info::IntegrationType value =
-    vtkm::filter::mesh_info::IntegrationType::ArcLength;
-};
-struct VTKM_DEPRECATED(1.8, "IntegrateOverSurface is no longer supported") IntegrateOverSurface
-  : IntegrateOver
-{
-  static constexpr vtkm::filter::mesh_info::IntegrationType value =
-    vtkm::filter::mesh_info::IntegrationType::Area;
-};
-struct VTKM_DEPRECATED(1.8, "IntegrateOverSurface is no longer supported") IntegrateOverSolid
-  : IntegrateOver
-{
-  static constexpr vtkm::filter::mesh_info::IntegrationType value =
-    vtkm::filter::mesh_info::IntegrationType::Volume;
-};
-
-// Lists of acceptable types of integration
-using ArcLength VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::IntegrationType::ArcLength") =
-  vtkm::List<IntegrateOverCurve>;
-using Area VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::IntegrationType::Area") =
-  vtkm::List<IntegrateOverSurface>;
-using Volume VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::IntegrationType::Volume") =
-  vtkm::List<IntegrateOverSolid>;
-using AllMeasures VTKM_DEPRECATED(1.8,
-                                  "Use vtkm::filter::mesh_info::IntegrationType::AllMeasures") =
-  vtkm::List<IntegrateOverSolid, IntegrateOverSurface, IntegrateOverCurve>;
-
-namespace detail
-{
-
-inline vtkm::filter::mesh_info::IntegrationType OldToNewIntegrationType(vtkm::List<>)
-{
-  return vtkm::filter::mesh_info::IntegrationType::None;
-}
-
-template <typename T, typename... Ts>
-inline vtkm::filter::mesh_info::IntegrationType OldToNewIntegrationType(vtkm::List<T, Ts...>)
-{
-  return T::value | OldToNewIntegrationType(vtkm::List<Ts...>{});
-}
-
-} // namespace detail
-
-namespace filter
-{
-
-template <typename IntegrationTypeList>
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::mesh_info::CellMeasures.") CellMeasures
-  : public vtkm::filter::mesh_info::CellMeasures
-{
-public:
-  CellMeasures()
-    : vtkm::filter::mesh_info::CellMeasures(
-        vtkm::detail::OldToNewIntegrationType(IntegrationTypeList{}))
-  {
-  }
-};
-
-} // namespace filter
-} // namespace vtkm
-
-VTKM_DEPRECATED_SUPPRESS_END
 
 #endif // vtk_m_filter_mesh_info_CellMeasures_h

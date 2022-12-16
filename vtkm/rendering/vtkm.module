@@ -1,0 +1,10 @@
+NAME
+  vtkm_rendering
+GROUPS
+  Rendering
+DEPENDS
+  vtkm_filter_image_processing
+  vtkm_filter_entity_extraction
+  vtkm_io
+TEST_DEPENDS
+  vtkm_rendering_testing

@@ -113,7 +113,8 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
 vtkm::cont::DataSet Make3DWavelet()
 {
 
-  vtkm::source::Wavelet wavelet({ -25 }, { 25 });
+  vtkm::source::Wavelet wavelet;
+  wavelet.SetExtent({ -25 }, { 25 });
   wavelet.SetFrequency({ 60, 30, 40 });
   wavelet.SetMagnitude({ 5 });
 

@@ -53,7 +53,6 @@
 #ifndef vtk_m_worklet_contourtree_augmented_pointer_doubling_h
 #define vtk_m_worklet_contourtree_augmented_pointer_doubling_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/WorkletMapField.h>
 

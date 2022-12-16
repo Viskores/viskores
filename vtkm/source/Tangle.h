@@ -35,17 +35,25 @@ namespace source
 class VTKM_SOURCE_EXPORT Tangle final : public vtkm::source::Source
 {
 public:
-  ///Construct a Tangle with Cell Dimensions
-  VTKM_CONT
-  Tangle(vtkm::Id3 dims)
-    : Dims(dims)
+  VTKM_CONT Tangle() = default;
+  VTKM_CONT ~Tangle() = default;
+
+  VTKM_DEPRECATED(2.0, "Use SetCellDimensions or SetPointDimensions.")
+  VTKM_CONT Tangle(vtkm::Id3 dims)
+    : PointDimensions(dims + vtkm::Id3(1))
   {
   }
+
+  VTKM_CONT vtkm::Id3 GetPointDimensions() const { return this->PointDimensions; }
+  VTKM_CONT void SetPointDimensions(vtkm::Id3 dims) { this->PointDimensions = dims; }
+
+  VTKM_CONT vtkm::Id3 GetCellDimensions() const { return this->PointDimensions - vtkm::Id3(1); }
+  VTKM_CONT void SetCellDimensions(vtkm::Id3 dims) { this->PointDimensions = dims + vtkm::Id3(1); }
 
 private:
   vtkm::cont::DataSet DoExecute() const override;
 
-  vtkm::Id3 Dims;
+  vtkm::Id3 PointDimensions = { 16, 16, 16 };
 };
 } //namespace source
 } //namespace vtkm

@@ -26,9 +26,13 @@ VTKM_CONT vtkm::cont::DataSet ZFPDecompressor1D::DoExecute(const vtkm::cont::Dat
   vtkm::cont::ArrayHandle<vtkm::Int64> compressed;
   vtkm::cont::ArrayCopyShallowIfPossible(this->GetFieldFromDataSet(input).GetData(), compressed);
 
+  vtkm::cont::CellSetStructured<1> cellSet;
+  input.GetCellSet().AsCellSet(cellSet);
+  vtkm::Id pointDimensions = cellSet.GetPointDimensions();
+
   vtkm::cont::ArrayHandle<vtkm::Float64> decompressed;
   vtkm::worklet::ZFP1DDecompressor decompressor;
-  decompressor.Decompress(compressed, decompressed, this->rate, compressed.GetNumberOfValues());
+  decompressor.Decompress(compressed, decompressed, this->rate, pointDimensions);
 
   return this->CreateResultFieldPoint(input, "decompressed", decompressed);
 }

@@ -43,7 +43,7 @@ static void TwoDimUniformTest()
   vtkm::cont::CellSetStructured<2> cellSet;
   dataSet.GetCellSet().AsCellSet(cellSet);
 
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 3, "Incorrect number of fields");
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == 1,
                    "Incorrect number of coordinate systems");
   VTKM_TEST_ASSERT(cellSet.GetNumberOfPoints() == 6, "Incorrect number of points");
@@ -132,7 +132,7 @@ static void ThreeDimUniformTest()
   vtkm::cont::CellSetStructured<3> cellSet;
   dataSet.GetCellSet().AsCellSet(cellSet);
 
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2, "Incorrect number of fields");
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 3, "Incorrect number of fields");
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == 1,
                    "Incorrect number of coordinate systems");

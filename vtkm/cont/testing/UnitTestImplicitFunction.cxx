@@ -15,10 +15,6 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/ImplicitFunctionHandle.h>
-#endif //!VTKM_NO_DEPRECATED_VIRTUAL
-
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <array>
@@ -41,20 +37,6 @@ public:
     val = function.Value(point);
     gradient = function.Gradient(point);
   }
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  template <typename VecType, typename ScalarType, typename FunctionType>
-  VTKM_EXEC void operator()(const VecType& point,
-                            ScalarType& val,
-                            VecType& gradient,
-                            const FunctionType* function) const
-  {
-    val = function->Value(point);
-    gradient = function->Gradient(point);
-  }
-  VTKM_DEPRECATED_SUPPRESS_END
-#endif //!VTKM_NO_DEPRECATED_VIRTUAL
 };
 
 constexpr std::array<vtkm::Vec3f, 8> points_g = { { { 0, 0, 0 },
@@ -95,20 +77,6 @@ void Try(ImplicitFunctorType& function,
     VTKM_TEST_ASSERT(test_equal_ArrayHandles(values, expectedValuesArray));
     VTKM_TEST_ASSERT(test_equal_ArrayHandles(gradients, expectedGradientsArray));
   }
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  {
-    vtkm::cont::ImplicitFunctionHandle functionHandle(&function, false);
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
-    EvaluateOnCoordinates(functionHandle, values, gradients);
-
-    VTKM_TEST_ASSERT(test_equal_ArrayHandles(values, expectedValuesArray));
-    VTKM_TEST_ASSERT(test_equal_ArrayHandles(gradients, expectedGradientsArray));
-  }
-  VTKM_DEPRECATED_SUPPRESS_END
-#endif //!VTKM_NO_DEPRECATED_VIRTUAL
 
   {
     vtkm::ImplicitFunctionMultiplexer<ImplicitFunctorType> functionChoose(function);

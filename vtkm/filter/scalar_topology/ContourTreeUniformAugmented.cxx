@@ -222,7 +222,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet ContourTreeAugmented::DoExecutePartitio
   const vtkm::cont::PartitionedDataSet& input)
 {
   this->PreExecute(input);
-  auto result = this->NewFilter::DoExecutePartitions(input);
+  auto result = this->Filter::DoExecutePartitions(input);
   this->PostExecute(input, result);
   return result;
 }

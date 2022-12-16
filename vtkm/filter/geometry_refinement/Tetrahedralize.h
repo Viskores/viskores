@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_geometry_refinement_Tetrahedralize_h
 #define vtk_m_filter_geometry_refinement_Tetrahedralize_h
 
-#include <vtkm/filter/NewFilter.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/geometry_refinement/vtkm_filter_geometry_refinement_export.h>
 
 namespace vtkm
@@ -20,16 +20,11 @@ namespace filter
 {
 namespace geometry_refinement
 {
-class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Tetrahedralize : public vtkm::filter::NewFilter
+class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Tetrahedralize : public vtkm::filter::Filter
 {
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace geometry_refinement
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::geometry_refinement::Tetrahedralize.") Tetrahedralize
-  : public vtkm::filter::geometry_refinement::Tetrahedralize
-{
-  using geometry_refinement::Tetrahedralize::Tetrahedralize;
-};
 } // namespace filter
 } // namespace vtkm
 

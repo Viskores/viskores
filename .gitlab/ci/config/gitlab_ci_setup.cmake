@@ -94,6 +94,12 @@ if(DEFINED ENV{CTEST_MEMORYCHECK_SANITIZER_OPTIONS})
   list(APPEND optional_variables "set(CTEST_MEMORYCHECK_SANITIZER_OPTIONS ${env_value})")
 endif()
 
+# Override revision (Git Commit) if ORIGINAL_COMMIT_SHA is found in source code
+if (EXISTS "ORIGINAL_COMMIT_SHA")
+  file(READ "ORIGINAL_COMMIT_SHA" commit_sha)
+  list(APPEND optional_variables "set(CTEST_UPDATE_VERSION_OVERRIDE ${commit_sha})")
+endif()
+
 #We need to do write this information out to a file in the build directory
 file(TO_CMAKE_PATH "${CTEST_SOURCE_DIRECTORY}" src_path) #converted so we can run on windows
 file(TO_CMAKE_PATH "${CTEST_BINARY_DIRECTORY}" bin_path) #converted so we can run on windows
