@@ -9,7 +9,7 @@
 ##============================================================================
 
 macro(vtkm_diy_get_general_target target)
-  if(CMAKE_PROJECT_NAME STREQUAL "VTKm")
+  if(PROJECT_NAME STREQUAL "VTKm" OR CMAKE_PROJECT_NAME STREQUAL "VTKm")
     set(${target} "vtkm_diy")
   else()
     set(${target} "vtkm::diy")
