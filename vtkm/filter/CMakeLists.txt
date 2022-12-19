@@ -47,4 +47,4 @@ target_link_libraries(vtkm_filter PUBLIC INTERFACE
   vtkm_filter_core
   )
 
-install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
+vtkm_install_targets(TARGETS vtkm_filter)

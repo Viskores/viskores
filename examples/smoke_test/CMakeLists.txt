@@ -14,9 +14,9 @@ include(CTest)
 
 find_package(VTKm REQUIRED)
 
-if(TARGET vtkm_source)
+if(TARGET vtkm::source)
   add_executable(smoke_test smoke_test.cxx)
-  target_link_libraries(smoke_test PRIVATE vtkm_source)
+  target_link_libraries(smoke_test PRIVATE vtkm::source)
 
   # Only add this test when this a standalone project
   if (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)

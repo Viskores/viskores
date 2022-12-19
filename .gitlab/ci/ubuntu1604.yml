@@ -7,7 +7,6 @@ build:ubuntu1604_gcc5:
     - vtkm
     - docker
     - linux
-    - cuda-rt
     - large-memory
   extends:
     - .ubuntu1604_cuda
@@ -46,7 +45,6 @@ build:ubuntu1604_gcc5_2:
     - vtkm
     - docker
     - linux
-    - cuda-rt
     - large-memory
   extends:
     - .ubuntu1604_cuda

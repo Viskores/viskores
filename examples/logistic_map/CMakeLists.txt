@@ -12,9 +12,9 @@ project(LogisticMap CXX)
 
 find_package(VTKm REQUIRED QUIET)
 
-if(TARGET vtkm_io)
+if(TARGET vtkm::io)
   add_executable(LogisticMap LogisticMap.cxx)
-  target_link_libraries(LogisticMap PRIVATE vtkm_io)
+  target_link_libraries(LogisticMap PRIVATE vtkm::io)
 
   vtkm_add_target_information(LogisticMap
     DROP_UNUSED_SYMBOLS

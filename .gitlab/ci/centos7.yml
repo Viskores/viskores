@@ -7,7 +7,6 @@ build:centos7_gcc73:
     - vtkm
     - docker
     - linux
-    - cuda-rt
     - large-memory
   extends:
     - .centos7

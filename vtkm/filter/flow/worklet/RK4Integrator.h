@@ -38,7 +38,7 @@ public:
                                        vtkm::FloatDefault stepLength,
                                        vtkm::Vec3f& velocity) const
   {
-    auto time = particle.Time;
+    auto time = particle.GetTime();
     auto inpos = particle.GetEvaluationPosition(stepLength);
     vtkm::FloatDefault boundary = this->Evaluator.GetTemporalBoundary(static_cast<vtkm::Id>(1));
     if ((time + stepLength + vtkm::Epsilon<vtkm::FloatDefault>() - boundary) > 0.0)

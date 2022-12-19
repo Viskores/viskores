@@ -111,14 +111,14 @@ function(add_benchmark_test benchmark)
 
   add_test(NAME "${test_name}Report"
     COMMAND ${CMAKE_COMMAND}
-    "-DBENCHMARK_NAME=${benchmark}"
-    "-DVTKm_PERF_ALPHA=${VTKm_PERF_ALPHA}"
-    "-DVTKm_PERF_DIST=${VTKm_PERF_DIST}"
-    "-DVTKm_PERF_REPO=${VTKm_PERF_REPO}"
-    "-DVTKm_PERF_COMPARE_JSON=${VTKm_PERF_COMPARE_JSON}"
-    "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}"
     "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}"
+    "-DVTKm_PERF_ALPHA=${VTKm_PERF_ALPHA}"
+    "-DVTKm_PERF_COMPARE_JSON=${VTKm_PERF_COMPARE_JSON}"
     "-DVTKm_PERF_COMPARE_STDOUT=${VTKm_PERF_COMPARE_STDOUT}"
+    "-DVTKm_PERF_DIST=${VTKm_PERF_DIST}"
+    "-DVTKm_PERF_NAME=${VTKm_PERF_NAME}"
+    "-DVTKm_PERF_REPO=${VTKm_PERF_REPO}"
+    "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}"
     -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestReport.cmake"
     )
 

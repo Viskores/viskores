@@ -38,11 +38,11 @@ public:
                             const vtkm::Id& step,
                             ParticleType& particle) const
   {
-    particle.Pos = pt;
-    particle.ID = id;
-    particle.Time = time;
-    particle.NumSteps = step;
-    particle.Status.SetOk();
+    particle.SetPosition(pt);
+    particle.SetID(id);
+    particle.SetTime(time);
+    particle.SetNumberOfSteps(step);
+    particle.GetStatus().SetOk();
   }
 };
 

@@ -19,7 +19,7 @@ if(TARGET OpenGL::GL AND
    TARGET GLEW::GLEW)
 
   add_executable(GameOfLife GameOfLife.cxx LoadShaders.h)
-  target_link_libraries(GameOfLife PRIVATE vtkm_filter OpenGL::GL GLEW::GLEW GLUT::GLUT)
+  target_link_libraries(GameOfLife PRIVATE vtkm::filter_core OpenGL::GL GLEW::GLEW GLUT::GLUT)
   vtkm_add_target_information(GameOfLife
                               DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES GameOfLife.cxx)

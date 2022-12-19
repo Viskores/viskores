@@ -6,4 +6,4 @@ DEPENDS
   vtkm_cont
 TEST_DEPENDS
   vtkm_worklet
-  vtkm::tbb
+  vtkm_tbb

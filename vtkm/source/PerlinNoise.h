@@ -57,9 +57,13 @@ public:
 
   /// \brief The seed used for the pseudorandom number generation of the noise.
   ///
-  /// If the seed is set to 0, then a new, unique seed is picked each time `Execute` is run.
+  /// If the seed is not set, then a new, unique seed is picked each time `Execute` is run.
   VTKM_CONT vtkm::IdComponent GetSeed() const { return this->Seed; }
-  VTKM_CONT void SetSeed(vtkm::IdComponent seed) { this->Seed = seed; }
+  VTKM_CONT void SetSeed(vtkm::IdComponent seed)
+  {
+    this->Seed = seed;
+    this->SeedSet = true;
+  }
 
 private:
   vtkm::cont::DataSet DoExecute() const override;
@@ -67,6 +71,7 @@ private:
   vtkm::Id3 PointDimensions = { 16, 16, 16 };
   vtkm::Vec3f Origin = { 0, 0, 0 };
   vtkm::IdComponent Seed = 0;
+  bool SeedSet = false;
 };
 } //namespace source
 } //namespace vtkm

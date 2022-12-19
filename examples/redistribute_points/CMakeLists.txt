@@ -13,9 +13,9 @@ project(RedistributePoints CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if(TARGET vtkm_io AND TARGET vtkm_filter_entity_extraction)
+if(TARGET vtkm::io AND TARGET vtkm::filter_entity_extraction)
   add_executable(RedistributePoints RedistributePoints.cxx RedistributePoints.h main.cxx)
-  target_link_libraries(RedistributePoints PRIVATE vtkm_io vtkm_filter_entity_extraction)
+  target_link_libraries(RedistributePoints PRIVATE vtkm::io vtkm::filter_entity_extraction)
   vtkm_add_target_information(RedistributePoints
     DROP_UNUSED_SYMBOLS
     MODIFY_CUDA_FLAGS

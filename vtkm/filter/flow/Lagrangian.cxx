@@ -45,10 +45,10 @@ public:
   template <typename ValidityType>
   VTKM_EXEC void operator()(const vtkm::Particle& end_point, ValidityType& res) const
   {
-    vtkm::Id steps = end_point.NumSteps;
+    vtkm::Id steps = end_point.GetNumberOfSteps();
     if (steps > 0 && res == 1)
     {
-      if (bounds.Contains(end_point.Pos))
+      if (bounds.Contains(end_point.GetPosition()))
       {
         res = 1;
       }
@@ -79,9 +79,9 @@ public:
                             const vtkm::Particle& start_point,
                             DisplacementType& res) const
   {
-    res[0] = end_point.Pos[0] - start_point.Pos[0];
-    res[1] = end_point.Pos[1] - start_point.Pos[1];
-    res[2] = end_point.Pos[2] - start_point.Pos[2];
+    res[0] = end_point.GetPosition()[0] - start_point.GetPosition()[0];
+    res[1] = end_point.GetPosition()[1] - start_point.GetPosition()[1];
+    res[2] = end_point.GetPosition()[2] - start_point.GetPosition()[2];
   }
 };
 
