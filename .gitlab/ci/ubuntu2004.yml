@@ -3,7 +3,7 @@ build:ubuntu2004_gcc9:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu2004
     - .cmake_build_linux
@@ -17,7 +17,7 @@ test:ubuntu2004_gcc9:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu2004
     - .cmake_test_linux
@@ -36,7 +36,7 @@ build:ubuntu2004_kokkos:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu2004_kokkos
     - .cmake_build_linux
@@ -50,7 +50,7 @@ test:ubuntu2004_kokkos:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu2004_kokkos
     - .cmake_test_linux
@@ -65,6 +65,7 @@ build:ubuntu2004_hip_kokkos:
     - build
     - vtkm
     - docker
+    - linux-x86_64
     - radeon
   extends:
     - .ubuntu2004_hip_kokkos
@@ -92,6 +93,7 @@ test:ubuntu2004_hip_kokkos:
     - build
     - vtkm
     - docker
+    - linux-x86_64
     - radeon
   extends:
     - .ubuntu2004_hip_kokkos
