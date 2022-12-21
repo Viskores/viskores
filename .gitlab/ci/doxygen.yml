@@ -16,9 +16,10 @@ doxygen:
   timeout:  30 minutes
   interruptible: true
   tags:
+    - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu2004_doxygen
   before_script:
