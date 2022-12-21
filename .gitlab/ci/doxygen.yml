@@ -16,6 +16,7 @@ doxygen:
   timeout:  30 minutes
   interruptible: true
   tags:
+    - build
     - vtkm
     - docker
     - linux-x86_64
