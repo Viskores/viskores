@@ -6,7 +6,7 @@ build:centos8_sanitizer:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .centos8
     - .cmake_build_linux
@@ -21,7 +21,7 @@ test:centos8_sanitizer:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
     - privileged
   extends:
     - .centos8
