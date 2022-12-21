@@ -90,7 +90,7 @@ build:windows_vs2019:
     - vtkm # Since this is a bare runner, pin to a project.
     - nonconcurrent
     - build
-    - windows
+    - windows-x86_64
     - shell
     - vs2019
     - msvc-19.25
@@ -110,7 +110,7 @@ test:windows_vs2019:
     - vtkm # Since this is a bare runner, pin to a project.
     - nonconcurrent
     - test
-    - windows
+    - windows-x86_64
     - shell
     - vs2019
     - msvc-19.25

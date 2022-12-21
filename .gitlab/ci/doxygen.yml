@@ -1,9 +1,10 @@
 .doxygen_submit: &doxygen_submit
   stage: build
   tags:
+    - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   before_script:
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
