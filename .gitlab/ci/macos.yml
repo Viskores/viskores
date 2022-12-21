@@ -79,6 +79,6 @@ test:macos_xcode13:
 .macos_build_tags:
   tags:
     - vtk-m
-    - macos
+    - macos-x86_64
     - xcode-13.3
     - nonconcurrent
