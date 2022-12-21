@@ -120,6 +120,8 @@ build:ascent:
   tags:
     - vtkm
     - docker
+    - build
+    - linux-x86_64
   extends:
     - .ubuntu2004
     - .run_only_merge_requests
