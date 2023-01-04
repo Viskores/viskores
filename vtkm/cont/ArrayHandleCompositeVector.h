@@ -66,18 +66,6 @@ struct GetValueType<ArrayType>
   using ValueType = typename ArrayType::ValueType;
 };
 
-// GetFromPortals: -------------------------------------------------------------
-// Given a set of array portals as arguments, returns a Vec comprising the values
-// at the provided index.
-VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename... Portals>
-VTKM_EXEC_CONT typename GetValueType<Portals...>::ValueType GetFromPortals(
-  vtkm::Id index,
-  const Portals&... portals)
-{
-  return { portals.Get(index)... };
-}
-
 // SetToPortals: ---------------------------------------------------------------
 // Given a Vec-like object, and index, and a set of array portals, sets each of
 // the portals to the respective component of the Vec.
@@ -137,14 +125,23 @@ public:
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
-    return this->Portals.Apply(compvec::GetFromPortals<PortalTypes...>, index);
+    auto getFromPortals = [index](const auto&... portals) {
+      return ValueType{ portals.Get(index)... };
+    };
+    return this->Portals.Apply(getFromPortals);
   }
 
   template <typename Writable_ = Writable,
             typename = typename std::enable_if<Writable_::value>::type>
   VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
-    this->Portals.Apply(compvec::SetToPortals<ValueType, PortalTypes...>, index, value);
+    // Note that we are using a lambda function here to implicitly construct a
+    // functor to pass to Apply. Some device compilers will not allow passing a
+    // function or function pointer to Tuple::Apply.
+    auto setToPortal = [index, &value](const auto&... portals) {
+      compvec::SetToPortals(index, value, portals...);
+    };
+    this->Portals.Apply(setToPortal);
   }
 };
 
