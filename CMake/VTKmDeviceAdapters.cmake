@@ -359,14 +359,10 @@ if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm_kokkos)
     install(TARGETS vtkm_kokkos_hip EXPORT ${VTKm_EXPORT_NAME})
 
     # Make sure rocthrust is available if requested
-    # If it is not available, warn the user and continue with thrust disabled
-    if(${VTKm_ENABLE_KOKKOS_THRUST})
+    if(VTKm_ENABLE_KOKKOS_THRUST)
       find_package(rocthrust)
-      if(${rocthrust_FOUND})
-        message(STATUS "Kokkos HIP enabled with rocthrust support")
-      else()
-        set(VTKm_ENABLE_KOKKOS_THRUST OFF CACHE BOOL "Enable thrust within Kokkos algorithms" FORCE)
-        message(WARNING "Kokkos HIP enabled, but rocthrust not found. Install rocthrust for improved performance.")
+      if(NOT rocthrust_FOUND)
+        message(FATAL_ERROR "rocthrust not found. Please set VTKm_ENABLE_KOKKOS_THRUST to OFF.")
       endif()
     endif()
   endif()
