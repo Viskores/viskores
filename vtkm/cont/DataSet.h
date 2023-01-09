@@ -46,22 +46,37 @@ public:
 
   VTKM_CONT void Clear();
 
-  /// Get the number of cells contained in this DataSet
+  /// \brief Get the number of cells contained in this DataSet
   VTKM_CONT vtkm::Id GetNumberOfCells() const;
 
-  /// Get the number of points contained in this DataSet
+  /// \brief Get the number of points contained in this DataSet
   ///
   /// Note: All coordinate systems for a DataSet are expected
   /// to have the same number of points.
   VTKM_CONT vtkm::Id GetNumberOfPoints() const;
 
+  /// \brief Adds a field to the `DataSet`.
+  ///
+  /// Note that the indexing of fields is not the same as the order in which they are
+  /// added, and that adding a field can arbitrarily reorder the integer indexing of
+  /// all the fields. To retrieve a specific field, retrieve the field by name, not by
+  /// integer index.
   VTKM_CONT void AddField(const Field& field);
 
+  ///@{
+  /// \brief Retrieves a field by index.
+  ///
+  /// Note that the indexing of fields is not the same as the order in which they are
+  /// added, and that adding a field can arbitrarily reorder the integer indexing of
+  /// all the fields. To retrieve a specific field, retrieve the field by name, not by
+  /// integer index. This method is most useful for iterating over all the fields of
+  /// a `DataSet` (indexed from `0` to `NumberOfFields() - 1`).
   VTKM_CONT
   const vtkm::cont::Field& GetField(vtkm::Id index) const { return this->Fields.GetField(index); }
 
   VTKM_CONT
   vtkm::cont::Field& GetField(vtkm::Id index) { return this->Fields.GetField(index); }
+  ///@}
 
   VTKM_CONT
   bool HasField(const std::string& name,
@@ -89,8 +104,14 @@ public:
   }
 
 
-  /// Returns the field that matches the provided name and association
-  /// Will return -1 if no match is found
+  /// \brief Returns the field that matches the provided name and association.
+  ///
+  /// This method will return -1 if no match for the field is found.
+  ///
+  /// Note that the indexing of fields is not the same as the order in which they are
+  /// added, and that adding a field can arbitrarily reorder the integer indexing of
+  /// all the fields. To retrieve a specific field, retrieve the field by name, not by
+  /// integer index.
   VTKM_CONT
   vtkm::Id GetFieldIndex(
     const std::string& name,
@@ -99,8 +120,10 @@ public:
     return this->Fields.GetFieldIndex(name, assoc);
   }
 
-  /// Returns the field that matches the provided name and association
-  /// Will throw an exception if no match is found
+  /// \brief Returns the field that matches the provided name and association.
+  ///
+  /// This method will throw an exception if no match is found. Use `HasField()` to query
+  /// whether a particular field exists.
   ///@{
   VTKM_CONT
   const vtkm::cont::Field& GetField(
@@ -120,8 +143,10 @@ public:
   }
   ///@}
 
-  /// Returns the first cell field that matches the provided name.
-  /// Will throw an exception if no match is found
+  /// \brief Returns the first cell field that matches the provided name.
+  ///
+  /// This method will throw an exception if no match is found. Use `HasCellField()` to query
+  /// whether a particular field exists.
   ///@{
   VTKM_CONT
   const vtkm::cont::Field& GetCellField(const std::string& name) const
@@ -136,15 +161,19 @@ public:
   }
   ///@}
 
-  /// Returns the cell field that matches the ghost cell field name.
-  /// Will throw an exception if no match is found
+  /// \brief Returns the cell field that matches the ghost cell field name.
+  ///
+  /// This method will throw an exception if no match is found. Use `HasGhostCellField()` to query
+  /// whether a particular field exists.
   ///@{
   VTKM_CONT
   const vtkm::cont::Field& GetGhostCellField() const;
   ///@}
 
-  /// Returns the first point field that matches the provided name.
-  /// Will throw an exception if no match is found
+  /// \brief Returns the first point field that matches the provided name.
+  ///
+  /// This method will throw an exception if no match is found. Use `HasPointField()` to query
+  /// whether a particular field exists.
   ///@{
   VTKM_CONT
   const vtkm::cont::Field& GetPointField(const std::string& name) const
@@ -159,6 +188,13 @@ public:
   }
   ///@}
 
+  ///@{
+  /// \brief Adds a point field of a given name to the `DataSet`.
+  ///
+  /// Note that the indexing of fields is not the same as the order in which they are
+  /// added, and that adding a field can arbitrarily reorder the integer indexing of
+  /// all the fields. To retrieve a specific field, retrieve the field by name, not by
+  /// integer index.
   VTKM_CONT
   void AddPointField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
   {
@@ -185,57 +221,20 @@ public:
     this->AddField(
       make_Field(fieldName, vtkm::cont::Field::Association::Points, field, n, vtkm::CopyFlag::On));
   }
+  ///@}
 
-  //Cell centered field
+  ///@{
+  /// \brief Adds a cell field of a given name to the `DataSet`.
+  ///
+  /// Note that the indexing of fields is not the same as the order in which they are
+  /// added, and that adding a field can arbitrarily reorder the integer indexing of
+  /// all the fields. To retrieve a specific field, retrieve the field by name, not by
+  /// integer index.
   VTKM_CONT
   void AddCellField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
   {
     this->AddField(make_FieldCell(fieldName, field));
   }
-
-  /// \brief Sets the name of the field to use for cell ghost levels.
-  ///
-  /// This value can be set regardless of whether such a cell field actually exists.
-  VTKM_CONT void SetGhostCellFieldName(const std::string& name);
-
-  /// \brief Sets the cell field of the given name as the cell ghost levels.
-  ///
-  /// If a cell field of the given name does not exist, an exception is thrown.
-  VTKM_CONT void SetGhostCellField(const std::string& name);
-
-  ///@{
-  /// \brief Sets the ghost cell levels.
-  ///
-  /// A field of the given name is added to the `DataSet`, and that field is set as the cell
-  /// ghost levels.
-  VTKM_CONT void SetGhostCellField(const vtkm::cont::Field& field);
-  VTKM_CONT void SetGhostCellField(const std::string& fieldName,
-                                   const vtkm::cont::UnknownArrayHandle& field);
-  ///@}
-
-  /// \brief Sets the ghost cell levels to the given array.
-  ///
-  /// A field with the global ghost cell field name (see `GlobalGhostCellFieldName`) is added
-  /// to the `DataSet` and made to be the cell ghost levels.
-  VTKM_CONT void SetGhostCellField(const vtkm::cont::UnknownArrayHandle& field);
-
-  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
-  VTKM_CONT
-  void AddGhostCellField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
-  {
-    this->SetGhostCellField(fieldName, field);
-  }
-
-  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
-  VTKM_CONT
-  void AddGhostCellField(const vtkm::cont::UnknownArrayHandle& field)
-  {
-    this->SetGhostCellField(field);
-  }
-
-  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
-  VTKM_CONT
-  void AddGhostCellField(const vtkm::cont::Field& field) { this->SetGhostCellField(field); }
 
   template <typename T, typename Storage>
   VTKM_CONT void AddCellField(const std::string& fieldName,
@@ -257,6 +256,61 @@ public:
     this->AddField(
       make_Field(fieldName, vtkm::cont::Field::Association::Cells, field, n, vtkm::CopyFlag::On));
   }
+  ///@}
+
+  /// \brief Sets the name of the field to use for cell ghost levels.
+  ///
+  /// This value can be set regardless of whether such a cell field actually exists.
+  VTKM_CONT void SetGhostCellFieldName(const std::string& name);
+
+  /// \brief Sets the cell field of the given name as the cell ghost levels.
+  ///
+  /// If a cell field of the given name does not exist, an exception is thrown.
+  VTKM_CONT void SetGhostCellField(const std::string& name);
+
+  ///@{
+  /// \brief Sets the ghost cell levels.
+  ///
+  /// A field of the given name is added to the `DataSet`, and that field is set as the cell
+  /// ghost levels.
+  ///
+  /// Note that the indexing of fields is not the same as the order in which they are
+  /// added, and that adding a field can arbitrarily reorder the integer indexing of
+  /// all the fields. To retrieve a specific field, retrieve the field by name, not by
+  /// integer index.
+  VTKM_CONT void SetGhostCellField(const vtkm::cont::Field& field);
+  VTKM_CONT void SetGhostCellField(const std::string& fieldName,
+                                   const vtkm::cont::UnknownArrayHandle& field);
+  ///@}
+
+  /// \brief Sets the ghost cell levels to the given array.
+  ///
+  /// A field with the global ghost cell field name (see `GlobalGhostCellFieldName`) is added
+  /// to the `DataSet` and made to be the cell ghost levels.
+  ///
+  /// Note that the indexing of fields is not the same as the order in which they are
+  /// added, and that adding a field can arbitrarily reorder the integer indexing of
+  /// all the fields. To retrieve a specific field, retrieve the field by name, not by
+  /// integer index.
+  VTKM_CONT void SetGhostCellField(const vtkm::cont::UnknownArrayHandle& field);
+
+  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
+  VTKM_CONT
+  void AddGhostCellField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
+  {
+    this->SetGhostCellField(fieldName, field);
+  }
+
+  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
+  VTKM_CONT
+  void AddGhostCellField(const vtkm::cont::UnknownArrayHandle& field)
+  {
+    this->SetGhostCellField(field);
+  }
+
+  VTKM_DEPRECATED(2.0, "Use SetGhostCellField.")
+  VTKM_CONT
+  void AddGhostCellField(const vtkm::cont::Field& field) { this->SetGhostCellField(field); }
 
 
   /// \brief Adds the given `CoordinateSystem` to the `DataSet`.
