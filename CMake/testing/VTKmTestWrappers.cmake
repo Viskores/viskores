@@ -298,34 +298,54 @@ vtkm_unit_tests but not in its test dependencies. Add test dependencies to \
                     $<TARGET_FILE:${test_prog}_mpi> ${tname} ${device_command_line_argument}
                     ${vtkm_default_test_log_level} ${VTKm_UT_TEST_ARGS} ${MPIEXEC_POSTFLAGS}
             )
-          set_tests_properties("${tname}${upper_backend}_mpi" PROPERTIES
-            LABELS "${upper_backend};${VTKm_UT_LABEL}"
-            TIMEOUT ${timeout}
-            RUN_SERIAL ${run_serial}
-            FAIL_REGULAR_EXPRESSION "runtime error")
+          if (VTKm_OVERRIDE_CTEST_TIMEOUT)
+            set_tests_properties("${tname}${upper_backend}_mpi" PROPERTIES
+              LABELS "${upper_backend};${VTKm_UT_LABEL}"
+              RUN_SERIAL ${run_serial}
+              FAIL_REGULAR_EXPRESSION "runtime error")
+          else()
+            set_tests_properties("${tname}${upper_backend}_mpi" PROPERTIES
+              LABELS "${upper_backend};${VTKm_UT_LABEL}"
+              TIMEOUT ${timeout}
+              RUN_SERIAL ${run_serial}
+              FAIL_REGULAR_EXPRESSION "runtime error")
+          endif() # VTKm_OVERRIDE_CTEST_TIMEOUT
         endif() # VTKm_ENABLE_MPI
         if ((NOT VTKm_ENABLE_MPI) OR VTKm_ENABLE_DIY_NOMPI)
           add_test(NAME ${tname}${upper_backend}_nompi
             COMMAND ${test_prog}_nompi ${tname} ${device_command_line_argument}
                     ${vtkm_default_test_log_level} ${VTKm_UT_TEST_ARGS}
             )
-          set_tests_properties("${tname}${upper_backend}_nompi" PROPERTIES
-            LABELS "${upper_backend};${VTKm_UT_LABEL}"
-            TIMEOUT ${timeout}
-            RUN_SERIAL ${run_serial}
-            FAIL_REGULAR_EXPRESSION "runtime error")
-
+          if (VTKm_OVERRIDE_CTEST_TIMEOUT)
+            set_tests_properties("${tname}${upper_backend}_nompi" PROPERTIES
+              LABELS "${upper_backend};${VTKm_UT_LABEL}"
+              RUN_SERIAL ${run_serial}
+              FAIL_REGULAR_EXPRESSION "runtime error")
+          else()
+            set_tests_properties("${tname}${upper_backend}_nompi" PROPERTIES
+              LABELS "${upper_backend};${VTKm_UT_LABEL}"
+              TIMEOUT ${timeout}
+              RUN_SERIAL ${run_serial}
+              FAIL_REGULAR_EXPRESSION "runtime error")
+          endif() #VTKm_OVERRIDE_CTEST_TIMEOUT
         endif() # VTKm_ENABLE_DIY_NOMPI
       else() # VTKm_UT_MPI
         add_test(NAME ${tname}${upper_backend}
           COMMAND ${test_prog} ${tname} ${device_command_line_argument}
                   ${vtkm_default_test_log_level} ${VTKm_UT_TEST_ARGS}
           )
-        set_tests_properties("${tname}${upper_backend}" PROPERTIES
-            LABELS "${upper_backend};${VTKm_UT_LABEL}"
-            TIMEOUT ${timeout}
-            RUN_SERIAL ${run_serial}
-            FAIL_REGULAR_EXPRESSION "runtime error")
+          if (VTKm_OVERRIDE_CTEST_TIMEOUT)
+            set_tests_properties("${tname}${upper_backend}" PROPERTIES
+                LABELS "${upper_backend};${VTKm_UT_LABEL}"
+                RUN_SERIAL ${run_serial}
+                FAIL_REGULAR_EXPRESSION "runtime error")
+          else()
+            set_tests_properties("${tname}${upper_backend}" PROPERTIES
+                LABELS "${upper_backend};${VTKm_UT_LABEL}"
+                TIMEOUT ${timeout}
+                RUN_SERIAL ${run_serial}
+                FAIL_REGULAR_EXPRESSION "runtime error")
+          endif() #VTKm_OVERRIDE_CTEST_TIMEOUT
       endif() # VTKm_UT_MPI
     endforeach()
   endforeach()
