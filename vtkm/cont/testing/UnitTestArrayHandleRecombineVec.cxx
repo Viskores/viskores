@@ -10,6 +10,7 @@
 
 #include <vtkm/cont/ArrayHandleRecombineVec.h>
 
+#include <vtkm/cont/ArrayHandleReverse.h>
 #include <vtkm/cont/Invoker.h>
 
 #include <vtkm/worklet/WorkletMapField.h>
@@ -80,8 +81,12 @@ struct TestRecombineVecAsOutput
 
     vtkm::cont::Invoker invoke;
     invoke(PassThrough{}, baseArray, recombinedArray);
-
     VTKM_TEST_ASSERT(test_equal_ArrayHandles(baseArray, outputArray));
+
+    // Try outputing to a recombine vec inside of another fancy ArrayHandle.
+    auto reverseOutput = vtkm::cont::make_ArrayHandleReverse(recombinedArray);
+    invoke(PassThrough{}, baseArray, reverseOutput);
+    VTKM_TEST_ASSERT(test_equal_ArrayHandles(baseArray, reverseOutput));
   }
 };
 
