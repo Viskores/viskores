@@ -116,7 +116,7 @@ function(vtkm_test_against_install dir)
     set(args -C ${build_config})
   endif()
 
-  if(WIN32 AND TARGET vtkm::tbb)
+  if(WIN32 AND TARGET vtkm_tbb)
     #on windows we need to specify these as FindTBB won't
     #find the installed version just with the prefix path
     list(APPEND args
@@ -126,7 +126,7 @@ function(vtkm_test_against_install dir)
     )
   endif()
 
-  if(TARGET vtkm::kokkos)
+  if(TARGET vtkm_kokkos)
     list(APPEND args "-DKokkos_DIR=${Kokkos_DIR}")
   endif()
 
