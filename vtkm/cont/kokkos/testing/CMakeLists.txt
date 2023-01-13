@@ -15,9 +15,9 @@ set(unit_tests
 
 vtkm_unit_tests(SOURCES ${unit_tests} LABEL "KOKKOS" LIBRARIES vtkm_worklet BACKEND kokkos)
 
-if (TARGET vtkm::kokkos_cuda)
+if (TARGET vtkm_kokkos_cuda)
   set_source_files_properties(${unit_tests} PROPERTIES LANGUAGE CUDA)
-elseif(TARGET vtkm::kokkos_hip)
+elseif(TARGET vtkm_kokkos_hip)
   set_source_files_properties(${unit_tests} PROPERTIES LANGUAGE HIP)
   kokkos_compilation(SOURCE ${unit_tests})
 endif()

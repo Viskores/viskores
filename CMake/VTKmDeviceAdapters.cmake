@@ -41,7 +41,7 @@ function(vtkm_extract_real_library library real_library)
   endif()
 endfunction()
 
-if(VTKm_ENABLE_TBB AND NOT TARGET vtkm_tbb)
+if(VTKm_ENABLE_TBB AND NOT (TARGET vtkm_tbb OR TARGET vtkm::tbb))
   # Skip find_package(TBB) if we already have it
   if (NOT TARGET TBB::tbb)
     find_package(TBB REQUIRED)
@@ -54,7 +54,7 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm_tbb)
   install(TARGETS vtkm_tbb EXPORT ${VTKm_EXPORT_NAME})
 endif()
 
-if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm_openmp)
+if(VTKm_ENABLE_OPENMP AND NOT (TARGET vtkm_openmp OR TARGET vtkm::openmp))
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
   add_library(vtkm_openmp INTERFACE)
@@ -85,7 +85,7 @@ if(VTKm_ENABLE_CUDA)
     message(FATAL_ERROR "VTK-m CUDA support requires version 9.2+")
   endif()
 
-  if(NOT TARGET vtkm_cuda)
+  if(NOT (TARGET vtkm_cuda OR TARGET vtkm::cuda))
     add_library(vtkm_cuda INTERFACE)
     set_target_properties(vtkm_cuda PROPERTIES EXPORT_NAME cuda)
 
@@ -313,13 +313,13 @@ function(kokkos_fix_compile_options)
     endforeach()
   endwhile()
 
-  set_property(TARGET vtkm::kokkos PROPERTY INTERFACE_LINK_OPTIONS "$<DEVICE_LINK:${cuda_arch}>")
+  set_property(TARGET vtkm_kokkos PROPERTY INTERFACE_LINK_OPTIONS "$<DEVICE_LINK:${cuda_arch}>")
   if (OPENMP IN_LIST Kokkos_DEVICES)
-    set_property(TARGET vtkm::kokkos PROPERTY INTERFACE_LINK_OPTIONS "$<HOST_LINK:-fopenmp>")
+    set_property(TARGET vtkm_kokkos PROPERTY INTERFACE_LINK_OPTIONS "$<HOST_LINK:-fopenmp>")
   endif()
 endfunction()
 
-if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm::kokkos)
+if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm_kokkos)
   cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
   find_package(Kokkos REQUIRED)
@@ -344,19 +344,25 @@ if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm::kokkos)
     set(CMAKE_CUDA_ARCHITECTURES ${cuda_arch})
     message(STATUS "Detected Cuda arch from Kokkos: ${cuda_arch}")
 
-    add_library(vtkm::kokkos_cuda INTERFACE IMPORTED GLOBAL)
+    add_library(vtkm_kokkos_cuda INTERFACE)
+    set_property(TARGET vtkm_kokkos_cuda PROPERTY EXPORT_NAME kokkos_cuda)
+    install(TARGETS vtkm_kokkos_cuda EXPORT ${VTKm_EXPORT_NAME})
   elseif(HIP IN_LIST Kokkos_DEVICES)
     cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
     enable_language(HIP)
-    add_library(vtkm::kokkos_hip INTERFACE IMPORTED GLOBAL)
-    set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_COMPILE_OPTIONS "")
-    set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_LINK_OPTIONS "")
+    set_target_properties(Kokkos::kokkoscore PROPERTIES
+      INTERFACE_COMPILE_OPTIONS ""
+      INTERFACE_LINK_OPTIONS ""
+      )
+    add_library(vtkm_kokkos_hip INTERFACE)
+    set_property(TARGET vtkm_kokkos_hip PROPERTY EXPORT_NAME kokkos_hip)
+    install(TARGETS vtkm_kokkos_hip EXPORT ${VTKm_EXPORT_NAME})
   endif()
 
-  add_library(vtkm::kokkos INTERFACE IMPORTED GLOBAL)
-  set_target_properties(vtkm::kokkos PROPERTIES INTERFACE_LINK_LIBRARIES "Kokkos::kokkos")
+  add_library(vtkm_kokkos INTERFACE IMPORTED GLOBAL)
+  set_target_properties(vtkm_kokkos PROPERTIES INTERFACE_LINK_LIBRARIES "Kokkos::kokkos")
 
-  if (TARGET vtkm::kokkos_cuda)
+  if (TARGET vtkm_kokkos_cuda)
     kokkos_fix_compile_options()
   endif()
 endif()
