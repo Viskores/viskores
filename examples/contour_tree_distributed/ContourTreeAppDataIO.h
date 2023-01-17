@@ -61,7 +61,6 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/io/BOVDataSetReader.h>
@@ -222,24 +221,24 @@ bool read3DHDF5File(const int& mpi_rank,
     count[2] = count[2] + 1;
   }
   // Check that we are not running over the end of the dataset
-  if (offset[0] + count[0] > globalSize[0])
+  if (vtkm::Id(offset[0] + count[0]) > globalSize[0])
   {
     count[0] = globalSize[0] - offset[0];
   }
-  if (offset[1] + count[1] > globalSize[1])
+  if (vtkm::Id(offset[1] + count[1]) > globalSize[1])
   {
     count[1] = globalSize[1] - offset[1];
   }
-  if (offset[2] + count[2] > globalSize[2])
+  if (vtkm::Id(offset[2] + count[2]) > globalSize[2])
   {
     count[2] = globalSize[2] - offset[2];
   }
   blockSize = vtkm::Id3{ static_cast<vtkm::Id>(count[0]),
                          static_cast<vtkm::Id>(count[1]),
                          static_cast<vtkm::Id>(count[2]) };
-  vtkm::Id3 blockOrigin = vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
+  /*vtkm::Id3 blockOrigin = vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
                                      static_cast<vtkm::Id>(offset[1]),
-                                     static_cast<vtkm::Id>(offset[2]) };
+                                     static_cast<vtkm::Id>(offset[2]) };*/
 
   // Define the hyperslap to read the data into memory
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, offset, NULL, count, NULL);
@@ -254,11 +253,11 @@ bool read3DHDF5File(const int& mpi_rank,
       double data_out[count[0]][count[1]][count[2]]; // output buffer
       status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace, H5P_DEFAULT, data_out);
       // Copy data to 1D array of the expected ValueType
-      for (vtkm::Id k = 0; k < count[0]; k++)
+      for (hsize_t k = 0; k < count[0]; k++)
       {
-        for (vtkm::Id j = 0; j < count[1]; j++)
+        for (hsize_t j = 0; j < count[1]; j++)
         {
-          for (vtkm::Id i = 0; i < count[2]; i++)
+          for (hsize_t i = 0; i < count[2]; i++)
           {
             values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
@@ -270,11 +269,11 @@ bool read3DHDF5File(const int& mpi_rank,
       float data_out[count[0]][count[1]][count[2]]; // output buffer
       status = H5Dread(dataset, H5T_NATIVE_FLOAT, memspace, dataspace, H5P_DEFAULT, data_out);
       // Copy data to 1D array of the expected ValueType
-      for (vtkm::Id k = 0; k < count[0]; k++)
+      for (hsize_t k = 0; k < count[0]; k++)
       {
-        for (vtkm::Id j = 0; j < count[1]; j++)
+        for (hsize_t j = 0; j < count[1]; j++)
         {
-          for (vtkm::Id i = 0; i < count[2]; i++)
+          for (hsize_t i = 0; i < count[2]; i++)
           {
             values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
@@ -286,11 +285,11 @@ bool read3DHDF5File(const int& mpi_rank,
       int data_out[count[0]][count[1]][count[2]]; // output buffer
       status = H5Dread(dataset, H5T_NATIVE_INT, memspace, dataspace, H5P_DEFAULT, data_out);
       // Copy data to 1D array of the expected ValueType
-      for (vtkm::Id k = 0; k < count[0]; k++)
+      for (hsize_t k = 0; k < count[0]; k++)
       {
-        for (vtkm::Id j = 0; j < count[1]; j++)
+        for (hsize_t j = 0; j < count[1]; j++)
         {
-          for (vtkm::Id i = 0; i < count[2]; i++)
+          for (hsize_t i = 0; i < count[2]; i++)
           {
             values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
@@ -302,11 +301,11 @@ bool read3DHDF5File(const int& mpi_rank,
       unsigned char data_out[count[0]][count[1]][count[2]]; // output buffer
       status = H5Dread(dataset, H5T_NATIVE_UCHAR, memspace, dataspace, H5P_DEFAULT, data_out);
       // Copy data to 1D array of the expected ValueType
-      for (vtkm::Id k = 0; k < count[0]; k++)
+      for (hsize_t k = 0; k < count[0]; k++)
       {
-        for (vtkm::Id j = 0; j < count[1]; j++)
+        for (hsize_t j = 0; j < count[1]; j++)
         {
-          for (vtkm::Id i = 0; i < count[2]; i++)
+          for (hsize_t i = 0; i < count[2]; i++)
           {
             values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
