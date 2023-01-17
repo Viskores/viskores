@@ -289,6 +289,12 @@ vtkm_unit_tests but not in its test dependencies. Add test dependencies to \
     list(GET per_device_timeout ${index}  timeout)
     list(GET per_device_serial  ${index}  run_serial)
 
+    # If set, remove the VTK-m specified timeouts for CTest
+    set(extra_args)
+    if (NOT VTKm_OVERRIDE_CTEST_TIMEOUT)
+      list(APPEND extra_args TIMEOUT ${timeout})
+    endif()
+
     foreach (test ${VTKm_UT_SOURCES} ${VTKm_UT_DEVICE_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
       if(VTKm_UT_MPI)
@@ -300,7 +306,7 @@ vtkm_unit_tests but not in its test dependencies. Add test dependencies to \
             )
           set_tests_properties("${tname}${upper_backend}_mpi" PROPERTIES
             LABELS "${upper_backend};${VTKm_UT_LABEL}"
-            TIMEOUT ${timeout}
+            ${extra_args}
             RUN_SERIAL ${run_serial}
             FAIL_REGULAR_EXPRESSION "runtime error")
         endif() # VTKm_ENABLE_MPI
@@ -311,7 +317,7 @@ vtkm_unit_tests but not in its test dependencies. Add test dependencies to \
             )
           set_tests_properties("${tname}${upper_backend}_nompi" PROPERTIES
             LABELS "${upper_backend};${VTKm_UT_LABEL}"
-            TIMEOUT ${timeout}
+            ${extra_args}
             RUN_SERIAL ${run_serial}
             FAIL_REGULAR_EXPRESSION "runtime error")
 
@@ -323,11 +329,12 @@ vtkm_unit_tests but not in its test dependencies. Add test dependencies to \
           )
         set_tests_properties("${tname}${upper_backend}" PROPERTIES
             LABELS "${upper_backend};${VTKm_UT_LABEL}"
-            TIMEOUT ${timeout}
+            ${extra_args}
             RUN_SERIAL ${run_serial}
             FAIL_REGULAR_EXPRESSION "runtime error")
       endif() # VTKm_UT_MPI
     endforeach()
+    unset(extra_args)
   endforeach()
 
 endfunction(vtkm_unit_tests)
