@@ -22,6 +22,9 @@ tar xf "$tarball"
 mkdir build
 mkdir "$install_dir"
 
-cmake -GNinja -S benchmark* -B build -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON
+cmake -GNinja -S benchmark* -B build   \
+  -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON \
+  -DCMAKE_BUILD_TYPE="Release"
+
 cmake --build build
 cmake --install build --prefix "$install_dir"

@@ -42,7 +42,7 @@
 #ifndef vtk_m_filter_scalar_topology_DistributedBranchDecompositionFilter_h
 #define vtk_m_filter_scalar_topology_DistributedBranchDecompositionFilter_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
 namespace vtkm
@@ -54,7 +54,7 @@ namespace scalar_topology
 /// \brief Compute branch decompostion from distributed contour tree
 
 class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT DistributedBranchDecompositionFilter
-  : public vtkm::filter::NewFilter
+  : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT DistributedBranchDecompositionFilter() = default;

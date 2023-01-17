@@ -103,7 +103,7 @@ public:
       vtkm::IdComponent caseNumber = 0;
       for (vtkm::IdComponent j = 0; j < numVerticesPerCell; ++j)
       {
-        caseNumber |= (fieldIn[j] > isovalues[i]) << j;
+        caseNumber |= (fieldIn[j] > isovalues.Get(i)) << j;
       }
 
       sum += classifyTable.GetNumTriangles(shape.Id, caseNumber);
@@ -239,7 +239,7 @@ public:
 
     for (i = 0; i < numIsoValues; ++i)
     {
-      const FieldType ivalue = isovalues[i];
+      const FieldType ivalue = isovalues.Get(i);
       // Compute the Marching Cubes case number for this cell. We need to iterate
       // the isovalues until the sum >= our visit index. But we need to make
       // sure the caseNumber is correct before stopping
@@ -275,7 +275,8 @@ public:
         outputPointId + triVertex,
         vtkm::Id2(indices[edgeVertices.first], indices[edgeVertices.second]));
 
-      vtkm::FloatDefault interpolant = static_cast<vtkm::FloatDefault>(isovalues[i] - fieldValue0) /
+      vtkm::FloatDefault interpolant =
+        static_cast<vtkm::FloatDefault>(isovalues.Get(i) - fieldValue0) /
         static_cast<vtkm::FloatDefault>(fieldValue1 - fieldValue0);
 
       metaData.InterpWeightsPortal.Set(outputPointId + triVertex, interpolant);
@@ -448,10 +449,8 @@ public:
     vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom);
 
     const auto& boundary = tpn.GetBoundaryState();
-    auto pointPortal = pointCoordinates.GetPortal();
-    auto fieldPortal = inputField.GetPortal();
-    vtkm::exec::FieldNeighborhood<decltype(pointPortal)> points(pointPortal, boundary);
-    vtkm::exec::FieldNeighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
+    vtkm::exec::FieldNeighborhood<WholeCoordinatesIn> points(pointCoordinates, boundary);
+    vtkm::exec::FieldNeighborhood<WholeFieldIn> field(inputField, boundary);
 
     vtkm::worklet::gradient::StructuredPointGradient gradient;
     gradient(boundary, points, field, normal);
@@ -530,10 +529,8 @@ public:
     vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom);
 
     const auto& boundary = tpn.GetBoundaryState();
-    auto pointPortal = pointCoordinates.GetPortal();
-    auto fieldPortal = inputField.GetPortal();
-    vtkm::exec::FieldNeighborhood<decltype(pointPortal)> points(pointPortal, boundary);
-    vtkm::exec::FieldNeighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
+    vtkm::exec::FieldNeighborhood<WholeCoordinatesIn> points(pointCoordinates, boundary);
+    vtkm::exec::FieldNeighborhood<WholeFieldIn> field(inputField, boundary);
 
     vtkm::worklet::gradient::StructuredPointGradient gradient;
     NormalType grad1;

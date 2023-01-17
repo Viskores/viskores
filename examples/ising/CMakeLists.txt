@@ -13,9 +13,12 @@ project(IsingModel CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(Ising Ising.cxx)
-target_link_libraries(Ising PRIVATE vtkm_worklet vtkm_io vtkm_rendering)
+if(TARGET vtkm::rendering)
+  add_executable(Ising Ising.cxx)
+  target_link_libraries(Ising PRIVATE vtkm::worklet vtkm::rendering)
 
-vtkm_add_target_information(Ising
-                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
-                            DEVICE_SOURCES Ising.cxx)
+  vtkm_add_target_information(Ising
+    DROP_UNUSED_SYMBOLS
+    MODIFY_CUDA_FLAGS
+    DEVICE_SOURCES Ising.cxx)
+endif()

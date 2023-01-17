@@ -55,6 +55,15 @@ def create_parser():
         default=True,
         action="store_false",
         help="The tool can do a two-tailed Mann-Whitney U test with the null hypothesis that it is equally likely that a randomly selected value from one sample will be less than or greater than a randomly selected value from a second sample.\nWARNING: requires **LARGE** (no less than {}) number of repetitions to be meaningful!\nThe test is being done by default, if at least {} repetitions were done.\nThis option can disable the U Test.".format(report.UTEST_OPTIMAL_REPETITIONS, report.UTEST_MIN_REPETITIONS))
+
+    utest.add_argument(
+        '--dist',
+        dest='utest_dist',
+        choices=['mannwhitney', 'normal', 't'],
+        default='mannwhitney',
+        type=str,
+        help="Utest probabilistic distribution to use")
+
     alpha_default = 0.05
     utest.add_argument(
         "--alpha",
@@ -239,7 +248,7 @@ def main():
     # Diff and output
     output_lines = gbench.report.generate_difference_report(
         json1, json2, args.display_aggregates_only,
-        args.utest, args.utest_alpha)
+        args.utest, args.utest_dist, args.utest_alpha, sys.stdout.isatty())
     print(description)
     for ln in output_lines:
         print(ln)

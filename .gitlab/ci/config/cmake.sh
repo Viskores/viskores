@@ -1,31 +1,25 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2079
 
-set -x
+set -ex
 
-version="${1:-3.21.1}"
+version="${1:-3.23.4}"
 
 case "$( uname -s )" in
     Linux)
-        shatool="sha256sum"
-        # We require CMake >= 3.13 in the CI to support CUDA builds
-        readonly -A linuxParamsByVersion=(
-        ['3.13.5']='e2fd0080a6f0fc1ec84647acdcd8e0b4019770f48d83509e6a5b0b6ea27e5864	Linux'
-        ['3.21.1']='bf496ce869d0aa8c1f57e4d1a2e50c8f2fb12a6cd7ccb37ad743bb88f6b76a1e	linux'
+        readonly -A sumsByVersion=(
+            # We require CMake >= 3.13 in the CI to support CUDA builds
+            ['3.13.5']='e2fd0080a6f0fc1ec84647acdcd8e0b4019770f48d83509e6a5b0b6ea27e5864'
+            ['3.23.4']='3fbcbff85043d63a8a83c8bdf8bd5b1b2fd5768f922de7dc4443de7805a2670d'
         )
-
-        if [ -z "${linuxParamsByVersion[$version]}" ]
-        then
-          echo "Given version ($version) is unsupported"
-          exit 1
-        fi
-        sha256sum=$(cut -f 1 <<<"${linuxParamsByVersion[$version]}")
-        platform=$(cut -f 2 <<<"${linuxParamsByVersion[$version]}")
+        shatool="sha256sum"
+        sha256sum="${sumsByVersion[$version]}"
+        platform="linux"
         arch="x86_64"
         ;;
     Darwin)
         shatool="shasum -a 256"
-        sha256sum="9dc2978c4d94a44f71336fa88c15bb0eee47cf44b6ece51b10d1dfae95f82279"
+        sha256sum="98cac043cdf321caa4fd07f27da3316db6c8bc48c39997bf78e27e5c46c4eb68"
         platform="macos"
         arch="universal"
         ;;
@@ -39,16 +33,17 @@ readonly sha256sum
 readonly platform
 readonly arch
 
-readonly filename="cmake-$version-$platform-$arch"
-readonly tarball="$filename.tar.gz"
-
 cd .gitlab || exit
 
+readonly tarball="cmake-$version-$platform-$arch.tar.gz"
+curl -SOL "https://github.com/Kitware/CMake/releases/download/v$version/$tarball"
+
 echo "$sha256sum  $tarball" > cmake.sha256sum
-curl -OL "https://github.com/Kitware/CMake/releases/download/v$version/$tarball"
 $shatool --check cmake.sha256sum
-tar xf "$tarball"
-mv "$filename" cmake
+
+# Extract cmake install root into director named cmake
+mkdir cmake
+tar xf "$tarball" --strip-components=1 -C cmake
 
 if [ "$( uname -s )" = "Darwin" ]; then
     ln -s CMake.app/Contents/bin cmake/bin

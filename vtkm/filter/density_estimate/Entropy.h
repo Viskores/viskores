@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_density_estimate_Entropy_h
 #define vtk_m_filter_density_estimate_Entropy_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/density_estimate/vtkm_filter_density_estimate_export.h>
 
 namespace vtkm
@@ -24,7 +24,7 @@ namespace density_estimate
 ///
 /// Construct a histogram which is used to compute the entropy with a default of 10 bins
 ///
-class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT Entropy : public vtkm::filter::NewFilterField
+class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT Entropy : public vtkm::filter::FilterField
 {
 public:
   //currently the Entropy filter only works on scalar data.
@@ -45,11 +45,6 @@ private:
   vtkm::Id NumberOfBins = 10;
 };
 } // namespace density_estimate
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::density_estimate::Entropy.") Entropy
-  : public vtkm::filter::density_estimate::Entropy
-{
-  using density_estimate::Entropy::Entropy;
-};
 } // namespace filter
 } // namespace vtkm
 

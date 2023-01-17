@@ -39,6 +39,7 @@ test:macos_xcode13:
     CCACHE_COMPILERCHECK: "content"
     CCACHE_NOHASHDIR: "true"
     CCACHE_RESHARE: "true"
+    CCACHE_INSTALL_DIR: "$CI_PROJECT_DIR/.gitlab"
   before_script:
     - .gitlab/ci/config/cmake.sh
     - export PATH=$PWD/.gitlab/cmake/bin:$PATH
@@ -78,6 +79,6 @@ test:macos_xcode13:
 .macos_build_tags:
   tags:
     - vtk-m
-    - macos
+    - macos-x86_64
     - xcode-13.3
     - nonconcurrent

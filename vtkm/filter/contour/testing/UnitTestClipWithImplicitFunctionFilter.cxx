@@ -62,7 +62,7 @@ void TestClipStructured(vtkm::Float64 offset)
 
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
+  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
                    "Wrong number of fields in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 8,
                    "Wrong number of cells in the output dataset");
@@ -98,7 +98,7 @@ void TestClipStructuredInverted()
   clip.SetFieldsToPass("scalars");
   auto outputData = clip.Execute(ds);
 
-  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
+  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
                    "Wrong number of fields in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 4,
                    "Wrong number of cells in the output dataset");

@@ -9,6 +9,8 @@
 ##============================================================================
 
 set(filter_unit_tests
+  UnitTestLagrangianFilter.cxx
+  UnitTestLagrangianStructuresFilter.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestStreamlineFilterWarpX.cxx
   UnitTestStreamSurfaceFilter.cxx
@@ -19,15 +21,7 @@ set(worklet_unit_tests
   UnitTestStreamSurfaceWorklet.cxx
   )
 
-set(libraries
-  vtkm_filter_mesh_info
-  vtkm_filter_flow
-  vtkm_io
-  )
-
-if (VTKm_ENABLE_RENDERING)
-  list(APPEND libraries vtkm_filter_geometry_refinement vtkm_rendering vtkm_rendering_testing)
-
+if (TARGET vtkm_rendering_testing)
   list(APPEND filter_unit_tests
     RenderTestStreamline.cxx
     )
@@ -36,9 +30,8 @@ endif()
 vtkm_unit_tests(
   SOURCES ${filter_unit_tests}
   DEVICE_SOURCES ${worklet_unit_tests}
-  LIBRARIES ${libraries}
   USE_VTKM_JOB_POOL
-)
+  )
 
 #add distributed tests i.e.test to run with MPI
 #if MPI is enabled.
@@ -48,9 +41,8 @@ if (VTKm_ENABLE_MPI)
     UnitTestStreamlineFilterMPI.cxx
   )
   vtkm_unit_tests(
-    MPI DEVICE_SOURCES ${mpi_unit_tests}
-    LIBRARIES ${libraries}
-    ALL_BACKENDS
+    MPI
+    DEVICE_SOURCES ${mpi_unit_tests}
     USE_VTKM_JOB_POOL
   )
 endif()

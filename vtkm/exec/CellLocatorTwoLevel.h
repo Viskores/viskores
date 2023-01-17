@@ -195,11 +195,6 @@ public:
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
-  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
-  VTKM_EXEC CellLocatorTwoLevel* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
-  VTKM_EXEC const CellLocatorTwoLevel* operator->() const { return this; }
-
 private:
   VTKM_EXEC
   vtkm::ErrorCode PointInCell(const vtkm::Vec3f& point,

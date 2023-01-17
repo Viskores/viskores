@@ -22,7 +22,7 @@
 #include <vtkm/filter/flow/worklet/RK4Integrator.h>
 #include <vtkm/filter/flow/worklet/Stepper.h>
 
-#include <vtkm/cont/internal/Variant.h>
+#include <vtkm/cont/Variant.h>
 
 namespace vtkm
 {
@@ -54,8 +54,8 @@ public:
   std::vector<vtkm::Id> TermIdx, TermID;
 };
 
-using DSIHelperInfoType = vtkm::cont::internal::Variant<DSIHelperInfo<vtkm::Particle>,
-                                                        DSIHelperInfo<vtkm::ChargedParticle>>;
+using DSIHelperInfoType =
+  vtkm::cont::Variant<DSIHelperInfo<vtkm::Particle>, DSIHelperInfo<vtkm::ChargedParticle>>;
 
 template <typename Derived>
 class DataSetIntegrator
@@ -65,14 +65,13 @@ public:
   using ElectroMagneticFieldNameType = std::pair<std::string, std::string>;
 
 protected:
-  using FieldNameType =
-    vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType>;
+  using FieldNameType = vtkm::cont::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType>;
 
-  using RType = vtkm::cont::internal::Variant<
-    vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle>,
-    vtkm::worklet::flow::ParticleAdvectionResult<vtkm::ChargedParticle>,
-    vtkm::worklet::flow::StreamlineResult<vtkm::Particle>,
-    vtkm::worklet::flow::StreamlineResult<vtkm::ChargedParticle>>;
+  using RType =
+    vtkm::cont::Variant<vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle>,
+                        vtkm::worklet::flow::ParticleAdvectionResult<vtkm::ChargedParticle>,
+                        vtkm::worklet::flow::StreamlineResult<vtkm::Particle>,
+                        vtkm::worklet::flow::StreamlineResult<vtkm::ChargedParticle>>;
 
 public:
   DataSetIntegrator(vtkm::Id id,
@@ -128,7 +127,7 @@ protected:
                                           DSIHelperInfo<ParticleType>& dsiInfo) const;
 
   //Data members.
-  vtkm::cont::internal::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType> FieldName;
+  vtkm::cont::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType> FieldName;
 
   vtkm::Id Id;
   vtkm::filter::flow::IntegrationSolverType SolverType;
@@ -162,32 +161,32 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
   {
     auto p = portal.Get(i);
 
-    if (p.Status.CheckTerminate())
+    if (p.GetStatus().CheckTerminate())
     {
       dsiInfo.TermIdx.emplace_back(i);
-      dsiInfo.TermID.emplace_back(p.ID);
+      dsiInfo.TermID.emplace_back(p.GetID());
     }
     else
     {
-      const auto& it = dsiInfo.ParticleBlockIDsMap.find(p.ID);
+      const auto& it = dsiInfo.ParticleBlockIDsMap.find(p.GetID());
       VTKM_ASSERT(it != dsiInfo.ParticleBlockIDsMap.end());
       auto currBIDs = it->second;
       VTKM_ASSERT(!currBIDs.empty());
 
       std::vector<vtkm::Id> newIDs;
-      if (p.Status.CheckSpatialBounds() && !p.Status.CheckTookAnySteps())
+      if (p.GetStatus().CheckSpatialBounds() && !p.GetStatus().CheckTookAnySteps())
         newIDs.assign(std::next(currBIDs.begin(), 1), currBIDs.end());
       else
-        newIDs = dsiInfo.BoundsMap.FindBlocks(p.Pos, currBIDs);
+        newIDs = dsiInfo.BoundsMap.FindBlocks(p.GetPosition(), currBIDs);
 
       //reset the particle status.
-      p.Status = vtkm::ParticleStatus();
+      p.GetStatus() = vtkm::ParticleStatus();
 
       if (newIDs.empty()) //No blocks, we're done.
       {
-        p.Status.SetTerminate();
+        p.GetStatus().SetTerminate();
         dsiInfo.TermIdx.emplace_back(i);
-        dsiInfo.TermID.emplace_back(p.ID);
+        dsiInfo.TermID.emplace_back(p.GetID());
       }
       else
       {
@@ -211,12 +210,12 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
         if (dstRank == this->Rank)
         {
           dsiInfo.A.emplace_back(p);
-          dsiInfo.IdMapA[p.ID] = newIDs;
+          dsiInfo.IdMapA[p.GetID()] = newIDs;
         }
         else
         {
           dsiInfo.I.emplace_back(p);
-          dsiInfo.IdMapI[p.ID] = newIDs;
+          dsiInfo.IdMapI[p.GetID()] = newIDs;
         }
       }
       portal.Set(i, p);

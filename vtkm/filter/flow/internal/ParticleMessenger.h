@@ -174,9 +174,9 @@ void ParticleMessenger<ParticleType>::SerialExchange(
 {
   for (auto& p : outData)
   {
-    const auto& bids = outBlockIDsMap.find(p.ID)->second;
+    const auto& bids = outBlockIDsMap.find(p.GetID())->second;
     inData.emplace_back(p);
-    inDataBlockIDsMap[p.ID] = bids;
+    inDataBlockIDsMap[p.GetID()] = bids;
   }
 }
 
@@ -205,7 +205,7 @@ void ParticleMessenger<ParticleType>::Exchange(
 
   for (const auto& p : outData)
   {
-    const auto& bids = outBlockIDsMap.find(p.ID)->second;
+    const auto& bids = outBlockIDsMap.find(p.GetID())->second;
     int dstRank = this->BoundsMap.FindRank(bids[0]);
     sendData[dstRank].emplace_back(std::make_pair(p, bids));
   }
@@ -227,7 +227,7 @@ void ParticleMessenger<ParticleType>::Exchange(
         const auto& p = v.first;
         const auto& bids = v.second;
         inData.emplace_back(p);
-        inDataBlockIDsMap[p.ID] = bids;
+        inDataBlockIDsMap[p.GetID()] = bids;
       }
 
     for (const auto& m : msgData)

@@ -47,9 +47,6 @@ public:
 
   class GatherFloat32;
 
-  template <typename Device>
-  class GatherVecCast;
-
   class CreateLeafs;
 
   class BVHData;
@@ -117,37 +114,6 @@ public:
     leafs.Set(offset + 1, dataIndex); // number of primitives
   }
 }; //class createLeafs
-
-template <typename DeviceAdapterTag>
-class LinearBVHBuilder::GatherVecCast : public vtkm::worklet::WorkletMapField
-{
-private:
-  using Vec4IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Id4>;
-  using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec4i_32>;
-  using PortalConst = typename Vec4IdArrayHandle::ReadPortalType;
-  using Portal = typename Vec4IntArrayHandle::WritePortalType;
-
-private:
-  PortalConst InputPortal;
-  Portal OutputPortal;
-
-public:
-  VTKM_CONT
-  GatherVecCast(const Vec4IdArrayHandle& inputPortal,
-                Vec4IntArrayHandle& outputPortal,
-                const vtkm::Id& size)
-    : InputPortal(inputPortal.PrepareForInput(DeviceAdapterTag()))
-  {
-    this->OutputPortal = outputPortal.PrepareForOutput(size, DeviceAdapterTag());
-  }
-  using ControlSignature = void(FieldIn);
-  using ExecutionSignature = void(WorkIndex, _1);
-  VTKM_EXEC
-  void operator()(const vtkm::Id& outIndex, const vtkm::Id& inIndex) const
-  {
-    OutputPortal.Set(outIndex, InputPortal.Get(inIndex));
-  }
-}; //class GatherVec3Id
 
 class LinearBVHBuilder::BVHData
 {

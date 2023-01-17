@@ -53,17 +53,6 @@ struct CheckSameCoordinateSystem
     CheckSameField{}(originalArray, fileCoords);
   }
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  template <typename T>
-  void operator()(const vtkm::cont::ArrayHandleVirtual<T>& originalArray,
-                  const vtkm::cont::CoordinateSystem& fileCoords) const
-  {
-    CheckSameField{}(originalArray, fileCoords);
-  }
-  VTKM_DEPRECATED_SUPPRESS_END
-#endif
-
   void operator()(const vtkm::cont::ArrayHandleUniformPointCoordinates& originalArray,
                   const vtkm::cont::CoordinateSystem& fileCoords) const
   {
@@ -123,6 +112,13 @@ void CheckWrittenReadData(const vtkm::cont::DataSet& originalData,
   for (vtkm::IdComponent fieldId = 0; fieldId < originalData.GetNumberOfFields(); ++fieldId)
   {
     vtkm::cont::Field originalField = originalData.GetField(fieldId);
+    if (originalField.IsPointField() &&
+        (originalField.GetName() == originalData.GetCoordinateSystemName()))
+    {
+      // Do not check the field that is the first coordinate system. It is likely to have
+      // changed name because VTK does not name coordinate systems.
+      continue;
+    }
     VTKM_TEST_ASSERT(fileData.HasField(originalField.GetName(), originalField.GetAssociation()));
     vtkm::cont::Field fileField =
       fileData.GetField(originalField.GetName(), originalField.GetAssociation());

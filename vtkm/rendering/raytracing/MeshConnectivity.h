@@ -13,7 +13,7 @@
 #include <sstream>
 #include <vtkm/CellShape.h>
 #include <vtkm/cont/ErrorBadValue.h>
-#include <vtkm/exec/internal/Variant.h>
+#include <vtkm/exec/Variant.h>
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/CellTables.h>
 #include <vtkm/rendering/raytracing/Logger.h>
@@ -250,7 +250,7 @@ public:
 /// \brief General version of mesh connectivity that can be used for all supported mesh types.
 class VTKM_ALWAYS_EXPORT MeshConnectivity
 {
-  using ConnectivityType = vtkm::exec::internal::
+  using ConnectivityType = vtkm::exec::
     Variant<MeshConnectivityStructured, MeshConnectivityUnstructured, MeshConnectivitySingleType>;
   ConnectivityType Connectivity;
 

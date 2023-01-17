@@ -12,6 +12,7 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/CellTraits.h>
+#include <vtkm/Deprecated.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
@@ -451,15 +452,6 @@ public:
     OriginalCellSetType,
     PermutationArrayHandleType>::ExecConnectivityType;
 
-  template <typename Device, typename VisitTopology, typename IncidentTopology>
-  struct VTKM_DEPRECATED(
-    1.6,
-    "Replace ExecutionTypes<D, V, I>::ExecObjectType with ExecConnectivityType<V, I>.")
-    ExecutionTypes
-  {
-    using ExecObjectType = ExecConnectivityType<VisitTopology, IncidentTopology>;
-  };
-
   VTKM_CONT ExecConnectivityType<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
   PrepareForInput(vtkm::cont::DeviceAdapterId device,
                   vtkm::TopologyElementTagCell visitTopology,
@@ -490,17 +482,6 @@ public:
       ExecConnectivityType<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>;
     return ConnectivityType(this->VisitPointsWithCells.Connectivity.PrepareForInput(device, token),
                             this->VisitPointsWithCells.Offsets.PrepareForInput(device, token));
-  }
-
-  template <typename VisitTopology, typename IncidentTopology>
-  VTKM_CONT VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
-    ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(
-      vtkm::cont::DeviceAdapterId device,
-      VisitTopology visitTopology,
-      IncidentTopology incidentTopology)
-  {
-    vtkm::cont::Token token;
-    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
   }
 
   VTKM_CONT

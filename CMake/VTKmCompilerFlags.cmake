@@ -30,6 +30,11 @@ endif()
 # vtkm_compiler_flags is used by all the vtkm targets and consumers of VTK-m
 # The flags on vtkm_compiler_flags are needed when using/building vtk-m
 add_library(vtkm_compiler_flags INTERFACE)
+set_target_properties(
+  vtkm_compiler_flags
+  PROPERTIES
+  EXPORT_NAME compiler_flags
+  )
 
 # When building libraries/tests that are part of the VTK-m repository
 # inherit the properties from vtkm_vectorization_flags.
@@ -50,12 +55,12 @@ target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_14)
 # they don't use.
 if(VTKM_COMPILER_IS_MSVC)
   target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/Gy>)
-  if(TARGET vtkm::cuda)
+  if(TARGET vtkm_cuda)
     target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/Gy">)
   endif()
 elseif(NOT (VTKM_COMPILER_IS_PGI OR VTKM_COMPILER_IS_XL)) #can't find an equivalant PGI/XL flag
   target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-ffunction-sections>)
-  if(TARGET vtkm::cuda)
+  if(TARGET vtkm_cuda)
     target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-ffunction-sections>)
   endif()
 endif()
@@ -63,7 +68,7 @@ endif()
 # Enable large object support so we can have 2^32 addressable sections
 if(VTKM_COMPILER_IS_MSVC)
   target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/bigobj>)
-  if(TARGET vtkm::cuda)
+  if(TARGET vtkm_cuda)
     target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/bigobj">)
   endif()
 endif()
@@ -79,6 +84,11 @@ target_include_directories(vtkm_compiler_flags INTERFACE
 # vtkm_developer_flags is used ONLY BY libraries that are built as part of this
 # repository
 add_library(vtkm_developer_flags INTERFACE)
+set_target_properties(
+  vtkm_developer_flags
+  PROPERTIES
+  EXPORT_NAME developer_flags
+  )
 
 # Additional warnings just for Clang 3.5+, and AppleClang 7+
 # about failures to vectorize.
@@ -101,7 +111,7 @@ if(VTKM_COMPILER_IS_MSVC)
 
   #Setup MSVC warnings with CUDA and CXX
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>)
-  if(TARGET vtkm::cuda)
+  if(TARGET vtkm_cuda)
     target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags}  -Xcudafe=--diag_suppress=1394,--diag_suppress=766>)
   endif()
 
@@ -109,7 +119,7 @@ if(VTKM_COMPILER_IS_MSVC)
     # In VS2013 the C4127 warning has a bug in the implementation and
     # generates false positive warnings for lots of template code
     target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd4127>)
-    if(TARGET vtkm::cuda)
+    if(TARGET vtkm_cuda)
       target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-wd4127>)
     endif()
   endif()
@@ -165,7 +175,7 @@ elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
   endif()
 
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>)
-  if(TARGET vtkm::cuda)
+  if(TARGET vtkm_cuda)
     target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags}>)
   endif()
 endif()
@@ -176,10 +186,10 @@ function(setup_cuda_flags)
 endfunction()
 
 #common warnings for all platforms when building cuda
-if ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
+if ((TARGET vtkm_cuda) OR (TARGET vtkm_kokkos_cuda))
   setup_cuda_flags()
 endif()
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
-  install(TARGETS vtkm_compiler_flags vtkm_developer_flags EXPORT ${VTKm_EXPORT_NAME})
+  vtkm_install_targets(TARGETS vtkm_compiler_flags vtkm_developer_flags)
 endif()

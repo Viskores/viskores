@@ -14,10 +14,12 @@ include(CTest)
 
 find_package(VTKm REQUIRED)
 
-add_executable(smoke_test smoke_test.cxx)
-target_link_libraries(smoke_test PRIVATE vtkm_source)
+if(TARGET vtkm::source)
+  add_executable(smoke_test smoke_test.cxx)
+  target_link_libraries(smoke_test PRIVATE vtkm::source)
 
-# Only add this test when this an standalone project
-if (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-  add_test(NAME SmokeTestInternal COMMAND ${CMAKE_BINARY_DIR}/smoke_test)
+  # Only add this test when this a standalone project
+  if (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    add_test(NAME SmokeTestInternal COMMAND ${CMAKE_BINARY_DIR}/smoke_test)
+  endif()
 endif()

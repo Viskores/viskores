@@ -43,14 +43,14 @@ if(NOT DEFINED full_url)
 endif()
 
 file(DOWNLOAD
-  "${full_url}" .gitlab/${tarball}
+  "${full_url}" $ENV{CCACHE_INSTALL_DIR}/${tarball}
   EXPECTED_HASH SHA256=${sha256sum}
   SHOW_PROGRESS
   )
 
 execute_process(
   COMMAND ${CMAKE_COMMAND} -E tar xf ${tarball}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/.gitlab
+  WORKING_DIRECTORY $ENV{CCACHE_INSTALL_DIR}
   RESULT_VARIABLE extract_results
   )
 
@@ -58,4 +58,4 @@ if(extract_results)
   message(FATAL_ERROR "Extracting `${tarball}` failed: ${extract_results}.")
 endif()
 
-file(RENAME .gitlab/${filename} .gitlab/ccache)
+file(RENAME $ENV{CCACHE_INSTALL_DIR}/${filename} $ENV{CCACHE_INSTALL_DIR}/ccache)

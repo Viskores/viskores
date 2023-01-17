@@ -9,23 +9,17 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
-  UnitTestLagrangianFilter.cxx
-  UnitTestLagrangianStructuresFilter.cxx
   UnitTestMapFieldMergeAverage.cxx
   UnitTestMapFieldPermutation.cxx
   UnitTestMultiBlockFilter.cxx
   UnitTestPartitionedDataSetFilters.cxx
 )
 
-set(libraries
-  vtkm_filter
-  vtkm_io
-  vtkm_source
-)
-
 vtkm_unit_tests(
+  # For historical reasons, these tests are part of the vtkm_filter_core module even though
+  # they are in vtkm/filter. Thus, we need to rename the test for the filter to recognize it.
+  NAME UnitTests_vtkm_filter_core_testing
   DEVICE_SOURCES ${unit_tests}
   LIBRARIES ${libraries}
   USE_VTKM_JOB_POOL

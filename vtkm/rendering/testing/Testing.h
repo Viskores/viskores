@@ -24,7 +24,11 @@
 
 #include <vtkm/rendering/View.h>
 
-#include <vtkm/rendering/testing/vtkm_rendering_testing_export.h>
+// Because the testing directory is reserved for test executables and not
+// libraries, the vtkm_rendering_testing module has to put this file in
+// vtkm/rendering/testlib instead of vtkm/rendering/testing where you normally
+// would expect it.
+#include <vtkm/rendering/testlib/vtkm_rendering_testing_export.h>
 
 #include <fstream>
 #include <sstream>

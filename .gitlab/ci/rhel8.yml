@@ -6,21 +6,21 @@ build:rhel8:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .rhel8
     - .cmake_build_linux
     - .run_automatically
   variables:
     CMAKE_GENERATOR: "Unix Makefiles"
-    VTKM_SETTINGS: "serial+shared+64bit_floats+32bit_ids+use_virtuals"
+    VTKM_SETTINGS: "serial+shared+64bit_floats+32bit_ids"
 
 test:rhel8:
   tags:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .rhel8
     - .cmake_test_linux
@@ -37,7 +37,7 @@ build:rhel8_vtk_types:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .rhel8
     - .cmake_build_linux
@@ -51,7 +51,7 @@ test:rhel8_vtk_types:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .rhel8
     - .cmake_test_linux

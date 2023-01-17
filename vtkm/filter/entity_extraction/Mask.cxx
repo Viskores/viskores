@@ -51,7 +51,7 @@ VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input)
 
   // create the output dataset
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  return this->CreateResult(input, cellOut, input.GetCoordinateSystems(), mapper);
+  return this->CreateResult(input, cellOut, mapper);
 }
 } // namespace entity_extraction
 } // namespace filter

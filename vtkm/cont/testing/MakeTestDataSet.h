@@ -14,7 +14,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/cont/vtkm_cont_export.h>
+#include <vtkm/cont/testlib/vtkm_cont_testing_export.h>
 
 #include <numeric>
 
@@ -25,7 +25,7 @@ namespace cont
 namespace testing
 {
 
-class VTKM_CONT_EXPORT MakeTestDataSet
+class VTKM_CONT_TESTING_EXPORT MakeTestDataSet
 {
 public:
   // 1D uniform datasets.

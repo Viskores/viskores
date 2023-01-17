@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_entity_extraction_Threshold_h
 #define vtk_m_filter_entity_extraction_Threshold_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -20,16 +20,13 @@ namespace filter
 {
 namespace entity_extraction
 {
-/// \brief Extracts cells where scalar value in cell satisfies threshold criterion
+/// \brief Extracts cells which satisfy threshold criterion
 ///
-/// Extracts all cells from any dataset type that
-/// satisfy a threshold criterion. A cell satisfies the criterion if the
-/// scalar value of every point or cell satisfies the criterion. The
-/// criterion takes the form of between two values. The output of this
-/// filter is an permutation of the input dataset.
+/// Extracts all cells from any dataset type that satisfy a threshold criterion.
+/// The output of this filter is an permutation of the input dataset.
 ///
 /// You can threshold either on point or cell fields
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT Threshold : public vtkm::filter::NewFilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT Threshold : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
@@ -42,14 +39,48 @@ public:
   VTKM_CONT
   vtkm::Float64 GetUpperThreshold() const { return this->UpperValue; }
 
-  //If using scalars from point data, all scalars for all points in a cell must
-  //satisfy the threshold criterion if AllScalars is set. Otherwise, just a
-  //single scalar value satisfying the threshold criterion will extract the cell.
+  /// @brief Set the threshold criterion to pass any value <= to the specified value.
   VTKM_CONT
-  void SetAllInRange(bool value) { this->ReturnAllInRange = value; }
+  void SetThresholdBelow(vtkm::Float64 value);
 
+  /// @brief Set the threshold criterion to pass any value >= to the specified value.
   VTKM_CONT
-  bool GetAllInRange() const { return this->ReturnAllInRange; }
+  void SetThresholdAbove(vtkm::Float64 value);
+
+  /// @brief Set the threshold criterion to pass any value between (inclusive) the given values.
+  VTKM_CONT
+  void SetThresholdBetween(vtkm::Float64 value1, vtkm::Float64 value2);
+
+  ///@{
+  /// @brief For multi-component fields, select how to apply the threshold criterion.
+  /// The default is to test the 0th component.
+  VTKM_CONT
+  void SetComponentToTest(vtkm::IdComponent component)
+  {
+    this->ComponentMode = Component::Selected;
+    this->SelectedComponent = component;
+  }
+  VTKM_CONT
+  void SetComponentToTestToAny() { this->ComponentMode = Component::Any; }
+  VTKM_CONT
+  void SetComponentToTestToAll() { this->ComponentMode = Component::All; }
+  ///@}
+
+  /// @brief If using field from point data, all values for all points in a cell must
+  /// satisfy the threshold criterion if `AllInRange` is set. Otherwise, just a
+  /// single point's value satisfying the threshold criterion will extract the cell.
+  VTKM_CONT
+  void SetAllInRange(bool value) { this->AllInRange = value; }
+  VTKM_CONT
+  bool GetAllInRange() const { return this->AllInRange; }
+
+  /// @brief Invert the threshold result, i.e. cells that would have been in the output with this
+  /// option off are excluded, while cells that would have been excluded from the output are
+  /// included.
+  VTKM_CONT
+  void SetInvert(bool value) { this->Invert = value; }
+  VTKM_CONT
+  bool GetInvert() const { return this->Invert; }
 
 private:
   VTKM_CONT
@@ -57,14 +88,21 @@ private:
 
   double LowerValue = 0;
   double UpperValue = 0;
-  bool ReturnAllInRange = false;
+
+  enum struct Component
+  {
+    Any,
+    All,
+    Selected
+  };
+
+  Component ComponentMode = Component::Selected;
+  vtkm::IdComponent SelectedComponent = 0;
+
+  bool AllInRange = false;
+  bool Invert = false;
 };
 } // namespace entity_extraction
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::entity_extraction::Threshold.") Threshold
-  : public vtkm::filter::entity_extraction::Threshold
-{
-  using entity_extraction::Threshold::Threshold;
-};
 } // namespace filter
 } // namespace vtkm
 

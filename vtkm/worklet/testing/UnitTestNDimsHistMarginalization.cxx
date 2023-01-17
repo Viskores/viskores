@@ -206,11 +206,6 @@ struct VariableCondition
 //
 void TestNDimsHistMarginalization()
 {
-  // Setup and calculate a ND-histogram without marginalization first
-  // Create the output bin array
-  vtkm::cont::ArrayHandle<vtkm::Range> range;
-  vtkm::cont::ArrayHandle<vtkm::Float64> delta;
-
   // Data attached is the poisson distribution
   vtkm::cont::DataSet ds = MakeTestDataSet();
 

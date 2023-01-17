@@ -97,7 +97,7 @@ public:
     thresholdPoints.SetActiveField("pointvar");
     thresholdPoints.SetFieldsToPass("pointvar");
     auto output = thresholdPoints.Execute(dataset);
-    VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
+    VTKM_TEST_ASSERT(output.GetNumberOfFields() == 2,
                      "Wrong number of fields in the output dataset");
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 0), "Wrong result for ThresholdPoints");
   }

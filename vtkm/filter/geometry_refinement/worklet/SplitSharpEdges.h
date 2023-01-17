@@ -475,7 +475,7 @@ public:
 
 
     // Create the new cellset
-    CellDeepCopy::Run(oldCellset, newCellset);
+    CellDeepCopy::Run(oldCellset, newCellset, this->NewPointsIdArray.GetNumberOfValues());
     // FIXME: Since the non const get array function is not in CellSetExplict.h,
     // here I just get a non-const copy of the array handle.
     auto connectivityArrayHandle = newCellset.GetConnectivityArray(vtkm::TopologyElementTagCell(),

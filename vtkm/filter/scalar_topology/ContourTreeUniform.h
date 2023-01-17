@@ -57,7 +57,7 @@
 #ifndef vtk_m_filter_scalar_topology_ContourTreeUniform_h
 #define vtk_m_filter_scalar_topology_ContourTreeUniform_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
 namespace vtkm
@@ -72,7 +72,7 @@ namespace scalar_topology
 /// peak of contour
 /// Based on the algorithm presented in the paper:
 //  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
-class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeMesh2D : public vtkm::filter::NewFilterField
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeMesh2D : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
@@ -89,7 +89,7 @@ private:
 /// peak of contour
 /// Based on the algorithm presented in the paper:
 //  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
-class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeMesh3D : public vtkm::filter::NewFilterField
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeMesh3D : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT
@@ -100,16 +100,6 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
 } // namespace scalar_topology
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::scalar_topology::ContourTree2D.") ContourTree2D
-  : public vtkm::filter::scalar_topology::ContourTreeMesh2D
-{
-  using scalar_topology::ContourTreeMesh2D::ContourTreeMesh2D;
-};
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::scalar_topology::ContourTree3D.") ContourTree3D
-  : public vtkm::filter::scalar_topology::ContourTreeMesh3D
-{
-  using scalar_topology::ContourTreeMesh3D::ContourTreeMesh3D;
-};
 } // namespace filter
 } // namespace vtkm
 

@@ -56,7 +56,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
@@ -85,7 +85,7 @@ namespace scalar_topology
 /// tree are merged progressively using a binary-reduction scheme to compute the
 /// final contour tree. I.e., in the multi-block context, the final tree is
 /// constructed on rank 0.
-class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeAugmented : public vtkm::filter::NewFilterField
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeAugmented : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT bool CanThread() const override
@@ -119,19 +119,6 @@ public:
   VTKM_CONT
   void SetBlockIndices(vtkm::Id3 blocksPerDim,
                        const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices);
-
-  VTKM_CONT
-  VTKM_DEPRECATED(1.9,
-                  "Set PointSize, GlobalPointOrigin, and GlobalPointSize in CellSetStructured and "
-                  "optionally use SetBlockIndices.")
-  void SetSpatialDecomposition(vtkm::Id3 blocksPerDim,
-                               vtkm::Id3,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>&,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>&)
-  {
-    SetBlockIndices(blocksPerDim, localBlockIndices);
-  }
 
   ///@{
   /// Get the contour tree computed by the filter
@@ -185,11 +172,6 @@ private:
     MultiBlockTreeHelper;
 };
 } // namespace scalar_topology
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::scalar_topology::ContourTreeAugmented.")
-  ContourTreeAugmented : public vtkm::filter::scalar_topology::ContourTreeAugmented
-{
-  using scalar_topology::ContourTreeAugmented::ContourTreeAugmented;
-};
 } // namespace filter
 } // namespace vtkm
 

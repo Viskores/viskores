@@ -16,7 +16,7 @@
 
 #include <vtkm/exec/CellLocatorMultiplexer.h>
 
-#include <vtkm/cont/internal/Variant.h>
+#include <vtkm/cont/Variant.h>
 
 #include <functional>
 #include <memory>
@@ -60,7 +60,7 @@ public:
                                             vtkm::cont::Token& token) const;
 
 private:
-  vtkm::cont::internal::ListAsVariant<ContLocatorList> LocatorImpl;
+  vtkm::cont::ListAsVariant<ContLocatorList> LocatorImpl;
 
   friend Superclass;
   VTKM_CONT void Build();

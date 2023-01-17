@@ -14,14 +14,13 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Initialize.h>
-#include <vtkm/filter/Lagrangian.h>
+#include <vtkm/filter/flow/Lagrangian.h>
 
 using namespace std;
 
-vtkm::cont::DataSet make3DRectilinearDataSet(double time)
+vtkm::cont::DataSet make3DUniformDataSet(double time)
 {
   ABCfield field;
 
@@ -79,14 +78,14 @@ int main(int argc, char** argv)
     vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
   vtkm::cont::Initialize(argc, argv, opts);
 
-  vtkm::filter::Lagrangian lagrangianFilter;
+  vtkm::filter::flow::Lagrangian lagrangianFilter;
   lagrangianFilter.SetResetParticles(true);
   vtkm::Float32 stepSize = 0.01f;
   lagrangianFilter.SetStepSize(stepSize);
   lagrangianFilter.SetWriteFrequency(10);
   for (int i = 0; i < 100; i++)
   {
-    vtkm::cont::DataSet inputData = make3DRectilinearDataSet((double)i * stepSize);
+    vtkm::cont::DataSet inputData = make3DUniformDataSet((double)i * stepSize);
     lagrangianFilter.SetActiveField("velocity");
     vtkm::cont::DataSet extractedBasisFlows = lagrangianFilter.Execute(inputData);
   }

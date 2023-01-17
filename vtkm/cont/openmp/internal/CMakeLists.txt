@@ -21,12 +21,6 @@ set(headers
   RuntimeDeviceConfigurationOpenMP.h
   )
 
-if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
-  set(headers ${headers}
-    VirtualObjectTransferOpenMP.h
-    )
-endif()
-
 vtkm_declare_headers(${headers})
 
 #These sources need to always be built
@@ -35,7 +29,7 @@ target_sources(vtkm_cont PRIVATE
   )
 
 #-----------------------------------------------------------------------------
-if (TARGET vtkm::openmp)
+if (TARGET vtkm_openmp)
   target_sources(vtkm_cont PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmOpenMP.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/ParallelRadixSortOpenMP.cxx

@@ -10,22 +10,22 @@
 
 # When this file is run by CMake through the find_package command, the
 # following targets will exist:
-#   vtkm_cont       Target that contains most of VTK-m
+#   vtkm::cont       Target that contains most of VTK-m
 #
-#   vtkm_rendering  Target that contains all the rendering code
+#   vtkm::rendering  Target that contains all the rendering code
 #
-#   vtkm_filter     Target that contains all of VTK-m pre-built filters
+#   vtkm::filter     Target that contains all of VTK-m pre-built filters
 #
-#   vtkm_source     Target that contains all of VTK-m pre-built sources
+#   vtkm::source     Target that contains all of VTK-m pre-built sources
 #
-#   vtkm::tbb       Target that contains tbb related link information
-#                   implicitly linked to by `vtkm_cont` if tbb is enabled
+#   vtkm::tbb        Target that contains tbb related link information
+#                    implicitly linked to by `vtkm_cont` if tbb is enabled
 #
-#   vtkm::openmp    Target that contains openmp related link information
-#                   implicitly linked to by `vtkm_cont` if openmp is enabled
+#   vtkm::openmp     Target that contains openmp related link information
+#                    implicitly linked to by `vtkm_cont` if openmp is enabled
 #
-#   vtkm::cuda      Target that contains cuda related link information
-#                   implicitly linked to by `vtkm_cont` if cuda is enabled
+#   vtkm::cuda       Target that contains cuda related link information
+#                    implicitly linked to by `vtkm_cont` if cuda is enabled
 #
 # The following local variables will also be defined:
 #
@@ -46,7 +46,6 @@
 #  VTKm_ENABLE_GL_CONTEXT     Will be enabled if VTK-m rendering was built with a GL context
 #  VTKm_ENABLE_OSMESA_CONTEXT Will be enabled if VTK-m rendering was built with a osmesa context
 #  VTKm_ENABLE_EGL_CONTEXT    Will be enabled if VTK-m rendering was built with a EGL context
-#
 #
 
 if (CMAKE_VERSION VERSION_LESS "3.12")
@@ -78,6 +77,7 @@ set(VTKm_ENABLE_OSMESA_CONTEXT "@VTKm_ENABLE_OSMESA_CONTEXT@")
 set(VTKm_ENABLE_EGL_CONTEXT "@VTKm_ENABLE_EGL_CONTEXT@")
 set(VTKm_ENABLE_MPI "@VTKm_ENABLE_MPI@")
 set(VTKm_ENABLE_TESTING_LIBRARY "@VTKm_ENABLE_TESTING_LIBRARY@")
+set(VTKm_USE_DEFAULT_TYPES_FOR_ASCENT "@VTKm_USE_DEFAULT_TYPES_FOR_ASCENT@")
 
 # This is true when the package is still in the build directory (not installed)
 if(CMAKE_CURRENT_LIST_DIR STREQUAL "@VTKm_BUILD_CMAKE_BASE_DIR@/@VTKm_INSTALL_CONFIG_DIR@")
@@ -109,18 +109,27 @@ set(VTKM_FROM_INSTALL_DIR FALSE)
 if(NOT "${CMAKE_BINARY_DIR}" STREQUAL "@VTKm_BINARY_DIR@")
   set(VTKM_FROM_INSTALL_DIR TRUE)
   include(${VTKm_CONFIG_DIR}/VTKmTargets.cmake)
+
+  if(DEFINED PACKAGE_FIND_VERSION AND PACKAGE_FIND_VERSION VERSION_LESS 2.0)
+    add_library(vtkm_cont ALIAS vtkm::cont)
+    add_library(vtkm_filter ALIAS vtkm::filter)
+    add_library(vtkm_io ALIAS vtkm::io)
+    add_library(vtkm_rendering ALIAS vtkm::rendering)
+    add_library(vtkm_source ALIAS vtkm::source)
+    add_library(vtkm_worklet ALIAS vtkm::worklet)
+  endif()
 endif()
 
 # Once we can require CMake 3.15 for all cuda builds we can
 # replace this with setting `cuda_architecture_flags` as part of the
-# EXPORT_PROPERTIES of the vtkm_cuda target
+# EXPORT_PROPERTIES of the vtkm::cuda target
 if(VTKm_ENABLE_CUDA AND VTKM_FROM_INSTALL_DIR)
+  # Canonical way of setting CUDA arch
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+    set_target_properties(vtkm::cuda PROPERTIES CUDA_ARCHITECTURES "@CMAKE_CUDA_ARCHITECTURES@")
+  endif()
 
   set_target_properties(vtkm::cuda PROPERTIES
-
-    # Canonical way of setting CUDA arch
-    CUDA_ARCHITECTURES      "@CMAKE_CUDA_ARCHITECTURES@"
-
     # Legacy way of setting CUDA arch
     cuda_architecture_flags "@VTKm_CUDA_Architecture_Flags@"
     requires_static_builds TRUE)

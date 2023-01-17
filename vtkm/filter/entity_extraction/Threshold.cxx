@@ -11,11 +11,16 @@
 #include <vtkm/filter/entity_extraction/Threshold.h>
 #include <vtkm/filter/entity_extraction/worklet/Threshold.h>
 
+#include <vtkm/BinaryPredicates.h>
+#include <vtkm/Math.h>
+
 namespace
 {
 class ThresholdRange
 {
 public:
+  VTKM_CONT ThresholdRange() = default;
+
   VTKM_CONT
   ThresholdRange(const vtkm::Float64& lower, const vtkm::Float64& upper)
     : Lower(lower)
@@ -26,17 +31,8 @@ public:
   template <typename T>
   VTKM_EXEC bool operator()(const T& value) const
   {
-
-    return value >= static_cast<T>(this->Lower) && value <= static_cast<T>(this->Upper);
-  }
-
-  //Needed to work with ArrayHandleVirtual
-  template <typename PortalType>
-  VTKM_EXEC bool operator()(
-    const vtkm::internal::ArrayPortalValueReference<PortalType>& value) const
-  {
-    using T = typename PortalType::ValueType;
-    return value.Get() >= static_cast<T>(this->Lower) && value.Get() <= static_cast<T>(this->Upper);
+    return static_cast<vtkm::Float64>(value) >= this->Lower &&
+      static_cast<vtkm::Float64>(value) <= this->Upper;
   }
 
 private:
@@ -72,6 +68,25 @@ namespace filter
 namespace entity_extraction
 {
 //-----------------------------------------------------------------------------
+VTKM_CONT void Threshold::SetThresholdBelow(vtkm::Float64 value)
+{
+  this->SetLowerThreshold(vtkm::NegativeInfinity<vtkm::Float64>());
+  this->SetUpperThreshold(value);
+}
+
+VTKM_CONT void Threshold::SetThresholdAbove(vtkm::Float64 value)
+{
+  this->SetLowerThreshold(value);
+  this->SetUpperThreshold(vtkm::Infinity<vtkm::Float64>());
+}
+
+VTKM_CONT void Threshold::SetThresholdBetween(vtkm::Float64 value1, vtkm::Float64 value2)
+{
+  this->SetLowerThreshold(value1);
+  this->SetUpperThreshold(value2);
+}
+
+//-----------------------------------------------------------------------------
 vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
 {
   //get the cells and coordinates of the dataset
@@ -82,16 +97,58 @@ vtkm::cont::DataSet Threshold::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::worklet::Threshold worklet;
   vtkm::cont::UnknownCellSet cellOut;
 
-  auto resolveArrayType = [&](const auto& concrete) {
-    cellOut =
-      worklet.Run(cells, concrete, field.GetAssociation(), predicate, this->GetAllInRange());
+  auto callWithArrayBaseComponent = [&](auto baseComp) {
+    using ComponentType = decltype(baseComp);
+    if (!field.GetData().IsBaseComponentType<ComponentType>())
+    {
+      return;
+    }
+
+    if (this->ComponentMode == Component::Selected)
+    {
+      auto arrayComponent =
+        field.GetData().ExtractComponent<ComponentType>(this->SelectedComponent);
+      cellOut = worklet.Run(
+        cells, arrayComponent, field.GetAssociation(), predicate, this->AllInRange, this->Invert);
+    }
+    else
+    {
+      for (vtkm::IdComponent i = 0; i < field.GetData().GetNumberOfComponents(); ++i)
+      {
+        auto arrayComponent = field.GetData().ExtractComponent<ComponentType>(i);
+        if (this->ComponentMode == Component::Any)
+        {
+          worklet.RunIncremental(cells,
+                                 arrayComponent,
+                                 field.GetAssociation(),
+                                 predicate,
+                                 this->AllInRange,
+                                 vtkm::LogicalOr{});
+        }
+        else // this->ComponentMode == Component::All
+        {
+          worklet.RunIncremental(cells,
+                                 arrayComponent,
+                                 field.GetAssociation(),
+                                 predicate,
+                                 this->AllInRange,
+                                 vtkm::LogicalAnd{});
+        }
+      }
+
+      if (this->Invert)
+      {
+        worklet.InvertResults();
+      }
+
+      cellOut = worklet.GenerateResultCellSet(cells);
+    }
   };
 
-  field.GetData().CastAndCallForTypes<vtkm::TypeListScalarAll, VTKM_DEFAULT_STORAGE_LIST>(
-    resolveArrayType);
+  vtkm::ListForEach(callWithArrayBaseComponent, vtkm::TypeListScalarAll{});
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  return this->CreateResult(input, cellOut, input.GetCoordinateSystems(), mapper);
+  return this->CreateResult(input, cellOut, mapper);
 }
 } // namespace entity_extraction
 } // namespace filter

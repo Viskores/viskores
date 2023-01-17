@@ -13,8 +13,8 @@ project(StreamlineMPI CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if (VTKm_ENABLE_MPI)
+if (VTKm_ENABLE_MPI AND TARGET vtkm::io AND TARGET vtkm::filter_flow)
   add_executable(StreamlineMPI StreamlineMPI.cxx)
   target_compile_definitions(StreamlineMPI PRIVATE "MPI_ENABLED")
-  target_link_libraries(StreamlineMPI PRIVATE vtkm_filter_flow vtkm_io MPI::MPI_CXX)
+  target_link_libraries(StreamlineMPI PRIVATE vtkm::filter_flow vtkm::io MPI::MPI_CXX)
 endif()

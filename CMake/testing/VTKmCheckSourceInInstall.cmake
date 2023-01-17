@@ -16,8 +16,7 @@
 #        -DVTKm_SOURCE_DIR=<VTKm_SOURCE_DIR>
 #        -DVTKm_BINARY_DIR=<VTKm_BINARY_DIR>
 #        -DVTKm_INSTALL_INCLUDE_DIR=<VTKm_INSTALL_INCLUDE_DIR>
-#        -DVTKm_ENABLE_RENDERING=<VTKm_ENABLE_RENDERING>
-#        -DVTKm_ENABLE_LOGGING=<VTKm_ENABLE_LOGGING>
+#        -DDIR_EXCEPTIONS=<dir>:<dir>:...
 #        -DVTKm_ENABLE_HDF5_IO=<VTKm_ENABLE_HDF5_IO>
 #        -P <VTKm_SOURCE_DIR>/CMake/testing/VTKMCheckSourceInInstall.cmake
 ##
@@ -34,12 +33,9 @@ endif ()
 if (NOT VTKm_INSTALL_INCLUDE_DIR)
   message(FATAL_ERROR "VTKm_INSTALL_INCLUDE_DIR not defined.")
 endif ()
-if (NOT DEFINED VTKm_ENABLE_RENDERING)
-  message(FATAL_ERROR "VTKm_ENABLE_RENDERING not defined.")
-endif ()
-if (NOT DEFINED VTKm_ENABLE_LOGGING)
-  message(FATAL_ERROR "VTKm_ENABLE_LOGGING not defined.")
-endif ()
+if (NOT DEFINED DIR_EXCEPTIONS)
+  message(FATAL_ERROR "DIR_EXCEPTIONS not defined.")
+endif()
 if (NOT DEFINED VTKm_ENABLE_HDF5_IO)
   message(FATAL_ERROR "VTKm_ENABLE_HDF5_IO not defined.")
 endif()
@@ -116,41 +112,13 @@ function(do_verify root_dir prefix)
     thirdparty/diy/vtkmdiy/cmake/mpi_types.h
     thirdparty/lodepng/vtkmlodepng/lodepng.h
     thirdparty/loguru/vtkmloguru/loguru.hpp
-
-    # Ignore deprecated virtual classes (which are not installed if VTKm_NO_DEPRECATED_VIRTUAL
-    # is on). These exceptions can be removed when these files are completely removed.
-    cont/ArrayHandleVirtual.h
-    cont/ArrayHandleVirtual.hxx
-    cont/ArrayHandleVirtualCoordinates.h
-    cont/CellLocator.h
-    cont/PointLocator.h
-    cont/StorageVirtual.h
-    cont/StorageVirtual.hxx
-    cont/VirtualObjectHandle.h
-    cont/cuda/internal/VirtualObjectTransferCuda.h
-    cont/internal/TransferInfo.h
-    cont/internal/VirtualObjectTransfer.h
-    cont/internal/VirtualObjectTransferInstantiate.h
-    cont/internal/VirtualObjectTransferShareWithControl.h
-    cont/kokkos/internal/VirtualObjectTransferKokkos.h
-    cont/openmp/internal/VirtualObjectTransferOpenMP.h
-    cont/serial/internal/VirtualObjectTransferSerial.h
-    cont/tbb/internal/VirtualObjectTransferTBB.h
-    exec/CellLocator.h
-    exec/PointLocator.h
-    internal/ArrayPortalVirtual.h
     )
 
+  string(REPLACE ":" ";" directory_exceptions "${DIR_EXCEPTIONS}")
   #by default every header in a testing directory doesn't need to be installed
-  set(directory_exceptions ".*/testing" )
+  list(APPEND directory_exceptions ".*/testing")
   # These exceptions should be based on the status of the associated
   # cmake option
-  if(NOT VTKm_ENABLE_RENDERING)
-    list(APPEND directory_exceptions rendering)
-  endif()
-  if(NOT VTKm_ENABLE_LOGGING)
-    list(APPEND directory_exceptions thirdparty/loguru)
-  endif()
   if (NOT VTKm_ENABLE_HDF5_IO)
     list(APPEND file_exceptions
       io/ImageWriterHDF5.h

@@ -144,8 +144,8 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
       resolveFieldType);
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  vtkm::cont::DataSet output = this->CreateResult(
-    inDataSet, outputCells, vtkm::cont::CoordinateSystem{ "coordinates", vertices }, mapper);
+  vtkm::cont::DataSet output = this->CreateResultCoordinateSystem(
+    inDataSet, outputCells, inputCoords.GetName(), vertices, mapper);
 
   if (this->GenerateNormals)
   {

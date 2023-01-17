@@ -69,32 +69,6 @@ public:
                                               const std::string& coordsNm = "coords");
 
   template <typename T>
-  VTKM_DEPRECATED(1.6,
-                  "Combine point coordinate arrays using most appropriate array (e.g. "
-                  "ArrayHandleCompositeVector, ArrayHandleSOA, ArrayHandleCartesianProduct")
-  VTKM_CONT static vtkm::cont::DataSet
-    Create(const vtkm::cont::ArrayHandle<T>& xVals,
-           const vtkm::cont::ArrayHandle<T>& yVals,
-           const vtkm::cont::ArrayHandle<T>& zVals,
-           const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
-           const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
-           const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
-           const std::string& coordsNm = "coords")
-  {
-    VTKM_ASSERT(xVals.GetNumberOfValues() == yVals.GetNumberOfValues());
-    VTKM_ASSERT(xVals.GetNumberOfValues() == zVals.GetNumberOfValues());
-
-    auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(numIndices);
-
-    return DataSetBuilderExplicit::BuildDataSet(
-      vtkm::cont::make_ArrayHandleCompositeVector(xVals, yVals, zVals),
-      shapes,
-      offsets,
-      connectivity,
-      coordsNm);
-  }
-
-  template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const std::vector<vtkm::Vec<T, 3>>& coords,
                                               const std::vector<vtkm::UInt8>& shapes,
                                               const std::vector<vtkm::IdComponent>& numIndices,

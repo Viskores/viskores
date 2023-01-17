@@ -1,0 +1,19 @@
+NAME
+  benchmarking
+GROUPS
+  Benchmarking
+DEPENDS
+  vtkm_cont
+  vtkm_filter_contour
+  vtkm_filter_entity_extraction
+  vtkm_filter_field_conversion
+  vtkm_filter_field_transform
+  vtkm_filter_flow
+  vtkm_filter_geometry_refinement
+  vtkm_filter_mesh_info
+  vtkm_filter_vector_analysis
+  vtkm_io
+  vtkm_source
+OPTIONAL_DEPENDS
+  vtkm_rendering
+NO_TESTING

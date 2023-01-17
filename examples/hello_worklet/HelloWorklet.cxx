@@ -10,7 +10,6 @@
 
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/filter/CreateResult.h>
 #include <vtkm/filter/FilterField.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
@@ -23,58 +22,56 @@
 #include <cstdlib>
 #include <iostream>
 
-namespace vtkm
-{
-namespace worklet
+namespace hello_worklet_example
 {
 
 struct HelloWorklet : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn inVector, FieldOut outMagnitude);
 
-  VTKM_EXEC void operator()(const vtkm::Vec3f& inVector, vtkm::FloatDefault& outMagnitude) const
+  template <typename T>
+  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& inVector, T& outMagnitude) const
   {
     outMagnitude = vtkm::Magnitude(inVector);
   }
 };
-}
-} // namespace vtkm::worklet
+
+} // namespace hello_worklet_example
 
 namespace vtkm
 {
 namespace filter
 {
 
-class HelloField : public vtkm::filter::FilterField<HelloField>
+class HelloField : public vtkm::filter::FilterField
 {
 public:
-  // Specify that this filter operates on 3-vectors
-  using SupportedTypes = vtkm::TypeListFieldVec3;
-
-  template <typename FieldType, typename Policy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet,
-                                          const FieldType& inField,
-                                          const vtkm::filter::FieldMetadata& fieldMetadata,
-                                          vtkm::filter::PolicyBase<Policy>)
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet)
   {
-    VTKM_IS_ARRAY_HANDLE(FieldType);
+    // Input field
+    vtkm::cont::Field inField = this->GetFieldFromDataSet(inDataSet);
 
-    //construct our output
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> outField;
+    // Holder for output
+    vtkm::cont::UnknownArrayHandle outArray;
 
-    //construct our invoker to launch worklets
-    vtkm::worklet::HelloWorklet mag;
-    this->Invoke(mag, inField, outField); //launch mag worklets
+    hello_worklet_example::HelloWorklet mag;
+    auto resolveType = [&](const auto& inputArray) {
+      // use std::decay to remove const ref from the decltype of concrete.
+      using T = typename std::decay_t<decltype(inputArray)>::ValueType::ComponentType;
+      vtkm::cont::ArrayHandle<T> result;
+      this->Invoke(mag, inputArray, result);
+      outArray = result;
+    };
 
-    //construct output field information
-    if (this->GetOutputFieldName().empty())
+    this->CastAndCallVecField<3>(inField, resolveType);
+
+    std::string outFieldName = this->GetOutputFieldName();
+    if (outFieldName.empty())
     {
-      this->SetOutputFieldName(fieldMetadata.GetName() + "_magnitude");
+      outFieldName = inField.GetName() + "_magnitude";
     }
 
-    //return the result, which is the input data with the computed field added to it
-    return vtkm::filter::CreateResult(
-      inDataSet, outField, this->GetOutputFieldName(), fieldMetadata);
+    return this->CreateResultField(inDataSet, outFieldName, inField.GetAssociation(), outArray);
   }
 };
 }

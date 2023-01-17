@@ -33,15 +33,6 @@ namespace detail
 struct ColorTableInternals;
 }
 
-struct VTKM_DEPRECATED(1.6, "Use vtkm::ColorSpace.") ColorSpace
-{
-  static constexpr vtkm::ColorSpace RGB = vtkm::ColorSpace::RGB;
-  static constexpr vtkm::ColorSpace HSV = vtkm::ColorSpace::HSV;
-  static constexpr vtkm::ColorSpace HSV_WRAP = vtkm::ColorSpace::HSVWrap;
-  static constexpr vtkm::ColorSpace LAB = vtkm::ColorSpace::Lab;
-  static constexpr vtkm::ColorSpace DIVERGING = vtkm::ColorSpace::Diverging;
-};
-
 /// \brief Color Table for coloring arbitrary fields
 ///
 ///
@@ -120,25 +111,6 @@ public:
     RainbowUniform,
     Jet,
     RainbowDesaturated,
-
-    DEFAULT VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Default."),
-    COOL_TO_WARM VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::CoolToWarm."),
-    COOL_TO_WARM_EXTENDED VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::CoolToWarmExtended."),
-    VIRIDIS VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Viridis."),
-    INFERNO VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Inferno."),
-    PLASMA VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Plasma."),
-    BLACK_BODY_RADIATION VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::BlackBodyRadiation."),
-    X_RAY VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::XRay."),
-    GREEN VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Green."),
-    BLACK_BLUE_WHITE VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::BlackBlueWhite."),
-    BLUE_TO_ORANGE VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::BlueToOrange."),
-    GRAY_TO_RED VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::GrayToRed."),
-    COLD_AND_HOT VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::ColdAndHot."),
-    BLUE_GREEN_ORANGE VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::BlueGreenOrange."),
-    YELLOW_GRAY_BLUE VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::YellowGrayBlue."),
-    RAINBOW_UNIFORM VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::RainbowUniform."),
-    JET VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Jet."),
-    RAINBOW_DESATURATED VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::RainbowDesaturated.")
   };
 
   /// \brief Construct a color table from a preset
@@ -598,9 +570,6 @@ public:
   /// This pointer is only valid as long as the ColorTable is unmodified
   vtkm::exec::ColorTable PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
                                              vtkm::cont::Token& token) const;
-
-  VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object")
-  inline vtkm::exec::ColorTable PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const;
 
   /// \brief Returns the modified count for changes of the color table
   ///

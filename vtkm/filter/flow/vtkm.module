@@ -1,0 +1,17 @@
+NAME
+  vtkm_filter_flow
+GROUPS
+  Filters
+DEPENDS
+  vtkm_filter_core
+PRIVATE_DEPENDS
+  vtkm_worklet
+OPTIONAL_DEPENDS
+  MPI::MPI_CXX
+TEST_DEPENDS
+  vtkm_filter_geometry_refinement
+  vtkm_filter_mesh_info
+  vtkm_io
+TEST_OPTIONAL_DEPENDS
+  vtkm_rendering_testing
+  MPI::MPI_CXX

@@ -62,6 +62,12 @@ if(TARGET vtkm_vectorization_flags)
 endif()
 
 add_library(vtkm_vectorization_flags INTERFACE)
+set_target_properties(
+  vtkm_vectorization_flags
+  PROPERTIES
+  EXPORT_NAME vectorization_flags
+  )
+
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   install(TARGETS vtkm_vectorization_flags EXPORT ${VTKm_EXPORT_NAME})
 endif()
@@ -193,7 +199,7 @@ target_compile_options(vtkm_vectorization_flags
   INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${flags}>
   )
 
-if(TARGET vtkm::cuda AND flags AND NOT CMAKE_CUDA_HOST_COMPILER)
+if(TARGET vtkm_cuda AND flags AND NOT CMAKE_CUDA_HOST_COMPILER)
   # Also propagate down these optimizations when building host side code
   # with cuda. To be safe we only do this when we know the C++ and CUDA
   # host compiler are from the same vendor

@@ -39,9 +39,8 @@ vtkm::cont::InitializeResult Config;
 
 void BenchRayTracing(::benchmark::State& state)
 {
-  const vtkm::Id3 dims(128, 128, 128);
-
-  vtkm::source::Tangle maker(dims);
+  vtkm::source::Tangle maker;
+  maker.SetPointDimensions({ 128, 128, 128 });
   vtkm::cont::DataSet dataset = maker.Execute();
   vtkm::cont::CoordinateSystem coords = dataset.GetCoordinateSystem();
 

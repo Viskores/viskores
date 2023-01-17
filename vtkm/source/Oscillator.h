@@ -16,10 +16,6 @@ namespace vtkm
 {
 namespace source
 {
-namespace internal
-{
-class OscillatorSource;
-}
 
 /**\brief An analytical, time-varying uniform dataset with a point based array
  *
@@ -32,15 +28,22 @@ class OscillatorSource;
 class VTKM_SOURCE_EXPORT Oscillator final : public vtkm::source::Source
 {
 public:
+  VTKM_CONT Oscillator();
+
   ///Construct a Oscillator with Cell Dimensions
-  VTKM_CONT
-  explicit Oscillator(vtkm::Id3 dims);
+  VTKM_CONT VTKM_DEPRECATED(
+    2.0,
+    "Use SetCellDimensions or SetPointDimensions.") explicit Oscillator(vtkm::Id3 dims);
 
   // We can not declare default destructor here since compiler does not know how
   // to create one for the Worklet at this point yet. However, the implementation
   // in Oscillator.cxx does have ~Oscillator() = default;
-  VTKM_CONT
-  ~Oscillator() override;
+  VTKM_CONT ~Oscillator() override;
+
+  VTKM_CONT void SetPointDimensions(vtkm::Id3 pointDimensions);
+  VTKM_CONT vtkm::Id3 GetPointDimensions() const;
+  VTKM_CONT void SetCellDimensions(vtkm::Id3 pointDimensions);
+  VTKM_CONT vtkm::Id3 GetCellDimensions() const;
 
   VTKM_CONT
   void SetTime(vtkm::FloatDefault time);
@@ -72,8 +75,8 @@ public:
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute() const override;
 
-  vtkm::Id3 Dims;
-  std::unique_ptr<internal::OscillatorSource> Worklet;
+  struct InternalStruct;
+  std::unique_ptr<InternalStruct> Internals;
 };
 }
 }

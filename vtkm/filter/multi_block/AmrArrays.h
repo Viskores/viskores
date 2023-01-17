@@ -12,7 +12,7 @@
 
 #include <vtkm/cont/ErrorFilterExecution.h>
 
-#include <vtkm/filter/NewFilter.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/multi_block/vtkm_filter_multi_block_export.h>
 
 namespace vtkm
@@ -21,7 +21,7 @@ namespace filter
 {
 namespace multi_block
 {
-class VTKM_FILTER_MULTI_BLOCK_EXPORT AmrArrays : public vtkm::filter::NewFilter
+class VTKM_FILTER_MULTI_BLOCK_EXPORT AmrArrays : public vtkm::filter::Filter
 {
 private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&) override
@@ -70,14 +70,6 @@ private:
   std::vector<std::vector<vtkm::Id>> ChildrenIdsVector;
 };
 } // namespace multi_block
-
-
-class VTKM_DEPRECATED(1.8, "Use vtkm::filter::multi_block::AmrArrays.") AmrArrays
-  : public vtkm::filter::multi_block::AmrArrays
-{
-  using multi_block::AmrArrays::AmrArrays;
-};
-
 } // namesapce filter
 } // namespace vtkm
 

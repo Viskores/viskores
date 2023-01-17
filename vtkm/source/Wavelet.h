@@ -13,6 +13,8 @@
 
 #include <vtkm/source/Source.h>
 
+#include <vtkm/Math.h>
+
 namespace vtkm
 {
 namespace source
@@ -59,28 +61,54 @@ namespace source
 class VTKM_SOURCE_EXPORT Wavelet final : public vtkm::source::Source
 {
 public:
-  VTKM_CONT
-  Wavelet(vtkm::Id3 minExtent = { -10 }, vtkm::Id3 maxExtent = { 10 });
+  VTKM_CONT Wavelet() = default;
+  VTKM_CONT ~Wavelet() = default;
 
-  VTKM_CONT void SetCenter(const vtkm::Vec<FloatDefault, 3>& center) { this->Center = center; }
+  VTKM_DEPRECATED(2.0, "Use SetExtent.")
+  VTKM_CONT Wavelet(vtkm::Id3 minExtent, vtkm::Id3 maxExtent = { 10 });
 
-  VTKM_CONT void SetOrigin(const vtkm::Vec<FloatDefault, 3>& origin) { this->Origin = origin; }
+  ///@{
+  /// \brief Specifies the center of the wavelet function.
+  ///
+  /// Note that the center of the function can be anywhere in space including
+  /// outside the domain of the data created (as specified by the origin,
+  /// spacing and extent).
+  VTKM_CONT void SetCenter(const vtkm::Vec3f& center) { this->Center = center; }
+  VTKM_CONT vtkm::Vec3f GetCenter() const { return this->Center; }
+  ///@}
 
-  VTKM_CONT void SetSpacing(const vtkm::Vec<FloatDefault, 3>& spacing) { this->Spacing = spacing; }
-
-  VTKM_CONT void SetFrequency(const vtkm::Vec<FloatDefault, 3>& frequency)
+  ///@{
+  /// \brief Specifies the origin (lower left corner) of the dataset created.
+  ///
+  /// If the origin is not specified, it will be placed such that extent
+  /// index (0, 0, 0) is at the coordinate system origin.
+  VTKM_CONT void SetOrigin(const vtkm::Vec3f& origin) { this->Origin = origin; }
+  VTKM_CONT vtkm::Vec3f GetOrigin() const
   {
-    this->Frequency = frequency;
+    if (!vtkm::IsNan(this->Origin[0]))
+    {
+      return this->Origin;
+    }
+    else
+    {
+      return this->MinimumExtent * this->Spacing;
+    }
   }
 
-  VTKM_CONT void SetMagnitude(const vtkm::Vec<FloatDefault, 3>& magnitude)
-  {
-    this->Magnitude = magnitude;
-  }
+  VTKM_CONT void SetSpacing(const vtkm::Vec3f& spacing) { this->Spacing = spacing; }
+  VTKM_CONT vtkm::Vec3f GetSpacing() const { return this->Spacing; }
+
+  VTKM_CONT void SetFrequency(const vtkm::Vec3f& frequency) { this->Frequency = frequency; }
+  VTKM_CONT vtkm::Vec3f GetFrequency() const { return this->Frequency; }
+
+  VTKM_CONT void SetMagnitude(const vtkm::Vec3f& magnitude) { this->Magnitude = magnitude; }
+  VTKM_CONT vtkm::Vec3f GetMagnitude() const { return this->Magnitude; }
 
   VTKM_CONT void SetMinimumExtent(const vtkm::Id3& minExtent) { this->MinimumExtent = minExtent; }
+  VTKM_CONT vtkm::Id3 GetMinimumExtent() const { return this->MinimumExtent; }
 
   VTKM_CONT void SetMaximumExtent(const vtkm::Id3& maxExtent) { this->MaximumExtent = maxExtent; }
+  VTKM_CONT vtkm::Id3 GetMaximumExtent() const { return this->MaximumExtent; }
 
   VTKM_CONT void SetExtent(const vtkm::Id3& minExtent, const vtkm::Id3& maxExtent)
   {
@@ -89,11 +117,13 @@ public:
   }
 
   VTKM_CONT void SetMaximumValue(const vtkm::FloatDefault& maxVal) { this->MaximumValue = maxVal; }
+  VTKM_CONT vtkm::FloatDefault GetMaximumValue() const { return this->MaximumValue; }
 
   VTKM_CONT void SetStandardDeviation(const vtkm::FloatDefault& stdev)
   {
     this->StandardDeviation = stdev;
   }
+  VTKM_CONT vtkm::FloatDefault GetStandardDeviation() const { return this->StandardDeviation; }
 
 private:
   vtkm::cont::DataSet DoExecute() const override;
@@ -105,15 +135,15 @@ private:
   template <vtkm::IdComponent Dim>
   vtkm::cont::DataSet GenerateDataSet(vtkm::cont::CoordinateSystem coords) const;
 
-  vtkm::Vec3f Center;
-  vtkm::Vec3f Origin;
-  vtkm::Vec3f Spacing;
-  vtkm::Vec3f Frequency;
-  vtkm::Vec3f Magnitude;
-  vtkm::Id3 MinimumExtent;
-  vtkm::Id3 MaximumExtent;
-  vtkm::FloatDefault MaximumValue;
-  vtkm::FloatDefault StandardDeviation;
+  vtkm::Vec3f Center = { 0, 0, 0 };
+  vtkm::Vec3f Origin = { vtkm::Nan<vtkm::FloatDefault>() };
+  vtkm::Vec3f Spacing = { 1, 1, 1 };
+  vtkm::Vec3f Frequency = { 60.0f, 30.0f, 40.0f };
+  vtkm::Vec3f Magnitude = { 10.0f, 18.0f, 5.0f };
+  vtkm::Id3 MinimumExtent = { -10, -10, -10 };
+  vtkm::Id3 MaximumExtent = { 10, 10, 10 };
+  vtkm::FloatDefault MaximumValue = 255.0f;
+  vtkm::FloatDefault StandardDeviation = 0.5f;
 };
 } //namespace source
 } //namespace vtkm

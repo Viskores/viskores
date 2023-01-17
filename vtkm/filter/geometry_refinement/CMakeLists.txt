@@ -34,8 +34,3 @@ target_link_libraries(vtkm_filter_geometry_refinement PUBLIC vtkm_worklet vtkm_f
 target_link_libraries(vtkm_filter PUBLIC INTERFACE vtkm_filter_geometry_refinement)
 
 add_subdirectory(worklet)
-
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
-if (VTKm_ENABLE_TESTING)
-  add_subdirectory(testing)
-endif ()

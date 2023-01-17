@@ -54,23 +54,6 @@ namespace filter
 {
 namespace density_estimate
 {
-VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(
-  const vtkm::Id3& dimension,
-  const vtkm::Vec3f& origin,
-  const vtkm::Vec3f& spacing)
-{
-  this->SetDimension(dimension);
-  this->SetOrigin(origin);
-  this->SetSpacing(spacing);
-}
-
-VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(
-  const Id3& dimension,
-  const vtkm::Bounds& bounds)
-{
-  this->SetDimension(dimension);
-  this->SetBounds(bounds);
-}
 
 VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   const vtkm::cont::DataSet& input)
@@ -100,7 +83,7 @@ VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
     // We create an ArrayHandle and pass it to the Worklet as AtomicArrayInOut.
     // However, the ArrayHandle needs to be allocated and initialized first.
     vtkm::cont::ArrayHandle<T> density;
-    density.AllocateAndFill(uniform.GetNumberOfPoints(), 0);
+    density.AllocateAndFill(uniform.GetNumberOfCells(), 0);
 
     this->Invoke(vtkm::worklet::NGPWorklet{}, coords, concrete, locator, density);
 
