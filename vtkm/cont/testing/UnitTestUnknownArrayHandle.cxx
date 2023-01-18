@@ -350,6 +350,43 @@ void TryAsMultiplexer(vtkm::cont::UnknownArrayHandle sourceArray)
 #endif
 }
 
+struct SimpleRecombineCopy
+{
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandleRecombineVec<T>& inputArray,
+                  const vtkm::cont::UnknownArrayHandle& output) const
+  {
+    vtkm::cont::ArrayHandleRecombineVec<T> outputArray =
+      output.ExtractArrayFromComponents<T>(vtkm::CopyFlag::Off);
+    vtkm::Id size = inputArray.GetNumberOfValues();
+    outputArray.Allocate(size);
+    auto inputPortal = inputArray.ReadPortal();
+    auto outputPortal = outputArray.WritePortal();
+
+    for (vtkm::Id index = 0; index < size; ++index)
+    {
+      outputPortal.Set(index, inputPortal.Get(index));
+    }
+  }
+};
+
+template <typename T>
+void TryExtractArray(const vtkm::cont::UnknownArrayHandle& originalArray)
+{
+  // This check should already have been performed by caller, but just in case.
+  CheckUnknownArray<vtkm::List<T>, VTKM_DEFAULT_STORAGE_LIST>(originalArray,
+                                                              vtkm::VecTraits<T>::NUM_COMPONENTS);
+
+  std::cout << "Create new instance of array." << std::endl;
+  vtkm::cont::UnknownArrayHandle newArray = originalArray.NewInstanceBasic();
+
+  std::cout << "Do CastAndCallWithExtractedArray." << std::endl;
+  originalArray.CastAndCallWithExtractedArray(SimpleRecombineCopy{}, newArray);
+
+  CheckUnknownArray<vtkm::List<T>, VTKM_DEFAULT_STORAGE_LIST>(newArray,
+                                                              vtkm::VecTraits<T>::NUM_COMPONENTS);
+}
+
 template <typename T>
 void TryDefaultType()
 {
@@ -360,6 +397,8 @@ void TryDefaultType()
   TryNewInstance<T>(array);
 
   TryAsMultiplexer<T>(array);
+
+  TryExtractArray<T>(array);
 }
 
 struct TryBasicVTKmType

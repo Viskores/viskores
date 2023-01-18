@@ -69,7 +69,6 @@ struct TestRecombineVecAsOutput
     SetPortal(baseArray.WritePortal());
 
     vtkm::cont::ArrayHandle<T> outputArray;
-    outputArray.Allocate(ARRAY_SIZE); // Cannot resize after recombine
 
     using VTraits = vtkm::VecTraits<T>;
     vtkm::cont::ArrayHandleRecombineVec<typename VTraits::ComponentType> recombinedArray;
@@ -78,7 +77,6 @@ struct TestRecombineVecAsOutput
       recombinedArray.AppendComponentArray(vtkm::cont::ArrayExtractComponent(outputArray, cIndex));
     }
     VTKM_TEST_ASSERT(recombinedArray.GetNumberOfComponents() == VTraits::NUM_COMPONENTS);
-    VTKM_TEST_ASSERT(recombinedArray.GetNumberOfValues() == ARRAY_SIZE);
 
     vtkm::cont::Invoker invoke;
     invoke(PassThrough{}, baseArray, recombinedArray);
