@@ -73,7 +73,6 @@ void CheckOutputArray(const vtkm::cont::ArrayHandle<T, S>& originalArray)
   //vtkm::cont::printSummary_ArrayHandle(originalArray, std::cout);
 
   vtkm::cont::ArrayHandle<T, S> outputArray;
-  outputArray.Allocate(originalArray.GetNumberOfValues());
 
   using FlatVec = vtkm::VecFlat<T>;
   using ComponentType = typename FlatVec::ComponentType;
@@ -84,6 +83,7 @@ void CheckOutputArray(const vtkm::cont::ArrayHandle<T, S>& originalArray)
       vtkm::cont::ArrayExtractComponent(originalArray, numComponents - componentId - 1);
     vtkm::cont::ArrayHandleStride<ComponentType> outComponentArray =
       vtkm::cont::ArrayExtractComponent(outputArray, componentId, vtkm::CopyFlag::Off);
+    outComponentArray.Allocate(originalArray.GetNumberOfValues());
 
     auto inPortal = inComponentArray.ReadPortal();
     auto outPortal = outComponentArray.WritePortal();
@@ -173,7 +173,12 @@ void DoTest()
     auto compositeArray = vtkm::cont::make_ArrayHandleCompositeVector(array0, array1);
     CheckOutputArray(compositeArray);
 
-    CheckOutputArray(vtkm::cont::make_ArrayHandleExtractComponent(compositeArray, 1));
+    // Note that when the extracted component array gets allocated, it only allocates the
+    // array it was given. This is a weird case when using `ArrayHandleExtractComponent`
+    // on something that has multiple arrays as input. It works fine if all components get
+    // extracted and updated, but can cause issues if only one is resized. In this case
+    // just test the input.
+    CheckInputArray(vtkm::cont::make_ArrayHandleExtractComponent(compositeArray, 1));
   }
 
   {
