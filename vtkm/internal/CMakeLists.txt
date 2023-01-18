@@ -31,9 +31,9 @@ if(VTKM_ENABLE_CUDA)
   string(REGEX REPLACE "([0-9]+)\\.([0-9]+).*" "\\2" VTKM_CUDA_VERSION_MINOR ${CMAKE_CUDA_COMPILER_VERSION})
 endif()
 
-if (TARGET vtkm::kokkos_cuda)
+if (TARGET vtkm_kokkos_cuda)
   set(VTKM_KOKKOS_CUDA ON)
-elseif(TARGET vtkm::kokkos_hip)
+elseif(TARGET vtkm_kokkos_hip)
   set(VTKM_KOKKOS_HIP ON)
 endif()
 

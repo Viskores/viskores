@@ -186,7 +186,7 @@ function(setup_cuda_flags)
 endfunction()
 
 #common warnings for all platforms when building cuda
-if ((TARGET vtkm_cuda) OR (TARGET vtkm::kokkos_cuda))
+if ((TARGET vtkm_cuda) OR (TARGET vtkm_kokkos_cuda))
   setup_cuda_flags()
 endif()
 

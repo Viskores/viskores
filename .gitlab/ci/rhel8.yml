@@ -6,7 +6,7 @@ build:rhel8:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .rhel8
     - .cmake_build_linux
@@ -20,7 +20,7 @@ test:rhel8:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .rhel8
     - .cmake_test_linux
@@ -37,7 +37,7 @@ build:rhel8_vtk_types:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .rhel8
     - .cmake_build_linux
@@ -51,7 +51,7 @@ test:rhel8_vtk_types:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .rhel8
     - .cmake_test_linux

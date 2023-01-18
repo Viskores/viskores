@@ -112,7 +112,7 @@ void PrintLabelledBlock(std::string label,
 inline std::string NumString(vtkm::Id number)
 { // NumString()
   char strBuf[20];
-  sprintf(strBuf, "%1d", static_cast<int>(number));
+  snprintf(strBuf, 19, "%1d", static_cast<int>(number));
   return std::string(strBuf);
 } // NumString()
 
