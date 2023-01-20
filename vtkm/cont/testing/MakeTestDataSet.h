@@ -11,8 +11,15 @@
 #ifndef vtk_m_cont_testing_MakeTestDataSet_h
 #define vtk_m_cont_testing_MakeTestDataSet_h
 
+// The relative path of Testing.h is unknown, the only thing that we can assume
+// is that it is located in the same directory as this header file. This is
+// because the testing directory is reserved for test executables and not
+// libraries, the vtkm_cont_testing module has to put this file in
+// vtkm/cont/testlib instead of vtkm/cont/testing where you normally would
+// expect it.
+#include "Testing.h"
+
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/cont/testlib/vtkm_cont_testing_export.h>
 
