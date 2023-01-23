@@ -25,6 +25,10 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+#include <algorithm>
+#include <random>
+#include <vector>
+
 namespace
 {
 
@@ -73,22 +77,38 @@ void CheckOutputArray(const vtkm::cont::ArrayHandle<T, S>& originalArray)
   //vtkm::cont::printSummary_ArrayHandle(originalArray, std::cout);
 
   vtkm::cont::ArrayHandle<T, S> outputArray;
-  outputArray.Allocate(originalArray.GetNumberOfValues());
 
   using FlatVec = vtkm::VecFlat<T>;
   using ComponentType = typename FlatVec::ComponentType;
   constexpr vtkm::IdComponent numComponents = FlatVec::NUM_COMPONENTS;
+
+  // Extract all the stride arrays first, and then allocate them later. This tests to
+  // to make sure that the independent allocation of all the extracted arrays are consistent
+  // and correct.
+  std::vector<std::pair<vtkm::cont::ArrayHandleStride<ComponentType>,
+                        vtkm::cont::ArrayHandleStride<ComponentType>>>
+    componentArrays;
+  componentArrays.reserve(static_cast<std::size_t>(numComponents));
   for (vtkm::IdComponent componentId = 0; componentId < numComponents; ++componentId)
   {
-    vtkm::cont::ArrayHandleStride<ComponentType> inComponentArray =
-      vtkm::cont::ArrayExtractComponent(originalArray, numComponents - componentId - 1);
-    vtkm::cont::ArrayHandleStride<ComponentType> outComponentArray =
-      vtkm::cont::ArrayExtractComponent(outputArray, componentId, vtkm::CopyFlag::Off);
+    componentArrays.emplace_back(
+      vtkm::cont::ArrayExtractComponent(originalArray, numComponents - componentId - 1),
+      vtkm::cont::ArrayExtractComponent(outputArray, componentId, vtkm::CopyFlag::Off));
+  }
 
-    auto inPortal = inComponentArray.ReadPortal();
-    auto outPortal = outComponentArray.WritePortal();
-    VTKM_TEST_ASSERT(inComponentArray.GetNumberOfValues() == originalArray.GetNumberOfValues());
-    VTKM_TEST_ASSERT(outComponentArray.GetNumberOfValues() == originalArray.GetNumberOfValues());
+  // Shuffle the component arrays to ensure the allocation/copy can occur in any order.
+  std::random_device rd;
+  std::default_random_engine rng(rd());
+  std::shuffle(componentArrays.begin(), componentArrays.end(), rng);
+
+  for (auto& inOutArrays : componentArrays)
+  {
+    inOutArrays.second.Allocate(originalArray.GetNumberOfValues());
+
+    auto inPortal = inOutArrays.first.ReadPortal();
+    auto outPortal = inOutArrays.second.WritePortal();
+    VTKM_TEST_ASSERT(inPortal.GetNumberOfValues() == originalArray.GetNumberOfValues());
+    VTKM_TEST_ASSERT(outPortal.GetNumberOfValues() == originalArray.GetNumberOfValues());
     for (vtkm::Id arrayIndex = 0; arrayIndex < originalArray.GetNumberOfValues(); ++arrayIndex)
     {
       outPortal.Set(arrayIndex, inPortal.Get(arrayIndex));
@@ -173,7 +193,12 @@ void DoTest()
     auto compositeArray = vtkm::cont::make_ArrayHandleCompositeVector(array0, array1);
     CheckOutputArray(compositeArray);
 
-    CheckOutputArray(vtkm::cont::make_ArrayHandleExtractComponent(compositeArray, 1));
+    // Note that when the extracted component array gets allocated, it only allocates the
+    // array it was given. This is a weird case when using `ArrayHandleExtractComponent`
+    // on something that has multiple arrays as input. It works fine if all components get
+    // extracted and updated, but can cause issues if only one is resized. In this case
+    // just test the input.
+    CheckInputArray(vtkm::cont::make_ArrayHandleExtractComponent(compositeArray, 1));
   }
 
   {
