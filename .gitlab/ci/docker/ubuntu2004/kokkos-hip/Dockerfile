@@ -47,7 +47,7 @@ ENV CMAKE_PREFIX_PATH "/opt/rocm/lib/cmake:/opt/rocm/lib:${CMAKE_PREFIX_PATH}"
 ENV CMAKE_GENERATOR "Ninja"
 
 # Build and install Kokkos
-ARG KOKKOS_VERSION=3.6.00
+ARG KOKKOS_VERSION=3.7.01
 COPY kokkos_cmake_config.cmake kokkos_cmake_config.cmake
 RUN curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz | tar -xzf - && \
     cmake -S kokkos-$KOKKOS_VERSION -B build -C kokkos_cmake_config.cmake                          && \
