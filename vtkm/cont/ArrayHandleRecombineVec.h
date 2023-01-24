@@ -78,7 +78,14 @@ public:
 
   VTKM_EXEC_CONT RecombineVec& operator=(const RecombineVec& src)
   {
-    this->DoCopy(src);
+    if ((&this->Portals[0] != &src.Portals[0]) || (this->Index != src.Index))
+    {
+      this->DoCopy(src);
+    }
+    else
+    {
+      // Copying to myself. Do not need to do anything.
+    }
     return *this;
   }
 
@@ -647,9 +654,5 @@ struct ArrayExtractComponentImpl<vtkm::cont::internal::StorageTagRecombineVec>
 
 }
 } // namespace vtkm::cont
-
-//=============================================================================
-// Specializations of worklet arguments using ArrayHandleGropuVecVariable
-#include <vtkm/exec/arg/FetchTagArrayDirectOutArrayHandleRecombineVec.h>
 
 #endif //vtk_m_cont_ArrayHandleRecombineVec_h

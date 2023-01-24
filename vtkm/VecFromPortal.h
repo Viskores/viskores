@@ -33,14 +33,6 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  VecFromPortal()
-    : NumComponents(0)
-    , Offset(0)
-  {
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
   VecFromPortal(const PortalType& portal, vtkm::IdComponent numComponents = 0, vtkm::Id offset = 0)
     : Portal(portal)
     , NumComponents(numComponents)

@@ -315,10 +315,6 @@ make_ArrayHandleGroupVecVariable(const ComponentsArrayHandleType& componentsArra
 } // namespace vtkm::cont
 
 //=============================================================================
-// Specializations of worklet arguments using ArrayHandleGropuVecVariable
-#include <vtkm/exec/arg/FetchTagArrayDirectOutArrayHandleGroupVecVariable.h>
-
-//=============================================================================
 // Specializations of serialization related classes
 /// @cond SERIALIZATION
 namespace vtkm
