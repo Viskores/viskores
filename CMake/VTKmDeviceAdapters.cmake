@@ -322,7 +322,7 @@ endfunction()
 if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm_kokkos)
   cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
-  find_package(Kokkos REQUIRED)
+  find_package(Kokkos 3.7 REQUIRED)
 
   # We must empty this property for every kokkos backend device since it
   # contains a generator expresion which breaks some of our users builds.
