@@ -95,7 +95,7 @@ public:
       return RuntimeDeviceConfigReturnCode::NOT_APPLIED;
     }
     this->KokkosArguments.insert(this->KokkosArguments.begin(),
-                                 "--kokkos-threads=" + std::to_string(value));
+                                 "--kokkos-num-threads=" + std::to_string(value));
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
@@ -131,7 +131,7 @@ public:
 
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id& value) const override final
   {
-    return GetArgFromList(this->KokkosArguments, "--kokkos-threads", value);
+    return GetArgFromList(this->KokkosArguments, "--kokkos-num-threads", value);
   }
 
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetNumaRegions(
@@ -149,7 +149,7 @@ public:
 protected:
   /// Store a copy of the current arguments when initializing the Kokkos subsystem later
   /// Appends a copy of the argv values in the KokkosArguments vector: this assumes the
-  /// argv values contain kokkos command line arguments (like --kokkos-threads, etc)
+  /// argv values contain kokkos command line arguments (like --kokkos-num-threads, etc)
   VTKM_CONT virtual void ParseExtraArguments(int& argc, char* argv[]) override final
   {
     if (argc > 0 && argv)

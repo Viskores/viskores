@@ -26,7 +26,7 @@ TestingRuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagKokkos>::TestRunti
 {
   int argc;
   char** argv;
-  vtkm::cont::testing::Testing::MakeArgs(argc, argv, "--kokkos-numa=4");
+  vtkm::cont::testing::Testing::MakeArgs(argc, argv, "--kokkos-print-configuration");
   auto deviceOptions = TestingRuntimeDeviceConfiguration::DefaultInitializeConfigOptions();
   deviceOptions.VTKmDeviceInstance.SetOption(0);
   internal::RuntimeDeviceConfigurationBase& config =
