@@ -99,21 +99,6 @@ public:
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetNumaRegions(
-    const vtkm::Id& value) override final
-  {
-    if (Kokkos::is_initialized())
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-                 "SetNumaRegions was called but Kokkos was already initailized! Updates will not "
-                 "be applied.");
-      return RuntimeDeviceConfigReturnCode::NOT_APPLIED;
-    }
-    this->KokkosArguments.insert(this->KokkosArguments.begin(),
-                                 "--kokkos-numa=" + std::to_string(value));
-    return RuntimeDeviceConfigReturnCode::SUCCESS;
-  }
-
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(
     const vtkm::Id& value) override final
   {
@@ -132,12 +117,6 @@ public:
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id& value) const override final
   {
     return GetArgFromList(this->KokkosArguments, "--kokkos-num-threads", value);
-  }
-
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetNumaRegions(
-    vtkm::Id& value) const override final
-  {
-    return GetArgFromList(this->KokkosArguments, "--kokkos-numa", value);
   }
 
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(

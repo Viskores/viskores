@@ -40,28 +40,21 @@ TestingRuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagKokkos>::TestRunti
                    "Failed to get set threads");
   VTKM_TEST_ASSERT(testValue == 8,
                    "Set threads does not match expected value: 8 != " + std::to_string(testValue));
-  VTKM_TEST_ASSERT(config.GetNumaRegions(testValue) ==
-                     internal::RuntimeDeviceConfigReturnCode::SUCCESS,
-                   "Failed to get set numa regions");
-  VTKM_TEST_ASSERT(testValue == 4,
-                   "Set numa regions does not match expected value: 4 != " +
-                     std::to_string(testValue));
   VTKM_TEST_ASSERT(config.GetDeviceInstance(testValue) ==
                      internal::RuntimeDeviceConfigReturnCode::SUCCESS,
                    "Failed to get set device instance");
   VTKM_TEST_ASSERT(testValue == 0,
                    "Set device instance does not match expected value: 0 != " +
                      std::to_string(testValue));
-  // Ensure that with kokkos we can't re-initialize or set values after the first initialize
-  // Should pop up a few warnings in the test logs
+  std::cout
+    << "Ensure that with kokkos we can't re-initialize or set values after the first initialize"
+    << std::endl;
+  std::cout << "This should pop up a few warnings in the test logs" << std::endl;
   deviceOptions.VTKmNumThreads.SetOption(16);
-  deviceOptions.VTKmNumaRegions.SetOption(2);
   deviceOptions.VTKmDeviceInstance.SetOption(5);
   config.Initialize(deviceOptions);
   VTKM_TEST_ASSERT(config.SetThreads(1) == internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
                    "Shouldn't be able to set threads after kokkos is initalized");
-  VTKM_TEST_ASSERT(config.SetNumaRegions(1) == internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
-                   "Shouldn't be able to set numa regions after kokkos is initalized");
   VTKM_TEST_ASSERT(config.SetDeviceInstance(1) ==
                      internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
                    "Shouldn't be able to set device instnace after kokkos is initalized");
@@ -71,12 +64,6 @@ TestingRuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagKokkos>::TestRunti
                    "Failed to get set threads");
   VTKM_TEST_ASSERT(testValue == 8,
                    "Set threads does not match expected value: 8 != " + std::to_string(testValue));
-  VTKM_TEST_ASSERT(config.GetNumaRegions(testValue) ==
-                     internal::RuntimeDeviceConfigReturnCode::SUCCESS,
-                   "Failed to get set numa regions");
-  VTKM_TEST_ASSERT(testValue == 4,
-                   "Set numa regions does not match expected value: 4 != " +
-                     std::to_string(testValue));
   VTKM_TEST_ASSERT(config.GetDeviceInstance(testValue) ==
                      internal::RuntimeDeviceConfigReturnCode::SUCCESS,
                    "Failed to get set device instance");
