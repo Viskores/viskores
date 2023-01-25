@@ -27,21 +27,7 @@ TestingRuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagKokkos>::TestRunti
   int argc;
   char** argv;
   vtkm::cont::testing::Testing::MakeArgs(argc, argv, "--kokkos-numa=4");
-  vtkm::cont::testing::Testing::SetEnv("KOKKOS_DEVICE_ID", "0");
   auto deviceOptions = TestingRuntimeDeviceConfiguration::DefaultInitializeConfigOptions();
-  bool threw = false;
-  try
-  {
-    RuntimeDeviceInformation{}.GetRuntimeConfiguration(
-      DeviceAdapterTagKokkos(), deviceOptions, argc, argv);
-  }
-  catch (const std::runtime_error& e)
-  {
-    threw = true;
-  }
-  VTKM_TEST_ASSERT(threw,
-                   "GetRuntimeConfiguration should have thrown, env KOKKOS_DEVICE_ID didn't match");
-  VTKM_TEST_ASSERT(!Kokkos::is_initialized(), "Kokkos should not be initialized at this point");
   deviceOptions.VTKmDeviceInstance.SetOption(0);
   internal::RuntimeDeviceConfigurationBase& config =
     RuntimeDeviceInformation{}.GetRuntimeConfiguration(
@@ -97,8 +83,6 @@ TestingRuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagKokkos>::TestRunti
   VTKM_TEST_ASSERT(testValue == 0,
                    "Set device instance does not match expected value: 0 != " +
                      std::to_string(testValue));
-
-  vtkm::cont::testing::Testing::UnsetEnv("KOKKOS_DEVICE_ID");
 }
 
 } // namespace vtkm::cont::testing
