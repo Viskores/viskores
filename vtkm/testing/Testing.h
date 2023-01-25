@@ -36,8 +36,14 @@
 
 #include <math.h>
 
+// Uncomment to turn on floating point exceptions for Mac builds
+// This non-portable solution is known to fail for some platforms (such as the dashboard).
+//#define VTKM_TEST_APPLE_FPE
+
 #if defined(VTKM_GCC) && !defined(__APPLE__)
 #include <fenv.h>
+#elif defined(__APPLE__) && defined(__MACH__) && defined(VTKM_TEST_APPLE_FPE)
+#include <cfenv>
 #endif
 
 // Try to enforce using the correct testing version. (Those that include the
@@ -120,6 +126,23 @@ inline void FloatingPointExceptionTrapEnable()
   // Turn on floating point exception trapping where available
 #if defined(VTKM_GCC) && !defined(__APPLE__)
   feenableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
+#elif defined(__APPLE__) && defined(__MACH__) && defined(VTKM_TEST_APPLE_FPE)
+  std::fenv_t fenv;
+  if (std::fegetenv(&fenv) != 0)
+  {
+    return;
+  }
+  int excepts = FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID;
+#if defined(__arm) || defined(__arm64) || defined(__aarch64__)
+  // ARM architecture
+  fenv.__fpcr |= (excepts << 8);
+#else
+  // Intel architecture
+  // Control flags are masked exceptions, so we have to unset them.
+  fenv.__control &= ~excepts;
+  fenv.__mxcsr &= ~(excepts << 7);
+#endif
+  fesetenv(&fenv);
 #endif
 }
 
@@ -128,6 +151,22 @@ inline void FloatingPointExceptionTrapDisable()
   // Turn on floating point exception trapping where available
 #if defined(VTKM_GCC) && !defined(__APPLE__)
   fedisableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
+#elif defined(__APPLE__) && defined(__MACH__) && defined(VTKM_TEST_APPLE_FPE)
+  std::fenv_t fenv;
+  if (std::fegetenv(&fenv) != 0)
+  {
+    return;
+  }
+  int excepts = FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID;
+#if defined(__arm) || defined(__arm64) || defined(__aarch64__)
+  // ARM architecture
+  fenv.__fpcr &= ~(excepts << 8);
+#else
+  // Control flags are masked exceptions, so we have to set them.
+  fenv.__control |= excepts;
+  fenv.__mxcsr |= excepts << 7;
+#endif
+  fesetenv(&fenv);
 #endif
 }
 
