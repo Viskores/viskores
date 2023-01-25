@@ -726,6 +726,13 @@ private:
   template <typename T>
   VTKM_CONT static void SortImpl(vtkm::cont::ArrayHandle<T>& values, vtkm::SortLess, std::true_type)
   {
+    // In Kokkos 3.7, we have noticed some errors when sorting with zero-length arrays (which
+    // should do nothing). There is no check, and the bin size computation gets messed up.
+    if (values.GetNumberOfValues() <= 1)
+    {
+      return;
+    }
+
     vtkm::cont::Token token;
     auto portal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagKokkos{}, token);
     kokkos::internal::KokkosViewExec<T> view(portal.GetArray(), portal.GetNumberOfValues());
