@@ -79,6 +79,24 @@ function(add_benchmark_test benchmark)
   set(test_name "PerformanceTest${VTKm_PERF_NAME}")
 
   ###TEST INVOKATIONS##########################################################
+  if (NOT TEST PerformanceTestFetch)
+    add_test(NAME "PerformanceTestFetch"
+      COMMAND ${CMAKE_COMMAND}
+      "-DVTKm_PERF_REPO=${VTKm_PERF_REPO}"
+      "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}"
+      "-DVTKm_PERF_REMOTE_URL=${VTKm_PERF_REMOTE_URL}"
+      -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestFetch.cmake"
+      )
+    set_property(TEST PerformanceTestFetch PROPERTY FIXTURES_SETUP "FixturePerformanceTestSetup")
+  endif()
+
+  if (NOT TEST PerformanceTestCleanUp)
+    add_test(NAME "PerformanceTestCleanUp"
+      COMMAND ${CMAKE_COMMAND} -E rm -rf "${VTKm_PERF_REPO}"
+      )
+    set_property(TEST PerformanceTestCleanUp PROPERTY FIXTURES_CLEANUP "FixturePerformanceTestCleanUp")
+  endif()
+
   add_test(NAME "${test_name}Run"
     COMMAND ${CMAKE_COMMAND}
     "-DVTKm_PERF_BENCH_DEVICE=Any"
@@ -91,14 +109,6 @@ function(add_benchmark_test benchmark)
     "-DVTKm_PERF_STDOUT=${VTKm_PERF_STDOUT}"
     "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}"
     -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestRun.cmake"
-    )
-
-  add_test(NAME "${test_name}Fetch"
-    COMMAND ${CMAKE_COMMAND}
-    "-DVTKm_PERF_REPO=${VTKm_PERF_REPO}"
-    "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}"
-    "-DVTKm_PERF_REMOTE_URL=${VTKm_PERF_REMOTE_URL}"
-    -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestFetch.cmake"
     )
 
   add_test(NAME "${test_name}Upload"
@@ -122,22 +132,21 @@ function(add_benchmark_test benchmark)
     -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestReport.cmake"
     )
 
-  add_test(NAME "${test_name}CleanUp"
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${VTKm_PERF_REPO}"
-    )
-
   ###TEST PROPERTIES###########################################################
+  set_property(TEST ${test_name}Upload PROPERTY DEPENDS ${test_name}Report)
+  set_property(TEST ${test_name}Report PROPERTY DEPENDS ${test_name}Run)
+  set_property(TEST ${test_name}Report PROPERTY FIXTURES_REQUIRED "FixturePerformanceTestSetup")
+  set_property(TEST ${test_name}Upload PROPERTY FIXTURES_REQUIRED "FixturePerformanceTestCleanUp")
+
   set_tests_properties("${test_name}Report" "${test_name}Upload"
     PROPERTIES
-    FIXTURE_REQUIRED "${test_name}Run;${test_name}Fetch"
-    FIXTURE_CLEANUP  "${test_name}CleanUp"
     REQUIRED_FILES "${VTKm_PERF_COMPARE_JSON}")
 
   set_tests_properties("${test_name}Run"
                         "${test_name}Report"
                         "${test_name}Upload"
-                        "${test_name}Fetch"
-                        "${test_name}CleanUp"
+                        "PerformanceTestFetch"
+                        "PerformanceTestCleanUp"
                         PROPERTIES RUN_SERIAL ON)
 
   set_tests_properties(${test_name}Run PROPERTIES TIMEOUT 1800)
