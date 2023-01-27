@@ -38,7 +38,11 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #define VTKM_VOLATILE volatile
 #endif
 
-#if defined(VTKM_ENABLE_KOKKOS_THRUST)
+#if defined(VTKM_ENABLE_KOKKOS_THRUST) && (defined(__HIP__) || defined(__CUDA__))
+#define VTKM_USE_KOKKOS_THRUST
+#endif
+
+#if defined(VTKM_USE_KOKKOS_THRUST)
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
 #endif
@@ -778,7 +782,7 @@ public:
 protected:
   // Kokkos currently (11/10/2022) does not support a sort_by_key operator
   // so instead we are using thrust if and only if HIP or CUDA are the backends for Kokkos
-#if defined(VTKM_ENABLE_KOKKOS_THRUST)
+#if defined(VTKM_USE_KOKKOS_THRUST)
 
   template <typename T, typename U, typename BinaryCompare>
   VTKM_CONT static std::enable_if_t<(std::is_same<BinaryCompare, vtkm::SortLess>::value ||
