@@ -2377,19 +2377,37 @@ struct DestructPointWeightList : public vtkm::worklet::WorkletMapField
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
   template <typename PID, typename PW, typename OV, typename NV>
-  VTKM_EXEC void operator()(const PID& pids, const PW& pws, const OV& ov, NV& newVals) const
+  VTKM_EXEC void operator()(const PID& pointIDs,
+                            const PW& pointWeights,
+                            const OV& originalVals,
+                            NV& newVal) const
   {
-    VTKM_ASSERT(pids[0] != -1);
-    newVals = static_cast<NV>(ov.Get(pids[0]) * pws[0]);
+    // This code assumes that originalVals and newVals come from ArrayHandleRecombineVec.
+    // This means that they will have Vec-like values that support Vec operations. It also
+    // means that operations have to be component-wise.
+    VTKM_ASSERT(pointIDs[0] != -1);
+    using WeightType = typename PW::ComponentType;
+    using ValueType = typename NV::ComponentType;
+    auto originalVal = originalVals.Get(pointIDs[0]);
+    for (vtkm::IdComponent cIndex = 0; cIndex < newVal.GetNumberOfComponents(); ++cIndex)
+    {
+      newVal[cIndex] =
+        static_cast<ValueType>(static_cast<WeightType>(originalVal[cIndex]) * pointWeights[0]);
+    }
     for (vtkm::IdComponent i = 1; i < 8; i++)
     {
-      if (pids[i] == vtkm::Id(-1))
+      if (pointIDs[i] == vtkm::Id(-1))
       {
         break;
       }
       else
       {
-        newVals += static_cast<NV>(ov.Get(pids[i]) * pws[i]);
+        originalVal = originalVals.Get(pointIDs[i]);
+        for (vtkm::IdComponent cIndex = 0; cIndex < newVal.GetNumberOfComponents(); ++cIndex)
+        {
+          newVal[cIndex] +=
+            static_cast<ValueType>(static_cast<WeightType>(originalVal[cIndex]) * pointWeights[i]);
+        }
       }
     }
   }
