@@ -166,6 +166,7 @@ void DoTest()
     constexpr vtkm::Id STRIDE = 7;
     vtkm::cont::ArrayHandleBasic<vtkm::Vec3f> originalArray;
     originalArray.Allocate(ARRAY_SIZE * STRIDE);
+    SetPortal(originalArray.WritePortal());
     for (vtkm::Id offset = 0; offset < STRIDE; ++offset)
     {
       vtkm::cont::ArrayHandleStride<vtkm::Vec3f> strideArray(

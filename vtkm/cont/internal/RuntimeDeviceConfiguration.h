@@ -54,13 +54,11 @@ public:
   /// A method should return INVALID_FOR_DEVICE if the overriden device does not
   /// support the particular set method.
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id& value);
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetNumaRegions(const vtkm::Id& value);
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(const vtkm::Id& value);
 
   /// The following public methods are overriden in each individual device and store the
   /// values that were set via the above Set* methods for the given device.
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id& value) const;
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetNumaRegions(vtkm::Id& value) const;
   VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(vtkm::Id& value) const;
 
   /// The following public methods should be overriden as needed for each individual device

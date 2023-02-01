@@ -76,6 +76,8 @@ VTK-m Requires:
 
 Optional dependencies are:
 
+  + Kokkos Device Adapter
+      + [Kokkos](https://kokkos.github.io/) 3.7+
   + CUDA Device Adapter
       + [Cuda Toolkit 9.2, >= 10.2](https://developer.nvidia.com/cuda-toolkit)
       + Note CUDA >= 10.2 is required on Windows
