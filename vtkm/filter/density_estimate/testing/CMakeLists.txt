@@ -14,6 +14,7 @@ set(unit_tests
   UnitTestNDEntropyFilter.cxx
   UnitTestNDHistogramFilter.cxx
   UnitTestPartitionedDataSetHistogramFilter.cxx
+  UnitTestStatisticsFilter.cxx
   )
 
 set(unit_tests_device
