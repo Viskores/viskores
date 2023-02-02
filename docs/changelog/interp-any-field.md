@@ -18,3 +18,4 @@ updated.
   * `ClipWithImplicitFunction`
   * `Contour`
   * `MIRFilter`
+  * `PointAverage`
