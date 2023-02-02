@@ -42,8 +42,22 @@ public:
                             OutFieldType& result) const
   {
     //fetch the low / high values from inPortal
-    result = static_cast<OutFieldType>(
-      vtkm::Lerp(inPortal.Get(low_high[0]), inPortal.Get(low_high[1]), weight));
+    OutFieldType lowValue = inPortal.Get(low_high[0]);
+    OutFieldType highValue = inPortal.Get(low_high[1]);
+
+    // Interpolate per-vected because some vec-like objects do not allow intermediate variables
+    using VTraits = vtkm::VecTraits<OutFieldType>;
+    VTKM_ASSERT(VTraits::GetNumberOfComponents(lowValue) == VTraits::GetNumberOfComponents(result));
+    VTKM_ASSERT(VTraits::GetNumberOfComponents(highValue) ==
+                VTraits::GetNumberOfComponents(result));
+    for (vtkm::IdComponent cIndex = 0; cIndex < VTraits::GetNumberOfComponents(result); ++cIndex)
+    {
+      VTraits::SetComponent(result,
+                            cIndex,
+                            vtkm::Lerp(VTraits::GetComponent(lowValue, cIndex),
+                                       VTraits::GetComponent(highValue, cIndex),
+                                       weight));
+    }
   }
 };
 }
