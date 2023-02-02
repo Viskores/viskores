@@ -13,6 +13,7 @@ to get data from any type of array. The following filters have been
 updated.
 
   * `CleanGrid`
+  * `CellAverage`
   * `ClipWithField`
   * `ClipWithImplicitFunction`
   * `Contour`

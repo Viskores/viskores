@@ -114,7 +114,10 @@ static void TestAvgPointToCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(&cellset, dataSet.GetField("pointvar"), &result);
+  dispatcher.Invoke(
+    &cellset,
+    dataSet.GetField("pointvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>(),
+    &result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(0), 20.1333f),
@@ -126,9 +129,12 @@ static void TestAvgPointToCell()
   bool exceptionThrown = false;
   try
   {
-    dispatcher.Invoke(dataSet.GetCellSet(),
-                      dataSet.GetField("cellvar"), // should be pointvar
-                      result);
+    dispatcher.Invoke(
+      dataSet.GetCellSet(),
+      dataSet.GetField("cellvar")
+        .GetData()
+        .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>(), // should be pointvar
+      result);
   }
   catch (vtkm::cont::ErrorBadValue& error)
   {
