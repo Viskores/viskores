@@ -19,3 +19,4 @@ updated.
   * `Contour`
   * `MIRFilter`
   * `PointAverage`
+  * `NDHistogram`
