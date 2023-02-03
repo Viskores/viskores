@@ -16,3 +16,4 @@ updated.
   * `ClipWithField`
   * `ClipWithImplicitFunction`
   * `Contour`
+  * `MIRFilter`

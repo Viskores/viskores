@@ -55,16 +55,15 @@ VTKM_CONT bool MIRFilter::DoMapField(
 
   if (field.IsPointField())
   {
+    vtkm::cont::UnknownArrayHandle output = field.GetData().NewInstanceBasic();
     auto resolve = [&](const auto& concrete) {
-      using T = typename std::decay_t<decltype(concrete)>::ValueType;
-      vtkm::cont::ArrayHandle<T> outputArray;
+      using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
+      auto outputArray = output.ExtractArrayFromComponents<T>(vtkm::CopyFlag::Off);
       vtkm::worklet::DestructPointWeightList destructWeightList;
       this->Invoke(destructWeightList, MIRIDs, MIRWeights, concrete, outputArray);
-      result.AddPointField(field.GetName(), outputArray);
     };
-    field.GetData()
-      .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
-        resolve);
+    field.GetData().CastAndCallWithExtractedArray(resolve);
+    result.AddPointField(field.GetName(), output);
     return true;
   }
   else if (field.IsCellField())
