@@ -227,15 +227,13 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
     const vtkm::Id offset2 = (xgcidx.Planes[1] * xgcidx.NumberOfPointsPerPlane);
 
     using ValueType = vtkm::Vec<typename ExecObjectType::ValueType, 6>;
-    ValueType result;
 
-    result[0] = portal.Get(offset1 + xgcidx.PointIds[0][0]);
-    result[1] = portal.Get(offset1 + xgcidx.PointIds[0][1]);
-    result[2] = portal.Get(offset1 + xgcidx.PointIds[0][2]);
-    result[3] = portal.Get(offset2 + xgcidx.PointIds[1][0]);
-    result[4] = portal.Get(offset2 + xgcidx.PointIds[1][1]);
-    result[5] = portal.Get(offset2 + xgcidx.PointIds[1][2]);
-    return result;
+    return ValueType(portal.Get(offset1 + xgcidx.PointIds[0][0]),
+                     portal.Get(offset1 + xgcidx.PointIds[0][1]),
+                     portal.Get(offset1 + xgcidx.PointIds[0][2]),
+                     portal.Get(offset2 + xgcidx.PointIds[1][0]),
+                     portal.Get(offset2 + xgcidx.PointIds[1][1]),
+                     portal.Get(offset2 + xgcidx.PointIds[1][2]));
   }
 
 
