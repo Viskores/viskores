@@ -12,6 +12,7 @@ possible types. This is done by using the extract component functionality
 to get data from any type of array. The following filters have been
 updated.
 
+  * `CleanGrid`
   * `ClipWithField`
   * `ClipWithImplicitFunction`
   * `Contour`
