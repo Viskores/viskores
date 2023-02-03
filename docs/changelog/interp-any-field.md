@@ -19,7 +19,8 @@ fallback is used.
   * `ClipWithImplicitFunction`
   * `Contour`
   * `MIRFilter`
-  * `PointAverage`
   * `NDHistogram`
   * `ParticleDensityCloudInCell`
   * `ParticleDensityNearestGridPoint`
+  * `PointAverage`
+  * `Probe`
