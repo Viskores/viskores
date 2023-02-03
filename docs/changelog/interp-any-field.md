@@ -24,3 +24,4 @@ fallback is used.
   * `ParticleDensityNearestGridPoint`
   * `PointAverage`
   * `Probe`
+  * `VectorMagnitude`
