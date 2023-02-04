@@ -35,43 +35,25 @@ public:
   {
     using PointValueType = typename PointValueVecType::ComponentType;
 
-    using InVecSize =
-      std::integral_constant<vtkm::IdComponent, vtkm::VecTraits<PointValueType>::NUM_COMPONENTS>;
-    using OutVecSize =
-      std::integral_constant<vtkm::IdComponent, vtkm::VecTraits<OutType>::NUM_COMPONENTS>;
-    using SameLengthVectors = typename std::is_same<InVecSize, OutVecSize>::type;
+    VTKM_ASSERT(vtkm::VecTraits<PointValueType>::GetNumberOfComponents(pointValues[0]) ==
+                vtkm::VecTraits<OutType>::GetNumberOfComponents(average));
 
-    this->DoAverage(numPoints, pointValues, average, SameLengthVectors());
-  }
-
-private:
-  template <typename PointValueVecType, typename OutType>
-  VTKM_EXEC void DoAverage(const vtkm::IdComponent& numPoints,
-                           const PointValueVecType& pointValues,
-                           OutType& average,
-                           std::true_type) const
-  {
-    using OutComponentType = typename vtkm::VecTraits<OutType>::ComponentType;
-    OutType sum = OutType(pointValues[0]);
+    average = pointValues[0];
     for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
     {
-      // OutType constructor is for when OutType is a Vec.
-      // static_cast is for when OutType is a small int that gets promoted to int32.
-      sum = static_cast<OutType>(sum + OutType(pointValues[pointIndex]));
+      average += pointValues[pointIndex];
     }
 
-    // OutType constructor is for when OutType is a Vec.
-    // static_cast is for when OutType is a small int that gets promoted to int32.
-    average = static_cast<OutType>(sum / OutType(static_cast<OutComponentType>(numPoints)));
-  }
-
-  template <typename PointValueVecType, typename OutType>
-  VTKM_EXEC void DoAverage(const vtkm::IdComponent& vtkmNotUsed(numPoints),
-                           const PointValueVecType& vtkmNotUsed(pointValues),
-                           OutType& vtkmNotUsed(average),
-                           std::false_type) const
-  {
-    this->RaiseError("CellAverage called with mismatched Vec sizes for CellAverage.");
+    using VTraits = vtkm::VecTraits<OutType>;
+    using OutComponentType = typename VTraits::ComponentType;
+    const vtkm::IdComponent numComponents = VTraits::GetNumberOfComponents(average);
+    for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
+    {
+      VTraits::SetComponent(
+        average,
+        cIndex,
+        static_cast<OutComponentType>(VTraits::GetComponent(average, cIndex) / numPoints));
+    }
   }
 };
 }
