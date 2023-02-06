@@ -111,28 +111,15 @@ VTKM_CONT vtkm::cont::DataSet ParticleDensityCloudInCell::DoExecute(const cont::
     uniform.AddField(vtkm::cont::make_FieldPoint("density", density));
   };
 
-  // Note: This is the so called Immediately-Invoked Function Expression (IIFE). Here we define
-  // a lambda expression and immediately call it at the end. This allows us to not declare an
-  // UnknownArrayHandle first and then assign it in the if-else statement. If I really want to
-  // show-off, I can even inline the `fieldArray` variable and turn it into a long expression.
-  auto fieldArray = [&]() -> vtkm::cont::UnknownArrayHandle {
-    if (this->ComputeNumberDensity)
-    {
-      return vtkm::cont::make_ArrayHandleConstant(vtkm::FloatDefault{ 1 },
-                                                  input.GetNumberOfPoints());
-    }
-    else
-    {
-      return this->GetFieldFromDataSet(input).GetData();
-    }
-  }();
-  fieldArray.CastAndCallForTypes<
-    vtkm::TypeListFieldScalar,
-    vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST, vtkm::List<vtkm::cont::StorageTagConstant>>>(
-    resolveType);
-
-  // Deposition of the input field to the output field is already mapping. No need to map other
-  // fields.
+  if (this->ComputeNumberDensity)
+  {
+    resolveType(
+      vtkm::cont::make_ArrayHandleConstant(vtkm::FloatDefault{ 1 }, input.GetNumberOfPoints()));
+  }
+  else
+  {
+    this->CastAndCallScalarField(this->GetFieldFromDataSet(input), resolveType);
+  }
   return uniform;
 }
 } // namespace density_estimate
