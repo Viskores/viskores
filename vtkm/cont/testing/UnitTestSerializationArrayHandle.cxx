@@ -22,6 +22,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
+#include <vtkm/cont/ArrayHandleRuntimeVec.h>
 #include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/ArrayHandleSwizzle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
@@ -303,6 +304,20 @@ struct TestArrayHandleGroupVecVariable
   }
 };
 
+struct TestArrayHandleRuntimeVec
+{
+  template <typename T>
+  void operator()(T) const
+  {
+    auto numComps = RandomValue<vtkm::IdComponent>::Make(1, 5);
+    auto flat = RandomArrayHandle<T>::Make(ArraySize * numComps);
+    auto array = vtkm::cont::make_ArrayHandleRuntimeVec(numComps, flat);
+    RunTest(array);
+    // TODO: Add this back once UnknownArrayHandle supports ArrayHandleRuntimeVec more fully.
+    //RunTest(MakeTestUnknownArrayHandle(array));
+  }
+};
+
 void TestArrayHandleIndex()
 {
   auto size = RandomValue<vtkm::Id>::Make(2, 10);
@@ -412,6 +427,9 @@ void TestArrayHandleSerialization()
 
   std::cout << "Testing ArrayHandleGroupVecVariable\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleGroupVecVariable(), TestTypesList());
+
+  std::cout << "Testing ArrayHandleRuntimeVec\n";
+  vtkm::testing::Testing::TryTypes(TestArrayHandleRuntimeVec(), TestTypesList());
 
   std::cout << "Testing ArrayHandleIndex\n";
   TestArrayHandleIndex();

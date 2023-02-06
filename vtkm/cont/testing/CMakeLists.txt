@@ -85,6 +85,7 @@ set(unit_tests_device
   UnitTestArrayHandleRandomStandardNormal.cxx
   UnitTestArrayHandleRandomUniformReal.cxx
   UnitTestArrayHandleRecombineVec.cxx
+  UnitTestArrayHandleRuntimeVec.cxx
   UnitTestArrayHandleSOA.cxx
   UnitTestArrayHandleSwizzle.cxx
   UnitTestArrayHandleTransform.cxx

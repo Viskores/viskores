@@ -38,6 +38,7 @@ set(headers
   ArrayHandleRandomStandardNormal.h
   ArrayHandleRandomUniformBits.h
   ArrayHandleRandomUniformReal.h
+  ArrayHandleRuntimeVec.h
   ArrayHandleSOA.h
   ArrayHandleStride.h
   ArrayHandleSwizzle.h

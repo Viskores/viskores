@@ -47,7 +47,7 @@ public:
   {
   }
 
-  /// Copy constructor for any other ArrayPortalConcatenate with a portal type
+  /// Copy constructor for any other ArrayPortalGroupVecVariable with a portal type
   /// that can be copied to this portal type. This allows us to do any type
   /// casting that the portals do (like the non-const to const cast).
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -77,12 +77,19 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
+  void Set(vtkm::Id index, const ValueType& value) const
   {
-    // The ValueType (VecFromPortal) operates on demand. Thus, if you set
-    // something in the value, it has already been passed to the array. Perhaps
-    // we should check to make sure that the value used matches the location
-    // you are trying to set in the array, but we don't do that.
+    if ((&value.GetPortal() == &this->ComponentsPortal) &&
+        (value.GetOffset() == this->OffsetsPortal.Get(index)))
+    {
+      // The ValueType (VecFromPortal) operates on demand. Thus, if you set
+      // something in the value, it has already been passed to the array.
+    }
+    else
+    {
+      // The value comes from somewhere else. Copy data in.
+      this->Get(index) = value;
+    }
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
