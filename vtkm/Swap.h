@@ -24,21 +24,31 @@ namespace vtkm
 
 /// Performs a swap operation. Safe to call from cuda code.
 #if defined(VTKM_CUDA)
+// CUDA 12 adds a `cub::Swap` function that creates ambiguity with `vtkm::Swap`.
+// This happens when a function from the `cub` namespace is called with an object of a class
+// defined in the `vtkm` namespace as an argument. If that function has an unqualified call to
+// `Swap`, it results in ADL being used, causing the templated functions `cub::Swap` and
+// `vtkm::Swap` to conflict.
+#if defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR >= 12) && \
+  defined(VTKM_CUDA_DEVICE_PASS)
+using cub::Swap;
+#else
 template <typename T>
-VTKM_EXEC_CONT void Swap(T& a, T& b)
+VTKM_EXEC_CONT inline void Swap(T& a, T& b)
 {
-  using namespace thrust;
+  using thrust::swap;
   swap(a, b);
 }
+#endif
 #elif defined(VTKM_HIP)
 template <typename T>
-__host__ void Swap(T& a, T& b)
+__host__ inline void Swap(T& a, T& b)
 {
-  using namespace std;
+  using std::swap;
   swap(a, b);
 }
 template <typename T>
-__device__ void Swap(T& a, T& b)
+__device__ inline void Swap(T& a, T& b)
 {
   T temp = a;
   a = b;
@@ -46,9 +56,9 @@ __device__ void Swap(T& a, T& b)
 }
 #else
 template <typename T>
-VTKM_EXEC_CONT void Swap(T& a, T& b)
+VTKM_EXEC_CONT inline void Swap(T& a, T& b)
 {
-  using namespace std;
+  using std::swap;
   swap(a, b);
 }
 #endif
