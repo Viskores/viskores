@@ -265,7 +265,7 @@ vtkm::IdComponent UnknownArrayHandle::GetNumberOfComponents() const
 {
   if (this->Container)
   {
-    return this->Container->NumberOfComponents();
+    return this->Container->NumberOfComponents(this->Container->ArrayHandlePointer);
   }
   else
   {
@@ -277,7 +277,7 @@ VTKM_CONT vtkm::IdComponent UnknownArrayHandle::GetNumberOfComponentsFlat() cons
 {
   if (this->Container)
   {
-    return this->Container->NumberOfComponentsFlat();
+    return this->Container->NumberOfComponentsFlat(this->Container->ArrayHandlePointer);
   }
   else
   {
