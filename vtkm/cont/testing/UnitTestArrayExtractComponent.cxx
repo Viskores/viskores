@@ -38,20 +38,12 @@ template <typename T, typename S>
 void CheckInputArray(const vtkm::cont::ArrayHandle<T, S>& originalArray,
                      vtkm::CopyFlag allowCopy = vtkm::CopyFlag::Off)
 {
-  //std::cout << "  Checking input array type "
-  //          << vtkm::cont::TypeToString<vtkm::cont::ArrayHandle<T, S>>() << std::endl;
-
-  //std::cout << "    Original array: ";
-  //vtkm::cont::printSummary_ArrayHandle(originalArray, std::cout);
-
   using FlatVec = vtkm::VecFlat<T>;
   using ComponentType = typename FlatVec::ComponentType;
   for (vtkm::IdComponent componentId = 0; componentId < FlatVec::NUM_COMPONENTS; ++componentId)
   {
     vtkm::cont::ArrayHandleStride<ComponentType> componentArray =
       vtkm::cont::ArrayExtractComponent(originalArray, componentId, allowCopy);
-    //std::cout << "    Component " << componentId << ": ";
-    //vtkm::cont::printSummary_ArrayHandle(componentArray, std::cout);
 
     auto originalPortal = originalArray.ReadPortal();
     auto componentPortal = componentArray.ReadPortal();
@@ -69,12 +61,6 @@ template <typename T, typename S>
 void CheckOutputArray(const vtkm::cont::ArrayHandle<T, S>& originalArray)
 {
   CheckInputArray(originalArray);
-
-  //std::cout << "  Checking output array type "
-  //          << vtkm::cont::TypeToString<vtkm::cont::ArrayHandle<T, S>>() << std::endl;
-
-  //std::cout << "    Original array: ";
-  //vtkm::cont::printSummary_ArrayHandle(originalArray, std::cout);
 
   vtkm::cont::ArrayHandle<T, S> outputArray;
 
@@ -114,9 +100,6 @@ void CheckOutputArray(const vtkm::cont::ArrayHandle<T, S>& originalArray)
       outPortal.Set(arrayIndex, inPortal.Get(arrayIndex));
     }
   }
-
-  //std::cout << "    Output array: ";
-  //vtkm::cont::printSummary_ArrayHandle(outputArray, std::cout);
 
   auto inPortal = originalArray.ReadPortal();
   auto outPortal = outputArray.ReadPortal();
