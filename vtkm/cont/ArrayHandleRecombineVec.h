@@ -437,7 +437,7 @@ public:
   using ReadPortalType = vtkm::internal::ArrayPortalRecombineVec<ReadWritePortal>;
   using WritePortalType = vtkm::internal::ArrayPortalRecombineVec<ReadWritePortal>;
 
-  VTKM_CONT static vtkm::IdComponent NumberOfComponents(
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponents(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return static_cast<vtkm::IdComponent>(
@@ -455,7 +455,7 @@ public:
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
-    vtkm::IdComponent numComponents = NumberOfComponents(buffers);
+    vtkm::IdComponent numComponents = GetNumberOfComponents(buffers);
     for (vtkm::IdComponent component = 0; component < numComponents; ++component)
     {
       SourceStorage::ResizeBuffers(
@@ -477,7 +477,7 @@ public:
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
   {
-    vtkm::IdComponent numComponents = NumberOfComponents(buffers);
+    vtkm::IdComponent numComponents = GetNumberOfComponents(buffers);
 
     // The array portal needs a runtime-allocated array of portals for each component.
     // We use the vtkm::cont::internal::Buffer object to allow us to allocate memory on the
@@ -515,7 +515,7 @@ public:
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
   {
-    vtkm::IdComponent numComponents = NumberOfComponents(buffers);
+    vtkm::IdComponent numComponents = GetNumberOfComponents(buffers);
 
     // The array portal needs a runtime-allocated array of portals for each component.
     // We use the vtkm::cont::internal::Buffer object to allow us to allocate memory on the
@@ -608,7 +608,7 @@ private:
 public:
   vtkm::IdComponent GetNumberOfComponents() const
   {
-    return StorageType::NumberOfComponents(this->GetBuffers());
+    return StorageType::GetNumberOfComponents(this->GetBuffers());
   }
 
   vtkm::cont::ArrayHandleStride<ComponentType> GetComponentArray(

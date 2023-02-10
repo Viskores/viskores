@@ -56,49 +56,88 @@ vtkm::Id UnknownAHNumberOfValues(void* mem)
   return arrayHandle->GetNumberOfValues();
 }
 
-template <typename T, typename StaticSize = typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic>
-struct UnknownAHNumberOfComponentsImpl;
-template <typename T>
-struct UnknownAHNumberOfComponentsImpl<T, vtkm::VecTraitsTagSizeStatic>
+// Uses SFINAE to use Storage<>::GetNumberOfComponents if it exists, or the VecTraits otherwise
+template <typename T, typename S>
+inline auto UnknownAHNumberOfComponentsImpl(void* mem)
+  -> decltype(vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(
+    std::vector<vtkm::cont::internal::Buffer>()))
 {
-  static constexpr vtkm::IdComponent Value = vtkm::internal::SafeVecTraits<T>::NUM_COMPONENTS;
-};
-template <typename T>
-struct UnknownAHNumberOfComponentsImpl<T, vtkm::VecTraitsTagSizeVariable>
-{
-  static constexpr vtkm::IdComponent Value = 0;
-};
-
-template <typename T>
-vtkm::IdComponent UnknownAHNumberOfComponents()
-{
-  return UnknownAHNumberOfComponentsImpl<T>::Value;
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  AH* arrayHandle = reinterpret_cast<AH*>(mem);
+  return vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(arrayHandle->GetBuffers());
 }
 
-template <typename T,
-          typename = typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic,
-          typename = vtkm::HasVecTraits<T>>
-struct UnknownAHNumberOfComponentsFlatImpl;
-template <typename T>
-struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeStatic, std::true_type>
+// Uses SFINAE to use the number of compnents in VecTraits.
+// Note that this will conflict with the above overloaded function if the storage has a
+// GetNumberOfComponents method and VecTraits has a static size. However, I cannot think
+// of a use case for the storage to report the number of components for a static data type.
+// If that happens, this implementation will need to be modified.
+template <typename T, typename S>
+inline auto UnknownAHNumberOfComponentsImpl(void*)
+  -> decltype(vtkm::internal::SafeVecTraits<T>::NUM_COMPONENTS)
 {
-  static constexpr vtkm::IdComponent Value = vtkm::VecFlat<T>::NUM_COMPONENTS;
-};
-template <typename T>
-struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeVariable, std::true_type>
-{
-  static constexpr vtkm::IdComponent Value = 0;
-};
-template <typename T>
-struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeStatic, std::false_type>
-{
-  static constexpr vtkm::IdComponent Value = 1;
-};
+  static constexpr vtkm::IdComponent numComponents =
+    vtkm::internal::SafeVecTraits<T>::NUM_COMPONENTS;
+  return numComponents;
+}
 
-template <typename T>
-vtkm::IdComponent UnknownAHNumberOfComponentsFlat()
+// Fallback for when there is no way to determine the number of components. (This could be
+// because each value could have a different number of components.
+template <typename T, typename S>
+inline vtkm::IdComponent UnknownAHNumberOfComponentsImpl(...)
 {
-  return UnknownAHNumberOfComponentsFlatImpl<T>::Value;
+  return 0;
+}
+
+template <typename T, typename S>
+vtkm::IdComponent UnknownAHNumberOfComponents(void* mem)
+{
+  return UnknownAHNumberOfComponentsImpl<T, S>(mem);
+}
+
+// Uses SFINAE to use Storage<>::GetNumberOfComponents if it exists, or the VecTraits otherwise
+template <typename T, typename S>
+inline auto UnknownAHNumberOfComponentsFlatImpl(void* mem)
+  -> decltype(vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(
+    std::vector<vtkm::cont::internal::Buffer>()))
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  AH* arrayHandle = reinterpret_cast<AH*>(mem);
+  // Making an assumption here that `T` is a `Vec`-like object that `GetNumberOfComponents`
+  // will report on how many each has. Further assuming that the components of `T` are
+  // static. If a future `ArrayHandle` type violates this, this code will have to become
+  // more complex.
+  return (vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(arrayHandle->GetBuffers()) *
+          vtkm::VecFlat<typename vtkm::internal::SafeVecTraits<T>::ComponentType>::NUM_COMPONENTS);
+}
+
+// Uses SFINAE to use the number of compnents in VecTraits.
+// Note that this will conflict with the above overloaded function if the storage has a
+// GetNumberOfComponents method and VecTraits has a static size. However, I cannot think
+// of a use case for the storage to report the number of components for a static data type.
+// If that happens, this implementation will need to be modified.
+template <typename T, typename S>
+inline auto UnknownAHNumberOfComponentsFlatImpl(void*)
+  -> decltype(vtkm::VecTraits<T>::NUM_COMPONENTS)
+{
+  //  static constexpr vtkm::IdComponent numComponents = vtkm::VecFlat<T>::NUM_COMPONENTS;
+  //  return numComponents;
+  return vtkm::VecFlat<T>::NUM_COMPONENTS;
+}
+
+// Fallback for when there is no way to determine the number of components. (This could be
+// because each value could have a different number of components or just that VecTraits
+// are not defined.) Since it cannot be flattened, just return the same as num components.
+template <typename T, typename S>
+inline vtkm::IdComponent UnknownAHNumberOfComponentsFlatImpl(...)
+{
+  return UnknownAHNumberOfComponentsImpl<T, S>(static_cast<void*>(nullptr));
+}
+
+template <typename T, typename S>
+vtkm::IdComponent UnknownAHNumberOfComponentsFlat(void* mem)
+{
+  return UnknownAHNumberOfComponentsFlatImpl<T, S>(mem);
 }
 
 template <typename T, typename S>
@@ -230,7 +269,7 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   using NumberOfValuesType = vtkm::Id(void*);
   NumberOfValuesType* NumberOfValues;
 
-  using NumberOfComponentsType = vtkm::IdComponent();
+  using NumberOfComponentsType = vtkm::IdComponent(void*);
   NumberOfComponentsType* NumberOfComponents;
   NumberOfComponentsType* NumberOfComponentsFlat;
 
@@ -348,8 +387,8 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   , NewInstanceBasic(detail::UnknownAHNewInstanceBasic<T>)
   , NewInstanceFloatBasic(detail::UnknownAHNewInstanceFloatBasic<T>)
   , NumberOfValues(detail::UnknownAHNumberOfValues<T, S>)
-  , NumberOfComponents(detail::UnknownAHNumberOfComponents<T>)
-  , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T>)
+  , NumberOfComponents(detail::UnknownAHNumberOfComponents<T, S>)
+  , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T, S>)
   , Allocate(detail::UnknownAHAllocate<T, S>)
   , ShallowCopy(detail::UnknownAHShallowCopy<T, S>)
   , DeepCopy(detail::UnknownAHDeepCopy<T, S>)
