@@ -23,6 +23,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorInternal.h>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 
@@ -96,6 +97,17 @@ vtkm::cont::DataSet& GetUnstructuredInputDataSet()
   return *UnstructuredInputDataSet;
 }
 
+vtkm::cont::PartitionedDataSet* InputPartitionedData;
+vtkm::cont::PartitionedDataSet* UnstructuredInputPartitionedData;
+vtkm::cont::PartitionedDataSet& GetInputPartitionedData()
+{
+  return *InputPartitionedData;
+}
+vtkm::cont::PartitionedDataSet& GetUnstructuredInputPartitionedData()
+{
+  return *UnstructuredInputPartitionedData;
+}
+
 // The point scalars to use:
 static std::string PointScalarsName;
 // The cell scalars to use:
@@ -120,7 +132,8 @@ enum GradOpts : int
   Vorticity = 1 << 3,
   QCriterion = 1 << 4,
   RowOrdering = 1 << 5,
-  ScalarInput = 1 << 6
+  ScalarInput = 1 << 6,
+  PartitionedInput = 1 << 7
 };
 
 void BenchGradient(::benchmark::State& state, int options)
@@ -162,11 +175,21 @@ void BenchGradient(::benchmark::State& state, int options)
   vtkm::cont::Timer timer{ device };
   //vtkm::cont::DataSet input = static_cast<bool>(options & Structured) ? GetInputDataSet() : GetUnstructuredInputDataSet();
 
+  vtkm::cont::PartitionedDataSet input;
+  if (options & PartitionedInput)
+  {
+    input = GetInputPartitionedData();
+  }
+  else
+  {
+    input = GetInputDataSet();
+  }
+
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(GetInputDataSet());
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -179,7 +202,9 @@ void BenchGradient(::benchmark::State& state, int options)
   VTKM_BENCHMARK(BenchGradient##Name)
 
 VTKM_PRIVATE_GRADIENT_BENCHMARK(Scalar, Gradient | ScalarInput);
+VTKM_PRIVATE_GRADIENT_BENCHMARK(ScalarPartitionedData, Gradient | ScalarInput | PartitionedInput);
 VTKM_PRIVATE_GRADIENT_BENCHMARK(Vector, Gradient);
+VTKM_PRIVATE_GRADIENT_BENCHMARK(VectorPartitionedData, Gradient | PartitionedInput);
 VTKM_PRIVATE_GRADIENT_BENCHMARK(VectorRow, Gradient | RowOrdering);
 VTKM_PRIVATE_GRADIENT_BENCHMARK(Point, PointGradient);
 VTKM_PRIVATE_GRADIENT_BENCHMARK(Divergence, Divergence);
@@ -190,7 +215,7 @@ VTKM_PRIVATE_GRADIENT_BENCHMARK(All,
 
 #undef VTKM_PRIVATE_GRADIENT_BENCHMARK
 
-void BenchThreshold(::benchmark::State& state)
+void BenchThreshold(::benchmark::State& state, bool partitionedInput)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
@@ -210,24 +235,33 @@ void BenchThreshold(::benchmark::State& state)
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
 
+  auto input = partitionedInput ? GetInputPartitionedData() : GetInputDataSet();
+
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(GetInputDataSet());
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK(BenchThreshold);
+
+#define VTKM_PRIVATE_THRESHOLD_BENCHMARK(Name, Opts)                                    \
+  void BenchThreshold##Name(::benchmark::State& state) { BenchThreshold(state, Opts); } \
+  VTKM_BENCHMARK(BenchThreshold##Name)
+
+VTKM_PRIVATE_THRESHOLD_BENCHMARK(BenchThreshold, false);
+VTKM_PRIVATE_THRESHOLD_BENCHMARK(BenchThresholdPartitioned, true);
 
 void BenchThresholdPoints(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
   const bool compactPoints = static_cast<bool>(state.range(0));
+  const bool partitionedInput = static_cast<bool>(state.range(1));
 
   // Lookup the point scalar range
   const auto range = []() -> vtkm::Range {
@@ -246,19 +280,33 @@ void BenchThresholdPoints(::benchmark::State& state)
   filter.SetUpperThreshold(mid + quarter);
   filter.SetCompactPoints(compactPoints);
 
+  vtkm::cont::PartitionedDataSet input;
+  input = partitionedInput ? GetInputPartitionedData() : GetInputDataSet();
+
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(GetInputDataSet());
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK_OPTS(BenchThresholdPoints, ->ArgName("CompactPts")->DenseRange(0, 1));
+
+void BenchThresholdPointsGenerator(::benchmark::internal::Benchmark* bm)
+{
+  bm->ArgNames({ "CompactPts", "PartitionedInput" });
+
+  bm->Args({ 0, 0 });
+  bm->Args({ 1, 0 });
+  bm->Args({ 0, 1 });
+  bm->Args({ 1, 1 });
+}
+
+VTKM_BENCHMARK_APPLY(BenchThresholdPoints, BenchThresholdPointsGenerator);
 
 void BenchCellAverage(::benchmark::State& state)
 {
@@ -284,68 +332,79 @@ VTKM_BENCHMARK(BenchCellAverage);
 void BenchPointAverage(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const bool isPartitioned = static_cast<bool>(state.range(0));
 
   vtkm::filter::field_conversion::PointAverage filter;
   filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::Cells);
 
+  vtkm::cont::PartitionedDataSet input;
+  input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(GetInputDataSet());
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK(BenchPointAverage);
+VTKM_BENCHMARK_OPTS(BenchPointAverage, ->ArgName("PartitionedInput")->DenseRange(0, 1));
 
 void BenchWarpScalar(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const bool isPartitioned = static_cast<bool>(state.range(0));
 
   vtkm::filter::field_transform::WarpScalar filter{ 2. };
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::Points);
   filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::Points);
 
+  vtkm::cont::PartitionedDataSet input;
+  input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
+
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(GetInputDataSet());
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK(BenchWarpScalar);
+VTKM_BENCHMARK_OPTS(BenchWarpScalar, ->ArgName("PartitionedInput")->DenseRange(0, 1));
 
 void BenchWarpVector(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const bool isPartitioned = static_cast<bool>(state.range(0));
 
   vtkm::filter::field_transform::WarpVector filter{ 2. };
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::Points);
 
+  vtkm::cont::PartitionedDataSet input;
+  input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
+
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(GetInputDataSet());
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK(BenchWarpVector);
+VTKM_BENCHMARK_OPTS(BenchWarpVector, ->ArgName("PartitionedInput")->DenseRange(0, 1));
 
 void BenchContour(::benchmark::State& state)
 {
@@ -356,6 +415,7 @@ void BenchContour(::benchmark::State& state)
   const bool mergePoints = static_cast<bool>(state.range(2));
   const bool normals = static_cast<bool>(state.range(3));
   const bool fastNormals = static_cast<bool>(state.range(4));
+  const bool isPartitioned = static_cast<bool>(state.range(5));
 
   vtkm::filter::contour::Contour filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
@@ -383,7 +443,15 @@ void BenchContour(::benchmark::State& state)
 
   vtkm::cont::Timer timer{ device };
 
-  vtkm::cont::DataSet input = isStructured ? GetInputDataSet() : GetUnstructuredInputDataSet();
+  vtkm::cont::PartitionedDataSet input;
+  if (isPartitioned)
+  {
+    input = isStructured ? GetInputPartitionedData() : GetUnstructuredInputPartitionedData();
+  }
+  else
+  {
+    input = isStructured ? GetInputDataSet() : GetUnstructuredInputDataSet();
+  }
 
   for (auto _ : state)
   {
@@ -399,17 +467,31 @@ void BenchContour(::benchmark::State& state)
 
 void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
 {
-  bm->ArgNames({ "IsStructuredDataSet", "NIsoVals", "MergePts", "GenNormals", "FastNormals" });
+  bm->ArgNames({ "IsStructuredDataSet",
+                 "NIsoVals",
+                 "MergePts",
+                 "GenNormals",
+                 "FastNormals",
+                 "MultiPartitioned" });
 
   auto helper = [&](const vtkm::Id numIsoVals) {
-    bm->Args({ 0, numIsoVals, 0, 0, 0 });
-    bm->Args({ 0, numIsoVals, 1, 0, 0 });
-    bm->Args({ 0, numIsoVals, 0, 1, 0 });
-    bm->Args({ 0, numIsoVals, 0, 1, 1 });
-    bm->Args({ 1, numIsoVals, 0, 0, 0 });
-    bm->Args({ 1, numIsoVals, 1, 0, 0 });
-    bm->Args({ 1, numIsoVals, 0, 1, 0 });
-    bm->Args({ 1, numIsoVals, 0, 1, 1 });
+    bm->Args({ 0, numIsoVals, 0, 0, 0, 0 });
+    bm->Args({ 0, numIsoVals, 1, 0, 0, 0 });
+    bm->Args({ 0, numIsoVals, 0, 1, 0, 0 });
+    bm->Args({ 0, numIsoVals, 0, 1, 1, 0 });
+    bm->Args({ 1, numIsoVals, 0, 0, 0, 0 });
+    bm->Args({ 1, numIsoVals, 1, 0, 0, 0 });
+    bm->Args({ 1, numIsoVals, 0, 1, 0, 0 });
+    bm->Args({ 1, numIsoVals, 0, 1, 1, 0 });
+
+    bm->Args({ 0, numIsoVals, 0, 0, 0, 1 });
+    bm->Args({ 0, numIsoVals, 1, 0, 0, 1 });
+    bm->Args({ 0, numIsoVals, 0, 1, 0, 1 });
+    bm->Args({ 0, numIsoVals, 0, 1, 1, 1 });
+    bm->Args({ 1, numIsoVals, 0, 0, 0, 1 });
+    bm->Args({ 1, numIsoVals, 1, 0, 0, 1 });
+    bm->Args({ 1, numIsoVals, 0, 1, 0, 1 });
+    bm->Args({ 1, numIsoVals, 0, 1, 1, 1 });
   };
 
   helper(1);
@@ -417,34 +499,48 @@ void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
   helper(12);
 }
 
-// :TODO: Disabled until SIGSEGV in Countour when passings field is resolved
 VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
 
 void BenchExternalFaces(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
   const bool compactPoints = static_cast<bool>(state.range(0));
+  const bool isPartitioned = false; //static_cast<bool>(state.range(1));
 
   vtkm::filter::entity_extraction::ExternalFaces filter;
   filter.SetCompactPoints(compactPoints);
+
+  vtkm::cont::PartitionedDataSet input;
+  input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(GetInputDataSet());
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK_OPTS(BenchExternalFaces, ->ArgName("Compact")->DenseRange(0, 1));
+
+void BenchExternalFacesGenerator(::benchmark::internal::Benchmark* bm)
+{
+  bm->ArgNames({ "Compact", "PartitionedInput" });
+
+  bm->Args({ 0, 0 });
+  bm->Args({ 1, 0 });
+  bm->Args({ 0, 1 });
+  bm->Args({ 1, 1 });
+}
+VTKM_BENCHMARK_APPLY(BenchExternalFaces, BenchExternalFacesGenerator);
 
 void BenchTetrahedralize(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const bool isPartitioned = static_cast<bool>(state.range(0));
 
   // This filter only supports structured datasets:
   if (FileAsInput && !InputIsStructured())
@@ -453,20 +549,23 @@ void BenchTetrahedralize(::benchmark::State& state)
   }
 
   vtkm::filter::geometry_refinement::Tetrahedralize filter;
+  vtkm::cont::PartitionedDataSet input;
+  input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
 
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(GetInputDataSet());
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK(BenchTetrahedralize);
+
+VTKM_BENCHMARK_OPTS(BenchTetrahedralize, ->ArgName("PartitionedInput")->DenseRange(0, 1));
 
 void BenchVertexClustering(::benchmark::State& state)
 {
@@ -803,6 +902,7 @@ enum optionIndex
   CELL_SCALARS,
   POINT_VECTORS,
   WAVELET_DIM,
+  NUM_PARTITIONS,
   TETRA
 };
 
@@ -810,6 +910,7 @@ void InitDataSet(int& argc, char** argv)
 {
   std::string filename;
   vtkm::Id waveletDim = 256;
+  vtkm::Id numPartitions = 1;
   bool tetra = false;
 
   namespace option = vtkm::cont::internal::option;
@@ -854,6 +955,12 @@ void InitDataSet(int& argc, char** argv)
                     Arg::Number,
                     "  --wavelet-dim <N> \tThe size in each dimension of the wavelet grid "
                     "(if generated)." });
+  usage.push_back({ NUM_PARTITIONS,
+                    0,
+                    "",
+                    "num-partitions",
+                    Arg::Number,
+                    "  --num-partitions <N> \tThe number of partitions to create" });
   usage.push_back({ TETRA,
                     0,
                     "",
@@ -901,6 +1008,12 @@ void InitDataSet(int& argc, char** argv)
   {
     std::istringstream parse(options[WAVELET_DIM].arg);
     parse >> waveletDim;
+  }
+
+  if (options[NUM_PARTITIONS])
+  {
+    std::istringstream parse(options[NUM_PARTITIONS].arg);
+    parse >> numPartitions;
   }
 
   tetra = (options[TETRA] != nullptr);
@@ -992,6 +1105,19 @@ void InitDataSet(int& argc, char** argv)
     GetInputDataSet() = GetUnstructuredInputDataSet();
   }
 
+  //Create partitioned data.
+  if (numPartitions > 0)
+  {
+    std::cerr << "[InitDataSet] Creating " << numPartitions << " partitions." << std::endl;
+    InputPartitionedData = new vtkm::cont::PartitionedDataSet;
+    UnstructuredInputPartitionedData = new vtkm::cont::PartitionedDataSet;
+    for (vtkm::Id i = 0; i < numPartitions; i++)
+    {
+      GetInputPartitionedData().AppendPartition(GetInputDataSet());
+      GetUnstructuredInputPartitionedData().AppendPartition(GetUnstructuredInputDataSet());
+    }
+  }
+
   inputGenTimer.Stop();
 
   std::cerr << "[InitDataSet] DataSet initialization took " << inputGenTimer.GetElapsedTime()
@@ -1027,4 +1153,6 @@ int main(int argc, char* argv[])
   VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, args.data(), dataSetSummary);
   delete InputDataSet;
   delete UnstructuredInputDataSet;
+  delete InputPartitionedData;
+  delete UnstructuredInputPartitionedData;
 }

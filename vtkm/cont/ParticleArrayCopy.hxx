@@ -29,14 +29,14 @@ template <typename ParticleType>
 struct ExtractPositionFunctor
 {
   VTKM_EXEC_CONT
-  vtkm::Vec3f operator()(const ParticleType& p) const { return p.Pos; }
+  vtkm::Vec3f operator()(const ParticleType& p) const { return p.GetPosition(); }
 };
 
 template <typename ParticleType>
 struct ExtractTerminatedFunctor
 {
   VTKM_EXEC_CONT
-  bool operator()(const ParticleType& p) const { return p.Status.CheckTerminate(); }
+  bool operator()(const ParticleType& p) const { return p.GetStatus().CheckTerminate(); }
 };
 
 template <typename ParticleType>
@@ -56,11 +56,11 @@ struct CopyParticleAllWorklet : public vtkm::worklet::WorkletMapField
                             vtkm::ParticleStatus& outStatus,
                             vtkm::FloatDefault& outTime) const
   {
-    outPos = inParticle.Pos;
-    outID = inParticle.ID;
-    outSteps = inParticle.NumSteps;
-    outStatus = inParticle.Status;
-    outTime = inParticle.Time;
+    outPos = inParticle.GetPosition();
+    outID = inParticle.GetID();
+    outSteps = inParticle.GetNumberOfSteps();
+    outStatus = inParticle.GetStatus();
+    outTime = inParticle.GetTime();
   }
 };
 

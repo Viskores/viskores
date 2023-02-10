@@ -14,7 +14,7 @@
 #include <vtkm/Matrix.h>
 #include <vtkm/Transform3D.h>
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -26,7 +26,7 @@ namespace field_transform
 /// \brief
 ///
 /// Generate scalar field from a dataset.
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT PointTransform : public vtkm::filter::NewFilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT PointTransform : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT

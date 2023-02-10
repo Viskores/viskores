@@ -85,7 +85,7 @@ vtkm_library(
 
 if (VTKm_ENABLE_HDF5_IO)
   target_include_directories(vtkm_io PRIVATE $<BUILD_INTERFACE:${HDF5_INCLUDE_DIR}>)
-  target_link_libraries(vtkm_io PRIVATE ${HDF5_HL_LIBRARIES})
+  target_link_libraries(vtkm_io PRIVATE ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
 endif()
 
 add_subdirectory(internal)

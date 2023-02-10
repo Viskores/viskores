@@ -29,25 +29,23 @@ vtkm::cont::DataSet PointAverage::DoExecute(const vtkm::cont::DataSet& input)
   }
 
   vtkm::cont::UnknownCellSet cellSet = input.GetCellSet();
-  vtkm::cont::UnknownArrayHandle outArray;
+  vtkm::cont::UnknownArrayHandle inArray = field.GetData();
+  vtkm::cont::UnknownArrayHandle outArray = inArray.NewInstanceBasic();
 
   auto resolveType = [&](const auto& concrete) {
-    using T = typename std::decay_t<decltype(concrete)>::ValueType;
+    using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
+    auto result = outArray.ExtractArrayFromComponents<T>();
     using SupportedCellSets =
       vtkm::ListAppend<vtkm::List<vtkm::cont::CellSetExtrude>, VTKM_DEFAULT_CELL_SET_LIST>;
 
-    vtkm::cont::ArrayHandle<T> result;
     this->Invoke(vtkm::worklet::PointAverage{},
                  cellSet.ResetCellSetList<SupportedCellSets>(),
                  concrete,
                  result);
-    outArray = result;
   };
-  // TODO: Do we need to deal with XCG storage type explicitly?
-  //  using AdditionalFieldStorage = vtkm::List<vtkm::cont::StorageTagXGCCoordinates>;
-  field.GetData()
-    .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
-      resolveType);
+  // TODO: Do we need to deal with XCG storage type (vtkm::cont::ArrayHandleXGCCoordinates)
+  // explicitly? Extracting from that is slow.
+  inArray.CastAndCallWithExtractedArray(resolveType);
 
   std::string outputName = this->GetOutputFieldName();
   if (outputName.empty())

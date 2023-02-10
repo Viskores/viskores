@@ -10,12 +10,12 @@
 #ifndef example_RedistributePoints_h
 #define example_RedistributePoints_h
 
-#include <vtkm/filter/NewFilter.h>
+#include <vtkm/filter/Filter.h>
 
 namespace example
 {
 
-class RedistributePoints : public vtkm::filter::NewFilter
+class RedistributePoints : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT RedistributePoints() {}

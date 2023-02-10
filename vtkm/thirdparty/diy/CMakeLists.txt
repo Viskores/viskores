@@ -82,6 +82,7 @@ endif()
 include(VTKmDIYUtils)
 
 add_library(vtkm_diy INTERFACE)
+
 vtkm_diy_init_target()
 target_include_directories(vtkm_diy INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
@@ -113,7 +114,7 @@ else()
 endif()
 
 #-----------------------------------------------------------------------------
-install(TARGETS vtkm_diy EXPORT ${VTKm_EXPORT_NAME})
+vtkm_install_targets(TARGETS vtkm_diy)
 
 ## Install headers
 if (NOT VTKm_INSTALL_ONLY_LIBRARIES)

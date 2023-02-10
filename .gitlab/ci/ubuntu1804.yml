@@ -7,7 +7,7 @@ build:ubuntu1804_gcc9:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu1804
     - .cmake_build_linux
@@ -23,7 +23,7 @@ test:ubuntu1804_gcc9:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu1804
     - .cmake_test_linux
@@ -45,8 +45,7 @@ build:ubuntu1804_gcc7:
     - build
     - vtkm
     - docker
-    - linux
-    - cuda-rt
+    - linux-x86_64
     - large-memory
   extends:
     - .ubuntu1804_cuda
@@ -63,7 +62,7 @@ test:ubuntu1804_gcc7:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
     - cuda-rt
     - turing
   extends:
@@ -84,8 +83,7 @@ build:ubuntu1804_clang_cuda:
     - build
     - vtkm
     - docker
-    - linux
-    - cuda-rt
+    - linux-x86_64
     - large-memory
   extends:
     - .ubuntu1804_cuda
@@ -103,7 +101,7 @@ test:ubuntu1804_clang_cuda:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
     - cuda-rt
     - pascal
   extends:
@@ -123,7 +121,7 @@ build:ubuntu1804_gcc6:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu1804
     - .cmake_build_linux
@@ -138,7 +136,7 @@ test:ubuntu1804_gcc6:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu1804
     - .cmake_test_linux
@@ -159,7 +157,7 @@ build:ubuntu1804_clang8:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu1804
     - .cmake_build_linux
@@ -175,7 +173,7 @@ test:ubuntu1804_clang8:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu1804
     - .cmake_test_linux
@@ -192,8 +190,7 @@ build:ubuntu1804_kokkos:
     - build
     - vtkm
     - docker
-    - linux
-    - cuda-rt
+    - linux-x86_64
     - large-memory
   extends:
     - .ubuntu1804_cuda_kokkos
@@ -209,7 +206,7 @@ test:ubuntu1804_kokkos:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
     - cuda-rt
     - turing
   extends:
@@ -226,7 +223,7 @@ build:ubuntu1804_cuda_perftest:
     - build
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu1804_cuda
     - .cmake_build_linux
@@ -241,7 +238,7 @@ test:ubuntu1804_cuda_perftest:
     - vtkm
     - docker
     - cuda-rt
-    - linux
+    - linux-x86_64
   extends:
     - .ubuntu1804_cuda
     - .cmake_test_linux

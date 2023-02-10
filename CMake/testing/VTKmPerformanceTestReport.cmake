@@ -10,7 +10,7 @@
 
 include("${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestLib.cmake")
 
-REQUIRE_FLAG("BENCHMARK_NAME")
+REQUIRE_FLAG("VTKm_PERF_NAME")
 REQUIRE_FLAG("VTKm_PERF_COMPARE_JSON")
 REQUIRE_FLAG("VTKm_PERF_COMPARE_STDOUT")
 
@@ -19,7 +19,7 @@ REQUIRE_FLAG_MUTABLE("VTKm_PERF_ALPHA")
 REQUIRE_FLAG_MUTABLE("VTKm_PERF_DIST")
 
 ###FIND MOST RECENT BASELINE####################################################
-execute(COMMAND /usr/bin/git -C "${VTKm_SOURCE_DIR}" merge-base origin/master @
+execute(COMMAND /usr/bin/git -C "${VTKm_SOURCE_DIR}" merge-base upstream/master @
         OUTPUT_VARIABLE GIT_BASE_COMMIT)
 
 string(STRIP "${GIT_BASE_COMMIT}" GIT_BASE_COMMIT)
@@ -34,8 +34,8 @@ execute_process(COMMAND /usr/bin/git -C "${VTKm_SOURCE_DIR}" log --format=%H --f
 string(REPLACE "\n" ";" GIT_ANCESTOR_COMMITS ${GIT_ANCESTOR_COMMITS})
 
 foreach(commit IN LISTS GIT_ANCESTOR_COMMITS)
-  if (EXISTS "${VTKm_PERF_REPO}/${commit}_${BENCHMARK_NAME}.json")
-    set(BASELINE_REPORT "${VTKm_PERF_REPO}/${commit}_${BENCHMARK_NAME}.json")
+  if (EXISTS "${VTKm_PERF_REPO}/${commit}_${VTKm_PERF_NAME}.json")
+    set(BASELINE_REPORT "${VTKm_PERF_REPO}/${commit}_${VTKm_PERF_NAME}.json")
     break()
   endif()
 endforeach()

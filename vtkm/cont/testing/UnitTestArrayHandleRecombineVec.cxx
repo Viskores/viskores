@@ -10,6 +10,7 @@
 
 #include <vtkm/cont/ArrayHandleRecombineVec.h>
 
+#include <vtkm/cont/ArrayHandleReverse.h>
 #include <vtkm/cont/Invoker.h>
 
 #include <vtkm/worklet/WorkletMapField.h>
@@ -69,7 +70,6 @@ struct TestRecombineVecAsOutput
     SetPortal(baseArray.WritePortal());
 
     vtkm::cont::ArrayHandle<T> outputArray;
-    outputArray.Allocate(ARRAY_SIZE); // Cannot resize after recombine
 
     using VTraits = vtkm::VecTraits<T>;
     vtkm::cont::ArrayHandleRecombineVec<typename VTraits::ComponentType> recombinedArray;
@@ -78,12 +78,15 @@ struct TestRecombineVecAsOutput
       recombinedArray.AppendComponentArray(vtkm::cont::ArrayExtractComponent(outputArray, cIndex));
     }
     VTKM_TEST_ASSERT(recombinedArray.GetNumberOfComponents() == VTraits::NUM_COMPONENTS);
-    VTKM_TEST_ASSERT(recombinedArray.GetNumberOfValues() == ARRAY_SIZE);
 
     vtkm::cont::Invoker invoke;
     invoke(PassThrough{}, baseArray, recombinedArray);
-
     VTKM_TEST_ASSERT(test_equal_ArrayHandles(baseArray, outputArray));
+
+    // Try outputing to a recombine vec inside of another fancy ArrayHandle.
+    auto reverseOutput = vtkm::cont::make_ArrayHandleReverse(recombinedArray);
+    invoke(PassThrough{}, baseArray, reverseOutput);
+    VTKM_TEST_ASSERT(test_equal_ArrayHandles(baseArray, reverseOutput));
   }
 };
 

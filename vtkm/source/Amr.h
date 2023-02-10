@@ -58,22 +58,39 @@ namespace source
 class VTKM_SOURCE_EXPORT Amr
 {
 public:
-  VTKM_CONT
-  Amr(vtkm::IdComponent dimension = 2,
-      vtkm::IdComponent cellsPerDimension = 6,
-      vtkm::IdComponent numberOfLevels = 4);
-  VTKM_CONT
-  ~Amr();
+  VTKM_CONT Amr() = default;
 
-  vtkm::cont::PartitionedDataSet Execute() const;
+  VTKM_CONT VTKM_DEPRECATED(2.0, "Use Set* methods to set parameters.")
+    Amr(vtkm::IdComponent dimension,
+        vtkm::IdComponent cellsPerDimension = 6,
+        vtkm::IdComponent numberOfLevels = 4);
+
+  VTKM_CONT ~Amr() = default;
+
+  VTKM_CONT void SetDimension(vtkm::IdComponent dimension) { this->Dimension = dimension; }
+  VTKM_CONT vtkm::IdComponent GetDimension() const { return this->Dimension; }
+
+  VTKM_CONT void SetCellsPerDimension(vtkm::IdComponent cellsPerDimension)
+  {
+    this->CellsPerDimension = cellsPerDimension;
+  }
+  VTKM_CONT vtkm::IdComponent GetCellsPerDimension() const { return this->CellsPerDimension; }
+
+  VTKM_CONT void SetNumberOfLevels(vtkm::IdComponent numberOfLevels)
+  {
+    this->NumberOfLevels = numberOfLevels;
+  }
+  VTKM_CONT vtkm::IdComponent GetNumberOfLevels() const { return this->NumberOfLevels; }
+
+  VTKM_CONT vtkm::cont::PartitionedDataSet Execute() const;
 
 private:
   template <vtkm::IdComponent Dim>
   vtkm::cont::DataSet GenerateDataSet(unsigned int level, unsigned int amrIndex) const;
 
-  vtkm::IdComponent Dimension;
-  vtkm::IdComponent CellsPerDimension;
-  vtkm::IdComponent NumberOfLevels;
+  vtkm::IdComponent Dimension = 2;
+  vtkm::IdComponent CellsPerDimension = 6;
+  vtkm::IdComponent NumberOfLevels = 4;
 };
 } //namespace source
 } //namespace vtkm

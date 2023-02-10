@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_mesh_info_CellMeasures_h
 #define vtk_m_filter_mesh_info_CellMeasures_h
 
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -47,7 +47,7 @@ VTKM_EXEC_CONT inline IntegrationType operator|(IntegrationType left, Integratio
 /// or 0 (if measure is not well defined or the cell type is unsupported).
 ///
 /// By default, the new cell-data array is named "measure".
-class VTKM_FILTER_MESH_INFO_EXPORT CellMeasures : public vtkm::filter::NewFilterField
+class VTKM_FILTER_MESH_INFO_EXPORT CellMeasures : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT

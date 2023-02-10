@@ -17,6 +17,7 @@ set(field_transform_headers
   WarpScalar.h
   WarpVector.h
   LogValues.h
+  CompositeVectors.h
   )
 
 set(field_transform_sources
@@ -29,6 +30,7 @@ set(field_transform_sources
   WarpScalar.cxx
   WarpVector.cxx
   LogValues.cxx
+  CompositeVectors.cxx
   )
 
 vtkm_library(

@@ -87,8 +87,8 @@ int main(int argc, char** argv)
   for (vtkm::Id i = 0; i < numPts; i++)
   {
     vtkm::Particle p;
-    p.Pos = ptsPortal.Get(i);
-    p.ID = i;
+    p.SetPosition(ptsPortal.Get(i));
+    p.SetID(i);
     seedPortal.Set(i, p);
   }
 

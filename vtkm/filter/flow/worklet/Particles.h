@@ -54,9 +54,9 @@ public:
                   const vtkm::Vec3f& pt)
   {
     ParticleType newParticle(particle);
-    newParticle.Pos = pt;
-    newParticle.Time = time;
-    newParticle.NumSteps++;
+    newParticle.SetPosition(pt);
+    newParticle.SetTime(time);
+    newParticle.SetNumberOfSteps(particle.GetNumberOfSteps() + 1);
     this->Particles.Set(idx, newParticle);
   }
 
@@ -67,37 +67,37 @@ public:
   {
     ParticleType p(this->GetParticle(idx));
 
-    if (p.NumSteps == maxSteps)
-      p.Status.SetTerminate();
+    if (p.GetNumberOfSteps() == maxSteps)
+      p.GetStatus().SetTerminate();
 
     if (status.CheckFail())
-      p.Status.SetFail();
+      p.GetStatus().SetFail();
     if (status.CheckSpatialBounds())
-      p.Status.SetSpatialBounds();
+      p.GetStatus().SetSpatialBounds();
     if (status.CheckTemporalBounds())
-      p.Status.SetTemporalBounds();
+      p.GetStatus().SetTemporalBounds();
     if (status.CheckInGhostCell())
-      p.Status.SetInGhostCell();
+      p.GetStatus().SetInGhostCell();
     if (status.CheckZeroVelocity())
     {
-      p.Status.SetZeroVelocity();
-      p.Status.SetTerminate();
+      p.GetStatus().SetZeroVelocity();
+      p.GetStatus().SetTerminate();
     }
 
     this->Particles.Set(idx, p);
   }
 
   VTKM_EXEC
-  bool CanContinue(const vtkm::Id& idx) { return this->GetParticle(idx).Status.CanContinue(); }
+  bool CanContinue(const vtkm::Id& idx) { return this->GetParticle(idx).GetStatus().CanContinue(); }
 
   VTKM_EXEC
   void UpdateTookSteps(const vtkm::Id& idx, bool val)
   {
     ParticleType p(this->GetParticle(idx));
     if (val)
-      p.Status.SetTookAnySteps();
+      p.GetStatus().SetTookAnySteps();
     else
-      p.Status.ClearTookAnySteps();
+      p.GetStatus().ClearTookAnySteps();
     this->Particles.Set(idx, p);
   }
 
@@ -172,7 +172,7 @@ public:
     if (this->StepCount.Get(idx) == 0)
     {
       vtkm::Id loc = idx * Length;
-      this->History.Set(loc, p.Pos);
+      this->History.Set(loc, p.GetPosition());
       this->ValidPoint.Set(loc, 1);
       this->StepCount.Set(idx, 1);
     }

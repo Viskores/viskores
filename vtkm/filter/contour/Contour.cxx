@@ -45,13 +45,16 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
 {
   if (field.IsPointField())
   {
+    vtkm::cont::UnknownArrayHandle inputArray = field.GetData();
+    vtkm::cont::UnknownArrayHandle outputArray = inputArray.NewInstanceBasic();
+
     auto functor = [&](const auto& concrete) {
-      auto fieldArray = worklet.ProcessPointField(concrete);
-      result.AddPointField(field.GetName(), fieldArray);
+      using ComponentType = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
+      auto fieldArray = outputArray.ExtractArrayFromComponents<ComponentType>();
+      worklet.ProcessPointField(concrete, fieldArray);
     };
-    field.GetData()
-      .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
-        functor);
+    inputArray.CastAndCallWithExtractedArray(functor);
+    result.AddPointField(field.GetName(), outputArray);
     return true;
   }
   else if (field.IsCellField())

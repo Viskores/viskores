@@ -8,10 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
-#define vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
+#ifndef vtk_m_filter_flow_FilterParticleAdvectionUnsteadyState_h
+#define vtk_m_filter_flow_FilterParticleAdvectionUnsteadyState_h
 
-#include <vtkm/filter/flow/NewFilterParticleAdvection.h>
+#include <vtkm/filter/flow/FilterParticleAdvection.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
@@ -21,8 +21,7 @@ namespace filter
 namespace flow
 {
 
-class VTKM_FILTER_FLOW_EXPORT NewFilterParticleAdvectionUnsteadyState
-  : public NewFilterParticleAdvection
+class VTKM_FILTER_FLOW_EXPORT FilterParticleAdvectionUnsteadyState : public FilterParticleAdvection
 {
 public:
   VTKM_CONT void SetPreviousTime(vtkm::FloatDefault t1) { this->Time1 = t1; }
@@ -49,4 +48,4 @@ private:
 }
 } // namespace vtkm::filter::flow
 
-#endif // vtk_m_filter_flow_NewFilterParticleAdvectionUnsteadyState_h
+#endif // vtk_m_filter_flow_FilterParticleAdvectionUnsteadyState_h

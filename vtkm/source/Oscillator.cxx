@@ -10,13 +10,10 @@
 #include <vtkm/source/Oscillator.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm
+namespace
 {
-namespace source
-{
-namespace internal
-{
-struct Oscillator
+
+struct Oscillation
 {
   vtkm::Vec3f Center;
   vtkm::FloatDefault Radius;
@@ -24,7 +21,7 @@ struct Oscillator
   vtkm::FloatDefault Zeta;
 };
 
-class OscillatorSource : public vtkm::worklet::WorkletMapField
+class OscillatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn, FieldOut);
@@ -40,7 +37,7 @@ public:
   {
     if (this->PeriodicOscillators.GetNumberOfComponents() < MAX_OSCILLATORS)
     {
-      this->PeriodicOscillators.Append(Oscillator{ { x, y, z }, radius, omega, zeta });
+      this->PeriodicOscillators.Append(Oscillation{ { x, y, z }, radius, omega, zeta });
     }
   }
 
@@ -54,7 +51,7 @@ public:
   {
     if (this->DampedOscillators.GetNumberOfComponents() < MAX_OSCILLATORS)
     {
-      this->DampedOscillators.Append(Oscillator{ { x, y, z }, radius, omega, zeta });
+      this->DampedOscillators.Append(Oscillation{ { x, y, z }, radius, omega, zeta });
     }
   }
 
@@ -68,7 +65,7 @@ public:
   {
     if (this->DecayingOscillators.GetNumberOfComponents() < MAX_OSCILLATORS)
     {
-      this->DecayingOscillators.Append(Oscillator{ { x, y, z }, radius, omega, zeta });
+      this->DecayingOscillators.Append(Oscillation{ { x, y, z }, radius, omega, zeta });
     }
   }
 
@@ -80,7 +77,7 @@ public:
   {
     vtkm::UInt8 oIdx;
     vtkm::FloatDefault t0, t, result = 0;
-    const internal::Oscillator* oscillator;
+    const Oscillation* oscillator;
 
     t0 = 0.0;
     t = vtkm::FloatDefault(this->Time * 2 * 3.14159265358979323846);
@@ -136,27 +133,64 @@ public:
 
 private:
   static constexpr vtkm::IdComponent MAX_OSCILLATORS = 10;
-  vtkm::VecVariable<internal::Oscillator, MAX_OSCILLATORS> PeriodicOscillators;
-  vtkm::VecVariable<internal::Oscillator, MAX_OSCILLATORS> DampedOscillators;
-  vtkm::VecVariable<internal::Oscillator, MAX_OSCILLATORS> DecayingOscillators;
+  vtkm::VecVariable<Oscillation, MAX_OSCILLATORS> PeriodicOscillators;
+  vtkm::VecVariable<Oscillation, MAX_OSCILLATORS> DampedOscillators;
+  vtkm::VecVariable<Oscillation, MAX_OSCILLATORS> DecayingOscillators;
   vtkm::FloatDefault Time{};
-}; // OscillatorSource
+}; // OscillatorWorklet
 
-} // internal
+} // anonymous namespace
+
+namespace vtkm
+{
+namespace source
+{
+
+//-----------------------------------------------------------------------------
+struct Oscillator::InternalStruct
+{
+  vtkm::Id3 PointDimensions = { 3, 3, 3 };
+  OscillatorWorklet Worklet;
+};
+
+//-----------------------------------------------------------------------------
+Oscillator::Oscillator()
+  : Internals(new InternalStruct)
+{
+}
 
 //-----------------------------------------------------------------------------
 Oscillator::Oscillator(vtkm::Id3 dims)
-  : Dims(dims)
-  , Worklet(std::make_unique<internal::OscillatorSource>())
+  : Internals(new InternalStruct)
 {
+  this->SetCellDimensions(dims);
 }
 
 Oscillator::~Oscillator() = default;
 
 //-----------------------------------------------------------------------------
+void Oscillator::SetPointDimensions(vtkm::Id3 pointDimensions)
+{
+  this->Internals->PointDimensions = pointDimensions;
+}
+vtkm::Id3 Oscillator::GetPointDimensions() const
+{
+  return this->Internals->PointDimensions;
+}
+
+void Oscillator::SetCellDimensions(vtkm::Id3 cellDimensions)
+{
+  this->SetPointDimensions(cellDimensions + vtkm::Id3(1));
+}
+vtkm::Id3 Oscillator::GetCellDimensions() const
+{
+  return this->GetPointDimensions() - vtkm::Id3(1);
+}
+
+//-----------------------------------------------------------------------------
 void Oscillator::SetTime(vtkm::FloatDefault time)
 {
-  this->Worklet->SetTime(time);
+  this->Internals->Worklet.SetTime(time);
 }
 
 //-----------------------------------------------------------------------------
@@ -167,7 +201,7 @@ void Oscillator::AddPeriodic(vtkm::FloatDefault x,
                              vtkm::FloatDefault omega,
                              vtkm::FloatDefault zeta)
 {
-  this->Worklet->AddPeriodic(x, y, z, radius, omega, zeta);
+  this->Internals->Worklet.AddPeriodic(x, y, z, radius, omega, zeta);
 }
 
 //-----------------------------------------------------------------------------
@@ -178,7 +212,7 @@ void Oscillator::AddDamped(vtkm::FloatDefault x,
                            vtkm::FloatDefault omega,
                            vtkm::FloatDefault zeta)
 {
-  this->Worklet->AddDamped(x, y, z, radius, omega, zeta);
+  this->Internals->Worklet.AddDamped(x, y, z, radius, omega, zeta);
 }
 
 //-----------------------------------------------------------------------------
@@ -189,7 +223,7 @@ void Oscillator::AddDecaying(vtkm::FloatDefault x,
                              vtkm::FloatDefault omega,
                              vtkm::FloatDefault zeta)
 {
-  this->Worklet->AddDecaying(x, y, z, radius, omega, zeta);
+  this->Internals->Worklet.AddDecaying(x, y, z, radius, omega, zeta);
 }
 
 
@@ -200,22 +234,23 @@ vtkm::cont::DataSet Oscillator::DoExecute() const
 
   vtkm::cont::DataSet dataSet;
 
-  const vtkm::Id3 pdims{ this->Dims + vtkm::Id3{ 1, 1, 1 } };
   vtkm::cont::CellSetStructured<3> cellSet;
-  cellSet.SetPointDimensions(pdims);
+  vtkm::Id3 pointDims = this->GetPointDimensions();
+  cellSet.SetPointDimensions(pointDims);
   dataSet.SetCellSet(cellSet);
 
+  vtkm::Id3 cellDims = this->GetCellDimensions();
   const vtkm::Vec3f origin(0.0f, 0.0f, 0.0f);
-  const vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(this->Dims[0]),
-                            1.0f / static_cast<vtkm::FloatDefault>(this->Dims[1]),
-                            1.0f / static_cast<vtkm::FloatDefault>(this->Dims[2]));
+  const vtkm::Vec3f spacing(1.0f / static_cast<vtkm::FloatDefault>(cellDims[0]),
+                            1.0f / static_cast<vtkm::FloatDefault>(cellDims[1]),
+                            1.0f / static_cast<vtkm::FloatDefault>(cellDims[2]));
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(pdims, origin, spacing);
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(pointDims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
-  this->Invoke(*(this->Worklet), coordinates, outArray);
+  this->Invoke(this->Internals->Worklet, coordinates, outArray);
   dataSet.AddField(vtkm::cont::make_FieldPoint("oscillating", outArray));
 
   return dataSet;

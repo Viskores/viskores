@@ -12,7 +12,7 @@
 #define vtk_m_fulter_entity_extraction_ExtractGeometry_h
 
 #include <vtkm/ImplicitFunction.h>
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -36,7 +36,7 @@ namespace entity_extraction
 /// This differs from Clip in that Clip will subdivide boundary cells into new
 /// cells, while this filter will not, producing a more 'crinkly' output.
 ///
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExtractGeometry : public vtkm::filter::NewFilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExtractGeometry : public vtkm::filter::FilterField
 {
 public:
   // Set the volume of interest to extract

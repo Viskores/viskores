@@ -6,8 +6,7 @@ build:centos7_gcc73:
     - build
     - vtkm
     - docker
-    - linux
-    - cuda-rt
+    - linux-x86_64
     - large-memory
   extends:
     - .centos7
@@ -24,7 +23,7 @@ test:centos7_gcc73:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
     - cuda-rt
     - turing
   extends:
@@ -42,7 +41,7 @@ test:rhel8_test_centos7:
     - test
     - vtkm
     - docker
-    - linux
+    - linux-x86_64
     - cuda-rt
     - turing
   extends:

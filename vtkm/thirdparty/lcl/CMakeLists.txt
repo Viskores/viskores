@@ -18,8 +18,7 @@ target_include_directories(vtkm_lcl INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vtkmlcl>
   $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}/vtkm/thirdparty/lcl/vtkmlcl>)
 
-install(TARGETS vtkm_lcl
-  EXPORT ${VTKm_EXPORT_NAME})
+vtkm_install_targets(TARGETS vtkm_lcl)
 
 ## Install headers
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)

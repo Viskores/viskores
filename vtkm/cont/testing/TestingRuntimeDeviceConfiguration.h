@@ -35,7 +35,6 @@ struct TestingRuntimeDeviceConfiguration
   {
     internal::RuntimeDeviceConfigurationOptions runtimeDeviceOptions{};
     runtimeDeviceOptions.VTKmNumThreads.SetOption(8);
-    runtimeDeviceOptions.VTKmNumaRegions.SetOption(0);
     runtimeDeviceOptions.VTKmDeviceInstance.SetOption(2);
     runtimeDeviceOptions.Initialize(nullptr);
     VTKM_TEST_ASSERT(runtimeDeviceOptions.IsInitialized(),

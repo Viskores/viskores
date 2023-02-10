@@ -31,13 +31,13 @@ void AppendOptionDescriptors(std::vector<option::Descriptor>& usage,
       "vtkm-num-threads",
       option::VtkmArg::Required,
       "  --vtkm-num-threads <dev> \tSets the number of threads to use for the selected device" });
-  usage.push_back(
-    { useOptionIndex ? static_cast<uint32_t>(option::OptionIndex::NUMA_REGIONS) : 1,
-      0,
-      "",
-      "vtkm-numa-regions",
-      option::VtkmArg::Required,
-      "  --vtkm-numa-regions <dev> \tSets the number of numa regions when using kokkos/OpenMP" });
+  usage.push_back({ useOptionIndex ? static_cast<uint32_t>(option::OptionIndex::NUMA_REGIONS) : 1,
+                    0,
+                    "",
+                    "vtkm-numa-regions",
+                    option::VtkmArg::Required,
+                    "  --vtkm-numa-regions <dev> \tSets the number of numa regions when using "
+                    "kokkos/OpenMP (deprecated, has no effect)" });
   usage.push_back(
     { useOptionIndex ? static_cast<uint32_t>(option::OptionIndex::DEVICE_INSTANCE) : 2,
       0,
@@ -51,7 +51,6 @@ void AppendOptionDescriptors(std::vector<option::Descriptor>& usage,
 
 RuntimeDeviceConfigurationOptions::RuntimeDeviceConfigurationOptions(const bool& useOptionIndex)
   : VTKmNumThreads(useOptionIndex ? option::OptionIndex::NUM_THREADS : 0, "VTKM_NUM_THREADS")
-  , VTKmNumaRegions(useOptionIndex ? option::OptionIndex::NUMA_REGIONS : 1, "VTKM_NUMA_REGIONS")
   , VTKmDeviceInstance(useOptionIndex ? option::OptionIndex::DEVICE_INSTANCE : 2,
                        "VTKM_DEVICE_INSTANCE")
   , Initialized(false)
@@ -100,7 +99,6 @@ RuntimeDeviceConfigurationOptions::~RuntimeDeviceConfigurationOptions() noexcept
 void RuntimeDeviceConfigurationOptions::Initialize(const option::Option* options)
 {
   this->VTKmNumThreads.Initialize(options);
-  this->VTKmNumaRegions.Initialize(options);
   this->VTKmDeviceInstance.Initialize(options);
   this->Initialized = true;
 }

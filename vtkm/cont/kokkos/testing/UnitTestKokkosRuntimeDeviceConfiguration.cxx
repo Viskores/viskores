@@ -26,22 +26,8 @@ TestingRuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagKokkos>::TestRunti
 {
   int argc;
   char** argv;
-  vtkm::cont::testing::Testing::MakeArgs(argc, argv, "--kokkos-numa=4");
-  vtkm::cont::testing::Testing::SetEnv("KOKKOS_DEVICE_ID", "0");
+  vtkm::cont::testing::Testing::MakeArgs(argc, argv, "--kokkos-print-configuration");
   auto deviceOptions = TestingRuntimeDeviceConfiguration::DefaultInitializeConfigOptions();
-  bool threw = false;
-  try
-  {
-    RuntimeDeviceInformation{}.GetRuntimeConfiguration(
-      DeviceAdapterTagKokkos(), deviceOptions, argc, argv);
-  }
-  catch (const std::runtime_error& e)
-  {
-    threw = true;
-  }
-  VTKM_TEST_ASSERT(threw,
-                   "GetRuntimeConfiguration should have thrown, env KOKKOS_DEVICE_ID didn't match");
-  VTKM_TEST_ASSERT(!Kokkos::is_initialized(), "Kokkos should not be initialized at this point");
   deviceOptions.VTKmDeviceInstance.SetOption(0);
   internal::RuntimeDeviceConfigurationBase& config =
     RuntimeDeviceInformation{}.GetRuntimeConfiguration(
@@ -54,28 +40,21 @@ TestingRuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagKokkos>::TestRunti
                    "Failed to get set threads");
   VTKM_TEST_ASSERT(testValue == 8,
                    "Set threads does not match expected value: 8 != " + std::to_string(testValue));
-  VTKM_TEST_ASSERT(config.GetNumaRegions(testValue) ==
-                     internal::RuntimeDeviceConfigReturnCode::SUCCESS,
-                   "Failed to get set numa regions");
-  VTKM_TEST_ASSERT(testValue == 4,
-                   "Set numa regions does not match expected value: 4 != " +
-                     std::to_string(testValue));
   VTKM_TEST_ASSERT(config.GetDeviceInstance(testValue) ==
                      internal::RuntimeDeviceConfigReturnCode::SUCCESS,
                    "Failed to get set device instance");
   VTKM_TEST_ASSERT(testValue == 0,
                    "Set device instance does not match expected value: 0 != " +
                      std::to_string(testValue));
-  // Ensure that with kokkos we can't re-initialize or set values after the first initialize
-  // Should pop up a few warnings in the test logs
+  std::cout
+    << "Ensure that with kokkos we can't re-initialize or set values after the first initialize"
+    << std::endl;
+  std::cout << "This should pop up a few warnings in the test logs" << std::endl;
   deviceOptions.VTKmNumThreads.SetOption(16);
-  deviceOptions.VTKmNumaRegions.SetOption(2);
   deviceOptions.VTKmDeviceInstance.SetOption(5);
   config.Initialize(deviceOptions);
   VTKM_TEST_ASSERT(config.SetThreads(1) == internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
                    "Shouldn't be able to set threads after kokkos is initalized");
-  VTKM_TEST_ASSERT(config.SetNumaRegions(1) == internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
-                   "Shouldn't be able to set numa regions after kokkos is initalized");
   VTKM_TEST_ASSERT(config.SetDeviceInstance(1) ==
                      internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
                    "Shouldn't be able to set device instnace after kokkos is initalized");
@@ -85,20 +64,12 @@ TestingRuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagKokkos>::TestRunti
                    "Failed to get set threads");
   VTKM_TEST_ASSERT(testValue == 8,
                    "Set threads does not match expected value: 8 != " + std::to_string(testValue));
-  VTKM_TEST_ASSERT(config.GetNumaRegions(testValue) ==
-                     internal::RuntimeDeviceConfigReturnCode::SUCCESS,
-                   "Failed to get set numa regions");
-  VTKM_TEST_ASSERT(testValue == 4,
-                   "Set numa regions does not match expected value: 4 != " +
-                     std::to_string(testValue));
   VTKM_TEST_ASSERT(config.GetDeviceInstance(testValue) ==
                      internal::RuntimeDeviceConfigReturnCode::SUCCESS,
                    "Failed to get set device instance");
   VTKM_TEST_ASSERT(testValue == 0,
                    "Set device instance does not match expected value: 0 != " +
                      std::to_string(testValue));
-
-  vtkm::cont::testing::Testing::UnsetEnv("KOKKOS_DEVICE_ID");
 }
 
 } // namespace vtkm::cont::testing

@@ -13,9 +13,9 @@ project(HelloWorklet CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if(TARGET vtkm_io)
+if(TARGET vtkm::io)
   add_executable(HelloWorklet HelloWorklet.cxx)
-  target_link_libraries(HelloWorklet PRIVATE vtkm_filter_core vtkm_io)
+  target_link_libraries(HelloWorklet PRIVATE vtkm::filter_core vtkm::io)
 
   vtkm_add_target_information(HelloWorklet
     DROP_UNUSED_SYMBOLS

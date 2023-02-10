@@ -181,6 +181,11 @@ vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README a
 # Allow VTK to turn off these symlinks for its wheel distribution.
 vtkm_option(VTKm_SKIP_LIBRARY_VERSIONS "Skip versioning VTK-m libraries" OFF)
 
+# During development, running unit tests with the default values can be too lengthy.
+# Allow for the developer to skip the majority of the default values and control them
+# through ctest's command-line. Doesn't affect CI unless enabled.
+vtkm_option(VTKm_OVERRIDE_CTEST_TIMEOUT "Disable default ctest timeout" OFF)
+
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
@@ -191,6 +196,7 @@ mark_as_advanced(
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
   VTKm_SKIP_LIBRARY_VERSIONS
+  VTKm_OVERRIDE_CTEST_TIMEOUT
   )
 
 #-----------------------------------------------------------------------------
@@ -414,9 +420,11 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
 
   # Create and install exports for external projects
   export(EXPORT ${VTKm_EXPORT_NAME}
+    NAMESPACE vtkm::
     FILE ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
     )
   install(EXPORT ${VTKm_EXPORT_NAME}
+    NAMESPACE vtkm::
     DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
     FILE VTKmTargets.cmake
     )

@@ -75,7 +75,7 @@ public:
     for (vtkm::Id i = 0; i < n; i++)
     {
       const ParticleType p = portal.Get(i);
-      std::vector<vtkm::Id> ids = this->BoundsMap.FindBlocks(p.Pos);
+      std::vector<vtkm::Id> ids = this->BoundsMap.FindBlocks(p.GetPosition());
 
       if (!ids.empty() && this->BoundsMap.FindRank(ids[0]) == this->Rank)
       {
@@ -160,7 +160,7 @@ public:
     auto bit = blockIds.begin();
     while (pit != particles.end() && bit != blockIds.end())
     {
-      this->ParticleBlockIDsMap[pit->ID] = *bit;
+      this->ParticleBlockIDsMap[pit->GetID()] = *bit;
       pit++;
       bit++;
     }
@@ -175,12 +175,12 @@ public:
     if (this->Active.empty())
       return false;
 
-    blockId = this->ParticleBlockIDsMap[this->Active.front().ID][0];
+    blockId = this->ParticleBlockIDsMap[this->Active.front().GetID()][0];
     auto it = this->Active.begin();
     while (it != this->Active.end())
     {
       auto p = *it;
-      if (blockId == this->ParticleBlockIDsMap[p.ID][0])
+      if (blockId == this->ParticleBlockIDsMap[p.GetID()][0])
       {
         particles.emplace_back(p);
         it = this->Active.erase(it);

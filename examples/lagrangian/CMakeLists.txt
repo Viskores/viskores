@@ -12,7 +12,7 @@ cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if(TARGET vtkm_filter_flow)
+if(TARGET vtkm::filter_flow)
   add_executable(Lagrangian lagrangian.cxx ABCfield.h)
-  target_link_libraries(Lagrangian PRIVATE vtkm_filter_flow)
+  target_link_libraries(Lagrangian PRIVATE vtkm::filter_flow)
 endif()

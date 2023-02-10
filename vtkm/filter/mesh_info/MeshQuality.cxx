@@ -89,7 +89,7 @@ VTKM_CONT MeshQuality::MeshQuality(CellMetric metric)
 
 VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& input)
 {
-  std::unique_ptr<vtkm::filter::NewFilterField> implementation;
+  std::unique_ptr<vtkm::filter::FilterField> implementation;
   switch (this->MyMetric)
   {
     case vtkm::filter::mesh_info::CellMetric::Area:

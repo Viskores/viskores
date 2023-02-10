@@ -7,15 +7,15 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/filter/NewFilterField.h>
+#include <vtkm/filter/FilterField.h>
 
 namespace vtkm
 {
 namespace filter
 {
 
-vtkm::cont::DataSet NewFilterField::CreateResultField(const vtkm::cont::DataSet& inDataSet,
-                                                      const vtkm::cont::Field& resultField) const
+vtkm::cont::DataSet FilterField::CreateResultField(const vtkm::cont::DataSet& inDataSet,
+                                                   const vtkm::cont::Field& resultField) const
 {
   vtkm::cont::DataSet outDataSet = this->CreateResult(inDataSet);
   outDataSet.AddField(resultField);
@@ -24,7 +24,7 @@ vtkm::cont::DataSet NewFilterField::CreateResultField(const vtkm::cont::DataSet&
   return outDataSet;
 }
 
-void NewFilterField::ResizeIfNeeded(size_t index_st)
+void FilterField::ResizeIfNeeded(size_t index_st)
 {
   if (this->ActiveFieldNames.size() <= index_st)
   {

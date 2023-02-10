@@ -217,24 +217,22 @@ public:
   };
 
   /// Intepolate the input point field data at the points of the geometry
-  template <typename T,
-            typename Storage,
+  template <typename InArrayType,
+            typename OutArrayType,
+            typename ComponentType,
             typename InputCellSetTypeList = VTKM_DEFAULT_CELL_SET_LIST>
-  vtkm::cont::ArrayHandle<T> ProcessPointField(
-    const vtkm::cont::ArrayHandle<T, Storage>& field,
-    const T& invalidValue,
-    InputCellSetTypeList icsTypes = InputCellSetTypeList()) const
+  void ProcessPointField(const InArrayType& field,
+                         const OutArrayType& result,
+                         ComponentType invalidValue,
+                         InputCellSetTypeList icsTypes = InputCellSetTypeList()) const
   {
-    vtkm::cont::ArrayHandle<T> result;
     vtkm::cont::Invoker invoke;
-    invoke(InterpolatePointField<T>(invalidValue),
+    invoke(InterpolatePointField<ComponentType>(invalidValue),
            this->CellIds,
            this->ParametricCoordinates,
            this->InputCellSet.ResetCellSetList(icsTypes),
            field,
            result);
-
-    return result;
   }
 
   vtkm::cont::ArrayHandle<vtkm::Id> GetCellIds() const { return this->CellIds; }

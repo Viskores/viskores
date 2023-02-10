@@ -24,11 +24,17 @@ namespace vtkm
 namespace internal
 {
 
+// Forward declaration
+template <typename SourcePortalType>
+class ArrayPortalRecombineVec;
+
 template <typename PortalType>
 class RecombineVec
 {
   vtkm::VecCConst<PortalType> Portals;
   vtkm::Id Index;
+
+  friend vtkm::internal::ArrayPortalRecombineVec<PortalType>;
 
 public:
   using ComponentType = typename std::remove_const<typename PortalType::ValueType>::type;
@@ -72,7 +78,14 @@ public:
 
   VTKM_EXEC_CONT RecombineVec& operator=(const RecombineVec& src)
   {
-    this->DoCopy(src);
+    if ((&this->Portals[0] != &src.Portals[0]) || (this->Index != src.Index))
+    {
+      this->DoCopy(src);
+    }
+    else
+    {
+      // Copying to myself. Do not need to do anything.
+    }
     return *this;
   }
 
@@ -320,13 +333,26 @@ public:
 
   VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
-    // The ValueType is actually a reference back to the portals, and sets to it should
-    // already be set in the portal. Thus, we don't really need to do anything.
-    VTKM_ASSERT(value.GetIndex() == index);
+    if ((value.GetIndex() == index) && (value.Portals.GetPointer() == this->Portals))
+    {
+      // The ValueType is actually a reference back to the portals. If this reference is
+      // actually pointing back to the same index, we don't need to do anything.
+    }
+    else
+    {
+      this->DoCopy(index, value);
+    }
   }
 
   template <typename T>
   VTKM_EXEC_CONT void Set(vtkm::Id index, const T& value) const
+  {
+    this->DoCopy(index, value);
+  }
+
+private:
+  template <typename T>
+  VTKM_EXEC_CONT void DoCopy(vtkm::Id index, const T& value) const
   {
     using Traits = vtkm::VecTraits<T>;
     VTKM_ASSERT(Traits::GetNumberOfComponents(value) == this->NumberOfComponents);
@@ -408,8 +434,6 @@ class Storage<vtkm::internal::RecombineVec<ReadWritePortal>,
   }
 
 public:
-  VTKM_STORAGE_NO_RESIZE;
-
   using ReadPortalType = vtkm::internal::ArrayPortalRecombineVec<ReadWritePortal>;
   using WritePortalType = vtkm::internal::ArrayPortalRecombineVec<ReadWritePortal>;
 
@@ -424,6 +448,19 @@ public:
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return SourceStorage::GetNumberOfValues(BuffersForComponent(buffers, 0));
+  }
+
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token)
+  {
+    vtkm::IdComponent numComponents = NumberOfComponents(buffers);
+    for (vtkm::IdComponent component = 0; component < numComponents; ++component)
+    {
+      SourceStorage::ResizeBuffers(
+        numValues, BuffersForComponent(buffers, component), preserve, token);
+    }
   }
 
   VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>&,
@@ -617,9 +654,5 @@ struct ArrayExtractComponentImpl<vtkm::cont::internal::StorageTagRecombineVec>
 
 }
 } // namespace vtkm::cont
-
-//=============================================================================
-// Specializations of worklet arguments using ArrayHandleGropuVecVariable
-#include <vtkm/exec/arg/FetchTagArrayDirectOutArrayHandleRecombineVec.h>
 
 #endif //vtk_m_cont_ArrayHandleRecombineVec_h
