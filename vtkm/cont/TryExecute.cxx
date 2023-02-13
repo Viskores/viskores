@@ -12,6 +12,7 @@
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/ErrorUserAbort.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
 namespace vtkm
@@ -53,6 +54,13 @@ VTKM_CONT_EXPORT void HandleTryExecuteException(vtkm::cont::DeviceAdapterId devi
     // Should bad values be deferred to another device? Seems unlikely they will succeed.
     // Re-throw instead.
     VTKM_LOG_TRYEXECUTE_FAIL("ErrorBadValue (" << e.GetMessage() << ")", functorName, deviceId);
+    throw;
+  }
+  catch (vtkm::cont::ErrorUserAbort& e)
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               e.GetMessage() << " Aborting: " << functorName << ", on device "
+                              << deviceId.GetName());
     throw;
   }
   catch (vtkm::cont::Error& e)

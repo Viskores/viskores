@@ -94,6 +94,7 @@ set(headers
   ErrorExecution.h
   ErrorFilterExecution.h
   ErrorInternal.h
+  ErrorUserAbort.h
   ExecutionAndControlObjectBase.h
   ExecutionObjectBase.h
   Field.h

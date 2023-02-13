@@ -122,6 +122,12 @@ if(TARGET vtkm_filter_field_conversion)
     )
 endif()
 
+if(TARGET vtkm_filter_contour)
+  list(APPEND unit_tests_device
+    UnitTestAbort.cxx
+  )
+endif()
+
 vtkm_unit_tests(SOURCES ${unit_tests} DEVICE_SOURCES ${unit_tests_device})
 
 #add distributed tests i.e.test to run with MPI
