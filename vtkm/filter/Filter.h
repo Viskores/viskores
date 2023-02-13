@@ -263,27 +263,31 @@ public:
   ///
   /// By default, all fields are passed during execution.
   ///
-  VTKM_CONT
-  void SetFieldsToPass(const vtkm::filter::FieldSelection& fieldsToPass)
-  {
-    this->FieldsToPass = fieldsToPass;
-  }
+  VTKM_CONT void SetFieldsToPass(const vtkm::filter::FieldSelection& fieldsToPass);
+  VTKM_CONT void SetFieldsToPass(vtkm::filter::FieldSelection&& fieldsToPass);
 
-  VTKM_CONT
-  void SetFieldsToPass(const vtkm::filter::FieldSelection& fieldsToPass,
-                       vtkm::filter::FieldSelection::Mode mode)
-  {
-    this->FieldsToPass = fieldsToPass;
-    this->FieldsToPass.SetMode(mode);
-  }
+  VTKM_DEPRECATED(2.0)
+  VTKM_CONT void SetFieldsToPass(const vtkm::filter::FieldSelection& fieldsToPass,
+                                 vtkm::filter::FieldSelection::Mode mode);
 
-  VTKM_CONT
-  void SetFieldsToPass(
+  VTKM_CONT void SetFieldsToPass(
+    std::initializer_list<std::string> fields,
+    vtkm::filter::FieldSelection::Mode mode = vtkm::filter::FieldSelection::Mode::Select);
+
+  VTKM_CONT void SetFieldsToPass(
+    std::initializer_list<std::pair<std::string, vtkm::cont::Field::Association>> fields,
+    vtkm::filter::FieldSelection::Mode mode = vtkm::filter::FieldSelection::Mode::Select);
+
+
+  VTKM_CONT void SetFieldsToPass(
     const std::string& fieldname,
     vtkm::cont::Field::Association association,
-    vtkm::filter::FieldSelection::Mode mode = vtkm::filter::FieldSelection::Mode::Select)
+    vtkm::filter::FieldSelection::Mode mode = vtkm::filter::FieldSelection::Mode::Select);
+
+  VTKM_CONT void SetFieldsToPass(const std::string& fieldname,
+                                 vtkm::filter::FieldSelection::Mode mode)
   {
-    this->SetFieldsToPass({ fieldname, association }, mode);
+    this->SetFieldsToPass(fieldname, vtkm::cont::Field::Association::Any, mode);
   }
 
   VTKM_CONT
@@ -442,9 +446,12 @@ protected:
   {
     vtkm::cont::DataSet outDataSet;
     outDataSet.SetCellSet(resultCellSet);
-    outDataSet.AddCoordinateSystem(resultCoordSystem);
     vtkm::filter::FieldSelection fieldSelection = this->GetFieldsToPass();
-    fieldSelection.AddField(resultCoordSystem, vtkm::filter::FieldSelection::Mode::Exclude);
+    if (this->GetPassCoordinateSystems() || fieldSelection.HasField(resultCoordSystem))
+    {
+      outDataSet.AddCoordinateSystem(resultCoordSystem);
+      fieldSelection.AddField(resultCoordSystem, vtkm::filter::FieldSelection::Mode::Exclude);
+    }
     this->MapFieldsOntoOutput(inDataSet, fieldSelection, outDataSet, fieldMapper);
     return outDataSet;
   }
