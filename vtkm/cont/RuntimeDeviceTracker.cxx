@@ -35,6 +35,7 @@ struct RuntimeDeviceTrackerInternals
 
   std::array<bool, VTKM_MAX_DEVICE_ADAPTER_ID> RuntimeAllowed;
   bool ThreadFriendlyMemAlloc = false;
+  std::function<bool()> AbortChecker;
 };
 
 }
@@ -187,6 +188,28 @@ VTKM_CONT void RuntimeDeviceTracker::CopyStateFrom(const vtkm::cont::RuntimeDevi
 }
 
 VTKM_CONT
+void RuntimeDeviceTracker::SetAbortChecker(const std::function<bool()>& func)
+{
+  this->Internals->AbortChecker = func;
+}
+
+VTKM_CONT
+bool RuntimeDeviceTracker::CheckForAbortRequest() const
+{
+  if (this->Internals->AbortChecker)
+  {
+    return this->Internals->AbortChecker();
+  }
+  return false;
+}
+
+VTKM_CONT
+void RuntimeDeviceTracker::ClearAbortChecker()
+{
+  this->Internals->AbortChecker = nullptr;
+}
+
+VTKM_CONT
 void RuntimeDeviceTracker::PrintSummary(std::ostream& out) const
 {
   for (vtkm::Int8 i = 1; i < VTKM_MAX_DEVICE_ADAPTER_ID; ++i)
@@ -229,25 +252,6 @@ ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(
 }
 
 VTKM_CONT
-ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(vtkm::cont::DeviceAdapterId device,
-                                                       RuntimeDeviceTrackerMode mode)
-  : ScopedRuntimeDeviceTracker(GetRuntimeDeviceTracker())
-{
-  if (mode == RuntimeDeviceTrackerMode::Force)
-  {
-    this->ForceDevice(device);
-  }
-  else if (mode == RuntimeDeviceTrackerMode::Enable)
-  {
-    this->ResetDevice(device);
-  }
-  else if (mode == RuntimeDeviceTrackerMode::Disable)
-  {
-    this->DisableDevice(device);
-  }
-}
-
-VTKM_CONT
 ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(
   vtkm::cont::DeviceAdapterId device,
   RuntimeDeviceTrackerMode mode,
@@ -266,6 +270,14 @@ ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(
   {
     this->DisableDevice(device);
   }
+}
+
+VTKM_CONT ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(
+  const std::function<bool()>& abortChecker,
+  const vtkm::cont::RuntimeDeviceTracker& tracker)
+  : ScopedRuntimeDeviceTracker(tracker)
+{
+  this->SetAbortChecker(abortChecker);
 }
 
 VTKM_CONT
