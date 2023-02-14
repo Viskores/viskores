@@ -77,7 +77,7 @@ int TestAbort()
                    result.GetNumberOfCells(),
                    " triangles");
   }
-  catch (const vtkm::cont::ErrorUserAbort& e)
+  catch (const vtkm::cont::ErrorUserAbort&)
   {
     std::cout << "Execution was successfully aborted\n";
   }
@@ -90,7 +90,7 @@ int TestAbort()
     std::cout << "Success: filter execution was not aborted. Result: " << result.GetNumberOfPoints()
               << " points and " << result.GetNumberOfCells() << " triangles\n";
   }
-  catch (const vtkm::cont::ErrorUserAbort& e)
+  catch (const vtkm::cont::ErrorUserAbort&)
   {
     VTKM_TEST_FAIL("Execution was unexpectedly aborted");
   }
