@@ -256,10 +256,7 @@ private:
     }
 
     KOKKOS_INLINE_FUNCTION
-    void join(volatile value_type& dst, const volatile value_type& src) const
-    {
-      dst = this->Operator(dst, src);
-    }
+    void join(value_type& dst, const value_type& src) const { dst = this->Operator(dst, src); }
 
     KOKKOS_INLINE_FUNCTION
     void init(value_type& dst) const
