@@ -15,8 +15,6 @@
 #include <vtkm/cont/ArrayHandleStride.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 
-#include <vtkm/VecVariable.h>
-
 #include <vtkm/internal/ArrayPortalValueReference.h>
 
 namespace vtkm
@@ -586,9 +584,13 @@ public:
 ///
 /// Note that caution should be used with `ArrayHandleRecombineVec` because the
 /// size of the `Vec` values is not known at compile time. Thus, the value
-/// type of this array is forced to a `VecVariable`, which can cause surprises
-/// if treated as a `Vec`. In particular, the static `NUM_COMPONENTS` expression
-/// does not exist.
+/// type of this array is forced to a special `RecombineVec` class that can cause
+/// surprises if treated as a `Vec`. In particular, the static `NUM_COMPONENTS`
+/// expression does not exist. Furthermore, new variables of type `RecombineVec`
+/// cannot be created. This means that simple operators like `+` will not work
+/// because they require an intermediate object to be created. (Equal operators
+/// like `+=` do work because they are given an existing variable to place the
+/// output.)
 ///
 template <typename ComponentType>
 class ArrayHandleRecombineVec

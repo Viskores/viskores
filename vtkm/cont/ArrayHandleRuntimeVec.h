@@ -262,13 +262,15 @@ public:
 /// as a template parameter at compile time. `ArrayHandleRuntimeVec` can be used
 /// in this case.
 ///
-/// Note that this version of `ArrayHandle` breaks some of the assumptions
-/// about `ArrayHandle` a little bit. Typically, there is exactly one type for
-/// every value in the array, and this value is also the same between the
-/// control and execution environment. However, this class uses `VecFromPortal`
-/// it implement a `Vec`-like class that has a variable number of
-/// values, and this type can change between control and execution
-/// environments.
+/// Note that caution should be used with `ArrayHandleRuntimeVec` because the
+/// size of the `Vec` values is not known at compile time. Thus, the value
+/// type of this array is forced to a special `VecFromPortal` class that can cause
+/// surprises if treated as a `Vec`. In particular, the static `NUM_COMPONENTS`
+/// expression does not exist. Furthermore, new variables of type `VecFromPortal`
+/// cannot be created. This means that simple operators like `+` will not work
+/// because they require an intermediate object to be created. (Equal operators
+/// like `+=` do work because they are given an existing variable to place the
+/// output.)
 ///
 /// It is possible to provide an `ArrayHandleBasic` of the same component
 /// type as the underlying storage for this array. In this case, the array
