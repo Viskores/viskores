@@ -123,7 +123,7 @@ if(TARGET vtkm_filter_field_conversion)
 endif()
 
 if(TARGET vtkm_filter_contour)
-  list(APPEND unit_tests_device
+  list(APPEND unit_tests
     UnitTestAbort.cxx
   )
 endif()
