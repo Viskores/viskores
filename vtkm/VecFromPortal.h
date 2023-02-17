@@ -53,6 +53,18 @@ public:
     }
   }
 
+  template <vtkm::IdComponent N>
+  VTKM_EXEC_CONT operator vtkm::Vec<ComponentType, N>() const
+  {
+    vtkm::Vec<ComponentType, N> result;
+    this->CopyInto(result);
+    for (vtkm::IdComponent index = this->NumComponents; index < N; ++index)
+    {
+      result[index] = vtkm::TypeTraits<ComponentType>::ZeroInitialization();
+    }
+    return result;
+  }
+
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   vtkm::internal::ArrayPortalValueReference<PortalType> operator[](vtkm::IdComponent index) const
@@ -60,6 +72,20 @@ public:
     return vtkm::internal::ArrayPortalValueReference<PortalType>(this->Portal,
                                                                  index + this->Offset);
   }
+
+  template <typename T, vtkm::IdComponent N>
+  VTKM_EXEC_CONT VecFromPortal& operator=(const vtkm::Vec<T, N>& src)
+  {
+    vtkm::IdComponent numComponents = vtkm::Min(N, this->NumComponents);
+    for (vtkm::IdComponent index = 0; index < numComponents; ++index)
+    {
+      this->Portal.Set(index + this->Offset, src[index]);
+    }
+    return *this;
+  }
+
+  VTKM_EXEC_CONT const PortalType& GetPortal() const { return this->Portal; }
+  VTKM_EXEC_CONT vtkm::Id GetOffset() const { return this->Offset; }
 
 private:
   PortalType Portal;
@@ -91,7 +117,8 @@ struct VecTraits<vtkm::VecFromPortal<PortalType>>
   using VecType = vtkm::VecFromPortal<PortalType>;
 
   using ComponentType = typename VecType::ComponentType;
-  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
+  using BaseComponentType =
+    typename vtkm::internal::SafeVecTraits<ComponentType>::BaseComponentType;
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeVariable;
 

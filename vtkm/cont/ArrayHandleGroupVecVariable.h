@@ -47,7 +47,7 @@ public:
   {
   }
 
-  /// Copy constructor for any other ArrayPortalConcatenate with a portal type
+  /// Copy constructor for any other ArrayPortalGroupVecVariable with a portal type
   /// that can be copied to this portal type. This allows us to do any type
   /// casting that the portals do (like the non-const to const cast).
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -77,12 +77,19 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
+  void Set(vtkm::Id index, const ValueType& value) const
   {
-    // The ValueType (VecFromPortal) operates on demand. Thus, if you set
-    // something in the value, it has already been passed to the array. Perhaps
-    // we should check to make sure that the value used matches the location
-    // you are trying to set in the array, but we don't do that.
+    if ((&value.GetPortal() == &this->ComponentsPortal) &&
+        (value.GetOffset() == this->OffsetsPortal.Get(index)))
+    {
+      // The ValueType (VecFromPortal) operates on demand. Thus, if you set
+      // something in the value, it has already been passed to the array.
+    }
+    else
+    {
+      // The value comes from somewhere else. Copy data in.
+      this->Get(index) = value;
+    }
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -237,13 +244,15 @@ public:
 /// it contains three values of Vec-like objects with the data [0,1,2,3],
 /// [4,5], and [6,7,8].
 ///
-/// Note that this version of \c ArrayHandle breaks some of the assumptions
-/// about \c ArrayHandle a little bit. Typically, there is exactly one type for
-/// every value in the array, and this value is also the same between the
-/// control and execution environment. However, this class uses \c
-/// VecFromPortal it implement a Vec-like class that has a variable number of
-/// values, and this type can change between control and execution
-/// environments.
+/// Note that caution should be used with `ArrayHandleRuntimeVec` because the
+/// size of the `Vec` values is not known at compile time. Thus, the value
+/// type of this array is forced to a special `VecFromPortal` class that can cause
+/// surprises if treated as a `Vec`. In particular, the static `NUM_COMPONENTS`
+/// expression does not exist. Furthermore, new variables of type `VecFromPortal`
+/// cannot be created. This means that simple operators like `+` will not work
+/// because they require an intermediate object to be created. (Equal operators
+/// like `+=` do work because they are given an existing variable to place the
+/// output.)
 ///
 /// The offsets array is often derived from a list of sizes for each of the
 /// entries. You can use the convenience function \c

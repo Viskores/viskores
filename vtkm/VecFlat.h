@@ -22,18 +22,20 @@ namespace internal
 {
 
 template <typename T,
-          typename MultipleComponents = typename vtkm::VecTraits<T>::HasMultipleComponents>
+          typename MultipleComponents =
+            typename vtkm::internal::SafeVecTraits<T>::HasMultipleComponents>
 struct TotalNumComponents;
 
 template <typename T>
 struct TotalNumComponents<T, vtkm::VecTraitsTagMultipleComponents>
 {
   VTKM_STATIC_ASSERT_MSG(
-    (std::is_same<typename vtkm::VecTraits<T>::IsSizeStatic, vtkm::VecTraitsTagSizeStatic>::value),
+    (std::is_same<typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic,
+                  vtkm::VecTraitsTagSizeStatic>::value),
     "vtkm::VecFlat can only be used with Vec types with a static number of components.");
-  using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
+  using ComponentType = typename vtkm::internal::SafeVecTraits<T>::ComponentType;
   static constexpr vtkm::IdComponent value =
-    vtkm::VecTraits<T>::NUM_COMPONENTS * TotalNumComponents<ComponentType>::value;
+    vtkm::internal::SafeVecTraits<T>::NUM_COMPONENTS * TotalNumComponents<ComponentType>::value;
 };
 
 template <typename T>
@@ -43,7 +45,7 @@ struct TotalNumComponents<T, vtkm::VecTraitsTagSingleComponent>
 };
 
 template <typename T>
-using FlattenVec = vtkm::Vec<typename vtkm::VecTraits<T>::BaseComponentType,
+using FlattenVec = vtkm::Vec<typename vtkm::internal::SafeVecTraits<T>::BaseComponentType,
                              vtkm::internal::TotalNumComponents<T>::value>;
 
 template <typename T>
@@ -62,10 +64,10 @@ VTKM_EXEC_CONT T GetFlatVecComponentImpl(const T& component,
 }
 
 template <typename T>
-VTKM_EXEC_CONT typename vtkm::VecTraits<T>::BaseComponentType
+VTKM_EXEC_CONT typename vtkm::internal::SafeVecTraits<T>::BaseComponentType
 GetFlatVecComponentImpl(const T& vec, vtkm::IdComponent index, std::false_type vtkmNotUsed(isBase))
 {
-  using Traits = vtkm::VecTraits<T>;
+  using Traits = vtkm::internal::SafeVecTraits<T>;
   using ComponentType = typename Traits::ComponentType;
   using BaseComponentType = typename Traits::BaseComponentType;
 
@@ -78,7 +80,7 @@ GetFlatVecComponentImpl(const T& vec, vtkm::IdComponent index, std::false_type v
 } // namespace detail
 
 template <typename T>
-VTKM_EXEC_CONT typename vtkm::VecTraits<T>::BaseComponentType GetFlatVecComponent(
+VTKM_EXEC_CONT typename vtkm::internal::SafeVecTraits<T>::BaseComponentType GetFlatVecComponent(
   const T& vec,
   vtkm::IdComponent index)
 {
@@ -112,7 +114,7 @@ VTKM_EXEC_CONT void CopyVecNestedToFlatImpl(const NestedVecType& nestedVec,
                                             vtkm::Vec<T, N>& flatVec,
                                             vtkm::IdComponent flatOffset)
 {
-  using Traits = vtkm::VecTraits<NestedVecType>;
+  using Traits = vtkm::internal::SafeVecTraits<NestedVecType>;
   using ComponentType = typename Traits::ComponentType;
   constexpr vtkm::IdComponent subSize = TotalNumComponents<ComponentType>::value;
 
@@ -174,7 +176,7 @@ VTKM_EXEC_CONT void CopyVecFlatToNestedImpl(const vtkm::Vec<T, N>& flatVec,
                                             vtkm::IdComponent flatOffset,
                                             NestedVecType& nestedVec)
 {
-  using Traits = vtkm::VecTraits<NestedVecType>;
+  using Traits = vtkm::internal::SafeVecTraits<NestedVecType>;
   using ComponentType = typename Traits::ComponentType;
   constexpr vtkm::IdComponent subSize = TotalNumComponents<ComponentType>::value;
 
