@@ -32,11 +32,12 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <type_traits>
 
-#ifdef KOKKOS_VERSION_MAJOR> 3 || (KOKKOS_VERSION_MAJOR == 3 && KOKKOS_VERSION_MINOR >= 7)
-#define __MAYBE_VOLATILE
+#if KOKKOS_VERSION_MAJOR > 3 || (KOKKOS_VERSION_MAJOR == 3 && KOKKOS_VERSION_MINOR >= 7)
+#define VTKM_VOLATILE
 #else
-#define __MAYBE_VOLATILE volatile
+#define VTKM_VOLATILE volatile
 #endif
+
 
 namespace vtkm
 {
@@ -262,7 +263,7 @@ private:
     }
 
     KOKKOS_INLINE_FUNCTION
-    void join(__MAYBE_VOLATILE value_type& dst, const __MAYBE_VOLATILE value_type& src) const
+    void join(VTKM_VOLATILE value_type& dst, const VTKM_VOLATILE value_type& src) const
     {
       dst = this->Operator(dst, src);
     }
@@ -793,6 +794,6 @@ public:
 }
 } // namespace vtkm::cont
 
-#undef __MAYBE_VOLATILE
+#undef VTKM_VOLATILE
 
 #endif //vtk_m_cont_kokkos_internal_DeviceAdapterAlgorithmKokkos_h
