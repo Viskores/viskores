@@ -235,7 +235,6 @@ public:
                   << " localTerm= " << numLocalTerminations << " Block= " << block << std::endl;
     for (auto& p : this->Inactive)
       p.NumCommunications++;
-
     messenger.Exchange(this->Inactive,
                        this->ParticleBlockIDsMap,
                        numLocalTerminations,

@@ -391,53 +391,54 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
 
     vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
     seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0) });
-    //                                               vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
-    vtkm::Id numSeeds = seedArray.GetNumberOfValues();
+    vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1)
+  });
+  vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
-    if (fType == STREAMLINE)
-    {
-      vtkm::filter::flow::Streamline streamline;
-      SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
-      auto out = streamline.Execute(pds);
+  if (fType == STREAMLINE)
+  {
+    vtkm::filter::flow::Streamline streamline;
+    SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+    auto out = streamline.Execute(pds);
 
-      for (vtkm::Id i = 0; i < nPerRank; i++)
-        ValidateOutput(out.GetPartition(i), numSeeds, xMaxRanges[i], fType);
-    }
-    else if (fType == PARTICLE_ADVECTION)
-    {
-      vtkm::filter::flow::ParticleAdvection particleAdvection;
-      SetFilter(particleAdvection, stepSize, numSteps, fieldName, seedArray, useThreaded);
-      auto out = particleAdvection.Execute(pds);
-
-      //Particles end up in last rank.
-      if (comm.rank() == comm.size() - 1)
-      {
-        VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
-        ValidateOutput(out.GetPartition(0), numSeeds, xMaxRanges[xMaxRanges.size() - 1], fType);
-
-        vtkm::Id n = out.GetNumberOfPartitions();
-        out.GetPartition(n - 1).PrintSummary(std::cout);
-      }
-      else
-        VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 0, "Wrong number of partitions in output");
-    }
-    else if (fType == PATHLINE)
-    {
-      auto pds2 = allPDS2[n];
-      AddVectorFields(pds2, fieldName, vecX);
-
-      vtkm::filter::flow::Pathline pathline;
-      SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
-
-      pathline.SetPreviousTime(time0);
-      pathline.SetNextTime(time1);
-      pathline.SetNextDataSet(pds2);
-
-      auto out = pathline.Execute(pds);
-      for (vtkm::Id i = 0; i < nPerRank; i++)
-        ValidateOutput(out.GetPartition(i), numSeeds, xMaxRanges[i], fType);
-    }
+    for (vtkm::Id i = 0; i < nPerRank; i++)
+      ValidateOutput(out.GetPartition(i), numSeeds, xMaxRanges[i], fType);
   }
+  else if (fType == PARTICLE_ADVECTION)
+  {
+    vtkm::filter::flow::ParticleAdvection particleAdvection;
+    SetFilter(particleAdvection, stepSize, numSteps, fieldName, seedArray, useThreaded);
+    auto out = particleAdvection.Execute(pds);
+
+    //Particles end up in last rank.
+    if (comm.rank() == comm.size() - 1)
+    {
+      VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
+      ValidateOutput(out.GetPartition(0), numSeeds, xMaxRanges[xMaxRanges.size() - 1], fType);
+
+      vtkm::Id n = out.GetNumberOfPartitions();
+      out.GetPartition(n - 1).PrintSummary(std::cout);
+    }
+    else
+      VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 0, "Wrong number of partitions in output");
+  }
+  else if (fType == PATHLINE)
+  {
+    auto pds2 = allPDS2[n];
+    AddVectorFields(pds2, fieldName, vecX);
+
+    vtkm::filter::flow::Pathline pathline;
+    SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+
+    pathline.SetPreviousTime(time0);
+    pathline.SetNextTime(time1);
+    pathline.SetNextDataSet(pds2);
+
+    auto out = pathline.Execute(pds);
+    for (vtkm::Id i = 0; i < nPerRank; i++)
+      ValidateOutput(out.GetPartition(i), numSeeds, xMaxRanges[i], fType);
+  }
+}
 }
 
 void TestStreamlineFiltersMPI()

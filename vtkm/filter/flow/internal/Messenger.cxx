@@ -383,7 +383,6 @@ bool Messenger::RecvDataSync(const std::set<int>& tags,
     this->Log << "    tag= " << tag << std::endl;
     this->Log << "    numMessages= " << numMessages << std::endl;
     this->Log << "    maxBuffSize= " << maxBuffSize << std::endl;
-
     MPI_Status status;
     std::vector<char> recvBuff;
     for (int r = 0; r < this->NumRanks; r++)
