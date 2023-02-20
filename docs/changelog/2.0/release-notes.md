@@ -21,10 +21,13 @@ VTK-m 2.0 Release Notes
   - Attach compressed ZFP data as WholeDataSet field
 4. [Execution Environment](#Execution-Environment)
   - Removed ExecutionWholeArray class
+  - Add initial support for aborting execution
 5. [Worklets and Filters](#Worklets-and-Filters)
   - Correct particle density filter output field
   - Rename NewFilter base classes to Filter
   - Fix handling of cell fields in Tube filter
+  - Fix setting fields to pass in Filter when setting mode
+  - Respect Filter::PassCoordinateSystem flag in filters creating coordinate systems.
 6. [Build](#Build)
   - More performance test options
   - Output complete list of libraries for external Makefiles
@@ -32,6 +35,7 @@ VTK-m 2.0 Release Notes
 7. [Other](#Other)
   - Expose the Variant helper class
   - Fix VTKM_LOG_SCOPE
+  - Clarify field index ordering in Doxygen
 
 # Core
 
@@ -240,6 +244,29 @@ that `ExecutionWholeArray` had was that it provided an subscript operator
 (somewhat incorrectly). Thus, any use of '[..]' to index the array portal
 have to be changed to use the `Get` method.
 
+## Add initial support for aborting execution
+
+VTK-m now has preliminary support for aborting execution. The per-thread instances of
+`RuntimeDeviceTracker` have a functor called `AbortChecker`. This functor can be set using
+`RuntimeDeviceTracker::SetAbortChecker()` and cleared by `RuntimeDeviceTracker::ClearAbortChecker()`
+The abort checker functor should return `true` if an abort is requested for the thread,
+otherwise, it should return `false`.
+
+Before launching a new task, `TaskExecute` calls the functor to see if an abort is requested,
+and If so, throws an exception of type `vtkm::cont::ErrorUserAbort`.
+
+Any code that wants to use the abort feature, should set an appropriate `AbortChecker`
+functor for the target thread. Then any piece of code that has parts that can execute on
+the device should be put under a `try-catch` block. Any clean-up that is required for an
+aborted execution should be handled in a `catch` block that handles exceptions of type
+`vtkm::cont::ErrorUserAbort`.
+
+The limitation of this implementation is that it is control-side only. The check for abort
+is done before launching a new device task. Once execution has begun on the device, there is
+currently no way to abort that. Therefore, this feature is only useful for aborting code
+that is made up of several smaller device task launches (Which is the case for most
+worklets and filters in VTK-m)
+
 # Worklets and Filters
 
 ## Correct particle density filter output field
@@ -281,6 +308,43 @@ The proper implementation would be to add edge fields to VTK-m. (This
 would also get around some problems with the implementation that was
 removed here when mixing polylines with other cell types and degenerate
 lines.)
+
+## Fix setting fields to pass in `Filter` when setting mode
+
+The `Filter` class has several version of the `SetFieldsToPass` method that
+works in conjunction with the `FieldSelection` object to specify which
+fields are mapped. For example, the user might have code like this to pass
+all fields except those named `pointvar` and `cellvar`:
+
+``` cpp
+    filter.SetFieldsToPass({ "pointvar", "cellvar" },
+                           vtkm::filter::FieldSelection::Mode::Exclude);
+```
+
+This previously worked by implicitly creating a `FieldSelection` object
+using the `std::initializer_list` filled with the 2 strings. This would
+then be passed to the `SetFieldsToPass` method, which would capture the
+`FieldSelection` object and change the mode.
+
+This stopped working in a recent change to `FieldSelection` where each
+entry is given its own mode. With this new class, the `FieldSelection`
+constructor would capture each field in the default mode (`Select`) and
+then change the default mode to `Exclude`. However, the already set modes
+kept their `Select` status, which is not what is intended.
+
+This behavior is fixed by adding `SetFieldToPass` overloads that capture
+both the `initializer_list` and the `Mode` and then constructs the
+`FieldSelection` correctly.
+
+## Respect `Filter::PassCoordinateSystem` flag in filters creating coordinate systems
+
+The `Filter` class has a `PassCoordinateSystem` flag that specifies whether
+coordinate systems should be passed regardless of whether the associated
+field is passed. However, if a filter created its output with the
+`CreateResultCoordinateSystem` method this flag was ignored, and the
+provided coordinate system was always passed. This might not be what the
+user intended, so this method has been fixed to first check the
+`PassCoordinateSystem` flag before setting the coordinates on the output.
 
 # Build
 
@@ -375,3 +439,14 @@ This was not what was happening. The second log message was being printed
 immediately after the first. This is because the scope was taken inside of
 the `LogScope` method. The macro has been rewritten to put the tracking in
 the right scope.
+
+## Clarify field index ordering in Doxygen
+
+The fields in a `DataSet` are indexed from `0` to `GetNumberOfFields() - 1`.
+It is natural to assume that the fields will be indexed in the order that
+they are added, but they are not. Rather, the indexing is arbitrary and can
+change any time a field is added to the dataset.
+
+To make this more clear, Doxygen documentation is added to the `DataSet`
+methods to inform users to not make any assumptions about the order of
+field indexing.
