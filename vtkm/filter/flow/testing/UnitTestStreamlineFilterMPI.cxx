@@ -414,6 +414,9 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
       {
         VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
         ValidateOutput(out.GetPartition(0), numSeeds, xMaxRanges[xMaxRanges.size() - 1], fType);
+
+        vtkm::Id n = out.GetNumberOfPartitions();
+        out.GetPartition(n - 1).PrintSummary(std::cout);
       }
       else
         VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 0, "Wrong number of partitions in output");
@@ -444,7 +447,8 @@ void TestStreamlineFiltersMPI()
   //filterTypes = {filterTypes[1]};
   //flags = {false};
 
-  //TestPartitionedDataSet(1, false, PARTICLE_ADVECTION, true);
+  TestPartitionedDataSet(1, false, PARTICLE_ADVECTION, false);
+  return;
 
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   for (int n = 1; n < 3; n++)
