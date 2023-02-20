@@ -112,11 +112,6 @@ cmake_dependent_option(VTKm_ENABLE_TESTING_LIBRARY "Enable VTKm Testing Library"
   OFF "NOT VTKm_ENABLE_TESTING;NOT VTKm_ENABLE_BENCHMARKS" ON)
 mark_as_advanced(VTKm_ENABLE_TESTING_LIBRARY)
 
-# By default: Set VTKm_ENABLE_KOKKOS_THRUST to ON if VTKm_ENABLE_KOKKOS is ON, otherwise
-# disable it (or if the user explicitly turns this option OFF)
-cmake_dependent_option(VTKm_ENABLE_KOKKOS_THRUST "Enable Kokkos thrust support (only valid with CUDA and HIP)"
-  ON "VTKm_ENABLE_KOKKOS" OFF)
-
 # We may want to make finer controls on whether libraries/modules get built.
 # VTK uses the concept of groups for its modules
 vtkm_option(VTKm_BUILD_ALL_LIBRARIES
@@ -231,6 +226,11 @@ include(VTKmBuildType)
 
 # Include the vtk-m wrappers
 include(VTKmWrappers)
+
+# By default: Set VTKm_ENABLE_KOKKOS_THRUST to ON if VTKm_ENABLE_KOKKOS is ON, otherwise
+# disable it (or if the user explicitly turns this option OFF)
+cmake_dependent_option(VTKm_ENABLE_KOKKOS_THRUST "Enable Kokkos thrust support (only valid with CUDA and HIP)"
+  ON "VTKm_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP" OFF)
 
 # Create vtkm_compiler_flags library. This is an interface library that
 # holds all the C++ compiler flags that are needed for consumers and
