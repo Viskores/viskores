@@ -1,3 +1,6 @@
+![GitLab tag](https://img.shields.io/gitlab/v/tag/vtk/vtk-m?color=red&gitlab_url=https%3A%2F%2Fgitlab.kitware.com&include_prereleases&sort=semver)  
+![Spack version](https://img.shields.io/spack/v/vtk-m.svg)  
+
 # VTK-m #
 
 VTK-m is a toolkit of scientific visualization algorithms for emerging
