@@ -312,12 +312,12 @@
 #define VTKM_CUDA_VERSION_MINOR @VTKM_CUDA_VERSION_MINOR@
 #endif
 
-#if __cplusplus >= 201103L || \
-    ( defined(VTKM_MSVC) && _MSC_VER >= 1900  ) || \
+#if __cplusplus >= 201402L || \
+    ( defined(VTKM_MSVC) && _MSC_VER >= 1910 ) || \
     ( defined(VTKM_ICC)  && defined(__INTEL_CXX11_MODE__) )
-#define VTKM_HAVE_CXX_11
+#define VTKM_HAVE_CXX_14
 #else
-#error "VTK-m requires at least a C++11 compiler"
+#error "VTK-m requires at least a C++14 compiler"
 #endif
 
 //Mark if we have enabled logging.
