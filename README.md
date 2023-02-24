@@ -67,7 +67,7 @@ effort.
 
 VTK-m Requires:
 
-  + C++11 Compiler. VTK-m has been confirmed to work with the following
+  + C++14 Compiler. VTK-m has been confirmed to work with the following
       + GCC 5.4+
       + Clang 5.0+
       + XCode 5.0+
