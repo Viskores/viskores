@@ -40,6 +40,8 @@ $endif\
 
 ## Create update branch
 
+- [ ] Freeze the release branch (In Gitlab VTK-m page)
+  - Settings/Repository/Protected Branches: Release; "allowed to push:No one"
 - [ ] Create update branch `git checkout -b update-to-$(VERSION)`
 $if(PATCH == 0 and RC == "-rc1")\
 - [ ] Bring as a second parent the history of master (Solve conflicts always
@@ -104,6 +106,8 @@ $endif\
   - [ ] `Do: merge`
 - Push tags
   - [ ] `git push origin v$(VERSION)$(RC)`
+- [ ] Unfreeze the release branch (In Gitlab VTK-m page)
+  - Settings/Repository/Protected Branches: Release; "allowed to push: Maintainers"
 
 ## Update Spack
 - [ ] Update Spack package: https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/vtk-m/package.py
