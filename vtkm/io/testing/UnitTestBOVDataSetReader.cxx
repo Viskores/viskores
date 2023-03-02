@@ -41,7 +41,8 @@ inline vtkm::cont::DataSet readBOVDataSet(const char* fname)
 
 void TestReadingBOVDataSet()
 {
-  std::string bovFile = vtkm::cont::testing::Testing::DataPath("uniform/noise.bov");
+  std::string bovFile =
+    vtkm::cont::testing::Testing::DataPath("third_party/visit/example_temp.bov");
 
   auto const& ds = readBOVDataSet(bovFile.data());
 

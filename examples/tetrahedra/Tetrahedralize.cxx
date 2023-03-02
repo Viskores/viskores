@@ -24,8 +24,9 @@ int main(int argc, char* argv[])
   if ((argc < 2) || (argc > 3))
   {
     std::cerr << "Usage: " << argv[0] << " in_data.vtk [out_data.vtk]\n\n";
-    std::cerr << "For example, you could use the ucd3d.vtk that comes with the VTK-m source:\n\n";
-    std::cerr << "  " << argv[0] << " <path-to-vtkm-source>/data/data/unstructured/ucd3d.vtk\n";
+    std::cerr << "For example, you could use the example.vtk that comes with the VTK-m source:\n\n";
+    std::cerr << "  " << argv[0]
+              << " <path-to-vtkm-source>/data/data/third_party/visit/example.vtk\n";
     return 1;
   }
   std::string infilename = argv[1];
