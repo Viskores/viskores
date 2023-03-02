@@ -2,7 +2,7 @@
 .ascent_gcc_cuda:
   variables:
     CCACHE_BASEDIR:       "/gpfs/wolf/"
-    CCACHE_DIR:           "/gpfs/wolf/proj-shared/csc331/vtk-m/ci/ccache/"
+    CCACHE_DIR:           "/gpfs/wolf/csc331/scratch/vbolea/ci/ccache"
     # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
     CCACHE_IGNOREOPTIONS: "-isystem=*"
     CCACHE_NOHASHDIR:     "true"
@@ -12,7 +12,7 @@
     CMAKE_BUILD_TYPE:     "RelWithDebInfo"
     CMAKE_GENERATOR:      "Ninja"
     CUDAHOSTCXX:          "g++"
-    CUSTOM_CI_BUILDS_DIR: "/gpfs/wolf/proj-shared/csc331/vtk-m/ci/runtime"
+    CUSTOM_CI_BUILDS_DIR: "/gpfs/wolf/csc331/scratch/vbolea/ci/vtk-m"
 
     VTKM_SETTINGS: cuda+ascent+ccache
     JOB_MODULES: >-
@@ -31,7 +31,7 @@
   module purge
   module load ${JOB_MODULES}
   module list
-  export PATH="/gpfs/wolf/proj-shared/csc331/vtk-m/ci/utils:$PATH"
+  export PATH="/gpfs/wolf/csc331/scratch/vbolea/ci/utils:$PATH"
 
 build:ascent_gcc_cuda:
   stage: build
