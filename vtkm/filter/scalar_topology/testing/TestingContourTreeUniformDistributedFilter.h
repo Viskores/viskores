@@ -314,9 +314,6 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   {
     // Mutiple ranks -> Some assembly required. Collect data
     // on rank 0, all other ranks return empty data sets
-    using FieldTypeList = vtkm::ListAppend<vtkm::TypeListScalarAll, vtkm::List<vtkm::Id>>;
-    using DataSetWrapper =
-      vtkm::cont::SerializableDataSet<FieldTypeList, vtkm::cont::CellSetListStructured>;
 
     // Communicate results to rank 0
     auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
@@ -331,8 +328,7 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
       p.enqueue(root, result.GetNumberOfPartitions());
       for (const vtkm::cont::DataSet& curr_ds : result)
       {
-        auto curr_sds = DataSetWrapper(curr_ds);
-        p.enqueue(root, curr_sds);
+        p.enqueue(root, curr_ds);
       }
     });
     // Exchange data, i.e., send to rank 0 (pass "true" to exchange data between
@@ -352,9 +348,9 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
           for (vtkm::Id currReceiveDataSetNo = 0; currReceiveDataSetNo < numberOfDataSetsToReceive;
                ++currReceiveDataSetNo)
           {
-            vtkm::cont::SerializableDataSet<> sds;
-            p.dequeue({ receiveFromRank, receiveFromRank }, sds);
-            combined_result.AppendPartition(sds.DataSet);
+            vtkm::cont::DataSet dsIncoming;
+            p.dequeue({ receiveFromRank, receiveFromRank }, dsIncoming);
+            combined_result.AppendPartition(dsIncoming);
           }
         }
       });

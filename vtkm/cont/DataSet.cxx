@@ -8,6 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/CellSetExtrude.h>
+#include <vtkm/cont/CellSetSingleType.h>
+#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Logging.h>
@@ -341,3 +345,30 @@ void DataSet::ConvertToExpected()
 
 } // namespace cont
 } // namespace vtkm
+
+
+namespace mangled_diy_namespace
+{
+
+using SerializedCellSetTypes = vtkm::ListAppend<VTKM_DEFAULT_CELL_SET_LIST,
+                                                vtkm::List<vtkm::cont::CellSetStructured<1>,
+                                                           vtkm::cont::CellSetStructured<2>,
+                                                           vtkm::cont::CellSetStructured<3>,
+                                                           vtkm::cont::CellSetExplicit<>,
+                                                           vtkm::cont::CellSetSingleType<>,
+                                                           vtkm::cont::CellSetExtrude>>;
+using DefaultDataSetWithCellTypes = vtkm::cont::DataSetWithCellSetTypes<SerializedCellSetTypes>;
+
+void Serialization<vtkm::cont::DataSet>::save(BinaryBuffer& bb, const vtkm::cont::DataSet& obj)
+{
+  vtkmdiy::save(bb, DefaultDataSetWithCellTypes{ obj });
+}
+
+void Serialization<vtkm::cont::DataSet>::load(BinaryBuffer& bb, vtkm::cont::DataSet& obj)
+{
+  DefaultDataSetWithCellTypes data;
+  vtkmdiy::load(bb, data);
+  obj = data.DataSet;
+}
+
+} // namespace mangled_diy_namespace
