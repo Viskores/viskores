@@ -1,9 +1,9 @@
 # Ad-hoc build that runs in the ECP Hardware, concretely in OLCF Spock.
 .spock_gcc_hip:
   variables:
-    CCACHE_BASEDIR:          "/gpfs/alpine/world-shared/csc331/"
-    CCACHE_DIR:              "/gpfs/alpine/world-shared/csc331/vtk-m/ci/ccache"
-    CUSTOM_CI_BUILDS_DIR:    "/gpfs/alpine/world-shared/csc331/vtk-m/ci/runtime"
+    CCACHE_BASEDIR:          "/gpfs/alpine/csc331/scratch/"
+    CCACHE_DIR:              "/gpfs/alpine/csc331/scratch/vbolea/ci/vtk-m/ccache"
+    CUSTOM_CI_BUILDS_DIR:    "/gpfs/alpine/csc331/scratch/vbolea/ci/vtk-m/runtime"
 
     # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
     CCACHE_IGNOREOPTIONS:    "-isystem=*"
@@ -12,36 +12,26 @@
 
     CMAKE_BUILD_TYPE:        "RelWithDebInfo"
     CMAKE_GENERATOR:         "Ninja"
+    CMAKE_PREFIX_PATH:       "$CI_BUILDS_DIR/kokkos_install"
 
-    # This is needed for the smoke_test, while we use rocm 5 to build VTK-m the
-    # smoke_test needs 4.5 since Kokkos is built agains rocm 4.5
-    LD_LIBRARY_PATH:         "/opt/rocm-4.5.0/lib:${LD_LIBRARY_PATH}"
-    LIBRARY_PATH:            "/opt/rocm-4.5.0/lib:${LIBRARY_PATH}"
+    KOKKOS_OPTS: >-
+      -DCMAKE_INSTALL_PREFIX:PATH=$CI_BUILDS_DIR/kokkos_install
+      -DCMAKE_CXX_COMPILER:FILEPATH=/opt/rocm-4.5.0/hip/bin/hipcc
+      -DKokkos_ARCH_VEGA908:BOOL=ON
 
-    # While Kokkos and VTK-m uses ROCm 4.5.0 runtime/sdk, we need to build
-    # VTK-m with HIPCC from ROCM 5
-    CMAKE_HIP_COMPILER:      "/opt/rocm-default/llvm/bin/clang++"
-    Kokkos_CXX_COMPILER:     "/opt/rocm-default/llvm/bin/clang++"
-    CMAKE_HIP_ARCHITECTURES: "gfx908"
-
-    CC: gcc
-    CXX: g++
     # DefApps/default;craype;rocm;gcc should be loaded first
     JOB_MODULES: >-
       DefApps/default
-      craype-accel-amd-gfx90a
-      rocm/5
+      craype-accel-amd-gfx908
+      rocm/4.5.0
       gcc/10
       cmake/3.22
       git
 
 
-      kokkos/3.5.00
-      lsf-tools
       ninja
-      spectrum-mpi
       zstd
-    VTKM_SETTINGS: kokkos+hip+spock+ccache+no_rendering
+    VTKM_SETTINGS: kokkos+hip+gfx908+spock+ccache+no_rendering
   interruptible: true
 
 .setup_env_ecpci: &setup_env_ecpci |
@@ -63,6 +53,7 @@ build:spock_gcc_hip:
     - cmake -VV -P .gitlab/ci/config/ccache.cmake
     - ccache -z
     - ccache -s
+    - .gitlab/ci/config/kokkos.sh "$CI_BUILDS_DIR" "3.7.01" $KOKKOS_OPTS
 
 
 
