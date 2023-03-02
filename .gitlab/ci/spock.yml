@@ -42,7 +42,7 @@
 
 build:spock_gcc_hip:
   stage: build
-  tags: [spock, shell]
+  tags: [spock, shell, olcf-spock-shell-02]
   extends:
     - .spock_gcc_hip
     - .run_spock_ci
@@ -75,7 +75,7 @@ build:spock_gcc_hip:
 
 test:spock_gcc_hip:
   stage: test
-  tags: [spock, slurm]
+  tags: [spock, slurm, olcf-spock-slurm-02]
   extends:
     - .spock_gcc_hip
     - .run_spock_ci
