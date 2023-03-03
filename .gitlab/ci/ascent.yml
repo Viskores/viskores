@@ -55,7 +55,7 @@ build:ascent_gcc_cuda:
 
 
   script:
-    - CTEST_MAX_PARALLELISM=8 cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
+    - CTEST_MAX_PARALLELISM=32 cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
     - ctest -VV -S .gitlab/ci/ctest_configure.cmake
     - GITLAB_CI_EMULATION=1 jsrun -n1 -a1 -g1 -c42 ctest -VV -S .gitlab/ci/ctest_build.cmake
   after_script:
