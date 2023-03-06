@@ -65,7 +65,6 @@ template <typename T, typename S>
 void CheckRange(const vtkm::cont::ArrayHandle<T, S>& array)
 {
   VerifyRange(array, vtkm::cont::ArrayRangeCompute(array));
-  VerifyRange(array, vtkm::cont::ArrayRangeCompute(vtkm::cont::UnknownArrayHandle{ array }));
 }
 
 template <typename T, typename S>

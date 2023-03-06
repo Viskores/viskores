@@ -576,7 +576,8 @@ template <typename FieldType>
 inline void ContourTreeMesh<FieldType>::ComputeMaxNeighbors()
 {
   auto neighborCounts = make_ArrayHandleOffsetsToNumComponents(this->NeighborOffsets);
-  vtkm::cont::ArrayHandle<vtkm::Range> rangeArray = vtkm::cont::ArrayRangeCompute(neighborCounts);
+  vtkm::cont::ArrayHandle<vtkm::Range> rangeArray =
+    vtkm::cont::ArrayRangeComputeTemplate(neighborCounts);
   this->MaxNeighbors = static_cast<vtkm::Id>(rangeArray.ReadPortal().Get(0).Max);
 }
 
