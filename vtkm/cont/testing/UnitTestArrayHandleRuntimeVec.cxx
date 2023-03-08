@@ -10,6 +10,7 @@
 
 #include <vtkm/cont/ArrayHandleRuntimeVec.h>
 
+#include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/Invoker.h>
 
 #include <vtkm/worklet/WorkletMapField.h>
@@ -64,7 +65,52 @@ struct PassThrough : vtkm::worklet::WorkletMapField
   template <typename InValue, typename OutValue>
   VTKM_EXEC void operator()(const InValue& inValue, OutValue& outValue) const
   {
-    outValue = inValue;
+    vtkm::IdComponent inIndex = 0;
+    vtkm::IdComponent outIndex = 0;
+    this->FlatCopy(inValue, inIndex, outValue, outIndex);
+  }
+
+  template <typename InValue, typename OutValue>
+  VTKM_EXEC void FlatCopy(const InValue& inValue,
+                          vtkm::IdComponent& inIndex,
+                          OutValue& outValue,
+                          vtkm::IdComponent& outIndex) const
+  {
+    using VTraitsIn = vtkm::internal::SafeVecTraits<InValue>;
+    using VTraitsOut = vtkm::internal::SafeVecTraits<OutValue>;
+    VTraitsOut::SetComponent(outValue, outIndex, VTraitsIn::GetComponent(inValue, inIndex));
+    inIndex++;
+    outIndex++;
+  }
+
+  template <typename InComponent, vtkm::IdComponent InN, typename OutValue>
+  VTKM_EXEC void FlatCopy(const vtkm::Vec<InComponent, InN>& inValue,
+                          vtkm::IdComponent& inIndex,
+                          OutValue& outValue,
+                          vtkm::IdComponent& outIndex) const
+  {
+    VTKM_ASSERT(inIndex == 0);
+    for (vtkm::IdComponent i = 0; i < InN; ++i)
+    {
+      FlatCopy(inValue[i], inIndex, outValue, outIndex);
+      inIndex = 0;
+    }
+  }
+
+  template <typename InValue, typename OutComponent, vtkm::IdComponent OutN>
+  VTKM_EXEC void FlatCopy(const InValue& inValue,
+                          vtkm::IdComponent& inIndex,
+                          vtkm::Vec<OutComponent, OutN>& outValue,
+                          vtkm::IdComponent& outIndex) const
+  {
+    VTKM_ASSERT(outIndex == 0);
+    for (vtkm::IdComponent i = 0; i < OutN; ++i)
+    {
+      OutComponent outComponent;
+      FlatCopy(inValue, inIndex, outComponent, outIndex);
+      outValue[i] = outComponent;
+      outIndex = 0;
+    }
   }
 };
 
@@ -80,7 +126,7 @@ struct TestRuntimeVecAsInput
     baseArray.Allocate(ARRAY_SIZE * NUM_COMPONENTS);
     SetPortal(baseArray.WritePortal());
 
-    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> runtimeVecArray(NUM_COMPONENTS, baseArray);
+    auto runtimeVecArray = vtkm::cont::make_ArrayHandleRuntimeVec(NUM_COMPONENTS, baseArray);
     VTKM_TEST_ASSERT(runtimeVecArray.GetNumberOfValues() == ARRAY_SIZE,
                      "Group array reporting wrong array size.");
 
@@ -108,7 +154,8 @@ struct TestRuntimeVecAsInput
     //verify that you can get the data as a basic array
     vtkm::cont::ArrayHandle<vtkm::Vec<ComponentType, NUM_COMPONENTS>> flatComponents;
     runtimeVecArray.AsArrayHandleBasic(flatComponents);
-    VTKM_TEST_ASSERT(test_equal_ArrayHandles(flatComponents, runtimeVecArray));
+    VTKM_TEST_ASSERT(test_equal_ArrayHandles(
+      flatComponents, vtkm::cont::make_ArrayHandleGroupVec<NUM_COMPONENTS>(baseArray)));
 
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<ComponentType, 1>, NUM_COMPONENTS>>
       nestedComponents;

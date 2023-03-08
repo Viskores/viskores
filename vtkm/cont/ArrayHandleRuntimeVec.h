@@ -26,6 +26,31 @@ namespace vtkm
 namespace internal
 {
 
+namespace detail
+{
+
+template <typename T>
+struct UnrollVecImpl
+{
+  using type = vtkm::Vec<T, 1>;
+};
+
+template <typename T, vtkm::IdComponent N>
+struct UnrollVecImpl<vtkm::Vec<T, N>>
+{
+  using subtype = typename UnrollVecImpl<T>::type;
+  using type = vtkm::Vec<typename subtype::ComponentType, subtype::NUM_COMPONENTS * N>;
+};
+
+} // namespace detail
+
+// A helper class that unrolls a nested `Vec` to a single layer `Vec`. This is similar
+// to `vtkm::VecFlat`, except that this only flattens `vtkm::Vec<T,N>` objects, and not
+// any other `Vec`-like objects. The reason is that a `vtkm::Vec<T,N>` is the same as N
+// consecutive `T` objects whereas the same may not be said about other `Vec`-like objects.
+template <typename T>
+using UnrollVec = typename detail::UnrollVecImpl<T>::type;
+
 template <typename ComponentsPortalType>
 class VTKM_ALWAYS_EXPORT ArrayPortalRuntimeVec
 {
@@ -114,6 +139,12 @@ class Storage<vtkm::VecFromPortal<ComponentsPortal>, vtkm::cont::StorageTagRunti
   using ComponentType = typename ComponentsPortal::ValueType;
   using ComponentsStorage =
     vtkm::cont::internal::Storage<ComponentType, vtkm::cont::StorageTagBasic>;
+
+  VTKM_STATIC_ASSERT_MSG(
+    vtkm::internal::SafeVecTraits<ComponentType>::NUM_COMPONENTS == 1,
+    "ArrayHandleRuntimeVec only supports scalars grouped into a single Vec. Nested Vecs can "
+    "still be used with ArrayHandleRuntimeVec. The values are treated as flattened (like "
+    "with VecFlat).");
 
   using ComponentsArray = vtkm::cont::ArrayHandle<ComponentType, StorageTagBasic>;
 
@@ -346,11 +377,28 @@ public:
 /// entries grouped in a Vec.
 ///
 template <typename T>
-VTKM_CONT vtkm::cont::ArrayHandleRuntimeVec<T> make_ArrayHandleRuntimeVec(
+VTKM_CONT auto make_ArrayHandleRuntimeVec(
   vtkm::IdComponent numComponents,
+  const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& componentsArray =
+    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>{})
+{
+  using UnrolledVec = vtkm::internal::UnrollVec<T>;
+  using ComponentType = typename UnrolledVec::ComponentType;
+
+  // Use some dangerous magic to convert the basic array to its base component and create
+  // an ArrayHandleRuntimeVec from that.
+  vtkm::cont::ArrayHandle<ComponentType, vtkm::cont::StorageTagBasic> flatComponents(
+    componentsArray.GetBuffers());
+
+  return vtkm::cont::ArrayHandleRuntimeVec<ComponentType>(
+    numComponents * UnrolledVec::NUM_COMPONENTS, flatComponents);
+}
+
+template <typename T>
+VTKM_CONT auto make_ArrayHandleRuntimeVec(
   const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& componentsArray)
 {
-  return vtkm::cont::ArrayHandleRuntimeVec<T>(numComponents, componentsArray);
+  return make_ArrayHandleRuntimeVec(1, componentsArray);
 }
 
 namespace internal

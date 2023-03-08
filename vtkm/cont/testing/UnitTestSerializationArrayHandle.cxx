@@ -313,8 +313,7 @@ struct TestArrayHandleRuntimeVec
     auto flat = RandomArrayHandle<T>::Make(ArraySize * numComps);
     auto array = vtkm::cont::make_ArrayHandleRuntimeVec(numComps, flat);
     RunTest(array);
-    // TODO: Add this back once UnknownArrayHandle supports ArrayHandleRuntimeVec more fully.
-    //RunTest(MakeTestUnknownArrayHandle(array));
+    RunTest(MakeTestUnknownArrayHandle(array));
   }
 };
 

@@ -10,3 +10,14 @@ proper `Vec` value type. This allows one part of code (such as a file
 reader) to create an array with any `Vec` size, and then that array can be
 fed to an algorithm that expects an `ArrayHandleBasic` of a certain value
 type.
+
+The `UnknownArrayHandle` has also been updated to allow
+`ArrayHandleRuntimeVec` to work interchangeably with basic `ArrayHandle`.
+If an `ArrayHandleRuntimeVec` is put into an `UnknownArrayHandle`, it can
+be later retrieved as an `ArrayHandleBasic` as long as the base component
+type matches and it has the correct amount of components. This means that
+an array can be created as an `ArrayHandleRuntimeVec` and be used with any
+filters or most other features designed to operate on basic `ArrayHandle`s.
+Likewise, an array added as a basic `ArrayHandle` can be retrieved in an
+`ArrayHandleRuntimeVec`. This makes it easier to pull arrays from VTK-m and
+place them in external structures (such as `vtkDataArray`).

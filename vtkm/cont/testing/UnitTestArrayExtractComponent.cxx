@@ -230,13 +230,13 @@ void DoTest()
 
   {
     std::cout << "ArrayHandleRuntimeVec" << std::endl;
-    vtkm::cont::ArrayHandle<vtkm::Vec3f> array;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> array;
     array.Allocate(ARRAY_SIZE * 4);
     SetPortal(array.WritePortal());
     CheckOutputArray(vtkm::cont::make_ArrayHandleRuntimeVec(2, array),
-                     vtkm::cont::ArrayHandleRuntimeVec<vtkm::Vec3f>(2));
+                     vtkm::cont::ArrayHandleRuntimeVec<vtkm::FloatDefault>(2));
     CheckOutputArray(vtkm::cont::make_ArrayHandleRuntimeVec(4, array),
-                     vtkm::cont::ArrayHandleRuntimeVec<vtkm::Vec3f>(4));
+                     vtkm::cont::ArrayHandleRuntimeVec<vtkm::FloatDefault>(4));
   }
 
   {

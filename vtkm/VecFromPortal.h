@@ -137,6 +137,15 @@ struct VecTraits<vtkm::VecFromPortal<PortalType>>
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  static void SetComponent(const VecType& vector,
+                           vtkm::IdComponent componentIndex,
+                           const ComponentType& value)
+  {
+    vector[componentIndex] = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <vtkm::IdComponent destSize>
   VTKM_EXEC_CONT static void CopyInto(const VecType& src, vtkm::Vec<ComponentType, destSize>& dest)
   {
