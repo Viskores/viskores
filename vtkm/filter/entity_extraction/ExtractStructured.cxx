@@ -74,7 +74,7 @@ vtkm::cont::DataSet ExtractStructured::DoExecute(const vtkm::cont::DataSet& inpu
                              this->VOI,
                              this->SampleRate,
                              this->IncludeBoundary,
-                             this->IncludeOffset);
+                             this->VOIIsGlobal);
 
   // Create map arrays for mapping fields. Could potentially save some time to first check to see
   // if these arrays would be used.

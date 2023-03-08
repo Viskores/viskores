@@ -78,8 +78,17 @@ public:
   VTKM_CONT
   void SetIncludeBoundary(bool value) { this->IncludeBoundary = value; }
 
+  /// Get if VOI is specified in global point (rather than in local) indices
   VTKM_CONT
-  void SetIncludeOffset(bool value) { this->IncludeOffset = value; }
+  bool GetVOIIsGlobal() const { return this->VOIIsGlobal; }
+  /// Set if VOI is specified in global point (rather than in local) indices
+  VTKM_CONT
+  void SetVOIIsGlobal(bool value) { this->VOIIsGlobal = value; }
+  /// Set if VOI is specified in global point (rather than in local) indices
+  /// (depracted in favor of a method with a name that better conveys purpose)
+  VTKM_DEPRECATED(2.0)
+  VTKM_CONT
+  void SetIncludeOffset(bool value) { this->VOIIsGlobal = value; }
 
 private:
   VTKM_CONT
@@ -88,7 +97,7 @@ private:
   vtkm::RangeId3 VOI = vtkm::RangeId3(0, -1, 0, -1, 0, -1);
   vtkm::Id3 SampleRate = { 1, 1, 1 };
   bool IncludeBoundary = false;
-  bool IncludeOffset = false;
+  bool VOIIsGlobal = false;
 };
 
 } // namespace entity_extraction
