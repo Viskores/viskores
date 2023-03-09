@@ -982,6 +982,55 @@ void ParseBenchmarkOptions(int& argc, char** argv)
 
   std::cerr << "Using data set dimensions = " << DataSetDim << std::endl;
   std::cerr << "Using image size = " << ImageSize << "x" << ImageSize << std::endl;
+
+  // Now go back through the arg list and remove anything that is not in the list of
+  // unknown options or non-option arguments.
+  int destArg = 1;
+  // This is copy/pasted from vtkm::cont::Initialize(), should probably be abstracted eventually:
+  for (int srcArg = 1; srcArg < argc; ++srcArg)
+  {
+    std::string thisArg{ argv[srcArg] };
+    bool copyArg = false;
+
+    // Special case: "--" gets removed by optionparser but should be passed.
+    if (thisArg == "--")
+    {
+      copyArg = true;
+    }
+    for (const option::Option* opt = options[UNKNOWN]; !copyArg && opt != nullptr;
+         opt = opt->next())
+    {
+      if (thisArg == opt->name)
+      {
+        copyArg = true;
+      }
+      if ((opt->arg != nullptr) && (thisArg == opt->arg))
+      {
+        copyArg = true;
+      }
+      // Special case: optionparser sometimes removes a single "-" from an option
+      if (thisArg.substr(1) == opt->name)
+      {
+        copyArg = true;
+      }
+    }
+    for (int nonOpt = 0; !copyArg && nonOpt < commandLineParse.nonOptionsCount(); ++nonOpt)
+    {
+      if (thisArg == commandLineParse.nonOption(nonOpt))
+      {
+        copyArg = true;
+      }
+    }
+    if (copyArg)
+    {
+      if (destArg != srcArg)
+      {
+        argv[destArg] = argv[srcArg];
+      }
+      ++destArg;
+    }
+  }
+  argc = destArg;
 }
 
 // Adding a const char* or std::string to a vector of char* is harder than it sounds.
