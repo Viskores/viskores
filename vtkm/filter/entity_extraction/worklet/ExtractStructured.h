@@ -203,7 +203,7 @@ public:
                                         const vtkm::RangeId3& voi,
                                         const vtkm::Id3& sampleRate,
                                         bool includeBoundary,
-                                        bool voiIsGlobal)
+                                        bool includeOffset)
   {
     vtkm::Id pdims = cellset.GetPointDimensions();
     vtkm::Id offsets = cellset.GetGlobalPointIndexStart();
@@ -215,14 +215,14 @@ public:
                          voi,
                          sampleRate,
                          includeBoundary,
-                         voiIsGlobal);
+                         includeOffset);
   }
 
   inline UncertainCellSetStructured Run(const vtkm::cont::CellSetStructured<2>& cellset,
                                         const vtkm::RangeId3& voi,
                                         const vtkm::Id3& sampleRate,
                                         bool includeBoundary,
-                                        bool voiIsGlobal)
+                                        bool includeOffset)
   {
     vtkm::Id2 pdims = cellset.GetPointDimensions();
     vtkm::Id2 offsets = cellset.GetGlobalPointIndexStart();
@@ -234,19 +234,20 @@ public:
                          voi,
                          sampleRate,
                          includeBoundary,
-                         voiIsGlobal);
+                         includeOffset);
   }
 
   inline UncertainCellSetStructured Run(const vtkm::cont::CellSetStructured<3>& cellset,
                                         const vtkm::RangeId3& voi,
                                         const vtkm::Id3& sampleRate,
                                         bool includeBoundary,
-                                        bool voiIsGlobal)
+                                        bool includeOffset)
   {
     vtkm::Id3 pdims = cellset.GetPointDimensions();
     vtkm::Id3 offsets = cellset.GetGlobalPointIndexStart();
     vtkm::Id3 gpdims = cellset.GetGlobalPointDimensions();
-    return this->Compute(3, pdims, offsets, gpdims, voi, sampleRate, includeBoundary, voiIsGlobal);
+    return this->Compute(
+      3, pdims, offsets, gpdims, voi, sampleRate, includeBoundary, includeOffset);
   }
 
   UncertainCellSetStructured Compute(const int dimensionality,
@@ -256,7 +257,7 @@ public:
                                      const vtkm::RangeId3& voi,
                                      const vtkm::Id3& sampleRate,
                                      bool includeBoundary,
-                                     bool voiIsGlobal)
+                                     bool includeOffset)
   {
     // Verify input parameters
     vtkm::Id3 offset_vec(0, 0, 0);
@@ -271,7 +272,7 @@ public:
     {
       throw vtkm::cont::ErrorBadValue("Bad sampling rate");
     }
-    if (voiIsGlobal)
+    if (includeOffset)
     {
       vtkm::Id3 tmpDims = ptdim;
       offset_vec = offsets;
@@ -338,7 +339,7 @@ public:
       vtkm::Id3 empty = { 0, 0, 0 };
       return MakeCellSetStructured(empty, empty, globalPointDimensions, dimensionality);
     }
-    if (!voiIsGlobal)
+    if (!includeOffset)
     {
       // compute output dimensions
       this->OutputDimensions = vtkm::Id3(1, 1, 1);
@@ -395,13 +396,13 @@ private:
             const vtkm::RangeId3& voi,
             const vtkm::Id3& sampleRate,
             bool includeBoundary,
-            bool voiIsGlobal,
+            bool includeOffset,
             UncertainCellSetStructured& output)
       : Worklet(worklet)
       , VOI(&voi)
       , SampleRate(&sampleRate)
       , IncludeBoundary(includeBoundary)
-      , VOIIsGlobal(voiIsGlobal)
+      , IncludeOffset(includeOffset)
       , Output(&output)
     {
     }
@@ -410,7 +411,7 @@ private:
     void operator()(const vtkm::cont::CellSetStructured<N>& cellset) const
     {
       *this->Output = this->Worklet->Run(
-        cellset, *this->VOI, *this->SampleRate, this->IncludeBoundary, this->VOIIsGlobal);
+        cellset, *this->VOI, *this->SampleRate, this->IncludeBoundary, this->IncludeOffset);
     }
 
     template <typename CellSetType>
@@ -424,7 +425,7 @@ private:
     const vtkm::RangeId3* VOI;
     const vtkm::Id3* SampleRate;
     bool IncludeBoundary;
-    bool VOIIsGlobal;
+    bool IncludeOffset;
     UncertainCellSetStructured* Output;
   };
 
@@ -434,10 +435,10 @@ public:
                                  const vtkm::RangeId3& voi,
                                  const vtkm::Id3& sampleRate,
                                  bool includeBoundary,
-                                 bool voiIsGlobal)
+                                 bool includeOffset)
   {
     UncertainCellSetStructured output;
-    CallRun cr(this, voi, sampleRate, includeBoundary, voiIsGlobal, output);
+    CallRun cr(this, voi, sampleRate, includeBoundary, includeOffset, output);
     vtkm::cont::CastAndCall(cellset, cr);
     return output;
   }

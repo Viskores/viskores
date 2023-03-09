@@ -78,17 +78,16 @@ public:
   VTKM_CONT
   void SetIncludeBoundary(bool value) { this->IncludeBoundary = value; }
 
-  /// Get if VOI is specified in global point (rather than in local) indices
+  /// Set if VOI is specified in global (rather than in local) point indices
+  /// (NOTE: Depracted this method since this does not seem to work as
+  /// expected and there are no tests for it. Furthermore, neither VTK-m nor
+  /// VTK-h/Ascent seem to use this method. If your are using this method
+  /// somewhere else and think it should remain, please open a merge request to
+  /// "de-deprecate" it and add a test and documentation of the expected
+  /// behavior.)
+  VTKM_DEPRECATED(2.1)
   VTKM_CONT
-  bool GetVOIIsGlobal() const { return this->VOIIsGlobal; }
-  /// Set if VOI is specified in global point (rather than in local) indices
-  VTKM_CONT
-  void SetVOIIsGlobal(bool value) { this->VOIIsGlobal = value; }
-  /// Set if VOI is specified in global point (rather than in local) indices
-  /// (depracted in favor of a method with a name that better conveys purpose)
-  VTKM_DEPRECATED(2.0)
-  VTKM_CONT
-  void SetIncludeOffset(bool value) { this->VOIIsGlobal = value; }
+  void SetIncludeOffset(bool value) { this->IncludeOffset = value; }
 
 private:
   VTKM_CONT
@@ -97,7 +96,7 @@ private:
   vtkm::RangeId3 VOI = vtkm::RangeId3(0, -1, 0, -1, 0, -1);
   vtkm::Id3 SampleRate = { 1, 1, 1 };
   bool IncludeBoundary = false;
-  bool VOIIsGlobal = false;
+  bool IncludeOffset = false;
 };
 
 } // namespace entity_extraction
