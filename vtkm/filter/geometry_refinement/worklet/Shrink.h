@@ -115,24 +115,24 @@ public:
     vtkm::cont::Invoker invoke;
 
     // First pass : count the new number of points per cell, shapes and compute centroids
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> CellPointCount;
-    vtkm::cont::ArrayHandle<vtkm::Vec3f> Centroids;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> cellPointCount;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> centroids;
     vtkm::cont::CellSetExplicit<>::ShapesArrayType shapeArray;
-    invoke(PrepareCellsForShrink{}, oldCellset, CellPointCount, Centroids, shapeArray, oldCoords);
+    invoke(PrepareCellsForShrink{}, oldCellset, cellPointCount, centroids, shapeArray, oldCoords);
 
 
     // Second pass : compute new point positions and mappings to input points
     vtkm::cont::ArrayHandle<vtkm::Id> newPoints;
-    vtkm::worklet::ScatterCounting scatter(CellPointCount, true);
+    vtkm::worklet::ScatterCounting scatter(cellPointCount, true);
     vtkm::cont::ArrayHandle<vtkm::Id> offsets = scatter.GetInputToOutputMap();
-    vtkm::Id totalPoints = scatter.GetOutputRange(CellPointCount.GetNumberOfValues());
+    vtkm::Id totalPoints = scatter.GetOutputRange(cellPointCount.GetNumberOfValues());
 
     ComputeNewPoints worklet = ComputeNewPoints(shinkFactor);
     invoke(worklet,
            scatter,
            oldCellset,
            offsets,
-           Centroids,
+           centroids,
            oldPointsMapping,
            newPoints,
            newCoords,
@@ -141,7 +141,7 @@ public:
     newCellset.Fill(totalPoints,
                     shapeArray,
                     newPoints,
-                    vtkm::cont::ConvertNumComponentsToOffsets(CellPointCount));
+                    vtkm::cont::ConvertNumComponentsToOffsets(cellPointCount));
   }
 };
 } // namespace vtkm::worklet
