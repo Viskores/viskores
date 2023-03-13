@@ -10,6 +10,7 @@
 
 set(unit_tests
   UnitTestBOVDataSetReader.cxx
+  UnitTestVisItFileDataSetReader.cxx
   UnitTestFileUtils.cxx
   UnitTestPixelTypes.cxx
   UnitTestVTKDataSetReader.cxx
