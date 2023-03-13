@@ -33,7 +33,6 @@ vtkm::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
 {
   //Get the base path of the input file.
   std::string baseDirPath = ".";
-  baseDirPath = "../vtk-m/data/data/uniform";
 
   //Get the base dir name
   auto pos = this->FileName.rfind("/");
@@ -78,6 +77,9 @@ vtkm::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
       std::cerr << "Skipping line: " << line << std::endl;
     }
   }
+
+  if (static_cast<std::size_t>(numBlocks) != fileNames.size())
+    throw vtkm::io::ErrorIO("Wrong number of partitions in VisIt file: " + this->FileName);
 
   vtkm::cont::PartitionedDataSet pds;
 
