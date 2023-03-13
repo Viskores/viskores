@@ -1,5 +1,5 @@
 # Ad-hoc build that runs in the ECP Hardware, concretely in OLCF Spock.
-.spock_gcc_hip:
+.crusher_gcc_hip:
   variables:
     CCACHE_BASEDIR:          "/gpfs/alpine/csc331/scratch/"
     CCACHE_DIR:              "/gpfs/alpine/csc331/scratch/vbolea/ci/vtk-m/ccache"
@@ -17,12 +17,12 @@
     KOKKOS_OPTS: >-
       -DCMAKE_INSTALL_PREFIX:PATH=$CI_BUILDS_DIR/kokkos_install
       -DCMAKE_CXX_COMPILER:FILEPATH=/opt/rocm-4.5.0/hip/bin/hipcc
-      -DKokkos_ARCH_VEGA908:BOOL=ON
+      -DKokkos_ARCH_VEGA90A:BOOL=ON
 
     # DefApps/default;craype;rocm;gcc should be loaded first
     JOB_MODULES: >-
       DefApps/default
-      craype-accel-amd-gfx908
+      craype-accel-amd-gfx90a
       rocm/4.5.0
       gcc/10
       cmake/3.22
@@ -31,7 +31,7 @@
 
       ninja
       zstd
-    VTKM_SETTINGS: kokkos+hip+gfx908+spock+ccache+no_rendering
+    VTKM_SETTINGS: kokkos+hip+gfx90a+crusher+ccache+no_rendering
   interruptible: true
 
 .setup_env_ecpci: &setup_env_ecpci |
@@ -40,12 +40,12 @@
   module list
   export PATH="${CCACHE_INSTALL_DIR}/ccache:$PATH"
 
-build:spock_gcc_hip:
+build:crusher_gcc_hip:
   stage: build
-  tags: [spock, shell, olcf-spock-shell-02]
+  tags: [crusher, shell]
   extends:
-    - .spock_gcc_hip
-    - .run_spock_ci
+    - .crusher_gcc_hip
+    - .run_crusher_ci
   before_script:
     - *setup_env_ecpci
     - mkdir -p "$CCACHE_INSTALL_DIR"
@@ -73,18 +73,18 @@ build:spock_gcc_hip:
       - build/
       - .gitlab/ccache/ccache
 
-test:spock_gcc_hip:
+test:crusher_gcc_hip:
   stage: test
-  tags: [spock, slurm, olcf-spock-slurm-02]
+  tags: [crusher, slurm]
   extends:
-    - .spock_gcc_hip
-    - .run_spock_ci
+    - .crusher_gcc_hip
+    - .run_crusher_ci
   needs:
-    - build:spock_gcc_hip
+    - build:crusher_gcc_hip
   dependencies:
-    - build:spock_gcc_hip
+    - build:crusher_gcc_hip
   variables:
-    SCHEDULER_PARAMETERS: "-ACSC331 -pecp -t120 --nice=0 -c32 --gpus=4 -N 1"
+    SCHEDULER_PARAMETERS: "-ACSC331 -pbatch -t120 --nice=0 -c32 --gpus=4 -N 1"
     # We need this to skip ctest_submit from being run inside a jsrun job
     GITLAB_CI_EMULATION: 1
     # Tests errors to address due to different env in Spock

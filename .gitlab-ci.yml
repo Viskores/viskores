@@ -96,7 +96,7 @@
       when: on_success
     - when: never
 
-.run_spock_ci: &run_spock_ci
+.run_crusher_ci: &run_crusher_ci
   rules:
     - if: '$CI_PROJECT_PATH == "ci/csc331_crusher/dev/vtk-m"'
       when: on_success
@@ -214,7 +214,7 @@ stages:
 
 include:
   - local: '/.gitlab/ci/ascent.yml'
-  - local: '/.gitlab/ci/spock.yml'
+  - local: '/.gitlab/ci/crusher.yml'
   - local: '/.gitlab/ci/centos7.yml'
   - local: '/.gitlab/ci/centos8.yml'
   - local: '/.gitlab/ci/doxygen.yml'
