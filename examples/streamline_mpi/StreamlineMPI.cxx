@@ -76,11 +76,11 @@ void LoadData(std::string& fname, std::vector<vtkm::cont::DataSet>& dataSets, in
 }
 
 // Example computing streamlines.
-// An example vector field is available in the vtk-m data directory: magField.vtk
+// An example vector field is available in the vtk-m data directory: rotate-vectors.vtk
 // Example usage:
-//   this will advect 200 particles 50 steps using a step size of 0.01
+//   this will advect 200 particles 50 steps using a step size of 0.05
 //
-// Particle_Advection <path-to-data-dir>/magField.vtk vec 200 50 0.01 output.vtk
+// Particle_Advection <path-to-data-dir>/rotate-vectors.vtk vec 200 50 0.05 output.vtk
 //
 
 int main(int argc, char** argv)

@@ -16,11 +16,11 @@
 #include <vtkm/io/VTKDataSetWriter.h>
 
 // Example computing streamlines.
-// An example vector field is available in the vtk-m data directory: magField.vtk
+// An example vector field is available in the vtk-m data directory: rotate-vectors.vtk
 // Example usage:
-//   this will advect 200 particles 50 steps using a step size of 0.01
+//   this will advect 200 particles 50 steps using a step size of 0.05
 //
-// Particle_Advection <path-to-data-dir>/magField.vtk vec 200 50 0.01 output.vtk
+// Particle_Advection <path-to-data-dir>/rotate-vectors.vtk rotate 200 50 0.05 output.vtk
 //
 
 int main(int argc, char** argv)
@@ -28,10 +28,10 @@ int main(int argc, char** argv)
   auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
   auto config = vtkm::cont::Initialize(argc, argv, opts);
 
-  if (argc < 8)
+  if (argc < 7)
   {
     std::cerr << "Usage: " << argv[0]
-              << "dataFile varName numSeeds numSteps stepSize outputFile [options]" << std::endl;
+              << " dataFile varName numSeeds numSteps stepSize outputFile [options]" << std::endl;
     std::cerr << "where options are: " << std::endl << config.Usage << std::endl;
     return -1;
   }
