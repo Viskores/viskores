@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/io/ErrorIO.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKVisItFileReader.h>
@@ -52,13 +53,14 @@ vtkm::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
     std::getline(stream, line);
     if (line.size() == 0 || line[0] == '#')
       continue;
-    else if (line.find("!NBLOCKS") != std::string::npos)
+    else if (line.rfind("!NBLOCKS", 0) != std::string::npos)
     {
+      //!NBLOCKS is already set!!
       if (numBlocks > 0)
         throw vtkm::io::ErrorIO("Invalid file: " + this->FileName +
                                 ". Number of blocks already specified");
-      numBlocks = std::atoi(line.substr(8, line.size()).c_str());
 
+      numBlocks = std::atoi(line.substr(8, line.size()).c_str());
       if (numBlocks <= 0)
         throw vtkm::io::ErrorIO("Invalid file: " + this->FileName +
                                 ". Number of blocks must be > 0");
@@ -68,14 +70,26 @@ vtkm::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
       char char_to_remove = ' ';
       line.erase(std::remove(line.begin(), line.end(), char_to_remove), line.end());
       if (line.find(".vtk") != std::string::npos)
+      {
         fileNames.push_back(baseDirPath + "/" + line);
+      }
       else
-        std::cerr << "Skipping: " << line << std::endl;
+      {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                   "Skipping: " << line << ". It does not appear to be a legacy VTK file.");
+        continue;
+      }
     }
     else
     {
-      std::cerr << "Skipping line: " << line << std::endl;
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Skipping line: " << line);
+      continue;
     }
+  }
+
+  if (numBlocks < 0)
+  {
+    throw vtkm::io::ErrorIO("`!NBLOCKS` line not provided in VisIt file: " + this->FileName);
   }
 
   if (static_cast<std::size_t>(numBlocks) != fileNames.size())
@@ -86,10 +100,6 @@ vtkm::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
   //Read all the files.
   for (const auto fn : fileNames)
   {
-    std::ifstream s(fn);
-    if (s.fail())
-      throw vtkm::io::ErrorIO("Failed to open file: " + fn);
-
     vtkm::io::VTKDataSetReader reader(fn);
     pds.AppendPartition(reader.ReadDataSet());
   }
