@@ -839,15 +839,16 @@ void ValidateResult(const ResultType& res,
 }
 
 
-void TestParticleAdvectionFile(const std::string& fname,
+void TestParticleAdvectionFile(const std::string& fileName,
+                               const std::string& fieldName,
                                const std::vector<vtkm::Vec3f>& pts,
                                vtkm::FloatDefault stepSize,
                                vtkm::Id maxSteps,
                                const std::vector<vtkm::Vec3f>& endPts)
 {
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Testing particle advection on file " << fname);
-  vtkm::io::VTKDataSetReader reader(fname);
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Testing particle advection on file " << fileName);
+  vtkm::io::VTKDataSetReader reader(fileName);
   vtkm::cont::DataSet ds;
   try
   {
@@ -856,7 +857,7 @@ void TestParticleAdvectionFile(const std::string& fname,
   catch (vtkm::io::ErrorIO& e)
   {
     std::string message("Error reading: ");
-    message += fname;
+    message += fileName;
     message += ", ";
     message += e.GetMessage();
 
@@ -869,8 +870,8 @@ void TestParticleAdvectionFile(const std::string& fname,
   using RK4Type = vtkm::worklet::flow::RK4Integrator<GridEvalType>;
   using Stepper = vtkm::worklet::flow::Stepper<RK4Type, GridEvalType>;
 
-  VTKM_TEST_ASSERT(ds.HasField("vec"), "Data set missing a field named 'vec'");
-  vtkm::cont::Field& field = ds.GetField("vec");
+  VTKM_TEST_ASSERT(ds.HasField(fieldName), "Data set missing a field named ", fieldName);
+  vtkm::cont::Field& field = ds.GetField(fieldName);
   auto fieldData = field.GetData();
 
   FieldHandle fieldArray;
@@ -923,32 +924,35 @@ void TestParticleAdvection()
   TestWorkletsBasic();
   TestParticleWorkletsWithDataSetTypes();
 
-  //Fusion test.
-  std::vector<vtkm::Vec3f> fusionPts, fusionEndPts;
-  fusionPts.push_back(vtkm::Vec3f(0.8f, 0.6f, 0.6f));
-  fusionPts.push_back(vtkm::Vec3f(0.8f, 0.8f, 0.6f));
-  fusionPts.push_back(vtkm::Vec3f(0.8f, 0.8f, 0.3f));
-  //End point values were generated in VisIt.
-  fusionEndPts.push_back(vtkm::Vec3f(0.5335789918f, 0.87112802267f, 0.6723330020f));
-  fusionEndPts.push_back(vtkm::Vec3f(0.5601879954f, 0.91389900446f, 0.43989110522f));
-  fusionEndPts.push_back(vtkm::Vec3f(0.7004770041f, 0.63193398714f, 0.64524400234f));
-  vtkm::FloatDefault fusionStep = 0.005f;
-  std::string fusionFile = vtkm::cont::testing::Testing::DataPath("rectilinear/fusion.vtk");
-  TestParticleAdvectionFile(fusionFile, fusionPts, fusionStep, 1000, fusionEndPts);
+  {
+    //Rotate test.
+    std::vector<vtkm::Vec3f> startPoints, endPoints;
+    startPoints.push_back(vtkm::Vec3f(0.4f, 0.3f, -0.2f));
+    startPoints.push_back(vtkm::Vec3f(-0.4f, 0.0f, -0.84f));
+    startPoints.push_back(vtkm::Vec3f(0.0f, 0.0f, 0.41f));
+    //End point values were generated in VisIt.
+    endPoints.push_back(vtkm::Vec3f(-0.341196f, 0.474331f, 0.142614f));
+    endPoints.push_back(vtkm::Vec3f(-0.342764f, -0.713572f, -0.746209f));
+    endPoints.push_back(vtkm::Vec3f(-0.617492f, -0.0167f, 0.104733f));
+    vtkm::FloatDefault stepSize = 0.1f;
+    std::string file = vtkm::cont::testing::Testing::DataPath("uniform/rotate-vectors.vtk");
+    TestParticleAdvectionFile(file, "rotate", startPoints, stepSize, 1000, endPoints);
+  }
 
-  //Fishtank test.
-  std::vector<vtkm::Vec3f> fishPts, fishEndPts;
-  fishPts.push_back(vtkm::Vec3f(0.75f, 0.5f, 0.01f));
-  fishPts.push_back(vtkm::Vec3f(0.4f, 0.2f, 0.7f));
-  fishPts.push_back(vtkm::Vec3f(0.5f, 0.3f, 0.8f));
-  //End point values were generated in VisIt.
-  fishEndPts.push_back(vtkm::Vec3f(0.7734669447f, 0.4870159328f, 0.8979591727f));
-  fishEndPts.push_back(vtkm::Vec3f(0.7257543206f, 0.1277695596f, 0.7468645573f));
-  fishEndPts.push_back(vtkm::Vec3f(0.8347796798f, 0.1276152730f, 0.4985143244f));
-
-  vtkm::FloatDefault fishStep = 0.001f;
-  std::string fishFile = vtkm::cont::testing::Testing::DataPath("rectilinear/fishtank.vtk");
-  TestParticleAdvectionFile(fishFile, fishPts, fishStep, 100, fishEndPts);
+  {
+    //Kitchen test.
+    std::vector<vtkm::Vec3f> startPoints, endPoints;
+    startPoints.push_back(vtkm::Vec3f(6.0f, 1.0f, 2.0f));
+    startPoints.push_back(vtkm::Vec3f(1.3f, 2.4f, 1.3f));
+    startPoints.push_back(vtkm::Vec3f(1.0f, 3.0f, 2.0f));
+    //End point values were generated in VisIt.
+    endPoints.push_back(vtkm::Vec3f(4.42419f, 0.956935f, 1.89111f));
+    endPoints.push_back(vtkm::Vec3f(0.217019f, 3.65243f, 2.49638f));
+    endPoints.push_back(vtkm::Vec3f(0.753178f, 0.410568f, 1.11006f));
+    vtkm::FloatDefault stepSize = 0.2f;
+    std::string file = vtkm::cont::testing::Testing::DataPath("curvilinear/kitchen.vtk");
+    TestParticleAdvectionFile(file, "velocity", startPoints, stepSize, 2000, endPoints);
+  }
 }
 
 int UnitTestWorkletParticleAdvection(int argc, char* argv[])

@@ -645,6 +645,7 @@ public:
                              this->InCellInterpolationKeys,
                              this->InCellInterpolationInfo,
                              this->CellMapOutputToInput);
+    this->InterpolationKeysBuilt = false;
 
     // Get unique EdgeInterpolation : unique edge points.
     // LowerBound for edgeInterpolation : get index into new edge points array.
@@ -763,140 +764,97 @@ public:
     return this->Run(cellSet, clipFunction, 0.0, coords, invert);
   }
 
-  template <typename ArrayHandleType>
-  class InterpolateField
+  struct PerformEdgeInterpolations : public vtkm::worklet::WorkletMapField
   {
-  public:
-    using ValueType = typename ArrayHandleType::ValueType;
-    using TypeMappedValue = vtkm::List<ValueType>;
+    using ControlSignature = void(FieldIn edgeInterpolations,
+                                  WholeArrayIn originalField,
+                                  FieldOut outputField);
+    using ExecutionSignature = void(_1, _2, _3);
 
-    InterpolateField(vtkm::cont::ArrayHandle<EdgeInterpolation> edgeInterpolationArray,
-                     vtkm::cont::ArrayHandle<vtkm::Id> inCellInterpolationKeys,
-                     vtkm::cont::ArrayHandle<vtkm::Id> inCellInterpolationInfo,
-                     vtkm::Id edgePointsOffset,
-                     vtkm::Id inCellPointsOffset,
-                     ArrayHandleType* output)
-      : EdgeInterpolationArray(edgeInterpolationArray)
-      , InCellInterpolationKeys(inCellInterpolationKeys)
-      , InCellInterpolationInfo(inCellInterpolationInfo)
-      , EdgePointsOffset(edgePointsOffset)
-      , InCellPointsOffset(inCellPointsOffset)
-      , Output(output)
+    template <typename FieldPortal, typename T>
+    VTKM_EXEC void operator()(const EdgeInterpolation& edgeInterp,
+                              const FieldPortal& originalField,
+                              T& output) const
     {
+      T v1 = originalField.Get(edgeInterp.Vertex1);
+      T v2 = originalField.Get(edgeInterp.Vertex2);
+
+      // Interpolate per-vertex because some vec-like objects do not allow intermediate variables
+      using VTraits = vtkm::VecTraits<T>;
+      using CType = typename VTraits::ComponentType;
+      VTKM_ASSERT(VTraits::GetNumberOfComponents(v1) == VTraits::GetNumberOfComponents(output));
+      VTKM_ASSERT(VTraits::GetNumberOfComponents(v2) == VTraits::GetNumberOfComponents(output));
+      for (vtkm::IdComponent component = 0; component < VTraits::GetNumberOfComponents(output);
+           ++component)
+      {
+        CType c1 = VTraits::GetComponent(v1, component);
+        CType c2 = VTraits::GetComponent(v2, component);
+        CType o = static_cast<CType>(((c1 - c2) * edgeInterp.Weight) + c1);
+        VTraits::SetComponent(output, component, o);
+      }
     }
-
-    class PerformEdgeInterpolations : public vtkm::worklet::WorkletMapField
-    {
-    public:
-      PerformEdgeInterpolations(vtkm::Id edgePointsOffset)
-        : EdgePointsOffset(edgePointsOffset)
-      {
-      }
-
-      using ControlSignature = void(FieldIn edgeInterpolations, WholeArrayInOut outputField);
-
-      using ExecutionSignature = void(_1, _2, WorkIndex);
-
-      template <typename EdgeInterp, typename OutputFieldPortal>
-      VTKM_EXEC void operator()(const EdgeInterp& ei,
-                                OutputFieldPortal& field,
-                                vtkm::Id workIndex) const
-      {
-        using T = typename OutputFieldPortal::ValueType;
-        T v1 = field.Get(ei.Vertex1);
-        T v2 = field.Get(ei.Vertex2);
-        field.Set(this->EdgePointsOffset + workIndex,
-                  static_cast<T>(internal::Scale(T(v1 - v2), ei.Weight) + v1));
-      }
-
-    private:
-      vtkm::Id EdgePointsOffset;
-    };
-
-    class PerformInCellInterpolations : public vtkm::worklet::WorkletReduceByKey
-    {
-    public:
-      using ControlSignature = void(KeysIn keys, ValuesIn toReduce, ReducedValuesOut centroid);
-
-      using ExecutionSignature = void(_2, _3);
-
-      template <typename MappedValueVecType, typename MappedValueType>
-      VTKM_EXEC void operator()(const MappedValueVecType& toReduce, MappedValueType& centroid) const
-      {
-        vtkm::IdComponent numValues = toReduce.GetNumberOfComponents();
-        MappedValueType sum = toReduce[0];
-        for (vtkm::IdComponent i = 1; i < numValues; i++)
-        {
-          MappedValueType value = toReduce[i];
-          // static_cast is for when MappedValueType is a small int that gets promoted to int32.
-          sum = static_cast<MappedValueType>(sum + value);
-        }
-        centroid = internal::Scale(sum, 1. / static_cast<vtkm::Float64>(numValues));
-      }
-    };
-
-    template <typename Storage>
-    VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<ValueType, Storage>& field) const
-    {
-      vtkm::worklet::Keys<vtkm::Id> interpolationKeys(InCellInterpolationKeys);
-
-      vtkm::Id numberOfOriginalValues = field.GetNumberOfValues();
-      vtkm::Id numberOfEdgePoints = EdgeInterpolationArray.GetNumberOfValues();
-      vtkm::Id numberOfInCellPoints = interpolationKeys.GetUniqueKeys().GetNumberOfValues();
-
-      ArrayHandleType result;
-      result.Allocate(numberOfOriginalValues + numberOfEdgePoints + numberOfInCellPoints);
-      vtkm::cont::Algorithm::CopySubRange(field, 0, numberOfOriginalValues, result);
-
-      PerformEdgeInterpolations edgeInterpWorklet(numberOfOriginalValues);
-      vtkm::worklet::DispatcherMapField<PerformEdgeInterpolations> edgeInterpDispatcher(
-        edgeInterpWorklet);
-      edgeInterpDispatcher.Invoke(this->EdgeInterpolationArray, result);
-
-      // Perform a gather on output to get all required values for calculation of
-      // centroids using the interpolation info array.
-      using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
-      using ValueHandle = vtkm::cont::ArrayHandle<ValueType>;
-      vtkm::cont::ArrayHandlePermutation<IdHandle, ValueHandle> toReduceValues(
-        InCellInterpolationInfo, result);
-
-      vtkm::cont::ArrayHandle<ValueType> reducedValues;
-      vtkm::worklet::DispatcherReduceByKey<PerformInCellInterpolations>
-        inCellInterpolationDispatcher;
-      inCellInterpolationDispatcher.Invoke(interpolationKeys, toReduceValues, reducedValues);
-      vtkm::Id inCellPointsOffset = numberOfOriginalValues + numberOfEdgePoints;
-      vtkm::cont::Algorithm::CopySubRange(
-        reducedValues, 0, reducedValues.GetNumberOfValues(), result, inCellPointsOffset);
-      *(this->Output) = result;
-    }
-
-  private:
-    vtkm::cont::ArrayHandle<EdgeInterpolation> EdgeInterpolationArray;
-    vtkm::cont::ArrayHandle<vtkm::Id> InCellInterpolationKeys;
-    vtkm::cont::ArrayHandle<vtkm::Id> InCellInterpolationInfo;
-    vtkm::Id EdgePointsOffset;
-    vtkm::Id InCellPointsOffset;
-    ArrayHandleType* Output;
   };
 
-  template <typename ValueType, typename StorageType>
-  vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& fieldData) const
+  struct PerformInCellInterpolations : public vtkm::worklet::WorkletReduceByKey
   {
-    using ResultType = vtkm::cont::ArrayHandle<ValueType>;
-    using Worker = InterpolateField<ResultType>;
+    using ControlSignature = void(KeysIn keys, ValuesIn toReduce, ReducedValuesOut centroids);
+    using ExecutionSignature = void(_2, _3);
 
-    ResultType output;
+    template <typename MappedValueVecType, typename MappedValueType>
+    VTKM_EXEC void operator()(const MappedValueVecType& toReduce, MappedValueType& centroid) const
+    {
+      const vtkm::IdComponent numValues = toReduce.GetNumberOfComponents();
 
-    Worker worker = Worker(this->EdgePointsInterpolation,
-                           this->InCellInterpolationKeys,
-                           this->InCellInterpolationInfo,
-                           this->EdgePointsOffset,
-                           this->InCellPointsOffset,
-                           &output);
-    worker(fieldData);
+      // Interpolate per-vertex because some vec-like objects do not allow intermediate variables
+      using VTraits = vtkm::VecTraits<MappedValueType>;
+      using CType = typename VTraits::ComponentType;
+      for (vtkm::IdComponent component = 0; component < VTraits::GetNumberOfComponents(centroid);
+           ++component)
+      {
+        CType sum = VTraits::GetComponent(toReduce[0], component);
+        for (vtkm::IdComponent reduceI = 1; reduceI < numValues; ++reduceI)
+        {
+          // static_cast is for when MappedValueType is a small int that gets promoted to int32.
+          sum = static_cast<CType>(sum + VTraits::GetComponent(toReduce[reduceI], component));
+        }
+        VTraits::SetComponent(centroid, component, static_cast<CType>(sum / numValues));
+      }
+    }
+  };
 
-    return output;
+  template <typename InputType, typename OutputType>
+  void ProcessPointField(const InputType& input, OutputType& output)
+  {
+    if (!this->InterpolationKeysBuilt)
+    {
+      this->InterpolationKeys.BuildArrays(this->InCellInterpolationKeys, KeysSortType::Unstable);
+    }
+
+    vtkm::Id numberOfOriginalValues = input.GetNumberOfValues();
+    vtkm::Id numberOfEdgePoints = this->EdgePointsInterpolation.GetNumberOfValues();
+    vtkm::Id numberOfInCellPoints = this->InterpolationKeys.GetUniqueKeys().GetNumberOfValues();
+
+    // Copy over the original values. They are still part of the output. (Unused points are
+    // not culled. Use CleanGrid for that.)
+    output.Allocate(numberOfOriginalValues + numberOfEdgePoints + numberOfInCellPoints);
+    vtkm::cont::Algorithm::CopySubRange(input, 0, numberOfOriginalValues, output);
+
+    // Interpolate all new points that lie on edges of the input mesh.
+    vtkm::cont::Invoker invoke;
+    invoke(PerformEdgeInterpolations{},
+           this->EdgePointsInterpolation,
+           input,
+           vtkm::cont::make_ArrayHandleView(output, numberOfOriginalValues, numberOfEdgePoints));
+
+    // Perform a gather on the output to get all the required values for calculation of centroids
+    // using the interpolation info array.
+    auto toReduceValues =
+      vtkm::cont::make_ArrayHandlePermutation(this->InCellInterpolationInfo, output);
+    invoke(PerformInCellInterpolations{},
+           this->InterpolationKeys,
+           toReduceValues,
+           vtkm::cont::make_ArrayHandleView(
+             output, numberOfOriginalValues + numberOfEdgePoints, numberOfInCellPoints));
   }
 
   vtkm::cont::ArrayHandle<vtkm::Id> GetCellMapOutputToInput() const
@@ -912,6 +870,8 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> CellMapOutputToInput;
   vtkm::Id EdgePointsOffset;
   vtkm::Id InCellPointsOffset;
+  vtkm::worklet::Keys<vtkm::Id> InterpolationKeys;
+  bool InterpolationKeysBuilt = false;
 };
 }
 } // namespace vtkm::worklet

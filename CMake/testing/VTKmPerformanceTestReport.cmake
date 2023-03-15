@@ -19,7 +19,7 @@ REQUIRE_FLAG_MUTABLE("VTKm_PERF_ALPHA")
 REQUIRE_FLAG_MUTABLE("VTKm_PERF_DIST")
 
 ###FIND MOST RECENT BASELINE####################################################
-execute(COMMAND /usr/bin/git -C "${VTKm_SOURCE_DIR}" merge-base origin/master @
+execute(COMMAND /usr/bin/git -C "${VTKm_SOURCE_DIR}" merge-base upstream/master @
         OUTPUT_VARIABLE GIT_BASE_COMMIT)
 
 string(STRIP "${GIT_BASE_COMMIT}" GIT_BASE_COMMIT)

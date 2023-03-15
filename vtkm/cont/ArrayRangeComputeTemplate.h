@@ -13,6 +13,7 @@
 #include <vtkm/cont/ArrayRangeCompute.h>
 
 #include <vtkm/BinaryOperators.h>
+#include <vtkm/Deprecated.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/Algorithm.h>
@@ -42,8 +43,13 @@ struct ArrayRangeComputeFunctor
   }
 };
 
+} // namespace detail
+
+namespace internal
+{
+
 template <typename T, typename S>
-inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
+inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeGeneric(
   const vtkm::cont::ArrayHandle<T, S>& input,
   vtkm::cont::DeviceAdapterId device)
 {
@@ -74,7 +80,7 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
     initial[1] = T(std::numeric_limits<CT>::lowest());
 
     const bool rangeComputed = vtkm::cont::TryExecuteOnDevice(
-      device, detail::ArrayRangeComputeFunctor{}, input, initial, result);
+      device, vtkm::cont::detail::ArrayRangeComputeFunctor{}, input, initial, result);
     if (!rangeComputed)
     {
       ThrowArrayRangeComputeFailed();
@@ -93,17 +99,38 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
   return range;
 }
 
-} // namespace detail
+template <typename S>
+struct ArrayRangeComputeImpl
+{
+  template <typename T>
+  vtkm::cont::ArrayHandle<vtkm::Range> operator()(const vtkm::cont::ArrayHandle<T, S>& input,
+                                                  vtkm::cont::DeviceAdapterId device) const
+  {
+    return vtkm::cont::internal::ArrayRangeComputeGeneric(input, device);
+  }
+};
+
+} // namespace internal
 
 
 template <typename ArrayHandleType>
-inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeTemplate(
   const ArrayHandleType& input,
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny{})
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-  return detail::ArrayRangeComputeImpl(input, device);
+  return internal::ArrayRangeComputeImpl<typename ArrayHandleType::StorageTag>{}(input, device);
 }
+
+template <typename ArrayHandleType>
+VTKM_DEPRECATED(2.1, "Use precompiled ArrayRangeCompute or ArrayRangeComputeTemplate.")
+inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const ArrayHandleType& input,
+  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny{})
+{
+  return ArrayRangeComputeTemplate(input, device);
+}
+
 }
 } // namespace vtkm::cont
 

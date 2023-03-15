@@ -45,16 +45,20 @@ struct VecTraitsTagSizeVariable
 namespace internal
 {
 
-template <vtkm::IdComponent numComponents>
+// Forward declaration
+template <typename T>
+struct SafeVecTraits;
+
+template <vtkm::IdComponent numComponents, typename ComponentType>
 struct VecTraitsMultipleComponentChooser
 {
   using Type = vtkm::VecTraitsTagMultipleComponents;
 };
 
-template <>
-struct VecTraitsMultipleComponentChooser<1>
+template <typename ComponentType>
+struct VecTraitsMultipleComponentChooser<1, ComponentType>
 {
-  using Type = vtkm::VecTraitsTagSingleComponent;
+  using Type = typename vtkm::internal::SafeVecTraits<ComponentType>::HasMultipleComponents;
 };
 
 } // namespace internal
@@ -95,7 +99,7 @@ struct VTKM_NEVER_EXPORT VecTraits
   /// is really just a scalar.
   ///
   using HasMultipleComponents =
-    typename internal::VecTraitsMultipleComponentChooser<NUM_COMPONENTS>::Type;
+    typename internal::VecTraitsMultipleComponentChooser<NUM_COMPONENTS, ComponentType>::Type;
 
   /// \brief A tag specifying whether the size of this vector is known at compile time.
   ///
@@ -197,7 +201,8 @@ template <typename T, vtkm::IdComponent Size, typename NewT>
 struct VecReplaceBaseComponentTypeGCC4or5
 {
   using type =
-    vtkm::Vec<typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<NewT>, Size>;
+    vtkm::Vec<typename vtkm::internal::SafeVecTraits<T>::template ReplaceBaseComponentType<NewT>,
+              Size>;
 };
 
 } // namespace detail
@@ -219,7 +224,8 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
   /// Similar to ComponentType except that for nested vectors (e.g. Vec<Vec<T, M>, N>), it
   /// returns the base scalar type at the end of the composition (T in this example).
   ///
-  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
+  using BaseComponentType =
+    typename vtkm::internal::SafeVecTraits<ComponentType>::BaseComponentType;
 
   /// Number of components in the vector.
   ///
@@ -235,7 +241,7 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
   /// when a vector is really just a scalar.
   ///
   using HasMultipleComponents =
-    typename internal::VecTraitsMultipleComponentChooser<NUM_COMPONENTS>::Type;
+    typename internal::VecTraitsMultipleComponentChooser<NUM_COMPONENTS, ComponentType>::Type;
 
   /// A tag specifying whether the size of this vector is known at compile
   /// time. If set to \c VecTraitsTagSizeStatic, then \c NUM_COMPONENTS is set.
@@ -298,9 +304,10 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
     typename detail::VecReplaceBaseComponentTypeGCC4or5<T, Size, NewComponentType>::type;
 #else // !GCC <= 5
   template <typename NewComponentType>
-  using ReplaceBaseComponentType = vtkm::Vec<
-    typename vtkm::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
-    Size>;
+  using ReplaceBaseComponentType =
+    vtkm::Vec<typename vtkm::internal::SafeVecTraits<
+                ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
+              Size>;
 #endif
   ///@}
 

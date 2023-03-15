@@ -32,6 +32,21 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <type_traits>
 
+#if KOKKOS_VERSION_MAJOR > 3 || (KOKKOS_VERSION_MAJOR == 3 && KOKKOS_VERSION_MINOR >= 7)
+#define VTKM_VOLATILE
+#else
+#define VTKM_VOLATILE volatile
+#endif
+
+#if defined(VTKM_ENABLE_KOKKOS_THRUST) && (defined(__HIP__) || defined(__CUDA__))
+#define VTKM_USE_KOKKOS_THRUST
+#endif
+
+#if defined(VTKM_USE_KOKKOS_THRUST)
+#include <thrust/device_ptr.h>
+#include <thrust/sort.h>
+#endif
+
 namespace vtkm
 {
 namespace internal
@@ -256,7 +271,7 @@ private:
     }
 
     KOKKOS_INLINE_FUNCTION
-    void join(volatile value_type& dst, const volatile value_type& src) const
+    void join(VTKM_VOLATILE value_type& dst, const VTKM_VOLATILE value_type& src) const
     {
       dst = this->Operator(dst, src);
     }
@@ -726,6 +741,13 @@ private:
   template <typename T>
   VTKM_CONT static void SortImpl(vtkm::cont::ArrayHandle<T>& values, vtkm::SortLess, std::true_type)
   {
+    // In Kokkos 3.7, we have noticed some errors when sorting with zero-length arrays (which
+    // should do nothing). There is no check, and the bin size computation gets messed up.
+    if (values.GetNumberOfValues() <= 1)
+    {
+      return;
+    }
+
     vtkm::cont::Token token;
     auto portal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagKokkos{}, token);
     kokkos::internal::KokkosViewExec<T> view(portal.GetArray(), portal.GetNumberOfValues());
@@ -757,6 +779,88 @@ public:
     SortImpl(values, comp, typename std::is_scalar<T>::type{});
   }
 
+protected:
+  // Kokkos currently (11/10/2022) does not support a sort_by_key operator
+  // so instead we are using thrust if and only if HIP or CUDA are the backends for Kokkos
+#if defined(VTKM_USE_KOKKOS_THRUST)
+
+  template <typename T, typename U, typename BinaryCompare>
+  VTKM_CONT static std::enable_if_t<(std::is_same<BinaryCompare, vtkm::SortLess>::value ||
+                                     std::is_same<BinaryCompare, vtkm::SortGreater>::value)>
+  SortByKeyImpl(vtkm::cont::ArrayHandle<T>& keys,
+                vtkm::cont::ArrayHandle<U>& values,
+                BinaryCompare,
+                std::true_type,
+                std::true_type)
+  {
+    vtkm::cont::Token token;
+    auto keys_portal = keys.PrepareForInPlace(vtkm::cont::DeviceAdapterTagKokkos{}, token);
+    auto values_portal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagKokkos{}, token);
+
+    kokkos::internal::KokkosViewExec<T> keys_view(keys_portal.GetArray(),
+                                                  keys_portal.GetNumberOfValues());
+    kokkos::internal::KokkosViewExec<U> values_view(values_portal.GetArray(),
+                                                    values_portal.GetNumberOfValues());
+
+    thrust::device_ptr<T> keys_begin(keys_view.data());
+    thrust::device_ptr<T> keys_end(keys_view.data() + keys_view.size());
+    thrust::device_ptr<U> values_begin(values_view.data());
+
+    if (std::is_same<BinaryCompare, vtkm::SortLess>::value)
+    {
+      thrust::sort_by_key(keys_begin, keys_end, values_begin, thrust::less<T>());
+    }
+    else
+    {
+      thrust::sort_by_key(keys_begin, keys_end, values_begin, thrust::greater<T>());
+    }
+  }
+
+#endif
+
+  template <typename T,
+            typename U,
+            class StorageT,
+            class StorageU,
+            class BinaryCompare,
+            typename ValidKeys,
+            typename ValidValues>
+  VTKM_CONT static void SortByKeyImpl(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                      vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                      BinaryCompare binary_compare,
+                                      ValidKeys,
+                                      ValidValues)
+  {
+    // Default to general algorithm
+    Superclass::SortByKey(keys, values, binary_compare);
+  }
+
+public:
+  template <typename T, typename U, class StorageT, class StorageU>
+  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                  vtkm::cont::ArrayHandle<U, StorageU>& values)
+  {
+    // Make sure not to use the general algorithm here since
+    // it will use Sort algorithm instead of SortByKey
+    SortByKey(keys, values, internal::DefaultCompareFunctor());
+  }
+
+  template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
+  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                  vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                  BinaryCompare binary_compare)
+  {
+    // If T or U are not scalar types, or the BinaryCompare is not supported
+    // then the general algorithm is called, otherwise we will run thrust
+    SortByKeyImpl(keys,
+                  values,
+                  binary_compare,
+                  typename std::is_scalar<T>::type{},
+                  typename std::is_scalar<U>::type{});
+  }
+
+  //----------------------------------------------------------------------------
+
   VTKM_CONT static void Synchronize()
   {
     vtkm::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
@@ -786,5 +890,7 @@ public:
 };
 }
 } // namespace vtkm::cont
+
+#undef VTKM_VOLATILE
 
 #endif //vtk_m_cont_kokkos_internal_DeviceAdapterAlgorithmKokkos_h

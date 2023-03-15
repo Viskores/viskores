@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandleIndex_h
 #define vtk_m_cont_ArrayHandleIndex_h
 
+#include <vtkm/Range.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
 namespace vtkm
@@ -71,6 +72,29 @@ VTKM_CONT inline vtkm::cont::ArrayHandleIndex make_ArrayHandleIndex(vtkm::Id len
 {
   return vtkm::cont::ArrayHandleIndex(length);
 }
+
+namespace internal
+{
+
+template <typename S>
+struct ArrayRangeComputeImpl;
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagIndex>
+{
+  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>& input,
+    vtkm::cont::DeviceAdapterId) const
+  {
+    vtkm::cont::ArrayHandle<vtkm::Range> result;
+    result.Allocate(1);
+    result.WritePortal().Set(0, vtkm::Range(0, input.GetNumberOfValues() - 1));
+    return result;
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

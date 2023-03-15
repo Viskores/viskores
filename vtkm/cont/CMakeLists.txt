@@ -38,6 +38,7 @@ set(headers
   ArrayHandleRandomStandardNormal.h
   ArrayHandleRandomUniformBits.h
   ArrayHandleRandomUniformReal.h
+  ArrayHandleRuntimeVec.h
   ArrayHandleSOA.h
   ArrayHandleStride.h
   ArrayHandleSwizzle.h
@@ -94,6 +95,7 @@ set(headers
   ErrorExecution.h
   ErrorFilterExecution.h
   ErrorInternal.h
+  ErrorUserAbort.h
   ExecutionAndControlObjectBase.h
   ExecutionObjectBase.h
   Field.h

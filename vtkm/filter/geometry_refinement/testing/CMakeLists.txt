@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestShrinkFilter.cxx
   UnitTestSplitSharpEdgesFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
   UnitTestTriangulateFilter.cxx

@@ -15,6 +15,7 @@ set(density_estimate_headers
   ParticleDensityBase.h
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
+  Statistics.h
   )
 
 set(density_estimate_sources_device
@@ -25,6 +26,7 @@ set(density_estimate_sources_device
   ParticleDensityBase.cxx
   ParticleDensityCloudInCell.cxx
   ParticleDensityNearestGridPoint.cxx
+  Statistics.cxx
   )
 
 vtkm_library(

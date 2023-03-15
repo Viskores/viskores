@@ -146,16 +146,8 @@ void InitializeRuntimeDeviceConfigurationWithArgs()
 {
   int argc;
   char** argv;
-  vtkm::cont::testing::Testing::MakeArgsAddProgramName(argc,
-                                                       argv,
-                                                       "--vtkm-device",
-                                                       "Any",
-                                                       "--vtkm-num-threads",
-                                                       "100",
-                                                       "--vtkm-numa-regions",
-                                                       "4",
-                                                       "--vtkm-device-instance",
-                                                       "2");
+  vtkm::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--vtkm-device", "Any", "--vtkm-num-threads", "100", "--vtkm-device-instance", "2");
   vtkm::cont::Initialize(argc, argv);
   CheckArgs(argc, argv);
 }

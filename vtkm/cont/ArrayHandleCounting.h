@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
+#include <vtkm/Range.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
 
@@ -152,6 +153,52 @@ make_ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::
 {
   return vtkm::cont::ArrayHandleCounting<CountingValueType>(start, step, length);
 }
+
+namespace internal
+{
+
+template <typename S>
+struct ArrayRangeComputeImpl;
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagCounting>
+{
+  template <typename T>
+  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagCounting>& input,
+    vtkm::cont::DeviceAdapterId) const
+  {
+    using Traits = vtkm::VecTraits<T>;
+    vtkm::cont::ArrayHandle<vtkm::Range> result;
+    result.Allocate(Traits::NUM_COMPONENTS);
+    auto portal = result.WritePortal();
+    if (portal.GetNumberOfValues() > 0)
+    {
+      T first = input.ReadPortal().Get(0);
+      T last = input.ReadPortal().Get(input.GetNumberOfValues() - 1);
+      for (vtkm::IdComponent cIndex = 0; cIndex < Traits::NUM_COMPONENTS; ++cIndex)
+      {
+        auto firstComponent = Traits::GetComponent(first, cIndex);
+        auto lastComponent = Traits::GetComponent(last, cIndex);
+        portal.Set(cIndex,
+                   vtkm::Range(vtkm::Min(firstComponent, lastComponent),
+                               vtkm::Max(firstComponent, lastComponent)));
+      }
+    }
+    else
+    {
+      // Array is empty
+      for (vtkm::IdComponent cIndex = 0; cIndex < Traits::NUM_COMPONENTS; ++cIndex)
+      {
+        portal.Set(cIndex, vtkm::Range{});
+      }
+    }
+    return result;
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

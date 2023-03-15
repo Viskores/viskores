@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(headers
+  Shrink.h
   SplitSharpEdges.h
   Tetrahedralize.h
   Triangulate.h

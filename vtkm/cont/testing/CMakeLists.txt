@@ -85,6 +85,7 @@ set(unit_tests_device
   UnitTestArrayHandleRandomStandardNormal.cxx
   UnitTestArrayHandleRandomUniformReal.cxx
   UnitTestArrayHandleRecombineVec.cxx
+  UnitTestArrayHandleRuntimeVec.cxx
   UnitTestArrayHandleSOA.cxx
   UnitTestArrayHandleSwizzle.cxx
   UnitTestArrayHandleTransform.cxx
@@ -120,6 +121,12 @@ if(TARGET vtkm_filter_field_conversion)
   list(APPEND unit_tests_device
     UnitTestCellSetExtrude.cxx
     )
+endif()
+
+if(TARGET vtkm_filter_contour)
+  list(APPEND unit_tests
+    UnitTestAbort.cxx
+  )
 endif()
 
 vtkm_unit_tests(SOURCES ${unit_tests} DEVICE_SOURCES ${unit_tests_device})

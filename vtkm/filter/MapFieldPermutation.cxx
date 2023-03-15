@@ -37,6 +37,29 @@ VTKM_FILTER_CORE_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
 }
 
 VTKM_FILTER_CORE_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
+  const vtkm::cont::CoordinateSystem& inputCoords,
+  const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
+  vtkm::cont::CoordinateSystem& outputCoords,
+  vtkm::Float64 invalidValue)
+{
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+  try
+  {
+    vtkm::cont::UnknownArrayHandle outputArray =
+      vtkm::cont::internal::MapArrayPermutation(inputCoords.GetData(), permutation, invalidValue);
+    outputCoords =
+      vtkm::cont::Field(inputCoords.GetName(), inputCoords.GetAssociation(), outputArray);
+    return true;
+  }
+  catch (...)
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Faild to coordinate system " << inputCoords.GetName());
+    return false;
+  }
+}
+
+VTKM_FILTER_CORE_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
   const vtkm::cont::Field& inputField,
   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
   vtkm::cont::DataSet& outputData,

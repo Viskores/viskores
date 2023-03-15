@@ -40,7 +40,7 @@ void RunFilter(Filter* self, vtkm::filter::DataSetQueue& input, vtkm::filter::Da
   tracker.SetThreadFriendlyMemAlloc(prevVal);
 }
 
-}
+} // anonymous namespace
 
 Filter::~Filter() = default;
 
@@ -48,6 +48,45 @@ bool Filter::CanThread() const
 {
   return true;
 }
+
+//----------------------------------------------------------------------------
+void Filter::SetFieldsToPass(const vtkm::filter::FieldSelection& fieldsToPass)
+{
+  this->FieldsToPass = fieldsToPass;
+}
+
+void Filter::SetFieldsToPass(vtkm::filter::FieldSelection&& fieldsToPass)
+{
+  this->FieldsToPass = std::move(fieldsToPass);
+}
+
+void Filter::SetFieldsToPass(const vtkm::filter::FieldSelection& fieldsToPass,
+                             vtkm::filter::FieldSelection::Mode mode)
+{
+  this->FieldsToPass = fieldsToPass;
+  this->FieldsToPass.SetMode(mode);
+}
+
+VTKM_CONT void Filter::SetFieldsToPass(std::initializer_list<std::string> fields,
+                                       vtkm::filter::FieldSelection::Mode mode)
+{
+  this->SetFieldsToPass(vtkm::filter::FieldSelection{ fields, mode });
+}
+
+void Filter::SetFieldsToPass(
+  std::initializer_list<std::pair<std::string, vtkm::cont::Field::Association>> fields,
+  vtkm::filter::FieldSelection::Mode mode)
+{
+  this->SetFieldsToPass(vtkm::filter::FieldSelection{ fields, mode });
+}
+
+void Filter::SetFieldsToPass(const std::string& fieldname,
+                             vtkm::cont::Field::Association association,
+                             vtkm::filter::FieldSelection::Mode mode)
+{
+  this->SetFieldsToPass(vtkm::filter::FieldSelection{ fieldname, association, mode });
+}
+
 
 //----------------------------------------------------------------------------
 vtkm::cont::PartitionedDataSet Filter::DoExecutePartitions(
