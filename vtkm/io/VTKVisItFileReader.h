@@ -21,19 +21,20 @@ namespace vtkm
 namespace io
 {
 
-//
-// Reader for ".visit" files, a simple file format for partioned data sets.
-// The file format consists of the keyword "!NBLOCKS <N>", where N is the number of
-// partitions, followed by a list of the N files. For example:
-//
-/*
-!NBLOCKS 2
-file1.vtk
-file2.vtk
-*/
-//
-// Note: .visit files support time varying partitione data, but it is not supported
-// in this reader.
+/// Reader for ".visit" files, a simple file format for partioned data sets.
+/// The file format consists of the keyword "!NBLOCKS <N>", where N is the number of
+/// partitions, followed by a list of the N files. For example:
+///
+/// ```
+/// # This is a comment
+/// !NBLOCKS 2
+/// file1.vtk
+/// file2.vtk
+/// ```
+///
+/// Note: .visit files support time varying partitioned data, but it is not supported
+/// in this reader.
+///
 
 class VTKM_IO_EXPORT VTKVisItFileReader
 {

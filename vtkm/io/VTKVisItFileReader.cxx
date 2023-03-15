@@ -38,7 +38,7 @@ vtkm::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
   //Get the base dir name
   auto pos = this->FileName.rfind("/");
   if (pos != std::string::npos)
-    baseDirPath = baseDirPath.substr(0, pos);
+    baseDirPath = this->FileName.substr(0, pos);
 
   //Open up the file of filenames.
   std::ifstream stream(this->FileName);
@@ -58,12 +58,12 @@ vtkm::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
       //!NBLOCKS is already set!!
       if (numBlocks > 0)
         throw vtkm::io::ErrorIO("Invalid file: " + this->FileName +
-                                ". Number of blocks already specified");
+                                ". `!NBLOCKS` specified more than once.");
 
       numBlocks = std::atoi(line.substr(8, line.size()).c_str());
       if (numBlocks <= 0)
         throw vtkm::io::ErrorIO("Invalid file: " + this->FileName +
-                                ". Number of blocks must be > 0");
+                                ". Number of blocks (!NBLOCKS) must be > 0.");
     }
     else if (numBlocks > 0)
     {
@@ -82,7 +82,8 @@ vtkm::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
     }
     else
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Skipping line: " << line);
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                 "Skipping line that occurs before `!NBLOCKS`: " << line);
       continue;
     }
   }
@@ -98,7 +99,7 @@ vtkm::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
   vtkm::cont::PartitionedDataSet pds;
 
   //Read all the files.
-  for (const auto fn : fileNames)
+  for (auto&& fn : fileNames)
   {
     vtkm::io::VTKDataSetReader reader(fn);
     pds.AppendPartition(reader.ReadDataSet());
