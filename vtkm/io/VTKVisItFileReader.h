@@ -21,6 +21,7 @@ namespace vtkm
 namespace io
 {
 
+//
 // Reader for ".visit" files, a simple file format for partioned data sets.
 // The file format consists of the keyword "!NBLOCKS <N>", where N is the number of
 // partitions, followed by a list of the N files. For example:
