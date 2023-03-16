@@ -77,27 +77,17 @@ private:
 namespace detail
 {
 
-template <typename T, typename UseVecTraits = vtkm::HasVecTraits<T>>
-struct CanCountImpl;
-
 template <typename T>
-struct CanCountImpl<T, std::false_type>
-{
-  using TTraits = vtkm::TypeTraits<T>;
-  static constexpr bool IsNumeric =
-    !std::is_same<typename TTraits::NumericTag, vtkm::TypeTraitsUnknownTag>::value;
-
-  static constexpr bool value = IsNumeric;
-};
-
-template <typename T>
-struct CanCountImpl<T, std::true_type>
+struct CanCountImpl
 {
   using VTraits = vtkm::VecTraits<T>;
   using BaseType = typename VTraits::BaseComponentType;
+  using TTraits = vtkm::TypeTraits<BaseType>;
+  static constexpr bool IsNumeric =
+    !std::is_same<typename TTraits::NumericTag, vtkm::TypeTraitsUnknownTag>::value;
   static constexpr bool IsBool = std::is_same<BaseType, bool>::value;
 
-  static constexpr bool value = CanCountImpl<BaseType, std::false_type>::value && !IsBool;
+  static constexpr bool value = IsNumeric && !IsBool;
 };
 
 } // namespace detail

@@ -117,8 +117,7 @@ struct VecTraits<vtkm::VecFromPortal<PortalType>>
   using VecType = vtkm::VecFromPortal<PortalType>;
 
   using ComponentType = typename VecType::ComponentType;
-  using BaseComponentType =
-    typename vtkm::internal::SafeVecTraits<ComponentType>::BaseComponentType;
+  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeVariable;
 

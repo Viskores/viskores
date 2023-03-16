@@ -10,6 +10,8 @@
 #ifndef vtk_m_VecTraits_h
 #define vtk_m_VecTraits_h
 
+#include <vtkm/Deprecated.h>
+#include <vtkm/StaticAssert.h>
 #include <vtkm/Types.h>
 
 namespace vtkm
@@ -42,64 +44,55 @@ struct VecTraitsTagSizeVariable
 {
 };
 
-namespace internal
-{
-
-// Forward declaration
-template <typename T>
-struct SafeVecTraits;
-
-template <vtkm::IdComponent numComponents, typename ComponentType>
-struct VecTraitsMultipleComponentChooser
-{
-  using Type = vtkm::VecTraitsTagMultipleComponents;
-};
-
-template <typename ComponentType>
-struct VecTraitsMultipleComponentChooser<1, ComponentType>
-{
-  using Type = typename vtkm::internal::SafeVecTraits<ComponentType>::HasMultipleComponents;
-};
-
-} // namespace internal
-
-/// The VecTraits class gives several static members that define how
-/// to use a given type as a vector.
+/// \brief Traits that can be queried to treat any type as a `Vec`.
 ///
-template <class VecType>
+/// The VecTraits class gives several static members that define how
+/// to use a given type as a vector. This is useful for templated
+/// functions and methods that have a parameter that could be either
+/// a standard scalar type or a `Vec` or some other `Vec`-like
+/// object. When using this class, scalar objects are treated like
+/// a `Vec` of size 1.
+///
+/// The default implementation of this template treats the type as
+/// a scalar. Types that actually behave like vectors should
+/// specialize this template to provide the proper information.
+///
+template <class T>
 struct VTKM_NEVER_EXPORT VecTraits
 {
-#ifdef VTKM_DOXYGEN_ONLY
+  // The base VecTraits should not be used with qualifiers.
+  VTKM_STATIC_ASSERT_MSG((std::is_same<std::remove_pointer_t<std::decay_t<T>>, T>::value),
+                         "The base VecTraits should not be used with qualifiers.");
+
   /// \brief Type of the components in the vector.
   ///
   /// If the type is really a scalar, then the component type is the same as the scalar type.
   ///
-  using ComponentType = typename VecType::ComponentType;
+  using ComponentType = T;
 
   /// \brief Base component type in the vector.
   ///
   /// Similar to ComponentType except that for nested vectors (e.g. Vec<Vec<T, M>, N>), it
   /// returns the base scalar type at the end of the composition (T in this example).
   ///
-  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
+  using BaseComponentType = T;
 
   /// \brief Number of components in the vector.
   ///
   /// This is only defined for vectors of a static size.
   ///
-  static constexpr vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 1;
 
   /// Number of components in the given vector.
   ///
-  static vtkm::IdComponent GetNumberOfComponents(const VecType& vec);
+  static constexpr vtkm::IdComponent GetNumberOfComponents(const T&) { return NUM_COMPONENTS; }
 
   /// \brief A tag specifying whether this vector has multiple components (i.e. is a "real" vector).
   ///
   /// This tag can be useful for creating specialized functions when a vector
   /// is really just a scalar.
   ///
-  using HasMultipleComponents =
-    typename internal::VecTraitsMultipleComponentChooser<NUM_COMPONENTS, ComponentType>::Type;
+  using HasMultipleComponents = vtkm::VecTraitsTagSingleComponent;
 
   /// \brief A tag specifying whether the size of this vector is known at compile time.
   ///
@@ -111,79 +104,111 @@ struct VTKM_NEVER_EXPORT VecTraits
 
   /// Returns the value in a given component of the vector.
   ///
-  VTKM_EXEC_CONT static const ComponentType& GetComponent(
-    const typename std::remove_const<VecType>::type& vector,
-    vtkm::IdComponent component);
-  VTKM_EXEC_CONT static ComponentType& GetComponent(
-    typename std::remove_const<VecType>::type& vector,
-    vtkm::IdComponent component);
+  VTKM_EXEC_CONT static const ComponentType& GetComponent(const T& vector,
+                                                          vtkm::IdComponent vtkmNotUsed(component))
+  {
+    return vector;
+  }
+  VTKM_EXEC_CONT static ComponentType& GetComponent(T& vector,
+                                                    vtkm::IdComponent vtkmNotUsed(component))
+  {
+    return vector;
+  }
 
   /// Changes the value in a given component of the vector.
   ///
-  VTKM_EXEC_CONT static void SetComponent(VecType& vector,
-                                          vtkm::IdComponent component,
-                                          ComponentType value);
+  VTKM_EXEC_CONT static void SetComponent(T& vector,
+                                          vtkm::IdComponent vtkmNotUsed(component),
+                                          ComponentType value)
+  {
+    vector = value;
+  }
 
   /// \brief Get a vector of the same type but with a different component.
   ///
   /// This type resolves to another vector with a different component type. For example,
-  /// @code vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> @endcode is vtkm::Vec<T2, N>.
-  /// This replacement is not recursive. So @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode
-  /// is vtkm::Vec<T2, N>.
+  /// `vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2>` is `vtkm::Vec<T2, N>`.
+  /// This replacement is not recursive. So `VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>`
+  /// is `vtkm::Vec<T2, N>`.
   ///
   template <typename NewComponentType>
-  using ReplaceComponentType = VecTemplate<NewComponentType, N>;
+  using ReplaceComponentType = NewComponentType;
 
   /// \brief Get a vector of the same type but with a different base component.
   ///
   /// This type resolves to another vector with a different base component type. The replacement
   /// is recursive for nested types. For example,
-  /// @code VecTraits<Vec<Vec<T, M>, N>::ReplaceBaseComponentType<T2> @endcode is Vec<Vec<T2, M>, N>.
+  /// `VecTraits<Vec<Vec<T, M>, N>::ReplaceBaseComponentType<T2>` is `Vec<Vec<T2, M>, N>`.
   ///
   template <typename NewComponentType>
-  using ReplaceBaseComponentType = VecTemplate<
-    typename VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
-    N>;
+  using ReplaceBaseComponentType = NewComponentType;
 
   /// Copies the components in the given vector into a given Vec object.
   ///
-  template <vktm::IdComponent destSize>
-  VTKM_EXEC_CONT static void CopyInto(const VecType& src, vtkm::Vec<ComponentType, destSize>& dest);
-#endif // VTKM_DOXYGEN_ONLY
+  template <vtkm::IdComponent destSize>
+  VTKM_EXEC_CONT static void CopyInto(const T& src, vtkm::Vec<ComponentType, destSize>& dest)
+  {
+    dest[0] = src;
+  }
 };
 
-namespace detail
-{
-
 template <typename T>
-struct HasVecTraitsImpl
-{
-  template <typename A, typename S = typename vtkm::VecTraits<A>::ComponentType>
-  static std::true_type Test(A*);
+using HasVecTraits VTKM_DEPRECATED(2.1, "All types now have VecTraits defined.") = std::true_type;
 
-  static std::false_type Test(...);
-
-  using Type = decltype(Test(std::declval<T*>()));
-};
-
-} // namespace detail
-
-/// \brief Determines whether the given type has VecTraits defined.
-///
-/// If the given type T has a valid VecTraits class, then HasVecTraits<T> will be set to
-/// std::true_type. Otherwise it will be set to std::false_type. For example,
-/// HasVecTraits<vtkm::Id> is the same as std::true_type whereas HasVecTraits<void *> is the same
-/// as std::false_type. This is useful to block the definition of methods using VecTraits when
-/// VecTraits are not defined.
-///
-template <typename T>
-using HasVecTraits = typename detail::HasVecTraitsImpl<T>::Type;
-
-// This partial specialization allows you to define a non-const version of
-// VecTraits and have it still work for const version.
-//
+// These partial specializations allow VecTraits to work with const and reference qualifiers.
 template <typename T>
 struct VTKM_NEVER_EXPORT VecTraits<const T> : VecTraits<T>
+{
+};
+template <typename T>
+struct VTKM_NEVER_EXPORT VecTraits<T&> : VecTraits<T>
+{
+};
+template <typename T>
+struct VTKM_NEVER_EXPORT VecTraits<const T&> : VecTraits<T>
+{
+};
+
+// This partial specialization allows VecTraits to work with pointers.
+template <typename T>
+struct VTKM_NEVER_EXPORT VecTraits<T*> : VecTraits<T>
+{
+  VTKM_EXEC_CONT static vtkm::IdComponent GetNumberOfComponents(const T* vector)
+  {
+    return VecTraits<T>::GetNumberOfComponents(*vector);
+  }
+  VTKM_EXEC_CONT static auto GetComponent(const T* vector, vtkm::IdComponent component)
+    -> decltype(VecTraits<T>::GetComponent(*vector, component))
+  {
+    return VecTraits<T>::GetComponent(*vector, component);
+  }
+  VTKM_EXEC_CONT static auto GetComponent(T* vector, vtkm::IdComponent component)
+    -> decltype(VecTraits<T>::GetComponent(*vector, component))
+  {
+    return VecTraits<T>::GetComponent(*vector, component);
+  }
+  VTKM_EXEC_CONT static void SetComponent(T* vector,
+                                          vtkm::IdComponent component,
+                                          typename VecTraits<T>::ComponentType value)
+  {
+    VecTraits<T>::SetComponent(*vector, component, value);
+  }
+  template <typename NewComponentType>
+  using ReplaceComponentType =
+    typename VecTraits<T>::template ReplaceComponentType<NewComponentType>*;
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType =
+    typename VecTraits<T>::template ReplaceBaseComponentType<NewComponentType>*;
+  template <vtkm::IdComponent destSize>
+  VTKM_EXEC_CONT static void CopyInto(
+    const T* src,
+    vtkm::Vec<typename VecTraits<T>::ComponentType, destSize>& dest)
+  {
+    VecTraits<T>::CopyInto(*src, dest);
+  }
+};
+template <typename T>
+struct VTKM_NEVER_EXPORT VecTraits<const T*> : VecTraits<T*>
 {
 };
 
@@ -201,12 +226,28 @@ template <typename T, vtkm::IdComponent Size, typename NewT>
 struct VecReplaceBaseComponentTypeGCC4or5
 {
   using type =
-    vtkm::Vec<typename vtkm::internal::SafeVecTraits<T>::template ReplaceBaseComponentType<NewT>,
-              Size>;
+    vtkm::Vec<typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<NewT>, Size>;
 };
 
 } // namespace detail
 #endif // GCC Version 4.8
+
+namespace internal
+{
+
+template <vtkm::IdComponent numComponents, typename ComponentType>
+struct VecTraitsMultipleComponentChooser
+{
+  using Type = vtkm::VecTraitsTagMultipleComponents;
+};
+
+template <typename ComponentType>
+struct VecTraitsMultipleComponentChooser<1, ComponentType>
+{
+  using Type = typename vtkm::VecTraits<ComponentType>::HasMultipleComponents;
+};
+
+} // namespace internal
 
 template <typename T, vtkm::IdComponent Size>
 struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
@@ -224,8 +265,7 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
   /// Similar to ComponentType except that for nested vectors (e.g. Vec<Vec<T, M>, N>), it
   /// returns the base scalar type at the end of the composition (T in this example).
   ///
-  using BaseComponentType =
-    typename vtkm::internal::SafeVecTraits<ComponentType>::BaseComponentType;
+  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
 
   /// Number of components in the vector.
   ///
@@ -304,10 +344,9 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
     typename detail::VecReplaceBaseComponentTypeGCC4or5<T, Size, NewComponentType>::type;
 #else // !GCC <= 5
   template <typename NewComponentType>
-  using ReplaceBaseComponentType =
-    vtkm::Vec<typename vtkm::internal::SafeVecTraits<
-                ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
-              Size>;
+  using ReplaceBaseComponentType = vtkm::Vec<
+    typename vtkm::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
+    Size>;
 #endif
   ///@}
 
@@ -509,7 +548,8 @@ namespace internal
 /// Used for overriding VecTraits for basic scalar types.
 ///
 template <typename ScalarType>
-struct VTKM_NEVER_EXPORT VecTraitsBasic
+struct VTKM_DEPRECATED(2.1, "VecTraitsBasic is now the default implementation for VecTraits.")
+  VTKM_NEVER_EXPORT VecTraitsBasic
 {
   using ComponentType = ScalarType;
   using BaseComponentType = ScalarType;
@@ -548,87 +588,41 @@ struct VTKM_NEVER_EXPORT VecTraitsBasic
   }
 };
 
-namespace detail
-{
-
-template <typename T, typename = vtkm::HasVecTraits<T>>
-struct VTKM_NEVER_EXPORT SafeVecTraitsImpl;
-
 template <typename T>
-struct VTKM_NEVER_EXPORT SafeVecTraitsImpl<T, std::true_type> : vtkm::VecTraits<T>
-{
-};
-
-template <typename T>
-struct VTKM_NEVER_EXPORT SafeVecTraitsImpl<T, std::false_type> : vtkm::internal::VecTraitsBasic<T>
-{
-};
-
-} // namespace detail
-
-/// \brief A version of VecTraits that will be available for any type.
-///
-/// The `VecTraits` template is only defined for types that have a specific specialization
-/// for it. That means if you use `VecTraits` in a template, that template will likely
-/// fail to build for types that are not defined for `VecTraits`.
-///
-/// To use `VecTraits` in a class that should support all types, not just those with
-/// defined `VecTraits`, you can use this "safe" version. `SafeVecTraits` is the same as
-/// `VecTraits` if the latter is defined. If the `VecTraits` are not defined, then
-/// `SafeVecTraits` treats the type as a simple scalar value.
-///
-/// This template ensures that it will work reasonably well for all types. But be careful
-/// as if `VecTraits` is later defined, the template is likely to change.
-///
-template <typename T>
-struct VTKM_NEVER_EXPORT SafeVecTraits : detail::SafeVecTraitsImpl<T>
+struct VTKM_DEPRECATED(2.1 "VecTraits now safe to use on any type.") VTKM_NEVER_EXPORT SafeVecTraits
+  : vtkm::VecTraits<T>
 {
 };
 
 } // namespace internal
 
-/// \brief VecTraits for Pair types
-///
-/// Although a pair would seem better as a size-2 vector, we treat it as a
-/// scalar. This is because a \c Vec is assumed to have the same type for
-/// every component, and a pair in general has a different type for each
-/// component. Thus we treat a pair as a "scalar" unit.
-///
-template <typename T, typename U>
-struct VTKM_NEVER_EXPORT VecTraits<vtkm::Pair<T, U>>
-  : public vtkm::internal::VecTraitsBasic<vtkm::Pair<T, U>>
+namespace detail
+{
+
+struct VTKM_DEPRECATED(2.1,
+                       "VTKM_BASIC_TYPE_VECTOR is no longer necessary because VecTraits implements "
+                       "basic type by default.") VTKM_BASIC_TYPE_VECTOR_is_deprecated
 {
 };
 
+template <typename T>
+struct issue_VTKM_BASIC_TYPE_VECTOR_deprecation_warning;
+
+}
+
 } // namespace vtkm
 
-#define VTKM_BASIC_TYPE_VECTOR(type)                                                     \
-  namespace vtkm                                                                         \
-  {                                                                                      \
-  template <>                                                                            \
-  struct VTKM_NEVER_EXPORT VecTraits<type> : public vtkm::internal::VecTraitsBasic<type> \
-  {                                                                                      \
-  };                                                                                     \
+#define VTKM_BASIC_TYPE_VECTOR(type)                            \
+  namespace vtkm                                                \
+  {                                                             \
+  namespace detail                                              \
+  {                                                             \
+  template <>                                                   \
+  struct issue_VTKM_BASIC_TYPE_VECTOR_deprecation_warning<type> \
+    : public vtkm::detail::VTKM_BASIC_TYPE_VECTOR_is_deprecated \
+  {                                                             \
+  };                                                            \
+  }                                                             \
   }
-
-/// Allows you to treat basic types as if they were vectors.
-
-VTKM_BASIC_TYPE_VECTOR(float)
-VTKM_BASIC_TYPE_VECTOR(double)
-
-VTKM_BASIC_TYPE_VECTOR(bool)
-VTKM_BASIC_TYPE_VECTOR(char)
-VTKM_BASIC_TYPE_VECTOR(signed char)
-VTKM_BASIC_TYPE_VECTOR(unsigned char)
-VTKM_BASIC_TYPE_VECTOR(short)
-VTKM_BASIC_TYPE_VECTOR(unsigned short)
-VTKM_BASIC_TYPE_VECTOR(int)
-VTKM_BASIC_TYPE_VECTOR(unsigned int)
-VTKM_BASIC_TYPE_VECTOR(long)
-VTKM_BASIC_TYPE_VECTOR(unsigned long)
-VTKM_BASIC_TYPE_VECTOR(long long)
-VTKM_BASIC_TYPE_VECTOR(unsigned long long)
-
-//#undef VTKM_BASIC_TYPE_VECTOR
 
 #endif //vtk_m_VecTraits_h

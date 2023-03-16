@@ -69,7 +69,7 @@ public:
   /// \brief A tag to determine whether the type has multiple components.
   ///
   /// This tag is either TypeTraitsScalarTag or TypeTraitsVectorTag. Scalars can
-  /// also be treated as vectors.
+  /// also be treated as vectors with VecTraits.
   using DimensionalityTag = vtkm::TypeTraitsUnknownTag;
 
   VTKM_EXEC_CONT static T ZeroInitialization() { return T(); }
