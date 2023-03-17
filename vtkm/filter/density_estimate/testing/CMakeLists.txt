@@ -15,6 +15,7 @@ set(unit_tests
   UnitTestNDHistogramFilter.cxx
   UnitTestPartitionedDataSetHistogramFilter.cxx
   UnitTestStatisticsFilter.cxx
+  UnitTestStatisticsFilterMPI.cxx
   )
 
 set(unit_tests_device
@@ -31,3 +32,14 @@ vtkm_unit_tests(
   LIBRARIES ${libraries}
   USE_VTKM_JOB_POOL
 )
+
+if (VTKm_ENABLE_MPI)
+  set(mpi_unit_tests
+    UnitTestStatisticsFilterMPI.cxx
+  )
+  vtkm_unit_tests(
+    MPI
+    DEVICE_SOURCES ${mpi_unit_tests}
+    USE_VTKM_JOB_POOL
+  )
+endif()

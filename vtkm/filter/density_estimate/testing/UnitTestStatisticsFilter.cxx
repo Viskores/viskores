@@ -8,16 +8,16 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/density_estimate/Statistics.h>
-
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-
+#include <vtkm/filter/density_estimate/Statistics.h>
+#include <vtkm/thirdparty/diy/environment.h>
 
 namespace
 {
-
-vtkm::FloatDefault getStatsFromArray(vtkm::cont::DataSet dataset, const std::string statName)
+template <typename DataSetType>
+vtkm::FloatDefault getStatsFromDataSet(const DataSetType& dataset, const std::string statName)
 {
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> array;
   dataset.GetField(statName).GetData().AsArrayHandle(array);
@@ -30,56 +30,127 @@ void TestStatisticsPartial()
 {
   vtkm::cont::DataSet dataSet;
   constexpr vtkm::FloatDefault N = 1000;
-  // the number is from 0 to 999
-  auto scalaArray =
+  auto scalarArrayCounting =
     vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault>(0.0f, 1.0f, static_cast<vtkm::Id>(N));
-  dataSet.AddPointField("scalarField", scalaArray);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> scalarArray;
+  vtkm::cont::ArrayCopy(scalarArrayCounting, scalarArray);
+  dataSet.AddPointField("scalarField", scalarArray);
 
   using STATS = vtkm::filter::density_estimate::Statistics;
   STATS statisticsFilter;
-
-  //set required states
-  std::vector<STATS::Stats> RequiredStatsList{ STATS::Stats::N,        STATS::Stats::Sum,
-                                               STATS::Stats::Mean,     STATS::Stats::SampleVariance,
-                                               STATS::Stats::Skewness, STATS::Stats::Kurtosis };
-
-  //default RequiredStatsList contains all statistics variables
-  statisticsFilter.SetRequiredStats(RequiredStatsList);
   using AsscoType = vtkm::cont::Field::Association;
-
   statisticsFilter.SetActiveField("scalarField", AsscoType::Points);
-
-  // We use the same test cases with the UnitTestDescriptiveStatistics.h
   vtkm::cont::DataSet resultDataSet = statisticsFilter.Execute(dataSet);
 
-  vtkm::FloatDefault NValueFromFilter = getStatsFromArray(resultDataSet, "N");
+  vtkm::FloatDefault NValueFromFilter = getStatsFromDataSet(resultDataSet, "N");
   VTKM_TEST_ASSERT(test_equal(NValueFromFilter, N));
 
-  vtkm::FloatDefault SumFromFilter = getStatsFromArray(resultDataSet, "Sum");
+  vtkm::FloatDefault MinValueFromFilter = getStatsFromDataSet(resultDataSet, "Min");
+  VTKM_TEST_ASSERT(test_equal(MinValueFromFilter, 0));
+
+  vtkm::FloatDefault MaxValueFromFilter = getStatsFromDataSet(resultDataSet, "Max");
+  VTKM_TEST_ASSERT(test_equal(MaxValueFromFilter, N - 1));
+
+  vtkm::FloatDefault SumFromFilter = getStatsFromDataSet(resultDataSet, "Sum");
   VTKM_TEST_ASSERT(test_equal(SumFromFilter, N * (N - 1) / 2));
 
-  vtkm::FloatDefault MeanFromFilter = getStatsFromArray(resultDataSet, "Mean");
+  vtkm::FloatDefault MeanFromFilter = getStatsFromDataSet(resultDataSet, "Mean");
   VTKM_TEST_ASSERT(test_equal(MeanFromFilter, (N - 1) / 2));
 
-  vtkm::FloatDefault SVFromFilter = getStatsFromArray(resultDataSet, "SampleVariance");
+  vtkm::FloatDefault SVFromFilter = getStatsFromDataSet(resultDataSet, "SampleVariance");
   VTKM_TEST_ASSERT(test_equal(SVFromFilter, 83416.66));
 
-  vtkm::FloatDefault SkewnessFromFilter = getStatsFromArray(resultDataSet, "Skewness");
+  vtkm::FloatDefault SstddevFromFilter = getStatsFromDataSet(resultDataSet, "SampleStddev");
+  VTKM_TEST_ASSERT(test_equal(SstddevFromFilter, 288.819));
+
+  vtkm::FloatDefault SkewnessFromFilter = getStatsFromDataSet(resultDataSet, "Skewness");
   VTKM_TEST_ASSERT(test_equal(SkewnessFromFilter, 0));
 
   // we use fisher=False when computing the Kurtosis value
-  vtkm::FloatDefault KurtosisFromFilter = getStatsFromArray(resultDataSet, "Kurtosis");
+  vtkm::FloatDefault KurtosisFromFilter = getStatsFromDataSet(resultDataSet, "Kurtosis");
   VTKM_TEST_ASSERT(test_equal(KurtosisFromFilter, 1.8));
+
+  vtkm::FloatDefault PopulationStddev = getStatsFromDataSet(resultDataSet, "PopulationStddev");
+  VTKM_TEST_ASSERT(test_equal(PopulationStddev, 288.675));
+
+  vtkm::FloatDefault PopulationVariance = getStatsFromDataSet(resultDataSet, "PopulationVariance");
+  VTKM_TEST_ASSERT(test_equal(PopulationVariance, 83333.3));
 }
 
+void TestStatisticsPartition()
+{
+  std::vector<vtkm::cont::DataSet> dataSetList;
+  constexpr vtkm::FloatDefault N = 1000;
+
+  for (vtkm::Id i = 0; i < 10; i++)
+  {
+    vtkm::cont::DataSet dataSet;
+    constexpr vtkm::FloatDefault localN = N / 10;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> scalarArray;
+    scalarArray.Allocate(static_cast<vtkm::Id>(localN));
+    auto writePortal = scalarArray.WritePortal();
+    for (vtkm::Id j = 0; j < static_cast<vtkm::Id>(localN); j++)
+    {
+      writePortal.Set(j, static_cast<vtkm::FloatDefault>(i * localN + j));
+    }
+    dataSet.AddPointField("scalarField", scalarArray);
+    dataSetList.push_back(dataSet);
+  }
+
+  //adding data sets for testing edge cases
+  vtkm::cont::DataSet dataSetEmptyField;
+  dataSetEmptyField.AddPointField("scalarField", vtkm::cont::ArrayHandle<vtkm::FloatDefault>());
+  dataSetList.push_back(dataSetEmptyField);
+
+  vtkm::cont::PartitionedDataSet pds(dataSetList);
+  using STATS = vtkm::filter::density_estimate::Statistics;
+  STATS statisticsFilter;
+  using AsscoType = vtkm::cont::Field::Association;
+  statisticsFilter.SetActiveField("scalarField", AsscoType::Points);
+  vtkm::cont::PartitionedDataSet outputPDS = statisticsFilter.Execute(pds);
+
+  vtkm::FloatDefault NValueFromFilter = getStatsFromDataSet(outputPDS, "N");
+  VTKM_TEST_ASSERT(test_equal(NValueFromFilter, N));
+
+  vtkm::FloatDefault MinValueFromFilter = getStatsFromDataSet(outputPDS, "Min");
+  VTKM_TEST_ASSERT(test_equal(MinValueFromFilter, 0));
+
+  vtkm::FloatDefault MaxValueFromFilter = getStatsFromDataSet(outputPDS, "Max");
+  VTKM_TEST_ASSERT(test_equal(MaxValueFromFilter, N - 1));
+
+  vtkm::FloatDefault SumFromFilter = getStatsFromDataSet(outputPDS, "Sum");
+  VTKM_TEST_ASSERT(test_equal(SumFromFilter, N * (N - 1) / 2));
+
+  vtkm::FloatDefault MeanFromFilter = getStatsFromDataSet(outputPDS, "Mean");
+  VTKM_TEST_ASSERT(test_equal(MeanFromFilter, (N - 1) / 2));
+
+  vtkm::FloatDefault SVFromFilter = getStatsFromDataSet(outputPDS, "SampleVariance");
+  VTKM_TEST_ASSERT(test_equal(SVFromFilter, 83416.66));
+
+  vtkm::FloatDefault SstddevFromFilter = getStatsFromDataSet(outputPDS, "SampleStddev");
+  VTKM_TEST_ASSERT(test_equal(SstddevFromFilter, 288.819));
+
+  vtkm::FloatDefault SkewnessFromFilter = getStatsFromDataSet(outputPDS, "Skewness");
+  VTKM_TEST_ASSERT(test_equal(SkewnessFromFilter, 0));
+
+  // we use fisher=False when computing the Kurtosis value
+  vtkm::FloatDefault KurtosisFromFilter = getStatsFromDataSet(outputPDS, "Kurtosis");
+  VTKM_TEST_ASSERT(test_equal(KurtosisFromFilter, 1.8));
+
+  vtkm::FloatDefault PopulationStddev = getStatsFromDataSet(outputPDS, "PopulationStddev");
+  VTKM_TEST_ASSERT(test_equal(PopulationStddev, 288.675));
+
+  vtkm::FloatDefault PopulationVariance = getStatsFromDataSet(outputPDS, "PopulationVariance");
+  VTKM_TEST_ASSERT(test_equal(PopulationVariance, 83333.3));
+}
 
 void TestStatistics()
 {
   TestStatisticsPartial();
+  TestStatisticsPartition();
 } // TestFieldStatistics
 }
 
-//More deatiled tests can be found in the UnitTestStatisticsFilter
 int UnitTestStatisticsFilter(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestStatistics, argc, argv);

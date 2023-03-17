@@ -52,11 +52,32 @@ public:
     }
 
     VTKM_EXEC_CONT
+    StatState(T n, T min, T max, T sum, T mean, T M2, T M3, T M4)
+      : n_(n)
+      , min_(min)
+      , max_(max)
+      , sum_(sum)
+      , mean_(mean)
+      , M2_(M2)
+      , M3_(M3)
+      , M4_(M4)
+    {
+    }
+
+    VTKM_EXEC_CONT
     StatState operator+(const StatState<T>& y) const
     {
       const StatState<T>& x = *this;
-      StatState result;
+      if (y.n_ == 0)
+      {
+        return x;
+      }
+      if (x.n_ == 0)
+      {
+        return y;
+      }
 
+      StatState result;
       result.n_ = x.n_ + y.n_;
 
       result.min_ = vtkm::Min(x.min_, y.min_);
@@ -97,8 +118,7 @@ public:
       return result;
     }
 
-    VTKM_EXEC_CONT
-    T N() const { return this->n_; }
+    VTKM_EXEC_CONT T N() const { return this->n_; }
 
     VTKM_EXEC_CONT
     T Min() const { return this->min_; }
@@ -113,6 +133,15 @@ public:
     T Mean() const { return this->mean_; }
 
     VTKM_EXEC_CONT
+    T M2() const { return this->M2_; }
+
+    VTKM_EXEC_CONT
+    T M3() const { return this->M3_; }
+
+    VTKM_EXEC_CONT
+    T M4() const { return this->M4_; }
+
+    VTKM_EXEC_CONT
     T SampleStddev() const { return vtkm::Sqrt(this->SampleVariance()); }
 
     VTKM_EXEC_CONT
@@ -121,17 +150,27 @@ public:
     VTKM_EXEC_CONT
     T SampleVariance() const
     {
-      VTKM_ASSERT(n_ != 1);
+      if (this->n_ <= 1)
+      {
+        return 0;
+      }
       return this->M2_ / (this->n_ - 1);
     }
 
     VTKM_EXEC_CONT
-    T PopulationVariance() const { return this->M2_ / this->n_; }
+    T PopulationVariance() const
+    {
+      if (this->M2_ == 0 || this->n_ == 0)
+      {
+        return T(0);
+      }
+      return this->M2_ / this->n_;
+    }
 
     VTKM_EXEC_CONT
     T Skewness() const
     {
-      if (this->M2_ == 0)
+      if (this->M2_ == 0 || this->n_ == 0)
         // Shamelessly swiped from Boost Math
         // The limit is technically undefined, but the interpretation here is clear:
         // A constant dataset has no skewness.
@@ -143,7 +182,7 @@ public:
     VTKM_EXEC_CONT
     T Kurtosis() const
     {
-      if (this->M2_ == 0)
+      if (this->M2_ == 0 || this->n_ == 0)
         // Shamelessly swiped from Boost Math
         // The limit is technically undefined, but the interpretation here is clear:
         // A constant dataset has no kurtosis.
