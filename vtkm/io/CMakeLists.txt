@@ -30,6 +30,7 @@ set(headers
   VTKStructuredGridReader.h
   VTKStructuredPointsReader.h
   VTKUnstructuredGridReader.h
+  VTKVisItFileReader.h
   )
 
 set(template_sources
@@ -57,6 +58,7 @@ set(sources
   VTKStructuredGridReader.cxx
   VTKStructuredPointsReader.cxx
   VTKUnstructuredGridReader.cxx
+  VTKVisItFileReader.cxx
   )
 
 if (VTKm_ENABLE_HDF5_IO)
