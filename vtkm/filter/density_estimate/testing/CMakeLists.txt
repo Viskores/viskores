@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestContinuousScatterPlot.cxx
   UnitTestEntropyFilter.cxx
   UnitTestHistogramFilter.cxx
   UnitTestNDEntropyFilter.cxx

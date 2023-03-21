@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(headers
+  ContinuousScatterPlot.h
   FieldEntropy.h
   FieldHistogram.h
   NDimsEntropy.h
