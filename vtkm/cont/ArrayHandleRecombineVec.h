@@ -87,7 +87,7 @@ public:
     return *this;
   }
 
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator=(const T& src)
   {
     this->DoCopy(src);
@@ -104,7 +104,7 @@ public:
     return result;
   }
 
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator+=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -115,7 +115,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator-=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -126,7 +126,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator*=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -137,7 +137,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator/=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -148,7 +148,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator%=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -159,7 +159,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator&=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -170,7 +170,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator|=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -181,7 +181,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator^=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -192,7 +192,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator>>=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -203,7 +203,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator<<=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;

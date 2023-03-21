@@ -141,7 +141,7 @@ class Storage<vtkm::VecFromPortal<ComponentsPortal>, vtkm::cont::StorageTagRunti
     vtkm::cont::internal::Storage<ComponentType, vtkm::cont::StorageTagBasic>;
 
   VTKM_STATIC_ASSERT_MSG(
-    vtkm::internal::SafeVecTraits<ComponentType>::NUM_COMPONENTS == 1,
+    vtkm::VecTraits<ComponentType>::NUM_COMPONENTS == 1,
     "ArrayHandleRuntimeVec only supports scalars grouped into a single Vec. Nested Vecs can "
     "still be used with ArrayHandleRuntimeVec. The values are treated as flattened (like "
     "with VecFlat).");

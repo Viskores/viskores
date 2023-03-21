@@ -82,11 +82,9 @@ inline auto UnknownAHNumberOfComponentsImpl(void* mem)
 // of a use case for the storage to report the number of components for a static data type.
 // If that happens, this implementation will need to be modified.
 template <typename T, typename S>
-inline auto UnknownAHNumberOfComponentsImpl(void*)
-  -> decltype(vtkm::internal::SafeVecTraits<T>::NUM_COMPONENTS)
+inline auto UnknownAHNumberOfComponentsImpl(void*) -> decltype(vtkm::VecTraits<T>::NUM_COMPONENTS)
 {
-  static constexpr vtkm::IdComponent numComponents =
-    vtkm::internal::SafeVecTraits<T>::NUM_COMPONENTS;
+  static constexpr vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
   return numComponents;
 }
 
@@ -117,7 +115,7 @@ inline auto UnknownAHNumberOfComponentsFlatImpl(void* mem)
   // static. If a future `ArrayHandle` type violates this, this code will have to become
   // more complex.
   return (vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(arrayHandle->GetBuffers()) *
-          vtkm::VecFlat<typename vtkm::internal::SafeVecTraits<T>::ComponentType>::NUM_COMPONENTS);
+          vtkm::VecFlat<typename vtkm::VecTraits<T>::ComponentType>::NUM_COMPONENTS);
 }
 
 // Uses SFINAE to use the number of compnents in VecTraits.
@@ -364,14 +362,13 @@ std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTag
 template <typename T>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic()
 {
-  return UnknownAHNewInstanceBasic<T>(typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTraitsTagSizeStatic)
 {
-  using FloatT = typename vtkm::internal::SafeVecTraits<T>::template ReplaceBaseComponentType<
-    vtkm::FloatDefault>;
+  using FloatT = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>;
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<FloatT>{});
 }
 template <typename T>
@@ -383,8 +380,7 @@ std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTrai
 template <typename T>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
 {
-  return UnknownAHNewInstanceFloatBasic<T>(
-    typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceFloatBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T, typename S>
@@ -393,7 +389,7 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   , ValueType(typeid(T))
   , StorageType(typeid(S))
   , BaseComponentType(
-      UnknownAHComponentInfo::Make<typename vtkm::internal::SafeVecTraits<T>::BaseComponentType>())
+      UnknownAHComponentInfo::Make<typename vtkm::VecTraits<T>::BaseComponentType>())
   , DeleteFunction(detail::UnknownAHDelete<T, S>)
   , Buffers(detail::UnknownAHBuffers<T, S>)
   , NewInstance(detail::UnknownAHNewInstance<T, S>)
@@ -1031,8 +1027,8 @@ namespace detail
 {
 
 template <typename T,
-          vtkm::IdComponent = vtkm::internal::SafeVecTraits<
-            typename vtkm::internal::UnrollVec<T>::ComponentType>::NUM_COMPONENTS>
+          vtkm::IdComponent =
+            vtkm::VecTraits<typename vtkm::internal::UnrollVec<T>::ComponentType>::NUM_COMPONENTS>
 struct UnknownArrayHandleRuntimeVecAsBasic
 {
   VTKM_CONT bool operator()(const vtkm::cont::UnknownArrayHandle*,

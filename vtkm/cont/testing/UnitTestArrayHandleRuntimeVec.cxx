@@ -76,8 +76,8 @@ struct PassThrough : vtkm::worklet::WorkletMapField
                           OutValue& outValue,
                           vtkm::IdComponent& outIndex) const
   {
-    using VTraitsIn = vtkm::internal::SafeVecTraits<InValue>;
-    using VTraitsOut = vtkm::internal::SafeVecTraits<OutValue>;
+    using VTraitsIn = vtkm::VecTraits<InValue>;
+    using VTraitsOut = vtkm::VecTraits<OutValue>;
     VTraitsOut::SetComponent(outValue, outIndex, VTraitsIn::GetComponent(inValue, inIndex));
     inIndex++;
     outIndex++;

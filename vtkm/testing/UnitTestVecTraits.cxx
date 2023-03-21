@@ -17,12 +17,18 @@ namespace
 static constexpr vtkm::Id MAX_VECTOR_SIZE = 5;
 static constexpr vtkm::Id VecInit[MAX_VECTOR_SIZE] = { 42, 54, 67, 12, 78 };
 
-void ExpectTrueType(std::true_type) {}
-
-void ExpectFalseType(std::false_type) {}
-
 struct TypeWithoutVecTraits
 {
+  vtkm::Id Value = -1;
+
+  TypeWithoutVecTraits() = default;
+
+  TypeWithoutVecTraits(vtkm::Id value)
+    : Value(value)
+  {
+  }
+
+  operator vtkm::Id() const { return this->Value; }
 };
 
 struct TestVecTypeFunctor
@@ -30,9 +36,6 @@ struct TestVecTypeFunctor
   template <typename T>
   void operator()(const T&) const
   {
-    // Make sure that VecTraits actually exists
-    ExpectTrueType(vtkm::HasVecTraits<T>());
-
     using Traits = vtkm::VecTraits<T>;
     using ComponentType = typename Traits::ComponentType;
     VTKM_TEST_ASSERT(Traits::NUM_COMPONENTS <= MAX_VECTOR_SIZE,
@@ -59,8 +62,8 @@ void TestVecTraits()
   vtkm::testing::Testing::TryTypes(test);
   std::cout << "vtkm::Vec<vtkm::FloatDefault, 5>" << std::endl;
   test(vtkm::Vec<vtkm::FloatDefault, 5>());
-
-  ExpectFalseType(vtkm::HasVecTraits<TypeWithoutVecTraits>());
+  std::cout << "TypeWithoutVecTraits" << std::endl;
+  test(TypeWithoutVecTraits{});
 
   vtkm::testing::TestVecComponentsTag<vtkm::Id3>();
   vtkm::testing::TestVecComponentsTag<vtkm::Vec3f>();
@@ -69,6 +72,7 @@ void TestVecTraits()
   vtkm::testing::TestVecComponentsTag<vtkm::VecCConst<vtkm::Id>>();
   vtkm::testing::TestScalarComponentsTag<vtkm::Id>();
   vtkm::testing::TestScalarComponentsTag<vtkm::FloatDefault>();
+  vtkm::testing::TestScalarComponentsTag<TypeWithoutVecTraits>();
 }
 
 } // anonymous namespace

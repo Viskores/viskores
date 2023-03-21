@@ -120,9 +120,6 @@ VTKM_CONT void ArrayGetValues(const vtkm::cont::ArrayHandle<vtkm::Id, SIds>& ids
                               const vtkm::cont::ArrayHandle<T, SData>& data,
                               vtkm::cont::ArrayHandle<T, SOut>& output)
 {
-  VTKM_STATIC_ASSERT_MSG(
-    vtkm::HasVecTraits<T>::value,
-    "ArrayGetValues can only be used with arrays containing value types with VecTraits defined.");
   using DataArrayHandle = vtkm::cont::ArrayHandle<T, SData>;
   using InefficientExtract =
     vtkm::cont::internal::ArrayExtractComponentIsInefficient<DataArrayHandle>;
