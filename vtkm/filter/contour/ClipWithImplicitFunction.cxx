@@ -29,17 +29,18 @@ bool DoMapField(vtkm::cont::DataSet& result,
 {
   if (field.IsPointField())
   {
+    vtkm::cont::UnknownArrayHandle inputArray = field.GetData();
+    vtkm::cont::UnknownArrayHandle outputArray = inputArray.NewInstanceBasic();
+
     auto resolve = [&](const auto& concrete) {
       // use std::decay to remove const ref from the decltype of concrete.
-      using T = typename std::decay_t<decltype(concrete)>::ValueType;
-      vtkm::cont::ArrayHandle<T> outputArray;
-      worklet.ProcessPointField(concrete, outputArray);
-      result.AddPointField(field.GetName(), outputArray);
+      using BaseT = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
+      auto concreteOut = outputArray.ExtractArrayFromComponents<BaseT>();
+      worklet.ProcessPointField(concrete, concreteOut);
     };
 
-    field.GetData()
-      .CastAndCallForTypesWithFloatFallback<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
-        resolve);
+    inputArray.CastAndCallWithExtractedArray(resolve);
+    result.AddPointField(field.GetName(), outputArray);
     return true;
   }
   else if (field.IsCellField())
