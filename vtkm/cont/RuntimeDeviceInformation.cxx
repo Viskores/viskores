@@ -78,6 +78,11 @@ public:
   {
     throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
+
+  VTKM_CONT virtual void DeleteRawPointer(void*) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
 };
 
 class RuntimeDeviceConfigurationInvalid final

@@ -153,6 +153,32 @@ void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagKokkos>::CopyDeviceT
     static_cast<vtkm::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
   Kokkos::deep_copy(vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
 }
+
+// Low level memory management methods
+void* DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagKokkos>::AllocateRawPointer(
+  vtkm::BufferSizeType size) const
+{
+  return vtkm::cont::kokkos::internal::Allocate(size);
+}
+
+void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagKokkos>::CopyDeviceToDeviceRawPointer(
+  const void* src,
+  void* dest,
+  vtkm::BufferSizeType size) const
+{
+  Kokkos::View<char*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> destView(static_cast<char*>(dest),
+                                                                        size);
+  Kokkos::View<const char*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> srcView(
+    static_cast<const char*>(src), size);
+  Kokkos::deep_copy(vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
+}
+
+void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagKokkos>::DeleteRawPointer(
+  void* mem) const
+{
+  vtkm::cont::kokkos::internal::Free(mem);
+}
+
 }
 }
 } // vtkm::cont::internal

@@ -86,6 +86,7 @@ set(headers
   DeviceAdapterAlgorithm.h
   DeviceAdapterList.h
   DeviceAdapterTag.h
+  DIYMemoryManagement.h
   EnvironmentTracker.h
   Error.h
   ErrorBadAllocation.h
@@ -154,6 +155,7 @@ set(sources
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
   DeviceAdapterTag.cxx
+  DIYMemoryManagement.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx

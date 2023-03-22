@@ -50,6 +50,12 @@ public:
   VTKM_CONT virtual void CopyDeviceToDevice(
     const vtkm::cont::internal::BufferInfo& src,
     const vtkm::cont::internal::BufferInfo& dest) const override;
+
+  VTKM_CONT void* AllocateRawPointer(vtkm::BufferSizeType size) const override;
+  VTKM_CONT void CopyDeviceToDeviceRawPointer(const void* src,
+                                              void* dest,
+                                              vtkm::BufferSizeType size) const override;
+  VTKM_CONT void DeleteRawPointer(void* mem) const override;
 };
 }
 }

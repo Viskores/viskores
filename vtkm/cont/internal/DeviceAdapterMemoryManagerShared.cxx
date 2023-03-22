@@ -83,6 +83,12 @@ void DeviceAdapterMemoryManagerShared::CopyDeviceToDevice(
 
   std::memcpy(dest.GetPointer(), src.GetPointer(), static_cast<std::size_t>(src.GetSize()));
 }
+
+void DeviceAdapterMemoryManagerShared::DeleteRawPointer(void* mem) const
+{
+  vtkm::cont::internal::HostDeleter(mem);
+}
+
 }
 }
 } // namespace vtkm::cont::internal
