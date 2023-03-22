@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 #define vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 
+#include <vtkm/Range.h>
 #include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
@@ -81,6 +82,17 @@ struct VTKM_CONT_EXPORT ArrayExtractComponentImpl<vtkm::cont::StorageTagUniformP
     const vtkm::cont::ArrayHandleUniformPointCoordinates& src,
     vtkm::IdComponent componentIndex,
     vtkm::CopyFlag allowCopy) const;
+};
+
+template <typename S>
+struct ArrayRangeComputeImpl;
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagUniformPoints>
+{
+  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
+    const vtkm::cont::ArrayHandleUniformPointCoordinates& input,
+    vtkm::cont::DeviceAdapterId device) const;
 };
 
 } // namespace internal

@@ -150,21 +150,17 @@ public:
   }
 
   //----------------------------------------------------------------------------
-  template <typename ValueType, typename StorageType>
-  vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input) const
+  template <typename InArrayType, typename OutArrayType>
+  void ProcessPointField(const InArrayType& input, const OutArrayType& output) const
   {
 
     using vtkm::worklet::contour::MapPointField;
     vtkm::worklet::DispatcherMapField<MapPointField> applyFieldDispatcher;
 
-    vtkm::cont::ArrayHandle<ValueType> output;
     applyFieldDispatcher.Invoke(this->SharedState.InterpolationEdgeIds,
                                 this->SharedState.InterpolationWeights,
                                 input,
                                 output);
-
-    return output;
   }
 
   //----------------------------------------------------------------------------

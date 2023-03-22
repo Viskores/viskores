@@ -158,8 +158,6 @@ class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagStride>
   using StrideInfo = vtkm::internal::ArrayStrideInfo;
 
 public:
-  VTKM_STORAGE_NO_RESIZE;
-
   using ReadPortalType = vtkm::internal::ArrayPortalStrideRead<T>;
   using WritePortalType = vtkm::internal::ArrayPortalStrideWrite<T>;
 
@@ -172,6 +170,85 @@ public:
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return GetInfo(buffers).NumberOfValues;
+  }
+
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      const std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token)
+  {
+    StrideInfo& info = GetInfo(buffers);
+
+    if (info.NumberOfValues == numValues)
+    {
+      // Array resized to current size. Don't need to do anything.
+      return;
+    }
+
+    // Find the end index after dealing with the divsor and modulo.
+    auto lengthDivMod = [info](vtkm::Id length) -> vtkm::Id {
+      vtkm::Id resultLength = ((length - 1) / info.Divisor) + 1;
+      if ((info.Modulo > 0) && (info.Modulo < resultLength))
+      {
+        resultLength = info.Modulo;
+      }
+      return resultLength;
+    };
+    vtkm::Id lastStridedIndex = lengthDivMod(numValues);
+
+    vtkm::Id originalStride;
+    vtkm::Id originalOffset;
+    if (info.Stride > 0)
+    {
+      originalStride = info.Stride;
+      originalOffset = info.Offset;
+    }
+    else
+    {
+      // The stride is negative, which means we are counting backward. Here we have to be careful
+      // about the offset, which should move to push to the end of the array. We also need to
+      // be careful about multiplying by the stride.
+      originalStride = -info.Stride;
+
+      vtkm::Id originalSize = lengthDivMod(info.NumberOfValues);
+
+      // Because the stride is negative, we expect the offset to be at the end of the array.
+      // We will call the "real" offset the distance from that end.
+      originalOffset = originalSize - info.Offset - 1;
+    }
+
+    // If the offset is more than the stride, that means there are values skipped at the
+    // beginning of the array, and it is impossible to know exactly how many. In this case,
+    // we cannot know how to resize. (If this is an issue, we will have to change
+    // `ArrayHandleStride` to take resizing parameters.)
+    if (originalOffset >= originalStride)
+    {
+      if (numValues == 0)
+      {
+        // Array resized to zero. This can happen when releasing resources.
+        // Should we try to clear out the buffers, or avoid that for messing up shared buffers?
+        return;
+      }
+      throw vtkm::cont::ErrorBadAllocation(
+        "Cannot resize stride array with offset greater than stride (start of stride unknown).");
+    }
+
+    // lastIndex should be the index in the source array after each stride block. Assuming the
+    // offset is inside the first stride, this should be the end of the array regardless of
+    // offset.
+    vtkm::Id lastIndex = lastStridedIndex * originalStride;
+
+    buffers[1].SetNumberOfBytes(
+      vtkm::internal::NumberOfValuesToNumberOfBytes<T>(lastIndex), preserve, token);
+    info.NumberOfValues = numValues;
+
+    if (info.Stride < 0)
+    {
+      // As described above, when the stride is negative, we are counting backward. This means
+      // that the offset is actually relative to the end, so we need to adjust it to the new
+      // end of the array.
+      info.Offset = lastIndex - originalOffset - 1;
+    }
   }
 
   VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>&,

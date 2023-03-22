@@ -133,8 +133,7 @@ public:
           this->Decomposer.fill_bounds(bds, target.gid);
 
           auto extractedDS = this->Extract(*block, bds);
-          // TODO: Need a better way to serialize DataSet. See issue #725.
-          rp.enqueue(target, vtkm::cont::SerializableDataSet<>(extractedDS));
+          rp.enqueue(target, extractedDS);
         }
         // clear our dataset.
         *block = vtkm::cont::DataSet();
@@ -149,10 +148,9 @@ public:
         auto target = rp.in_link().target(cc);
         if (rp.incoming(target.gid).size() > 0)
         {
-          // TODO: Need a better way to serialize DataSet. See issue #725.
-          vtkm::cont::SerializableDataSet<> sds;
-          rp.dequeue(target.gid, sds);
-          receives.push_back(sds.DataSet);
+          vtkm::cont::DataSet incomingDS;
+          rp.dequeue(target.gid, incomingDS);
+          receives.push_back(incomingDS);
           numValues += receives.back().GetCoordinateSystem(0).GetNumberOfPoints();
         }
       }

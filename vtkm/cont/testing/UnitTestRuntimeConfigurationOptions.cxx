@@ -187,11 +187,9 @@ void TestConfigOptionValues(const internal::RuntimeDeviceConfigurationOptions& c
   VTKM_TEST_ASSERT(configOptions.IsInitialized(), "runtime config options should be initialized");
 
   VTKM_TEST_ASSERT(configOptions.VTKmNumThreads.IsSet(), "num threads should be set");
-  VTKM_TEST_ASSERT(configOptions.VTKmNumaRegions.IsSet(), "numa regions should be set");
   VTKM_TEST_ASSERT(configOptions.VTKmDeviceInstance.IsSet(), "device instance should be set");
 
   VTKM_TEST_ASSERT(configOptions.VTKmNumThreads.GetValue() == 100, "num threads should == 100");
-  VTKM_TEST_ASSERT(configOptions.VTKmNumaRegions.GetValue() == 2, "numa regions should == 2");
   VTKM_TEST_ASSERT(configOptions.VTKmDeviceInstance.GetValue() == 1, "device instance should == 1");
 }
 
@@ -211,14 +209,8 @@ void TestRuntimeDeviceConfigurationOptions()
 
     int argc;
     char** argv;
-    vtkm::cont::testing::Testing::MakeArgs(argc,
-                                           argv,
-                                           "--vtkm-num-threads",
-                                           "100",
-                                           "--vtkm-numa-regions",
-                                           "2",
-                                           "--vtkm-device-instance",
-                                           "1");
+    vtkm::cont::testing::Testing::MakeArgs(
+      argc, argv, "--vtkm-num-threads", "100", "--vtkm-device-instance", "1");
     auto options = GetOptions(argc, argv, usage);
 
     VTKM_TEST_ASSERT(!configOptions.IsInitialized(),
@@ -230,14 +222,8 @@ void TestRuntimeDeviceConfigurationOptions()
   {
     int argc;
     char** argv;
-    vtkm::cont::testing::Testing::MakeArgs(argc,
-                                           argv,
-                                           "--vtkm-num-threads",
-                                           "100",
-                                           "--vtkm-numa-regions",
-                                           "2",
-                                           "--vtkm-device-instance",
-                                           "1");
+    vtkm::cont::testing::Testing::MakeArgs(
+      argc, argv, "--vtkm-num-threads", "100", "--vtkm-device-instance", "1");
     internal::RuntimeDeviceConfigurationOptions configOptions(argc, argv);
     TestConfigOptionValues(configOptions);
   }

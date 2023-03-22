@@ -24,6 +24,25 @@
 
 #include <cstdio>
 
+#if defined(KOKKOS_ENABLE_SYCL)
+#define DEVICE_ASSERT_MSG(cond, message) \
+  do                                     \
+  {                                      \
+    if (!(cond))                         \
+    {                                    \
+      return false;                      \
+    }                                    \
+  } while (false)
+
+#define DEVICE_ASSERT(cond) \
+  do                        \
+  {                         \
+    if (!(cond))            \
+    {                       \
+      return false;         \
+    }                       \
+  } while (false)
+#else
 #define DEVICE_ASSERT_MSG(cond, message)                                             \
   do                                                                                 \
   {                                                                                  \
@@ -47,6 +66,7 @@
       return false;                                                                             \
     }                                                                                           \
   } while (false)
+#endif
 
 // Test with some trailing bits in partial last word:
 #define NUM_BITS \

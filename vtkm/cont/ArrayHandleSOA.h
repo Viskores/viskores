@@ -44,7 +44,6 @@ public:
 private:
   using ComponentType = typename ComponentPortalType::ValueType;
 
-  VTKM_STATIC_ASSERT(vtkm::HasVecTraits<ValueType>::value);
   using VTraits = vtkm::VecTraits<ValueType>;
   VTKM_STATIC_ASSERT((std::is_same<typename VTraits::ComponentType, ComponentType>::value));
   static constexpr vtkm::IdComponent NUM_COMPONENTS = VTraits::NUM_COMPONENTS;

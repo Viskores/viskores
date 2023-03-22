@@ -51,7 +51,7 @@ bool DoMapField(vtkm::cont::DataSet& result,
     if (self.GetCompactPointFields())
     {
       bool success = vtkm::filter::MapFieldPermutation(
-        field, worklets.PointCompactor.GetPointScatter().GetOutputToInputMap(), compactedField);
+        field, worklets.PointCompactor.GetPermutationArray(), compactedField);
       if (!success)
       {
         return false;
@@ -111,9 +111,8 @@ vtkm::cont::DataSet CleanGrid::GenerateOutput(const vtkm::cont::DataSet& inData,
 
     outputCellSet = worklets.PointCompactor.MapCellSet(outputCellSet);
 
-    activeCoordSystem = vtkm::cont::CoordinateSystem(
-      activeCoordSystem.GetName(),
-      worklets.PointCompactor.MapPointFieldDeep(activeCoordSystem.GetData()));
+    vtkm::filter::MapFieldPermutation(
+      activeCoordSystem, worklets.PointCompactor.GetPermutationArray(), activeCoordSystem);
   }
 
   // Optionally find and merge coincident points

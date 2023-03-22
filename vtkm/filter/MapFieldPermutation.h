@@ -12,6 +12,7 @@
 #define vtk_m_filter_MapFieldPermutation_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 
@@ -47,6 +48,12 @@ VTKM_FILTER_CORE_EXPORT VTKM_CONT bool MapFieldPermutation(
   const vtkm::cont::Field& inputField,
   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
   vtkm::cont::Field& outputField,
+  vtkm::Float64 invalidValue = vtkm::Nan<vtkm::Float64>());
+
+VTKM_FILTER_CORE_EXPORT VTKM_CONT bool MapFieldPermutation(
+  const vtkm::cont::CoordinateSystem& inputCoords,
+  const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
+  vtkm::cont::CoordinateSystem& outputCoords,
   vtkm::Float64 invalidValue = vtkm::Nan<vtkm::Float64>());
 
 /// \brief Maps a field by permuting it by a given index array.

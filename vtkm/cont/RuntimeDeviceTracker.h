@@ -17,6 +17,7 @@
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 
+#include <functional>
 #include <memory>
 
 namespace vtkm
@@ -123,6 +124,18 @@ public:
   ///
   VTKM_CONT void CopyStateFrom(const vtkm::cont::RuntimeDeviceTracker& tracker);
 
+  ///@{
+  /// \brief Set/Clear the abort checker functor.
+  ///
+  /// If set the abort checker functor is called by \c TryExecute before scheduling
+  /// a task on a device from the associated the thread. If the functor returns
+  /// \e true, an exception is thrown.
+  VTKM_CONT void SetAbortChecker(const std::function<bool()>& func);
+  VTKM_CONT void ClearAbortChecker();
+  ///@}
+
+  VTKM_CONT bool CheckForAbortRequest() const;
+
   VTKM_CONT void PrintSummary(std::ostream& out) const;
 
 private:
@@ -149,82 +162,7 @@ private:
   void LogEnabledDevices() const;
 };
 
-
-enum struct RuntimeDeviceTrackerMode
-{
-  Force,
-  Enable,
-  Disable
-};
-
-/// A class that can be used to determine or modify which device adapter
-/// VTK-m algorithms should be run on. This class captures the state
-/// of the per-thread device adapter and will revert any changes applied
-/// during its lifetime on destruction.
-///
-///
-struct VTKM_CONT_EXPORT ScopedRuntimeDeviceTracker : public vtkm::cont::RuntimeDeviceTracker
-{
-  /// Construct a ScopedRuntimeDeviceTracker where the state of the active devices
-  /// for the current thread are determined by the parameters to the constructor.
-  ///
-  /// 'Force'
-  ///   - Force-Enable the provided single device adapter
-  ///   - Force-Enable all device adapters when using vtkm::cont::DeviceAdaterTagAny
-  /// 'Enable'
-  ///   - Enable the provided single device adapter if it was previously disabled
-  ///   - Enable all device adapters that are currently disabled when using
-  ///     vtkm::cont::DeviceAdaterTagAny
-  /// 'Disable'
-  ///   - Disable the provided single device adapter
-  ///   - Disable all device adapters when using vtkm::cont::DeviceAdaterTagAny
-  ///
-  /// Constructor is not thread safe
-  VTKM_CONT ScopedRuntimeDeviceTracker(
-    vtkm::cont::DeviceAdapterId device,
-    RuntimeDeviceTrackerMode mode = RuntimeDeviceTrackerMode::Force);
-
-  /// Construct a ScopedRuntimeDeviceTracker associated with the thread
-  /// associated with the provided tracker. The active devices
-  /// for the current thread are determined by the parameters to the constructor.
-  ///
-  /// 'Force'
-  ///   - Force-Enable the provided single device adapter
-  ///   - Force-Enable all device adapters when using vtkm::cont::DeviceAdaterTagAny
-  /// 'Enable'
-  ///   - Enable the provided single device adapter if it was previously disabled
-  ///   - Enable all device adapters that are currently disabled when using
-  ///     vtkm::cont::DeviceAdaterTagAny
-  /// 'Disable'
-  ///   - Disable the provided single device adapter
-  ///   - Disable all device adapters when using vtkm::cont::DeviceAdaterTagAny
-  ///
-  /// Any modifications to the ScopedRuntimeDeviceTracker will effect what
-  /// ever thread the \c tracker is associated with, which might not be
-  /// the thread which ScopedRuntimeDeviceTracker was constructed on.
-  ///
-  /// Constructor is not thread safe
-  VTKM_CONT ScopedRuntimeDeviceTracker(vtkm::cont::DeviceAdapterId device,
-                                       RuntimeDeviceTrackerMode mode,
-                                       const vtkm::cont::RuntimeDeviceTracker& tracker);
-
-  /// Construct a ScopedRuntimeDeviceTracker associated with the thread
-  /// associated with the provided tracker.
-  ///
-  /// Any modifications to the ScopedRuntimeDeviceTracker will effect what
-  /// ever thread the \c tracker is associated with, which might not be
-  /// the thread which ScopedRuntimeDeviceTracker was constructed on.
-  ///
-  /// Constructor is not thread safe
-  VTKM_CONT ScopedRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker& tracker);
-
-  /// Destructor is not thread safe
-  VTKM_CONT ~ScopedRuntimeDeviceTracker();
-
-private:
-  std::unique_ptr<detail::RuntimeDeviceTrackerInternals> SavedState;
-};
-
+///----------------------------------------------------------------------------
 /// \brief Get the \c RuntimeDeviceTracker for the current thread.
 ///
 /// Many features in VTK-m will attempt to run algorithms on the "best
@@ -236,6 +174,66 @@ private:
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker();
+
+enum struct RuntimeDeviceTrackerMode
+{
+  Force,
+  Enable,
+  Disable
+};
+
+///----------------------------------------------------------------------------
+/// A class to create a scoped runtime device tracker object. This object captures the state
+/// of the per-thread device tracker and will revert any changes applied
+/// during its lifetime on destruction.
+///
+struct VTKM_CONT_EXPORT ScopedRuntimeDeviceTracker : public vtkm::cont::RuntimeDeviceTracker
+{
+  /// Construct a ScopedRuntimeDeviceTracker associated with the thread,
+  /// associated with the provided tracker (defaults to current thread's tracker).
+  ///
+  /// Any modifications to the ScopedRuntimeDeviceTracker will effect what
+  /// ever thread the \c tracker is associated with, which might not be
+  /// the thread on which the ScopedRuntimeDeviceTracker was constructed.
+  ///
+  /// Constructors are not thread safe
+  /// @{
+  ///
+  VTKM_CONT ScopedRuntimeDeviceTracker(
+    const vtkm::cont::RuntimeDeviceTracker& tracker = GetRuntimeDeviceTracker());
+
+  /// Use this constructor to modify the state of the device adapters associated with
+  /// the provided tracker. Use \p mode with \p device as follows:
+  ///
+  /// 'Force' (default)
+  ///   - Force-Enable the provided single device adapter
+  ///   - Force-Enable all device adapters when using vtkm::cont::DeviceAdaterTagAny
+  /// 'Enable'
+  ///   - Enable the provided single device adapter if it was previously disabled
+  ///   - Enable all device adapters that are currently disabled when using
+  ///     vtkm::cont::DeviceAdaterTagAny
+  /// 'Disable'
+  ///   - Disable the provided single device adapter
+  ///   - Disable all device adapters when using vtkm::cont::DeviceAdaterTagAny
+  ///
+  VTKM_CONT ScopedRuntimeDeviceTracker(
+    vtkm::cont::DeviceAdapterId device,
+    RuntimeDeviceTrackerMode mode = RuntimeDeviceTrackerMode::Force,
+    const vtkm::cont::RuntimeDeviceTracker& tracker = GetRuntimeDeviceTracker());
+
+  /// Use this constructor to set the abort checker functor for the provided tracker.
+  ///
+  VTKM_CONT ScopedRuntimeDeviceTracker(
+    const std::function<bool()>& abortChecker,
+    const vtkm::cont::RuntimeDeviceTracker& tracker = GetRuntimeDeviceTracker());
+
+  /// Destructor is not thread safe
+  VTKM_CONT ~ScopedRuntimeDeviceTracker();
+
+private:
+  std::unique_ptr<detail::RuntimeDeviceTrackerInternals> SavedState;
+};
+
 }
 } // namespace vtkm::cont
 

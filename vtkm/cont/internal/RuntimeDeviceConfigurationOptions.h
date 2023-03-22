@@ -48,7 +48,6 @@ public:
   VTKM_CONT bool IsInitialized() const;
 
   RuntimeDeviceOption VTKmNumThreads;
-  RuntimeDeviceOption VTKmNumaRegions;
   RuntimeDeviceOption VTKmDeviceInstance;
 
 protected:

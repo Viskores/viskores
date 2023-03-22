@@ -322,7 +322,7 @@ endfunction()
 if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm_kokkos)
   cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
-  find_package(Kokkos REQUIRED)
+  find_package(Kokkos 3.7 REQUIRED)
 
   # We must empty this property for every kokkos backend device since it
   # contains a generator expresion which breaks some of our users builds.
@@ -357,6 +357,14 @@ if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm_kokkos)
     add_library(vtkm_kokkos_hip INTERFACE)
     set_property(TARGET vtkm_kokkos_hip PROPERTY EXPORT_NAME kokkos_hip)
     install(TARGETS vtkm_kokkos_hip EXPORT ${VTKm_EXPORT_NAME})
+
+    # Make sure rocthrust is available if requested
+    if(VTKm_ENABLE_KOKKOS_THRUST)
+      find_package(rocthrust)
+      if(NOT rocthrust_FOUND)
+        message(FATAL_ERROR "rocthrust not found. Please set VTKm_ENABLE_KOKKOS_THRUST to OFF.")
+      endif()
+    endif()
   endif()
 
   add_library(vtkm_kokkos INTERFACE IMPORTED GLOBAL)

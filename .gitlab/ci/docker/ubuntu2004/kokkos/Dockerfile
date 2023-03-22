@@ -34,11 +34,12 @@ RUN mkdir /opt/cmake/ && \
 ENV PATH "${PATH}:/opt/cmake/bin"
 
 # Build and install Kokkos
+ARG KOKKOS_VERSION=3.7.01
 RUN mkdir -p /opt/kokkos/build && \
     cd /opt/kokkos/build && \
-    curl -L https://github.com/kokkos/kokkos/archive/refs/tags/3.4.01.tar.gz > kokkos-3.4.01.tar.gz && \
-    tar -xf kokkos-3.4.01.tar.gz && \
+    curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz > kokkos-$KOKKOS_VERSION.tar.gz && \
+    tar -xf kokkos-$KOKKOS_VERSION.tar.gz && \
     mkdir bld && cd bld && \
-    cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/kokkos -DCMAKE_CXX_FLAGS=-fPIC -DKokkos_ENABLE_SERIAL=ON ../kokkos-3.4.01 &&\
+    cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/kokkos -DCMAKE_CXX_FLAGS=-fPIC -DKokkos_ENABLE_SERIAL=ON ../kokkos-$KOKKOS_VERSION &&\
     ninja all && \
     ninja install

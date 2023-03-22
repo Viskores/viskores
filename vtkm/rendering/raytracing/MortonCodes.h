@@ -183,7 +183,6 @@ public:
     }
     else
     {
-      printf("Unknown shape type %d\n", (int)cellShape.Id);
       return;
     }
 

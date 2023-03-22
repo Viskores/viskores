@@ -33,21 +33,6 @@ namespace cont
 namespace detail
 {
 
-// Compile-time check to make sure that an `ArrayHandle` passed to `ArrayCopy`
-// can be passed to a `UnknownArrayHandle`. This function does nothing
-// except provide a compile error that is easier to understand than if you
-// let it go and error in `UnknownArrayHandle`. (Huh? I'm not using that.)
-template <typename T>
-inline void ArrayCopyValueTypeCheck()
-{
-  VTKM_STATIC_ASSERT_MSG(vtkm::HasVecTraits<T>::value,
-                         "An `ArrayHandle` that has a special value type that is not supported "
-                         "by the precompiled version of `ArrayCopy` has been used. If this array "
-                         "must be deep copied, consider using `ArrayCopyDevice`. Look at the "
-                         "compile error for the type assigned to template parameter `T` to "
-                         "see the offending type.");
-}
-
 template <typename S>
 struct ArrayCopyConcreteSrc;
 
@@ -74,8 +59,6 @@ void ArrayCopyImpl(const vtkm::cont::UnknownArrayHandle& source,
                    std::false_type,
                    std::true_type)
 {
-  detail::ArrayCopyValueTypeCheck<T>();
-
   using DestType = vtkm::cont::ArrayHandle<T, S>;
   if (source.CanConvert<DestType>())
   {
@@ -96,9 +79,6 @@ void ArrayCopyImpl(const vtkm::cont::ArrayHandle<TS, SS>& source,
                    std::true_type,
                    std::true_type)
 {
-  ArrayCopyValueTypeCheck<TS>();
-  ArrayCopyValueTypeCheck<TD>();
-
   detail::ArrayCopyConcreteSrc<SS>{}(source, destination);
 }
 
