@@ -114,10 +114,6 @@ public:
     , NumSteps(p.NumSteps)
     , Status(p.Status)
     , Time(p.Time)
-    , NumIntegrations(p.NumIntegrations)
-    , NumRounds(p.NumRounds)
-    , NumCommunications(p.NumCommunications)
-    , LifeTime(p.LifeTime)
   {
   }
 
@@ -165,24 +161,16 @@ public:
   inline VTKM_CONT friend std::ostream& operator<<(std::ostream& out, const vtkm::Particle& p)
   {
     out << "v(" << p.Time << ") = " << p.Position << ", ID: " << p.ID
-        << ", NumSteps: " << p.NumSteps << ", Status: " << p.Status
-        << ", NumInt: " << p.NumIntegrations << ", NumRounds: " << p.NumRounds
-        << ", NumComm: " << p.NumCommunications << " LifeTime: " << p.LifeTime;
+        << ", NumSteps: " << p.NumSteps << ", Status: " << p.Status;
     return out;
   }
 
-  //private:
-public:
+private:
   vtkm::Vec3f Position;
   vtkm::Id ID = -1;
   vtkm::Id NumSteps = 0;
   vtkm::ParticleStatus Status;
   vtkm::FloatDefault Time = 0;
-
-  vtkm::Id NumIntegrations = 0;
-  vtkm::Id NumRounds = 0;
-  vtkm::Id NumCommunications = 0;
-  vtkm::FloatDefault LifeTime = 0;
 
 public:
   static size_t Sizeof()
@@ -191,9 +179,8 @@ public:
       + sizeof(vtkm::Id)                           // ID
       + sizeof(vtkm::Id)                           // NumSteps
       + sizeof(vtkm::UInt8)                        // Status
-      + sizeof(vtkm::FloatDefault)                 // Time
-      + sizeof(vtkm::Id) * 3                       //NumIntegrations, NumRounds, NumCommunications.
-      + sizeof(vtkm::FloatDefault);                //LifeTime
+      + sizeof(vtkm::FloatDefault);                // Time
+
     return sz;
   }
 };
@@ -306,8 +293,7 @@ public:
     return out;
   }
 
-  //private:
-public:
+private:
   vtkm::Vec3f Position;
   vtkm::Id ID = -1;
   vtkm::Id NumSteps = 0;
@@ -319,11 +305,6 @@ public:
   vtkm::Vec3f Momentum;
   constexpr static vtkm::FloatDefault SPEED_OF_LIGHT =
     static_cast<vtkm::FloatDefault>(2.99792458e8);
-
-  vtkm::Id NumIntegrations = 0;
-  vtkm::Id NumRounds = 0;
-  vtkm::Id NumCommunications = 0;
-  vtkm::FloatDefault LifeTime = 0;
 
   friend struct mangled_diy_namespace::Serialization<vtkm::ChargedParticle>;
 
@@ -360,11 +341,6 @@ public:
     vtkmdiy::save(bb, p.GetNumberOfSteps());
     vtkmdiy::save(bb, p.GetStatus());
     vtkmdiy::save(bb, p.GetTime());
-
-    vtkmdiy::save(bb, p.NumIntegrations);
-    vtkmdiy::save(bb, p.NumRounds);
-    vtkmdiy::save(bb, p.NumCommunications);
-    vtkmdiy::save(bb, p.LifeTime);
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, vtkm::Particle& p)
@@ -388,11 +364,6 @@ public:
     vtkm::FloatDefault time;
     vtkmdiy::load(bb, time);
     p.SetTime(time);
-
-    vtkmdiy::load(bb, p.NumIntegrations);
-    vtkmdiy::load(bb, p.NumRounds);
-    vtkmdiy::load(bb, p.NumCommunications);
-    vtkmdiy::load(bb, p.LifeTime);
   }
 };
 
@@ -411,11 +382,6 @@ public:
     vtkmdiy::save(bb, e.Charge);
     vtkmdiy::save(bb, e.Weighting);
     vtkmdiy::save(bb, e.Momentum);
-
-    vtkmdiy::save(bb, e.NumIntegrations);
-    vtkmdiy::save(bb, e.NumRounds);
-    vtkmdiy::save(bb, e.NumCommunications);
-    vtkmdiy::save(bb, e.LifeTime);
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, vtkm::ChargedParticle& e)
@@ -429,11 +395,6 @@ public:
     vtkmdiy::load(bb, e.Charge);
     vtkmdiy::load(bb, e.Weighting);
     vtkmdiy::load(bb, e.Momentum);
-
-    vtkmdiy::load(bb, e.NumIntegrations);
-    vtkmdiy::load(bb, e.NumRounds);
-    vtkmdiy::load(bb, e.NumCommunications);
-    vtkmdiy::load(bb, e.LifeTime);
   }
 };
 }

@@ -96,15 +96,6 @@ public:
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
     this->ComputeTotalNumParticles(nLocal);
 
-    //DRP: Set global time;
-#ifdef VTKM_ENABLE_MPI
-    MPI_Comm mpiComm = vtkmdiy::mpi::mpi_cast(this->Comm.handle());
-    MPI_Barrier(mpiComm);
-    this->StartTime = MPI_Wtime();
-    for (auto& block : this->Blocks)
-      block.StartTime = this->StartTime;
-#endif
-
     messenger.Log << "Begin" << std::endl;
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
@@ -113,9 +104,6 @@ public:
       vtkm::Id numTerm = 0, blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
-        for (auto& p : v)
-          p.NumIntegrations++;
-
         messenger.Log << " Advect " << v.size() << " in block " << blockId << std::endl;
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
@@ -134,24 +122,6 @@ public:
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
     messenger.Log << "Done" << std::endl;
-
-    //DRP
-    //Print out particle fluxes
-    if (this->Rank == 0)
-    {
-      std::cout << "==================================" << std::endl;
-      std::cout << "Rank: " << this->Rank << std::endl;
-      std::cout << "ParticleFlux: " << this->Rank << std::endl;
-      for (const auto& block : this->Blocks)
-      {
-        std::cout << "  Block_ID: " << block.GetID() << std::endl;
-        for (const auto& it : block.ParticleFlux)
-        {
-          std::cout << "    " << it.first << " :: " << it.second << std::endl;
-        }
-      }
-    }
-    MPI_Barrier(mpiComm);
   }
 
 
@@ -233,8 +203,6 @@ public:
 
     messenger.Log << " Communicate: AI= " << this->Active.size() << " " << this->Inactive.size()
                   << " localTerm= " << numLocalTerminations << " Block= " << block << std::endl;
-    for (auto& p : this->Inactive)
-      p.NumCommunications++;
     messenger.Exchange(this->Inactive,
                        this->ParticleBlockIDsMap,
                        numLocalTerminations,
@@ -327,9 +295,6 @@ public:
   vtkm::FloatDefault StepSize;
   vtkm::Id TotalNumParticles = 0;
   vtkm::Id TotalNumTerminatedParticles = 0;
-
-  //DRP
-  vtkm::FloatDefault StartTime = 0.0;
 };
 
 }

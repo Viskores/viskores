@@ -15,7 +15,6 @@
 #include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/internal/Messenger.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 #include <list>
 #include <map>
@@ -30,17 +29,6 @@ namespace flow
 {
 namespace internal
 {
-
-namespace detail
-{
-template <typename ParticleType>
-struct UpdatePreCommunicationWorklet : public vtkm::worklet::WorkletMapField
-{
-  using ControlSignature = void(FieldInOut inParticle);
-
-  VTKM_EXEC void operator()(ParticleType& particle) const { particle.NumCommunications++; }
-};
-}
 
 template <typename ParticleType>
 class VTKM_FILTER_FLOW_EXPORT ParticleMessenger : public vtkm::filter::flow::internal::Messenger
@@ -213,10 +201,6 @@ void ParticleMessenger<ParticleType>::Exchange(
       outData, outBlockIDsMap, numLocalTerm, inData, inDataBlockIDsMap, blockAndWait);
 
 #ifdef VTKM_ENABLE_MPI
-  auto outArrayHandle = vtkm::cont::make_ArrayHandle(outData, vtkm::CopyFlag::Off);
-  vtkm::cont::Invoker invoke;
-  //detail::UpdatePreCommunicationWorklet<ParticleType> worklet;
-  invoke(detail::UpdatePreCommunicationWorklet<ParticleType>{}, outArrayHandle);
 
   //dstRank, vector of (particles,blockIDs)
   std::unordered_map<int, std::vector<ParticleCommType>> sendData;

@@ -106,6 +106,7 @@ public:
   template <typename ParticleType>
   VTKM_CONT bool GetOutput(vtkm::cont::DataSet& ds) const;
 
+
 protected:
   template <typename ParticleType, template <typename> class ResultType>
   VTKM_CONT void UpdateResult(const ResultType<ParticleType>& result,
@@ -123,7 +124,7 @@ protected:
 
   template <typename ParticleType>
   VTKM_CONT inline void ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
-                                          DSIHelperInfo<ParticleType>& dsiInfo); //DRPconst;
+                                          DSIHelperInfo<ParticleType>& dsiInfo) const;
 
   //Data members.
   vtkm::cont::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType> FieldName;
@@ -138,19 +139,13 @@ protected:
   vtkm::Id Rank;
   bool CopySeedArray = false;
   std::vector<RType> Results;
-
-  //DRP
-public:
-  vtkm::FloatDefault StartTime = 0.0;
-  // key=blockId, value = number of particles
-  std::map<vtkm::Id, vtkm::Id> ParticleFlux;
 };
 
 template <typename Derived>
 template <typename ParticleType>
 VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
   const vtkm::cont::ArrayHandle<ParticleType>& particles,
-  DSIHelperInfo<ParticleType>& dsiInfo) //DRP const
+  DSIHelperInfo<ParticleType>& dsiInfo) const
 {
   dsiInfo.A.clear();
   dsiInfo.I.clear();
@@ -166,13 +161,10 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
   {
     auto p = portal.Get(i);
 
-    bool particleTerminates = false;
     if (p.GetStatus().CheckTerminate())
     {
       dsiInfo.TermIdx.emplace_back(i);
       dsiInfo.TermID.emplace_back(p.GetID());
-      //DRP
-      particleTerminates = true;
     }
     else
     {
@@ -195,8 +187,6 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
         p.GetStatus().SetTerminate();
         dsiInfo.TermIdx.emplace_back(i);
         dsiInfo.TermID.emplace_back(p.GetID());
-        //DRP
-        particleTerminates = true;
       }
       else
       {
@@ -216,15 +206,6 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
           }
         }
 
-        //Record particle flux
-#ifdef VTKM_ENABLE_MPI
-        //        if (this->ParticleFlux.find(newIDs[0]) == this->ParticleFlux.end())
-        //          this->ParticleFlux[newIDs[0]] = 0;
-        //auto it = this->ParticleFlux.find(newIDs[0]);
-        this->ParticleFlux[newIDs[0]]++;
-        //it->second++;
-#endif
-
         int dstRank = dsiInfo.BoundsMap.FindRank(newIDs[0]);
         if (dstRank == this->Rank)
         {
@@ -237,12 +218,6 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
           dsiInfo.IdMapI[p.GetID()] = newIDs;
         }
       }
-#ifdef VTKM_ENABLE_MPI
-      //DRP
-      if (particleTerminates)
-        p.LifeTime = MPI_Wtime() - this->StartTime;
-#endif
-
       portal.Set(i, p);
     }
   }
@@ -297,18 +272,8 @@ VTKM_CONT inline bool DataSetIntegrator<Derived>::GetOutput(vtkm::cont::DataSet&
     for (const auto& vres : this->Results)
       allParticles.emplace_back(vres.template Get<ResType>().Particles);
 
-    std::cout << "GetOutput() " << std::endl;
-    std::cout << "  " << allParticles[0].ReadPortal().Get(0) << std::endl;
-
-
-
-    vtkm::cont::ArrayHandle<vtkm::Id> ids, steps, numInt, numRounds, numComm;
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> lifeTime;
-
     vtkm::cont::ArrayHandle<vtkm::Vec3f> pts;
-    //vtkm::cont::ParticleArrayCopy(allParticles, pts);
-    vtkm::cont::ParticleArrayCopy(
-      allParticles, pts, ids, steps, numInt, numRounds, numComm, lifeTime);
+    vtkm::cont::ParticleArrayCopy(allParticles, pts);
 
     vtkm::Id numPoints = pts.GetNumberOfValues();
     if (numPoints > 0)
@@ -323,13 +288,6 @@ VTKM_CONT inline bool DataSetIntegrator<Derived>::GetOutput(vtkm::cont::DataSet&
       vtkm::cont::ArrayCopy(conn, connectivity);
       cells.Fill(numPoints, vtkm::CELL_SHAPE_VERTEX, 1, connectivity);
       ds.SetCellSet(cells);
-
-      ds.AddCellField("IDs", ids);
-      ds.AddCellField("NumSteps", steps);
-      ds.AddCellField("NumIntegrations", numInt);
-      ds.AddCellField("NumRounds", numRounds);
-      ds.AddCellField("NumComm", numComm);
-      ds.AddCellField("lifeTime", lifeTime);
     }
   }
   else if (this->IsStreamlineResult())

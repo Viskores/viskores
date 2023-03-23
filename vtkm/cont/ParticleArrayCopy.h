@@ -57,18 +57,6 @@ VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
   vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>& outSteps,
   vtkm::cont::ArrayHandle<vtkm::ParticleStatus, vtkm::cont::StorageTagBasic>& outStatus,
   vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>& outTime);
-
-template <typename ParticleType>
-VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
-  const std::vector<vtkm::cont::ArrayHandle<ParticleType, vtkm::cont::StorageTagBasic>>& inputs,
-  vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos,
-  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>& outIDs,
-  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>& outSteps,
-  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>& outNumInt,
-  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>& outNumRounds,
-  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>& outNumComm,
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>& outLifeTime);
-
 }
 } // namespace vtkm::cont
 
