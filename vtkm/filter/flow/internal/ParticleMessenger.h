@@ -63,9 +63,7 @@ protected:
 #ifdef VTKM_ENABLE_MPI
   static constexpr int MSG_TERMINATE = 1;
 
-  //enum { MESSAGE_TAG = 0x42000, PARTICLE_TAG = 0x42001 };
-  enum { MESSAGE_TAG = 100, PARTICLE_TAG = 200 };
-  //int MESSAGE_TAG = 101, PARTICLE_TAG = 102;
+  enum { MESSAGE_TAG = 0x42000, PARTICLE_TAG = 0x42001 };
 
   VTKM_CONT void RegisterMessages(int msgSz, int nParticles, int numBlockIds);
 
