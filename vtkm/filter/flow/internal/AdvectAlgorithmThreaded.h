@@ -39,10 +39,6 @@ public:
     , Done(false)
     , WorkerActivate(false)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               "Synchronous communication not supported for AdvectAlgorithmThreaded. Forcing "
-               "asynchronous communication.");
-
     //For threaded algorithm, the particles go out of scope in the Work method.
     //When this happens, they are destructed by the time the Manage thread gets them.
     //Set the copy flag so the std::vector is copied into the ArrayHandle
@@ -139,9 +135,11 @@ protected:
   void Manage()
   {
     if (!this->UseAsynchronousCommunication)
+    {
       VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                  "Synchronous communication not supported for AdvectAlgorithmThreaded. Forcing "
                  "asynchronous communication.");
+    }
 
     bool useAsync = true;
     vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
