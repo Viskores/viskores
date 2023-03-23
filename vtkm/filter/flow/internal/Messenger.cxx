@@ -292,24 +292,6 @@ void Messenger::SendDataSync(int dst, int tag, vtkmdiy::MemoryBuffer& buff)
   this->Log << "  SendDataSync: SyncSendBuffs[tag] = " << it->second.size() << std::endl;
 }
 
-/*
-bool Messenger::RecvData(int tag, std::vector<vtkmdiy::MemoryBuffer>& buffers, bool blockAndWait)
-{
-  std::set<int> setTag;
-  setTag.insert(tag);
-  std::vector<std::pair<int, vtkmdiy::MemoryBuffer>> b;
-  buffers.resize(0);
-  if (this->RecvData(setTag, b, blockAndWait))
-  {
-    buffers.resize(b.size());
-    for (std::size_t i = 0; i < b.size(); i++)
-      buffers[i] = std::move(b[i].second);
-    return true;
-  }
-  return false;
-}
-*/
-
 bool Messenger::RecvDataAsync(const std::set<int>& tags,
                               std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>& buffers,
                               bool blockAndWait)
