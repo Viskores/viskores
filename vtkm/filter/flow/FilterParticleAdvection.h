@@ -85,6 +85,12 @@ public:
   VTKM_CONT
   void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
 
+  VTKM_CONT
+  void SetUseAsynchronousCommunication() { this->UseAsynchronousCommunication = true; }
+
+  VTKM_CONT
+  void SetUseSynchronousCommunication() { this->UseAsynchronousCommunication = false; }
+
 protected:
   VTKM_CONT virtual void ValidateOptions() const;
 
@@ -95,6 +101,7 @@ protected:
   vtkm::filter::flow::IntegrationSolverType SolverType =
     vtkm::filter::flow::IntegrationSolverType::RK4_TYPE;
   vtkm::FloatDefault StepSize = 0;
+  bool UseAsynchronousCommunication = true;
   bool UseThreadedAlgorithm = false;
   vtkm::filter::flow::VectorFieldType VecFieldType =
     vtkm::filter::flow::VectorFieldType::VELOCITY_FIELD_TYPE;

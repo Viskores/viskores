@@ -36,7 +36,7 @@ namespace internal
 class VTKM_FILTER_FLOW_EXPORT Messenger
 {
 public:
-  VTKM_CONT Messenger(vtkmdiy::mpi::communicator& comm);
+  VTKM_CONT Messenger(vtkmdiy::mpi::communicator& comm, bool useAsyncComm);
   VTKM_CONT virtual ~Messenger()
   {
 #ifdef VTKM_ENABLE_MPI
@@ -51,7 +51,7 @@ public:
   VTKM_CONT void RegisterTag(int tag, std::size_t numRecvs, std::size_t size);
 
   bool UsingSyncCommunication() const { return !this->UsingAsyncCommunication(); }
-  bool UsingAsyncCommunication() const { return this->AsyncCommunication; }
+  bool UsingAsyncCommunication() const { return this->UseAsynchronousCommunication; }
 
   std::ofstream Log;
 
@@ -63,7 +63,7 @@ protected:
   void CleanupRequests(int tag = TAG_ANY);
   void SendData(int dst, int tag, vtkmdiy::MemoryBuffer& buff)
   {
-    if (this->AsyncCommunication)
+    if (this->UseAsynchronousCommunication)
       this->SendDataAsync(dst, tag, buff);
     else
       this->SendDataSync(dst, tag, buff);
@@ -72,7 +72,7 @@ protected:
                 std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>& buffers,
                 bool blockAndWait = false)
   {
-    if (this->AsyncCommunication)
+    if (this->UseAsynchronousCommunication)
       return this->RecvDataAsync(tags, buffers, blockAndWait);
     else
       return this->RecvDataSync(tags, buffers, blockAndWait);
@@ -111,7 +111,6 @@ private:
   using RankIdPair = std::pair<int, int>;
 
   //Member data
-  bool AsyncCommunication = false; //true;
   // <tag, {dst, buffer}>
   std::map<int, std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>> SyncSendBuffers;
   std::map<int, std::pair<std::size_t, std::size_t>> MessageTagInfo;
@@ -123,6 +122,7 @@ private:
   std::map<RankIdPair, std::list<char*>> RecvPackets;
   std::map<RequestTagPair, char*> SendBuffers;
   static constexpr int TAG_ANY = -1;
+  bool UseAsynchronousCommunication = true;
 
   void CheckRequests(const std::map<RequestTagPair, char*>& buffer,
                      const std::set<int>& tags,

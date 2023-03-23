@@ -91,7 +91,7 @@ public:
   virtual void Go()
   {
     vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
-      this->Comm, this->BoundsMap, 1, 128);
+      this->Comm, this->UseAsynchronousCommunication, this->BoundsMap, 1, 128);
 
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
     this->ComputeTotalNumParticles(nLocal);
@@ -295,6 +295,7 @@ public:
   vtkm::FloatDefault StepSize;
   vtkm::Id TotalNumParticles = 0;
   vtkm::Id TotalNumTerminatedParticles = 0;
+  bool UseAsynchronousCommunication = true;
 };
 
 }

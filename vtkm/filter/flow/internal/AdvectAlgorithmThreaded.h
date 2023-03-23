@@ -136,7 +136,7 @@ protected:
   void Manage()
   {
     vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
-      this->Comm, this->BoundsMap, 1, 128);
+      this->Comm, this->UseAsynchronousCommunication, this->BoundsMap, 1, 128);
 
     messenger.Log << "Begin" << std::endl;
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)

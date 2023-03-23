@@ -33,13 +33,14 @@ namespace internal
 
 VTKM_CONT
 #ifdef VTKM_ENABLE_MPI
-Messenger::Messenger(vtkmdiy::mpi::communicator& comm)
+Messenger::Messenger(vtkmdiy::mpi::communicator& comm, bool useAsyncComm)
   : MPIComm(vtkmdiy::mpi::mpi_cast(comm.handle()))
   , MsgID(0)
   , NumRanks(comm.size())
   , Rank(comm.rank())
+  , UseAsynchronousCommunication(useAsyncComm)
 #else
-Messenger::Messenger(vtkmdiy::mpi::communicator& vtkmNotUsed(comm))
+Messenger::Messenger(vtkmdiy::mpi::communicator& vtkmNotUsed(comm), bool vtkmNotUsed(useAsyncComm))
 #endif
 {
   std::string fname = "out." + std::to_string(this->Rank) + ".log";
