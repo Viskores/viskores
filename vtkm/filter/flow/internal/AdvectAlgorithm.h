@@ -29,11 +29,14 @@ template <typename DSIType, template <typename> class ResultType, typename Parti
 class AdvectAlgorithm
 {
 public:
-  AdvectAlgorithm(const vtkm::filter::flow::internal::BoundsMap& bm, std::vector<DSIType>& blocks)
+  AdvectAlgorithm(const vtkm::filter::flow::internal::BoundsMap& bm,
+                  std::vector<DSIType>& blocks,
+                  bool useAsyncComm)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumRanks(this->Comm.size())
     , Rank(this->Comm.rank())
+    , UseAsynchronousCommunication(useAsyncComm)
   {
   }
 

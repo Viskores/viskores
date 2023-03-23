@@ -464,6 +464,9 @@ void TestStreamlineFiltersMPI()
 
   //TestPartitionedDataSet(1, false, PARTICLE_ADVECTION, true);
 
+  //TestPartitionedDataSet(1, false, PARTICLE_ADVECTION, true, true);
+  //return;
+
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   for (int n = 1; n < 3; n++)
   {
@@ -472,8 +475,6 @@ void TestStreamlineFiltersMPI()
         for (auto useThreaded : flags)
           for (auto useAsyncComm : flags)
           {
-            if (useThreaded) // && !useAsyncComm)
-              continue;
             TestPartitionedDataSet(n, useGhost, fType, useThreaded, useAsyncComm);
           }
   }
@@ -483,8 +484,6 @@ void TestStreamlineFiltersMPI()
     for (auto useThreaded : flags)
       for (auto useAsyncComm : flags)
       {
-        if (useThreaded) // && !useAsyncComm)
-          continue;
         TestAMRStreamline(fType, useThreaded, useAsyncComm);
       }
 }

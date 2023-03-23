@@ -116,7 +116,7 @@ void ValidateReceivedMessage(int sendRank,
     VTKM_TEST_ASSERT(reqMsg[i] == recvMsg[i], "Wrong message value received");
 }
 
-void TestParticleMessenger(bool useAsyncComm)
+void TestParticleMessenger()
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
 
@@ -129,7 +129,7 @@ void TestParticleMessenger(bool useAsyncComm)
   int maxNumParticles = 128;
   int maxNumBlockIds = 5 * comm.size();
   TestMessenger messenger(
-    comm, useAsyncComm, boundsMap, maxMsgSz / 2, maxNumParticles / 2, maxNumBlockIds / 2);
+    comm, true, boundsMap, maxMsgSz / 2, maxNumParticles / 2, maxNumBlockIds / 2);
 
   //create some data.
   std::vector<std::vector<vtkm::Particle>> particles(comm.size());
@@ -242,7 +242,7 @@ void TestParticleMessenger(bool useAsyncComm)
   comm.barrier();
 }
 
-void TestBufferSizes(bool useAsyncComm)
+void TestBufferSizes()
 {
   //Make sure the buffer sizes are correct.
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
@@ -256,7 +256,7 @@ void TestBufferSizes(bool useAsyncComm)
     for (const auto& numP : numPs)
       for (const auto& nBids : numBids)
       {
-        TestMessenger messenger(comm, useAsyncComm, boundsMap);
+        TestMessenger messenger(comm, true, boundsMap);
 
         std::size_t pSize, mSize;
         messenger.GetBufferSizes(numP, nBids, mSz, pSize, mSize);
@@ -287,11 +287,8 @@ void TestBufferSizes(bool useAsyncComm)
 
 void TestParticleMessengerMPI()
 {
-  for (const auto& flag : { true, false })
-  {
-    TestBufferSizes(flag);
-    TestParticleMessenger(flag);
-  }
+  TestBufferSizes();
+  TestParticleMessenger();
 }
 }
 

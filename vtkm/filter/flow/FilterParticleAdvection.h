@@ -87,9 +87,13 @@ public:
 
   VTKM_CONT
   void SetUseAsynchronousCommunication() { this->UseAsynchronousCommunication = true; }
+  VTKM_CONT
+  bool GetUseAsynchronousCommunication() { return this->UseAsynchronousCommunication; }
 
   VTKM_CONT
   void SetUseSynchronousCommunication() { this->UseAsynchronousCommunication = false; }
+  VTKM_CONT
+  bool GetUseSynchronousCommunication() { return !this->GetUseAsynchronousCommunication(); }
 
 protected:
   VTKM_CONT virtual void ValidateOptions() const;

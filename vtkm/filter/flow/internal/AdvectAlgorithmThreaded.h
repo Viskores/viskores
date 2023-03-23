@@ -33,11 +33,16 @@ class AdvectAlgorithmThreaded : public AdvectAlgorithm<DSIType, ResultType, Part
 {
 public:
   AdvectAlgorithmThreaded(const vtkm::filter::flow::internal::BoundsMap& bm,
-                          std::vector<DSIType>& blocks)
-    : AdvectAlgorithm<DSIType, ResultType, ParticleType>(bm, blocks)
+                          std::vector<DSIType>& blocks,
+                          bool useAsyncComm)
+    : AdvectAlgorithm<DSIType, ResultType, ParticleType>(bm, blocks, useAsyncComm)
     , Done(false)
     , WorkerActivate(false)
   {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "Synchronous communication not supported for AdvectAlgorithmThreaded. Forcing "
+               "asynchronous communication.");
+
     //For threaded algorithm, the particles go out of scope in the Work method.
     //When this happens, they are destructed by the time the Manage thread gets them.
     //Set the copy flag so the std::vector is copied into the ArrayHandle
@@ -52,8 +57,6 @@ public:
 
     std::vector<std::thread> workerThreads;
     workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
-    this->Comm.barrier();
-    //MPI_Barrier(this->Comm);
     this->Manage();
 
     //This will only work for 1 thread. For > 1, the Blocks will need a mutex.
@@ -135,8 +138,14 @@ protected:
 
   void Manage()
   {
+    if (!this->UseAsynchronousCommunication)
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                 "Synchronous communication not supported for AdvectAlgorithmThreaded. Forcing "
+                 "asynchronous communication.");
+
+    bool useAsync = true;
     vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
-      this->Comm, this->UseAsynchronousCommunication, this->BoundsMap, 1, 128);
+      this->Comm, useAsync, this->BoundsMap, 1, 128);
 
     messenger.Log << "Begin" << std::endl;
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
@@ -164,10 +173,6 @@ protected:
     messenger.Log << "DONE" << std::endl;
     //Let the workers know that we are done.
     this->SetDone();
-
-    //Do one last communicate to send out the messages.
-    vtkm::Id dummy;
-    this->Communicate(messenger, 0, dummy);
   }
 
   bool GetBlockAndWait(const bool& syncComm, const vtkm::Id& numLocalTerm) override
