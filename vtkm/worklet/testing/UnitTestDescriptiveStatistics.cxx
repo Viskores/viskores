@@ -238,6 +238,53 @@ void TestMomentsByKey()
   }
 }
 
+void TestEdgeCases()
+{
+  using StatValueType = vtkm::worklet::DescriptiveStatistics::StatState<vtkm::FloatDefault>;
+  StatValueType state1(42);
+  StatValueType state2;
+
+  StatValueType result = state1 + state2;
+  VTKM_TEST_ASSERT(test_equal(result.N(), 1));
+  VTKM_TEST_ASSERT(test_equal(result.Min(), 42));
+  VTKM_TEST_ASSERT(test_equal(result.Max(), 42));
+  VTKM_TEST_ASSERT(test_equal(result.Mean(), 42));
+  VTKM_TEST_ASSERT(test_equal(result.SampleVariance(), 0));
+  VTKM_TEST_ASSERT(test_equal(result.PopulationVariance(), 0));
+  VTKM_TEST_ASSERT(test_equal(result.Skewness(), 0));
+  VTKM_TEST_ASSERT(test_equal(result.Kurtosis(), 0));
+
+  result = state2 + state1;
+  VTKM_TEST_ASSERT(test_equal(result.N(), 1));
+  VTKM_TEST_ASSERT(test_equal(result.Min(), 42));
+  VTKM_TEST_ASSERT(test_equal(result.Max(), 42));
+  VTKM_TEST_ASSERT(test_equal(result.Mean(), 42));
+  VTKM_TEST_ASSERT(test_equal(result.SampleVariance(), 0));
+  VTKM_TEST_ASSERT(test_equal(result.PopulationVariance(), 0));
+  VTKM_TEST_ASSERT(test_equal(result.Skewness(), 0));
+  VTKM_TEST_ASSERT(test_equal(result.Kurtosis(), 0));
+
+  StatValueType empty;
+  VTKM_TEST_ASSERT(test_equal(empty.N(), 0));
+  VTKM_TEST_ASSERT(test_equal(empty.Min(), std::numeric_limits<vtkm::FloatDefault>::max()));
+  VTKM_TEST_ASSERT(test_equal(empty.Max(), std::numeric_limits<vtkm::FloatDefault>::lowest()));
+  VTKM_TEST_ASSERT(test_equal(empty.Mean(), 0));
+  VTKM_TEST_ASSERT(test_equal(empty.SampleVariance(), 0));
+  VTKM_TEST_ASSERT(test_equal(empty.PopulationVariance(), 0));
+  VTKM_TEST_ASSERT(test_equal(empty.Skewness(), 0));
+  VTKM_TEST_ASSERT(test_equal(empty.Kurtosis(), 0));
+
+  result = empty + empty;
+  VTKM_TEST_ASSERT(test_equal(empty.N(), 0));
+  VTKM_TEST_ASSERT(test_equal(empty.Min(), std::numeric_limits<vtkm::FloatDefault>::max()));
+  VTKM_TEST_ASSERT(test_equal(empty.Max(), std::numeric_limits<vtkm::FloatDefault>::lowest()));
+  VTKM_TEST_ASSERT(test_equal(empty.Mean(), 0));
+  VTKM_TEST_ASSERT(test_equal(empty.SampleVariance(), 0));
+  VTKM_TEST_ASSERT(test_equal(empty.PopulationVariance(), 0));
+  VTKM_TEST_ASSERT(test_equal(empty.Skewness(), 0));
+  VTKM_TEST_ASSERT(test_equal(empty.Kurtosis(), 0));
+}
+
 void TestDescriptiveStatistics()
 {
   TestSingle();
@@ -249,6 +296,7 @@ void TestDescriptiveStatistics()
   TestMeanProperties();
   TestVarianceProperty();
   TestMomentsByKey();
+  TestEdgeCases();
 }
 
 int UnitTestDescriptiveStatistics(int argc, char* argv[])

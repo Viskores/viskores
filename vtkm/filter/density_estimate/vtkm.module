@@ -6,6 +6,8 @@ DEPENDS
   vtkm_filter_core
 PRIVATE_DEPENDS
   vtkm_worklet
+OPTIONAL_DEPENDS
+  MPI::MPI_CXX
 TEST_DEPENDS
   vtkm_filter_density_estimate
   vtkm_source
