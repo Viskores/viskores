@@ -17,10 +17,10 @@ namespace diy
       typedef       std::vector<Element>                        Elements;
       typedef       critical_resource<int, recursive_mutex>     CInt;
 
-      typedef       void* (*Create)();
-      typedef       void  (*Destroy)(void*);
-      typedef       detail::Save                                Save;
-      typedef       detail::Load                                Load;
+      using Create  = std::function<void*()>;
+      using Destroy = std::function<void(void*)>;
+      using Save    = detail::Save;
+      using Load    = detail::Load;
 
     public:
                     Collection(Create               create__,

@@ -37,8 +37,8 @@ namespace mpi
       const void*   address() const             { return buf_; }
 
     private:
+      alignas(T) char buf_[sizeof(T)];
       bool init_;
-      char buf_[sizeof(T)];
   };
 }
 }

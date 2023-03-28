@@ -41,6 +41,9 @@ namespace diy
 #include "critical-resource.hpp"
 
 #if !defined(VTKMDIY_NO_THREADS)
+
+#include <memory>       // for shared_ptr
+
 template<class T, class U>
 struct diy::concurrent_map
 {
