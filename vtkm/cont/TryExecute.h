@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/ErrorUserAbort.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
@@ -40,6 +41,11 @@ inline bool TryExecuteIfValid(std::true_type,
   {
     try
     {
+      if (tracker.CheckForAbortRequest())
+      {
+        throw vtkm::cont::ErrorUserAbort{};
+      }
+
       return f(tag, std::forward<Args>(args)...);
     }
     catch (...)

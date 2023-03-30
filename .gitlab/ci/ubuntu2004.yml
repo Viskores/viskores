@@ -62,7 +62,6 @@ test:ubuntu2004_kokkos:
 
 build:ubuntu2004_hip_kokkos:
   tags:
-    - build
     - vtkm
     - docker
     - linux-x86_64
@@ -93,7 +92,6 @@ build:ubuntu2004_hip_kokkos:
 
 test:ubuntu2004_hip_kokkos:
   tags:
-    - build
     - vtkm
     - docker
     - linux-x86_64

@@ -368,250 +368,115 @@ void TestReadingStructuredGridBin()
                    "Incorrect cellset type");
 }
 
-void TestReadingFishTank()
+void TestReadingRotate()
 {
-  std::string fishtank = vtkm::cont::testing::Testing::DataPath("rectilinear/fishtank.vtk");
-  vtkm::cont::DataSet ds = readVTKDataSet(fishtank.c_str());
-
-  // This is information you can glean by running 'strings' on fishtank.vtk:
-  VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
-  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 50 * 50 * 50, "Incorrect number of points");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 50 * 50 * 50,
-                   "Incorrect number of points (from cell set)");
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
-  VTKM_TEST_ASSERT(ds.HasField("vec"), "The vtk file has a field 'vec', but the dataset does not.");
-  VTKM_TEST_ASSERT(ds.HasField("vec_magnitude"),
-                   "The vtk file has a field 'vec_magnitude', but the dataset does not.");
-
-  // I believe the coordinate system is implicitly given by the first element of X_COORDINATES:
-  VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                   "Need one and only one coordinate system.");
-  // In order to get the data from the coordinate system, I used the following workflow:
-  // First, I deleted all ascii header lines just past 'X_COORDINATES 50 float'.
-  // Once this is done, I can get the binary data from
-  // $ od -tfF --endian=big fishtank_copy.vtk
-  // The result is:
-  // 0     0.020408163 ... 0.9591837  0.97959185   1
-  // So monotone increasing, bound [0,1].
-  const vtkm::cont::CoordinateSystem& coordinateSystem = ds.GetCoordinateSystem();
-  vtkm::Vec<vtkm::Range, 3> ranges = coordinateSystem.GetRange();
-  vtkm::Range xRange = ranges[0];
-  VTKM_TEST_ASSERT(xRange.Min == 0);
-  VTKM_TEST_ASSERT(xRange.Max == 1);
-  // Do the same past 'Y_COORDINATES 50 float'.
-  // You get exactly the same as the x data.
-  vtkm::Range yRange = ranges[1];
-  VTKM_TEST_ASSERT(yRange.Min == 0);
-  VTKM_TEST_ASSERT(yRange.Max == 1);
-  // And finally, do it past 'Z_COORDINATES 50 float':
-  vtkm::Range zRange = ranges[2];
-  VTKM_TEST_ASSERT(zRange.Min == 0);
-  VTKM_TEST_ASSERT(zRange.Max == 1);
-
-  // Now delete the text up to LOOKUP TABLE default.
-  // I see:
-  // 0 0 0 0 3.5267966 . . .
-  // This is a vector magnitude, so all values must be >= 0.
-  // A cursory glance shows that 124.95 is a large value, so we can sanity check the data with the bounds
-  // [0, ~130].
-  // And if we open the file in Paraview, we can observe the bounds [0, 156.905].
-  const vtkm::cont::Field& vec_magnitude = ds.GetField("vec_magnitude");
-  VTKM_TEST_ASSERT(vec_magnitude.GetName() == "vec_magnitude");
-  VTKM_TEST_ASSERT(vec_magnitude.IsPointField());
-
-  vtkm::Range mag_range;
-  vec_magnitude.GetRange(&mag_range);
-  VTKM_TEST_ASSERT(mag_range.Min == 0);
-  VTKM_TEST_ASSERT(mag_range.Max <= 156.906);
-
-  // This info was gleaned from the Paraview Information panel:
-  const vtkm::cont::Field& vec = ds.GetField("vec");
-  VTKM_TEST_ASSERT(vec.GetName() == "vec");
-  VTKM_TEST_ASSERT(vec.IsPointField());
-  // Bounds from Information panel:
-  // [-65.3147, 86.267], [-88.0325, 78.7217], [-67.0969, 156.867]
-  const vtkm::cont::ArrayHandle<vtkm::Range>& vecRanges = vec.GetRange();
-  VTKM_TEST_ASSERT(vecRanges.GetNumberOfValues() == 3);
-  auto vecRangesReadPortal = vecRanges.ReadPortal();
-
-  auto xVecRange = vecRangesReadPortal.Get(0);
-  VTKM_TEST_ASSERT(xVecRange.Min >= -65.3148 && xVecRange.Min <= -65.3146);
-  VTKM_TEST_ASSERT(xVecRange.Max >= 86.26 && xVecRange.Min <= 86.268);
-
-  auto yVecRange = vecRangesReadPortal.Get(1);
-  VTKM_TEST_ASSERT(yVecRange.Min >= -88.0326 && yVecRange.Min <= -88.0324);
-  VTKM_TEST_ASSERT(yVecRange.Max >= 78.721);
-  VTKM_TEST_ASSERT(yVecRange.Max <= 78.7218);
-
-  auto zVecRange = vecRangesReadPortal.Get(2);
-  VTKM_TEST_ASSERT(zVecRange.Min >= -67.097 && zVecRange.Min <= -67.096);
-  VTKM_TEST_ASSERT(zVecRange.Max >= 156.866 && zVecRange.Max <= 156.868);
-}
-
-void TestReadingDoublePrecisionFishTank()
-{
-  std::string fishtank =
-    vtkm::cont::testing::Testing::DataPath("rectilinear/fishtank_double_big_endian.vtk");
-  vtkm::cont::DataSet ds = readVTKDataSet(fishtank.c_str());
-
-  // This is information you can glean by running 'strings' on fishtank.vtk:
-  VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
-  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 50 * 50 * 50, "Incorrect number of points");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 50 * 50 * 50,
-                   "Incorrect number of points (from cell set)");
-
-  VTKM_TEST_ASSERT(ds.HasField("vec"), "The vtk file has a field 'vec', but the dataset does not.");
-
-
-  VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                   "fishtank has one and only one coordinate system.");
-  // See the single precision version for info:
-  const vtkm::cont::CoordinateSystem& coordinateSystem = ds.GetCoordinateSystem();
-  vtkm::Vec<vtkm::Range, 3> ranges = coordinateSystem.GetRange();
-  vtkm::Range xRange = ranges[0];
-  VTKM_TEST_ASSERT(xRange.Min == 0);
-  VTKM_TEST_ASSERT(xRange.Max == 1);
-  vtkm::Range yRange = ranges[1];
-  VTKM_TEST_ASSERT(yRange.Min == 0);
-  VTKM_TEST_ASSERT(yRange.Max == 1);
-  vtkm::Range zRange = ranges[2];
-  VTKM_TEST_ASSERT(zRange.Min == 0);
-  VTKM_TEST_ASSERT(zRange.Max == 1);
-
-  // This info was gleaned from the Paraview Information panel:
-  const vtkm::cont::Field& vec = ds.GetField("vec");
-  VTKM_TEST_ASSERT(vec.GetName() == "vec");
-  VTKM_TEST_ASSERT(vec.IsPointField());
-  // Bounds from Information panel:
-  // [-65.3147, 86.267], [-88.0325, 78.7217], [-67.0969, 156.867]
-  const vtkm::cont::ArrayHandle<vtkm::Range>& vecRanges = vec.GetRange();
-  VTKM_TEST_ASSERT(vecRanges.GetNumberOfValues() == 3);
-  auto vecRangesReadPortal = vecRanges.ReadPortal();
-
-  auto xVecRange = vecRangesReadPortal.Get(0);
-  VTKM_TEST_ASSERT(xVecRange.Min >= -65.3148 && xVecRange.Min <= -65.3146);
-  VTKM_TEST_ASSERT(xVecRange.Max >= 86.26 && xVecRange.Min <= 86.268);
-
-  auto yVecRange = vecRangesReadPortal.Get(1);
-  VTKM_TEST_ASSERT(yVecRange.Min >= -88.0326 && yVecRange.Min <= -88.0324);
-  VTKM_TEST_ASSERT(yVecRange.Max >= 78.721);
-  VTKM_TEST_ASSERT(yVecRange.Max <= 78.7218);
-
-  auto zVecRange = vecRangesReadPortal.Get(2);
-  VTKM_TEST_ASSERT(zVecRange.Min >= -67.097 && zVecRange.Min <= -67.096);
-  VTKM_TEST_ASSERT(zVecRange.Max >= 156.866 && zVecRange.Max <= 156.868);
-}
-
-void TestReadingASCIIFishTank()
-{
-  std::string fishtank =
-    vtkm::cont::testing::Testing::DataPath("rectilinear/fishtank_double_ascii.vtk");
-  vtkm::cont::DataSet ds = readVTKDataSet(fishtank.c_str());
-  VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
-  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 50 * 50 * 50, "Incorrect number of points");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 50 * 50 * 50,
-                   "Incorrect number of points (from cell set)");
-  VTKM_TEST_ASSERT(ds.HasField("vec"), "The vtk file has a field 'vec', but the dataset does not.");
-  VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                   "fishtank has one and only one coordinate system.");
-  const vtkm::cont::CoordinateSystem& coordinateSystem = ds.GetCoordinateSystem();
-  vtkm::Vec<vtkm::Range, 3> ranges = coordinateSystem.GetRange();
-  vtkm::Range xRange = ranges[0];
-  VTKM_TEST_ASSERT(xRange.Min == 0);
-  VTKM_TEST_ASSERT(xRange.Max == 1);
-  vtkm::Range yRange = ranges[1];
-  VTKM_TEST_ASSERT(yRange.Min == 0);
-  VTKM_TEST_ASSERT(yRange.Max == 1);
-  vtkm::Range zRange = ranges[2];
-  VTKM_TEST_ASSERT(zRange.Min == 0);
-  VTKM_TEST_ASSERT(zRange.Max == 1);
-
-  const vtkm::cont::Field& vec = ds.GetField("vec");
-  VTKM_TEST_ASSERT(vec.GetName() == "vec");
-  VTKM_TEST_ASSERT(vec.IsPointField());
-  // Bounds from Paraview information panel:
-  // [-65.3147, 86.267], [-88.0325, 78.7217], [-67.0969, 156.867]
-  const vtkm::cont::ArrayHandle<vtkm::Range>& vecRanges = vec.GetRange();
-  VTKM_TEST_ASSERT(vecRanges.GetNumberOfValues() == 3);
-  auto vecRangesReadPortal = vecRanges.ReadPortal();
-  auto xVecRange = vecRangesReadPortal.Get(0);
-  VTKM_TEST_ASSERT(xVecRange.Min >= -65.3148 && xVecRange.Min <= -65.3146);
-  VTKM_TEST_ASSERT(xVecRange.Max >= 86.26 && xVecRange.Min <= 86.268);
-
-  auto yVecRange = vecRangesReadPortal.Get(1);
-  VTKM_TEST_ASSERT(yVecRange.Min >= -88.0326 && yVecRange.Min <= -88.0324);
-  VTKM_TEST_ASSERT(yVecRange.Max >= 78.721);
-  VTKM_TEST_ASSERT(yVecRange.Max <= 78.7218);
-
-  auto zVecRange = vecRangesReadPortal.Get(2);
-  VTKM_TEST_ASSERT(zVecRange.Min >= -67.097 && zVecRange.Min <= -67.096);
-  VTKM_TEST_ASSERT(zVecRange.Max >= 156.866 && zVecRange.Max <= 156.868);
-}
-
-void TestReadingFusion()
-{
-  std::string fusion = vtkm::cont::testing::Testing::DataPath("rectilinear/fusion.vtk");
+  std::string fusion = vtkm::cont::testing::Testing::DataPath("uniform/rotate-vectors.vtk");
   vtkm::cont::DataSet ds = readVTKDataSet(fusion.c_str());
 
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
                    "Incorrect cellset type");
-  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 32 * 32 * 32, "Incorrect number of points");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 32 * 32 * 32,
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 33 * 33 * 33, "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 33 * 33 * 33,
                    "Incorrect number of points (from cell set)");
-  VTKM_TEST_ASSERT(ds.HasField("vec_magnitude"),
-                   "The vtk file has a field 'vec_magnitude', but the dataset does not.");
-  VTKM_TEST_ASSERT(ds.HasField("vec"), "The vtk file has a field 'vec', but the dataset does not.");
-  VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                   "The vtk file has a field 'vec', but the dataset does not.");
+  VTKM_TEST_ASSERT(ds.HasField("rotate"),
+                   "The vtk file has a field 'rotate', but the dataset does not.");
 
   // Taken from Paraview + clicking Data Axes Grid:
   const vtkm::cont::CoordinateSystem& coordinateSystem = ds.GetCoordinateSystem();
   vtkm::Vec<vtkm::Range, 3> ranges = coordinateSystem.GetRange();
   vtkm::Range xRange = ranges[0];
-  VTKM_TEST_ASSERT(xRange.Min == 0);
+  VTKM_TEST_ASSERT(xRange.Min == -1);
   VTKM_TEST_ASSERT(xRange.Max == 1);
   vtkm::Range yRange = ranges[1];
-  VTKM_TEST_ASSERT(yRange.Min == 0);
+  VTKM_TEST_ASSERT(yRange.Min == -1);
   VTKM_TEST_ASSERT(yRange.Max == 1);
   vtkm::Range zRange = ranges[2];
-  VTKM_TEST_ASSERT(zRange.Min == 0);
+  VTKM_TEST_ASSERT(zRange.Min == -1);
   VTKM_TEST_ASSERT(zRange.Max == 1);
 
   // Paraview Information Panel of this file:
-  // vec_magnitude [0, 3.73778]
-  vtkm::cont::Field vec_magnitude = ds.GetField("vec_magnitude");
-  VTKM_TEST_ASSERT(vec_magnitude.GetName() == "vec_magnitude");
-  VTKM_TEST_ASSERT(vec_magnitude.IsPointField());
-
-  vtkm::Range mag_range;
-  vec_magnitude.GetRange(&mag_range);
-  VTKM_TEST_ASSERT(mag_range.Min == 0);
-  VTKM_TEST_ASSERT(mag_range.Max <= 3.73779);
-  VTKM_TEST_ASSERT(mag_range.Max >= 3.73777);
-
-  vtkm::cont::Field vec = ds.GetField("vec");
-  VTKM_TEST_ASSERT(vec.GetName() == "vec");
+  // rotate double [-1.29845, 1.25443], [-1.34447, 1.22820], [-0.32387, 0.33180]
+  vtkm::cont::Field vec = ds.GetField("rotate");
+  VTKM_TEST_ASSERT(vec.GetName() == "rotate");
   VTKM_TEST_ASSERT(vec.IsPointField());
   const vtkm::cont::ArrayHandle<vtkm::Range>& vecRanges = vec.GetRange();
   VTKM_TEST_ASSERT(vecRanges.GetNumberOfValues() == 3);
   auto vecRangesReadPortal = vecRanges.ReadPortal();
 
-  // vec float [-3.41054, 3.40824], [-3.41018, 3.41036], [-0.689022, 0.480726]
   auto xVecRange = vecRangesReadPortal.Get(0);
-  VTKM_TEST_ASSERT(test_equal(xVecRange.Min, -3.41054));
-  VTKM_TEST_ASSERT(test_equal(xVecRange.Max, 3.40824));
+  VTKM_TEST_ASSERT(test_equal(xVecRange.Min, -1.29845));
+  VTKM_TEST_ASSERT(test_equal(xVecRange.Max, 1.25443));
 
   auto yVecRange = vecRangesReadPortal.Get(1);
 
-  VTKM_TEST_ASSERT(test_equal(yVecRange.Min, -3.41018));
-  VTKM_TEST_ASSERT(test_equal(yVecRange.Max, 3.41036));
+  VTKM_TEST_ASSERT(test_equal(yVecRange.Min, -1.34447));
+  VTKM_TEST_ASSERT(test_equal(yVecRange.Max, 1.22820));
 
   auto zVecRange = vecRangesReadPortal.Get(2);
-  VTKM_TEST_ASSERT(test_equal(zVecRange.Min, -0.689022));
-  VTKM_TEST_ASSERT(test_equal(zVecRange.Max, 0.480726));
+  VTKM_TEST_ASSERT(test_equal(zVecRange.Min, -0.32387));
+  VTKM_TEST_ASSERT(test_equal(zVecRange.Max, 0.33180));
+}
+
+void TestReadingKitchen()
+{
+  std::string fusion = vtkm::cont::testing::Testing::DataPath("curvilinear/kitchen.vtk");
+  vtkm::cont::DataSet ds = readVTKDataSet(fusion.c_str());
+
+  VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
+                   "Incorrect cellset type");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 28 * 24 * 17, "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 28 * 24 * 17,
+                   "Incorrect number of points (from cell set)");
+  VTKM_TEST_ASSERT(ds.HasField("h1"), "The vtk file has a field 'h1', but the dataset does not.");
+  VTKM_TEST_ASSERT(ds.HasField("velocity"),
+                   "The vtk file has a field 'velocity', but the dataset does not.");
+
+  // Paraview Information Panel of this file:
+  // Bounds: [0.01, 7], [0.01, 5], [0.01, 2.5]
+  const vtkm::cont::CoordinateSystem& coordinateSystem = ds.GetCoordinateSystem();
+  vtkm::Vec<vtkm::Range, 3> ranges = coordinateSystem.GetRange();
+  vtkm::Range xRange = ranges[0];
+  VTKM_TEST_ASSERT(test_equal(xRange.Min, 0.01));
+  VTKM_TEST_ASSERT(test_equal(xRange.Max, 7));
+  vtkm::Range yRange = ranges[1];
+  VTKM_TEST_ASSERT(test_equal(yRange.Min, 0.01));
+  VTKM_TEST_ASSERT(test_equal(yRange.Max, 5));
+  vtkm::Range zRange = ranges[2];
+  VTKM_TEST_ASSERT(test_equal(zRange.Min, 0.01));
+  VTKM_TEST_ASSERT(test_equal(zRange.Max, 2.5));
+
+  // h1 float [0, 26823.6]
+  vtkm::cont::Field h1 = ds.GetField("h1");
+  VTKM_TEST_ASSERT(h1.GetName() == "h1");
+  VTKM_TEST_ASSERT(h1.IsPointField());
+  const vtkm::cont::ArrayHandle<vtkm::Range>& h1Ranges = h1.GetRange();
+  VTKM_TEST_ASSERT(h1Ranges.GetNumberOfValues() == 1);
+  auto h1RangesReadPortal = h1Ranges.ReadPortal();
+
+  auto h1Range = h1RangesReadPortal.Get(0);
+  VTKM_TEST_ASSERT(test_equal(h1Range.Min, 0));
+  VTKM_TEST_ASSERT(test_equal(h1Range.Max, 26823.6));
+
+  // velocity float [-0.34942, 0.26521], [-0.31407, 0.31543], [-0.45072, 0.28649]
+  vtkm::cont::Field vec = ds.GetField("velocity");
+  VTKM_TEST_ASSERT(vec.GetName() == "velocity");
+  VTKM_TEST_ASSERT(vec.IsPointField());
+  const vtkm::cont::ArrayHandle<vtkm::Range>& vecRanges = vec.GetRange();
+  VTKM_TEST_ASSERT(vecRanges.GetNumberOfValues() == 3);
+  auto vecRangesReadPortal = vecRanges.ReadPortal();
+
+  auto xVecRange = vecRangesReadPortal.Get(0);
+  VTKM_TEST_ASSERT(test_equal(xVecRange.Min, -0.34942));
+  VTKM_TEST_ASSERT(test_equal(xVecRange.Max, 0.26521));
+
+  auto yVecRange = vecRangesReadPortal.Get(1);
+
+  VTKM_TEST_ASSERT(test_equal(yVecRange.Min, -0.31407));
+  VTKM_TEST_ASSERT(test_equal(yVecRange.Max, 0.31543));
+
+  auto zVecRange = vecRangesReadPortal.Get(2);
+  VTKM_TEST_ASSERT(test_equal(zVecRange.Min, -0.45072));
+  VTKM_TEST_ASSERT(test_equal(zVecRange.Max, 0.28649));
 }
 
 void TestSkppingStringFields(Format format)
@@ -668,14 +533,10 @@ void TestReadingVTKDataSet()
   TestReadingStructuredGridASCII();
   std::cout << "Test reading VTK StructuredGrid file in BINARY" << std::endl;
   TestReadingStructuredGridBin();
-  std::cout << "Test reading float precision fishtank" << std::endl;
-  TestReadingFishTank();
-  std::cout << "Test reading double precision fishtank" << std::endl;
-  TestReadingDoublePrecisionFishTank();
-  std::cout << "Test ASCII fishtank" << std::endl;
-  TestReadingASCIIFishTank();
-  std::cout << "Test reading fusion" << std::endl;
-  TestReadingFusion();
+  std::cout << "Test reading rotate" << std::endl;
+  TestReadingRotate();
+  std::cout << "Test reading kitchen" << std::endl;
+  TestReadingKitchen();
 
   std::cout << "Test skipping string fields in ASCII files" << std::endl;
   TestSkppingStringFields(FORMAT_ASCII);

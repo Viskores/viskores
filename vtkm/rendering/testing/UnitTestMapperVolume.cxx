@@ -26,8 +26,10 @@ namespace
 void RenderTests()
 {
   vtkm::cont::ColorTable colorTable = vtkm::cont::ColorTable::Preset::Inferno;
-  colorTable.AddPointAlpha(0.0, .01f);
-  colorTable.AddPointAlpha(1.0, .01f);
+  colorTable.AddPointAlpha(0.0, 0.01f);
+  colorTable.AddPointAlpha(0.4, 0.01f);
+  colorTable.AddPointAlpha(0.7, 0.2f);
+  colorTable.AddPointAlpha(1.0, 0.5f);
 
   vtkm::rendering::testing::RenderTestOptions options;
   options.Mapper = vtkm::rendering::testing::MapperType::Volume;
@@ -35,7 +37,7 @@ void RenderTests()
   options.ColorTable = colorTable;
 
   vtkm::cont::DataSet rectDS, unsDS;
-  std::string rectfname = vtkm::cont::testing::Testing::DataPath("rectilinear/noise.vtk");
+  std::string rectfname = vtkm::cont::testing::Testing::DataPath("third_party/visit/example.vtk");
   vtkm::io::VTKDataSetReader rectReader(rectfname);
 
   try
@@ -53,7 +55,7 @@ void RenderTests()
   }
 
   vtkm::rendering::testing::RenderTest(
-    rectDS, "hardyglobal", "rendering/volume/rectilinear3D.png", options);
+    rectDS, "temp", "rendering/volume/rectilinear3D.png", options);
 }
 
 } //namespace

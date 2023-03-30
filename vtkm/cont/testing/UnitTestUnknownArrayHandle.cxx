@@ -16,6 +16,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
+#include <vtkm/cont/ArrayHandleRuntimeVec.h>
 
 #include <vtkm/TypeTraits.h>
 
@@ -542,6 +543,57 @@ void TrySetMultiplexerArray()
   CheckUnknownArray<vtkm::List<vtkm::Id>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(unknownArray, 1);
 }
 
+template <typename T>
+void TryConvertRuntimeVec()
+{
+  using BasicArrayType = vtkm::cont::ArrayHandle<T>;
+  using BasicComponentType = typename vtkm::VecFlat<T>::ComponentType;
+  constexpr vtkm::IdComponent numFlatComponents = vtkm::VecFlat<T>::NUM_COMPONENTS;
+  using RuntimeArrayType = vtkm::cont::ArrayHandleRuntimeVec<BasicComponentType>;
+
+  std::cout << "    Get basic array as ArrayHandleRuntimeVec" << std::endl;
+  BasicArrayType inputArray;
+  inputArray.Allocate(ARRAY_SIZE);
+  SetPortal(inputArray.WritePortal());
+
+  vtkm::cont::UnknownArrayHandle unknownWithBasic{ inputArray };
+  VTKM_TEST_ASSERT(unknownWithBasic.GetNumberOfComponentsFlat() == numFlatComponents);
+
+  VTKM_TEST_ASSERT(unknownWithBasic.CanConvert<RuntimeArrayType>());
+  RuntimeArrayType runtimeArray = unknownWithBasic.AsArrayHandle<RuntimeArrayType>();
+
+  // Hack to convert the array handle to a flat array to make it easy to check the runtime array
+  vtkm::cont::ArrayHandle<vtkm::VecFlat<T>> flatInput{ inputArray.GetBuffers() };
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(flatInput, runtimeArray));
+
+  std::cout << "    Get ArrayHandleRuntimeVec as basic array" << std::endl;
+  vtkm::cont::UnknownArrayHandle unknownWithRuntimeVec{ runtimeArray };
+  VTKM_TEST_ASSERT(unknownWithRuntimeVec.GetNumberOfComponentsFlat() == numFlatComponents);
+
+  VTKM_TEST_ASSERT(unknownWithRuntimeVec.CanConvert<RuntimeArrayType>());
+  VTKM_TEST_ASSERT(unknownWithRuntimeVec.CanConvert<BasicArrayType>());
+  BasicArrayType outputArray = unknownWithRuntimeVec.AsArrayHandle<BasicArrayType>();
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(inputArray, outputArray));
+}
+
+void TryConvertRuntimeVec()
+{
+  std::cout << "  Scalar array." << std::endl;
+  TryConvertRuntimeVec<vtkm::FloatDefault>();
+
+  std::cout << "  Equivalent scalar." << std::endl;
+  TryConvertRuntimeVec<VTKM_UNUSED_INT_TYPE>();
+
+  std::cout << "  Basic Vec." << std::endl;
+  TryConvertRuntimeVec<vtkm::Id3>();
+
+  std::cout << "  Vec of Vecs." << std::endl;
+  TryConvertRuntimeVec<vtkm::Vec<vtkm::Vec2f, 3>>();
+
+  std::cout << "  Vec of Vecs of Vecs." << std::endl;
+  TryConvertRuntimeVec<vtkm::Vec<vtkm::Vec<vtkm::Id4, 3>, 2>>();
+}
+
 struct DefaultTypeFunctor
 {
   template <typename T>
@@ -573,6 +625,9 @@ void TestUnknownArrayHandle()
 
   std::cout << "Try setting ArrayHandleMultiplexer" << std::endl;
   TrySetMultiplexerArray();
+
+  std::cout << "Try converting between ArrayHandleRuntimeVec and basic array" << std::endl;
+  TryConvertRuntimeVec();
 }
 
 } // anonymous namespace

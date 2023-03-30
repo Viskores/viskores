@@ -624,12 +624,8 @@ namespace detail
 template <typename T1, typename T2>
 struct TestEqualImpl
 {
-  template <typename Dimensionality1, typename Dimensionality2>
-  VTKM_EXEC_CONT bool DoIt(T1 vector1,
-                           T2 vector2,
-                           vtkm::Float64 tolerance,
-                           Dimensionality1,
-                           Dimensionality2) const
+  template <typename IsBase1, typename IsBase2>
+  VTKM_EXEC_CONT bool DoIt(T1 vector1, T2 vector2, vtkm::Float64 tolerance, IsBase1, IsBase2) const
   {
     using Traits1 = vtkm::VecTraits<T1>;
     using Traits2 = vtkm::VecTraits<T2>;
@@ -658,8 +654,8 @@ struct TestEqualImpl
   VTKM_EXEC_CONT bool DoIt(T1 scalar1,
                            T2 scalar2,
                            vtkm::Float64 tolerance,
-                           vtkm::TypeTraitsScalarTag,
-                           vtkm::TypeTraitsScalarTag) const
+                           std::true_type,
+                           std::true_type) const
   {
     // Do all comparisons using 64-bit floats.
     return test_equal(
@@ -668,11 +664,13 @@ struct TestEqualImpl
 
   VTKM_EXEC_CONT bool operator()(T1 value1, T2 value2, vtkm::Float64 tolerance) const
   {
+    using Base1 = typename vtkm::VecTraits<T1>::BaseComponentType;
+    using Base2 = typename vtkm::VecTraits<T2>::BaseComponentType;
     return this->DoIt(value1,
                       value2,
                       tolerance,
-                      typename vtkm::TypeTraits<T1>::DimensionalityTag(),
-                      typename vtkm::TypeTraits<T2>::DimensionalityTag());
+                      typename std::is_same<T1, Base1>::type{},
+                      typename std::is_same<T2, Base2>::type{});
   }
 };
 

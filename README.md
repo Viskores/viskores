@@ -1,3 +1,6 @@
+![GitLab tag](https://img.shields.io/gitlab/v/tag/vtk/vtk-m?color=red&gitlab_url=https%3A%2F%2Fgitlab.kitware.com&include_prereleases&sort=semver)  
+![Spack version](https://img.shields.io/spack/v/vtk-m.svg)  
+
 # VTK-m #
 
 VTK-m is a toolkit of scientific visualization algorithms for emerging
@@ -64,7 +67,7 @@ effort.
 
 VTK-m Requires:
 
-  + C++11 Compiler. VTK-m has been confirmed to work with the following
+  + C++14 Compiler. VTK-m has been confirmed to work with the following
       + GCC 5.4+
       + Clang 5.0+
       + XCode 5.0+

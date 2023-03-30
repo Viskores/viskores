@@ -242,11 +242,9 @@ inline void SelectTypeAndCall(DataType dtype,
       assert(false);
   }
 }
+
 }
 }
 } // namespace vtkm::io::internal
-
-VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::ColorChannel8)
-VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::DummyBitType)
 
 #endif // vtk_m_io_internal_VTKDataSetTypes_h

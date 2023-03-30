@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
+#include <vtkm/Range.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
 
@@ -76,27 +77,17 @@ private:
 namespace detail
 {
 
-template <typename T, typename UseVecTraits = vtkm::HasVecTraits<T>>
-struct CanCountImpl;
-
 template <typename T>
-struct CanCountImpl<T, std::false_type>
-{
-  using TTraits = vtkm::TypeTraits<T>;
-  static constexpr bool IsNumeric =
-    !std::is_same<typename TTraits::NumericTag, vtkm::TypeTraitsUnknownTag>::value;
-
-  static constexpr bool value = IsNumeric;
-};
-
-template <typename T>
-struct CanCountImpl<T, std::true_type>
+struct CanCountImpl
 {
   using VTraits = vtkm::VecTraits<T>;
   using BaseType = typename VTraits::BaseComponentType;
+  using TTraits = vtkm::TypeTraits<BaseType>;
+  static constexpr bool IsNumeric =
+    !std::is_same<typename TTraits::NumericTag, vtkm::TypeTraitsUnknownTag>::value;
   static constexpr bool IsBool = std::is_same<BaseType, bool>::value;
 
-  static constexpr bool value = CanCountImpl<BaseType, std::false_type>::value && !IsBool;
+  static constexpr bool value = IsNumeric && !IsBool;
 };
 
 } // namespace detail
@@ -152,6 +143,52 @@ make_ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::
 {
   return vtkm::cont::ArrayHandleCounting<CountingValueType>(start, step, length);
 }
+
+namespace internal
+{
+
+template <typename S>
+struct ArrayRangeComputeImpl;
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagCounting>
+{
+  template <typename T>
+  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagCounting>& input,
+    vtkm::cont::DeviceAdapterId) const
+  {
+    using Traits = vtkm::VecTraits<T>;
+    vtkm::cont::ArrayHandle<vtkm::Range> result;
+    result.Allocate(Traits::NUM_COMPONENTS);
+    auto portal = result.WritePortal();
+    if (portal.GetNumberOfValues() > 0)
+    {
+      T first = input.ReadPortal().Get(0);
+      T last = input.ReadPortal().Get(input.GetNumberOfValues() - 1);
+      for (vtkm::IdComponent cIndex = 0; cIndex < Traits::NUM_COMPONENTS; ++cIndex)
+      {
+        auto firstComponent = Traits::GetComponent(first, cIndex);
+        auto lastComponent = Traits::GetComponent(last, cIndex);
+        portal.Set(cIndex,
+                   vtkm::Range(vtkm::Min(firstComponent, lastComponent),
+                               vtkm::Max(firstComponent, lastComponent)));
+      }
+    }
+    else
+    {
+      // Array is empty
+      for (vtkm::IdComponent cIndex = 0; cIndex < Traits::NUM_COMPONENTS; ++cIndex)
+      {
+        portal.Set(cIndex, vtkm::Range{});
+      }
+    }
+    return result;
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

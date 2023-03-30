@@ -86,6 +86,28 @@ ArrayExtractComponentImpl<vtkm::cont::StorageTagUniformPoints>::operator()(
   }
 }
 
+VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range>
+ArrayRangeComputeImpl<vtkm::cont::StorageTagUniformPoints>::operator()(
+  const vtkm::cont::ArrayHandleUniformPointCoordinates& input,
+  vtkm::cont::DeviceAdapterId vtkmNotUsed(device)) const
+{
+  vtkm::internal::ArrayPortalUniformPointCoordinates portal = input.ReadPortal();
+
+  // In this portal we know that the min value is the first entry and the
+  // max value is the last entry.
+  vtkm::Vec3f minimum = portal.Get(0);
+  vtkm::Vec3f maximum = portal.Get(portal.GetNumberOfValues() - 1);
+
+  vtkm::cont::ArrayHandle<vtkm::Range> rangeArray;
+  rangeArray.Allocate(3);
+  vtkm::cont::ArrayHandle<vtkm::Range>::WritePortalType outPortal = rangeArray.WritePortal();
+  outPortal.Set(0, vtkm::Range(minimum[0], maximum[0]));
+  outPortal.Set(1, vtkm::Range(minimum[1], maximum[1]));
+  outPortal.Set(2, vtkm::Range(minimum[2], maximum[2]));
+
+  return rangeArray;
+}
+
 } // namespace internal
 
 }

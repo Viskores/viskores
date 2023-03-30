@@ -708,29 +708,6 @@ public:
   }
 };
 
-// Get the number of components in a UnknownArrayHandle, ArrayHandle, or Field's
-// ValueType.
-struct NumberOfComponents
-{
-  vtkm::IdComponent NumComponents;
-
-  template <typename ArrayHandleT>
-  VTKM_CONT void operator()(const ArrayHandleT&)
-  {
-    using ValueType = typename ArrayHandleT::ValueType;
-    using Traits = vtkm::VecTraits<ValueType>;
-    this->NumComponents = Traits::NUM_COMPONENTS;
-  }
-
-  template <typename DynamicType>
-  VTKM_CONT static vtkm::IdComponent Check(const DynamicType& obj)
-  {
-    NumberOfComponents functor;
-    vtkm::cont::CastAndCall(obj, functor);
-    return functor.NumComponents;
-  }
-};
-
 void FindFields()
 {
   if (PointScalarsName.empty())
@@ -739,7 +716,7 @@ void FindFields()
     {
       auto field = GetInputDataSet().GetField(i);
       if (field.GetAssociation() == vtkm::cont::Field::Association::Points &&
-          NumberOfComponents::Check(field) == 1)
+          field.GetData().GetNumberOfComponentsFlat() == 1)
       {
         PointScalarsName = field.GetName();
         std::cerr << "[FindFields] Found PointScalars: " << PointScalarsName << "\n";
@@ -754,7 +731,7 @@ void FindFields()
     {
       auto field = GetInputDataSet().GetField(i);
       if (field.GetAssociation() == vtkm::cont::Field::Association::Cells &&
-          NumberOfComponents::Check(field) == 1)
+          field.GetData().GetNumberOfComponentsFlat() == 1)
       {
         CellScalarsName = field.GetName();
         std::cerr << "[FindFields] CellScalars: " << CellScalarsName << "\n";
@@ -769,7 +746,7 @@ void FindFields()
     {
       auto field = GetInputDataSet().GetField(i);
       if (field.GetAssociation() == vtkm::cont::Field::Association::Points &&
-          NumberOfComponents::Check(field) == 3)
+          field.GetData().GetNumberOfComponentsFlat() == 3)
       {
         PointVectorsName = field.GetName();
         std::cerr << "[FindFields] Found PointVectors: " << PointVectorsName << "\n";

@@ -11,17 +11,22 @@
 #include <vtkm/cont/ArrayCopyDevice.h>
 #include <vtkm/cont/ArrayHandleBasic.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
+#include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleRandomUniformReal.h>
 #include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/ArrayHandleStride.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/ArrayHandleView.h>
+#include <vtkm/cont/ArrayHandleXGCCoordinates.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
 
 #include <vtkm/Math.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -31,12 +36,12 @@ namespace
 constexpr vtkm::Id ARRAY_SIZE = 20;
 
 template <typename T, typename S>
-void CheckRange(const vtkm::cont::ArrayHandle<T, S>& array, bool checkUnknown = true)
+void VerifyRange(const vtkm::cont::ArrayHandle<T, S>& array,
+                 const vtkm::cont::ArrayHandle<vtkm::Range>& computedRangeArray)
 {
   using Traits = vtkm::VecTraits<T>;
   vtkm::IdComponent numComponents = Traits::NUM_COMPONENTS;
 
-  vtkm::cont::ArrayHandle<vtkm::Range> computedRangeArray = vtkm::cont::ArrayRangeCompute(array);
   VTKM_TEST_ASSERT(computedRangeArray.GetNumberOfValues() == numComponents);
   auto computedRangePortal = computedRangeArray.ReadPortal();
 
@@ -54,28 +59,12 @@ void CheckRange(const vtkm::cont::ArrayHandle<T, S>& array, bool checkUnknown = 
     VTKM_TEST_ASSERT(!vtkm::IsNan(computedRange.Max));
     VTKM_TEST_ASSERT(test_equal(expectedRange, computedRange));
   }
+}
 
-  if (checkUnknown)
-  {
-    computedRangeArray = vtkm::cont::ArrayRangeCompute(vtkm::cont::UnknownArrayHandle{ array });
-    VTKM_TEST_ASSERT(computedRangeArray.GetNumberOfValues() == numComponents);
-    computedRangePortal = computedRangeArray.ReadPortal();
-
-    portal = array.ReadPortal();
-    for (vtkm::IdComponent component = 0; component < numComponents; ++component)
-    {
-      vtkm::Range computedRange = computedRangePortal.Get(component);
-      vtkm::Range expectedRange;
-      for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); ++index)
-      {
-        T value = portal.Get(index);
-        expectedRange.Include(Traits::GetComponent(value, component));
-      }
-      VTKM_TEST_ASSERT(!vtkm::IsNan(computedRange.Min));
-      VTKM_TEST_ASSERT(!vtkm::IsNan(computedRange.Max));
-      VTKM_TEST_ASSERT(test_equal(expectedRange, computedRange));
-    }
-  }
+template <typename T, typename S>
+void CheckRange(const vtkm::cont::ArrayHandle<T, S>& array)
+{
+  VerifyRange(array, vtkm::cont::ArrayRangeCompute(array));
 }
 
 template <typename T, typename S>
@@ -119,12 +108,22 @@ void TestSOAArray(vtkm::TypeTraitsScalarTag)
 }
 
 template <typename T>
-void TestStrideArray(vtkm::TypeTraitsScalarTag)
+void TestStrideArray()
 {
   std::cout << "Checking stride array" << std::endl;
   vtkm::cont::ArrayHandleBasic<T> array;
   FillArray(array);
   CheckRange(vtkm::cont::ArrayHandleStride<T>(array, ARRAY_SIZE / 2, 2, 1));
+}
+
+template <typename T>
+void TestCastArray()
+{
+  std::cout << "Checking cast array" << std::endl;
+  using CastType = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::Float64>;
+  vtkm::cont::ArrayHandle<T> array;
+  FillArray(array);
+  CheckRange(vtkm::cont::make_ArrayHandleCast<CastType>(array));
 }
 
 template <typename T>
@@ -151,7 +150,7 @@ void TestCartesianProduct(vtkm::TypeTraitsVectorTag)
 template <typename T>
 void TestComposite(vtkm::TypeTraitsScalarTag)
 {
-  std::cout << "Checking composite vector" << std::endl;
+  std::cout << "Checking composite vector array" << std::endl;
 
   vtkm::cont::ArrayHandleBasic<T> array0;
   FillArray(array0);
@@ -167,6 +166,32 @@ template <typename T>
 void TestComposite(vtkm::TypeTraitsVectorTag)
 {
   // Skip test.
+}
+
+template <typename T>
+void TestGroup(vtkm::TypeTraitsScalarTag)
+{
+  std::cout << "Checking group vec array" << std::endl;
+
+  vtkm::cont::ArrayHandleBasic<T> array;
+  FillArray(array);
+  CheckRange(vtkm::cont::make_ArrayHandleGroupVec<2>(array));
+}
+
+template <typename T>
+void TestGroup(vtkm::TypeTraitsVectorTag)
+{
+  // Skip test.
+}
+
+template <typename T>
+void TestView()
+{
+  std::cout << "Checking view array" << std::endl;
+
+  vtkm::cont::ArrayHandleBasic<T> array;
+  FillArray(array);
+  CheckRange(vtkm::cont::make_ArrayHandleView(array, 2, ARRAY_SIZE - 5));
 }
 
 template <typename T>
@@ -205,15 +230,29 @@ void TestUniformPointCoords()
     vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(ARRAY_SIZE, ARRAY_SIZE, ARRAY_SIZE)));
 }
 
+void TestXGCCoordinates()
+{
+  std::cout << "Checking XGC coordinates array" << std::endl;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> array;
+  FillArray(array);
+  CheckRange(vtkm::cont::make_ArrayHandleXGCCoordinates(array, 4, true));
+}
+
 struct DoTestFunctor
 {
   template <typename T>
   void operator()(T) const
   {
+    typename vtkm::TypeTraits<T>::DimensionalityTag dimensionality{};
+
     TestBasicArray<T>();
-    TestSOAArray<T>(typename vtkm::TypeTraits<T>::DimensionalityTag{});
-    TestCartesianProduct<T>(typename vtkm::TypeTraits<T>::DimensionalityTag{});
-    TestComposite<T>(typename vtkm::TypeTraits<T>::DimensionalityTag{});
+    TestSOAArray<T>(dimensionality);
+    TestStrideArray<T>();
+    TestCastArray<T>();
+    TestCartesianProduct<T>(dimensionality);
+    TestComposite<T>(dimensionality);
+    TestGroup<T>(dimensionality);
+    TestView<T>();
     TestConstant<T>();
     TestCounting<T>(typename std::is_signed<typename vtkm::VecTraits<T>::ComponentType>::type{});
   }
@@ -226,6 +265,7 @@ void DoTest()
   std::cout << "*** Specific arrays *****************" << std::endl;
   TestIndex();
   TestUniformPointCoords();
+  TestXGCCoordinates();
 }
 
 } // anonymous namespace

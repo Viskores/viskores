@@ -19,39 +19,6 @@ namespace vtkm
 namespace internal
 {
 
-namespace detail
-{
-
-// TODO: VecTraits should just always be supported. See #589.
-
-template <typename Vec, typename = typename std::enable_if<vtkm::HasVecTraits<Vec>::value>::type>
-VTKM_EXEC_CONT inline vtkm::IdComponent SafeGetNumberOfComponents(const Vec& vec)
-{
-  return vtkm::VecTraits<Vec>::GetNumberOfComponents(vec);
-}
-
-VTKM_EXEC_CONT inline vtkm::IdComponent SafeGetNumberOfComponents(...)
-{
-  return 1;
-}
-
-template <typename Vec, typename = typename std::enable_if<vtkm::HasVecTraits<Vec>::value>::type>
-VTKM_EXEC_CONT inline typename vtkm::VecTraits<Vec>::ComponentType SafeGetComponent(
-  const Vec& vec,
-  vtkm::IdComponent index)
-{
-  return vtkm::VecTraits<Vec>::GetComponent(vec, index);
-}
-
-template <typename T, typename = typename std::enable_if<!vtkm::HasVecTraits<T>::value>::type>
-VTKM_EXEC_CONT inline T SafeGetComponent(const T& value, vtkm::IdComponent index)
-{
-  VTKM_ASSERT(index == 0);
-  return value;
-}
-
-} // namespace detail
-
 /// \brief A value class for returning setable values of an ArrayPortal
 ///
 /// \c ArrayPortal classes have a pair of \c Get and \c Set methods that
@@ -350,12 +317,12 @@ struct ArrayPortalValueReference
   // cannot write components one at a time.
   VTKM_EXEC_CONT vtkm::IdComponent GetNumberOfComponents() const
   {
-    return detail::SafeGetNumberOfComponents(static_cast<ValueType>(*this));
+    return vtkm::VecTraits<ValueType>::GetNumberOfComponents(this->Get());
   }
-  VTKM_EXEC_CONT auto operator[](vtkm::IdComponent index) const
-    -> decltype(detail::SafeGetComponent(std::declval<ValueType>(), index))
+  VTKM_EXEC_CONT
+  typename vtkm::VecTraits<ValueType>::ComponentType operator[](vtkm::IdComponent index) const
   {
-    return detail::SafeGetComponent(static_cast<ValueType>(*this), index);
+    return vtkm::VecTraits<ValueType>::GetComponent(this->Get(), index);
   }
 
 private:

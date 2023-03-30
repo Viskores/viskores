@@ -2,7 +2,7 @@
 .ascent_gcc_cuda:
   variables:
     CCACHE_BASEDIR:       "/gpfs/wolf/"
-    CCACHE_DIR:           "/gpfs/wolf/proj-shared/csc331/vtk-m/ci/ccache/"
+    CCACHE_DIR:           "/gpfs/wolf/csc331/scratch/vbolea/ci/ccache"
     # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
     CCACHE_IGNOREOPTIONS: "-isystem=*"
     CCACHE_NOHASHDIR:     "true"
@@ -12,7 +12,7 @@
     CMAKE_BUILD_TYPE:     "RelWithDebInfo"
     CMAKE_GENERATOR:      "Ninja"
     CUDAHOSTCXX:          "g++"
-    CUSTOM_CI_BUILDS_DIR: "/gpfs/wolf/proj-shared/csc331/vtk-m/ci/runtime"
+    CUSTOM_CI_BUILDS_DIR: "/gpfs/wolf/csc331/scratch/vbolea/ci/vtk-m"
 
     VTKM_SETTINGS: cuda+ascent+ccache
     JOB_MODULES: >-
@@ -31,14 +31,18 @@
   module purge
   module load ${JOB_MODULES}
   module list
-  export PATH="/gpfs/wolf/proj-shared/csc331/vtk-m/ci/utils:$PATH"
+  export PATH="/gpfs/wolf/csc331/scratch/vbolea/ci/utils:$PATH"
 
 build:ascent_gcc_cuda:
   stage: build
-  tags: [olcf, ascent, nobatch]
+  tags: [olcf, ascent, batch]
   extends:
     - .ascent_gcc_cuda
     - .run_ascent_ci
+    - .cmake_build_artifacts
+  variables:
+    SCHEDULER_PARAMETERS: -P CSC331 -W 2:00 -nnodes 1 -alloc_flags smt1
+  timeout: 125 minutes
   before_script:
     - *setup_env_ecpci
     - ccache -z
@@ -51,14 +55,16 @@ build:ascent_gcc_cuda:
 
 
   script:
-    - CTEST_MAX_PARALLELISM=32 cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
+    # Each Ascent (Summit) node has 172 threads (43 cores). SMT1 is needed to
+    # avoid L1 cache pollution among different processes. Thus, using 40 cores
+    # seems a reasonable choice which leaves a couple of cores for system processes.
+    - CTEST_MAX_PARALLELISM=40 cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
     - ctest -VV -S .gitlab/ci/ctest_configure.cmake
-  artifacts:
-    expire_in: 24 hours
-    when: always
-    paths:
-      - build/
-  timeout: 10 minutes
+    - GITLAB_CI_EMULATION=1 jsrun -n1 -a1 -g1 -c40 -bpacked:40 ctest -VV -S .gitlab/ci/ctest_build.cmake
+  after_script:
+    - *setup_env_ecpci
+    - ccache -s
+    - ctest -VV -S .gitlab/ci/ctest_submit_build.cmake
 
 test:ascent_gcc_cuda:
   stage: test
@@ -72,17 +78,18 @@ test:ascent_gcc_cuda:
   dependencies:
     - build:ascent_gcc_cuda
   variables:
-    SCHEDULER_PARAMETERS: -P CSC331 -W 2:00 -nnodes 1 -alloc_flags gpudefault
+    # For tests we want to use a small number of proccesses, for some reason
+    # a higher parallelism number tend to results in test malfunctions.
+    CTEST_MAX_PARALLELISM: 4
     # We need this to skip ctest_submit from being run inside a jsrun job
     GITLAB_CI_EMULATION: 1
+    SCHEDULER_PARAMETERS: -P CSC331 -W 1:00 -nnodes 1 -alloc_flags gpudefault
+  timeout: 65 minutes
   before_script:
     - *setup_env_ecpci
   script:
-    - jsrun -n1 -a1 -g1 -c42 ctest -VV -S .gitlab/ci/ctest_build.cmake
-    - CTEST_MAX_PARALLELISM=4  jsrun -n1 -a1 -g1 -c8  ctest -VV -S .gitlab/ci/ctest_test.cmake
+    - cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
+    - jsrun -n1 -a1 -g1 -c1 ctest -VV -S .gitlab/ci/ctest_test.cmake
   after_script:
     - *setup_env_ecpci
-    - ccache -s
-    - ctest -VV -S .gitlab/ci/ctest_submit_build.cmake
     - ctest -VV -S .gitlab/ci/ctest_submit_test.cmake
-  timeout: 120 minutes

@@ -15,8 +15,6 @@
 #include <vtkm/cont/ArrayHandleStride.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 
-#include <vtkm/VecVariable.h>
-
 #include <vtkm/internal/ArrayPortalValueReference.h>
 
 namespace vtkm
@@ -89,7 +87,7 @@ public:
     return *this;
   }
 
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator=(const T& src)
   {
     this->DoCopy(src);
@@ -106,7 +104,7 @@ public:
     return result;
   }
 
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator+=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -117,7 +115,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator-=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -128,7 +126,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator*=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -139,7 +137,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator/=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -150,7 +148,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator%=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -161,7 +159,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator&=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -172,7 +170,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator|=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -183,7 +181,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator^=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -194,7 +192,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator>>=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -205,7 +203,7 @@ public:
     }
     return *this;
   }
-  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  template <typename T>
   VTKM_EXEC_CONT RecombineVec& operator<<=(const T& src)
   {
     using VTraits = vtkm::VecTraits<T>;
@@ -437,7 +435,7 @@ public:
   using ReadPortalType = vtkm::internal::ArrayPortalRecombineVec<ReadWritePortal>;
   using WritePortalType = vtkm::internal::ArrayPortalRecombineVec<ReadWritePortal>;
 
-  VTKM_CONT static vtkm::IdComponent NumberOfComponents(
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponents(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
     return static_cast<vtkm::IdComponent>(
@@ -455,7 +453,7 @@ public:
                                       vtkm::CopyFlag preserve,
                                       vtkm::cont::Token& token)
   {
-    vtkm::IdComponent numComponents = NumberOfComponents(buffers);
+    vtkm::IdComponent numComponents = GetNumberOfComponents(buffers);
     for (vtkm::IdComponent component = 0; component < numComponents; ++component)
     {
       SourceStorage::ResizeBuffers(
@@ -477,7 +475,7 @@ public:
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
   {
-    vtkm::IdComponent numComponents = NumberOfComponents(buffers);
+    vtkm::IdComponent numComponents = GetNumberOfComponents(buffers);
 
     // The array portal needs a runtime-allocated array of portals for each component.
     // We use the vtkm::cont::internal::Buffer object to allow us to allocate memory on the
@@ -515,7 +513,7 @@ public:
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
   {
-    vtkm::IdComponent numComponents = NumberOfComponents(buffers);
+    vtkm::IdComponent numComponents = GetNumberOfComponents(buffers);
 
     // The array portal needs a runtime-allocated array of portals for each component.
     // We use the vtkm::cont::internal::Buffer object to allow us to allocate memory on the
@@ -586,9 +584,13 @@ public:
 ///
 /// Note that caution should be used with `ArrayHandleRecombineVec` because the
 /// size of the `Vec` values is not known at compile time. Thus, the value
-/// type of this array is forced to a `VecVariable`, which can cause surprises
-/// if treated as a `Vec`. In particular, the static `NUM_COMPONENTS` expression
-/// does not exist.
+/// type of this array is forced to a special `RecombineVec` class that can cause
+/// surprises if treated as a `Vec`. In particular, the static `NUM_COMPONENTS`
+/// expression does not exist. Furthermore, new variables of type `RecombineVec`
+/// cannot be created. This means that simple operators like `+` will not work
+/// because they require an intermediate object to be created. (Equal operators
+/// like `+=` do work because they are given an existing variable to place the
+/// output.)
 ///
 template <typename ComponentType>
 class ArrayHandleRecombineVec
@@ -608,7 +610,7 @@ private:
 public:
   vtkm::IdComponent GetNumberOfComponents() const
   {
-    return StorageType::NumberOfComponents(this->GetBuffers());
+    return StorageType::GetNumberOfComponents(this->GetBuffers());
   }
 
   vtkm::cont::ArrayHandleStride<ComponentType> GetComponentArray(

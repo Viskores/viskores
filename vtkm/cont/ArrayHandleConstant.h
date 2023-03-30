@@ -12,6 +12,9 @@
 
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
+#include <vtkm/Range.h>
+#include <vtkm/VecFlat.h>
+
 namespace vtkm
 {
 namespace cont
@@ -90,6 +93,36 @@ vtkm::cont::ArrayHandleConstant<T> make_ArrayHandleConstant(T value, vtkm::Id nu
 {
   return vtkm::cont::ArrayHandleConstant<T>(value, numberOfValues);
 }
+
+namespace internal
+{
+
+template <typename S>
+struct ArrayRangeComputeImpl;
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagConstant>
+{
+  template <typename T>
+  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConstant>& input,
+    vtkm::cont::DeviceAdapterId) const
+  {
+    auto value = vtkm::make_VecFlat(input.ReadPortal().Get(0));
+
+    vtkm::cont::ArrayHandle<vtkm::Range> result;
+    result.Allocate(value.GetNumberOfComponents());
+    auto resultPortal = result.WritePortal();
+    for (vtkm::IdComponent index = 0; index < value.GetNumberOfComponents(); ++index)
+    {
+      resultPortal.Set(index, vtkm::Range{ value[index], value[index] });
+    }
+    return result;
+  }
+};
+
+} // namespace internal
+
 }
 } // vtkm::cont
 
