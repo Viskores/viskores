@@ -145,7 +145,6 @@ protected:
     vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
       this->Comm, useAsync, this->BoundsMap, 1, 128);
 
-    messenger.Log << "Begin" << std::endl;
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfoType>> workerResults;
@@ -157,8 +156,6 @@ protected:
         for (auto& r : it.second)
           numTerm += this->UpdateResult(r.Get<DSIHelperInfo<ParticleType>>());
       }
-      messenger.Log << " Advected: " << workerResults.size() << " numTerm= " << numTerm
-                    << std::endl;
 
       vtkm::Id numTermMessages = 0;
       this->Communicate(messenger, numTerm, numTermMessages);
@@ -168,7 +165,6 @@ protected:
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
 
-    messenger.Log << "DONE" << std::endl;
     //Let the workers know that we are done.
     this->SetDone();
   }

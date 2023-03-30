@@ -43,8 +43,6 @@ Messenger::Messenger(vtkmdiy::mpi::communicator& comm, bool useAsyncComm)
 Messenger::Messenger(vtkmdiy::mpi::communicator& vtkmNotUsed(comm), bool vtkmNotUsed(useAsyncComm))
 #endif
 {
-  std::string fname = "out." + std::to_string(this->Rank) + ".log";
-  this->Log.open(fname, std::ofstream::out);
 }
 
 #ifdef VTKM_ENABLE_MPI
@@ -274,9 +272,6 @@ void Messenger::SendDataAsync(int dst, int tag, const vtkmdiy::MemoryBuffer& buf
 
 void Messenger::SendDataSync(int dst, int tag, vtkmdiy::MemoryBuffer& buff)
 {
-  this->Log << "  SendDataSync: sendTo= " << dst << " tag= " << tag << " sz= " << buff.size()
-            << std::endl;
-
   auto entry = std::make_pair(dst, std::move(buff));
   auto it = this->SyncSendBuffers.find(tag);
   if (it == this->SyncSendBuffers.end())
@@ -289,7 +284,6 @@ void Messenger::SendDataSync(int dst, int tag, vtkmdiy::MemoryBuffer& buff)
     it->second.emplace_back(std::move(entry));
 
   it = this->SyncSendBuffers.find(tag);
-  this->Log << "  SendDataSync: SyncSendBuffs[tag] = " << it->second.size() << std::endl;
 }
 
 bool Messenger::RecvDataAsync(const std::set<int>& tags,
@@ -331,7 +325,6 @@ bool Messenger::RecvDataSync(const std::set<int>& tags,
                              bool blockAndWait)
 {
   buffers.resize(0);
-  this->Log << "   RecvDataSync: block= " << blockAndWait << std::endl;
   if (!blockAndWait)
     return false;
 
@@ -363,16 +356,12 @@ bool Messenger::RecvDataSync(const std::set<int>& tags,
     if (err != MPI_SUCCESS)
       throw vtkm::cont::ErrorFilterExecution("Error in MPI_Isend inside Messenger::RecvDataSync");
 
-    this->Log << "    tag= " << tag << std::endl;
-    this->Log << "    numMessages= " << numMessages << std::endl;
-    this->Log << "    maxBuffSize= " << maxBuffSize << std::endl;
     MPI_Status status;
     std::vector<char> recvBuff;
     for (int r = 0; r < this->NumRanks; r++)
     {
       int numMsgs = numMessages[r];
 
-      this->Log << "     R= " << r << " nMsgs= " << numMsgs << std::endl;
       if (numMsgs == 0)
         continue;
 
@@ -383,15 +372,12 @@ bool Messenger::RecvDataSync(const std::set<int>& tags,
         recvBuff.resize(maxSz);
         for (int n = 0; n < numMsgs; n++)
         {
-          this->Log << "     Recv " << n << " of " << numMsgs << " sz= " << maxSz << std::endl;
           err =
             MPI_Recv(recvBuff.data(), maxSz, MPI_BYTE, MPI_ANY_SOURCE, 0, this->MPIComm, &status);
           if (err != MPI_SUCCESS)
             throw vtkm::cont::ErrorFilterExecution(
               "Error in MPI_Recv inside Messenger::RecvDataSync");
-          this->Log << "     Recv " << n << " of " << numMsgs << " sz= " << maxSz << std::endl;
-          this->Log << "     Recv complete: " << status.MPI_SOURCE << " " << status.MPI_TAG << " "
-                    << status.MPI_ERROR << std::endl;
+
           std::pair<int, vtkmdiy::MemoryBuffer> entry;
           entry.first = tag;
           entry.second.buffer = recvBuff;
@@ -403,13 +389,10 @@ bool Messenger::RecvDataSync(const std::set<int>& tags,
         if (it != this->SyncSendBuffers.end())
         {
           //it = <tag, <dst,buffer>>
-          this->Log << "     Send to: " << r << " I have " << it->second.size() << std::endl;
           for (const auto& dst_buff : it->second)
           {
-            this->Log << "      SendDst= " << dst_buff.first << std::endl;
             if (dst_buff.first == r)
             {
-              this->Log << "      Send to " << r << " sz= " << dst_buff.second.size() << std::endl;
               err = MPI_Send(dst_buff.second.buffer.data(),
                              dst_buff.second.size(),
                              MPI_BYTE,
@@ -419,7 +402,6 @@ bool Messenger::RecvDataSync(const std::set<int>& tags,
               if (err != MPI_SUCCESS)
                 throw vtkm::cont::ErrorFilterExecution(
                   "Error in MPI_Send inside Messenger::RecvDataSync");
-              this->Log << "      Send complete" << std::endl;
             }
           }
         }
@@ -431,10 +413,7 @@ bool Messenger::RecvDataSync(const std::set<int>& tags,
       this->SyncSendBuffers.erase(it);
   }
 
-  this->Log << "    Barrier Begin" << std::endl;
   MPI_Barrier(this->MPIComm);
-  this->Log << "    Barrier End" << std::endl;
-  this->Log << "    buffers.size() = " << buffers.size() << std::endl;
 
   return !buffers.empty();
 }

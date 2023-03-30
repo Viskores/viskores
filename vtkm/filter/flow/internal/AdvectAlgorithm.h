@@ -99,22 +99,18 @@ public:
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
     this->ComputeTotalNumParticles(nLocal);
 
-    messenger.Log << "Begin" << std::endl;
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
-      messenger.Log << " TotNumTerminated= " << this->TotalNumTerminatedParticles << std::endl;
       std::vector<ParticleType> v;
       vtkm::Id numTerm = 0, blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
-        messenger.Log << " Advect " << v.size() << " in block " << blockId << std::endl;
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfoType bb =
           DSIHelperInfo<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
         block.Advect(bb, this->StepSize, this->NumberOfSteps);
         numTerm = this->UpdateResult(bb.Get<DSIHelperInfo<ParticleType>>());
-        messenger.Log << " numTerm=  " << numTerm << std::endl;
       }
 
       vtkm::Id numTermMessages = 0;
@@ -124,7 +120,6 @@ public:
       if (this->TotalNumTerminatedParticles > this->TotalNumParticles)
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
-    messenger.Log << "Done" << std::endl;
   }
 
 
@@ -204,8 +199,6 @@ public:
     numTermMessages = 0;
     bool block = this->GetBlockAndWait(messenger.UsingSyncCommunication(), numLocalTerminations);
 
-    messenger.Log << " Communicate: AI= " << this->Active.size() << " " << this->Inactive.size()
-                  << " localTerm= " << numLocalTerminations << " Block= " << block << std::endl;
     messenger.Exchange(this->Inactive,
                        this->ParticleBlockIDsMap,
                        numLocalTerminations,
@@ -217,8 +210,6 @@ public:
 
     this->Inactive.clear();
     this->UpdateActive(incoming, incomingIDs);
-    messenger.Log << " Communicate Done: AI= " << this->Active.size() << " "
-                  << this->Inactive.size() << " numTermMsg= " << numTermMessages << std::endl;
   }
 
   virtual void UpdateActive(const std::vector<ParticleType>& particles,

@@ -33,27 +33,6 @@ namespace flow
 namespace internal
 {
 
-#ifdef NDEBUG
-namespace
-{
-struct NullStream
-{
-  void open(const std::string&, std::ios_base::openmode) {}
-};
-
-template <typename T>
-NullStream& operator<<(NullStream& s, T const&)
-{
-  return s;
-}
-NullStream& operator<<(NullStream& s, std::ostream&(std::ostream&))
-{
-  return s;
-}
-}
-#endif
-
-
 class VTKM_FILTER_FLOW_EXPORT Messenger
 {
 public:
@@ -73,12 +52,6 @@ public:
 
   bool UsingSyncCommunication() const { return !this->UsingAsyncCommunication(); }
   bool UsingAsyncCommunication() const { return this->UseAsynchronousCommunication; }
-
-#ifdef NDEBUG
-  NullStream Log;
-#else
-  std::ofstream Log;
-#endif
 
 protected:
   static std::size_t CalcMessageBufferSize(std::size_t msgSz);
