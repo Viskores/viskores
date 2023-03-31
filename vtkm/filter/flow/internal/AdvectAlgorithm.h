@@ -197,7 +197,11 @@ public:
     std::vector<ParticleType> incoming;
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingIDs;
     numTermMessages = 0;
-    bool block = this->GetBlockAndWait(messenger.UsingSyncCommunication(), numLocalTerminations);
+
+    bool block = false;
+#ifdef VTKM_ENABLE_MPI
+    block = this->GetBlockAndWait(messenger.UsingSyncCommunication(), numLocalTerminations);
+#endif
 
     messenger.Exchange(this->Inactive,
                        this->ParticleBlockIDsMap,
@@ -206,7 +210,6 @@ public:
                        incomingIDs,
                        numTermMessages,
                        block);
-    //this->GetBlockAndWait(messenger.UsingSyncCommunication(), numLocalTerminations));
 
     this->Inactive.clear();
     this->UpdateActive(incoming, incomingIDs);
