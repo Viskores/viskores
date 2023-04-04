@@ -75,7 +75,7 @@ constexpr std::size_t MaxSizeOf()
 #endif
 
 // --------------------------------------------------------------------------------
-// Placeholder for a fullly used structure of the given type.
+// Placeholder for a fully used structure of the given type.
 template <std::size_t Size, bool = (Size > 8)>
 struct SizedPlaceholder
 {
