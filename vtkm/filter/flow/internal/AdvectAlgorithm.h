@@ -29,11 +29,14 @@ template <typename DSIType, template <typename> class ResultType, typename Parti
 class AdvectAlgorithm
 {
 public:
-  AdvectAlgorithm(const vtkm::filter::flow::internal::BoundsMap& bm, std::vector<DSIType>& blocks)
+  AdvectAlgorithm(const vtkm::filter::flow::internal::BoundsMap& bm,
+                  std::vector<DSIType>& blocks,
+                  bool useAsyncComm)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumRanks(this->Comm.size())
     , Rank(this->Comm.rank())
+    , UseAsynchronousCommunication(useAsyncComm)
   {
   }
 
@@ -91,7 +94,7 @@ public:
   virtual void Go()
   {
     vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
-      this->Comm, this->BoundsMap, 1, 128);
+      this->Comm, this->UseAsynchronousCommunication, this->BoundsMap, 1, 128);
 
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
     this->ComputeTotalNumParticles(nLocal);
@@ -194,13 +197,19 @@ public:
     std::vector<ParticleType> incoming;
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingIDs;
     numTermMessages = 0;
+
+    bool block = false;
+#ifdef VTKM_ENABLE_MPI
+    block = this->GetBlockAndWait(messenger.UsingSyncCommunication(), numLocalTerminations);
+#endif
+
     messenger.Exchange(this->Inactive,
                        this->ParticleBlockIDsMap,
                        numLocalTerminations,
                        incoming,
                        incomingIDs,
                        numTermMessages,
-                       this->GetBlockAndWait(numLocalTerminations));
+                       block);
 
     this->Inactive.clear();
     this->UpdateActive(incoming, incomingIDs);
@@ -245,20 +254,29 @@ public:
     return numTerm;
   }
 
-  virtual bool GetBlockAndWait(const vtkm::Id& numLocalTerm)
+
+  virtual bool GetBlockAndWait(const bool& syncComm, const vtkm::Id& numLocalTerm)
   {
-    //There are only two cases where blocking would deadlock.
-    //1. There are active particles.
-    //2. numLocalTerm + this->TotalNumberOfTerminatedParticles == this->TotalNumberOfParticles
-    //So, if neither are true, we can safely block and wait for communication to come in.
+    bool haveNoWork = this->Active.empty() && this->Inactive.empty();
 
-    if (this->Active.empty() && this->Inactive.empty() &&
-        (numLocalTerm + this->TotalNumTerminatedParticles < this->TotalNumParticles))
+    //Using syncronous communication we should only block and wait if we have no particles
+    if (syncComm)
     {
-      return true;
+      return haveNoWork;
     }
+    else
+    {
+      //Otherwise, for asyncronous communication, there are only two cases where blocking would deadlock.
+      //1. There are active particles.
+      //2. numLocalTerm + this->TotalNumberOfTerminatedParticles == this->TotalNumberOfParticles
+      //So, if neither are true, we can safely block and wait for communication to come in.
 
-    return false;
+      if (haveNoWork &&
+          (numLocalTerm + this->TotalNumTerminatedParticles < this->TotalNumParticles))
+        return true;
+
+      return false;
+    }
   }
 
   //Member data
@@ -274,6 +292,7 @@ public:
   vtkm::FloatDefault StepSize;
   vtkm::Id TotalNumParticles = 0;
   vtkm::Id TotalNumTerminatedParticles = 0;
+  bool UseAsynchronousCommunication = true;
 };
 
 }

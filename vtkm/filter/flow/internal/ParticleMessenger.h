@@ -44,6 +44,7 @@ class VTKM_FILTER_FLOW_EXPORT ParticleMessenger : public vtkm::filter::flow::int
 
 public:
   VTKM_CONT ParticleMessenger(vtkmdiy::mpi::communicator& comm,
+                              bool useAsyncComm,
                               const vtkm::filter::flow::internal::BoundsMap& bm,
                               int msgSz = 1,
                               int numParticles = 128,
@@ -111,11 +112,12 @@ VTKM_CONT
 template <typename ParticleType>
 ParticleMessenger<ParticleType>::ParticleMessenger(
   vtkmdiy::mpi::communicator& comm,
+  bool useAsyncComm,
   const vtkm::filter::flow::internal::BoundsMap& boundsMap,
   int msgSz,
   int numParticles,
   int numBlockIds)
-  : Messenger(comm)
+  : Messenger(comm, useAsyncComm)
 #ifdef VTKM_ENABLE_MPI
   , BoundsMap(boundsMap)
 #endif

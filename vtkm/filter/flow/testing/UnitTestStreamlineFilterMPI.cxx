@@ -51,16 +51,21 @@ void SetFilter(FilterType& filter,
                vtkm::Id numSteps,
                const std::string& fieldName,
                vtkm::cont::ArrayHandle<vtkm::Particle> seedArray,
-               bool useThreaded)
+               bool useThreaded,
+               bool useAsyncComm)
 {
   filter.SetStepSize(stepSize);
   filter.SetNumberOfSteps(numSteps);
   filter.SetSeeds(seedArray);
   filter.SetActiveField(fieldName);
   filter.SetUseThreadedAlgorithm(useThreaded);
+  if (useAsyncComm)
+    filter.SetUseAsynchronousCommunication();
+  else
+    filter.SetUseSynchronousCommunication();
 }
 
-void TestAMRStreamline(FilterType fType, bool useThreaded)
+void TestAMRStreamline(FilterType fType, bool useThreaded, bool useAsyncComm)
 {
   switch (fType)
   {
@@ -76,6 +81,10 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
   }
   if (useThreaded)
     std::cout << " - using threaded";
+  if (useAsyncComm)
+    std::cout << " - usingAsyncComm";
+  else
+    std::cout << " - usingSyncComm";
   std::cout << " - on an AMR data set" << std::endl;
 
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
@@ -152,13 +161,13 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
       if (fType == STREAMLINE)
       {
         vtkm::filter::flow::Streamline streamline;
-        SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+        SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded, useAsyncComm);
         out = streamline.Execute(pds);
       }
       else if (fType == PATHLINE)
       {
         vtkm::filter::flow::Pathline pathline;
-        SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+        SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, useAsyncComm);
         //Create timestep 2
         auto pds2 = vtkm::cont::PartitionedDataSet(pds);
         pathline.SetPreviousTime(0);
@@ -285,8 +294,8 @@ void ValidateOutput(const vtkm::cont::DataSet& out,
                    "Wrong number of coordinate systems in the output dataset");
 
   vtkm::cont::UnknownCellSet dcells = out.GetCellSet();
-  out.PrintSummary(std::cout);
-  std::cout << " nSeeds= " << numSeeds << std::endl;
+  //out.PrintSummary(std::cout);
+  //std::cout << " nSeeds= " << numSeeds << std::endl;
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
   auto coords = out.GetCoordinateSystem().GetDataAsMultiplexer();
   auto ptPortal = coords.ReadPortal();
@@ -314,7 +323,11 @@ void ValidateOutput(const vtkm::cont::DataSet& out,
   }
 }
 
-void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, bool useThreaded)
+void TestPartitionedDataSet(vtkm::Id nPerRank,
+                            bool useGhost,
+                            FilterType fType,
+                            bool useThreaded,
+                            bool useAsyncComm)
 {
   switch (fType)
   {
@@ -332,6 +345,10 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
     std::cout << " - using ghost cells";
   if (useThreaded)
     std::cout << " - using threaded";
+  if (useAsyncComm)
+    std::cout << " - usingAsyncComm";
+  else
+    std::cout << " - usingSyncComm";
   std::cout << " - on a partitioned data set" << std::endl;
 
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
@@ -397,7 +414,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
     if (fType == STREAMLINE)
     {
       vtkm::filter::flow::Streamline streamline;
-      SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+      SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded, useAsyncComm);
       auto out = streamline.Execute(pds);
 
       for (vtkm::Id i = 0; i < nPerRank; i++)
@@ -406,7 +423,8 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
     else if (fType == PARTICLE_ADVECTION)
     {
       vtkm::filter::flow::ParticleAdvection particleAdvection;
-      SetFilter(particleAdvection, stepSize, numSteps, fieldName, seedArray, useThreaded);
+      SetFilter(
+        particleAdvection, stepSize, numSteps, fieldName, seedArray, useThreaded, useAsyncComm);
       auto out = particleAdvection.Execute(pds);
 
       //Particles end up in last rank.
@@ -424,7 +442,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
       AddVectorFields(pds2, fieldName, vecX);
 
       vtkm::filter::flow::Pathline pathline;
-      SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+      SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, useAsyncComm);
 
       pathline.SetPreviousTime(time0);
       pathline.SetNextTime(time1);
@@ -441,18 +459,33 @@ void TestStreamlineFiltersMPI()
 {
   std::vector<bool> flags = { true, false };
   std::vector<FilterType> filterTypes = { PARTICLE_ADVECTION, STREAMLINE, PATHLINE };
+  //filterTypes = {filterTypes[1]};
+  //flags = {false};
 
+  //TestPartitionedDataSet(1, false, PARTICLE_ADVECTION, true);
+
+  //TestPartitionedDataSet(1, false, PARTICLE_ADVECTION, true, true);
+  //return;
+
+  auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)
       for (auto fType : filterTypes)
         for (auto useThreaded : flags)
-          TestPartitionedDataSet(n, useGhost, fType, useThreaded);
+          for (auto useAsyncComm : flags)
+          {
+            TestPartitionedDataSet(n, useGhost, fType, useThreaded, useAsyncComm);
+          }
   }
 
+  //streamline, threaded will sometimes hang.
   for (auto fType : filterTypes)
     for (auto useThreaded : flags)
-      TestAMRStreamline(fType, useThreaded);
+      for (auto useAsyncComm : flags)
+      {
+        TestAMRStreamline(fType, useThreaded, useAsyncComm);
+      }
 }
 }
 
