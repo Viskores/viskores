@@ -98,7 +98,7 @@ public:
   VTKM_EXEC_CONT
   iter& operator-=(difference_type n)
   {
-    this->Index += static_cast<vtkm::Id>(n);
+    this->Index -= static_cast<vtkm::Id>(n);
     VTKM_ASSERT(this->Index >= 0);
     return *this;
   }

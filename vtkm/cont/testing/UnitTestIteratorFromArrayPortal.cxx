@@ -11,6 +11,7 @@
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
 #include <vtkm/VecTraits.h>
+#include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -115,6 +116,74 @@ struct TemplatedTests
                      "Did not get correct values when writing to iterator.");
   }
 
+  void TestOperators()
+  {
+    struct Functor
+    {
+      VTKM_EXEC ValueType operator()(vtkm::Id index) const { return TestValue(index, ValueType{}); }
+    };
+    Functor functor;
+
+    auto array = vtkm::cont::make_ArrayHandleImplicit(functor, ARRAY_SIZE);
+    auto portal = array.ReadPortal();
+
+    VTKM_TEST_ASSERT(test_equal(portal.Get(0), functor(0)));
+    ::CheckPortal(portal);
+
+    // Normally, you would use `ArrayPortalToIterators`, but we want to test this
+    // class specifically.
+    using IteratorType = vtkm::cont::internal::IteratorFromArrayPortal<decltype(portal)>;
+    IteratorType begin{ portal };
+    IteratorType end{ portal, ARRAY_SIZE };
+
+    VTKM_TEST_ASSERT(test_equal(*begin, functor(0)));
+    VTKM_TEST_ASSERT(test_equal(begin[0], functor(0)));
+    VTKM_TEST_ASSERT(test_equal(begin[3], functor(3)));
+
+    IteratorType iter = begin;
+    VTKM_TEST_ASSERT(test_equal(*iter, functor(0)));
+    VTKM_TEST_ASSERT(test_equal(*(iter++), functor(0)));
+    VTKM_TEST_ASSERT(test_equal(*iter, functor(1)));
+    VTKM_TEST_ASSERT(test_equal(*(++iter), functor(2)));
+    VTKM_TEST_ASSERT(test_equal(*iter, functor(2)));
+
+    VTKM_TEST_ASSERT(test_equal(*(iter--), functor(2)));
+    VTKM_TEST_ASSERT(test_equal(*iter, functor(1)));
+    VTKM_TEST_ASSERT(test_equal(*(--iter), functor(0)));
+    VTKM_TEST_ASSERT(test_equal(*iter, functor(0)));
+
+    VTKM_TEST_ASSERT(test_equal(*(iter += 3), functor(3)));
+    VTKM_TEST_ASSERT(test_equal(*(iter -= 3), functor(0)));
+
+    VTKM_TEST_ASSERT(end - begin == ARRAY_SIZE);
+
+    VTKM_TEST_ASSERT(test_equal(*(iter + 3), functor(3)));
+    VTKM_TEST_ASSERT(test_equal(*(3 + iter), functor(3)));
+    iter += 3;
+    VTKM_TEST_ASSERT(test_equal(*(iter - 3), functor(0)));
+
+    VTKM_TEST_ASSERT(iter == (begin + 3));
+    VTKM_TEST_ASSERT(!(iter != (begin + 3)));
+    VTKM_TEST_ASSERT(iter != begin);
+    VTKM_TEST_ASSERT(!(iter == begin));
+
+    VTKM_TEST_ASSERT(!(iter < begin));
+    VTKM_TEST_ASSERT(!(iter < (begin + 3)));
+    VTKM_TEST_ASSERT((iter < end));
+
+    VTKM_TEST_ASSERT(!(iter <= begin));
+    VTKM_TEST_ASSERT((iter <= (begin + 3)));
+    VTKM_TEST_ASSERT((iter <= end));
+
+    VTKM_TEST_ASSERT((iter > begin));
+    VTKM_TEST_ASSERT(!(iter > (begin + 3)));
+    VTKM_TEST_ASSERT(!(iter > end));
+
+    VTKM_TEST_ASSERT((iter >= begin));
+    VTKM_TEST_ASSERT((iter >= (begin + 3)));
+    VTKM_TEST_ASSERT(!(iter >= end));
+  }
+
   void operator()()
   {
     ValueType array[ARRAY_SIZE];
@@ -133,6 +202,9 @@ struct TemplatedTests
 
     std::cout << "  Test write to iterator." << std::endl;
     TestIteratorWrite(portal);
+
+    std::cout << "  Test operators." << std::endl;
+    TestOperators();
   }
 };
 
