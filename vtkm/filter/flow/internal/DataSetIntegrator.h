@@ -42,16 +42,63 @@ public:
                 const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& particleBlockIDsMap)
     : BoundsMap(boundsMap)
     , ParticleBlockIDsMap(particleBlockIDsMap)
-    , V(v)
+    , Particles(v)
   {
+  }
+
+  struct ParticleBlockIds
+  {
+    void Clear()
+    {
+      this->Particles.clear();
+      this->BlockIDs.clear();
+    }
+
+    void Add(const ParticleType& p, const std::vector<vtkm::Id>& bids)
+    {
+      this->Particles.emplace_back(p);
+      this->BlockIDs[p.GetID()] = std::move(bids);
+    }
+
+    std::vector<ParticleType> Particles;
+    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> BlockIDs;
+  };
+
+  void Clear()
+  {
+    this->InBounds.Clear();
+    this->OutOfBounds.Clear();
+    this->TermIdx.clear();
+    this->TermID.clear();
+  }
+
+  void Validate(vtkm::Id num)
+  {
+#ifndef NDEBUG
+    //Make sure we didn't miss anything. Every particle goes into a single bucket.
+    VTKM_ASSERT(static_cast<std::size_t>(num) ==
+                (this->InBounds.Particles.size() + this->OutOfBounds.Particles.size() +
+                 this->TermIdx.size()));
+    VTKM_ASSERT(this->InBounds.Particles.size() == this->InBounds.BlockIDs.size());
+    VTKM_ASSERT(this->OutOfBounds.Particles.size() == this->OutOfBounds.BlockIDs.size());
+    VTKM_ASSERT(this->TermIdx.size() == this->TermID.size());
+#endif
+  }
+
+  void AddTerminated(vtkm::Id idx, vtkm::Id pID)
+  {
+    this->TermIdx.emplace_back(idx);
+    this->TermID.emplace_back(pID);
   }
 
   const vtkm::filter::flow::internal::BoundsMap BoundsMap;
   const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
 
-  std::vector<ParticleType> A, I, V;
-  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> IdMapA, IdMapI;
-  std::vector<vtkm::Id> TermIdx, TermID;
+  ParticleBlockIds InBounds;
+  ParticleBlockIds OutOfBounds;
+  std::vector<ParticleType> Particles;
+  std::vector<vtkm::Id> TermID;
+  std::vector<vtkm::Id> TermIdx;
 };
 
 using DSIHelperInfoType =
@@ -147,12 +194,13 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
   const vtkm::cont::ArrayHandle<ParticleType>& particles,
   DSIHelperInfo<ParticleType>& dsiInfo) const
 {
-  dsiInfo.A.clear();
-  dsiInfo.I.clear();
-  dsiInfo.TermID.clear();
-  dsiInfo.TermIdx.clear();
-  dsiInfo.IdMapI.clear();
-  dsiInfo.IdMapA.clear();
+  /*
+ each particle: --> T,I,A
+ if T: update TermIdx, TermID
+ if A: update IdMapA;
+ if I: update IdMapI;
+   */
+  dsiInfo.Clear();
 
   auto portal = particles.WritePortal();
   vtkm::Id n = portal.GetNumberOfValues();
@@ -161,13 +209,15 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
   {
     auto p = portal.Get(i);
 
+    //Terminated.
     if (p.GetStatus().CheckTerminate())
     {
-      dsiInfo.TermIdx.emplace_back(i);
-      dsiInfo.TermID.emplace_back(p.GetID());
+      dsiInfo.AddTerminated(i, p.GetID());
     }
     else
     {
+      //Didn't terminate.
+      //Get the blockIDs.
       const auto& it = dsiInfo.ParticleBlockIDsMap.find(p.GetID());
       VTKM_ASSERT(it != dsiInfo.ParticleBlockIDsMap.end());
       auto currBIDs = it->second;
@@ -175,9 +225,17 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
 
       std::vector<vtkm::Id> newIDs;
       if (p.GetStatus().CheckSpatialBounds() && !p.GetStatus().CheckTookAnySteps())
+      {
+        //particle is OUTSIDE but didn't take any steps.
+        //this means that the particle wasn't in the block.
+        //assign newIDs to currBIDs[1:]
         newIDs.assign(std::next(currBIDs.begin(), 1), currBIDs.end());
+      }
       else
+      {
+        //Otherwise, get new blocks from the current position.
         newIDs = dsiInfo.BoundsMap.FindBlocks(p.GetPosition(), currBIDs);
+      }
 
       //reset the particle status.
       p.GetStatus() = vtkm::ParticleStatus();
@@ -185,19 +243,19 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
       if (newIDs.empty()) //No blocks, we're done.
       {
         p.GetStatus().SetTerminate();
-        dsiInfo.TermIdx.emplace_back(i);
-        dsiInfo.TermID.emplace_back(p.GetID());
+        dsiInfo.AddTerminated(i, p.GetID());
       }
       else
       {
-        //If we have more than blockId, we want to minimize communication
+        //If we have more than one blockId, we want to minimize communication
         //and put any blocks owned by this rank first.
         if (newIDs.size() > 1)
         {
           for (auto idit = newIDs.begin(); idit != newIDs.end(); idit++)
           {
             vtkm::Id bid = *idit;
-            if (dsiInfo.BoundsMap.FindRank(bid) == this->Rank)
+            auto ranks = dsiInfo.BoundsMap.FindRank(bid);
+            if (std::find(ranks.begin(), ranks.end(), this->Rank) != ranks.end())
             {
               newIDs.erase(idit);
               newIDs.insert(newIDs.begin(), bid);
@@ -206,26 +264,14 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
           }
         }
 
-        int dstRank = dsiInfo.BoundsMap.FindRank(newIDs[0]);
-        if (dstRank == this->Rank)
-        {
-          dsiInfo.A.emplace_back(p);
-          dsiInfo.IdMapA[p.GetID()] = newIDs;
-        }
-        else
-        {
-          dsiInfo.I.emplace_back(p);
-          dsiInfo.IdMapI[p.GetID()] = newIDs;
-        }
+        dsiInfo.OutOfBounds.Add(p, newIDs);
       }
-      portal.Set(i, p);
     }
+    portal.Set(i, p);
   }
 
-  //Make sure we didn't miss anything. Every particle goes into a single bucket.
-  VTKM_ASSERT(static_cast<std::size_t>(n) ==
-              (dsiInfo.A.size() + dsiInfo.I.size() + dsiInfo.TermIdx.size()));
-  VTKM_ASSERT(dsiInfo.TermIdx.size() == dsiInfo.TermID.size());
+  //Make sure everything is copacetic.
+  dsiInfo.Validate(n);
 }
 
 template <typename Derived>

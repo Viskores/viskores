@@ -51,6 +51,7 @@ public:
   VTKM_CONT ~ParticleMessenger() {}
 
   VTKM_CONT void Exchange(const std::vector<ParticleType>& outData,
+                          const std::vector<vtkm::Id>& outRanks,
                           const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
                           vtkm::Id numLocalTerm,
                           std::vector<ParticleType>& inData,
@@ -96,6 +97,7 @@ protected:
 
   VTKM_CONT void SerialExchange(
     const std::vector<ParticleType>& outData,
+    const std::vector<vtkm::Id>& outRanks,
     const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
     vtkm::Id numLocalTerm,
     std::vector<ParticleType>& inData,
@@ -166,6 +168,7 @@ VTKM_CONT
 template <typename ParticleType>
 void ParticleMessenger<ParticleType>::SerialExchange(
   const std::vector<ParticleType>& outData,
+  const std::vector<vtkm::Id>& vtkmNotUsed(outRanks),
   const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
   vtkm::Id vtkmNotUsed(numLocalTerm),
   std::vector<ParticleType>& inData,
@@ -184,6 +187,7 @@ VTKM_CONT
 template <typename ParticleType>
 void ParticleMessenger<ParticleType>::Exchange(
   const std::vector<ParticleType>& outData,
+  const std::vector<vtkm::Id>& outRanks,
   const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
   vtkm::Id numLocalTerm,
   std::vector<ParticleType>& inData,
@@ -191,23 +195,25 @@ void ParticleMessenger<ParticleType>::Exchange(
   vtkm::Id& numTerminateMessages,
   bool blockAndWait)
 {
+  VTKM_ASSERT(outData.size() == outRanks.size());
+
   numTerminateMessages = 0;
   inDataBlockIDsMap.clear();
 
   if (this->GetNumRanks() == 1)
     return this->SerialExchange(
-      outData, outBlockIDsMap, numLocalTerm, inData, inDataBlockIDsMap, blockAndWait);
+      outData, outRanks, outBlockIDsMap, numLocalTerm, inData, inDataBlockIDsMap, blockAndWait);
 
 #ifdef VTKM_ENABLE_MPI
 
   //dstRank, vector of (particles,blockIDs)
   std::unordered_map<int, std::vector<ParticleCommType>> sendData;
 
-  for (const auto& p : outData)
+  std::size_t numP = outData.size();
+  for (std::size_t i = 0; i < numP; i++)
   {
-    const auto& bids = outBlockIDsMap.find(p.GetID())->second;
-    int dstRank = this->BoundsMap.FindRank(bids[0]);
-    sendData[dstRank].emplace_back(std::make_pair(p, bids));
+    const auto& bids = outBlockIDsMap.find(outData[i].GetID())->second;
+    sendData[outRanks[i]].emplace_back(std::make_pair(outData[i], bids));
   }
 
   //Do all the sends first.

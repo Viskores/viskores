@@ -53,6 +53,12 @@ public:
     this->Seeds = vtkm::cont::make_ArrayHandle(seeds, copyFlag);
   }
 
+  VTKM_CONT void SetBlockIDs(const std::vector<vtkm::Id>& blockIds)
+  {
+    this->BlockIds = blockIds;
+    this->BlockIdsSet = true;
+  }
+
   VTKM_CONT
   void SetSolverRK4() { this->SolverType = vtkm::filter::flow::IntegrationSolverType::RK4_TYPE; }
 
@@ -90,6 +96,8 @@ protected:
 
   VTKM_CONT virtual vtkm::filter::flow::FlowResultType GetResultType() const = 0;
 
+  bool BlockIdsSet = false;
+  std::vector<vtkm::Id> BlockIds;
   vtkm::Id NumberOfSteps = 0;
   vtkm::cont::UnknownArrayHandle Seeds;
   vtkm::filter::flow::IntegrationSolverType SolverType =

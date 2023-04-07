@@ -83,7 +83,12 @@ VTKM_CONT vtkm::cont::PartitionedDataSet FilterParticleAdvectionSteadyState::DoE
     variant.Emplace<DSIType::ElectroMagneticFieldNameType>(electric, magnetic);
   }
 
-  vtkm::filter::flow::internal::BoundsMap boundsMap(input);
+  vtkm::filter::flow::internal::BoundsMap boundsMap;
+  if (this->BlockIdsSet)
+    boundsMap = vtkm::filter::flow::internal::BoundsMap(input, this->BlockIds);
+  else
+    boundsMap = vtkm::filter::flow::internal::BoundsMap(input);
+
   auto dsi = CreateDataSetIntegrators(
     input, variant, boundsMap, this->SolverType, this->VecFieldType, this->GetResultType());
 

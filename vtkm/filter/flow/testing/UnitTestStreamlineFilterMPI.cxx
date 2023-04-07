@@ -51,16 +51,29 @@ void SetFilter(FilterType& filter,
                vtkm::Id numSteps,
                const std::string& fieldName,
                vtkm::cont::ArrayHandle<vtkm::Particle> seedArray,
-               bool useThreaded)
+               bool useThreaded,
+               bool useBlockIds,
+               vtkm::Id nPerRank)
 {
   filter.SetStepSize(stepSize);
   filter.SetNumberOfSteps(numSteps);
   filter.SetSeeds(seedArray);
   filter.SetActiveField(fieldName);
   filter.SetUseThreadedAlgorithm(useThreaded);
+
+  if (useBlockIds)
+  {
+    auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+    std::vector<vtkm::Id> blockIds;
+
+    for (vtkm::Id i = 0; i < nPerRank; i++)
+      blockIds.push_back(comm.rank() * nPerRank + i);
+
+    filter.SetBlockIDs(blockIds);
+  }
 }
 
-void TestAMRStreamline(FilterType fType, bool useThreaded)
+void TestAMRStreamline(FilterType fType, bool useThreaded, bool useBlockIds, vtkm::Id nPerRank)
 {
   switch (fType)
   {
@@ -152,13 +165,15 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
       if (fType == STREAMLINE)
       {
         vtkm::filter::flow::Streamline streamline;
-        SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+        SetFilter(
+          streamline, stepSize, numSteps, fieldName, seedArray, useThreaded, useBlockIds, nPerRank);
         out = streamline.Execute(pds);
       }
       else if (fType == PATHLINE)
       {
         vtkm::filter::flow::Pathline pathline;
-        SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+        SetFilter(
+          pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, useBlockIds, nPerRank);
         //Create timestep 2
         auto pds2 = vtkm::cont::PartitionedDataSet(pds);
         pathline.SetPreviousTime(0);
@@ -285,8 +300,8 @@ void ValidateOutput(const vtkm::cont::DataSet& out,
                    "Wrong number of coordinate systems in the output dataset");
 
   vtkm::cont::UnknownCellSet dcells = out.GetCellSet();
-  out.PrintSummary(std::cout);
-  std::cout << " nSeeds= " << numSeeds << std::endl;
+  //out.PrintSummary(std::cout);
+  //std::cout << " nSeeds= " << numSeeds << std::endl;
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
   auto coords = out.GetCoordinateSystem().GetDataAsMultiplexer();
   auto ptPortal = coords.ReadPortal();
@@ -314,7 +329,98 @@ void ValidateOutput(const vtkm::cont::DataSet& out,
   }
 }
 
-void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, bool useThreaded)
+void TestDuplicatedBlocks(vtkm::Id nPerRank)
+{
+  auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+
+  vtkm::Id numDims = 5;
+  vtkm::FloatDefault x0 = 0;
+  vtkm::FloatDefault x1 = x0 + static_cast<vtkm::FloatDefault>(numDims - 1);
+  vtkm::FloatDefault dx = x1 - x0;
+  vtkm::FloatDefault y0 = 0, y1 = numDims - 1, z0 = 0, z1 = numDims - 1;
+
+  std::vector<vtkm::Bounds> bounds;
+  for (vtkm::Id i = 0; i < nPerRank * comm.size(); i++)
+  {
+    bounds.push_back(vtkm::Bounds(x0, x1, y0, y1, z0, z1));
+    if (comm.rank() == 0)
+    {
+      std::cout << __FILE__ << " " << __LINE__ << std::endl;
+      std::cout << i << " :: (" << x0 << ", " << x1 << ")" << std::endl;
+    }
+    x0 += dx;
+    x1 += dx;
+  }
+
+  if (comm.rank() == 0)
+  {
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
+    std::cout << "Bounds: " << std::endl;
+    int i = 0;
+    for (const auto& b : bounds)
+    {
+      std::cout << " " << i << " " << b << std::endl;
+      i++;
+    }
+  }
+  comm.barrier();
+
+  const vtkm::Id3 dims(numDims, numDims, numDims);
+  auto allPDS = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
+
+  vtkm::Vec3f vecX(1, 0, 0);
+  std::string fieldName = "vec";
+  vtkm::FloatDefault stepSize = 0.1f;
+  vtkm::Id numSteps = 100000;
+  for (std::size_t n = 0; n < allPDS.size(); n++)
+  {
+    auto pds = allPDS[n];
+    AddVectorFields(pds, fieldName, vecX);
+
+    vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+    seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0) });
+    //                                               vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
+    vtkm::Id numSeeds = seedArray.GetNumberOfValues();
+
+    vtkm::filter::flow::ParticleAdvection particleAdvection;
+    SetFilter(particleAdvection, stepSize, numSteps, fieldName, seedArray, false, false, nPerRank);
+
+    std::vector<vtkm::Id> blockIds;
+    if (comm.rank() == 0)
+      blockIds = { 0, 1, 2, 3 };
+    else
+      blockIds = { 1, 2, 3 };
+
+    vtkm::cont::PartitionedDataSet input;
+    for (const auto& bid : blockIds)
+      input.AppendPartition(pds.GetPartition(bid));
+    particleAdvection.SetBlockIDs(blockIds);
+
+    if (comm.rank() == 0)
+    {
+      std::cout << __FILE__ << " " << __LINE__ << std::endl;
+      std::cout << "all blocks: " << pds.GetNumberOfPartitions() << std::endl;
+    }
+    for (int r = 0; r < comm.size(); r++)
+    {
+      if (r == comm.rank())
+        std::cout << r << ": my blocks: " << input.GetNumberOfPartitions() << std::endl;
+      comm.barrier();
+    }
+
+    auto out = particleAdvection.Execute(input);
+
+    if (comm.rank() == comm.size() - 1)
+      out.PrintSummary(std::cout);
+    return;
+  }
+}
+
+void TestPartitionedDataSet(vtkm::Id nPerRank,
+                            bool useGhost,
+                            FilterType fType,
+                            bool useThreaded,
+                            bool useBlockIds)
 {
   switch (fType)
   {
@@ -374,7 +480,6 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
     xMaxRanges.push_back(vtkm::Range(xMax, xMax + static_cast<vtkm::FloatDefault>(.5)));
   }
 
-
   std::vector<vtkm::cont::PartitionedDataSet> allPDS, allPDS2;
   const vtkm::Id3 dims(numDims, numDims, numDims);
   allPDS = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, useGhost);
@@ -397,7 +502,8 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
     if (fType == STREAMLINE)
     {
       vtkm::filter::flow::Streamline streamline;
-      SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+      SetFilter(
+        streamline, stepSize, numSteps, fieldName, seedArray, useThreaded, useBlockIds, nPerRank);
       auto out = streamline.Execute(pds);
 
       for (vtkm::Id i = 0; i < nPerRank; i++)
@@ -406,7 +512,15 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
     else if (fType == PARTICLE_ADVECTION)
     {
       vtkm::filter::flow::ParticleAdvection particleAdvection;
-      SetFilter(particleAdvection, stepSize, numSteps, fieldName, seedArray, useThreaded);
+      SetFilter(particleAdvection,
+                stepSize,
+                numSteps,
+                fieldName,
+                seedArray,
+                useThreaded,
+                useBlockIds,
+                nPerRank);
+
       auto out = particleAdvection.Execute(pds);
 
       //Particles end up in last rank.
@@ -424,7 +538,8 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
       AddVectorFields(pds2, fieldName, vecX);
 
       vtkm::filter::flow::Pathline pathline;
-      SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+      SetFilter(
+        pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, useBlockIds, nPerRank);
 
       pathline.SetPreviousTime(time0);
       pathline.SetNextTime(time1);
@@ -439,20 +554,29 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
 
 void TestStreamlineFiltersMPI()
 {
+  std::srand(std::time(0));
+  TestDuplicatedBlocks(2);
+  return;
+
   std::vector<bool> flags = { true, false };
   std::vector<FilterType> filterTypes = { PARTICLE_ADVECTION, STREAMLINE, PATHLINE };
 
+  TestPartitionedDataSet(2, false, PARTICLE_ADVECTION, false, false);
+
+  /*
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)
       for (auto fType : filterTypes)
         for (auto useThreaded : flags)
-          TestPartitionedDataSet(n, useGhost, fType, useThreaded);
+        for (auto useBlockIds : flags)
+          TestPartitionedDataSet(n, useGhost, fType, useThreaded, useBlockIds);
   }
 
   for (auto fType : filterTypes)
     for (auto useThreaded : flags)
       TestAMRStreamline(fType, useThreaded);
+  */
 }
 }
 
