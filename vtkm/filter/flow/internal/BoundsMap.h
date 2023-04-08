@@ -310,7 +310,9 @@ private:
       idx += 3;
     }
 
+#ifdef VTKM_ENABLE_MPI
     if (comm.rank() == 0)
+#endif
     {
       std::cout << "BlockBounds: " << this->GlobalBounds << std::endl;
       for (const auto& block : this->BlockBounds)

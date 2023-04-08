@@ -78,6 +78,7 @@ public:
       std::vector<vtkm::Id> ids = this->BoundsMap.FindBlocks(p.GetPosition());
 
       //DRP
+      //Note: For duplicate blocks, this will give the seeds to the rank that first in the list.
       if (!ids.empty())
       {
         auto ranks = this->BoundsMap.FindRank(ids[0]);

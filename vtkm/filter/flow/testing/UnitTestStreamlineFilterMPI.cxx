@@ -339,6 +339,7 @@ void TestDuplicatedBlocks(vtkm::Id nPerRank)
   vtkm::FloatDefault dx = x1 - x0;
   vtkm::FloatDefault y0 = 0, y1 = numDims - 1, z0 = 0, z1 = numDims - 1;
 
+  //Create all of the blocks.
   std::vector<vtkm::Bounds> bounds;
   for (vtkm::Id i = 0; i < nPerRank * comm.size(); i++)
   {
