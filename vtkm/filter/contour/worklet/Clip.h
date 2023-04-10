@@ -645,6 +645,9 @@ public:
            this->CellMapOutputToInput);
     this->InterpolationKeysBuilt = false;
 
+    clipTableIndices.ReleaseResources();
+    cellSetStats.ReleaseResources();
+
     // Get unique EdgeInterpolation : unique edge points.
     // LowerBound for edgeInterpolation : get index into new edge points array.
     // LowerBound for cellPointEdgeInterpolation : get index into new edge points array.
@@ -658,12 +661,14 @@ public:
                                        edgeInterpolation,
                                        edgeInterpolationIndexToUnique,
                                        EdgeInterpolation::LessThanOp());
+    edgeInterpolation.ReleaseResources();
 
     vtkm::cont::ArrayHandle<vtkm::Id> cellInterpolationIndexToUnique;
     vtkm::cont::Algorithm::LowerBounds(this->EdgePointsInterpolation,
                                        cellPointEdgeInterpolation,
                                        cellInterpolationIndexToUnique,
                                        EdgeInterpolation::LessThanOp());
+    cellPointEdgeInterpolation.ReleaseResources();
 
     this->EdgePointsOffset = scalars.GetNumberOfValues();
     this->InCellPointsOffset =
