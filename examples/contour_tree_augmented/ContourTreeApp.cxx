@@ -756,14 +756,13 @@ int main(int argc, char* argv[])
     //----Isovalue seleciton start
     if (numLevels > 0) // if compute isovalues
     {
-// Get the data values for computing the explicit branch decomposition
-#ifdef WITH_MPI
+      // Get the data values for computing the explicit branch decomposition
       vtkm::cont::ArrayHandle<ValueType> dataField;
-      result.GetPartitions()[0].GetField(0).GetData().AsArrayHandle(dataField);
+#ifdef WITH_MPI
+      result.GetPartitions()[0].GetField("values").GetData().AsArrayHandle(dataField);
       bool dataFieldIsSorted = true;
 #else
-      vtkm::cont::ArrayHandle<ValueType> dataField;
-      useDataSet.GetField(0).GetData().AsArrayHandle(dataField);
+      useDataSet.GetField("values").GetData().AsArrayHandle(dataField);
       bool dataFieldIsSorted = false;
 #endif
 
