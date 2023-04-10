@@ -83,9 +83,10 @@ public:
   std::vector<int> FindRank(vtkm::Id blockId) const
   {
     auto it = this->BlockToRankMap.find(blockId);
-    std::cout << "FindRank(" << blockId << ") --> ";
-    printVec(it->second);
-    std::cout << std::endl;
+    /*
+    std::cout<<"FindRank("<<blockId<<") --> ";
+    printVec(it->second); std::cout<<std::endl;
+    */
 
     if (it == this->BlockToRankMap.end())
       return {};
@@ -132,8 +133,7 @@ private:
     this->LocalNumBlocks = dataSets.size();
 
     vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-    if (comm.rank() == 0)
-      std::cout << "Init: " << blockIds.size() << std::endl;
+    //if (comm.rank() == 0) std::cout<<"Init: "<<blockIds.size()<<std::endl;
 
     //1. Get the min/max blockId
     vtkm::Id locMinId = 0, locMaxId = 0;
@@ -205,6 +205,7 @@ private:
         this->BlockToRankMap[bid].push_back(rank);
       }
     }
+    /*
     if (comm.rank() == 0)
     {
       std::cout << "Rank --> BlockIds" << std::endl;
@@ -223,6 +224,7 @@ private:
         std::cout << std::endl;
       }
     }
+    */
 
     this->Build(dataSets);
 
@@ -310,6 +312,7 @@ private:
       idx += 3;
     }
 
+    /*
 #ifdef VTKM_ENABLE_MPI
     if (comm.rank() == 0)
 #endif
@@ -318,6 +321,7 @@ private:
       for (const auto& block : this->BlockBounds)
         std::cout << "    " << block << std::endl;
     }
+    */
   }
 
   vtkm::Id LocalNumBlocks = 0;

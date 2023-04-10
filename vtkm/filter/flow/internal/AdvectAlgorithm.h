@@ -108,8 +108,7 @@ public:
       vtkm::Id numTerm = 0, blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
-        std::cout << "   RANK= " << this->Rank << " *****Advect: " << v[0].GetID()
-                  << " BID= " << blockId << std::endl;
+        //std::cout<<"   RANK= "<<this->Rank<<" *****Advect: "<<v[0].GetID()<<" BID= "<<blockId<<std::endl;
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfoType bb =
@@ -241,8 +240,7 @@ public:
 
       auto ranks = this->BoundsMap.FindRank(bid[0]);
       VTKM_ASSERT(!ranks.empty());
-      std::cout << "********************** GetOutgoing: " << bid[0] << " r= " << ranks.size()
-                << std::endl;
+      //std::cout<<"********************** GetOutgoing: "<<bid[0]<<" r= "<<ranks.size()<<std::endl;
 
       if (ranks.size() == 1)
       {
@@ -260,7 +258,7 @@ public:
 
         //Random selection:
         vtkm::Id outRank = std::rand() % ranks.size();
-        std::cout << "******* CHOICES: " << ranks.size() << " --> " << outRank << std::endl;
+        //std::cout<<"******* CHOICES: "<<ranks.size()<<" --> "<<outRank<<std::endl;
         if (outRank == this->Rank)
           this->Active.emplace_back(p);
         else
