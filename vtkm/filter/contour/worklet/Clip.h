@@ -11,9 +11,6 @@
 #define vtkm_m_worklet_Clip_h
 
 #include <vtkm/filter/contour/worklet/clip/ClipTables.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -26,6 +23,7 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
@@ -589,14 +587,14 @@ public:
                                     vtkm::Float64 value,
                                     bool invert)
   {
+    vtkm::cont::Invoker invoke;
     // Create the required output fields.
     vtkm::cont::ArrayHandle<ClipStats> clipStats;
     vtkm::cont::ArrayHandle<vtkm::Id> clipTableIndices;
 
-    ComputeStats statsWorklet(value, invert);
     //Send this CellSet to process
-    vtkm::worklet::DispatcherMapTopology<ComputeStats> statsDispatcher(statsWorklet);
-    statsDispatcher.Invoke(cellSet, scalars, this->ClipTablesInstance, clipStats, clipTableIndices);
+    ComputeStats statsWorklet(value, invert);
+    invoke(statsWorklet, cellSet, scalars, this->ClipTablesInstance, clipStats, clipTableIndices);
 
     ClipStats zero;
     vtkm::cont::ArrayHandle<ClipStats> cellSetStats;
@@ -628,23 +626,23 @@ public:
     this->InCellInterpolationInfo.Allocate(total.NumberOfInCellInterpPoints);
     this->CellMapOutputToInput.Allocate(total.NumberOfCells);
 
-    GenerateCellSet cellSetWorklet(value);
     //Send this CellSet to process
-    vtkm::worklet::DispatcherMapTopology<GenerateCellSet> cellSetDispatcher(cellSetWorklet);
-    cellSetDispatcher.Invoke(cellSet,
-                             scalars,
-                             clipTableIndices,
-                             cellSetStats,
-                             this->ClipTablesInstance,
-                             connectivityObject,
-                             edgePointReverseConnectivity,
-                             edgeInterpolation,
-                             cellPointReverseConnectivity,
-                             cellPointEdgeReverseConnectivity,
-                             cellPointEdgeInterpolation,
-                             this->InCellInterpolationKeys,
-                             this->InCellInterpolationInfo,
-                             this->CellMapOutputToInput);
+    GenerateCellSet cellSetWorklet(value);
+    invoke(cellSetWorklet,
+           cellSet,
+           scalars,
+           clipTableIndices,
+           cellSetStats,
+           this->ClipTablesInstance,
+           connectivityObject,
+           edgePointReverseConnectivity,
+           edgeInterpolation,
+           cellPointReverseConnectivity,
+           cellPointEdgeReverseConnectivity,
+           cellPointEdgeInterpolation,
+           this->InCellInterpolationKeys,
+           this->InCellInterpolationInfo,
+           this->CellMapOutputToInput);
     this->InterpolationKeysBuilt = false;
 
     // Get unique EdgeInterpolation : unique edge points.
@@ -674,18 +672,18 @@ public:
     // Scatter these values into the connectivity array,
     // scatter indices are given in reverse connectivity.
     ScatterEdgeConnectivity scatterEdgePointConnectivity(this->EdgePointsOffset);
-    vtkm::worklet::DispatcherMapField<ScatterEdgeConnectivity> scatterEdgeDispatcher(
-      scatterEdgePointConnectivity);
-    scatterEdgeDispatcher.Invoke(
-      edgeInterpolationIndexToUnique, edgePointReverseConnectivity, connectivity);
-    scatterEdgeDispatcher.Invoke(cellInterpolationIndexToUnique,
-                                 cellPointEdgeReverseConnectivity,
-                                 this->InCellInterpolationInfo);
+    invoke(scatterEdgePointConnectivity,
+           edgeInterpolationIndexToUnique,
+           edgePointReverseConnectivity,
+           connectivity);
+    invoke(scatterEdgePointConnectivity,
+           cellInterpolationIndexToUnique,
+           cellPointEdgeReverseConnectivity,
+           this->InCellInterpolationInfo);
+
     // Add offset in connectivity of all new in-cell points.
     ScatterInCellConnectivity scatterInCellPointConnectivity(this->InCellPointsOffset);
-    vtkm::worklet::DispatcherMapField<ScatterInCellConnectivity> scatterInCellDispatcher(
-      scatterInCellPointConnectivity);
-    scatterInCellDispatcher.Invoke(cellPointReverseConnectivity, connectivity);
+    invoke(scatterInCellPointConnectivity, cellPointReverseConnectivity, connectivity);
 
     vtkm::cont::CellSetExplicit<> output;
     vtkm::Id numberOfPoints = scalars.GetNumberOfValues() +
