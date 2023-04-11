@@ -559,6 +559,7 @@ void TestStreamlineFiltersMPI()
   TestDuplicatedBlocks(2);
   return;
 
+
   std::vector<bool> flags = { true, false };
   std::vector<FilterType> filterTypes = { PARTICLE_ADVECTION, STREAMLINE, PATHLINE };
 
