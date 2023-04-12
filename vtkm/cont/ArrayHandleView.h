@@ -197,10 +197,6 @@ public:
     (vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
                              StorageTagView<typename ArrayHandleType::StorageTag>>));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandleView(const ArrayHandleType& array, vtkm::Id startIndex, vtkm::Id numValues)
     : Superclass(StorageType::CreateBuffers(startIndex, numValues, array))

@@ -251,10 +251,6 @@ public:
                              StorageTagConcatenate<typename ArrayHandleType1::StorageTag,
                                                    typename ArrayHandleType2::StorageTag>>));
 
-protected:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandleConcatenate(const ArrayHandleType1& array1, const ArrayHandleType2& array2)
     : Superclass(StorageType::CreateBuffers(array1, array2))

@@ -156,7 +156,6 @@ public:
     (vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
                              StorageTagReverse<typename ArrayHandleType::StorageTag>>));
 
-public:
   ArrayHandleReverse(const ArrayHandleType& handle)
     : Superclass(handle.GetBuffers())
   {

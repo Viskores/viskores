@@ -246,8 +246,7 @@ class Storage<typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueT
   using FunctorManager = TransformFunctorManager<FunctorType>;
   using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
 
-  using SourceStorage =
-    Storage<typename ArrayHandleType::ValueType, typename ArrayHandleType::StorageTag>;
+  using SourceStorage = typename ArrayHandleType::StorageType;
 
   static std::vector<vtkm::cont::internal::Buffer> SourceBuffers(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
@@ -323,8 +322,7 @@ class Storage<
   using InverseFunctorManager = TransformFunctorManager<InverseFunctorType>;
   using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
 
-  using SourceStorage =
-    Storage<typename ArrayHandleType::ValueType, typename ArrayHandleType::StorageTag>;
+  using SourceStorage = typename ArrayHandleType::StorageType;
 
   static std::vector<vtkm::cont::internal::Buffer> SourceBuffers(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
@@ -454,10 +452,6 @@ public:
       typename internal::StorageTagTransform<ArrayHandleType, FunctorType>::ValueType,
       internal::StorageTagTransform<ArrayHandleType, FunctorType>>));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandleTransform(const ArrayHandleType& handle,
                        const FunctorType& functor = FunctorType{},
@@ -498,10 +492,6 @@ public:
         ValueType,
       internal::StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>>));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   ArrayHandleTransform(const ArrayHandleType& handle,
                        const FunctorType& functor = FunctorType(),
                        const InverseFunctorType& inverseFunctor = InverseFunctorType())
