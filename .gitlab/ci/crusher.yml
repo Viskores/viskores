@@ -24,8 +24,8 @@
       DefApps/default
       craype-accel-amd-gfx90a
       rocm/4.5.0
-      gcc/10
-      cmake/3.22
+      gcc/12
+      cmake/3.23
       git
 
 
@@ -84,7 +84,7 @@ test:crusher_gcc_hip:
   dependencies:
     - build:crusher_gcc_hip
   variables:
-    SCHEDULER_PARAMETERS: "-ACSC331 -pbatch -t120 --nice=0 -c32 --gpus=4 -N 1"
+    SCHEDULER_PARAMETERS: "-ACSC331_crusher -pbatch -t120 --nice=0 -c32 --gpus=4 -N 1"
     # We need this to skip ctest_submit from being run inside a jsrun job
     GITLAB_CI_EMULATION: 1
     # Tests errors to address due to different env in Spock
