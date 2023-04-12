@@ -89,7 +89,6 @@ public:
         }
       }
     }
-
     this->SetSeedArray(particles, blockIDs);
   }
 
@@ -125,7 +124,6 @@ public:
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
   }
-
 
   virtual void ClearParticles()
   {
