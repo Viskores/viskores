@@ -759,7 +759,7 @@ private:
 
     // Get the arrays used for masking output elements.
     typename MaskType::ThreadToOutputMapType threadToOutputMap =
-      this->Mask.GetThreadToOutputMap(inputRange);
+      this->Mask.GetThreadToOutputMap(outputRange);
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
