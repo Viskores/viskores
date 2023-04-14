@@ -107,7 +107,6 @@ public:
       vtkm::Id numTerm = 0, blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
-        //std::cout<<"   RANK= "<<this->Rank<<" *****Advect: "<<v[0].GetID()<<" BID= "<<blockId<<std::endl;
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfoType bb =
@@ -165,6 +164,7 @@ public:
       bit++;
     }
 
+    //Update Active
     this->Active.insert(this->Active.end(), particles.begin(), particles.end());
   }
 
@@ -230,6 +230,8 @@ public:
     outgoing.reserve(this->Inactive.size());
     outgoingRanks.reserve(this->Inactive.size());
 
+    std::vector<ParticleType> particlesStaying;
+    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> particlesStayingBlockIDs;
     //Send out Everything.
     for (const auto& p : this->Inactive)
     {
@@ -238,12 +240,14 @@ public:
 
       auto ranks = this->BoundsMap.FindRank(bid[0]);
       VTKM_ASSERT(!ranks.empty());
-      //std::cout<<"********************** GetOutgoing: "<<bid[0]<<" r= "<<ranks.size()<<std::endl;
 
       if (ranks.size() == 1)
       {
         if (ranks[0] == this->Rank)
-          this->Active.emplace_back(p);
+        {
+          particlesStaying.emplace_back(p);
+          particlesStayingBlockIDs[p.GetID()] = this->ParticleBlockIDsMap[p.GetID()];
+        }
         else
         {
           outgoing.emplace_back(p);
@@ -256,9 +260,11 @@ public:
 
         //Random selection:
         vtkm::Id outRank = std::rand() % ranks.size();
-        //std::cout<<"******* CHOICES: "<<ranks.size()<<" --> "<<outRank<<std::endl;
         if (outRank == this->Rank)
-          this->Active.emplace_back(p);
+        {
+          particlesStayingBlockIDs[p.GetID()] = this->ParticleBlockIDsMap[p.GetID()];
+          particlesStaying.emplace_back(p);
+        }
         else
         {
           outgoing.emplace_back(p);
@@ -269,6 +275,10 @@ public:
 
     this->Inactive.clear();
     VTKM_ASSERT(outgoing.size() == outgoingRanks.size());
+
+    VTKM_ASSERT(particlesStaying.size() == particlesStayingBlockIDs.size());
+    if (!particlesStaying.empty())
+      this->UpdateActive(particlesStaying, particlesStayingBlockIDs);
   }
 
   virtual void UpdateActive(const std::vector<ParticleType>& particles,

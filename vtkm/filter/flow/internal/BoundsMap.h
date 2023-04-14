@@ -44,6 +44,7 @@ void printVec(const std::vector<T>& v)
   }
   std::cout << "]";
 }
+
 namespace vtkm
 {
 namespace filter
