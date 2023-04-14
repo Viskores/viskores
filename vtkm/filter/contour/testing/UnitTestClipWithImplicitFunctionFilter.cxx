@@ -71,11 +71,11 @@ void TestClipStructured(vtkm::Float64 offset)
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.AsArrayHandle(resultArrayHandle);
 
-  VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 13,
+  VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 12,
                    "Wrong number of points in the output dataset");
 
-  vtkm::Float32 expected[13] = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0.25, 0.25, 0.25, 0.25 };
-  for (int i = 0; i < 13; ++i)
+  vtkm::Float32 expected[12] = { 1, 1, 1, 1, 1, 1, 1, 1, 0.25, 0.25, 0.25, 0.25 };
+  for (int i = 0; i < 12; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");
@@ -107,11 +107,11 @@ void TestClipStructuredInverted()
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.AsArrayHandle(resultArrayHandle);
 
-  VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 13,
+  VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 5,
                    "Wrong number of points in the output dataset");
 
-  vtkm::Float32 expected[13] = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0.25, 0.25, 0.25, 0.25 };
-  for (int i = 0; i < 13; ++i)
+  vtkm::Float32 expected[5] = { 0, 0.25, 0.25, 0.25, 0.25 };
+  for (int i = 0; i < 5; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");

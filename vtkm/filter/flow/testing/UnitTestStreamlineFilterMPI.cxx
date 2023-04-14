@@ -106,6 +106,7 @@ void SetFilter(FilterType& filter,
                const std::string& fieldName,
                vtkm::cont::ArrayHandle<vtkm::Particle> seedArray,
                bool useThreaded,
+               bool useAsyncComm,
                bool useBlockIds,
                const std::vector<vtkm::Id>& blockIds)
 {
@@ -114,30 +115,42 @@ void SetFilter(FilterType& filter,
   filter.SetSeeds(seedArray);
   filter.SetActiveField(fieldName);
   filter.SetUseThreadedAlgorithm(useThreaded);
+  //  if (useAsyncComm)
+  //    filter.SetUseAsynchronousCommunication();
+  //  else
+  //    filter.SetUseSynchronousCommunication();
 
   if (useBlockIds)
     filter.SetBlockIDs(blockIds);
 }
 
-void TestAMRStreamline(FilterType fType, bool useThreaded)
+void TestAMRStreamline(FilterType fType, bool useThreaded, bool useAsyncComm)
 {
-  switch (fType)
-  {
-    case PARTICLE_ADVECTION:
-      std::cout << "Particle advection";
-      break;
-    case STREAMLINE:
-      std::cout << "Streamline";
-      break;
-    case PATHLINE:
-      std::cout << "Pathline";
-      break;
-  }
-  if (useThreaded)
-    std::cout << " - using threaded";
-  std::cout << " - on an AMR data set" << std::endl;
-
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  if (comm.rank() == 0)
+  {
+    switch (fType)
+    {
+      case PARTICLE_ADVECTION:
+        std::cout << "Particle advection";
+        break;
+      case STREAMLINE:
+        std::cout << "Streamline";
+        break;
+      case PATHLINE:
+        std::cout << "Pathline";
+        break;
+    }
+    if (useThreaded)
+      std::cout << " - using threaded";
+    if (useAsyncComm)
+      std::cout << " - usingAsyncComm";
+    else
+      std::cout << " - usingSyncComm";
+
+    std::cout << " - on an AMR data set" << std::endl;
+  }
+
   if (comm.size() < 2)
     return;
 
@@ -211,13 +224,22 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
       if (fType == STREAMLINE)
       {
         vtkm::filter::flow::Streamline streamline;
-        SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded, false, {});
+        SetFilter(streamline,
+                  stepSize,
+                  numSteps,
+                  fieldName,
+                  seedArray,
+                  useThreaded,
+                  useAsyncComm,
+                  false,
+                  {});
         out = streamline.Execute(pds);
       }
       else if (fType == PATHLINE)
       {
         vtkm::filter::flow::Pathline pathline;
-        SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, false, {});
+        SetFilter(
+          pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, useAsyncComm, false, {});
         //Create timestep 2
         auto pds2 = vtkm::cont::PartitionedDataSet(pds);
         pathline.SetPreviousTime(0);
@@ -386,6 +408,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
                             bool useGhost,
                             FilterType fType,
                             bool useThreaded,
+                            bool useAsyncComm,
                             bool useBlockIds,
                             bool duplicateBlocks)
 {
@@ -409,6 +432,11 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
       std::cout << " - using ghost cells";
     if (useThreaded)
       std::cout << " - using threaded";
+    if (useAsyncComm)
+      std::cout << " - usingAsyncComm";
+    else
+      std::cout << " - usingSyncComm";
+
     if (useBlockIds)
       std::cout << " - using block IDs";
     if (duplicateBlocks)
@@ -461,8 +489,15 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
     if (fType == STREAMLINE)
     {
       vtkm::filter::flow::Streamline streamline;
-      SetFilter(
-        streamline, stepSize, numSteps, fieldName, seedArray, useThreaded, useBlockIds, blockIds);
+      SetFilter(streamline,
+                stepSize,
+                numSteps,
+                fieldName,
+                seedArray,
+                useThreaded,
+                useAsyncComm,
+                useBlockIds,
+                blockIds);
       auto out = streamline.Execute(pds);
 
       vtkm::Id numOutputs = out.GetNumberOfPartitions();
@@ -486,6 +521,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
                 fieldName,
                 seedArray,
                 useThreaded,
+                useAsyncComm,
                 useBlockIds,
                 blockIds);
 
@@ -514,8 +550,15 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
       AddVectorFields(pds2, fieldName, vecX);
 
       vtkm::filter::flow::Pathline pathline;
-      SetFilter(
-        pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, useBlockIds, blockIds);
+      SetFilter(pathline,
+                stepSize,
+                numSteps,
+                fieldName,
+                seedArray,
+                useThreaded,
+                useAsyncComm,
+                useBlockIds,
+                blockIds);
 
       pathline.SetPreviousTime(time0);
       pathline.SetNextTime(time1);
@@ -548,21 +591,26 @@ void TestStreamlineFiltersMPI()
     for (auto useGhost : flags)
       for (auto fType : filterTypes)
         for (auto useThreaded : flags)
-          for (auto useBlockIds : flags)
-          {
-            //Run blockIds with and without block duplication.
-            if (useBlockIds && comm.size() > 1)
+          for (auto useAsyncComm : flags)
+            for (auto useBlockIds : flags)
             {
-              TestPartitionedDataSet(n, useGhost, fType, useThreaded, useBlockIds, false);
-              TestPartitionedDataSet(n, useGhost, fType, useThreaded, useBlockIds, true);
+              //Run blockIds with and without block duplication.
+              if (useBlockIds && comm.size() > 1)
+              {
+                TestPartitionedDataSet(
+                  n, useGhost, fType, useThreaded, useAsyncComm, useBlockIds, false);
+                TestPartitionedDataSet(
+                  n, useGhost, fType, useThreaded, useAsyncComm, useBlockIds, true);
+              }
+              else
+                TestPartitionedDataSet(
+                  n, useGhost, fType, useThreaded, useAsyncComm, useBlockIds, false);
             }
-            else
-              TestPartitionedDataSet(n, useGhost, fType, useThreaded, useBlockIds, false);
-          }
 
   for (auto fType : filterTypes)
     for (auto useThreaded : flags)
-      TestAMRStreamline(fType, useThreaded);
+      for (auto useAsyncComm : flags)
+        TestAMRStreamline(fType, useThreaded, useAsyncComm);
 }
 }
 

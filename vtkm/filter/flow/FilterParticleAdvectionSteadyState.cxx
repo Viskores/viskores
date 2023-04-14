@@ -92,8 +92,12 @@ VTKM_CONT vtkm::cont::PartitionedDataSet FilterParticleAdvectionSteadyState::DoE
   auto dsi = CreateDataSetIntegrators(
     input, variant, boundsMap, this->SolverType, this->VecFieldType, this->GetResultType());
 
-  vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(
-    boundsMap, dsi, this->UseThreadedAlgorithm, this->GetResultType());
+
+  vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(boundsMap,
+                                                              dsi,
+                                                              this->UseThreadedAlgorithm,
+                                                              this->UseAsynchronousCommunication,
+                                                              this->GetResultType());
 
   return pav.Execute(this->NumberOfSteps, this->StepSize, this->Seeds);
 }
