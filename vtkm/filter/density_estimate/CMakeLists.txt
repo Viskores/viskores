@@ -8,6 +8,7 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(density_estimate_headers
+  ContinuousScatterPlot.h
   Entropy.h
   Histogram.h
   NDEntropy.h
@@ -19,6 +20,7 @@ set(density_estimate_headers
   )
 
 set(density_estimate_sources_device
+  ContinuousScatterPlot.cxx
   Entropy.cxx
   Histogram.cxx
   NDEntropy.cxx
