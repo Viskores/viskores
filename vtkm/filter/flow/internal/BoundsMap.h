@@ -31,20 +31,6 @@
 #include <set>
 #include <vector>
 
-template <typename T>
-void printVec(const std::vector<T>& v)
-{
-  std::cout << "[";
-  int n = v.size();
-  if (n > 0)
-  {
-    for (int i = 0; i < n - 1; i++)
-      std::cout << v[i] << " ";
-    std::cout << v[n - 1];
-  }
-  std::cout << "]";
-}
-
 namespace vtkm
 {
 namespace filter
@@ -84,11 +70,6 @@ public:
   std::vector<int> FindRank(vtkm::Id blockId) const
   {
     auto it = this->BlockToRankMap.find(blockId);
-    /*
-    std::cout<<"FindRank("<<blockId<<") --> ";
-    printVec(it->second); std::cout<<std::endl;
-    */
-
     if (it == this->BlockToRankMap.end())
       return {};
 
@@ -134,7 +115,6 @@ private:
     this->LocalNumBlocks = dataSets.size();
 
     vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-    //if (comm.rank() == 0) std::cout<<"Init: "<<blockIds.size()<<std::endl;
 
     //1. Get the min/max blockId
     vtkm::Id locMinId = 0, locMaxId = 0;
@@ -206,39 +186,9 @@ private:
         this->BlockToRankMap[bid].push_back(rank);
       }
     }
-    /*
-    if (comm.rank() == 0)
-    {
-      std::cout << "Rank --> BlockIds" << std::endl;
-      for (int i = 0; i < comm.size(); i++)
-      {
-        std::cout << i << ": ";
-        printVec(rankToBlockIds[i]);
-        std::cout << std::endl;
-      }
-
-      std::cout << "BlockIds --> Ranks" << std::endl;
-      for (const auto& it : this->BlockToRankMap)
-      {
-        std::cout << it.first << " : ";
-        printVec(it.second);
-        std::cout << std::endl;
-      }
-    }
-    */
 
     this->Build(dataSets);
-
-    //ensure dataSets.size() == blockIds.size()
-    //find min/max block id.
-    //count number of copies of each block.  It better be >= 1 for each.
-    //find blocks per rank for all ranks.
-    //exchange who has what blocks.
-    //exchange ranks for each block
-    //building block tree will be the same: duplicates wont mess up the min/max
-    //
   }
-
 
   void Init(const std::vector<vtkm::cont::DataSet>& dataSets)
   {
@@ -312,17 +262,6 @@ private:
       this->GlobalBounds.Include(block);
       idx += 3;
     }
-
-    /*
-#ifdef VTKM_ENABLE_MPI
-    if (comm.rank() == 0)
-#endif
-    {
-      std::cout << "BlockBounds: " << this->GlobalBounds << std::endl;
-      for (const auto& block : this->BlockBounds)
-        std::cout << "    " << block << std::endl;
-    }
-    */
   }
 
   vtkm::Id LocalNumBlocks = 0;
