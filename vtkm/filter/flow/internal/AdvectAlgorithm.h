@@ -80,13 +80,17 @@ public:
       const ParticleType p = portal.Get(i);
       std::vector<vtkm::Id> ids = this->BoundsMap.FindBlocks(p.GetPosition());
 
-      if (!ids.empty() && this->BoundsMap.FindRank(ids[0]) == this->Rank)
+      //Note: For duplicate blocks, this will give the seeds to the rank that are first in the list.
+      if (!ids.empty())
       {
-        particles.emplace_back(p);
-        blockIDs.emplace_back(ids);
+        auto ranks = this->BoundsMap.FindRank(ids[0]);
+        if (!ranks.empty() && this->Rank == ranks[0])
+        {
+          particles.emplace_back(p);
+          blockIDs.emplace_back(ids);
+        }
       }
     }
-
     this->SetSeedArray(particles, blockIDs);
   }
 
@@ -121,7 +125,6 @@ public:
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
   }
-
 
   virtual void ClearParticles()
   {
@@ -163,11 +166,13 @@ public:
       bit++;
     }
 
+    //Update Active
     this->Active.insert(this->Active.end(), particles.begin(), particles.end());
   }
 
   virtual bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId)
   {
+    //DRP:  particles = std::move(this->Active2[blockId]);
     particles.clear();
     blockId = -1;
     if (this->Active.empty())
@@ -190,29 +195,97 @@ public:
     return !particles.empty();
   }
 
-  virtual void Communicate(vtkm::filter::flow::internal::ParticleMessenger<ParticleType>& messenger,
-                           vtkm::Id numLocalTerminations,
-                           vtkm::Id& numTermMessages)
+  void Communicate(vtkm::filter::flow::internal::ParticleMessenger<ParticleType>& messenger,
+                   vtkm::Id numLocalTerminations,
+                   vtkm::Id& numTermMessages)
   {
-    std::vector<ParticleType> incoming;
-    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingIDs;
-    numTermMessages = 0;
+    std::vector<ParticleType> outgoing;
+    std::vector<vtkm::Id> outgoingRanks;
 
+    this->GetOutgoingParticles(outgoing, outgoingRanks);
+
+    std::vector<ParticleType> incoming;
+    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingBlockIDs;
+    numTermMessages = 0;
     bool block = false;
 #ifdef VTKM_ENABLE_MPI
     block = this->GetBlockAndWait(messenger.UsingSyncCommunication(), numLocalTerminations);
 #endif
 
-    messenger.Exchange(this->Inactive,
+    messenger.Exchange(outgoing,
+                       outgoingRanks,
                        this->ParticleBlockIDsMap,
                        numLocalTerminations,
                        incoming,
-                       incomingIDs,
+                       incomingBlockIDs,
                        numTermMessages,
                        block);
 
+    //Cleanup what was sent.
+    for (const auto& p : outgoing)
+      this->ParticleBlockIDsMap.erase(p.GetID());
+
+    this->UpdateActive(incoming, incomingBlockIDs);
+  }
+
+  void GetOutgoingParticles(std::vector<ParticleType>& outgoing,
+                            std::vector<vtkm::Id>& outgoingRanks)
+  {
+    outgoing.clear();
+    outgoingRanks.clear();
+
+    outgoing.reserve(this->Inactive.size());
+    outgoingRanks.reserve(this->Inactive.size());
+
+    std::vector<ParticleType> particlesStaying;
+    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> particlesStayingBlockIDs;
+    //Send out Everything.
+    for (const auto& p : this->Inactive)
+    {
+      const auto& bid = this->ParticleBlockIDsMap[p.GetID()];
+      VTKM_ASSERT(!bid.empty());
+
+      auto ranks = this->BoundsMap.FindRank(bid[0]);
+      VTKM_ASSERT(!ranks.empty());
+
+      if (ranks.size() == 1)
+      {
+        if (ranks[0] == this->Rank)
+        {
+          particlesStaying.emplace_back(p);
+          particlesStayingBlockIDs[p.GetID()] = this->ParticleBlockIDsMap[p.GetID()];
+        }
+        else
+        {
+          outgoing.emplace_back(p);
+          outgoingRanks.emplace_back(ranks[0]);
+        }
+      }
+      else
+      {
+        //Decide where it should go...
+
+        //Random selection:
+        vtkm::Id outRank = std::rand() % ranks.size();
+        if (outRank == this->Rank)
+        {
+          particlesStayingBlockIDs[p.GetID()] = this->ParticleBlockIDsMap[p.GetID()];
+          particlesStaying.emplace_back(p);
+        }
+        else
+        {
+          outgoing.emplace_back(p);
+          outgoingRanks.emplace_back(outRank);
+        }
+      }
+    }
+
     this->Inactive.clear();
-    this->UpdateActive(incoming, incomingIDs);
+    VTKM_ASSERT(outgoing.size() == outgoingRanks.size());
+
+    VTKM_ASSERT(particlesStaying.size() == particlesStayingBlockIDs.size());
+    if (!particlesStaying.empty())
+      this->UpdateActive(particlesStaying, particlesStayingBlockIDs);
   }
 
   virtual void UpdateActive(const std::vector<ParticleType>& particles,
@@ -240,8 +313,8 @@ public:
 
   vtkm::Id UpdateResult(const DSIHelperInfo<ParticleType>& stuff)
   {
-    this->UpdateActive(stuff.A, stuff.IdMapA);
-    this->UpdateInactive(stuff.I, stuff.IdMapI);
+    this->UpdateActive(stuff.InBounds.Particles, stuff.InBounds.BlockIDs);
+    this->UpdateInactive(stuff.OutOfBounds.Particles, stuff.OutOfBounds.BlockIDs);
 
     vtkm::Id numTerm = static_cast<vtkm::Id>(stuff.TermID.size());
     //Update terminated particles.
@@ -287,6 +360,7 @@ public:
   std::vector<ParticleType> Inactive;
   vtkm::Id NumberOfSteps;
   vtkm::Id NumRanks;
+  //{particleId : {block IDs}}
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
   vtkm::Id Rank;
   vtkm::FloatDefault StepSize;

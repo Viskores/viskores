@@ -147,6 +147,7 @@ protected:
 
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
+
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfoType>> workerResults;
       this->GetWorkerResults(workerResults);
 
@@ -154,7 +155,9 @@ protected:
       for (auto& it : workerResults)
       {
         for (auto& r : it.second)
+        {
           numTerm += this->UpdateResult(r.Get<DSIHelperInfo<ParticleType>>());
+        }
       }
 
       vtkm::Id numTermMessages = 0;

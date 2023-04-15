@@ -199,7 +199,7 @@ VTKM_CONT inline void DataSetIntegratorSteadyState::DoAdvect(DSIHelperInfo<vtkm:
   using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
   auto copyFlag = (this->CopySeedArray ? vtkm::CopyFlag::On : vtkm::CopyFlag::Off);
-  auto seedArray = vtkm::cont::make_ArrayHandle(b.V, copyFlag);
+  auto seedArray = vtkm::cont::make_ArrayHandle(b.Particles, copyFlag);
 
   if (this->VecFieldType == VectorFieldType::VELOCITY_FIELD_TYPE)
   {
@@ -238,7 +238,7 @@ VTKM_CONT inline void DataSetIntegratorSteadyState::DoAdvect(
   using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
   auto copyFlag = (this->CopySeedArray ? vtkm::CopyFlag::On : vtkm::CopyFlag::Off);
-  auto seedArray = vtkm::cont::make_ArrayHandle(b.V, copyFlag);
+  auto seedArray = vtkm::cont::make_ArrayHandle(b.Particles, copyFlag);
 
   if (this->VecFieldType == VectorFieldType::ELECTRO_MAGNETIC_FIELD_TYPE)
   {

@@ -10,8 +10,11 @@
 
 
 #include <vtkm/Particle.h>
+#include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/flow/FilterParticleAdvection.h>
+
+#include <vtkm/thirdparty/diy/diy.h>
 
 namespace vtkm
 {
@@ -33,7 +36,15 @@ VTKM_CONT void FilterParticleAdvection::ValidateOptions() const
 {
   if (this->GetUseCoordinateSystemAsField())
     throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");
-  if (this->Seeds.GetNumberOfValues() == 0)
+
+  vtkm::Id numSeeds = this->Seeds.GetNumberOfValues();
+#ifdef VTKM_ENABLE_MPI
+  vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkm::Id totalNumSeeds = 0;
+  vtkmdiy::mpi::all_reduce(comm, numSeeds, totalNumSeeds, std::plus<vtkm::Id>{});
+  numSeeds = totalNumSeeds;
+#endif
+  if (numSeeds == 0)
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
   if (!this->Seeds.IsBaseComponentType<vtkm::Particle>() &&
       !this->Seeds.IsBaseComponentType<vtkm::ChargedParticle>())

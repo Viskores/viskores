@@ -200,7 +200,7 @@ VTKM_CONT inline void DataSetIntegratorUnsteadyState::DoAdvect(DSIHelperInfo<vtk
   using ArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
 
   auto copyFlag = (this->CopySeedArray ? vtkm::CopyFlag::On : vtkm::CopyFlag::Off);
-  auto seedArray = vtkm::cont::make_ArrayHandle(b.V, copyFlag);
+  auto seedArray = vtkm::cont::make_ArrayHandle(b.Particles, copyFlag);
 
   using AHType = internal::AdvectHelper<internal::UnsteadyStateGridEvalType, vtkm::Particle>;
 
