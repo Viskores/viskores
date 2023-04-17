@@ -14,6 +14,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleOffsetsToNumComponents.h>
+#include <vtkm/cont/ArrayHandleRuntimeVec.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
@@ -33,162 +34,6 @@ inline void PrintVTKDataFileSummary(const vtkm::io::internal::VTKDataSetFile& df
   out << "\tFormat: " << (df.IsBinary ? "BINARY" : "ASCII") << std::endl;
   out << "\tDataSet type: " << vtkm::io::internal::DataSetStructureString(df.Structure)
       << std::endl;
-}
-
-// Since Fields and DataSets store data in the default UnknownArrayHandle, convert
-// the data to the closest type supported by default. The following will
-// need to be updated if UnknownArrayHandle or TypeListCommon changes.
-template <typename T>
-struct ClosestCommonType
-{
-  using Type = T;
-};
-template <>
-struct ClosestCommonType<vtkm::Int8>
-{
-  using Type = vtkm::Int32;
-};
-template <>
-struct ClosestCommonType<vtkm::UInt8>
-{
-  using Type = vtkm::Int32;
-};
-template <>
-struct ClosestCommonType<vtkm::Int16>
-{
-  using Type = vtkm::Int32;
-};
-template <>
-struct ClosestCommonType<vtkm::UInt16>
-{
-  using Type = vtkm::Int32;
-};
-template <>
-struct ClosestCommonType<vtkm::UInt32>
-{
-  using Type = vtkm::Int64;
-};
-template <>
-struct ClosestCommonType<vtkm::UInt64>
-{
-  using Type = vtkm::Int64;
-};
-
-template <typename T>
-struct ClosestFloat
-{
-  using Type = T;
-};
-template <>
-struct ClosestFloat<vtkm::Int8>
-{
-  using Type = vtkm::Float32;
-};
-template <>
-struct ClosestFloat<vtkm::UInt8>
-{
-  using Type = vtkm::Float32;
-};
-template <>
-struct ClosestFloat<vtkm::Int16>
-{
-  using Type = vtkm::Float32;
-};
-template <>
-struct ClosestFloat<vtkm::UInt16>
-{
-  using Type = vtkm::Float32;
-};
-template <>
-struct ClosestFloat<vtkm::Int32>
-{
-  using Type = vtkm::Float64;
-};
-template <>
-struct ClosestFloat<vtkm::UInt32>
-{
-  using Type = vtkm::Float64;
-};
-template <>
-struct ClosestFloat<vtkm::Int64>
-{
-  using Type = vtkm::Float64;
-};
-template <>
-struct ClosestFloat<vtkm::UInt64>
-{
-  using Type = vtkm::Float64;
-};
-
-template <typename T>
-vtkm::cont::UnknownArrayHandle CreateUnknownArrayHandle(const std::vector<T>& vec)
-{
-  switch (vtkm::VecTraits<T>::NUM_COMPONENTS)
-  {
-    case 1:
-    {
-      using CommonType = typename ClosestCommonType<T>::Type;
-      constexpr bool not_same = !std::is_same<T, CommonType>::value;
-      if (not_same)
-      {
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                   "Type " << vtkm::io::internal::DataTypeName<T>::Name()
-                           << " is currently unsupported. Converting to "
-                           << vtkm::io::internal::DataTypeName<CommonType>::Name() << ".");
-      }
-
-      vtkm::cont::ArrayHandle<CommonType> output;
-      output.Allocate(static_cast<vtkm::Id>(vec.size()));
-      auto portal = output.WritePortal();
-      for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
-      {
-        portal.Set(i, static_cast<CommonType>(vec[static_cast<std::size_t>(i)]));
-      }
-
-      return vtkm::cont::UnknownArrayHandle(output);
-    }
-    case 2:
-    case 3:
-    case 9:
-    {
-      constexpr auto numComps = vtkm::VecTraits<T>::NUM_COMPONENTS;
-
-      using InComponentType = typename vtkm::VecTraits<T>::ComponentType;
-      using OutComponentType = typename ClosestFloat<InComponentType>::Type;
-      using CommonType = vtkm::Vec<OutComponentType, numComps>;
-      constexpr bool not_same = !std::is_same<T, CommonType>::value;
-      if (not_same)
-      {
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                   "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name() << "["
-                           << vtkm::VecTraits<T>::GetNumberOfComponents(T()) << "] "
-                           << "is currently unsupported. Converting to "
-                           << vtkm::io::internal::DataTypeName<OutComponentType>::Name() << "["
-                           << numComps << "].");
-      }
-
-      vtkm::cont::ArrayHandle<CommonType> output;
-      output.Allocate(static_cast<vtkm::Id>(vec.size()));
-      auto portal = output.WritePortal();
-      for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
-      {
-        CommonType outval = CommonType();
-        for (vtkm::IdComponent j = 0; j < numComps; ++j)
-        {
-          outval[j] = static_cast<OutComponentType>(
-            vtkm::VecTraits<T>::GetComponent(vec[static_cast<std::size_t>(i)], j));
-        }
-        portal.Set(i, outval);
-      }
-
-      return vtkm::cont::UnknownArrayHandle(output);
-    }
-    default:
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Only 1, 2, 3, or 9 components supported. Skipping.");
-      return vtkm::cont::UnknownArrayHandle(vtkm::cont::ArrayHandle<vtkm::Float32>());
-    }
-  }
 }
 
 } // anonymous namespace
@@ -676,27 +521,23 @@ void VTKDataSetReaderBase::ReadGlobalOrPedigreeIds(vtkm::cont::Field::Associatio
 class VTKDataSetReaderBase::SkipArrayVariant
 {
 public:
-  SkipArrayVariant(VTKDataSetReaderBase* reader, std::size_t numElements)
+  SkipArrayVariant(VTKDataSetReaderBase* reader,
+                   std::size_t numElements,
+                   vtkm::IdComponent numComponents)
     : Reader(reader)
-    , NumElements(numElements)
+    , TotalSize(numElements * static_cast<std::size_t>(numComponents))
   {
   }
 
   template <typename T>
   void operator()(T) const
   {
-    this->Reader->SkipArray(this->NumElements, T());
-  }
-
-  template <typename T>
-  void operator()(vtkm::IdComponent numComponents, T) const
-  {
-    this->Reader->SkipArray(this->NumElements * static_cast<std::size_t>(numComponents), T());
+    this->Reader->SkipArray(this->TotalSize, T());
   }
 
 protected:
   VTKDataSetReaderBase* Reader;
-  std::size_t NumElements;
+  std::size_t TotalSize;
 };
 
 class VTKDataSetReaderBase::ReadArrayVariant : public SkipArrayVariant
@@ -705,9 +546,11 @@ public:
   ReadArrayVariant(VTKDataSetReaderBase* reader,
                    vtkm::cont::Field::Association association,
                    std::size_t numElements,
+                   vtkm::IdComponent numComponents,
                    vtkm::cont::UnknownArrayHandle& data)
-    : SkipArrayVariant(reader, numElements)
+    : SkipArrayVariant(reader, numElements, numComponents)
     , Association(association)
+    , NumComponents(numComponents)
     , Data(&data)
   {
   }
@@ -715,12 +558,13 @@ public:
   template <typename T>
   void operator()(T) const
   {
-    std::vector<T> buffer(this->NumElements);
+    std::vector<T> buffer(this->TotalSize);
     this->Reader->ReadArray(buffer);
     if ((this->Association != vtkm::cont::Field::Association::Cells) ||
         (this->Reader->GetCellsPermutation().GetNumberOfValues() < 1))
     {
-      *this->Data = CreateUnknownArrayHandle(buffer);
+      *this->Data =
+        vtkm::cont::make_ArrayHandleRuntimeVecMove(this->NumComponents, std::move(buffer));
     }
     else
     {
@@ -734,20 +578,14 @@ public:
         std::size_t inIndex = static_cast<std::size_t>(permutation.Get(outIndex));
         permutedBuffer[static_cast<std::size_t>(outIndex)] = buffer[inIndex];
       }
-      *this->Data = CreateUnknownArrayHandle(permutedBuffer);
+      *this->Data =
+        vtkm::cont::make_ArrayHandleRuntimeVecMove(this->NumComponents, std::move(permutedBuffer));
     }
-  }
-
-  template <typename T>
-  void operator()(vtkm::IdComponent numComponents, T) const
-  {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-               "Support for " << numComponents << " components not implemented. Skipping.");
-    SkipArrayVariant::operator()(numComponents, T());
   }
 
 private:
   vtkm::cont::Field::Association Association;
+  vtkm::IdComponent NumComponents;
   vtkm::cont::UnknownArrayHandle* Data;
 };
 
@@ -764,8 +602,8 @@ void VTKDataSetReaderBase::DoSkipArrayVariant(std::string dataType,
   else
   {
     vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
-    vtkm::io::internal::SelectTypeAndCall(
-      typeId, numComponents, SkipArrayVariant(this, numElements));
+    vtkm::io::internal::SelectTypeAndCall(typeId,
+                                          SkipArrayVariant(this, numElements, numComponents));
   }
 }
 
@@ -791,7 +629,7 @@ vtkm::cont::UnknownArrayHandle VTKDataSetReaderBase::DoReadArrayVariant(
   {
     vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
     vtkm::io::internal::SelectTypeAndCall(
-      typeId, numComponents, ReadArrayVariant(this, association, numElements, data));
+      typeId, ReadArrayVariant(this, association, numElements, numComponents, data));
   }
 
   return data;
