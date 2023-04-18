@@ -61,6 +61,14 @@ public:
     this->Init(pds.GetPartitions(), blockIds);
   }
 
+  vtkm::Bounds GetGlobalBounds() const { return this->GlobalBounds; }
+
+  vtkm::Bounds GetBlockBounds(std::size_t idx) const
+  {
+    VTKM_ASSERT(idx < this->BlockBounds.size());
+    return this->BlockBounds[idx];
+  }
+
   vtkm::Id GetLocalBlockId(vtkm::Id idx) const
   {
     VTKM_ASSERT(idx >= 0 && idx < this->LocalNumBlocks);
