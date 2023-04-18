@@ -604,10 +604,6 @@ public:
     (vtkm::cont::ArrayHandle<internal::detail::RecombinedValueType<ComponentType>,
                              vtkm::cont::internal::StorageTagRecombineVec>));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   vtkm::IdComponent GetNumberOfComponents() const
   {
     return StorageType::GetNumberOfComponents(this->GetBuffers());

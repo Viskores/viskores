@@ -188,7 +188,6 @@ struct CompositeVectorTraits
 
   using ValueType = typename vtkm::internal::compvec::GetValueType<ArrayTs...>::ValueType;
   using StorageTag = vtkm::cont::StorageTagCompositeVec<typename ArrayTs::StorageTag...>;
-  using StorageType = Storage<ValueType, StorageTag>;
   using Superclass = ArrayHandle<ValueType, StorageTag>;
 };
 
@@ -400,14 +399,10 @@ class ArrayHandleCompositeVector
   : public ArrayHandle<typename internal::CompositeVectorTraits<ArrayTs...>::ValueType,
                        typename internal::CompositeVectorTraits<ArrayTs...>::StorageTag>
 {
-private:
-  using Traits = internal::CompositeVectorTraits<ArrayTs...>;
-  using StorageType = typename Traits::StorageType;
-
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleCompositeVector,
                              (ArrayHandleCompositeVector<ArrayTs...>),
-                             (typename Traits::Superclass));
+                             (typename internal::CompositeVectorTraits<ArrayTs...>::Superclass));
 
   VTKM_CONT
   ArrayHandleCompositeVector(const ArrayTs&... arrays)

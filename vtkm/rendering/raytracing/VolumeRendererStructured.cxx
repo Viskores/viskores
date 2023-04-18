@@ -11,7 +11,6 @@
 
 #include <iostream>
 #include <math.h>
-#include <stdio.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -20,7 +19,6 @@
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
@@ -33,6 +31,9 @@ namespace rendering
 {
 namespace raytracing
 {
+using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
+using CartesianArrayHandle =
+  vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
 
 namespace
 {
@@ -41,9 +42,6 @@ template <typename Device>
 class RectilinearLocator
 {
 protected:
-  using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using CartesianArrayHandle =
-    vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
   using DefaultConstHandle = typename DefaultHandle::ReadPortalType;
   using CartesianConstPortal = typename CartesianArrayHandle::ReadPortalType;
 
@@ -728,13 +726,6 @@ public:
   }
 }; //class CalcRayStart
 
-VolumeRendererStructured::VolumeRendererStructured()
-{
-  IsSceneDirty = false;
-  IsUniformDataSet = true;
-  SampleDistance = -1.f;
-}
-
 void VolumeRendererStructured::SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colorMap)
 {
   ColorMap = colorMap;
@@ -754,35 +745,15 @@ void VolumeRendererStructured::SetData(const vtkm::cont::CoordinateSystem& coord
   ScalarRange = scalarRange;
 }
 
-template <typename Precision>
-struct VolumeRendererStructured::RenderFunctor
-{
-protected:
-  vtkm::rendering::raytracing::VolumeRendererStructured* Self;
-  vtkm::rendering::raytracing::Ray<Precision>& Rays;
-
-public:
-  VTKM_CONT
-  RenderFunctor(vtkm::rendering::raytracing::VolumeRendererStructured* self,
-                vtkm::rendering::raytracing::Ray<Precision>& rays)
-    : Self(self)
-    , Rays(rays)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    this->Self->RenderOnDevice(this->Rays, Device());
-    return true;
-  }
-};
-
 void VolumeRendererStructured::Render(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays)
 {
-  RenderFunctor<vtkm::Float32> functor(this, rays);
+  auto functor = [&](auto device) {
+    using Device = typename std::decay_t<decltype(device)>;
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
+    this->RenderOnDevice(rays, device);
+    return true;
+  };
   vtkm::cont::TryExecute(functor);
 }
 

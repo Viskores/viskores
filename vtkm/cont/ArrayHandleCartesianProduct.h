@@ -344,10 +344,6 @@ public:
                                                           SecondHandleType,
                                                           ThirdHandleType>::Superclass));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandleCartesianProduct(const FirstHandleType& firstArray,
                               const SecondHandleType& secondArray,
