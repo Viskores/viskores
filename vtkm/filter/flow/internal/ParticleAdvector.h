@@ -32,10 +32,12 @@ public:
   ParticleAdvector(const vtkm::filter::flow::internal::BoundsMap& bm,
                    const std::vector<DSIType>& blocks,
                    const bool& useThreaded,
+                   const bool& useAsyncComm,
                    const vtkm::filter::flow::FlowResultType& parType)
     : Blocks(blocks)
     , BoundsMap(bm)
     , ResultType(parType)
+    , UseAsynchronousCommunication(useAsyncComm)
     , UseThreadedAlgorithm(useThreaded)
   {
   }
@@ -61,7 +63,7 @@ private:
                                          vtkm::FloatDefault stepSize,
                                          const vtkm::cont::ArrayHandle<ParticleType>& seeds)
   {
-    AlgorithmType algo(this->BoundsMap, this->Blocks);
+    AlgorithmType algo(this->BoundsMap, this->Blocks, this->UseAsynchronousCommunication);
     algo.Execute(numSteps, stepSize, seeds);
     return algo.GetOutput();
   }
@@ -113,6 +115,7 @@ private:
   std::vector<DSIType> Blocks;
   vtkm::filter::flow::internal::BoundsMap BoundsMap;
   FlowResultType ResultType;
+  bool UseAsynchronousCommunication = true;
   bool UseThreadedAlgorithm;
 };
 

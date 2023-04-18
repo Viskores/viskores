@@ -75,8 +75,11 @@ VTKM_CONT vtkm::cont::PartitionedDataSet FilterParticleAdvectionUnsteadyState::D
                                       this->VecFieldType,
                                       this->GetResultType());
 
-  vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(
-    boundsMap, dsi, this->UseThreadedAlgorithm, this->GetResultType());
+  vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(boundsMap,
+                                                              dsi,
+                                                              this->UseThreadedAlgorithm,
+                                                              this->UseAsynchronousCommunication,
+                                                              this->GetResultType());
 
   return pav.Execute(this->NumberOfSteps, this->StepSize, this->Seeds);
 }
