@@ -63,10 +63,10 @@ public:
 
   vtkm::Bounds GetGlobalBounds() const { return this->GlobalBounds; }
 
-  vtkm::Bounds GetBlockBounds(std::size_t idx) const
+  vtkm::Bounds GetBlockBounds(vtkm::Id idx) const
   {
-    VTKM_ASSERT(idx < this->BlockBounds.size());
-    return this->BlockBounds[idx];
+    VTKM_ASSERT(idx >= 0 && static_cast<std::size_t>(idx) < this->BlockBounds.size());
+    return this->BlockBounds[static_cast<std::size_t>(idx)];
   }
 
   vtkm::Id GetLocalBlockId(vtkm::Id idx) const
@@ -146,7 +146,7 @@ private:
 
     //note: there might be duplicates...
     vtkm::Id globalNumBlocks =
-      std::accumulate(globalBlockCounts.begin(), globalBlockCounts.end(), 0);
+      std::accumulate(globalBlockCounts.begin(), globalBlockCounts.end(), vtkm::Id{ 0 });
 
     //3. given the counts per rank, calc offset for this rank.
     vtkm::Id offset = 0;
