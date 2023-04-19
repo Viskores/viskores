@@ -66,6 +66,7 @@ public:
   vtkm::Bounds GetBlockBounds(vtkm::Id idx) const
   {
     VTKM_ASSERT(idx >= 0 && static_cast<std::size_t>(idx) < this->BlockBounds.size());
+
     return this->BlockBounds[static_cast<std::size_t>(idx)];
   }
 
