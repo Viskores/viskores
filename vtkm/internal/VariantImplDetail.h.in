@@ -36,6 +36,7 @@ $# Ignore the following comment. It is meant for the generated file.
 
 #include <vtkmstd/is_trivial.h>
 
+#include <algorithm>
 #include <type_traits>
 
 $py(max_expanded=8)\
@@ -84,6 +85,58 @@ template <typename... Ts>
 using AllTriviallyDestructible =
   vtkm::ListAll<vtkm::List<Ts...>, vtkmstd::is_trivially_destructible>;
 
+// --------------------------------------------------------------------------------
+// Helper functions to determine the maximum type size.
+#if defined(VTKM_GCC) && (__GNUC__ == 5)
+// GCC5 gives an error with `sizeof(Ts)...` for an unexpanded parameter pack.
+template <typename T0>
+constexpr std::size_t MaxSizeOf()
+{
+  return sizeof(T0);
+}
+template <typename T0, typename T1, typename... Ts>
+constexpr std::size_t MaxSizeOf()
+{
+  return std::max(sizeof(T0), MaxSizeOf<T1, Ts...>());
+}
+#else
+template <typename... Ts>
+constexpr std::size_t MaxSizeOf()
+{
+  return std::max({ sizeof(Ts)... });
+}
+#endif
+
+// --------------------------------------------------------------------------------
+// Placeholder for a fully used structure of the given type.
+template <std::size_t Size, bool = (Size > 8)>
+struct SizedPlaceholder
+{
+  VTKM_STATIC_ASSERT(Size > 0);
+  vtkm::Int8 A;
+  SizedPlaceholder<Size - 1> B;
+};
+
+template <>
+struct SizedPlaceholder<1, false>
+{
+  vtkm::Int8 A;
+};
+
+template <std::size_t Size>
+struct SizedPlaceholder<Size, true>
+{
+  vtkm::Int8 A;
+  vtkm::Int8 B;
+  vtkm::Int8 C;
+  vtkm::Int8 D;
+  vtkm::Int8 E;
+  vtkm::Int8 F;
+  vtkm::Int8 G;
+  vtkm::Int8 H;
+  SizedPlaceholder<Size - 8> I;
+};
+
 // clang-format off
 
 // --------------------------------------------------------------------------------
@@ -128,6 +181,11 @@ $for(param_length in range(max_expanded))\
 template <$typename_list(param_length)>
 union VariantUnionTD<$type_list(param_length)>
 {
+  // Work around issue where CUDA sometimes seems to miss initializing some struct members
+  // if another entry in the varient has a struct with padding. Place an item that requires
+  // everthing to be copied.
+  SizedPlaceholder<MaxSizeOf<$type_list(param_length)>()> Placeholder;
+
 $for(param_index in range(param_length + 1))\
   T$(param_index) V$(param_index);
 $endfor\
@@ -137,6 +195,11 @@ $endfor\
 template <$typename_list(param_length)>
 union VariantUnionNTD<$type_list(param_length)>
 {
+  // Work around issue where CUDA sometimes seems to miss initializing some struct members
+  // if another entry in the varient has a struct with padding. Place an item that requires
+  // everthing to be copied.
+  SizedPlaceholder<MaxSizeOf<$type_list(param_length)>()> Placeholder;
+
 $for(param_index in range(param_length + 1))\
   T$(param_index) V$(param_index);
 $endfor\
@@ -150,6 +213,11 @@ $endfor\
 template <$typename_list(max_expanded), typename... Ts>
 union VariantUnionTD<$type_list(max_expanded), Ts...>
 {
+  // Work around issue where CUDA sometimes seems to miss initializing some struct members
+  // if another entry in the varient has a struct with padding. Place an item that requires
+  // everthing to be copied.
+  SizedPlaceholder<MaxSizeOf<$type_list(max_expanded), Ts...>()> Placeholder;
+
 $for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
 $endfor\
@@ -162,6 +230,11 @@ $endfor\
 template <$typename_list(max_expanded), typename... Ts>
 union VariantUnionNTD<$type_list(max_expanded), Ts...>
 {
+  // Work around issue where CUDA sometimes seems to miss initializing some struct members
+  // if another entry in the varient has a struct with padding. Place an item that requires
+  // everthing to be copied.
+  SizedPlaceholder<MaxSizeOf<$type_list(max_expanded), Ts...>()> Placeholder;
+
 $for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
 $endfor\
