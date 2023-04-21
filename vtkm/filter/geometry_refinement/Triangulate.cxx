@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/geometry_refinement/Triangulate.h>
 #include <vtkm/filter/geometry_refinement/worklet/Triangulate.h>
@@ -42,6 +43,18 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
     return false;
   }
 }
+
+struct IsShapeTriangle
+{
+  VTKM_EXEC_CONT
+  bool operator()(vtkm::UInt8 shape) const { return shape == vtkm::CELL_SHAPE_TRIANGLE; }
+};
+
+struct BinaryAnd
+{
+  VTKM_EXEC_CONT
+  bool operator()(bool u, bool v) const { return u && v; }
+};
 } // anonymous namespace
 
 namespace vtkm
@@ -54,15 +67,57 @@ VTKM_CONT vtkm::cont::DataSet Triangulate::DoExecute(const vtkm::cont::DataSet& 
 {
   const vtkm::cont::UnknownCellSet& inCellSet = input.GetCellSet();
 
+  // In case we already have a CellSetSingleType of tetras,
+  // don't call the worklet and return the input DataSet directly
+  if (inCellSet.CanConvert<vtkm::cont::CellSetSingleType<>>() &&
+      inCellSet.AsCellSet<vtkm::cont::CellSetSingleType<>>().GetCellShapeAsId() ==
+        vtkm::CellShapeTagTriangle::Id)
+  {
+    return input;
+  }
+
   vtkm::cont::CellSetSingleType<> outCellSet;
-  vtkm::worklet::Triangulate worklet;
+  vtkm::cont::DataSet output;
 
-  vtkm::cont::CastAndCall(inCellSet,
-                          [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
+  // Optimization in case we only have triangles in the CellSet
+  bool allTriangles = false;
+  if (inCellSet.CanConvert<vtkm::cont::CellSetExplicit<>>())
+  {
+    vtkm::cont::CellSetExplicit<> inCellSetExplicit =
+      inCellSet.AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
-  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  // create the output dataset (without a CoordinateSystem).
-  vtkm::cont::DataSet output = this->CreateResult(input, outCellSet, mapper);
+    auto shapeArray = inCellSetExplicit.GetShapesArray(vtkm::TopologyElementTagCell(),
+                                                       vtkm::TopologyElementTagPoint());
+    auto isCellTriangleArray = vtkm::cont::make_ArrayHandleTransform(shapeArray, IsShapeTriangle{});
+    allTriangles = vtkm::cont::Algorithm::Reduce(isCellTriangleArray, true, BinaryAnd{});
+
+    if (allTriangles)
+    {
+      // Reuse the input's connectivity array
+      outCellSet.Fill(inCellSet.GetNumberOfPoints(),
+                      vtkm::CellShapeTagTriangle::Id,
+                      3,
+                      inCellSetExplicit.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                             vtkm::TopologyElementTagPoint()));
+
+      // Copy all fields from the input
+      output = this->CreateResult(input, outCellSet, [&](auto& result, const auto& f) {
+        result.AddField(f);
+        return true;
+      });
+    }
+  }
+
+  if (!allTriangles)
+  {
+    vtkm::worklet::Triangulate worklet;
+    vtkm::cont::CastAndCall(inCellSet,
+                            [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
+
+    auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+    // create the output dataset (without a CoordinateSystem).
+    output = this->CreateResult(input, outCellSet, mapper);
+  }
 
   // We did not change the geometry of the input dataset at all. Just attach coordinate system
   // of input dataset to output dataset.
