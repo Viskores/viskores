@@ -25,19 +25,6 @@ namespace raytracing
 class VTKM_RENDERING_EXPORT VolumeRendererStructured
 {
 public:
-  using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using CartesianArrayHandle =
-    vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
-
-  VTKM_CONT
-  VolumeRendererStructured();
-
-  VTKM_CONT
-  void EnableCompositeBackground();
-
-  VTKM_CONT
-  void DisableCompositeBackground();
-
   VTKM_CONT
   void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colorMap);
 
@@ -60,17 +47,15 @@ public:
 protected:
   template <typename Precision, typename Device>
   VTKM_CONT void RenderOnDevice(vtkm::rendering::raytracing::Ray<Precision>& rays, Device);
-  template <typename Precision>
-  struct RenderFunctor;
 
-  bool IsSceneDirty;
-  bool IsUniformDataSet;
+  bool IsSceneDirty = false;
+  bool IsUniformDataSet = true;
   vtkm::Bounds SpatialExtent;
   vtkm::cont::CoordinateSystem Coordinates;
   vtkm::cont::CellSetStructured<3> Cellset;
   const vtkm::cont::Field* ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;
-  vtkm::Float32 SampleDistance;
+  vtkm::Float32 SampleDistance = -1.f;
   vtkm::Range ScalarRange;
 };
 }
