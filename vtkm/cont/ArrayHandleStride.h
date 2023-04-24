@@ -333,10 +333,6 @@ public:
                              (ArrayHandleStride<T>),
                              (ArrayHandle<T, vtkm::cont::StorageTagStride>));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   ArrayHandleStride(vtkm::Id stride, vtkm::Id offset, vtkm::Id modulo = 0, vtkm::Id divisor = 1)
     : Superclass(StorageType::CreateBuffers(
         vtkm::cont::internal::Buffer{},

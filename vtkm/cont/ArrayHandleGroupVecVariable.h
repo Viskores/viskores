@@ -285,10 +285,6 @@ public:
 
   using ComponentType = typename ComponentsArrayHandleType::ValueType;
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandleGroupVecVariable(const ComponentsArrayHandleType& componentsArray,
                               const OffsetsArrayHandleType& offsetsArray)

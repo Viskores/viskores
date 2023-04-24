@@ -291,10 +291,6 @@ public:
     (ArrayHandleXGCCoordinates<T>),
     (vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, vtkm::cont::StorageTagXGCCoordinates>));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandleXGCCoordinates(const OriginalType& array,
                             vtkm::Id numberOfPlanes,

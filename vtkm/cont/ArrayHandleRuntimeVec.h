@@ -327,7 +327,6 @@ public:
       vtkm::cont::StorageTagRuntimeVec>));
 
 private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
   using ComponentsArrayType = vtkm::cont::ArrayHandle<ComponentType, StorageTagBasic>;
 
 public:

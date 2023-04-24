@@ -129,10 +129,6 @@ struct ArrayHandleZipTraits
   using Tag =
     StorageTagZip<typename FirstHandleType::StorageTag, typename SecondHandleType::StorageTag>;
 
-  /// The storage type.
-  ///
-  using Storage = vtkm::cont::internal::Storage<ValueType, Tag>;
-
   /// The superclass for ArrayHandleZip.
   ///
   using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
@@ -258,9 +254,6 @@ class ArrayHandleZip
   // If the following line gives a compile error, then the SecondHandleType
   // template argument is not a valid ArrayHandle type.
   VTKM_IS_ARRAY_HANDLE(SecondHandleType);
-
-  using StorageType =
-    typename internal::ArrayHandleZipTraits<FirstHandleType, SecondHandleType>::Storage;
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
