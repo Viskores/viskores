@@ -234,7 +234,7 @@ void TestWithStructuredData()
   contour.SetIsoValue(192);
   contour.SetMergeDuplicatePoints(true);
   contour.SetGenerateNormals(true);
-  contour.SetComputeFastNormalsForStructured(true);
+  contour.SetComputeFastNormals(true);
   contour.SetNormalArrayName("normals");
   dataSet = contour.Execute(dataSet);
 

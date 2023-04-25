@@ -438,8 +438,7 @@ void BenchContour(::benchmark::State& state)
 
   filter.SetMergeDuplicatePoints(mergePoints);
   filter.SetGenerateNormals(normals);
-  filter.SetComputeFastNormalsForStructured(fastNormals);
-  filter.SetComputeFastNormalsForUnstructured(fastNormals);
+  filter.SetComputeFastNormals(fastNormals);
 
   vtkm::cont::Timer timer{ device };
 

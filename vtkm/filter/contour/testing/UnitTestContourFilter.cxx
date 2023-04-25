@@ -11,10 +11,13 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/contour/ContourFlyingEdges.h>
+#include <vtkm/filter/contour/ContourMarchingCells.h>
 #include <vtkm/filter/field_transform/GenerateIds.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
@@ -26,7 +29,8 @@ namespace
 class TestContourFilter
 {
 public:
-  void TestContourUniformGrid() const
+  template <typename ContourFilterType>
+  void TestContourUniformGrid(vtkm::IdComponent numPointsNoMergeDuplicate) const
   {
     std::cout << "Testing Contour filter on a uniform grid" << std::endl;
 
@@ -38,14 +42,14 @@ public:
     genIds.SetCellFieldName("cellvar");
     vtkm::cont::DataSet dataSet = genIds.Execute(tangle.Execute());
 
-    vtkm::filter::contour::Contour mc;
+    ContourFilterType filter;
 
-    mc.SetGenerateNormals(true);
-    mc.SetIsoValue(0, 0.5);
-    mc.SetActiveField("tangle");
-    mc.SetFieldsToPass(vtkm::filter::FieldSelection::Mode::None);
+    filter.SetGenerateNormals(true);
+    filter.SetIsoValue(0, 0.5);
+    filter.SetActiveField("tangle");
+    filter.SetFieldsToPass(vtkm::filter::FieldSelection::Mode::None);
 
-    auto result = mc.Execute(dataSet);
+    auto result = filter.Execute(dataSet);
     {
       VTKM_TEST_ASSERT(result.GetNumberOfCoordinateSystems() == 1,
                        "Wrong number of coordinate systems in the output dataset");
@@ -55,8 +59,8 @@ public:
     }
 
     // let's execute with mapping fields.
-    mc.SetFieldsToPass({ "tangle", "cellvar" });
-    result = mc.Execute(dataSet);
+    filter.SetFieldsToPass({ "tangle", "cellvar" });
+    result = filter.Execute(dataSet);
     {
       const bool isMapped = result.HasField("tangle");
       VTKM_TEST_ASSERT(isMapped, "mapping should pass");
@@ -99,16 +103,13 @@ public:
       VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
     }
 
-    //Now try with vertex merging disabled. Since this
-    //we use FlyingEdges we now which does point merging for free
-    //so we should see the number of points not change
-    mc.SetMergeDuplicatePoints(false);
-    mc.SetFieldsToPass(vtkm::filter::FieldSelection::Mode::All);
-    result = mc.Execute(dataSet);
+    //Now try with vertex merging disabled.
+    filter.SetMergeDuplicatePoints(false);
+    filter.SetFieldsToPass(vtkm::filter::FieldSelection::Mode::All);
+    result = filter.Execute(dataSet);
     {
       vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
-
-      VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 72,
+      VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == numPointsNoMergeDuplicate,
                        "Shouldn't have less coordinates than the unmerged version");
 
       //verify that the number of cells is correct (160)
@@ -120,20 +121,24 @@ public:
     }
   }
 
+  template <typename ContourFilterType>
   void Test3DUniformDataSet0() const
   {
     vtkm::cont::testing::MakeTestDataSet maker;
     vtkm::cont::DataSet inputData = maker.Make3DUniformDataSet0();
     std::string fieldName = "pointvar";
+
     // Defend the test against changes to Make3DUniformDataSet0():
     VTKM_TEST_ASSERT(inputData.HasField(fieldName));
     vtkm::cont::Field pointField = inputData.GetField(fieldName);
+
     vtkm::Range range;
     pointField.GetRange(&range);
     vtkm::FloatDefault isovalue = 100.0;
     // Range = [10.1, 180.5]
     VTKM_TEST_ASSERT(range.Contains(isovalue));
-    vtkm::filter::contour::Contour filter;
+
+    ContourFilterType filter;
     filter.SetGenerateNormals(false);
     filter.SetMergeDuplicatePoints(true);
     filter.SetIsoValue(isovalue);
@@ -143,6 +148,7 @@ public:
     VTKM_TEST_ASSERT(outputData.GetNumberOfPoints() == 9);
   }
 
+  template <typename ContourFilterType>
   void TestContourWedges() const
   {
     std::cout << "Testing Contour filter on wedge cells" << std::endl;
@@ -158,7 +164,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
     dataSet.GetPointField("gyroid").GetData().AsArrayHandle(fieldArray);
 
-    vtkm::filter::contour::Contour isosurfaceFilter;
+    ContourFilterType isosurfaceFilter;
     isosurfaceFilter.SetActiveField("gyroid");
     isosurfaceFilter.SetMergeDuplicatePoints(false);
     isosurfaceFilter.SetIsoValue(0.0);
@@ -167,11 +173,54 @@ public:
     VTKM_TEST_ASSERT(result.GetNumberOfCells() == 52);
   }
 
+  void TestUnsupportedFlyingEdges() const
+  {
+    vtkm::cont::testing::MakeTestDataSet maker;
+
+    vtkm::cont::DataSet rectilinearDataset = maker.Make3DRectilinearDataSet0();
+    vtkm::cont::DataSet explicitDataSet = maker.Make3DExplicitDataSet0();
+
+    vtkm::filter::contour::ContourFlyingEdges filter;
+    filter.SetIsoValue(2.0);
+    filter.SetActiveField("pointvar");
+
+    try
+    {
+      filter.Execute(rectilinearDataset);
+      VTKM_TEST_FAIL("Flying Edges filter should not run on datasets with rectilinear coordinates");
+    }
+    catch (vtkm::cont::ErrorFilterExecution&)
+    {
+      std::cout << "Execution successfully aborted" << std::endl;
+    }
+
+    try
+    {
+      filter.Execute(explicitDataSet);
+      VTKM_TEST_FAIL("Flying Edges filter should not run on explicit datasets");
+    }
+    catch (vtkm::cont::ErrorFilterExecution&)
+    {
+      std::cout << "Execution successfully aborted" << std::endl;
+    }
+  }
+
   void operator()() const
   {
-    this->Test3DUniformDataSet0();
-    this->TestContourUniformGrid();
-    this->TestContourWedges();
+    this->TestContourUniformGrid<vtkm::filter::contour::Contour>(72);
+    this->TestContourUniformGrid<vtkm::filter::contour::ContourFlyingEdges>(72);
+    // Unlike flying edges, marching cells does not have point merging for free,
+    // So the number of points should increase when disabling duplicate point merging.
+    this->TestContourUniformGrid<vtkm::filter::contour::ContourMarchingCells>(480);
+
+    this->Test3DUniformDataSet0<vtkm::filter::contour::Contour>();
+    this->Test3DUniformDataSet0<vtkm::filter::contour::ContourMarchingCells>();
+    this->Test3DUniformDataSet0<vtkm::filter::contour::ContourFlyingEdges>();
+
+    this->TestContourWedges<vtkm::filter::contour::Contour>();
+    this->TestContourWedges<vtkm::filter::contour::ContourMarchingCells>();
+
+    this->TestUnsupportedFlyingEdges();
   }
 
 }; // class TestContourFilter
