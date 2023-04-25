@@ -25,4 +25,9 @@ set(unit_tests
   UnitTestMapperGlyphVector.cxx
 )
 
-vtkm_unit_tests(SOURCES ${unit_tests})
+set(libraries
+  vtkm_source)
+
+vtkm_unit_tests(SOURCES ${unit_tests}
+  LIBRARIES ${libraries}
+  )

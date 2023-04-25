@@ -18,12 +18,12 @@
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
+#include <vtkm/source/Tangle.h>
 
 namespace
 {
 
-
-void RenderTests()
+void TestRectilinear()
 {
   vtkm::cont::ColorTable colorTable = vtkm::cont::ColorTable::Preset::Inferno;
   colorTable.AddPointAlpha(0.0, 0.01f);
@@ -56,6 +56,34 @@ void RenderTests()
 
   vtkm::rendering::testing::RenderTest(
     rectDS, "temp", "rendering/volume/rectilinear3D.png", options);
+}
+
+void TestUniformGrid()
+{
+  vtkm::cont::ColorTable colorTable = vtkm::cont::ColorTable::Preset::Inferno;
+  colorTable.AddPointAlpha(0.0, 0.2f);
+  colorTable.AddPointAlpha(0.2, 0.0f);
+  colorTable.AddPointAlpha(0.5, 0.0f);
+  //  colorTable.AddPointAlpha(0.9, 0.0f);
+
+  vtkm::rendering::testing::RenderTestOptions options;
+  options.Mapper = vtkm::rendering::testing::MapperType::Volume;
+  options.AllowAnyDevice = false;
+  options.ColorTable = colorTable;
+
+  vtkm::source::Tangle tangle;
+  tangle.SetPointDimensions({ 50, 50, 50 });
+  vtkm::cont::DataSet tangleData = tangle.Execute();
+  std::string fieldName = "tangle";
+
+  vtkm::rendering::testing::RenderTest(
+    tangleData, "tangle", "rendering/volume/uniform.png", options);
+}
+
+void RenderTests()
+{
+  TestRectilinear();
+  TestUniformGrid();
 }
 
 } //namespace

@@ -9,6 +9,7 @@
 //============================================================================
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 
+#include "vtkm/cont/CellLocatorUniformGrid.h"
 #include <iostream>
 #include <math.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
@@ -111,7 +112,8 @@ public:
   VTKM_EXEC
   inline void LocateCell(vtkm::Id3& cell,
                          const vtkm::Vec3f_32& point,
-                         vtkm::Vec3f_32& invSpacing) const
+                         vtkm::Vec3f_32& invSpacing,
+                         vtkm::Vec3f& /*parametric*/) const
   {
     for (vtkm::Int32 dim = 0; dim < 3; ++dim)
     {
@@ -193,24 +195,27 @@ protected:
   using UniformConstPortal = typename UniformArrayHandle::ReadPortalType;
 
   vtkm::Id3 PointDimensions;
-  vtkm::Vec3f_32 Origin;
+  //  vtkm::Vec3f_32 Origin;
   vtkm::Vec3f_32 InvSpacing;
-  vtkm::Vec3f_32 MaxPoint;
+  //  vtkm::Vec3f_32 MaxPoint;
   UniformConstPortal Coordinates;
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
     Conn;
+  vtkm::exec::CellLocatorUniformGrid Locator;
 
 public:
   UniformLocator(const UniformArrayHandle& coordinates,
                  vtkm::cont::CellSetStructured<3>& cellset,
+                 vtkm::cont::CellLocatorUniformGrid& locator,
                  vtkm::cont::Token& token)
     : Coordinates(coordinates.PrepareForInput(Device(), token))
     , Conn(cellset.PrepareForInput(Device(),
                                    vtkm::TopologyElementTagCell(),
                                    vtkm::TopologyElementTagPoint(),
                                    token))
+    , Locator(locator.PrepareForExecution(Device(), token))
   {
-    Origin = Coordinates.GetOrigin();
+    //    Origin = Coordinates.GetOrigin();
     PointDimensions = Conn.GetPointDimensions();
     vtkm::Vec3f_32 spacing = Coordinates.GetSpacing();
 
@@ -218,7 +223,7 @@ public:
     unitLength[0] = static_cast<vtkm::Float32>(PointDimensions[0] - 1);
     unitLength[1] = static_cast<vtkm::Float32>(PointDimensions[1] - 1);
     unitLength[2] = static_cast<vtkm::Float32>(PointDimensions[2] - 1);
-    MaxPoint = Origin + spacing * unitLength;
+    //    MaxPoint = Origin + spacing * unitLength;
     InvSpacing[0] = 1.f / spacing[0];
     InvSpacing[1] = 1.f / spacing[1];
     InvSpacing[2] = 1.f / spacing[2];
@@ -227,57 +232,71 @@ public:
   VTKM_EXEC
   inline bool IsInside(const vtkm::Vec3f_32& point) const
   {
-    bool inside = true;
-    if (point[0] < Origin[0] || point[0] > MaxPoint[0])
-      inside = false;
-    if (point[1] < Origin[1] || point[1] > MaxPoint[1])
-      inside = false;
-    if (point[2] < Origin[2] || point[2] > MaxPoint[2])
-      inside = false;
-    return inside;
+#if 0
+//    bool inside = true;
+//    if (point[0] < Origin[0] || point[0] > MaxPoint[0])
+//      inside = false;
+//    if (point[1] < Origin[1] || point[1] > MaxPoint[1])
+//      inside = false;
+//    if (point[2] < Origin[2] || point[2] > MaxPoint[2])
+//      inside = false;
+//    return inside;
+#endif
+    return this->Locator.IsInside(point);
   }
 
   VTKM_EXEC
   inline void GetCellIndices(const vtkm::Id3& cell, vtkm::Vec<vtkm::Id, 8>& cellIndices) const
   {
-    cellIndices[0] = (cell[2] * PointDimensions[1] + cell[1]) * PointDimensions[0] + cell[0];
-    cellIndices[1] = cellIndices[0] + 1;
-    cellIndices[2] = cellIndices[1] + PointDimensions[0];
-    cellIndices[3] = cellIndices[2] - 1;
-    cellIndices[4] = cellIndices[0] + PointDimensions[0] * PointDimensions[1];
-    cellIndices[5] = cellIndices[4] + 1;
-    cellIndices[6] = cellIndices[5] + PointDimensions[0];
-    cellIndices[7] = cellIndices[6] - 1;
+#if 0
+//    cellIndices[0] = (cell[2] * PointDimensions[1] + cell[1]) * PointDimensions[0] + cell[0];
+//    cellIndices[1] = cellIndices[0] + 1;
+//    cellIndices[2] = cellIndices[1] + PointDimensions[0];
+//    cellIndices[3] = cellIndices[2] - 1;
+//    cellIndices[4] = cellIndices[0] + PointDimensions[0] * PointDimensions[1];
+//    cellIndices[5] = cellIndices[4] + 1;
+//    cellIndices[6] = cellIndices[5] + PointDimensions[0];
+//    cellIndices[7] = cellIndices[6] - 1;
+#endif
+    cellIndices = Conn.GetIndices(cell);
   } // GetCellIndices
 
   VTKM_EXEC
   inline vtkm::Id GetCellIndex(const vtkm::Id3& cell) const
   {
-    return (cell[2] * (PointDimensions[1] - 1) + cell[1]) * (PointDimensions[0] - 1) + cell[0];
+    //    return (cell[2] * (PointDimensions[1] - 1) + cell[1]) * (PointDimensions[0] - 1) + cell[0];
+    return this->Conn.LogicalToFlatToIndex(cell);
   }
 
   VTKM_EXEC
   inline void LocateCell(vtkm::Id3& cell,
                          const vtkm::Vec3f_32& point,
-                         vtkm::Vec3f_32& invSpacing) const
+                         vtkm::Vec3f_32& invSpacing,
+                         vtkm::Vec3f& parametric) const
   {
-    vtkm::Vec3f_32 temp = point;
-    temp = temp - Origin;
-    temp = temp * InvSpacing;
-    //make sure that if we border the edges, we sample the correct cell
-    if (temp[0] < 0.0f)
-      temp[0] = 0.0f;
-    if (temp[1] < 0.0f)
-      temp[1] = 0.0f;
-    if (temp[2] < 0.0f)
-      temp[2] = 0.0f;
-    if (temp[0] >= vtkm::Float32(PointDimensions[0] - 1))
-      temp[0] = vtkm::Float32(PointDimensions[0] - 2);
-    if (temp[1] >= vtkm::Float32(PointDimensions[1] - 1))
-      temp[1] = vtkm::Float32(PointDimensions[1] - 2);
-    if (temp[2] >= vtkm::Float32(PointDimensions[2] - 1))
-      temp[2] = vtkm::Float32(PointDimensions[2] - 2);
-    cell = temp;
+#if 0
+//    vtkm::Vec3f_32 temp = point;
+//    temp = temp - Origin;
+//    temp = temp * InvSpacing;
+//    //make sure that if we border the edges, we sample the correct cell
+//    if (temp[0] < 0.0f)
+//      temp[0] = 0.0f;
+//    if (temp[1] < 0.0f)
+//      temp[1] = 0.0f;
+//    if (temp[2] < 0.0f)
+//      temp[2] = 0.0f;
+//    if (temp[0] >= vtkm::Float32(PointDimensions[0] - 1))
+//      temp[0] = vtkm::Float32(PointDimensions[0] - 2);
+//    if (temp[1] >= vtkm::Float32(PointDimensions[1] - 1))
+//      temp[1] = vtkm::Float32(PointDimensions[1] - 2);
+//    if (temp[2] >= vtkm::Float32(PointDimensions[2] - 1))
+//      temp[2] = vtkm::Float32(PointDimensions[2] - 2);
+//    cell = temp;
+//    invSpacing = InvSpacing;
+#endif
+    vtkm::Id cellId{};
+    this->Locator.FindCell(point, cellId, parametric);
+    cell = this->Conn.FlatToLogicalToIndex(cellId);
     invSpacing = InvSpacing;
   }
 
@@ -390,9 +409,12 @@ public:
     vtkm::Vec3f_32 bottomLeft(0, 0, 0);
     bool newCell = true;
     //check to see if we left the cell
+#if 0
     vtkm::Float32 tx = 0.f;
     vtkm::Float32 ty = 0.f;
     vtkm::Float32 tz = 0.f;
+#endif
+    vtkm::Vec3f parametric{ 0, 0, 0 };
     vtkm::Float32 scalar0 = 0.f;
     vtkm::Float32 scalar1minus0 = 0.f;
     vtkm::Float32 scalar2minus3 = 0.f;
@@ -408,8 +430,12 @@ public:
 
     while (Locator.IsInside(sampleLocation) && distance < maxDistance)
     {
-      vtkm::Float32 mint = vtkm::Min(tx, vtkm::Min(ty, tz));
-      vtkm::Float32 maxt = vtkm::Max(tx, vtkm::Max(ty, tz));
+#if 0
+//      vtkm::Float32 mint = vtkm::Min(tx, vtkm::Min(ty, tz));
+//      vtkm::Float32 maxt = vtkm::Max(tx, vtkm::Max(ty, tz));
+#endif
+      vtkm::Float32 mint = vtkm::Min(parametric[0], vtkm::Min(parametric[1], parametric[2]));
+      vtkm::Float32 maxt = vtkm::Max(parametric[0], vtkm::Max(parametric[1], parametric[2]));
       if (maxt > 1.f || mint < 0.f)
         newCell = true;
 
@@ -417,7 +443,7 @@ public:
       {
 
         vtkm::Vec<vtkm::Id, 8> cellIndices;
-        Locator.LocateCell(cell, sampleLocation, invSpacing);
+        Locator.LocateCell(cell, sampleLocation, invSpacing, parametric);
         Locator.GetCellIndices(cell, cellIndices);
         Locator.GetPoint(cellIndices[0], bottomLeft);
 
@@ -435,23 +461,34 @@ public:
         scalar5minus4 = scalar5 - scalar4;
         scalar1minus0 = scalar1 - scalar0;
         scalar2minus3 = scalar2 - scalar3;
-
+#if 0
         tx = (sampleLocation[0] - bottomLeft[0]) * invSpacing[0];
         ty = (sampleLocation[1] - bottomLeft[1]) * invSpacing[1];
         tz = (sampleLocation[2] - bottomLeft[2]) * invSpacing[2];
-
+#endif
         newCell = false;
       }
+#if 0
+//      vtkm::Float32 lerped76 = scalar7 + tx * scalar6minus7;
+//      vtkm::Float32 lerped45 = scalar4 + tx * scalar5minus4;
+//      vtkm::Float32 lerpedTop = lerped45 + ty * (lerped76 - lerped45);
+//
+//      vtkm::Float32 lerped01 = scalar0 + tx * scalar1minus0;
+//      vtkm::Float32 lerped32 = scalar3 + tx * scalar2minus3;
+//      vtkm::Float32 lerpedBottom = lerped01 + ty * (lerped32 - lerped01);
+//
+//      vtkm::Float32 finalScalar = lerpedBottom + tz * (lerpedTop - lerpedBottom);
+#endif
+      vtkm::Float32 lerped76 = scalar7 + parametric[0] * scalar6minus7;
+      vtkm::Float32 lerped45 = scalar4 + parametric[0] * scalar5minus4;
+      vtkm::Float32 lerpedTop = lerped45 + parametric[1] * (lerped76 - lerped45);
 
-      vtkm::Float32 lerped76 = scalar7 + tx * scalar6minus7;
-      vtkm::Float32 lerped45 = scalar4 + tx * scalar5minus4;
-      vtkm::Float32 lerpedTop = lerped45 + ty * (lerped76 - lerped45);
+      vtkm::Float32 lerped01 = scalar0 + parametric[0] * scalar1minus0;
+      vtkm::Float32 lerped32 = scalar3 + parametric[0] * scalar2minus3;
+      vtkm::Float32 lerpedBottom = lerped01 + parametric[1] * (lerped32 - lerped01);
 
-      vtkm::Float32 lerped01 = scalar0 + tx * scalar1minus0;
-      vtkm::Float32 lerped32 = scalar3 + tx * scalar2minus3;
-      vtkm::Float32 lerpedBottom = lerped01 + ty * (lerped32 - lerped01);
+      vtkm::Float32 finalScalar = lerpedBottom + parametric[2] * (lerpedTop - lerpedBottom);
 
-      vtkm::Float32 finalScalar = lerpedBottom + tz * (lerpedTop - lerpedBottom);
       //normalize scalar
       finalScalar = (finalScalar - MinScalar) * InverseDeltaScalar;
 
@@ -475,9 +512,14 @@ public:
       sampleLocation = sampleLocation + SampleDistance * rayDir;
 
       //this is linear could just do an addition
+#if 0
       tx = (sampleLocation[0] - bottomLeft[0]) * invSpacing[0];
       ty = (sampleLocation[1] - bottomLeft[1]) * invSpacing[1];
       tz = (sampleLocation[2] - bottomLeft[2]) * invSpacing[2];
+#endif
+      parametric = (sampleLocation - bottomLeft) * invSpacing;
+      // FIXME: what's wrong with the following?
+      //      parametric += SampleDistance * rayDir * invSpacing;
 
       if (color[3] >= 1.f)
         break;
@@ -586,6 +628,7 @@ public:
     vtkm::Float32 tx = 2.f;
     vtkm::Float32 ty = 2.f;
     vtkm::Float32 tz = 2.f;
+    vtkm::Vec3f parametric{ 0, 0, 0 };
     vtkm::Float32 scalar0 = 0.f;
     vtkm::Vec4f_32 sampleColor(0.f, 0.f, 0.f, 0.f);
     vtkm::Vec3f_32 bottomLeft(0.f, 0.f, 0.f);
@@ -599,7 +642,7 @@ public:
         newCell = true;
       if (newCell)
       {
-        Locator.LocateCell(cell, sampleLocation, invSpacing);
+        Locator.LocateCell(cell, sampleLocation, invSpacing, parametric);
         vtkm::Id cellId = Locator.GetCellIndex(cell);
 
         scalar0 = vtkm::Float32(scalars.Get(cellId));
@@ -813,7 +856,11 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
     vertices =
       Coordinates.GetData().AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-    UniformLocator<Device> locator(vertices, Cellset, token);
+    vtkm::cont::CellLocatorUniformGrid uniLocator;
+    uniLocator.SetCellSet(this->Cellset);
+    uniLocator.SetCoordinates(this->Coordinates);
+    UniformLocator<Device> locator(vertices, this->Cellset, uniLocator, token);
+    //    UniformLocator<Device> locator(vertices, Cellset, token);
 
     if (isAssocPoints)
     {
