@@ -1,9 +1,9 @@
 # Ad-hoc build that runs in the ECP Hardware, concretely in OLCF Spock.
 .crusher_gcc_hip:
   variables:
-    CCACHE_BASEDIR:          "/gpfs/alpine/csc331/scratch/"
-    CCACHE_DIR:              "/gpfs/alpine/csc331/scratch/vbolea/ci/vtk-m/ccache"
-    CUSTOM_CI_BUILDS_DIR:    "/gpfs/alpine/csc331/scratch/vbolea/ci/vtk-m/runtime"
+    CCACHE_BASEDIR:          "/lustre/orion/csc331/scratch/"
+    CCACHE_DIR:              "/lustre/orion/csc331/scratch/vbolea/ci/vtk-m/ccache"
+    CUSTOM_CI_BUILDS_DIR:    "/lustre/orion/csc331/scratch/vbolea/ci/vtk-m/runtime"
 
     # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
     CCACHE_IGNOREOPTIONS:    "-isystem=*"
@@ -14,6 +14,9 @@
     CMAKE_GENERATOR:         "Ninja"
     CMAKE_PREFIX_PATH:       "$CI_BUILDS_DIR/kokkos_install"
 
+    # We do not want to use the user's ~/.gitconfig
+    GIT_CONFIG_GLOBAL:       "true"
+
     KOKKOS_OPTS: >-
       -DCMAKE_INSTALL_PREFIX:PATH=$CI_BUILDS_DIR/kokkos_install
       -DCMAKE_CXX_COMPILER:FILEPATH=/opt/rocm-4.5.0/hip/bin/hipcc
@@ -21,7 +24,6 @@
 
     # DefApps/default;craype;rocm;gcc should be loaded first
     JOB_MODULES: >-
-      DefApps/default
       craype-accel-amd-gfx90a
       rocm/4.5.0
       gcc/12
