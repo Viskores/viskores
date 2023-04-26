@@ -347,9 +347,9 @@ public:
           |/         |/     |/
           0----------1      |__ x
     */
-    vtkm::Vec3f_32 bottomLeft(0, 0, 0);
     bool newCell = true;
     vtkm::Vec3f parametric{ 0, 0, 0 };
+    vtkm::Vec3f_32 bottomLeft(0, 0, 0);
 
     vtkm::Float32 scalar0 = 0.f;
     vtkm::Float32 scalar1minus0 = 0.f;
@@ -369,7 +369,6 @@ public:
       vtkm::Float32 maxt = vtkm::Max(parametric[0], vtkm::Max(parametric[1], parametric[2]));
       if (maxt > 1.f || mint < 0.f)
         newCell = true;
-
       if (newCell)
       {
         vtkm::Vec<vtkm::Id, 8> cellIndices;
@@ -391,6 +390,8 @@ public:
         scalar5minus4 = scalar5 - scalar4;
         scalar1minus0 = scalar1 - scalar0;
         scalar2minus3 = scalar2 - scalar3;
+
+        newCell = false;
       }
 
       vtkm::Float32 lerped76 = scalar7 + parametric[0] * scalar6minus7;
@@ -412,15 +413,14 @@ public:
         colorIndex = 0;
       if (colorIndex > ColorMapSize)
         colorIndex = ColorMapSize;
-
       vtkm::Vec4f_32 sampleColor = ColorMap.Get(colorIndex);
 
       //composite
-      sampleColor[3] *= (1.f - color[3]);
-      color[0] = color[0] + sampleColor[0] * sampleColor[3];
-      color[1] = color[1] + sampleColor[1] * sampleColor[3];
-      color[2] = color[2] + sampleColor[2] * sampleColor[3];
-      color[3] = sampleColor[3] + color[3];
+      vtkm::Float32 alpha = sampleColor[3] * (1.f - color[3]);
+      color[0] = color[0] + sampleColor[0] * alpha;
+      color[1] = color[1] + sampleColor[1] * alpha;
+      color[2] = color[2] + sampleColor[2] * alpha;
+      color[3] = alpha + color[3];
 
       // terminate the ray early if it became completely opaque.
       if (color[3] >= 1.f)
@@ -430,7 +430,7 @@ public:
       distance += SampleDistance;
       sampleLocation = sampleLocation + SampleDistance * rayDir;
 
-      // parametric coordinate with the cell for the new sample location
+      // parametric coordinate within the cell for the new sample location
       // TODO: this is essentially a WorldToParametric coordinate transform, how can we use the rest of VTKm
       //  to do it? The goal is to abstract and remove invSpacing, which is different from Uniform and Rectilinear
       //  grid.
@@ -542,26 +542,26 @@ public:
           0----------1      |__ x
     */
     bool newCell = true;
-    vtkm::Float32 tx = 2.f;
-    vtkm::Float32 ty = 2.f;
-    vtkm::Float32 tz = 2.f;
     vtkm::Vec3f parametric{ 0, 0, 0 };
     vtkm::Float32 scalar0 = 0.f;
     vtkm::Vec4f_32 sampleColor(0.f, 0.f, 0.f, 0.f);
     vtkm::Vec3f_32 bottomLeft(0.f, 0.f, 0.f);
-    vtkm::Vec3f_32 invSpacing(0.f, 0.f, 0.f);
+
     vtkm::Id3 cell(0, 0, 0);
+    vtkm::Vec3f_32 invSpacing(0.f, 0.f, 0.f);
 
     while (Locator.IsInside(sampleLocation) && distance < maxDistance)
     {
-      vtkm::Float32 mint = vtkm::Min(tx, vtkm::Min(ty, tz));
-      vtkm::Float32 maxt = vtkm::Max(tx, vtkm::Max(ty, tz));
+      vtkm::Float32 mint = vtkm::Min(parametric[0], vtkm::Min(parametric[1], parametric[2]));
+      vtkm::Float32 maxt = vtkm::Max(parametric[0], vtkm::Max(parametric[1], parametric[2]));
       if (maxt > 1.f || mint < 0.f)
         newCell = true;
       if (newCell)
       {
         Locator.LocateCell(cell, sampleLocation, invSpacing, parametric);
         vtkm::Id cellId = Locator.GetCellIndex(cell);
+        Locator.GetMinPoint(cell, bottomLeft);
+
         scalar0 = vtkm::Float32(scalars.Get(cellId));
         vtkm::Float32 normalizedScalar = (scalar0 - MinScalar) * InverseDeltaScalar;
 
@@ -572,7 +572,6 @@ public:
         if (colorIndex > ColorMapSize)
           colorIndex = ColorMapSize;
         sampleColor = ColorMap.Get(colorIndex);
-        Locator.GetMinPoint(cell, bottomLeft);
 
         newCell = false;
       }
@@ -592,10 +591,8 @@ public:
       distance += SampleDistance;
       sampleLocation = sampleLocation + SampleDistance * rayDir;
 
-      // parametric coordinate with the cell for the new sample location
-      tx = (sampleLocation[0] - bottomLeft[0]) * invSpacing[0];
-      ty = (sampleLocation[1] - bottomLeft[1]) * invSpacing[1];
-      tz = (sampleLocation[2] - bottomLeft[2]) * invSpacing[2];
+      // parametric coordinate within the cell for the new sample location
+      parametric = (sampleLocation - bottomLeft) * invSpacing;
     }
 
     color[0] = vtkm::Min(color[0], 1.f);
