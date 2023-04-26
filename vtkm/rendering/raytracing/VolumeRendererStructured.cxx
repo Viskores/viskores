@@ -40,10 +40,65 @@ using CartesianArrayHandle =
 namespace
 {
 
-template <typename Device>
-class RectilinearLocator
+template <typename Device, typename Derived>
+class LocatorAdopterBase
 {
-protected:
+private:
+public:
+  VTKM_EXEC
+  inline bool IsInside(const vtkm::Vec3f_32& point) const
+  {
+    return static_cast<const Derived*>(this)->Locator.IsInside(point);
+  }
+
+  // Assumes point inside the data set
+  VTKM_EXEC
+  inline void LocateCell(vtkm::Id3& cell,
+                         const vtkm::Vec3f_32& point,
+                         vtkm::Vec3f_32& invSpacing,
+                         vtkm::Vec3f_32& parametric) const
+  {
+    vtkm::Id cellId{};
+    auto self = static_cast<const Derived*>(this);
+    self->Locator.FindCell(point, cellId, parametric);
+    cell = self->Conn.FlatToLogicalToIndex(cellId);
+    self->ComputeInvSpacing(cell, point, invSpacing, parametric);
+  }
+
+  VTKM_EXEC
+  inline void GetCellIndices(const vtkm::Id3& cell, vtkm::Vec<vtkm::Id, 8>& cellIndices) const
+  {
+    cellIndices = static_cast<const Derived*>(this)->Conn.GetIndices(cell);
+  }
+
+  VTKM_EXEC
+  inline vtkm::Id GetCellIndex(const vtkm::Id3& cell) const
+  {
+    return static_cast<const Derived*>(this)->Conn.LogicalToFlatToIndex(cell);
+  }
+
+  VTKM_EXEC
+  inline void GetPoint(const vtkm::Id& index, vtkm::Vec3f_32& point) const
+  {
+    BOUNDS_CHECK(static_cast<const Derived*>(this)->Coordinates, index);
+    point = static_cast<const Derived*>(this)->Coordinates.Get(index);
+  }
+
+  VTKM_EXEC
+  inline void GetMinPoint(const vtkm::Id3& cell, vtkm::Vec3f_32& point) const
+  {
+    const vtkm::Id pointIndex =
+      static_cast<const Derived*>(this)->Conn.LogicalToFlatFromIndex(cell);
+    point = static_cast<const Derived*>(this)->Coordinates.Get(pointIndex);
+  }
+};
+
+template <typename Device>
+class RectilinearLocatorAdopter
+  : public LocatorAdopterBase<Device, RectilinearLocatorAdopter<Device>>
+{
+private:
+  friend LocatorAdopterBase<Device, RectilinearLocatorAdopter<Device>>;
   using DefaultConstHandle = typename DefaultHandle::ReadPortalType;
   using CartesianConstPortal = typename CartesianArrayHandle::ReadPortalType;
 
@@ -54,10 +109,10 @@ protected:
   vtkm::exec::CellLocatorRectilinearGrid Locator;
 
 public:
-  RectilinearLocator(const CartesianArrayHandle& coordinates,
-                     vtkm::cont::CellSetStructured<3>& cellset,
-                     vtkm::cont::CellLocatorRectilinearGrid& locator,
-                     vtkm::cont::Token& token)
+  RectilinearLocatorAdopter(const CartesianArrayHandle& coordinates,
+                            vtkm::cont::CellSetStructured<3>& cellset,
+                            vtkm::cont::CellLocatorRectilinearGrid& locator,
+                            vtkm::cont::Token& token)
     : Coordinates(coordinates.PrepareForInput(Device(), token))
     , Conn(cellset.PrepareForInput(Device(),
                                    vtkm::TopologyElementTagCell(),
@@ -71,32 +126,11 @@ public:
   }
 
   VTKM_EXEC
-  inline bool IsInside(const vtkm::Vec3f_32& point) const { return this->Locator.IsInside(point); }
-
-  VTKM_EXEC
-  inline void GetCellIndices(const vtkm::Id3& cell, vtkm::Vec<vtkm::Id, 8>& cellIndices) const
+  inline void ComputeInvSpacing(vtkm::Id3& cell,
+                                const vtkm::Vec3f_32&,
+                                vtkm::Vec3f_32& invSpacing,
+                                vtkm::Vec3f_32&) const
   {
-    cellIndices = Conn.GetIndices(cell);
-  } // GetCellIndices
-
-  VTKM_EXEC
-  inline vtkm::Id GetCellIndex(const vtkm::Id3& cell) const
-  {
-    return this->Conn.LogicalToFlatToIndex(cell);
-  }
-
-  //
-  // Assumes point inside the data set
-  //
-  VTKM_EXEC
-  inline void LocateCell(vtkm::Id3& cell,
-                         const vtkm::Vec3f_32& point,
-                         vtkm::Vec3f_32& invSpacing,
-                         vtkm::Vec3f_32& parametric) const
-  {
-    vtkm::Id cellId{};
-    this->Locator.FindCell(point, cellId, parametric);
-    cell = this->Conn.FlatToLogicalToIndex(cellId);
     vtkm::Vec3f_32 p0{ CoordPortals[0].Get(cell[0]),
                        CoordPortals[1].Get(cell[1]),
                        CoordPortals[2].Get(cell[2]) };
@@ -104,28 +138,14 @@ public:
                        CoordPortals[1].Get(cell[1] + 1),
                        CoordPortals[2].Get(cell[2] + 1) };
     invSpacing = 1.f / (p1 - p0);
-  } // LocateCell
-
-
-  VTKM_EXEC
-  inline void GetPoint(const vtkm::Id& index, vtkm::Vec3f_32& point) const
-  {
-    BOUNDS_CHECK(Coordinates, index);
-    point = Coordinates.Get(index);
   }
-
-  VTKM_EXEC
-  inline void GetMinPoint(const vtkm::Id3& cell, vtkm::Vec3f_32& point) const
-  {
-    const vtkm::Id pointIndex = this->Conn.LogicalToFlatFromIndex(cell);
-    point = Coordinates.Get(pointIndex);
-  }
-}; // class RectilinearLocator
+}; // class RectilinearLocatorAdopter
 
 template <typename Device>
-class UniformLocator
+class UniformLocatorAdopter : public LocatorAdopterBase<Device, UniformLocatorAdopter<Device>>
 {
-protected:
+private:
+  friend LocatorAdopterBase<Device, UniformLocatorAdopter<Device>>;
   using UniformArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
   using UniformConstPortal = typename UniformArrayHandle::ReadPortalType;
 
@@ -136,10 +156,10 @@ protected:
   vtkm::exec::CellLocatorUniformGrid Locator;
 
 public:
-  UniformLocator(const UniformArrayHandle& coordinates,
-                 vtkm::cont::CellSetStructured<3>& cellset,
-                 vtkm::cont::CellLocatorUniformGrid& locator,
-                 vtkm::cont::Token& token)
+  UniformLocatorAdopter(const UniformArrayHandle& coordinates,
+                        vtkm::cont::CellSetStructured<3>& cellset,
+                        vtkm::cont::CellLocatorUniformGrid& locator,
+                        vtkm::cont::Token& token)
     : Coordinates(coordinates.PrepareForInput(Device(), token))
     , Conn(cellset.PrepareForInput(Device(),
                                    vtkm::TopologyElementTagCell(),
@@ -154,48 +174,14 @@ public:
   }
 
   VTKM_EXEC
-  inline bool IsInside(const vtkm::Vec3f_32& point) const { return this->Locator.IsInside(point); }
-
-  VTKM_EXEC
-  inline void GetCellIndices(const vtkm::Id3& cell, vtkm::Vec<vtkm::Id, 8>& cellIndices) const
+  inline void ComputeInvSpacing(vtkm::Id3&,
+                                const vtkm::Vec3f_32&,
+                                vtkm::Vec3f_32& invSpacing,
+                                vtkm::Vec3f_32&) const
   {
-    cellIndices = Conn.GetIndices(cell);
-  } // GetCellIndices
-
-  VTKM_EXEC
-  inline vtkm::Id GetCellIndex(const vtkm::Id3& cell) const
-  {
-    return this->Conn.LogicalToFlatToIndex(cell);
-  }
-
-  VTKM_EXEC
-  inline void LocateCell(vtkm::Id3& cell,
-                         const vtkm::Vec3f_32& point,
-                         vtkm::Vec3f_32& invSpacing,
-                         vtkm::Vec3f_32& parametric) const
-  {
-    vtkm::Id cellId{};
-    this->Locator.FindCell(point, cellId, parametric);
-    cell = this->Conn.FlatToLogicalToIndex(cellId);
     invSpacing = InvSpacing;
   }
-
-  VTKM_EXEC
-  inline void GetPoint(const vtkm::Id& index, vtkm::Vec3f_32& point) const
-  {
-    BOUNDS_CHECK(Coordinates, index);
-    point = Coordinates.Get(index);
-  }
-
-  VTKM_EXEC
-  inline void GetMinPoint(const vtkm::Id3& cell, vtkm::Vec3f_32& point) const
-  {
-    const vtkm::Id pointIndex = this->Conn.LogicalToFlatFromIndex(cell);
-    point = Coordinates.Get(pointIndex);
-  }
-
-}; // class UniformLocator
-
+}; // class UniformLocatorAdopter
 
 } //namespace
 
@@ -288,7 +274,7 @@ public:
           0----------1      |__ x
     */
     bool newCell = true;
-    vtkm::Vec3f_32 parametric{ 2.f, 2.f, 2.f };
+    vtkm::Vec3f_32 parametric{ -1.f, -1.f, -1.f };
     vtkm::Vec3f_32 bottomLeft(0.f, 0.f, 0.f);
 
     vtkm::Float32 scalar0 = 0.f;
@@ -482,7 +468,7 @@ public:
           0----------1      |__ x
     */
     bool newCell = true;
-    vtkm::Vec3f_32 parametric{ 2.f, 2.f, 2.f };
+    vtkm::Vec3f_32 parametric{ -1.f, -1.f, -1.f };
     vtkm::Float32 scalar0 = 0.f;
     vtkm::Vec4f_32 sampleColor(0.f, 0.f, 0.f, 0.f);
     vtkm::Vec3f_32 bottomLeft(0.f, 0.f, 0.f);
@@ -716,18 +702,19 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     vtkm::cont::CellLocatorUniformGrid uniLocator;
     uniLocator.SetCellSet(this->Cellset);
     uniLocator.SetCoordinates(this->Coordinates);
-    UniformLocator<Device> locator(vertices, this->Cellset, uniLocator, token);
+    UniformLocatorAdopter<Device> locator(vertices, this->Cellset, uniLocator, token);
 
     if (isAssocPoints)
     {
-      vtkm::worklet::DispatcherMapField<Sampler<Device, UniformLocator<Device>>> samplerDispatcher(
-        Sampler<Device, UniformLocator<Device>>(ColorMap,
-                                                vtkm::Float32(ScalarRange.Min),
-                                                vtkm::Float32(ScalarRange.Max),
-                                                SampleDistance,
-                                                locator,
-                                                meshEpsilon,
-                                                token));
+      vtkm::worklet::DispatcherMapField<Sampler<Device, UniformLocatorAdopter<Device>>>
+        samplerDispatcher(
+          Sampler<Device, UniformLocatorAdopter<Device>>(ColorMap,
+                                                         vtkm::Float32(ScalarRange.Min),
+                                                         vtkm::Float32(ScalarRange.Max),
+                                                         SampleDistance,
+                                                         locator,
+                                                         meshEpsilon,
+                                                         token));
       samplerDispatcher.SetDevice(Device());
       samplerDispatcher.Invoke(
         rays.Dir,
@@ -739,14 +726,14 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     }
     else
     {
-      vtkm::worklet::DispatcherMapField<SamplerCellAssoc<Device, UniformLocator<Device>>>(
-        SamplerCellAssoc<Device, UniformLocator<Device>>(ColorMap,
-                                                         vtkm::Float32(ScalarRange.Min),
-                                                         vtkm::Float32(ScalarRange.Max),
-                                                         SampleDistance,
-                                                         locator,
-                                                         meshEpsilon,
-                                                         token))
+      vtkm::worklet::DispatcherMapField<SamplerCellAssoc<Device, UniformLocatorAdopter<Device>>>(
+        SamplerCellAssoc<Device, UniformLocatorAdopter<Device>>(ColorMap,
+                                                                vtkm::Float32(ScalarRange.Min),
+                                                                vtkm::Float32(ScalarRange.Max),
+                                                                SampleDistance,
+                                                                locator,
+                                                                meshEpsilon,
+                                                                token))
         .Invoke(rays.Dir,
                 rays.Origin,
                 rays.MinDistance,
@@ -763,18 +750,18 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     vtkm::cont::CellLocatorRectilinearGrid rectLocator;
     rectLocator.SetCellSet(this->Cellset);
     rectLocator.SetCoordinates(this->Coordinates);
-    RectilinearLocator<Device> locator(vertices, Cellset, rectLocator, token);
+    RectilinearLocatorAdopter<Device> locator(vertices, Cellset, rectLocator, token);
     if (isAssocPoints)
     {
-      vtkm::worklet::DispatcherMapField<Sampler<Device, RectilinearLocator<Device>>>
+      vtkm::worklet::DispatcherMapField<Sampler<Device, RectilinearLocatorAdopter<Device>>>
         samplerDispatcher(
-          Sampler<Device, RectilinearLocator<Device>>(ColorMap,
-                                                      vtkm::Float32(ScalarRange.Min),
-                                                      vtkm::Float32(ScalarRange.Max),
-                                                      SampleDistance,
-                                                      locator,
-                                                      meshEpsilon,
-                                                      token));
+          Sampler<Device, RectilinearLocatorAdopter<Device>>(ColorMap,
+                                                             vtkm::Float32(ScalarRange.Min),
+                                                             vtkm::Float32(ScalarRange.Max),
+                                                             SampleDistance,
+                                                             locator,
+                                                             meshEpsilon,
+                                                             token));
       samplerDispatcher.SetDevice(Device());
       samplerDispatcher.Invoke(
         rays.Dir,
@@ -786,15 +773,15 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     }
     else
     {
-      vtkm::worklet::DispatcherMapField<SamplerCellAssoc<Device, RectilinearLocator<Device>>>
-        rectilinearLocatorDispatcher(
-          SamplerCellAssoc<Device, RectilinearLocator<Device>>(ColorMap,
-                                                               vtkm::Float32(ScalarRange.Min),
-                                                               vtkm::Float32(ScalarRange.Max),
-                                                               SampleDistance,
-                                                               locator,
-                                                               meshEpsilon,
-                                                               token));
+      vtkm::worklet::DispatcherMapField<SamplerCellAssoc<Device, RectilinearLocatorAdopter<Device>>>
+        rectilinearLocatorDispatcher(SamplerCellAssoc<Device, RectilinearLocatorAdopter<Device>>(
+          ColorMap,
+          vtkm::Float32(ScalarRange.Min),
+          vtkm::Float32(ScalarRange.Max),
+          SampleDistance,
+          locator,
+          meshEpsilon,
+          token));
       rectilinearLocatorDispatcher.SetDevice(Device());
       rectilinearLocatorDispatcher.Invoke(
         rays.Dir,
