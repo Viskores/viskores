@@ -25,6 +25,7 @@ test:macos_xcode13:
     CC: gcc
     CXX: g++
     DEVELOPER_DIR: "/Applications/Xcode-13.3.app/Contents/Developer"
+    GIT_CLONE_PATH: "$CI_BUILDS_DIR/vtk-m-ci"
     VTKM_SETTINGS: "64bit_floats+shared+ccache"
 
 .cmake_build_macos:
