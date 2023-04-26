@@ -52,9 +52,6 @@ protected:
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
     Conn;
   vtkm::exec::CellLocatorRectilinearGrid Locator;
-  vtkm::Id3 PointDimensions;
-  vtkm::Vec3f_32 MinPoint;
-  vtkm::Vec3f_32 MaxPoint;
 
 public:
   RectilinearLocator(const CartesianArrayHandle& coordinates,
@@ -71,17 +68,6 @@ public:
     CoordPortals[0] = Coordinates.GetFirstPortal();
     CoordPortals[1] = Coordinates.GetSecondPortal();
     CoordPortals[2] = Coordinates.GetThirdPortal();
-    PointDimensions = Conn.GetPointDimensions();
-    MinPoint[0] = static_cast<vtkm::Float32>(coordinates.ReadPortal().GetFirstPortal().Get(0));
-    MinPoint[1] = static_cast<vtkm::Float32>(coordinates.ReadPortal().GetSecondPortal().Get(0));
-    MinPoint[2] = static_cast<vtkm::Float32>(coordinates.ReadPortal().GetThirdPortal().Get(0));
-
-    MaxPoint[0] = static_cast<vtkm::Float32>(
-      coordinates.ReadPortal().GetFirstPortal().Get(PointDimensions[0] - 1));
-    MaxPoint[1] = static_cast<vtkm::Float32>(
-      coordinates.ReadPortal().GetSecondPortal().Get(PointDimensions[1] - 1));
-    MaxPoint[2] = static_cast<vtkm::Float32>(
-      coordinates.ReadPortal().GetThirdPortal().Get(PointDimensions[2] - 1));
   }
 
   VTKM_EXEC
@@ -106,64 +92,18 @@ public:
   inline void LocateCell(vtkm::Id3& cell,
                          const vtkm::Vec3f_32& point,
                          vtkm::Vec3f_32& invSpacing,
-                         vtkm::Vec3f& parametric) const
+                         vtkm::Vec3f_32& parametric) const
   {
-    //#if 0
-    for (vtkm::Int32 dim = 0; dim < 3; ++dim)
-    {
-      if (point[dim] <= MinPoint[dim])
-      {
-        cell[dim] = 0;
-        continue;
-      }
-      //
-      // When searching for points, we consider the max value of the cell
-      // to be apart of the next cell. If the point falls on the boundary of the
-      // data set, then it is technically inside a cell. This checks for that case
-      //
-      if (point[dim] >= MaxPoint[dim])
-      {
-        cell[dim] = PointDimensions[dim] - 2;
-        continue;
-      }
-
-      bool found = false;
-      vtkm::Float32 minVal = static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim]));
-      const vtkm::Id searchDir = (point[dim] - minVal >= 0.f) ? 1 : -1;
-      vtkm::Float32 maxVal = static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim] + 1));
-
-      while (!found)
-      {
-        if (point[dim] >= minVal && point[dim] < maxVal)
-        {
-          found = true;
-          continue;
-        }
-
-        cell[dim] += searchDir;
-        vtkm::Id nextCellId = searchDir == 1 ? cell[dim] + 1 : cell[dim];
-        BOUNDS_CHECK(CoordPortals[dim], nextCellId);
-        vtkm::Float32 next = static_cast<vtkm::Float32>(CoordPortals[dim].Get(nextCellId));
-        if (searchDir == 1)
-        {
-          minVal = maxVal;
-          maxVal = next;
-        }
-        else
-        {
-          maxVal = minVal;
-          minVal = next;
-        }
-      }
-      invSpacing[dim] = 1.f / (maxVal - minVal);
-    }
-    //#else
     vtkm::Id cellId{};
     this->Locator.FindCell(point, cellId, parametric);
     cell = this->Conn.FlatToLogicalToIndex(cellId);
-    // FIXME: how to calculate this?
-    //    invSpacing = InvSpacing;
-    //#endif
+    vtkm::Vec3f_32 p0{ CoordPortals[0].Get(cell[0]),
+                       CoordPortals[1].Get(cell[1]),
+                       CoordPortals[2].Get(cell[2]) };
+    vtkm::Vec3f_32 p1{ CoordPortals[0].Get(cell[0] + 1),
+                       CoordPortals[1].Get(cell[1] + 1),
+                       CoordPortals[2].Get(cell[2] + 1) };
+    invSpacing = 1.f / (p1 - p0);
   } // LocateCell
 
 
@@ -232,7 +172,7 @@ public:
   inline void LocateCell(vtkm::Id3& cell,
                          const vtkm::Vec3f_32& point,
                          vtkm::Vec3f_32& invSpacing,
-                         vtkm::Vec3f& parametric) const
+                         vtkm::Vec3f_32& parametric) const
   {
     vtkm::Id cellId{};
     this->Locator.FindCell(point, cellId, parametric);
@@ -348,8 +288,8 @@ public:
           0----------1      |__ x
     */
     bool newCell = true;
-    vtkm::Vec3f parametric{ 0, 0, 0 };
-    vtkm::Vec3f_32 bottomLeft(0, 0, 0);
+    vtkm::Vec3f_32 parametric{ 2.f, 2.f, 2.f };
+    vtkm::Vec3f_32 bottomLeft(0.f, 0.f, 0.f);
 
     vtkm::Float32 scalar0 = 0.f;
     vtkm::Float32 scalar1minus0 = 0.f;
@@ -542,7 +482,7 @@ public:
           0----------1      |__ x
     */
     bool newCell = true;
-    vtkm::Vec3f parametric{ 0, 0, 0 };
+    vtkm::Vec3f_32 parametric{ 2.f, 2.f, 2.f };
     vtkm::Float32 scalar0 = 0.f;
     vtkm::Vec4f_32 sampleColor(0.f, 0.f, 0.f, 0.f);
     vtkm::Vec3f_32 bottomLeft(0.f, 0.f, 0.f);
