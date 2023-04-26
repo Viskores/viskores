@@ -56,11 +56,13 @@ test:macos_xcode13:
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
     - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
+    - cmake -P .gitlab/ci/check_warnings.cmake || exit 47
   after_script:
     - ccache -v -s
     - ccache -z
   extends:
     - .cmake_build_artifacts
+    - .warning_policy
 
 .cmake_test_macos:
   stage: test
