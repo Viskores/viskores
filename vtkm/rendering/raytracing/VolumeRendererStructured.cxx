@@ -55,7 +55,7 @@ public:
   inline void LocateCell(vtkm::Id3& cell,
                          const vtkm::Vec3f_32& point,
                          vtkm::Vec3f_32& invSpacing,
-                         vtkm::Vec3f_32& parametric) const
+                         vtkm::Vec3f& parametric) const
   {
     vtkm::Id cellId{};
     self->Locator.FindCell(point, cellId, parametric);
@@ -273,7 +273,7 @@ public:
           0----------1      |__ x
     */
     bool newCell = true;
-    vtkm::Vec3f_32 parametric{ -1.f, -1.f, -1.f };
+    vtkm::Vec3f parametric{ -1.f, -1.f, -1.f };
     vtkm::Vec3f_32 bottomLeft(0.f, 0.f, 0.f);
 
     vtkm::Float32 scalar0 = 0.f;
@@ -461,7 +461,7 @@ public:
           0----------1      |__ x
     */
     bool newCell = true;
-    vtkm::Vec3f_32 parametric{ -1.f, -1.f, -1.f };
+    vtkm::Vec3f parametric{ -1.f, -1.f, -1.f };
     vtkm::Float32 scalar0 = 0.f;
     vtkm::Vec4f_32 sampleColor(0.f, 0.f, 0.f, 0.f);
     vtkm::Vec3f_32 bottomLeft(0.f, 0.f, 0.f);
