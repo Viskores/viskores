@@ -9,13 +9,13 @@
 //============================================================================
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 
-#include "vtkm/cont/CellLocatorRectilinearGrid.h"
-#include "vtkm/cont/CellLocatorUniformGrid.h"
+#include <cmath>
 #include <iostream>
-#include <math.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/CellLocatorRectilinearGrid.h>
+#include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/ErrorBadValue.h>
@@ -44,12 +44,11 @@ template <typename Device, typename Derived>
 class LocatorAdopterBase
 {
 private:
+  const Derived* self = static_cast<const Derived*>(this);
+
 public:
   VTKM_EXEC
-  inline bool IsInside(const vtkm::Vec3f_32& point) const
-  {
-    return static_cast<const Derived*>(this)->Locator.IsInside(point);
-  }
+  inline bool IsInside(const vtkm::Vec3f_32& point) const { return self->Locator.IsInside(point); }
 
   // Assumes point inside the data set
   VTKM_EXEC
@@ -59,7 +58,6 @@ public:
                          vtkm::Vec3f_32& parametric) const
   {
     vtkm::Id cellId{};
-    auto self = static_cast<const Derived*>(this);
     self->Locator.FindCell(point, cellId, parametric);
     cell = self->Conn.FlatToLogicalToIndex(cellId);
     self->ComputeInvSpacing(cell, point, invSpacing, parametric);
@@ -68,28 +66,27 @@ public:
   VTKM_EXEC
   inline void GetCellIndices(const vtkm::Id3& cell, vtkm::Vec<vtkm::Id, 8>& cellIndices) const
   {
-    cellIndices = static_cast<const Derived*>(this)->Conn.GetIndices(cell);
+    cellIndices = self->Conn.GetIndices(cell);
   }
 
   VTKM_EXEC
   inline vtkm::Id GetCellIndex(const vtkm::Id3& cell) const
   {
-    return static_cast<const Derived*>(this)->Conn.LogicalToFlatToIndex(cell);
+    return self->Conn.LogicalToFlatToIndex(cell);
   }
 
   VTKM_EXEC
   inline void GetPoint(const vtkm::Id& index, vtkm::Vec3f_32& point) const
   {
-    BOUNDS_CHECK(static_cast<const Derived*>(this)->Coordinates, index);
-    point = static_cast<const Derived*>(this)->Coordinates.Get(index);
+    BOUNDS_CHECK(self->Coordinates, index);
+    point = self->Coordinates.Get(index);
   }
 
   VTKM_EXEC
   inline void GetMinPoint(const vtkm::Id3& cell, vtkm::Vec3f_32& point) const
   {
-    const vtkm::Id pointIndex =
-      static_cast<const Derived*>(this)->Conn.LogicalToFlatFromIndex(cell);
-    point = static_cast<const Derived*>(this)->Coordinates.Get(pointIndex);
+    const vtkm::Id pointIndex = self->Conn.LogicalToFlatFromIndex(cell);
+    point = self->Coordinates.Get(pointIndex);
   }
 };
 
@@ -102,11 +99,27 @@ private:
   using DefaultConstHandle = typename DefaultHandle::ReadPortalType;
   using CartesianConstPortal = typename CartesianArrayHandle::ReadPortalType;
 
-  DefaultConstHandle CoordPortals[3];
   CartesianConstPortal Coordinates;
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
     Conn;
   vtkm::exec::CellLocatorRectilinearGrid Locator;
+
+  DefaultConstHandle CoordPortals[3];
+
+  VTKM_EXEC
+  inline void ComputeInvSpacing(vtkm::Id3& cell,
+                                const vtkm::Vec3f_32&,
+                                vtkm::Vec3f_32& invSpacing,
+                                vtkm::Vec3f_32&) const
+  {
+    vtkm::Vec3f_32 p0{ CoordPortals[0].Get(cell[0]),
+                       CoordPortals[1].Get(cell[1]),
+                       CoordPortals[2].Get(cell[2]) };
+    vtkm::Vec3f_32 p1{ CoordPortals[0].Get(cell[0] + 1),
+                       CoordPortals[1].Get(cell[1] + 1),
+                       CoordPortals[2].Get(cell[2] + 1) };
+    invSpacing = 1.f / (p1 - p0);
+  }
 
 public:
   RectilinearLocatorAdopter(const CartesianArrayHandle& coordinates,
@@ -124,21 +137,6 @@ public:
     CoordPortals[1] = Coordinates.GetSecondPortal();
     CoordPortals[2] = Coordinates.GetThirdPortal();
   }
-
-  VTKM_EXEC
-  inline void ComputeInvSpacing(vtkm::Id3& cell,
-                                const vtkm::Vec3f_32&,
-                                vtkm::Vec3f_32& invSpacing,
-                                vtkm::Vec3f_32&) const
-  {
-    vtkm::Vec3f_32 p0{ CoordPortals[0].Get(cell[0]),
-                       CoordPortals[1].Get(cell[1]),
-                       CoordPortals[2].Get(cell[2]) };
-    vtkm::Vec3f_32 p1{ CoordPortals[0].Get(cell[0] + 1),
-                       CoordPortals[1].Get(cell[1] + 1),
-                       CoordPortals[2].Get(cell[2] + 1) };
-    invSpacing = 1.f / (p1 - p0);
-  }
 }; // class RectilinearLocatorAdopter
 
 template <typename Device>
@@ -149,11 +147,21 @@ private:
   using UniformArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
   using UniformConstPortal = typename UniformArrayHandle::ReadPortalType;
 
-  vtkm::Vec3f_32 InvSpacing;
   UniformConstPortal Coordinates;
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
     Conn;
   vtkm::exec::CellLocatorUniformGrid Locator;
+
+  vtkm::Vec3f_32 InvSpacing{ 0, 0, 0 };
+
+  VTKM_EXEC
+  inline void ComputeInvSpacing(vtkm::Id3&,
+                                const vtkm::Vec3f_32&,
+                                vtkm::Vec3f_32& invSpacing,
+                                vtkm::Vec3f_32&) const
+  {
+    invSpacing = InvSpacing;
+  }
 
 public:
   UniformLocatorAdopter(const UniformArrayHandle& coordinates,
@@ -171,15 +179,6 @@ public:
     InvSpacing[0] = 1.f / spacing[0];
     InvSpacing[1] = 1.f / spacing[1];
     InvSpacing[2] = 1.f / spacing[2];
-  }
-
-  VTKM_EXEC
-  inline void ComputeInvSpacing(vtkm::Id3&,
-                                const vtkm::Vec3f_32&,
-                                vtkm::Vec3f_32& invSpacing,
-                                vtkm::Vec3f_32&) const
-  {
-    invSpacing = InvSpacing;
   }
 }; // class UniformLocatorAdopter
 
@@ -356,13 +355,7 @@ public:
       distance += SampleDistance;
       sampleLocation = sampleLocation + SampleDistance * rayDir;
 
-      // parametric coordinate within the cell for the new sample location
-      // TODO: this is essentially a WorldToParametric coordinate transform, how can we use the rest of VTKm
-      //  to do it? The goal is to abstract and remove invSpacing, which is different from Uniform and Rectilinear
-      //  grid.
       parametric = (sampleLocation - bottomLeft) * invSpacing;
-      // FIXME: what's wrong with the following?
-      //      parametric += SampleDistance * rayDir * invSpacing;
     }
 
     color[0] = vtkm::Min(color[0], 1.f);
@@ -491,7 +484,7 @@ public:
         scalar0 = vtkm::Float32(scalars.Get(cellId));
         vtkm::Float32 normalizedScalar = (scalar0 - MinScalar) * InverseDeltaScalar;
 
-        vtkm::Id colorIndex =
+        auto colorIndex =
           static_cast<vtkm::Id>(normalizedScalar * static_cast<vtkm::Float32>(ColorMapSize));
         if (colorIndex < 0)
           colorIndex = 0;
@@ -517,7 +510,6 @@ public:
       distance += SampleDistance;
       sampleLocation = sampleLocation + SampleDistance * rayDir;
 
-      // parametric coordinate within the cell for the new sample location
       parametric = (sampleLocation - bottomLeft) * invSpacing;
     }
 
@@ -548,7 +540,7 @@ class CalcRayStart : public vtkm::worklet::WorkletMapField
 
 public:
   VTKM_CONT
-  CalcRayStart(const vtkm::Bounds boundingBox)
+  explicit CalcRayStart(const vtkm::Bounds boundingBox)
   {
     Xmin = static_cast<vtkm::Float32>(boundingBox.X.Min);
     Xmax = static_cast<vtkm::Float32>(boundingBox.X.Max);
@@ -559,10 +551,10 @@ public:
   }
 
   VTKM_EXEC
-  vtkm::Float32 rcp(vtkm::Float32 f) const { return 1.0f / f; }
+  static vtkm::Float32 rcp(vtkm::Float32 f) { return 1.0f / f; }
 
   VTKM_EXEC
-  vtkm::Float32 rcp_safe(vtkm::Float32 f) const { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
+  static vtkm::Float32 rcp_safe(vtkm::Float32 f) { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
 
   using ControlSignature = void(FieldIn, FieldOut, FieldInOut, FieldInOut, FieldIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
@@ -573,12 +565,12 @@ public:
                             vtkm::Float32& maxDistance,
                             const vtkm::Vec<Precision, 3>& rayOrigin) const
   {
-    vtkm::Float32 dirx = static_cast<vtkm::Float32>(rayDir[0]);
-    vtkm::Float32 diry = static_cast<vtkm::Float32>(rayDir[1]);
-    vtkm::Float32 dirz = static_cast<vtkm::Float32>(rayDir[2]);
-    vtkm::Float32 origx = static_cast<vtkm::Float32>(rayOrigin[0]);
-    vtkm::Float32 origy = static_cast<vtkm::Float32>(rayOrigin[1]);
-    vtkm::Float32 origz = static_cast<vtkm::Float32>(rayOrigin[2]);
+    auto dirx = static_cast<vtkm::Float32>(rayDir[0]);
+    auto diry = static_cast<vtkm::Float32>(rayDir[1]);
+    auto dirz = static_cast<vtkm::Float32>(rayDir[2]);
+    auto origx = static_cast<vtkm::Float32>(rayOrigin[0]);
+    auto origy = static_cast<vtkm::Float32>(rayOrigin[1]);
+    auto origz = static_cast<vtkm::Float32>(rayOrigin[2]);
 
     vtkm::Float32 invDirx = rcp_safe(dirx);
     vtkm::Float32 invDiry = rcp_safe(diry);
