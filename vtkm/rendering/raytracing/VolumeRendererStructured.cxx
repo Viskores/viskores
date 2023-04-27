@@ -110,7 +110,7 @@ private:
   inline void ComputeInvSpacing(vtkm::Id3& cell,
                                 const vtkm::Vec3f_32&,
                                 vtkm::Vec3f_32& invSpacing,
-                                vtkm::Vec3f_32&) const
+                                vtkm::Vec3f) const
   {
     vtkm::Vec3f_32 p0{ CoordPortals[0].Get(cell[0]),
                        CoordPortals[1].Get(cell[1]),
@@ -158,7 +158,7 @@ private:
   inline void ComputeInvSpacing(vtkm::Id3&,
                                 const vtkm::Vec3f_32&,
                                 vtkm::Vec3f_32& invSpacing,
-                                vtkm::Vec3f_32&) const
+                                vtkm::Vec3f&) const
   {
     invSpacing = InvSpacing;
   }
