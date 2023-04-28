@@ -112,12 +112,12 @@ private:
                                 vtkm::Vec3f_32& invSpacing,
                                 vtkm::Vec3f) const
   {
-    vtkm::Vec3f_32 p0{ CoordPortals[0].Get(cell[0]),
-                       CoordPortals[1].Get(cell[1]),
-                       CoordPortals[2].Get(cell[2]) };
-    vtkm::Vec3f_32 p1{ CoordPortals[0].Get(cell[0] + 1),
-                       CoordPortals[1].Get(cell[1] + 1),
-                       CoordPortals[2].Get(cell[2] + 1) };
+    vtkm::Vec3f p0{ CoordPortals[0].Get(cell[0]),
+                    CoordPortals[1].Get(cell[1]),
+                    CoordPortals[2].Get(cell[2]) };
+    vtkm::Vec3f p1{ CoordPortals[0].Get(cell[0] + 1),
+                    CoordPortals[1].Get(cell[1] + 1),
+                    CoordPortals[2].Get(cell[2] + 1) };
     invSpacing = 1.f / (p1 - p0);
   }
 
