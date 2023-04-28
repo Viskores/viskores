@@ -67,13 +67,14 @@ public:
 
   // Filter called without normals generation
   template <typename ValueType,
+            typename CoordsType,
             typename StorageTagField,
             typename CoordinateType,
             typename StorageTagVertices>
   vtkm::cont::CellSetSingleType<> Run(
     const std::vector<ValueType>& isovalues,
     const vtkm::cont::CellSetStructured<3>& cells,
-    const vtkm::cont::ArrayHandleUniformPointCoordinates& coordinateSystem,
+    const CoordsType& coordinateSystem,
     const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& input,
     vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>& vertices)
   {
@@ -87,6 +88,7 @@ public:
 
   // Filter called with normals generation
   template <typename ValueType,
+            typename CoordsType,
             typename StorageTagField,
             typename CoordinateType,
             typename StorageTagVertices,
@@ -94,7 +96,7 @@ public:
   vtkm::cont::CellSetSingleType<> Run(
     const std::vector<ValueType>& isovalues,
     const vtkm::cont::CellSetStructured<3>& cells,
-    const vtkm::cont::ArrayHandleUniformPointCoordinates& coordinateSystem,
+    const CoordsType& coordinateSystem,
     const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& input,
     vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>& vertices,
     vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagNormals>& normals)

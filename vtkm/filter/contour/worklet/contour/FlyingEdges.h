@@ -41,6 +41,7 @@ vtkm::Id extend_by(vtkm::cont::ArrayHandle<T, S>& handle, vtkm::Id size)
 
 //----------------------------------------------------------------------------
 template <typename ValueType,
+          typename CoordsType,
           typename StorageTagField,
           typename StorageTagVertices,
           typename StorageTagNormals,
@@ -48,7 +49,7 @@ template <typename ValueType,
           typename NormalType>
 vtkm::cont::CellSetSingleType<> execute(
   const vtkm::cont::CellSetStructured<3>& cells,
-  const vtkm::cont::ArrayHandleUniformPointCoordinates& coordinateSystem,
+  const CoordsType coordinateSystem,
   const std::vector<ValueType>& isovalues,
   const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& inputField,
   vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>& points,
@@ -56,18 +57,10 @@ vtkm::cont::CellSetSingleType<> execute(
   vtkm::worklet::contour::CommonState& sharedState)
 {
   vtkm::cont::Invoker invoke;
-
-  vtkm::Vec3f origin, spacing;
-  { //extract out the origin and spacing as these are needed for Pass4 to properly
-    //interpolate the new points
-    auto portal = coordinateSystem.ReadPortal();
-    origin = portal.GetOrigin();
-    spacing = portal.GetSpacing();
-  }
   auto pdims = cells.GetPointDimensions();
 
   vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases;
-  edgeCases.Allocate(coordinateSystem.GetNumberOfValues());
+  edgeCases.Allocate(coordinateSystem.GetData().GetNumberOfValues());
 
   vtkm::cont::CellSetStructured<2> metaDataMesh2D;
   vtkm::cont::ArrayHandle<vtkm::Id> metaDataLinearSums; //per point of metaDataMesh
@@ -158,8 +151,7 @@ vtkm::cont::CellSetSingleType<> execute(
       {
         VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges Pass4");
 
-        launchComputePass4 pass4(
-          pdims, origin, spacing, multiContourCellOffset, multiContourPointOffset);
+        auto pass4 = launchComputePass4(pdims, multiContourCellOffset, multiContourPointOffset);
 
         detail::extend_by(points, newPointSize);
         if (sharedState.GenerateNormals)
@@ -171,6 +163,7 @@ vtkm::cont::CellSetSingleType<> execute(
                                        pass4,
                                        newPointSize,
                                        isoval,
+                                       coordinateSystem,
                                        inputField,
                                        edgeCases,
                                        metaDataMesh2D,

@@ -276,17 +276,11 @@ struct ComputePass4Y : public vtkm::worklet::WorkletVisitCellsWithPoints
 template <typename T>
 struct ComputePass5Y : public vtkm::worklet::WorkletMapField
 {
-
-  vtkm::internal::ArrayPortalUniformPointCoordinates Coordinates;
+  vtkm::Id3 PointDims;
   vtkm::Id NormalWriteOffset;
 
-  ComputePass5Y() {}
-  ComputePass5Y(const vtkm::Id3& pdims,
-                const vtkm::Vec3f& origin,
-                const vtkm::Vec3f& spacing,
-                vtkm::Id normalWriteOffset,
-                bool generateNormals)
-    : Coordinates(pdims, origin, spacing)
+  ComputePass5Y(const vtkm::Id3& pdims, vtkm::Id normalWriteOffset, bool generateNormals)
+    : PointDims(pdims)
     , NormalWriteOffset(normalWriteOffset)
   {
     if (!generateNormals)
@@ -299,20 +293,25 @@ struct ComputePass5Y : public vtkm::worklet::WorkletMapField
                                 FieldIn interpWeight,
                                 FieldOut points,
                                 WholeArrayIn field,
+                                WholeArrayIn coords,
                                 WholeArrayOut normals);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
-  template <typename PT, typename WholeInputField, typename WholeNormalField>
+  template <typename PT,
+            typename WholeInputField,
+            typename WholeNormalField,
+            typename WholeCoordsField>
   VTKM_EXEC void operator()(const vtkm::Id2& interpEdgeIds,
                             vtkm::FloatDefault weight,
                             vtkm::Vec<PT, 3>& outPoint,
                             const WholeInputField& field,
+                            const WholeCoordsField& coords,
                             WholeNormalField& normals,
                             vtkm::Id oidx) const
   {
     {
-      vtkm::Vec3f point1 = this->Coordinates.Get(interpEdgeIds[0]);
-      vtkm::Vec3f point2 = this->Coordinates.Get(interpEdgeIds[1]);
+      vtkm::Vec3f point1 = coords.Get(interpEdgeIds[0]);
+      vtkm::Vec3f point2 = coords.Get(interpEdgeIds[1]);
       outPoint = vtkm::Lerp(point1, point2, weight);
     }
 
@@ -320,15 +319,13 @@ struct ComputePass5Y : public vtkm::worklet::WorkletMapField
     if (this->NormalWriteOffset >= 0)
     {
       vtkm::Vec<T, 3> g0, g1;
-      const vtkm::Id3& dims = this->Coordinates.GetDimensions();
-      vtkm::Id3 ijk{ interpEdgeIds[0] % dims[0],
-                     (interpEdgeIds[0] / dims[0]) % dims[1],
-                     interpEdgeIds[0] / (dims[0] * dims[1]) };
+      vtkm::Id3 ijk{ interpEdgeIds[0] % this->PointDims[0],
+                     (interpEdgeIds[0] / this->PointDims[0]) % this->PointDims[1],
+                     interpEdgeIds[0] / (this->PointDims[0] * this->PointDims[1]) };
 
       vtkm::worklet::gradient::StructuredPointGradient gradient;
-      vtkm::exec::BoundaryState boundary(ijk, dims);
-      vtkm::exec::FieldNeighborhood<vtkm::internal::ArrayPortalUniformPointCoordinates>
-        coord_neighborhood(this->Coordinates, boundary);
+      vtkm::exec::BoundaryState boundary(ijk, this->PointDims);
+      vtkm::exec::FieldNeighborhood<WholeCoordsField> coord_neighborhood(coords, boundary);
 
       vtkm::exec::FieldNeighborhood<WholeInputField> field_neighborhood(field, boundary);
 
@@ -337,9 +334,9 @@ struct ComputePass5Y : public vtkm::worklet::WorkletMapField
       gradient(boundary, coord_neighborhood, field_neighborhood, g0);
 
       //compute the gradient at point 2. This optimization can be optimized
-      boundary.IJK = vtkm::Id3{ interpEdgeIds[1] % dims[0],
-                                (interpEdgeIds[1] / dims[0]) % dims[1],
-                                interpEdgeIds[1] / (dims[0] * dims[1]) };
+      boundary.IJK = vtkm::Id3{ interpEdgeIds[1] % this->PointDims[0],
+                                (interpEdgeIds[1] / this->PointDims[0]) % this->PointDims[1],
+                                interpEdgeIds[1] / (this->PointDims[0] * this->PointDims[1]) };
       gradient(boundary, coord_neighborhood, field_neighborhood, g1);
 
       vtkm::Vec3f n = vtkm::Lerp(g0, g1, weight);
