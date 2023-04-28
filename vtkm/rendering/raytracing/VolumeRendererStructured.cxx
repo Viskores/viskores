@@ -41,7 +41,7 @@ namespace
 {
 
 template <typename Device, typename Derived>
-class LocatorAdopterBase
+class LocatorAdapterBase
 {
 private:
   const Derived* self = static_cast<const Derived*>(this);
@@ -91,11 +91,11 @@ public:
 };
 
 template <typename Device>
-class RectilinearLocatorAdopter
-  : public LocatorAdopterBase<Device, RectilinearLocatorAdopter<Device>>
+class RectilinearLocatorAdapter
+  : public LocatorAdapterBase<Device, RectilinearLocatorAdapter<Device>>
 {
 private:
-  friend LocatorAdopterBase<Device, RectilinearLocatorAdopter<Device>>;
+  friend LocatorAdapterBase<Device, RectilinearLocatorAdapter<Device>>;
   using DefaultConstHandle = typename DefaultHandle::ReadPortalType;
   using CartesianConstPortal = typename CartesianArrayHandle::ReadPortalType;
 
@@ -122,7 +122,7 @@ private:
   }
 
 public:
-  RectilinearLocatorAdopter(const CartesianArrayHandle& coordinates,
+  RectilinearLocatorAdapter(const CartesianArrayHandle& coordinates,
                             vtkm::cont::CellSetStructured<3>& cellset,
                             vtkm::cont::CellLocatorRectilinearGrid& locator,
                             vtkm::cont::Token& token)
@@ -137,13 +137,13 @@ public:
     CoordPortals[1] = Coordinates.GetSecondPortal();
     CoordPortals[2] = Coordinates.GetThirdPortal();
   }
-}; // class RectilinearLocatorAdopter
+}; // class RectilinearLocatorAdapter
 
 template <typename Device>
-class UniformLocatorAdopter : public LocatorAdopterBase<Device, UniformLocatorAdopter<Device>>
+class UniformLocatorAdapter : public LocatorAdapterBase<Device, UniformLocatorAdapter<Device>>
 {
 private:
-  friend LocatorAdopterBase<Device, UniformLocatorAdopter<Device>>;
+  friend LocatorAdapterBase<Device, UniformLocatorAdapter<Device>>;
   using UniformArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
   using UniformConstPortal = typename UniformArrayHandle::ReadPortalType;
 
@@ -164,7 +164,7 @@ private:
   }
 
 public:
-  UniformLocatorAdopter(const UniformArrayHandle& coordinates,
+  UniformLocatorAdapter(const UniformArrayHandle& coordinates,
                         vtkm::cont::CellSetStructured<3>& cellset,
                         vtkm::cont::CellLocatorUniformGrid& locator,
                         vtkm::cont::Token& token)
@@ -180,7 +180,7 @@ public:
     InvSpacing[1] = 1.f / spacing[1];
     InvSpacing[2] = 1.f / spacing[2];
   }
-}; // class UniformLocatorAdopter
+}; // class UniformLocatorAdapter
 
 } //namespace
 
@@ -694,13 +694,13 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     vtkm::cont::CellLocatorUniformGrid uniLocator;
     uniLocator.SetCellSet(this->Cellset);
     uniLocator.SetCoordinates(this->Coordinates);
-    UniformLocatorAdopter<Device> locator(vertices, this->Cellset, uniLocator, token);
+    UniformLocatorAdapter<Device> locator(vertices, this->Cellset, uniLocator, token);
 
     if (isAssocPoints)
     {
-      vtkm::worklet::DispatcherMapField<Sampler<Device, UniformLocatorAdopter<Device>>>
+      vtkm::worklet::DispatcherMapField<Sampler<Device, UniformLocatorAdapter<Device>>>
         samplerDispatcher(
-          Sampler<Device, UniformLocatorAdopter<Device>>(ColorMap,
+          Sampler<Device, UniformLocatorAdapter<Device>>(ColorMap,
                                                          vtkm::Float32(ScalarRange.Min),
                                                          vtkm::Float32(ScalarRange.Max),
                                                          SampleDistance,
@@ -718,8 +718,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     }
     else
     {
-      vtkm::worklet::DispatcherMapField<SamplerCellAssoc<Device, UniformLocatorAdopter<Device>>>(
-        SamplerCellAssoc<Device, UniformLocatorAdopter<Device>>(ColorMap,
+      vtkm::worklet::DispatcherMapField<SamplerCellAssoc<Device, UniformLocatorAdapter<Device>>>(
+        SamplerCellAssoc<Device, UniformLocatorAdapter<Device>>(ColorMap,
                                                                 vtkm::Float32(ScalarRange.Min),
                                                                 vtkm::Float32(ScalarRange.Max),
                                                                 SampleDistance,
@@ -742,12 +742,12 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     vtkm::cont::CellLocatorRectilinearGrid rectLocator;
     rectLocator.SetCellSet(this->Cellset);
     rectLocator.SetCoordinates(this->Coordinates);
-    RectilinearLocatorAdopter<Device> locator(vertices, Cellset, rectLocator, token);
+    RectilinearLocatorAdapter<Device> locator(vertices, Cellset, rectLocator, token);
     if (isAssocPoints)
     {
-      vtkm::worklet::DispatcherMapField<Sampler<Device, RectilinearLocatorAdopter<Device>>>
+      vtkm::worklet::DispatcherMapField<Sampler<Device, RectilinearLocatorAdapter<Device>>>
         samplerDispatcher(
-          Sampler<Device, RectilinearLocatorAdopter<Device>>(ColorMap,
+          Sampler<Device, RectilinearLocatorAdapter<Device>>(ColorMap,
                                                              vtkm::Float32(ScalarRange.Min),
                                                              vtkm::Float32(ScalarRange.Max),
                                                              SampleDistance,
@@ -765,8 +765,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
     }
     else
     {
-      vtkm::worklet::DispatcherMapField<SamplerCellAssoc<Device, RectilinearLocatorAdopter<Device>>>
-        rectilinearLocatorDispatcher(SamplerCellAssoc<Device, RectilinearLocatorAdopter<Device>>(
+      vtkm::worklet::DispatcherMapField<SamplerCellAssoc<Device, RectilinearLocatorAdapter<Device>>>
+        rectilinearLocatorDispatcher(SamplerCellAssoc<Device, RectilinearLocatorAdapter<Device>>(
           ColorMap,
           vtkm::Float32(ScalarRange.Min),
           vtkm::Float32(ScalarRange.Max),
