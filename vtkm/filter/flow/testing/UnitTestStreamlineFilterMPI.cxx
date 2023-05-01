@@ -115,10 +115,10 @@ void SetFilter(FilterType& filter,
   filter.SetSeeds(seedArray);
   filter.SetActiveField(fieldName);
   filter.SetUseThreadedAlgorithm(useThreaded);
-  //  if (useAsyncComm)
-  //    filter.SetUseAsynchronousCommunication();
-  //  else
-  //    filter.SetUseSynchronousCommunication();
+  if (useAsyncComm)
+    filter.SetUseAsynchronousCommunication();
+  else
+    filter.SetUseSynchronousCommunication();
 
   if (useBlockIds)
     filter.SetBlockIDs(blockIds);
@@ -577,7 +577,6 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
     }
   }
 }
-
 
 void TestStreamlineFiltersMPI()
 {

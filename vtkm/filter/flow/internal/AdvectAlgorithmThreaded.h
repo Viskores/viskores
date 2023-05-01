@@ -137,8 +137,8 @@ protected:
     if (!this->UseAsynchronousCommunication)
     {
       VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Synchronous communication not supported for AdvectAlgorithmThreaded. Forcing "
-                 "asynchronous communication.");
+                 "Synchronous communication not supported for AdvectAlgorithmThreaded."
+                 "Forcing asynchronous communication.");
     }
 
     bool useAsync = true;
