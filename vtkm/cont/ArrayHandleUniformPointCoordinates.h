@@ -51,10 +51,6 @@ public:
     ArrayHandleUniformPointCoordinates,
     (vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandleUniformPointCoordinates(vtkm::Id3 dimensions,
                                      ValueType origin = ValueType(0.0f, 0.0f, 0.0f),

@@ -408,10 +408,6 @@ public:
     (ArrayHandleMultiplexer<ArrayHandleTypes...>),
     (vtkm::cont::ArrayHandle<typename Traits::ValueType, typename Traits::StorageTag>));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   template <typename RealStorageTag>
   VTKM_CONT ArrayHandleMultiplexer(const vtkm::cont::ArrayHandle<ValueType, RealStorageTag>& src)
     : Superclass(StorageType::CreateBuffers(src))

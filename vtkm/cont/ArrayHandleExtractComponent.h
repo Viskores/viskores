@@ -94,8 +94,7 @@ class Storage<typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::Com
 {
   using SourceValueType = typename ArrayHandleType::ValueType;
   using ValueType = typename vtkm::VecTraits<SourceValueType>::ComponentType;
-  using SourceStorageTag = typename ArrayHandleType::StorageTag;
-  using SourceStorage = vtkm::cont::internal::Storage<SourceValueType, SourceStorageTag>;
+  using SourceStorage = typename ArrayHandleType::StorageType;
 
 public:
   VTKM_CONT static vtkm::IdComponent ComponentIndex(
@@ -198,10 +197,6 @@ public:
       typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType,
       StorageTagExtractComponent<ArrayHandleType>>));
 
-protected:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandleExtractComponent(const ArrayHandleType& array, vtkm::IdComponent component)
     : Superclass(StorageType::CreateBuffers(component, array))
