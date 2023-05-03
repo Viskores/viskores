@@ -44,11 +44,12 @@ template <typename Device, typename Derived>
 class LocatorAdapterBase
 {
 private:
-  const Derived* self = static_cast<const Derived*>(this);
-
 public:
   VTKM_EXEC
-  inline bool IsInside(const vtkm::Vec3f_32& point) const { return self->Locator.IsInside(point); }
+  inline bool IsInside(const vtkm::Vec3f_32& point) const
+  {
+    return static_cast<const Derived*>(this)->Locator.IsInside(point);
+  }
 
   // Assumes point inside the data set
   VTKM_EXEC
@@ -58,6 +59,7 @@ public:
                          vtkm::Vec3f& parametric) const
   {
     vtkm::Id cellId{};
+    auto self = static_cast<const Derived*>(this);
     self->Locator.FindCell(point, cellId, parametric);
     cell = self->Conn.FlatToLogicalToIndex(cellId);
     self->ComputeInvSpacing(cell, point, invSpacing, parametric);
@@ -66,27 +68,28 @@ public:
   VTKM_EXEC
   inline void GetCellIndices(const vtkm::Id3& cell, vtkm::Vec<vtkm::Id, 8>& cellIndices) const
   {
-    cellIndices = self->Conn.GetIndices(cell);
+    cellIndices = static_cast<const Derived*>(this)->Conn.GetIndices(cell);
   }
 
   VTKM_EXEC
   inline vtkm::Id GetCellIndex(const vtkm::Id3& cell) const
   {
-    return self->Conn.LogicalToFlatToIndex(cell);
+    return static_cast<const Derived*>(this)->Conn.LogicalToFlatToIndex(cell);
   }
 
   VTKM_EXEC
   inline void GetPoint(const vtkm::Id& index, vtkm::Vec3f_32& point) const
   {
-    BOUNDS_CHECK(self->Coordinates, index);
-    point = self->Coordinates.Get(index);
+    BOUNDS_CHECK(static_cast<const Derived*>(this)->Coordinates, index);
+    point = static_cast<const Derived*>(this)->Coordinates.Get(index);
   }
 
   VTKM_EXEC
   inline void GetMinPoint(const vtkm::Id3& cell, vtkm::Vec3f_32& point) const
   {
-    const vtkm::Id pointIndex = self->Conn.LogicalToFlatFromIndex(cell);
-    point = self->Coordinates.Get(pointIndex);
+    const vtkm::Id pointIndex =
+      static_cast<const Derived*>(this)->Conn.LogicalToFlatFromIndex(cell);
+    point = static_cast<const Derived*>(this)->Coordinates.Get(pointIndex);
   }
 };
 
