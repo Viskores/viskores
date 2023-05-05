@@ -1011,7 +1011,6 @@ public:
 
   //--------------------------------------------------------------------------
   // Sort by Key
-public:
   template <typename T, typename U, class StorageT, class StorageU>
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)

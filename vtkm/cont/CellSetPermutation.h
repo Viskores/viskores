@@ -78,7 +78,6 @@ public:
     }
   };
 
-public:
   template <typename CellSetPermutationType>
   static VTKM_CONT vtkm::cont::ArrayHandle<vtkm::IdComponent> GetNumIndicesArray(
     const CellSetPermutationType& cs,
@@ -465,7 +464,6 @@ public:
     return this->FullCellSet.GetNumberOfPoints();
   }
 
-public:
   template <typename VisitTopology, typename IncidentTopology>
   using ExecConnectivityType = typename internal::CellSetPermutationConnectivityChooser<
     VisitTopology,
