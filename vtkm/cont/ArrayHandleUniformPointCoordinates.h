@@ -114,7 +114,7 @@ namespace cont
 template <>
 struct SerializableTypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>
 {
-  static VTKM_CONT const std::string Get() { return "AH_UniformPointCoordinates"; }
+  static VTKM_CONT std::string Get() { return "AH_UniformPointCoordinates"; }
 };
 
 template <>
