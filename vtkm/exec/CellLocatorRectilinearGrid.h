@@ -37,6 +37,7 @@ private:
   using AxisPortalType = typename AxisHandle::ReadPortalType;
   using RectilinearPortalType = typename RectilinearType::ReadPortalType;
 
+  // NOLINTNEXTLINE(performance-move-const-arg)
   VTKM_CONT static vtkm::Id3&& ToId3(vtkm::Id3&& src) { return std::move(src); }
   VTKM_CONT static vtkm::Id3 ToId3(vtkm::Id2&& src) { return vtkm::Id3(src[0], src[1], 1); }
   VTKM_CONT static vtkm::Id3 ToId3(vtkm::Id&& src) { return vtkm::Id3(src, 1, 1); }
