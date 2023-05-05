@@ -293,7 +293,7 @@ vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet2()
   return dataSet;
 }
 
-vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(const vtkm::Id3 dims)
+vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(vtkm::Id3 dims)
 {
   vtkm::cont::DataSetBuilderUniform dsb;
   vtkm::cont::DataSet dataSet = dsb.Create(dims);
