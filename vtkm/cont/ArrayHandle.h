@@ -154,10 +154,7 @@ struct GetTypeInParentheses<void(T)>
   VTKM_IS_ARRAY_HANDLE(Superclass);                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
-  classname()                                                                                      \
-    : Superclass()                                                                                 \
-  {                                                                                                \
-  }                                                                                                \
+  classname() {}                                                                                   \
                                                                                                    \
   VTKM_CONT                                                                                        \
   classname(const Thisclass& src)                                                                  \
