@@ -132,7 +132,7 @@ public:
     return vtkm::Bounds(ranges[0], ranges[1], ranges[2]);
   }
 
-  virtual void PrintSummary(std::ostream& out) const override;
+  void PrintSummary(std::ostream& out) const override;
 
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).

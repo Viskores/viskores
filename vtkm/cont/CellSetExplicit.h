@@ -121,7 +121,7 @@ public:
   VTKM_CONT Thisclass& operator=(const Thisclass& src);
   VTKM_CONT Thisclass& operator=(Thisclass&& src) noexcept;
 
-  VTKM_CONT virtual ~CellSetExplicit() override;
+  VTKM_CONT ~CellSetExplicit() override;
 
   VTKM_CONT vtkm::Id GetNumberOfCells() const override;
   VTKM_CONT vtkm::Id GetNumberOfPoints() const override;
