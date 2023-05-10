@@ -10,7 +10,8 @@
 
 set(headers
   Clip.h
-  Contour.h
+  ContourFlyingEdges.h
+  ContourMarchingCells.h
   MIR.h
   )
 
