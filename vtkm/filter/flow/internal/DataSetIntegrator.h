@@ -74,15 +74,16 @@ public:
 
   void Validate(vtkm::Id num)
   {
-#ifndef NDEBUG
     //Make sure we didn't miss anything. Every particle goes into a single bucket.
-    VTKM_ASSERT(static_cast<std::size_t>(num) ==
-                (this->InBounds.Particles.size() + this->OutOfBounds.Particles.size() +
-                 this->TermIdx.size()));
-    VTKM_ASSERT(this->InBounds.Particles.size() == this->InBounds.BlockIDs.size());
-    VTKM_ASSERT(this->OutOfBounds.Particles.size() == this->OutOfBounds.BlockIDs.size());
-    VTKM_ASSERT(this->TermIdx.size() == this->TermID.size());
-#endif
+    if ((static_cast<std::size_t>(num) !=
+         (this->InBounds.Particles.size() + this->OutOfBounds.Particles.size() +
+          this->TermIdx.size())) ||
+        (this->InBounds.Particles.size() != this->InBounds.BlockIDs.size()) ||
+        (this->OutOfBounds.Particles.size() != this->OutOfBounds.BlockIDs.size()) ||
+        (this->TermIdx.size() != this->TermID.size()))
+    {
+      throw vtkm::cont::ErrorFilterExecution("Particle count mismatch after classification");
+    }
   }
 
   void AddTerminated(vtkm::Id idx, vtkm::Id pID)

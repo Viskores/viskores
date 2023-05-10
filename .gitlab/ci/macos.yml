@@ -25,6 +25,7 @@ test:macos_xcode13:
     CC: gcc
     CXX: g++
     DEVELOPER_DIR: "/Applications/Xcode-13.3.app/Contents/Developer"
+    GIT_CLONE_PATH: "$CI_BUILDS_DIR/vtk-m-ci"
     VTKM_SETTINGS: "64bit_floats+shared+ccache"
 
 .cmake_build_macos:
@@ -55,11 +56,13 @@ test:macos_xcode13:
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
     - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
+    - cmake -P .gitlab/ci/check_warnings.cmake || exit 47
   after_script:
     - ccache -v -s
     - ccache -z
   extends:
     - .cmake_build_artifacts
+    - .warning_policy
 
 .cmake_test_macos:
   stage: test

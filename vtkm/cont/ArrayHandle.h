@@ -200,7 +200,10 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   using ValueType = typename__ Superclass::ValueType;                                              \
-  using StorageTag = typename__ Superclass::StorageTag
+  using StorageTag = typename__ Superclass::StorageTag;                                            \
+  using StorageType = typename__ Superclass::StorageType;                                          \
+  using ReadPortalType = typename__ Superclass::ReadPortalType;                                    \
+  using WritePortalType = typename__ Superclass::WritePortalType
 
 /// \brief Macro to make default methods in ArrayHandle subclasses.
 ///

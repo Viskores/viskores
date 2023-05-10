@@ -19,7 +19,7 @@ curl -L "https://github.com/kokkos/kokkos/archive/refs/tags/$VERSION.tar.gz" \
 cmake -S "$WORKDIR/kokkos-$VERSION" -B "$WORKDIR/kokkos_build" \
   "-DCMAKE_BUILD_TYPE:STRING=release" \
   "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache" \
-  "-DCMAKE_CXX_STANDARD:STRING=14" \
+  "-DCMAKE_CXX_STANDARD:STRING=17" \
   "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON" \
   "-DKokkos_ENABLE_HIP:BOOL=ON" \
   "-DKokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE:BOOL=OFF" \

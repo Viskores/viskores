@@ -117,6 +117,10 @@ stages:
   variables:
     CMAKE_VERSION: "3.13.5"
 
+.warning_policy:
+  allow_failure:
+    exit_codes: [ 47 ]
+
 .install_cmake: &install_cmake |
   export PATH=$PWD/.gitlab/cmake/bin:$PATH
   .gitlab/ci/config/cmake.sh "$CMAKE_VERSION"
@@ -141,8 +145,10 @@ stages:
   script:
     - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
     - sccache --show-stats
+    - cmake -P .gitlab/ci/check_warnings.cmake || exit 47
   extends:
     - .cmake_build_artifacts
+    - .warning_policy
 
 .cmake_test_linux: &cmake_test_linux
   stage: test
@@ -192,6 +198,7 @@ stages:
       # CTest and CMake install files.
       # Note: this also captures our CIState.cmake file
       - build/CMakeCache.txt
+      - build/compile_num_warnings.log
       - build/**/*.cmake
       - build/Testing/
 

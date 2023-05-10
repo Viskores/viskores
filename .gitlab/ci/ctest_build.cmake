@@ -30,11 +30,10 @@ if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
   else()
     ctest_submit(PARTS Build)
   endif()
-
-
 endif()
 
+file(WRITE "${CTEST_BINARY_DIRECTORY}/compile_num_warnings.log" "${num_warnings}")
+
 if (build_result)
-  message(FATAL_ERROR
-    "Failed to build")
+  message(FATAL_ERROR "Failed to build")
 endif ()
