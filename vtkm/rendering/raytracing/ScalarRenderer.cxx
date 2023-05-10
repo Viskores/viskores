@@ -217,7 +217,6 @@ public:
 void ScalarRenderer::SetShapeIntersector(std::unique_ptr<ShapeIntersector>&& intersector)
 {
   Intersector = std::move(intersector);
-  IntersectorValid = true;
 }
 
 void ScalarRenderer::AddField(const vtkm::cont::Field& scalarField)
@@ -265,7 +264,7 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays,
   {
     throw vtkm::cont::ErrorBadValue("ScalarRenderer: no fields added");
   }
-  if (!IntersectorValid)
+  if (!Intersector)
   {
     throw vtkm::cont::ErrorBadValue("ScalarRenderer: intersector never set");
   }

@@ -33,7 +33,6 @@ private:
 protected:
   std::unique_ptr<ShapeIntersector> Intersector;
   std::vector<vtkm::cont::Field> Fields;
-  bool IntersectorValid = false;
 
   template <typename Precision>
   void RenderOnDevice(Ray<Precision>& rays,
