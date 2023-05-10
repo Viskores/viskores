@@ -25,6 +25,11 @@ class VTKM_RENDERING_EXPORT ScalarRenderer
 public:
   ScalarRenderer();
 
+  // Note: since we are using std::unique_ptr<T> for PIMPL, the compiler does
+  // not know the real size of std::unique_ptr<T> at this point. Thus, we
+  // can not have the definition of the destructor here. We need to declare it
+  // here and have an implementation in .cxx. The implementation could just
+  // be = default.
   ~ScalarRenderer();
 
   void SetInput(vtkm::cont::DataSet& dataSet);
@@ -47,10 +52,9 @@ public:
 
   ScalarRenderer::Result Render(const vtkm::rendering::Camera& camera);
 
-
 private:
   struct InternalsType;
-  std::shared_ptr<InternalsType> Internals;
+  std::unique_ptr<InternalsType> Internals;
 };
 }
 } //namespace vtkm::rendering

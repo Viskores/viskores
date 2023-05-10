@@ -13,7 +13,6 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
 
-#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
@@ -22,7 +21,6 @@
 #include <vtkm/rendering/raytracing/SphereIntersector.h>
 #include <vtkm/rendering/raytracing/TriangleExtractor.h>
 
-
 namespace vtkm
 {
 namespace rendering
@@ -30,30 +28,21 @@ namespace rendering
 
 struct ScalarRenderer::InternalsType
 {
-  bool ValidDataSet;
-  vtkm::Int32 Width;
-  vtkm::Int32 Height;
-  vtkm::Float32 DefaultValue;
+  bool ValidDataSet = false;
+  vtkm::Int32 Width = 1024;
+  vtkm::Int32 Height = 1024;
+  vtkm::Float32 DefaultValue = vtkm::Nan32();
   vtkm::cont::DataSet DataSet;
   vtkm::rendering::raytracing::ScalarRenderer Tracer;
   vtkm::Bounds ShapeBounds;
-
-  VTKM_CONT
-  InternalsType()
-    : ValidDataSet(false)
-    , Width(1024)
-    , Height(1024)
-    , DefaultValue(vtkm::Nan32())
-  {
-  }
 };
 
 ScalarRenderer::ScalarRenderer()
-  : Internals(new InternalsType)
+  : Internals(std::make_unique<InternalsType>())
 {
 }
 
-ScalarRenderer::~ScalarRenderer() {}
+ScalarRenderer::~ScalarRenderer() = default;
 
 void ScalarRenderer::SetWidth(const vtkm::Int32 width)
 {
@@ -90,16 +79,16 @@ void ScalarRenderer::SetInput(vtkm::cont::DataSet& dataSet)
 
   if (triExtractor.GetNumberOfTriangles() > 0)
   {
-    auto triIntersector = std::make_shared<raytracing::TriangleIntersector>();
+    auto triIntersector = std::make_unique<raytracing::TriangleIntersector>();
     triIntersector->SetData(coords, triExtractor.GetTriangles());
-    this->Internals->Tracer.SetShapeIntersector(triIntersector);
     this->Internals->ShapeBounds = triIntersector->GetShapeBounds();
+    this->Internals->Tracer.SetShapeIntersector(std::unique_ptr<raytracing::ShapeIntersector>{
+      static_cast<raytracing::ShapeIntersector*>(triIntersector.release()) });
   }
 }
 
 ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& camera)
 {
-
   if (!Internals->ValidDataSet)
   {
     throw vtkm::cont::ErrorBadValue("ScalarRenderer: input never set");
@@ -182,7 +171,7 @@ ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& cam
 
 vtkm::cont::DataSet ScalarRenderer::Result::ToDataSet()
 {
-  if (Scalars.size() == 0)
+  if (Scalars.empty())
   {
     throw vtkm::cont::ErrorBadValue("ScalarRenderer: result empty");
   }
