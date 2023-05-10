@@ -82,8 +82,7 @@ void ScalarRenderer::SetInput(vtkm::cont::DataSet& dataSet)
     auto triIntersector = std::make_unique<raytracing::TriangleIntersector>();
     triIntersector->SetData(coords, triExtractor.GetTriangles());
     this->Internals->ShapeBounds = triIntersector->GetShapeBounds();
-    this->Internals->Tracer.SetShapeIntersector(std::unique_ptr<raytracing::ShapeIntersector>{
-      static_cast<raytracing::ShapeIntersector*>(triIntersector.release()) });
+    this->Internals->Tracer.SetShapeIntersector(std::move(triIntersector));
   }
 }
 

@@ -48,7 +48,7 @@ protected:
 
 public:
   VTKM_CONT
-  void SetShapeIntersector(std::unique_ptr<ShapeIntersector> intersector);
+  void SetShapeIntersector(std::unique_ptr<ShapeIntersector>&& intersector);
 
   VTKM_CONT
   void AddField(const vtkm::cont::Field& scalarField);

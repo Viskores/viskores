@@ -214,7 +214,7 @@ public:
 }; //class WriteDepthBuffer
 } // namespace detail
 
-void ScalarRenderer::SetShapeIntersector(std::unique_ptr<ShapeIntersector> intersector)
+void ScalarRenderer::SetShapeIntersector(std::unique_ptr<ShapeIntersector>&& intersector)
 {
   Intersector = std::move(intersector);
   IntersectorValid = true;
