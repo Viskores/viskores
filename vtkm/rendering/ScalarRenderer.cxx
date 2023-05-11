@@ -42,6 +42,8 @@ ScalarRenderer::ScalarRenderer()
 {
 }
 
+ScalarRenderer::ScalarRenderer(ScalarRenderer&&) noexcept = default;
+ScalarRenderer& ScalarRenderer::operator=(ScalarRenderer&&) noexcept = default;
 ScalarRenderer::~ScalarRenderer() = default;
 
 void ScalarRenderer::SetWidth(const vtkm::Int32 width)
