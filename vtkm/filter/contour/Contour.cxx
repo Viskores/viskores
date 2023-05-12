@@ -34,11 +34,8 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
   auto inCoords = inDataSet.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()).GetData();
   std::unique_ptr<vtkm::filter::contour::AbstractContour> implementation;
 
-  // For now, Flying Edges is only used for 3D Structured CellSets,
-  // using Uniform coordinates.
-  if (inCellSet.template IsType<vtkm::cont::CellSetStructured<3>>() &&
-      inCoords.template IsType<
-        vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>>())
+  // Flying Edges is only used for 3D Structured CellSets
+  if (inCellSet.template IsType<vtkm::cont::CellSetStructured<3>>())
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Using flying edges");
     implementation.reset(new vtkm::filter::contour::ContourFlyingEdges);
