@@ -228,7 +228,7 @@ public:
     // But it should not change anything on the contour itself.
     filter.SetGenerateNormals(true);
     vtkm::cont::DataSet outputNormals = filter.Execute(rectilinearDataset);
-    coordinates = outputSingleCell.GetCoordinateSystem()
+    coordinates = outputNormals.GetCoordinateSystem()
                     .GetData()
                     .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f>>();
     VTKM_TEST_ASSERT(test_equal_ArrayHandles(coordinates, expectedCoordinates),
