@@ -177,6 +177,16 @@ VTKM_CONT bool UnknownArrayHandle::IsValid() const
 
 VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstance() const
 {
+  if (this->IsStorageType<vtkm::cont::StorageTagRuntimeVec>())
+  {
+    // Special case for `ArrayHandleRuntimeVec`, which (1) can be used in place of
+    // a basic array in `UnknownArrayHandle` and (2) needs a special construction to
+    // capture the correct number of components. Also note that we are allowing this
+    // special case to be implemented in `NewInstanceBasic` because it has a better
+    // fallback (throw an exception rather than create a potentially incompatible
+    // with the wrong number of components).
+    return this->NewInstanceBasic();
+  }
   UnknownArrayHandle newArray;
   if (this->Container)
   {
@@ -188,6 +198,25 @@ VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstance() const
 VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceBasic() const
 {
   UnknownArrayHandle newArray;
+  if (this->IsStorageType<vtkm::cont::StorageTagRuntimeVec>())
+  {
+    // Special case for `ArrayHandleRuntimeVec`, which (1) can be used in place of
+    // a basic array in `UnknownArrayHandle` and (2) needs a special construction to
+    // capture the correct number of components.
+    auto runtimeVecArrayCreator = [&](auto exampleComponent) {
+      using ComponentType = decltype(exampleComponent);
+      if (this->IsBaseComponentType<ComponentType>())
+      {
+        newArray =
+          vtkm::cont::make_ArrayHandleRuntimeVec<ComponentType>(this->GetNumberOfComponentsFlat());
+      }
+    };
+    vtkm::ListForEach(runtimeVecArrayCreator, vtkm::TypeListBaseC{});
+    if (newArray.IsValid())
+    {
+      return newArray;
+    }
+  }
   if (this->Container)
   {
     newArray.Container = this->Container->NewInstanceBasic();
@@ -197,6 +226,14 @@ VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceBasic() const
 
 VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceFloatBasic() const
 {
+  if (this->IsStorageType<vtkm::cont::StorageTagRuntimeVec>())
+  {
+    // Special case for `ArrayHandleRuntimeVec`, which (1) can be used in place of
+    // a basic array in `UnknownArrayHandle` and (2) needs a special construction to
+    // capture the correct number of components.
+    return vtkm::cont::make_ArrayHandleRuntimeVec<vtkm::FloatDefault>(
+      this->GetNumberOfComponentsFlat());
+  }
   UnknownArrayHandle newArray;
   if (this->Container)
   {

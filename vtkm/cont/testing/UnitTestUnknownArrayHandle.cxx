@@ -11,6 +11,7 @@
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -574,6 +575,27 @@ void TryConvertRuntimeVec()
   VTKM_TEST_ASSERT(unknownWithRuntimeVec.CanConvert<BasicArrayType>());
   BasicArrayType outputArray = unknownWithRuntimeVec.AsArrayHandle<BasicArrayType>();
   VTKM_TEST_ASSERT(test_equal_ArrayHandles(inputArray, outputArray));
+
+  std::cout << "    Copy ArrayHandleRuntimeVec to a new instance" << std::endl;
+  vtkm::cont::UnknownArrayHandle unknownCopy = unknownWithRuntimeVec.NewInstance();
+  VTKM_TEST_ASSERT(unknownWithRuntimeVec.GetNumberOfComponentsFlat() ==
+                   unknownCopy.GetNumberOfComponentsFlat());
+  vtkm::cont::ArrayCopy(unknownWithRuntimeVec, unknownCopy);
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(inputArray, unknownCopy));
+
+  std::cout << "    Copy ArrayHandleRuntimeVec as basic array" << std::endl;
+  unknownCopy = unknownWithRuntimeVec.NewInstanceBasic();
+  VTKM_TEST_ASSERT(unknownWithRuntimeVec.GetNumberOfComponentsFlat() ==
+                   unknownCopy.GetNumberOfComponentsFlat());
+  vtkm::cont::ArrayCopy(unknownWithRuntimeVec, unknownCopy);
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(inputArray, unknownCopy));
+
+  std::cout << "    Copy ArrayHandleRuntimeVec to float array" << std::endl;
+  unknownCopy = unknownWithRuntimeVec.NewInstanceFloatBasic();
+  VTKM_TEST_ASSERT(unknownWithRuntimeVec.GetNumberOfComponentsFlat() ==
+                   unknownCopy.GetNumberOfComponentsFlat());
+  vtkm::cont::ArrayCopy(unknownWithRuntimeVec, unknownCopy);
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(inputArray, unknownCopy));
 }
 
 void TryConvertRuntimeVec()
