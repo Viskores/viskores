@@ -29,20 +29,15 @@ public:
   ScalarRenderer(const ScalarRenderer&) = delete;
   ScalarRenderer& operator=(const ScalarRenderer&) = delete;
 
-  // Note: we are using std::unique_ptr<SomeIncompleteType> with default deleter for PIMPL,
-  // the compiler does not know how to delete SomeIncompleteType* at this point. Thus, we
-  // can not omit the declaration of destructor, move assignment operator and let the
-  // compiler generate implicit default version (which it can't.) We also can not have
-  // inline definitions of them here. We need to declare them here and have definitions in
-  // .cxx where SomeIncompleteType becomes complete. The implementations could just be = default.
   ScalarRenderer(ScalarRenderer&&) noexcept;
   ScalarRenderer& operator=(ScalarRenderer&&) noexcept;
+  // Default destructor implemented in source file to support PIMPL idiom.
   ~ScalarRenderer();
 
   void SetInput(vtkm::cont::DataSet& dataSet);
 
-  void SetWidth(const vtkm::Int32 width);
-  void SetHeight(const vtkm::Int32 height);
+  void SetWidth(vtkm::Int32 width);
+  void SetHeight(vtkm::Int32 height);
   void SetDefaultValue(vtkm::Float32 value);
 
   struct VTKM_RENDERING_EXPORT Result

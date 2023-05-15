@@ -46,7 +46,7 @@ ScalarRenderer::ScalarRenderer(ScalarRenderer&&) noexcept = default;
 ScalarRenderer& ScalarRenderer::operator=(ScalarRenderer&&) noexcept = default;
 ScalarRenderer::~ScalarRenderer() = default;
 
-void ScalarRenderer::SetWidth(const vtkm::Int32 width)
+void ScalarRenderer::SetWidth(vtkm::Int32 width)
 {
   if (width < 1)
   {
@@ -55,12 +55,12 @@ void ScalarRenderer::SetWidth(const vtkm::Int32 width)
   Internals->Width = width;
 }
 
-void ScalarRenderer::SetDefaultValue(const vtkm::Float32 value)
+void ScalarRenderer::SetDefaultValue(vtkm::Float32 value)
 {
   Internals->DefaultValue = value;
 }
 
-void ScalarRenderer::SetHeight(const vtkm::Int32 height)
+void ScalarRenderer::SetHeight(vtkm::Int32 height)
 {
   if (height < 1)
   {
