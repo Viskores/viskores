@@ -133,6 +133,11 @@ struct VTKM_ALWAYS_EXPORT StorageTagRuntimeVec
 namespace internal
 {
 
+struct RuntimeVecMetaData
+{
+  vtkm::IdComponent NumberOfComponents;
+};
+
 template <typename ComponentsPortal>
 class Storage<vtkm::VecFromPortal<ComponentsPortal>, vtkm::cont::StorageTagRuntimeVec>
 {
@@ -152,10 +157,7 @@ class Storage<vtkm::VecFromPortal<ComponentsPortal>, vtkm::cont::StorageTagRunti
     (std::is_same<ComponentsPortal, typename ComponentsStorage::WritePortalType>::value),
     "Used invalid ComponentsPortal type with expected ComponentsStorageTag.");
 
-  struct Info
-  {
-    vtkm::IdComponent NumberOfComponents;
-  };
+  using Info = RuntimeVecMetaData;
 
   VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> ComponentsBuffers(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)

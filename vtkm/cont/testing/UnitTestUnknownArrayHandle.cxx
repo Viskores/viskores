@@ -544,11 +544,10 @@ void TrySetMultiplexerArray()
   CheckUnknownArray<vtkm::List<vtkm::Id>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(unknownArray, 1);
 }
 
-template <typename T>
+template <typename T, typename BasicComponentType = typename vtkm::VecFlat<T>::ComponentType>
 void TryConvertRuntimeVec()
 {
   using BasicArrayType = vtkm::cont::ArrayHandle<T>;
-  using BasicComponentType = typename vtkm::VecFlat<T>::ComponentType;
   constexpr vtkm::IdComponent numFlatComponents = vtkm::VecFlat<T>::NUM_COMPONENTS;
   using RuntimeArrayType = vtkm::cont::ArrayHandleRuntimeVec<BasicComponentType>;
 
@@ -614,6 +613,16 @@ void TryConvertRuntimeVec()
 
   std::cout << "  Vec of Vecs of Vecs." << std::endl;
   TryConvertRuntimeVec<vtkm::Vec<vtkm::Vec<vtkm::Id4, 3>, 2>>();
+
+  std::cout << "  Compatible but different C types." << std::endl;
+  if (sizeof(int) == sizeof(long))
+  {
+    TryConvertRuntimeVec<vtkm::Vec<int, 4>, long>();
+  }
+  else // assuming sizeof(long long) == sizeof(long)
+  {
+    TryConvertRuntimeVec<vtkm::Vec<long long, 4>, long>();
+  }
 }
 
 struct DefaultTypeFunctor
