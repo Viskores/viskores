@@ -8,16 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_worklet_Contour_h
-#define vtk_m_worklet_Contour_h
-
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#ifndef vtk_m_worklet_ContourMarchingCells_h
+#define vtk_m_worklet_ContourMarchingCells_h
 
 #include <vtkm/filter/contour/worklet/contour/CommonState.h>
 #include <vtkm/filter/contour/worklet/contour/FieldPropagation.h>
-#include <vtkm/filter/contour/worklet/contour/FlyingEdges.h>
 #include <vtkm/filter/contour/worklet/contour/MarchingCells.h>
 
 
@@ -25,8 +20,6 @@ namespace vtkm
 {
 namespace worklet
 {
-
-
 namespace contour
 {
 struct DeduceCoordType
@@ -38,16 +31,6 @@ struct DeduceCoordType
                   Args&&... args) const
   {
     result = marching_cells::execute(cells, coords, std::forward<Args>(args)...);
-  }
-
-  template <typename... Args>
-  void operator()(
-    const vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>& coords,
-    const vtkm::cont::CellSetStructured<3>& cells,
-    vtkm::cont::CellSetSingleType<>& result,
-    Args&&... args) const
-  {
-    result = flying_edges::execute(cells, coords, std::forward<Args>(args)...);
   }
 };
 
@@ -62,13 +45,12 @@ struct DeduceCellType
 };
 }
 
-/// \brief Compute the isosurface of a given 3D data set, supports all
-/// linear cell types
-class Contour
+/// \brief Compute the isosurface of a given 3D data set, supports all linear cell types
+class ContourMarchingCells
 {
 public:
   //----------------------------------------------------------------------------
-  Contour(bool mergeDuplicates = true)
+  ContourMarchingCells(bool mergeDuplicates = true)
     : SharedState(mergeDuplicates)
   {
   }
@@ -89,6 +71,23 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Id> GetCellIdMap() const { return this->SharedState.CellIdMap; }
 
   //----------------------------------------------------------------------------
+  template <typename InArrayType, typename OutArrayType>
+  void ProcessPointField(const InArrayType& input, const OutArrayType& output) const
+  {
+
+    using vtkm::worklet::contour::MapPointField;
+    vtkm::worklet::DispatcherMapField<MapPointField> applyFieldDispatcher;
+
+    applyFieldDispatcher.Invoke(this->SharedState.InterpolationEdgeIds,
+                                this->SharedState.InterpolationWeights,
+                                input,
+                                output);
+  }
+
+  //----------------------------------------------------------------------------
+  void ReleaseCellMapArrays() { this->SharedState.CellIdMap.ReleaseResources(); }
+
+  // Filter called without normals generation
   template <typename ValueType,
             typename CellSetType,
             typename CoordinateSystem,
@@ -118,7 +117,7 @@ public:
     return outputCells;
   }
 
-  //----------------------------------------------------------------------------
+  // Filter called with normals generation
   template <typename ValueType,
             typename CellSetType,
             typename CoordinateSystem,
@@ -149,22 +148,6 @@ public:
     return outputCells;
   }
 
-  //----------------------------------------------------------------------------
-  template <typename InArrayType, typename OutArrayType>
-  void ProcessPointField(const InArrayType& input, const OutArrayType& output) const
-  {
-
-    using vtkm::worklet::contour::MapPointField;
-    vtkm::worklet::DispatcherMapField<MapPointField> applyFieldDispatcher;
-
-    applyFieldDispatcher.Invoke(this->SharedState.InterpolationEdgeIds,
-                                this->SharedState.InterpolationWeights,
-                                input,
-                                output);
-  }
-
-  //----------------------------------------------------------------------------
-  void ReleaseCellMapArrays() { this->SharedState.CellIdMap.ReleaseResources(); }
 
 private:
   vtkm::worklet::contour::CommonState SharedState;
@@ -172,4 +155,4 @@ private:
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_Contour_h
+#endif // vtk_m_worklet_ContourMarchingCells_h

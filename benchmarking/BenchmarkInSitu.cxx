@@ -340,8 +340,7 @@ void BenchContour(::benchmark::State& state)
     filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
     filter.SetMergeDuplicatePoints(true);
     filter.SetGenerateNormals(true);
-    filter.SetComputeFastNormalsForStructured(true);
-    filter.SetComputeFastNormalsForUnstructured(true);
+    filter.SetComputeFastNormals(true);
     state.ResumeTiming(); // And resume timers.
 
     filterTimer.Start();

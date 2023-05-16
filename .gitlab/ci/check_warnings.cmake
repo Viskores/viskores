@@ -10,16 +10,31 @@
 ##
 ##=============================================================================
 
-# Find the path the logs from the last configure
+set(configure_warning_exceptions
+  ".*CMake Warning at CMake/VTKmDetermineVersion.cmake.*"
+  )
+
+# Find the path of the logs from the last configure
 set(cnf_log_path "${CMAKE_SOURCE_DIR}/build/Testing/Temporary/LastConfigure*.log")
 file(GLOB cnf_log_files ${cnf_log_path})
 
+# Check for warnings during the configure phase
 foreach(file IN LISTS cnf_log_files)
   file(STRINGS ${file} lines)
-  string(FIND "${lines}" "Warning" line)
-  if (NOT ${line} EQUAL "-1")
-    message(FATAL_ERROR "Configure warnings detected, please check cdash-commit job")
-  endif()
+  foreach(line IN LISTS lines)
+    if ("${line}" MATCHES "Warning|WARNING|warning")
+      set(exception_matches FALSE)
+      foreach(exception IN LISTS configure_warning_exceptions)
+        if (${line} MATCHES "${exception}")
+          set(exception_matches TRUE)
+          break()
+        endif()
+      endforeach()
+      if (NOT exception_matches)
+        message(FATAL_ERROR "Configure warnings detected, please check cdash-commit job: ${line}")
+      endif()
+    endif()
+  endforeach()
 endforeach()
 
 # `compile_num_warnings` contains a single integer symbolizing the number of

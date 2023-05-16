@@ -105,6 +105,14 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   vtkm::filter::contour::Contour mc;
   mc.SetIsoValue(0, 200);
   mc.SetGenerateNormals(true);
+  if (structured)
+  {
+    mc.SetComputeFastNormals(false);
+  }
+  else
+  {
+    mc.SetComputeFastNormals(true);
+  }
 
   // Test default normals generation: high quality for structured, fast for unstructured.
   auto expected = structured ? hq_sg : fast;
@@ -136,7 +144,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   // Test the other normals generation method
   if (structured)
   {
-    mc.SetComputeFastNormalsForStructured(true);
+    mc.SetComputeFastNormals(true);
     expected = fast;
     if (using_fe_y_alg_ordering)
     {
@@ -145,7 +153,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   }
   else
   {
-    mc.SetComputeFastNormalsForUnstructured(false);
+    mc.SetComputeFastNormals(false);
     expected = hq_ug;
   }
 
