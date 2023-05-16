@@ -46,7 +46,7 @@ public:
     vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     auto index_st = static_cast<std::size_t>(index);
-    ResizeIfNeeded(index_st);
+    this->ResizeIfNeeded(index_st);
     this->ActiveFieldNames[index_st] = name;
     this->ActiveFieldAssociation[index_st] = association;
   }
@@ -79,7 +79,7 @@ public:
   void SetActiveCoordinateSystem(vtkm::IdComponent index, vtkm::Id coord_idx)
   {
     auto index_st = static_cast<std::size_t>(index);
-    ResizeIfNeeded(index_st);
+    this->ResizeIfNeeded(index_st);
     this->ActiveCoordinateSystemIndices[index_st] = coord_idx;
   }
 
@@ -119,6 +119,19 @@ public:
     return this->UseCoordinateSystemAsField[index];
   }
   ///@}
+
+  /// \brief Return the number of active fields currently set.
+  ///
+  /// The general interface to `FilterField` allows a user to set an arbitrary number
+  /// of active fields (indexed 0 and on). This method returns the number of active
+  /// fields that are set. Note that the filter implementation is free to ignore
+  /// any active fields it does not support. Also note that an active field can be
+  /// set to be either a named field or a coordinate system.
+  vtkm::IdComponent GetNumberOfActiveFields() const
+  {
+    VTKM_ASSERT(this->ActiveFieldNames.size() == this->UseCoordinateSystemAsField.size());
+    return static_cast<vtkm::IdComponent>(this->UseCoordinateSystemAsField.size());
+  }
 
 protected:
   VTKM_CONT
