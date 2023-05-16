@@ -467,8 +467,12 @@ void HierarchicalAugmenter<FieldType>::RetrieveInAttachmentPoints()
 template <typename FieldType>
 void HierarchicalAugmenter<FieldType>::ReleaseSwapArrays()
 { // ReleaseSwapArrays()
-  this->OutData.ReleaseResources();
-  this->InData.ReleaseResources();
+  // Rather than explicitly delete the arrays, we are going to "forget" them and
+  // just release our reference count on them. If no one else is using them, the
+  // memory will actually be deleted. But if an array is being used, it will
+  // continue to be managed until it is not.
+  this->OutData = decltype(this->OutData){};
+  this->InData = decltype(this->InData){};
 } // ReleaseSwapArrays()
 
 

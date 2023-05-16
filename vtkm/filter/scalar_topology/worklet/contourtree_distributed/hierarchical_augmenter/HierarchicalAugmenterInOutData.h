@@ -101,33 +101,12 @@ public:
   }
 
   /// Destructor
-  ~HierarchicalAugmenterInOutData();
-
-  /// Clear all arrays
-  void ReleaseResources();
+  ~HierarchicalAugmenterInOutData() = default;
 
   /// Print contents fo this objects
   std::string DebugPrint(std::string message, const char* fileName, long lineNum);
 
 }; // class HierarchicalAugmenterInOutData
-
-template <typename FieldType>
-HierarchicalAugmenterInOutData<FieldType>::~HierarchicalAugmenterInOutData()
-{
-  this->ReleaseResources();
-}
-
-// routine to release memory used for out arrays
-template <typename FieldType>
-void HierarchicalAugmenterInOutData<FieldType>::ReleaseResources()
-{ // ReleaseResources()
-  this->GlobalRegularIds.ReleaseResources();
-  this->DataValues.ReleaseResources();
-  this->SupernodeIds.ReleaseResources();
-  this->Superparents.ReleaseResources();
-  this->SuperparentRounds.ReleaseResources();
-  this->WhichRounds.ReleaseResources();
-} // ReleaseResources()
 
 template <typename FieldType>
 std::string HierarchicalAugmenterInOutData<FieldType>::DebugPrint(std::string message,
