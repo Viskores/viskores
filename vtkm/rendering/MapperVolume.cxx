@@ -98,13 +98,11 @@ void MapperVolume::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
     vtkm::rendering::raytracing::VolumeRendererStructured tracer;
 
     vtkm::rendering::raytracing::Camera rayCamera;
-    vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
-
     vtkm::Int32 width = (vtkm::Int32)this->Internals->Canvas->GetWidth();
     vtkm::Int32 height = (vtkm::Int32)this->Internals->Canvas->GetHeight();
-
     rayCamera.SetParameters(camera, width, height);
 
+    vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
     rayCamera.CreateRays(rays, coords.GetBounds());
     rays.Buffers.at(0).InitConst(0.f);
     raytracing::RayOperations::MapCanvasToRays(rays, camera, *this->Internals->Canvas);

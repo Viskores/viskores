@@ -285,48 +285,46 @@ public:
     return masks;
   }
 
-  template <typename Device, typename T>
-  static void Resize(Ray<T>& rays, const vtkm::Int32 newSize, Device)
+  template <typename T>
+  static void Resize(Ray<T>& rays, const vtkm::Int32 newSize)
   {
     if (newSize == rays.NumRays)
       return; //nothing to do
 
     rays.NumRays = newSize;
-    vtkm::cont::Token token;
 
     if (rays.IntersectionDataEnabled)
     {
-      rays.IntersectionX.PrepareForOutput(rays.NumRays, Device(), token);
-      rays.IntersectionY.PrepareForOutput(rays.NumRays, Device(), token);
-      rays.IntersectionZ.PrepareForOutput(rays.NumRays, Device(), token);
-      rays.U.PrepareForOutput(rays.NumRays, Device(), token);
-      rays.V.PrepareForOutput(rays.NumRays, Device(), token);
-      rays.Scalar.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.IntersectionX.Allocate(rays.NumRays);
+      rays.IntersectionY.Allocate(rays.NumRays);
+      rays.IntersectionZ.Allocate(rays.NumRays);
+      rays.U.Allocate(rays.NumRays);
+      rays.V.Allocate(rays.NumRays);
+      rays.Scalar.Allocate(rays.NumRays);
 
-      rays.NormalX.PrepareForOutput(rays.NumRays, Device(), token);
-      rays.NormalY.PrepareForOutput(rays.NumRays, Device(), token);
-      rays.NormalZ.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.NormalX.Allocate(rays.NumRays);
+      rays.NormalY.Allocate(rays.NumRays);
+      rays.NormalZ.Allocate(rays.NumRays);
     }
 
-    rays.OriginX.PrepareForOutput(rays.NumRays, Device(), token);
-    rays.OriginY.PrepareForOutput(rays.NumRays, Device(), token);
-    rays.OriginZ.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.OriginX.Allocate(rays.NumRays);
+    rays.OriginY.Allocate(rays.NumRays);
+    rays.OriginZ.Allocate(rays.NumRays);
 
-    rays.DirX.PrepareForOutput(rays.NumRays, Device(), token);
-    rays.DirY.PrepareForOutput(rays.NumRays, Device(), token);
-    rays.DirZ.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.DirX.Allocate(rays.NumRays);
+    rays.DirY.Allocate(rays.NumRays);
+    rays.DirZ.Allocate(rays.NumRays);
 
-    rays.Distance.PrepareForOutput(rays.NumRays, Device(), token);
-    rays.MinDistance.PrepareForOutput(rays.NumRays, Device(), token);
-    rays.MaxDistance.PrepareForOutput(rays.NumRays, Device(), token);
-    rays.Status.PrepareForOutput(rays.NumRays, Device(), token);
-    rays.HitIdx.PrepareForOutput(rays.NumRays, Device(), token);
-    rays.PixelIdx.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.Distance.Allocate(rays.NumRays);
+    rays.MinDistance.Allocate(rays.NumRays);
+    rays.MaxDistance.Allocate(rays.NumRays);
+    rays.Status.Allocate(rays.NumRays);
+    rays.HitIdx.Allocate(rays.NumRays);
+    rays.PixelIdx.Allocate(rays.NumRays);
 
-    const size_t bufferCount = static_cast<size_t>(rays.Buffers.size());
-    for (size_t i = 0; i < bufferCount; ++i)
+    for (auto& buffer : rays.Buffers)
     {
-      rays.Buffers[i].Resize(rays.NumRays, Device());
+      buffer.Resize(rays.NumRays);
     }
   }
 
