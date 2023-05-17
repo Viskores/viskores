@@ -25,12 +25,19 @@ class VTKM_RENDERING_EXPORT ScalarRenderer
 public:
   ScalarRenderer();
 
+  // Disable copying due to unique_ptr;
+  ScalarRenderer(const ScalarRenderer&) = delete;
+  ScalarRenderer& operator=(const ScalarRenderer&) = delete;
+
+  ScalarRenderer(ScalarRenderer&&) noexcept;
+  ScalarRenderer& operator=(ScalarRenderer&&) noexcept;
+  // Default destructor implemented in source file to support PIMPL idiom.
   ~ScalarRenderer();
 
   void SetInput(vtkm::cont::DataSet& dataSet);
 
-  void SetWidth(const vtkm::Int32 width);
-  void SetHeight(const vtkm::Int32 height);
+  void SetWidth(vtkm::Int32 width);
+  void SetHeight(vtkm::Int32 height);
   void SetDefaultValue(vtkm::Float32 value);
 
   struct VTKM_RENDERING_EXPORT Result
@@ -47,10 +54,9 @@ public:
 
   ScalarRenderer::Result Render(const vtkm::rendering::Camera& camera);
 
-
 private:
   struct InternalsType;
-  std::shared_ptr<InternalsType> Internals;
+  std::unique_ptr<InternalsType> Internals;
 };
 }
 } //namespace vtkm::rendering
