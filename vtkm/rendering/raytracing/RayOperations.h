@@ -277,7 +277,7 @@ public:
 
     rays.NumRays = rays.Status.ReadPortal().GetNumberOfValues();
 
-    const size_t bufferCount = static_cast<size_t>(rays.Buffers.size());
+    const auto bufferCount = static_cast<size_t>(rays.Buffers.size());
     for (size_t i = 0; i < bufferCount; ++i)
     {
       ChannelBufferOperations::Compact(rays.Buffers[i], masks, rays.NumRays);
@@ -298,6 +298,7 @@ public:
       rays.IntersectionX.Allocate(rays.NumRays);
       rays.IntersectionY.Allocate(rays.NumRays);
       rays.IntersectionZ.Allocate(rays.NumRays);
+
       rays.U.Allocate(rays.NumRays);
       rays.V.Allocate(rays.NumRays);
       rays.Scalar.Allocate(rays.NumRays);
@@ -322,7 +323,7 @@ public:
     rays.HitIdx.Allocate(rays.NumRays);
     rays.PixelIdx.Allocate(rays.NumRays);
 
-    for (auto& buffer : rays.Buffers)
+    for (auto&& buffer : rays.Buffers)
     {
       buffer.Resize(rays.NumRays);
     }
