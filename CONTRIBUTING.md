@@ -33,7 +33,7 @@ Before you begin, perform initial setup:
     called `gitlab` to refer to it.
 
 5.  (Required to use Git LFS.)
-    [Using the SSH URL for the origin remote] is needed to for Git LFS to work.
+    [Using the SSH URL for the origin remote] is needed for Git LFS to work.
     Do not forget to run `$ ./Utilities/SetupForDevelopment.sh` after changing
     the remote URL.
 
