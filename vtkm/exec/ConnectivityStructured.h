@@ -11,6 +11,7 @@
 #ifndef vtk_m_exec_ConnectivityStructured_h
 #define vtk_m_exec_ConnectivityStructured_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/internal/ConnectivityStructuredInternals.h>
@@ -77,28 +78,54 @@ public:
     return Helper::GetIndices(this->Internals, index);
   }
 
+  VTKM_EXEC_CONT SchedulingRangeType FlatToLogicalVisitIndex(vtkm::Id flatVisitIndex) const
+  {
+    return Helper::FlatToLogicalVisitIndex(this->Internals, flatVisitIndex);
+  }
+
+  VTKM_EXEC_CONT SchedulingRangeType FlatToLogicalIncidentIndex(vtkm::Id flatIncidentIndex) const
+  {
+    return Helper::FlatToLogicalIncidentIndex(this->Internals, flatIncidentIndex);
+  }
+
+  VTKM_EXEC_CONT vtkm::Id LogicalToFlatVisitIndex(
+    const SchedulingRangeType& logicalVisitIndex) const
+  {
+    return Helper::LogicalToFlatVisitIndex(this->Internals, logicalVisitIndex);
+  }
+
+  VTKM_EXEC_CONT vtkm::Id LogicalToFlatIncidentIndex(
+    const SchedulingRangeType& logicalIncidentIndex) const
+  {
+    return Helper::LogicalToFlatIncidentIndex(this->Internals, logicalIncidentIndex);
+  }
+
   VTKM_EXEC_CONT
+  VTKM_DEPRECATED(2.1, "Use FlatToLogicalIncidentIndex.")
   SchedulingRangeType FlatToLogicalFromIndex(vtkm::Id flatFromIndex) const
   {
-    return Helper::FlatToLogicalFromIndex(this->Internals, flatFromIndex);
+    return this->FlatToLogicalIncidentIndex(flatFromIndex);
   }
 
   VTKM_EXEC_CONT
+  VTKM_DEPRECATED(2.1, "Use LogicalToFlatIncidentIndex.")
   vtkm::Id LogicalToFlatFromIndex(const SchedulingRangeType& logicalFromIndex) const
   {
-    return Helper::LogicalToFlatFromIndex(this->Internals, logicalFromIndex);
+    return this->LogicalToFlatIncidentIndex(logicalFromIndex);
   }
 
   VTKM_EXEC_CONT
+  VTKM_DEPRECATED(2.1, "Use FlatToLogicalVisitIndex.")
   SchedulingRangeType FlatToLogicalToIndex(vtkm::Id flatToIndex) const
   {
-    return Helper::FlatToLogicalToIndex(this->Internals, flatToIndex);
+    return this->FlatToLogicalVisitIndex(flatToIndex);
   }
 
   VTKM_EXEC_CONT
+  VTKM_DEPRECATED(2.1, "Use LogicalToFlatVisitIndex.")
   vtkm::Id LogicalToFlatToIndex(const SchedulingRangeType& logicalToIndex) const
   {
-    return Helper::LogicalToFlatToIndex(this->Internals, logicalToIndex);
+    return this->LogicalToFlatVisitIndex(logicalToIndex);
   }
 
   VTKM_EXEC_CONT
