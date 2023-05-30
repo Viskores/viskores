@@ -13,7 +13,6 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
@@ -88,9 +87,9 @@ public:
     vtkm::Normalize(nlook);
   }
 
-  VTKM_EXEC inline vtkm::Float32 rcp(vtkm::Float32 f) const { return 1.0f / f; }
+  VTKM_EXEC static inline vtkm::Float32 rcp(vtkm::Float32 f) { return 1.0f / f; }
 
-  VTKM_EXEC inline vtkm::Float32 rcp_safe(vtkm::Float32 f) const
+  VTKM_EXEC static inline vtkm::Float32 rcp_safe(vtkm::Float32 f)
   {
     return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
   }
@@ -260,15 +259,18 @@ public:
     vtkm::Float32 _h = static_cast<vtkm::Float32>(height) * (vt - vb) / 2.f;
     vtkm::Vec2f_32 minPoint(left, bottom);
     vtkm::Vec2f_32 maxPoint(right, top);
+
+    // pixel size in world coordinate
     vtkm::Vec2f_32 delta = maxPoint - minPoint;
-    //delta[0] /= vtkm::Float32(width);
-    //delta[1] /= vtkm::Float32(height);
     delta[0] /= vtkm::Float32(_w);
     delta[1] /= vtkm::Float32(_h);
+
     PixelDelta[0] = delta[0];
     PixelDelta[1] = delta[1];
     PixelDelta[2] = 0.f;
 
+    // "first" ray starts at the bottom-lower corner, with half pixel offset. All other
+    // pixels will be one pixel size (i.e. PixelData) apart.
     vtkm::Vec2f_32 startOffset = minPoint + delta / 2.f;
     StartOffset[0] = startOffset[0];
     StartOffset[1] = startOffset[1];
@@ -294,6 +296,7 @@ public:
     rayDirX = 0.f;
     rayDirY = 0.f;
     rayDirZ = 1.f;
+
     //
     // Pixel subset is the pixels in the 2d viewport
     // not where the rays might intersect data like
@@ -302,14 +305,13 @@ public:
     int i = vtkm::Int32(idx) % SubsetWidth;
     int j = vtkm::Int32(idx) / SubsetWidth;
 
-    vtkm::Vec3f_32 pos;
-    pos[0] = vtkm::Float32(i);
-    pos[1] = vtkm::Float32(j);
-    pos[2] = 0.f;
+    vtkm::Vec3f_32 pos{ vtkm::Float32(i), vtkm::Float32(j), 0.f };
+
     vtkm::Vec3f_32 origin = StartOffset + pos * PixelDelta;
     rayOriginX = origin[0];
     rayOriginY = origin[1];
     rayOriginZ = origin[2];
+
     i += Minx;
     j += Miny;
     pixelIndex = static_cast<vtkm::Id>(j * w + i);
@@ -347,11 +349,13 @@ public:
   {
     vtkm::Float32 thx = tanf((fovX * vtkm::Pi_180f()) * .5f);
     vtkm::Float32 thy = tanf((fovY * vtkm::Pi_180f()) * .5f);
+
     vtkm::Vec3f_32 ru = vtkm::Cross(look, up);
     vtkm::Normalize(ru);
 
     vtkm::Vec3f_32 rv = vtkm::Cross(ru, look);
     vtkm::Normalize(rv);
+
     delta_x = ru * (2 * thx / (float)w);
     delta_y = rv * (2 * thy / (float)h);
 
@@ -364,6 +368,7 @@ public:
       delta_y[1] = delta_y[1] / _zoom;
       delta_y[2] = delta_y[2] / _zoom;
     }
+
     nlook = look;
     vtkm::Normalize(nlook);
   }
@@ -378,14 +383,15 @@ public:
                             Precision& rayDirZ,
                             vtkm::Id& pixelIndex) const
   {
-    vtkm::Vec<Precision, 3> ray_dir(rayDirX, rayDirY, rayDirZ);
-    int i = vtkm::Int32(idx) % SubsetWidth;
-    int j = vtkm::Int32(idx) / SubsetWidth;
+    auto i = vtkm::Int32(idx) % SubsetWidth;
+    auto j = vtkm::Int32(idx) / SubsetWidth;
     i += Minx;
     j += Miny;
     // Write out the global pixelId
     pixelIndex = static_cast<vtkm::Id>(j * w + i);
-    ray_dir = nlook + delta_x * ((2.f * Precision(i) - Precision(w)) / 2.0f) +
+
+    vtkm::Vec<Precision, 3> ray_dir = nlook +
+      delta_x * ((2.f * Precision(i) - Precision(w)) / 2.0f) +
       delta_y * ((2.f * Precision(j) - Precision(h)) / 2.0f);
     // avoid some numerical issues
     for (vtkm::Int32 d = 0; d < 3; ++d)
@@ -393,12 +399,10 @@ public:
       if (ray_dir[d] == 0.f)
         ray_dir[d] += 0.0000001f;
     }
-    Precision dot = vtkm::Dot(ray_dir, ray_dir);
-    Precision sq_mag = vtkm::Sqrt(dot);
-
-    rayDirX = ray_dir[0] / sq_mag;
-    rayDirY = ray_dir[1] / sq_mag;
-    rayDirZ = ray_dir[2] / sq_mag;
+    vtkm::Normalize(ray_dir);
+    rayDirX = ray_dir[0];
+    rayDirY = ray_dir[1];
+    rayDirZ = ray_dir[2];
   }
 
 }; // class perspective ray gen
@@ -909,7 +913,7 @@ VTKM_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
   else if (ortho2D)
   {
     // 2D rendering has a viewport that represents the area of the canvas where the image
-    // is drawn. Thus, we have to create rays cooresponding to that region of the
+    // is drawn. Thus, we have to create rays corresponding to that region of the
     // canvas, so annotations are correctly rendered
     vtkm::Float32 vl, vr, vb, vt;
     this->CameraView.GetRealViewport(this->GetWidth(), this->GetHeight(), vl, vr, vb, vt);

@@ -30,8 +30,6 @@ namespace detail
 class RayStatusFilter : public vtkm::worklet::WorkletMapField
 {
 public:
-  VTKM_CONT
-  RayStatusFilter() {}
   using ControlSignature = void(FieldIn, FieldInOut);
   using ExecutionSignature = void(_1, _2);
   VTKM_EXEC
@@ -205,7 +203,7 @@ public:
   {
     vtkm::Vec<UInt8, 1> maskValues;
     maskValues[0] = RAY_ACTIVE;
-    vtkm::UInt8 statusUInt8 = static_cast<vtkm::UInt8>(RAY_ACTIVE);
+    auto statusUInt8 = static_cast<vtkm::UInt8>(RAY_ACTIVE);
     vtkm::cont::ArrayHandle<vtkm::UInt8> masks;
 
     vtkm::worklet::DispatcherMapField<Mask<vtkm::UInt8>> dispatcher{ (
