@@ -199,6 +199,24 @@ void TryCopy()
     TestValues(input, output);
   }
 
+  {
+    std::cout << "unknown -> basic (different type, unsupported device)" << std::endl;
+    // Force the source to be on the Serial device. If the --vtkm-device argument was
+    // given with a different device (which is how ctest is set up if compiled with
+    // any device), then Serial will be turned off.
+    using SourceType = typename VTraits::template ReplaceComponentType<vtkm::UInt8>;
+    auto rawInput = MakeInputArray<SourceType>();
+    {
+      // Force moving the data to the Serial device.
+      vtkm::cont::Token token;
+      rawInput.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, token);
+    }
+    vtkm::cont::UnknownArrayHandle input = rawInput;
+    vtkm::cont::ArrayHandle<ValueType> output;
+    vtkm::cont::ArrayCopy(input, output);
+    TestValues(input, output);
+  }
+
   // Test the copy methods in UnknownArrayHandle. Although this would be appropriate in
   // UnitTestUnknownArrayHandle, it is easier to test copies here.
   {
