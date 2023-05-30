@@ -34,8 +34,6 @@ View3D::View3D(const vtkm::rendering::Scene& scene,
 {
 }
 
-View3D::~View3D() {}
-
 void View3D::Paint()
 {
   this->GetCanvas().Clear();

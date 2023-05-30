@@ -36,8 +36,6 @@ View1D::View1D(const vtkm::rendering::Scene& scene,
 {
 }
 
-View1D::~View1D() {}
-
 void View1D::Paint()
 {
   this->GetCanvas().Clear();
@@ -104,7 +102,7 @@ void View1D::RenderColorLegendAnnotations()
     this->GetCanvas().BeginTextRenderingBatch();
     for (int i = 0; i < this->GetScene().GetNumberOfActors(); ++i)
     {
-      vtkm::rendering::Actor act = this->GetScene().GetActor(i);
+      const auto& act = this->GetScene().GetActor(i);
 
       vtkm::Vec<double, 4> colorData;
       act.GetColorTable().GetPoint(0, colorData);
