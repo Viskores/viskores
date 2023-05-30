@@ -105,6 +105,12 @@ namespace diy
                                 void (*save)(BinaryBuffer&, const T&) = &::diy::save    //!< optional serialization function
                                ) const;
 
+    void inline         enqueue_blob
+                               (const BlockID&  to,                                     //!< target block (gid,proc)
+                                const char*     x,                                      //!< pointer to the data
+                                size_t          n                                       //!< size in data elements (eg. ints)
+                               ) const;
+
     //! Dequeue data whose size can be determined automatically (e.g., STL vector) and that was
     //! previously enqueued so that diy knows its size when it is received.
     //! In this case, diy will allocate the receive buffer; the user does not need to do so.
@@ -141,6 +147,9 @@ namespace diy
                                 size_t          n,                                      //!< size in data elements (eg. ints)
                                 void (*load)(BinaryBuffer&, T&) = &::diy::load          //!< optional serialization function
                                ) const                                  { dequeue(from.gid, x, n, load); }
+
+    BinaryBlob inline   dequeue_blob
+                               (int  from) const;
 
     template<class T>
     EnqueueIterator<T>  enqueuer(const T& x,
@@ -347,5 +356,20 @@ dequeue(int from, T* x, size_t n,
             load(bb, x[i]);
 }
 
+void
+diy::Master::Proxy::
+enqueue_blob(const BlockID& to, const char* x, size_t n) const
+{
+    BinaryBuffer&   bb  = outgoing_[to];
+    bb.save_binary_blob(x,n);
+}
+
+diy::BinaryBlob
+diy::Master::Proxy::
+dequeue_blob(int from) const
+{
+    BinaryBuffer&   bb = incoming_[from];
+    return bb.load_binary_blob();
+}
 
 #endif

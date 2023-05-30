@@ -1,6 +1,8 @@
 #ifndef VTKMDIY_MPI_CONFIG_HPP
 #define VTKMDIY_MPI_CONFIG_HPP
 
+#include <utility>
+
 /// We want to allow the use of `diy::mpi` in either header-only or library mode.
 /// VTKMDIY_MPI_AS_LIB is defined when using library mode.
 /// This file contains some configuration macros. To maintain backwards compatibility
@@ -49,13 +51,26 @@ struct DIY_##mpitype {                                                        \
   mpitype data;                                                               \
 };
 
+#define DEFINE_DIY_MPI_TYPE_MOVE(mpitype)                                           \
+struct DIY_##mpitype {                                                              \
+  DIY_##mpitype() = default;                                                        \
+  DIY_##mpitype(const mpitype&) = delete;                                           \
+  DIY_##mpitype(mpitype&& obj) : data(std::move(obj)) {}                            \
+  DIY_##mpitype& operator=(const mpitype&) = delete;                                \
+  DIY_##mpitype& operator=(mpitype&& obj) { data = std::move(obj); return *this; }  \
+  operator const mpitype&() const { return data; }                                  \
+  void reset() { data = mpitype(); }                                                \
+private:                                                                            \
+  mpitype data;                                                                     \
+};
+
 DEFINE_DIY_MPI_TYPE(MPI_Comm)
 DEFINE_DIY_MPI_TYPE(MPI_Datatype)
 DEFINE_DIY_MPI_TYPE(MPI_Status)
 DEFINE_DIY_MPI_TYPE(MPI_Request)
 DEFINE_DIY_MPI_TYPE(MPI_Op)
 DEFINE_DIY_MPI_TYPE(MPI_File)
-DEFINE_DIY_MPI_TYPE(MPI_Win)
+DEFINE_DIY_MPI_TYPE_MOVE(MPI_Win)
 
 #undef DEFINE_DIY_MPI_TYPE
 
