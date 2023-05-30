@@ -13,19 +13,16 @@
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/source/Tangle.h>
 
 #include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
-#include <vtkm/rendering/raytracing/SphereIntersector.h>
 #include <vtkm/rendering/raytracing/TriangleExtractor.h>
-
-#include <vtkm/exec/FunctorBase.h>
 
 #include <sstream>
 #include <string>
