@@ -76,6 +76,14 @@ function(add_benchmark_test benchmark)
     set(VTKm_PERF_COMPARE_JSON "${CMAKE_BINARY_DIR}/$ENV{CI_COMMIT_SHA}_${VTKm_PERF_NAME}.json")
   endif()
 
+  # Only upload when we are inside a CI build and in master.  We need to check
+  # if VTKM_BENCH_RECORDS_TOKEN is either defined or non-empty, the reason is
+  # that in Gitlab CI Variables for protected branches are also defined in MR
+  # from forks, however, they are empty.
+  if (DEFINED ENV{VTKM_BENCH_RECORDS_TOKEN} AND ENV{VTKM_BENCH_RECORDS_TOKEN})
+    set(enable_upload TRUE)
+  endif()
+
   set(test_name "PerformanceTest${VTKm_PERF_NAME}")
 
   ###TEST INVOKATIONS##########################################################
@@ -88,13 +96,6 @@ function(add_benchmark_test benchmark)
       -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestFetch.cmake"
       )
     set_property(TEST PerformanceTestFetch PROPERTY FIXTURES_SETUP "FixturePerformanceTestSetup")
-  endif()
-
-  if (NOT TEST PerformanceTestCleanUp)
-    add_test(NAME "PerformanceTestCleanUp"
-      COMMAND ${CMAKE_COMMAND} -E rm -rf "${VTKm_PERF_REPO}"
-      )
-    set_property(TEST PerformanceTestCleanUp PROPERTY FIXTURES_CLEANUP "FixturePerformanceTestCleanUp")
   endif()
 
   add_test(NAME "${test_name}Run"
@@ -111,14 +112,6 @@ function(add_benchmark_test benchmark)
     -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestRun.cmake"
     )
 
-  add_test(NAME "${test_name}Upload"
-    COMMAND ${CMAKE_COMMAND}
-    "-DVTKm_PERF_REPO=${VTKm_PERF_REPO}"
-    "-DVTKm_PERF_COMPARE_JSON=${VTKm_PERF_COMPARE_JSON}"
-    "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}"
-    -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestUpload.cmake"
-    )
-
   add_test(NAME "${test_name}Report"
     COMMAND ${CMAKE_COMMAND}
     "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}"
@@ -132,27 +125,34 @@ function(add_benchmark_test benchmark)
     -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestReport.cmake"
     )
 
+  if (enable_upload)
+    add_test(NAME "${test_name}Upload"
+      COMMAND ${CMAKE_COMMAND}
+      "-DVTKm_PERF_REPO=${VTKm_PERF_REPO}"
+      "-DVTKm_PERF_COMPARE_JSON=${VTKm_PERF_COMPARE_JSON}"
+      "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}"
+      -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestUpload.cmake"
+      )
+
+    set_tests_properties("${test_name}Upload" PROPERTIES
+      DEPENDS ${test_name}Report
+      FIXTURES_REQUIRED "FixturePerformanceTestCleanUp"
+      REQUIRED_FILES "${VTKm_PERF_COMPARE_JSON}"
+      RUN_SERIAL ON)
+  endif()
+
   ###TEST PROPERTIES###########################################################
-  set_property(TEST ${test_name}Upload PROPERTY DEPENDS ${test_name}Report)
   set_property(TEST ${test_name}Report PROPERTY DEPENDS ${test_name}Run)
   set_property(TEST ${test_name}Report PROPERTY FIXTURES_REQUIRED "FixturePerformanceTestSetup")
-  set_property(TEST ${test_name}Upload PROPERTY FIXTURES_REQUIRED "FixturePerformanceTestCleanUp")
 
-  set_tests_properties("${test_name}Report" "${test_name}Upload"
+  set_tests_properties("${test_name}Report"
     PROPERTIES
     REQUIRED_FILES "${VTKm_PERF_COMPARE_JSON}")
 
   set_tests_properties("${test_name}Run"
                         "${test_name}Report"
-                        "${test_name}Upload"
                         "PerformanceTestFetch"
-                        "PerformanceTestCleanUp"
                         PROPERTIES RUN_SERIAL ON)
 
   set_tests_properties(${test_name}Run PROPERTIES TIMEOUT 1800)
-
-  # Only upload when we are inside a CI build
-  if (NOT DEFINED ENV{CI_COMMIT_SHA} OR NOT DEFINED ENV{VTKM_BENCH_RECORDS_TOKEN})
-    set_tests_properties(${test_name}Upload PROPERTIES DISABLED TRUE)
-  endif()
 endfunction()

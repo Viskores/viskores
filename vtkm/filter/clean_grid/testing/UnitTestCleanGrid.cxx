@@ -13,7 +13,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/contour/ContourMarchingCells.h>
 
 namespace
 {
@@ -72,13 +72,7 @@ void TestPointMerging()
   vtkm::cont::testing::MakeTestDataSet makeDataSet;
   vtkm::cont::DataSet baseData = makeDataSet.Make3DUniformDataSet3(vtkm::Id3(4, 4, 4));
 
-  //Convert the baseData implicit points to explicit points, since the contour
-  //filter for uniform data always does point merging
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> newcoords;
-  vtkm::cont::ArrayCopy(baseData.GetCoordinateSystem().GetData(), newcoords);
-  baseData.AddPointField(baseData.GetCoordinateSystemName(), newcoords);
-
-  vtkm::filter::contour::Contour marchingCubes;
+  vtkm::filter::contour::ContourMarchingCells marchingCubes;
   marchingCubes.SetIsoValue(0.05);
   marchingCubes.SetMergeDuplicatePoints(false);
   marchingCubes.SetActiveField("pointvar");

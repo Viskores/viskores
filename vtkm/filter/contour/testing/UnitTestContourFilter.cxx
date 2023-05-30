@@ -176,23 +176,11 @@ public:
   void TestUnsupportedFlyingEdges() const
   {
     vtkm::cont::testing::MakeTestDataSet maker;
-
-    vtkm::cont::DataSet rectilinearDataset = maker.Make3DRectilinearDataSet0();
     vtkm::cont::DataSet explicitDataSet = maker.Make3DExplicitDataSet0();
 
     vtkm::filter::contour::ContourFlyingEdges filter;
     filter.SetIsoValue(2.0);
     filter.SetActiveField("pointvar");
-
-    try
-    {
-      filter.Execute(rectilinearDataset);
-      VTKM_TEST_FAIL("Flying Edges filter should not run on datasets with rectilinear coordinates");
-    }
-    catch (vtkm::cont::ErrorFilterExecution&)
-    {
-      std::cout << "Execution successfully aborted" << std::endl;
-    }
 
     try
     {
@@ -203,6 +191,58 @@ public:
     {
       std::cout << "Execution successfully aborted" << std::endl;
     }
+  }
+
+  template <typename ContourFilterType>
+  void TestNonUniformStructured() const
+  {
+    auto pathname =
+      vtkm::cont::testing::Testing::DataPath("rectilinear/simple_rectilinear1_ascii.vtk");
+    vtkm::io::VTKDataSetReader reader(pathname);
+    vtkm::cont::DataSet rectilinearDataset = reader.ReadDataSet();
+
+    // Single-cell contour
+    ContourFilterType filter;
+    filter.SetActiveField("var");
+    filter.SetIsoValue(2.0);
+    vtkm::cont::DataSet outputSingleCell = filter.Execute(rectilinearDataset);
+    auto coordinates = outputSingleCell.GetCoordinateSystem()
+                         .GetData()
+                         .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f>>();
+
+    VTKM_TEST_ASSERT(outputSingleCell.GetNumberOfPoints() == 3,
+                     "Wrong number of points in rectilinear contour");
+    VTKM_TEST_ASSERT(outputSingleCell.GetNumberOfCells() == 1,
+                     "Wrong number of cells in rectilinear contour");
+    VTKM_TEST_ASSERT(outputSingleCell.GetCellSet().GetCellShape(0) == vtkm::CELL_SHAPE_TRIANGLE,
+                     "Wrong contour cell shape");
+
+    auto expectedCoordinates =
+      vtkm::cont::make_ArrayHandle<vtkm::Vec3f>({ vtkm::Vec3f{ 10.0f, -10.0f, 9.66341f },
+                                                  vtkm::Vec3f{ 9.30578f, -10.0f, 10.0f },
+                                                  vtkm::Vec3f{ 10.0f, -9.78842f, 10.0f } });
+    VTKM_TEST_ASSERT(test_equal_ArrayHandles(coordinates, expectedCoordinates),
+                     "Wrong contour coordinates");
+
+    // Generating normals triggers a different worklet for Flying Edges pass 4,
+    // But it should not change anything on the contour itself.
+    filter.SetGenerateNormals(true);
+    vtkm::cont::DataSet outputNormals = filter.Execute(rectilinearDataset);
+    coordinates = outputNormals.GetCoordinateSystem()
+                    .GetData()
+                    .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f>>();
+    VTKM_TEST_ASSERT(test_equal_ArrayHandles(coordinates, expectedCoordinates),
+                     "Wrong contour coordinates");
+
+    // Full contour
+    filter.SetIsoValue(3.0);
+    filter.SetGenerateNormals(false);
+    vtkm::cont::DataSet output = filter.Execute(rectilinearDataset);
+
+    VTKM_TEST_ASSERT(output.GetNumberOfPoints() == 93,
+                     "Wrong number of points in rectilinear contour");
+    VTKM_TEST_ASSERT(output.GetNumberOfCells() == 144,
+                     "Wrong number of cells in rectilinear contour");
   }
 
   void operator()() const
@@ -219,6 +259,10 @@ public:
 
     this->TestContourWedges<vtkm::filter::contour::Contour>();
     this->TestContourWedges<vtkm::filter::contour::ContourMarchingCells>();
+
+    this->TestNonUniformStructured<vtkm::filter::contour::Contour>();
+    this->TestNonUniformStructured<vtkm::filter::contour::ContourFlyingEdges>();
+    this->TestNonUniformStructured<vtkm::filter::contour::ContourMarchingCells>();
 
     this->TestUnsupportedFlyingEdges();
   }

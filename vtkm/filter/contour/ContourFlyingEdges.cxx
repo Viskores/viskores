@@ -44,13 +44,10 @@ vtkm::cont::DataSet ContourFlyingEdges::DoExecute(const vtkm::cont::DataSet& inD
   const vtkm::cont::CoordinateSystem& inCoords =
     inDataSet.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  if (!inCellSet.template IsType<vtkm::cont::CellSetStructured<3>>() ||
-      !inCoords.GetData()
-         .template IsType<
-           vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>>())
+  if (!inCellSet.template IsType<vtkm::cont::CellSetStructured<3>>())
   {
     throw vtkm::cont::ErrorFilterExecution("This filter is only available for 3-Dimensional "
-                                           "Structured Cell Sets using uniform point coordinates.");
+                                           "Structured Cell Sets");
   }
 
   // Get the CellSet's known dynamic type
@@ -74,22 +71,11 @@ vtkm::cont::DataSet ContourFlyingEdges::DoExecute(const vtkm::cont::DataSet& inD
 
     if (this->GenerateNormals && !this->GetComputeFastNormals())
     {
-      outputCells = worklet.Run(
-        ivalues,
-        inputCells,
-        inCoords.GetData().AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>(),
-        concrete,
-        vertices,
-        normals);
+      outputCells = worklet.Run(ivalues, inputCells, inCoords, concrete, vertices, normals);
     }
     else
     {
-      outputCells = worklet.Run(
-        ivalues,
-        inputCells,
-        inCoords.GetData().AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>(),
-        concrete,
-        vertices);
+      outputCells = worklet.Run(ivalues, inputCells, inCoords, concrete, vertices);
     }
   };
 

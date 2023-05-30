@@ -20,8 +20,15 @@ namespace filter
 namespace field_transform
 {
 
-/// \brief The composite vector filter combines multiple scalar fields into a single vector field.
-/// Scalar fields are selected as the active input fields, and the combined vector field is set at the output.
+/// \brief Combine multiple scalar fields into a single vector field.
+///
+/// Scalar fields are selected as the active input fields, and the combined vector
+/// field is set at the output. The `SetFieldNameList` method takes a `std::vector`
+/// of field names to use as the component fields. Alternately, the superclass'
+/// set active field methods can be used to select the fields independently.
+///
+/// All of the input fields must be scalar values. The type of the first field
+/// determines the type of the output vector field.
 ///
 class VTKM_FILTER_FIELD_TRANSFORM_EXPORT CompositeVectors : public vtkm::filter::FilterField
 {
@@ -33,24 +40,12 @@ public:
   VTKM_CONT
   void SetFieldNameList(
     const std::vector<std::string>& fieldNameList,
-    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
-  {
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any);
 
-    vtkm::IdComponent index = 0;
-    for (auto& fieldName : fieldNameList)
-    {
-      this->SetActiveField(index, fieldName, association);
-      ++index;
-    }
-    this->NumberOfFields = static_cast<vtkm::IdComponent>(fieldNameList.size());
-  }
-
-  VTKM_CONT
-  vtkm::IdComponent GetNumberOfFields() { return this->NumberOfFields; }
+  VTKM_CONT vtkm::IdComponent GetNumberOfFields() const;
 
 private:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
-  vtkm::IdComponent NumberOfFields;
 };
 } // namespace field_transform
 } // namespace vtkm::filter

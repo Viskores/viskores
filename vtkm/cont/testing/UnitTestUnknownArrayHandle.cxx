@@ -11,6 +11,7 @@
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -543,11 +544,10 @@ void TrySetMultiplexerArray()
   CheckUnknownArray<vtkm::List<vtkm::Id>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(unknownArray, 1);
 }
 
-template <typename T>
+template <typename T, typename BasicComponentType = typename vtkm::VecFlat<T>::ComponentType>
 void TryConvertRuntimeVec()
 {
   using BasicArrayType = vtkm::cont::ArrayHandle<T>;
-  using BasicComponentType = typename vtkm::VecFlat<T>::ComponentType;
   constexpr vtkm::IdComponent numFlatComponents = vtkm::VecFlat<T>::NUM_COMPONENTS;
   using RuntimeArrayType = vtkm::cont::ArrayHandleRuntimeVec<BasicComponentType>;
 
@@ -574,6 +574,27 @@ void TryConvertRuntimeVec()
   VTKM_TEST_ASSERT(unknownWithRuntimeVec.CanConvert<BasicArrayType>());
   BasicArrayType outputArray = unknownWithRuntimeVec.AsArrayHandle<BasicArrayType>();
   VTKM_TEST_ASSERT(test_equal_ArrayHandles(inputArray, outputArray));
+
+  std::cout << "    Copy ArrayHandleRuntimeVec to a new instance" << std::endl;
+  vtkm::cont::UnknownArrayHandle unknownCopy = unknownWithRuntimeVec.NewInstance();
+  VTKM_TEST_ASSERT(unknownWithRuntimeVec.GetNumberOfComponentsFlat() ==
+                   unknownCopy.GetNumberOfComponentsFlat());
+  vtkm::cont::ArrayCopy(unknownWithRuntimeVec, unknownCopy);
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(inputArray, unknownCopy));
+
+  std::cout << "    Copy ArrayHandleRuntimeVec as basic array" << std::endl;
+  unknownCopy = unknownWithRuntimeVec.NewInstanceBasic();
+  VTKM_TEST_ASSERT(unknownWithRuntimeVec.GetNumberOfComponentsFlat() ==
+                   unknownCopy.GetNumberOfComponentsFlat());
+  vtkm::cont::ArrayCopy(unknownWithRuntimeVec, unknownCopy);
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(inputArray, unknownCopy));
+
+  std::cout << "    Copy ArrayHandleRuntimeVec to float array" << std::endl;
+  unknownCopy = unknownWithRuntimeVec.NewInstanceFloatBasic();
+  VTKM_TEST_ASSERT(unknownWithRuntimeVec.GetNumberOfComponentsFlat() ==
+                   unknownCopy.GetNumberOfComponentsFlat());
+  vtkm::cont::ArrayCopy(unknownWithRuntimeVec, unknownCopy);
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(inputArray, unknownCopy));
 }
 
 void TryConvertRuntimeVec()
@@ -592,6 +613,16 @@ void TryConvertRuntimeVec()
 
   std::cout << "  Vec of Vecs of Vecs." << std::endl;
   TryConvertRuntimeVec<vtkm::Vec<vtkm::Vec<vtkm::Id4, 3>, 2>>();
+
+  std::cout << "  Compatible but different C types." << std::endl;
+  if (sizeof(int) == sizeof(long))
+  {
+    TryConvertRuntimeVec<vtkm::Vec<int, 4>, long>();
+  }
+  else // assuming sizeof(long long) == sizeof(long)
+  {
+    TryConvertRuntimeVec<vtkm::Vec<long long, 4>, long>();
+  }
 }
 
 struct DefaultTypeFunctor

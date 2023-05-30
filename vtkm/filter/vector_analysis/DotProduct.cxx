@@ -78,11 +78,9 @@ VTKM_CONT DotProduct::DotProduct()
 VTKM_CONT vtkm::cont::DataSet DotProduct::DoExecute(const vtkm::cont::DataSet& inDataSet)
 {
   vtkm::cont::Field primaryField = this->GetFieldFromDataSet(0, inDataSet);
-  vtkm::cont::UnknownArrayHandle primaryArray = primaryField.GetData();
-
   vtkm::cont::Field secondaryField = this->GetFieldFromDataSet(1, inDataSet);
 
-  if (primaryArray.GetNumberOfComponentsFlat() !=
+  if (primaryField.GetData().GetNumberOfComponentsFlat() !=
       secondaryField.GetData().GetNumberOfComponentsFlat())
   {
     throw vtkm::cont::ErrorFilterExecution(
@@ -91,22 +89,10 @@ VTKM_CONT vtkm::cont::DataSet DotProduct::DoExecute(const vtkm::cont::DataSet& i
 
   vtkm::cont::UnknownArrayHandle outArray;
 
-  if (primaryArray.IsBaseComponentType<vtkm::Float32>())
-  {
-    outArray =
-      DoDotProduct(primaryArray.ExtractArrayFromComponents<vtkm::Float32>(), secondaryField);
-  }
-  else if (primaryArray.IsBaseComponentType<vtkm::Float64>())
-  {
-    outArray =
-      DoDotProduct(primaryArray.ExtractArrayFromComponents<vtkm::Float64>(), secondaryField);
-  }
-  else
-  {
-    primaryArray = primaryField.GetDataAsDefaultFloat();
-    outArray =
-      DoDotProduct(primaryArray.ExtractArrayFromComponents<vtkm::FloatDefault>(), secondaryField);
-  }
+  auto resolveArray = [&](const auto& concretePrimaryField) {
+    outArray = DoDotProduct(concretePrimaryField, secondaryField);
+  };
+  this->CastAndCallVariableVecField(primaryField, resolveArray);
 
   return this->CreateResultField(inDataSet,
                                  this->GetOutputFieldName(),

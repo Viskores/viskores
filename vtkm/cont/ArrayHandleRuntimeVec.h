@@ -133,6 +133,11 @@ struct VTKM_ALWAYS_EXPORT StorageTagRuntimeVec
 namespace internal
 {
 
+struct RuntimeVecMetaData
+{
+  vtkm::IdComponent NumberOfComponents;
+};
+
 template <typename ComponentsPortal>
 class Storage<vtkm::VecFromPortal<ComponentsPortal>, vtkm::cont::StorageTagRuntimeVec>
 {
@@ -152,10 +157,7 @@ class Storage<vtkm::VecFromPortal<ComponentsPortal>, vtkm::cont::StorageTagRunti
     (std::is_same<ComponentsPortal, typename ComponentsStorage::WritePortalType>::value),
     "Used invalid ComponentsPortal type with expected ComponentsStorageTag.");
 
-  struct Info
-  {
-    vtkm::IdComponent NumberOfComponents;
-  };
+  using Info = RuntimeVecMetaData;
 
   VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> ComponentsBuffers(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
@@ -370,10 +372,13 @@ public:
   ///@}
 };
 
-/// \c make_ArrayHandleRuntimeVec is convenience function to generate an
-/// ArrayHandleRuntimeVec. It takes in an ArrayHandle of values and an
-/// array handle of offsets and returns an array handle with consecutive
-/// entries grouped in a Vec.
+/// `make_ArrayHandleRuntimeVec` is convenience function to generate an
+/// `ArrayHandleRuntimeVec`. It takes the number of components stored in
+/// each value's `Vec`, which must be specified on the construction of
+/// the `ArrayHandleRuntimeVec`. If not specified, the number of components
+/// is set to 1. `make_ArrayHandleRuntimeVec` can also optionally take an
+/// existing array of components, which will be grouped into `Vec` values
+/// based on the specified number of components.
 ///
 template <typename T>
 VTKM_CONT auto make_ArrayHandleRuntimeVec(
@@ -398,6 +403,62 @@ VTKM_CONT auto make_ArrayHandleRuntimeVec(
   const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& componentsArray)
 {
   return make_ArrayHandleRuntimeVec(1, componentsArray);
+}
+
+/// A convenience function for creating an `ArrayHandleRuntimeVec` from a standard C array.
+///
+template <typename T>
+VTKM_CONT auto make_ArrayHandleRuntimeVec(vtkm::IdComponent numComponents,
+                                          const T* array,
+                                          vtkm::Id numberOfValues,
+                                          vtkm::CopyFlag copy)
+{
+  return make_ArrayHandleRuntimeVec(numComponents,
+                                    vtkm::cont::make_ArrayHandle(array, numberOfValues, copy));
+}
+
+/// A convenience function to move a user-allocated array into an `ArrayHandleRuntimeVec`.
+/// The provided array pointer will be reset to `nullptr`.
+/// If the array was not allocated with the `new[]` operator, then deleter and reallocater
+/// functions must be provided.
+///
+template <typename T>
+VTKM_CONT auto make_ArrayHandleRuntimeVecMove(
+  vtkm::IdComponent numComponents,
+  T*& array,
+  vtkm::Id numberOfValues,
+  vtkm::cont::internal::BufferInfo::Deleter deleter = internal::SimpleArrayDeleter<T>,
+  vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::SimpleArrayReallocater<T>)
+{
+  return make_ArrayHandleRuntimeVec(
+    numComponents, vtkm::cont::make_ArrayHandleMove(array, numberOfValues, deleter, reallocater));
+}
+
+/// A convenience function for creating an `ArrayHandleRuntimeVec` from an `std::vector`.
+///
+template <typename T, typename Allocator>
+VTKM_CONT auto make_ArrayHandleRuntimeVec(vtkm::IdComponent numComponents,
+                                          const std::vector<T, Allocator>& array,
+                                          vtkm::CopyFlag copy)
+{
+  return make_ArrayHandleRuntimeVec(numComponents, vtkm::cont::make_ArrayHandle(array, copy));
+}
+
+/// Move an `std::vector` into an `ArrayHandleRuntimeVec`.
+///
+template <typename T, typename Allocator>
+VTKM_CONT auto make_ArrayHandleRuntimeVecMove(vtkm::IdComponent numComponents,
+                                              std::vector<T, Allocator>&& array)
+{
+  return make_ArrayHandleRuntimeVec(numComponents, make_ArrayHandleMove(std::move(array)));
+}
+
+template <typename T, typename Allocator>
+VTKM_CONT auto make_ArrayHandleRuntimeVec(vtkm::IdComponent numComponents,
+                                          std::vector<T, Allocator>&& array,
+                                          vtkm::CopyFlag vtkmNotUsed(copy))
+{
+  return make_ArrayHandleRuntimeVecMove(numComponents, std::move(array));
 }
 
 namespace internal

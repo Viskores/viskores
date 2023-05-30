@@ -31,9 +31,6 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
 {
 
   vtkm::Id3 PointDims;
-  vtkm::Vec3f Origin;
-  vtkm::Vec3f Spacing;
-
   T IsoValue;
 
   vtkm::Id CellWriteOffset;
@@ -42,13 +39,9 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
   ComputePass4XWithNormals() {}
   ComputePass4XWithNormals(T value,
                            const vtkm::Id3& pdims,
-                           const vtkm::Vec3f& origin,
-                           const vtkm::Vec3f& spacing,
                            vtkm::Id multiContourCellOffset,
                            vtkm::Id multiContourPointOffset)
     : PointDims(pdims)
-    , Origin(origin)
-    , Spacing(spacing)
     , IsoValue(value)
     , CellWriteOffset(multiContourCellOffset)
     , PointWriteOffset(multiContourPointOffset)
@@ -61,6 +54,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
                                 FieldInPoint axis_maxs,
                                 WholeArrayIn cell_tri_count,
                                 WholeArrayIn edgeData,
+                                WholeArrayIn coords,
                                 WholeArrayIn data,
                                 WholeArrayOut connectivity,
                                 WholeArrayOut edgeIds,
@@ -69,13 +63,14 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
                                 WholeArrayOut points,
                                 WholeArrayOut normals);
   using ExecutionSignature =
-    void(ThreadIndices, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, WorkIndex);
+    void(ThreadIndices, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, WorkIndex);
 
   template <typename ThreadIndices,
             typename FieldInPointId3,
             typename FieldInPointId,
             typename WholeTriField,
             typename WholeEdgeField,
+            typename WholeCoordsField,
             typename WholeDataField,
             typename WholeConnField,
             typename WholeEdgeIdField,
@@ -89,6 +84,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
                             const FieldInPointId& axis_maxs,
                             const WholeTriField& cellTriCount,
                             const WholeEdgeField& edges,
+                            const WholeCoordsField& coords,
                             const WholeDataField& field,
                             const WholeConnField& conn,
                             const WholeEdgeIdField& interpolatedEdgeIds,
@@ -144,6 +140,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
                          field,
                          interpolatedEdgeIds,
                          weights,
+                         coords,
                          points,
                          normals,
                          state.startPos,
@@ -162,6 +159,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
   template <typename WholeDataField,
             typename WholeIEdgeField,
             typename WholeWeightField,
+            typename WholeCoordsField,
             typename WholePointField,
             typename WholeNormalField>
   VTKM_EXEC inline void Generate(const vtkm::Vec<vtkm::UInt8, 3>& boundaryStatus,
@@ -169,6 +167,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
                                  const WholeDataField& field,
                                  const WholeIEdgeField& interpolatedEdgeIds,
                                  const WholeWeightField& weights,
+                                 const WholeCoordsField coords,
                                  const WholePointField& points,
                                  const WholeNormalField& normals,
                                  const vtkm::Id4& startPos,
@@ -197,7 +196,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
         weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
 
         auto ijk1 = ijk + vtkm::Id3{ 1, 0, 0 };
-        auto coord = this->InterpolateCoordinate(t, ijk, ijk1);
+        auto coord = this->InterpolateCoordinate(coords, t, ijk, ijk1);
         points.Set(writeIndex, coord);
 
         //gradient generation
@@ -216,7 +215,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
         weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
 
         auto ijk1 = ijk + vtkm::Id3{ 0, 1, 0 };
-        auto coord = this->InterpolateCoordinate(t, ijk, ijk1);
+        auto coord = this->InterpolateCoordinate(coords, t, ijk, ijk1);
         points.Set(writeIndex, coord);
 
         //gradient generation
@@ -235,7 +234,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
         weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
 
         auto ijk1 = ijk + vtkm::Id3{ 0, 0, 1 };
-        auto coord = this->InterpolateCoordinate(t, ijk, ijk1);
+        auto coord = this->InterpolateCoordinate(coords, t, ijk, ijk1);
         points.Set(writeIndex, coord);
 
         //gradient generation
@@ -258,38 +257,38 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
     if (onX) //+x boundary
     {
       this->InterpolateEdge(
-          fullyInterior, ijk, pos[0], incs, 5, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points, normals);
+          fullyInterior, ijk, pos[0], incs, 5, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points, normals);
       this->InterpolateEdge(
-          fullyInterior, ijk, pos[0], incs, 9, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points, normals);
+          fullyInterior, ijk, pos[0], incs, 9, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points, normals);
       if (onY) //+x +y
       {
         this->InterpolateEdge(
-          fullyInterior, ijk, pos[0], incs, 11, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points, normals);
+          fullyInterior, ijk, pos[0], incs, 11, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points, normals);
       }
       if (onZ) //+x +z
       {
         this->InterpolateEdge(
-          fullyInterior, ijk, pos[0], incs, 7, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points, normals);
+          fullyInterior, ijk, pos[0], incs, 7, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points, normals);
       }
     }
     if (onY) //+y boundary
     {
       this->InterpolateEdge(
-        fullyInterior, ijk, pos[0], incs, 1, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points, normals);
+        fullyInterior, ijk, pos[0], incs, 1, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points, normals);
       this->InterpolateEdge(
-        fullyInterior, ijk, pos[0], incs, 10, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points, normals);
+        fullyInterior, ijk, pos[0], incs, 10, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points, normals);
       if (onZ) //+y +z boundary
       {
         this->InterpolateEdge(
-          fullyInterior, ijk, pos[0], incs, 3, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points, normals);
+          fullyInterior, ijk, pos[0], incs, 3, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points, normals);
       }
     }
     if (onZ) //+z boundary
     {
       this->InterpolateEdge(
-        fullyInterior, ijk, pos[0], incs, 2, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points, normals);
+        fullyInterior, ijk, pos[0], incs, 2, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points, normals);
       this->InterpolateEdge(
-        fullyInterior, ijk, pos[0], incs, 6, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points, normals);
+        fullyInterior, ijk, pos[0], incs, 6, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points, normals);
     }
     // clang-format on
   }
@@ -300,6 +299,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
             typename WholeIEdgeField,
             typename WholeWeightField,
             typename WholePointField,
+            typename WholeCoordsField,
             typename WholeNormalField>
   VTKM_EXEC inline void InterpolateEdge(bool fullyInterior,
                                         const vtkm::Id3& ijk,
@@ -311,6 +311,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
                                         const WholeField& field,
                                         const WholeIEdgeField& interpolatedEdgeIds,
                                         const WholeWeightField& weights,
+                                        const WholeCoordsField& coords,
                                         const WholePointField& points,
                                         const WholeNormalField& normals) const
   {
@@ -338,34 +339,53 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
     T t = static_cast<T>((this->IsoValue - s0) / (s1 - s0));
     weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
 
-    auto coord = this->InterpolateCoordinate(t, ijk + offsets1, ijk + offsets2);
+    auto coord = this->InterpolateCoordinate(coords, t, ijk + offsets1, ijk + offsets2);
     points.Set(writeIndex, coord);
 
-    auto g0 = this->ComputeGradient(fullyInterior, ijk + offsets1, incs, iEdge[0], field);
     auto g1 = this->ComputeGradient(fullyInterior, ijk + offsets2, incs, iEdge[1], field);
+    auto g0 = this->ComputeGradient(fullyInterior, ijk + offsets1, incs, iEdge[0], field);
     g1 = g0 + (t * (g1 - g0));
     normals.Set(writeIndex, vtkm::Normal(g1));
   }
 
+  // Fast interpolation method for uniform coordinates
   //----------------------------------------------------------------------------
-  inline VTKM_EXEC vtkm::Vec3f InterpolateCoordinate(T t,
-                                                     const vtkm::Id3& ijk0,
-                                                     const vtkm::Id3& ijk1) const
+  inline VTKM_EXEC vtkm::Vec3f InterpolateCoordinate(
+    const vtkm::internal::ArrayPortalUniformPointCoordinates& coords,
+    T t,
+    const vtkm::Id3& ijk0,
+    const vtkm::Id3& ijk1) const
   {
     return vtkm::Vec3f(
-      this->Origin[0] +
-        this->Spacing[0] *
+      coords.GetOrigin()[0] +
+        coords.GetSpacing()[0] *
           (static_cast<vtkm::FloatDefault>(ijk0[0]) +
            static_cast<vtkm::FloatDefault>(t) * static_cast<vtkm::FloatDefault>(ijk1[0] - ijk0[0])),
-      this->Origin[1] +
-        this->Spacing[1] *
+      coords.GetOrigin()[1] +
+        coords.GetSpacing()[1] *
           (static_cast<vtkm::FloatDefault>(ijk0[1]) +
            static_cast<vtkm::FloatDefault>(t) * static_cast<vtkm::FloatDefault>(ijk1[1] - ijk0[1])),
-      this->Origin[2] +
-        this->Spacing[2] *
+      coords.GetOrigin()[2] +
+        coords.GetSpacing()[2] *
           (static_cast<vtkm::FloatDefault>(ijk0[2]) +
            static_cast<vtkm::FloatDefault>(t) *
              static_cast<vtkm::FloatDefault>(ijk1[2] - ijk0[2])));
+  }
+
+  // Interpolation for explicit coordinates
+  //----------------------------------------------------------------------------
+  template <typename CoordsPortal>
+  inline VTKM_EXEC vtkm::Vec3f InterpolateCoordinate(const CoordsPortal& coords,
+                                                     T t,
+                                                     const vtkm::Id3& ijk0,
+                                                     const vtkm::Id3& ijk1) const
+  {
+    return (1.0f - static_cast<vtkm::FloatDefault>(t)) *
+      coords.Get(ijk0[0] + this->PointDims[0] * ijk0[1] +
+                 this->PointDims[0] * this->PointDims[1] * ijk0[2]) +
+      static_cast<vtkm::FloatDefault>(t) *
+      coords.Get(ijk1[0] + this->PointDims[0] * ijk1[1] +
+                 this->PointDims[0] * this->PointDims[1] * ijk1[2]);
   }
 
   //----------------------------------------------------------------------------

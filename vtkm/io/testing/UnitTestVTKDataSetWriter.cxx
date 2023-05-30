@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <vector>
 #include <vtkm/cont/ArrayHandleSOA.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
@@ -122,7 +123,7 @@ void CheckWrittenReadData(const vtkm::cont::DataSet& originalData,
     VTKM_TEST_ASSERT(fileData.HasField(originalField.GetName(), originalField.GetAssociation()));
     vtkm::cont::Field fileField =
       fileData.GetField(originalField.GetName(), originalField.GetAssociation());
-    vtkm::cont::CastAndCall(originalField, CheckSameField{}, fileField);
+    VTKM_TEST_ASSERT(test_equal_ArrayHandles(originalField.GetData(), fileField.GetData()));
   }
 
   VTKM_TEST_ASSERT(fileData.GetNumberOfCoordinateSystems() > 0);
@@ -261,12 +262,31 @@ void TestVTKCompoundWrite()
   std::remove("chirp.vtk");
 }
 
+void TestVTKOddVecSizes()
+{
+  vtkm::cont::DataSetBuilderUniform dsb;
+  vtkm::cont::DataSet dataSet = dsb.Create({ 2, 2, 2 });
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 5>> vec5Array;
+  vec5Array.Allocate(dataSet.GetNumberOfPoints());
+  SetPortal(vec5Array.WritePortal());
+  dataSet.AddPointField("vec5", vec5Array);
+
+  vtkm::cont::ArrayHandleSOA<vtkm::Vec<vtkm::FloatDefault, 13>> vec13Array;
+  vec13Array.Allocate(dataSet.GetNumberOfPoints());
+  SetPortal(vec13Array.WritePortal());
+  dataSet.AddPointField("vec13", vec13Array);
+
+  TestVTKWriteTestData("OddVecSizes", dataSet);
+}
+
 void TestVTKWrite()
 {
   TestVTKExplicitWrite();
   TestVTKUniformWrite();
   TestVTKRectilinearWrite();
   TestVTKCompoundWrite();
+  TestVTKOddVecSizes();
 }
 
 } //Anonymous namespace
