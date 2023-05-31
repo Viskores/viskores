@@ -37,12 +37,23 @@ vtkm_unit_tests(
 #if MPI is enabled.
 if (VTKm_ENABLE_MPI)
   set(mpi_unit_tests
+    UnitTestAdvectionAsynchronousMPI.cxx
+    UnitTestAdvectionSynchronousMPI.cxx
     UnitTestParticleMessengerMPI.cxx
-    UnitTestStreamlineFilterMPI.cxx
-  )
+    UnitTestPathlineAsynchronousMPI.cxx
+    UnitTestPathlineSynchronousMPI.cxx
+    UnitTestStreamlineAMRMPI.cxx
+    UnitTestStreamlineAsynchronousMPI.cxx
+    UnitTestStreamlineSynchronousMPI.cxx
+    )
+  set(mpi_helpers
+    TestingFlow.cxx
+    TestingFlow.h
+    )
+  set_source_files_properties(${mpi_helpers} PROPERTIES NOT_A_TEST TRUE)
   vtkm_unit_tests(
     MPI
-    DEVICE_SOURCES ${mpi_unit_tests}
+    SOURCES ${mpi_unit_tests} ${mpi_helpers}
     USE_VTKM_JOB_POOL
   )
 endif()

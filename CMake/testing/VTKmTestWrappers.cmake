@@ -39,11 +39,24 @@ function(_vtkm_create_test_executable
     set(CMAKE_TESTDRIVER_BEFORE_TESTMAIN "")
   endif()
 
-  #the creation of the test source list needs to occur before the labeling as
+  #The creation of the test source list needs to occur before the labeling as
   #cuda. This is so that we get the correctly named entry points generated
-  create_test_sourcelist(test_sources ${prog}.cxx ${sources} ${device_sources} ${extraArgs})
+  #Also, although we usually assume that each source file is a test, we need
+  #to check for the `NOT_A_TEST` property for support code that should be
+  #compiled with the executable but is not a test itself.
+  set(test_sources)
+  set(extra_sources)
+  foreach(src IN LISTS sources device_sources)
+    get_source_file_property(not_a_test ${src} NOT_A_TEST)
+    if (not_a_test)
+      list(APPEND extra_sources ${src})
+    else()
+      list(APPEND test_sources ${src})
+    endif()
+  endforeach()
+  create_test_sourcelist(test_sources ${prog}.cxx ${test_sources} ${extraArgs})
 
-  add_executable(${prog} ${test_sources})
+  add_executable(${prog} ${test_sources} ${extra_sources})
   vtkm_add_drop_unused_function_flags(${prog})
   target_compile_definitions(${prog} PRIVATE ${defines})
 
@@ -91,6 +104,14 @@ endfunction()
 # function with the same name as the source file. For example, if SOURCES
 # contains `UnitTestFoo.cxx`, then `UnitTestFoo.cxx` should contain a
 # function named `UnitTestFoo`. A test with this name is also added to ctest.
+# If you want to add a source file that should not be treated as a test, then
+# you can attach the `NOT_A_TEST` property to those files (using
+# `set_source_files_properties`), and that file will be added to the test
+# executable without adding an associated test.
+#
+# DEVICE_SOURCES: The same as SOURCES except that each file will be compiled
+# with the device compiler. You can use both SOURCES and DEVICE_SOURCES
+# together to specify which compiler to use for each file.
 #
 # LIBRARIES: Extra libraries that this set of tests need to link to.
 #
@@ -296,6 +317,10 @@ vtkm_unit_tests but not in its test dependencies. Add test dependencies to \
     endif()
 
     foreach (test ${VTKm_UT_SOURCES} ${VTKm_UT_DEVICE_SOURCES})
+      get_source_file_property(not_a_test ${test} NOT_A_TEST)
+      if (not_a_test)
+        continue()
+      endif()
       get_filename_component(tname ${test} NAME_WE)
       if(VTKm_UT_MPI)
         if (VTKm_ENABLE_MPI)
