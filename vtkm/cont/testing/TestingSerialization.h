@@ -13,6 +13,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/cont/DIYMemoryManagement.h>
 #include <vtkm/thirdparty/diy/serialization.h>
 
 #include <random>
@@ -189,7 +190,9 @@ void TestSerialization(const T& obj, const TestEqualFunctor& test)
   master.foreach ([](Block<T>* b, const vtkmdiy::Master::ProxyWithLink& cp) {
     cp.enqueue(cp.link()->target(0), b->send);
   });
-  master.exchange();
+
+  vtkm::cont::DIYMasterExchange(master);
+
   master.foreach ([](Block<T>* b, const vtkmdiy::Master::ProxyWithLink& cp) {
     cp.dequeue(cp.link()->target(1).gid, b->received);
   });

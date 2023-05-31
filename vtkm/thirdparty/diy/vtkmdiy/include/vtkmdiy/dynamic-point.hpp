@@ -7,17 +7,17 @@
 #include <algorithm>
 
 #include "constants.h"
-#include "thirdparty/chobo/small_vector.hpp"
+#include "thirdparty/itlib/small_vector.hpp"
 
 namespace diy
 {
 
 template<class Coordinate_, size_t static_size = VTKMDIY_MAX_DIM>
-class DynamicPoint: public chobo::small_vector<Coordinate_, static_size>
+class DynamicPoint: public itlib::small_vector<Coordinate_, static_size>
 {
     public:
         using Coordinate    = Coordinate_;
-        using Parent        = chobo::small_vector<Coordinate_, static_size>;
+        using Parent        = itlib::small_vector<Coordinate_, static_size>;
 
         template<class U>
         struct rebind       { typedef DynamicPoint<U> type; };

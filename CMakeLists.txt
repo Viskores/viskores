@@ -186,6 +186,11 @@ vtkm_option(VTKm_SKIP_LIBRARY_VERSIONS "Skip versioning VTK-m libraries" OFF)
 # through ctest's command-line. Doesn't affect CI unless enabled.
 vtkm_option(VTKm_OVERRIDE_CTEST_TIMEOUT "Disable default ctest timeout" OFF)
 
+# VTKm_ENABLE_GPU_MPI makes VTK-m to use DIY routines that enables GPU aware
+# MPI. By default, this option is disabled. Also, this option is hidden unless
+# VTKm_ENABLE_MPI=ON.
+cmake_dependent_option(VTKm_ENABLE_GPU_MPI "Enable GPU AWARE MPI support" OFF "VTKm_ENABLE_MPI" OFF)
+
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT

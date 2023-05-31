@@ -23,6 +23,9 @@ namespace detail
 {
 
 VTKMDIY_MPI_EXPORT_FUNCTION
+DIY_MPI_Win win_allocate(const communicator& comm, void** base, unsigned size, int disp);
+
+VTKMDIY_MPI_EXPORT_FUNCTION
 DIY_MPI_Win win_create(const communicator& comm, void* base, unsigned size, int disp);
 
 VTKMDIY_MPI_EXPORT_FUNCTION
@@ -96,8 +99,8 @@ void flush_local_all(const DIY_MPI_Win& win);
             inline ~window();
 
             // moving is Ok
-            window(window&&)      = default;
-            window& operator=(window&&) = default;
+            inline window(window&&);
+            inline window& operator=(window&&);
 
             // cannot copy because of the buffer_
             window(const window&) = delete;
@@ -129,7 +132,7 @@ void flush_local_all(const DIY_MPI_Win& win);
             inline void flush_local_all();
 
         private:
-            std::vector<T>      buffer_;
+            void*               buffer_;
             int                 rank_;
             DIY_MPI_Win         window_;
     };
@@ -140,16 +143,46 @@ void flush_local_all(const DIY_MPI_Win& win);
 template<class T>
 diy::mpi::window<T>::
 window(const diy::mpi::communicator& comm, unsigned size):
-  buffer_(size), rank_(comm.rank())
+  buffer_(nullptr), rank_(comm.rank())
 {
-  window_ = detail::win_create(comm, buffer_.data(), static_cast<unsigned>(buffer_.size()*sizeof(T)), static_cast<int>(sizeof(T)));
+  window_ = detail::win_allocate(comm, &buffer_, static_cast<unsigned>(size*sizeof(T)), static_cast<int>(sizeof(T)));
 }
 
 template<class T>
 diy::mpi::window<T>::
 ~window()
 {
-  detail::win_free(window_);
+  if (buffer_)
+    detail::win_free(window_);
+}
+
+template<class T>
+diy::mpi::window<T>::
+window(window&& rhs):
+  buffer_(rhs.buffer_), rank_(rhs.rank_), window_(std::move(rhs.window_))
+{
+  rhs.buffer_ = nullptr;
+  rhs.window_.reset();
+}
+
+template<class T>
+diy::mpi::window<T>&
+diy::mpi::window<T>::
+operator=(window&& rhs)
+{
+  if (this == &rhs)
+    return *this;
+
+  if (buffer_)
+    detail::win_free(window_);
+
+  buffer_ = rhs.buffer_;
+  rhs.buffer_ = nullptr;
+  rank_ = rhs.rank_;
+  window_ = std::move(rhs.window_);
+  rhs.window_.reset();
+
+  return *this;
 }
 
 template<class T>
