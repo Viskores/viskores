@@ -96,7 +96,6 @@ public:
   {
     TwoD,
     ThreeD,
-    Three3DPara,
   };
 
   VTKM_CONT
