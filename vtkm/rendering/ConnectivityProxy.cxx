@@ -15,6 +15,8 @@
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
 
+#include <memory>
+
 
 namespace vtkm
 {
@@ -51,8 +53,6 @@ public:
       this->SetScalarField(fieldName);
     }
   }
-
-  ~InternalsType() {}
 
   VTKM_CONT
   void SetUnitScalar(vtkm::Float32 unitScalar) { Tracer.SetUnitScalar(unitScalar); }
@@ -241,7 +241,7 @@ public:
 VTKM_CONT
 ConnectivityProxy::ConnectivityProxy(const vtkm::cont::DataSet& dataSet,
                                      const std::string& fieldName)
-  : Internals(new InternalsType(dataSet, fieldName))
+  : Internals(std::make_unique<InternalsType>(dataSet, fieldName))
 {
 }
 
@@ -256,11 +256,16 @@ ConnectivityProxy::ConnectivityProxy(const vtkm::cont::UnknownCellSet& cellset,
   dataset.AddCoordinateSystem(coords);
   dataset.AddField(scalarField);
 
-  Internals = std::shared_ptr<InternalsType>(new InternalsType(dataset, scalarField.GetName()));
+  Internals = std::make_unique<InternalsType>(dataset, scalarField.GetName());
 }
 
 VTKM_CONT
-ConnectivityProxy::~ConnectivityProxy() {}
+ConnectivityProxy::ConnectivityProxy(ConnectivityProxy&&) noexcept = default;
+VTKM_CONT
+ConnectivityProxy& ConnectivityProxy::operator=(vtkm::rendering::ConnectivityProxy&&) noexcept =
+  default;
+VTKM_CONT
+ConnectivityProxy::~ConnectivityProxy() = default;
 
 VTKM_CONT
 void ConnectivityProxy::SetSampleDistance(const vtkm::Float32& distance)
