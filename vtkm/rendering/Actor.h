@@ -40,6 +40,14 @@ public:
         const vtkm::cont::Field& scalarField,
         const vtkm::rendering::Color& color);
 
+  // Disable copying due to unique_ptr;
+  Actor(const Actor&) = delete;
+  Actor& operator=(const Actor&) = delete;
+
+  Actor(Actor&&) noexcept;
+  Actor& operator=(Actor&&) noexcept;
+  ~Actor();
+
   void Render(vtkm::rendering::Mapper& mapper,
               vtkm::rendering::Canvas& canvas,
               const vtkm::rendering::Camera& camera) const;
@@ -60,9 +68,7 @@ public:
 
 private:
   struct InternalsType;
-  std::shared_ptr<InternalsType> Internals;
-
-  struct RangeFunctor;
+  std::unique_ptr<InternalsType> Internals;
 
   void Init(const vtkm::cont::CoordinateSystem& coordinates, const vtkm::cont::Field& scalarField);
 };

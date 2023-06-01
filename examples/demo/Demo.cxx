@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
                                tangleData.GetField(fieldName),
                                colorTable);
   vtkm::rendering::Scene scene;
-  scene.AddActor(actor);
+  scene.AddActor(std::move(actor));
   // 2048x2048 pixels in the canvas:
   CanvasRayTracer canvas(2048, 2048);
   // Create a view and use it to render the input data using OS Mesa
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
   // from, so we want the scalar range to match that of the previous image.
   isoActor.SetScalarRange(actor.GetScalarRange());
   vtkm::rendering::Scene isoScene;
-  isoScene.AddActor(isoActor);
+  isoScene.AddActor(std::move(isoActor));
 
   // Wireframe surface:
   vtkm::rendering::View3D isoView(isoScene, MapperWireframer(), canvas, camera, bg);

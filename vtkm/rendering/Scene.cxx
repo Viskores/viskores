@@ -27,9 +27,9 @@ Scene::Scene()
 {
 }
 
-void Scene::AddActor(const vtkm::rendering::Actor& actor)
+void Scene::AddActor(vtkm::rendering::Actor&& actor)
 {
-  this->Internals->Actors.push_back(actor);
+  this->Internals->Actors.push_back(std::move(actor));
 }
 
 const vtkm::rendering::Actor& Scene::GetActor(vtkm::IdComponent index) const
