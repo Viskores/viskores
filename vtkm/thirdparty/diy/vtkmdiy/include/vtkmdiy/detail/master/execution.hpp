@@ -1,3 +1,5 @@
+#include <algorithm>
+
 struct diy::Master::ProcessBlock
 {
           ProcessBlock(Master&                    master_,

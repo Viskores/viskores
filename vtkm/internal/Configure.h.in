@@ -308,6 +308,9 @@
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI
 
+//Mark if we are building with GPU AWARE MPI enabled.
+#cmakedefine VTKM_ENABLE_GPU_MPI
+
 //Mark what version of the CUDA compiler we have. This is needed to correctly
 //choose consistent implementation ( so we don't violate ODR ) when we compile
 //with CUDA 7.5

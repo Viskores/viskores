@@ -10,6 +10,7 @@
 #include <numeric>
 #include <memory>
 #include <chrono>
+#include <climits>
 
 #include "link.hpp"
 #include "collection.hpp"
@@ -28,6 +29,23 @@
 
 namespace diy
 {
+
+  struct MemoryManagement
+  {
+      using Allocate = std::function<char* (int, size_t)>;
+      using Deallocate = BinaryBlob::Deleter;
+      using MemCopy = std::function<void(char*, const char*, size_t)>;
+
+      MemoryManagement()    = default;
+      MemoryManagement(Allocate allocate_, Deallocate deallocate_, MemCopy copy_):
+            allocate(allocate_), deallocate(deallocate_), copy(copy_)       {}
+
+      Allocate      allocate    = [](int /* gid */, size_t n) { return new char[n]; };
+      Deallocate    deallocate  = [](const char* p) { delete[] p; };
+      MemCopy       copy        = [](char* dest, const char* src, size_t count) { std::memcpy(dest, src, count); };
+  };
+
+
   // Stores and manages blocks; initiates serialization and communication when necessary.
   //
   // Provides a foreach function, which is meant as the main entry point.
@@ -126,6 +144,8 @@ namespace diy
         void            unload(ExternalStorage* storage)                                { size_ = buffer_.size(); external_ = storage->put(buffer_); }
         void            load(ExternalStorage* storage)                                  { storage->get(external_, buffer_); external_ = -1; }
 
+        MemoryBuffer&   buffer()                                                        { return buffer_; }
+
         private:
             size_t          size_;
             int             external_;
@@ -146,7 +166,6 @@ namespace diy
         int received{0};
       };
       typedef std::map<int, IncomingRound> IncomingRoundMap;
-
 
     public:
      /**
@@ -173,6 +192,7 @@ namespace diy
       inline void   destroy(int i)                      { if (blocks_.own()) blocks_.destroy(i); }
 
       inline int    add(int gid, void* b, Link* l);     //!< add a block
+      inline int    add(int gid, void* b, const Link& l){ return add(gid, b, l.clone()); }
       inline void*  release(int i);                     //!< release ownership of the block
 
       //!< return the `i`-th block
@@ -213,17 +233,17 @@ namespace diy
       bool          local(int gid__) const              { return lids_.find(gid__) != lids_.end(); }
 
       //! exchange the queues between all the blocks (collective operation)
-      inline void   exchange(bool remote = false);
+      inline void   exchange(bool remote = false, MemoryManagement mem = MemoryManagement());
 
       //! nonblocking exchange of the queues between all the blocks
       template<class Block>
-      void          iexchange_(const ICallback<Block>&  f);
+      void          iexchange_(const ICallback<Block>&  f, MemoryManagement mem);
 
       template<class F>
-      void          iexchange(const F& f)
+      void          iexchange(const F& f, MemoryManagement mem = MemoryManagement())
       {
           using Block = typename detail::block_traits<F>::type;
-          iexchange_<Block>(f);
+          iexchange_<Block>(f, mem);
       }
 
       inline void   process_collectives();
@@ -283,29 +303,30 @@ namespace diy
 
     public:
       // Communicator functionality
-      inline void       flush(bool remote = false);     // makes sure all the serialized queues migrate to their target processors
+      inline void       flush(bool remote, MemoryManagement mem = MemoryManagement());            // makes sure all the serialized queues migrate to their target processors
 
     private:
       // Communicator functionality
-      inline void       comm_exchange(GidSendOrder& gid_order, IExchangeInfo*    iex = 0);
-      inline void       rcomm_exchange();    // possibly called in between block computations
+      inline void       comm_exchange(GidSendOrder& gid_order, MemoryManagement mem, IExchangeInfo*    iex = 0);
+      inline void       rcomm_exchange(MemoryManagement mem);    // possibly called in between block computations
       inline bool       nudge(IExchangeInfo* iex = 0);
-      inline void       send_queue(int from_gid, int to_gid, int to_proc, QueueRecord& qr, bool remote, IExchangeInfo* iex);
+      inline void       send_queue(int from_gid, int to_gid, int to_proc, QueueRecord& qr, bool remote, MemoryManagement mem, IExchangeInfo* iex);
       inline void       send_outgoing_queues(GidSendOrder&   gid_order,
                                              bool            remote,
+                                             MemoryManagement mem,
                                              IExchangeInfo*  iex = 0);
-      inline void       check_incoming_queues(IExchangeInfo* iex = 0);
+      inline void       check_incoming_queues(MemoryManagement mem, IExchangeInfo* iex = 0);
       inline GidSendOrder
                         order_gids();
       inline void       touch_queues();
-      inline void       send_same_rank(int from, int to, QueueRecord& qr, IExchangeInfo* iex);
+      inline void       send_same_rank(int from, int to, QueueRecord& qr, MemoryManagement mem, IExchangeInfo* iex);
       inline void       send_different_rank(int from, int to, int proc, QueueRecord& qr, bool remote, IExchangeInfo* iex);
 
       inline InFlightRecv&         inflight_recv(int proc);
       inline InFlightSendsList&    inflight_sends();
 
       // iexchange commmunication
-      inline void       icommunicate(IExchangeInfo* iex);     // async communication
+      inline void       icommunicate(IExchangeInfo* iex, MemoryManagement mem);     // async communication
 
       struct tags       { enum {
                                     queue,
@@ -607,7 +628,7 @@ foreach_(const Callback<Block>& f, const Skip& skip)
 
 void
 diy::Master::
-exchange(bool remote)
+exchange(bool remote, MemoryManagement mem)
 {
   auto scoped = prof.scoped("exchange");
   VTKMDIY_UNUSED(scoped);
@@ -625,7 +646,7 @@ exchange(bool remote)
   if (!remote)
       touch_queues();
 
-  flush(remote);
+  flush(remote, mem);
   log->debug("Finished exchange");
 }
 
@@ -658,7 +679,7 @@ touch_queues()
 template<class Block>
 void
 diy::Master::
-iexchange_(const ICallback<Block>& f)
+iexchange_(const ICallback<Block>& f, MemoryManagement mem)
 {
     auto scoped = prof.scoped("iexchange");
     VTKMDIY_UNUSED(scoped);
@@ -685,11 +706,11 @@ iexchange_(const ICallback<Block>& f)
 
     thread comm_thread;
     if (threads() > 1)
-        comm_thread = thread([this,&iex]()
+        comm_thread = thread([this,&iex,mem]()
         {
             while(!iex.all_done())
             {
-                icommunicate(&iex);
+                icommunicate(&iex, mem);
                 iex.control();
                 //std::this_thread::sleep_for(std::chrono::microseconds(1));
             }
@@ -713,7 +734,7 @@ iexchange_(const ICallback<Block>& f)
             stats::Annotation::Guard g( stats::Annotation("diy.block").set(gid) );
 
             if (threads() == 1)
-                icommunicate(&iex);
+                icommunicate(&iex, mem);
             bool done = done_result[gid];
             if (!done || !empty_incoming(gid))
             {
@@ -762,17 +783,17 @@ iexchange_(const ICallback<Block>& f)
 /* Communicator */
 void
 diy::Master::
-comm_exchange(GidSendOrder& gid_order, IExchangeInfo* iex)
+comm_exchange(GidSendOrder& gid_order, MemoryManagement mem, IExchangeInfo* iex)
 {
     auto scoped = prof.scoped("comm-exchange");
     VTKMDIY_UNUSED(scoped);
 
-    send_outgoing_queues(gid_order, false, iex);
+    send_outgoing_queues(gid_order, false, mem, iex);
 
     while(nudge(iex))                         // kick requests
         ;
 
-    check_incoming_queues(iex);
+    check_incoming_queues(mem, iex);
 }
 
 /* Remote communicator */
@@ -803,7 +824,7 @@ comm_exchange(GidSendOrder& gid_order, IExchangeInfo* iex)
 //
 void
 diy::Master::
-rcomm_exchange()
+rcomm_exchange(MemoryManagement mem)
 {
     bool            done                = false;
     bool            ibarr_act           = false;
@@ -814,12 +835,12 @@ rcomm_exchange()
 
     while (!done)
     {
-        send_outgoing_queues(gid_order, true, 0);
+        send_outgoing_queues(gid_order, true, mem, 0);
 
         // kick requests
         nudge();
 
-        check_incoming_queues();
+        check_incoming_queues(mem);
         if (ibarr_act)
         {
             if (ibarr_req.test())
@@ -877,7 +898,7 @@ order_gids()
 // iexchange communicator
 void
 diy::Master::
-icommunicate(IExchangeInfo* iex)
+icommunicate(IExchangeInfo* iex, MemoryManagement mem)
 {
     auto scoped = prof.scoped("icommunicate");
     VTKMDIY_UNUSED(scoped);
@@ -887,7 +908,7 @@ icommunicate(IExchangeInfo* iex)
     auto gid_order = order_gids();
 
     // exchange
-    comm_exchange(gid_order, iex);
+    comm_exchange(gid_order, mem, iex);
 
     // cleanup
 
@@ -906,6 +927,7 @@ send_queue(int              from_gid,
            int              to_proc,
            QueueRecord&     qr,
            bool             remote,
+           MemoryManagement mem,
            IExchangeInfo*   iex)
 {
     stats::Annotation::Guard gb( stats::Annotation("diy.block").set(from_gid) );
@@ -917,7 +939,7 @@ send_queue(int              from_gid,
     log->debug("[{}] Sending queue: {} <- {} of size {}, iexchange = {}", comm_.rank(), to_gid, from_gid, qr.size(), iex ? 1 : 0);
 
     if (to_proc == comm_.rank())            // sending to same rank, simply swap buffers
-        send_same_rank(from_gid, to_gid, qr, iex);
+        send_same_rank(from_gid, to_gid, qr, mem, iex);
     else                                    // sending to an actual message to a different rank
         send_different_rank(from_gid, to_gid, to_proc, qr, remote, iex);
 }
@@ -926,6 +948,7 @@ void
 diy::Master::
 send_outgoing_queues(GidSendOrder&   gid_order,
                      bool            remote,            // TODO: are remote and iexchange mutually exclusive? If so, use single enum?
+                     MemoryManagement mem,
                      IExchangeInfo*  iex)
 {
     auto scoped = prof.scoped("send-outgoing-queues");
@@ -950,7 +973,7 @@ send_outgoing_queues(GidSendOrder&   gid_order,
                     access.unlock();            // others can push on this queue, while we are working
                     assert(!qr.external());
                     log->debug("Processing queue:      {} <- {} of size {}", to_gid, from, qr.size());
-                    send_queue(from, to_gid, to_proc, qr, remote, iex);
+                    send_queue(from, to_gid, to_proc, qr, remote, mem, iex);
                     access.lock();
                 }
             }
@@ -978,7 +1001,7 @@ send_outgoing_queues(GidSendOrder&   gid_order,
                 // NB: send only front
                 auto& qr = access->front();
                 log->debug("Processing queue:      {} <- {} of size {}", to_gid, from_gid, qr.size());
-                send_queue(from_gid, to_gid, to_proc, qr, remote, iex);
+                send_queue(from_gid, to_gid, to_proc, qr, remote, mem, iex);
                 access->pop_front();
             }
         }
@@ -987,7 +1010,7 @@ send_outgoing_queues(GidSendOrder&   gid_order,
 
 void
 diy::Master::
-send_same_rank(int from, int to, QueueRecord& qr, IExchangeInfo*)
+send_same_rank(int from, int to, QueueRecord& qr, MemoryManagement mem, IExchangeInfo*)
 {
     auto scoped = prof.scoped("send-same-rank");
 
@@ -997,8 +1020,23 @@ send_same_rank(int from, int to, QueueRecord& qr, IExchangeInfo*)
 
     auto access_incoming = current_incoming.map[to][from].access();
 
+    // save blobs to copy them explicitly
+    std::vector<BinaryBlob> blobs;
+    qr.buffer().blobs.swap(blobs);
+    qr.buffer().blob_position = 0;
+
     access_incoming->emplace_back(std::move(qr));
     QueueRecord& in_qr = access_incoming->back();
+
+    // copy blobs explicitly; we cannot just move them in place, since we don't
+    // own their memory and must guarantee that it's safe to free, once
+    // exchange() is done
+    for (BinaryBlob& blob : blobs)
+    {
+        char* p = mem.allocate(to, blob.size);
+        mem.copy(p, blob.pointer.get(), blob.size);
+        in_qr.buffer().save_binary_blob(p, blob.size, mem.deallocate);
+    }
 
     if (!in_qr.external())
     {
@@ -1029,7 +1067,7 @@ send_different_rank(int from, int to, int proc, QueueRecord& qr, bool remote, IE
     // sending to a different rank
     std::shared_ptr<MemoryBuffer> buffer = std::make_shared<MemoryBuffer>(qr.move());
 
-    MessageInfo info{from, to, 1, exchange_round_};
+    MessageInfo info{from, to, 1, exchange_round_, static_cast<int>(buffer->nblobs())};
     // size fits in one message
     if (Serialization<MemoryBuffer>::size(*buffer) + Serialization<MessageInfo>::size(info) <= MAX_MPI_MESSAGE_COUNT)
     {
@@ -1103,11 +1141,33 @@ send_different_rank(int from, int to, int proc, QueueRecord& qr, bool remote, IE
             inflight_send.message = buffer;
         }
     }   // large message broken into pieces
+
+    // send binary blobs
+    for (size_t i = 0; i < buffer->nblobs(); ++i)
+    {
+        auto blob = buffer->load_binary_blob();
+        assert(blob.size < MAX_MPI_MESSAGE_COUNT);      // for now assume blobs are small enough that we don't need to break them into multiple parts
+
+        inflight_sends().emplace_back();
+        auto& inflight_send = inflight_sends().back();
+
+        inflight_send.info = info;
+
+        detail::VectorWindow<char> window;
+        window.begin = const_cast<char*>(blob.pointer.get());
+        window.count = blob.size;
+
+        if (remote || iex)
+            inflight_send.request = comm_.issend(proc, tags::queue, window);
+        else
+            inflight_send.request = comm_.isend(proc, tags::queue, window);
+        inflight_send.blob = std::move(blob);
+    }
 }
 
 void
 diy::Master::
-check_incoming_queues(IExchangeInfo* iex)
+check_incoming_queues(MemoryManagement mem, IExchangeInfo* iex)
 {
     auto scoped = prof.scoped("check-incoming-queues");
     VTKMDIY_UNUSED(scoped);
@@ -1116,6 +1176,7 @@ check_incoming_queues(IExchangeInfo* iex)
     while (ostatus)
     {
         InFlightRecv& ir = inflight_recv(ostatus->source());
+        ir.mem = mem;
 
         if (iex)
             iex->inc_work();                      // increment work before sender's issend request can complete (so we are now responsible for the queue)
@@ -1141,7 +1202,7 @@ check_incoming_queues(IExchangeInfo* iex)
 
 void
 diy::Master::
-flush(bool remote)
+flush(bool remote, MemoryManagement mem)
 {
 #ifdef VTKMDIY_DEBUG
   time_type start = get_time();
@@ -1155,13 +1216,13 @@ flush(bool remote)
 
 
   if (remote)
-      rcomm_exchange();
+      rcomm_exchange(mem);
   else
   {
       auto gid_order = order_gids();
       do
       {
-          comm_exchange(gid_order);
+          comm_exchange(gid_order, mem);
 
 #ifdef VTKMDIY_DEBUG
           time_type cur = get_time();

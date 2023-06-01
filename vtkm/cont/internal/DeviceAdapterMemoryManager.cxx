@@ -42,7 +42,11 @@
 #include <cstddef>
 #include <cstdlib>
 
-namespace
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
 {
 
 /// A deleter object that can be used with our aligned mallocs
@@ -119,15 +123,6 @@ void HostReallocate(void*& memory,
 
   memory = container = newBuffer;
 }
-
-} // anonymous namespace
-
-namespace vtkm
-{
-namespace cont
-{
-namespace internal
-{
 
 VTKM_CONT void InvalidRealloc(void*&, void*&, vtkm::BufferSizeType, vtkm::BufferSizeType)
 {
@@ -340,6 +335,28 @@ vtkm::cont::internal::BufferInfo DeviceAdapterMemoryManagerBase::ManageArray(
   return vtkm::cont::internal::BufferInfo(
     this->GetDevice(), memory, container, size, deleter, reallocater);
 }
+
+void* DeviceAdapterMemoryManagerBase::AllocateRawPointer(vtkm::BufferSizeType size) const
+{
+  return this->Allocate(size).TransferOwnership().Memory;
+}
+
+void DeviceAdapterMemoryManagerBase::CopyDeviceToDeviceRawPointer(const void* src,
+                                                                  void* dest,
+                                                                  vtkm::BufferSizeType size) const
+{
+  this->CopyDeviceToDevice(
+    vtkm::cont::internal::BufferInfo(
+      this->GetDevice(),
+      const_cast<void*>(src),
+      const_cast<void*>(src),
+      size,
+      [](void*) {},
+      vtkm::cont::internal::InvalidRealloc),
+    vtkm::cont::internal::BufferInfo(
+      this->GetDevice(), dest, dest, size, [](void*) {}, vtkm::cont::internal::InvalidRealloc));
+}
+
 }
 }
 } // namespace vtkm::cont::internal

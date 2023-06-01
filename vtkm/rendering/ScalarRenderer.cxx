@@ -102,12 +102,12 @@ ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& cam
   vtkm::cont::Timer timer;
   timer.Start();
 
-  //
   // Create rays
-  //
   vtkm::rendering::raytracing::Camera cam;
   cam.SetParameters(camera, this->Internals->Width, this->Internals->Height);
 
+  // FIXME: rays are created with an unused Buffers.at(0), that ChannelBuffer
+  //  also has wrong number of channels, thus allocates memory that is wasted.
   vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
   cam.CreateRays(rays, this->Internals->ShapeBounds);
   rays.Buffers.at(0).InitConst(0.f);
@@ -117,12 +117,10 @@ ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& cam
   std::map<std::string, vtkm::Range> rangeMap;
   for (vtkm::Id i = 0; i < numFields; ++i)
   {
-    vtkm::cont::Field field = this->Internals->DataSet.GetField(i);
-    vtkm::cont::ArrayHandle<vtkm::Range> ranges;
-    ranges = field.GetRange();
-    vtkm::Id comps = ranges.GetNumberOfValues();
-    if (comps == 1)
+    const auto& field = this->Internals->DataSet.GetField(i);
+    if (field.GetData().GetNumberOfComponents() == 1)
     {
+      auto ranges = field.GetRange();
       rangeMap[field.GetName()] = ranges.ReadPortal().Get(0);
       this->Internals->Tracer.AddField(field);
     }
@@ -152,7 +150,6 @@ ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& cam
   depthChannel.Buffer = rays.Distance;
   raytracing::ChannelBuffer<vtkm::Float32> depthExpanded =
     depthChannel.ExpandBuffer(rays.PixelIdx, expandSize, Internals->DefaultValue);
-
 
   Result result;
   result.Width = Internals->Width;

@@ -22,6 +22,21 @@ EXPORT_MACRO const int nocheck  = MPI_MODE_NOCHECK;
 namespace detail
 {
 
+DIY_MPI_Win win_allocate(const communicator& comm, void** base, unsigned size, int disp)
+{
+#if VTKMDIY_HAS_MPI
+  DIY_MPI_Win win;
+  MPI_Win_allocate(size, disp, MPI_INFO_NULL, mpi_cast(comm.handle()), base, &mpi_cast(win));
+  return win;
+#else
+  (void)comm; (void)disp;
+  *base = malloc(size);
+  auto mpi_win = MPI_Win(*base, true);
+  auto win = make_DIY_MPI_Win(std::move(mpi_win));
+  return win;
+#endif
+}
+
 DIY_MPI_Win win_create(const communicator& comm, void* base, unsigned size, int disp)
 {
 #if VTKMDIY_HAS_MPI
@@ -30,7 +45,8 @@ DIY_MPI_Win win_create(const communicator& comm, void* base, unsigned size, int 
   return win;
 #else
   (void)comm; (void)size; (void)disp;
-  auto win = make_DIY_MPI_Win(base);
+  auto mpi_win = MPI_Win(base);
+  auto win = make_DIY_MPI_Win(std::move(mpi_win));
   return win;
 #endif
 }
@@ -40,7 +56,9 @@ void win_free(DIY_MPI_Win& win)
 #if VTKMDIY_HAS_MPI
   MPI_Win_free(&mpi_cast(win));
 #else
-  (void)win;
+  auto& mpi_win = mpi_cast(win);
+  if (mpi_win.owned())
+    free(mpi_win.data());
 #endif
 }
 
@@ -49,7 +67,7 @@ void put(const DIY_MPI_Win& win, const void* data, int count, const datatype& ty
 #if VTKMDIY_HAS_MPI
   MPI_Put(data, count, mpi_cast(type.handle), rank, offset, count, mpi_cast(type.handle), mpi_cast(win));
 #else
-  void* buffer = mpi_cast(win);
+  void* buffer = mpi_cast(win).data();
   size_t size = mpi_cast(type.handle);
   std::copy_n(static_cast<const int8_t*>(data),
               size * static_cast<size_t>(count),
@@ -63,7 +81,7 @@ void get(const DIY_MPI_Win& win, void* data, int count, const datatype& type, in
 #if VTKMDIY_HAS_MPI
   MPI_Get(data, count, mpi_cast(type.handle), rank, offset, count, mpi_cast(type.handle), mpi_cast(win));
 #else
-  const void* buffer = mpi_cast(win);
+  const void* buffer = mpi_cast(win).data();
   size_t size = mpi_cast(type.handle);
   std::copy_n(static_cast<const int8_t*>(buffer) + (offset * size),
               size * static_cast<size_t>(count),
@@ -136,7 +154,7 @@ void fetch(const DIY_MPI_Win& win, void* result, const datatype& type, int rank,
   MPI_Fetch_and_op(nullptr, result, mpi_cast(type.handle), rank, offset, MPI_NO_OP, mpi_cast(win));
 #else
   (void) rank;
-  const void* buffer = mpi_cast(win);
+  const void* buffer = mpi_cast(win).data();
   size_t size = mpi_cast(type.handle);
   std::copy_n(static_cast<const int8_t*>(buffer) + (offset * size),
               size,
@@ -150,7 +168,7 @@ void replace(const DIY_MPI_Win& win, const void* value, const datatype& type, in
   MPI_Fetch_and_op(value, nullptr, mpi_cast(type.handle), rank, offset, MPI_REPLACE, mpi_cast(win));
 #else
   (void) rank;
-  void* buffer = mpi_cast(win);
+  void* buffer = mpi_cast(win).data();
   size_t size = mpi_cast(type.handle);
   std::copy_n(static_cast<const int8_t*>(value),
               size,
