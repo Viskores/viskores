@@ -98,7 +98,7 @@ struct RenderTestOptions
   bool LogX = false;
   bool LogY = false;
 
-  std::string Title = "";
+  std::string Title;
   vtkm::Float32 TitleScale = 0.075f;
   vtkm::Vec2f_32 TitlePosition = { -0.11f, 0.92f };
   vtkm::Float32 TitleAngle = 0;
