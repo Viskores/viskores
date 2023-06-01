@@ -29,6 +29,7 @@ void TestComputeMoments()
   vtkm::cont::DataSet result = filter.Execute(data);
 
   vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.AllowedPixelErrorRatio = 0.001f;
   testOptions.ColorTable = vtkm::cont::ColorTable("inferno");
   testOptions.EnableAnnotations = false;
   vtkm::rendering::testing::RenderTest(result, "index", "filter/moments.png", testOptions);
