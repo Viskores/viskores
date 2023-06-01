@@ -104,7 +104,7 @@ int main(int argc, char** argv)
                                dataSet.GetCoordinateSystem(),
                                dataSet.GetCellField("spins"),
                                vtkm::cont::ColorTable("Cool To Warm"));
-  scene.AddActor(actor);
+  scene.AddActor(std::move(actor));
   vtkm::rendering::CanvasRayTracer canvas(1024, 1024);
   vtkm::rendering::MapperRayTracer mapper;
   mapper.SetShadingOn(false);
