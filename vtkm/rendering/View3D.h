@@ -37,8 +37,6 @@ public:
          const vtkm::rendering::Color& backgroundColor = vtkm::rendering::Color(0, 0, 0, 1),
          const vtkm::rendering::Color& foregroundColor = vtkm::rendering::Color(1, 1, 1, 1));
 
-  ~View3D();
-
   void Paint() override;
 
   void RenderScreenAnnotations() override;

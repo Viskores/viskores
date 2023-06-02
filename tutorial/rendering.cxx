@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 
   //Creating Scene and adding Actor
   vtkm::rendering::Scene scene;
-  scene.AddActor(actor);
+  scene.AddActor(std::move(actor));
 
   //Creating and initializing the View using the Canvas, Ray Tracer Mappers, and Scene
   vtkm::rendering::MapperRayTracer mapper;

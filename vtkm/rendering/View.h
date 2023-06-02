@@ -90,7 +90,7 @@ public:
   void SetWorldAnnotationsEnabled(bool val) { this->WorldAnnotationsEnabled = val; }
 
   VTKM_CONT void SetRenderAnnotationsEnabled(bool val) { this->RenderAnnotationsEnabled = val; }
-  VTKM_CONT bool GetRenderAnnotationsEnabled() { return this->RenderAnnotationsEnabled; }
+  VTKM_CONT bool GetRenderAnnotationsEnabled() const { return this->RenderAnnotationsEnabled; }
 
   virtual void Paint() = 0;
   virtual void RenderScreenAnnotations() = 0;
@@ -126,7 +126,7 @@ protected:
   bool RenderAnnotationsEnabled = true;
 
 private:
-  std::shared_ptr<InternalData> Internal;
+  std::unique_ptr<InternalData> Internal;
 };
 
 } // namespace vtkm::rendering
