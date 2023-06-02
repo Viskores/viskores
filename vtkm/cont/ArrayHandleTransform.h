@@ -226,7 +226,7 @@ struct TransformFunctorManager
   }
 
   template <typename ValueType>
-  using TransformedValueType = decltype(std::declval<FunctorType>()(ValueType{}));
+  using TransformedValueType = decltype(std::declval<FunctorType>()(std::declval<ValueType>()));
 };
 
 template <typename ArrayHandleType,

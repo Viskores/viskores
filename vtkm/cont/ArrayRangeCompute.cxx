@@ -8,13 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/ArrayRangeComputeTemplate.h>
 
 #include <vtkm/TypeList.h>
 
 #include <vtkm/cont/ArrayHandleBasic.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
-#include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
@@ -42,50 +42,39 @@ using AllVec = vtkm::ListAppend<AllVecOfSize<2>, AllVecOfSize<3>, AllVecOfSize<4
 
 using AllTypes = vtkm::ListAppend<AllScalars, AllVec>;
 
-struct ComputeRangeFunctor
-{
-  // Used with UnknownArrayHandle::CastAndCallForTypes
-  template <typename T, typename S>
-  void operator()(const vtkm::cont::ArrayHandle<T, S>& array,
-                  vtkm::cont::DeviceAdapterId device,
-                  vtkm::cont::ArrayHandle<vtkm::Range>& ranges) const
-  {
-    ranges = vtkm::cont::ArrayRangeComputeTemplate(array, device);
+using CartesianProductStorage = vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                                                       vtkm::cont::StorageTagBasic,
+                                                                       vtkm::cont::StorageTagBasic>;
+
+using StorageTagsList = vtkm::List<vtkm::cont::StorageTagBasic,
+                                   vtkm::cont::StorageTagSOA,
+                                   vtkm::cont::StorageTagXGCCoordinates,
+                                   vtkm::cont::StorageTagUniformPoints,
+                                   CartesianProductStorage,
+                                   vtkm::cont::StorageTagConstant,
+                                   vtkm::cont::StorageTagCounting,
+                                   vtkm::cont::StorageTagIndex>;
+
+template <typename StorageTag>
+struct StorageTagToValueTypesMap;
+
+#define MAP_STORAGE_TAG_VALUE_TYPES(StorageTag, ValueTypesList) \
+  template <>                                                   \
+  struct StorageTagToValueTypesMap<StorageTag>                  \
+  {                                                             \
+    using TypeList = ValueTypesList;                            \
   }
 
-  // Used with vtkm::ListForEach to get components
-  template <typename T>
-  void operator()(T,
-                  const vtkm::cont::UnknownArrayHandle& array,
-                  vtkm::cont::DeviceAdapterId device,
-                  vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
-                  bool& success) const
-  {
-    if (!success && array.IsBaseComponentType<T>())
-    {
-      vtkm::IdComponent numComponents = array.GetNumberOfComponentsFlat();
-      ranges.Allocate(numComponents);
-      auto rangePortal = ranges.WritePortal();
-      for (vtkm::IdComponent componentI = 0; componentI < numComponents; ++componentI)
-      {
-        vtkm::cont::ArrayHandleStride<T> componentArray = array.ExtractComponent<T>(componentI);
-        vtkm::cont::ArrayHandle<vtkm::Range> componentRange =
-          vtkm::cont::ArrayRangeComputeTemplate(componentArray, device);
-        rangePortal.Set(componentI, componentRange.ReadPortal().Get(0));
-      }
-      success = true;
-    }
-  }
-};
+MAP_STORAGE_TAG_VALUE_TYPES(vtkm::cont::StorageTagBasic, AllTypes);
+MAP_STORAGE_TAG_VALUE_TYPES(vtkm::cont::StorageTagSOA, AllVec);
+MAP_STORAGE_TAG_VALUE_TYPES(vtkm::cont::StorageTagXGCCoordinates, vtkm::TypeListFieldVec3);
+MAP_STORAGE_TAG_VALUE_TYPES(vtkm::cont::StorageTagUniformPoints, vtkm::List<vtkm::Vec3f>);
+MAP_STORAGE_TAG_VALUE_TYPES(CartesianProductStorage, vtkm::TypeListFieldVec3);
+MAP_STORAGE_TAG_VALUE_TYPES(vtkm::cont::StorageTagConstant, AllTypes);
+MAP_STORAGE_TAG_VALUE_TYPES(vtkm::cont::StorageTagCounting, AllTypes);
+MAP_STORAGE_TAG_VALUE_TYPES(vtkm::cont::StorageTagIndex, vtkm::List<vtkm::Id>);
 
-template <typename TList, typename Storage>
-vtkm::cont::ArrayHandle<vtkm::Range> ComputeForStorage(const vtkm::cont::UnknownArrayHandle& array,
-                                                       vtkm::cont::DeviceAdapterId device)
-{
-  vtkm::cont::ArrayHandle<vtkm::Range> ranges;
-  array.CastAndCallForTypes<TList, vtkm::List<Storage>>(ComputeRangeFunctor{}, device, ranges);
-  return ranges;
-}
+#undef MAP_STORAGE_TAG_VALUE_TYPES
 
 } // anonymous namespace
 
@@ -105,49 +94,44 @@ void ThrowArrayRangeComputeFailed()
 } // namespace internal
 
 vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(const vtkm::cont::UnknownArrayHandle& array,
+                                                       bool computeFiniteRange,
                                                        vtkm::cont::DeviceAdapterId device)
 {
-  // First, try fast-paths of precompiled array types common(ish) in fields.
+  return ArrayRangeCompute(
+    array, vtkm::cont::ArrayHandle<vtkm::UInt8>{}, computeFiniteRange, device);
+}
+
+vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const vtkm::cont::UnknownArrayHandle& array,
+  const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+  bool computeFiniteRange,
+  vtkm::cont::DeviceAdapterId device)
+{
+  // First, try (potentially fast-paths) for common(ish) array types.
   try
   {
-    if (array.IsStorageType<vtkm::cont::StorageTagBasic>())
+    vtkm::cont::ArrayHandle<vtkm::Range> ranges;
+
+    auto computeForArrayHandle = [&](const auto& input) {
+      ranges = vtkm::cont::ArrayRangeComputeTemplate(input, maskArray, computeFiniteRange, device);
+    };
+
+    bool success = false;
+    auto computeForStorage = [&](auto storageTag) {
+      using STag = decltype(storageTag);
+      using VTypes = typename StorageTagToValueTypesMap<STag>::TypeList;
+      if (array.IsStorageType<STag>())
+      {
+        array.CastAndCallForTypes<VTypes, vtkm::List<STag>>(computeForArrayHandle);
+        success = true;
+      }
+    };
+
+    vtkm::ListForEach(computeForStorage, StorageTagsList{});
+
+    if (success)
     {
-      return ComputeForStorage<AllTypes, vtkm::cont::StorageTagBasic>(array, device);
-    }
-    if (array.IsStorageType<vtkm::cont::StorageTagSOA>())
-    {
-      return ComputeForStorage<AllVec, vtkm::cont::StorageTagSOA>(array, device);
-    }
-    if (array.IsStorageType<vtkm::cont::StorageTagXGCCoordinates>())
-    {
-      return ComputeForStorage<vtkm::TypeListFieldVec3, vtkm::cont::StorageTagXGCCoordinates>(
-        array, device);
-    }
-    if (array.IsStorageType<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>())
-    {
-      vtkm::cont::ArrayHandleUniformPointCoordinates uniformPoints;
-      array.AsArrayHandle(uniformPoints);
-      return vtkm::cont::ArrayRangeComputeTemplate(uniformPoints, device);
-    }
-    using CartesianProductStorage =
-      vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
-                                             vtkm::cont::StorageTagBasic,
-                                             vtkm::cont::StorageTagBasic>;
-    if (array.IsStorageType<CartesianProductStorage>())
-    {
-      return ComputeForStorage<vtkm::TypeListFieldVec3, CartesianProductStorage>(array, device);
-    }
-    if (array.IsStorageType<vtkm::cont::StorageTagConstant>())
-    {
-      return ComputeForStorage<AllTypes, vtkm::cont::StorageTagConstant>(array, device);
-    }
-    if (array.IsStorageType<vtkm::cont::StorageTagCounting>())
-    {
-      return ComputeForStorage<AllTypes, vtkm::cont::StorageTagCounting>(array, device);
-    }
-    if (array.IsStorageType<vtkm::cont::StorageTagIndex>())
-    {
-      return ArrayRangeComputeTemplate(array.AsArrayHandle<vtkm::cont::ArrayHandleIndex>(), device);
+      return ranges;
     }
   }
   catch (vtkm::cont::ErrorBadType&)
@@ -155,10 +139,103 @@ vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(const vtkm::cont::Unknown
     // If a cast/call failed, try falling back to a more general implementation.
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Range> ranges;
+  // fallback
   bool success = false;
-  vtkm::ListForEach(ComputeRangeFunctor{}, AllScalars{}, array, device, ranges, success);
+  vtkm::cont::ArrayHandle<vtkm::Range> ranges;
+  auto computeForExtractComponent = [&](auto valueTypeObj) {
+    using VT = decltype(valueTypeObj);
+    if (!success && array.IsBaseComponentType<VT>())
+    {
+      vtkm::IdComponent numComponents = array.GetNumberOfComponentsFlat();
+      ranges.Allocate(numComponents);
+      auto rangePortal = ranges.WritePortal();
+      for (vtkm::IdComponent i = 0; i < numComponents; ++i)
+      {
+        auto componentArray = array.ExtractComponent<VT>(i);
+        auto componentRange = vtkm::cont::ArrayRangeComputeTemplate(
+          componentArray, maskArray, computeFiniteRange, device);
+        rangePortal.Set(i, componentRange.ReadPortal().Get(0));
+      }
+      success = true;
+    }
+  };
+
+  vtkm::ListForEach(computeForExtractComponent, AllScalars{});
+  if (!success)
+  {
+    internal::ThrowArrayRangeComputeFailed();
+  }
+
   return ranges;
+}
+
+vtkm::Range ArrayRangeComputeMagnitude(const vtkm::cont::UnknownArrayHandle& array,
+                                       bool computeFiniteRange,
+                                       vtkm::cont::DeviceAdapterId device)
+{
+  return ArrayRangeComputeMagnitude(
+    array, vtkm::cont::ArrayHandle<vtkm::UInt8>{}, computeFiniteRange, device);
+}
+
+vtkm::Range ArrayRangeComputeMagnitude(const vtkm::cont::UnknownArrayHandle& array,
+                                       const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+                                       bool computeFiniteRange,
+                                       vtkm::cont::DeviceAdapterId device)
+{
+  // First, try (potentially fast-paths) for common(ish) array types.
+  try
+  {
+    vtkm::Range range;
+
+    auto computeForArrayHandle = [&](const auto& input) {
+      range = vtkm::cont::ArrayRangeComputeMagnitudeTemplate(
+        input, maskArray, computeFiniteRange, device);
+    };
+
+    bool success = false;
+    auto computeForStorage = [&](auto storageTag) {
+      using STag = decltype(storageTag);
+      using VTypes = typename StorageTagToValueTypesMap<STag>::TypeList;
+      if (array.IsStorageType<STag>())
+      {
+        array.CastAndCallForTypes<VTypes, vtkm::List<STag>>(computeForArrayHandle);
+        success = true;
+      }
+    };
+
+    vtkm::ListForEach(computeForStorage, StorageTagsList{});
+
+    if (success)
+    {
+      return range;
+    }
+  }
+  catch (vtkm::cont::ErrorBadType&)
+  {
+    // If a cast/call failed, try falling back to a more general implementation.
+  }
+
+  // fallback
+  bool success = false;
+  vtkm::Range range;
+  auto computeForExtractArrayFromComponents = [&](auto valueTypeObj) {
+    using VT = decltype(valueTypeObj);
+    if (!success && array.IsBaseComponentType<VT>())
+    {
+      auto extractedArray = array.ExtractArrayFromComponents<VT>();
+      range = vtkm::cont::ArrayRangeComputeMagnitudeTemplate(
+        extractedArray, maskArray, computeFiniteRange, device);
+      success = true;
+    }
+  };
+
+  vtkm::ListForEach(computeForExtractArrayFromComponents, AllScalars{});
+  if (!success)
+  {
+    internal::ThrowArrayRangeComputeFailed();
+  }
+
+  return range;
 }
 
 }

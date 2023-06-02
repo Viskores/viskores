@@ -12,6 +12,7 @@ set(headers
   ArrayCopyUnknown.h
   ArrayHandleExecutionManager.h
   ArrayPortalFromIterators.h
+  ArrayRangeComputeUtils.h
   ArrayTransfer.h
   Buffer.h
   CastInvalidValue.h

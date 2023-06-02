@@ -10,6 +10,10 @@
 
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 
+#include <vtkm/cont/ArrayRangeComputeTemplate.h>
+
+#include <vtkm/VectorAnalysis.h>
+
 namespace vtkm
 {
 namespace cont
@@ -89,8 +93,16 @@ ArrayExtractComponentImpl<vtkm::cont::StorageTagUniformPoints>::operator()(
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range>
 ArrayRangeComputeImpl<vtkm::cont::StorageTagUniformPoints>::operator()(
   const vtkm::cont::ArrayHandleUniformPointCoordinates& input,
-  vtkm::cont::DeviceAdapterId vtkmNotUsed(device)) const
+  const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+  bool computeFiniteRange,
+  vtkm::cont::DeviceAdapterId device) const
 {
+  if (maskArray.GetNumberOfValues() != 0)
+  {
+    return vtkm::cont::internal::ArrayRangeComputeGeneric(
+      input, maskArray, computeFiniteRange, device);
+  }
+
   vtkm::internal::ArrayPortalUniformPointCoordinates portal = input.ReadPortal();
 
   // In this portal we know that the min value is the first entry and the

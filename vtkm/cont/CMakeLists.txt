@@ -51,6 +51,7 @@ set(headers
   ArrayPortalToIterators.h
   ArrayRangeCompute.h
   ArrayRangeComputeTemplate.h
+  ArrayRangeComputeTemplateInstantiationsIncludes.h
   AssignerPartitionedDataSet.h
   AtomicArray.h
   BitField.h
@@ -135,7 +136,6 @@ set(sources
   ArrayHandleBasic.cxx
   ArrayHandleSOA.cxx
   ArrayHandleStride.cxx
-  ArrayHandleUniformPointCoordinates.cxx
   AssignerPartitionedDataSet.cxx
   BitField.cxx
   BoundsCompute.cxx
@@ -183,6 +183,8 @@ set(sources
 set(device_sources
   ArrayCopy.cxx
   ArrayGetValues.cxx
+  ArrayHandleIndex.cxx
+  ArrayHandleUniformPointCoordinates.cxx
   ArrayRangeCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorUniformBins.cxx
@@ -193,6 +195,7 @@ set(device_sources
   ConvertNumComponentsToOffsets.cxx
   Field.cxx
   internal/ArrayCopyUnknown.cxx
+  internal/ArrayRangeComputeUtils.cxx
   internal/Buffer.cxx
   internal/MapArrayPermutation.cxx
   MergePartitionedDataSet.cxx
@@ -268,6 +271,7 @@ vtkm_install_headers(vtkm/cont
 # compiles by breaking them up into smaller units.
 vtkm_add_instantiations(array_range_instantiations
   INSTANTIATIONS_FILE ArrayRangeComputeTemplate.h
+  TEMPLATE_SOURCE ArrayRangeComputeTemplateInstantiationsIncludes.h
   )
 list(APPEND device_sources ${array_range_instantiations})
 

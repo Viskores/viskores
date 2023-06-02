@@ -12,8 +12,11 @@
 
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
+#include <vtkm/cont/internal/ArrayRangeComputeUtils.h>
+
 #include <vtkm/Range.h>
 #include <vtkm/VecFlat.h>
+#include <vtkm/VectorAnalysis.h>
 
 namespace vtkm
 {
@@ -106,8 +109,18 @@ struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagConstant>
   template <typename T>
   VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
     const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConstant>& input,
-    vtkm::cont::DeviceAdapterId) const
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
+    vtkm::cont::DeviceAdapterId devId) const
   {
+    bool allMasked = false;
+    if (maskArray.GetNumberOfValues() != 0)
+    {
+      // Find if there is atleast one value that is not masked
+      auto ids = GetFirstAndLastUnmaskedIndices(maskArray, devId);
+      allMasked = (ids[1] < ids[0]);
+    }
+
     auto value = vtkm::make_VecFlat(input.ReadPortal().Get(0));
 
     vtkm::cont::ArrayHandle<vtkm::Range> result;
@@ -115,9 +128,48 @@ struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagConstant>
     auto resultPortal = result.WritePortal();
     for (vtkm::IdComponent index = 0; index < value.GetNumberOfComponents(); ++index)
     {
-      resultPortal.Set(index, vtkm::Range{ value[index], value[index] });
+      auto comp = static_cast<vtkm::Float64>(value[index]);
+      if (allMasked || (computeFiniteRange && !vtkm::IsFinite(comp)))
+      {
+        resultPortal.Set(index, vtkm::Range{});
+      }
+      else
+      {
+        resultPortal.Set(index, vtkm::Range{ comp, comp });
+      }
     }
     return result;
+  }
+};
+
+template <typename S>
+struct ArrayRangeComputeMagnitudeImpl;
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeMagnitudeImpl<vtkm::cont::StorageTagConstant>
+{
+  template <typename T>
+  VTKM_CONT vtkm::Range operator()(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConstant>& input,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
+    vtkm::cont::DeviceAdapterId devId) const
+  {
+    if (maskArray.GetNumberOfValues() != 0)
+    {
+      // Find if there is atleast one value that is not masked
+      auto ids = GetFirstAndLastUnmaskedIndices(maskArray, devId);
+      if (ids[1] < ids[0])
+      {
+        return vtkm::Range{};
+      }
+    }
+
+    auto value = input.ReadPortal().Get(0);
+    vtkm::Float64 rangeValue = vtkm::Magnitude(vtkm::make_VecFlat(value));
+    return (computeFiniteRange && !vtkm::IsFinite(rangeValue))
+      ? vtkm::Range{}
+      : vtkm::Range{ rangeValue, rangeValue };
   }
 };
 

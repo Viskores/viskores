@@ -20,7 +20,6 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-#include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>

@@ -84,12 +84,26 @@ struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagIndex>
 {
   VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
     const vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>& input,
-    vtkm::cont::DeviceAdapterId) const
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
+    vtkm::cont::DeviceAdapterId device) const;
+};
+
+template <typename S>
+struct ArrayRangeComputeMagnitudeImpl;
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeMagnitudeImpl<vtkm::cont::StorageTagIndex>
+{
+  VTKM_CONT vtkm::Range operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>& input,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
+    vtkm::cont::DeviceAdapterId device) const
   {
-    vtkm::cont::ArrayHandle<vtkm::Range> result;
-    result.Allocate(1);
-    result.WritePortal().Set(0, vtkm::Range(0, input.GetNumberOfValues() - 1));
-    return result;
+    auto rangeAH = ArrayRangeComputeImpl<vtkm::cont::StorageTagIndex>{}(
+      input, maskArray, computeFiniteRange, device);
+    return rangeAH.ReadPortal().Get(0);
   }
 };
 
