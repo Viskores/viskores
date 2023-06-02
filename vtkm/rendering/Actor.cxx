@@ -81,9 +81,36 @@ Actor::Actor(const vtkm::cont::UnknownCellSet& cells,
   this->Init(coordinates, scalarField);
 }
 
-Actor::~Actor() = default;
+Actor::Actor(const Actor& rhs)
+  : Internals(nullptr)
+{
+  // rhs might have been moved, its Internal would be nullptr
+  if (rhs.Internals)
+    Internals = std::make_unique<InternalsType>(*rhs.Internals);
+}
+
+Actor& Actor::operator=(const Actor& rhs)
+{
+  // both *this and rhs might have been moved.
+  if (!rhs.Internals)
+  {
+    Internals.reset();
+  }
+  else if (!Internals)
+  {
+    Internals = std::make_unique<InternalsType>(*rhs.Internals);
+  }
+  else
+  {
+    *Internals = *rhs.Internals;
+  }
+
+  return *this;
+}
+
 Actor::Actor(vtkm::rendering::Actor&&) noexcept = default;
 Actor& Actor::operator=(Actor&&) noexcept = default;
+Actor::~Actor() = default;
 
 void Actor::Init(const vtkm::cont::CoordinateSystem& coordinates,
                  const vtkm::cont::Field& scalarField)

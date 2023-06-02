@@ -40,9 +40,8 @@ public:
         const vtkm::cont::Field& scalarField,
         const vtkm::rendering::Color& color);
 
-  // Disable copying due to unique_ptr;
-  Actor(const Actor&) = delete;
-  Actor& operator=(const Actor&) = delete;
+  Actor(const Actor&);
+  Actor& operator=(const Actor&);
 
   Actor(Actor&&) noexcept;
   Actor& operator=(Actor&&) noexcept;

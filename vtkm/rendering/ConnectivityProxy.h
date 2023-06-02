@@ -35,8 +35,8 @@ public:
                     const vtkm::cont::CoordinateSystem& coords,
                     const vtkm::cont::Field& scalarField);
 
-  ConnectivityProxy(const ConnectivityProxy&) = delete;
-  ConnectivityProxy& operator=(const ConnectivityProxy&) = delete;
+  ConnectivityProxy(const ConnectivityProxy&);
+  ConnectivityProxy& operator=(const ConnectivityProxy&);
 
   ConnectivityProxy(ConnectivityProxy&&) noexcept;
   ConnectivityProxy& operator=(ConnectivityProxy&&) noexcept;
