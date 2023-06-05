@@ -55,9 +55,8 @@ void ColorLegendAnnotation::Render(const vtkm::rendering::Camera& camera,
 
   while (this->Annot.size() < this->Labels.size())
   {
-    this->Annot.push_back(
-      std::make_unique<TextAnnotationScreen>(vtkm::rendering::TextAnnotationScreen(
-        "test", this->LabelColor, this->FontScale, vtkm::Vec2f_32(0, 0), 0)));
+    this->Annot.push_back(std::make_unique<TextAnnotationScreen>(
+      "test", this->LabelColor, this->FontScale, vtkm::Vec2f_32(0, 0), 0));
   }
 
   for (unsigned int i = 0; i < this->Annot.size(); ++i)
