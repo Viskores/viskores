@@ -9,13 +9,17 @@
 ##============================================================================
 
 set(unit_tests
+  RenderTestComputeMoments.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
   )
 
 set(libraries
   vtkm_filter_image_processing
-  vtkm_source)
+  vtkm_source
+  vtkm_rendering
+  vtkm_rendering_testing
+)
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
