@@ -7,6 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/field_transform/LogValues.h>
 
