@@ -16,6 +16,8 @@
 #include <vtkm/Deprecated.h>
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/internal/Instantiations.h>
+
 #include <vtkm/cont/Algorithm.h>
 
 #include <limits>
@@ -114,7 +116,7 @@ struct ArrayRangeComputeImpl
 
 
 template <typename ArrayHandleType>
-inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeTemplate(
+vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeTemplate(
   const ArrayHandleType& input,
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny{})
 {
@@ -133,5 +135,157 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 
 }
 } // namespace vtkm::cont
+
+#define VTK_M_ARRAY_RANGE_COMPUTE_ALL_SCALARS(modifiers, ...)                                     \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Int8, __VA_ARGS__>& input,                                \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::UInt8, __VA_ARGS__>& input,                               \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Int16, __VA_ARGS__>& input,                               \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::UInt16, __VA_ARGS__>& input,                              \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Int32, __VA_ARGS__>& input,                               \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::UInt32, __VA_ARGS__>& input,                              \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Int64, __VA_ARGS__>& input,                               \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::UInt64, __VA_ARGS__>& input,                              \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Float32, __VA_ARGS__>& input,                             \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Float64, __VA_ARGS__>& input,                             \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<bool, __VA_ARGS__>& input, vtkm::cont::DeviceAdapterId device); \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<char, __VA_ARGS__>& input, vtkm::cont::DeviceAdapterId device); \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<signed VTKM_UNUSED_INT_TYPE, __VA_ARGS__>& input,               \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<unsigned VTKM_UNUSED_INT_TYPE, __VA_ARGS__>& input,             \
+    vtkm::cont::DeviceAdapterId device)
+
+#define VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(modifiers, N, ...)                                     \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int8, N>, __VA_ARGS__>& input,                  \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<UInt8, N>, __VA_ARGS__>& input,                       \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<Int16, N>, __VA_ARGS__>& input,                       \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<UInt16, N>, __VA_ARGS__>& input,                      \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<Int32, N>, __VA_ARGS__>& input,                       \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<UInt32, N>, __VA_ARGS__>& input,                      \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<Int64, N>, __VA_ARGS__>& input,                       \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<UInt64, N>, __VA_ARGS__>& input,                      \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<Float32, N>, __VA_ARGS__>& input,                     \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<Float64, N>, __VA_ARGS__>& input,                     \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<bool, N>, __VA_ARGS__>& input,                        \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<char, N>, __VA_ARGS__>& input,                        \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<signed VTKM_UNUSED_INT_TYPE, N>, __VA_ARGS__>& input, \
+    vtkm::cont::DeviceAdapterId device);                                                          \
+  modifiers vtkm::cont::ArrayHandle<vtkm::Range> vtkm::cont::ArrayRangeComputeTemplate(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<unsigned VTKM_UNUSED_INT_TYPE, N>, __VA_ARGS__>&      \
+      input,                                                                                      \
+    vtkm::cont::DeviceAdapterId device)
+
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_SCALARS(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                      vtkm::cont::StorageTagBasic);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                   2,
+                                   vtkm::cont::StorageTagBasic);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                   3,
+                                   vtkm::cont::StorageTagBasic);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                   4,
+                                   vtkm::cont::StorageTagBasic);
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                   2,
+                                   vtkm::cont::StorageTagSOA);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                   3,
+                                   vtkm::cont::StorageTagSOA);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                   4,
+                                   vtkm::cont::StorageTagSOA);
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(
+  extern template VTKM_CONT_TEMPLATE_EXPORT,
+  3,
+  vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic,
+                                         vtkm::cont::StorageTagBasic>);
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_SCALARS(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                      vtkm::cont::StorageTagConstant);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                   2,
+                                   vtkm::cont::StorageTagConstant);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                   3,
+                                   vtkm::cont::StorageTagConstant);
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+VTK_M_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VTKM_CONT_TEMPLATE_EXPORT,
+                                   4,
+                                   vtkm::cont::StorageTagConstant);
+VTKM_INSTANTIATION_END
 
 #endif //vtk_m_cont_ArrayRangeComputeTemplate_h

@@ -658,6 +658,10 @@ function(vtkm_add_instantiations instantiations_list)
     set(file_template_source ${instantiations_file})
   endif()
 
+  set_property(DIRECTORY
+    APPEND
+    PROPERTY CMAKE_CONFIGURE_DEPENDS ${instantiations_file})
+
   # Extract explicit instantiations
   _vtkm_extract_instantiations(instantiations ${instantiations_file})
 
