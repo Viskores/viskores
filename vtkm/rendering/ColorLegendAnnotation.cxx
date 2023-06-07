@@ -21,8 +21,6 @@ ColorLegendAnnotation::ColorLegendAnnotation()
   this->LabelColor = vtkm::rendering::Color::white;
 }
 
-ColorLegendAnnotation::~ColorLegendAnnotation() {}
-
 void ColorLegendAnnotation::Clear()
 {
   this->Labels.clear();
@@ -42,9 +40,9 @@ void ColorLegendAnnotation::Render(const vtkm::rendering::Camera& camera,
   vtkm::Float32 l = -0.95f, r = -0.90f;
   vtkm::Float32 b = +0.90f, t = +0.95f;
 
-  for (unsigned int i = 0; i < this->ColorSwatchList.size(); ++i)
+  for (auto& color : this->ColorSwatchList)
   {
-    canvas.AddColorSwatch(l, b, l, t, r, t, r, b, this->ColorSwatchList[i]);
+    canvas.AddColorSwatch(l, b, l, t, r, t, r, b, color);
     b -= 0.07f;
     t -= 0.07f;
   }
@@ -57,9 +55,8 @@ void ColorLegendAnnotation::Render(const vtkm::rendering::Camera& camera,
 
   while (this->Annot.size() < this->Labels.size())
   {
-    this->Annot.push_back(
-      std::unique_ptr<TextAnnotationScreen>(new vtkm::rendering::TextAnnotationScreen(
-        "test", this->LabelColor, this->FontScale, vtkm::Vec2f_32(0, 0), 0)));
+    this->Annot.push_back(std::make_unique<TextAnnotationScreen>(
+      "test", this->LabelColor, this->FontScale, vtkm::Vec2f_32(0, 0)));
   }
 
   for (unsigned int i = 0; i < this->Annot.size(); ++i)
