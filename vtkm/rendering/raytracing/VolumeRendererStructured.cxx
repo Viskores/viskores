@@ -61,7 +61,7 @@ public:
     vtkm::Id cellId{};
     auto self = static_cast<const Derived*>(this);
     self->Locator.FindCell(point, cellId, parametric);
-    cell = self->Conn.FlatToLogicalToIndex(cellId);
+    cell = self->Conn.FlatToLogicalVisitIndex(cellId);
     self->ComputeInvSpacing(cell, point, invSpacing, parametric);
   }
 
@@ -74,7 +74,7 @@ public:
   VTKM_EXEC
   inline vtkm::Id GetCellIndex(const vtkm::Id3& cell) const
   {
-    return static_cast<const Derived*>(this)->Conn.LogicalToFlatToIndex(cell);
+    return static_cast<const Derived*>(this)->Conn.LogicalToFlatVisitIndex(cell);
   }
 
   VTKM_EXEC
@@ -88,7 +88,7 @@ public:
   inline void GetMinPoint(const vtkm::Id3& cell, vtkm::Vec3f_32& point) const
   {
     const vtkm::Id pointIndex =
-      static_cast<const Derived*>(this)->Conn.LogicalToFlatFromIndex(cell);
+      static_cast<const Derived*>(this)->Conn.LogicalToFlatIncidentIndex(cell);
     point = static_cast<const Derived*>(this)->Coordinates.Get(pointIndex);
   }
 };
