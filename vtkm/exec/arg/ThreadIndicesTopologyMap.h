@@ -181,7 +181,7 @@ public:
     this->InputIndex = inputIndex;
     this->VisitIndex = visitIndex;
     this->OutputIndex = outputIndex;
-    this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->InputIndex);
+    this->LogicalIndex = connectivity.FlatToLogicalVisitIndex(this->InputIndex);
     this->IndicesIncident = connectivity.GetIndices(this->LogicalIndex);
     this->CellShape = connectivity.GetCellShape(this->InputIndex);
   }
@@ -338,7 +338,7 @@ public:
                                      const ConnectivityType& connectivity)
   {
     this->ThreadIndex = threadIndex;
-    this->LogicalIndex = connectivity.FlatToLogicalToIndex(inputIndex);
+    this->LogicalIndex = connectivity.FlatToLogicalVisitIndex(inputIndex);
     this->IndicesIncident = connectivity.GetIndices(this->LogicalIndex);
     this->CellShape = connectivity.GetCellShape(inputIndex);
   }
@@ -503,7 +503,7 @@ public:
     this->OutputIndex = outputIndex;
 
     const vtkm::Id permutedIndex = permutation.Portal.Get(this->InputIndex);
-    this->LogicalIndex = permutation.Connectivity.FlatToLogicalToIndex(permutedIndex);
+    this->LogicalIndex = permutation.Connectivity.FlatToLogicalVisitIndex(permutedIndex);
     this->IndicesIncident = permutation.Connectivity.GetIndices(this->LogicalIndex);
     this->CellShape = permutation.Connectivity.GetCellShape(permutedIndex);
   }

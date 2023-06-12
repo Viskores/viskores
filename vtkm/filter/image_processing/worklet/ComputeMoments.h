@@ -15,6 +15,9 @@
 #include <vtkm/Math.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
+#include <vtkm/cont/ArrayHandleRecombineVec.h>
+#include <vtkm/cont/ArrayHandleRuntimeVec.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UncertainCellSet.h>
@@ -54,13 +57,19 @@ public:
 
   using ExecutionSignature = void(_2, Boundary, _3);
 
-  template <typename NeighIn, typename T>
+  template <typename NeighIn, typename TOut>
   VTKM_EXEC void operator()(const NeighIn& image,
                             const vtkm::exec::BoundaryState& boundary,
-                            T& moment) const
+                            TOut& moment) const
   {
-    // TODO: type safety and numerical precision
-    auto sum = vtkm::TypeTraits<T>::ZeroInitialization();
+    using ComponentType = typename TOut::ComponentType;
+    const vtkm::IdComponent numComponents = moment.GetNumberOfComponents();
+
+    // For variable sized Vecs, need to iterate over each component.
+    for (vtkm::IdComponent componentI = 0; componentI < numComponents; ++componentI)
+    {
+      moment[componentI] = vtkm::TypeTraits<ComponentType>::ZeroInitialization();
+    }
 
     // Clamp the radius to the dataset bounds (discard out-of-bounds points).
     const auto minRadius = boundary.ClampNeighborIndex(-this->RadiusDiscrete);
@@ -85,13 +94,23 @@ public:
 
         if (vtkm::Dot(radius, radius) <= 1)
         {
-          sum +=
-            static_cast<T>(vtkm::Pow(radius[0], p) * vtkm::Pow(radius[1], q) * image.Get(i, j, 0));
+          ComponentType multiplier =
+            static_cast<ComponentType>(vtkm::Pow(radius[0], p) * vtkm::Pow(radius[1], q));
+          auto inputField = image.Get(i, j, 0);
+          // For variable sized Vecs, need to iterate over each component.
+          for (vtkm::IdComponent componentI = 0; componentI < numComponents; ++componentI)
+          {
+            moment[componentI] += multiplier * inputField[componentI];
+          }
         }
       }
     }
 
-    moment = T(sum * this->SpacingProduct);
+    // For variable sized Vecs, need to iterate over each component.
+    for (vtkm::IdComponent componentI = 0; componentI < numComponents; ++componentI)
+    {
+      moment[componentI] *= static_cast<ComponentType>(this->SpacingProduct);
+    }
   }
 
 private:
@@ -126,13 +145,19 @@ public:
 
   using ExecutionSignature = void(_2, Boundary, _3);
 
-  template <typename NeighIn, typename T>
+  template <typename NeighIn, typename TOut>
   VTKM_EXEC void operator()(const NeighIn& image,
                             const vtkm::exec::BoundaryState& boundary,
-                            T& moment) const
+                            TOut& moment) const
   {
-    // TODO: type safety and numerical precision
-    auto sum = vtkm::TypeTraits<T>::ZeroInitialization();
+    using ComponentType = typename TOut::ComponentType;
+    const vtkm::IdComponent numComponents = moment.GetNumberOfComponents();
+
+    // For variable sized Vecs, need to iterate over each component.
+    for (vtkm::IdComponent componentI = 0; componentI < numComponents; ++componentI)
+    {
+      moment[componentI] = vtkm::TypeTraits<ComponentType>::ZeroInitialization();
+    }
 
     // Clamp the radius to the dataset bounds (discard out-of-bounds points).
     const auto minRadius = boundary.ClampNeighborIndex(-this->RadiusDiscrete);
@@ -165,14 +190,24 @@ public:
 
           if (vtkm::Dot(radius, radius) <= 1)
           {
-            sum += static_cast<T>(vtkm::Pow(radius[0], p) * vtkm::Pow(radius[1], q) *
-                                  vtkm::Pow(radius[2], r) * image.Get(i, j, k));
+            ComponentType multiplier = static_cast<ComponentType>(
+              vtkm::Pow(radius[0], p) * vtkm::Pow(radius[1], q) * vtkm::Pow(radius[2], r));
+            auto inputField = image.Get(i, j, k);
+            // For variable sized Vecs, need to iterate over each component.
+            for (vtkm::IdComponent componentI = 0; componentI < numComponents; ++componentI)
+            {
+              moment[componentI] += multiplier * inputField[componentI];
+            }
           }
         }
       }
     }
 
-    moment = T(sum * this->SpacingProduct);
+    // For variable sized Vecs, need to iterate over each component.
+    for (vtkm::IdComponent componentI = 0; componentI < numComponents; ++componentI)
+    {
+      moment[componentI] *= static_cast<ComponentType>(this->SpacingProduct);
+    }
   }
 
 private:
@@ -195,9 +230,9 @@ public:
   class ResolveUnknownCellSet
   {
   public:
-    template <typename T, typename S>
+    template <typename T>
     void operator()(const vtkm::cont::CellSetStructured<2>& input,
-                    const vtkm::cont::ArrayHandle<T, S>& pixels,
+                    const vtkm::cont::ArrayHandleRecombineVec<T>& pixels,
                     vtkm::Vec3f spacing,
                     vtkm::Float64 radius,
                     int maxOrder,
@@ -212,7 +247,7 @@ public:
         {
           const int q = order - p;
 
-          vtkm::cont::ArrayHandle<T> moments;
+          vtkm::cont::ArrayHandleRuntimeVec<T> moments{ pixels.GetNumberOfComponents() };
 
           DispatcherType dispatcher(WorkletType{ spacing, radius, p, q });
           dispatcher.Invoke(input, pixels, moments);
@@ -226,9 +261,9 @@ public:
       }
     }
 
-    template <typename T, typename S>
+    template <typename T>
     void operator()(const vtkm::cont::CellSetStructured<3>& input,
-                    const vtkm::cont::ArrayHandle<T, S>& pixels,
+                    const vtkm::cont::ArrayHandleRecombineVec<T>& pixels,
                     vtkm::Vec3f spacing,
                     vtkm::Float64 radius,
                     int maxOrder,
@@ -246,7 +281,7 @@ public:
           {
             const int p = order - r - q;
 
-            vtkm::cont::ArrayHandle<T> moments;
+            vtkm::cont::ArrayHandleRuntimeVec<T> moments{ pixels.GetNumberOfComponents() };
 
             DispatcherType dispatcher(WorkletType{ spacing, radius, p, q, r });
             dispatcher.Invoke(input, pixels, moments);
@@ -263,9 +298,9 @@ public:
     }
   };
 
-  template <typename T, typename S>
+  template <typename T>
   void Run(const vtkm::cont::UnknownCellSet& input,
-           const vtkm::cont::ArrayHandle<T, S>& pixels,
+           const vtkm::cont::ArrayHandleRecombineVec<T>& pixels,
            int maxOrder,
            vtkm::cont::DataSet& output) const
   {

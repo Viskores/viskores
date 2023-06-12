@@ -607,29 +607,29 @@ struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagCell,
   }
 
   VTKM_EXEC_CONT
-  static LogicalIndexType FlatToLogicalFromIndex(const ConnectivityType& connectivity,
-                                                 vtkm::Id flatFromIndex)
+  static LogicalIndexType FlatToLogicalIncidentIndex(const ConnectivityType& connectivity,
+                                                     vtkm::Id flatFromIndex)
   {
     return connectivity.FlatToLogicalPointIndex(flatFromIndex);
   }
 
   VTKM_EXEC_CONT
-  static vtkm::Id LogicalToFlatFromIndex(const ConnectivityType& connectivity,
-                                         const LogicalIndexType& logicalFromIndex)
+  static vtkm::Id LogicalToFlatIncidentIndex(const ConnectivityType& connectivity,
+                                             const LogicalIndexType& logicalFromIndex)
   {
     return connectivity.LogicalToFlatPointIndex(logicalFromIndex);
   }
 
   VTKM_EXEC_CONT
-  static LogicalIndexType FlatToLogicalToIndex(const ConnectivityType& connectivity,
-                                               vtkm::Id flatToIndex)
+  static LogicalIndexType FlatToLogicalVisitIndex(const ConnectivityType& connectivity,
+                                                  vtkm::Id flatToIndex)
   {
     return connectivity.FlatToLogicalCellIndex(flatToIndex);
   }
 
   VTKM_EXEC_CONT
-  static vtkm::Id LogicalToFlatToIndex(const ConnectivityType& connectivity,
-                                       const LogicalIndexType& logicalToIndex)
+  static vtkm::Id LogicalToFlatVisitIndex(const ConnectivityType& connectivity,
+                                          const LogicalIndexType& logicalToIndex)
   {
     return connectivity.LogicalToFlatCellIndex(logicalToIndex);
   }
@@ -667,29 +667,29 @@ struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
   }
 
   VTKM_EXEC_CONT
-  static LogicalIndexType FlatToLogicalFromIndex(const ConnectivityType& connectivity,
-                                                 vtkm::Id flatFromIndex)
+  static LogicalIndexType FlatToLogicalIncidentIndex(const ConnectivityType& connectivity,
+                                                     vtkm::Id flatFromIndex)
   {
     return connectivity.FlatToLogicalCellIndex(flatFromIndex);
   }
 
   VTKM_EXEC_CONT
-  static vtkm::Id LogicalToFlatFromIndex(const ConnectivityType& connectivity,
-                                         const LogicalIndexType& logicalFromIndex)
+  static vtkm::Id LogicalToFlatIncidentIndex(const ConnectivityType& connectivity,
+                                             const LogicalIndexType& logicalFromIndex)
   {
     return connectivity.LogicalToFlatCellIndex(logicalFromIndex);
   }
 
   VTKM_EXEC_CONT
-  static LogicalIndexType FlatToLogicalToIndex(const ConnectivityType& connectivity,
-                                               vtkm::Id flatToIndex)
+  static LogicalIndexType FlatToLogicalVisitIndex(const ConnectivityType& connectivity,
+                                                  vtkm::Id flatToIndex)
   {
     return connectivity.FlatToLogicalPointIndex(flatToIndex);
   }
 
   VTKM_EXEC_CONT
-  static vtkm::Id LogicalToFlatToIndex(const ConnectivityType& connectivity,
-                                       const LogicalIndexType& logicalToIndex)
+  static vtkm::Id LogicalToFlatVisitIndex(const ConnectivityType& connectivity,
+                                          const LogicalIndexType& logicalToIndex)
   {
     return connectivity.LogicalToFlatPointIndex(logicalToIndex);
   }

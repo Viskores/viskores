@@ -9,3 +9,5 @@ PRIVATE_DEPENDS
   vtkm_worklet
 TEST_DEPENDS
   vtkm_source
+  vtkm_rendering
+  vtkm_rendering_testing
