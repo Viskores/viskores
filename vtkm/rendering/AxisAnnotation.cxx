@@ -10,8 +10,6 @@
 
 #include <vtkm/rendering/AxisAnnotation.h>
 
-#include <vtkm/cont/ErrorBadType.h>
-
 namespace vtkm
 {
 namespace rendering
@@ -37,7 +35,7 @@ void AxisAnnotation::CalculateTicks(const vtkm::Range& range,
                                     bool minor,
                                     std::vector<vtkm::Float64>& positions,
                                     std::vector<vtkm::Float64>& proportions,
-                                    int modifyTickQuantity) const
+                                    int modifyTickQuantity)
 {
   positions.clear();
   proportions.clear();
@@ -144,7 +142,7 @@ void AxisAnnotation::CalculateTicks(const vtkm::Range& range,
 void AxisAnnotation::CalculateTicksLogarithmic(const vtkm::Range& range,
                                                bool minor,
                                                std::vector<vtkm::Float64>& positions,
-                                               std::vector<vtkm::Float64>& proportions) const
+                                               std::vector<vtkm::Float64>& proportions)
 {
   positions.clear();
   proportions.clear();
@@ -167,7 +165,7 @@ void AxisAnnotation::CalculateTicksLogarithmic(const vtkm::Range& range,
     last_log = first_log + 1;
   }
   vtkm::Float64 diff_log = last_log - first_log;
-  vtkm::Int32 step = vtkm::Int32((diff_log + 9) / 10);
+  auto step = vtkm::Int32((diff_log + 9) / 10);
 
   if (minor)
   {
@@ -175,7 +173,7 @@ void AxisAnnotation::CalculateTicksLogarithmic(const vtkm::Range& range,
     last_log += step;
   }
 
-  for (vtkm::Int32 i = vtkm::Int32(first_log); i <= last_log; i += step)
+  for (auto i = vtkm::Int32(first_log); i <= last_log; i += step)
   {
     vtkm::Float64 logpos = i;
     vtkm::Float64 pos = vtkm::Pow(10, logpos);
@@ -229,9 +227,5 @@ void AxisAnnotation::CalculateTicksLogarithmic(const vtkm::Range& range,
     }
   }
 }
-
-AxisAnnotation::AxisAnnotation() {}
-
-AxisAnnotation::~AxisAnnotation() {}
 }
 } // namespace vtkm::rendering

@@ -27,7 +27,7 @@ class Canvas;
 class VTKM_RENDERING_EXPORT WorldAnnotator
 {
 public:
-  WorldAnnotator(const vtkm::rendering::Canvas* canvas);
+  explicit WorldAnnotator(const vtkm::rendering::Canvas* canvas);
 
   void AddLine(const vtkm::Vec3f_64& point0,
                const vtkm::Vec3f_64& point1,
@@ -63,7 +63,7 @@ public:
                const vtkm::Vec2f_32& anchor,
                const vtkm::rendering::Color& color,
                const std::string& text,
-               const vtkm::Float32 depth = 0.f) const;
+               vtkm::Float32 depth = 0.f) const;
 
   VTKM_CONT
   void AddText(vtkm::Float32 originX,

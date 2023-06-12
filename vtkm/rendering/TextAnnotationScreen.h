@@ -30,8 +30,6 @@ public:
                        const vtkm::Vec2f_32& position,
                        vtkm::Float32 angleDegrees = 0);
 
-  ~TextAnnotationScreen();
-
   void SetPosition(const vtkm::Vec2f_32& position);
 
   void SetPosition(vtkm::Float32 posx, vtkm::Float32 posy);

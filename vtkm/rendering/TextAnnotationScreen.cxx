@@ -26,8 +26,6 @@ TextAnnotationScreen::TextAnnotationScreen(const std::string& text,
 {
 }
 
-TextAnnotationScreen::~TextAnnotationScreen() {}
-
 void TextAnnotationScreen::SetPosition(const vtkm::Vec2f_32& position)
 {
   this->Position = position;
