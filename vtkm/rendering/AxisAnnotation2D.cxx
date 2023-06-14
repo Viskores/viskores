@@ -85,7 +85,7 @@ void AxisAnnotation2D::Render(const vtkm::rendering::Camera& camera,
   while (this->Labels.size() < nmajor)
   {
     this->Labels.push_back(std::make_unique<TextAnnotationScreen>(
-      "test", this->Color, this->FontScale, vtkm::Vec2f_32(0, 0), 0));
+      "test", this->Color, this->FontScale, vtkm::Vec2f_32(0, 0)));
   }
 
   std::stringstream numberToString;

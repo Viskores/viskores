@@ -69,7 +69,7 @@ void AxisAnnotation3D::Render(const Camera& camera,
   while (this->Labels.size() < nmajor)
   {
     this->Labels.push_back(std::make_unique<TextAnnotationBillboard>(
-      "test", this->Color, vtkm::Float32(this->FontScale), vtkm::Vec3f_32(0, 0, 0), 0));
+      "test", this->Color, vtkm::Float32(this->FontScale), vtkm::Vec3f_32(0, 0, 0)));
   }
 
   std::stringstream numberToString;
