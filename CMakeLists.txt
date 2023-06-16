@@ -121,6 +121,12 @@ endif()
 if (NOT DEFINED diy_export_name)
     set(diy_export_name "diy_targets")
 endif()
+if (NOT DEFINED diy_development_component)
+    set(diy_development_component "development")
+endif()
+if (NOT DEFINED diy_runtime_component)
+    set(diy_runtime_component "runtime")
+endif()
 
 if  (NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
     set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
@@ -273,22 +279,26 @@ configure_package_config_file(
 
 # install targets
 if (NOT DEFINED diy_install_only_libraries) # defined by parent project if building for binary distribution
-    install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/${diy_prefix} DESTINATION ${diy_install_include_dir})
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/${diy_prefix}
+        DESTINATION ${diy_install_include_dir}
+        COMPONENT ${diy_development_component})
 
     if (build_diy_mpi_lib)
-        install(FILES ${PROJECT_BINARY_DIR}/include/${diy_prefix}/mpi/mpitypes.hpp DESTINATION ${diy_install_include_dir}/${diy_prefix}/mpi)
+        install(FILES ${PROJECT_BINARY_DIR}/include/${diy_prefix}/mpi/mpitypes.hpp
+            DESTINATION ${diy_install_include_dir}/${diy_prefix}/mpi
+            COMPONENT ${diy_development_component})
     endif()
 endif()
 
 install(TARGETS ${diy_targets} EXPORT ${diy_export_name}
-    ARCHIVE DESTINATION ${diy_install_lib_dir}
-    LIBRARY DESTINATION ${diy_install_lib_dir}
-    RUNTIME DESTINATION ${diy_install_bin_dir})
+    ARCHIVE DESTINATION ${diy_install_lib_dir} COMPONENT ${diy_development_component}
+    LIBRARY DESTINATION ${diy_install_lib_dir} COMPONENT ${diy_runtime_component}
+    RUNTIME DESTINATION ${diy_install_bin_dir} COMPONENT ${diy_runtime_component})
 
 if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR) # Only generate these files when diy is the main project
   export(EXPORT ${diy_export_name} NAMESPACE DIY:: FILE "${PROJECT_BINARY_DIR}/diy-targets.cmake")
-  install(EXPORT ${diy_export_name} NAMESPACE DIY:: DESTINATION "." FILE diy-targets.cmake)
-  install(FILES "${PROJECT_BINARY_DIR}/diy-config.cmake" DESTINATION ".")
+  install(EXPORT ${diy_export_name} NAMESPACE DIY:: DESTINATION "." FILE diy-targets.cmake COMPONENT ${diy_development_component})
+  install(FILES "${PROJECT_BINARY_DIR}/diy-config.cmake" DESTINATION "." COMPONENT ${diy_development_component})
 endif()
 
 if      (python)

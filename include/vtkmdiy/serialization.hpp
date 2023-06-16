@@ -69,7 +69,7 @@ namespace diy
     void                wipe()                                      { std::vector<char>().swap(buffer); reset(); }
     void                reset()                                     { position = 0; }
     void                skip(size_t s)                              { position += s; }
-    void                swap(MemoryBuffer& o)                       { std::swap(position, o.position); buffer.swap(o.buffer); }
+    void                swap(MemoryBuffer& o)                       { std::swap(position, o.position); buffer.swap(o.buffer); std::swap(blob_position, o.blob_position); blobs.swap(o.blobs); }
     bool                empty() const                               { return buffer.empty(); }
     size_t              size() const                                { return buffer.size(); }
     void                reserve(size_t s)                           { buffer.reserve(s); }
