@@ -264,6 +264,14 @@ vtkm_install_headers(vtkm/cont
   )
 
 #-----------------------------------------------------------------------------
+# Some operations are pre-compiled for many different types. Improve parallel
+# compiles by breaking them up into smaller units.
+vtkm_add_instantiations(array_range_instantiations
+  INSTANTIATIONS_FILE ArrayRangeComputeTemplate.h
+  )
+list(APPEND device_sources ${array_range_instantiations})
+
+#-----------------------------------------------------------------------------
 vtkm_library( NAME vtkm_cont
               SOURCES ${sources}
               TEMPLATE_SOURCES ${template_sources}
