@@ -41,7 +41,6 @@ protected:
   TextAnnotation::HorizontalAlignment AlignH;
   TextAnnotation::VerticalAlignment AlignV;
   std::vector<std::unique_ptr<TextAnnotation>> Labels;
-  //  std::vector<TextAnnotation*> Labels;
 
   std::vector<vtkm::Float64> PositionsMajor;
   std::vector<vtkm::Float64> ProportionsMajor;
@@ -53,8 +52,6 @@ protected:
 
 public:
   AxisAnnotation2D();
-
-  ~AxisAnnotation2D();
 
   AxisAnnotation2D(const AxisAnnotation2D&) = delete;
 
@@ -104,8 +101,8 @@ public:
   void SetLabelFontScale(vtkm::Float32 s)
   {
     this->FontScale = s;
-    for (unsigned int i = 0; i < this->Labels.size(); i++)
-      this->Labels[i]->SetScale(s);
+    for (auto& label : this->Labels)
+      label->SetScale(s);
   }
 
   void SetRangeForAutoTicks(const vtkm::Range& range);

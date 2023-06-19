@@ -51,7 +51,7 @@ void WorldAnnotator::AddText(const vtkm::Vec3f_32& origin,
                              const vtkm::Vec2f_32& anchor,
                              const vtkm::rendering::Color& color,
                              const std::string& text,
-                             const vtkm::Float32 depth) const
+                             vtkm::Float32 depth) const
 {
   vtkm::Vec3f_32 n = vtkm::Cross(right, up);
   vtkm::Normalize(n);
