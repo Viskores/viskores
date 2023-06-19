@@ -62,6 +62,11 @@
   extends:
     - .docker_image
 
+.opensuse: &opensuse
+  image: "kitware/vtkm:ci-opensuse-20230619"
+  extends:
+    - .docker_image
+
 .run_automatically: &run_automatically
   rules:
     - if: '$CI_MERGE_REQUEST_ID'
@@ -226,6 +231,7 @@ include:
   - local: '/.gitlab/ci/centos8.yml'
   - local: '/.gitlab/ci/doxygen.yml'
   - local: '/.gitlab/ci/macos.yml'
+  - local: '/.gitlab/ci/opensuse.yml'
   - local: '/.gitlab/ci/rhel8.yml'
   - local: '/.gitlab/ci/ubuntu1604.yml'
   - local: '/.gitlab/ci/ubuntu1804.yml'
