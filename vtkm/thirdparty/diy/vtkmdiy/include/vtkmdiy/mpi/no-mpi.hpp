@@ -2,8 +2,8 @@
 #define VTKMDIY_MPI_NO_MPI_HPP
 
 #include <cassert> // std::assert
+#include <cstdint> // uintptr_t
 #include <stdexcept> // std::runtime_error
-
 
 static const int MPI_SUCCESS = 0;
 static const int MPI_ANY_SOURCE = -1;
