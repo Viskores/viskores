@@ -31,7 +31,6 @@ public:
     dataset.GetCellSet().AsCellSet(cellSet);
     cellSet.SetGlobalPointDimensions(vtkm::Id2{ 15, 19 });
     cellSet.SetGlobalPointIndexStart(vtkm::Id2{ 10, 14 });
-    //cellSet.SetGlobalPointIndexStart(vtkm::Id2{ 0, 0 });
     dataset.SetCellSet(cellSet);
     dataset.PrintSummary(std::cout);
 
@@ -41,11 +40,9 @@ public:
     vtkm::filter::entity_extraction::ExtractStructured extract;
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
-    //extract.SetVOIIsGlobal(true);
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
-    output.PrintSummary(std::cout);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 9),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 4),
