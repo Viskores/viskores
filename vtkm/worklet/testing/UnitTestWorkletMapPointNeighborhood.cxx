@@ -320,7 +320,7 @@ static void TestIndexing()
   vtkm::cont::CellSetStructured<3> outCellSet;
   outCellSet.SetPointDimensions({ outDim });
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates inField{ { inDim } };
+  vtkm::cont::ArrayHandleUniformPointCoordinates inField(vtkm::Id3{ inDim });
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> outField;
 
