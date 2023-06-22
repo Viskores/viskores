@@ -26,6 +26,14 @@ public:
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
 
+    // Change point index start from 0, 0 to 10, 14
+    vtkm::cont::CellSetStructured<2> cellSet;
+    dataset.GetCellSet().AsCellSet(cellSet);
+    cellSet.SetGlobalPointDimensions(vtkm::Id2{ 15, 19 });
+    cellSet.SetGlobalPointIndexStart(vtkm::Id2{ 10, 14 });
+    dataset.SetCellSet(cellSet);
+    dataset.PrintSummary(std::cout);
+
     vtkm::RangeId3 range(1, 4, 1, 4, 0, 1);
     vtkm::Id3 sample(1, 1, 1);
 
@@ -39,6 +47,17 @@ public:
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 4),
                      "Wrong result for ExtractStructured worklet");
+    vtkm::cont::CellSetStructured<2> outputCellSet;
+    output.GetCellSet().AsCellSet(outputCellSet);
+    VTKM_TEST_ASSERT(test_equal(outputCellSet.GetGlobalPointIndexStart()[0], 11),
+                     "Wrong result for ExtractStructured PointIndexStart");
+    VTKM_TEST_ASSERT(test_equal(outputCellSet.GetGlobalPointIndexStart()[1], 15),
+                     "Wrong result for ExtractStructured PointIndexStart");
+    VTKM_TEST_ASSERT(test_equal(outputCellSet.GetGlobalPointDimensions()[0], 15),
+                     "Wrong result for ExtractStructured GlobalPointDimensions");
+    VTKM_TEST_ASSERT(test_equal(outputCellSet.GetGlobalPointDimensions()[1], 19),
+                     "Wrong result for ExtractStructured GlobalPointDimensions");
+
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
